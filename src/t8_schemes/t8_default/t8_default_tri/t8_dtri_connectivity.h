@@ -26,7 +26,7 @@
 #ifndef T8_DTRI_CONNECTIVITY_H
 #define T8_DTRI_CONNECTIVITY_H
 
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.hxx>
 #include <t8_eclass.h>
 
 T8_EXTERN_C_BEGIN ();

@@ -22,8 +22,8 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_default_prism.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
-#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 
 typedef t8_dprism_t t8_default_prism_t;

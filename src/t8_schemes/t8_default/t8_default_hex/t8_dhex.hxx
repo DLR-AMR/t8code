@@ -23,7 +23,7 @@
 #ifndef T8_DHEX_H
 #define T8_DHEX_H
 
-/** \file t8_dhex.h
+/** \file t8_dhex.hxx
  * TODO: document this.
  */
 
@@ -52,12 +52,16 @@
 
 typedef int32_t t8_dhex_coord_t;
 
-typedef struct t8_dhex
+
+template <>
+struct t8_default_element <T8_ECLASS_HEX>
 {
   int8_t level;
   t8_dhex_coord_t x; /**< The x integer coordinate of the anchor node. */
   t8_dhex_coord_t y; /**< The y integer coordinate of the anchor node. */
   t8_dhex_coord_t z; /**< The z integer coordinate of the anchor node. */
 } t8_dhex_t;
+
+using t8_dhex_t = t8_default_element<T8_ECLASS_HEX>;
 
 #endif /* T8_DHEX_H */

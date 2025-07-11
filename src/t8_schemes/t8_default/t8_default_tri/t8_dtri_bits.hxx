@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtri_bits.h
+/** \file t8_dtri_bits.hxx
  * Definitions of triangle-specific functions.
  */
 
@@ -28,9 +28,7 @@
 #define T8_DTRI_BITS_H
 
 #include <t8_element.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
-
-T8_EXTERN_C_BEGIN ();
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.hxx>
 
 /** Copy the values of one triangle to another.
  * \param [in] t Triangle whose values will be copied.
@@ -414,7 +412,5 @@ t8_dtri_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack
 void
 t8_dtri_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtri_t **elements,
                         const unsigned int count, sc_MPI_Comm comm);
-
-T8_EXTERN_C_END ();
 
 #endif /* T8_DTRI_BITS_H */

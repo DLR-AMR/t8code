@@ -20,31 +20,36 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DQUAD_H
-#define T8_DQUAD_H
+#ifndef T8_DVERTEX_H
+#define T8_DVERTEX_H
 
-/** \file t8_dquad.h
+/** \file t8_dvertex.hxx
  * TODO: document this.
  */
 
 #include <t8.h>
 
-/** The number of children that a quad is refined into. */
-#define T8_DQUAD_CHILDREN 4
+/** The number of children that a vertex is refined into. */
+#define T8_DVERTEX_CHILDREN 1
 
-/** The number of faces of a quad. */
-#define T8_DQUAD_FACES 4
+/** The number of faces of a vertex. */
+#define T8_DVERTEX_FACES 0
 
-/** The number of children at a face of a quad. */
-#define T8_DQUAD_FACE_CHILDREN 2
+/** The number of face children of a vertex. */
+#define T8_DVERTEX_FACE_CHILDREN 0
 
-/** The maximum refinement level allowed for a quad. */
-#define T8_DQUAD_MAXLEVEL 29
+/** The length of a vertex root tree */
+#define T8_DVERTEX_ROOT_LEN 0
 
-/** The length of the root quad in integer coordinates. */
-#define T8_DQUAD_ROOT_LEN (1 << (T8_DQUAD_MAXLEVEL))
+/** The maximum refinement level allowed for a vertex. */
+#define T8_DVERTEX_MAXLEVEL 255
 
-/** The length of a quad at a given level in integer coordinates. */
-#define T8_DQUAD_LEN(l) (1 << (T8_DQUAD_MAXLEVEL - (l)))
+template <>
+struct t8_default_element <T8_ECLASS_VERTEX>
+{
+  uint8_t level;
+};
 
-#endif /* T8_DQUAD_H */
+typedef t8_default_element<T8_ECLASS_VERTEX> t8_dvertex_t;
+
+#endif /* T8_DVERTEX_H */

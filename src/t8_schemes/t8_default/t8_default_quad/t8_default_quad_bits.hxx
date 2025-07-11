@@ -30,8 +30,6 @@
 #include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 
-T8_EXTERN_C_BEGIN ();
-
 /** Convert points in the reference space of a quad element to points in the
  *  reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
  * \param [in]  elem       Input quad.
@@ -45,7 +43,5 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_dquad_compute_reference_coords (const t8_pquad_t *elem, const double *ref_coords, const size_t num_coords,
                                    double *out_coords);
-
-T8_EXTERN_C_END ();
 
 #endif /* T8_DQUAD_BITS_H */

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dhex_bits.h
+/** \file t8_dhex_bits.hxx
  * Definitions of hex-specific functions.
  */
 
@@ -28,9 +28,7 @@
 #define T8_DHEX_BITS_H
 
 #include <t8_element.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
-
-T8_EXTERN_C_BEGIN ();
+#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.hxx>
 
 /** Convert points in the reference space of a hex element to points in the
  *  reference space of the tree (level 0) embedded in \f$ [0,1]^3 \f$.
@@ -45,7 +43,5 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_dhex_compute_reference_coords (const t8_dhex_t *elem, const double *ref_coords, const size_t num_coords,
                                   double *out_coords);
-
-T8_EXTERN_C_END ();
 
 #endif /* T8_DHEX_BITS_H */

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dprism_bits.h
+/** \file t8_dprism_bits.hxx
  * Definition if prism-specific functions.
  */
 
@@ -28,9 +28,7 @@
 #define T8_DPRISM_BITS_H
 
 #include <t8_element.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
-
-T8_EXTERN_C_BEGIN ();
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.hxx>
 
 /** Look-up table for the corners of each face. */
 extern int t8_dprism_face_corners[5][4];
@@ -318,7 +316,5 @@ t8_dprism_linear_id (const t8_dprism_t *p, int level);
  */
 int
 t8_dprism_is_valid (const t8_dprism_t *p);
-
-T8_EXTERN_C_END ();
 
 #endif /* T8_DPRISM_BITS_H */

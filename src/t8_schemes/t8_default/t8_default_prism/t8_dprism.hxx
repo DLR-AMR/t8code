@@ -23,13 +23,13 @@
 #ifndef T8_DPRISM_H
 #define T8_DPRISM_H
 
-/** \file t8_dprism.h
+/** \file t8_dprism.hxx
  * TODO: document this.
  */
 
 #include <t8.h>
-#include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.hxx>
 
 /** The number of children that a prism is refined into. */
 #define T8_DPRISM_CHILDREN 8
@@ -66,10 +66,13 @@
 
 typedef int32_t t8_dprism_coord_t;
 
-typedef struct t8_dprism
+template <>
+struct t8_default_element <T8_ECLASS_PRISM>
 {
   t8_dline_t line; /*z coordinate + level */
   t8_dtri_t tri;   /*x,y coordinate + level + type */
-} t8_dprism_t;
+};
+
+using t8_dprism_t = t8_default_element<T8_ECLASS_PRISM>;
 
 #endif /* T8_DPRISM_H */

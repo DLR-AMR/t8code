@@ -20,39 +20,31 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DLINE_H
-#define T8_DLINE_H
+#ifndef T8_DQUAD_H
+#define T8_DQUAD_H
 
-/** \file t8_dline.h
+/** \file t8_dquad.hxx
  * TODO: document this.
  */
 
 #include <t8.h>
 
-/** The number of children that a line is refined into. */
-#define T8_DLINE_CHILDREN 2
+/** The number of children that a quad is refined into. */
+#define T8_DQUAD_CHILDREN 4
 
-/** The number of faces of a line. */
-#define T8_DLINE_FACES 2
+/** The number of faces of a quad. */
+#define T8_DQUAD_FACES 4
 
-/** The number of children at a face of a line. */
-#define T8_DLINE_FACE_CHILDREN 1
+/** The number of children at a face of a quad. */
+#define T8_DQUAD_FACE_CHILDREN 2
 
-/** The maximum refinement level allowed for a line. */
-#define T8_DLINE_MAXLEVEL 30
+/** The maximum refinement level allowed for a quad. */
+#define T8_DQUAD_MAXLEVEL 29
 
-/** The length of the root line in integer coordinates. */
-#define T8_DLINE_ROOT_LEN (1 << (T8_DLINE_MAXLEVEL))
+/** The length of the root quad in integer coordinates. */
+#define T8_DQUAD_ROOT_LEN (1 << (T8_DQUAD_MAXLEVEL))
 
-/** The length of a line at a given level in integer coordinates. */
-#define T8_DLINE_LEN(l) (1 << (T8_DLINE_MAXLEVEL - (l)))
+/** The length of a quad at a given level in integer coordinates. */
+#define T8_DQUAD_LEN(l) (1 << (T8_DQUAD_MAXLEVEL - (l)))
 
-typedef int32_t t8_dline_coord_t;
-
-typedef struct t8_dline
-{
-  t8_dline_coord_t x;
-  int8_t level;
-} t8_dline_t;
-
-#endif /* T8_DLINE_H */
+#endif /* T8_DQUAD_H */

@@ -28,8 +28,8 @@
 
 #include <p8est.h>
 #include <t8_element.hxx>
-#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
-#include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
+#include <t8_schemes/t8_default/t8_default_hex/t8_dhex.hxx>
+#include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 

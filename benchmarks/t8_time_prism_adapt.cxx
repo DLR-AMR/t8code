@@ -22,9 +22,9 @@
 
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>

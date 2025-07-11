@@ -25,7 +25,7 @@
 #include <t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>

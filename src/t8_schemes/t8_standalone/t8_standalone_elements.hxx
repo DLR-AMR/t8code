@@ -49,13 +49,16 @@ using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
 
 template <t8_eclass_t TEclass>
 using t8_element_coords = std::array<t8_element_coord, T8_ELEMENT_DIM[TEclass]>;
+
 template <t8_eclass_t TEclass>
-struct t8_standalone_element
+struct t8_standalone_element : t8_element_base<t8_standalone_scheme<TEclass>>
 {
   /** The coordinates of the anchor vertex of the element. */
   t8_element_coords<TEclass> coords;
   /** The refinement level of the element relative to the root at level 0. */
   t8_element_level level;
 };
+
+
 
 #endif /* T8_STANDALONE_ELEMENTS_HXX */

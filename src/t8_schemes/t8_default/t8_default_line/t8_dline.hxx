@@ -20,33 +20,42 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_DVERTEX_H
-#define T8_DVERTEX_H
+#ifndef T8_DLINE_H
+#define T8_DLINE_H
 
-/** \file t8_dvertex.h
+/** \file t8_dline.hxx
  * TODO: document this.
  */
 
 #include <t8.h>
 
-/** The number of children that a vertex is refined into. */
-#define T8_DVERTEX_CHILDREN 1
+/** The number of children that a line is refined into. */
+#define T8_DLINE_CHILDREN 2
 
-/** The number of faces of a vertex. */
-#define T8_DVERTEX_FACES 0
+/** The number of faces of a line. */
+#define T8_DLINE_FACES 2
 
-/** The number of face children of a vertex. */
-#define T8_DVERTEX_FACE_CHILDREN 0
+/** The number of children at a face of a line. */
+#define T8_DLINE_FACE_CHILDREN 1
 
-/** The length of a vertex root tree */
-#define T8_DVERTEX_ROOT_LEN 0
+/** The maximum refinement level allowed for a line. */
+#define T8_DLINE_MAXLEVEL 30
 
-/** The maximum refinement level allowed for a vertex. */
-#define T8_DVERTEX_MAXLEVEL 255
+/** The length of the root line in integer coordinates. */
+#define T8_DLINE_ROOT_LEN (1 << (T8_DLINE_MAXLEVEL))
 
-typedef struct t8_dvertex
+/** The length of a line at a given level in integer coordinates. */
+#define T8_DLINE_LEN(l) (1 << (T8_DLINE_MAXLEVEL - (l)))
+
+typedef int32_t t8_dline_coord_t;
+
+template <>
+struct t8_default_element <T8_ECLASS_LINE>
 {
-  uint8_t level;
-} t8_dvertex_t;
+  t8_dline_coord_t x;
+  int8_t level;
+};
 
-#endif /* T8_DVERTEX_H */
+typedef t8_default_element<T8_ECLASS_LINE> t8_dline_t;
+
+#endif /* T8_DLINE_H */

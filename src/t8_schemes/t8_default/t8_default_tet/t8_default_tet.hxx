@@ -23,7 +23,7 @@
 /** \file t8_default_tet.hxx
  * The default implementation for tetrahedra. Interface between the
  * \file t8_default_common.hxx definitions and the element type specific
- * implementations in \file t8_dtet_bits.h
+ * implementations in \file t8_dtet_bits.hxx
  */
 
 #ifndef T8_DEFAULT_TET_HXX
@@ -32,7 +32,7 @@
 #include <t8_element.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;

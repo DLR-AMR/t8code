@@ -23,9 +23,9 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 
 typedef t8_dpyramid_t t8_default_pyramid_t;

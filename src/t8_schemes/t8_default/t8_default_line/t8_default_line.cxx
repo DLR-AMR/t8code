@@ -22,8 +22,8 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
-#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
-#include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 
 typedef t8_dline_t t8_default_line_t;

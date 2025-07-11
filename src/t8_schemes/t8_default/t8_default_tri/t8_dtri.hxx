@@ -23,13 +23,11 @@
 #ifndef T8_DTRI_H
 #define T8_DTRI_H
 
-/** \file t8_dtri.h
+/** \file t8_dtri.hxx
  * TODO: document this.
  */
 
 #include <t8.h>
-
-T8_EXTERN_C_BEGIN ();
 
 /** The number of children that a triangle is refined into. */
 #define T8_DTRI_CHILDREN 4
@@ -62,13 +60,14 @@ T8_EXTERN_C_BEGIN ();
 typedef int8_t t8_dtri_type_t;
 typedef int32_t t8_dtri_coord_t;
 
-typedef struct t8_dtri
+template <>
+struct t8_default_element <T8_ECLASS_TRIANGLE>
 {
   int8_t level;
   t8_dtri_type_t type;
   t8_dtri_coord_t x, y;
-} t8_dtri_t;
+};
 
-T8_EXTERN_C_END ();
+using t8_dtri_t = t8_default_element<T8_ECLASS_TRIANGLE>;
 
 #endif /* T8_DTRI_H */

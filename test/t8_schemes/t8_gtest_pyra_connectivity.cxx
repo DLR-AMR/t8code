@@ -27,7 +27,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.hxx>
 
 /**
  * Check if the two possible ways to compute the type of a parent give the same result

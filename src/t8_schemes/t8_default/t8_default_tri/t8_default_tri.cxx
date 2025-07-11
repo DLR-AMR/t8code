@@ -22,9 +22,9 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
-#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -274,7 +274,7 @@ t8_default_scheme_tri::element_transform_face (const t8_element_t *elem1, t8_ele
 /* Construct the inner element from a boundary element. */
 /* This function is defined here instead of in t8_dri_bits.c since
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
- * both in t8_dtri_bits.c. This would be needed by an implementation, at least
+ * both in t8_dtri_bits.cxx. This would be needed by an implementation, at least
  * for tets. */
 int
 t8_default_scheme_tri::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,

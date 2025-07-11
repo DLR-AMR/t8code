@@ -35,7 +35,11 @@
 /** Opaque structure for a generic element, only used as pointer.
  * Implementations are free to cast it to their internal data structure.
  */
-typedef struct t8_element t8_element_t;
+class t8_element_t{};
+
+template <typename scheme, t8_eclass eclass>
+class t8_element_base : public t8_element_t
+{};
 
 /** This array holds the reference coordinates of each vertex of each element.
  *  It can e.g. be used with the \ref t8_element_reference_coords function.

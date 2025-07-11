@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.hxx>
 
 int
 t8_dline_get_level (const t8_dline_t *l)

@@ -308,4 +308,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
 #endif
 };
 
+template <t8_eclass TEclass>
+class t8_default_element : t8_element_base<t8_default_scheme_common<TEclass>, TEclass> {};
+
 #endif /* !T8_DEFAULT_COMMON_HXX */

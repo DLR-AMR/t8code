@@ -6,7 +6,7 @@
  */
 
 #include <t8.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.hxx>
 
 /** The number of children that a pyramid is refined into. */
 #define T8_DPYRAMID_CHILDREN 10
@@ -61,10 +61,14 @@ typedef int8_t t8_dpyramid_type_t;
  * Level, at which the shape switches from tet, to pyra. -1 if not computed for a pyramid with the shape of a tet
  * undefined, if the pyramid has the shape of a pyramid.
  */
-typedef struct t8_dpyramid
+
+template <>
+struct t8_default_element <T8_ECLASS_PYRAMID>
 {
   t8_dtet_t pyramid; /* Coordinates, level and type */
   int8_t switch_shape_at_level;
-} t8_dpyramid_t;
+};
+
+typedef t8_default_element<T8_ECLASS_PYRAMID> t8_dpyramid_t;
 
 #endif /* T8_DPYRAMID_H */

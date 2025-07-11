@@ -67,7 +67,8 @@ typedef int8_t t8_dtet_type_t;
 typedef int32_t t8_dtet_coord_t;
 
 /** This data type stores a tetrahedron. */
-typedef struct t8_dtet
+template <>
+struct t8_default_element <T8_ECLASS_TET>
 {
   /** The refinement level of the tetrahedron relative to the root at level 0. */
   int8_t level;
@@ -78,6 +79,8 @@ typedef struct t8_dtet
   t8_dtet_coord_t x; /**< The x integer coordinate of the anchor node. */
   t8_dtet_coord_t y; /**< The y integer coordinate of the anchor node. */
   t8_dtet_coord_t z; /**< The z integer coordinate of the anchor node. */
-} t8_dtet_t;
+};
+
+typedef t8_default_element<T8_ECLASS_TET> t8_dtet_t;
 
 #endif /* T8_DTET_H */

@@ -38,7 +38,7 @@
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 #include <Standard_Version.hxx>
-#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
+#include <t8_schemes/t8_default/t8_default_prism/t8_dprism.hxx>
 
 /* The lookup table contains the coordinate of each edge of a tetrahedron,
  * which is used for the interpolation.
