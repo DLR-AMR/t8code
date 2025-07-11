@@ -495,12 +495,12 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] elem           The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
+   * \param [in,out] succ       The element whose entries will be set.
    */
   void
-  element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
+  element_construct_successor (const t8_element_t *elem, const int uniform_level, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the

@@ -43,6 +43,7 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
+#include <t8_schemes/t8_multilevel/t8_multilevel_implementation.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
@@ -95,10 +96,28 @@ class t8_scheme {
                                 t8_default_scheme_tet,
                                 t8_default_scheme_prism,
                                 t8_default_scheme_pyramid,
+
+                                /* Multilevel default schemes */
+                                t8_multilevel_scheme<t8_default_scheme_vertex, t8_dvertex_t>,
+                                t8_multilevel_scheme<t8_default_scheme_line, t8_dline_t>,
+                                t8_multilevel_scheme<t8_default_scheme_quad, t8_pquad_t>,
+                                t8_multilevel_scheme<t8_default_scheme_tri, t8_dtri_t>,
+                                t8_multilevel_scheme<t8_default_scheme_hex, t8_phex_t>,
+                                t8_multilevel_scheme<t8_default_scheme_tet, t8_dtet_t>,
+                                t8_multilevel_scheme<t8_default_scheme_prism, t8_dprism_t>,
+                                t8_multilevel_scheme<t8_default_scheme_pyramid, t8_dpyramid_t>,
+
+                                /* Standalone schemes */
                                 t8_standalone_scheme<T8_ECLASS_VERTEX>,
                                 t8_standalone_scheme<T8_ECLASS_LINE>,
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
-                                t8_standalone_scheme<T8_ECLASS_HEX>
+                                t8_standalone_scheme<T8_ECLASS_HEX>,
+
+                                /* Multilevel standalone schemes */
+                                t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>, t8_standalone_element<T8_ECLASS_VERTEX>>,
+                                t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_LINE>, t8_standalone_element<T8_ECLASS_LINE>>,
+                                t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_QUAD>, t8_standalone_element<T8_ECLASS_QUAD>>,
+                                t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_HEX>, t8_standalone_element<T8_ECLASS_HEX>>
                                 >;
   /* clang-format on */
 
@@ -854,14 +873,16 @@ class t8_scheme {
   };
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
+   * \param [in] tree_class     The eclass of the current tree.
+   * \param [in] elem           The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
+   * \param [in,out] succ       The element whose entries will be set.
    */
   inline void
-  element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *t, t8_element_t *s) const
+  element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *elem, const int uniform_level,
+                               t8_element_t *succ) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_successor (t, s); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_successor (elem, uniform_level, succ); },
                        eclass_schemes[tree_class]);
   };
 
