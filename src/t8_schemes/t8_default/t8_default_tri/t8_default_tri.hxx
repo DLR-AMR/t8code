@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_tri.h
+/** \file t8_default_tri.hxx
  * The default implementation for triangles. Interface between the
  * \file t8_default_common.hxx definitions and the element type specific
  * implementations in \file t8_dtri_bits.h

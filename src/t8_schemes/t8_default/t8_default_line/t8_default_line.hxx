@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_lines.h
+/** \file t8_default_line.hxx
  * The default implementation for lines. Interface between the
  * \file t8_default_common.hxx definitions and the element type specific
  * implementations in \file t8_dline_bits.h

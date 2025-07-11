@@ -136,7 +136,7 @@ t8_deep_successor (t8_element_t *element, t8_element_t *successor, t8_element_t 
 
 TEST_P (class_successor, test_recursive_and_deep_successor)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 4;

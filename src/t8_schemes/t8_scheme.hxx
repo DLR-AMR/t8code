@@ -387,6 +387,16 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
+  /** Return the max number of children of an eclass.
+   * \param [in] tree_class    The eclass of tree the elements are part of.
+   * \return            The max number of children of \a element.
+   */
+  inline int
+  get_max_num_children (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_max_num_children (); }, eclass_schemes[tree_class]);
+  };
+
   /** Return the number of children of an element's face when the element is refined.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] elem   The element whose face is considered.

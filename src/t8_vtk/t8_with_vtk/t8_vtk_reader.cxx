@@ -53,7 +53,7 @@
  * \param[in, out] tree_vertices The vertices of a tree
  * \param[in] eclass             The eclass of the tree.
  */
-void
+static void
 t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
 {
   /* The \param described is negative. We need to change vertices.
@@ -182,7 +182,7 @@ t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, c
  * \return The dimension of \a vtkGrid. 
  */
 int
-t8_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
+t8_vtk_grid_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
 {
   /* This array contains the type of each cell */
   vtkSmartPointer<vtkCellTypes> cell_type_of_each_cell = vtkSmartPointer<vtkCellTypes>::New ();
@@ -219,7 +219,7 @@ t8_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
 
 static void
 t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, const t8_gloidx_t first_tree,
-                      [[maybe_unused]] sc_MPI_Comm comm)
+                      [[maybe_unused]] sc_MPI_Comm comm, const int package_id, const int starting_key)
 {
   double **tuples = NULL;
   size_t *data_size = NULL;
@@ -279,7 +279,7 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
       const t8_gloidx_t cell_id = cell_it->GetCellId ();
       vtkDataArray *data = cell_data->GetArray (dtype);
       data->GetTuple (cell_id, tuples[dtype]);
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), dtype + 1, tuples[dtype], data_size[dtype], 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, package_id, dtype + starting_key, tuples[dtype], data_size[dtype], 0);
     }
     tree_id++;
   }
@@ -337,8 +337,11 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_glo
 
 t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
-                     const int distributed_grid, sc_MPI_Comm comm)
+                     const int distributed_grid, sc_MPI_Comm comm, const int package_id, const int starting_key)
 {
+  T8_ASSERT (package_id != t8_get_package_id ());
+  T8_ASSERT (package_id != sc_get_package_id ());
+  T8_ASSERT (sc_package_is_registered (package_id));
   t8_cmesh_t cmesh;
   int mpisize;
   int mpirank;
@@ -360,7 +363,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   }
 
   /* Set the dimension on all procs (even empty procs). */
-  int dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
+  int dim = num_trees > 0 ? t8_vtk_grid_get_dimension (vtkGrid) : 0;
   int dim_buf = dim;
   mpiret = sc_MPI_Allreduce ((void *) &dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
@@ -384,7 +387,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
    * - We use a parallel file-type and use a partitioned read, every proc translates its chunk of the grid. 
    */
   if (!partition || mpirank == main_proc || distributed_grid) {
-    t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
+    t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm, package_id, starting_key);
   }
 
   if (cmesh != NULL) {
@@ -486,12 +489,14 @@ t8_vtk_reader_pointSet ([[maybe_unused]] const char *filename, [[maybe_unused]] 
 t8_cmesh_t
 t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
                      [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
-                     [[maybe_unused]] const vtk_file_type_t vtk_file_type)
+                     [[maybe_unused]] const vtk_file_type_t vtk_file_type, [[maybe_unused]] const int package_id,
+                     [[maybe_unused]] const int starting_key)
 {
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int distributed_grid = (vtk_file_type & VTK_PARALLEL_FILE) && partition;
-    t8_cmesh_t cmesh = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid, comm);
+    t8_cmesh_t cmesh
+      = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid, comm, package_id, starting_key);
     T8_ASSERT (cmesh != NULL);
     return cmesh;
   }

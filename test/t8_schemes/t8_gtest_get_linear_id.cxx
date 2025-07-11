@@ -75,9 +75,9 @@ TEST_P (get_linear_id, uniform_forest)
 {
   t8_forest_t forest, forest_adapt;
   t8_cmesh_t cmesh;
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
   const int maxlvl = 4;
-#elif T8CODE_TEST_LEVEL >= 1
+#elif T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 5;
 #else
   const int maxlvl = 6;
@@ -94,13 +94,13 @@ TEST_P (get_linear_id, uniform_forest)
     /*Iterate over trees */
     for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; tree_id++) {
       /*Get the number of elements in the tree*/
-      const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, tree_id);
+      const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, tree_id);
       /*Manually compute the id of the first element*/
       const t8_locidx_t shift = tc_scheme->count_leaves_from_root (eclass, level) - num_elements_in_tree;
       /*Iterate over elements */
       for (t8_locidx_t id_iter = 0; id_iter < num_elements_in_tree; id_iter++) {
         /*Get the current element*/
-        const t8_element_t *element = t8_forest_get_element_in_tree (forest, tree_id, id_iter);
+        const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, tree_id, id_iter);
         /*Get the ID of the element at current level */
         const t8_locidx_t id = tc_scheme->element_get_linear_id (eclass, element, level);
         /* Check the computed id*/
@@ -122,7 +122,7 @@ TEST_P (get_linear_id, uniform_forest)
  * (on the level defined by the element) */
 TEST_P (get_linear_id, id_at_other_level)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int max_lvl = 3; /* Maximal level to compute elements on */
   const int add_lvl = 3; /* maxlvl + add_lvl is the level of the descendants*/
 #else
