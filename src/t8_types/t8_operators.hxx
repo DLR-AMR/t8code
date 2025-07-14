@@ -20,16 +20,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_operators.hxx This file provides the CRTP pattern for operators.
+ * The operators can be used by a \a T8Type to extend the functionality of the type.
+ */
+
 #ifndef T8_OPERATORS_HXX
 #define T8_OPERATORS_HXX
 
 #include <iostream>
 #include <t8_types/t8_type.hxx>
-
-/**
- * \file This file provides the CRTP pattern for operators.
- * The operators can be used by a \a T8Type to extend the functionality of the type.
- */
 
 /**
  * \brief The CRTP pattern for operators.
@@ -172,6 +172,11 @@ struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
   }
 };
 
+/**
+ * \brief A template for printable types. Provides the << operator.
+ * 
+ * \tparam TUnderlying 
+ */
 template <typename TUnderlying>
 struct Printable: t8_crtp_operator<TUnderlying, Printable>
 {

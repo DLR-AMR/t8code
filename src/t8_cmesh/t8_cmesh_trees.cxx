@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_trees.c
+/** \file t8_cmesh_trees.cxx
  *
  * TODO: document this file
  */
@@ -31,12 +31,12 @@
 #include "t8_cmesh_stash.h"
 #include "t8_cmesh_trees.h"
 
-/* This struct is needed as a key to search
+/** This struct is needed as a key to search
  * for an argument in the arguments array of a tree */
 struct t8_key_id_pair
 {
-  int key;
-  int package_id;
+  int key;        /**< The key to search for */
+  int package_id; /**< The package id to use */
 };
 
 /* The hash function for the global to local hash table.
@@ -213,21 +213,25 @@ t8_cmesh_trees_start_part (const t8_cmesh_trees_t trees, const int proc, const t
   part->first_ghost_id = lfirst_ghost;
 }
 
-/* Helper struct for sorting the number of ghost attributes by global id.
+/**
+ * 
+ * Helper struct for sorting the number of ghost attributes by global id.
  * In order to sort them, we need the part ghost id to access the global id.
- * Thus, we store both the part id and the number of attributes. */
+ * Thus, we store both the part id and the number of attributes.
+ *
+ */
 typedef struct
 {
-  t8_locidx_t part_ghost_id;
-  t8_gloidx_t global_id;
-  int num_attributes;
-  int attribute_offset;
+  t8_locidx_t part_ghost_id; /**< Local identifier for the partition ghost. */
+  t8_gloidx_t global_id;     /**< Global identifier for the partition ghost. */
+  int num_attributes;        /**< Number of attributes associated with the partition ghost. */
+  int attribute_offset;      /**< Offset to the attributes associated with the partition ghost. */
 } t8_part_ghost_id_and_num_atts;
 
-/* Compare function for t8_part_ghost_id_and_num_atts to compare by global id.
-*
-* Return True if global_id of if_A < global_id of id_B
-* Return False otherwise
+/** Compare function for t8_part_ghost_id_and_num_atts to compare by global id.
+* \param [in] id_A First t8_part_ghost_id_and_num_atts to compare.
+* \param [in] id_B Second t8_part_ghost_id_and_num_atts to compare.
+* \return True if global_id of id_A < global_id of id_B, False otherwise.
 * */
 bool
 t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)
@@ -235,10 +239,10 @@ t8_compare_id_and_att_by_global_id (t8_part_ghost_id_and_num_atts &id_A, t8_part
   return id_A.global_id < id_B.global_id;
 }
 
-/* Compare function for t8_part_ghost_id_and_num_atts to compare by local id.
-*
-* Return True if local id of if_A < local id of id_B
-* Return False otherwise
+/** Compare function for t8_part_ghost_id_and_num_atts to compare by local id.
+* \param [in] id_A First t8_part_ghost_id_and_num_atts to compare.
+* \param [in] id_B Second t8_part_ghost_id_and_num_atts to compare.
+* \return True if part_ghost_id of id_A < part_ghost_id of id_B, False otherwise.
 * */
 bool
 t8_compare_id_and_att_by_part_id (t8_part_ghost_id_and_num_atts &id_A, t8_part_ghost_id_and_num_atts &id_B)

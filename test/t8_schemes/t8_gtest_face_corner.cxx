@@ -99,7 +99,7 @@ class class_face_corner_test: public TestDFS {
 
 TEST_P (class_face_corner_test, test_equal_dfs)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;

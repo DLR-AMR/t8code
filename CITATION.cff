@@ -70,6 +70,7 @@ authors:
     family-names: Albers
     email: "Ole.Albers@dlr.de"
     affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0009-0001-5102-151X"
   #Contributors
   - given-names: Veli
     family-names: Uenlue

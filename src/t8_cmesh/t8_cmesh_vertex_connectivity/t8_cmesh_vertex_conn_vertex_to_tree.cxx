@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_conn_vertex_to_tree.cxx
+/** \file t8_cmesh_vertex_conn_vertex_to_tree.cxx
  *  This file implements the routines for the t8_cmesh_conn_vertex_to_tree struct.
  */
 
@@ -113,8 +113,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree ([[maybe_unused]] const 
  *    (\a local_tree_id_a == \a local_tree_id_b and \a local_tree_vertex_a < \a local_tree_vertex_b)
  */
 static inline bool
-t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_a,
-                                   t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_b)
+t8_cmesh_tree_vertex_pair_compare (tree_vertex_pair const& pair_a, tree_vertex_pair const& pair_b)
 {
   return pair_a.first == pair_b.first ?                              /* if tree_id_A == tree_id_B  */
            pair_a.second < pair_b.second                             /* then check vertex_id_A < vertex_id_B */

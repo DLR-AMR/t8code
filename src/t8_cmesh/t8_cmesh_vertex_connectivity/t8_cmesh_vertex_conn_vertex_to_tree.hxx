@@ -32,6 +32,7 @@
 #include <unordered_map>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
 
 /** forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_tree_to_vertex;
@@ -87,20 +88,9 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   void
   build_from_ttv (const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex& ttv);
 
-  /** Variable type for (tree_id, tree_vertex_id) pair */
-  using tree_vertex_pair = std::pair<t8_locidx_t, int>;
-
-  /** list of tree vertex pairs, each global vertex id maps to
-    * such a list. */
-  using tree_vertex_list = std::vector<tree_vertex_pair>;
-
-  /** The internal storage data type used for storing the vertex to tree data. */
-  using vtt_storage_type = std::unordered_map<t8_gloidx_t, tree_vertex_list>;
-
   /* Setter functions */
   /** Given a cmesh, build up the vertex_to_tree.
    * \param [in] cmesh An initialized but not yet committed cmesh.
-   * \return: some error value to be specified.
    * The cmesh must not be committed, but all tree information and neighbor information must
    * have been set.
    * Currently, \a cmesh has to be replicated. */
