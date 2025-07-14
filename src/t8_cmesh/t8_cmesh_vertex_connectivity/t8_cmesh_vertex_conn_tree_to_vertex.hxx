@@ -120,7 +120,6 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   /** Return the global vertex indices of a local tree.
    * \param [in] cmesh A committed cmesh.
    * \param [in] local_tree A local tree in \a cmesh.
-   * \param [in] num_vertices The count of local vertices of \a local_tree
    * \return An array of length \a num_vertices containing the global vertex ids of \a local_tree's vertices.
   */
   inline const std::span<const t8_gloidx_t>
