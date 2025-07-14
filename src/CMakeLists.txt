@@ -28,7 +28,7 @@ endif()
 
 target_compile_features( T8 PUBLIC c_std_11 cxx_std_20 )
 add_library( T8CODE::T8 ALIAS T8 )
-target_compile_definitions( T8 PUBLIC T8CODE_TEST_LEVEL=${T8CODE_TEST_LEVEL})
+target_compile_definitions( T8 PUBLIC T8_TEST_LEVEL_INT=${T8_TEST_LEVEL_INT})
 
 if( CMAKE_BUILD_TYPE STREQUAL "Release" )
   set (T8_CXXFLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -177,7 +177,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_adapt.cxx 
     t8_forest/t8_forest_partition.cxx 
     t8_forest/t8_forest.cxx 
-    t8_forest/t8_forest_private.c 
+    t8_forest/t8_forest_private.cxx
     t8_forest/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
@@ -251,8 +251,11 @@ install( FILES
     t8_mat.h
     t8_refcount.h
     t8_types/t8_vec.hxx
+    t8_types/t8_vec.h
     t8_version.h
     t8_vtk.h
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h
     TYPE INCLUDE
 )
 

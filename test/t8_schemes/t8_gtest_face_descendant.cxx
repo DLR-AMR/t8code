@@ -35,8 +35,8 @@ t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_ele
 {
   const int num_children_at_face = scheme->element_get_num_face_children (tree_class, element, iface);
 
-  int *child_indices = T8_ALLOC (int, num_children_at_face);
-  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children_at_face);
+  int *child_indices = T8_TESTSUITE_ALLOC (int, num_children_at_face);
+  t8_element_t **children = T8_TESTSUITE_ALLOC (t8_element_t *, num_children_at_face);
   scheme->element_new (tree_class, num_children_at_face, children);
 
   scheme->element_copy (tree_class, element, face_desc);
@@ -54,8 +54,8 @@ t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_ele
     scheme->element_get_child (tree_class, face_desc, child_id, face_desc);
   }
   scheme->element_destroy (tree_class, num_children_at_face, children);
-  T8_FREE (children);
-  T8_FREE (child_indices);
+  T8_TESTSUITE_FREE (children);
+  T8_TESTSUITE_FREE (child_indices);
 }
 
 class class_descendant: public TestDFS {
@@ -69,7 +69,7 @@ class class_descendant: public TestDFS {
 
     const int level = scheme->element_get_level (eclass, element);
     const int num_faces = scheme->element_get_num_faces (eclass, element);
-#if T8CODE_TEST_LEVEL == 0
+#if T8_TEST_LEVEL_INT == 0
     const int final_level = scheme->get_maxlevel (eclass);
 #else
     const int final_level = level + additional_test_lvl;
@@ -106,12 +106,12 @@ class class_descendant: public TestDFS {
     scheme->element_destroy (eclass, 1, &scheme_face_desc);
     dfs_test_teardown ();
   }
-#if T8CODE_TEST_LEVEL == 0
+#if T8_TEST_LEVEL_INT == 0
   int additional_test_lvl
     = 3;  // For level 0 additional_test_lvl is unused and we always test up to the maximum possible refinement level.
-#elif T8CODE_TEST_LEVEL == 1
+#elif T8_TEST_LEVEL_INT == 1
   int additional_test_lvl = 2;
-#elif T8CODE_TEST_LEVEL == 2
+#elif T8_TEST_LEVEL_INT == 2
   int additional_test_lvl = 1;
 #endif
   t8_element_t *manual_face_desc;
@@ -121,7 +121,7 @@ class class_descendant: public TestDFS {
 TEST_P (class_descendant, t8_check_face_desc)
 {
 
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;

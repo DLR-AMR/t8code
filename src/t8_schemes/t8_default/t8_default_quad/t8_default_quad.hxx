@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_quad.h
+/** \file t8_default_quad.hxx
  * We use a p4est_quadrant_t object as storage for the T8 quadrant.
  * To record if and if yes, how this quadrant is part of a 3D octant, we use
  * the member pad8 for the surrounding toplevel dimension (2 or 3), pad16 for

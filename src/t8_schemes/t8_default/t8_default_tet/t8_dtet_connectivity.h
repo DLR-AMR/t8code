@@ -74,8 +74,8 @@ extern const int t8_dtet_parenttype_Iloc_to_cid[6][8];
  *  of the respective boundary triangle.
  * I.e. {2, 1} means the boundary triangle is of category 2 and type 1.
  * The category determines how the coordinates of the triangle are computed
- * from the parent. \see t8_default_scheme_tet::t8_element_boundary.
- * Invalid inpute values are represented by -1.
+ * from the parent.
+ * Invalid input values are represented by -1.
  */
 extern const int t8_dtet_type_face_to_boundary[6][4][2];
 

@@ -24,7 +24,7 @@
 #include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
-#include <t8_cmesh/t8_cmesh_geometry.h>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
@@ -38,9 +38,9 @@
 #include <t8_schemes/t8_default/t8_default_c_interface.h> /* default refinement scheme. */
 
 /**
- * \brief This function calculates an 'equal' partition for the cmesh based on the \var number of trees supplied
- *  and stores the computed partition range within the \var cmesh.
- * 
+ * This function calculates an 'equal' partition for the cmesh based on the \a number_trees supplied
+ *  and stores the computed partition range within the \a cmesh.
+ *
  * \param [in,out] cmesh The cmesh for which the partition will be calculated
  * \param [in] num_trees The number of trees the cmesh consists of
  * \param [in] set_face_knowledge Set how much information is required on face connections (\see t8_cmesh_set_partition_range)
@@ -224,9 +224,9 @@ t8_cmesh_new_line (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[6] = { 
-    0, 0, 0, 
-    1, 0, 0 
+  double vertices[6] = {
+    0, 0, 0,
+    1, 0, 0
   };
   /* clang-format on */
 
@@ -244,10 +244,10 @@ t8_cmesh_new_tri (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[9] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    1, 1, 0 
+  double vertices[9] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0
   };
   /* clang-format on */
 
@@ -265,11 +265,11 @@ t8_cmesh_new_tet (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[12] = { 
-    1, 1, 1, 
-    1, -1, -1, 
-    -1, 1, -1, 
-    -1, -1, 1 
+  double vertices[12] = {
+    1, 1, 1,
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
   };
   /* clang-format on */
 
@@ -288,9 +288,9 @@ t8_cmesh_new_quad (sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   /* clang-format off */
   double vertices[12] = {
-    0, 0, 0, 
-    1, 0, 0, 
-    0, 1, 0, 
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
     1, 1, 0,
   };
   /* clang-format on */
@@ -309,15 +309,15 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[24] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    0, 1, 0, 
-    1, 1, 0, 
-    0, 0, 1, 
-    1, 0, 1, 
-    0, 1, 1, 
-    1, 1, 1 
+  double vertices[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
   };
   /* clang-format on */
 
@@ -335,12 +335,12 @@ t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[15] = { 
-    -1, -2, 0.5, 
-    2, -1, 0, 
-    -1, 2, -0.5, 
-    2, 2, 0, 
-    3, 3, sqrt (3) 
+  double vertices[15] = {
+    -1, -2, 0.5,
+    2, -1, 0,
+    -1, 2, -0.5,
+    2, 2, 0,
+    3, 3, sqrt (3)
   };
   /* clang-format on */
 
@@ -358,12 +358,12 @@ t8_cmesh_new_pyramid (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[15] = { 
-    -1, -1, 0, 
-    1, -1, 0, 
-    -1, 1, 0, 
-    1, 1, 0, 
-    0, 0, sqrt (2) 
+  double vertices[15] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1
   };
   /* clang-format on */
 
@@ -381,13 +381,13 @@ t8_cmesh_new_prism (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[18] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    1, 1, 0, 
-    0, 0, 1, 
-    1, 0, 1, 
-    1, 1, 1 
+  double vertices[18] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    1, 1, 1
   };
   /* clang-format on */
 
@@ -456,24 +456,24 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partiti
   double attr_vertices[24];
   /* clang-format off */
   double null_vec[3] = { 0, 0, 0 };
-  double shift[7][3] = { 
-    { 0.5, 0, 0 },   
-    { 0, 0.5, 0 },     
-    { 0, 0, 0.5 },  
+  double shift[7][3] = {
+    { 0.5, 0, 0 },
+    { 0, 0.5, 0 },
+    { 0, 0, 0.5 },
     { 0.5, 0.5 },
-    { 0.5, 0, 0.5 }, 
-    { 0.5, 0.5, 0.5 }, 
-    { 0, 0.5, 0.5 } 
+    { 0.5, 0, 0.5 },
+    { 0.5, 0.5, 0.5 },
+    { 0, 0.5, 0.5 }
   };
-  double vertices_coords[24] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    0, 1, 0, 
+  double vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
     1, 1, 0,
-    0, 0, 1, 
+    0, 0, 1,
     1, 0, 1,
-    0, 1, 1, 
-    1, 1, 1 
+    0, 1, 1,
+    1, 1, 1
   };
   /* clang-format on */
 
@@ -666,15 +666,15 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   double attr_vertices[24];
   int mpirank, mpiret;
   /* clang-format off */
-  const double vertices_coords[24] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    0, 1, 0, 
-    1, 1, 0, 
-    0, 0, 1, 
-    1, 0, 1, 
+  const double vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
     0, 1, 1,
-    1, 1, 1 
+    1, 1, 1
   };
   /* clang-format on */
 
@@ -850,7 +850,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   return cmesh;
 }
 
-/** This is just a helper function that was needed when we update the 
+/** This is just a helper function that was needed when we update the
  * directional vector around a box for t8_cmesh_set_vertices_2D and _3D.
  * \param [in] dim          The dimension of the box. 2 or 3D.
  * \param [in] box_corners  The vertices that define the box.
@@ -882,15 +882,15 @@ t8_update_box_face_edges (const int dim, const double *box_corners, double *box_
   }
 }
 
-/** This is just a helper function that was needed when we change the 
+/** This is just a helper function that was needed when we change the
  * size of a box for t8_cmesh_set_vertices_2D and _3D.
  * \param [in] dim          The dimension of the box. 2 or 3D.
  * \param [in, out] box_corners  The vertices that define the box.
  * \param [in] box_dir      The direction vectors of the edges of the surrounding box.
  * \param [in] face         The box face along which we change the box size.
- * \param [in] factor       The number of quads or hexes along an axis 
+ * \param [in] factor       The number of quads or hexes along an axis
  *                          defined by face by which we decrease or increase box.
- * \param [in, out] axes    The number of quads or hexes along the axes. 
+ * \param [in, out] axes    The number of quads or hexes along the axes.
  */
 static void
 t8_resize_box (const int dim, double *box_corners, const double *box_dir, const int face, const t8_locidx_t factor,
@@ -908,7 +908,7 @@ t8_resize_box (const int dim, double *box_corners, const double *box_dir, const 
   axes[face / 2] += face % 2 ? factor : -factor;
 }
 
-/** This is just a helper function that was needed when we set the tree vertices 
+/** This is just a helper function that was needed when we set the tree vertices
  * of a 2 dimensional eclass in t8_cmesh_new_hypercube_ext(*).
  * \param [in, out] cmesh   The cmesh in which the vertices have to be set.
  * \param [in] eclass       The class of each tree. T8_ECLASS_QUAD or T8_ECLASS_TRIANGLE
@@ -944,15 +944,15 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   /* Every time we change the size of the box, we keep track of it. */
   int box_quads[2] = { quads_x, quads_y };
 
-  /** The directional vector e_k between two vertices v_i and v_j, i > j
-   * of box. The length is egual to distance (v_i, v_j) / #box_quads 
+  /* The directional vector e_k between two vertices v_i and v_j, i > j
+   * of box. The length is egual to distance (v_i, v_j) / #box_quads
    * along the respective axis.
    * \note Every time, we change the size of box, we must update box_dir.
-   *   
-   *     v2--e3--v3                 
-   *      |       |       
-   *     e0      e1     y      
-   *      |       |     |                   
+   *
+   *     v2--e3--v3
+   *      |       |
+   *     e0      e1     y
+   *      |       |     |
    *     v0--e2--v1     0---x
    **/
   double box_dir[12];
@@ -982,7 +982,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
       t8_axy (box, vertices + 3, 1.0);            /* Vertex 1 */
       t8_axpyz (box, box_dir, vertices + 9, 1.0); /* Vertex 3 */
       if (use_axis_aligned_geom && eclass == T8_ECLASS_QUAD) {
-        /* Copy vertex 3 into the place of vertex 1. The box-procedure has to be done to compute 
+        /* Copy vertex 3 into the place of vertex 1. The box-procedure has to be done to compute
          * vertex 3 correctly. */
         memcpy (vertices + 3, vertices + 9, 3 * sizeof (double));
       }
@@ -1029,7 +1029,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   }
 }
 
-/** This is just a helper function that was needed when we set the tree vertices 
+/** This is just a helper function that was needed when we set the tree vertices
  * of a 3 dimensional eclass in t8_cmesh_new_hypercube_ext(*).
  * \param [in, out] cmesh   The cmesh in which the vertices have to be set.
  * \param [in] eclass       The class of each tree with dimension 3.
@@ -1039,7 +1039,7 @@ t8_cmesh_set_vertices_2D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
  * \param [in] hexs_z       The number of hexs along the z-axis.
  * \param [in] use_axis_aligned_geom Flag if cmesh uses the axis aligned_geometry. Only available for T8_ECLASS_QUAD
  * \param [in] offset       Offset for cmesh partitioning.
- * \note each hex of \a hexs_x * \a hexs_y * \a hexs_z hexs in \a boundary 
+ * \note each hex of \a hexs_x * \a hexs_y * \a hexs_z hexs in \a boundary
  * contains several trees of class \a eclass.
  */
 static void
@@ -1074,23 +1074,23 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   /* Every time we change the size of the box, we keep track of it. */
   t8_locidx_t box_hexs[3] = { hexs_x, hexs_y, hexs_z };
 
-  /** The directional vector e_k between two vertices v_i and v_j, i > j
-   * of box. The length is egual to distance (v_i, v_j) / #box_hexs 
+  /* The directional vector e_k between two vertices v_i and v_j, i > j
+   * of box. The length is egual to distance (v_i, v_j) / #box_hexs
    * along the respective axis.
    * \note Every time, we change the size of box, we must update box_dir.
-   *          
+   *
    *         v6-------e3------v7
    *         /|               /|
    *       e6 |             e7 |
-   *       / e10            / e11      z y       
-   *     v4-------e2-----v5    |       |/          
-   *      |   |           |    |       0--- x     
+   *       / e10            / e11      z y
+   *     v4-------e2-----v5    |       |/
+   *      |   |           |    |       0--- x
    *      |  v2 ------e1--|---v3
    *     e8  /           e9   /
    *      | e4            |  e5
    *      |/              | /
    *     v0------e0------v1
-   *        
+   *
    */
   double box_dir[36];
   /* Set up initial box_dir. Faces 0, 1, 2 and 3 cover all edges. */
@@ -1100,7 +1100,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
   t8_update_box_face_edges (3, box, box_dir, 3, box_hexs);
 
   /* Increase the box along each axis x, y and z with faces 1, 3 and 5
-   * by one hex. This is necessary because otherwise we get a box of 
+   * by one hex. This is necessary because otherwise we get a box of
    * length 0 at one point. */
   t8_resize_box (3, box, box_dir, 1, 1, box_hexs);
   t8_update_box_face_edges (3, box, box_dir, 1, box_hexs);
@@ -1111,11 +1111,11 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
 
   /* The first vertex of box corresponds to the first vertex of the
    * current hexahedral box (or tree in case of eclass = T8_ECLASS_HEX).
-   * Resize the box 3 times so that the first vertex of box corresponds to 
-   * vertices 0, 4, 5 and finally 1. Along the directional vector 
-   * e_4 = (box_dir[12], box_dir[13], box_dir[14]) of each resized box 
+   * Resize the box 3 times so that the first vertex of box corresponds to
+   * vertices 0, 4, 5 and finally 1. Along the directional vector
+   * e_4 = (box_dir[12], box_dir[13], box_dir[14]) of each resized box
    * we can calculate the respective vertices 2, 3, 6 and 7.
-   * We iterate in the order of the trees - 
+   * We iterate in the order of the trees -
    * from bottom to top, front to back and left to right.
    */
   for (t8_locidx_t hex_z_id = 0; hex_z_id < hexs_z; hex_z_id++) {
@@ -1146,7 +1146,7 @@ t8_cmesh_set_vertices_3D (t8_cmesh_t cmesh, const t8_eclass_t eclass, const doub
         t8_axpyz (box, box_dir + 12, vertices + 9, 1.0); /* Vertex 3 */
 
         if (use_axis_aligned_geom && eclass == T8_ECLASS_HEX) {
-          /* Copy vertex 7 into the place of vertex 1. The box-procedure has to be done to compute 
+          /* Copy vertex 7 into the place of vertex 1. The box-procedure has to be done to compute
          * vertex 7 correctly. */
           memcpy (vertices + 3, vertices + 21, 3 * sizeof (double));
         }
@@ -1322,8 +1322,8 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     t8_axpyz (boundary, boundary + 3, line_dir, -1.0);
     /* Get length of one tree */
     double length;
-    length = t8_norm (line_dir) * (double) polygons_x;
-    length = t8_dist (boundary, boundary + 3) / length;
+    length = t8_norm (line_dir) / (double) polygons_x;
+    //length = t8_dist (boundary, boundary + 3) / length;
     t8_ax (line_dir, length);
 
     double vertices[6];
@@ -1335,7 +1335,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     for (t8_gloidx_t tree_x = 0; tree_x < polygons_x; tree_x++) {
       t8_cmesh_set_tree_vertices (cmesh, tree_x + offset, vertices, 2);
       /* Update vertices for next tree */
-      t8_axy (vertices, vertices + 3, 1.0);
+      t8_axy (vertices + 3, vertices, 1.0);
       t8_axpy (line_dir, vertices + 3, 1.0);
     }
   }
@@ -1635,11 +1635,11 @@ t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm)
 {
   t8_cmesh_t cmesh;
   /* clang-format off */
-  double vertices[12] = { 
-    0, 0, 0, 
-    0.2, 0, 0, 
-    0.6, 0, 0, 
-    1, 0, 0 
+  double vertices[12] = {
+    0, 0, 0,
+    0.2, 0, 0,
+    0.6, 0, 0,
+    1, 0, 0
   };
   /* clang-format on */
 
@@ -1664,13 +1664,13 @@ t8_cmesh_t
 t8_cmesh_new_periodic_tri (sc_MPI_Comm comm)
 {
   /* clang-format off */
-  double vertices[18] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    1, 1, 0, 
-    0, 0, 0, 
-    1, 1, 0, 
-    0, 1, 0 
+  double vertices[18] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0,
+    0, 0, 0,
+    1, 1, 0,
+    0, 1, 0
   };
   /* clang-format on */
 
@@ -1697,23 +1697,23 @@ t8_cmesh_new_periodic_hybrid (sc_MPI_Comm comm)
   /* clang-format off */
   double vertices[60] = {                                        /* Just all vertices of all trees. partly duplicated */
     0, 0, 0,              /* tree 0, triangle */
-    0.5, 0, 0, 
-    0.5, 0.5, 0, 
+    0.5, 0, 0,
+    0.5, 0.5, 0,
     0, 0, 0,              /* tree 1, triangle */
-    0.5, 0.5, 0, 
+    0.5, 0.5, 0,
     0, 0.5, 0,
     0.5, 0, 0,            /* tree 2, quad */
-    1, 0, 0, 0.5, 
-    0.5, 0, 1, 0.5, 
+    1, 0, 0, 0.5,
+    0.5, 0, 1, 0.5,
     0, 0, 0.5, 0,         /* tree 3, quad */
-    0.5, 0.5, 0, 
-    0, 1, 0, 
-    0.5, 1, 0, 
+    0.5, 0.5, 0,
+    0, 1, 0,
+    0.5, 1, 0,
     0.5, 0.5, 0,          /* tree 4, triangle */
-    1, 0.5, 0, 
-    1, 1, 0, 
+    1, 0.5, 0,
+    1, 1, 0,
     0.5, 0.5, 0,          /* tree 5, triangle */
-    1, 1, 0, 
+    1, 1, 0,
     0.5, 1, 0
   };
   /* clang-format on */
@@ -1778,15 +1778,15 @@ t8_cmesh_new_periodic (sc_MPI_Comm comm, int dim)
   t8_cmesh_t cmesh;
   t8_eclass_t tree_class;
   /* clang-format off */
-  double vertices[24] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    0, 1, 0, 
-    1, 1, 0, 
-    0, 0, 1, 
-    1, 0, 1, 
-    0, 1, 1, 
-    1, 1, 1 
+  double vertices[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
   };
   /* clang-format on */
 
@@ -1849,13 +1849,13 @@ t8_cmesh_new_line_zigzag (sc_MPI_Comm comm)
 {
   int i;
   /* clang-format off */
-  double vertices[18] = { 
-    1, 2, 0, 
-    2, 4, 1, 
-    1, 1, 2, 
-    2, 4, 1, 
-    1, 1, 2, 
-    3, 2, 5 
+  double vertices[18] = {
+    1, 2, 0,
+    2, 4, 1,
+    1, 1, 2,
+    2, 4, 1,
+    1, 1, 2,
+    3, 2, 5
   };
   /* clang-format on */
 
@@ -1940,12 +1940,12 @@ t8_cmesh_new_prism_deformed (sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   /* clang-format off */
   double vertices[18] = {
-    -1, -0.5, 0.25, 
-    1, 0, 0, 
-    1, 1, 0, 
-    0, 0, 0.75, 
-    1.25, 0, 1, 
-    2, 2, 2 
+    -1, -0.5, 0.25,
+    1, 0, 0,
+    1, 1, 0,
+    0, 0, 0.75,
+    1.25, 0, 1,
+    2, 2, 2
   };
   /* clang-format on */
 
@@ -2157,11 +2157,11 @@ t8_cmesh_new_tet_orientation_test (sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
   int i;
   /* clang-format off */
-  double vertices_coords[12] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    1, 0, 1, 
-    1, 1, 1 
+  double vertices_coords[12] = {
+    0, 0, 0,
+    1, 0, 0,
+    1, 0, 1,
+    1, 1, 1
   };
   /* clang-format on */
 
@@ -2687,15 +2687,15 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
   double attr_vertices[15];
   int mpirank, mpiret;
   /* clang-format off */
-  double vertices_coords[24] = { 
-    0, 0, 0, 
-    1, 0, 0, 
-    0, 1, 0, 
-    1, 1, 0, 
-    0, 0, 1, 
-    1, 0, 1, 
-    0, 1, 1, 
-    1, 1, 1 
+  double vertices_coords[24] = {
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
+    1, 1, 1
   };
   /* clang-format on */
 
@@ -2760,7 +2760,8 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
 }
 
 t8_cmesh_t
-t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm)
+t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, const int do_partition, sc_MPI_Comm comm,
+                           const int package_id)
 {
   T8_ASSERT (num_trees > 0);
 
@@ -2771,13 +2772,13 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
   /* clang-format off */
   /* Vertices of first cube in row. */
   double vertices[24] = {
-    0, 0, 0, 
-    1, 0, 0, 
-    0, 1, 0, 
-    1, 1, 0, 
-    0, 0, 1, 
-    1, 0, 1, 
-    0, 1, 1, 
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 0, 1,
+    1, 0, 1,
+    0, 1, 1,
     1, 1, 1
   };
   /* clang-format on */
@@ -2793,10 +2794,8 @@ t8_cmesh_new_row_of_cubes (t8_locidx_t num_trees, const int set_attributes, cons
     }
     /* Set two more dummy attributes - tree_id & num_trees. */
     if (set_attributes) {
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY, &tree_id,
-                              sizeof (t8_locidx_t), 0);
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY + 1, &num_trees,
-                              sizeof (t8_locidx_t), 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, package_id, 0, &tree_id, sizeof (t8_locidx_t), 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, package_id, 1, &num_trees, sizeof (t8_locidx_t), 0);
     }
   }
 
@@ -3060,7 +3059,7 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (const double radius, sc
   }
 
   /* Create the cmesh in 5 bands of 4 triangles.
-   * Rotate the initial top and bottom triangle around the z axis. 
+   * Rotate the initial top and bottom triangle around the z axis.
    * The two triangles on the "belly" that are connecting the top and bottom triangle share vertices
    * with the top and bottom triangle, so we can construct them in one go as well.
    */
@@ -3491,7 +3490,7 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   // Vertices of the template hex.
   const double hex_vertices[][3] = {
     { -r, -r, r }, { r, -r, r }, { -r, r, r }, { r, r, r },
-    { -R, -R, R }, { R, -R, R }, { -R, R, R }, { R, R, R } 
+    { -R, -R, R }, { R, -R, R }, { -R, R, R }, { R, R, R }
   };
 
   const double angles[] = { 0.0 , 0.5 * M_PI, 0.5 * M_PI, M_PI, -0.5 * M_PI, -0.5 * M_PI };
@@ -3521,7 +3520,7 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
           const double K = k + 1;
           double ref_coords[][3] = {
             { i*w, j*l, k*h }, { I*w, j*l, k*h }, { i*w, J*l, k*h }, { I*w, J*l, k*h },
-            { i*w, j*l, K*h }, { I*w, j*l, K*h }, { i*w, J*l, K*h }, { I*w, J*l, K*h } 
+            { i*w, j*l, K*h }, { I*w, j*l, K*h }, { i*w, J*l, K*h }, { I*w, J*l, K*h }
           };
 
           double tile_vertices[8][3];
@@ -3551,7 +3550,7 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
               rot_vertices[ivert][icoord] = 0.5 * outer_radius * rot_vertices[ivert][icoord];
             }
           }
-          
+
           t8_geom_compute_linear_geometry (T8_ECLASS_HEX, (double *) rot_vertices, (double *) ref_coords, nverts, (double *) tile_vertices);
 
           t8_cmesh_set_tree_vertices (cmesh, itree, (double *) tile_vertices, nverts);
@@ -3561,7 +3560,7 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
       }
     }
   }
- 
+
   /* Face connectivity. */
   t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, NULL, 0);
 
