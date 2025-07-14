@@ -22,13 +22,13 @@ cmake_minimum_required( VERSION 3.16 )
 
 include( cmake/GitProjectVersion.cmake )
 
-project( 
+project(
     T8CODE
     DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
     LANGUAGES C CXX
-    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" 
+    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}"
     )
-    
+
 include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
@@ -124,6 +124,10 @@ if( T8CODE_ENABLE_NETCDF )
     endif (netCDF_FOUND)
 endif( T8CODE_ENABLE_NETCDF )
 
+# Include and setup FetchContent
+include(FetchContent)
+set(FETCHCONTENT_QUIET FALSE)
+
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
 
@@ -135,7 +139,7 @@ set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
 set(libPath ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}) # Library directory)
 cmake_path(RELATIVE_PATH libPath
     BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} # Binary directory
-    OUTPUT_VARIABLE relativeRpath 
+    OUTPUT_VARIABLE relativeRpath
 )
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
@@ -143,23 +147,19 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED PATHS /path/to/system/sc )
 else()
-    include(FetchContent)
     FetchContent_Declare(
         sc
         GIT_REPOSITORY https://github.com/cburstedde/libsc.git
         GIT_TAG f8c5099bd5ad553c1bf6e34dc7b6c290f3cc3cca      # libsc version 2.8.7
+        GIT_PROGRESS TRUE
     )
-    FetchContent_GetProperties(sc)
     set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
-    
+
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES )
 
-    if(NOT sc_POPULATED)
-        FetchContent_Populate(sc)
-        add_subdirectory( ${sc_SOURCE_DIR} ${sc_BINARY_DIR} )
-    endif() 
+    FetchContent_MakeAvailable(sc)
 
     # Capture the list of variables after adding the subdirectory
     get_cmake_property(_vars_after_sc VARIABLES )
@@ -170,32 +170,27 @@ else()
             list( APPEND _new_sc_vars ${_var} )
         endif()
     endforeach()
-    
+
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_sc_vars} )
-    FetchContent_MakeAvailable(sc)
 endif()
 
 if (T8CODE_USE_SYSTEM_P4EST)
     find_package(P4EST REQUIRED PATHS /path/to/system/p4est)
 else()
-    include(FetchContent)
     FetchContent_Declare(
         p4est
         GIT_REPOSITORY https://github.com/cburstedde/p4est.git
         GIT_TAG 2296a990d8b6b54731a63be0ba5bc17b08cd1f3d    # p4est version 2.8.7
+        GIT_PROGRESS TRUE
     )
-    FetchContent_GetProperties(p4est)
     set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
 
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property( _vars_before_p4est VARIABLES )
 
-    if(NOT p4est_POPULATED)
-        FetchContent_Populate(p4est)
-        add_subdirectory(${p4est_SOURCE_DIR} ${p4est_BINARY_DIR})
-    endif()
+    FetchContent_MakeAvailable(p4est)
 
     # Capture the list of variables after adding the subdirectory
     get_cmake_property( _vars_after_p4est VARIABLES )
@@ -210,8 +205,6 @@ else()
 
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_p4est_vars})
-
-    FetchContent_MakeAvailable(p4est)
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
