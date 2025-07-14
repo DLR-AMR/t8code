@@ -29,6 +29,7 @@
 #ifndef T8_H
 #define T8_H
 
+#include <t8_with_macro_error.h>
 /* include config headers */
 #ifndef T8_CMAKE_BUILD
 #include <t8_config.h>
