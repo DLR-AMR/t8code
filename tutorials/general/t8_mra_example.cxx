@@ -8,6 +8,7 @@
 #include <t8_forest/t8_forest_io.h>                                       /* forest io interface. */
 #include <t8_schemes/t8_default/t8_default.hxx>                           /* default refinement scheme. */
 #include <t8_forest/t8_forest_geometrical.h>                              /* geometrical information */
+#include "t8_mra/data/cell_data.hpp"
 #include "t8_mra/vecmat.hxx"
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/mask_coefficients.hxx"
@@ -1017,8 +1018,16 @@ main (int argc, char** argv)
   /* Creation of a basic two dimensional cmesh. */
   cout << "File data is\n";
   InitialisiereKoeff (p_mra, M0, M1, M2, M3, N0, N1, N2, N3);
+  int max_level = 8;
 
-  t8_mra::multiscale<T8_ECLASS_TRIANGLE, 1, 2> test;
+  constexpr int P = 3;
+  constexpr int U = 1;
+
+  using element_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
+
+  t8_mra::levelindex_map<element_type> grid_bla (max_level);
+  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> test;
+  test.multiscale_transformation (grid_bla, 0, 1);
 
   //Here you choose the correct coarse mesh.
   //t8_cmesh_t cmesh = t8_cmesh_new_basic (comm);
@@ -1033,7 +1042,6 @@ main (int argc, char** argv)
   //t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
   //t8_forest_write_vtk (forest, "forest_lev0");
   cout << "File data is\n";
-  int max_level = 8;
   levelgrid_map<t8_data_per_element_waveletfree_1d_gh>* grid
     = new levelgrid_map<t8_data_per_element_waveletfree_1d_gh> (max_level);
   levelgrid_map<t8_data_per_element_1d_gh>* grid_wb = new levelgrid_map<t8_data_per_element_1d_gh> (max_level);
