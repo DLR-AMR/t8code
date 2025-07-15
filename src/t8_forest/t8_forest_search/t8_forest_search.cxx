@@ -138,6 +138,7 @@ t8_search_base::do_search ()
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (this->forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    this->init_queries ();
     this->search_tree (itree);
   }
 }

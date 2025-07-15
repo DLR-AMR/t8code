@@ -308,6 +308,10 @@ class t8_search_base {
   virtual void
   update_queries (std::vector<size_t> &old_query_indices)
     = 0;
+
+  virtual void
+  init_queries ()
+    = 0;
 };
 
 template <typename Udata = void>
@@ -370,6 +374,12 @@ class t8_search: public t8_search_base {
     return;
   }
 
+  void
+  init_queries () override
+  {
+    return;
+  }
+
   t8_search_element_callback<Udata> element_callback;
 };
 
@@ -389,8 +399,6 @@ class t8_search_with_queries: public t8_search<Udata> {
                           const t8_forest_t forest = nullptr, Udata *user_data = nullptr)
     : t8_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback), queries (queries)
   {
-    this->active_queries.resize (queries.size ());
-    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   }
 
   void
@@ -434,6 +442,13 @@ class t8_search_with_queries: public t8_search<Udata> {
     this->active_queries = old_query_indices;
   }
 
+  void
+  init_queries () override
+  {
+    this->active_queries.resize (this->queries.size ());
+    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
+  }
+
   t8_search_query_callback<Query_T, Udata> queries_callback;
   std::vector<Query_T> &queries;
   std::vector<size_t> active_queries;
@@ -458,8 +473,6 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
                                   Udata *user_data = nullptr)
     : t8_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback), queries (queries)
   {
-    this->active_queries.resize (queries.size ());
-    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   }
 
   void
@@ -500,6 +513,13 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
   update_queries (std::vector<size_t> &old_query_indices) override
   {
     this->active_queries = old_query_indices;
+  }
+
+  void
+  init_queries () override
+  {
+    this->active_queries.resize (this->queries.size ());
+    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   }
 
   t8_search_batched_queries_callback<Query_T, Udata> queries_callback;
