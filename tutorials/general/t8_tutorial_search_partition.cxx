@@ -53,6 +53,10 @@ typedef struct t8_tutorial_search_partition_global
   double clustering_exponent;     /* affects the distribution of queries */
   sc_array_t *queries;            /* array of query points */
 
+  /* search statistics */
+  int num_local_queries;         /* number of queries found in local search */
+  int num_local_batched_queries; /* number of queries found in local batched search */
+
   /* MPI */
   sc_MPI_Comm mpicomm; /* the mpi communicator */
   int mpirank;         /* the processes rank */
@@ -204,20 +208,80 @@ t8_tutorial_search_partition_local_query_fn (const t8_forest_t forest, const t8_
                                              const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
                                              const t8_point_t &query, t8_tutorial_search_partition_global_t *g)
 {
-  return false;
+  int is_inside;
+  double coords[3], tolerance;
+
+  /* temporarily scale query point coords to [0,2]^3 to account for built-in brick mapping */
+  coords[0] = query.xyz[0] * 2.;
+  coords[1] = query.xyz[1] * 2.;
+  coords[2] = query.xyz[2] * 2.;
+  tolerance = 1e-8;
+
+  /* check if the query point lies inside the element */
+  t8_forest_element_points_inside (forest, ltreeid, element, coords, 1, &is_inside, tolerance);
+
+  if (is_inside && is_leaf) {
+    /* The query point is inside and this element is a leaf element. */
+    g->num_local_queries++;
+  }
+
+  return is_inside;
+}
+
+static void
+t8_tutorial_search_partition_local_queries_fn (
+  const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
+  const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const std::vector<t8_point_t> &queries,
+  const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches,
+  t8_tutorial_search_partition_global_t *g)
+{
+  int is_inside;
+  double coords[3], tolerance;
+
+  tolerance = 1e-8;
+  for (size_t qiz : active_query_indices) {
+    const t8_point_t &query = queries[qiz];
+
+    /* temporarily scale query point coords to [0,2]^3 to account for built-in brick mapping */
+    coords[0] = query.xyz[0] * 2.;
+    coords[1] = query.xyz[1] * 2.;
+    coords[2] = query.xyz[2] * 2.;
+
+    /* check if the query point lies inside the element */
+    t8_forest_element_points_inside (forest, ltreeid, element, coords, 1, &is_inside, tolerance);
+    query_matches[qiz] = is_inside;
+
+    if (is_inside && is_leaf) {
+      /* The query point is inside and this element is a leaf element. */
+      g->num_local_batched_queries++;
+    }
+  }
 }
 
 static void
 t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t *g)
 {
+  /* convert queries array to vector */
   std::vector<t8_point_t> query_vec ((t8_point_t *) sc_array_index (g->queries, 0),
                                      (t8_point_t *) sc_array_index (g->queries, 0) + g->queries->elem_count);
 
+  /* call local search */
+  g->num_local_queries = 0;
   t8_search_with_queries<t8_point_t, t8_tutorial_search_partition_global_t> local_search (
     t8_tutorial_search_partition_local_element_fn, t8_tutorial_search_partition_local_query_fn, query_vec, g->forest,
     g);
-
+  local_search.update_queries (query_vec);
   local_search.do_search ();
+  t8_infof ("Queries found in local search = %d\n", g->num_local_queries);
+
+  /* call local batched search and compare */
+  g->num_local_batched_queries = 0;
+  t8_search_with_batched_queries<t8_point_t, t8_tutorial_search_partition_global_t> local_batched_search (
+    t8_tutorial_search_partition_local_element_fn, t8_tutorial_search_partition_local_queries_fn, query_vec, g->forest,
+    g);
+  local_batched_search.update_queries (query_vec);
+  local_batched_search.do_search ();
+  T8_ASSERT (g->num_local_queries == g->num_local_batched_queries);
 }
 
 static void
@@ -265,7 +329,7 @@ main (int argc, char **argv)
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_PRODUCTION);
+  t8_init (SC_LP_DEFAULT);
 
   /* Define command line options of this tutorial. */
   opt = sc_options_new (argv[0]);
