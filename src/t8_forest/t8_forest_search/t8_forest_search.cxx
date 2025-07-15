@@ -99,8 +99,8 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
        * we construct an array of these leaves */
       t8_element_array_init_view (&child_leaves, leaf_elements, indexa, indexb - indexa);
       /* Enter the recursion */
-      search_recursion (ltreeid, children[ichild], ts, &child_leaves, indexa + tree_lindex_of_first_leaf);
       update_queries (new_active_queries);
+      search_recursion (ltreeid, children[ichild], ts, &child_leaves, indexa + tree_lindex_of_first_leaf);
     }
   }
 
