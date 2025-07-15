@@ -27,9 +27,10 @@ struct data_per_element
 {
   static constexpr unsigned short DIM = 2;  /// TODO
   static constexpr unsigned short U_DIM = U;
-  static constexpr unsigned short DOF = P;
-  static constexpr unsigned short P_DIM = binom (DIM + P - 1, DIM);
-  static constexpr unsigned short W_DIM = 3 * P_DIM;
+
+  static constexpr unsigned short P_DIM = P;
+  static constexpr unsigned short DOF = binom (DIM + P_DIM - 1, DIM);
+  static constexpr unsigned short W_DOF = DOF * 3;
 
   std::vector<double> u_coeffs;  // Single-scale coefficients
   std::vector<double> d_coeffs;  // Detail coefficients
@@ -37,7 +38,7 @@ struct data_per_element
   std::array<int, 3> order;  // Point order
 
   explicit data_per_element ()
-    : u_coeffs (U_DIM * P_DIM, {}), d_coeffs (U_DIM * W_DIM, {}), significant (false), order ({})
+    : u_coeffs (U_DIM * DOF, {}), d_coeffs (U_DIM * W_DOF, {}), significant (false), order ({})
   {
   }
 };
