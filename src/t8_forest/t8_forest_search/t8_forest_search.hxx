@@ -425,14 +425,11 @@ class t8_search_with_queries: public t8_search<Udata> {
   {
     T8_ASSERT (new_active_queries.empty ());
     if (!this->active_queries.empty ()) {
-      auto positive_queries = this->active_queries | std::ranges::views::filter ([&] (size_t &query_index) {
-                                return this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements,
-                                                               tree_leaf_index, queries[query_index], this->user_data);
-                              });
-      if (!is_leaf) {
-        new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
-        std::swap (this->active_queries, new_active_queries);
-      }
+      std::copy_if (this->active_queries.begin (), this->active_queries.end (), std::back_inserter (new_active_queries),
+                    [&] (size_t &query_index) {
+                      return this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements,
+                                                     tree_leaf_index, queries[query_index], this->user_data);
+                    });
     }
   }
 
@@ -499,14 +496,9 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
       std::vector<bool> query_matches (this->queries.size ());
       this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
                               this->active_queries, query_matches, this->user_data);
-      if (!is_leaf) {
-        auto positive_queries = this->active_queries | std::ranges::views::filter ([&] (size_t &query_index) {
-                                  return query_matches[query_index];
-                                });
-        new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
-      }
+      std::copy_if (this->active_queries.begin (), this->active_queries.end (), std::back_inserter (new_active_queries),
+                    [&] (size_t &query_index) { return query_matches[query_index]; });
     }
-    std::swap (new_active_queries, this->active_queries);
   }
 
   void
