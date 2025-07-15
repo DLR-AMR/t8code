@@ -309,6 +309,11 @@ class t8_search_base {
   update_queries (std::vector<size_t> &old_query_indices)
     = 0;
 
+  /**
+   * @brief Function gives the user the opportunity to set the queries to the initial
+   *        full set before searching each tree.
+   *
+   */
   virtual void
   init_queries ()
     = 0;
