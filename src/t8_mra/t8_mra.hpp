@@ -43,6 +43,9 @@ class multiscale: public multiscale_data<TShape> {
   static constexpr unsigned int DOF = element_t::DOF;
   static constexpr unsigned int W_DOF = element_t::W_DOF;
 
+  using multiscale_data<TShape>::mask_coefficients;
+  using multiscale_data<TShape>::inverse_mask_coefficients;
+
  public:
   multiscale ()
   {
@@ -50,22 +53,24 @@ class multiscale: public multiscale_data<TShape> {
                                                   multiscale_data<TShape>::inverse_mask_coefficients);
   }
 
+  /// TODO index with lmi_map (template<index, val>)
+  /// TODO matrix vector product?
   void
   multiscale_transformation (t8_mra::levelindex_map<element_t>& grid_hierarchy, unsigned int l_min, unsigned int l_max)
   {
     for (auto l = l_max; l > l_min; --l) {
       for (const auto& [lmi, val] : grid_hierarchy.level_map[l]) {
-        const auto parent_lmi = t8_mra::parent_lmi (lmi);
+        const auto parent_lmi = t8_mra::parent_lmi<levelmultiindex> (lmi);
 
-        if (grid_hierarchy.contains (l - 1, parent_lmi))
+        if (grid_hierarchy.contains (l - 1, parent_lmi.index))
           continue;
 
-        const auto children = t8_mra::children_lmi (parent_lmi);
+        const auto children = t8_mra::children_lmi<levelmultiindex> (parent_lmi);
         std::array<element_t, levelmultiindex::NUM_CHILDREN> child_data;
         element_t parent_data;
 
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
-          child_data[k] = grid_hierarchy.get (l, children[k]);
+          child_data[k] = grid_hierarchy.get (l, children[k].index);
 
         parent_data.order = child_data[0].order;
         triangle_order::get_parent_order (parent_data.order);
@@ -76,10 +81,23 @@ class multiscale: public multiscale_data<TShape> {
 
           for (auto j = 0u; j < DOF; ++j) {
             for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-              /// TODO mask coeffs
+              const auto v = child_data[k].u_coeffs;
+              u_sum += mask_coefficients[k](i, j) * v[k];
+              d_sum += inverse_mask_coefficients[k](i, j) * v[k];
             }
           }
+          parent_data.u_coeffs[i] = u_sum;
+          parent_data.d_coeffs[i] = d_sum;
         }
+
+        for (auto i = 0u; i < W_DOF; ++i) {
+          auto sum = 0.0;
+          for (auto j = 0u; j < DOF; ++j)
+            for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+              sum += inverse_mask_coefficients[k](i, j) * child_data[k].u_coeffs[j];
+          parent_data.d_coeffs[i] = sum;
+        }
+        grid_hierarchy.insert (l - 1, parent_lmi.index, parent_data);
       }
     }
   }
