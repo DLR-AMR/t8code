@@ -13,9 +13,12 @@ namespace t8_mra
 
 template <>
 void
-initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, std::vector<t8_mra::mat>& mask_coeffs,
+initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, size_t dof, std::vector<t8_mra::mat>& mask_coeffs,
                                                   std::vector<t8_mra::mat>& inv_mask_coeffs)
 {
+  mask_coeffs.resize (4, t8_mra::mat { dof, dof });
+  inv_mask_coeffs.resize (4, t8_mra::mat { 3 * dof, dof });
+
   switch (order) {
   case 1:
     mask_coeffs[0] = { 1. / 2. };
