@@ -118,7 +118,7 @@ TEST_P (get_linear_id, uniform_forest)
   t8_forest_unref (&forest_adapt);
 }
 
-/* Test, if the linear_id of descendants of an element is the same as the id of element 
+/* Test, if the linear_id of descendants of an element is the same as the id of element
  * (on the level defined by the element) */
 TEST_P (get_linear_id, id_at_other_level)
 {
@@ -141,7 +141,7 @@ TEST_P (get_linear_id, id_at_other_level)
       const t8_linearidx_t child_desc = scheme->element_count_leaves (eclass, child, level + add_lvl);
       /* Iterate over all descendants */
       for (t8_linearidx_t leaf_id = 0; leaf_id < child_desc; leaf_id++) {
-        /* Set the descendant (test) at level of the descendants and shift the 
+        /* Set the descendant (test) at level of the descendants and shift the
          * leaf_id into the region of the descendants of child*/
         scheme->element_set_linear_id (eclass, test, level + add_lvl, id_at_lvl + leaf_id);
         /* Compute the id of the descendant (test) at the current level */

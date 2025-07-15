@@ -75,7 +75,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   }
 
  protected:
-  size_t multilevel_element_size; /**< The size in bytes of an element of 
+  size_t multilevel_element_size; /**< The size in bytes of an element of
                                        t8_multilevel_element<TUnderlyingElementType> */
   void *multilevel_scheme_pool;   /**< Memory pool for multilevel elements. */
 
@@ -411,7 +411,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     parent_m->is_child_of_itself = 0;
   }
 
-  /** Compute the number of siblings of an element. That is the number of 
+  /** Compute the number of siblings of an element. That is the number of
    * elements with the same parent (if available).
    * \param [in] elem The element.
    * \return          The number of siblings of \a element.
@@ -875,7 +875,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
    * \return The index of the tree face that \a face is a subface of, if
    *         \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
-   * \warning The return value may look like a valid face of the tree even if 
+   * \warning The return value may look like a valid face of the tree even if
    *   the element does not lie on the root boundary.
    */
   inline int
@@ -948,7 +948,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
-   *                      lies.   
+   *                      lies.
    * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
    * \return              The face number of the face of \a elem that coincides
    *                      with \a face.
@@ -1103,7 +1103,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] elem  The element to be checked.
-   * \param [in] level A refinement level. 
+   * \param [in] level A refinement level.
    * \return Suppose \a t is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
    * If \a level < t8_element_level(t), the return value should be 0.
@@ -1214,7 +1214,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
 
   /** Convert a point in the reference space of an element to a point in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
    * \param [in] coords_input The coordinates of the point in the reference space of the element.
    * \param [in] user_data    User data.
@@ -1352,8 +1352,8 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   /**
    * Print a given element. For a example for a triangle print the coordinates
    * and the level of the triangle. This function is only available in the
-   * debugging configuration. 
-   * 
+   * debugging configuration.
+   *
    * \param [in]        elem  The element to print
    */
   inline void
@@ -1367,8 +1367,8 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   /**
    * Print a given element. For a example for a triangle print the coordinates
    * and the level of the triangle. This function is only available in the
-   * debugging configuration. 
-   * 
+   * debugging configuration.
+   *
    * \param [in]        elem  The element to print
    */
   inline void
