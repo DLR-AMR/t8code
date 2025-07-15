@@ -168,8 +168,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   inline int
   refines_irregular (void) const
   {
-    /* A multilevel scheme always refines irregular. */
-    return true;
+    return TUnderlyingEclassScheme::refines_irregular ();
   }
 
   /** Return the maximum allowed level for any element of a given class.
