@@ -164,6 +164,8 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/vecmat.hxx
     t8_mra/num/basis_functions.hxx
     t8_mra/num/dunavant.hxx
+    t8_mra/num/mask_coefficients.hpp
+    tr_mra/num/mask_coeffs_triangle.hpp
     t8_mra/mask_coefficients.hxx
     DESTINATION include)
 endif()
