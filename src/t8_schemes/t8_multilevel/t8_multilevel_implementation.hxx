@@ -815,15 +815,10 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     * \note For the root element this function always returns \a face.
     */
   inline int
-  element_face_get_parent_face (const t8_element_t *elem, const int face) const
+  element_face_get_parent_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) const
   {
-    T8_ASSERT (element_is_valid (elem));
-    const multilevel_element *elem_m = (const multilevel_element *) elem;
-    if (elem_m->is_child_of_itself) {
-      /* The parent of an element that is child of itself is the element itself. */
-      return face;
-    }
-    return TUnderlyingEclassScheme::element_face_get_parent_face ((const t8_element_t *) &elem_m->linear_element, face);
+    SC_ABORTF ("Not implemented.");
+    return 0;
   }
 
   /** Construct the first descendant of an element at a given level that touches a given face.
