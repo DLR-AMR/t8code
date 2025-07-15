@@ -516,6 +516,15 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     return 1 + TUnderlyingEclassScheme::element_get_num_children ((const t8_element_t *) &elem_m->linear_element);
   }
 
+  /** Return the max number of children of an eclass.
+   * \return            The max number of children of \a element.
+   */
+  inline int
+  get_max_num_children () const
+  {
+    return 1 + TUnderlyingEclassScheme::get_max_num_children ();
+  }
+
   /**
    * Indicates if an element is refinable. Possible reasons for being not refinable could be
    * that the element has reached its max level or that it is a subelement.
