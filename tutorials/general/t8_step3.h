@@ -73,7 +73,7 @@ t8_step3_adapt_forest (t8_forest_t forest);
  * See t8_step3.cxx for more details.
  */
 int
-t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+t8_step3_adapt_callback (t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
                          t8_locidx_t lelement_id, const t8_scheme_c *scheme, const int is_family,
                          const int num_elements, t8_element_t *elements[]);
 

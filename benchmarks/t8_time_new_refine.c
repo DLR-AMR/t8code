@@ -35,7 +35,7 @@
 #include <t8_forest/t8_forest_types.h> /* TODO: This file should not be included from an application */
 /* This function refines every element */
 static int
-t8_basic_adapt_refine (__attribute__ ((unused)) t8_forest_t forest, __attribute__ ((unused)) t8_forest_t forest_from,
+t8_basic_adapt_refine (__attribute__ ((unused)) t8_forest_t forest_from,
                        __attribute__ ((unused)) t8_locidx_t which_tree, t8_eclass_t tree_class,
                        __attribute__ ((unused)) t8_locidx_t lelement_id, const t8_scheme_c *scheme,
                        __attribute__ ((unused)) const int is_family, const int num_elements, t8_element_t *elements[])
@@ -52,7 +52,7 @@ t8_basic_adapt_refine (__attribute__ ((unused)) t8_forest_t forest, __attribute_
 
 /* This function coarsens each element */
 static int
-t8_basic_adapt_coarsen (__attribute__ ((unused)) t8_forest_t forest, __attribute__ ((unused)) t8_forest_t forest_from,
+t8_basic_adapt_coarsen (__attribute__ ((unused)) t8_forest_t forest_from,
                         __attribute__ ((unused)) t8_locidx_t which_tree,
                         __attribute__ ((unused)) t8_eclass_t tree_class,
                         __attribute__ ((unused)) t8_locidx_t lelement_id,
