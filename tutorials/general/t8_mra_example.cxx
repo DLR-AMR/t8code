@@ -1,3 +1,5 @@
+#include <t8_mra/t8_mra.hpp>
+
 #include <t8.h>                          /* General t8code header, always include this. */
 #include <t8_cmesh.hxx>                  /* cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h> /* forest definition and basic interface. */
@@ -1015,6 +1017,9 @@ main (int argc, char** argv)
   /* Creation of a basic two dimensional cmesh. */
   cout << "File data is\n";
   InitialisiereKoeff (p_mra, M0, M1, M2, M3, N0, N1, N2, N3);
+
+  t8_mra::multiscale<T8_ECLASS_TRIANGLE, 1, 2> test;
+
   //Here you choose the correct coarse mesh.
   //t8_cmesh_t cmesh = t8_cmesh_new_basic (comm);
   t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
