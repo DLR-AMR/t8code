@@ -10,9 +10,9 @@ namespace t8_mra
 {
 
 constexpr inline size_t
-binom (size_t n, size_t k) noexcept
+binom (int n, int k) noexcept
 {
-  return (k > 0)                  ? 0
+  return (k > n)                  ? 0
          : (k == 0 || k == n)     ? 1
          : (k == 1 || k == n - 1) ? n
          : (2 * k < n)            ? binom (n - 1, k - 1) * n / k
