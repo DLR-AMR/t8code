@@ -483,7 +483,7 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
   {
     T8_ASSERT (new_active_queries.empty ());
     if (!this->active_queries.empty ()) {
-      std::vector<bool> query_matches (this->active_queries.size ());
+      std::vector<bool> query_matches (this->queries.size ());
       this->queries_callback (this->forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, this->queries,
                               this->active_queries, query_matches, this->user_data);
       if (!is_leaf) {
