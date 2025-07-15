@@ -186,7 +186,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     const t8_element_level maxlevel = TUnderlyingEclassScheme::get_maxlevel ();
     double count = 0; /* Use double because it should hold bigger numbers than t8_linearidx_t */
     const int dim = t8_eclass_to_dimension[get_eclass ()];
-    for (t8_element_level i_level = 0; i_level <= maxlevel; ++i_level) {
+    for (size_t i_level = 0; i_level <= maxlevel; ++i_level) {
       count += pow (2.0, dim * i_level * 1.0);
     }
     T8_ASSERTF (std::numeric_limits<t8_linearidx_t>::max () >= count,
@@ -1001,13 +1001,13 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   element_set_linear_id (t8_element_t *elem, const t8_element_level uniform_level, t8_linearidx_t id) const
   {
     multilevel_element *elem_m = (multilevel_element *) elem;
-    const int dim = t8_eclass_to_dimension[TUnderlyingEclassScheme::get_eclass ()];
-    const int maxlvl = get_maxlevel ();
+    const uint8_t dim = t8_eclass_to_dimension[TUnderlyingEclassScheme::get_eclass ()];
+    const t8_element_level maxlvl = get_maxlevel ();
 #if T8_ENABLE_DEBUG
     const t8_linearidx_t id_max = get_num_elem_in_regular_subtree (dim, maxlvl);
     T8_ASSERT (id < id_max);
 #endif
-    t8_element_level level = 0;    /* current operating level */
+    int level = 0;                 /* current operating level */
     t8_linearidx_t id_linear = id; /* linear id */
     int id_in_subtree = id_linear; /* id in subtree */
     t8_linearidx_t subtree_id;     /* id of the subtree */
@@ -1140,7 +1140,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
       const t8_child_id num_children
         = TUnderlyingEclassScheme::element_get_num_children ((const t8_element_t *) &elem_m->linear_element);
       /* For each level this scheme adds num_children^ilevel leaves. */
-      for (t8_element_level ilevel = 0; ilevel < level - elem_level; ++ilevel) {
+      for (int ilevel = 0; ilevel < level - elem_level; ++ilevel) {
         count_leaves += sc_intpow (num_children, ilevel);
       }
       return count_leaves;
@@ -1169,7 +1169,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
       const t8_child_id num_children
         = TUnderlyingEclassScheme::element_get_num_children ((const t8_element_t *) &root.linear_element);
       /* For each level this scheme adds num_children^ilevel leaves. */
-      for (t8_element_level ilevel = 0; ilevel < level; ++ilevel) {
+      for (size_t ilevel = 0; ilevel < level; ++ilevel) {
         count_leaves += sc_intpow (num_children, ilevel);
       }
       return count_leaves;
@@ -1453,7 +1453,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
   get_num_elem_in_regular_subtree (const int dim, const t8_element_level level) const
   {
     t8_linearidx_t count = 0;
-    for (t8_element_level i_level = 0; i_level <= level; ++i_level) {
+    for (size_t i_level = 0; i_level <= level; ++i_level) {
       // The following is "count += sc_intpow (2, dim * i_level);" in bitshift
       count |= 1ULL << i_level * dim;
     }
