@@ -12,7 +12,7 @@ namespace t8_mra
 {
 template <t8_eclass TShape>
 void
-initialize_mask_coefficients (size_t order, std::vector<t8_mra::mat>& mask_coeffs,
+initialize_mask_coefficients (size_t order, size_t dof, std::vector<t8_mra::mat>& mask_coeffs,
                               std::vector<t8_mra::mat>& inv_mask_coeffs)
 {
   throw std::out_of_range ("Element shape is not supported in "
@@ -21,7 +21,7 @@ initialize_mask_coefficients (size_t order, std::vector<t8_mra::mat>& mask_coeff
 
 template <>
 void
-initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, std::vector<t8_mra::mat>& mask_coeffs,
+initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, size_t dof, std::vector<t8_mra::mat>& mask_coeffs,
                                                   std::vector<t8_mra::mat>& inv_mask_coeffs);
 
 }  // namespace t8_mra
