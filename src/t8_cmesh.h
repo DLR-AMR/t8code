@@ -782,7 +782,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
  * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
  *                                  the calling process anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
- *                                 same as \a last_local_tree on the next process.
+ *                                 same as \a last_local_tree on the previous process.
  * \param [in] comm         The communicator 
  */
 void
