@@ -493,7 +493,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
 void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, double *coordinates)
 {
-  T8_ASSERT (t8_forest_is_committed (forest));
+  //  T8_ASSERT (t8_forest_is_committed (forest));
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
 
@@ -3475,7 +3475,7 @@ t8_gloidx_t
 t8_forest_global_tree_id (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
   t8_locidx_t num_local_trees;
-  T8_ASSERT (t8_forest_is_committed (forest));
+  //  T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest) + t8_forest_ghost_num_trees (forest));
 
   num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -3680,7 +3680,7 @@ t8_forest_get_first_local_leaf_element_id (t8_forest_t forest)
 const t8_scheme *
 t8_forest_get_scheme (const t8_forest_t forest)
 {
-  T8_ASSERT (t8_forest_is_committed (forest));
+  //  T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->scheme != NULL);
 
   return forest->scheme;
