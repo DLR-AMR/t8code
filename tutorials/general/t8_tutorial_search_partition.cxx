@@ -57,6 +57,7 @@ typedef struct t8_tutorial_search_partition_global
   /* search statistics */
   int num_local_queries;            /* number of queries found in local search */
   int num_local_batched_queries;    /* number of queries found in local batched search */
+  sc_array_t *global_nlq;           /* num_local_queries gathered globally */
   sc_array_t *num_queries_per_rank; /* number of queries found in partition search */
 
   /* MPI */
@@ -273,6 +274,9 @@ t8_tutorial_search_partition_local_queries_fn (
 static void
 t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t *g)
 {
+  int mpiret;
+  int gnq, il;
+
   /* call local search */
   g->num_local_queries = 0;
   t8_search_with_queries<t8_point_t, t8_tutorial_search_partition_global_t> local_search (
@@ -290,6 +294,20 @@ t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t
   local_batched_search.update_queries (g->query_vec);
   local_batched_search.do_search ();
   T8_ASSERT (g->num_local_queries == g->num_local_batched_queries);
+
+  /* allgather local num queries for future comparison with partition search */
+  g->global_nlq = sc_array_new_count (sizeof (int), g->mpisize);
+  mpiret = sc_MPI_Allgather (&g->num_local_queries, 1, sc_MPI_INT, g->global_nlq->array, 1, sc_MPI_INT, g->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* compute sum of local number of queries across all processes */
+  gnq = 0;
+  for (il = 0; il < g->global_nlq->elem_count; il++) {
+    gnq += *(int *) sc_array_index (g->global_nlq, il);
+  }
+  t8_global_productionf ("Queries found globally during local search: %d (expected %d)\n", gnq,
+                         (int) g->num_global_queries);
+  T8_ASSERT (g->num_global_queries == (t8_locidx_t) gnq);
 }
 
 static bool
@@ -338,6 +356,7 @@ t8_tutorial_search_partition_cleanup (t8_tutorial_search_partition_global_t *g)
   /* Destroy the queries. */
   sc_array_destroy (g->queries);
   sc_array_destroy (g->num_queries_per_rank);
+  sc_array_destroy (g->global_nlq);
 
   /* Destroy the forest. */
   t8_forest_unref (&g->forest);
