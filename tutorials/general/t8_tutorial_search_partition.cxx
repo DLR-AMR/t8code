@@ -340,6 +340,11 @@ t8_tutorial_search_partition_partition_query_fn (const t8_forest_t forest, const
 static void
 t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_global_t *g)
 {
+  size_t iz, lenz, buffer_size;
+  int num_queries_found;
+  int retb;
+  char *buffer;
+
   /* call partition search */
   g->num_queries_per_rank = sc_array_new_count (sizeof (int), g->mpisize);
   sc_array_memset (g->num_queries_per_rank, 0);
@@ -348,6 +353,49 @@ t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_glob
     g->forest, g);
   partition_search.update_queries (g->query_vec);
   partition_search.do_search ();
+
+  /* output query points found per rank */
+  buffer_size = 0;
+  for (iz = 0; iz < g->num_queries_per_rank->elem_count; iz++) {
+    if (iz % 10 == 0) {
+      buffer_size += 1;
+    }
+    retb = snprintf (NULL, 0, "%7d ", *(int *) sc_array_index (g->num_queries_per_rank, iz));
+    SC_CHECK_ABORT (retb > 0, "Overflow in snprintf");
+    buffer_size += (size_t) retb;
+  }
+
+  /* now we know the buffer size and allocate it */
+  buffer = T8_ALLOC (char, buffer_size);
+
+  lenz = 0;
+  num_queries_found = 0;
+  for (iz = 0; iz < g->num_queries_per_rank->elem_count; iz++) {
+    /* add result to buffer */
+    if (iz % 10 == 0) {
+      T8_ASSERT (buffer_size >= lenz);
+      retb = snprintf (buffer + lenz, buffer_size - lenz, "\n");
+      SC_CHECK_ABORT (retb == 1, "Overflow in snprintf");
+      lenz += retb;
+    }
+    retb = snprintf (buffer + lenz, buffer_size - lenz, "%7d ", *(int *) sc_array_index (g->num_queries_per_rank, iz));
+    SC_CHECK_ABORT (retb > 0, "Overflow in snprintf");
+    lenz += retb;
+
+    /* compute total number of queries found during partition search */
+    num_queries_found += *(int *) sc_array_index (g->num_queries_per_rank, iz);
+  }
+  t8_global_productionf ("Queries found during partition search: %d (expected %d)\n", num_queries_found,
+                         (int) g->num_global_queries);
+  t8_global_productionf ("Partition search found the following query counts %s\n", buffer);
+
+  /* the buffer is no longer accessed */
+  T8_FREE (buffer);
+
+  /* check results for consistency */
+  for (iz = 0; iz < g->num_queries_per_rank->elem_count; iz++) {
+    T8_ASSERT (*(int *) sc_array_index (g->num_queries_per_rank, iz) == *(int *) sc_array_index (g->global_nlq, iz));
+  }
 }
 
 static void
