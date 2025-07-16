@@ -45,18 +45,18 @@ typedef struct t8_tutorial_search_partition_global
   t8_forest_t forest;      /* the resulting forest */
 
   /* Queries */
-  t8_locidx_t num_global_queries; /* global number of queries;
+  t8_locidx_t num_global_queries;    /* global number of queries;
                                                  * of type p4est_locidx_t, since
                                                  * queries are replicated across
                                                  * all processes */
-  int seed;                       /* seed for random query creation */
-  double clustering_exponent;     /* affects the distribution of queries */
-  sc_array_t *queries;            /* array of query points */
+  int seed;                          /* seed for random query creation */
+  double clustering_exponent;        /* affects the distribution of queries */
+  sc_array_t *queries;               /* array of query points */
   std::vector<t8_point_t> query_vec; /* vector of the same query points */
 
   /* search statistics */
-  int num_local_queries;         /* number of queries found in local search */
-  int num_local_batched_queries; /* number of queries found in local batched search */
+  int num_local_queries;            /* number of queries found in local search */
+  int num_local_batched_queries;    /* number of queries found in local batched search */
 
   /* MPI */
   sc_MPI_Comm mpicomm; /* the mpi communicator */
@@ -96,14 +96,12 @@ t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t for
   t8_forest_element_centroid (forest, gtreeid, elements[0], center);
 
   /* Compute distance to point a. */
-  dist = (g->a[0] - center[0]) * (g->a[0] - center[0])
-         + (g->a[1] - center[1]) * (g->a[1] - center[1])
+  dist = (g->a[0] - center[0]) * (g->a[0] - center[0]) + (g->a[1] - center[1]) * (g->a[1] - center[1])
          + (g->a[2] - center[2]) * (g->a[2] - center[2]);
   min_dist = sqrt (dist);
 
   /* Compute distance to point b. */
-  dist = (g->b[0] - center[0]) * (g->b[0] - center[0])
-         + (g->b[1] - center[1]) * (g->b[1] - center[1])
+  dist = (g->b[0] - center[0]) * (g->b[0] - center[0]) + (g->b[1] - center[1]) * (g->b[1] - center[1])
          + (g->b[2] - center[2]) * (g->b[2] - center[2]);
   min_dist = SC_MIN (min_dist, sqrt (dist));
 
@@ -119,33 +117,10 @@ static t8_cmesh_t
 t8_tutorial_search_partition_new_unit_brick (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z,
                                              sc_MPI_Comm comm)
 {
-  const double boundary[24] = { 0.0,
-                                0.0,
-                                0.0,
-                                1.0,
-                                0.0,
-                                0.0,
-                                0.0,
-                                1.0,
-                                0.0,
-                                1.0,
-                                1.0,
-                                0.0,
-                                0.0,
-                                0.0,
-                                1.0,
-                                1.0,
-                                0.0,
-                                1.0,
-                                0.0,
-                                1.0,
-                                1.0,
-                                1.0,
-                                1.0,
-                                1.0};
+  const double boundary[24] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0,
+                                0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
 
-  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z, 0, 0,
-                                         0, 0, 0, 0);
+  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z, 0, 0, 0, 0, 0, 0);
 }
 
 static void
@@ -306,8 +281,8 @@ t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t
   /* call local batched search and compare */
   g->num_local_batched_queries = 0;
   t8_search_with_batched_queries<t8_point_t, t8_tutorial_search_partition_global_t> local_batched_search (
-    t8_tutorial_search_partition_local_element_fn, t8_tutorial_search_partition_local_queries_fn, g->query_vec, g->forest,
-    g);
+    t8_tutorial_search_partition_local_element_fn, t8_tutorial_search_partition_local_queries_fn, g->query_vec,
+    g->forest, g);
   local_batched_search.update_queries (g->query_vec);
   local_batched_search.do_search ();
   T8_ASSERT (g->num_local_queries == g->num_local_batched_queries);
