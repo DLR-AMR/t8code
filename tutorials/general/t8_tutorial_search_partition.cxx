@@ -55,10 +55,11 @@ typedef struct t8_tutorial_search_partition_global
   std::vector<t8_point_t> query_vec; /* vector of the same query points */
 
   /* search statistics */
-  int num_local_queries;            /* number of queries found in local search */
-  int num_local_batched_queries;    /* number of queries found in local batched search */
-  sc_array_t *global_nlq;           /* num_local_queries gathered globally */
-  sc_array_t *num_queries_per_rank; /* number of queries found in partition search */
+  int num_local_queries;                    /* number of queries found in local search */
+  int num_local_batched_queries;            /* number of queries found in local batched search */
+  sc_array_t *global_nlq;                   /* num_local_queries gathered globally */
+  sc_array_t *num_queries_per_rank;         /* number of queries found in partition search */
+  sc_array_t *num_batched_queries_per_rank; /* number of queries found in batched partition search */
 
   /* MPI */
   sc_MPI_Comm mpicomm; /* the mpi communicator */
@@ -338,6 +339,29 @@ t8_tutorial_search_partition_partition_query_fn (const t8_forest_t forest, const
 }
 
 static void
+t8_tutorial_search_partition_partition_queries_fn (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                                   const t8_element_t *element, int pfirst, int plast,
+                                                   const std::vector<t8_point_t> &queries,
+                                                   const std::vector<size_t> &active_query_indices,
+                                                   std::vector<bool> &query_matches,
+                                                   t8_tutorial_search_partition_global_t *g)
+{
+  int is_inside;
+  for (size_t qiz : active_query_indices) {
+    const t8_point_t &query = queries[qiz];
+
+    /* check if the query point lies inside the element */
+    t8_forest_element_points_inside (forest, ltreeid, element, query.xyz, 1, &is_inside, 1e-8);
+    query_matches[qiz] = is_inside;
+
+    if (is_inside && pfirst == plast) {
+      /* The query point is inside and the recursion ends at this element. */
+      *(int *) sc_array_index_int (g->num_batched_queries_per_rank, pfirst) += 1;
+    }
+  }
+}
+
+static void
 t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_global_t *g)
 {
   size_t iz, lenz, buffer_size;
@@ -353,6 +377,20 @@ t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_glob
     g->forest, g);
   partition_search.update_queries (g->query_vec);
   partition_search.do_search ();
+
+  /* call local batched search and compare */
+  g->num_batched_queries_per_rank = sc_array_new_count (sizeof (int), g->mpisize);
+  sc_array_memset (g->num_batched_queries_per_rank, 0);
+  t8_partition_search_with_batched_queries<t8_point_t, t8_tutorial_search_partition_global_t> partition_batched_search (
+    t8_tutorial_search_partition_partition_element_fn, t8_tutorial_search_partition_partition_queries_fn, g->query_vec,
+    g->forest, g);
+  partition_batched_search.update_queries (g->query_vec);
+  partition_batched_search.do_search ();
+  for (iz = 0; iz < g->num_queries_per_rank->elem_count; iz++) {
+    /* check results for consistency */
+    T8_ASSERT (*(int *) sc_array_index (g->num_queries_per_rank, iz)
+               == *(int *) sc_array_index (g->num_batched_queries_per_rank, iz));
+  }
 
   /* output query points found per rank */
   buffer_size = 0;
@@ -404,6 +442,7 @@ t8_tutorial_search_partition_cleanup (t8_tutorial_search_partition_global_t *g)
   /* Destroy the queries. */
   sc_array_destroy (g->queries);
   sc_array_destroy (g->num_queries_per_rank);
+  sc_array_destroy (g->num_batched_queries_per_rank);
   sc_array_destroy (g->global_nlq);
 
   /* Destroy the forest. */
