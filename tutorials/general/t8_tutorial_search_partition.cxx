@@ -57,9 +57,11 @@ typedef struct t8_tutorial_search_partition_global
   /* search statistics */
   int num_local_queries;            /* number of queries found in local search */
   int num_local_batched_queries;    /* number of queries found in local batched search */
+  sc_array_t *num_queries_per_rank; /* number of queries found in partition search */
 
   /* MPI */
   sc_MPI_Comm mpicomm; /* the mpi communicator */
+  int mpisize;         /* the size of mpicomm */
   int mpirank;         /* the processes rank */
 } t8_tutorial_search_partition_global_t;
 
@@ -132,8 +134,10 @@ t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_
   t8_cmesh_t cmesh;
   t8_forest_t forest_adapt;
 
-  /* Get the MPI rank. */
+  /* Get MPI info. */
   g->mpicomm = sc_MPI_COMM_WORLD;
+  mpiret = sc_MPI_Comm_size (g->mpicomm, &g->mpisize);
+  SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (g->mpicomm, &g->mpirank);
   SC_CHECK_MPI (mpiret);
 
@@ -288,11 +292,52 @@ t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t
   T8_ASSERT (g->num_local_queries == g->num_local_batched_queries);
 }
 
+static bool
+t8_tutorial_search_partition_partition_element_fn (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                                   const t8_element_t *element, int pfirst, int plast,
+                                                   t8_tutorial_search_partition_global_t *g)
+{
+  /* partition search requires an element callback */
+  return true;
+}
+
+static bool
+t8_tutorial_search_partition_partition_query_fn (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                                 const t8_element_t *element, int pfirst, int plast,
+                                                 const t8_point_t &query, t8_tutorial_search_partition_global_t *g)
+{
+  int is_inside;
+
+  /* check if the query point lies inside the element */
+  t8_forest_element_points_inside (forest, ltreeid, element, query.xyz, 1, &is_inside, 1e-8);
+
+  if (is_inside && pfirst == plast) {
+    /* The query point is inside and the recursion ends at this element. */
+    *(int *) sc_array_index_int (g->num_queries_per_rank, pfirst) += 1;
+  }
+
+  return is_inside;
+}
+
+static void
+t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_global_t *g)
+{
+  /* call partition search */
+  g->num_queries_per_rank = sc_array_new_count (sizeof (int), g->mpisize);
+  sc_array_memset (g->num_queries_per_rank, 0);
+  t8_partition_search_with_queries<t8_point_t, t8_tutorial_search_partition_global_t> partition_search (
+    t8_tutorial_search_partition_partition_element_fn, t8_tutorial_search_partition_partition_query_fn, g->query_vec,
+    g->forest, g);
+  partition_search.update_queries (g->query_vec);
+  partition_search.do_search ();
+}
+
 static void
 t8_tutorial_search_partition_cleanup (t8_tutorial_search_partition_global_t *g)
 {
   /* Destroy the queries. */
   sc_array_destroy (g->queries);
+  sc_array_destroy (g->num_queries_per_rank);
 
   /* Destroy the forest. */
   t8_forest_unref (&g->forest);
@@ -309,6 +354,9 @@ t8_tutorial_search_partition_run (t8_tutorial_search_partition_global_t *g)
 
   /* Search queries in the local part of the forest. */
   t8_tutorial_search_partition_search_local (g);
+
+  /* Search queries in the partition of the forest. */
+  t8_tutorial_search_partition_search_partition (g);
 
   /* Fee memory. */
   t8_tutorial_search_partition_cleanup (g);
