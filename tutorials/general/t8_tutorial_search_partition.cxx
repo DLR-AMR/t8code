@@ -62,17 +62,6 @@ typedef struct t8_tutorial_search_partition_global
   int mpirank;         /* the processes rank */
 } t8_tutorial_search_partition_global_t;
 
-/* Map coordinates from the reference coordinate system of the 2x2x2 brick
- * forest to the unit cube. */
-static void
-t8_tutorial_search_partition_map_coordinates (double *xyz, t8_locidx_t which_tree, double *mapped_xyz)
-{
-  T8_ASSERT (which_tree < 8); /* assert we have a 2x2(x2) brick */
-  mapped_xyz[0] = 0.5 * xyz[0];
-  mapped_xyz[1] = 0.5 * xyz[1];
-  mapped_xyz[2] = 0.5 * xyz[2];
-}
-
 int
 t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                                              [[maybe_unused]] t8_eclass_t tree_class,
@@ -80,7 +69,7 @@ t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t for
                                              [[maybe_unused]] const t8_scheme *scheme, const int is_family,
                                              [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
-  double center[3], mapped_center[3];
+  double center[3];
   double dist, min_dist;
 
   t8_tutorial_search_partition_global_t *g = (t8_tutorial_search_partition_global_t *) t8_forest_get_user_data (forest);
@@ -88,23 +77,58 @@ t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t for
   /* Compute the element center's position in the unit cube. */
   T8_ASSERT (num_elements == 1);
   t8_forest_element_centroid (forest, which_tree, elements[0], center);
-  t8_tutorial_search_partition_map_coordinates (center, which_tree, mapped_center);
 
   /* Compute distance to point a. */
-  dist = (g->a[0] - mapped_center[0]) * (g->a[0] - mapped_center[0])
-         + (g->a[1] - mapped_center[1]) * (g->a[1] - mapped_center[1])
-         + (g->a[2] - mapped_center[2]) * (g->a[2] - mapped_center[2]);
+  dist = (g->a[0] - center[0]) * (g->a[0] - center[0])
+         + (g->a[1] - center[1]) * (g->a[1] - center[1])
+         + (g->a[2] - center[2]) * (g->a[2] - center[2]);
   min_dist = sqrt (dist);
 
   /* Compute distance to point b. */
-  dist = (g->b[0] - mapped_center[0]) * (g->b[0] - mapped_center[0])
-         + (g->b[1] - mapped_center[1]) * (g->b[1] - mapped_center[1])
-         + (g->b[2] - mapped_center[2]) * (g->b[2] - mapped_center[2]);
+  dist = (g->b[0] - center[0]) * (g->b[0] - center[0])
+         + (g->b[1] - center[1]) * (g->b[1] - center[1])
+         + (g->b[2] - center[2]) * (g->b[2] - center[2]);
   min_dist = SC_MIN (min_dist, sqrt (dist));
 
   /* refine if quadrant center is close enough to either point a or point b */
   return (scheme->element_get_level (tree_class, elements[0])
           < g->max_level - floor (min_dist * (g->max_level - g->uniform_level) / 0.2));
+}
+
+/** Create a non-periodic brick coarse mesh similar to \ref t8_cmesh_new_brick_3d_ext
+ * with the difference that it is mapped to the unit cube instead of
+ * [0,num_x]x[0,num_y]x[0,num_y]. */
+static t8_cmesh_t
+t8_tutorial_search_partition_new_unit_brick (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z,
+                                             sc_MPI_Comm comm)
+{
+  const double boundary[24] = { 0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                0.0,
+                                1.0,
+                                1.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                1.0,
+                                1.0,
+                                0.0,
+                                1.0,
+                                0.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0};
+
+  return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z, 0, 0,
+                                         0, 0, 0, 0);
 }
 
 static void
@@ -122,7 +146,7 @@ t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_
   SC_CHECK_MPI (mpiret);
 
   /* Build a 2x2x2 cube cmesh. */
-  cmesh = t8_cmesh_new_brick_3d (2, 2, 2, 0, 0, 0, g->mpicomm);
+  cmesh = t8_tutorial_search_partition_new_unit_brick (2, 2, 2, g->mpicomm);
   /* Build a uniform forest on it. */
   g->forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), g->uniform_level, 0, g->mpicomm);
 
@@ -209,16 +233,9 @@ t8_tutorial_search_partition_local_query_fn (const t8_forest_t forest, const t8_
                                              const t8_point_t &query, t8_tutorial_search_partition_global_t *g)
 {
   int is_inside;
-  double coords[3], tolerance;
-
-  /* temporarily scale query point coords to [0,2]^3 to account for built-in brick mapping */
-  coords[0] = query.xyz[0] * 2.;
-  coords[1] = query.xyz[1] * 2.;
-  coords[2] = query.xyz[2] * 2.;
-  tolerance = 1e-8;
 
   /* check if the query point lies inside the element */
-  t8_forest_element_points_inside (forest, ltreeid, element, coords, 1, &is_inside, tolerance);
+  t8_forest_element_points_inside (forest, ltreeid, element, query.xyz, 1, &is_inside, 1e-8);
 
   if (is_inside && is_leaf) {
     /* The query point is inside and this element is a leaf element. */
@@ -236,19 +253,11 @@ t8_tutorial_search_partition_local_queries_fn (
   t8_tutorial_search_partition_global_t *g)
 {
   int is_inside;
-  double coords[3], tolerance;
-
-  tolerance = 1e-8;
   for (size_t qiz : active_query_indices) {
     const t8_point_t &query = queries[qiz];
 
-    /* temporarily scale query point coords to [0,2]^3 to account for built-in brick mapping */
-    coords[0] = query.xyz[0] * 2.;
-    coords[1] = query.xyz[1] * 2.;
-    coords[2] = query.xyz[2] * 2.;
-
     /* check if the query point lies inside the element */
-    t8_forest_element_points_inside (forest, ltreeid, element, coords, 1, &is_inside, tolerance);
+    t8_forest_element_points_inside (forest, ltreeid, element, query.xyz, 1, &is_inside, 1e-8);
     query_matches[qiz] = is_inside;
 
     if (is_inside && is_leaf) {
