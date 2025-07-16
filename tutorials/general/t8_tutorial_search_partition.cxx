@@ -46,9 +46,9 @@ typedef struct t8_tutorial_search_partition_global
 
   /* Queries */
   t8_locidx_t num_global_queries;    /* global number of queries;
-                                                 * of type p4est_locidx_t, since
-                                                 * queries are replicated across
-                                                 * all processes */
+                                      * of type t8_locidx_t, since
+                                      * queries are replicated across
+                                      * all processes */
   int seed;                          /* seed for random query creation */
   double clustering_exponent;        /* affects the distribution of queries */
   sc_array_t *queries;               /* array of query points */
@@ -414,19 +414,19 @@ main (int argc, char **argv)
       ue = 1;
     }
     if (g->num_global_queries < 0) {
-      P4EST_GLOBAL_LERROR ("Number of queries has to be non-negative.\n");
+      t8_global_errorf ("Number of queries has to be non-negative.\n");
       ue = 1;
     }
     if ((long long) g->num_global_queries * sizeof (t8_point_t) > INT_MAX) {
-      P4EST_GLOBAL_LERROR ("Number of queries too large for MPI buffer.\n");
+      t8_global_errorf ("Number of queries too large for MPI buffer.\n");
       ue = 1;
     }
     if (g->seed < 0) {
-      P4EST_GLOBAL_LERROR ("Seed has to be non-negative.\n");
+      t8_global_errorf ("Seed has to be non-negative.\n");
       ue = 1;
     }
     if (g->clustering_exponent < 0.) {
-      P4EST_GLOBAL_LERROR ("Clustering exponent has to be non-negative.\n");
+      t8_global_errorf ("Clustering exponent has to be non-negative.\n");
       ue = 1;
     }
     if (ue) {
