@@ -52,6 +52,7 @@ typedef struct t8_tutorial_search_partition_global
   int seed;                       /* seed for random query creation */
   double clustering_exponent;     /* affects the distribution of queries */
   sc_array_t *queries;            /* array of query points */
+  std::vector<t8_point_t> query_vec; /* vector of the same query points */
 
   /* search statistics */
   int num_local_queries;         /* number of queries found in local search */
@@ -213,6 +214,11 @@ t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_glob
   mpiret = sc_MPI_Bcast (g->queries->array, g->num_global_queries * sizeof (t8_point_t), sc_MPI_BYTE, 0, g->mpicomm);
   SC_CHECK_MPI (mpiret);
   t8_global_productionf ("Created %lld global queries.\n", (unsigned long long) g->queries->elem_count);
+
+  /* convert queries array to vector */
+  std::vector<t8_point_t> query_vec ((t8_point_t *) sc_array_index (g->queries, 0),
+                                     (t8_point_t *) sc_array_index (g->queries, 0) + g->queries->elem_count);
+  g->query_vec = query_vec;
 }
 
 static bool
@@ -270,25 +276,21 @@ t8_tutorial_search_partition_local_queries_fn (
 static void
 t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t *g)
 {
-  /* convert queries array to vector */
-  std::vector<t8_point_t> query_vec ((t8_point_t *) sc_array_index (g->queries, 0),
-                                     (t8_point_t *) sc_array_index (g->queries, 0) + g->queries->elem_count);
-
   /* call local search */
   g->num_local_queries = 0;
   t8_search_with_queries<t8_point_t, t8_tutorial_search_partition_global_t> local_search (
-    t8_tutorial_search_partition_local_element_fn, t8_tutorial_search_partition_local_query_fn, query_vec, g->forest,
+    t8_tutorial_search_partition_local_element_fn, t8_tutorial_search_partition_local_query_fn, g->query_vec, g->forest,
     g);
-  local_search.update_queries (query_vec);
+  local_search.update_queries (g->query_vec);
   local_search.do_search ();
   t8_infof ("Queries found in local search = %d\n", g->num_local_queries);
 
   /* call local batched search and compare */
   g->num_local_batched_queries = 0;
   t8_search_with_batched_queries<t8_point_t, t8_tutorial_search_partition_global_t> local_batched_search (
-    t8_tutorial_search_partition_local_element_fn, t8_tutorial_search_partition_local_queries_fn, query_vec, g->forest,
+    t8_tutorial_search_partition_local_element_fn, t8_tutorial_search_partition_local_queries_fn, g->query_vec, g->forest,
     g);
-  local_batched_search.update_queries (query_vec);
+  local_batched_search.update_queries (g->query_vec);
   local_batched_search.do_search ();
   T8_ASSERT (g->num_local_queries == g->num_local_batched_queries);
 }
