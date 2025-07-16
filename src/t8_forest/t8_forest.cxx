@@ -399,15 +399,15 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->scheme != NULL);
   /* Get the tree's class and scheme */
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltree_id);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, ltree_id);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
   scheme->element_get_vertex_reference_coords (tree_class, element, corner_number, vertex_coords);
   /* Compute the global tree id */
-  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltree_id);
   /* Get the cmesh */
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   /* Evaluate the geometry */
+  const t8_gloidx_t gtreeid = t8_cmesh_get_global_id (cmesh, ltree_id);
   t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, 1, coordinates);
 }
 
@@ -416,11 +416,11 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
                                        const double *ref_coords, const size_t num_coords, double *coords_out,
                                        const double *stretch_factors)
 {
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
   const int tree_dim = t8_eclass_to_dimension[tree_class];
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
+  const t8_gloidx_t gtreeid = t8_cmesh_get_global_id (cmesh, ltreeid);
 
   double *tree_ref_coords = T8_ALLOC (double, (tree_dim == 0 ? 1 : tree_dim) * num_coords);
 
@@ -495,7 +495,8 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
 {
   //  T8_ASSERT (t8_forest_is_committed (forest));
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
 
   /* Get the tree's eclass and scheme. */
   T8_ASSERT (scheme->element_is_valid (tree_class, element));
@@ -918,7 +919,8 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
                                double normal[3])
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_element_shape_t face_shape = scheme->element_get_face_shape (tree_class, element, face);
 
@@ -1085,8 +1087,8 @@ t8_forest_element_points_inside (t8_forest_t forest, t8_locidx_t ltreeid, const 
 {
   /* Check whether the provided geometry is linear */
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const t8_locidx_t cltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-  const t8_gloidx_t cgtreeid = t8_cmesh_get_global_id (cmesh, cltreeid);
+  //  const t8_locidx_t cltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+  const t8_gloidx_t cgtreeid = t8_cmesh_get_global_id (cmesh, ltreeid);
   const t8_geometry_c *geometry = t8_cmesh_get_tree_geometry (cmesh, cgtreeid);
   geometry->t8_geom_point_batch_inside_element (forest, ltreeid, element, points, num_points, is_inside, tolerance);
 }

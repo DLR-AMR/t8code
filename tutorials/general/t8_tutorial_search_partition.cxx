@@ -63,6 +63,22 @@ typedef struct t8_tutorial_search_partition_global
   int mpirank;         /* the processes rank */
 } t8_tutorial_search_partition_global_t;
 
+/** Compute the id of a tree in the replicated coarse mesh.
+ *
+ * For the partition search we need to be able to search points in all trees of
+ * the replicated coarse mesh. However, the respective functionality in
+ * t8_forest.cxx assumes to operate only on trees local to the forest.
+ * we temporarily adapt the relevant functions in t8_forest.cxx to use
+ * t8_cmesh_get_tree_class instead of t8_forest_get_tree_class to get rid of
+ * this restriction. For this approach to work we need to use the ltreeid with
+ * respect to the coarse mesh instead of the forest, which is done using this
+ * function. */
+t8_locidx_t
+t8_tutorial_search_partition_cmesh_id (t8_forest_t forest, t8_locidx_t which_tree)
+{
+  return t8_forest_global_tree_id (forest, which_tree);
+}
+
 int
 t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                                              [[maybe_unused]] t8_eclass_t tree_class,
@@ -76,8 +92,8 @@ t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t for
   t8_tutorial_search_partition_global_t *g = (t8_tutorial_search_partition_global_t *) t8_forest_get_user_data (forest);
 
   /* Compute the element center's position in the unit cube. */
-  T8_ASSERT (num_elements == 1);
-  t8_forest_element_centroid (forest, which_tree, elements[0], center);
+  t8_locidx_t gtreeid = t8_tutorial_search_partition_cmesh_id (forest, which_tree);
+  t8_forest_element_centroid (forest, gtreeid, elements[0], center);
 
   /* Compute distance to point a. */
   dist = (g->a[0] - center[0]) * (g->a[0] - center[0])
@@ -241,7 +257,8 @@ t8_tutorial_search_partition_local_query_fn (const t8_forest_t forest, const t8_
   int is_inside;
 
   /* check if the query point lies inside the element */
-  t8_forest_element_points_inside (forest, ltreeid, element, query.xyz, 1, &is_inside, 1e-8);
+  t8_locidx_t gtreeid = t8_tutorial_search_partition_cmesh_id (forest, ltreeid);
+  t8_forest_element_points_inside (forest, gtreeid, element, query.xyz, 1, &is_inside, 1e-8);
 
   if (is_inside && is_leaf) {
     /* The query point is inside and this element is a leaf element. */
@@ -259,11 +276,12 @@ t8_tutorial_search_partition_local_queries_fn (
   t8_tutorial_search_partition_global_t *g)
 {
   int is_inside;
+  t8_locidx_t gtreeid = t8_tutorial_search_partition_cmesh_id (forest, ltreeid);
   for (size_t qiz : active_query_indices) {
     const t8_point_t &query = queries[qiz];
 
     /* check if the query point lies inside the element */
-    t8_forest_element_points_inside (forest, ltreeid, element, query.xyz, 1, &is_inside, 1e-8);
+    t8_forest_element_points_inside (forest, gtreeid, element, query.xyz, 1, &is_inside, 1e-8);
     query_matches[qiz] = is_inside;
 
     if (is_inside && is_leaf) {
