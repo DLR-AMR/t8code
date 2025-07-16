@@ -149,7 +149,7 @@ class t8_forest_pfc_message_c {
 
     // eclass = scheme->eclass;
     myscheme = t8_forest_get_scheme (forest);
-    eclass = t8_forest_get_eclass (forest, itree);
+    eclass = t8_forest_get_eclass (forest, t8_forest_get_local_id(forest, itree));
     /* if we are already the root element, we cannot be part of a split family, so we send any(the root) element and no num_siblings */
     if (myscheme->element_get_level (eclass, element_closest_to_receiver) == 0) {
       parent = element_closest_to_receiver;
