@@ -2,11 +2,19 @@
 
 #include <array>
 
+#include <t8_element.h>
+#include <t8_schemes/t8_scheme.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
+
 #ifdef T8_ENABLE_MRA
 namespace t8_mra
 {
+/// TODO write more general with templates
 struct triangle_order
 {
+
+  static constexpr t8_eclass ECLASS = T8_ECLASS_TRIANGLE;
 
   static void
   get_point_order (std::array<int, 3>& order, int cube_id)
@@ -69,6 +77,21 @@ struct triangle_order
                                                          : 5;
 
     return (type == 1) ? lookup_type_1[idx][child_id] : lookup_type_2[idx][child_id];
+  }
+
+  static void
+  get_point_order_at_level (size_t basecell, const t8_element_t* elem, const t8_scheme* scheme,
+                            std::array<int, 3>& order)
+  {
+    order = { 0, 0, 0 };
+    const auto elem_level = scheme->element_get_level (ECLASS, elem);
+    t8_dtri_t ancestor;
+
+    for (auto l = 0u; l < elem_level; ++l) {
+      const auto ancestor_id = scheme->element_get_ancestor_id (ECLASS, elem, l + 1);
+      t8_dtri_ancestor ((t8_dtri_t*) elem, l, &ancestor);
+      get_point_order (order, t8_dtri_type_cid_to_beyid[ancestor.type][ancestor_id]);
+    }
   }
 
  private:
