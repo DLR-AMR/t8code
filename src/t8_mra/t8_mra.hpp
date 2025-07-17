@@ -1,5 +1,8 @@
 #pragma once
 
+#include <complex>
+#include <iterator>
+#include "t8_forest/t8_forest_general.h"
 #ifdef T8_ENABLE_MRA
 
 #include "t8_eclass.h"
@@ -7,7 +10,11 @@
 #include "t8_mra/data/cell_data.hpp"
 #include "t8_mra/data/levelmultiindex.hpp"
 #include "t8_mra/data/levelindex_map.hpp"
+#include "t8_mra/num/dunavant.hxx"
 #include "t8_mra/num/mask_coefficients.hpp"
+#include "t8_mra/num/basis_functions.hxx"
+#include "t8_mra/num/mat.hpp"
+#include <t8_forest/t8_forest_geometrical.h>
 
 namespace t8_mra
 {
@@ -46,11 +53,63 @@ class multiscale: public multiscale_data<TShape> {
   using multiscale_data<TShape>::mask_coefficients;
   using multiscale_data<TShape>::inverse_mask_coefficients;
 
+  int max_level;
+  double c_thresh;
+  int dunavant_rule;
+
+  sc_MPI_Comm comm;
+
  public:
-  multiscale ()
+  multiscale (int _max_level, double _c_thresh, int _dunavant_rule, sc_MPI_Comm _comm)
+    : max_level (_max_level), c_thresh (_c_thresh), dunavant_rule (_dunavant_rule), comm (_comm)
   {
     t8_mra::initialize_mask_coefficients<TShape> (P_DIM, DOF, multiscale_data<TShape>::mask_coefficients,
                                                   multiscale_data<TShape>::inverse_mask_coefficients);
+  }
+
+  template <typename TFunc>
+  std::vector<double>
+  project (std::vector<double>& dg_coeffs, const t8_forest_t forest, int tree_idx, const t8_element_t* element,
+           const std::array<int, 3>& order, TFunc&& func)
+  {
+    /// Projection -> TODO auslagern
+    const auto order_num = t8_mra::dunavant_order_num (dunavant_rule);
+    std::vector<double> wtab (order_num, 0.0);
+    std::vector<double> xytab (2 * order_num, 0.0);
+    std::vector<double> xytab_ref (2 * order_num, 0.0);
+
+    /// TODO std::vector
+    t8_mra::dunavant_rule (dunavant_rule, order_num, xytab_ref.data (), wtab.data ());
+    const auto volume = t8_forest_element_volume (forest, tree_idx, element);
+
+    double vertices[3][3];
+    for (auto i = 0; i < 3; ++i)
+      t8_forest_element_coordinate (forest, tree_idx, element, i, vertices[order[i]]);
+
+    t8_mra::mat A (3, 3);
+    std::vector<size_t> r (0, 3);
+
+    for (auto i = 0; i < 3; ++i)
+      for (auto j = 0; j < 3; ++j)
+        A (i, j) = i == 2 ? 1.0 : vertices[i][j];
+
+    t8_mra::lu_factors (A, r);
+    std::array<double, 6> corners { vertices[0][0], vertices[0][1], vertices[1][0],
+                                    vertices[1][1], vertices[2][0], vertices[2][1] };
+    t8_mra::reference_to_physical_t3 (corners.data (), order_num, xytab_ref.data (), xytab.data ());
+
+    for (auto i = 0u; i < DOF; ++i) {
+      double sum = 0.0;
+      for (auto j = 0u; j < order_num; ++j) {
+        const auto x = xytab[2 * j];
+        const auto y = xytab[1 + 2 * j];
+        vec tau = { x, y, 1.0 };
+        t8_mra::lu_solve (A, r, tau);
+        sum += wtab[j] * func (x, y) * std::sqrt (1.0 / (2.0 * volume))
+               * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
+      }
+      dg_coeffs[i] = sum * volume;
+    }
   }
 
   /// TODO index with lmi_map (template<index, val>)
@@ -100,6 +159,36 @@ class multiscale: public multiscale_data<TShape> {
         grid_hierarchy.insert (l - 1, parent_lmi.index, parent_data);
       }
     }
+  }
+
+  t8_forest_t
+  initialize_data (t8_mra::levelindex_map<element_t>& grid_hierarchy, t8_cmesh_t mesh, t8_scheme* scheme, int level,
+                   auto&& func)
+  {
+    auto forest = t8_forest_new_uniform (mesh, scheme, level, 0, comm);
+    grid_hierarchy.level_map.reserve (level + 1);
+
+    const auto num_local_elements = t8_forest_get_global_num_leaf_elements (forest);
+    const auto num_ghost_elements = t8_forest_get_num_ghosts (forest);
+
+    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+    for (auto tree_idx = 0u; tree_idx < num_local_trees; ++tree_idx) {
+      const auto num_elements_in_treee = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+      const auto base_element = t8_forest_global_tree_id (forest, tree_idx);
+
+      for (auto ele_idx = 0u; ele_idx < num_elements_in_treee; ++ele_idx) {
+        element_t data_element;
+        const auto* element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+        // const auto volume = t8_forest_element_volume (forest, tree_idx, element);
+        const auto lmi = levelmultiindex (base_element, element, scheme);
+        std::array<int, 3> point_order;
+        t8_mra::triangle_order::get_point_order_at_level (base_element, element, scheme, point_order);
+        project (data_element.u_coeffs, forest, tree_idx, element, func);
+        grid_hierarchy.insert (level, lmi.index, data_element);
+      }
+    }
+
+    return forest;  /// TODO link data to forest
   }
 };
 
