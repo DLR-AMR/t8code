@@ -1034,7 +1034,9 @@ main (int argc, char** argv)
   //Here you choose the correct coarse mesh.
   //t8_cmesh_t cmesh = t8_cmesh_new_basic (comm);
   t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
-  test.initialize_data (grid_bla, cmesh, test_scheme, 1u, [] (double x, double y) -> double { return x + y; });
+
+  auto test_forest
+    = test.initialize_data (grid_bla, cmesh, test_scheme, 1u, [] (double x, double y) -> double { return x + y; });
 
   //t8_cmesh_t cmesh = t8_cmesh_new_octagon (comm);
   //t8_cmesh_t cmesh = t8_cmesh_new_complex_polygonal_shape (comm);
