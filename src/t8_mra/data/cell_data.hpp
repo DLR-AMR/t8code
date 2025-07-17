@@ -25,6 +25,7 @@ binom (int n, int k) noexcept
 template <t8_eclass TShape, unsigned short U, unsigned short P>
 struct data_per_element
 {
+  static constexpr t8_eclass Shape = TShape;
   static constexpr unsigned short DIM = 2;  /// TODO
   static constexpr unsigned short U_DIM = U;
 
