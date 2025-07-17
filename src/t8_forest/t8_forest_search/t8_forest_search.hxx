@@ -145,7 +145,7 @@ using t8_partition_search_element_callback
  */
 template <typename Query_T, typename Udata = void>
 using t8_partition_search_query_callback
-  = std::function<void (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+  = std::function<bool (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                         const int pfirst, const int plast, const Query_T &query, Udata *user_data)>;
 
 /**
