@@ -20,6 +20,37 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/* This 3D tutorial replicates a set of random points on all processes and
+ * searches them in a forest locally as well as in its partition and checks
+ * the results for consistency.
+ *
+ * The query points are replicated on all processes.
+ * First, they are entered into the local search and the amount of queries found
+ * in the local part of the forest is stored for each process.
+ * Next, the queries are entered into the partition search and the amount of
+ * queries assigned to each process is compared to the results of the local
+ * search, to check for consistency.
+ *
+ * The forest is either a 2x2x2 brick covering the unit square or a hybrid
+ * hypercube consisting of multiple tree types. First, it is refined
+ * uniformly to a user-specified level. Then, it is refined adaptively around
+ * two refinement center points a and b.
+ * The query points are created with a random distribution that clusters them
+ * around the refinement point b and another point c.
+ * As a result, both searches are tested for
+ * - a fine mesh with few query points (point a)
+ * - a fine mesh with many query points (point b)
+ * - a coarse mesh with many query points (point c)
+ * - a coarse mesh with few query points (else).
+ *
+ * The adaptive refinement of the forest can be controlled by its maxlevel and
+ * its level of uniform refinement. In particular, by choosing the maxlevel
+ * small enough, a uniform forest can be enforced.
+ * Similarly, the query point creation can be controlled by the
+ * "clustering exponent" c.
+ * Setting c to 0 leads to a uniform distribution. Higher values of c lead to
+ * the query points increasingly clustering around point b and point c. */
+
 #include <t8.h>                                            /* General t8code header, always include this. */
 #include <t8_forest/t8_forest_general.h>                   /* Forest definition and basic interface. */
 #include <t8_forest/t8_forest_geometrical.h>               /* Element center computation. */
@@ -84,6 +115,9 @@ t8_tutorial_search_partition_cmesh_id (t8_forest_t forest, t8_locidx_t which_tre
   return t8_forest_global_tree_id (forest, which_tree);
 }
 
+/** The adaptive refinement callback. First, the center of the element is
+ * computed. The closer the center is to one of the two prefdefined refinement
+ * centers g->a and g->b, the stronger it will be refined. */
 int
 t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                                              [[maybe_unused]] t8_eclass_t tree_class,
@@ -128,6 +162,9 @@ t8_tutorial_search_partition_new_unit_brick (const t8_gloidx_t num_x, const t8_g
   return t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_HEX, comm, boundary, num_x, num_y, num_z, 0, 0, 0, 0, 0, 0);
 }
 
+/** Create a forest covering the unit square. Depending on the user-specified
+ * example id the forest will either be a brick of hexahedra or a hybrid mesh
+ * consisting of several different tree types combined into a cube. */
 static void
 t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_t *g)
 {
@@ -176,6 +213,11 @@ t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_
   }
 }
 
+/** Create a set of random queries on rank 0 and distribute them to all ranks.
+ * The queries are first generated with uniform distribution in the unit square
+ * and are then moved closer to one of two predefined cluster centers g->b and
+ * g->c. The "intensity" of the clustering can be controlled with the
+ * clustering exponent. */
 static void
 t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_global_t *g)
 {
@@ -237,6 +279,9 @@ t8_tutorial_search_partition_local_element_fn (const t8_forest_t forest, const t
   return true;
 }
 
+/** Query callback for the local search. Determine whether the query point is
+ * contained inside the element and keep track of the number of queries found
+ * locally. */
 static bool
 t8_tutorial_search_partition_local_query_fn (const t8_forest_t forest, const t8_locidx_t ltreeid,
                                              const t8_element_t *element, const bool is_leaf,
@@ -257,6 +302,9 @@ t8_tutorial_search_partition_local_query_fn (const t8_forest_t forest, const t8_
   return is_inside;
 }
 
+/** Batched queries callback for the local search. Determine whether the queries
+ * are contained inside the element and keep track of the number of queries
+ * found locally. */
 static void
 t8_tutorial_search_partition_local_queries_fn (
   const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const bool is_leaf,
@@ -280,6 +328,11 @@ t8_tutorial_search_partition_local_queries_fn (
   }
 }
 
+/** Perform local searches of the replicated queries. Compare the number of
+ * queries found during the local search with single query callback and with
+ * batched queries callback and check them for consistency. The numbers of
+ * locally found queries are gathered globally for future comparison to the
+ * results of the partition. */
 static void
 t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t *g)
 {
@@ -329,6 +382,9 @@ t8_tutorial_search_partition_partition_element_fn (const t8_forest_t forest, con
   return true;
 }
 
+/** Query callback for the partition search. Determine whether the query point
+ * is contained inside the element and keep track of the number of queries
+ * assigned to each process. */
 static bool
 t8_tutorial_search_partition_partition_query_fn (const t8_forest_t forest, const t8_locidx_t ltreeid,
                                                  const t8_element_t *element, int pfirst, int plast,
@@ -347,6 +403,9 @@ t8_tutorial_search_partition_partition_query_fn (const t8_forest_t forest, const
   return is_inside;
 }
 
+/** Batched queries callback for the partition search. Determine whether the
+ * queries  are contained inside the element and keep track of the number of
+ * queries assigned to each process. */
 static void
 t8_tutorial_search_partition_partition_queries_fn (const t8_forest_t forest, const t8_locidx_t ltreeid,
                                                    const t8_element_t *element, int pfirst, int plast,
@@ -370,6 +429,11 @@ t8_tutorial_search_partition_partition_queries_fn (const t8_forest_t forest, con
   }
 }
 
+/** Perform partition searches of the replicated queries. Compare the number of
+ * queries found during the partition search with single query callback and with
+ * batched queries callback and check them for consistency. Compare the
+ * number of queries assigned to each rank with the results gathered from the
+ * local search previously. */
 static void
 t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_global_t *g)
 {
@@ -387,7 +451,7 @@ t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_glob
   partition_search.update_queries (g->query_vec);
   partition_search.do_search ();
 
-  /* call local batched search and compare */
+  /* call batched partition search and compare */
   g->num_batched_queries_per_rank = sc_array_new_count (sizeof (int), g->mpisize);
   sc_array_memset (g->num_batched_queries_per_rank, 0);
   t8_partition_search_with_batched_queries<t8_point_t, t8_tutorial_search_partition_global_t> partition_batched_search (
@@ -445,6 +509,7 @@ t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_glob
   }
 }
 
+/** Free the queries and the mesh. */
 static void
 t8_tutorial_search_partition_cleanup (t8_tutorial_search_partition_global_t *g)
 {
@@ -458,6 +523,8 @@ t8_tutorial_search_partition_cleanup (t8_tutorial_search_partition_global_t *g)
   t8_forest_unref (&g->forest);
 }
 
+/** Create a mesh and a set of queries, search them in the local mesh and in the
+* mesh partition and perform some consistency checks, before deallocating. */
 static void
 t8_tutorial_search_partition_run (t8_tutorial_search_partition_global_t *g)
 {
