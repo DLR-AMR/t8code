@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_conn_vertex_to_tree.cxx
+/** \file t8_cmesh_vertex_conn_vertex_to_tree.cxx
  *  This file implements the routines for the t8_cmesh_conn_vertex_to_tree struct.
  */
 

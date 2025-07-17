@@ -91,7 +91,6 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   /* Setter functions */
   /** Given a cmesh, build up the vertex_to_tree.
    * \param [in] cmesh An initialized but not yet committed cmesh.
-   * \return: some error value to be specified.
    * The cmesh must not be committed, but all tree information and neighbor information must
    * have been set.
    * Currently, \a cmesh has to be replicated. */

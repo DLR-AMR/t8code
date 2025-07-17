@@ -2059,10 +2059,12 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
   return 0;
 }
 
-/* The data that we use as key in the binary owner search.
+/**
+ * The data that we use as key in the binary owner search.
  * It contains the linear id of the element that we look for and
  * a pointer to the forest, we also store the index of the biggest owner process.
  */
+
 struct find_owner_data_t
 {
   t8_linearidx_t linear_id;
