@@ -634,6 +634,15 @@ class t8_partition_search_base {
   virtual void
   update_queries (std::vector<size_t> &old_query_indices)
     = 0;
+
+  /**
+   * @brief Function gives the user the opportunity to set the queries to the initial
+   *        full set before searching each tree.
+   *
+   */
+  virtual void
+  init_queries ()
+    = 0;
 };
 
 template <typename Udata = void>
@@ -692,6 +701,12 @@ class t8_partition_search: public t8_partition_search_base {
     return;
   }
 
+  void
+  init_queries () override
+  {
+    return;
+  }
+
   t8_partition_search_element_callback<Udata> element_callback;
 };
 
@@ -713,8 +728,6 @@ class t8_partition_search_with_queries: public t8_partition_search<Udata> {
     : t8_partition_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback),
       queries (queries)
   {
-    this->active_queries.resize (queries.size ());
-    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   }
 
   void
@@ -740,21 +753,25 @@ class t8_partition_search_with_queries: public t8_partition_search<Udata> {
   {
     T8_ASSERT (new_active_queries.empty ());
     if (!this->active_queries.empty ()) {
-      auto positive_queries = this->active_queries | std::ranges::views::filter ([&] (size_t &query_index) {
-                                return this->queries_callback (this->forest, ltreeid, element, pfirst, plast,
-                                                               queries[query_index], this->user_data);
-                              });
-      if (pfirst != plast) {
-        new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
-        std::swap (this->active_queries, new_active_queries);
-      }
+      std::copy_if (this->active_queries.begin (), this->active_queries.end (), std::back_inserter (new_active_queries),
+                    [&] (size_t &query_index) {
+                      return this->queries_callback (this->forest, ltreeid, element, pfirst, plast,
+                                                     queries[query_index], this->user_data);
+                    });
     }
   }
 
   void
   update_queries (std::vector<size_t> &old_query_indices)
   {
-    std::swap (this->active_queries, old_query_indices);
+    this->active_queries = old_query_indices;
+  }
+
+  void
+  init_queries () override
+  {
+    this->active_queries.resize (this->queries.size ());
+    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   }
 
   t8_partition_search_query_callback<Query_T, Udata> queries_callback;
@@ -782,8 +799,6 @@ class t8_partition_search_with_batched_queries: public t8_partition_search<Udata
     : t8_partition_search<Udata> (element_callback, forest, user_data), queries_callback (queries_callback),
       queries (queries)
   {
-    this->active_queries.resize (queries.size ());
-    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   }
 
   void
@@ -808,15 +823,11 @@ class t8_partition_search_with_batched_queries: public t8_partition_search<Udata
   {
     T8_ASSERT (new_active_queries.empty ());
     if (!this->active_queries.empty ()) {
-      std::vector<bool> query_matches (this->active_queries.size ());
+      std::vector<bool> query_matches (this->queries.size ());
       this->queries_callback (this->forest, ltreeid, element, pfirst, plast, this->queries, this->active_queries,
                               query_matches, this->user_data);
-      if (pfirst != plast) {
-        auto positive_queries = this->active_queries | std::ranges::views::filter ([&] (size_t &query_index) {
-                                  return query_matches[query_index];
-                                });
-        new_active_queries.assign (positive_queries.begin (), positive_queries.end ());
-      }
+      std::copy_if (this->active_queries.begin (), this->active_queries.end (), std::back_inserter (new_active_queries),
+                    [&] (size_t &query_index) { return query_matches[query_index]; });
     }
     std::swap (new_active_queries, this->active_queries);
   }
@@ -824,7 +835,14 @@ class t8_partition_search_with_batched_queries: public t8_partition_search<Udata
   void
   update_queries (std::vector<size_t> &old_query_indices)
   {
-    std::swap (this->active_queries, old_query_indices);
+    this->active_queries = old_query_indices;
+  }
+
+  void
+  init_queries () override
+  {
+    this->active_queries.resize (this->queries.size ());
+    std::iota (this->active_queries.begin (), this->active_queries.end (), 0);
   }
 
   t8_partition_search_batched_queries_callback<Query_T, Udata> queries_callback;
