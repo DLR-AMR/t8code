@@ -305,8 +305,8 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_elemen
     }
 
     /* enter the recursion for the current child */
-    search_recursion (ltreeid, children[ichild], ts, cpfirst, cplast);
     update_queries (new_active_queries);
+    search_recursion (ltreeid, children[ichild], ts, cpfirst, cplast);
   }
 
   /* clean-up */
@@ -352,6 +352,7 @@ t8_partition_search_base::do_search ()
     plast = t8_offset_last_owner_of_tree (num_procs, itree, tree_offsets, &plast);
 
     /* go into recursion for this tree */
+    this->init_queries ();
     this->search_tree (itree, pfirst, plast);
   }
 }
