@@ -481,7 +481,7 @@ int
 main (int argc, char **argv)
 {
   int mpiret;
-  int first_argc, ue;
+  int first_argc, ue, help;
   int ngq;
   sc_options_t *opt;
   t8_tutorial_search_partition_global_t global, *g = &global;
@@ -500,6 +500,7 @@ main (int argc, char **argv)
 
   /* Define command line options of this tutorial. */
   opt = sc_options_new (argv[0]);
+  sc_options_add_switch (opt, 'h', "help", &help, "Print help message and exit cleanly");
   sc_options_add_int (opt, 'e', "example", &g->example, 0, "Index of the example forests");
   sc_options_add_int (opt, 'l', "minlevel", &g->uniform_level, 3, "Level of uniform refinement");
   sc_options_add_int (opt, 'L', "maxlevel", &g->max_level, 5, "Level of maximum refinement");
@@ -549,7 +550,7 @@ main (int argc, char **argv)
       t8_global_errorf ("Clustering exponent has to be non-negative.\n");
       ue = 1;
     }
-    if (ue) {
+    if (ue || help) {
       break;
     }
     sc_options_print_summary (p4est_get_package_id (), SC_LP_ESSENTIAL, opt);
@@ -577,7 +578,7 @@ main (int argc, char **argv)
      */
     t8_tutorial_search_partition_run (g);
   } while (0);
-  if (ue) {
+  if (ue || help) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
 
