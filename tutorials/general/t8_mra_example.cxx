@@ -1019,19 +1019,23 @@ main (int argc, char** argv)
   cout << "File data is\n";
   InitialisiereKoeff (p_mra, M0, M1, M2, M3, N0, N1, N2, N3);
   int max_level = 8;
+  double c_thresh = 1.0;
+  int dunavant_rule = 10;
 
   constexpr int P = 3;
   constexpr int U = 1;
 
-  using element_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
+  auto* test_scheme = t8_scheme_new_default ();
+  using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
 
-  t8_mra::levelindex_map<element_type> grid_bla (max_level);
-  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> test;
-  test.multiscale_transformation (grid_bla, 0, 1);
+  t8_mra::levelindex_map<element_data_type> grid_bla (max_level);
+  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> test (max_level, c_thresh, dunavant_rule, comm);
 
   //Here you choose the correct coarse mesh.
   //t8_cmesh_t cmesh = t8_cmesh_new_basic (comm);
   t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
+  test.initialize_data (grid_bla, cmesh, test_scheme, 1u, [] (double x, double y) -> double { return x + y; });
+
   //t8_cmesh_t cmesh = t8_cmesh_new_octagon (comm);
   //t8_cmesh_t cmesh = t8_cmesh_new_complex_polygonal_shape (comm);
   //t8_cmesh_t cmesh = t8_cmesh_new_l_shape (comm);
