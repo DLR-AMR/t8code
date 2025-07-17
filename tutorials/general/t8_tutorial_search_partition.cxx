@@ -39,6 +39,7 @@ typedef struct t8_tutorial_search_partition_point
 typedef struct t8_tutorial_search_partition_global
 {
   /* Forest */
+  int example;             /* Index of the example coarse mesh. */
   double a[3], b[3], c[3]; /* refinement centers */
   int uniform_level;       /* level of initial uniform refinement */
   int max_level;           /* maximum level of adaptive refinement */
@@ -143,8 +144,15 @@ t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_
   mpiret = sc_MPI_Comm_rank (g->mpicomm, &g->mpirank);
   SC_CHECK_MPI (mpiret);
 
-  /* Build a 2x2x2 cube cmesh. */
-  cmesh = t8_tutorial_search_partition_new_unit_brick (2, 2, 2, g->mpicomm);
+  if (g->example == 0) {
+    /* Build a 2x2x2 cube cmesh. */
+    cmesh = t8_tutorial_search_partition_new_unit_brick (2, 2, 2, g->mpicomm);
+  }
+  else {
+    /* Build a hybrid hypercube mesh consisting of different tree types. */
+    cmesh = t8_cmesh_new_hypercube_hybrid (g->mpicomm, 0, 0);
+  }
+
   /* Build a uniform forest on it. */
   g->forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), g->uniform_level, 0, g->mpicomm);
 
@@ -276,7 +284,8 @@ static void
 t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t *g)
 {
   int mpiret;
-  int gnq, il;
+  int gnq;
+  size_t il;
 
   /* call local search */
   g->num_local_queries = 0;
@@ -491,6 +500,7 @@ main (int argc, char **argv)
 
   /* Define command line options of this tutorial. */
   opt = sc_options_new (argv[0]);
+  sc_options_add_int (opt, 'e', "example", &g->example, 0, "Index of the example forests");
   sc_options_add_int (opt, 'l', "minlevel", &g->uniform_level, 3, "Level of uniform refinement");
   sc_options_add_int (opt, 'L', "maxlevel", &g->max_level, 5, "Level of maximum refinement");
   sc_options_add_int (opt, 'q', "num-queries", &ngq, 100, "Number of queries created per process");
@@ -510,6 +520,10 @@ main (int argc, char **argv)
     g->num_global_queries = (t8_locidx_t) ngq;
 
     /* Check options for consistency. */
+    if (g->example < 0 || g->example > 1) {
+      t8_global_errorf ("Choose example from 0 (brick mesh) and 1 (hybrid mesh)\n");
+      ue = 1;
+    }
     if (g->uniform_level < 0 || g->uniform_level > 18) {
       /* compared against hard-coded maxlevel of a brick forest */
       t8_global_errorf ("Uniform level out of bounds 0..18\n");
