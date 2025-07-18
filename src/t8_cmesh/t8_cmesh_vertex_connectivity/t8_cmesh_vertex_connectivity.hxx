@@ -220,7 +220,7 @@ struct t8_cmesh_vertex_connectivity
   }
 
  private:
-  /** The internal state. Indicating whether nothing happened, the ttv was filled or the vertex conn was built completely. */
+  /** The internal state. Indicating whether this structure is new and unfilled, the ttv was filled or the vertex conn was built completely. */
   state current_state;
 
   /** The process global number of global vertices. */
