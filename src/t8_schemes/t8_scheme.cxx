@@ -324,10 +324,10 @@ t8_element_get_last_descendant (const t8_scheme_c *scheme, const t8_eclass_t tre
 }
 
 void
-t8_element_construct_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
-                                t8_element_t *elem2)
+t8_element_construct_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                const int uniform_level, t8_element_t *succ)
 {
-  return scheme->element_construct_successor (tree_class, elem1, elem2);
+  return scheme->element_construct_successor (tree_class, elem, uniform_level, succ);
 }
 
 void

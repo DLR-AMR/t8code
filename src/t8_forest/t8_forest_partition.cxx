@@ -143,7 +143,8 @@ t8_forest_partition_test_desc (t8_forest_t forest)
     scheme->element_get_first_descendant (tree_class, element, elem_desc, forest->maxlevel);
     level = scheme->element_get_level (tree_class, elem_desc);
     T8_ASSERT (level == scheme->element_get_level (tree_class, elem_desc));
-    T8_ASSERT (level == forest->maxlevel);
+    /* The descendant should either be at maxlevel or shouldn't be refinable anymore. */
+    T8_ASSERT (level == forest->maxlevel || !scheme->element_is_refinable (tree_class, elem_desc));
     T8_ASSERT (scheme->element_get_linear_id (tree_class, elem_desc, level) >= first_desc_id);
   }
   scheme->element_destroy (tree_class, 1, &elem_desc);
@@ -236,7 +237,8 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
   T8_ASSERT (scheme->element_is_valid (tree_class, element_last_desc));
   const int level = scheme->element_get_level (tree_class, element_last_desc);
   T8_ASSERT (level == scheme->element_get_level (tree_class, element_last_desc));
-  T8_ASSERT (level == forest->maxlevel);
+  /* The descendant should either be at maxlevel or shouldn't be refinable anymore. */
+  T8_ASSERT (level == forest->maxlevel || !scheme->element_is_refinable (tree_class, element_last_desc));
   const t8_linearidx_t last_desc_id = scheme->element_get_linear_id (tree_class, element_last_desc, level);
   /* Get the first descendant id of rank+1 */
   const t8_linearidx_t first_desc_id

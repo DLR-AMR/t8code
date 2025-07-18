@@ -20,31 +20,30 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_STANDALONE_HXX
-#define T8_STANDALONE_HXX
+/** \file t8_multilevel.hxx
+ * Helper functions for the multilevel scheme.
+ */
+
+#ifndef T8_MULTILEVEL_HXX
+#define T8_MULTILEVEL_HXX
 
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
-
-T8_EXTERN_C_BEGIN ();
-
-/** Return the standalone element implementation of t8code. */
-const t8_scheme *
-t8_scheme_new_standalone (void);
-
-/** Return the standalone multilevel element implementation of t8code. */
-const t8_scheme *
-t8_scheme_new_standalone_multilevel (void);
+#include <t8_schemes/t8_multilevel/t8_multilevel_implementation.hxx>
 
 /** Check whether a given eclass_scheme is one of the standalone schemes.
+ * \tparam TUnderlyingEclassScheme  The underlying eclass scheme of the multilevel.
+ * \tparam TUnderlyingElementType   The underlying element type of the multilevel scheme.
  * \param [in] scheme   A (pointer to a) scheme
  * \param [in] eclass   The eclass to check
- * \return              True (non-zero) if \a scheme is one of the standalone schemes,
- *                      false (zero) otherwise.
+ * \return              True if scheme is a multilevel scheme,
+ *                      false otherwise.
  */
-int
-t8_eclass_scheme_is_standalone (const t8_scheme *scheme, const t8_eclass_t eclass);
+template <class TUnderlyingEclassScheme, typename TUnderlyingElementType>
+bool
+t8_eclass_scheme_is_multilevel (const t8_scheme *scheme, const t8_eclass_t eclass)
+{
+  return scheme->check_eclass_scheme_type<t8_multilevel_scheme<TUnderlyingEclassScheme>, TUnderlyingElementType> (
+    eclass);
+}
 
-T8_EXTERN_C_END ();
-
-#endif /* !T8_STANDALONE_HXX */
+#endif /* !T8_MULTILEVEL_HXX */
