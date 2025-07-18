@@ -1,8 +1,12 @@
 #include <t8_mra/t8_mra.hpp>
 #include "t8.h"
 #include "t8_cmesh.hxx"
+#include "t8_eclass.h"
 #include "t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx"
 #include "t8_geometry/t8_geometry_with_vertices.h"
+#include "t8_mra/data/cell_data.hpp"
+#include "t8_mra/data/levelmultiindex.hpp"
+#include "t8_vtk.h"
 
 t8_cmesh_t
 t8_cmesh_new_debugging (sc_MPI_Comm comm)
@@ -37,6 +41,40 @@ t8_cmesh_new_debugging (sc_MPI_Comm comm)
   t8_cmesh_commit (cmesh, comm);
 
   return cmesh;
+}
+
+template <typename T>
+void
+t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* prefix)
+{
+  const auto num_elements = t8_forest_get_local_num_leaf_elements (forest);
+  double* element_data = T8_ALLOC (double, num_elements);
+
+  auto num_data = 1;
+  t8_vtk_data_field_t vtk_data;
+  vtk_data.type = T8_VTK_SCALAR;
+  strcpy (vtk_data.description, "Element own data");
+  vtk_data.data = element_data;
+
+  /// TODO Easy access to element in forest
+  auto get_value = [&] (const t8_mra::forest_data<T>* forest_data, auto idx) {
+    return *((t8_mra::levelmultiindex<T::Shape>*) t8_sc_array_index_locidx ((forest_data->lmi_idx), idx));
+  };
+
+  /// TODO Add lmi_map[lmi]
+  for (auto i = 0u; i < num_elements; ++i) {
+    const auto lmi = get_value (data, i).index;
+    element_data[i] = data->lmi_map->get (8u, lmi).u_coeffs[0];
+  }
+
+  int write_treeid = 1;
+  int write_mpirank = 1;
+  int write_level = 1;
+  int write_element_id = 1;
+  int write_ghosts = 0;
+  t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, 0,
+                           0, num_data, &vtk_data);
+  T8_FREE (element_data);
 }
 
 int
@@ -91,14 +129,16 @@ main (int argc, char** argv)
     return 1. - r4 + 4. * r4 * rm1 - 10. * r4 * rm1h2 + 20 * r4 * rm1h3;
   };
 
-  // auto test_forest
-  //   = mra_test.initialize_data (lmi_map, cmesh, test_scheme, 1u, [] (double x, double y) { return x + y; });
-  auto forest = mra_test.initialize_data (lmi_map, cmesh, test_scheme, 1u, f4);
+  auto forest = mra_test.initialize_data (lmi_map, cmesh, test_scheme, max_level, f4);
   printf ("initialize data\n");
 
   auto* user_data = reinterpret_cast<t8_mra::forest_data<element_data_type>*> (t8_forest_get_user_data (forest));
 
   printf ("size init data: %zu\n", user_data->lmi_map->size ());
+
+  t8_write_vtu<element_data_type> (forest, user_data, "testi_test");
+
+  printf ("Finished writing file\n");
 
   sc_array_destroy (user_data->lmi_idx);
   delete lmi_map;
