@@ -205,7 +205,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * It will get initialized either when a geometry is registered
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
-  cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
+  cmesh->vertex_connectivity = NULL;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -838,6 +838,8 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       cmesh_out->num_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
       cmesh_out->num_local_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
     }
+    if (meta_info.cmesh.vertex_connectivity != nullptr)
+      cmesh_out->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
 #if T8_ENABLE_DEBUG
     int result;
     mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
