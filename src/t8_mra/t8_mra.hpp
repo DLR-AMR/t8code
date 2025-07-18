@@ -1,5 +1,6 @@
 #pragma once
 
+#include "t8.h"
 #ifdef T8_ENABLE_MRA
 
 #include "t8_eclass.h"
@@ -115,33 +116,54 @@ class multiscale: public multiscale_data<TShape> {
     }
   }
 
+  // void eval(const t8_mra::levelindex_map<element_t>& grid_hierarchy, )
+
   t8_forest_t
-  initialize_data (t8_mra::levelindex_map<element_t>& grid_hierarchy, t8_cmesh_t mesh, const t8_scheme* scheme,
-                   int level, auto&& func)
+  initialize_data (t8_mra::levelindex_map<element_t>* lmi_map, t8_cmesh_t mesh, const t8_scheme* scheme, int level,
+                   auto&& func)
   {
     auto forest = t8_forest_new_uniform (mesh, scheme, level, 0, comm);
-    grid_hierarchy.level_map.resize (level + 1);
+    lmi_map->level_map.resize (level + 1);
+
+    levelmultiindex* elem_data;
+    t8_mra::forest_data<element_t>* user_data;
+
+    user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+    elem_data = T8_ALLOC (levelmultiindex, 1);
+
+    T8_ASSERT (t8_forest_is_commited (forest));
 
     const auto num_local_elements = t8_forest_get_global_num_leaf_elements (forest);
     const auto num_ghost_elements = t8_forest_get_num_ghosts (forest);
 
+    user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local_elements + num_ghost_elements);
+
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+    auto current_idx = 0u;
     for (auto tree_idx = 0u; tree_idx < num_local_trees; ++tree_idx) {
       const auto num_elements_in_treee = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
       const auto base_element = t8_forest_global_tree_id (forest, tree_idx);
 
-      for (auto ele_idx = 0u; ele_idx < num_elements_in_treee; ++ele_idx) {
+      for (auto ele_idx = 0u; ele_idx < num_elements_in_treee; ++ele_idx, ++current_idx) {
         element_t data_element;
         const auto* element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
         const auto lmi = levelmultiindex (base_element, element, scheme);
 
         std::array<int, 3> point_order;
         t8_mra::triangle_order::get_point_order_at_level (base_element, element, scheme, point_order);
+
         /// TODO maybe in separate file
         project (data_element.u_coeffs, forest, tree_idx, element, point_order, func);
-        grid_hierarchy.insert (level, lmi.index, data_element);
+        lmi_map->insert (level, lmi.index, data_element);
+
+        /// Insert lmi into forest
+        *((levelmultiindex*) t8_sc_array_index_locidx (user_data->lmi_idx, current_idx)) = lmi;
       }
     }
+
+    T8_FREE (elem_data);
+    user_data->lmi_map = lmi_map;
+    t8_forest_set_user_data (forest, user_data);
 
     return forest;  /// TODO link data to forest
   }
