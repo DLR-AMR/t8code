@@ -1,4 +1,5 @@
 #include <t8_mra/t8_mra.hpp>
+#include "t8.h"
 #include "t8_cmesh.hxx"
 #include "t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx"
 #include "t8_geometry/t8_geometry_with_vertices.h"
@@ -66,7 +67,7 @@ main (int argc, char** argv)
   t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
   printf ("created test_scheme and cmesh\n");
 
-  t8_mra::levelindex_map<element_data_type> lmi_map;
+  t8_mra::levelindex_map<element_data_type>* lmi_map = new t8_mra::levelindex_map<element_data_type> ();
   printf ("created lmi_map\n");
 
   t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra_test (max_level, c_thresh, dunavant_rule, comm);
@@ -92,8 +93,25 @@ main (int argc, char** argv)
 
   // auto test_forest
   //   = mra_test.initialize_data (lmi_map, cmesh, test_scheme, 1u, [] (double x, double y) { return x + y; });
-  auto test_forest = mra_test.initialize_data (lmi_map, cmesh, test_scheme, 1u, f4);
+  auto forest = mra_test.initialize_data (lmi_map, cmesh, test_scheme, 1u, f4);
   printf ("initialize data\n");
 
-  printf ("size init data: %zu\n", lmi_map.size ());
+  auto* user_data = reinterpret_cast<t8_mra::forest_data<element_data_type>*> (t8_forest_get_user_data (forest));
+
+  printf ("size init data: %zu\n", user_data->lmi_map->size ());
+
+  sc_array_destroy (user_data->lmi_idx);
+  delete lmi_map;
+
+  t8_forest_unref (&forest);
+  T8_FREE (user_data);
+
+  sc_finalize ();
+
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
+
+  printf ("freed everything...\n");
+
+  return 0;
 }
