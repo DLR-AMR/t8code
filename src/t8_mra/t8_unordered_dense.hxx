@@ -9,7 +9,8 @@
 #include <ankerl/unordered_dense.h>
 
 // Define M_mra for your problem (assumed p_mra * (p_mra + 1) / 2 where p_mra is a given integer)
-#define p_mra 4  // Or some other valid definition of p_mra
+// #define p_mra 4  // Or some other valid definition of p_mra
+#define p_mra 3  // Or some other valid definition of p_mra
 #define M_mra (p_mra * (p_mra + 1)) / 2
 
 // 1D Wavelet-Based Grid Data

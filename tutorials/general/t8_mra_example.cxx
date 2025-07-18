@@ -1028,15 +1028,15 @@ main (int argc, char** argv)
   auto* test_scheme = t8_scheme_new_default ();
   using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
 
-  t8_mra::levelindex_map<element_data_type> grid_bla (max_level);
-  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> test (max_level, c_thresh, dunavant_rule, comm);
+  // t8_mra::levelindex_map<element_data_type> grid_bla (max_level);
+  // t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> test (max_level, c_thresh, dunavant_rule, comm);
 
   //Here you choose the correct coarse mesh.
   //t8_cmesh_t cmesh = t8_cmesh_new_basic (comm);
   t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
 
-  auto test_forest
-    = test.initialize_data (grid_bla, cmesh, test_scheme, 1u, [] (double x, double y) -> double { return x + y; });
+  // auto test_forest
+  //   = test.initialize_data (grid_bla, cmesh, test_scheme, 1u, [] (double x, double y) -> double { return x + y; });
 
   //t8_cmesh_t cmesh = t8_cmesh_new_octagon (comm);
   //t8_cmesh_t cmesh = t8_cmesh_new_complex_polygonal_shape (comm);
@@ -1326,7 +1326,8 @@ main (int argc, char** argv)
   // free(index_combinations);
   // free(coordinates);
 
-  forest = t8_create_init_mra_forest_wf_1D_func (grid, comm, cmesh, scheme, 1., 1., 1.0, max_level, f4, 10, max_level);
+  // forest = t8_create_init_mra_forest_wf_1D_func (grid, comm, cmesh, scheme, 1., 1., 1.0, max_level, f4, 10, max_level);
+  forest = t8_create_init_mra_forest_wf_1D_func (grid, comm, cmesh, scheme, 1., 1., 1.0, 1u, f4, 10, 1u);
   calculate_rescale_wf_1D_func (forest);
   //const char* err_type_wb = "L2";
   //double err=ErrorSinglescale(forest,10,err_type);
