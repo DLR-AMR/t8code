@@ -83,7 +83,7 @@ struct triangle_order
   get_point_order_at_level (size_t basecell, const t8_element_t* elem, const t8_scheme* scheme,
                             std::array<int, 3>& order)
   {
-    order = { 0, 0, 0 };
+    order = { 0, 1, 2 };
     const auto elem_level = scheme->element_get_level (ECLASS, elem);
     t8_dtri_t ancestor;
 
