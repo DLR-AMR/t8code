@@ -55,14 +55,24 @@ class multiscale: public multiscale_data<TShape> {
   double c_thresh;
   int dunavant_rule;
 
+  /// Quadrature
+  int order_num;
+  std::vector<double> ele_quad_points;
+  std::vector<double> ref_quad_points;
+  std::vector<double> quad_weights;
   sc_MPI_Comm comm;
 
  public:
   multiscale (int _max_level, double _c_thresh, int _dunavant_rule, sc_MPI_Comm _comm)
-    : max_level (_max_level), c_thresh (_c_thresh), dunavant_rule (_dunavant_rule), comm (_comm)
+    : max_level (_max_level), c_thresh (_c_thresh), dunavant_rule (_dunavant_rule), comm (_comm),
+      order_num (t8_mra::dunavant_order_num (dunavant_rule)), ele_quad_points (2 * order_num, 0.0),
+      ref_quad_points (2 * order_num, 0.0), quad_weights (order_num, 0.0)
   {
     t8_mra::initialize_mask_coefficients<TShape> (P_DIM, DOF, multiscale_data<TShape>::mask_coefficients,
                                                   multiscale_data<TShape>::inverse_mask_coefficients);
+
+    /// TODO std::vector
+    t8_mra::dunavant_rule (dunavant_rule, order_num, ref_quad_points.data (), quad_weights.data ());
   }
 
   std::vector<double>
@@ -70,13 +80,8 @@ class multiscale: public multiscale_data<TShape> {
            const std::array<int, 3>& order, auto&& func)
   {
     /// Projection -> TODO auslagern
-    const auto order_num = t8_mra::dunavant_order_num (dunavant_rule);
-    std::vector<double> wtab (order_num, 0.0);
-    std::vector<double> xytab (2 * order_num, 0.0);
-    std::vector<double> xytab_ref (2 * order_num, 0.0);
 
     /// TODO std::vector
-    t8_mra::dunavant_rule (dunavant_rule, order_num, xytab_ref.data (), wtab.data ());
     const auto volume = t8_forest_element_volume (forest, tree_idx, element);
 
     double vertices[3][3];
