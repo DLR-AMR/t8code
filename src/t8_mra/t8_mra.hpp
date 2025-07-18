@@ -1,11 +1,10 @@
 #pragma once
 
-#include <complex>
-#include <iterator>
-#include "t8_forest/t8_forest_general.h"
 #ifdef T8_ENABLE_MRA
 
 #include "t8_eclass.h"
+#include "t8_forest/t8_forest_general.h"
+#include "t8_forest/t8_forest_geometrical.h"
 
 #include "t8_mra/data/cell_data.hpp"
 #include "t8_mra/data/levelmultiindex.hpp"
@@ -14,7 +13,6 @@
 #include "t8_mra/num/mask_coefficients.hpp"
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/mat.hpp"
-#include <t8_forest/t8_forest_geometrical.h>
 
 namespace t8_mra
 {
