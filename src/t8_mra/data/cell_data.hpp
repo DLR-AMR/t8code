@@ -6,6 +6,9 @@
 #include <array>
 #include "t8_eclass.h"
 
+#include "t8_mra/data/levelindex_map.hpp"
+#include "t8_mra/data/levelmultiindex.hpp"
+
 namespace t8_mra
 {
 
@@ -42,6 +45,19 @@ struct data_per_element
     : u_coeffs (U_DIM * DOF, {}), d_coeffs (U_DIM * W_DOF, {}), significant (false), order ({})
   {
   }
+};
+
+template <t8_eclass TShape>
+struct element_data
+{
+  t8_mra::levelmultiindex<TShape> lmi_idx;
+};
+
+template <typename T>
+struct forest_data
+{
+  sc_array_t *lmi_idx;
+  t8_mra::levelindex_map<T> *lmi_map;
 };
 
 }  // namespace t8_mra
