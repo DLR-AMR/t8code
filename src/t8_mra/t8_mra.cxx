@@ -2701,6 +2701,7 @@ t8_create_init_mra_forest_wf_1D_func (levelgrid_map<t8_data_per_element_waveletf
         t8_forest_element_coordinate (forest, itree, element, 0, verts[first]);
         t8_forest_element_coordinate (forest, itree, element, 1, verts[second]);
         t8_forest_element_coordinate (forest, itree, element, 2, verts[third]);
+        printf ("order: %d %d %d\n", first, second, third);
 
         A.resize (3, 3);
         r.resize (3);
@@ -2725,13 +2726,18 @@ t8_create_init_mra_forest_wf_1D_func (levelgrid_map<t8_data_per_element_waveletf
             tau (0) = x;
             tau (1) = y;
             tau (2) = 1.;
+            // printf ("tau: %f %f\n", tau (0), tau (1));
             A.lr_solve (A, r, tau);
+            // printf ("tau: %f %f\n\n", tau (0), tau (1));
             quad += wtab[order] * my_func (x, y) * sqrt (1. / (2. * volume))
                     * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
           }
           quad *= volume;
 
+          // printf ("volume: %f\n", volume);
           elem_data->u_coeff[i] = quad;
+          printf ("dg coeffs[%d] = %f\n", i, quad);
+
           //t8_global_productionf ("quad:%f.\n",quad);
           data_gh.u_coeff[i] = quad;
           data_gh.d_coeff_wavelet_free[i][0] = 0;
@@ -2746,6 +2752,8 @@ t8_create_init_mra_forest_wf_1D_func (levelgrid_map<t8_data_per_element_waveletf
           // elem_data->second = 1;
           // elem_data->third = 2;
         }
+
+        printf ("\n");
         data_gh.first = first;
         data_gh.second = second;
         data_gh.third = third;
