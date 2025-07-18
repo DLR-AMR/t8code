@@ -71,27 +71,28 @@ struct t8_cmesh_vertex_connectivity
                                           const t8_gloidx_t *global_tree_vertices, const int num_vertices)
   {
     T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+    T8_ASSERT (!t8_cmesh_is_committed (cmesh));
     T8_ASSERT (current_state != state::VALID);
     current_state = state::TREE_TO_VERTEX_VALID;
+    if (associated_cmesh == nullptr) {
+      associated_cmesh = cmesh;
+    }
+    T8_ASSERT (associated_cmesh == cmesh);
     return tree_to_vertex.set_global_vertex_ids_of_tree_vertices (cmesh, global_tree, global_tree_vertices,
                                                                   num_vertices);
   }
 
   /** Function to fill vtt from the stored ttv information.
    * Sets all global ids and associated tree vertices from
-   * the given input cmesh.
-   * Afterwards, the vtt is set to committed and can be used.
-   *
-   * \param [in] cmesh A committed cmesh with set tree to vertex entries (stored in this object)
-   * \param [in] ttv A filled tree to vertex list for \a cmesh.
+   * the associated cmesh.
+   * Afterwards, this class is ready to be used and cannot be altered.
   */
   void
-  build_vertex_to_tree (const t8_cmesh_t cmesh)
+  build_vertex_to_tree ()
   {
     T8_ASSERT (current_state == state::TREE_TO_VERTEX_VALID);
-    vertex_to_tree.build_from_ttv (cmesh, tree_to_vertex);
+    vertex_to_tree.build_from_ttv (associated_cmesh, tree_to_vertex);
     global_number_of_vertices = vertex_to_tree.vertex_to_tree.size ();
-    associated_cmesh = cmesh;
     current_state = state::VALID;
   }
 
