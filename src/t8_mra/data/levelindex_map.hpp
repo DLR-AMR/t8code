@@ -257,8 +257,12 @@ template <typename T>
 size_t
 levelindex_map<T>::size () const noexcept
 {
-  return std::accumulate (level_map.begin (), level_map.end (), 0u,
-                          [] (const auto& map, size_t res) { return map.size () + res; });
+  auto res = 0u;
+
+  for (const auto& m : level_map)
+    res += m.size ();
+
+  return res;
 }
 
 template <typename T>
