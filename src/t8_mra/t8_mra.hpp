@@ -60,6 +60,7 @@ class multiscale: public multiscale_data<TShape> {
   std::vector<double> ele_quad_points;
   std::vector<double> ref_quad_points;
   std::vector<double> quad_weights;
+
   sc_MPI_Comm comm;
 
  public:
@@ -75,15 +76,11 @@ class multiscale: public multiscale_data<TShape> {
     t8_mra::dunavant_rule (dunavant_rule, order_num, ref_quad_points.data (), quad_weights.data ());
   }
 
-  std::vector<double>
+  /// Projection -> TODO auslagern
+  void
   project (std::vector<double>& dg_coeffs, const t8_forest_t forest, int tree_idx, const t8_element_t* element,
            const std::array<int, 3>& order, auto&& func)
   {
-    /// Projection -> TODO auslagern
-
-    /// TODO std::vector
-    const auto volume = t8_forest_element_volume (forest, tree_idx, element);
-
     double vertices[3][3];
     for (auto i = 0; i < 3; ++i)
       t8_forest_element_coordinate (forest, tree_idx, element, i, vertices[order[i]]);
@@ -93,26 +90,27 @@ class multiscale: public multiscale_data<TShape> {
 
     for (auto i = 0; i < 3; ++i)
       for (auto j = 0; j < 3; ++j)
-        A (i, j) = i == 2 ? 1.0 : vertices[i][j];
-    printf ("after init mat\n");
+        A (i, j) = i == 2 ? 1.0 : vertices[j][i];
 
     t8_mra::lu_factors (A, r);
     std::array<double, 6> corners { vertices[0][0], vertices[0][1], vertices[1][0],
                                     vertices[1][1], vertices[2][0], vertices[2][1] };
-    t8_mra::reference_to_physical_t3 (corners.data (), order_num, xytab_ref.data (), xytab.data ());
-    printf ("after reference\n");
+    t8_mra::reference_to_physical_t3 (corners.data (), order_num, ref_quad_points.data (), ele_quad_points.data ());
 
+    const auto volume = t8_forest_element_volume (forest, tree_idx, element);
     for (auto i = 0u; i < DOF; ++i) {
       double sum = 0.0;
       for (auto j = 0u; j < order_num; ++j) {
-        const auto x = xytab[2 * j];
-        const auto y = xytab[1 + 2 * j];
+        const auto x = ele_quad_points[2 * j];
+        const auto y = ele_quad_points[1 + 2 * j];
+
         vec tau = { x, y, 1.0 };
         t8_mra::lu_solve (A, r, tau);
-        printf ("after lu_solve %d, %d\n", i, j);
-        sum += wtab[j] * func (x, y) * std::sqrt (1.0 / (2.0 * volume))
+
+        sum += quad_weights[j] * func (x, y) * std::sqrt (1.0 / (2.0 * volume))
                * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
       }
+
       dg_coeffs[i] = sum * volume;
     }
   }
