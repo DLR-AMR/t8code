@@ -72,7 +72,28 @@ main (int argc, char** argv)
   t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra_test (max_level, c_thresh, dunavant_rule, comm);
   printf ("created mra object\n");
 
-  auto test_forest
-    = mra_test.initialize_data (lmi_map, cmesh, test_scheme, 1u, [] (double x, double y) { return x + y; });
+  /// Velis debugging example
+  auto f4 = [] (double x, double y) {
+    //if ((x == -1.) && (y == -1.)) return 6.;
+    if (x < 0.41)
+      return 0.;
+    double r4 = (x - 0.5) * (x - 0.5) + (y - 0.5) * (y - 0.5);
+    double r = sqrt (r4);
+    if (r > 1. / 3.)
+      return 0.;
+    r *= 3.;
+    r4 *= 9.;
+    r4 *= r4;
+    double rm1 = r - 1.;
+    double rm1h2 = rm1 * rm1;
+    double rm1h3 = rm1 * rm1h2;
+    return 1. - r4 + 4. * r4 * rm1 - 10. * r4 * rm1h2 + 20 * r4 * rm1h3;
+  };
+
+  // auto test_forest
+  //   = mra_test.initialize_data (lmi_map, cmesh, test_scheme, 1u, [] (double x, double y) { return x + y; });
+  auto test_forest = mra_test.initialize_data (lmi_map, cmesh, test_scheme, 1u, f4);
   printf ("initialize data\n");
+
+  printf ("size init data: %zu\n", lmi_map.size ());
 }
