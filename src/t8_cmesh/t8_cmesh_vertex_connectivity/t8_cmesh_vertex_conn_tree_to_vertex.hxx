@@ -45,9 +45,12 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 
-/* forward declaration of ttv class needed since the two class headers include each other. */
+/** forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_vertex_to_tree;
 
+/**
+ * A class to hold the tree to vertex connectivity of a cmesh.
+ */
 class t8_cmesh_vertex_conn_tree_to_vertex {
  public:
   /** Standard constructor. Does nothing. */
@@ -85,8 +88,8 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   /* Setter functions */
   /** Set all global vertex ids of a local tree.
    * \param [in] cmesh The considered cmesh
-   * \param [in] local_tree A local tree id of \a cmesh
-   * \param [in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
+   * \param [in] global_tree A global tree id of \a cmesh
+   * \param [in] global_tree_vertices The ids of the global vertices in order of \a local_tree's vertices.
    * \param [in] num_vertices Must match the number of vertices of \a local_tree
    *
    * \note \a cmesh must not be committed.
