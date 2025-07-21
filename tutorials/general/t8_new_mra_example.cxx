@@ -50,6 +50,8 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   const auto num_elements = t8_forest_get_local_num_leaf_elements (forest);
   double* element_data = T8_ALLOC (double, num_elements);
 
+  const auto plot_level = 8u;
+
   auto num_data = 1;
   t8_vtk_data_field_t vtk_data;
   vtk_data.type = T8_VTK_SCALAR;
@@ -64,7 +66,7 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   /// TODO Add lmi_map[lmi]
   for (auto i = 0u; i < num_elements; ++i) {
     const auto lmi = get_value (data, i).index;
-    element_data[i] = data->lmi_map->get (8u, lmi).u_coeffs[0];
+    element_data[i] = data->lmi_map->get (plot_level, lmi).u_coeffs[0];
   }
 
   int write_treeid = 1;
@@ -88,29 +90,6 @@ main (int argc, char** argv)
   t8_init (SC_LP_PRODUCTION);
   comm = sc_MPI_COMM_WORLD;
 
-  printf ("Init done\n");
-
-  int max_level = 8;
-  double c_thresh = 1.0;
-  int dunavant_rule = 10;
-
-  constexpr int P = 3;
-  constexpr int U = 1;
-  using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
-
-  printf ("\nSettings:\n max_level %d\nc_thresh %f\ndunavant rule %d\nP %d\nU %d\nelem_type %d\n", max_level, c_thresh,
-          dunavant_rule, P, U, T8_ECLASS_TRIANGLE);
-
-  auto* test_scheme = t8_scheme_new_default ();
-  t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
-  printf ("created test_scheme and cmesh\n");
-
-  t8_mra::levelindex_map<element_data_type>* lmi_map = new t8_mra::levelindex_map<element_data_type> ();
-  printf ("created lmi_map\n");
-
-  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra_test (max_level, c_thresh, dunavant_rule, comm);
-  printf ("created mra object\n");
-
   /// Velis debugging example
   auto f4 = [] (double x, double y) {
     //if ((x == -1.) && (y == -1.)) return 6.;
@@ -129,29 +108,43 @@ main (int argc, char** argv)
     return 1. - r4 + 4. * r4 * rm1 - 10. * r4 * rm1h2 + 20 * r4 * rm1h3;
   };
 
-  auto forest = mra_test.initialize_data (lmi_map, cmesh, test_scheme, max_level, f4);
+  printf ("Init done\n");
+
+  auto max_level = 8u;
+  auto c_thresh = 1.0;
+  auto dunavant_rule = 10;
+
+  constexpr int P = 3;
+  constexpr int U = 1;
+  using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
+  using mra_type = t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P>;
+
+  printf ("\nSettings:\nmax_level %d\nc_thresh %f\ndunavant rule %d\nP %d\nU %d\nelem_type %d\n", max_level, c_thresh,
+          dunavant_rule, P, U, T8_ECLASS_TRIANGLE);
+
+  auto* test_scheme = t8_scheme_new_default ();
+  t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
+  printf ("created test_scheme and cmesh\n");
+
+  mra_type mra_test (max_level, c_thresh, dunavant_rule, comm);
+  printf ("created mra object\n");
+
+  mra_test.initialize_data (cmesh, test_scheme, 8u, f4);
   printf ("initialize data\n");
 
-  auto* user_data = reinterpret_cast<t8_mra::forest_data<element_data_type>*> (t8_forest_get_user_data (forest));
-
-  printf ("size init data: %zu\n", user_data->lmi_map->size ());
-
-  t8_write_vtu<element_data_type> (forest, user_data, "testi_test");
+  printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
+  t8_write_vtu<element_data_type> (mra_test.forest, mra_test.get_user_data (), "testi_test");
 
   printf ("Finished writing file\n");
 
-  sc_array_destroy (user_data->lmi_idx);
-  delete lmi_map;
-
-  t8_forest_unref (&forest);
-  T8_FREE (user_data);
+  mra_test.cleanup ();
+  printf ("freed everything...\n");
 
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-  printf ("freed everything...\n");
-
+  printf ("Program finished...\n");
   return 0;
 }
