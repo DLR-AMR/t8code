@@ -22,7 +22,7 @@
 
 /**
  * \file t8_vtk_reader.hxx
- * This file contains functions to read different VTK supported formates into
+ * This file contains functions to read different VTK supported formats into
  * t8code data structures.
  */
 
