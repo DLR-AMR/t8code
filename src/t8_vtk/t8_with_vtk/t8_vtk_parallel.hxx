@@ -50,7 +50,7 @@ t8_read_parallel_unstructured (const char *filename, vtkSmartPointer<vtkDataSet>
  * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
  *                 by the pieces read on this proc.
  * \param[in] comm The MPI communicator to use for reading the file.
- * \returns        non-zero on success, zero if the reading failed.
+ * \returns        read_success on success, read_failure if the reading failed.
  */
 vtk_read_success_t
 t8_read_parallel_polyData (const char *filename, vtkSmartPointer<vtkDataSet> grid, sc_MPI_Comm comm);

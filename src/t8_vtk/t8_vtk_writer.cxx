@@ -90,7 +90,7 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
 #endif /* T8_ENABLE_VTK */
 
 /**
- * \brief Write a forest to a VTK file in ASCII format.
+ * Write a forest to a VTK file in ASCII format.
  */
 template <>
 bool
@@ -102,7 +102,7 @@ vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
 }
 
 /**
- * \brief Write a cmesh to a VTK file in ASCII format.
+ * Write a cmesh to a VTK file in ASCII format.
  */
 template <>
 bool

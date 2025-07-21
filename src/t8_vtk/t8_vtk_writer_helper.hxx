@@ -32,7 +32,7 @@
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
 
-/** The maximal number of corners for a quadratic vtk element */
+/** The maximum number of corners for a quadratic vtk element */
 #define T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS 20
 /** Lookup table for number of nodes for curved eclasses. */
 const int t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] = { 1, 3, 8, 6, 20, 10, 15, 13 };
