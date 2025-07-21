@@ -263,6 +263,14 @@ t8_errorf (const char *fmt, ...)
 #endif
   ;
 
+/**
+ * Set a custom logging function to be used by t8code.
+ * When setting a custom logging function, the t8code internal logging function will be ignored.
+ * \param [in] log_fcn      A function pointer to a logging function
+ */
+void
+t8_set_external_log_fcn (void (*log_fcn) (int category, int priority, const char *msg));
+
 /** Register t8code with libsc and print version and variable information.
  * \param [in] log_threshold Declared in sc.h.  SC_LP_DEFAULT is fine.
  *                           You can also choose from log levels SC_LP_*.
