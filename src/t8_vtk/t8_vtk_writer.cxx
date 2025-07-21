@@ -68,7 +68,7 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
 }
 
 /**
- * \brief template specialization for cmeshes.
+ * Template specialization for cmeshes.
  *
  */
 template <>
