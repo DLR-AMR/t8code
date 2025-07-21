@@ -59,7 +59,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
 {
   TopExp_Explorer dora;
   int tag_count = 1;
-  for (dora.Init (shape, TopAbs_VERTEX); dora.More (); dora.Next ()) {
+  for (dora.Init (shape, TopAbs_VERTEX); dora.More (); dora.Next (), tag_count++) {
     const gp_Pnt point = BRep_Tool::Pnt (TopoDS::Vertex (dora.Current ()));
     const double cad_x_val = point.X ();
     const double cad_y_val = point.Y ();
@@ -84,14 +84,13 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
         temp_geom_data.location_on_curve = { -1, -1 };
 
         boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
-        tag_count += 1;
       }
     }
   }
   t8_debugf ("Vertices added\n");
 
   tag_count = 1;
-  for (dora.Init (shape, TopAbs_EDGE); dora.More (); dora.Next ()) {
+  for (dora.Init (shape, TopAbs_EDGE); dora.More (); dora.Next (), tag_count++) {
     Standard_Real first, last;
     if (!BRep_Tool::Degenerated (TopoDS::Edge (dora.Current ()))) {
       Handle (Geom_Curve) geomCurve = BRep_Tool::Curve (TopoDS::Edge (dora.Current ()), first, last);
@@ -117,7 +116,6 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
             temp_geom_data.location_on_curve = { projection.LowerDistanceParameter (), -1 };
 
             boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
-            tag_count += 1;
           }
         }
       }
@@ -125,7 +123,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
   }
 
   tag_count = 1;
-  for (dora.Init (shape, TopAbs_FACE); dora.More (); dora.Next ()) {
+  for (dora.Init (shape, TopAbs_FACE); dora.More (); dora.Next (), tag_count++) {
     Handle (Geom_Surface) surfer = BRep_Tool::Surface (TopoDS::Face (dora.Current ()));
     for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
       const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
@@ -152,7 +150,6 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
           temp_geom_data.location_on_curve = { u, v };
 
           boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
-          tag_count += 1;
         }
       }
     }
