@@ -62,15 +62,10 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
 void
 t8_forest_compute_desc (t8_forest_t forest);
 
-/**
- * Create the elements on this process given a uniform partition
- * of the coarse mesh.
- * 
- * \param[in, out] forest The forest to be populated.
- * \param[in] irregular   Flag indicating if a tree in the forest does not refine in a 1:2^dim manner.
- */
+/* Create the elements on this process given a uniform partition
+ * of the coarse mesh. */
 void
-t8_forest_populate (t8_forest_t forest, const int irregular);
+t8_forest_populate (t8_forest_t forest);
 
 /** Return the scheme associated to a forest.
  * This function does not check whether the given forest is committed, use with

@@ -112,6 +112,7 @@ int
 t8_offset_next_nonempty_rank (const int rank, const int mpisize, const t8_gloidx_t *offset)
 {
   int next_nonempty = rank + 1;
+
   while (next_nonempty < mpisize && t8_offset_empty (next_nonempty, offset)) {
     next_nonempty++;
   }

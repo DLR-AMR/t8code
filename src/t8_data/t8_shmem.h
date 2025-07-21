@@ -278,20 +278,6 @@ t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b);
 void
 t8_shmem_array_destroy (t8_shmem_array_t *parray);
 
-/**
- * Perform a binary search in a t8_shmem_array.
- * 
- * \param [in]      array   The t8_shmem_array to search in.
- * \param [in]      value   The value to search for.
- * \param [in]      size    The number of elements in the array.
- * \param [in]      compare A function that compares an element of the array with the value.
- * 
- * \return The index of the element in \a array that matches \a value.
- */
-int
-t8_shmem_array_binary_search (t8_shmem_array_t array, const t8_gloidx_t value, const int size,
-                              int (*compare) (t8_shmem_array_t, const int, const t8_gloidx_t));
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_SHMEM_H */

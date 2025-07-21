@@ -526,29 +526,3 @@ t8_shmem_array_destroy (t8_shmem_array_t *parray)
   T8_FREE (array);
   *parray = NULL;
 }
-
-int
-t8_shmem_array_binary_search (t8_shmem_array_t array, const t8_gloidx_t value, const int size,
-                              int (*compare) (t8_shmem_array_t, const int, const t8_gloidx_t))
-{
-  int low = 0;
-  int high = size;
-
-  while (low <= high) {
-    int mid = low + (high - low) / 2;
-    const int eval = compare (array, mid, value);
-    if (eval == 0) {
-      /* mid points to a value that equals \a value */
-      return mid;
-    }
-    else if (eval < 0) {
-      /* mid points to a value that is less than \a value */
-      high = mid - 1;
-    }
-    else {
-      /* mid points to a value that is greater than \a value */
-      low = mid + 1;
-    }
-  }
-  return -1;  // Not found
-}

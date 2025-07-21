@@ -109,8 +109,6 @@ typedef int64_t t8_gloidx_t;
 #define T8_MPI_GLOIDX sc_MPI_LONG_LONG_INT
 /** Macro to get the absolute value of a t8_gloidx_t */
 #define T8_GLOIDX_ABS(x) ((t8_gloidx_t) llabs ((long long) (x)))
-/** Maximum possible value of a t8_gloidx_t*/
-#define T8_GLOIDX_MAX INT64_MAX
 /** Comparison function for t8_gloidx_t */
 #define t8_compare_gloidx(v, w) sc_int64_compare (v, w)
 
@@ -141,8 +139,6 @@ typedef enum {
   T8_MPI_PARTITION_FOREST,              /**< Used for forest partitioning */
   T8_MPI_GHOST_FOREST,                  /**< Used for for ghost layer creation */
   T8_MPI_GHOST_EXC_FOREST,              /**< Used for ghost data exchange */
-  T8_MPI_CMESH_UNIFORM_BOUNDS_START,    /**< Used for cmesh uniform bounds computation. */
-  T8_MPI_CMESH_UNIFORM_BOUNDS_END,      /**< Used for cmesh uniform bounds computation. */
   T8_MPI_TEST_ELEMENT_PACK_TAG,         /**< Used for testing mpi pack and unpack functionality */
   T8_MPI_TAG_LAST
 } t8_MPI_tag_t;
