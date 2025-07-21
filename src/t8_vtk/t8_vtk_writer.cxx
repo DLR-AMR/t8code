@@ -28,7 +28,7 @@
 
 #if T8_ENABLE_VTK
 /**
- * \brief template specialization for forests.
+ * Template specialization for forests.
  *
  */
 template <>
