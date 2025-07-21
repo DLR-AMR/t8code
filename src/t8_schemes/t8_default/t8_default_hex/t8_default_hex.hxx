@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_hex.h
+/** \file t8_default_hex.hxx
  */
 
 #ifndef T8_DEFAULT_HEX_HXX

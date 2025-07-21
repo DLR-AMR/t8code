@@ -256,12 +256,15 @@ install( FILES
     t8_types/t8_vec.h
     t8_version.h
     t8_vtk.h
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h
     TYPE INCLUDE
 )
 
 install ( DIRECTORY t8_vector_helper DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
 
 install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
+
   PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
   PATTERN "t8_cmesh/t8_cmesh_partition.h" EXCLUDE

@@ -34,6 +34,9 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
+/**
+ * A class to hold the vertex connectivity of a cmesh.
+ */
 struct t8_cmesh_vertex_connectivity
 {
  public:
@@ -47,6 +50,15 @@ struct t8_cmesh_vertex_connectivity
    * Destructor.
    */
   ~t8_cmesh_vertex_connectivity () {};
+
+  /** Given a cmesh, build up the vertex_to_tree and tree_to_vertex members.
+   * \param [in] cmesh A cmesh that has been initialized, but not committed.
+   * On error, state will be set to ERROR. 
+   * The cmesh must not be committed, but all tree information and neighbor information must
+   * have been set. 
+   * Currently, \a cmesh has to be replicated. */
+  void
+  build (const t8_cmesh_t cmesh);
 
   /* Setter functions */
 
@@ -79,9 +91,7 @@ struct t8_cmesh_vertex_connectivity
    * Sets all global ids and associated tree vertices from
    * the given input cmesh.
    * Afterwards, the vtt is set to committed and can be used.
-   *
    * \param [in] cmesh A committed cmesh with set tree to vertex entries (stored in this object)
-   * \param [in] ttv A filled tree to vertex list for \a cmesh.
   */
   void
   build_vertex_to_tree (const t8_cmesh_t cmesh)

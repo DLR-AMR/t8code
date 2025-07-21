@@ -38,7 +38,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in]  file_title    A string to caption the NetCDF-File.
  * \param [in]  dim    The Dimension of the cmesh (2D or 3D).
  * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
- * \param [in]  ext_variables An array of pointers of the herein before mentioned user-defined variables (if none, set it to NULL).
+ * \param [in]  variables An array of pointers of the herein before mentioned user-defined variables (if none, set it to NULL).
  * \param [in]  comm The sc_MPI_Communicator to use.
  */
 void

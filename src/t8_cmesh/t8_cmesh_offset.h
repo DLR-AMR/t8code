@@ -89,7 +89,7 @@ t8_offset_empty (const int proc, const t8_gloidx_t *offset);
 
 /** Find the next higher rank that is not empty.
  * returns mpisize if this rank does not exist.
- * \param [in] proc     An MPI rank.
+ * \param [in] rank     An MPI rank.
  * \param [in] mpisize  The number of total MPI ranks.
  * \param [in] offset   An array with at least \a mpisize + 1 entries.
  * \return              A rank \a p such that \a p > \a rank and
@@ -109,11 +109,11 @@ t8_offset_next_nonempty_rank (const int rank, const int mpisize, const t8_gloidx
  *  - if a process is empty then its first tree is not shared,
  *  - if a process is not empty its first tree must be bigger than the last
  *    tree of the previous non-empty process, or equal to it if it is shared.
- * \param [in] mpisize    The number of MPI ranks, also the number of entries in \a offset minus 1.
- * \param [in] offset     The partition to be considered.
- * \param [in] num_trees  The total number of global trees in the partition.
- * \return                nonzero if the partition is valid,
- *                        0 if not.
+ * \param [in] mpisize        The number of MPI ranks, also the number of entries in \a offset minus 1.
+ * \param [in] offset_shmem   The partition to be considered.
+ * \param [in] num_trees      The total number of global trees in the partition.
+ * \return                    nonzero if the partition is valid,
+ *                            0 if not.
  */
 int
 t8_offset_consistent (const int mpisize, const t8_shmem_array_t offset_shmem, const t8_gloidx_t num_trees);
@@ -238,8 +238,8 @@ t8_offset_nosend (int proc, int mpisize, const t8_gloidx_t *offset_from, const t
  * given other process.
  * \param [in] proca    Mpi rank of the possible sending process.
  * \param [in] procb    Mpi rank of the possible receiver.
- * \param [in] offset_from   The partition table of the current partition.
- * \param [in] offset_to     The partition table of the next partition.
+ * \param [in] t8_offset_from   The partition table of the current partition.
+ * \param [in] t8_offset_to     The partition table of the next partition.
  * \return              nonzero if \a proca does send local trees to \a procb when
  *                      we repartition from \a offset_from to \a offset_to.
  *                      0 else.
@@ -250,7 +250,7 @@ t8_offset_sendsto (int proca, int procb, const t8_gloidx_t *t8_offset_from, cons
 /** Query whether in a repartitioning setting, a given process sends a given
  * tree to a second process.
  * \param [in] proc_send    Mpi rank of the possible sending process.
- * \param [in] proc_recv    Mpi rank of the possible receiver.
+ * \param [in] proc_to      Mpi rank of the possible receiver.
  * \param [in] gtree        A global tree id.
  * \param [in] offset_from   The partition table of the current partition.
  * \param [in] offset_to     The partition table of the next partition.
