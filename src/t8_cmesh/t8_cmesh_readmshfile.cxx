@@ -48,14 +48,14 @@
 const t8_eclass_t t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
   T8_ECLASS_COUNT,     /* 0 is not valid */
   T8_ECLASS_LINE,      /* 1 */
-  T8_ECLASS_TRIANGLE, 
-  T8_ECLASS_QUAD, 
-  T8_ECLASS_TET, 
+  T8_ECLASS_TRIANGLE,
+  T8_ECLASS_QUAD,
+  T8_ECLASS_TET,
   T8_ECLASS_HEX,        /* 5 */
-  T8_ECLASS_PRISM, 
+  T8_ECLASS_PRISM,
   T8_ECLASS_PYRAMID,    /* 7 This is the last first order tree type, except the Point, which is type 15 */
   /* We do not support type 8 to 14 */
-  T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, 
+  T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT,
   T8_ECLASS_COUNT, T8_ECLASS_COUNT, T8_ECLASS_COUNT,
   T8_ECLASS_VERTEX      /* 15 */
 };
@@ -625,12 +625,12 @@ t8_msh_file_4_read_nodes (FILE *fp)
 
 /**
  * Adds the elements of \a fp and dimension \a dim into the \a cmesh.
- * Returns a list of all vertex indices of each tree. 
+ * Returns a list of all vertex indices of each tree.
  * \param [in, out] cmesh     The cmesh.
  * \param [in, out] fp        The msh file.
  * \param [in, out] vertices  A hashtable filled with the nodes of the msh file.
  * \param [in, out] dim       The dimension of nodes to read in.
- * \return 
+ * \return
  */
 static std::optional<t8_msh_tree_vertex_indices>
 t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table vertices, const int dim)
@@ -770,63 +770,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 
       /* Add the node indices to return vector. */
       vertex_indices[tree_count] = std::move (node_indices);
-      /* Detect and correct negative volumes */
-      if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes)) {
-        /* The volume described is negative. We need to change vertices.
-         * For tets we switch 0 and 3.
-         * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
-         * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
-         * For pyramids we switch 0 and 4 */
-        double temp;
-        int num_switches = 0;
-        int switch_indices[4] = { 0 };
-        int iswitch;
-        T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
-        t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (tree_count));
-        switch (eclass) {
-        case T8_ECLASS_TRIANGLE:
-        case T8_ECLASS_QUAD:
-          /* We switch vertex 1 and vertex 2. */
-          num_switches = 2;
-          switch_indices[0] = 0;
-          switch_indices[1] = 2;
-          break;
-        case T8_ECLASS_TET:
-          /* We switch vertex 0 and vertex 3 */
-          num_switches = 1;
-          switch_indices[0] = 3;
-          break;
-        case T8_ECLASS_PRISM:
-          num_switches = 3;
-          switch_indices[0] = 3;
-          switch_indices[1] = 4;
-          switch_indices[2] = 5;
-          break;
-        case T8_ECLASS_HEX:
-          num_switches = 4;
-          switch_indices[0] = 4;
-          switch_indices[1] = 5;
-          switch_indices[2] = 6;
-          switch_indices[3] = 7;
-          break;
-        case T8_ECLASS_PYRAMID:
-          num_switches = 1;
-          switch_indices[0] = 4;
-          break;
-        default:
-          SC_ABORT_NOT_REACHED ();
-        }
 
-        for (iswitch = 0; iswitch < num_switches; ++iswitch) {
-          /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-          for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; i_dim++) {
-            temp = tree_vertices[3 * iswitch + i_dim];
-            tree_vertices[3 * iswitch + i_dim] = tree_vertices[3 * switch_indices[iswitch] + i_dim];
-            tree_vertices[3 * switch_indices[iswitch] + i_dim] = temp;
-          }
-        }
-        T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes));
-      } /* End of negative volume handling */
       /* Set the vertices of this tree */
       t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
     }
@@ -862,7 +806,7 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
   case 1:
     /* Only correct the U parameter if the edge is closed. */
     if (geometry_cad->t8_geom_is_edge_closed (geometry_index)) {
-      /* Get the parametric bounds of the closed geometry 
+      /* Get the parametric bounds of the closed geometry
        * edge    -> [Umin, Umax]
        */
       double parametric_bounds[2];
@@ -949,7 +893,7 @@ t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const in
 /* fp should be set after the Nodes section, right before the tree section.
  * If vertex_indices is not NULL, it is allocated and will store
  * for each tree the indices of its vertices.
- * They are stored as arrays of long ints. 
+ * They are stored as arrays of long ints.
  * If cad geometry is used, the geometry is passed as a pointer here.
  * We cannot access this geometry over the cmesh interface since the cmesh
  * is not committed yet. */
@@ -1112,67 +1056,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         /* Add the node indices to return vector. */
         vertex_indices[tree_count] = std::move (node_indices);
 
-        /* Set the vertices of this tree (can be removed with negative volume check) */
-        for (int i_node = 0; i_node < num_nodes; i_node++) {
-          tree_vertices[3 * i_node] = tree_nodes[i_node].coordinates[0];
-          tree_vertices[3 * i_node + 1] = tree_nodes[i_node].coordinates[1];
-          tree_vertices[3 * i_node + 2] = tree_nodes[i_node].coordinates[2];
-        }
-        /* Detect and correct negative volumes */
-        if (t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices.data (), num_nodes)) {
-          /* The volume described is negative. We need to change vertices.
-           * For tets we switch 0 and 3.
-           * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
-           * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
-           * For pyramids we switch 0 and 4 */
-          t8_msh_file_node temp_node;
-          int num_switches = 0;
-          int switch_indices[4] = { 0 };
-          int iswitch;
-          T8_ASSERT (t8_eclass_to_dimension[eclass] > 1);
-          t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (tree_count));
-          switch (eclass) {
-          case T8_ECLASS_TRIANGLE:
-          case T8_ECLASS_QUAD:
-            /* We switch vertex 1 and vertex 2. */
-            num_switches = 2;
-            switch_indices[0] = 0;
-            switch_indices[1] = 2;
-            break;
-          case T8_ECLASS_TET:
-            /* We switch vertex 0 and vertex 3. */
-            num_switches = 1;
-            switch_indices[0] = 3;
-            break;
-          case T8_ECLASS_PRISM:
-            num_switches = 3;
-            switch_indices[0] = 3;
-            switch_indices[1] = 4;
-            switch_indices[2] = 5;
-            break;
-          case T8_ECLASS_HEX:
-            num_switches = 4;
-            switch_indices[0] = 4;
-            switch_indices[1] = 5;
-            switch_indices[2] = 6;
-            switch_indices[3] = 7;
-            break;
-          case T8_ECLASS_PYRAMID:
-            num_switches = 1;
-            switch_indices[0] = 4;
-            break;
-          default:
-            SC_ABORT_NOT_REACHED ();
-          }
-
-          for (iswitch = 0; iswitch < num_switches; ++iswitch) {
-            /* We switch node 0 + iswitch and node switch_indices[iswitch] */
-            temp_node = tree_nodes[iswitch];
-            tree_nodes[iswitch] = tree_nodes[switch_indices[iswitch]];
-            tree_nodes[switch_indices[iswitch]] = temp_node;
-          }
-        }
-
         /* Set the vertices and global indices of this tree */
         for (int i_node = 0; i_node < num_nodes; i_node++) {
           tree_vertices[3 * i_node] = tree_nodes[i_node].coordinates[0];
@@ -1243,7 +1126,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
               }
             }
 
-            /* A face can only be linked to an cad surface if all nodes of the face are parametric or on a vertex 
+            /* A face can only be linked to an cad surface if all nodes of the face are parametric or on a vertex
              * (gmsh labels nodes on vertices as not parametric) */
             int all_parametric = 1;
             for (int i_face_nodes = 0; i_face_nodes < num_face_nodes; ++i_face_nodes) {
@@ -1267,7 +1150,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
             }
             /* If not we can take two curves and look if they share a surface and then use this surface */
             if (!surface_index) {
-              /* To do this we can look if there are two curves, otherwise we have to check which vertices 
+              /* To do this we can look if there are two curves, otherwise we have to check which vertices
                * share the same curve. */
               int edge1_index = 0;
               int edge2_index = 0;
@@ -1283,7 +1166,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                   }
                 }
               }
-              /* If there are less than 2 curves we can look at the vertices and check, 
+              /* If there are less than 2 curves we can look at the vertices and check,
                * if two of them are on the same curve */
               if (edge2_index == 0) {
                 /* For each edge of face */
@@ -1364,7 +1247,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
               face_geometries[i_tree_faces] = surface_index;
               tree_is_linked = 1;
               for (int i_face_edges = 0; i_face_edges < num_face_edges; ++i_face_edges) {
-                /* We lock the edges of the face for surfaces, so that we do not link the same surface again 
+                /* We lock the edges of the face for surfaces, so that we do not link the same surface again
                  * to the edges of the face */
                 if (dim == 2) /* 2D */
                 {
@@ -1411,7 +1294,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 || (!edge_nodes[1].parametric && edge_nodes[1].entity_dim != 0)) {
               continue;
             }
-            /* An edge can be linked to a curve as well as a surface. 
+            /* An edge can be linked to a curve as well as a surface.
              * Therefore, we have to save the geometry dim and tag */
             int edge_geometry_dim = 0;
             int edge_geometry_tag = 0;
@@ -1463,8 +1346,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
               }
             }
 
-            /* If both nodes are on a vertex we still got no edge. 
-             * But we can look if both vertices share an edge and use this edge. 
+            /* If both nodes are on a vertex we still got no edge.
+             * But we can look if both vertices share an edge and use this edge.
              * If not we can skip this edge. */
             if (edge_geometry_dim == 0 && edge_geometry_tag == 0) {
               int common_curve
@@ -1477,7 +1360,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                 continue;
               }
             }
-            /* If both nodes are on different edges we have to look if both edges share a surface. 
+            /* If both nodes are on different edges we have to look if both edges share a surface.
              * If not we can skip this edge */
             if (edge_nodes[0].entity_dim == 1 && edge_nodes[1].entity_dim == 1
                 && edge_nodes[0].entity_tag != edge_nodes[1].entity_tag) {
@@ -1564,7 +1447,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
                                       T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
                                       2 * sizeof (double), 0);
             }
-            /* If we have found a surface we can look for the parameters. 
+            /* If we have found a surface we can look for the parameters.
              * If the edge is locked for edges on surfaces we have to skip this edge */
             else if (edge_geometry_dim == 2 && edge_geometries[i_tree_edges + num_edges] >= 0) {
               /* If the node lies on a geometry with a different dimension we try to retrieve the parameters */
@@ -1917,7 +1800,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_ind
 /* This part should be callable from C */
 T8_EXTERN_C_BEGIN ();
 
-/* This is a helper function to properly register the 
+/* This is a helper function to properly register the
  * geometries for the cmesh created in t8_cmesh_from_msh_file.
  * It should be called by all processes of the cmesh.
  * Returns 1 on success, 0 on cad usage error: use_cad_geometry true, but OCC not linked.
