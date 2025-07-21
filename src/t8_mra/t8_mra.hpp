@@ -83,6 +83,24 @@ class multiscale: public multiscale_data<TShape> {
     lmi_map = new t8_mra::levelindex_map<element_t> (max_level);
   }
 
+  t8_forest_t
+  get_forest ()
+  {
+    return forest;
+  }
+
+  t8_mra::forest_data<element_t>*
+  get_user_data ()
+  {
+    return reinterpret_cast<t8_mra::forest_data<element_t>*> (t8_forest_get_user_data (forest));
+  }
+
+  t8_mra::levelindex_map<element_t>*
+  get_lmi_map ()
+  {
+    return get_user_data ()->lmi_map;
+  }
+
   /// Projection -> TODO auslagern
   void
   project (std::vector<double>& dg_coeffs, const t8_forest_t forest, int tree_idx, const t8_element_t* element,
