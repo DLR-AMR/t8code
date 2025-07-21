@@ -60,7 +60,7 @@ typedef enum { T8_VTK_KERNEL_INIT, T8_VTK_KERNEL_EXECUTE, T8_VTK_KERNEL_CLEANUP 
  * \param [in] tree   The local tree of the forest with id \a ltree_id.
  * \param [in] element_index An index of an element inside \a tree.
  * \param [in] element  A pointer to the current element.
- * \param [in] scheme       The eclass scheme of the current element.
+ * \param [in] tree_class   The eclass of the current tree.
  * \param [in] is_ghost Non-zero if the current element is a ghost element.
  *                      In this cas \a tree is NULL.
  *                      All ghost element will be traversed after all elements are
