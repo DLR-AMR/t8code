@@ -103,8 +103,8 @@ class multiscale: public multiscale_data<TShape> {
 
   /// Projection -> TODO auslagern
   void
-  project (std::vector<double>& dg_coeffs, const t8_forest_t forest, int tree_idx, const t8_element_t* element,
-           const std::array<int, 3>& order, auto&& func)
+  project (std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element, const std::array<int, 3>& order,
+           auto&& func)
   {
     double vertices[3][3];
     for (auto i = 0; i < 3; ++i)
@@ -142,12 +142,10 @@ class multiscale: public multiscale_data<TShape> {
 
   // void eval(const t8_mra::levelindex_map<element_t>& grid_hierarchy, )
 
-  t8_forest_t
-  initialize_data (t8_mra::levelindex_map<element_t>* lmi_map, t8_cmesh_t mesh, const t8_scheme* scheme, int level,
-                   auto&& func)
+  void
+  initialize_data (t8_cmesh_t mesh, const t8_scheme* scheme, int level, auto&& func)
   {
-    auto forest = t8_forest_new_uniform (mesh, scheme, level, 0, comm);
-    lmi_map->level_map.resize (level + 1);
+    forest = t8_forest_new_uniform (mesh, scheme, level, 0, comm);
 
     levelmultiindex* elem_data;
     t8_mra::forest_data<element_t>* user_data;
@@ -177,7 +175,7 @@ class multiscale: public multiscale_data<TShape> {
         t8_mra::triangle_order::get_point_order_at_level (base_element, element, scheme, point_order);
 
         /// TODO maybe in separate file
-        project (data_element.u_coeffs, forest, tree_idx, element, point_order, func);
+        project (data_element.u_coeffs, tree_idx, element, point_order, func);
         lmi_map->insert (level, lmi.index, data_element);
 
         /// Insert lmi into forest
@@ -186,10 +184,9 @@ class multiscale: public multiscale_data<TShape> {
     }
 
     T8_FREE (elem_data);
+
     user_data->lmi_map = lmi_map;
     t8_forest_set_user_data (forest, user_data);
-
-    return forest;  /// TODO link data to forest
   }
 
   /// TODO index with lmi_map (template<index, val>)
