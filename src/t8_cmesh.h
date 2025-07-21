@@ -98,13 +98,23 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
+/** Disable the debug check for negative volumes in trees during \ref t8_cmesh_commit.
+ *  Does nothing outside of debug mode.
+ * \param [in, out] cmesh
+ */
+void
+t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
+
 #if T8_ENABLE_DEBUG
-/** Check the geometry of the mesh for validity.
- * \param [in] cmesh            This cmesh is examined.
- * \return                      True if the geometry of the cmesh is valid.
+/** Check the geometry of the mesh for validity, this means checking if trees and their geometries
+ *  are compatible and if they have negative volume.
+ * \param [in] cmesh                      This cmesh is examined.
+ * \param [in] check_for_negative_volume  Enable the negative volume check.
+ * \return                                True if the geometry of the cmesh is valid.
  */
 int
-t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
+
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume);
 #endif
 
 /* TODO: Currently it is not possible to destroy set_from before

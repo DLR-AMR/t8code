@@ -52,7 +52,7 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
  *       and provide informative error messages both in debug and non-debug.
  */
 
-/* Definitions for attribute identifiers that are reserved for a special purpose. 
+/* Definitions for attribute identifiers that are reserved for a special purpose.
  * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
 /** Used to store vertex coordinates. */
 #define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0
@@ -118,7 +118,7 @@ typedef struct t8_cmesh
   int mpisize;                 /**< Number of MPI processes. */
   t8_refcount_t rc;            /**< The reference count of the cmesh. */
   t8_gloidx_t num_trees;       /**< The global number of trees */
-  t8_locidx_t num_local_trees; /**< If partitioned the number of trees on this process. 
+  t8_locidx_t num_local_trees; /**< If partitioned the number of trees on this process.
                                     Otherwise the global number of trees. */
   t8_locidx_t num_ghosts;      /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
@@ -134,10 +134,10 @@ typedef struct t8_cmesh
 
   t8_cmesh_trees_t trees; /**< structure that holds all local trees and ghosts */
 
-  t8_gloidx_t first_tree;   /**< The global index of the first local tree on this process. 
+  t8_gloidx_t first_tree;   /**< The global index of the first local tree on this process.
                                        Zero if the cmesh is not partitioned. -1 if this processor is empty.
                                        See also https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
-  int8_t first_tree_shared; /**< If partitioned true if the first tree on this process is also the last tree 
+  int8_t first_tree_shared; /**< If partitioned true if the first tree on this process is also the last tree
                                   on the next process. Always zero if num_local_trees = 0 */
 
   t8_shmem_array_t tree_offsets; /**< If partitioned for each process the global index of its first local tree
@@ -151,6 +151,7 @@ typedef struct t8_cmesh
     *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
 
 #if T8_ENABLE_DEBUG
+  int negative_volume_check;   /**< Whether the negative volume check will be performed */
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
   t8_locidx_t inserted_ghosts; /**< Count the number of inserted ghosts to
@@ -271,7 +272,7 @@ typedef struct t8_part_tree
 /* TODO: Extend this structure with meaningful entries.
  *       Maybe the number of shipped trees per process is useful?
  */
-/** 
+/**
  * This struct is used to profile cmesh algorithms.
  * The cmesh struct stores a pointer to a profile struct, and if
  * it is nonzero, various runtimes and data measurements are stored here.

@@ -128,9 +128,17 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
   return 1;
 }
 
+void
+t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh)
+{
+#if T8_ENABLE_DEBUG
+  cmesh->negative_volume_check = 0;
+#endif
+}
+
 #if T8_ENABLE_DEBUG
 int
-t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume)
 {
   /* After a cmesh is committed, check whether all trees in a cmesh are compatible
  * with their geometry and if they have positive volume.
@@ -155,7 +163,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
         return false;
       }
-      if (geometry_compatible) {
+      else if (check_for_negative_volume) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
         const int negative_volume
           = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
@@ -210,6 +218,9 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
   cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
+#if T8_ENABLE_DEBUG
+  cmesh->negative_volume_check = 1;
+#endif /* T8_ENABLE_DEBUG */
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -742,6 +753,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       cmesh_out->num_local_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
     }
 #if T8_ENABLE_DEBUG
+    cmesh_out->negative_volume_check = meta_info.cmesh.negative_volume_check;
     int result;
     mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
     SC_CHECK_MPI (mpiret);
