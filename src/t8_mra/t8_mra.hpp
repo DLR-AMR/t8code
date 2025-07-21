@@ -237,6 +237,16 @@ class multiscale: public multiscale_data<TShape> {
       }
     }
   }
+
+  void
+  cleanup ()
+  {
+    delete lmi_map;
+    sc_array_destroy (get_user_data ()->lmi_idx);
+
+    T8_FREE (get_user_data ());
+    t8_forest_unref (&forest);
+  }
 };
 
 }  // namespace t8_mra
