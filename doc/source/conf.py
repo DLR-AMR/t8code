@@ -72,6 +72,9 @@ if read_the_docs_build:
     breathe_projects["T8code"] = output_dir + '/xml'
 
 html_theme = 'sphinx_rtd_theme'
+html_theme_options = {
+    "collapse_navigation":True
+}
 html_static_path = ['_static']
 html_logo = '../../t8code_logo.png'
 html_extra_path = ['../../build/html']
