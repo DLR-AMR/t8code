@@ -28,8 +28,8 @@
 
 #if T8_ENABLE_VTK
 /**
- * \brief template specialization for forests. 
- * 
+ * \brief template specialization for forests.
+ *
  */
 template <>
 void
@@ -68,8 +68,8 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
 }
 
 /**
- * \brief template specialization for cmeshes. 
- * 
+ * \brief template specialization for cmeshes.
+ *
  */
 template <>
 void
@@ -100,9 +100,9 @@ vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
 
 template <>
 bool
-vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t forest)
+vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t cmesh)
 {
-  return t8_cmesh_vtk_write_ASCII (forest, this->fileprefix.c_str ());
+  return t8_cmesh_vtk_write_ASCII (cmesh, this->fileprefix.c_str ());
 }
 
 /* Implementation of the c-interface */
