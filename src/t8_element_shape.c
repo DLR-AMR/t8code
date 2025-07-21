@@ -52,11 +52,26 @@ t8_element_shape_vtk_type (int element_shape)
   return t8_eclass_vtk_type[element_shape];
 }
 
-/** Maps the t8code corner number of the element to the vtk corner number */
+/** Maps the t8code corner number of the element to the vtk corner number 
+ * \param [in] element_shape  The shape of the element.
+ * \param [in] index          The index of the corner in z-order (t8code numeration).
+ * \return                    The corresponding vtk index. 
+*/
 int
-t8_element_shape_vtk_corner_number (int element_shape, int index)
+t8_element_shape_t8_to_vtk_corner_number (int element_shape, int index)
 {
   return t8_eclass_t8_to_vtk_corner_number[element_shape][index];
+}
+
+/** Maps the vtk corner number of the element to the t8code corner number
+ * \param [in] element_shape  The shape of the element.
+ * \param [in] index          The index of the corner in vtk ordering. 
+ * \return                    The corresponding t8code index.
+ */
+int
+t8_element_shape_vtk_to_t8_corner_number (int element_shape, int index)
+{
+  return t8_eclass_vtk_to_t8_corner_number[element_shape][index];
 }
 
 /** For each element_shape, the name of this class as a string */

@@ -34,6 +34,9 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
+/**
+ * A class to hold the vertex connectivity of a cmesh.
+ */
 struct t8_cmesh_vertex_connectivity
 {
  public:
