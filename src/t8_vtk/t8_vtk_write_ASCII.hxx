@@ -31,7 +31,6 @@
 #include "t8_forest/t8_forest_types.h"
 #include "t8_vtk.h"
 
-
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function writes ASCII files and can be used when
