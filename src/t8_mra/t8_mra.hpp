@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sc_containers.h"
 #include "t8.h"
 #ifdef T8_ENABLE_MRA
 
@@ -52,6 +53,7 @@ class multiscale: public multiscale_data<TShape> {
   using multiscale_data<TShape>::mask_coefficients;
   using multiscale_data<TShape>::inverse_mask_coefficients;
 
+ public:  /// Debugging
   int max_level;
   double c_thresh;
   int dunavant_rule;
@@ -62,6 +64,9 @@ class multiscale: public multiscale_data<TShape> {
   std::vector<double> ref_quad_points;
   std::vector<double> quad_weights;
 
+  /// forest data
+  t8_forest_t forest;
+  t8_mra::levelindex_map<element_t>* lmi_map;
   sc_MPI_Comm comm;
 
  public:
@@ -75,6 +80,7 @@ class multiscale: public multiscale_data<TShape> {
 
     /// TODO std::vector
     t8_mra::dunavant_rule (dunavant_rule, order_num, ref_quad_points.data (), quad_weights.data ());
+    lmi_map = new t8_mra::levelindex_map<element_t> (max_level);
   }
 
   /// Projection -> TODO auslagern
