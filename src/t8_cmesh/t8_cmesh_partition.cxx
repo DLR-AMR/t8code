@@ -1579,8 +1579,10 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
     T8_ASSERT (scheme != NULL);
-    t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_partition_level, scheme, &cmesh->first_tree, NULL, &last_tree, NULL,
-                             &cmesh->first_tree_shared);
+    t8_cmesh_uniform_bounds_for_irregular_refinement (cmesh_from, cmesh->set_partition_level, scheme,
+                                                      &cmesh->first_tree, NULL, &last_tree, NULL,
+                                                      &cmesh->first_tree_shared, comm);
+
     cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
     /* Compute the tree offset */
     t8_cmesh_gather_treecount_nocommit (cmesh, comm);
