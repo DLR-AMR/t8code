@@ -148,6 +148,15 @@ class levelindex_map {
   const T&
   get (unsigned int level, size_t key) const;  // Access data at specific level and key
 
+  /// TODO concept lmi
+  template <typename TLmi>
+  T&
+  get (const TLmi& lmi);
+
+  template <typename TLmi>
+  const T&
+  get (const TLmi& lmi) const;
+
  private:
   void
   check_level (unsigned int level) const;
@@ -293,11 +302,27 @@ levelindex_map<T>::get (unsigned int level, size_t key)
 }
 
 template <typename T>
+template <typename TLmi>
+T&
+levelindex_map<T>::get (const TLmi& lmi)
+{
+  return get (lmi.level (), lmi.index);
+}
+
+template <typename T>
 const T&
 levelindex_map<T>::get (unsigned int level, size_t key) const
 {
   check_level (level);
   return level_map[level].at (key);
+}
+
+template <typename T>
+template <typename TLmi>
+const T&
+levelindex_map<T>::get (const TLmi& lmi) const
+{
+  return get (lmi.level (), lmi.index);
 }
 
 template <typename T>
