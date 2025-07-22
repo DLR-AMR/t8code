@@ -58,7 +58,7 @@ if( T8CODE_EXPORT_COMPILE_COMMANDS )
 endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
 if( T8CODE_ENABLE_NETCDF )
-  target_link_libraries( T8 PUBLIC netCDF::netcdf )
+  target_link_libraries( T8 PUBLIC NetCDF::NetCDF )
   target_compile_definitions(T8 PUBLIC
     T8_ENABLE_NETCDF=1
     $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR=1> )
@@ -262,6 +262,7 @@ install( FILES
 install ( DIRECTORY t8_vector_helper DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
 
 install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
+
   PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
   PATTERN "t8_cmesh/t8_cmesh_partition.h" EXCLUDE

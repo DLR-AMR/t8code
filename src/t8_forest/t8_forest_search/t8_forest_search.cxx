@@ -100,8 +100,8 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
        * we construct an array of these leaves */
       t8_element_array_init_view (&child_leaves, leaf_elements, indexa, indexb - indexa);
       /* Enter the recursion */
-      search_recursion (ltreeid, children[ichild], ts, &child_leaves, indexa + tree_lindex_of_first_leaf);
       update_queries (new_active_queries);
+      search_recursion (ltreeid, children[ichild], ts, &child_leaves, indexa + tree_lindex_of_first_leaf);
     }
   }
 
@@ -139,6 +139,7 @@ t8_search_base::do_search ()
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (this->forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    this->init_queries ();
     this->search_tree (itree);
   }
 }
