@@ -327,25 +327,40 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest, [[maybe_unused]] const
   return 1;
 }
 
+// TODO: Move to forest_general.h
+static t8_locidx_t
+t8_forest_compute_data_index (const t8_forest_t forest,
+                              const t8_locidx_t ltree_or_ghost_id,  // 0<= ID < num_local_trees + num_ghosts
+                              const t8_locidx_t element_in_tree_index)
+{
+  const bool is_local = t8_forest_tree_is_local (forest, ltree_or_ghost_id);
+
+  if (is_local) {
+    const t8_locidx_t element_offset = t8_forest_get_tree_element_offset (forest, ltree_or_ghost_id);
+    return element_offset + element_in_tree_index;
+  }
+  else {
+    // Compute the tree id of the ghost tree
+    const t8_locidx_t ghost_tree_id = ltree_or_ghost_id - t8_forest_get_num_local_trees (forest);
+    // Compute the offset among ghost elements
+    const t8_locidx_t ghost_tree_offset = t8_forest_ghost_get_tree_element_offset (forest, ghost_tree_id);
+    // Add the local element count
+    const t8_locidx_t ghost_element_offset = ghost_tree_offset + t8_forest_get_local_num_elements (forest);
+    return ghost_element_offset + element_in_tree_index;
+  }
+}
+
 static int
 t8_forest_vtk_cells_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
                                    [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
                                    [[maybe_unused]] const t8_element_t *element,
-                                   [[maybe_unused]] const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
-                                   int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+                                   [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost,
+                                   FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
 {
-  double element_value = 0;
-  t8_locidx_t scalar_index;
-
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     /* For local elements access the data array, for ghosts, write 0 */
-    if (!is_ghost) {
-      scalar_index = t8_forest_get_tree_element_offset (forest, ltree_id) + element_index;
-      element_value = ((double *) *data)[scalar_index];
-    }
-    else {
-      element_value = 0;
-    }
+    const t8_locidx_t data_index = t8_forest_compute_data_index (forest, ltree_id, element_index);
+    const double element_value = ((double *) *data)[data_index];
     fprintf (vtufile, "%g ", element_value);
     *columns += 1;
   }
@@ -356,25 +371,17 @@ static int
 t8_forest_vtk_cells_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
                                    [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
                                    [[maybe_unused]] const t8_element_t *element,
-                                   [[maybe_unused]] const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
-                                   int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+                                   [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost,
+                                   FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
 {
-  double *element_values, null_vec[3] = { 0, 0, 0 };
   int dim, idim;
-  t8_locidx_t tree_offset;
 
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     dim = 3;
     T8_ASSERT (forest->dimension <= 3);
     /* For local elements access the data array, for ghosts, write 0 */
-    if (!is_ghost) {
-      tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
-      /* Get a pointer to the start of the element's vector data */
-      element_values = ((double *) *data) + (tree_offset + element_index) * dim;
-    }
-    else {
-      element_values = null_vec;
-    }
+    const t8_locidx_t data_index = t8_forest_compute_data_index (forest, ltree_id, element_index);
+    const double *element_values = ((double *) *data) + data_index * dim;
     for (idim = 0; idim < dim; idim++) {
       fprintf (vtufile, "%g ", element_values[idim]);
     }
@@ -387,26 +394,17 @@ t8_forest_vtk_cells_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_i
 static int
 t8_forest_vtk_vertices_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
                                       [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
-                                      const t8_element_t *element, const t8_eclass_t tree_class, const int is_ghost,
-                                      FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+                                      const t8_element_t *element, const t8_eclass_t tree_class,
+                                      [[maybe_unused]] const int is_ghost, FILE *vtufile, int *columns, void **data,
+                                      T8_VTK_KERNEL_MODUS modus)
 {
-  double element_value = 0;
-  int num_vertex, ivertex;
-  t8_locidx_t scalar_index;
-
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
-    num_vertex = scheme->element_get_num_corners (tree_class, element);
+    const int num_vertex = scheme->element_get_num_corners (tree_class, element);
 
-    for (ivertex = 0; ivertex < num_vertex; ivertex++) {
-      /* For local elements access the data array, for ghosts, write 0 */
-      if (!is_ghost) {
-        scalar_index = t8_forest_get_tree_element_offset (forest, ltree_id) + element_index;
-        element_value = ((double *) *data)[scalar_index];
-      }
-      else {
-        element_value = 0;
-      }
+    for (int ivertex = 0; ivertex < num_vertex; ivertex++) {
+      const t8_locidx_t scalar_index = t8_forest_compute_data_index (forest, ltree_id, element_index);
+      const double element_value = ((double *) *data)[scalar_index];
       fprintf (vtufile, "%g ", element_value);
       *columns += 1;
     }
@@ -418,30 +416,20 @@ t8_forest_vtk_vertices_scalar_kernel (t8_forest_t forest, const t8_locidx_t ltre
 static int
 t8_forest_vtk_vertices_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_id,
                                       [[maybe_unused]] const t8_tree_t tree, const t8_locidx_t element_index,
-                                      const t8_element_t *element, const t8_eclass_t tree_class, const int is_ghost,
-                                      FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
+                                      const t8_element_t *element, const t8_eclass_t tree_class,
+                                      [[maybe_unused]] const int is_ghost, FILE *vtufile, int *columns, void **data,
+                                      T8_VTK_KERNEL_MODUS modus)
 {
-  double *element_values, null_vec[3] = { 0, 0, 0 };
-  int dim, idim;
-  int num_vertex, ivertex;
-  t8_locidx_t tree_offset;
-
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
-    num_vertex = scheme->element_get_num_corners (tree_class, element);
-    for (ivertex = 0; ivertex < num_vertex; ivertex++) {
-      dim = 3;
+    const int num_vertex = scheme->element_get_num_corners (tree_class, element);
+    for (int ivertex = 0; ivertex < num_vertex; ivertex++) {
+      constexpr int dim = 3;
       T8_ASSERT (forest->dimension <= 3);
-      /* For local elements access the data array, for ghosts, write 0 */
-      if (!is_ghost) {
-        tree_offset = t8_forest_get_tree_element_offset (forest, ltree_id);
-        /* Get a pointer to the start of the element's vector data */
-        element_values = ((double *) *data) + (tree_offset + element_index) * dim;
-      }
-      else {
-        element_values = null_vec;
-      }
-      for (idim = 0; idim < dim; idim++) {
+      /* Get a pointer to the start of the element's vector data */
+      const t8_locidx_t data_index = t8_forest_compute_data_index (forest, ltree_id, element_index);
+      const double *element_values = ((double *) *data) + (data_index) *dim;
+      for (int idim = 0; idim < dim; idim++) {
         fprintf (vtufile, "%g ", element_values[idim]);
       }
       *columns += dim;
