@@ -139,7 +139,7 @@ template <>
 inline unsigned int
 levelmultiindex<T8_ECLASS_TRIANGLE>::level () const noexcept
 {
-  return static_cast<unsigned int> ((index >> BASECELL_BITS >> LEVEL_BITS) & ((1ULL << LEVEL_BITS) - 1));
+  return static_cast<unsigned int> ((index >> BASECELL_BITS) & ((1ULL << LEVEL_BITS) - 1));
 }
 
 template <>
@@ -198,6 +198,7 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::point_order_at_level (const t8_element_t *e
 }
 
 // F R E E - F U N C T I O N S
+/// TODO concept lmi
 template <typename TLmi>
 [[nodiscard]] inline TLmi
 parent_lmi (TLmi lmi)
