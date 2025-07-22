@@ -57,6 +57,12 @@ class levelindex_map {
   void
   insert (unsigned int level, size_t key, const T& data);
 
+  /**
+   * @brief Insert levelmuliindex -> data to map
+   *
+   * @param lmi levelmultiindex
+   * @param data Given data
+   */
   template <lmi_type TLmi>
   void
   insert (const TLmi& lmi, const T& data);
@@ -70,6 +76,11 @@ class levelindex_map {
   void
   erase (unsigned int level, size_t key);
 
+  /**
+   * @brief Erase entry for given levelmultiindex
+   *
+   * @param lmi levelmultiindex
+   */
   template <lmi_type TLmi>
   void
   erase (const TLmi& lmi);
