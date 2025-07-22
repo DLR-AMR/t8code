@@ -30,6 +30,9 @@
 #include <t8.h>
 #include <t8_eclass.h>
 
+/**
+ * Opaque pointer to a stash data structure.
+ */
 typedef struct t8_stash *t8_stash_t;
 
 /* TODO: could store class information in an offset array instead of
@@ -109,8 +112,8 @@ t8_stash_add_class (t8_stash_t stash, t8_gloidx_t id, t8_eclass_t eclass);
 
 /** Add a face connection to a stash.
  * \param [in, out] stash The stash to be updated.
- * \param [in]      id1   The global id of the first tree.
- * \param [in]      id2   The global id of the second tree,
+ * \param [in]      gid1   The global id of the first tree.
+ * \param [in]      gid2   The global id of the second tree,
  * \param [in]      face1 The face number of the face of the first tree.
  * \param [in]      face2 The face number of the face of the second tree.
  * \param [in]      orientation The orientation of the faces to each other.

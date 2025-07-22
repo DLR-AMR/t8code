@@ -20,7 +20,7 @@
 
 if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
     add_library( T8 SHARED )
-    set_target_properties( T8 PROPERTIES VERSION ${CMAKE_PROJECT_VERSION} SOVERSION ${T8CODE_VERSION_RAW})
+    set_target_properties( T8 PROPERTIES VERSION ${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH} SOVERSION ${T8CODE_VERSION_RAW})
     set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
 else()
     add_library( T8 STATIC )
@@ -58,7 +58,7 @@ if( T8CODE_EXPORT_COMPILE_COMMANDS )
 endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
 if( T8CODE_ENABLE_NETCDF )
-  target_link_libraries( T8 PUBLIC netCDF::netcdf )
+  target_link_libraries( T8 PUBLIC NetCDF::NetCDF )
   target_compile_definitions(T8 PUBLIC
     T8_ENABLE_NETCDF=1
     $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR=1> )
@@ -254,12 +254,15 @@ install( FILES
     t8_types/t8_vec.h
     t8_version.h
     t8_vtk.h
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h
     TYPE INCLUDE
 )
 
 install ( DIRECTORY t8_vector_helper DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
 
 install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
+
   PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
   PATTERN "t8_cmesh/t8_cmesh_partition.h" EXCLUDE
