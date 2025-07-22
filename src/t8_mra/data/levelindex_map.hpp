@@ -57,6 +57,10 @@ class levelindex_map {
   void
   insert (unsigned int level, size_t key, const T& data);
 
+  template <lmi_type TLmi>
+  void
+  insert (const TLmi& lmi, const T& data);
+
   /**
    * @brief Erase entry for given (level, key)
    *
@@ -65,6 +69,10 @@ class levelindex_map {
    */
   void
   erase (unsigned int level, size_t key);
+
+  template <lmi_type TLmi>
+  void
+  erase (const TLmi& lmi);
 
   /**
    * @brief Erase entries for a given refinement level 
@@ -177,12 +185,28 @@ levelindex_map<T>::insert (unsigned int level, size_t key, const T& data)
 }
 
 template <typename T>
+template <lmi_type TLmi>
+void
+levelindex_map<T>::insert (const TLmi& lmi, const T& data)
+{
+  insert (lmi.level (), lmi.index, data);
+}
+
+template <typename T>
 void
 levelindex_map<T>::erase (unsigned int level, size_t key)
 {
   check_level (level);
 
   level_map[level].erase (key);
+}
+
+template <typename T>
+template <lmi_type TLmi>
+void
+levelindex_map<T>::erase (const TLmi& lmi)
+{
+  erase (lmi.level (), lmi.index);
 }
 
 template <typename T>
