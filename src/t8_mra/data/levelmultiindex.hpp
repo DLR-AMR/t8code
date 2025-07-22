@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include <t8_mra/data/triangle_order.hpp>
 
 #include <t8_eclass.h>
@@ -197,23 +199,26 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::point_order_at_level (const t8_element_t *e
   return res;
 }
 
+/// Levelmultiindex concept
+template <typename T>
+concept lmi_type = std::is_same_v<T, t8_mra::levelmultiindex<T::ECLASS>>;
+
 // F R E E - F U N C T I O N S
-/// TODO concept lmi
-template <typename TLmi>
+template <lmi_type TLmi>
 [[nodiscard]] inline TLmi
 parent_lmi (TLmi lmi)
 {
   return TLmi::parent (lmi);
 }
 
-template <typename TLmi>
+template <lmi_type TLmi>
 [[nodiscard]] inline TLmi
 jth_child_lmi (TLmi lmi, size_t j)
 {
   return TLmi::jth_child (lmi, j);
 }
 
-template <typename TLmi>
+template <lmi_type TLmi>
 [[nodiscard]] inline std::array<TLmi, TLmi::NUM_CHILDREN>
 children_lmi (TLmi lmi)
 {

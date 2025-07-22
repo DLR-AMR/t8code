@@ -78,8 +78,9 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
       element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
       const auto vol = t8_forest_element_volume (forest, tree_idx, element);
 
-      const auto lmi = get_value (data, current_index).index;
-      element_data[current_index] = data->lmi_map->get (plot_level, lmi).u_coeffs[0];
+      const auto lmi = get_value (data, current_index);
+      element_data[current_index] = data->lmi_map->get (lmi).u_coeffs[0];
+      /// TODO Eval function
       element_data[current_index] *= t8_mra::skalierungsfunktion (0, 0.0, 0.0) * std::sqrt (1.0 / (2.0 * vol));
     }
   }
