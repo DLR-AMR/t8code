@@ -125,6 +125,18 @@ class levelindex_map {
   find (unsigned int level, size_t key) const;
 
   /**
+   * @brief Returns data for a given levelmultiindex
+   *
+   * @param lmi levelmultiindex
+   *
+   * @return If lmi exists return given data otherwise
+   * std::nullopt
+   */
+  template <lmi_type TLmi>
+  std::optional<T>
+  find (const TLmi& lmi) const;
+
+  /**
    * @brief Does the cell (level, multiindex) exists?
    *
    * @param level Refinement level
@@ -134,6 +146,17 @@ class levelindex_map {
    */
   bool
   contains (unsigned int level, size_t key) const;
+
+  /**
+   * @brief Does the levelmultiindex exists?
+   *
+   * @param lmi levelmultiindex
+   *
+   * @return Does cell exist?
+   */
+  template <lmi_type TLmi>
+  bool
+  contains (const TLmi& lmi) const;
 
   /**
    * @brief Returns number elements stored in the map
@@ -288,12 +311,28 @@ levelindex_map<T>::find (unsigned int level, size_t key) const
 }
 
 template <typename T>
+template <lmi_type TLmi>
+std::optional<T>
+levelindex_map<T>::find (const TLmi& lmi) const
+{
+  return find (lmi.level (), lmi.index);
+}
+
+template <typename T>
 bool
 levelindex_map<T>::contains (unsigned int level, size_t key) const
 {
   check_level (level);
 
   return level_map[level].contains (key);
+}
+
+template <typename T>
+template <lmi_type TLmi>
+bool
+levelindex_map<T>::contains (const TLmi& lmi) const
+{
+  return contains (lmi.level (), lmi.index);
 }
 
 template <typename T>
