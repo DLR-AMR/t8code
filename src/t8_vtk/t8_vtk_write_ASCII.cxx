@@ -768,7 +768,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          /* Note: gcc >= 7.1 prints a warning if we 
+          /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
@@ -943,7 +943,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERT (fileprefix != NULL);
 
-  /* Constants used as return values in order 
+  /* Constants used as return values in order
    * to have more readable code. */
   constexpr int write_successful = 1;
   constexpr int write_failure = 0;
@@ -983,7 +983,6 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
     vtufile = fopen (vtufilename, "wb");
     if (vtufile == NULL) {
       t8_global_errorf ("Could not open file %s for output.\n", vtufilename);
-      fclose (vtufile);
       return write_failure;
     }
     fprintf (vtufile, "<?xml version=\"1.0\"?>\n");
