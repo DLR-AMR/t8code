@@ -129,7 +129,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 }
 
 void
-t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh)
+t8_cmesh_disable_negative_volume_check ([[maybe_unused]] t8_cmesh_t cmesh)
 {
 #if T8_ENABLE_DEBUG
   cmesh->negative_volume_check = 0;
