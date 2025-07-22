@@ -2,10 +2,13 @@
 #include "t8.h"
 #include "t8_cmesh.hxx"
 #include "t8_eclass.h"
+#include "t8_forest/t8_forest_general.h"
+#include "t8_forest/t8_forest_geometrical.h"
 #include "t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx"
 #include "t8_geometry/t8_geometry_with_vertices.h"
 #include "t8_mra/data/cell_data.hpp"
 #include "t8_mra/data/levelmultiindex.hpp"
+#include "t8_mra/num/basis_functions.hxx"
 #include "t8_vtk.h"
 
 t8_cmesh_t
@@ -47,8 +50,8 @@ template <typename T>
 void
 t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* prefix)
 {
-  const auto num_elements = t8_forest_get_local_num_leaf_elements (forest);
-  double* element_data = T8_ALLOC (double, num_elements);
+  const auto total_num_elements = t8_forest_get_global_num_leaf_elements (forest);
+  double* element_data = T8_ALLOC (double, total_num_elements);
 
   const auto plot_level = 8u;
 
@@ -64,9 +67,21 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   };
 
   /// TODO Add lmi_map[lmi]
-  for (auto i = 0u; i < num_elements; ++i) {
-    const auto lmi = get_value (data, i).index;
-    element_data[i] = data->lmi_map->get (plot_level, lmi).u_coeffs[0];
+  const t8_element_t* element;
+  const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+
+  auto current_index = 0u;
+  for (auto tree_idx = 0u, current_index = 0u; tree_idx < num_local_trees; ++tree_idx) {
+    const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+
+    for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx, ++current_index) {
+      element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+      const auto vol = t8_forest_element_volume (forest, tree_idx, element);
+
+      const auto lmi = get_value (data, current_index).index;
+      element_data[current_index] = data->lmi_map->get (plot_level, lmi).u_coeffs[0];
+      element_data[current_index] *= t8_mra::skalierungsfunktion (0, 0.0, 0.0) * std::sqrt (1.0 / (2.0 * vol));
+    }
   }
 
   int write_treeid = 1;
@@ -108,6 +123,8 @@ main (int argc, char** argv)
     return 1. - r4 + 4. * r4 * rm1 - 10. * r4 * rm1h2 + 20 * r4 * rm1h3;
   };
 
+  auto f = [] (double x, double y) { return x + y; };
+
   printf ("Init done\n");
 
   auto max_level = 8u;
@@ -130,10 +147,11 @@ main (int argc, char** argv)
   printf ("created mra object\n");
 
   mra_test.initialize_data (cmesh, test_scheme, 8u, f4);
+  // mra_test.initialize_data (cmesh, test_scheme, 4u, f);
   printf ("initialize data\n");
 
   printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
-  t8_write_vtu<element_data_type> (mra_test.forest, mra_test.get_user_data (), "testi_test");
+  t8_write_vtu<element_data_type> (mra_test.forest, mra_test.get_user_data (), "testi_test_8");
 
   printf ("Finished writing file\n");
 
