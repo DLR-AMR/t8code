@@ -80,7 +80,7 @@ if (PkgConfig_FOUND)
       add_library(NetCDF::NetCDF INTERFACE IMPORTED)
       set_target_properties(NetCDF::NetCDF PROPERTIES
         INTERFACE_LINK_LIBRARIES "PkgConfig::_NetCDF"
-	INTERFACE_INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}") # somehow lost sometimes
+        INTERFACE_INCLUDE_DIRECTORIES "${NetCDF_INCLUDE_DIRS}") # somehow lost sometimes
     endif ()
 
     FindNetCDF_get_is_parallel_aware("${_NetCDF_INCLUDEDIR}")
