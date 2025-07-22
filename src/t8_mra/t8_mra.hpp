@@ -40,6 +40,7 @@ struct multiscale_data<T8_ECLASS_TRIANGLE>
 /// TODO naming P -> ORDER?
 template <t8_eclass TShape, int U, int P>
 class multiscale: public multiscale_data<TShape> {
+
   using element_t = data_per_element<TShape, U, P>;
   using levelmultiindex = levelmultiindex<TShape>;
 
@@ -67,6 +68,7 @@ class multiscale: public multiscale_data<TShape> {
   /// forest data
   t8_forest_t forest;
   t8_mra::levelindex_map<element_t>* lmi_map;
+
   sc_MPI_Comm comm;
 
  public:
@@ -123,6 +125,7 @@ class multiscale: public multiscale_data<TShape> {
     t8_mra::reference_to_physical_t3 (corners.data (), order_num, ref_quad_points.data (), ele_quad_points.data ());
 
     const auto volume = t8_forest_element_volume (forest, tree_idx, element);
+
     for (auto i = 0u; i < DOF; ++i) {
       double sum = 0.0;
       for (auto j = 0u; j < order_num; ++j) {
@@ -176,7 +179,7 @@ class multiscale: public multiscale_data<TShape> {
 
         /// TODO maybe in separate file
         project (data_element.u_coeffs, tree_idx, element, point_order, func);
-        lmi_map->insert (level, lmi.index, data_element);
+        lmi_map->insert (lmi, data_element);
 
         /// Insert lmi into forest
         *((levelmultiindex*) t8_sc_array_index_locidx (user_data->lmi_idx, current_idx)) = lmi;
@@ -189,7 +192,6 @@ class multiscale: public multiscale_data<TShape> {
     t8_forest_set_user_data (forest, user_data);
   }
 
-  /// TODO index with lmi_map (template<index, val>)
   /// TODO matrix vector product?
   void
   multiscale_transformation (t8_mra::levelindex_map<element_t>& grid_hierarchy, unsigned int l_min, unsigned int l_max)
