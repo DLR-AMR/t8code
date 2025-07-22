@@ -310,7 +310,7 @@ class t8_search_base {
     = 0;
 
   /**
-   * @brief Function gives the user the opportunity to set the queries to the initial
+   * Function gives the user the opportunity to set the queries to the initial
    *        full set before searching each tree.
    *
    */
