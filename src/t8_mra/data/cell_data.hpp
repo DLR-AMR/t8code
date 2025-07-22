@@ -47,11 +47,11 @@ struct data_per_element
   }
 };
 
-template <t8_eclass TShape>
-struct element_data
-{
-  t8_mra::levelmultiindex<TShape> lmi_idx;
-};
+// template <t8_eclass TShape>
+// struct element_data
+// {
+//   t8_mra::levelmultiindex<TShape> lmi_idx;
+// };
 
 template <typename T>
 struct forest_data
@@ -59,6 +59,13 @@ struct forest_data
   sc_array_t *lmi_idx;
   t8_mra::levelindex_map<T> *lmi_map;
 };
+
+template <typename T>
+t8_mra::levelmultiindex<T::Shape>
+get_lmi_from_forest_data (const t8_mra::forest_data<T> *forest_data, size_t idx)
+{
+  return *reinterpret_cast<t8_mra::levelmultiindex<T::Shape> *> (t8_sc_array_index_locidx (forest_data->lmi_idx, idx));
+}
 
 }  // namespace t8_mra
 
