@@ -1,12 +1,12 @@
 #pragma once
 
-#include <numeric>
 #include <vector>
 #include <optional>
 
 #ifdef T8_ENABLE_MRA
 
 #include <ankerl/unordered_dense.h>
+#include "t8_mra/data/levelmultiindex.hpp"
 
 namespace t8_mra
 {
@@ -142,18 +142,17 @@ class levelindex_map {
   const map&
   operator[] (unsigned int level) const;
 
-  // TODO levelindex class
   T&
   get (unsigned int level, size_t key);  // Access data at specific level and key
-  const T&
-  get (unsigned int level, size_t key) const;  // Access data at specific level and key
-
-  /// TODO concept lmi
-  template <typename TLmi>
+  //
+  template <lmi_type TLmi>
   T&
   get (const TLmi& lmi);
 
-  template <typename TLmi>
+  const T&
+  get (unsigned int level, size_t key) const;  // Access data at specific level and key
+
+  template <lmi_type TLmi>
   const T&
   get (const TLmi& lmi) const;
 
@@ -302,7 +301,7 @@ levelindex_map<T>::get (unsigned int level, size_t key)
 }
 
 template <typename T>
-template <typename TLmi>
+template <lmi_type TLmi>
 T&
 levelindex_map<T>::get (const TLmi& lmi)
 {
@@ -318,7 +317,7 @@ levelindex_map<T>::get (unsigned int level, size_t key) const
 }
 
 template <typename T>
-template <typename TLmi>
+template <lmi_type TLmi>
 const T&
 levelindex_map<T>::get (const TLmi& lmi) const
 {
