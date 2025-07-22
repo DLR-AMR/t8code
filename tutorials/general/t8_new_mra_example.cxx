@@ -53,8 +53,6 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   const auto total_num_elements = t8_forest_get_global_num_leaf_elements (forest);
   double* element_data = T8_ALLOC (double, total_num_elements);
 
-  const auto plot_level = 8u;
-
   auto num_data = 1;
   t8_vtk_data_field_t vtk_data;
   vtk_data.type = T8_VTK_SCALAR;
@@ -66,7 +64,6 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
     return *((t8_mra::levelmultiindex<T::Shape>*) t8_sc_array_index_locidx ((forest_data->lmi_idx), idx));
   };
 
-  /// TODO Add lmi_map[lmi]
   const t8_element_t* element;
   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
 
@@ -80,6 +77,7 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
 
       const auto lmi = get_value (data, current_index);
       element_data[current_index] = data->lmi_map->get (lmi).u_coeffs[0];
+
       /// TODO Eval function
       element_data[current_index] *= t8_mra::skalierungsfunktion (0, 0.0, 0.0) * std::sqrt (1.0 / (2.0 * vol));
     }
