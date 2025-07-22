@@ -1,4 +1,5 @@
 #include <t8_mra/t8_mra.hpp>
+
 #include "t8.h"
 #include "t8_cmesh.hxx"
 #include "t8_eclass.h"
@@ -59,11 +60,6 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   strcpy (vtk_data.description, "Element own data");
   vtk_data.data = element_data;
 
-  /// TODO Easy access to element in forest
-  auto get_value = [&] (const t8_mra::forest_data<T>* forest_data, auto idx) {
-    return *((t8_mra::levelmultiindex<T::Shape>*) t8_sc_array_index_locidx ((forest_data->lmi_idx), idx));
-  };
-
   const t8_element_t* element;
   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
 
@@ -75,7 +71,7 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
       element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
       const auto vol = t8_forest_element_volume (forest, tree_idx, element);
 
-      const auto lmi = get_value (data, current_index);
+      const auto lmi = t8_mra::get_lmi_from_forest_data<T> (data, current_index);
       element_data[current_index] = data->lmi_map->get (lmi).u_coeffs[0];
 
       /// TODO Eval function
@@ -146,7 +142,6 @@ main (int argc, char** argv)
   printf ("created mra object\n");
 
   mra_test.initialize_data (cmesh, test_scheme, 8u, f4);
-  // mra_test.initialize_data (cmesh, test_scheme, 4u, f);
   printf ("initialize data\n");
 
   printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
@@ -155,7 +150,7 @@ main (int argc, char** argv)
   printf ("Finished writing file\n");
 
   mra_test.cleanup ();
-  printf ("freed everything...\n");
+  printf ("cleaned everything...\n");
 
   sc_finalize ();
 
