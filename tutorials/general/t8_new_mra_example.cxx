@@ -52,13 +52,20 @@ void
 t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* prefix)
 {
   const auto total_num_elements = t8_forest_get_global_num_leaf_elements (forest);
-  double* element_data = T8_ALLOC (double, total_num_elements);
 
-  auto num_data = 1;
-  t8_vtk_data_field_t vtk_data;
-  vtk_data.type = T8_VTK_SCALAR;
-  strcpy (vtk_data.description, "u0");
-  vtk_data.data = element_data;
+  constexpr auto U_DIM = T::U_DIM;
+  auto num_fields_to_write = U_DIM;
+
+  std::array<double*, U_DIM> element_data;
+  for (auto k = 0u; k < U_DIM; ++k)
+    element_data[k] = T8_ALLOC (double, total_num_elements);
+
+  std::array<t8_vtk_data_field_t, 3> vtk_data;
+  for (auto k = 0u; k < U_DIM; ++k) {
+    vtk_data[k].type = T8_VTK_SCALAR;
+    strcpy (vtk_data[k].description, ("u" + std::to_string (k)).c_str ());
+    vtk_data[k].data = element_data[k];
+  }
 
   const t8_element_t* element;
   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -73,7 +80,8 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
       const auto lmi = t8_mra::get_lmi_from_forest_data<T> (data, current_index);
       const auto mean_val = t8_mra::mean_val<T> (forest, tree_idx, lmi, element);
 
-      element_data[current_index] = mean_val[0];
+      for (auto k = 0u; k < U_DIM; ++k)
+        element_data[k][current_index] = mean_val[k];
     }
   }
 
@@ -83,8 +91,9 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   int write_element_id = 1;
   int write_ghosts = 0;
   t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, 0,
-                           0, num_data, &vtk_data);
-  T8_FREE (element_data);
+                           0, num_fields_to_write, vtk_data.data ());
+  for (auto k = 0u; k < U_DIM; ++k)
+    T8_FREE (element_data[k]);
 }
 
 int
@@ -117,7 +126,7 @@ main (int argc, char** argv)
     const auto rm1h3 = rm1 * rm1h2;
 
     return { 1.0 - r4 + 4.0 * r4 * rm1 - 10.0 * r4 * rm1h2 + 20.0 * r4 * rm1h3,
-             (1.0 - r4 + 4.0 * r4 * rm1 - 10.0 * r4 * rm1h2 + 20.0 * r4 * rm1h3) * 0.1 };
+             -(1.0 - r4 + 4.0 * r4 * rm1 - 10.0 * r4 * rm1h2 + 20.0 * r4 * rm1h3) };
   };
 
   auto f = [] (double x, double y) { return x + y; };
@@ -125,7 +134,7 @@ main (int argc, char** argv)
   printf ("Init done\n");
 
   auto max_level = 8u;
-  auto init_level = 8u;
+  auto init_level = 6u;
   auto c_thresh = 1.0;
   auto dunavant_rule = 10;
 
