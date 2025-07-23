@@ -66,6 +66,7 @@ add_t8_example( NAME t8_cmesh_set_join_by_vertices      SOURCES cmesh/t8_cmesh_s
 add_t8_example( NAME t8_cmesh_geometry_examples         SOURCES cmesh/t8_cmesh_geometry_examples.cxx )
 add_t8_example( NAME t8_cmesh_create_partitioned        SOURCES cmesh/t8_cmesh_create_partitioned.cxx )
 add_t8_example( NAME t8_cmesh_hypercube_pad             SOURCES cmesh/t8_cmesh_hypercube_pad.cxx )
+add_t8_example( NAME t8_brep_mesh_file_example          SOURCES cmesh/t8_brep_mesh_file_example.cxx)
 
 add_t8_example( NAME t8_test_ghost                      SOURCES forest/t8_test_ghost.cxx )
 add_t8_example( NAME t8_test_face_iterate               SOURCES forest/t8_test_face_iterate.cxx )
@@ -80,6 +81,7 @@ add_t8_example( NAME t8_read_tetgen                     SOURCES IO/cmesh/tetgen/
 add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/t8_time_tetgen_file.cxx )
 add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
 add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )
+
 
 if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
