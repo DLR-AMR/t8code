@@ -85,6 +85,16 @@ class multiscale: public multiscale_data<TShape> {
     lmi_map = new t8_mra::levelindex_map<element_t> (max_level);
   }
 
+  size_t static dg_idx (size_t u, size_t p) noexcept
+  {
+    return u * DOF + p;
+  }
+
+  size_t static wavelet_idx (size_t u, size_t p) noexcept
+  {
+    return u * W_DOF + p;
+  }
+
   t8_forest_t
   get_forest ()
   {
