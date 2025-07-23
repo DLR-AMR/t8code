@@ -69,13 +69,11 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
 
     for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx, ++current_index) {
       element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
-      const auto vol = t8_forest_element_volume (forest, tree_idx, element);
 
       const auto lmi = t8_mra::get_lmi_from_forest_data<T> (data, current_index);
-      element_data[current_index] = data->lmi_map->get (lmi).u_coeffs[0];
+      const auto mean_val = t8_mra::mean_val<T> (forest, tree_idx, lmi, element);
 
-      /// TODO Eval function
-      element_data[current_index] *= t8_mra::skalierungsfunktion (0, 0.0, 0.0) * std::sqrt (1.0 / (2.0 * vol));
+      element_data[current_index] = mean_val[0];
     }
   }
 
@@ -101,21 +99,21 @@ main (int argc, char** argv)
   comm = sc_MPI_COMM_WORLD;
 
   /// Velis debugging example
-  auto f4 = [] (double x, double y) {
+  auto f4 = [] (double x, double y) -> std::array<double, 1> {
     //if ((x == -1.) && (y == -1.)) return 6.;
     if (x < 0.41)
-      return 0.;
+      return { 0. };
     double r4 = (x - 0.5) * (x - 0.5) + (y - 0.5) * (y - 0.5);
     double r = sqrt (r4);
     if (r > 1. / 3.)
-      return 0.;
+      return { 0. };
     r *= 3.;
     r4 *= 9.;
     r4 *= r4;
     double rm1 = r - 1.;
     double rm1h2 = rm1 * rm1;
     double rm1h3 = rm1 * rm1h2;
-    return 1. - r4 + 4. * r4 * rm1 - 10. * r4 * rm1h2 + 20 * r4 * rm1h3;
+    return { 1. - r4 + 4. * r4 * rm1 - 10. * r4 * rm1h2 + 20 * r4 * rm1h3 };
   };
 
   auto f = [] (double x, double y) { return x + y; };
