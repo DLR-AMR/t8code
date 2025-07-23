@@ -40,7 +40,7 @@ struct multiscale_data<T8_ECLASS_TRIANGLE>
 /// TODO naming P -> ORDER?
 template <t8_eclass TShape, int U, int P>
 class multiscale: public multiscale_data<TShape> {
-
+ public:
   using element_t = data_per_element<TShape, U, P>;
   using levelmultiindex = levelmultiindex<TShape>;
 
@@ -83,16 +83,6 @@ class multiscale: public multiscale_data<TShape> {
     /// TODO std::vector
     t8_mra::dunavant_rule (dunavant_rule, order_num, ref_quad_points.data (), quad_weights.data ());
     lmi_map = new t8_mra::levelindex_map<element_t> (max_level);
-  }
-
-  size_t static dg_idx (size_t u, size_t p) noexcept
-  {
-    return u * DOF + p;
-  }
-
-  size_t static wavelet_idx (size_t u, size_t p) noexcept
-  {
-    return u * W_DOF + p;
   }
 
   t8_forest_t
@@ -153,7 +143,7 @@ class multiscale: public multiscale_data<TShape> {
       }
 
       for (auto k = 0u; k < U_DIM; ++k) {
-        dg_coeffs[dg_idx (k, i)] = sum[k] * volume;
+        dg_coeffs[element_t::dg_idx (k, i)] = sum[k] * volume;
       }
     }
   }
@@ -291,7 +281,7 @@ mean_val (t8_forest_t forest, int tree_idx, const t8_mra::levelmultiindex<T::Sha
   const auto scaling = t8_mra::skalierungsfunktion (0, 0.0, 0.0) * std::sqrt (1.0 / (2.0 * vol));
 
   for (auto k = 0u; k < T::U_DIM; ++k)
-    res[k] = scaling * mra_data->lmi_map->get (lmi).u_coeffs[mst_class::dg_idx (k, 0)];
+    res[k] = scaling * mra_data->lmi_map->get (lmi).u_coeffs[mst_class::element_t::dg_idx (k, 0)];
 
   return res;
 }

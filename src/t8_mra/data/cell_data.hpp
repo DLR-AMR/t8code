@@ -45,6 +45,16 @@ struct data_per_element
     : u_coeffs (U_DIM * DOF, {}), d_coeffs (U_DIM * W_DOF, {}), significant (false), order ({})
   {
   }
+
+  size_t static dg_idx (size_t u, size_t p) noexcept
+  {
+    return u * DOF + p;
+  }
+
+  size_t static wavelet_idx (size_t u, size_t p) noexcept
+  {
+    return u * W_DOF + p;
+  }
 };
 
 // template <t8_eclass TShape>
