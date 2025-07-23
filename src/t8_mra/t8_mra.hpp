@@ -272,6 +272,32 @@ get_mra_forest_data (t8_forest_t forest)
   return reinterpret_cast<t8_mra::forest_data<T>*> (t8_forest_get_user_data (forest));
 }
 
+template <typename T>
+std::array<double, T::U_DIM>
+mean_val (t8_forest_t forest, int tree_idx, const t8_mra::levelmultiindex<T::Shape>& lmi, const t8_element_t* element)
+{
+  using mst_class = t8_mra::multiscale<T::Shape, T::U_DIM, T::P_DIM>;
+  std::array<double, T::U_DIM> res = {};
+
+  auto* mra_data = get_mra_forest_data<T> (forest);
+  const auto vol = t8_forest_element_volume (forest, tree_idx, element);
+  const auto scaling = t8_mra::skalierungsfunktion (0, 0.0, 0.0) * std::sqrt (1.0 / (2.0 * vol));
+
+  for (auto k = 0u; k < T::U_DIM; ++k)
+    res[k] = scaling * mra_data->lmi_map->get (lmi).u_coeffs[mst_class::dg_idx (k, 0)];
+
+  return res;
+}
+
+template <typename T>
+std::array<double, T::U_DIM>
+mean_val (t8_forest_t forest, int tree_idx, int ele_idx, const t8_element_t* element)
+{
+  const auto lmi = t8_mra::get_lmi_from_forest_data<T> (get_mra_forest_data<T> (forest), ele_idx);
+
+  return mean_val<T> (forest, tree_idx, lmi, element);
+}
+
 }  // namespace t8_mra
 
 #endif
