@@ -57,7 +57,7 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   auto num_data = 1;
   t8_vtk_data_field_t vtk_data;
   vtk_data.type = T8_VTK_SCALAR;
-  strcpy (vtk_data.description, "Element own data");
+  strcpy (vtk_data.description, "u0");
   vtk_data.data = element_data;
 
   const t8_element_t* element;
@@ -78,7 +78,7 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   }
 
   int write_treeid = 1;
-  int write_mpirank = 1;
+  int write_mpirank = 0;
   int write_level = 1;
   int write_element_id = 1;
   int write_ghosts = 0;
