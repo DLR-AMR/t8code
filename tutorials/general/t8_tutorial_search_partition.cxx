@@ -260,7 +260,7 @@ t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_glob
   /* broadcast queries to all processes */
   mpiret = sc_MPI_Bcast (g->queries->array, g->num_global_queries * sizeof (t8_point_t), sc_MPI_BYTE, 0, g->mpicomm);
   SC_CHECK_MPI (mpiret);
-  t8_global_productionf ("Created %lld global queries.\n", (unsigned long long) g->queries->elem_count);
+  t8_global_productionf ("[search] Created %lld global queries.\n", (unsigned long long) g->queries->elem_count);
 
   /* convert queries array to vector */
   std::vector<t8_point_t> query_vec ((t8_point_t *) sc_array_index (g->queries, 0),
@@ -347,7 +347,7 @@ t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t
     g);
   local_search.update_queries (g->query_vec);
   local_search.do_search ();
-  t8_infof ("Queries found in local search = %d\n", g->num_local_queries);
+  t8_infof ("[search] Queries found in local search = %d\n", g->num_local_queries);
 
   /* call local batched search and compare */
   g->num_local_batched_queries = 0;
@@ -368,7 +368,7 @@ t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t
   for (il = 0; il < g->global_nlq->elem_count; il++) {
     gnq += *(int *) sc_array_index (g->global_nlq, il);
   }
-  t8_global_productionf ("Queries found globally during local search: %d (expected %d)\n", gnq,
+  t8_global_productionf ("[search] Queries found globally during local search: %d (expected %d)\n", gnq,
                          (int) g->num_global_queries);
   T8_ASSERT (g->num_global_queries == (t8_locidx_t) gnq);
 }
@@ -496,9 +496,9 @@ t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_glob
     /* compute total number of queries found during partition search */
     num_queries_found += *(int *) sc_array_index (g->num_queries_per_rank, iz);
   }
-  t8_global_productionf ("Queries found during partition search: %d (expected %d)\n", num_queries_found,
+  t8_global_productionf ("[search] Queries found during partition search: %d (expected %d)\n", num_queries_found,
                          (int) g->num_global_queries);
-  t8_global_productionf ("Partition search found the following query counts %s\n", buffer);
+  t8_global_productionf ("[search] Partition search found the following query counts %s\n", buffer);
 
   /* the buffer is no longer accessed */
   T8_FREE (buffer);
