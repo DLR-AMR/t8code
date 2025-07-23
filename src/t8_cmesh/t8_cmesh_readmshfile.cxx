@@ -175,6 +175,73 @@ struct t8_msh_file_node
   {
   }
 
+  /**
+   * Copy constructor
+   * \param [in] other The node to copy.
+   */
+  t8_msh_file_node (const t8_msh_file_node &other)
+    : parameters (other.parameters), coordinates (other.coordinates), index (other.index),
+      parametric (other.parametric), entity_dim (other.entity_dim), entity_tag (other.entity_tag)
+  {
+  }
+
+  /**
+   * Move constructor.
+   * \param [in] other The node to move.
+   */
+  t8_msh_file_node (t8_msh_file_node &&other) noexcept
+    : parameters (std::move (other.parameters)), coordinates (std::move (other.coordinates)), index (other.index),
+      parametric (other.parametric), entity_dim (other.entity_dim), entity_tag (other.entity_tag)
+  {
+    other.index = -1;
+    other.parametric = false;
+    other.entity_dim = -1;
+    other.entity_tag = -1;
+  }
+
+  /**
+   * Copy assignment operator.
+   * \param [in] other The node to copy.
+   * \return           Reference to this node.
+   */
+  t8_msh_file_node &
+  operator= (const t8_msh_file_node &other)
+  {
+    if (this != &other) {
+      parameters = other.parameters;
+      coordinates = other.coordinates;
+      index = other.index;
+      parametric = other.parametric;
+      entity_dim = other.entity_dim;
+      entity_tag = other.entity_tag;
+    }
+    return *this;
+  }
+
+  /**
+   * Move assignment operator.
+   * \param [in] other The node to move.
+   * \return           Reference to this node.
+   */
+  t8_msh_file_node &
+  operator= (t8_msh_file_node &&other) noexcept
+  {
+    if (this != &other) {
+      parameters = std::move (other.parameters);
+      coordinates = std::move (other.coordinates);
+      index = other.index;
+      parametric = other.parametric;
+      entity_dim = other.entity_dim;
+      entity_tag = other.entity_tag;
+
+      other.index = -1;
+      other.parametric = false;
+      other.entity_dim = -1;
+      other.entity_tag = -1;
+    }
+    return *this;
+  }
+
   std::array<double, 2> parameters;  /**< Parameters of the node in the parametric space, if applicable.
                                            * For example, for a point on a curve, this would be the parameter on the curve. */
   std::array<double, 3> coordinates; /**< Coordinates of the node in physical space. */
@@ -899,7 +966,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   t8_eclass_t eclass;
   t8_msh_file_node Node;
 #if T8_ENABLE_OCC
-  t8_msh_file_node face_nodes[T8_ECLASS_MAX_CORNERS_2D], edge_nodes[2];
+  std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS_2D> face_nodes;
+  std::array<t8_msh_file_node, 2> edge_nodes;
 #endif /* T8_ENABLE_OCC */
   long lnum_trees, lnum_blocks, entity_tag;
   int retval;
