@@ -262,6 +262,8 @@ class multiscale: public multiscale_data<TShape> {
     t8_forest_unref (&forest);
   }
 };
+
+/// FREE FUNCTIONS for eval
 template <typename T>
 t8_mra::forest_data<T>*
 get_mra_forest_data (t8_forest_t forest)
