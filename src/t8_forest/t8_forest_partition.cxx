@@ -1172,7 +1172,7 @@ t8_forest_partition (t8_forest_t forest)
   t8_forest_t forest_from;
   int create_offset_from = 0;
 
-  t8_global_productionf ("Enter  forest partition.\n");
+  t8_global_productionf ("Enter forest partition.\n");
   t8_log_indent_push ();
   T8_ASSERT (t8_forest_is_initialized (forest));
   forest_from = forest->set_from;
