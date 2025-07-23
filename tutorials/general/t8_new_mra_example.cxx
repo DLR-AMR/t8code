@@ -100,21 +100,24 @@ main (int argc, char** argv)
 
   /// Velis debugging example
   auto f4 = [] (double x, double y) -> std::array<double, 2> {
-    //if ((x == -1.) && (y == -1.)) return 6.;
     if (x < 0.41)
-      return { 0., 0.0 };
-    double r4 = (x - 0.5) * (x - 0.5) + (y - 0.5) * (y - 0.5);
-    double r = sqrt (r4);
-    if (r > 1. / 3.)
-      return { 0., 0.0 };
-    r *= 3.;
-    r4 *= 9.;
+      return { 0.0, 0.0 };
+    auto r4 = (x - 0.5) * (x - 0.5) + (y - 0.5) * (y - 0.5);
+    auto r = std::sqrt (r4);
+
+    if (r > 1.0 / 3.0)
+      return { 0.0, 0.0 };
+
+    r *= 3.0;
+    r4 *= 9.0;
     r4 *= r4;
-    double rm1 = r - 1.;
-    double rm1h2 = rm1 * rm1;
-    double rm1h3 = rm1 * rm1h2;
-    return { 1. - r4 + 4. * r4 * rm1 - 10. * r4 * rm1h2 + 20 * r4 * rm1h3,
-             (1. - r4 + 4. * r4 * rm1 - 10. * r4 * rm1h2 + 20 * r4 * rm1h3) * 0.1 };
+
+    const auto rm1 = r - 1.0;
+    const auto rm1h2 = rm1 * rm1;
+    const auto rm1h3 = rm1 * rm1h2;
+
+    return { 1.0 - r4 + 4.0 * r4 * rm1 - 10.0 * r4 * rm1h2 + 20.0 * r4 * rm1h3,
+             (1.0 - r4 + 4.0 * r4 * rm1 - 10.0 * r4 * rm1h2 + 20.0 * r4 * rm1h3) * 0.1 };
   };
 
   auto f = [] (double x, double y) { return x + y; };
@@ -122,16 +125,15 @@ main (int argc, char** argv)
   printf ("Init done\n");
 
   auto max_level = 8u;
+  auto init_level = 8u;
   auto c_thresh = 1.0;
   auto dunavant_rule = 10;
 
   constexpr int P = 3;
   constexpr int U = 2;
+
   using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
   using mra_type = t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P>;
-
-  printf ("\nSettings:\nmax_level %d\nc_thresh %f\ndunavant rule %d\nP %d\nU %d\nelem_type %d\n", max_level, c_thresh,
-          dunavant_rule, P, U, T8_ECLASS_TRIANGLE);
 
   auto* test_scheme = t8_scheme_new_default ();
   t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
@@ -140,11 +142,12 @@ main (int argc, char** argv)
   mra_type mra_test (max_level, c_thresh, dunavant_rule, comm);
   printf ("created mra object\n");
 
-  mra_test.initialize_data (cmesh, test_scheme, 8u, f4);
+  mra_test.initialize_data (cmesh, test_scheme, init_level, f4);
   printf ("initialize data\n");
 
   printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
-  t8_write_vtu<element_data_type> (mra_test.forest, mra_test.get_user_data (), "testi_test_8");
+  t8_write_vtu<element_data_type> (mra_test.forest, mra_test.get_user_data (),
+                                   ("testi_test_" + std::to_string (init_level)).c_str ());
 
   printf ("Finished writing file\n");
 
