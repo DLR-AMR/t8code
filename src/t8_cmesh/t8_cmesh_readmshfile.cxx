@@ -1920,7 +1920,7 @@ T8_EXTERN_C_BEGIN ();
 /* This is a helper function to properly register the 
  * geometries for the cmesh created in t8_cmesh_from_msh_file.
  * It should be called by all processes of the cmesh.
- * Returns 1 on success, 0 on cad usage error: use_cad_geometry true, but OCC not linked.
+ * Returns T8_SUBROUTINE_SUCCESS on success, T8_SUBROUTINE_FAILURE on cad usage error: use_cad_geometry true, but OCC not linked.
  * The linear_geometry pointer will point to the newly created linear geometry.
  * The cad_geometry pointer will point to the newly created cad geometry, or to NULL if
  * no cad geometry is used.
@@ -1937,10 +1937,10 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
 #else /* !T8_ENABLE_OCC */
     *cad_geometry = NULL;
-    return 0;
+    return T8_SUBROUTINE_FAILURE;
 #endif
   }
-  return 1;
+  return T8_SUBROUTINE_SUCCESS;
 }
 
 t8_cmesh_t

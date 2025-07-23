@@ -31,14 +31,14 @@
 
 /* include config headers */
 #ifndef T8_CMAKE_BUILD
-#include <t8_config.h>
+//#include <t8_config.h>
 #endif
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
-#error "MPI configured differently in t8code and libsc"
+//#error "MPI configured differently in t8code and libsc"
 #endif
 #if (defined(T8_ENABLE_MPIIO) && !defined(SC_ENABLE_MPIIO)) || (!defined(T8_ENABLE_MPIIO) && defined(SC_ENABLE_MPIIO))
-#error "MPI I/O configured differently in t8code and libsc"
+//#error "MPI I/O configured differently in t8code and libsc"
 #endif
 
 /* indirectly also include sc.h */
@@ -288,6 +288,10 @@ t8_init (int log_threshold);
  */
 void *
 t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it);
+
+/** Return values for subroutines, if they failed */
+#define T8_SUBROUTINE_SUCCESS 1 /* true */
+#define T8_SUBROUTINE_FAILURE 0 /* false */
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();

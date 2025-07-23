@@ -31,7 +31,7 @@
 #include <t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8.h>
 #include "t8_forest/t8_forest_types.h"
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
@@ -116,8 +116,8 @@ class vtk_writer {
    * A vtk-writer function that uses the vtk API.
    * 
    * \param[in] grid The forest or cmesh that is translated.
-   * \return true, if writing was successful. 
-   * \return false if writing was not successful. 
+   * \return T8_SUBROUTINE_SUCCESS, if writing was successful. 
+   * \return T8_SUBROUTINE_FAILURE if writing was not successful. 
    */
   bool
   write_with_API (const grid_t grid)
@@ -467,8 +467,8 @@ class vtk_writer {
    * Write a vtk file given a forest or a cmesh.
    * 
    * \param[in] grid a forest or a cmesh that will be translated into a vtk-file.
-   * \return true if writing was successful.
-   * \return false if writing was not successful.
+   * \return T8_SUBROUTINE_SUCCESS if writing was successful.
+   * \return T8_SUBROUTINE_FAILURE if writing was not successful.
    */
   bool
   write_vtk ([[maybe_unused]] const grid_t grid)
@@ -544,19 +544,19 @@ class vtk_writer {
     pwriterObj->SetInputData (unstructuredGrid);
     pwriterObj->Update ();
     if (pwriterObj->Write ()) {
-      return true;
+      return T8_SUBROUTINE_SUCCESS;
     }
     else {
       t8_errorf ("Error when writing vtk file.\n");
     }
 
     /* Return whether writing was successful */
-    return false;
+    return T8_SUBROUTINE_FAILURE;
 
 #else
     t8_global_errorf ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
     t8_global_productionf ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
-    return false;
+    return T8_SUBROUTINE_FAILURE;
 #endif
   }
 

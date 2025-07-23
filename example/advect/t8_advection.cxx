@@ -29,7 +29,7 @@
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_partition.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <example/common/t8_example_common.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh_readmshfile.h>
