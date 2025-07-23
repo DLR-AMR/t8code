@@ -33,7 +33,9 @@
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.hxx>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
+#include <BRep_Tool.hxx>
 #include <TopoDS_Shape.hxx>
+#include <TopExp.hxx>
 #include <t8_cmesh_readmshfile.h>
 #include <TopTools_IndexedMapOfShape.hxx>
 
@@ -62,6 +64,9 @@ class t8_gtest_cad_boundary: public testing::Test {
   SetUp () override
   {
     cad_shape = read_brep_file ("test/testfiles/coladose");
+    TopExp::MapShapes (cad_shape, TopAbs_VERTEX, cad_shape_vertex_map);
+    TopExp::MapShapes (cad_shape, TopAbs_EDGE, cad_shape_edge_map);
+    TopExp::MapShapes (cad_shape, TopAbs_FACE, cad_shape_face_map);
     cmesh = t8_cmesh_from_msh_file ("test/testfiles/coladose", 0, sc_MPI_COMM_WORLD, 3, 0, 0);
   }
   void
@@ -71,6 +76,9 @@ class t8_gtest_cad_boundary: public testing::Test {
   }
 
   TopoDS_Shape cad_shape;
+  TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
+  TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
+  TopTools_IndexedMapOfShape cad_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
   t8_cmesh_t cmesh;
 };
 
@@ -81,7 +89,8 @@ TEST_F (t8_gtest_cad_boundary, some_random_ass_name)
   t8_debugf ("Geom Data Map Created with the size %lu\n", geom_data_map.size ());
   for (auto iter : geom_data_map) {
     if (iter.second.entity_dim == 2) {
-      TopoDS_Face surface = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (iter.second.entity_tag)));
+      Handle_Geom_Surface surface
+        = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (iter.second.entity_tag)));
     }
   }
 }
