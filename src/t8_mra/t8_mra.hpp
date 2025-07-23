@@ -265,6 +265,12 @@ class multiscale: public multiscale_data<TShape> {
     t8_forest_unref (&forest);
   }
 };
+template <typename T>
+t8_mra::forest_data<T>*
+get_mra_forest_data (t8_forest_t forest)
+{
+  return reinterpret_cast<t8_mra::forest_data<T>*> (t8_forest_get_user_data (forest));
+}
 
 }  // namespace t8_mra
 
