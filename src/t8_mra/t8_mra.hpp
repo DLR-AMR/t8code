@@ -116,7 +116,6 @@ class multiscale: public multiscale_data<TShape> {
   /// Projection -> TODO auslagern
   void
   project (std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element, const std::array<int, 3>& order,
-           // auto&& func)
            std::function<std::array<double, U_DIM> (double, double)>&& func)
   {
     double vertices[3][3];
@@ -146,17 +145,25 @@ class multiscale: public multiscale_data<TShape> {
         vec tau = { x, y, 1.0 };
         t8_mra::lu_solve (A, r, tau);
 
-        const auto f = func (x, y);
+        const auto f_val = func (x, y);
 
         for (auto k = 0u; k < U_DIM; ++k)
-          sum[k] += quad_weights[j] * f[k] * std::sqrt (1.0 / (2.0 * volume))
+          sum[k] += quad_weights[j] * f_val[k] * std::sqrt (1.0 / (2.0 * volume))
                     * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
       }
 
-      for (auto k = 0u; k < U_DIM; ++k)
-        dg_coeffs[dg_idx (i, k)] = sum[k] * volume;
+      for (auto k = 0u; k < U_DIM; ++k) {
+        dg_coeffs[dg_idx (k, i)] = sum[k] * volume;
+      }
     }
   }
+
+  // std::array<double, U_DIM>
+  // eval (const std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element,
+  //       const std::array<int, 3>& order)
+  // {
+  //   auto res;
+  // }
 
   // void eval(const t8_mra::levelindex_map<element_t>& grid_hierarchy, )
 
