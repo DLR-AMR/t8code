@@ -116,7 +116,8 @@ class multiscale: public multiscale_data<TShape> {
   /// Projection -> TODO auslagern
   void
   project (std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element, const std::array<int, 3>& order,
-           auto&& func)
+           // auto&& func)
+           std::function<std::array<double, U_DIM> (double, double)>&& func)
   {
     double vertices[3][3];
     for (auto i = 0; i < 3; ++i)
@@ -137,7 +138,7 @@ class multiscale: public multiscale_data<TShape> {
     const auto volume = t8_forest_element_volume (forest, tree_idx, element);
 
     for (auto i = 0u; i < DOF; ++i) {
-      double sum = 0.0;
+      std::array<double, U_DIM> sum = {};
       for (auto j = 0u; j < order_num; ++j) {
         const auto x = ele_quad_points[2 * j];
         const auto y = ele_quad_points[1 + 2 * j];
@@ -145,11 +146,15 @@ class multiscale: public multiscale_data<TShape> {
         vec tau = { x, y, 1.0 };
         t8_mra::lu_solve (A, r, tau);
 
-        sum += quad_weights[j] * func (x, y) * std::sqrt (1.0 / (2.0 * volume))
-               * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
+        const auto f = func (x, y);
+
+        for (auto k = 0u; k < U_DIM; ++k)
+          sum[k] += quad_weights[j] * f[k] * std::sqrt (1.0 / (2.0 * volume))
+                    * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
       }
 
-      dg_coeffs[i] = sum * volume;
+      for (auto k = 0u; k < U_DIM; ++k)
+        dg_coeffs[dg_idx (i, k)] = sum[k] * volume;
     }
   }
 
