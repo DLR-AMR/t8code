@@ -49,7 +49,7 @@ t8_cmesh_new_debugging (sc_MPI_Comm comm)
 
 template <typename T>
 void
-t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* prefix)
+t8_write_vtu (t8_forest_t forest, const char* prefix)
 {
   const auto total_num_elements = t8_forest_get_global_num_leaf_elements (forest);
 
@@ -74,6 +74,7 @@ t8_write_vtu (t8_forest_t forest, t8_mra::forest_data<T>* data, const char* pref
   for (auto tree_idx = 0u, current_index = 0u; tree_idx < num_local_trees; ++tree_idx) {
     const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
 
+    auto* data = t8_mra::get_mra_forest_data<T> (forest);
     for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx, ++current_index) {
       element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
 
@@ -155,8 +156,7 @@ main (int argc, char** argv)
   printf ("initialize data\n");
 
   printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
-  t8_write_vtu<element_data_type> (mra_test.forest, mra_test.get_user_data (),
-                                   ("testi_test_" + std::to_string (init_level)).c_str ());
+  t8_write_vtu<element_data_type> (mra_test.forest, ("testi_test_" + std::to_string (init_level)).c_str ());
 
   printf ("Finished writing file\n");
 
