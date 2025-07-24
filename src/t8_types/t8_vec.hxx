@@ -128,7 +128,7 @@ t8_ax (t8_vec<dim> &vec_x, const double alpha)
 
 /** Compute Y = alpha * X
  * \param [in]  vec_x  An N-dimensional vector.
- * \param [out] vec_z  On output set to \a alpha * \a vec_x.
+ * \param [out] vec_y  On output set to \a alpha * \a vec_x.
  * \param [in]  alpha  A factor.
  */
 template <std::size_t dim>
