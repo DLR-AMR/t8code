@@ -34,6 +34,11 @@
 #include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h>
 
+/**
+ * Geometry which maps the trees interior to a user-specified analytical function.
+ * No class has to be implemented and every member function can be filled with
+ * a function pointer.
+ */
 struct t8_geometry_analytic: public t8_geometry
 {
  public:
@@ -59,7 +64,7 @@ struct t8_geometry_analytic: public t8_geometry
    */
   t8_geometry_analytic (std::string name);
 
-  /** The destructor. 
+  /** The destructor.
    */
   virtual ~t8_geometry_analytic ()
   {
@@ -126,7 +131,7 @@ struct t8_geometry_analytic: public t8_geometry
 
   /**
    * Check if the currently active tree has a negative volume
-   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.
    */
   bool
   t8_geom_tree_negative_volume () const override;
@@ -143,7 +148,7 @@ struct t8_geometry_analytic: public t8_geometry
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
-   * evaluated. You can use it for example to load the vertex coordinates of the 
+   * evaluated. You can use it for example to load the vertex coordinates of the
    * tree into an internal buffer (as is done in the linear geometry).
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
@@ -168,7 +173,7 @@ struct t8_geometry_analytic: public t8_geometry
 
   t8_geom_tree_compatible_fn tree_compatible; /**< The function to check if a tree is compatible. */
 
-  const void *tree_data; /** Tree data pointer that can be set in \a load_tree_data and 
+  const void *tree_data; /** Tree data pointer that can be set in \a load_tree_data and
                              is passed onto \a analytical_function and \a jacobian. */
 
   const void *user_data; /** Additional user data pointer that can be set in constructor
