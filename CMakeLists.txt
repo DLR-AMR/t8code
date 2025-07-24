@@ -180,7 +180,8 @@ else()
     ########################## Fix for OpenMPI ############################################
     # OpenMPI sometimes has a mismatch between their C and CXX interface which produces a warning in SC.
     # The warning makes t8codes build fail when Werror is activated. This fix checks if t8code
-    # is linked against OpenMPI and then suppresses this warning.
+    # is linked against OpenMPI and then suppresses that Werror treats this warning as error.
+    # The warning is still displayed while compiling.
     # We compile a test program mich checks if a OpenMPI specific macro is defined and then apply the fix.
 
     include(CheckIncludeFile)
