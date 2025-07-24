@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_with_vertices.hxx
- * Implements the inherited struct t8_geometry_with_vertices, which can be 
+ * Implements the inherited struct t8_geometry_with_vertices, which can be
  * used for geometries that use vertex coordinate information of the cmesh.
  */
 
@@ -36,6 +36,14 @@
 
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * Base class for vertex-based geometries. This class implements
+ * member variables storing tree vertex information and updates them before
+ * each member function call. Derived classes should not completely overwrite
+ * the \ref t8_geom_load_tree_data function since this function takes care
+ * of the updates. Instead the derived classes \ref t8_geom_load_tree_data
+ * function should also call the function of this base class.
+ */
 struct t8_geometry_with_vertices: public t8_geometry
 {
  public:
@@ -77,7 +85,7 @@ struct t8_geometry_with_vertices: public t8_geometry
 
   /**
    * Check if the currently active tree has a negative volume
-   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.
    */
   virtual bool
   t8_geom_tree_negative_volume () const;
