@@ -156,6 +156,10 @@ struct t8_geometry_analytic: public t8_geometry
   void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid) override;
 
+  /**
+   * Returns the user data stored in this geometry.
+   * \return The user data.
+   */
   inline const void *
   t8_geom_analytic_get_user_data ()
   {
