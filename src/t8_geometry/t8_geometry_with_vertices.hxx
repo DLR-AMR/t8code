@@ -47,7 +47,9 @@ T8_EXTERN_C_BEGIN ();
 struct t8_geometry_with_vertices: public t8_geometry
 {
  public:
-  /* Basic constructor that sets the name. */
+  /** Basic constructor that sets the name.
+   * \param [in] name The name of the geometry. Used to distinct the geometry from other geometries.
+   */
   t8_geometry_with_vertices (std::string name): t8_geometry (name)
   {
     active_tree_vertices = NULL;
