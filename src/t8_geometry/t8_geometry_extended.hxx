@@ -32,11 +32,13 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* This class extends the functionality of a geometry.
+/**
+ * This class extends the functionality of a geometry.
  * While t8_geometry only provides the mapping and jacobian
  * from reference space to physical space, the extended geometry
  * also provides functions to compute the volume of an element,
- * face normals, etc... */
+ * face normals, etc...
+ */
 struct t8_geometry_extended: t8_geometry
 {
  public:
