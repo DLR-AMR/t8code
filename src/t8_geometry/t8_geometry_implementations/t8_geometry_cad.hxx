@@ -327,7 +327,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
                              double *out_coords) const;
 
   /**
-   * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for tet trees.
+   * Map a point in the reference space \f$ [0,1]^3 \f$ to \f$ \mathbb R^3 \f$. Only for tet trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
