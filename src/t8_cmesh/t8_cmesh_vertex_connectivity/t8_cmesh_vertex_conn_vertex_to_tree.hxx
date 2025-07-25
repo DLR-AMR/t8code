@@ -40,9 +40,9 @@ class t8_cmesh_vertex_conn_tree_to_vertex;
 /** This class stores the vertex to tree lookup for
  * global vertex indices for a cmesh.
  * Thus, given a global vertex id the class provides
- * information about the trees the vertex belongs to and 
+ * information about the trees the vertex belongs to and
  * the corresponding local vertex ids inside these trees.
- * 
+ *
  * In particular, this class stores the lookup
  *
  * global_vertex_id -> List of (tree, tree_local_vertex)
@@ -98,7 +98,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   set_vertex_to_tree_list (const t8_cmesh_t cmesh);
 
   /** Get the list of global trees and local vertex ids a global vertex is connected to.
-   * 
+   *
    * \param [in] global_vertex_id The global id of a vertex in the cmesh.
    * \return The list of local tree ids and local vertex ids of \a global_vertex_id.
    */
@@ -122,10 +122,10 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
 
   /** Get the state of the vertex to tree object.
    * An object is either initialized (before commit) or committed (ready to use).
-   * \return INITIALIZED or COMMITTED 
+   * \return INITIALIZED or COMMITTED
    */
   inline int
-  get_state ()
+  get_state () const
   {
     return state;
   }
@@ -134,8 +134,8 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
 
   /** A single (tree, local vertex) value connected to a global vertex is added to the vertex_to_tree_list.
    * \param [in] cmesh must be committed.
-   * \param [in] global_vertex_id The global id of the vertex to be added. 
-   * \param [in] ltreeid The local tree id of a tree that \a global_vertex_id is connected to. 
+   * \param [in] global_vertex_id The global id of the vertex to be added.
+   * \param [in] ltreeid The local tree id of a tree that \a global_vertex_id is connected to.
    * \param [in] tree_vertex The local vertex id of \a ltreeid that \a global_vertex_id is connected to.
    */
   void
