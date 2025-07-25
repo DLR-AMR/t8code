@@ -46,12 +46,13 @@ struct t8_geometry_analytic: public t8_geometry
    * Constructor of the analytic geometry. The geometry
    * is viable with all tree types and uses a user-provided analytic and
    * jacobian function. The actual mappings are done by these functions.
-   * \param [in] name       The name to give this geometry.
-   * \param [in] analytical The analytical function to use for this geometry.
-   * \param [in] jacobian   The jacobian of \a analytical.
-   * \param [in] load_tree_data The function that is used to load a tree's data.
-   * \param [in] tree_negative_volume_in The function that is used to compute if a trees volume is negative.
-   * \param [in] tree_compatible_in The function that is used to check if a tree is compatible with the geometry.
+   * \param [in] name                     The name to give this geometry.
+   * \param [in] analytical               The analytical function to use for this geometry.
+   * \param [in] jacobian                 The jacobian of \a analytical.
+   * \param [in] load_tree_data           The function that is used to load a tree's data.
+   * \param [in] tree_negative_volume_in  The function that is used to compute if a trees volume is negative.
+   * \param [in] tree_compatible_in       The function that is used to check if a tree is compatible with the geometry.
+   * \param [in] user_data                User data saved by the geometry. Can be accessed via \ref t8_geom_analytic_get_user_data.
    */
   t8_geometry_analytic (std::string name, t8_geom_analytic_fn analytical, t8_geom_analytic_jacobian_fn jacobian,
                         t8_geom_load_tree_data_fn load_tree_data,
