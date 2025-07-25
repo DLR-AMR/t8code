@@ -43,7 +43,6 @@ const char *
 t8_geom_get_name (const t8_geometry_c *geom);
 
 /** Get the type of a geometry.
- *
  * \param [in] geom  A geometry.
  * \return           The type of \a geom.
  */
