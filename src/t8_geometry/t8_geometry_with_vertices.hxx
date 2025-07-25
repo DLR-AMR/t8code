@@ -103,7 +103,7 @@ struct t8_geometry_with_vertices: public t8_geometry
   };
 
  protected:
-  const double* active_tree_vertices; /*< The vertices of the currently active tree. */
+  const double* active_tree_vertices; /**< The vertices of the currently active tree. */
 };
 
 T8_EXTERN_C_END ();
