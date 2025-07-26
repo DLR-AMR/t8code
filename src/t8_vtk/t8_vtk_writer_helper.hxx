@@ -189,7 +189,7 @@ tree_local_to_global_id (const grid_t grid, t8_locidx_t itree);
  */
 template <typename grid_t>
 bool
-grid_do_ghosts (const grid_t grid, const int write_ghosts);
+grid_do_ghosts (const grid_t grid, const bool write_ghosts);
 
 /**
  * Compute the number of cells to write on this process.
@@ -201,7 +201,7 @@ grid_do_ghosts (const grid_t grid, const int write_ghosts);
  */
 template <typename grid_t>
 t8_locidx_t
-num_cells_to_write (const grid_t grid, const int write_ghosts);
+num_cells_to_write (const grid_t grid, const bool write_ghosts);
 
 /**
  * Templated function to get the shape of an element for forests or cmeshes. If grid is a cmesh the input for
