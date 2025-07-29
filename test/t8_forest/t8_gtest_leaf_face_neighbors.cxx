@@ -285,7 +285,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                                                &neigh_neigh_class, &neigh_gneigh_tree, &neigh_orientation);
 
             t8_debugf ("original element\n");
-            scheme->element_debug_print (neigh_class, element);
+            scheme->element_debug_print (tree_class, element);
             t8_debugf ("neighbor element\n");
             scheme->element_debug_print (neigh_class, neighbor);
             fflush (stdout);
