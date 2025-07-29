@@ -127,6 +127,12 @@ struct t8_geometry_linear_axis_aligned: public t8_geometry_with_vertices
     return true;
   }
 
+  /**
+   * Compute the bounding box of the currently active tree.
+   * \param[in] cmesh The cmesh to check compatibility with.
+   * \param[in, out] bounds The bounding box of the cmesh.
+   * \return True if the geometry is compatible with the cmesh, false otherwise.
+   */
   virtual bool
   get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const
   {
