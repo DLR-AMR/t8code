@@ -206,11 +206,11 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
       /* Loop over all faces of an element. */
       int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; iface++) {
-        int num_neighbors;        /**< Number of neighbors for each face */
-        int *dual_faces;          /**< The face indices of the neighbor elements */
-        t8_locidx_t *neighids;    /**< Indices of the neighbor elements */
+        int num_neighbors;              /**< Number of neighbors for each face */
+        int *dual_faces;                /**< The face indices of the neighbor elements */
+        t8_locidx_t *neighids;          /**< Indices of the neighbor elements */
         const t8_element_t **neighbors; /*< Neighboring elements. */
-        t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
+        t8_eclass_t neigh_class;        /*< Neighboring elements tree class. */
 
         /* Collect all neighbors at the current face. */
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
