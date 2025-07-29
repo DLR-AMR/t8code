@@ -137,7 +137,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
           // Iterate over all faces and compute the face neighbors
 
           // preparation
-          t8_element_t **neighbor_leaves;
+          const t8_element_t **neighbor_leaves;
           int *dual_faces;
           int num_neighbors = 0;
           t8_locidx_t *element_indices;
@@ -272,7 +272,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
               EXPECT_EQ (neigh_ltreeid, neigh_ltreeid_from_index);
             }  // TODO: Check neighbor ltreeid if ghost tree
             // preparation
-            t8_element_t **neigh_neighbor_leaves;
+            const t8_element_t **neigh_neighbor_leaves;
             int *neigh_dual_faces;
             int neigh_num_neighbors = 0;
             t8_locidx_t *neigh_element_indices;
@@ -336,7 +336,6 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
             // clean-up neighbor's neighbors
             if (neigh_num_neighbors > 0) {
-              scheme->element_destroy (neigh_class, neigh_num_neighbors, neigh_neighbor_leaves);
               T8_FREE (neigh_neighbor_leaves);
               T8_FREE (neigh_element_indices);
               T8_FREE (neigh_dual_faces);
@@ -345,7 +344,6 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
           // clean-up original element neighbors
           if (num_neighbors > 0) {
-            scheme->element_destroy (neigh_class, num_neighbors, neighbor_leaves);
             T8_FREE (neighbor_leaves);
             T8_FREE (element_indices);
             T8_FREE (dual_faces);

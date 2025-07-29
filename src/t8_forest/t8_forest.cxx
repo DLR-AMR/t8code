@@ -1688,13 +1688,18 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   }
   return 1;
 }
-
+#if 0
+todo: neighbor element in quad case /test/t8_forest/t8_gtest_leaf_face_neighbors_parallel --gtest_filter=*t8_cmesh_new_periodic_hybrid*
+triangle to quad, quad is invalid -1,-1,-1...where???
+Already in face callback?
+or before copy or after final copy?
+#endif
 /* 
  Set the proper return values of the leaf face neighbor computation
  in case that no neighbors are found.
  */
 static void
-t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (t8_element_t **pneighbor_leaves[], int *dual_faces[],
+t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (const t8_element_t **pneighbor_leaves[], int *dual_faces[],
                                                             int *num_neighbors, t8_locidx_t **pelement_indices,
                                                             t8_gloidx_t *gneigh_tree)
 {
@@ -1711,9 +1716,9 @@ t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (t8_element_t **pneig
 
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
-                                   t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                                   t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, t8_gloidx_t *gneigh_tree,
-                                   int *orientation)
+                                   const t8_element_t **pneighbor_leaves[], int face, int *dual_faces[],
+                                   int *num_neighbors, t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass,
+                                   t8_gloidx_t *gneigh_tree, int *orientation)
 {
   /* We compute all face neighbor leaf elements of E via the following strategy:
    * - Compute the same level face neighbor N
@@ -1952,13 +1957,6 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       //  Assign pelement_indices
       // (all as growing std::vectors, resp t8_element_array)
 
-      //
-      // After the iteration is finished we collected all
-      // neighbor data.
-      // TODO: Since there is no other way, we copy them from the vectors.
-      //       This should be improved in the future to get around the copy.
-      //       Indeed it would be more beneficial to just return const pointers to the actual internal leaves.
-
       // num_neighbors counts the already inserted neighbors before this tree
       // num_neighbors_current_tree counts the neighbors added in this tree
       // total_num_neighbors temporarily counts all inserted neighbors, including this tree
@@ -1969,18 +1967,11 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       // Copy neighbor element pointers
       if (num_neighbors_current_tree > 0) {
         if (pneighbor_leaves != NULL) {
-          // Note element_destroy call after this function on *pneighbor_leaves
-          // is compatible with using T8_REALLOC on *pneighbor_leaves.
-          // REALLOC moving the storage of the pointers. The pointers store the element storage.
-          // So the element storage allocated by t8_element_new is not affected by the call to REALLOC.
-          *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, t8_element_t *, total_num_neighbors);
-          scheme->element_new (eclass, num_neighbors_current_tree, *pneighbor_leaves + *num_neighbors);
+          *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, const t8_element_t *, total_num_neighbors);
           T8_ASSERT (*pneighbor_leaves != NULL);
-          // Call element copy for each element
+          // Copy the pointers to pneighbor_leaves
           for (t8_locidx_t ielem = 0; ielem < num_neighbors_current_tree; ++ielem) {
-            t8_element_t *new_element = (*pneighbor_leaves)[ielem];
-            const t8_element_t *forest_leaf = user_data.neighbors.data ()[*num_neighbors + ielem];
-            scheme->element_copy (eclass, forest_leaf, new_element);
+            (*pneighbor_leaves)[ielem] = user_data.neighbors.data ()[*num_neighbors + ielem];
           }
         }
         // Copy element indices
@@ -2033,7 +2024,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
 void
 t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
-                               t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
+                               const t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass)
 {
   t8_forest_leaf_face_neighbors_ext (forest, ltreeid, leaf, pneighbor_leaves, face, dual_faces, num_neighbors,
@@ -2098,7 +2089,7 @@ void
 t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
 {
   t8_locidx_t ltree, ielem;
-  t8_element_t **neighbor_leaves;
+  const t8_element_t **neighbor_leaves;
   int iface, num_neighbors, ineigh;
   t8_eclass_t eclass, neigh_eclass;
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
@@ -2137,8 +2128,6 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
       }
       t8_debugf ("%s\n", buffer);
       if (num_neighbors > 0) {
-        scheme->element_destroy (neigh_eclass, num_neighbors, neighbor_leaves);
-
         T8_FREE (element_indices);
         T8_FREE (neighbor_leaves);
         T8_FREE (dual_faces);

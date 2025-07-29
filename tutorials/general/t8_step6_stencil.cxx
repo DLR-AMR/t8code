@@ -209,7 +209,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
         int num_neighbors;        /**< Number of neighbors for each face */
         int *dual_faces;          /**< The face indices of the neighbor elements */
         t8_locidx_t *neighids;    /**< Indices of the neighbor elements */
-        t8_element_t **neighbors; /*< Neighboring elements. */
+        const t8_element_t **neighbors; /*< Neighboring elements. */
         t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
 
         /* Collect all neighbors at the current face. */
@@ -248,7 +248,6 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
 
         if (num_neighbors > 0) {
           /* Free allocated memory. */
-          scheme->element_destroy (tree_class, num_neighbors, neighbors);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
           T8_FREE (neighids);

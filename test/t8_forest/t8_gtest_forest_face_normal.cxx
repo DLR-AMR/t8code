@@ -81,7 +81,7 @@ TEST_P (class_forest_face_normal, back_and_forth)
 
         /* Get all face neighbors */
 
-        t8_element_t **neighbors;
+        const t8_element_t **neighbors;
         int num_neighbors;
         t8_eclass_t neigh_eclass;
         int *dual_faces;
@@ -102,7 +102,6 @@ TEST_P (class_forest_face_normal, back_and_forth)
         }
 
         if (num_neighbors > 0) {
-          scheme->element_destroy (neigh_eclass, num_neighbors, neighbors);
           T8_FREE (neigh_ids);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
