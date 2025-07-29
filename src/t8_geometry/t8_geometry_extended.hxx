@@ -52,7 +52,6 @@ struct t8_geometry_extended: t8_geometry
 
   /**
    * Compute the centroid of the element.
-   * \return The centroid.
    */
   virtual void
   t8_geom_element_centroid ()
@@ -62,7 +61,7 @@ struct t8_geometry_extended: t8_geometry
    * Compute the area of the face.
    * \return The area.
    */
-  virtual void
+  virtual double
   t8_geom_face_area ()
     = 0;
 
