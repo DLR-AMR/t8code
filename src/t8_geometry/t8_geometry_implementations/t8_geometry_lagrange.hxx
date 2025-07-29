@@ -109,7 +109,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
    * where \f$ \vec{\xi} \f$ is the point in the reference space to be mapped, \f$ \mathbf{x} \f$ is the mapped point we search,
    * \f$ \psi_i(\vec{\xi}) \f$ are the basis functions associated with the vertices, and \f$ \mathbf{x}_i \f$ are the
    * vertices of the current tree in the physical space.
-   * The basis functions are specific to the tree type, see e.g. \ref t8_geom_t6_basis.
+   * The basis functions are specific to the tree type, see e.g. t8_geom_t6_basis .
    * The vertices of the current tree were set with \ref t8_cmesh_set_tree_vertices.
    *
    * \param [in]  cmesh       The cmesh in which the point lies.
