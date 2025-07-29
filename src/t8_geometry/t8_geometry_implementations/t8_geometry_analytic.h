@@ -37,7 +37,7 @@
  * \param [in]  cmesh       The cmesh.
  * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [in]  num_coords
+ * \param [in]  num_coords  The number of coordinates in \a ref_coords.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
  * \param [in]  tree_data   The data of the current tree as loaded by a \ref t8_geom_load_tree_data_fn.
  * \param [in]  user_data   The user data pointer stored in the geometry.
