@@ -837,8 +837,9 @@ t8_forest_get_scheme (const t8_forest_t forest);
  * \param [in]      ltreeid     The local tree or ghost tree in which the element lies. 0 <= \a ltreeid < num_local_trees + num_ghost_trees
  * \param [in]      elem        An element or ghost in the tree \a ltreeid.
  * \param [in]      face        A face number of \a elem.
- * \return                      The local tree id of the tree in which the face
- *                              neighbor of \a elem across \a face lies.
+ * \return                      The eclass of the local tree or ghost tree that
+ *                              is face neighbor of \a elem across \a face.
+ *                              T8_ECLASS_INVALID if no neighbor exists.
  */
 t8_eclass_t
 t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *elem,

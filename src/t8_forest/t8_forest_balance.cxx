@@ -68,34 +68,39 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
       neigh_class = t8_forest_element_neighbor_eclass (forest_from, ltree_id, element, iface);
-      /* Allocate memory for the number of half face neighbors */
-      num_half_neighbors = scheme->element_get_num_face_children (tree_class, element, iface);
-      half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
-      scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
-      /* Compute the half face neighbors of element at this face */
-      neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
-                                                             neigh_class, iface, num_half_neighbors, NULL);
-      if (neighbor_tree >= 0) {
-        /* The face neighbors do exist, check for each one, whether it has
+      if (neigh_class != T8_ECLASS_INVALID) {
+        /* Check for each face neighbor, whether it has
+        * local or ghost leaf descendants in the forest.
+        * If so, the element will be refined. */
+
+        /* Allocate memory for the number of half face neighbors */
+        num_half_neighbors = scheme->element_get_num_face_children (tree_class, element, iface);
+        half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
+        scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
+        /* Compute the half face neighbors of element at this face */
+        neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
+                                                               neigh_class, iface, num_half_neighbors, NULL);
+        if (neighbor_tree >= 0) {
+          /* The face neighbors do exist, check for each one, whether it has
          * local or ghost leaf descendants in the forest.
          * If so, the element will be refined. */
-        for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
-          if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
-            /* This element should be refined */
-            *pdone = 0;
-            /* clean-up */
-            scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
-            T8_FREE (half_neighbors);
-            return 1;
+          for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
+            if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
+              /* This element should be refined */
+              *pdone = 0;
+              /* clean-up */
+              scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
+              T8_FREE (half_neighbors);
+              return 1;
+            }
           }
         }
+        /* clean-up */
+        scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
+        T8_FREE (half_neighbors);
       }
-      /* clean-up */
-      scheme->element_destroy (neigh_class, num_half_neighbors, half_neighbors);
-      T8_FREE (half_neighbors);
     }
   }
-
   return 0;
 }
 

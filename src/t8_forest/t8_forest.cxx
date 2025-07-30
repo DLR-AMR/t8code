@@ -2738,6 +2738,11 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
   int dual_face;
   t8_gloidx_t neigh_tree;
 
+  if (neigh_class == T8_ECLASS_INVALID) {
+    /* There is no face neighbor, we indicate this by setting the array to 0 */
+    sc_array_resize (owners, 0);
+    return;
+  }
   /* Aallocate memory for the neighbor element */
   T8_ASSERT (T8_ECLASS_ZERO <= neigh_class && neigh_class < T8_ECLASS_COUNT);
   scheme->element_new (neigh_class, 1, &face_neighbor);
@@ -2766,6 +2771,12 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
   int dual_face;
   t8_gloidx_t neigh_tree;
 
+  if (neigh_class == T8_ECLASS_INVALID) {
+    // There is no face neighbor, so there is no owner
+    *lower = 1;
+    *upper = 0;
+    return;
+  }
   if (*lower >= *upper) {
     /* There is no owner or it is unique */
     return;
