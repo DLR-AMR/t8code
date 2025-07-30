@@ -1422,28 +1422,10 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
     /* The neighbor element is inside the current tree. */
     return tree_class;
   }
-  else {
-    /* The neighbor is in a neighbor tree */
-    /* If the face neighbor is not inside the tree, we have to find out the tree
-     * face and the tree's face neighbor along that face. */
-    const int tree_face = scheme->element_get_tree_face (tree_class, elem, face);
 
-    const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-    /* Get the coarse tree corresponding to tree */
-    const t8_ctree_t coarse_tree = t8_forest_get_coarse_tree (forest, ltreeid);
-    /* Get the (coarse) local id of the tree neighbor */
-    const t8_locidx_t lcoarse_neighbor = t8_cmesh_trees_get_face_neighbor (coarse_tree, tree_face);
-    T8_ASSERT (0 <= lcoarse_neighbor);
-    if (lcoarse_neighbor < t8_cmesh_get_num_local_trees (cmesh)) {
-      /* The tree neighbor is a local tree */
-      return t8_cmesh_get_tree_class (cmesh, lcoarse_neighbor);
-    }
-    else {
-      T8_ASSERT (lcoarse_neighbor - t8_cmesh_get_num_local_trees (cmesh) < cmesh->num_ghosts);
-      /* The tree neighbor is a ghost */
-      return t8_cmesh_get_ghost_class (cmesh, lcoarse_neighbor - t8_cmesh_get_num_local_trees (cmesh));
-    }
-  }
+  const t8_locidx_t cmesh_local_tree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  return t8_cmesh_get_tree_face_neighbor_eclass (cmesh, cmesh_local_tree_id, face);
 }
 
 t8_gloidx_t
