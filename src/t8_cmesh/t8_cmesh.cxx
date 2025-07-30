@@ -1194,6 +1194,35 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
   return face_neigh;
 }
 
+t8_eclass_t
+t8_cmesh_get_tree_face_neighbor_eclass (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+
+  const t8_locidx_t neighbor_id = t8_cmesh_get_face_neighbor (cmesh, ltreeid, face, NULL, NULL);
+  if (neighbor_id < 0) {
+    // No neighbor was found.
+    return T8_ECLASS_INVALID;
+  }
+  const bool neighbor_is_ghost = t8_cmesh_treeid_is_ghost (cmesh, neighbor_id);
+  if (!neighbor_is_ghost) {
+    // Neighbor was found and is a local tree
+    return t8_cmesh_get_tree_class (cmesh, neighbor_id);
+  }
+  else {
+    // Neighbor was found and is a ghost.
+    // Translate ltreeid from range num_local_trees <= ltreeid < num_local_trees + num_ghost_trees
+    // into 0 <= lghost_id < num_ghost_trees
+    const t8_locidx_t lghost_neihgbor_id = neighbor_id - t8_cmesh_get_num_local_trees (cmesh);
+
+    t8_debugf ("in: %i out: %i, num t: %i num g: %i\n", neighbor_id, lghost_neihgbor_id,
+               t8_cmesh_get_num_local_trees (cmesh), t8_cmesh_get_num_ghosts (cmesh));
+    // Look up ghost tree class
+    return t8_cmesh_get_ghost_class (cmesh, lghost_neihgbor_id);
+  }
+}
+
 void
 t8_cmesh_print_profile (const t8_cmesh_t cmesh)
 {
