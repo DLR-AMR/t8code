@@ -34,6 +34,9 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
+/**
+ * A class to hold the vertex connectivity of a cmesh.
+ */
 struct t8_cmesh_vertex_connectivity
 {
  public:
@@ -86,7 +89,7 @@ struct t8_cmesh_vertex_connectivity
    * Sets all global ids and associated tree vertices from
    * the associated cmesh.
    * Afterwards, this class is ready to be used and cannot be altered.
-  */
+   */
   void
   build_vertex_to_tree ()
   {
@@ -100,7 +103,7 @@ struct t8_cmesh_vertex_connectivity
 
   /** Return the total number of global vertices of a cmesh (across all processes).
    * \return The total number of global vertices of \a cmesh.
-  */
+   */
   inline t8_gloidx_t
   get_global_number_of_vertices () const
   {
@@ -109,7 +112,7 @@ struct t8_cmesh_vertex_connectivity
 
   /** Return the number of process local global vertices of a cmesh.
    * \return The number of process local global vertices of \a cmesh.
-  */
+   */
   inline t8_gloidx_t
   get_local_number_of_vertices ()
   {
