@@ -4,8 +4,7 @@
 
 #include <vector>
 
-#include "t8_mra/data/cell_data.hpp"
-#include "t8_mra/num/mask_coefficients.hpp"
+#include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/dunavant.hxx"
 #include "t8_mra/num/mat.hpp"
 
@@ -104,6 +103,17 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
     requires (Shape == T8_ECLASS_TRIANGLE)
     : Base (_num_quad_points, _dunavant_rule)
   {
+  }
+
+  std::array<double, DOF>
+  basis_value (const std::vector<double>& x_ref)
+  {
+    std::array<double, DOF> res;
+    ///TODO scaling_functions für allgemeine shapes machen
+    for (auto i = 0u; i < DOF; ++i)
+      res[i] = t8_mra::skalierungsfunktion (i, x_ref[0], x_ref[1]);
+
+    return res;
   }
 };
 
