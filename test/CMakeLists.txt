@@ -154,7 +154,7 @@ add_t8_cpp_test( NAME t8_gtest_iterate_replace_parallel     SOURCES t8_forest_in
 add_t8_cpp_test( NAME t8_gtest_empty_local_tree_parallel    SOURCES t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_cpp_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
 
-if( T8_ENABLE_DEBUG )
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     add_t8_cpp_test( NAME t8_gtest_geometry_negative_volume_serial      SOURCES t8_geometry/t8_gtest_geometry_negative_volume.cxx )
 endif()
 
