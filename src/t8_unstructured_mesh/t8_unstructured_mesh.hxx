@@ -24,6 +24,8 @@
 #include <t8.h>
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_element.h>
+#include <t8_schemes/t8_scheme.hxx>
 #include <iterator>
 #include <cstddef>
 
@@ -35,7 +37,7 @@ class t8_unstructured_mesh {
   }
 
   /** \brief This iterator should iterate over all (local) elements.
- */
+  */
   struct Element_Iterator
   {
     using iterator_category = std::forward_iterator_tag;  //TODO: do we maybe need a bidrirecIterator?
@@ -48,13 +50,14 @@ class t8_unstructured_mesh {
       : m_current_tree_id (current_tree_id), m_current_element_id (current_element_id), m_forest (forest)
     {
       m_num_local_trees = t8_forest_get_num_local_trees (m_forest);
-      m_num_elements_current_tree = t8_forest_get_tree_num_elements (m_forest, m_current_tree_id);
+      m_num_elements_current_tree = t8_forest_get_tree_num_leaf_elements (m_forest, m_current_tree_id);
+      m_scheme = t8_forest_get_scheme (forest);
     }
 
     const t8_element_t*
     operator* () const
     {
-      const t8_element_t* elem = t8_forest_get_element_in_tree (m_forest, m_current_tree_id, m_current_element_id);
+      const t8_element_t* elem = t8_forest_get_leaf_element_in_tree (m_forest, m_current_tree_id, m_current_element_id);
       if (elem == nullptr) {
         SC_ABORT ("not implemented yet");
       }
@@ -72,10 +75,11 @@ class t8_unstructured_mesh {
         m_current_element_id = 0;
         m_current_tree_id++;
         m_num_elements_current_tree
-          = t8_forest_get_tree_num_elements (m_forest, m_current_tree_id);  //Problem for last element, right?
+          = t8_forest_get_tree_num_leaf_elements (m_forest, m_current_tree_id);  //Problem for last element, right?
       }
       return *this;
     }
+
     // Postfix version of ++.
     Element_Iterator
     operator++ (int)
@@ -102,7 +106,25 @@ class t8_unstructured_mesh {
     t8_locidx_t m_current_tree_id, m_current_element_id;
     t8_forest_t m_forest;
     t8_locidx_t m_num_local_trees, m_num_elements_current_tree;
+    const t8_scheme* m_scheme;
   };
+
+  /**TODO*/
+  inline Element_Iterator
+  element_begin ()
+  {
+    return Element_Iterator (forest, 0, 0);
+  }
+
+  /**
+ * TODO
+ */
+  inline Element_Iterator
+  element_end ()
+  {
+    return Element_Iterator (forest, t8_forest_get_num_local_trees (forest) - 1,
+                             t8_forest_get_tree_num_leaf_elements (forest, t8_forest_get_num_local_trees (forest) - 1));
+  }
 
  private:
   t8_forest_t forest;

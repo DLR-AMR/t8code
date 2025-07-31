@@ -30,5 +30,5 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 TEST (t8_unstructured_mesh, test_iterator)
 {
   //ASSERT_NO_THROW(std::forward_iterator<t8_unstructured_mesh::Element_Iterator>);
-  ASSERT_EQ (0, 0);
+  ASSERT_EQ (1, 0);
 }
