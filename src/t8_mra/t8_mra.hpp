@@ -1,7 +1,5 @@
 #pragma once
 
-#include "sc_containers.h"
-#include "t8.h"
 #ifdef T8_ENABLE_MRA
 
 #include "t8_eclass.h"
@@ -18,6 +16,12 @@
 
 #include "t8_mra/t8_basis.hpp"
 
+/// TODO std:vectoren/std::arrays -> modern structures
+/// TODO is there an option to get the leaf-cell for a given point x
+/// TODO Higher order plotting
+/// TODO cleaning up (unify naming conventions)
+/// TODO cleaning up files
+/// TODO modernize old code (skalierungsfunktion, dunavant, vec/mat, etc..)
 namespace t8_mra
 {
 
@@ -69,7 +73,7 @@ class multiscale: public multiscale_data<TShape> {
 
   t8_mra::dg_basis<element_t> DG_basis;
 
-  /// forest data
+  /// Forest data
   t8_forest_t forest;
   t8_mra::levelindex_map<element_t>* lmi_map;
 
@@ -142,14 +146,12 @@ class multiscale: public multiscale_data<TShape> {
     }
   }
 
-  // std::array<double, U_DIM>
-  // eval (const std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element,
-  //       const std::array<int, 3>& order)
-  // {
-  //   auto res;
-  // }
-
-  // void eval(const t8_mra::levelindex_map<element_t>& grid_hierarchy, )
+  std::array<double, U_DIM>
+  eval (const std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element,
+        const std::array<int, 3>& order)
+  {
+    std::array<double, U_DIM> res;
+  }
 
   void
   initialize_data (t8_cmesh_t mesh, const t8_scheme* scheme, int level, auto&& func)
@@ -183,7 +185,6 @@ class multiscale: public multiscale_data<TShape> {
         std::array<int, 3> point_order;
         t8_mra::triangle_order::get_point_order_at_level (base_element, element, scheme, point_order);
 
-        /// TODO maybe in separate file
         project (data_element.u_coeffs, tree_idx, element, point_order, func);
         lmi_map->insert (lmi, data_element);
 
