@@ -3,8 +3,8 @@
 #ifdef T8_ENABLE_MRA
 
 #include <algorithm>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 #include <t8_mra/num/vec.hpp>
 
@@ -171,6 +171,32 @@ lu_solve (const mat& A, const std::vector<size_t>& p, vec& x)
     for (auto k = static_cast<size_t> (i + 1); k < n; ++k)
       x (i) -= A (i, k) * x (k);
     x (i) /= A (i, i);
+  }
+}
+
+inline void
+lu_solve (const mat& A, const std::vector<size_t>& p, std::vector<double>& x)
+{
+  if (A.rows () != A.cols ())
+    throw std::logic_error ("Matrix in t8_mra::util::lr_solve is not a square matrix");
+  if (A.rows () != p.size ())
+    throw std::logic_error ("Permutation vector in t8_mra::util::lr_solve does not fit");
+  if (A.rows () != x.size ())
+    throw std::logic_error ("Solution vector in t8_mra::util::lr_solve does not fit");
+
+  const auto n = A.rows ();
+
+  const auto b = x;
+  for (auto i = 0u; i < n; ++i) {
+    x[i] = b[p[i]];
+    for (auto k = 0u; k < i; ++k)
+      x[i] -= A (i, k) * x[k];
+  }
+
+  for (int i = n - 1; i >= 0; --i) {
+    for (auto k = static_cast<size_t> (i + 1); k < n; ++k)
+      x[i] -= A (i, k) * x[k];
+    x[i] /= A (i, i);
   }
 }
 
