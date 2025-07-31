@@ -125,14 +125,15 @@ class multiscale: public multiscale_data<TShape> {
     for (auto i = 0u; i < DOF; ++i) {
       std::array<double, U_DIM> sum = {};
       for (auto j = 0u; j < order_num; ++j) {
-        const auto x = deref_quad_points[2 * j];
-        const auto y = deref_quad_points[1 + 2 * j];
+        const auto x_deref = deref_quad_points[2 * j];
+        const auto y_deref = deref_quad_points[1 + 2 * j];
 
-        const auto ref = DG_basis.ref_point (trafo_mat, perm, { x, y, 1.0 });
-        const auto f_val = func (x, y);
+        const auto ref = DG_basis.ref_point (trafo_mat, perm, { x_deref, y_deref, 1.0 });
+        const auto f_val = func (x_deref, y_deref);
+        const auto basis_val = DG_basis.basis_value (ref);
 
         for (auto k = 0u; k < U_DIM; ++k)
-          sum[k] += quad_weights[j] * f_val[k] * scaling_factor * t8_mra::skalierungsfunktion (i, ref[0], ref[1]);
+          sum[k] += quad_weights[j] * f_val[k] * scaling_factor * basis_val[i];
       }
 
       for (auto k = 0u; k < U_DIM; ++k) {
