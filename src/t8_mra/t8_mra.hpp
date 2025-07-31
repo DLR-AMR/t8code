@@ -16,6 +16,8 @@
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/mat.hpp"
 
+#include "t8_mra/t8_basis.hpp"
+
 namespace t8_mra
 {
 
@@ -65,6 +67,8 @@ class multiscale: public multiscale_data<TShape> {
   std::vector<double> ref_quad_points;
   std::vector<double> quad_weights;
 
+  t8_mra::dg_basis<element_t> DG_basis;
+
   /// forest data
   t8_forest_t forest;
   t8_mra::levelindex_map<element_t>* lmi_map;
@@ -75,7 +79,7 @@ class multiscale: public multiscale_data<TShape> {
   multiscale (int _max_level, double _c_thresh, int _dunavant_rule, sc_MPI_Comm _comm)
     : max_level (_max_level), c_thresh (_c_thresh), dunavant_rule (_dunavant_rule), comm (_comm),
       order_num (t8_mra::dunavant_order_num (dunavant_rule)), ele_quad_points (2 * order_num, 0.0),
-      ref_quad_points (2 * order_num, 0.0), quad_weights (order_num, 0.0)
+      ref_quad_points (2 * order_num, 0.0), quad_weights (order_num, 0.0), DG_basis (order_num, dunavant_rule)
   {
     t8_mra::initialize_mask_coefficients<TShape> (P_DIM, DOF, multiscale_data<TShape>::mask_coefficients,
                                                   multiscale_data<TShape>::inverse_mask_coefficients);
@@ -112,34 +116,23 @@ class multiscale: public multiscale_data<TShape> {
     for (auto i = 0; i < 3; ++i)
       t8_forest_element_coordinate (forest, tree_idx, element, i, vertices[order[i]]);
 
-    t8_mra::mat A (3, 3);
-    std::vector<size_t> r (0, 3);
-
-    for (auto i = 0; i < 3; ++i)
-      for (auto j = 0; j < 3; ++j)
-        A (i, j) = i == 2 ? 1.0 : vertices[j][i];
-
-    t8_mra::lu_factors (A, r);
-    std::array<double, 6> corners { vertices[0][0], vertices[0][1], vertices[1][0],
-                                    vertices[1][1], vertices[2][0], vertices[2][1] };
-    t8_mra::reference_to_physical_t3 (corners.data (), order_num, ref_quad_points.data (), ele_quad_points.data ());
+    auto [trafo_mat, perm] = DG_basis.trafo_matrix_to_ref_element (vertices);
+    const auto deref_quad_points = DG_basis.deref_quad_points (vertices);
 
     const auto volume = t8_forest_element_volume (forest, tree_idx, element);
+    const auto scaling_factor = std::sqrt (1.0 / (2.0 * volume));
 
     for (auto i = 0u; i < DOF; ++i) {
       std::array<double, U_DIM> sum = {};
       for (auto j = 0u; j < order_num; ++j) {
-        const auto x = ele_quad_points[2 * j];
-        const auto y = ele_quad_points[1 + 2 * j];
+        const auto x = deref_quad_points[2 * j];
+        const auto y = deref_quad_points[1 + 2 * j];
 
-        vec tau = { x, y, 1.0 };
-        t8_mra::lu_solve (A, r, tau);
-
+        const auto ref = DG_basis.ref_point (trafo_mat, perm, { x, y, 1.0 });
         const auto f_val = func (x, y);
 
         for (auto k = 0u; k < U_DIM; ++k)
-          sum[k] += quad_weights[j] * f_val[k] * std::sqrt (1.0 / (2.0 * volume))
-                    * t8_mra::skalierungsfunktion (i, tau (0), tau (1));
+          sum[k] += quad_weights[j] * f_val[k] * scaling_factor * t8_mra::skalierungsfunktion (i, ref[0], ref[1]);
       }
 
       for (auto k = 0u; k < U_DIM; ++k) {
