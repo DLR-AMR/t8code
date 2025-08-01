@@ -63,6 +63,8 @@ class multiscale: public multiscale_data<TShape> {
  public:  /// Debugging
   int max_level;
   double c_thresh;
+  int gamma;
+  std::vector<double> eps;
 
   t8_mra::dg_basis<element_t> DG_basis;
 
@@ -73,8 +75,8 @@ class multiscale: public multiscale_data<TShape> {
   sc_MPI_Comm comm;
 
  public:
-  multiscale (int _max_level, double _c_thresh, int _dunavant_rule, sc_MPI_Comm _comm)
-    : max_level (_max_level), c_thresh (_c_thresh), comm (_comm),
+  multiscale (int _max_level, double _c_thresh, int _gamma, int _dunavant_rule, sc_MPI_Comm _comm)
+    : max_level (_max_level), c_thresh (_c_thresh), gamma (_gamma), comm (_comm),
       DG_basis (t8_mra::dunavant_order_num (_dunavant_rule), _dunavant_rule)
   {
     t8_mra::initialize_mask_coefficients<TShape> (P_DIM, DOF, multiscale_data<TShape>::mask_coefficients,
