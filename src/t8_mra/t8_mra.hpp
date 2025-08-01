@@ -63,13 +63,6 @@ class multiscale: public multiscale_data<TShape> {
  public:  /// Debugging
   int max_level;
   double c_thresh;
-  int dunavant_rule;
-
-  /// Quadrature
-  int order_num;
-  std::vector<double> ele_quad_points;
-  std::vector<double> ref_quad_points;
-  std::vector<double> quad_weights;
 
   t8_mra::dg_basis<element_t> DG_basis;
 
@@ -81,15 +74,12 @@ class multiscale: public multiscale_data<TShape> {
 
  public:
   multiscale (int _max_level, double _c_thresh, int _dunavant_rule, sc_MPI_Comm _comm)
-    : max_level (_max_level), c_thresh (_c_thresh), dunavant_rule (_dunavant_rule), comm (_comm),
-      order_num (t8_mra::dunavant_order_num (dunavant_rule)), ele_quad_points (2 * order_num, 0.0),
-      ref_quad_points (2 * order_num, 0.0), quad_weights (order_num, 0.0), DG_basis (order_num, dunavant_rule)
+    : max_level (_max_level), c_thresh (_c_thresh), comm (_comm),
+      DG_basis (t8_mra::dunavant_order_num (_dunavant_rule), _dunavant_rule)
   {
     t8_mra::initialize_mask_coefficients<TShape> (P_DIM, DOF, multiscale_data<TShape>::mask_coefficients,
                                                   multiscale_data<TShape>::inverse_mask_coefficients);
 
-    /// TODO std::vector
-    t8_mra::dunavant_rule (dunavant_rule, order_num, ref_quad_points.data (), quad_weights.data ());
     lmi_map = new t8_mra::levelindex_map<element_t> (max_level);
   }
 
@@ -128,7 +118,7 @@ class multiscale: public multiscale_data<TShape> {
 
     for (auto i = 0u; i < DOF; ++i) {
       std::array<double, U_DIM> sum = {};
-      for (auto j = 0u; j < order_num; ++j) {
+      for (auto j = 0u; j < DG_basis.num_quad_points; ++j) {
         const auto x_deref = deref_quad_points[2 * j];
         const auto y_deref = deref_quad_points[1 + 2 * j];
 
@@ -137,7 +127,7 @@ class multiscale: public multiscale_data<TShape> {
         const auto basis_val = DG_basis.basis_value (ref);
 
         for (auto k = 0u; k < U_DIM; ++k)
-          sum[k] += quad_weights[j] * f_val[k] * scaling_factor * basis_val[i];
+          sum[k] += DG_basis.quad_weights[j] * f_val[k] * scaling_factor * basis_val[i];
       }
 
       for (auto k = 0u; k < U_DIM; ++k) {
@@ -245,6 +235,11 @@ class multiscale: public multiscale_data<TShape> {
         grid_hierarchy.insert (l - 1, parent_lmi.index, parent_data);
       }
     }
+  }
+
+  void
+  two_scale_transformation ()
+  {
   }
 
   void
