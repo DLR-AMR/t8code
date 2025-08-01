@@ -237,12 +237,9 @@ class multiscale: public multiscale_data<TShape> {
     }
   }
 
-  /// TODO return details + val
-  void
+  element_t
   two_scale_transformation (t8_locidx_t tree_idx, t8_locidx_t local_ele_idx)
   {
-    printf ("tree_idx: %d\tlocal_idx: %d\n", tree_idx, local_ele_idx);
-    ///TODO element level check before
     const auto offset = t8_forest_get_tree_element_offset (forest, tree_idx);
     const auto elem_idx = local_ele_idx + offset;
     const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
@@ -259,8 +256,6 @@ class multiscale: public multiscale_data<TShape> {
     parent_data.order = siblings_data[0].order;
     triangle_order::get_parent_order (parent_data.order);
 
-    std::array<std::array<double, U_DIM * DOF>, levelmultiindex::NUM_CHILDREN> d;
-
     for (auto u = 0u; u < U_DIM; ++u) {
 
       /// Single scale parent
@@ -276,23 +271,19 @@ class multiscale: public multiscale_data<TShape> {
 
       /// Details as differences
       for (auto i = 0u; i < DOF; ++i) {
-        std::array<double, levelmultiindex::NUM_CHILDREN> sum;
+        std::array<double, levelmultiindex::NUM_CHILDREN> sum = {};
 
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
           for (auto j = 0u; j < DOF; ++j)
             sum[k] += mask_coefficients[k](j, i) * parent_data.u_coeffs[element_t::dg_idx (u, j)];
 
-          d[k][element_t::dg_idx (u, i)] = siblings_data[k].u_coeffs[element_t::dg_idx (u, i)] - sum[k];
+          parent_data.d_coeffs[element_t::wavelet_idx (k, u, i)]
+            = siblings_data[k].u_coeffs[element_t::dg_idx (u, i)] - sum[k];
         }
       }
     }
 
-    for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-      for (auto i = 0u; i < d[k].size (); ++i)
-        printf ("%f\t", d[k][i]);
-      printf ("\n");
-    }
-    printf ("\n");
+    return parent_data;
   }
 
   void
