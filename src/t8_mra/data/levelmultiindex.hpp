@@ -41,9 +41,8 @@ struct levelmultiindex: public lmi_properties<TShape>
 
   static constexpr auto ECLASS = TShape;
 
-  levelmultiindex ()
-  {
-    SC_ABORTF ("levelmultiindex has not been implemented for shape %d", TShape);
+  levelmultiindex () {
+    // SC_ABORTF ("levelmultiindex has not been implemented for shape %d", TShape);
   };
   levelmultiindex (size_t _basecell) noexcept;
   levelmultiindex (size_t _basecell, const t8_element_t *elem, const t8_scheme *scheme) noexcept;
