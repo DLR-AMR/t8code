@@ -136,12 +136,12 @@ class multiscale: public multiscale_data<TShape> {
     }
   }
 
-  std::array<double, U_DIM>
-  eval (const std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element,
-        const std::array<int, 3>& order)
-  {
-    std::array<double, U_DIM> res;
-  }
+  // std::array<double, U_DIM>
+  // eval (const std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element,
+  //       const std::array<int, 3>& order)
+  // {
+  //   std::array<double, U_DIM> res;
+  // }
 
   void
   initialize_data (t8_cmesh_t mesh, const t8_scheme* scheme, int level, auto&& func)
