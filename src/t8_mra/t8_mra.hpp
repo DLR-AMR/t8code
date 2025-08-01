@@ -237,9 +237,62 @@ class multiscale: public multiscale_data<TShape> {
     }
   }
 
+  /// TODO return details + val
   void
-  two_scale_transformation ()
+  two_scale_transformation (t8_locidx_t tree_idx, t8_locidx_t local_ele_idx)
   {
+    printf ("tree_idx: %d\tlocal_idx: %d\n", tree_idx, local_ele_idx);
+    ///TODO element level check before
+    const auto offset = t8_forest_get_tree_element_offset (forest, tree_idx);
+    const auto elem_idx = local_ele_idx + offset;
+    const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
+
+    const auto parent_lmi = t8_mra::parent_lmi (lmi);
+    element_t parent_data;
+
+    const auto siblings_lmi = t8_mra::children_lmi (parent_lmi);
+    std::array<element_t, levelmultiindex::NUM_CHILDREN> siblings_data;
+
+    for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+      siblings_data[k] = get_user_data ()->lmi_map->get (siblings_lmi[k]);
+
+    parent_data.order = siblings_data[0].order;
+    triangle_order::get_parent_order (parent_data.order);
+
+    std::array<std::array<double, U_DIM * DOF>, levelmultiindex::NUM_CHILDREN> d;
+
+    for (auto u = 0u; u < U_DIM; ++u) {
+
+      /// Single scale parent
+      for (auto i = 0u; i < DOF; ++i) {
+        auto sum = 0.0;
+
+        for (auto j = 0u; j < DOF; ++j)
+          for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+            sum += siblings_data[k].u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](i, j);
+
+        parent_data.u_coeffs[element_t::dg_idx (u, i)] = sum;
+      }
+
+      /// Details as differences
+      for (auto i = 0u; i < DOF; ++i) {
+        std::array<double, levelmultiindex::NUM_CHILDREN> sum;
+
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          for (auto j = 0u; j < DOF; ++j)
+            sum[k] += mask_coefficients[k](j, i) * parent_data.u_coeffs[element_t::dg_idx (u, j)];
+
+          d[k][element_t::dg_idx (u, i)] = siblings_data[k].u_coeffs[element_t::dg_idx (u, i)] - sum[k];
+        }
+      }
+    }
+
+    for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+      for (auto i = 0u; i < d[k].size (); ++i)
+        printf ("%f\t", d[k][i]);
+      printf ("\n");
+    }
+    printf ("\n");
   }
 
   void
