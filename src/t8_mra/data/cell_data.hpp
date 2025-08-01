@@ -30,19 +30,24 @@ struct data_per_element
 {
   static constexpr t8_eclass Shape = TShape;
   static constexpr unsigned short DIM = 2;  /// TODO
+  static constexpr unsigned short NUM_CHILDREN = 4;
   static constexpr unsigned short U_DIM = U;
 
   static constexpr unsigned short P_DIM = P;
   static constexpr unsigned short DOF = binom (DIM + P_DIM - 1, DIM);
-  static constexpr unsigned short W_DOF = DOF * 3;
+  static constexpr unsigned short W_DOF = DOF * NUM_CHILDREN;
 
   std::vector<double> u_coeffs;  // Single-scale coefficients
   std::vector<double> d_coeffs;  // Detail coefficients
   bool significant;
   std::array<int, 3> order;  // Point order
 
+  // explicit data_per_element ()
+  //   : u_coeffs (U_DIM * DOF, {}), d_coeffs (U_DIM * W_DOF, {}), significant (false), order ({})
+  // {
+  // }
   explicit data_per_element ()
-    : u_coeffs (U_DIM * DOF, {}), d_coeffs (U_DIM * W_DOF, {}), significant (false), order ({})
+    : u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), significant (false), order ({})
   {
   }
 
@@ -51,11 +56,18 @@ struct data_per_element
     return u * DOF + p;
   }
 
-  size_t static wavelet_idx (size_t u, size_t p) noexcept
+  // size_t static wavelet_idx (size_t u, size_t p) noexcept
+  // {
+  //   return u * W_DOF + p;
+  // }
+  size_t static wavelet_idx (size_t k, size_t u, size_t p) noexcept
   {
-    return u * W_DOF + p;
+    return k * U_DIM * DOF + u * DOF + p;
   }
 };
+
+template <typename T>
+concept data_has_triangle = T::Shape == T8_ECLASS_TRIANGLE;
 
 // template <t8_eclass TShape>
 // struct element_data
