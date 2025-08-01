@@ -3,7 +3,9 @@
 #ifdef T8_ENABLE_MRA
 
 #include <vector>
+#include <array>
 
+#include "t8_eclass.h"
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/dunavant.hxx"
 #include "t8_mra/num/mat.hpp"
