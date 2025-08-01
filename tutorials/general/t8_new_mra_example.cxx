@@ -97,6 +97,23 @@ t8_write_vtu (t8_forest_t forest, const char* prefix)
     T8_FREE (element_data[k]);
 }
 
+void
+test_two_scale (auto& mra)
+{
+  const auto total_num_elements = t8_forest_get_global_num_leaf_elements (mra.forest);
+
+  const t8_element_t* element;
+  const auto num_local_trees = t8_forest_get_num_local_trees (mra.forest);
+
+  for (auto tree_idx = 0u; tree_idx < num_local_trees; ++tree_idx) {
+    const auto num_elements = t8_forest_get_tree_num_leaf_elements (mra.forest, tree_idx);
+
+    for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx) {
+      mra.two_scale_transformation (tree_idx, ele_idx);
+    }
+  }
+}
+
 int
 main (int argc, char** argv)
 {
@@ -154,6 +171,9 @@ main (int argc, char** argv)
 
   mra_test.initialize_data (cmesh, test_scheme, init_level, f4);
   printf ("initialize data\n");
+
+  test_two_scale (mra_test);
+  printf ("test two scale\n");
 
   printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
   t8_write_vtu<element_data_type> (mra_test.forest, ("testi_test_" + std::to_string (init_level)).c_str ());
