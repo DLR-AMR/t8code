@@ -105,11 +105,21 @@ test_two_scale (auto& mra)
   const t8_element_t* element;
   const auto num_local_trees = t8_forest_get_num_local_trees (mra.forest);
 
+  auto current_idx = 0u;
   for (auto tree_idx = 0u; tree_idx < num_local_trees; ++tree_idx) {
     const auto num_elements = t8_forest_get_tree_num_leaf_elements (mra.forest, tree_idx);
 
-    for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx) {
-      mra.two_scale_transformation (tree_idx, ele_idx);
+    for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+      const auto mra_ele = mra.two_scale_transformation (tree_idx, ele_idx);
+      const auto* t8_ele = t8_forest_get_leaf_element_in_tree (mra.forest, tree_idx, ele_idx);
+
+      auto thresholding = mra.hard_thresholding (mra_ele, tree_idx, t8_ele);
+
+      printf ("idx: %d\n", current_idx);
+      if (thresholding)
+        printf ("THRESHOLDING\n");
+      else
+        printf ("NO THRESHOLDING\n");
     }
   }
 }
@@ -152,8 +162,9 @@ main (int argc, char** argv)
   printf ("Init done\n");
 
   auto max_level = 8u;
-  auto init_level = 6u;
+  auto init_level = 4u;
   auto c_thresh = 1.0;
+  auto gamma = 1.0;  /// Order of convergence
   auto dunavant_rule = 10;
 
   constexpr int P = 3;
@@ -166,7 +177,7 @@ main (int argc, char** argv)
   t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
   printf ("created test_scheme and cmesh\n");
 
-  mra_type mra_test (max_level, c_thresh, dunavant_rule, comm);
+  mra_type mra_test (max_level, c_thresh, gamma, dunavant_rule, comm);
   printf ("created mra object\n");
 
   mra_test.initialize_data (cmesh, test_scheme, init_level, f4);
