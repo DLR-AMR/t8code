@@ -2,6 +2,8 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
+
 #include "t8_eclass.h"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
@@ -286,6 +288,37 @@ class multiscale: public multiscale_data<TShape> {
     }
 
     return parent_data;
+  }
+
+  /// TODO global scaling factor for normalization (see Veli eq. (2.39))
+  bool
+  hard_thresholding (const element_t& elem_data, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
+  {
+    bool is_significant = false;
+    std::array<double, U_DIM> norm = {};
+
+    for (auto u = 0u; u < U_DIM; ++u)
+      for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+        for (auto i = 0u; i < DOF; ++i)
+          norm[u] += elem_data.d_coeffs[element_t::wavelet_idx (k, u, i)]
+                     * elem_data.d_coeffs[element_t::wavelet_idx (k, u, i)];
+
+    const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
+
+    for (auto u = 0u; u < U_DIM; ++u)
+      norm[u] = std::sqrt (norm[u] / vol);
+
+    /// Local threshold value
+    /// Uniform subdivision (see Veli eq. (2.44))
+    const auto* scheme = t8_forest_get_scheme (forest);
+    const auto level_diff = max_level - (scheme->element_get_level (TShape, t8_elem) - 1);
+    const auto h_lambda = std::sqrt (vol);
+
+    const auto h_max_level_lambda = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), gamma + 1);
+
+    const auto local_eps = c_thresh * h_max_level_lambda / h_lambda;
+
+    return std::all_of (norm.cbegin (), norm.cend (), [&] (double n) { return n <= local_eps; });
   }
 
   void
