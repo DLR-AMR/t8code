@@ -83,6 +83,11 @@ t8_supported_msh_file (t8_cmesh_t cmesh)
       ltree_id = t8_cmesh_get_face_neighbor (cmesh, ltree_it, i, NULL, NULL);
       ASSERT_EQ (ltree_id, face_neigh_elem[ltree_it][i])
         << "The face neighbor element in the example test file was not read correctly.";
+      const t8_eclass_t neighbor_eclass = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, ltree_it, i);
+      // If a face neighbor exists, the return value must match the element type, otherwise it must
+      // be T8_ECLASS_INVALID
+      const t8_eclass_t reference_value = face_neigh_elem[ltree_it][i] == -1 ? T8_ECLASS_INVALID : elem_type;
+      EXPECT_EQ (neighbor_eclass, reference_value) << "mismatch in face neighbor eclass.";
     }
   }
 }
