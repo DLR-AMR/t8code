@@ -283,8 +283,9 @@ class multiscale: public multiscale_data<TShape> {
         }
       }
     }
+    get_user_data ()->lmi_map->insert (parent_lmi, parent_data);
 
-    return parent_data;
+    // return parent_data;
   }
 
   /// TODO global scaling factor for normalization (see Veli eq. (2.39))
