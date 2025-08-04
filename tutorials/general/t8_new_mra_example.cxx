@@ -160,7 +160,7 @@ main (int argc, char** argv)
              -(1.0 - r4 + 4.0 * r4 * rm1 - 10.0 * r4 * rm1h2 + 20.0 * r4 * rm1h3) };
   };
 
-  auto f = [] (double x, double y) { return x + y; };
+  auto f = [] (double x, double y) -> std::array<double, 1> { return { x + y }; };
 
   printf ("Init done\n");
 
