@@ -373,6 +373,7 @@ class multiscale: public multiscale_data<TShape> {
       t8_forest_ref (forest);
 
       get_user_data ()->current_refinement_level = l;
+
       new_forest = t8_forest_new_adapt (
         forest,
         [] (auto* forest, auto* forest_from, auto which_tree, auto tree_class, auto local_ele_idx, auto* scheme,
@@ -414,27 +415,30 @@ class multiscale: public multiscale_data<TShape> {
   {
     std::array<double, U_DIM> local_norm = {};
 
-    for (auto u = 0u; u < U_DIM; ++u)
-      for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
-        for (auto i = 0u; i < DOF; ++i) {
-          const auto d = get_user_data ()->lmi_map->get (lmi).d_coeffs[element_t::wavelet_idx (k, u, i)];
-          local_norm[u] += d * d;
-        }
-
     const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
 
-    for (auto u = 0u; u < U_DIM; ++u)
-      local_norm[u] = std::sqrt (local_norm[u] / vol);
+    for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+      std::array<double, U_DIM> tmp = {};
+      for (auto u = 0u; u < U_DIM; ++u)
+        for (auto i = 0u; i < DOF; ++i) {
+          const auto d = get_user_data ()->lmi_map->get (lmi).d_coeffs[element_t::wavelet_idx (k, u, i)];
+          tmp[u] += d * d;
+        }
+
+      for (auto u = 0u; u < U_DIM; ++u) {
+        tmp[u] = std::sqrt (tmp[u] / vol);
+        local_norm[u] = std::max (local_norm[u], tmp[u]);
+      }
+    }
 
     /// Local threshold value
     /// Uniform subdivision (see Veli eq. (2.44))
-    const auto* scheme = t8_forest_get_scheme (forest);
-    const auto level_diff = maximum_level - (scheme->element_get_level (TShape, t8_elem) - 1);
+    const auto level_diff = maximum_level - lmi.level ();
+
     const auto h_lambda = std::sqrt (vol);
+    const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
 
-    const auto h_max_level_lambda = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), gamma + 1);
-
-    const auto local_eps = c_thresh * h_max_level_lambda / h_lambda;
+    const auto local_eps = c_thresh * h_max_level / h_lambda;
 
     return std::all_of (local_norm.cbegin (), local_norm.cend (), [&] (double norm) { return norm <= local_eps; });
   }
