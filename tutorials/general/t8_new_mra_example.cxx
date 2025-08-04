@@ -192,7 +192,7 @@ main (int argc, char** argv)
   printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
   t8_write_vtu<element_data_type> (mra_test.forest, ("testi_test_" + std::to_string (init_level)).c_str ());
 
-  mra_test.coarsening (init_level - 1, init_level);
+  mra_test.coarsening (0, init_level);
   printf ("did coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
   t8_write_vtu<element_data_type> (mra_test.forest, ("coarsening_test_" + std::to_string (init_level)).c_str ());
 
