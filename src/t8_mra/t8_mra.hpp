@@ -314,7 +314,6 @@ class multiscale: public multiscale_data<TShape> {
     const auto parent = parent_lmi (lmi);
 
     if (hard_thresholding (parent, which_tree, elements[0])) {
-      get_user_data ()->lmi_map->get (parent).significant = false;
 
       for (const auto& child : t8_mra::children_lmi (parent))
         get_user_data ()->lmi_map->erase (child);
@@ -322,7 +321,6 @@ class multiscale: public multiscale_data<TShape> {
       return -1;
     }
 
-    get_user_data ()->lmi_map->get (parent_lmi (lmi)).significant = true;
     get_user_data ()->lmi_map->erase (parent_lmi (lmi));
 
     return 0;

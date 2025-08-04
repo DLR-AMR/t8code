@@ -38,8 +38,8 @@ struct data_per_element
   static constexpr unsigned short W_DOF = DOF * NUM_CHILDREN;
 
   std::vector<double> u_coeffs;  // Single-scale coefficients
+  /// TODO get rid of details
   std::vector<double> d_coeffs;  // Detail coefficients
-  bool significant;              // Is cell significant
 
   std::array<int, 3> order;  // Point order
 
@@ -47,8 +47,7 @@ struct data_per_element
   //   : u_coeffs (U_DIM * DOF, {}), d_coeffs (U_DIM * W_DOF, {}), significant (false), order ({})
   // {
   // }
-  explicit data_per_element ()
-    : u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), significant (false), order ({})
+  explicit data_per_element (): u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), order ({})
   {
   }
 
