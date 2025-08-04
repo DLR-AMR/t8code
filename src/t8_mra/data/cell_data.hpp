@@ -80,6 +80,9 @@ struct forest_data
 {
   sc_array_t *lmi_idx;
   t8_mra::levelindex_map<T> *lmi_map;
+
+  /// Global information needed for refinement/coarsening
+  int current_refinement_level;  // Which level do we refine?
 };
 
 template <typename T>
