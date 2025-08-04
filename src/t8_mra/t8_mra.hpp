@@ -238,12 +238,12 @@ class multiscale: public multiscale_data<TShape> {
     }
   }
 
-  element_t
-  two_scale_transformation (t8_locidx_t tree_idx, t8_locidx_t local_ele_idx)
+  void
+  two_scale_transformation (const levelmultiindex& lmi)
   {
-    const auto offset = t8_forest_get_tree_element_offset (forest, tree_idx);
-    const auto elem_idx = local_ele_idx + offset;
-    const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
+    // const auto offset = t8_forest_get_tree_element_offset (forest, tree_idx);
+    // const auto elem_idx = local_ele_idx + offset;
+    // const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
 
     const auto parent_lmi = t8_mra::parent_lmi (lmi);
     element_t parent_data;
@@ -288,8 +288,11 @@ class multiscale: public multiscale_data<TShape> {
   }
 
   /// TODO global scaling factor for normalization (see Veli eq. (2.39))
+  /// TODO global scaling factor for normalization of each component (see Veli eq. (2.39))
+  // bool
+  // hard_thresholding (const element_t& elem_data, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   bool
-  hard_thresholding (const element_t& elem_data, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
+  hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   {
     bool is_significant = false;
     std::array<double, U_DIM> norm = {};
