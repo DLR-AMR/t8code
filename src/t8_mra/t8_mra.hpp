@@ -370,7 +370,7 @@ class multiscale: public multiscale_data<TShape> {
 
     for (auto l = max_level; l > min_level; --l) {
       t8_forest_t new_forest;
-      t8_forest_ref (forest);  /// Otherwise forest will be destroyed
+      t8_forest_ref (forest);
 
       get_user_data ()->current_refinement_level = l;
       new_forest = t8_forest_new_adapt (
