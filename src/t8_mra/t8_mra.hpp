@@ -292,9 +292,9 @@ class multiscale: public multiscale_data<TShape> {
   ///TODO Performance problem: can I filter for elements on a current level,
   ///without iterating through
   int
-  thresholding_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                         t8_locidx_t local_ele_idx, const t8_scheme_c* scheme, const int is_family,
-                         const int num_elements, t8_element_t* elements[])
+  coarsening_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                       t8_locidx_t local_ele_idx, const t8_scheme_c* scheme, const int is_family,
+                       const int num_elements, t8_element_t* elements[])
   {
     if (!is_family)
       return 0;
@@ -312,19 +312,17 @@ class multiscale: public multiscale_data<TShape> {
     two_scale_transformation (lmi);
 
     const auto parent = parent_lmi (lmi);
+
     if (hard_thresholding (parent, which_tree, elements[0])) {
       get_user_data ()->lmi_map->get (parent).significant = false;
 
-      /// TEST
       for (const auto& child : t8_mra::children_lmi (parent))
         get_user_data ()->lmi_map->erase (child);
 
       return -1;
     }
 
-    /// Sollten wir vlt. elter direkt löschen?
     get_user_data ()->lmi_map->get (parent_lmi (lmi)).significant = true;
-    /// TEST
     get_user_data ()->lmi_map->erase (parent_lmi (lmi));
 
     return 0;
@@ -356,12 +354,12 @@ class multiscale: public multiscale_data<TShape> {
   void
   coarsening (int min_level, int max_level)
   {
-    static auto static_thresholding_callback
+    static auto static_coarsening_callback
       = [this] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
                 t8_locidx_t local_ele_idx, const t8_scheme_c* scheme, const int is_family, const int num_elements,
                 t8_element_t* elements[]) -> int {
-      return thresholding_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
-                                    num_elements, elements);
+      return coarsening_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
+                                  num_elements, elements);
     };
 
     static auto static_iterate_replace_callback
@@ -381,8 +379,8 @@ class multiscale: public multiscale_data<TShape> {
         forest,
         [] (auto* forest, auto* forest_from, auto which_tree, auto tree_class, auto local_ele_idx, auto* scheme,
             const auto is_family, const auto num_elements, auto* elements[]) -> int {
-          return static_thresholding_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme,
-                                               is_family, num_elements, elements);
+          return static_coarsening_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme,
+                                             is_family, num_elements, elements);
         },
         0, 0, get_user_data ());
 
