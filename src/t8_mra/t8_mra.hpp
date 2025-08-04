@@ -4,10 +4,13 @@
 
 #include <algorithm>
 
+#include "t8.h"
 #include "t8_eclass.h"
 #include "t8_element.h"
 #include "t8_forest/t8_forest_general.h"
+#include "t8_forest/t8_forest_iterate.h"
 #include "t8_forest/t8_forest_geometrical.h"
+#include "t8_schemes/t8_scheme.hxx"
 
 #include "t8_mra/data/cell_data.hpp"
 #include "t8_mra/data/levelmultiindex.hpp"
@@ -77,6 +80,11 @@ class multiscale: public multiscale_data<TShape> {
 
   /// Forest data
   t8_forest_t forest;
+
+  // /// Function class for callbacks
+  // std::function<int (t8_forest_t, t8_forest_t, t8_locidx_t, const t8_eclass_t, t8_locidx_t, const t8_scheme_c*,
+  //                    const int, const int, t8_element_t**)>
+  //   thres_callback;
 
   sc_MPI_Comm comm;
 
@@ -281,88 +289,127 @@ class multiscale: public multiscale_data<TShape> {
     get_user_data ()->lmi_map->insert (parent_lmi, parent_data);
   }
 
+  ///TODO Performance problem: can I filter for elements on a current level,
+  ///without iterating through
+  int
+  thresholding_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                         t8_locidx_t local_ele_idx, const t8_scheme_c* scheme, const int is_family,
+                         const int num_elements, t8_element_t* elements[])
+  {
+    if (!is_family)
+      return 0;
+
+    const auto element_level = scheme->element_get_level (tree_class, elements[0]);
+
+    /// check that
+    if (element_level > get_user_data ()->current_refinement_level || element_level < 1)
+      return 0;
+
+    const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
+    const auto elem_idx = local_ele_idx + offset;
+
+    const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
+    two_scale_transformation (lmi);
+
+    const auto parent = parent_lmi (lmi);
+    if (hard_thresholding (parent, which_tree, elements[0])) {
+      get_user_data ()->lmi_map->get (parent).significant = false;
+
+      /// TEST
+      for (const auto& child : t8_mra::children_lmi (parent))
+        get_user_data ()->lmi_map->erase (child);
+
+      return -1;
+    }
+
+    /// Sollten wir vlt. elter direkt löschen?
+    get_user_data ()->lmi_map->get (parent_lmi (lmi)).significant = true;
+    /// TEST
+    get_user_data ()->lmi_map->erase (parent_lmi (lmi));
+
+    return 0;
+  }
+
+  void
+  iterate_replace_callback (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
+                            const t8_eclass_t tree_class, const t8_scheme* scheme, int refine, int num_outgoing,
+                            t8_locidx_t first_outgoing, int num_incoming, t8_locidx_t first_incoming)
+  {
+    auto* old_user_data = get_user_data ();
+    auto* new_user_data = t8_mra::get_mra_forest_data<element_t> (forest_new);
+
+    first_incoming += t8_forest_get_tree_element_offset (forest_new, which_tree);
+    first_outgoing += t8_forest_get_tree_element_offset (forest_old, which_tree);
+
+    const auto old_lmi = t8_mra::get_lmi_from_forest_data (old_user_data, first_outgoing);
+
+    if (refine == 0)
+      t8_mra::set_lmi_forest_data (new_user_data, first_incoming, old_lmi);
+    else if (refine == -1) {
+      t8_mra::set_lmi_forest_data (new_user_data, first_incoming, t8_mra::parent_lmi (old_lmi));
+    }
+    else {
+      /// TODO
+    }
+  };
+
   void
   coarsening (int min_level, int max_level)
   {
-    ///TODO Performance problem: can I filter for elements on a current level,
-    ///without iterating through
-    auto thresholding_callback = [&] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                      const t8_eclass_t tree_class, t8_locidx_t local_ele_idx, const t8_scheme* scheme,
-                                      int is_family, int num_elements, t8_element_t* elements[]) -> int {
-      if (!is_family)
-        return 0;
-
-      const auto element_level = scheme->element_get_level (tree_class, elements[0]);
-
-      /// check that
-      if (element_level > get_user_data ()->current_refinement_level || element_level < 1)
-        return 0;
-
-      const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
-      const auto elem_idx = local_ele_idx + offset;
-
-      const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
-      two_scale_transformation (lmi);
-
-      const auto parent = parent_lmi (lmi);
-      if (hard_thresholding (parent, which_tree, elements[0])) {
-        get_user_data ()->lmi_map.get (parent).significant = false;
-
-        /// TEST
-        for (const auto& child : t8_mra::children_lmi (parent))
-          get_user_data ()->lmi_map.erase (child);
-
-        return -1;
-      }
-
-      /// Sollten wir vlt. elter direkt löschen?
-      get_user_data ()->lmi_map.get (parent_lmi (lmi)).significant = true;
-      /// TEST
-      get_user_data ()->lmi_map.erase (parent_lmi (lmi));
-
-      return 0;
+    static auto static_thresholding_callback
+      = [this] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                t8_locidx_t local_ele_idx, const t8_scheme_c* scheme, const int is_family, const int num_elements,
+                t8_element_t* elements[]) -> int {
+      return thresholding_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
+                                    num_elements, elements);
     };
 
-    auto iterate_replace_callback
-      = [&] (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-             const t8_scheme* scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
-             t8_locidx_t first_incoming) {
-          auto* old_user_data = get_user_data ();
-          auto* new_user_data = t8_mra::get_mra_forest_data<forest_data<element_t>> (forest_new);
-
-          first_incoming += t8_forest_get_tree_element_offset (forest_new, which_tree);
-          first_outgoing += t8_forest_get_tree_element_offset (forest_old, which_tree);
-
-          const auto old_lmi = t8_mra::get_lmi_from_forest_data (old_user_data, first_outgoing);
-
-          if (refine == 0)
-            t8_mra::set_lmi_forest_data (new_user_data, first_incoming, old_lmi);
-          else if (refine == -1) {
-            t8_mra::set_lmi_forest_data (new_user_data, first_incoming, t8_mra::parent_lmi (old_lmi));
-          }
-          else {
-            /// TODO
-          }
-        };
+    static auto static_iterate_replace_callback
+      = [this] (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                const t8_scheme* scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+                t8_locidx_t first_incoming) -> void {
+      iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+                                first_outgoing, num_incoming, first_incoming);
+    };
 
     for (auto l = max_level; l > min_level; --l) {
       t8_forest_t new_forest;
       t8_forest_ref (forest);  /// Otherwise forest will be destroyed
 
       get_user_data ()->current_refinement_level = l;
-      new_forest = t8_forest_new_adapt (forest, thresholding_callback, 0, 0, get_user_data ());
+      new_forest = t8_forest_new_adapt (
+        forest,
+        [] (auto* forest, auto* forest_from, auto which_tree, auto tree_class, auto local_ele_idx, auto* scheme,
+            const auto is_family, const auto num_elements, auto* elements[]) -> int {
+          return static_thresholding_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme,
+                                               is_family, num_elements, elements);
+        },
+        0, 0, get_user_data ());
+
       t8_forest_ref (new_forest);
 
       ///TODO balance
 
       t8_mra::forest_data<element_t>* new_user_data;
       new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+      new_user_data->lmi_map = new t8_mra::levelindex_map<element_t> (maximum_level);
+      std::swap (new_user_data->lmi_map, get_user_data ()->lmi_map);
+
       const auto num_new_local_elements = t8_forest_get_local_num_leaf_elements (new_forest);
       const auto num_new_ghost_elements = t8_forest_get_num_ghosts (new_forest);
       new_user_data->lmi_idx
         = sc_array_new_count (sizeof (levelmultiindex), num_new_local_elements + num_new_ghost_elements);
       t8_forest_set_user_data (new_forest, new_user_data);
-      t8_forest_iterate_replace (new_forest, forest, iterate_replace_callback);
+      t8_forest_iterate_replace (
+        new_forest, forest,
+        [] (auto* forest_old, auto* forest_new, auto which_tree, const auto tree_class, const auto* scheme, auto refine,
+            auto num_outgoing, auto first_outgoing, auto num_incoming, t8_locidx_t first_incoming) -> void {
+          static_iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+                                           first_outgoing, num_incoming, first_incoming);
+        });
+
+      cleanup ();
+      forest = new_forest;
     }
   }
 
