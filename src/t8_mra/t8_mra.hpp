@@ -1,5 +1,6 @@
 #pragma once
 
+#include "t8_element.h"
 #ifdef T8_ENABLE_MRA
 
 #include <algorithm>
@@ -26,6 +27,11 @@
 /// TODO modernize old code (skalierungsfunktion, dunavant, vec/mat, etc..)
 namespace t8_mra
 {
+
+///TODO Prototypes
+template <typename T>
+t8_mra::forest_data<T>*
+get_mra_forest_data (t8_forest_t forest);
 
 template <t8_eclass TShape>
 struct multiscale_data
@@ -147,6 +153,7 @@ class multiscale: public multiscale_data<TShape> {
   void
   initialize_data (t8_cmesh_t mesh, const t8_scheme* scheme, int level, auto&& func)
   {
+
     forest = t8_forest_new_uniform (mesh, scheme, level, 0, comm);
 
     levelmultiindex* elem_data;
@@ -288,7 +295,91 @@ class multiscale: public multiscale_data<TShape> {
     // return parent_data;
   }
 
-  /// TODO global scaling factor for normalization (see Veli eq. (2.39))
+  void
+  coarsening (int min_level, int max_level)
+  {
+    ///TODO Performance problem: can I filter for elements on a current level,
+    ///without iterating through
+    auto thresholding_callback = [&] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                                      const t8_eclass_t tree_class, t8_locidx_t local_ele_idx, const t8_scheme* scheme,
+                                      int is_family, int num_elements, t8_element_t* elements[]) -> int {
+      if (!is_family)
+        return 0;
+
+      const auto element_level = scheme->element_get_level (tree_class, elements[0]);
+
+      /// check that
+      if (element_level > get_user_data ()->current_refinement_level || element_level < 1)
+        return 0;
+
+      const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
+      const auto elem_idx = local_ele_idx + offset;
+
+      const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
+      two_scale_transformation (lmi);
+
+      const auto parent = parent_lmi (lmi);
+      if (hard_thresholding (parent, which_tree, elements[0])) {
+        get_user_data ()->lmi_map.get (parent).significant = false;
+
+        /// TEST
+        for (const auto& child : t8_mra::children_lmi (parent))
+          get_user_data ()->lmi_map.erase (child);
+
+        return -1;
+      }
+
+      /// Sollten wir vlt. elter direkt löschen?
+      get_user_data ()->lmi_map.get (parent_lmi (lmi)).significant = true;
+      /// TEST
+      get_user_data ()->lmi_map.erase (parent_lmi (lmi));
+
+      return 0;
+    };
+
+    auto iterate_replace_callback
+      = [&] (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+             const t8_scheme* scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+             t8_locidx_t first_incoming) {
+          auto* old_user_data = get_user_data ();
+          auto* new_user_data = t8_mra::get_mra_forest_data<forest_data<element_t>> (forest_new);
+
+          first_incoming += t8_forest_get_tree_element_offset (forest_new, which_tree);
+          first_outgoing += t8_forest_get_tree_element_offset (forest_old, which_tree);
+
+          const auto old_lmi = t8_mra::get_lmi_from_forest_data (old_user_data, first_outgoing);
+
+          if (refine == 0)
+            t8_mra::set_lmi_forest_data (new_user_data, first_incoming, old_lmi);
+          else if (refine == -1) {
+            t8_mra::set_lmi_forest_data (new_user_data, first_incoming, t8_mra::parent_lmi (old_lmi));
+          }
+          else {
+            /// TODO
+          }
+        };
+
+    for (auto l = max_level; l > min_level; --l) {
+      t8_forest_t new_forest;
+      t8_forest_ref (forest);  /// Otherwise forest will be destroyed
+
+      get_user_data ()->current_refinement_level = l;
+      new_forest = t8_forest_new_adapt (forest, thresholding_callback, 0, 0, get_user_data ());
+      t8_forest_ref (new_forest);
+
+      ///TODO balance
+
+      t8_mra::forest_data<element_t>* new_user_data;
+      new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+      const auto num_new_local_elements = t8_forest_get_local_num_leaf_elements (new_forest);
+      const auto num_new_ghost_elements = t8_forest_get_num_ghosts (new_forest);
+      new_user_data->lmi_idx
+        = sc_array_new_count (sizeof (levelmultiindex), num_new_local_elements + num_new_ghost_elements);
+      t8_forest_set_user_data (new_forest, new_user_data);
+      t8_forest_iterate_replace (new_forest, forest, iterate_replace_callback);
+    }
+  }
+
   /// TODO global scaling factor for normalization of each component (see Veli eq. (2.39))
   // bool
   // hard_thresholding (const element_t& elem_data, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
