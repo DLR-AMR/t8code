@@ -72,7 +72,6 @@ class multiscale: public multiscale_data<TShape> {
 
   /// Forest data
   t8_forest_t forest;
-  t8_mra::levelindex_map<element_t>* lmi_map;
 
   sc_MPI_Comm comm;
 
@@ -83,8 +82,6 @@ class multiscale: public multiscale_data<TShape> {
   {
     t8_mra::initialize_mask_coefficients<TShape> (P_DIM, DOF, multiscale_data<TShape>::mask_coefficients,
                                                   multiscale_data<TShape>::inverse_mask_coefficients);
-
-    lmi_map = new t8_mra::levelindex_map<element_t> (max_level);
   }
 
   t8_forest_t
@@ -163,6 +160,7 @@ class multiscale: public multiscale_data<TShape> {
     const auto num_local_elements = t8_forest_get_global_num_leaf_elements (forest);
     const auto num_ghost_elements = t8_forest_get_num_ghosts (forest);
 
+    user_data->lmi_map = new t8_mra::levelindex_map<element_t> (maximum_level);
     user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local_elements + num_ghost_elements);
 
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
@@ -180,16 +178,15 @@ class multiscale: public multiscale_data<TShape> {
         t8_mra::triangle_order::get_point_order_at_level (base_element, element, scheme, point_order);
 
         project (data_element.u_coeffs, tree_idx, element, point_order, func);
-        lmi_map->insert (lmi, data_element);
+        user_data->lmi_map->insert (lmi, data_element);
 
         /// Insert lmi into forest
-        *((levelmultiindex*) t8_sc_array_index_locidx (user_data->lmi_idx, current_idx)) = lmi;
+        t8_mra::set_lmi_forest_data (user_data, current_idx, lmi);
       }
     }
 
     T8_FREE (elem_data);
 
-    user_data->lmi_map = lmi_map;
     t8_forest_set_user_data (forest, user_data);
   }
 
