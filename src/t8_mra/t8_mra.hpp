@@ -1,11 +1,11 @@
 #pragma once
 
-#include "t8_element.h"
 #ifdef T8_ENABLE_MRA
 
 #include <algorithm>
 
 #include "t8_eclass.h"
+#include "t8_element.h"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
 
@@ -73,7 +73,6 @@ class multiscale: public multiscale_data<TShape> {
   double c_thresh;
   int gamma;
   std::vector<double> eps;
-
   t8_mra::dg_basis<element_t> DG_basis;
 
   /// Forest data
@@ -142,13 +141,6 @@ class multiscale: public multiscale_data<TShape> {
       }
     }
   }
-
-  // std::array<double, U_DIM>
-  // eval (const std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element,
-  //       const std::array<int, 3>& order)
-  // {
-  //   std::array<double, U_DIM> res;
-  // }
 
   void
   initialize_data (t8_cmesh_t mesh, const t8_scheme* scheme, int level, auto&& func)
@@ -248,10 +240,6 @@ class multiscale: public multiscale_data<TShape> {
   void
   two_scale_transformation (const levelmultiindex& lmi)
   {
-    // const auto offset = t8_forest_get_tree_element_offset (forest, tree_idx);
-    // const auto elem_idx = local_ele_idx + offset;
-    // const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
-
     const auto parent_lmi = t8_mra::parent_lmi (lmi);
     element_t parent_data;
 
@@ -291,8 +279,6 @@ class multiscale: public multiscale_data<TShape> {
       }
     }
     get_user_data ()->lmi_map->insert (parent_lmi, parent_data);
-
-    // return parent_data;
   }
 
   void
@@ -381,8 +367,6 @@ class multiscale: public multiscale_data<TShape> {
   }
 
   /// TODO global scaling factor for normalization of each component (see Veli eq. (2.39))
-  // bool
-  // hard_thresholding (const element_t& elem_data, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   bool
   hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   {
@@ -416,7 +400,6 @@ class multiscale: public multiscale_data<TShape> {
   void
   cleanup ()
   {
-    // delete lmi_map;
     delete get_user_data ()->lmi_map;
     sc_array_destroy (get_user_data ()->lmi_idx);
 
