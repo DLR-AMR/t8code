@@ -39,7 +39,8 @@ struct data_per_element
 
   std::vector<double> u_coeffs;  // Single-scale coefficients
   std::vector<double> d_coeffs;  // Detail coefficients
-  bool significant;
+  bool significant;              // Is cell significant
+
   std::array<int, 3> order;  // Point order
 
   // explicit data_per_element ()
