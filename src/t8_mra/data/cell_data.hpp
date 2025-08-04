@@ -92,6 +92,13 @@ get_lmi_from_forest_data (const t8_mra::forest_data<T> *forest_data, size_t idx)
   return *reinterpret_cast<t8_mra::levelmultiindex<T::Shape> *> (t8_sc_array_index_locidx (forest_data->lmi_idx, idx));
 }
 
+template <typename T>
+void
+set_lmi_forest_data (t8_mra::forest_data<T> *forest_data, size_t idx, const t8_mra::levelmultiindex<T::Shape> &lmi)
+{
+  *reinterpret_cast<t8_mra::levelmultiindex<T::Shape> *> (t8_sc_array_index_locidx (forest_data->lmi_idx, idx)) = lmi;
+}
+
 }  // namespace t8_mra
 
 #endif
