@@ -165,7 +165,7 @@ main (int argc, char** argv)
   printf ("Init done\n");
 
   auto max_level = 8u;
-  auto init_level = 4u;
+  auto init_level = 6u;
   auto c_thresh = 1.0;
   auto gamma = 1.0;  /// Order of convergence
   auto dunavant_rule = 10;
@@ -186,11 +186,15 @@ main (int argc, char** argv)
   mra_test.initialize_data (cmesh, test_scheme, init_level, f4);
   printf ("initialize data\n");
 
-  test_two_scale (mra_test);
-  printf ("test two scale\n");
+  // test_two_scale (mra_test);
+  // printf ("test two scale\n");
 
   printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
   t8_write_vtu<element_data_type> (mra_test.forest, ("testi_test_" + std::to_string (init_level)).c_str ());
+
+  mra_test.coarsening (init_level - 1, init_level);
+  printf ("did coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
+  t8_write_vtu<element_data_type> (mra_test.forest, ("coarsening_test_" + std::to_string (init_level)).c_str ());
 
   printf ("Finished writing file\n");
 
