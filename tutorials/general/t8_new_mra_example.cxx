@@ -4,12 +4,9 @@
 #include "t8_cmesh.hxx"
 #include "t8_eclass.h"
 #include "t8_forest/t8_forest_general.h"
-#include "t8_forest/t8_forest_geometrical.h"
 #include "t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx"
 #include "t8_geometry/t8_geometry_with_vertices.h"
 #include "t8_mra/data/cell_data.hpp"
-#include "t8_mra/data/levelmultiindex.hpp"
-#include "t8_mra/num/basis_functions.hxx"
 #include "t8_vtk.h"
 
 t8_cmesh_t
@@ -185,15 +182,13 @@ main (int argc, char** argv)
 
   mra_test.initialize_data (cmesh, test_scheme, init_level, f4);
   printf ("initialize data\n");
-
-  // test_two_scale (mra_test);
-  // printf ("test two scale\n");
-
   printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
+
   t8_write_vtu<element_data_type> (mra_test.forest, ("testi_test_" + std::to_string (init_level)).c_str ());
 
   mra_test.coarsening (0, init_level);
-  printf ("did coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
+  printf ("After coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
+
   t8_write_vtu<element_data_type> (mra_test.forest, ("coarsening_test_" + std::to_string (init_level)).c_str ());
 
   printf ("Finished writing file\n");
