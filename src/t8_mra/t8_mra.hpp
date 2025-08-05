@@ -370,18 +370,15 @@ class multiscale: public multiscale_data<TShape> {
     const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
 
     for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-      std::array<double, U_DIM> tmp = {};
       for (auto u = 0u; u < U_DIM; ++u)
         for (auto i = 0u; i < DOF; ++i) {
           const auto d = get_user_data ()->lmi_map->get (lmi).d_coeffs[element_t::wavelet_idx (k, u, i)];
-          tmp[u] += d * d;
+          local_norm[u] += d * d;
         }
-
-      for (auto u = 0u; u < U_DIM; ++u) {
-        tmp[u] = std::sqrt (tmp[u] / vol);
-        local_norm[u] = std::max (local_norm[u], tmp[u]);
-      }
     }
+
+    for (auto u = 0u; u < U_DIM; ++u)
+      local_norm[u] += std::sqrt (local_norm[u] / vol);
 
     /// Local threshold value
     /// Uniform subdivision (see Veli eq. (2.44))
