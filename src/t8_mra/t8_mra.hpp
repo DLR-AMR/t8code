@@ -36,6 +36,14 @@ template <typename T>
 t8_mra::forest_data<T>*
 get_mra_forest_data (t8_forest_t forest);
 
+template <typename T>
+std::array<double, T::U_DIM>
+mean_val (t8_forest_t forest, int tree_idx, const t8_mra::levelmultiindex<T::Shape>& lmi, const t8_element_t* element);
+
+template <typename T>
+std::array<double, T::U_DIM>
+mean_val (t8_forest_t forest, int tree_idx, int ele_idx, const t8_element_t* element);
+
 template <t8_eclass TShape>
 struct multiscale_data
 {
