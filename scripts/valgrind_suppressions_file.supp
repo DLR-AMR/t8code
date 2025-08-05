@@ -6,3 +6,14 @@
    fun:PMPI_Init
    fun:main
 }
+
+{
+   <mpi_suppression_fortran>
+   Memcheck:Leak
+   ...
+   obj:/usr/*libmpich*
+   fun:PMPI_Init
+   fun:MPI_INIT
+   fun:MAIN__
+   ...
+}
