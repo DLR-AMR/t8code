@@ -161,13 +161,13 @@ main (int argc, char** argv)
 
   printf ("Init done\n");
 
-  auto max_level = 8u;
-  auto init_level = 6u;
+  auto max_level = 7u;
+  auto init_level = 7u;
   auto c_thresh = 1.0;
   auto gamma = 1.0;  /// Order of convergence
   auto dunavant_rule = 10;
 
-  constexpr int P = 3;
+  constexpr int P = 4;
   constexpr int U = 2;
 
   using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
@@ -181,15 +181,17 @@ main (int argc, char** argv)
   printf ("created mra object\n");
 
   mra_test.initialize_data (cmesh, test_scheme, init_level, f4);
-  printf ("initialize data\n");
-  printf ("size init data: %zu\n", mra_test.get_lmi_map ()->size ());
+  printf ("Initialize data\n");
+  printf ("Size init data: %zu\n", mra_test.get_lmi_map ()->size ());
 
-  t8_write_vtu<element_data_type> (mra_test.forest, ("testi_test_" + std::to_string (init_level)).c_str ());
+  // t8_write_vtu<element_data_type> (mra_test.forest, ("uniform_" + std::to_string (init_level)).c_str ());
 
   mra_test.coarsening (0, init_level);
-  printf ("After coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
 
-  t8_write_vtu<element_data_type> (mra_test.forest, ("coarsening_test_" + std::to_string (init_level)).c_str ());
+  printf ("Size after coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
+
+  t8_write_vtu<element_data_type> (mra_test.forest,
+                                   ("coarsening_P" + std::to_string (P) + "_" + std::to_string (init_level)).c_str ());
 
   printf ("Finished writing file\n");
 
