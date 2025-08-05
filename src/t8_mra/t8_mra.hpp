@@ -184,6 +184,7 @@ class multiscale: public multiscale_data<TShape> {
         std::array<int, 3> point_order;
         t8_mra::triangle_order::get_point_order_at_level (base_element, element, scheme, point_order);
 
+        data_element.order = point_order;
         project (data_element.u_coeffs, tree_idx, element, point_order, func);
         user_data->lmi_map->insert (lmi, data_element);
 
