@@ -61,12 +61,8 @@ for bin_path in $test_bin_paths; do
   counter=$(( $counter + 1 ))
   echo "[$counter/$num_paths] Valgrind check of $bin_path..."
   # Run check_valgrind script for each test binary.
-  if [[ "$bin_path" == ./api* ]]; then
-    bash ../../scripts/check_valgrind.sh $bin_path $valgrind_suppressions_file 2>&1
-    status=$?
-  else
-    status=0
-  fi
+  bash ../../scripts/check_valgrind.sh $bin_path $valgrind_suppressions_file 2>&1
+  status=$?
   # If status is not 0, an error occurred.
   if test $status -ne 0; then
     echo "Error occurred during the valgrind check of $bin_path."
