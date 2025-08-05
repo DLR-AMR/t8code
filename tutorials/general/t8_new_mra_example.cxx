@@ -148,7 +148,9 @@ main (int argc, char** argv)
   t8_init (SC_LP_PRODUCTION);
   comm = sc_MPI_COMM_WORLD;
 
-  /// Velis debugging example
+  /// Velis example
+
+  /// Half circle + jump middle
   auto f4 = [] (double x, double y) -> std::array<double, 2> {
     if (x < 0.41)
       return { 0.0, 0.0 };
@@ -170,15 +172,14 @@ main (int argc, char** argv)
              -(1.0 - r4 + 4.0 * r4 * rm1 - 10.0 * r4 * rm1h2 + 20.0 * r4 * rm1h3) };
   };
 
-  auto f = [] (double x, double y) -> std::array<double, 1> { return { x + y }; };
-
+  /// Different oscillations
   auto f5 = [] (double x, double y) -> std::array<double, 1> { return { std::sin (1 / (1.001 - x * y)) }; };
+
+  /// Quarter circle + jump along circle
   auto f3 = [] (double x, double y) -> std::array<double, 1> {
     double r = x * x + y * y;
     return { (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x) };
   };
-
-  printf ("Init done\n");
 
   auto max_level = 7u;
   auto init_level = 7u;
