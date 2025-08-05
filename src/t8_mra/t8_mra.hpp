@@ -401,9 +401,8 @@ class multiscale: public multiscale_data<TShape> {
     return res;
   }
 
-  /// TODO global scaling factor for normalization of each component (see Veli eq. (2.39))
-  bool
-  hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
+  std::array<double, U_DIM>
+  local_detail_norm (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   {
 
     std::array<double, U_DIM> tmp = {};
@@ -417,16 +416,26 @@ class multiscale: public multiscale_data<TShape> {
         }
     }
 
-    for (auto u = 0u; u < U_DIM; ++u) {
+    for (auto u = 0u; u < U_DIM; ++u)
       tmp[u] += std::sqrt (tmp[u] / vol);
-      tmp[u] /= c_scaling[u];
-    }
 
+    return tmp;
+  }
+
+  /// TODO global scaling factor for normalization of each component (see Veli eq. (2.39))
+  bool
+  hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
+  {
+    auto tmp = local_detail_norm (lmi, tree_idx, t8_elem);
+    for (auto u = 0u; u < U_DIM; ++u)
+      tmp[u] /= c_scaling[u];
     const auto local_norm = *std::max_element (tmp.begin (), tmp.end ());
 
     /// Local threshold value
     /// Uniform subdivision (see Veli eq. (2.44))
     const auto level_diff = maximum_level - lmi.level ();
+
+    const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
 
     const auto h_lambda = std::sqrt (vol);
     const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
