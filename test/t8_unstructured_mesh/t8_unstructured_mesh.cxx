@@ -23,12 +23,27 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include "t8_unstructured_mesh/t8_unstructured_mesh.hxx"
 #include <gtest/gtest.h>
 #include <t8.h>
-#include <cstddef>
-#include <iterator>
-#include "t8_unstructured_mesh/t8_unstructured_mesh.hxx"
+#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_geometrical.h>
+#include <t8_schemes/t8_default/t8_default.hxx>
 
 TEST (t8_unstructured_mesh, test_iterator)
 {
-  //ASSERT_NO_THROW(std::forward_iterator<t8_unstructured_mesh::Element_Iterator>);
-  ASSERT_EQ (1, 0);
+  const int level = 1;
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  const t8_scheme *scheme = t8_scheme_new_default ();
+
+  /* Start with a uniform forest. */
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  ASSERT_EQ (true, t8_forest_is_committed (forest));
+
+  t8_unstructured_mesh unstructured_mesh = t8_unstructured_mesh (forest);
+
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    ASSERT_EQ (level, it->get_level ());
+  }
+  t8_forest_unref (&forest);
 }
