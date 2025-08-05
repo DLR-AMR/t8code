@@ -10,7 +10,7 @@
 #include "t8_vtk.h"
 
 t8_cmesh_t
-t8_cmesh_new_debugging (sc_MPI_Comm comm)
+t8_cmesh_square (sc_MPI_Comm comm)
 {
 
   /* 1. Defining an array with all vertices */
