@@ -137,36 +137,6 @@ t8_write_vtu (t8_forest_t forest, const char* prefix)
     T8_FREE (element_data[k]);
 }
 
-void
-test_two_scale (auto& mra)
-{
-  const auto total_num_elements = t8_forest_get_global_num_leaf_elements (mra.forest);
-
-  const t8_element_t* element;
-  const auto num_local_trees = t8_forest_get_num_local_trees (mra.forest);
-
-  auto current_idx = 0u;
-  for (auto tree_idx = 0u; tree_idx < num_local_trees; ++tree_idx) {
-    const auto num_elements = t8_forest_get_tree_num_leaf_elements (mra.forest, tree_idx);
-
-    for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx, ++current_idx) {
-      const auto offset = t8_forest_get_tree_element_offset (mra.forest, tree_idx);
-      const auto lmi = t8_mra::get_lmi_from_forest_data (mra.get_user_data (), ele_idx);
-      // const auto mra_ele = mra.two_scale_transformation (lmi);
-      mra.two_scale_transformation (lmi);
-
-      const auto* t8_ele = t8_forest_get_leaf_element_in_tree (mra.forest, tree_idx, ele_idx);
-      const auto thresholding = mra.hard_thresholding (parent_lmi (lmi), tree_idx, t8_ele);
-
-      printf ("idx: %d\n", current_idx);
-      if (thresholding)
-        printf ("THRESHOLDING\n");
-      else
-        printf ("NO THRESHOLDING\n");
-    }
-  }
-}
-
 int
 main (int argc, char** argv)
 {
