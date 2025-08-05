@@ -44,6 +44,49 @@ t8_cmesh_square (sc_MPI_Comm comm)
   return cmesh;
 }
 
+t8_cmesh_t
+t8_cmesh_l_shape (sc_MPI_Comm comm)
+{
+
+  /* 1. Defining an array with all vertices */
+  /* Just all vertices of all trees. partly duplicated */
+  double vertices[36] = {
+    0.5, 0.5, 0, 1, 0, 0, 1,   0.5, 0,  //triangle 1
+    0.5, 0.5, 0, 1, 0, 0, 0,   0,   0,  //triangle 2
+    0.5, 0.5, 0, 0, 1, 0, 0,   0,   0,  //triangle 3
+    0.5, 0.5, 0, 0, 1, 0, 0.5, 1,   0,  //triangle 4
+  };
+
+  /* 2. Initialization of the mesh */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  /* 3. Definition of the geometry */
+  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+
+  /* 4. Definition of the classes of the different trees */
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 2, T8_ECLASS_TRIANGLE);
+  t8_cmesh_set_tree_class (cmesh, 3, T8_ECLASS_TRIANGLE);
+
+  /* 5. Classification of the vertices for each tree */
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices + 9, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 2, vertices + 18, 3);
+  t8_cmesh_set_tree_vertices (cmesh, 3, vertices + 27, 3);
+
+  /* 6. Definition of the face neighbors between the different trees */
+  t8_cmesh_set_join (cmesh, 0, 1, 2, 2, 0);
+  t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
+  t8_cmesh_set_join (cmesh, 2, 3, 2, 2, 0);
+
+  /* 7. Commit the mesh */
+  t8_cmesh_commit (cmesh, comm);
+
+  return cmesh;
+}
+
 template <typename T>
 void
 t8_write_vtu (t8_forest_t forest, const char* prefix)
