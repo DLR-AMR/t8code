@@ -369,6 +369,34 @@ class multiscale: public multiscale_data<TShape> {
     }
   }
 
+  /// scaling (2.39)
+  std::array<double, U>
+  threshold_scaling_factor ()
+  {
+    std::array<double, U> res = {};
+
+    auto current_idx = 0u;
+    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+    for (auto tree_idx = 0u; tree_idx < num_local_trees; ++tree_idx) {
+      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+      for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+        const auto element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+
+        const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), current_idx);
+        const auto mean_val = t8_mra::mean_val<element_t> (forest, tree_idx, lmi, element);
+        const auto vol = t8_forest_element_volume (forest, tree_idx, element);
+
+        for (auto u = 0u; u < U; ++u)
+          res[u] += mean_val[u] * vol;
+      }
+    }
+
+    for (auto u = 0u; u < U; ++u)
+      res[u] = std::max (1.0, res[u]);
+
+    return res;
+  }
+
   /// TODO global scaling factor for normalization of each component (see Veli eq. (2.39))
   bool
   hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
