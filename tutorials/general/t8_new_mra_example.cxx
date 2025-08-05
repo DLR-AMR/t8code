@@ -202,6 +202,8 @@ main (int argc, char** argv)
 
   auto f = [] (double x, double y) -> std::array<double, 1> { return { x + y }; };
 
+  auto f5 = [] (double x, double y) -> std::array<double, 1> { return { std::sin (1 / (1.001 - x * y)) }; };
+
   printf ("Init done\n");
 
   auto max_level = 7u;
