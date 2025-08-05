@@ -82,6 +82,7 @@ class multiscale: public multiscale_data<TShape> {
  public:  /// Debugging
   int maximum_level;
   double c_thresh;
+  std::array<double, U> c_scaling;
   int gamma;
   std::vector<double> eps;
   t8_mra::dg_basis<element_t> DG_basis;
@@ -327,6 +328,9 @@ class multiscale: public multiscale_data<TShape> {
       iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
                                 first_outgoing, num_incoming, first_incoming);
     };
+
+    /// scaling due to (2.39)
+    c_scaling = threshold_scaling_factor ();
 
     for (auto l = max_level; l > min_level; --l) {
       t8_forest_t new_forest;
