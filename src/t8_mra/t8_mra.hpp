@@ -405,20 +405,24 @@ class multiscale: public multiscale_data<TShape> {
   bool
   hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   {
-    std::array<double, U_DIM> local_norm = {};
 
+    std::array<double, U_DIM> tmp = {};
     const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
 
     for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
       for (auto u = 0u; u < U_DIM; ++u)
         for (auto i = 0u; i < DOF; ++i) {
           const auto d = get_user_data ()->lmi_map->get (lmi).d_coeffs[element_t::wavelet_idx (k, u, i)];
-          local_norm[u] += d * d;
+          tmp[u] += d * d;
         }
     }
 
-    for (auto u = 0u; u < U_DIM; ++u)
-      local_norm[u] += std::sqrt (local_norm[u] / vol);
+    for (auto u = 0u; u < U_DIM; ++u) {
+      tmp[u] += std::sqrt (tmp[u] / vol);
+      tmp[u] /= c_scaling[u];
+    }
+
+    const auto local_norm = *std::max_element (tmp.begin (), tmp.end ());
 
     /// Local threshold value
     /// Uniform subdivision (see Veli eq. (2.44))
@@ -429,7 +433,7 @@ class multiscale: public multiscale_data<TShape> {
 
     const auto local_eps = c_thresh * h_max_level / h_lambda;
 
-    return std::all_of (local_norm.cbegin (), local_norm.cend (), [&] (double norm) { return norm <= local_eps; });
+    return local_norm <= local_eps;
   }
 
   void
