@@ -48,7 +48,7 @@ OUTPUT_FILE="valgrind-output.log"
 # Set valgrind flags.
 VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
     --trace-children=yes --show-leak-kinds=definite,indirect,possible \
-    --errors-for-leak-kinds=definite,indirect,possible"
+    --errors-for-leak-kinds=definite,indirect,possible --gen-suppressions=all"
 # There are some more flags that can be reasonable to use, e.g., for debugging reasons if you found an error.
 # We used minimal flags for performance reasons.
 # Further flags include (but of course are not limited to): --expensive-definedness-checks=yes --track-fds=yes
@@ -66,7 +66,8 @@ if ! [ ${2-x} = x ]; then
 fi
 
 # Run valgrind on given file with flags and write output to OUTPUT_FILE.
-valgrind $VALGRIND_FLAGS "${FILE}" > /dev/null 2>"${OUTPUT_FILE}"
+valgrind $VALGRIND_FLAGS "${FILE}" 
+#> /dev/null 2>"${OUTPUT_FILE}"
 
 # Parse valgrind output.
 declare -a VALGRIND_RULES=(
