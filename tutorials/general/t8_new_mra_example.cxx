@@ -203,6 +203,10 @@ main (int argc, char** argv)
   auto f = [] (double x, double y) -> std::array<double, 1> { return { x + y }; };
 
   auto f5 = [] (double x, double y) -> std::array<double, 1> { return { std::sin (1 / (1.001 - x * y)) }; };
+  auto f3 = [] (double x, double y) -> std::array<double, 1> {
+    double r = x * x + y * y;
+    return { (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x) };
+  };
 
   printf ("Init done\n");
 
