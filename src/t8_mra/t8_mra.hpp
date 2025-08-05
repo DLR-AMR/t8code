@@ -215,31 +215,29 @@ class multiscale: public multiscale_data<TShape> {
     triangle_order::get_parent_order (parent_data.order);
 
     for (auto u = 0u; u < U_DIM; ++u) {
-
       /// Single scale parent
       for (auto i = 0u; i < DOF; ++i) {
         auto sum = 0.0;
 
         for (auto j = 0u; j < DOF; ++j)
           for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
-            sum += siblings_data[k].u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](i, j);
+            sum += siblings_data[k].u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](j, i);
 
         parent_data.u_coeffs[element_t::dg_idx (u, i)] = sum;
       }
 
       /// Details as differences
-      for (auto i = 0u; i < DOF; ++i) {
-        std::array<double, levelmultiindex::NUM_CHILDREN> sum = {};
-
+      for (auto i = 0u; i < DOF; ++i)
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          auto sum = 0.0;
           for (auto j = 0u; j < DOF; ++j)
-            sum[k] += mask_coefficients[k](j, i) * parent_data.u_coeffs[element_t::dg_idx (u, j)];
+            sum += mask_coefficients[k](i, j) * parent_data.u_coeffs[element_t::dg_idx (u, j)];
 
           parent_data.d_coeffs[element_t::wavelet_idx (k, u, i)]
-            = siblings_data[k].u_coeffs[element_t::dg_idx (u, i)] - sum[k];
+            = siblings_data[k].u_coeffs[element_t::dg_idx (u, i)] - sum;
         }
-      }
     }
+
     get_user_data ()->lmi_map->insert (parent_lmi, parent_data);
   }
 
