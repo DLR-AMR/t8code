@@ -32,7 +32,8 @@ program t8_test_mpi_init
 
   integer :: ierror, fcomm
   type(c_ptr) :: ccomm, cmesh, geometry
-  real(c_double), target :: vertices(12)
+  real(c_double), target :: vertices_tri_0(9), vertices_tri_1(9), vertices_total(18)
+  integer(c_int), target :: eclasses(2)
 
   call MPI_Init (ierror)
 
@@ -49,16 +50,41 @@ program t8_test_mpi_init
 !!  call t8_cmesh_vtk_write_file_f(cmesh, 'test_mpi_init', 0)
   call t8_cmesh_destroy_f(cmesh)
 
-  vertices = [0.0_c_double, 0.0_c_double, 0.0_c_double, &
+  vertices_tri_0 = [0.0_c_double, 0.0_c_double, 0.0_c_double, &
               1.0_c_double, 0.0_c_double, 0.0_c_double, &
-              0.0_c_double, 1.0_c_double, 0.0_c_double, &
               1.0_c_double, 1.0_c_double, 0.0_c_double]
 
+  vertices_tri_1 = [0.0_c_double, 0.0_c_double, 0.0_c_double, &
+              1.0_c_double, 1.0_c_double, 0.0_c_double, &
+              0.0_c_double, 1.0_c_double, 0.0_c_double]
+  vertices_total = [vertices_tri_0, vertices_tri_1]
+
+  !! Create a test quad mesh with 2 triangles in a square
+  call t8_fortran_cmesh_init_f(cmesh)
+  !! Create and register a geometry for linear triangles
+  geometry = t8_fortran_geometry_linear_new_f (2)
+  call t8_fortran_cmesh_register_geometry_f(cmesh, geometry)
+  !! Set tree class
+  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(0, kind=8), 3)
+  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(1, kind=8), 3)
+  !! Set tree vertices for the two triangles
+  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(0, kind=8), c_loc(vertices_tri_0), 3)
+  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(1, kind=8), c_loc(vertices_tri_1), 3)
+  !! Set connections between the two triangles
+  call t8_fortran_cmesh_set_join_f(cmesh, int(0, kind=8), int(1, kind=8), 1, 2, 0)
+  call t8_fortran_cmesh_commit_f(cmesh, ccomm)
+  call t8_cmesh_destroy_f(cmesh)
+
+  !! Create the same mesh again, but let t8code find the connectivity
+  eclasses = [3, 3]
   call t8_fortran_cmesh_init_f(cmesh)
   geometry = t8_fortran_geometry_linear_new_f (2)
   call t8_fortran_cmesh_register_geometry_f(cmesh, geometry)
-  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(0, kind=8), 2)
-  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(0, kind=8), c_loc(vertices), 4)
+  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(0, kind=8), 3)
+  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(1, kind=8), 3)
+  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(0, kind=8), c_loc(vertices_tri_0), 3)
+  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(1, kind=8), c_loc(vertices_tri_1), 3)
+  call t8_fortran_cmesh_set_join_by_vertices_noConn_f(cmesh, 2, c_loc(eclasses), c_loc(vertices_total), C_NULL_PTR, 0)
   call t8_fortran_cmesh_commit_f(cmesh, ccomm)
   call t8_cmesh_destroy_f(cmesh)
 
