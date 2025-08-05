@@ -422,13 +422,47 @@ class multiscale: public multiscale_data<TShape> {
     return tmp;
   }
 
-  /// TODO global scaling factor for normalization of each component (see Veli eq. (2.39))
+  std::vector<t8_locidx_t>
+  get_neighbours (t8_locidx_t tree_idx, t8_locidx_t local_ele_idx, const t8_eclass_t tree_class,
+                  const t8_element_t* t8_elem)
+  {
+    const auto* scheme = t8_forest_get_scheme (forest);
+    const auto num_faces = scheme->element_get_num_faces (tree_class, t8_elem);
+  }
+
+  std::vector<t8_locidx_t>
+  hartens_prediction (const levelmultiindex& lmi, t8_locidx_t tree_idx, t8_locidx_t local_ele_idx,
+                      const t8_element_t* t8_elem)
+  {
+    std::vector<levelmultiindex> predicted_lmis;
+    const auto offset = t8_forest_get_tree_element_offset (forest, tree_idx);
+    const auto elem_idx = local_ele_idx + offset;
+
+    const auto detail_norm = local_detail_norm (lmi, tree_idx, t8_elem);
+    const auto d_max = *std::max_element (detail_norm.begin (), detail_norm.end ());
+
+    const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
+
+    /// TODO refactor as extra function
+    const auto level_diff = maximum_level - lmi.level ();
+    const auto h_lambda = std::sqrt (vol);
+    const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
+    const auto local_eps = h_max_level / h_lambda;
+
+    const auto predict_neighbour = d_max > local_eps;
+    const auto predict_steep_gradient = d_max > std::pow (2, P_DIM + 1) * local_eps;
+
+    if (predict_steep_gradient && lmi.level () + 1 < maximum_level)
+      predicted_lmis.push_back (elem_idx);
+  }
+
   bool
   hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   {
     auto tmp = local_detail_norm (lmi, tree_idx, t8_elem);
     for (auto u = 0u; u < U_DIM; ++u)
       tmp[u] /= c_scaling[u];
+
     const auto local_norm = *std::max_element (tmp.begin (), tmp.end ());
 
     /// Local threshold value
