@@ -21,7 +21,7 @@
 */
 
 /** \file t8_cmesh_boundary_node_list.hxx
- * Defines the boundary node list, which computes the boundary nodes of a cmesh.
+ * Defines the boundary node list, which computes the boundary nodes of a cmesh. The boundary node list will be computed during commit.
  */
 
 #ifndef T8_CMESH_BOUNDARY_NODE_LIST_HXX
@@ -33,16 +33,28 @@
 
 class t8_boundary_node_list {
  public:
+  /** Basic constructor
+  * 
+  * \param [in] cmesh_in  An uncommited cmesh
+  */
   t8_boundary_node_list (t8_cmesh_t cmesh_in);
 
+  /** Getter Function
+   * 
+   * \return   A std:.unordered_set with the global IDs of boundary nodes
+   */
   std::unordered_set<t8_gloidx_t>
   get_boundary_node_list ();
 
  private:
+  /** Function to fill the \a t8_boundary_node_list */
   std::unordered_set<t8_gloidx_t>
   compute_boundary_node ();
 
+  /* An uncommited cmesh */
   t8_cmesh_t cmesh;
+
+  /* Empty boundary node list */
   std::unordered_set<t8_gloidx_t> boundary_node_list;
 };
 

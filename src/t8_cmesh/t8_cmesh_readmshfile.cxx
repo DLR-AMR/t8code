@@ -1887,6 +1887,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
   t8_cmesh_set_dimension (cmesh, dim);
 
   /* DO NOT COMMIT THIS */
+  /* TODO: Sandro has to do something apparently*/
   cmesh->compute_boundary_node_list = 1;
 
   /* Register the geometries for the cmesh. */

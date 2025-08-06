@@ -42,6 +42,7 @@ std::unordered_set<t8_gloidx_t>
 t8_boundary_node_list::compute_boundary_node ()
 {
   std::unordered_set<t8_gloidx_t> boundary_node_list = {};
+  std::unordered_set<t8_gloidx_t> non_boundary_node_list = {};
   const t8_locidx_t num_trees = cmesh->num_local_trees;
 
   for (t8_locidx_t i_tree = 0; i_tree < num_trees; i_tree++) {
@@ -61,6 +62,28 @@ t8_boundary_node_list::compute_boundary_node ()
       }
     }
   }
+
+  for (t8_locidx_t i_tree = 0; i_tree < num_trees; i_tree++) {
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, i_tree);
+    int num_faces = t8_eclass_num_faces[(int) eclass];
+    //int num_vertices = t8_eclass_num_vertices[eclass];
+
+    const std::span<const t8_gloidx_t> global_vertices_of_tree
+      = cmesh->vertex_connectivity->get_global_vertices_of_tree (i_tree);
+    for (int i_face = 0; i_face < num_faces; i_face++) {
+      const int vertex_per_face = t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_face]];
+      if (!t8_cmesh_tree_face_is_boundary (cmesh, i_tree, i_face))
+        for (int count = 0; count < vertex_per_face; count++) {
+          if (auto search
+              = boundary_node_list.find (global_vertices_of_tree[t8_face_vertex_to_tree_vertex[eclass][i_face][count]]);
+              search == boundary_node_list.end ()) {
+            non_boundary_node_list.insert (
+              global_vertices_of_tree[t8_face_vertex_to_tree_vertex[eclass][i_face][count]]);
+          }
+        }
+    }
+  }
+
   return boundary_node_list;
 }
 

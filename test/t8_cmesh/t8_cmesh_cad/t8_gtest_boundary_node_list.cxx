@@ -47,12 +47,14 @@ class t8_test_boundary_node_list: public testing::Test {
   t8_cmesh_t cmesh;
 };
 
-TEST_F (t8_test_boundary_node_list, some_random_ass_name)
+TEST_F (t8_test_boundary_node_list, boundary_node_list_test)
 {
   std::unordered_set<t8_gloidx_t> boundary_list = cmesh->boundary_node_list->get_boundary_node_list ();
   const int num_boundary_nodes = cmesh->boundary_node_list->get_boundary_node_list ().size ();
+  std::unordered_set<t8_gloidx_t> expected_boundary_list = { 0, 1, 2, 3, 5, 6, 8, 11, 12, 13 };
 
   EXPECT_TRUE (cmesh->compute_boundary_node_list);
   EXPECT_TRUE (num_boundary_nodes == 10);
+  EXPECT_TRUE (expected_boundary_list == boundary_list);
   EXPECT_TRUE (t8_cmesh_is_committed (cmesh));
 }

@@ -34,9 +34,9 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
-#include <TopExp_Explorer.hxx>
 #include <TopAbs.hxx>
 #include <TopoDS.hxx>
+#include <TopExp.hxx>
 #include <BRep_Tool.hxx>
 #include <Standard_Real.hxx>
 #include <unordered_map>
@@ -48,62 +48,62 @@ t8_boundary_node_geom_data_map::t8_boundary_node_geom_data_map (TopoDS_Shape &sh
   : shape (shape_in), cmesh (cmesh_in), tolerance (tolerance)
 {
   T8_ASSERT (cmesh->boundary_node_list != nullptr);
+  TopExp::MapShapes (shape, TopAbs_VERTEX, cad_shape_vertex_map);
+  TopExp::MapShapes (shape, TopAbs_EDGE, cad_shape_edge_map);
+  TopExp::MapShapes (shape, TopAbs_FACE, cad_shape_face_map);
   boundary_node_list = cmesh->boundary_node_list->get_boundary_node_list ();
   T8_ASSERT (boundary_node_list.size () != 0);
-  printf ("size = %ld\n", boundary_node_list.size ());
+  t8_debugf ("Boundary Node List Size = %ld\n", boundary_node_list.size ());
   compute_geom_data_map ();
 }
 
 void
 t8_boundary_node_geom_data_map::compute_geom_data_map ()
 {
-  TopExp_Explorer dora;
-  int tag_count = 1;
-  for (dora.Init (shape, TopAbs_VERTEX); dora.More (); dora.Next (), tag_count++) {
-    const gp_Pnt point = BRep_Tool::Pnt (TopoDS::Vertex (dora.Current ()));
-    const double cad_x_val = point.X ();
-    const double cad_y_val = point.Y ();
-    const double cad_z_val = point.Z ();
+  for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
+    const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
+    t8_locidx_t local_tree_id = tree_list.at (0).first;
+    int local_vertex_id = tree_list.at (0).second;
+    double *vertices = (double *) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
+    const double cmesh_x_val = vertices[3 * local_vertex_id];
+    const double cmesh_y_val = vertices[3 * local_vertex_id + 1];
+    const double cmesh_z_val = vertices[3 * local_vertex_id + 2];
 
-    for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
-      const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
-      t8_locidx_t local_tree_id = tree_list.at (0).first;
-      int local_vertex_id = tree_list.at (0).second;
-      double *vertices = (double *) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
-      const double cmesh_x_coords = vertices[3 * local_vertex_id];
-      const double cmesh_y_coords = vertices[3 * local_vertex_id + 1];
-      const double cmesh_z_coords = vertices[3 * local_vertex_id + 2];
+    auto vertex_iter = cad_shape_vertex_map.cbegin ();
+    for (; vertex_iter != cad_shape_vertex_map.cend (); ++vertex_iter) {
+      const gp_Pnt point = BRep_Tool::Pnt (TopoDS::Vertex (*vertex_iter));
+      const double cad_x_val = point.X ();
+      const double cad_y_val = point.Y ();
+      const double cad_z_val = point.Z ();
 
-      const double dist = abs (sqrt (pow (cmesh_x_coords, 2) + pow (cmesh_y_coords, 2) + pow (cmesh_z_coords, 2))
-                               - sqrt (pow (cad_x_val, 2) + pow (cad_y_val, 2) + pow (cad_z_val, 2)));
+      const double dx = cmesh_x_val - cad_x_val;
+      const double dy = cmesh_y_val - cad_y_val;
+      const double dz = cmesh_z_val - cad_z_val;
+
+      const double dist = sqrt (dx * dx + dy * dy + dz * dz);
 
       if (dist <= tolerance) {
         t8_geom_data temp_geom_data;
         temp_geom_data.entity_dim = 0;
-        temp_geom_data.entity_tag = tag_count;
+        temp_geom_data.entity_tag = cad_shape_vertex_map.FindIndex (*vertex_iter);
         temp_geom_data.location_on_curve = { -1, -1 };
 
-        boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
+        boundary_node_geom_data_map.insert ({ *iter, temp_geom_data });
+        break;  //break early out of loop if found
       }
     }
-  }
-  t8_debugf ("Vertices added\n");
 
-  tag_count = 1;
-  for (dora.Init (shape, TopAbs_EDGE); dora.More (); dora.Next (), tag_count++) {
-    Standard_Real first, last;
-    if (!BRep_Tool::Degenerated (TopoDS::Edge (dora.Current ()))) {
-      Handle (Geom_Curve) geomCurve = BRep_Tool::Curve (TopoDS::Edge (dora.Current ()), first, last);
-      for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
-        const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
-        t8_locidx_t local_tree_id = tree_list.at (0).first;
-        int local_vertex_id = tree_list.at (0).second;
-        double *vertices = (double *) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
-        const double cmesh_x_coords = vertices[3 * local_vertex_id];
-        const double cmesh_y_coords = vertices[3 * local_vertex_id + 1];
-        const double cmesh_z_coords = vertices[3 * local_vertex_id + 2];
+    if (vertex_iter != cad_shape_vertex_map.cend ()) {
+      continue;
+    }
 
-        const gp_Pnt vertex (cmesh_x_coords, cmesh_y_coords, cmesh_z_coords);
+    auto edge_iter = cad_shape_edge_map.cbegin ();
+    for (; edge_iter != cad_shape_edge_map.cend (); ++edge_iter) {
+      Standard_Real first, last;
+      gp_Pnt test_pnt;
+      if (!BRep_Tool::Degenerated (TopoDS::Edge (*edge_iter))) {
+        Handle (Geom_Curve) geomCurve = BRep_Tool::Curve (TopoDS::Edge (*edge_iter), first, last);
+        const gp_Pnt vertex (cmesh_x_val, cmesh_y_val, cmesh_z_val);
 
         GeomAPI_ProjectPointOnCurve projection (vertex, geomCurve);
         projection.Perform (vertex);
@@ -112,29 +112,24 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
           if (dist <= tolerance) {
             t8_geom_data temp_geom_data;
             temp_geom_data.entity_dim = 1;
-            temp_geom_data.entity_tag = tag_count;
+            temp_geom_data.entity_tag = cad_shape_edge_map.FindIndex (*edge_iter);
             temp_geom_data.location_on_curve = { projection.LowerDistanceParameter (), -1 };
 
-            boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
+            boundary_node_geom_data_map.insert ({ *iter, temp_geom_data });
+            break;
           }
         }
       }
     }
-  }
 
-  tag_count = 1;
-  for (dora.Init (shape, TopAbs_FACE); dora.More (); dora.Next (), tag_count++) {
-    Handle (Geom_Surface) surfer = BRep_Tool::Surface (TopoDS::Face (dora.Current ()));
-    for (auto iter = boundary_node_list.begin (); iter != boundary_node_list.end (); ++iter) {
-      const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*iter);
-      t8_locidx_t local_tree_id = tree_list.at (0).first;
-      int local_vertex_id = tree_list.at (0).second;
-      double *vertices = (double *) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
-      const double cmesh_x_coords = vertices[3 * local_vertex_id];
-      const double cmesh_y_coords = vertices[3 * local_vertex_id + 1];
-      const double cmesh_z_coords = vertices[3 * local_vertex_id + 2];
+    if (edge_iter != cad_shape_edge_map.cend ()) {
+      continue;
+    }
 
-      const gp_Pnt vertex (cmesh_x_coords, cmesh_y_coords, cmesh_z_coords);
+    auto face_iter = cad_shape_face_map.cbegin ();
+    for (; face_iter != cad_shape_face_map.cend (); ++face_iter) {
+      Handle (Geom_Surface) surfer = BRep_Tool::Surface (TopoDS::Face (*face_iter));
+      const gp_Pnt vertex (cmesh_x_val, cmesh_y_val, cmesh_z_val);
 
       GeomAPI_ProjectPointOnSurf projection (vertex, surfer);
       projection.Perform (vertex);
@@ -146,15 +141,19 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
           projection.LowerDistanceParameters (u, v);
           t8_geom_data temp_geom_data;
           temp_geom_data.entity_dim = 2;
-          temp_geom_data.entity_tag = tag_count;
+          temp_geom_data.entity_tag = cad_shape_face_map.FindIndex (*face_iter);
           temp_geom_data.location_on_curve = { u, v };
 
-          boundary_node_geom_data_map.try_emplace (*iter, temp_geom_data);
+          boundary_node_geom_data_map.insert ({ *iter, temp_geom_data });
+          break;
         }
       }
     }
+
+    if (face_iter != cad_shape_face_map.cend ()) {
+      continue;
+    }
   }
-  t8_debugf ("Faces added\n");
 }
 
 std::unordered_map<t8_gloidx_t, t8_geom_data>

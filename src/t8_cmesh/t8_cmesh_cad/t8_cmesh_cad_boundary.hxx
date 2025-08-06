@@ -32,35 +32,65 @@
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <TopoDS.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
 #include <unordered_map>
 #include <unordered_set>
 #include <array>
 
+/**
+ *  Struct to store geometric data
+ */
 struct t8_geom_data
 {
-  int entity_dim;
-  int entity_tag;
-  std::array<double, 2> location_on_curve;
+  int entity_dim; /**< The entity's dimension (vertex->0, curve->1, surface->2) */
+  int entity_tag; /**< The entity's key in its corresponding dimensional entity map */
+  std::array<double, 2>
+    location_on_curve; /**< Parameters if point was projected -> (0D -> {-1, -1}, 1D -> {u, -1}, 2D -> {u, v}) */
 };
 
 class t8_boundary_node_geom_data_map {
  public:
-  t8_boundary_node_geom_data_map (TopoDS_Shape& shape_in, t8_cmesh_t cmesh_in, double tolerance);
+  /** Constructor from a given CAD geometry and a corresponding commited cmesh. 
+  * 
+  * \param [in] shape_in    A CAD geometry
+  * \param [in] cmesh_in    A commited cmesh
+  * \param [in] tolerance   A user defined tolerance to specify the precision of the boundary node remapping. Defaulted to 1e-7.
+  * 
+  */
+  t8_boundary_node_geom_data_map (TopoDS_Shape& shape_in, t8_cmesh_t cmesh_in, double tolerance = 1e-7);
 
+  /** Getter function for the geometry data map
+   * 
+   * \return    A std::unordered_map with multiple pairs of global node ID as the key and a t8_geom_data struct as the value
+   * 
+   */
   std::unordered_map<t8_gloidx_t, t8_geom_data>
   get_boundary_node_geom_data_map ();
 
  private:
+  /** Function to fill the \a t8_boundary_node_geom_data_map */
   void
   compute_geom_data_map ();
 
+  /* CAD Geometry and corresponding mesh */
   TopoDS_Shape& shape;
   t8_cmesh_t cmesh;
+
+  /* User specified tolerance */
   double tolerance;
+
+  /* Empty map to be filled on construction */
   t8_geom_data geom_data;
+
+  /* Boundary node list of the given cmesh */
   std::unordered_set<t8_gloidx_t> boundary_node_list;
 
+  /*Hashmap with key-value pairs of global_index - geom_data*/
   std::unordered_map<t8_gloidx_t, t8_geom_data> boundary_node_geom_data_map;
+
+  TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
+  TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
+  TopTools_IndexedMapOfShape cad_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
 };
 
 #endif /* T8_CMESH_CAD */

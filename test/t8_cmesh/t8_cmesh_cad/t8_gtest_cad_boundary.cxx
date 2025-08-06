@@ -31,10 +31,13 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
 #include <BRep_Tool.hxx>
 #include <TopoDS_Shape.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
 #include <TopExp.hxx>
 #include <t8_cmesh_readmshfile.h>
 #include <TopTools_IndexedMapOfShape.hxx>
@@ -82,15 +85,106 @@ class t8_gtest_cad_boundary: public testing::Test {
   t8_cmesh_t cmesh;
 };
 
-TEST_F (t8_gtest_cad_boundary, some_random_ass_name)
+TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
 {
-  t8_boundary_node_geom_data_map boundary_node_map = t8_boundary_node_geom_data_map (cad_shape, cmesh, 1e-6);
+  double tolerance = 1e-6;
+
+  t8_boundary_node_geom_data_map boundary_node_map = t8_boundary_node_geom_data_map (cad_shape, cmesh, tolerance);
   std::unordered_map geom_data_map = boundary_node_map.get_boundary_node_geom_data_map ();
   t8_debugf ("Geom Data Map Created with the size %lu\n", geom_data_map.size ());
+  ASSERT_EQ (cmesh->boundary_node_list->get_boundary_node_list ().size (), geom_data_map.size ());
+
   for (auto iter : geom_data_map) {
-    if (iter.second.entity_dim == 2) {
-      Handle_Geom_Surface surface
-        = BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (iter.second.entity_tag)));
+
+    gp_Pnt point;
+    const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (iter.first);
+    t8_locidx_t local_tree_id = tree_list.at (0).first;
+    int local_vertex_id = tree_list.at (0).second;
+    double* vertices = (double*) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
+    const double cmesh_x_coords = vertices[3 * local_vertex_id];
+    const double cmesh_y_coords = vertices[3 * local_vertex_id + 1];
+    const double cmesh_z_coords = vertices[3 * local_vertex_id + 2];
+
+    if (iter.second.entity_dim == 0) {
+      try {
+        // Check that entity_tag is a valid index in the edge map
+        ASSERT_GE (iter.second.entity_tag, 1) << "entity_tag index too low";
+        ASSERT_LE (iter.second.entity_tag, cad_shape_vertex_map.Extent ()) << "entity_tag index too high";
+
+        point = BRep_Tool::Pnt (TopoDS::Vertex (cad_shape_vertex_map.FindKey (iter.second.entity_tag)));
+
+        //ASSERT_FALSE (point.IsNull ()) << "Null curve handle for edge " << iter.second.entity_tag;
+
+        double dx = cmesh_x_coords - point.X ();
+        double dy = cmesh_y_coords - point.Y ();
+        double dz = cmesh_z_coords - point.Z ();
+
+        double dist = std::sqrt (dx * dx + dy * dy + dz * dz);
+
+        EXPECT_LE (dist, tolerance) << "Distance exceeds tolerance for edge " << iter.second.entity_tag;
+
+      } catch (const Standard_Failure& e) {
+        FAIL () << "Open CASCADE exception: " << e.GetMessageString ();
+      } catch (...) {
+        FAIL () << "Unknown exception caught during curve evaluation";
+      }
+    }
+
+    if (iter.second.entity_dim == 1) {
+      try {
+        Standard_Real first, last;
+
+        // Check that entity_tag is a valid index in the edge map
+        ASSERT_GE (iter.second.entity_tag, 1) << "entity_tag index too low";
+        ASSERT_LE (iter.second.entity_tag, cad_shape_edge_map.Extent ()) << "entity_tag index too high";
+
+        TopoDS_Edge edge = TopoDS::Edge (cad_shape_edge_map.FindKey (iter.second.entity_tag));
+        Handle (Geom_Curve) curve = BRep_Tool::Curve (edge, first, last);
+
+        ASSERT_FALSE (curve.IsNull ()) << "Null curve handle for edge " << iter.second.entity_tag;
+
+        curve->D0 (iter.second.location_on_curve[0], point);
+
+        double dx = cmesh_x_coords - point.X ();
+        double dy = cmesh_y_coords - point.Y ();
+        double dz = cmesh_z_coords - point.Z ();
+
+        double dist = std::sqrt (dx * dx + dy * dy + dz * dz);
+
+        EXPECT_LE (dist, tolerance) << "Distance exceeds tolerance for edge " << iter.second.entity_tag;
+
+      } catch (const Standard_Failure& e) {
+        FAIL () << "Open CASCADE exception: " << e.GetMessageString ();
+      } catch (...) {
+        FAIL () << "Unknown exception caught during curve evaluation";
+      }
+    }
+    else if (iter.second.entity_dim == 2) {
+      try {
+        // Check that entity_tag is a valid index in the edge map
+        ASSERT_GE (iter.second.entity_tag, 1) << "entity_tag index too low";
+        ASSERT_LE (iter.second.entity_tag, cad_shape_face_map.Extent ()) << "entity_tag index too high";
+
+        TopoDS_Face face = TopoDS::Face (cad_shape_face_map.FindKey (iter.second.entity_tag));
+        Handle_Geom_Surface surface = BRep_Tool::Surface (face);
+
+        ASSERT_FALSE (surface.IsNull ()) << "Null curve handle for edge " << iter.second.entity_tag;
+
+        surface->D0 (iter.second.location_on_curve[0], iter.second.location_on_curve[1], point);
+
+        double dx = cmesh_x_coords - point.X ();
+        double dy = cmesh_y_coords - point.Y ();
+        double dz = cmesh_z_coords - point.Z ();
+
+        double dist = std::sqrt (dx * dx + dy * dy + dz * dz);
+
+        EXPECT_LE (dist, tolerance) << "Distance exceeds tolerance for edge " << iter.second.entity_tag;
+
+      } catch (const Standard_Failure& e) {
+        FAIL () << "Open CASCADE exception: " << e.GetMessageString ();
+      } catch (...) {
+        FAIL () << "Unknown exception caught during curve evaluation";
+      }
     }
   }
 }
