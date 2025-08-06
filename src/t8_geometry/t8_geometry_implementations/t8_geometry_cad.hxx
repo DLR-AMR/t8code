@@ -34,7 +34,7 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 #include <t8_data/t8_cad.hxx>
-
+#include <memory>
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
 #include <gp_Pnt.hxx>
@@ -142,7 +142,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
     return true;
   }
 
-  t8_cad *
+  std::shared_ptr<t8_cad>
   get_cad_manager () const
   {
     return cad_manager;
@@ -212,7 +212,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   const int *edges; /**< The linked edges of the currently active tree. */
   const int *faces; /**< The linked faces of the currently active tree. */
 
-  t8_cad *cad_manager; /**< The CAD manager of the geometry. */
+  std::shared_ptr<t8_cad> cad_manager; /**< The CAD manager of the geometry. */
 
   gp_Pnt
   process_curve (const int edge_index, const double interpolated_curve_param) const;

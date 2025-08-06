@@ -33,13 +33,10 @@
 #include <TopoDS_Face.hxx>
 #include <Standard_Version.hxx>
 
-//#if T8_ENABLE_OCC
-
 t8_cad::t8_cad (std::string fileprefix)
 {
   BRep_Builder builder;
-  std::string current_file (fileprefix);
-  std::ifstream is (current_file + ".brep");
+  std::ifstream is (fileprefix + ".brep");
   if (is.is_open () == false) {
     SC_ABORTF ("Cannot find the file %s.brep.\n", fileprefix.c_str ());
   }
@@ -303,4 +300,3 @@ t8_cad::t8_geom_is_surface_closed (int geometry_index, int parameter) const
     break;
   }
 }
-//#endif /* T8_ENABLE_OCC */

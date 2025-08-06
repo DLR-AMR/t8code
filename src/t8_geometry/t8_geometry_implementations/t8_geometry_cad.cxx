@@ -51,13 +51,13 @@ const int t8_face_ref_coords_tet[4][2] = { { 2, 1 }, { 0, 1 }, { 0, 1 }, { 0, 2 
 
 t8_geometry_cad::t8_geometry_cad (std::string fileprefix, std::string name_in): t8_geometry_with_vertices (name_in)
 {
-  cad_manager = new t8_cad (fileprefix);
+  cad_manager = std::make_shared<t8_cad> (fileprefix);
 }
 
 t8_geometry_cad::t8_geometry_cad (const TopoDS_Shape cad_shape, std::string name_in)
   : t8_geometry_with_vertices (name_in)
 {
-  cad_manager = new t8_cad (cad_shape);
+  cad_manager = std::make_shared<t8_cad> (cad_shape);
 }
 
 t8_geometry_cad::t8_geometry_cad (): t8_geometry_with_vertices ("t8_geom_cad")
