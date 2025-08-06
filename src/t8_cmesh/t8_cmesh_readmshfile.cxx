@@ -992,24 +992,24 @@ t8_store_element_node_data (t8_cmesh_t cmesh, t8_gloidx_t tree_count,
  *
  * \param [in, out] cmesh The computational mesh to which the tree belongs.
  * \param [in] eclass The element class of the tree (e.g., triangle, quadrilateral, tetrahedron).
- * \param [in] tree_nodes An array of nodes representing the vertices of the tree.
- * \param [in] cad_geometry_base A pointer to the CAD-based geometry object.
  * \param [in] dim The dimension of the geometry (e.g., 2D or 3D).
- * \param [in] face_nodes An array of nodes representing the faces of the tree.
  * \param [in] tree_count The index of the tree in the computational mesh.
- * \param [in] edge_nodes An array of nodes representing the edges of the tree.
+ * \param [in] cad_geometry_base A pointer to the CAD-based geometry object.
  * \param [in] linear_geometry_base A pointer to the linear geometry object.
+ * \param [in] tree_nodes An array of nodes representing the vertices of the tree.
+ * \param [in] face_nodes An array of nodes representing the faces of the tree.
+ * \param [in] edge_nodes An array of nodes representing the edges of the tree.
  *
  * \return std::optional<t8_msh_tree_vertex_indices>
  *         - Returns a valid `t8_msh_tree_vertex_indices` object if the tree geometry is successfully processed.
  *         - Returns 0 if the geometry processing fails.
  */
 static bool
-t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass,
+t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t8_gloidx_t tree_count,
+                                const t8_geometry_c *cad_geometry_base, const t8_geometry_c *linear_geometry_base,
                                 std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS> tree_nodes,
-                                const t8_geometry_c *cad_geometry_base, const int dim, t8_msh_file_node face_nodes[],
-                                t8_gloidx_t tree_count, t8_msh_file_node edge_nodes[],
-                                const t8_geometry_c *linear_geometry_base)
+                                std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS_2D> face_nodes,
+                                std::array<t8_msh_file_node, 2> edge_nodes)
 {
   /* Calculate the parametric geometries of the tree */
   T8_ASSERT (cad_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD);
@@ -1017,7 +1017,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass,
   /* Check for right element class */
   if (eclass != T8_ECLASS_TRIANGLE && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX && eclass != T8_ECLASS_TET
       && eclass != T8_ECLASS_PRISM) {
-    t8_errorf ("%s element detected. The cad geometry currently only supports quad, tri, hex and prism elements.",
+    t8_errorf ("%s element detected. The cad geometry currently only supports quad, tri, hex, tet and prism elements.",
                t8_eclass_to_string[eclass]);
     return 0;
   }
@@ -1709,8 +1709,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         }
         else {
 #if T8_ENABLE_OCC
-          if (!t8_cmesh_process_tree_geometry (cmesh, eclass, tree_nodes, cad_geometry_base, dim, face_nodes,
-                                               tree_count, edge_nodes, linear_geometry_base)) {
+          if (!t8_cmesh_process_tree_geometry (cmesh, eclass, dim, tree_count, cad_geometry_base, linear_geometry_base,
+                                               tree_nodes, face_nodes, edge_nodes)) {
             free (line);
             t8_cmesh_destroy (&cmesh);
             return std::nullopt;
