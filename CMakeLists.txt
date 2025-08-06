@@ -191,26 +191,19 @@ else()
 
     if(MPI_HEADER_FOUND)
         # Create a temporary C++ source file to check for OpenMPI-specific macros
-        file(WRITE ${CMAKE_BINARY_DIR}/test_mpi.cpp "
+        include(CheckCXXSourceCompiles)
+        check_cxx_source_compiles("
         #include <mpi.h>
         #ifndef OPEN_MPI
         #error 'Not OpenMPI'
         #endif
-        int main() { return 0; }")
+        int main() { return 0; }" HAS_OPENMPI)
 
-        # Try compiling the test
-        try_compile(HAS_OPENMPI
-                    ${CMAKE_BINARY_DIR}
-                    ${CMAKE_BINARY_DIR}/test_mpi.cpp
-                    OUTPUT_VARIABLE _OUTPUT)
         if(HAS_OPENMPI)
             message(STATUS "OpenMPI detected via mpi.h")
             # Suppress warning
             target_compile_options(SC::SC INTERFACE -Wno-error=cast-function-type)
         endif()
-
-        # Clean up temporary test file
-        file(REMOVE ${CMAKE_BINARY_DIR}/test_mpi.cpp)
     else()
         message(WARNING "mpi.h not found!")
     endif()
