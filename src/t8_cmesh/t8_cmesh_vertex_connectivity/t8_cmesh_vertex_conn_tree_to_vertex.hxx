@@ -46,9 +46,12 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <span>
 
-/* forward declaration of ttv class needed since the two class headers include each other. */
+/** forward declaration of ttv class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_vertex_to_tree;
 
+/**
+ * A class to hold the tree to vertex connectivity of a cmesh.
+ */
 class t8_cmesh_vertex_conn_tree_to_vertex {
  public:
   /** Standard constructor. Does nothing. */
@@ -86,8 +89,8 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   /* Setter functions */
   /** Set all global vertex ids of a local tree.
    * \param [in] cmesh The considered cmesh
-   * \param [in] local_tree A local tree id of \a cmesh
-   * \param [in] global_vertex_id The ids of the global vertices in order of \a local_tree's vertices.
+   * \param [in] global_tree A global tree id of \a cmesh
+   * \param [in] global_tree_vertices The ids of the global vertices in order of \a local_tree's vertices.
    * \param [in] num_vertices Must match the number of vertices of \a local_tree
    *
    * \note \a cmesh must not be committed.
@@ -119,7 +122,6 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   /** Return the global vertex indices of a local tree.
    * \param [in] cmesh A committed cmesh.
    * \param [in] local_tree A local tree in \a cmesh.
-   * \param [in] num_vertices The count of local vertices of \a local_tree
    * \return An array of length \a num_vertices containing the global vertex ids of \a local_tree's vertices.
   */
   inline const std::span<const t8_gloidx_t>
