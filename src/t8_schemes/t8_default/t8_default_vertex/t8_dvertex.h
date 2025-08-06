@@ -41,8 +41,13 @@
 /** The length of a vertex root tree */
 #define T8_DVERTEX_ROOT_LEN 0
 
-/** The maximum refinement level allowed for a vertex. */
-#define T8_DVERTEX_MAXLEVEL 255
+/** The maximum refinement level allowed for a vertex.
+ * The max level is lower than 255 so that we can use \ref t8_element_level (uint8_t)
+ * to iterate to maxlevel:
+ * for (t8_element_level level = 0; level <= T8_DVERTEX_MAXLEVEL; ++level)
+ * Otherwise, t8_element_level would overflow after 255 and we would have an infinite loop.
+*/
+#define T8_DVERTEX_MAXLEVEL 254
 
 typedef struct t8_dvertex
 {

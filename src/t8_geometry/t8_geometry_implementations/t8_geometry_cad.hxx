@@ -21,8 +21,8 @@
 */
 
 /** \file t8_geometry_cad.hxx
- * This geometry implements OpenCASCADE geometries. It enables the option to link different 
- * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees. 
+ * This geometry implements OpenCASCADE geometries. It enables the option to link different
+ * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees.
  * The geometry of the refinement tree is extended into the volume accordingly.
  */
 
@@ -67,7 +67,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * additional geometry information, which is given via the \a cad_shape.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * This constructor can be used in short scripts or in combination with a
-   * mesh generator, to omit the file IO of the 
+   * mesh generator, to omit the file IO of the
    * \ref t8_geometry_cad (std::string fileprefix,  std::string name) constructor.
    * \param [in] cad_shape  cad shape geometry.
    * \param [in] name       The name to give this geometry.
@@ -122,7 +122,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
-   * evaluated. You can use it for example to load the vertex coordinates of the 
+   * evaluated. You can use it for example to load the vertex coordinates of the
    * tree into an internal buffer (as is done in the linear geometry).
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
@@ -255,12 +255,12 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   /** Converts the parameters of an cad edge to the corresponding parameters on an cad face.
    * The edge has to lie on the face.
    * For the conversion of edge parameters of mesh elements to topological face parameters of a closed surface, it is additionally
-   * checked, whether the conversion was correct, to prevent disorted elements. 
+   * checked, whether the conversion was correct, to prevent disorted elements.
    * \param [in]  edge_index     The index of the cad edge, which parameters should be converted to face parameters.
    * \param [in]  face_index     The index of the cad face, on to which the edge parameters should be converted.
    * \param [in]  num_face_nodes The number of the face nodes of the evaluated element. Only needed for closed surface check, otherwise NULL.
    * \param [in]  edge_param     The parameter on the edge.
-   * \param [in]  surface_param  The parameters of the surface nodes.
+   * \param [in]  surface_params The parameters of the surface nodes.
    *                             When provided, there are additional checks for closed geometries.
    *                             If there are no surface parameter
    *                             to pass in to the function, you can pass NULL.
@@ -272,7 +272,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
                                              double *face_params) const;
 
   /** Finds the parametric bounds of an cad face.
-   * \param [in]  face_index   The index of the cad face.
+   * \param [in]  surface_index   The index of the cad face.
    * \param [out] bounds          The parametric bounds of the cad face.
    */
   void
@@ -295,7 +295,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   /** Checks if a surface is closed in its U parameter or V parameter.
    * \param [in]  geometry_index   The index of the closed geometry.
    * \param [in]  parameter        The parameter, which should be check for closeness.
-   *                               0 stands for the U parameter and 1 for the V parameter. 
+   *                               0 stands for the U parameter and 1 for the V parameter.
    * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
    */
   int
@@ -327,7 +327,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
                              double *out_coords) const;
 
   /**
-   * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for tet trees.
+   * Map a point in the reference space \f$ [0,1]^3 \f$ to \f$ \mathbb R^3 \f$. Only for tet trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.

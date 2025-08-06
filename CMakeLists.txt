@@ -131,11 +131,11 @@ if( T8CODE_ENABLE_OCC )
 endif( T8CODE_ENABLE_OCC )
 
 if( T8CODE_ENABLE_NETCDF )
-    find_package( netCDF REQUIRED )
-    if(netCDF_FOUND)
-        message("Found netCDF")
+    find_package( NetCDF REQUIRED )
+    if(NetCDF_FOUND)
+        message("Found NetCDF")
         include(cmake/CheckNetCDFPar.cmake)
-    endif (netCDF_FOUND)
+    endif (NetCDF_FOUND)
 endif( T8CODE_ENABLE_NETCDF )
 
 # Override default for this libsc option
