@@ -2883,7 +2883,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
         forest->do_ghost = 1;
       }
       else {
-        SC_ABORT ("Want to aktivat ghost, without ghost_definition.\n");
+        SC_ABORT ("Want to activate ghost, without ghost_definition.\n");
       }
     }
     else {

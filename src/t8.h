@@ -289,7 +289,7 @@ t8_init (int log_threshold);
 void *
 t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it);
 
-/** Return values for subroutines, if they failed */
+/** Return values for subroutines to indicate if they fail or success. */
 #define T8_SUBROUTINE_SUCCESS 1 /* true */
 #define T8_SUBROUTINE_FAILURE 0 /* false */
 

@@ -24,7 +24,7 @@
 
 /* Writes the pvtu header file that links to the processor local files.
  * This function should only be called by one process.
- * Return T8_SUBROUTINE_SUCCESS on success. */
+ * Return T8_SUBROUTINE_SUCCESS on success and T8_SUBROUTINE_FAILURE on failure. */
 int
 t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_rank, int write_level, int write_id,
                int num_data, t8_vtk_data_field_t *data)

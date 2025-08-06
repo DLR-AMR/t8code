@@ -177,7 +177,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* if the set_from forest of the current forest has no ghost layer computed,
    * compute a ghost layer for the set_from forest */
   if (forest->set_from->ghosts == NULL) {
-    /* If the forest does not yet have a ghost_definition or it is not supported */
+    /* Check if the forest has a ghost_definition and that it is supported. */
     t8_forest_ghost_definition_c *temp_ghost_definition;
     if (forest->set_from->ghost_definition == NULL) {
       t8_debugf ("Forest has ghosts but no ghost definition for balance.\n");

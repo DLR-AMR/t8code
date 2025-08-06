@@ -21,7 +21,7 @@
 */
 
 /** \file t8_forest_ghost_definition_base.hxx
- * Implements the base class to create ghosts definitions.
+ * Implements the base class to create ghost definitions.
  */
 
 #ifndef T8_FOREST_GHOST_DEFINITION_BASE_HXX
@@ -46,9 +46,9 @@ struct t8_forest_ghost_definition
 {
  public:
   /**
-   * Constructor:
-   * Creates t8_forest_ghost_definition of type non
-   * init the refcout
+   * Constructor.
+   * Creates a t8_forest_ghost_definition of type T8_GHOST_NONE.
+   * Initializes the refcount.
    */
   t8_forest_ghost_definition ()
   {
@@ -57,7 +57,7 @@ struct t8_forest_ghost_definition
 
   /**
    * Destructor.
-   * unref the refcout
+   * Unref the refcount.
    */
   virtual ~t8_forest_ghost_definition ()
   {
@@ -113,7 +113,7 @@ struct t8_forest_ghost_definition
  protected:
   /**
    * Compute and collect ownerships to create the necessary offset
-   * for elements, trees and first descandance
+   * for elements, trees and first descendant.
    * Use memory_flag to record the allocation of memory
    * \note this function could be used in do_ghost
    */
@@ -142,13 +142,14 @@ struct t8_forest_ghost_definition
   }
 
   /**
-   * Constructor for the derivided classes to set the correkt type for them.
+   * Constructor for the derived classes to set the correct type for them.
    * \param [in] g_type   The type (faces, edges, userdefind, ...) of the ghost_definition
    */
   explicit t8_forest_ghost_definition (t8_ghost_type_t g_type): ghost_type (g_type)
   {
     init ();
   };
+  
   /** type of the ghost_definition */
   t8_ghost_type_t ghost_type { T8_GHOST_NONE };
   /** The reference count of the ghost_definition. TODO: Replace by shared_ptr when forest becomes a class. */

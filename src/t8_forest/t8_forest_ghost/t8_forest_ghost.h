@@ -64,7 +64,7 @@ typedef struct
  */
 
 /* TODO: document */
-/* returns 0 if ghost structure doesnt exist */
+/* returns 0 if ghost structure doesn't exist */
 t8_locidx_t
 t8_forest_ghost_num_trees (const t8_forest_t forest);
 

@@ -58,7 +58,7 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
    * If do_ghost is called on this object,
    * the ghost layer will be created with a tree-based search (t8_forest_search)
    * with \a search_function as callback function.
-   * \param search_function   The function used for the call bac
+   * \param search_function   The function used for the callback.
    */
   explicit t8_forest_ghost_definition_w_search (t8_forest_search_fn search_function,
                                                 t8_forest_ghost_search_data *search_data)
@@ -90,7 +90,7 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
   search_for_ghost_elements (t8_forest_t forest);
 
   /**
-   * Constructor for the derivided classes to set the type and the search_function.
+   * Constructor for the derived classes to set the type and the search_function.
    * \param [in] ghost_type       The type (faces, edges, user defined, ...) of the ghost_definition
    * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in search_for_ghost_elements
    * \param [in] search_data      Persistent data which can be used during the search. Ghost takes ownership of the data.
