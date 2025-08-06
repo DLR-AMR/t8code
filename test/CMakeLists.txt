@@ -25,7 +25,7 @@ target_include_directories( gtest SYSTEM PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../thi
 # The test executable is built from the provided source files.
 function( add_t8_test )
     set( options "" )
-    set( oneValueArgs "NAME" )  
+    set( oneValueArgs "NAME" )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
@@ -40,7 +40,7 @@ function( add_t8_test )
 
     # Check if test is a Fortran file and if MPI is enabled.
     string ( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file  )
-    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI ) 
+    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI )
       target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
       target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread MPI::MPI_Fortran )
     else()
@@ -77,7 +77,7 @@ function( add_t8_test )
         # Extent time that a single test is allowed to run to collect coverage information (as this naturally takes more time).
         # The default timeout of 1500 seconds is actually exceeded for some tests.
         # Without the collection of coverage information, an extension of the default timeout is not needed.
-        set_tests_properties(${ADD_T8_TEST_NAME} PROPERTIES TIMEOUT 3000) 
+        set_tests_properties(${ADD_T8_TEST_NAME} PROPERTIES TIMEOUT 3000)
     endif ( T8CODE_CODE_COVERAGE )
 endfunction()
 
@@ -86,7 +86,7 @@ endfunction()
 # Common test sources are t8_gtest_main.cpp and t8_gtest_memory_macros.cxx
 function ( add_t8_cpp_test)
     set( options "" )
-    set( oneValueArgs "NAME" )  
+    set( oneValueArgs "NAME" )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_CPP_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
@@ -122,7 +122,6 @@ add_t8_cpp_test( NAME t8_gtest_cmesh_partition_parallel                     SOUR
 add_t8_cpp_test( NAME t8_gtest_cmesh_set_partition_offsets_parallel         SOURCES t8_cmesh/t8_gtest_cmesh_set_partition_offsets.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_set_join_by_vertices_serial            SOURCES t8_cmesh/t8_gtest_cmesh_set_join_by_vertices.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_add_attributes_when_derive_parallel    SOURCES t8_cmesh/t8_gtest_cmesh_add_attributes_when_derive.cxx )
-add_t8_cpp_test( NAME t8_gtest_cmesh_tree_vertices_negative_volume_serial   SOURCES t8_cmesh/t8_gtest_cmesh_tree_vertices_negative_volume.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_vertex_conn_tree_to_vertex_parallel    SOURCES t8_cmesh/t8_gtest_cmesh_vertex_conn_tree_to_vertex.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_vertex_conn_vertex_to_tree_parallel    SOURCES t8_cmesh/t8_gtest_cmesh_vertex_conn_vertex_to_tree.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_vertex_conn_serial                     SOURCES t8_cmesh/t8_gtest_cmesh_vertex_conn.cxx )
@@ -154,6 +153,10 @@ add_t8_cpp_test( NAME t8_gtest_recursive_serial             SOURCES t8_forest_in
 add_t8_cpp_test( NAME t8_gtest_iterate_replace_parallel     SOURCES t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
 add_t8_cpp_test( NAME t8_gtest_empty_local_tree_parallel    SOURCES t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_cpp_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
+
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    add_t8_cpp_test( NAME t8_gtest_geometry_negative_volume_serial      SOURCES t8_geometry/t8_gtest_geometry_negative_volume.cxx )
+endif()
 
 if( T8_ENABLE_OCC )
     add_t8_cpp_test( NAME t8_gtest_geometry_cad_serial                  SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
