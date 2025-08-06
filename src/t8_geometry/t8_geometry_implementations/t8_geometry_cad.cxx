@@ -27,8 +27,6 @@
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 
-#if T8_ENABLE_OCC
-
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepTools.hxx>
@@ -147,7 +145,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
   double displacement;
   double scaling_factor;
   double scaled_displacement;
-  /* Allocate storage for later usage. Storage depents on size of the batch. */
+  /* Allocate storage for later usage. Storage depends on size of the batch. */
   double *ref_intersection = T8_ALLOC (double, 2 * num_coords);
   double *glob_intersection = T8_ALLOC (double, 3 * num_coords);
   double interpolated_curve_parameter;
@@ -1307,5 +1305,3 @@ t8_geometry_cad::process_surface (const int face_index, const double *interpolat
 }
 
 T8_EXTERN_C_END ();
-
-#endif /* T8_ENABLE_OCC */

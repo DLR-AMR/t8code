@@ -62,10 +62,15 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
 void
 t8_forest_compute_desc (t8_forest_t forest);
 
-/* Create the elements on this process given a uniform partition
- * of the coarse mesh. */
+/**
+ * Create the elements on this process given a uniform partition
+ * of the coarse mesh.
+ * 
+ * \param[in, out] forest The forest to be populated.
+ * \param[in] irregular   Flag indicating if a tree in the forest does not refine in a 1:2^dim manner.
+ */
 void
-t8_forest_populate (t8_forest_t forest);
+t8_forest_populate (t8_forest_t forest, const int irregular);
 
 /** Return the scheme associated to a forest.
  * This function does not check whether the given forest is committed, use with
@@ -156,41 +161,56 @@ t8_forest_get_coarse_tree_ext (t8_forest_t forest, t8_locidx_t ltreeid, t8_locid
 void
 t8_forest_compute_elements_offset (t8_forest_t forest);
 
-/** Return an element of a tree. Const version.
+/** Return a leaf element of a tree. Const version.
  * \param [in]  tree  The tree.
- * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the element with index \a elem_in_tree of the
+ * \param [in]  elem_in_tree The index of the leaf element within the tree.
+ * \return      Returns the leaf element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 const t8_element_t *
-t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_leaf_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return an element of a tree. Mutable version.
+/** Return a leaf element of a tree. Mutable version.
  * \param [in]  tree  The tree.
- * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the element with index \a elem_in_tree of the
+ * \param [in]  elem_in_tree The index of the leaf element within the tree.
+ * \return      Returns the leaf element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 t8_element_t *
-t8_forest_get_tree_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_leaf_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return the array of elements of a tree. Const version.
+/** Return the array of leaf elements of a tree. Const version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of elements of the tree.
+ * \return      Returns the array of leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
 const t8_element_array_t *
-t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_leaf_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
 
-/** Return the array of elements of a tree. Mutable version.
+/** Return the array of leaf elements of a tree. Mutable version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of elements of the tree.
+ * \return      Returns the array of leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
 t8_element_array_t *
-t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
+
+/** Search for a linear element id in a sorted array of
+ * elements. If the element does not exist, return the largest index i
+ * such that the element at position i has a smaller id than the given one.
+ * If no such i exists, return -1.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element_id  The linear id of the element to search for.
+ * \param [in]     element_level The level of the element to search for. Thus, the level at which \a element_id was computed.
+ * \return                     The largest index \a i of an element with linear_id smaller than or equal to \a element_id in \a elements if it exists.
+ *                             -1 if no such element was found in \a elements.
+ */
+t8_locidx_t
+t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.

@@ -16,7 +16,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh_vtk_reader.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh.h>
 #include <sc_options.h>
@@ -34,15 +34,19 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \param[in] prefix  The prefix of the file to read the mesh from
  * \param[in] comm    The communicator used in this example
  * \param[in] values_per_cell   The number of values per cell in the mesh.
+ * \param[in] partition         If set, partition the cmesh uniformly.
+ * \param[in] vtk_file_type     The type of the file to read.
+ * \param[in] user_package_id   The package id of the user application
+ * \param[in] out_prefix        The prefix of the output file.
  */
 void
 t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int values_per_cell, const int partition,
-                              vtk_file_type_t vtk_file_type, const char *out_prefix)
+                              vtk_file_type_t vtk_file_type, const int user_package_id, const char *out_prefix)
 {
   /* Read a poly-data file (.ply, .vtp, .obj, .stl, .vtk, .g) and construct a cmesh 
    * representing the mesh. If  there is any cell-data, it will be read too. 
    * Triangle-strips and polygons will be broken down to multiple triangles. */
-  t8_cmesh_t cmesh_in = t8_cmesh_vtk_reader (prefix, partition, 0, comm, vtk_file_type);
+  t8_cmesh_t cmesh_in = t8_vtk_reader_cmesh (prefix, partition, 0, comm, vtk_file_type, user_package_id, 0);
   if (cmesh_in == NULL) {
     t8_errorf ("Error reading file.\n");
     return;
@@ -123,7 +127,7 @@ main (int argc, char **argv)
   const char *out_file;
   sc_options_t *opt;
   char usage[BUFSIZ], help[BUFSIZ];
-  int sreturn;
+  int sreturn, user_application_package_id;
   int partition;
   int vtk_file_type_int;
   vtk_file_type_t vtk_file_type;
@@ -185,8 +189,10 @@ main (int argc, char **argv)
       vtk_file_type = VTK_FILE_ERROR;
       break;
     }
+    user_application_package_id = sc_package_register (NULL, SC_LP_DEFAULT, "user_application",
+                                                       "Dummy user application which accesses cmesh vtk data.");
     t8_forest_construct_from_vtk (vtk_file, sc_MPI_COMM_WORLD, num_keys, partition, (vtk_file_type_t) vtk_file_type,
-                                  out_file);
+                                  user_application_package_id, out_file);
   }
   sc_options_destroy (opt);
   sc_finalize ();

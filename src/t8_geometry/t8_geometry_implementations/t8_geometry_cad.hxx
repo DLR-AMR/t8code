@@ -21,8 +21,8 @@
 */
 
 /** \file t8_geometry_cad.hxx
- * This geometry implements OpenCASCADE geometries. It enables the option to link different 
- * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees. 
+ * This geometry implements OpenCASCADE geometries. It enables the option to link different
+ * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees.
  * The geometry of the refinement tree is extended into the volume accordingly.
  */
 
@@ -34,8 +34,6 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
 #include <t8_data/t8_cad.hxx>
-
-#if T8_ENABLE_OCC
 
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
@@ -57,7 +55,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * additional geometry information, which is extracted from a .brep file.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * Since the internals of this geometry are finely tuned to the .brep file
-   * it is recommended to only use it with the \ref t8_cmesh_readmshfile function.
+   * it is recommended to only use it with the \ref t8_cmesh_from_msh_file function.
    * \param [in] fileprefix Prefix of a .brep file from which to extract an cad geometry.
    * \param [in] name       The name to give this geometry.
    */
@@ -70,7 +68,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * additional geometry information, which is given via the \a cad_shape.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
    * This constructor can be used in short scripts or in combination with a
-   * mesh generator, to omit the file IO of the 
+   * mesh generator, to omit the file IO of the
    * \ref t8_geometry_cad (std::string fileprefix,  std::string name) constructor.
    * \param [in] cad_shape  cad shape geometry.
    * \param [in] name       The name to give this geometry.
@@ -125,7 +123,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
-   * evaluated. You can use it for example to load the vertex coordinates of the 
+   * evaluated. You can use it for example to load the vertex coordinates of the
    * tree into an internal buffer (as is done in the linear geometry).
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
@@ -176,7 +174,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
                              double *out_coords) const;
 
   /**
-   * Map a point in the reference space $$[0,1]^3$$ to $$\mathbb R^3$$. Only for tet trees.
+   * Map a point in the reference space \f$ [0,1]^3 \f$ to \f$ \mathbb R^3 \f$. Only for tet trees.
    * \param [in]  cmesh      The cmesh in which the point lies.
    * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
@@ -222,7 +220,5 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   gp_Pnt
   process_surface (const int face_index, const double *interpolated_surface_params, const int offset) const;
 };
-
-#endif /* T8_ENABLE_OCC */
 
 #endif /* !T8_GEOMETRY_CAD_HXX */

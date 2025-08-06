@@ -20,28 +20,29 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_geometry.h
- * Internal functions that we need for the cmesh geometry.
- * TODO: document this file
- */
+#ifndef T8_CMESH_VTK_UNSTRUCTURED_READER
+#define T8_CMESH_VTK_UNSTRUCTURED_READER
 
-#ifndef T8_CMESH_GEOMETRY_H
-#define T8_CMESH_GEOMETRY_H
+/**
+ * \file t8_vtk_unstructured.hxx
+ * This file contains all helper-functions needed to read a vtkUnstructuredGrid
+ * from a file using the vtk-library. 
+ */
 
 #include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_vtk/t8_vtk_types.h>
+#include <vtkDataSet.h>
+#include <vtkSmartPointer.h>
 
-T8_EXTERN_C_BEGIN ();
-
-/** Get the hash of the geometry stored for a tree in a cmesh.
- * \param [in] cmesh   A committed cmesh.
- * \param [in] gtreeid A global tree in \a cmesh.
- * \return             The hash of the tree's geometry or if only one geometry exists, its hash.
+/**
+ * Given a filename to a file containing an vtkUnstructured Grid, read
+ * the file using the vtk-library. 
+ * 
+ * \param[in] filename  The name of the file
+ * \param[in, out] grid On input a vtkSmartPointer, that will hold the grid described in
+ *                      \a filename.
+ * \returns             non-zero on success, zero if the reading failed.
  */
-size_t
-t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
-
-T8_EXTERN_C_END ();
-
-#endif /* !T8_CMESH_GEOMETRY_H */
+vtk_read_success_t
+t8_read_unstructured (const char *filename, vtkSmartPointer<vtkDataSet> grid);
+#endif /* T8_CMESH_VTK_UNSTRUCTURED_READER */

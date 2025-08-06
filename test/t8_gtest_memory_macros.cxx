@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,20 +20,22 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_vtk_reader.cxx
-* Implementation of a Reader for vtk/vtu files using the vtk-library.
-* The functions can only be used when t8code is linked with the vtk-library.
-*/
+#include <test/t8_gtest_memory_macros.hxx>
 
-#include <t8_cmesh_vtk_reader.hxx>
+/**
+ * Package id for the testsuite. Used for attributes.
+ */
+static int testsuite_package_id = -1;
 
-T8_EXTERN_C_BEGIN ();
-
-t8_cmesh_t
-t8_cmesh_vtk_reader (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                     const vtk_file_type_t vtk_file_type)
+void
+t8_testsuite_register_package_id ()
 {
-  return t8_vtk_reader_cmesh (filename, partition, main_proc, comm, vtk_file_type);
+  /* Register a package id for the t8code testsuite */
+  testsuite_package_id = sc_package_register (NULL, SC_LP_DEFAULT, "t8code_testsuite", "t8code testsuite package.");
 }
 
-T8_EXTERN_C_END ();
+int
+t8_testsuite_get_package_id ()
+{
+  return testsuite_package_id;
+}

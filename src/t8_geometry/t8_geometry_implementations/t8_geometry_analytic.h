@@ -37,7 +37,7 @@
  * \param [in]  cmesh       The cmesh.
  * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
  * \param [in]  ref_coords  Array of dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
- * \param [in]  num_coords  
+ * \param [in]  num_coords  The number of coordinates in \a ref_coords.
  * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
  * \param [in]  tree_data   The data of the current tree as loaded by a \ref t8_geom_load_tree_data_fn.
  * \param [in]  user_data   The user data pointer stored in the geometry.
@@ -91,13 +91,13 @@ t8_geometry_analytic_destroy (t8_geometry_c **geom);
    * Create a new analytic geometry. The geometry
    * is viable with all tree types and uses a user-provided analytic and
    * jacobian function. The actual mappings are done by these functions.
-   * \param [in] name       The name to give this geometry.
-   * \param [in] analytical The analytical function to use for this geometry.
-   * \param [in] jacobian   The jacobian of \a analytical.
-   * \param [in] load_tree_data The function that is used to load a tree's data.
-   * \param [in] tree_negative_volume_in The function that is used to compute if a trees volume is negative.
-   * \param [in] tree_compatible_in The function that is used to check if a tree is compatible with the geometry.
-   * \param [in] user_data   Additional user data which the geometry can use. Gets retrieved via \ref t8_geom_analytic_get_user_data.
+   * \param [in] name                 The name to give this geometry.
+   * \param [in] analytical           The analytical function to use for this geometry.
+   * \param [in] jacobian             The jacobian of \a analytical.
+   * \param [in] load_tree_data       The function that is used to load a tree's data.
+   * \param [in] tree_negative_volume The function that is used to compute if a trees volume is negative.
+   * \param [in] tree_compatible      The function that is used to check if a tree is compatible with the geometry.
+   * \param [in] user_data            Additional user data which the geometry can use.
    * \return          A pointer to an allocated geometry struct.
    */
 t8_geometry_c *
@@ -107,7 +107,7 @@ t8_geometry_analytic_new (const char *name, t8_geom_analytic_fn analytical, t8_g
                           t8_geom_tree_compatible_fn tree_compatible, const void *user_data);
 
 /**
- * Load vertex data from given tree. 
+ * Load vertex data from given tree.
  * \param [in]  cmesh       The cmesh.
  * \param [in]  gtreeid     The global tree id (in the cmesh).
  * \param [out] user_data  The load tree vertices.

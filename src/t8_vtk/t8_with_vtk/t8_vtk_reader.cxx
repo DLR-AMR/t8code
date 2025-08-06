@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,15 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_vtk/t8_vtk_reader.hxx>
-#include <t8_vtk/t8_vtk_unstructured.hxx>
-#include <t8_vtk/t8_vtk_polydata.hxx>
-#include <t8_vtk/t8_vtk_parallel.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 #include <t8_vtk/t8_vtk_types.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
-#if T8_ENABLE_VTK
+#include <t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx>
+#include <t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx>
 #include <vtkCellIterator.h>
 #include <vtkCellData.h>
 #include <vtkCellDataToPointData.h>
@@ -45,18 +46,15 @@
 #include <vtkPolyDataReader.h>
 #include <vtkSTLReader.h>
 #include <vtkXMLPolyDataReader.h>
-#endif
-
-T8_EXTERN_C_BEGIN ();
 
 /**
- * If the vertices of a tree describe a negative \param, 
- * permute the tree vertices. 
+ * If the vertices of a tree describe a negative volume, we need to
+ * permute the \a tree_vertices. 
  * 
  * \param[in, out] tree_vertices The vertices of a tree
  * \param[in] eclass             The eclass of the tree.
  */
-void
+static void
 t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
 {
   /* The \param described is negative. We need to change vertices.
@@ -107,8 +105,6 @@ t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
   }
   T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, t8_eclass_num_vertices[eclass]));
 }
-
-#if T8_ENABLE_VTK
 
 vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
@@ -187,7 +183,7 @@ t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, c
  * \return The dimension of \a vtkGrid. 
  */
 int
-t8_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
+t8_vtk_grid_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
 {
   /* This array contains the type of each cell */
   vtkSmartPointer<vtkCellTypes> cell_type_of_each_cell = vtkSmartPointer<vtkCellTypes>::New ();
@@ -218,13 +214,15 @@ t8_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
  * \param[in] vtkGrid       The vtkGrid that gets translated
  * \param[in, out] cmesh    An empty cmesh that is filled with the data. 
  * \param[in] first_tree    The global id of the first tree. Will be the global id of the first tree on this proc. 
- * \param[in] comm        A communicator. 
+ * \param[in] comm        A communicator.
+ * \param[in] package_id  The package id of the cmesh.
+ * \param[in] starting_key The starting key of the attributes in the cmesh.
  * \return  The number of elements that have been read by the process.
  */
 
 static void
 t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, const t8_gloidx_t first_tree,
-                      [[maybe_unused]] sc_MPI_Comm comm)
+                      [[maybe_unused]] sc_MPI_Comm comm, const int package_id, const int starting_key)
 {
   double **tuples = NULL;
   size_t *data_size = NULL;
@@ -233,10 +231,9 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
   vtkCellIterator *cell_it;
   vtkSmartPointer<vtkPoints> points;
   vtkSmartPointer<vtkCellData> cell_data = vtkGrid->GetCellData ();
-  const int max_cell_points = vtkGrid->GetMaxCellSize ();
 
-  T8_ASSERT (max_cell_points >= 0);
-  double *vertices = T8_ALLOC (double, 3 * max_cell_points);
+  std::array<double, T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM> vertices;
+  std::array<t8_gloidx_t, T8_ECLASS_MAX_CORNERS> global_vertex_indices;
   /* Get cell iterator */
   cell_it = vtkGrid->NewCellIterator ();
   /* get the number of data-arrays per cell */
@@ -259,7 +256,6 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
 
   /* Iterate over all cells */
   for (cell_it->InitTraversal (); !cell_it->IsDoneWithTraversal (); cell_it->GoToNextCell ()) {
-
     /* Set the t8_eclass of the cell */
     const t8_eclass_t cell_type = t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
     SC_CHECK_ABORTF (t8_eclass_is_valid (cell_type), "vtk-cell-type %i not supported by t8code\n", cell_type);
@@ -270,13 +266,21 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
     points = cell_it->GetPoints ();
 
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
-      points->GetPoint (t8_element_shape_vtk_corner_number (cell_type, ipoint), &vertices[3 * ipoint]);
+      points->GetPoint (t8_element_shape_t8_to_vtk_corner_number (cell_type, ipoint), &vertices[3 * ipoint]);
     }
     /* The order of the vertices in vtk might give a tree with negative \param */
-    if (t8_cmesh_tree_vertices_negative_volume (cell_type, vertices, num_points)) {
-      t8_cmesh_correct_volume (vertices, cell_type);
+    if (t8_cmesh_tree_vertices_negative_volume (cell_type, vertices.data (), num_points)) {
+      t8_cmesh_correct_volume (vertices.data (), cell_type);
     }
-    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_points);
+    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices.data (), num_points);
+    vtkIdList *id_list = cell_it->GetPointIds ();
+    const int num_id = id_list->GetNumberOfIds ();
+    T8_ASSERT (num_id == num_points);
+
+    for (int i_vertex = 0; i_vertex < num_id; i_vertex++) {
+      global_vertex_indices[i_vertex] = id_list->GetId (t8_element_shape_t8_to_vtk_corner_number (cell_type, i_vertex));
+    }
+    t8_cmesh_set_global_vertices_of_tree (cmesh, tree_id, global_vertex_indices.data (), num_id);
 
     /* TODO: Avoid magic numbers in the attribute setting. */
     /* Get and set the data of each cell */
@@ -284,7 +288,7 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
       const t8_gloidx_t cell_id = cell_it->GetCellId ();
       vtkDataArray *data = cell_data->GetArray (dtype);
       data->GetTuple (cell_id, tuples[dtype]);
-      t8_cmesh_set_attribute (cmesh, tree_id, t8_get_package_id (), dtype + 1, tuples[dtype], data_size[dtype], 0);
+      t8_cmesh_set_attribute (cmesh, tree_id, package_id, dtype + starting_key, tuples[dtype], data_size[dtype], 0);
     }
     tree_id++;
   }
@@ -297,7 +301,6 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
     }
     T8_FREE (tuples);
   }
-  T8_FREE (vertices);
   return;
 }
 
@@ -313,7 +316,8 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
  * \return            the global id of the first tree on this proc. 
  */
 static t8_gloidx_t
-t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees, sc_MPI_Comm comm)
+t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees,
+                  [[maybe_unused]] int dim, sc_MPI_Comm comm)
 {
   t8_gloidx_t first_tree = 0;
   t8_gloidx_t last_tree = 1;
@@ -341,8 +345,11 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_glo
 
 t8_cmesh_t
 t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
-                     const int distributed_grid, sc_MPI_Comm comm)
+                     const int distributed_grid, sc_MPI_Comm comm, const int package_id, const int starting_key)
 {
+  T8_ASSERT (package_id != t8_get_package_id ());
+  T8_ASSERT (package_id != sc_get_package_id ());
+  T8_ASSERT (sc_package_is_registered (package_id));
   t8_cmesh_t cmesh;
   int mpisize;
   int mpirank;
@@ -364,7 +371,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   }
 
   /* Set the dimension on all procs (even empty procs). */
-  int dim = num_trees > 0 ? t8_get_dimension (vtkGrid) : 0;
+  int dim = num_trees > 0 ? t8_vtk_grid_get_dimension (vtkGrid) : 0;
   int dim_buf = dim;
   mpiret = sc_MPI_Allreduce ((void *) &dim, &dim_buf, 1, sc_MPI_INT, sc_MPI_MAX, comm);
   SC_CHECK_MPI (mpiret);
@@ -378,9 +385,8 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
 
   /* Set the partition first, so we know the global id of the first tree on all procs. */
   if (partition) {
-    first_tree = t8_vtk_partition (cmesh, mpirank, mpisize, num_trees, comm);
+    first_tree = t8_vtk_partition (cmesh, mpirank, mpisize, num_trees, dim, comm);
   }
-
   /* Translation of vtkGrid to cmesh 
    * We translate the file if:
    * - We do not use a partitioned read, every process has read the vtk-file and shall now translate it, or if
@@ -388,7 +394,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
    * - We use a parallel file-type and use a partitioned read, every proc translates its chunk of the grid. 
    */
   if (!partition || mpirank == main_proc || distributed_grid) {
-    t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm);
+    t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm, package_id, starting_key);
   }
 
   if (cmesh != NULL) {
@@ -480,32 +486,24 @@ t8_vtk_reader (const char *filename, const int partition, const int main_proc, s
 }
 
 vtkSmartPointer<vtkPointSet>
-t8_vtk_reader_pointSet (const char *filename, const int partition, const int main_proc, sc_MPI_Comm comm,
-                        const vtk_file_type_t vtk_file_type)
+t8_vtk_reader_pointSet ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
+                        [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
+                        [[maybe_unused]] const vtk_file_type_t vtk_file_type)
 {
-#if T8_ENABLE_VTK
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   return t8_vtkGrid_to_vtkPointSet (vtkGrid);
-#else
-  /* Return NULL if not linked against vtk */
-  t8_global_errorf (
-    "WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
-#endif
-  return NULL;
 }
-
-#endif /* T8_ENABLE_VTK */
-
 t8_cmesh_t
 t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] const int partition,
                      [[maybe_unused]] const int main_proc, [[maybe_unused]] sc_MPI_Comm comm,
-                     [[maybe_unused]] const vtk_file_type_t vtk_file_type)
+                     [[maybe_unused]] const vtk_file_type_t vtk_file_type, [[maybe_unused]] const int package_id,
+                     [[maybe_unused]] const int starting_key)
 {
-#if T8_ENABLE_VTK
   vtkSmartPointer<vtkDataSet> vtkGrid = t8_vtk_reader (filename, partition, main_proc, comm, vtk_file_type);
   if (vtkGrid != NULL) {
     const int distributed_grid = (vtk_file_type & VTK_PARALLEL_FILE) && partition;
-    t8_cmesh_t cmesh = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid, comm);
+    t8_cmesh_t cmesh
+      = t8_vtkGrid_to_cmesh (vtkGrid, partition, main_proc, distributed_grid, comm, package_id, starting_key);
     T8_ASSERT (cmesh != NULL);
     return cmesh;
   }
@@ -513,12 +511,4 @@ t8_vtk_reader_cmesh ([[maybe_unused]] const char *filename, [[maybe_unused]] con
     t8_global_errorf ("Error translating file \n");
     return NULL;
   }
-#else
-  /* Return NULL if not linked against vtk */
-  t8_global_errorf (
-    "WARNING: t8code is not linked against the vtk library. Without proper linking t8code cannot use the vtk-reader\n");
-#endif
-  return NULL;
 }
-
-T8_EXTERN_C_END ();

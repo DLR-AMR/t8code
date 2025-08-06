@@ -24,9 +24,8 @@
 #define T8_VTK_PARALLEL_HXX
 
 #include <t8.h>
-#include "t8_vtk_types.h"
+#include <t8_vtk/t8_vtk_types.h>
 
-#if T8_ENABLE_VTK
 #include <vtkDataSet.h>
 #include <vtkSmartPointer.h>
 
@@ -36,7 +35,8 @@
  * 
  * \param[in] filename  The name of a parallel vtk file to a distributed vtkUnstructuredGrid
  * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
- *                 by the pieces read on this proc. 
+ *                 by the pieces read on this proc.
+ * \param[in] comm The MPI communicator to use for reading the file.
  * \returns        non-zero on success, zero if the reading failed. 
  */
 vtk_read_success_t
@@ -48,11 +48,11 @@ t8_read_parallel_unstructured (const char *filename, vtkSmartPointer<vtkDataSet>
  * 
  * \param[in] filename  The name of a parallel vtk file to a distributed vtkPolyData
  * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
- *                 by the pieces read on this proc. 
- * \returns        non-zero on success, zero if the reading failed. 
+ *                 by the pieces read on this proc.
+ * \param[in] comm The MPI communicator to use for reading the file.
+ * \returns        read_success on success, read_failure if the reading failed.
  */
 vtk_read_success_t
 t8_read_parallel_polyData (const char *filename, vtkSmartPointer<vtkDataSet> grid, sc_MPI_Comm comm);
 
-#endif /* T8_ENABLE_VTK */
 #endif /* T8_VTK_PARALLEL_HXX */
