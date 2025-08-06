@@ -120,7 +120,6 @@ if( T8CODE_ENABLE_OCC )
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
       t8_data/t8_cad.hxx
-      t8_data/t8_cad.h
       DESTINATION include
     )
 endif()
