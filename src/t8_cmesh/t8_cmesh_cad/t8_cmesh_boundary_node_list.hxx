@@ -35,7 +35,7 @@ class t8_boundary_node_list {
  public:
   /** Basic constructor
   * 
-  * \param [in] cmesh_in  An uncommited cmesh
+  * \param [in] cmesh_in  An uncommitted cmesh
   */
   t8_boundary_node_list (t8_cmesh_t cmesh_in);
 
@@ -51,7 +51,7 @@ class t8_boundary_node_list {
   std::unordered_set<t8_gloidx_t>
   compute_boundary_node ();
 
-  /* An uncommited cmesh */
+  /* An uncommitted cmesh */
   t8_cmesh_t cmesh;
 
   /* Empty boundary node list */

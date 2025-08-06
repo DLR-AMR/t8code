@@ -20,10 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_cad.hxx
- * This geometry implements OpenCASCADE geometries. It enables the option to link different 
- * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees. 
- * The geometry of the refinement tree is extended into the volume accordingly.
+/** \file t8_cmesh_cad_boundary.hxx
+ * Enables the correct identification and remapping of boundary nodes on a geometry
  */
 
 #ifndef T8_CMESH_CAD
@@ -50,10 +48,10 @@ struct t8_geom_data
 
 class t8_boundary_node_geom_data_map {
  public:
-  /** Constructor from a given CAD geometry and a corresponding commited cmesh. 
+  /** Constructor from a given CAD geometry and a corresponding committed cmesh. 
   * 
   * \param [in] shape_in    A CAD geometry
-  * \param [in] cmesh_in    A commited cmesh
+  * \param [in] cmesh_in    A committed cmesh
   * \param [in] tolerance   A user defined tolerance to specify the precision of the boundary node remapping. Defaulted to 1e-7.
   * 
   */
