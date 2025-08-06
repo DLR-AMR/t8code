@@ -65,6 +65,8 @@ get_vertices_ids (const t8_eclass_t eclass, int vertices_ids[T8_ECLASS_MAX_CORNE
     vertices_ids[7] = 7;
     vertices_ids[3] = 3;
     vertices_ids[2] = 2;
+    vertices_ids[1] = 1;
+    vertices_ids[0] = 0;
     break;
   case T8_ECLASS_PRISM:
     vertices_ids[3] = 4;
