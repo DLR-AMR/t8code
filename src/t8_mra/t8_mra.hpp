@@ -211,20 +211,19 @@ class multiscale: public multiscale_data<TShape> {
   void
   two_scale_transformation (const levelmultiindex& lmi)
   {
-    const auto parent_lmi = t8_mra::parent_lmi (lmi);
-    element_t parent_data;
+    element_t lmi_data;
 
-    const auto siblings_lmi = t8_mra::children_lmi (parent_lmi);
+    const auto siblings_lmi = t8_mra::children_lmi (lmi);
     std::array<element_t, levelmultiindex::NUM_CHILDREN> siblings_data;
 
     for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
       siblings_data[k] = get_user_data ()->lmi_map->get (siblings_lmi[k]);
 
-    parent_data.order = siblings_data[0].order;
-    triangle_order::get_parent_order (parent_data.order);
+    lmi_data.order = siblings_data[0].order;
+    triangle_order::get_parent_order (lmi_data.order);
 
     for (auto u = 0u; u < U_DIM; ++u) {
-      /// Single scale parent
+      /// Single scale of lmi
       for (auto i = 0u; i < DOF; ++i) {
         auto sum = 0.0;
 
@@ -232,7 +231,7 @@ class multiscale: public multiscale_data<TShape> {
           for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
             sum += siblings_data[k].u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](j, i);
 
-        parent_data.u_coeffs[element_t::dg_idx (u, i)] = sum;
+        lmi_data.u_coeffs[element_t::dg_idx (u, i)] = sum;
       }
 
       /// Details as differences
@@ -240,14 +239,14 @@ class multiscale: public multiscale_data<TShape> {
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
           auto sum = 0.0;
           for (auto j = 0u; j < DOF; ++j)
-            sum += mask_coefficients[k](i, j) * parent_data.u_coeffs[element_t::dg_idx (u, j)];
+            sum += mask_coefficients[k](i, j) * lmi_data.u_coeffs[element_t::dg_idx (u, j)];
 
-          parent_data.d_coeffs[element_t::wavelet_idx (k, u, i)]
+          lmi_data.d_coeffs[element_t::wavelet_idx (k, u, i)]
             = siblings_data[k].u_coeffs[element_t::dg_idx (u, i)] - sum;
         }
     }
 
-    get_user_data ()->lmi_map->insert (parent_lmi, parent_data);
+    get_user_data ()->lmi_map->insert (lmi, lmi_data);
   }
 
   ///TODO Performance problem: can I filter for elements on a current level,
@@ -263,26 +262,19 @@ class multiscale: public multiscale_data<TShape> {
     const auto element_level = scheme->element_get_level (tree_class, elements[0]);
 
     /// check that
-    if (element_level > get_user_data ()->current_refinement_level || element_level < 1)
+    if (element_level != get_user_data ()->current_refinement_level || element_level < 1)
       return 0;
 
     const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
     const auto elem_idx = local_ele_idx + offset;
 
     const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
-    two_scale_transformation (lmi);
+    two_scale_transformation (t8_mra::parent_lmi (lmi));
 
     const auto parent = parent_lmi (lmi);
 
-    if (hard_thresholding (parent, which_tree, elements[0])) {
-
-      for (const auto& child : t8_mra::children_lmi (parent))
-        get_user_data ()->lmi_map->erase (child);
-
+    if (hard_thresholding (parent, which_tree, elements[0]))
       return -1;
-    }
-
-    get_user_data ()->lmi_map->erase (parent_lmi (lmi));
 
     return 0;
   }
@@ -299,11 +291,18 @@ class multiscale: public multiscale_data<TShape> {
     first_outgoing += t8_forest_get_tree_element_offset (forest_old, which_tree);
 
     const auto old_lmi = t8_mra::get_lmi_from_forest_data (old_user_data, first_outgoing);
+    const auto parent_lmi = t8_mra::parent_lmi (old_lmi);
 
-    if (refine == 0)
+    if (refine == 0) {
       t8_mra::set_lmi_forest_data (new_user_data, first_incoming, old_lmi);
+
+      new_user_data->lmi_map->erase (parent_lmi);
+    }
     else if (refine == -1) {
       t8_mra::set_lmi_forest_data (new_user_data, first_incoming, t8_mra::parent_lmi (old_lmi));
+
+      for (const auto& child : t8_mra::children_lmi (parent_lmi))
+        new_user_data->lmi_map->erase (child);
     }
     else {
       /// TODO
