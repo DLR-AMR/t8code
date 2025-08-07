@@ -374,6 +374,7 @@ class multiscale: public multiscale_data<TShape> {
 
       t8_mra::forest_data<element_t>* new_user_data;
       new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+
       new_user_data->lmi_map = new t8_mra::levelindex_map<element_t> (maximum_level);
       std::swap (new_user_data->lmi_map, get_user_data ()->lmi_map);
 
@@ -444,6 +445,20 @@ class multiscale: public multiscale_data<TShape> {
     return tmp;
   }
 
+  /// Local threshold value
+  /// Uniform subdivision (see Veli eq. (2.44))
+  double
+  local_treshold_value (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* elem)
+  {
+    const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, elem);
+
+    const auto level_diff = maximum_level - lmi.level ();
+    const auto h_lambda = std::sqrt (vol);
+    const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
+
+    return h_max_level / h_lambda;
+  }
+
   std::vector<t8_locidx_t>
   get_neighbours (t8_locidx_t tree_idx, t8_locidx_t local_ele_idx, const t8_eclass_t tree_class,
                   const t8_element_t* t8_elem)
@@ -481,22 +496,14 @@ class multiscale: public multiscale_data<TShape> {
   bool
   hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   {
+    /// TODO different L^p norms?
     auto tmp = local_detail_norm (lmi, tree_idx, t8_elem);
+
     for (auto u = 0u; u < U_DIM; ++u)
       tmp[u] /= c_scaling[u];
 
     const auto local_norm = *std::max_element (tmp.begin (), tmp.end ());
-
-    /// Local threshold value
-    /// Uniform subdivision (see Veli eq. (2.44))
-    const auto level_diff = maximum_level - lmi.level ();
-
-    const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
-
-    const auto h_lambda = std::sqrt (vol);
-    const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
-
-    const auto local_eps = c_thresh * h_max_level / h_lambda;
+    const auto local_eps = c_thresh * local_treshold_value (lmi, tree_idx, t8_elem);
 
     return local_norm <= local_eps;
   }
