@@ -30,14 +30,11 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
-#include <memory>
-#include <string_view>
-#include <array>
 
 T8_EXTERN_C_BEGIN ();
 
 /**
- * Flags for communicate_ownerships 
+ * Flags for communicate_ownerships
  * store in the flags which memory was allocated
  */
 enum t8_ghost_definition_memory_flag { CREATE_ELEMENT_ARRAY = 1, CREATE_TREE_ARRAY = 2, CREATE_GFIRST_DESC_ARRAY = 4 };
@@ -149,7 +146,7 @@ struct t8_forest_ghost_definition
   {
     init ();
   };
-  
+
   /** type of the ghost_definition */
   t8_ghost_type_t ghost_type { T8_GHOST_NONE };
   /** The reference count of the ghost_definition. TODO: Replace by shared_ptr when forest becomes a class. */
