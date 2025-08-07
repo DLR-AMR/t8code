@@ -141,7 +141,6 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   int count_partition_stats = 0;
   double ada_time, ghost_time, part_time;
   sc_statinfo_t *adap_stats, *ghost_stats, *partition_stats;
-  int create_ghost_definition = 0; /* flag if create ghost_definition */
 
   t8_global_productionf ("Into t8_forest_balance with %lli global elements.\n",
                          (long long) t8_forest_get_global_num_leaf_elements (forest->set_from));
@@ -179,6 +178,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   if (forest->set_from->ghosts == NULL) {
     /* Check if the forest has a ghost_definition and that it is supported. */
     t8_forest_ghost_definition_c *temp_ghost_definition;
+    int create_ghost_definition = 0; /* flag if we need to create a temporary ghost definition for balance */
     if (forest->set_from->ghost_definition == NULL) {
       t8_debugf ("Forest has ghosts but no ghost definition for balance.\n");
       create_ghost_definition = 1;
