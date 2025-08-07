@@ -306,7 +306,19 @@ class multiscale: public multiscale_data<TShape> {
         new_user_data->lmi_map->erase (child);
     }
     else {
-      /// TODO
+      new_user_data->lmi_map->erase (old_lmi);
+
+      const auto children = t8_mra::children_lmi (old_lmi);
+      const auto lmi_data = old_user_data->lmi_map->get (old_lmi);
+
+      for (auto i = 0u; i < children.size (); ++i) {
+        t8_mra::set_lmi_forest_data (new_user_data, first_incoming + i, children[i]);
+        element_t child_data;
+
+        child_data.order = lmi_data.order;
+        child_data.u_coeffs = lmi_data.u_coeffs;
+        new_user_data->lmi_map->insert (children[i], child_data);
+      }
     }
   };
 
