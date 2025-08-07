@@ -21,9 +21,8 @@
 */
 
 /** \file t8_geometry_cad.hxx
- * This geometry implements OpenCASCADE geometries. It enables the option to link different 
- * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees. 
- * The geometry of the refinement tree is extended into the volume accordingly.
+ * This file implements the t8_cad class. It manages OpenCASCADE shapes and implements
+ * helper functions for working with the shapes.
  */
 
 #ifndef T8_CAD_HXX
@@ -178,7 +177,7 @@ class t8_cad {
   /** Converts the parameters of an cad edge to the corresponding parameters on an cad face.
    * The edge has to lie on the face.
    * For the conversion of edge parameters of mesh elements to topological face parameters of a closed surface, it is additionally
-   * checked, whether the conversion was correct, to prevent disorted elements. 
+   * checked, whether the conversion was correct, to prevent disorted elements.
    * \param [in]  edge_index     The index of the cad edge, which parameters should be converted to face parameters.
    * \param [in]  face_index     The index of the cad face, on to which the edge parameters should be converted.
    * \param [in]  num_face_nodes The number of the face nodes of the evaluated element. Only needed for closed surface check, otherwise NULL.
@@ -218,7 +217,7 @@ class t8_cad {
   /** Checks if a surface is closed in its U parameter or V parameter.
    * \param [in]  geometry_index   The index of the closed geometry.
    * \param [in]  parameter        The parameter, which should be check for closeness.
-   *                               0 stands for the U parameter and 1 for the V parameter. 
+   *                               0 stands for the U parameter and 1 for the V parameter.
    * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
    */
   int
