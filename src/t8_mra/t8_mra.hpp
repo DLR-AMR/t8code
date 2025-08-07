@@ -89,6 +89,7 @@ class multiscale: public multiscale_data<TShape> {
 
   /// Forest data
   t8_forest_t forest;
+  bool balanced;
 
   // /// Function class for callbacks
   // std::function<int (t8_forest_t, t8_forest_t, t8_locidx_t, const t8_eclass_t, t8_locidx_t, const t8_scheme_c*,
@@ -98,8 +99,8 @@ class multiscale: public multiscale_data<TShape> {
   sc_MPI_Comm comm;
 
  public:
-  multiscale (int _max_level, double _c_thresh, int _gamma, int _dunavant_rule, sc_MPI_Comm _comm)
-    : maximum_level (_max_level), c_thresh (_c_thresh), gamma (_gamma), comm (_comm),
+  multiscale (int _max_level, double _c_thresh, int _gamma, int _dunavant_rule, bool _balanced, sc_MPI_Comm _comm)
+    : maximum_level (_max_level), c_thresh (_c_thresh), gamma (_gamma), balanced (_balanced), comm (_comm),
       DG_basis (t8_mra::dunavant_order_num (_dunavant_rule), _dunavant_rule)
   {
     t8_mra::initialize_mask_coefficients<TShape> (P_DIM, DOF, multiscale_data<TShape>::mask_coefficients,
