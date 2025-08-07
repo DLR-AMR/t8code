@@ -445,7 +445,6 @@ class multiscale: public multiscale_data<TShape> {
   std::array<double, U_DIM>
   local_detail_norm (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
   {
-
     std::array<double, U_DIM> tmp = {};
     const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
 
@@ -517,13 +516,7 @@ class multiscale: public multiscale_data<TShape> {
     const auto detail_norm = local_detail_norm (lmi, tree_idx, t8_elem);
     const auto d_max = *std::max_element (detail_norm.begin (), detail_norm.end ());
 
-    const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
-
-    /// TODO refactor as extra function
-    const auto level_diff = maximum_level - lmi.level ();
-    const auto h_lambda = std::sqrt (vol);
-    const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
-    const auto local_eps = h_max_level / h_lambda;
+    const auto local_eps = local_treshold_value (lmi, tree_idx, t8_elem);
 
     const auto predict_neighbour = d_max > local_eps;
     const auto predict_steep_gradient = d_max > std::pow (2, P_DIM + 1) * local_eps;
