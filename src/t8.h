@@ -31,14 +31,14 @@
 
 /* include config headers */
 #ifndef T8_CMAKE_BUILD
-//#include <t8_config.h>
+#include <t8_config.h>
 #endif
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
-//#error "MPI configured differently in t8code and libsc"
+#error "MPI configured differently in t8code and libsc"
 #endif
 #if (defined(T8_ENABLE_MPIIO) && !defined(SC_ENABLE_MPIIO)) || (!defined(T8_ENABLE_MPIIO) && defined(SC_ENABLE_MPIIO))
-//#error "MPI I/O configured differently in t8code and libsc"
+#error "MPI I/O configured differently in t8code and libsc"
 #endif
 
 /* indirectly also include sc.h */
