@@ -394,6 +394,24 @@ class multiscale: public multiscale_data<TShape> {
       cleanup ();
       forest = new_forest;
     }
+
+    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+    auto global_idx = 0u;
+    for (auto i = 0u; i < num_local_trees; ++i) {
+      const auto num_local_ele = t8_forest_get_tree_num_leaf_elements (forest, i);
+      const auto tree_class = t8_forest_get_tree_class (forest, i);
+
+      for (auto idx = 0u; idx < num_local_ele; ++idx, ++global_idx) {
+        const auto* ele = t8_forest_get_leaf_element_in_tree (forest, i, idx);
+
+        const auto neighs = get_neighbors (i, idx, tree_class, ele);
+        printf ("size: %d\n", neighs.size ());
+        printf ("%d -> ", global_idx);
+        for (auto k = 0u; k < neighs.size (); ++k)
+          printf ("%d ", neighs[k]);
+        printf ("\n");
+      }
+    }
   }
 
   /// scaling (2.39)
@@ -460,11 +478,32 @@ class multiscale: public multiscale_data<TShape> {
   }
 
   std::vector<t8_locidx_t>
-  get_neighbours (t8_locidx_t tree_idx, t8_locidx_t local_ele_idx, const t8_eclass_t tree_class,
-                  const t8_element_t* t8_elem)
+  get_neighbors (t8_locidx_t tree_idx, t8_locidx_t local_ele_idx, const t8_eclass_t tree_class,
+                 const t8_element_t* t8_elem)
   {
+    std::vector<t8_locidx_t> neighs;
     const auto* scheme = t8_forest_get_scheme (forest);
     const auto num_faces = scheme->element_get_num_faces (tree_class, t8_elem);
+
+    for (auto i = 0u; i < num_faces; ++i) {
+      int num_neighbours;
+      int* dual_faces;
+      t8_locidx_t* neigh_ids;
+      t8_element_t** neighbors;
+      t8_eclass_t neigh_scheme;
+
+      t8_forest_leaf_face_neighbors (forest, tree_idx, t8_elem, &neighbors, i, &dual_faces, &num_neighbours, &neigh_ids,
+                                     &neigh_scheme, 1);
+
+      for (auto i = 0u; i < num_neighbours; ++i)
+        neighs.push_back (neigh_ids[i]);
+
+      T8_FREE (neighbors);
+      T8_FREE (neigh_ids);
+      T8_FREE (dual_faces);
+    }
+
+    return neighs;
   }
 
   std::vector<t8_locidx_t>
