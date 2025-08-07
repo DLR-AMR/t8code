@@ -1000,9 +1000,8 @@ t8_store_element_node_data (t8_cmesh_t cmesh, t8_gloidx_t tree_count,
  * \param [in] face_nodes An array of nodes representing the faces of the tree.
  * \param [in] edge_nodes An array of nodes representing the edges of the tree.
  *
- * \return std::optional<t8_msh_tree_vertex_indices>
- *         - Returns a valid `t8_msh_tree_vertex_indices` object if the tree geometry is successfully processed.
- *         - Returns 0 if the geometry processing fails.
+ * \return True if the tree geometry was successfully processed; false otherwise.
+ *
  */
 static bool
 t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t8_gloidx_t tree_count,
