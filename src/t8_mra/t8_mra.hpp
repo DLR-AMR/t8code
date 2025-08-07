@@ -359,8 +359,18 @@ class multiscale: public multiscale_data<TShape> {
         },
         0, 0, get_user_data ());
 
-      ///TODO balance
-      // t8_forest_ref (new_forest); /// Vlt. mit balance?
+      if (balanced)
+        new_forest = [&] () {
+          t8_forest_t balanced_forest;
+          t8_forest_t unbalanced_forest = new_forest;
+
+          t8_forest_init (&balanced_forest);
+          /// TODO partition
+          t8_forest_set_balance (balanced_forest, unbalanced_forest, 0);
+          t8_forest_commit (balanced_forest);
+
+          return balanced_forest;
+        }();
 
       t8_mra::forest_data<element_t>* new_user_data;
       new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
