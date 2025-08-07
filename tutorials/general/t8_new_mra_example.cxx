@@ -133,6 +133,7 @@ t8_write_vtu (t8_forest_t forest, const char* prefix)
   int write_ghosts = 0;
   t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank, write_level, write_element_id, write_ghosts, 0,
                            0, num_fields_to_write, vtk_data.data ());
+
   for (auto k = 0u; k < U_DIM; ++k)
     T8_FREE (element_data[k]);
 }
@@ -182,36 +183,39 @@ main (int argc, char** argv)
   };
 
   auto max_level = 7u;
-  auto init_level = 7u;
-  auto c_thresh = 1.0;
+  auto c_thresh = 0.8;
   auto gamma = 1.0;  /// Order of convergence
   auto dunavant_rule = 10;
 
+  bool balanced = true;
+
   constexpr int P = 4;
-  constexpr int U = 2;
+  constexpr int U = 1;
 
   using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
   using mra_type = t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P>;
 
   auto* test_scheme = t8_scheme_new_default ();
-  t8_cmesh_t cmesh = t8_cmesh_new_debugging (comm);
+  // t8_cmesh_t cmesh = t8_cmesh_square (comm);
+  t8_cmesh_t cmesh = t8_cmesh_l_shape (comm);
   printf ("created test_scheme and cmesh\n");
 
-  mra_type mra_test (max_level, c_thresh, gamma, dunavant_rule, comm);
+  mra_type mra_test (max_level, c_thresh, gamma, dunavant_rule, balanced, comm);
   printf ("created mra object\n");
 
-  mra_test.initialize_data (cmesh, test_scheme, init_level, f4);
+  mra_test.initialize_data (cmesh, test_scheme, max_level, f3);
   printf ("Initialize data\n");
   printf ("Size init data: %zu\n", mra_test.get_lmi_map ()->size ());
 
-  // t8_write_vtu<element_data_type> (mra_test.forest, ("uniform_" + std::to_string (init_level)).c_str ());
+  // t8_write_vtu<element_data_type> (mra_test.forest, ("reference_f3_" + std::to_string (init_level)).c_str ());
 
-  mra_test.coarsening (0, init_level);
+  mra_test.coarsening (0, max_level);
 
   printf ("Size after coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
 
-  t8_write_vtu<element_data_type> (mra_test.forest,
-                                   ("coarsening_P" + std::to_string (P) + "_" + std::to_string (init_level)).c_str ());
+  t8_write_vtu<element_data_type> (
+    mra_test.forest,
+    ("f3_l_shape_balanced_coarsening_P" + std::to_string (P) + "_" + std::to_string (max_level)).c_str ());
 
   printf ("Finished writing file\n");
 
