@@ -282,7 +282,7 @@ t8_forest_adapt_coarsen_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_e
 #endif
     if (is_family
         && forest->set_adapt_fn (forest->set_from, ltreeid, tree_class, lelement_id, scheme, is_family,
-                                 num_elements_to_adapt_callback, fam)
+                                 num_elements_to_adapt_callback, fam, forest->user_data)
              == -1) {
       /* Coarsen the element */
       *el_inserted -= (t8_locidx_t) (num_elements_to_adapt_callback - 1);
@@ -341,7 +341,7 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_ec
     const int is_family = 0;
     const int num_elements_to_adapt_callback = 1;
     const int refine = forest->set_adapt_fn (forest->set_from, ltreeid, tree_class, lelement_id, scheme, is_family,
-                                             num_elements_to_adapt_callback, el_buffer);
+                                             num_elements_to_adapt_callback, el_buffer, forest->user_data);
     T8_ASSERT (refine != -1);
     if (refine == 1) {
       /* The element should be refined */
@@ -534,7 +534,7 @@ t8_forest_adapt (t8_forest_t forest)
          *                    -2 if the element should be removed.
          */
         refine = forest->set_adapt_fn (forest->set_from, ltree_id, tree->eclass, el_considered, scheme, is_family,
-                                       num_elements_to_adapt_callback, elements_from);
+                                       num_elements_to_adapt_callback, elements_from, forest->user_data);
 
         T8_ASSERT (is_family || refine != -1);
         if (refine > 0

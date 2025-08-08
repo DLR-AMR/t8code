@@ -38,7 +38,7 @@ static int
 t8_basic_adapt_refine_type ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
                             t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                             [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                            t8_element_t *elements[])
+                            t8_element_t *elements[], [[maybe_unused]] void *user_data)
 {
   int level;
   int type;
@@ -62,7 +62,7 @@ static int
 t8_basic_adapt_refine_tet ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
                            t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                            [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                           t8_element_t *elements[])
+                           t8_element_t *elements[], [[maybe_unused]] void *user_data)
 {
   int level;
   int type;

@@ -59,7 +59,7 @@ typedef struct
 static int
 t8_band_adapt (t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
                [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
-               [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+               [[maybe_unused]] const int num_elements, t8_element_t *elements[], [[maybe_unused]] void *user_data)
 {
   int level, base_level, max_level;
   t8_3D_vec elem_midpoint;
