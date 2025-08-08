@@ -97,7 +97,7 @@ t8_adapt_remove (t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tre
                  [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
                  [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
                  [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[],
-                 [[maybe_unused]] void *user_data)
+                 [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
   struct t8_trees_to_remove *trees_to_remove = (struct t8_trees_to_remove *) user_data;
   if (trees_to_remove->remove[forest_from->mpirank] == 0) {

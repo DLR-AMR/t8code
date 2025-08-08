@@ -70,7 +70,7 @@ static int
 t8_test_adapt_balance ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
                        t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                        [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                       t8_element_t *elements[], [[maybe_unused]] void *user_data)
+                       t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
   T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (tree_class, elements[0])));
 

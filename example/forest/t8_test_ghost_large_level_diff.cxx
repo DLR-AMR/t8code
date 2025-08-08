@@ -70,7 +70,7 @@ static int
 t8_ghost_fractal_adapt ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
                         const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                         [[maybe_unused]] int is_family, [[maybe_unused]] int num_elements, t8_element_t *elements[],
-                        [[maybe_unused]] void *user_data)
+                        [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
   int level;
   int type, child_id;

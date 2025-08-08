@@ -39,7 +39,7 @@ t8_basic_adapt_refine (__attribute__ ((unused)) t8_forest_t forest_from,
                        __attribute__ ((unused)) t8_locidx_t which_tree, t8_eclass_t tree_class,
                        __attribute__ ((unused)) t8_locidx_t lelement_id, const t8_scheme_c *scheme,
                        __attribute__ ((unused)) const int is_family, const int num_elements, t8_element_t *elements[],
-                       __attribute__ ((unused)) void *user_data)
+                       __attribute__ ((unused)) void *user_data, __attribute__ ((unused)) void *t8code_data)
 {
   const int level = t8_element_get_level (scheme, tree_class, elements[0]);
   /* coarsen */
@@ -59,7 +59,7 @@ t8_basic_adapt_coarsen (__attribute__ ((unused)) t8_forest_t forest_from,
                         __attribute__ ((unused)) t8_locidx_t lelement_id,
                         __attribute__ ((unused)) const t8_scheme_c *scheme, const int is_family,
                         __attribute__ ((unused)) int num_elements, __attribute__ ((unused)) t8_element_t *elements[],
-                        __attribute__ ((unused)) void *user_data)
+                        __attribute__ ((unused)) void *user_data, __attribute__ ((unused)) void *t8code_data)
 {
   if (is_family) {
     return -1;

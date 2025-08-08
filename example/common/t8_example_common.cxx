@@ -39,7 +39,7 @@ int
 t8_common_adapt_balance (t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
                          [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                         t8_element_t *elements[], [[maybe_unused]] void *user_data)
+                         t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
   int level;
   int maxlevel, child_id;
@@ -121,7 +121,7 @@ int
 t8_common_adapt_level_set (t8_forest_t forest_from, t8_locidx_t which_tree, const t8_eclass_t tree_class,
                            [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
                            [[maybe_unused]] const int num_elements, t8_element_t *elements[],
-                           [[maybe_unused]] void *user_data)
+                           [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
   t8_example_level_set_struct_t *data;
   int within_band;
