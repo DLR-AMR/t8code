@@ -73,6 +73,7 @@ tutorials/t8_step3_adapt_forest
 tutorials/t8_step4_partition_balance_ghost
 tutorials/t8_step5_element_data
 tutorials/t8_tutorial_search
+tutorials/t8_tutorial_search_partition
 test/t8_cmesh/t8_test_cmesh_copy
 test/t8_cmesh/t8_test_cmesh_face_is_boundary
 test/t8_cmesh/t8_test_cmesh_partition
