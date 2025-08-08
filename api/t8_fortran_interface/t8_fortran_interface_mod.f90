@@ -240,7 +240,7 @@ module t8_fortran_interface_mod
 
       Interface
             integer (c_int) function t8_forest_get_global_num_elements (forest) &
-                                     bind (c, name = 't8_forest_get_global_num_elements')
+                                     bind (c, name = 't8_forest_get_global_num_leaf_elements')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
                   IMPLICIT NONE
                   type (c_ptr), value :: forest
@@ -258,7 +258,7 @@ module t8_fortran_interface_mod
 
       Interface
             integer (c_int) function t8_forest_get_tree_num_elements (forest, ltreeid) &
-                                    bind (c, name = 't8_forest_get_tree_num_elements')
+                                    bind (c, name = 't8_forest_get_tree_num_leaf_elements')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
                   IMPLICIT NONE
                   type (c_ptr), value :: forest
@@ -268,7 +268,7 @@ module t8_fortran_interface_mod
 
       Interface
             type (c_ptr) function t8_forest_get_element_in_tree (forest, ltreeid, leid_in_tree) &
-                                    bind (c, name = 't8_forest_get_element_in_tree')
+                                    bind (c, name = 't8_forest_get_leaf_element_in_tree')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
                   IMPLICIT NONE
                   type (c_ptr), value :: forest
