@@ -61,6 +61,7 @@ program t8_test_forest
   call t8_forest_unref_f (forest)
   call t8_fortran_finalize_f ()
   call t8_fortran_mpi_comm_delete_f(ccomm)
+  !! call t8_global_productionf_noargs_f ('Finalize forest tests')
   call MPI_Finalize(ierror)
   if (ierror /= 0) then
     print *, 'MPI Finalize failed.'
