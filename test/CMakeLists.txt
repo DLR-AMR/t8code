@@ -195,6 +195,7 @@ add_t8_cpp_test( NAME t8_gtest_elements_are_family_serial   SOURCES t8_schemes/t
 if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_parallel    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )
   add_t8_test( NAME t8_test_fortran_mpi_interface_cmesh_parallel   SOURCES api/t8_fortran_interface/t8_test_cmesh.f90 )
+  add_t8_test( NAME t8_test_fortran_mpi_interface_forest_parallel  SOURCES api/t8_fortran_interface/t8_test_forest.f90 )
 endif()
 
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_vector_helper/t8_gtest_vector_split.cxx )
