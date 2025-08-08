@@ -20,10 +20,11 @@
 
 !! Description:
 !!
-!! This program tests if t8code can be initialized from Fortran
-!! with given MPI communicator. Works only when MPI is enabled.
+!! This program tests if the cmesh part of the Fortran
+!! interface can be called.
+!! Works only when MPI is enabled.
 
-program t8_test_mpi_init
+program t8_test_cmesh
   use mpi
   use iso_c_binding, only: c_ptr, c_int
   use t8_fortran_interface_mod
