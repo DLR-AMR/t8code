@@ -744,6 +744,25 @@ t8_element_to_string (const t8_scheme_c *scheme, const t8_eclass_t tree_class, c
 void
 t8_element_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int length, t8_element_t **elems);
 
+/** Initialize an array of allocated elements.
+* \param [in] scheme        The scheme to use.
+* \param [in] tree_class    The eclass of the current tree.
+* \param [in] length   The number of elements to be initialized.
+* \param [in,out] elems On input an array of \a length many allocated
+*                       elements.
+* \note In debugging mode, an element that was passed to \ref t8_element_init
+* must pass \ref t8_element_is_valid.
+* \note If an element was created by \ref t8_element_new then \ref t8_element_init
+* may not be called for it. Thus, \ref t8_element_init should initialize an element
+* in the same way as a call to \ref t8_element_new would.
+* \note Every call to \ref t8_element_init must be matched by a call to \ref t8_element_deinit
+* \see t8_element_deinit
+* \see t8_element_new
+* \see t8_element_is_valid
+*/
+void
+t8_element_init (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int length, t8_element_t *elem);
+
 /** Deallocate an array of elements.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
