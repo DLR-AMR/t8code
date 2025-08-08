@@ -33,15 +33,15 @@
  * The array uses sc_shmem shared memory.*/
 typedef struct t8_shmem_array
 {
-  void *array;          /*< Pointer to the actual memory. */
-  size_t elem_size;     /*< Size of one entry in byte. */
-  size_t elem_count;    /*< Total count of entries. */
-  sc_MPI_Comm comm;     /*< MPI communicator. */
-  int writing_possible; /*< True if we can currently write into this array. False if not. */
+  void *array;          /*!< Pointer to the actual memory. */
+  size_t elem_size;     /*!< Size of one entry in byte. */
+  size_t elem_count;    /*!< Total count of entries. */
+  sc_MPI_Comm comm;     /*!< MPI communicator. */
+  int writing_possible; /*!< True if we can currently write into this array. False if not. */
   int
-    write_start_called; /*< True if t8_shmem_array_start_writing was called and no call to t8_shmem_array_end_writing happened yet. */
+    write_start_called; /*!< True if t8_shmem_array_start_writing was called and no call to t8_shmem_array_end_writing happened yet. */
 #if T8_ENABLE_DEBUG
-  sc_shmem_type_t shmem_type; /*< Shared memory type of the communicator (at time of initializing the array). */
+  sc_shmem_type_t shmem_type; /*!< Shared memory type of the communicator (at time of initializing the array). */
 #endif
 } t8_shmem_array_struct_t;
 
@@ -220,6 +220,7 @@ t8_shmem_array_prefix (const void *sendbuf, t8_shmem_array_t recvarray, const in
  * \param[in] sendcount The number of items this proc sends
  * \param[in, out] recvcounts On input a zero-initialized array that is going to be filled with the number of elements send by rank i
  * \param[in, out] displs On input a zero-initialized array that is going to be filled with the displacements
+ * \param[in] comm The MPI communicator to use
  * \returns   The total number of items 
  */
 static int
@@ -480,7 +481,6 @@ t8_shmem_array_index_for_writing (t8_shmem_array_t array, size_t index)
   return ((char *) array->array) + index * array->elem_size;
 }
 
-/* TODO: implement */
 int
 t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b)
 {
