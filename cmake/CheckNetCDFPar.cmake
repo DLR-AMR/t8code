@@ -20,7 +20,7 @@
 
 include( CheckCSourceCompiles )
 function( check_netcdf_par )
-  set( CMAKE_REQUIRED_LIBRARIES netCDF::netcdf )
+  set( CMAKE_REQUIRED_LIBRARIES NetCDF::NetCDF )
 
   check_c_source_compiles(
     "
