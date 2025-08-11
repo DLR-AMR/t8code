@@ -2969,32 +2969,6 @@ t8_forest_comm_global_num_leaf_elements (t8_forest_t forest)
   forest->global_num_leaf_elements = global_num_el;
 }
 
-/** Adapt callback function to refine every element in the forest.
- * It is merely used to build a new forest with pyramids. 
- * 
- * \param [in] forest       The forest to which the new elements belong
- * \param [in] forest_from  The forest that is adapted.
- * \param [in] which_tree   The local tree containing \a elements.
- * \param [in] tree_class   The eclass of \a which_tree.
- * \param [in] lelement_id  The local element id in \a forest_old in the tree of the current element
- * \param [in] scheme           The eclass scheme of the tree
- * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
- * \param [in] num_elements The number of entries in \a elements that are defined
- * \param [in] elements     Pointers to a family or, if \a is_family is zero,
- *                          pointer to one element.
- * \return                  Always return 1, to refine every element
- */
-static int
-t8_forest_refine_everything ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
-                             [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                             [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                             [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[],
-                             [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
-{
-
-  return 1;
-}
-
 /**
  * Check if any tree in a forest refines irregularly.
  * An irregular refining tree is a tree with an element that does not
