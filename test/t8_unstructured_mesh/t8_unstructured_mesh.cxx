@@ -42,6 +42,7 @@ TEST (t8_unstructured_mesh, test_iterator)
 
   // Define an unstructured mesh for the forest.
   t8_unstructured_mesh unstructured_mesh = t8_unstructured_mesh (forest);
+  unstructured_mesh.cache_level ();
 
   // Iterate with the iterator over all unstructured mesh elements and check the level.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {

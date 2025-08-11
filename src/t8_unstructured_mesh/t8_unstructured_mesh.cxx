@@ -29,9 +29,14 @@
 int
 t8_unstructured_mesh_element::get_level ()
 {
-  const t8_scheme* scheme = t8_forest_get_scheme (m_unstructured_mesh->m_forest);
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
-  const t8_element_t* element
-    = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
-  return scheme->element_get_level (tree_class, element);
+  if (m_unstructured_mesh->m_level_cache.empty ()) {
+    const t8_scheme* scheme = t8_forest_get_scheme (m_unstructured_mesh->m_forest);
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
+    const t8_element_t* element
+      = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+    return scheme->element_get_level (tree_class, element);
+  }
+  else {
+    return m_unstructured_mesh->m_level_cache[m_tree_id][m_element_id];  //TODO correct index.
+  }
 }

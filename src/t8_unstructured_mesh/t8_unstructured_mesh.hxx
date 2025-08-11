@@ -31,6 +31,7 @@
 #include <t8_element.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <iterator>
+#include <vector>
 #include <cstddef>
 
 /* Forward declaration of the default unstructured element class because used as default template parameter in
@@ -58,6 +59,31 @@ class t8_unstructured_mesh {
    */
   t8_unstructured_mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
+  }
+
+  //TODO: maybe bool for error or no error
+  // TODO DOCUMENT
+  void
+  cache_level ()
+  {
+    const t8_scheme* scheme = t8_forest_get_scheme (m_forest);
+    t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (m_forest);
+
+    for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
+
+      const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
+      const t8_eclass_t tree_class = t8_forest_get_tree_class (m_forest, itree);
+      // Temp vector to store the level of each element in the current tree.
+      std::vector<int> temp;
+
+      for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
+        const t8_element_t* elem = t8_forest_get_leaf_element_in_tree (m_forest, itree, ielem);
+        const int elem_level = scheme->element_get_level (tree_class, elem);
+        temp.push_back (elem_level);
+      }
+
+      m_level_cache.push_back (temp);
+    }
   }
 
   /** \brief This forward iterator iterates over all (local) elements of the unstructured mesh.
@@ -209,7 +235,8 @@ class t8_unstructured_mesh {
   }
 
  private:
-  t8_forest_t m_forest; /*< The forest the unstructured mesh should be defined for. */
+  t8_forest_t m_forest;                        /*< The forest the unstructured mesh should be defined for. */
+  std::vector<std::vector<int>> m_level_cache; /*< The cache vector for the level. */
 };
 
 /** 
