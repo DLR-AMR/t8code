@@ -22,71 +22,12 @@
 
 #include <t8_unstructured_mesh/t8_unstructured_mesh.hxx>
 
-t8_unstructured_mesh::Element_Iterator::Element_Iterator (t8_unstructured_mesh* unstructured_mesh,
-                                                          t8_locidx_t current_tree_id, t8_locidx_t current_element_id)
-  : m_current_tree_id (current_tree_id), m_current_element_id (current_element_id),
-    m_unstructured_mesh (unstructured_mesh)
+int
+t8_unstructured_mesh_element::get_level ()
 {
-  m_num_local_trees = t8_forest_get_num_local_trees (m_unstructured_mesh->m_forest);
-  if (m_num_local_trees > m_current_tree_id) {
-    m_num_elements_current_tree
-      = t8_forest_get_tree_num_leaf_elements (m_unstructured_mesh->m_forest, m_current_tree_id);
-  }
-  else {
-    m_num_elements_current_tree = 0;
-  }
-}
-
-t8_unstructured_mesh::Element_Iterator::reference
-t8_unstructured_mesh::Element_Iterator::operator* () const
-{
-  return *new t8_unstructured_mesh_element (m_unstructured_mesh, m_current_tree_id, m_current_element_id);
-}
-
-t8_unstructured_mesh::Element_Iterator::pointer
-t8_unstructured_mesh::Element_Iterator::operator->() const
-{
-  return new t8_unstructured_mesh_element (m_unstructured_mesh, m_current_tree_id, m_current_element_id);
-}
-
-t8_unstructured_mesh::Element_Iterator&
-t8_unstructured_mesh::Element_Iterator::operator++ ()
-{
-  if (m_current_element_id < m_num_elements_current_tree - 1) {
-    m_current_element_id++;
-  }
-  else {
-    m_current_element_id = 0;
-    m_current_tree_id++;
-    if (m_num_local_trees > m_current_tree_id) {
-      m_num_elements_current_tree
-        = t8_forest_get_tree_num_leaf_elements (m_unstructured_mesh->m_forest, m_current_tree_id);
-    }
-    else {
-      m_num_elements_current_tree = 0;
-    }
-  }
-  return *this;
-}
-
-t8_unstructured_mesh::Element_Iterator
-t8_unstructured_mesh::Element_Iterator::operator++ (int)
-{
-  t8_unstructured_mesh::Element_Iterator tmp = *this;
-  ++(*this);
-  return tmp;
-}
-
-bool
-t8_unstructured_mesh::Element_Iterator::operator== (const t8_unstructured_mesh::Element_Iterator& other_iterator) const
-{
-  return m_unstructured_mesh->m_forest == other_iterator.m_unstructured_mesh->m_forest
-         && m_current_tree_id == other_iterator.m_current_tree_id
-         && m_current_element_id == other_iterator.m_current_element_id;
-}
-// Not needed in C++20 but for completion.
-bool
-t8_unstructured_mesh::Element_Iterator::operator!= (const t8_unstructured_mesh::Element_Iterator& other_iterator) const
-{
-  return !(*this == other_iterator);
+  const t8_scheme* scheme = t8_forest_get_scheme (m_unstructured_mesh->m_forest);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
+  const t8_element_t* element
+    = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+  return scheme->element_get_level (tree_class, element);
 }
