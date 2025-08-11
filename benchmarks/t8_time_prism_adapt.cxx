@@ -47,7 +47,7 @@ t8_basic_adapt_refine_type ([[maybe_unused]] t8_forest_t forest_from, [[maybe_un
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
 
   level = scheme->element_get_level (tree_class, elements[0]);
-  if (level >= *(int *) t8_forest_get_user_data (forest_from)) {
+  if (level >= *(int *) user_data) {
     return 0;
   }
   /* get the type of the current element */
@@ -72,7 +72,7 @@ t8_basic_adapt_refine_tet ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unu
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
 
   level = scheme->element_get_level (tree_class, elements[0]);
-  if (level >= *(int *) t8_forest_get_user_data (forest_from)) {
+  if (level >= *(int *) user_data) {
     return 0;
   }
   /* get the type of the current element */

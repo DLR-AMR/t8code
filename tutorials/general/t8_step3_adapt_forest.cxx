@@ -94,8 +94,7 @@ t8_step3_adapt_callback (t8_forest_t forest_from, t8_locidx_t which_tree, [[mayb
   /* In t8_step3_adapt_forest we pass a t8_step3_adapt_data pointer as user data to the
    * t8_forest_new_adapt function. This pointer is stored as the used data of the new forest
    * and we can now access it with t8_forest_get_user_data (forest). */
-  const struct t8_step3_adapt_data *adapt_data
-    = (const struct t8_step3_adapt_data *) t8_forest_get_user_data (forest_from);
+  const struct t8_step3_adapt_data *adapt_data = (const struct t8_step3_adapt_data *) user_data;
   double dist; /* Will store the distance of the element's midpoint and the sphere midpoint. */
 
   /* You can use T8_ASSERT for assertions that are active in debug mode (when configured with --enable-debug).

@@ -45,7 +45,7 @@ t8_adapt_callback_refine (t8_forest_t forest_from, t8_locidx_t which_tree,
                           [[maybe_unused]] const int num_elements, t8_element_t *elements[],
                           [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest_from);
+  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) user_data;
   T8_ASSERT (adapt_data != NULL);
 
   t8_3D_point centroid;
@@ -68,7 +68,7 @@ t8_adapt_callback_remove (t8_forest_t forest_from, t8_locidx_t which_tree,
                           [[maybe_unused]] const int num_elements, t8_element_t *elements[],
                           [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest_from);
+  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) user_data;
   T8_ASSERT (adapt_data != NULL);
 
   t8_3D_point centroid;

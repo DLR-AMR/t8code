@@ -69,7 +69,7 @@ t8_band_adapt (t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
   level = scheme->element_get_level (tree_class, elements[0]);
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
-  adapt_data = (adapt_data_t *) t8_forest_get_user_data (forest_from);
+  adapt_data = (adapt_data_t *) user_data;
   t8_3D_vec normal = adapt_data->normal;
   base_level = adapt_data->base_level;
   max_level = adapt_data->max_level;

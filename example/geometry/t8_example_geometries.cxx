@@ -601,7 +601,7 @@ t8_geom_adapt_boundary (t8_forest_t forest_from, t8_locidx_t ltree_id, const t8_
   int iface;
   /* Get the maximum level from the forest's user data 
    * (must be set before using the callback). */
-  int maxlevel = *(int *) t8_forest_get_user_data (forest_from);
+  int maxlevel = *(int *) user_data;
 
   /* We do not refine more then the given maximum level. */
   if (scheme->element_get_level (tree_class, elements[0]) >= maxlevel) {

@@ -194,7 +194,7 @@ t8_advect_adapt (t8_forest_t forest_from, t8_locidx_t ltree_id, const t8_eclass_
 
   srand (seed++);
   /* Get a pointer to the problem from the user data pointer of forest */
-  problem = (t8_advect_problem_t *) t8_forest_get_user_data (forest_from);
+  problem = (t8_advect_problem_t *) user_data;
   /* Get the element's level */
   level = scheme->element_get_level (tree_class, elements[0]);
   if (level == problem->maxlevel && !is_family) {

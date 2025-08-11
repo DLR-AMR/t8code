@@ -50,7 +50,7 @@ t8_adapt_menger_quad ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]]
                       [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                       t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest_from);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements get removed, 0 else */
 
@@ -83,7 +83,7 @@ t8_adapt_sierpinski_tri ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unuse
                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                          t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest_from);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -109,7 +109,7 @@ t8_adapt_menger_hex ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] 
                      [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                      t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest_from);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -159,7 +159,7 @@ t8_adapt_sierpinski_tet ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unuse
                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                          t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest_from);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -186,7 +186,7 @@ t8_adapt_sierpinski_prism ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unu
                            t8_element_t *elements[], [[maybe_unused]] void *user_data,
                            [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest_from);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -213,7 +213,7 @@ t8_adapt_sierpinski_pyramid ([[maybe_unused]] t8_forest_t forest_from, [[maybe_u
                              t8_element_t *elements[], [[maybe_unused]] void *user_data,
                              [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest_from);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 

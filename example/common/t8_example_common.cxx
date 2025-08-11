@@ -47,7 +47,7 @@ t8_common_adapt_balance (t8_forest_t forest_from, t8_locidx_t which_tree, const 
   level = scheme->element_get_level (tree_class, elements[0]);
 
   /* we set a maximum refinement level as forest user data */
-  maxlevel = *(int *) t8_forest_get_user_data (forest_from);
+  maxlevel = *(int *) user_data;
   if (level >= maxlevel) {
     /* Do not refine after the maxlevel */
     return 0;
@@ -129,11 +129,11 @@ t8_common_adapt_level_set (t8_forest_t forest_from, t8_locidx_t which_tree, cons
 
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
 
-  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest_from);
+  data = (t8_example_level_set_struct_t *) user_data;
   level = scheme->element_get_level (tree_class, elements[0]);
 
   /* Get the minimum and maximum x-coordinate from the user data pointer of forest */
-  data = (t8_example_level_set_struct_t *) t8_forest_get_user_data (forest_from);
+  data = (t8_example_level_set_struct_t *) user_data;
 
   /* If maxlevel is exceeded then coarsen */
   if (level > data->max_level && is_family) {

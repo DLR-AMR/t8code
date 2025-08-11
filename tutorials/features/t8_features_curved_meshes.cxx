@@ -94,8 +94,7 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest_from, t8_locidx_t which_tree
                                  [[maybe_unused]] void *t8code_data)
 {
   /* We retrieve the adapt data */
-  const struct t8_naca_geometry_adapt_data *adapt_data
-    = (const struct t8_naca_geometry_adapt_data *) t8_forest_get_user_data (forest_from);
+  const struct t8_naca_geometry_adapt_data *adapt_data = (const struct t8_naca_geometry_adapt_data *) user_data;
   /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
   /* Refine element to the uniform refinement level */
@@ -243,8 +242,7 @@ t8_naca_plane_adapt_callback (t8_forest_t forest_from, t8_locidx_t which_tree, t
   /* Get the level of the element */
   elem_level = scheme->element_get_level (tree_class, elements[0]);
   /* We retrieve the adapt data */
-  const struct t8_naca_plane_adapt_data *adapt_data
-    = (const struct t8_naca_plane_adapt_data *) t8_forest_get_user_data (forest_from);
+  const struct t8_naca_plane_adapt_data *adapt_data = (const struct t8_naca_plane_adapt_data *) user_data;
   /* And check if it was retrieved successfully. */
   T8_ASSERT (adapt_data != NULL);
 

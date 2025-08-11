@@ -78,7 +78,7 @@ t8_ghost_fractal_adapt ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused
   T8_ASSERT (t8_eclass_scheme_is_default (scheme, tree_class));
 
   level = scheme->element_get_level (tree_class, elements[0]);
-  if (level >= *(int *) t8_forest_get_user_data (forest_from)) {
+  if (level >= *(int *) user_data) {
     return 0;
   }
   if (tree_class == T8_ECLASS_PRISM) {
