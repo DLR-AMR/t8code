@@ -19,6 +19,10 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
+
+/** \file t8_unstructured_mesh.hxx
+ * Definition of the unstructured mesh class and related functionality.
+ */
 #ifndef T8_UNSTRUCTURED_MESH_HXX
 #define T8_UNSTRUCTURED_MESH_HXX
 #include <t8.h>
@@ -29,37 +33,59 @@
 #include <iterator>
 #include <cstddef>
 
-/** TODO: Maybe templated class with template unstructured mesh element? Then we could also use a child of 
-unstructured_elements here and construct their type. We want to derive from unstructured element if we want to add 
-a further property of the element that can be accessed. */
-template <class unstructured_mesh_element>
-class t8_unstructured_mesh {
+/* Forward declaration of the default unstructured element class because used as default template parameter in
+ * t8_unstructured_mesh but t8_unstructured_mesh is also needed to define the element class.
+ */
+class t8_unstructured_mesh_element;
 
+/**
+ * Wrapper for a forest to be handled like an unstructured mesh object. 
+ * \tparam unstructured_mesh_element: The element class that should be used for the unstructured mesh elements. 
+ * The default class \a t8_unstructured_mesh_element provides access to the default functionality needed.
+ * In the unstructured mesh class, you can decide which parameters should be cached and which should be calculated on the fly. 
+ * If you want to access more element parameters than the default ones, that should not be cached, you can write a derived class of 
+ * \a t8_unstructured_mesh_element and use the derived class as template parameter. If the additional variable(s) should be cached,
+ *  you may also write a derived class of \a t8_unstructured_mesh.
+ */
+template <class unstructured_mesh_element = t8_unstructured_mesh_element>
+class t8_unstructured_mesh {
+ public:
+  // Declare unstructured mesh element as friend such that the forest and cached variables can be accessed.
   friend unstructured_mesh_element;
 
- public:
-  /** TODO*/
+  /** Constructor for an unstructured mesh. 
+   * \param input_forest The forest from which the unstructured mesh should be created. 
+   */
   t8_unstructured_mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
   }
 
-  /** \brief This iterator should iterate over all (local) elements.
-  */
+  /** \brief This forward iterator iterates over all (local) elements of the unstructured mesh.
+   */
   struct Element_Iterator
   {
-    /* Design choice: This Iterator is part of the unstructured mesh as it is */
+    /* Design choice: This Iterator is part of the unstructured mesh as it is strongly connected to the unstructured mesh 
+     * and we should not need derived iterators. 
+     */
     using iterator_category = std::forward_iterator_tag;  //TODO: do we maybe need a bi-directional Iterator?
     using difference_type = std::ptrdiff_t;
     using value_type = unstructured_mesh_element;
     using pointer = value_type*;
     using reference = value_type&;
-    // Constructor.
+
+    /** Constructor for the element iterator. 
+     * \param unstructured_mesh Pointer to the unstructured mesh the iterator should be created for. 
+     * \param current_tree_id Initial tree id of the iterator. 
+     * \param current_element_id Initial element id in the tree of the iterator. 
+     */
     Element_Iterator (t8_unstructured_mesh* unstructured_mesh, t8_locidx_t current_tree_id,
                       t8_locidx_t current_element_id)
       : m_current_tree_id (current_tree_id), m_current_element_id (current_element_id),
         m_unstructured_mesh (unstructured_mesh)
     {
       m_num_local_trees = t8_forest_get_num_local_trees (m_unstructured_mesh->m_forest);
+      // It has to be possible to give an invalid tree_id, e.g., for end().
+      // Define the elements in the current tree as 0 for this case.
       if (m_num_local_trees > m_current_tree_id) {
         m_num_elements_current_tree
           = t8_forest_get_tree_num_leaf_elements (m_unstructured_mesh->m_forest, m_current_tree_id);
@@ -69,17 +95,32 @@ class t8_unstructured_mesh {
       }
     }
 
+    /**
+     * \brief Dereference the iterator to access the unstructured mesh element.
+     * \return Reference to the current unstructured mesh element.
+     */
     reference
     operator* () const
-    {
+    { /* Define new unstructured mesh element instead of caching the current one because it is possible that the iterator 
+       * should point to an element following the last (local) element, e.g., end().
+       */
       return *new unstructured_mesh_element (m_unstructured_mesh, m_current_tree_id, m_current_element_id);
     }
+
+    /**
+     * \brief Access member of the current unstructured mesh element.
+     * \return Pointer to the current unstructured mesh element.
+     */
     pointer
     operator->() const
     {
       return new unstructured_mesh_element (m_unstructured_mesh, m_current_tree_id, m_current_element_id);
     }
 
+    /**
+     * \brief Prefix-increment the iterator to point to the next element.
+     * \return Reference to the incremented iterator.
+     */
     Element_Iterator&
     operator++ ()
     {
@@ -87,6 +128,7 @@ class t8_unstructured_mesh {
         m_current_element_id++;
       }
       else {
+        // Jump to the next (local) tree.
         m_current_element_id = 0;
         m_current_tree_id++;
         if (m_num_local_trees > m_current_tree_id) {
@@ -94,12 +136,17 @@ class t8_unstructured_mesh {
             = t8_forest_get_tree_num_leaf_elements (m_unstructured_mesh->m_forest, m_current_tree_id);
         }
         else {
+          // Iterator points now to an element following the last (local) element of the unstructured mesh.
           m_num_elements_current_tree = 0;
         }
       }
       return *this;
     }
 
+    /**
+     * \brief Post-increment the iterator.
+     * \return Iterator before increment.
+     */
     Element_Iterator
     operator++ (int)
     {
@@ -108,6 +155,12 @@ class t8_unstructured_mesh {
       return tmp;
     }
 
+    /**
+     * \brief Equality comparison.
+     * 
+     * \param other_iterator Another iterator to compare.
+     * \return true if both iterators point to the same element, false otherwise.
+     */
     bool
     operator== (const Element_Iterator& other_iterator) const
     {
@@ -116,7 +169,13 @@ class t8_unstructured_mesh {
              && m_current_element_id == other_iterator.m_current_element_id;
     }
 
-    // Not needed in C++20 but for completion.
+    /**
+     * \brief Inequality comparison operator.
+     * This operator is not needed in C++20 but for completion.
+     * 
+     * \param other_iterator Another iterator to compare.
+     * \return true if both iterators point to different elements, false otherwise.
+     */
     bool
     operator!= (const Element_Iterator& other_iterator) const
     {
@@ -124,13 +183,16 @@ class t8_unstructured_mesh {
     }
 
    private:
-    t8_locidx_t m_current_tree_id, m_current_element_id;
-    t8_unstructured_mesh* m_unstructured_mesh;
-    t8_locidx_t m_num_local_trees, m_num_elements_current_tree;
-    unstructured_mesh_element* current_element;
+    t8_locidx_t m_current_tree_id,
+      m_current_element_id; /*< The tree id and the element id defining the position of the iterator in the forest. */
+    t8_unstructured_mesh* m_unstructured_mesh; /*< The unstructured mesh the iterator is defined for. */
+    t8_locidx_t m_num_local_trees,
+      m_num_elements_current_tree; /*< The number of local trees of the forest and the number of elements in the current tree. */
   };
 
-  /**TODO*/
+  /**
+   * \brief Returns an iterator to the first (local) unstructured mesh element.
+   */
   inline Element_Iterator
   begin ()
   {
@@ -138,8 +200,8 @@ class t8_unstructured_mesh {
   }
 
   /**
- * TODO
- */
+   * \brief Returns an iterator to an unstructured mesh element following the last (local) element of the unstructured mesh.
+   */
   inline Element_Iterator
   end ()
   {
@@ -147,23 +209,36 @@ class t8_unstructured_mesh {
   }
 
  private:
-  t8_forest_t m_forest;
+  t8_forest_t m_forest; /*< The forest the unstructured mesh should be defined for. */
 };
 
+/** 
+ * Default element of an unstructured mesh. 
+ * For this element, the following properties can be accessed: Level, TODO.
+ */
 class t8_unstructured_mesh_element {
+  /* Design choice: Decided to not define the class inside of \a t8_unstructured_mesh although the classes are strongly connected,
+ * because the class also would not have access to private members and inheritance of the element class would be complicated.
+ */
  public:
-  t8_unstructured_mesh_element (t8_unstructured_mesh<t8_unstructured_mesh_element>* unstruct, t8_locidx_t tree_id,
-                                t8_locidx_t element_id)
-    : m_tree_id (tree_id), m_element_id (element_id), m_unstructured_mesh (unstruct)
+  t8_unstructured_mesh_element (t8_unstructured_mesh<t8_unstructured_mesh_element>* unstructured_mesh,
+                                t8_locidx_t tree_id, t8_locidx_t element_id)
+    : m_tree_id (tree_id), m_element_id (element_id), m_unstructured_mesh (unstructured_mesh)
   {
   }
 
+  /**
+   * \brief Getter for the refinement level of the unstructured mesh element.
+   * \return Refinement level of the unstructured mesh element.
+   */
   int
   get_level ();
 
  private:
-  t8_locidx_t m_tree_id, m_element_id;
-  t8_unstructured_mesh<t8_unstructured_mesh_element>* m_unstructured_mesh;
+  t8_locidx_t m_tree_id,
+    m_element_id; /*< The tree id and the element id of the element in the forest defined in the unstructured mesh. */
+  t8_unstructured_mesh<t8_unstructured_mesh_element>*
+    m_unstructured_mesh; /*< Pointer to the unstructured mesh the element is defined for. */
 };
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */

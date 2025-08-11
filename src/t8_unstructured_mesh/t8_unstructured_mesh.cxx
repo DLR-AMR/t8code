@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_unstructured_mesh.cxx
+ *  This file implements functions defined in the unstructured mesh element class.
+ */
+
 #include <t8_unstructured_mesh/t8_unstructured_mesh.hxx>
 
 int

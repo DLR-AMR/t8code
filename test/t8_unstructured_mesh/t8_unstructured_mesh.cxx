@@ -36,14 +36,18 @@ TEST (t8_unstructured_mesh, test_iterator)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *scheme = t8_scheme_new_default ();
 
-  /* Start with a uniform forest. */
+  // Start with a uniform forest.
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  t8_unstructured_mesh unstructured_mesh = t8_unstructured_mesh<t8_unstructured_mesh_element> (forest);
+  // Define an unstructured mesh for the forest.
+  t8_unstructured_mesh unstructured_mesh = t8_unstructured_mesh (forest);
 
+  // Iterate with the iterator over all unstructured mesh elements and check the level.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     ASSERT_EQ (level, it->get_level ());
   }
+
+  // Unref the forest.
   t8_forest_unref (&forest);
 }
