@@ -35,11 +35,11 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 static int
-t8_basic_adapt_refine_type (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                            [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                            [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+t8_basic_adapt_refine_type ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                            t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                             [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                            t8_element_t *elements[])
+                            t8_element_t *elements[], [[maybe_unused]] void *user_data,
+                            [[maybe_unused]] void *t8code_data)
 {
   int level;
   int type;
@@ -47,7 +47,7 @@ t8_basic_adapt_refine_type (t8_forest_t forest, [[maybe_unused]] t8_forest_t for
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
 
   level = scheme->element_get_level (tree_class, elements[0]);
-  if (level >= *(int *) t8_forest_get_user_data (forest)) {
+  if (level >= *(int *) user_data) {
     return 0;
   }
   /* get the type of the current element */
@@ -60,11 +60,11 @@ t8_basic_adapt_refine_type (t8_forest_t forest, [[maybe_unused]] t8_forest_t for
 }
 
 static int
-t8_basic_adapt_refine_tet (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                           [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+t8_basic_adapt_refine_tet ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                           t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                            [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                           t8_element_t *elements[])
+                           t8_element_t *elements[], [[maybe_unused]] void *user_data,
+                           [[maybe_unused]] void *t8code_data)
 {
   int level;
   int type;
@@ -72,7 +72,7 @@ t8_basic_adapt_refine_tet (t8_forest_t forest, [[maybe_unused]] t8_forest_t fore
   T8_ASSERT (!is_family || num_elements == scheme->element_get_num_children (tree_class, elements[0]));
 
   level = scheme->element_get_level (tree_class, elements[0]);
-  if (level >= *(int *) t8_forest_get_user_data (forest)) {
+  if (level >= *(int *) user_data) {
     return 0;
   }
   /* get the type of the current element */
