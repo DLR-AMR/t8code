@@ -54,10 +54,10 @@ class t8_element_array_iterator {
 
  public:
   using iterator_category = std::random_access_iterator_tag; /*!< The iterator category. */
-  using difference_type = std::ptrdiff_t; /*!< The difference type for the iterator. */
-  using pointer = t8_element_t**; /*!< The pointer type for the iterator. */
-  using value_type = t8_element_t*; /*!< The value type for the iterator. */
-  using reference = t8_element_t*&; /*!< The reference type for the iterator. */
+  using difference_type = std::ptrdiff_t;                    /*!< The difference type for the iterator. */
+  using pointer = t8_element_t**;                            /*!< The pointer type for the iterator. */
+  using value_type = t8_element_t*;                          /*!< The value type for the iterator. */
+  using reference = t8_element_t*&;                          /*!< The reference type for the iterator. */
 
   /* Constructors */
   t8_element_array_iterator () = delete;
@@ -76,7 +76,7 @@ class t8_element_array_iterator {
    * \param [in] other The iterator to copy from.
    */
   t8_element_array_iterator (const t8_element_array_iterator& other) = default;
-  
+
   /**
    * Assignment operator for the iterator.
    * \param [in] other The iterator to assign from.
@@ -90,7 +90,7 @@ class t8_element_array_iterator {
    * \param [in] other The iterator to move from.
    */
   t8_element_array_iterator (t8_element_array_iterator&& other) = default;
-  
+
   /**
    * Move assignment operator for the iterator.
    * \param [in] other The iterator to move from.
@@ -297,7 +297,7 @@ class t8_element_array_iterator {
     tmp_iterator += n;
     return tmp_iterator;
   }
-  
+
   /**
    * Plus operator for the iterator.
    * \param [in] n    The number to add.
