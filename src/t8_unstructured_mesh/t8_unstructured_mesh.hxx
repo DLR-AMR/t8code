@@ -44,6 +44,7 @@ class t8_unstructured_mesh_element;
  * \tparam unstructured_mesh_element: The element class that should be used for the unstructured mesh elements. 
  * The default class \a t8_unstructured_mesh_element provides access to the default functionality needed.
  * In the unstructured mesh class, you can decide which parameters should be cached and which should be calculated on the fly. 
+ * Per default, the parameters will be calculated and not cached, please call the related functions to cache variables.
  * If you want to access more element parameters than the default ones, that should not be cached, you can write a derived class of 
  * \a t8_unstructured_mesh_element and use the derived class as template parameter. If the additional variable(s) should be cached,
  *  you may also write a derived class of \a t8_unstructured_mesh.
@@ -54,15 +55,18 @@ class t8_unstructured_mesh {
   // Declare unstructured mesh element as friend such that the forest and cached variables can be accessed.
   friend unstructured_mesh_element;
 
-  /** Constructor for an unstructured mesh. 
+  /** \brief Constructor for an unstructured mesh. 
    * \param input_forest The forest from which the unstructured mesh should be created. 
    */
   t8_unstructured_mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
   }
 
-  //TODO: maybe bool for error or no error
-  // TODO DOCUMENT
+  /** \brief If this function is called, the level parameter of the unstructured mesh elements will be cached 
+  * and accessed if the function \a get_level() is called. If the function is not called before using the function, 
+  * the level will be calculated in place. 
+  * You should decide to cache or calculate incorporating runtime and memory aspects.
+  */
   void
   cache_level ()
   {
@@ -86,7 +90,7 @@ class t8_unstructured_mesh {
     }
   }
 
-  /** \brief This forward iterator iterates over all (local) elements of the unstructured mesh.
+  /** This forward iterator iterates over all (local) elements of the unstructured mesh.
    */
   struct Element_Iterator
   {
@@ -99,7 +103,7 @@ class t8_unstructured_mesh {
     using pointer = value_type*;
     using reference = value_type&;
 
-    /** Constructor for the element iterator. 
+    /** \brief Constructor for the element iterator. 
      * \param unstructured_mesh Pointer to the unstructured mesh the iterator should be created for. 
      * \param current_tree_id Initial tree id of the iterator. 
      * \param current_element_id Initial element id in the tree of the iterator. 
@@ -235,8 +239,9 @@ class t8_unstructured_mesh {
   }
 
  private:
-  t8_forest_t m_forest;                        /*< The forest the unstructured mesh should be defined for. */
-  std::vector<std::vector<int>> m_level_cache; /*< The cache vector for the level. */
+  t8_forest_t m_forest; /*< The forest the unstructured mesh should be defined for. */
+  std::vector<std::vector<int>>
+    m_level_cache; /*< The cache vector for the level. The vector consists of one vector for each (local) tree. */
 };
 
 /** 
@@ -245,8 +250,8 @@ class t8_unstructured_mesh {
  */
 class t8_unstructured_mesh_element {
   /* Design choice: Decided to not define the class inside of \a t8_unstructured_mesh although the classes are strongly connected,
- * because the class also would not have access to private members and inheritance of the element class would be complicated.
- */
+* because the class also would not have access to private members and inheritance of the element class would be complicated.
+*/
  public:
   t8_unstructured_mesh_element (t8_unstructured_mesh<t8_unstructured_mesh_element>* unstructured_mesh,
                                 t8_locidx_t tree_id, t8_locidx_t element_id)

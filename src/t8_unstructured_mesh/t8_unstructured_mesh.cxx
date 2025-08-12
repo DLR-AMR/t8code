@@ -37,6 +37,6 @@ t8_unstructured_mesh_element::get_level ()
     return scheme->element_get_level (tree_class, element);
   }
   else {
-    return m_unstructured_mesh->m_level_cache[m_tree_id][m_element_id];  //TODO correct index.
+    return m_unstructured_mesh->m_level_cache[m_tree_id][m_element_id];
   }
 }
