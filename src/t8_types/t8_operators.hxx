@@ -32,7 +32,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_type.hxx>
 
 /**
- * \brief The CRTP pattern for operators.
+ * The CRTP pattern for operators.
  * 
  * \tparam TUnderlying
  * \tparam crtpType 
@@ -40,12 +40,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 template <typename TUnderlying, template <typename> class crtpType>
 struct t8_crtp_operator
 {
+  /**
+   * Get the underlying type.
+   */
   constexpr TUnderlying&
   underlying () noexcept
   {
     return static_cast<TUnderlying&> (*this);
   }
 
+  /**
+   * Get the underlying type.
+   */
   constexpr const TUnderlying&
   underlying () const noexcept
   {
@@ -67,7 +73,12 @@ struct t8_crtp_operator
 template <typename TUnderlying>
 struct Addable: t8_crtp_operator<TUnderlying, Addable>
 {
-
+  /**
+   * Add the value of \a other to the underlying type.
+   * 
+   * \param [in] other The value to add to the underlying type.
+   * \return The underlying type after the addition.
+   */
   constexpr TUnderlying
   operator+ (const TUnderlying& other) const noexcept
   {
@@ -83,6 +94,12 @@ struct Addable: t8_crtp_operator<TUnderlying, Addable>
 template <typename TUnderlying>
 struct Subtractable: t8_crtp_operator<TUnderlying, Subtractable>
 {
+  /**
+   * Subtract the value of \a other from the underlying type.
+   * 
+   * \param [in] other The value to subtract from the underlying type.
+   * \return The underlying type after the subtraction.
+   */
   constexpr TUnderlying
   operator- (const TUnderlying& other) const noexcept
   {
@@ -98,6 +115,12 @@ struct Subtractable: t8_crtp_operator<TUnderlying, Subtractable>
 template <typename TUnderlying>
 struct Multipliable: t8_crtp_operator<TUnderlying, Multipliable>
 {
+  /**
+   * Multiply the underlying type with \a other.
+   * 
+   * \param [in] other The value to multiply the underlying type with.
+   * \return The underlying type after the multiplication.
+   */
   constexpr TUnderlying
   operator* (const TUnderlying& other) const noexcept
   {
@@ -113,6 +136,12 @@ struct Multipliable: t8_crtp_operator<TUnderlying, Multipliable>
 template <typename TUnderlying>
 struct Dividable: t8_crtp_operator<TUnderlying, Dividable>
 {
+  /**
+   * Divide the underlying type by \a other.
+   * 
+   * \param [in] other The value to divide the underlying type by.
+   * \return The underlying type after the division.
+   */
   constexpr TUnderlying
   operator/ (const TUnderlying& other) const noexcept
   {
@@ -128,6 +157,12 @@ struct Dividable: t8_crtp_operator<TUnderlying, Dividable>
 template <typename TUnderlying>
 struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 {
+  /**
+   * Add-assign the value of \a other to the underlying type.
+   * 
+   * \param [in] other The value to add to the underlying type.
+   * \return The underlying type after the addition.
+   */
   constexpr TUnderlying&
   operator+= (const TUnderlying& other) noexcept
   {
@@ -146,6 +181,11 @@ struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 template <typename TUnderlying>
 struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 {
+  /**
+   * Increment the underlying type.
+   * 
+   * \return The underlying type after the increment.
+   */
   TUnderlying&
   operator++ () noexcept
   {
@@ -164,6 +204,11 @@ struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 template <typename TUnderlying>
 struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 {
+  /**
+   * Decrement the underlying type.
+   * 
+   * \return The underlying type after the decrement.
+   */
   TUnderlying&
   operator-- () noexcept
   {
@@ -180,6 +225,13 @@ struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 template <typename TUnderlying>
 struct Printable: t8_crtp_operator<TUnderlying, Printable>
 {
+  /**
+   * Print the underlying type to the output stream.
+   * 
+   * \param [in] os The output stream to print to.
+   * \param [in] obj The object to print.
+   * \return The output stream after printing.
+   */
   friend std::ostream&
   operator<< (std::ostream& os, const TUnderlying& obj)
   {
@@ -196,6 +248,12 @@ struct Printable: t8_crtp_operator<TUnderlying, Printable>
 template <typename TUnderlying>
 struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 {
+  /**
+   * Swap the underlying type with another underlying type.
+   * 
+   * \param [in,out] lhs The left-hand side of the swap.
+   * \param [in,out] other The right-hand side of the swap.
+   */
   constexpr void
   swap (TUnderlying& lhs, TUnderlying& other) noexcept
   {
@@ -211,12 +269,25 @@ struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 template <typename TUnderlying>
 struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
 {
+  /**
+   * Check if the underlying types are equal.
+   * 
+   * \param [in] lhs The left-hand side of the equality check.
+   * \param [in] rhs The right-hand side of the equality check.
+   * \return True if the underlying types are equal, false otherwise.
+   */
   friend constexpr bool
   operator== (const TUnderlying& lhs, const TUnderlying& rhs) noexcept
   {
     return lhs.get () == rhs.get ();
   }
 
+  /**
+   * Check if the underlying type is not equal to another underlying type.
+   * 
+   * \param [in] other The other underlying type to compare with.
+   * \return True if the underlying types are not equal, false otherwise.
+   */
   constexpr bool
   operator!= (TUnderlying const& other) const
   {
@@ -232,6 +303,7 @@ struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
 template <typename TUnderlying>
 struct Hashable
 {
+  /** Set if the underlying type is hashable. */
   static constexpr bool is_hashable = true;
 };
 
@@ -243,48 +315,90 @@ struct Hashable
 template <typename TUnderlying>
 struct RandomAccessible: t8_crtp_operator<TUnderlying, RandomAccessible>
 {
+  /**
+   * Get the element at the given index.
+   * 
+   * \param [in] index The index of the element to get.
+   * \return The element at the given index.
+   */
   auto
   operator[] (std::size_t index) -> decltype (auto)
   {
     return this->underlying ().get ()[index];
   }
 
+  /**
+   * Get the element at the given index.
+   * 
+   * \param [in] index The index of the element to get.
+   * \return The element at the given index.
+   */
   auto
   operator[] (std::size_t index) const -> decltype (auto)
   {
     return this->underlying ().get ()[index];
   }
 
+  /**
+   * Get an iterator to the beginning of the underlying type.
+   * 
+   * \return An iterator to the beginning of the underlying type.
+   */
   auto
   begin () -> decltype (auto)
   {
     return this->underlying ().get ().begin ();
   }
 
+  /**
+   * Get an iterator to the begin of the underlying type.
+   * 
+   * \return An iterator to the begin of the underlying type.
+   */
   auto
   begin () const -> decltype (auto)
   {
     return this->underlying ().get ().begin ();
   }
 
+  /**
+   * Get an iterator to the end of the underlying type.
+   * 
+   * \return An iterator to the end of the underlying type.
+   */
   auto
   end () -> decltype (auto)
   {
     return this->underlying ().get ().end ();
   }
 
+  /**
+   * Get an iterator to the end of the underlying type.
+   * 
+   * \return An iterator to the end of the underlying type.
+   */
   auto
   end () const -> decltype (auto)
   {
     return this->underlying ().get ().end ();
   }
 
+  /**
+   * Get a pointer to the data of the underlying type.
+   * 
+   * \return A pointer to the data of the underlying type.
+   */
   auto
   data () -> decltype (auto)
   {
     return this->underlying ().get ().data ();
   }
 
+  /**
+   * Get a pointer to the data of the underlying type.
+   * 
+   * \return A pointer to the data of the underlying type.
+   */
   auto
   data () const -> decltype (auto)
   {
