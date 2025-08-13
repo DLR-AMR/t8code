@@ -46,10 +46,13 @@
 template <typename T, typename Parameter, template <typename> class... competence>
 class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
+  /** The type of the value stored in this strong type. */
   using value_type = T;
 
+  /** Default constructor */
   explicit constexpr T8Type () = default;
 
+  /** Constructor with value */
   explicit constexpr T8Type (const T& value): value_ (value)
   {
   }
@@ -69,6 +72,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   {
   }
 
+  /** Copy constructor */
   constexpr T8Type&
   operator= (const T& value)
   {
@@ -76,12 +80,22 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
     return *this;
   }
 
+  /**
+   * \brief Get a reference to the stored value.
+   *
+   * \return A reference to the stored value.
+   */
   constexpr T&
   get () noexcept
   {
     return value_;
   }
 
+  /**
+   * \brief Get a const reference to the stored value.
+   *
+   * \return A const reference to the stored value.
+   */
   constexpr T const&
   get () const noexcept
   {
@@ -125,9 +139,17 @@ namespace std
 template <typename T, typename Parameter, template <typename> class... competence>
 struct hash<T8Type<T, Parameter, competence...>>
 {
+  /** The implementation of the T8Type with the given competences. */
   using T8TypeImpl = T8Type<T, Parameter, competence...>;
+  /** Check if the T8TypeImpl is hashable. */
   using checkIfHashable = typename std::enable_if<T8TypeImpl::is_hashable, void>::type;
 
+  /**
+   * Compute the hash value of a T8Type object.
+   *
+   * \param x The T8Type object to hash.
+   * \return The computed hash value.
+   */
   size_t
   operator() (T8Type<T, Parameter, competence...> const& x) const
   {
