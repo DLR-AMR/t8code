@@ -23,9 +23,11 @@
 /** \file t8_unstructured_mesh.hxx
  * Definition of the unstructured mesh class and related functionality.
  */
+ 
 #ifndef T8_UNSTRUCTURED_MESH_HXX
 #define T8_UNSTRUCTURED_MESH_HXX
 #include <t8.h>
+
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_element.h>
@@ -57,7 +59,7 @@ class t8_unstructured_mesh {
 
   /** 
    * Constructor for an unstructured mesh. 
-   * \param input_forest The forest from which the unstructured mesh should be created. 
+   * \param [in] input_forest The forest from which the unstructured mesh should be created. 
    */
   t8_unstructured_mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
@@ -194,8 +196,8 @@ class t8_unstructured_mesh {
     /**
      * Equality comparison.
      * 
-     * \param other_iterator Another iterator to compare.
-     * \return true if both iterators point to the same element, false otherwise.
+     * \param [in] other_iterator Another iterator to compare.
+     * \return True if both iterators point to the same element, false otherwise.
      */
     bool
     operator== (const Element_Iterator& other_iterator) const
@@ -209,8 +211,8 @@ class t8_unstructured_mesh {
      * Inequality comparison operator.
      * This operator is not needed in C++20 but for completion.
      * 
-     * \param other_iterator Another iterator to compare.
-     * \return true if both iterators point to different elements, false otherwise.
+     * \param [in] other_iterator Another iterator to compare.
+     * \return True if both iterators point to different elements, false otherwise.
      */
     bool
     operator!= (const Element_Iterator& other_iterator) const
@@ -220,10 +222,10 @@ class t8_unstructured_mesh {
 
    private:
     t8_locidx_t m_current_tree_id,
-      m_current_element_id; /*< The tree id and the element id defining the position of the iterator in the forest. */
-    t8_unstructured_mesh* m_unstructured_mesh; /*< The unstructured mesh the iterator is defined for. */
+      m_current_element_id; /**< The tree id and the element id defining the position of the iterator in the forest. */
+    t8_unstructured_mesh* m_unstructured_mesh; /**< The unstructured mesh the iterator is defined for. */
     t8_locidx_t m_num_local_trees,
-      m_num_elements_current_tree; /*< The number of local trees of the forest and the number of elements in the current tree. */
+      m_num_elements_current_tree; /**< The number of local trees of the forest and the number of elements in the current tree. */
     std::shared_ptr<TUnstructuredMeshElement> m_current_element_p;
   };
 
@@ -246,9 +248,9 @@ class t8_unstructured_mesh {
   }
 
  private:
-  t8_forest_t m_forest; /*< The forest the unstructured mesh should be defined for. */
+  t8_forest_t m_forest; /**< The forest the unstructured mesh should be defined for. */
   std::vector<std::vector<t8_element_level>>
-    m_level_cache; /*< The cache vector for the level. The vector consists of one vector for each (local) tree. */
+    m_level_cache; /**< The cache vector for the level. The vector consists of one vector for each (local) tree. */
 };
 
 /** 
@@ -256,7 +258,7 @@ class t8_unstructured_mesh {
  * For this element, the following properties can be accessed: Level, TODO.
  */
 class t8_unstructured_mesh_element {
-  /* Design choice: Decided to not define the class inside of \a t8_unstructured_mesh although the classes are strongly connected,
+  /* Design choice: Decided to not define the class inside of \ref t8_unstructured_mesh although the classes are strongly connected,
 * because the class also would not have access to private members and inheritance of the element class would be complicated.
 */
  public:
@@ -275,9 +277,9 @@ class t8_unstructured_mesh_element {
 
  private:
   t8_locidx_t m_tree_id,
-    m_element_id; /*< The tree id and the element id of the element in the forest defined in the unstructured mesh. */
+    m_element_id; /**< The tree id and the element id of the element in the forest defined in the unstructured mesh. */
   t8_unstructured_mesh<t8_unstructured_mesh_element>*
-    m_unstructured_mesh; /*< Pointer to the unstructured mesh the element is defined for. */
+    m_unstructured_mesh; /**< Pointer to the unstructured mesh the element is defined for. */
 };
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */
