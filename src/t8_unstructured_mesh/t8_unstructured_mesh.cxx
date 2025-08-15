@@ -26,7 +26,7 @@
 
 #include <t8_unstructured_mesh/t8_unstructured_mesh.hxx>
 
-int
+t8_element_level
 t8_unstructured_mesh_element::get_level ()
 {
   if (m_unstructured_mesh->m_level_cache.empty ()) {
