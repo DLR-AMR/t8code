@@ -50,7 +50,7 @@ TEST (t8_unstructured_mesh, test_iterator)
   }
 
   // Version with cached level variable.
-  unstructured_mesh.cache_level ();
+  //unstructured_mesh.cache_level ();
   // Iterate with the iterator over all unstructured mesh elements and check the level.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     ASSERT_EQ (level, (*it).get_level ());
