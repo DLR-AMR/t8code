@@ -114,10 +114,12 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
     target_sources(T8 PRIVATE 
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
+      t8_data/t8_cad.cxx
     )
     install( FILES 
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
+      t8_data/t8_cad.hxx
       DESTINATION include
     )
 endif()
@@ -171,7 +173,7 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx 
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx 
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx 
-    t8_cmesh/t8_cmesh_readmshfile.cxx 
+    t8_cmesh/t8_cmesh_readmshfile.cxx
     t8_data/t8_shmem.c 
     t8_data/t8_containers.cxx 
     t8_forest/t8_forest_adapt.cxx 
@@ -255,20 +257,17 @@ install( FILES
     t8_types/t8_vec.h
     t8_version.h
     t8_vtk.h
-    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx
-    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h
     TYPE INCLUDE
 )
 
 install ( DIRECTORY t8_vector_helper DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
 
 install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
-
   PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
   PATTERN "t8_cmesh/t8_cmesh_partition.h" EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_trees.h"     EXCLUDE 
-  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/*.h"     EXCLUDE 
+  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
 
 install( DIRECTORY t8_data TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
@@ -276,7 +275,6 @@ install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
   PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
   PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
-  PATTERN "t8_forest/t8_forest_types.h"   EXCLUDE
   )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" 
   PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.h" EXCLUDE)
