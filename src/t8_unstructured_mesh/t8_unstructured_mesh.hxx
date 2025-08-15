@@ -79,10 +79,11 @@ class t8_unstructured_mesh {
     for (t8_locidx_t itree = 0; itree < m_num_local_trees; ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
       element_vector temp;
+      temp.reserve (num_elems);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        temp.push_back (TUnstructuredMeshElement (this, itree, ielem));
+        temp.emplace_back (this, itree, ielem);
       }
-      m_elements.push_back (temp);
+      m_elements.push_back (std::move (temp));
     }
   }
 
@@ -110,7 +111,12 @@ class t8_unstructured_mesh {
       : m_unstructured_mesh (unstructured_mesh)
     {
       m_outer_iterator = m_unstructured_mesh->m_elements.begin () + current_tree_id;
-      m_inner_iterator = m_outer_iterator->begin () + current_element_id;
+      if (m_outer_iterator != m_unstructured_mesh->m_elements.end ()) {
+        m_inner_iterator = m_outer_iterator->begin () + current_element_id;
+      }
+      else {
+        m_inner_iterator = (m_unstructured_mesh->m_elements.end () - 1)->end ();
+      }
     }
 
     /**
@@ -144,7 +150,12 @@ class t8_unstructured_mesh {
     {
       if (m_inner_iterator == (*m_outer_iterator).end () - 1) {
         m_outer_iterator++;
-        m_inner_iterator = m_outer_iterator->begin ();
+        if (m_outer_iterator != m_unstructured_mesh->m_elements.end ()) {
+          m_inner_iterator = m_outer_iterator->begin ();
+        }
+        else {
+          m_inner_iterator++;
+        }
       }
       else {
         m_inner_iterator++;
