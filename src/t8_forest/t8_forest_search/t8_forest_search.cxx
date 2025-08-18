@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_cmesh/t8_cmesh_offset.h>
 
 void
 t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
@@ -140,6 +141,220 @@ t8_search_base::do_search ()
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     this->init_queries ();
     this->search_tree (itree);
+  }
+}
+
+/* Contains the necessary context data to determine the child id of a global
+ * first descendant on a specific level in t8_forest_determine_childid. */
+typedef struct
+{
+  const t8_scheme_c *ts;
+  t8_eclass_t eclass;
+  int level;
+  int num_children;
+  int maxlevel;
+  int pfirst;
+  t8_shmem_array_t element_offsets;
+} t8_forest_child_type_query_t;
+
+static t8_linearidx_t
+t8_forest_get_monotonous_gfd (sc_array_t *global_first_desc, size_t index, t8_forest_child_type_query_t *query_data)
+{
+  t8_linearidx_t linearid = *(t8_linearidx_t *) sc_array_index (global_first_desc, index);
+
+  if (linearid == 0
+      && t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + index)
+           == t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + index + 1)) {
+    /* On empty processes global_first_desc is always set to 0. However,
+     * for split_array the array has to increase monotonously. Use the next
+     * non-zero entry of global_first_desc instead. */
+    size_t nonzero_index = index + 1;
+    while (t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + nonzero_index)
+           == t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + nonzero_index + 1)) {
+      nonzero_index++;
+    }
+    linearid = *(t8_linearidx_t *) sc_array_index (global_first_desc, nonzero_index);
+    T8_ASSERT (t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + nonzero_index)
+               != t8_shmem_array_get_gloidx (query_data->element_offsets, query_data->pfirst + 1 + nonzero_index + 1));
+  }
+
+  return linearid;
+}
+
+static size_t
+t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *data)
+{
+  T8_ASSERT (data != NULL);
+  T8_ASSERT (global_first_desc->elem_size = sizeof (t8_linearidx_t));
+  T8_ASSERT (index < global_first_desc->elem_count);
+
+  /* Get the global first descendant of the process with rank index. For empty
+   * processes we choose the next non-zero global_first_descendat to obtain a
+   * monotonously increasing array to sort. */
+  t8_forest_child_type_query_t *query_data = (t8_forest_child_type_query_t *) data;
+  t8_linearidx_t linearid = t8_forest_get_monotonous_gfd (global_first_desc, index, query_data);
+
+  /* Create an element from the linear_id and compute its child_id. */
+  t8_element_t *element;
+  query_data->ts->element_new (query_data->eclass, 1, &element);
+  query_data->ts->element_set_linear_id (query_data->eclass, element, query_data->maxlevel, linearid);
+  size_t child_id = query_data->ts->element_get_ancestor_id (query_data->eclass, element, query_data->level);
+  query_data->ts->element_destroy (query_data->eclass, 1, &element);
+
+  return child_id;
+}
+
+void
+t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
+                                            int pfirst, int plast)
+{
+  /* Assertions to check for necessary requirements */
+  /* The forest must be committed */
+  T8_ASSERT (t8_forest_is_committed (forest));
+  /* The tree must be in the global tree range */
+  T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_global_trees (forest));
+
+  if (this->stop_due_to_queries ()) {
+    return;
+  }
+
+  const t8_eclass_t eclass = t8_cmesh_get_tree_class (forest->cmesh, ltreeid);
+
+  /* Call the callback function for the element */
+  const bool ret = check_element (ltreeid, element, pfirst, plast);
+
+  if (!ret) {
+    /* The function returned false. We abort the recursion */
+    return;
+  }
+
+  std::vector<size_t> new_active_queries;
+  this->check_queries (new_active_queries, ltreeid, element, pfirst, plast);
+
+  if (pfirst == plast) {
+    return; /* the partition search recursion stops on single processes */
+  }
+
+  /* Enter the recursion (the element is definitely not a leaf at this point) */
+  /* We compute all children of E, compute their leaf arrays and call search_recursion */
+  /* allocate the memory to store the children */
+  const int num_children = ts->element_get_num_children (eclass, element);
+  t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
+  ts->element_new (eclass, num_children, children);
+  /* Compute the children */
+  ts->element_get_children (eclass, element, num_children, children);
+
+  /* Get a view of the relevant section of the forest's element_offsets */
+  sc_array_t *global_first_desc = sc_array_new_data (
+    (void *) ((t8_linearidx_t *) t8_shmem_array_get_array (forest->global_first_desc) + pfirst + 1),
+    sizeof (t8_linearidx_t), plast - pfirst);
+
+  /* Prepare relevant information for child_id computation. */
+  t8_forest_child_type_query_t query_data;
+  query_data.num_children = num_children;
+  query_data.ts = ts;
+  query_data.eclass = eclass;
+  query_data.level = ts->element_get_level (eclass, element) + 1;
+  query_data.maxlevel = forest->maxlevel;
+  query_data.pfirst = pfirst;
+  query_data.element_offsets = forest->element_offsets;
+
+  /* Split global first descendants by child id with respect to element */
+  sc_array_t *split_offsets = sc_array_new_count (sizeof (size_t), num_children + 1);
+  sc_array_split (global_first_desc, split_offsets, num_children, t8_forest_determine_childid, &query_data);
+  T8_ASSERT (*(size_t *) sc_array_index (split_offsets, (size_t) num_children) == (size_t) (plast - pfirst));
+  T8_ASSERT (*(size_t *) sc_array_index (split_offsets, 0) == 0);
+
+  int cpfirst, ichild, cpnext, cplast;
+  for (cpfirst = pfirst + 1, ichild = 0; ichild < num_children; cpfirst = cpnext, ichild++) {
+    /* determine the exclusive upper bound of processors starting in child */
+    cpnext = *(int *) sc_array_index (split_offsets, ichild + 1) + pfirst + 1;
+    T8_ASSERT (cpfirst <= cpnext && cpnext <= plast + 1);
+
+    /* fix the last processor in child, which is known at this point */
+    T8_ASSERT (cpnext > 0);
+    cplast = cpnext - 1;
+
+    /* now check multiple cases for the beginning processor */
+    if (cpfirst < cpnext) {
+      /* at least one processor starts in this child */
+      t8_linearidx_t global_first_descendant
+        = t8_forest_get_monotonous_gfd (global_first_desc, cpfirst - pfirst - 1, &query_data);
+      t8_linearidx_t element_id = ts->element_get_linear_id (eclass, children[ichild], forest->maxlevel);
+
+      if (global_first_descendant == element_id) {
+        /* cpfirst starts at the tree's first descendant but may be empty */
+        T8_ASSERT (ichild > 0);
+        while (t8_shmem_array_get_gloidx (forest->element_offsets, cpfirst)
+               == t8_shmem_array_get_gloidx (forest->element_offsets, cpfirst + 1)) {
+          ++cpfirst;
+          T8_ASSERT (t8_forest_determine_childid (global_first_desc, cpfirst - pfirst - 1, &query_data)
+                     == (size_t) ichild);
+        }
+      }
+      else {
+        /* there must be exactly one processor before us in this child */
+        --cpfirst;
+        T8_ASSERT (cpfirst == pfirst
+                   || t8_forest_determine_childid (global_first_desc, cpfirst - pfirst - 1, &query_data)
+                        < (size_t) ichild);
+      }
+    }
+    else {
+      /* this whole child is owned by one processor */
+      cpfirst = cplast;
+    }
+
+    /* enter the recursion for the current child */
+    update_queries (new_active_queries);
+    search_recursion (ltreeid, children[ichild], ts, cpfirst, cplast);
+  }
+
+  /* clean-up */
+  sc_array_destroy (split_offsets);
+  sc_array_destroy (global_first_desc);
+  ts->element_destroy (eclass, num_children, children);
+  T8_FREE (children);
+}
+
+void
+t8_partition_search_base::search_tree (const t8_locidx_t ltreeid, int pfirst, int plast)
+{
+  const t8_eclass_t eclass = t8_cmesh_get_tree_class (forest->cmesh, ltreeid);
+  const t8_scheme *ts = t8_forest_get_scheme (forest);
+
+  /* compute the root element */
+  t8_element_t *root;
+  ts->element_new (eclass, 1, &root);
+  t8_element_set_to_root (ts, eclass, root);
+
+  /* start the top-down search */
+  this->search_recursion (ltreeid, root, ts, pfirst, plast);
+
+  ts->element_destroy (eclass, 1, &root);
+}
+
+void
+t8_partition_search_base::do_search ()
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (!t8_cmesh_is_partitioned (t8_forest_get_cmesh (forest)));
+  T8_ASSERT (forest->tree_offsets != NULL);
+
+  const t8_gloidx_t num_global_trees = t8_forest_get_num_global_trees (this->forest);
+  int pfirst, plast;
+  int num_procs = forest->mpisize;
+  const t8_gloidx_t *tree_offsets = t8_shmem_array_get_gloidx_array (forest->tree_offsets);
+  for (t8_locidx_t itree = 0; itree < (t8_locidx_t) num_global_trees; itree++) {
+    /* compute process range for the current tree */
+    pfirst = -1;
+    plast = -1;
+    pfirst = t8_offset_first_owner_of_tree (num_procs, itree, tree_offsets, &pfirst);
+    plast = t8_offset_last_owner_of_tree (num_procs, itree, tree_offsets, &plast);
+
+    /* go into recursion for this tree */
+    this->init_queries ();
+    this->search_tree (itree, pfirst, plast);
   }
 }
 
