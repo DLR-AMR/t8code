@@ -61,6 +61,9 @@ TEST_P (cmesh_face_boundary_one_tree, check_face_is_boundary_one_tree)
     ASSERT_TRUE (t8_cmesh_tree_face_is_boundary (cmesh, 0, iface)) << "Face is not detected as a boundary";
     ASSERT_LT (t8_cmesh_get_face_neighbor (cmesh, 0, iface, NULL, NULL), 0)
       << "Face neighbor on boundary face detected";
+    const t8_eclass_t should_be_invalid = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, 0, iface);
+    EXPECT_EQ (should_be_invalid, T8_ECLASS_INVALID)
+      << "eclass of non-existing face neighbor should be invalid but is not.";
   }
 }
 
@@ -162,6 +165,12 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
           << "Face neighbor on boundary face detected. Tree 0 face " << checkface << ".";
         ASSERT_LT (t8_cmesh_get_face_neighbor (cmesh, 1, checkface, NULL, NULL), 0)
           << "Face neighbor on boundary face detected. Tree 1 face " << checkface << ".";
+        const t8_eclass_t should_be_invalid_tree0 = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, 0, checkface);
+        EXPECT_EQ (should_be_invalid_tree0, T8_ECLASS_INVALID)
+          << "eclass of non-existing face neighbor should be invalid but is not.";
+        const t8_eclass_t should_be_invalid_tree1 = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, 1, checkface);
+        EXPECT_EQ (should_be_invalid_tree1, T8_ECLASS_INVALID)
+          << "eclass of non-existing face neighbor should be invalid but is not.";
       }
       else {
         /* checkface == iface 
@@ -178,6 +187,9 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
         ASSERT_TRUE (face_neighbor) << "Wrong face neighbor computed. Expected 1 got" << face_neighbor << ".";
         ASSERT_EQ (dual_face, checkface) << "Wrong dual face. Expected " << checkface << " got " << dual_face << ".";
         ASSERT_EQ (orientation, 0) << "Wrong orientation. Expected 0 got " << orientation << ".";
+        // Check t8_cmesh_get_tree_face_neighbor_eclass
+        const t8_eclass_t neighbor_class_tree0 = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, 0, iface);
+        EXPECT_EQ (neighbor_class_tree0, eclass) << "Wrong eclass of face neighbor computed.";
         /* Check that tree 1 face is not a boundary */
         ASSERT_FALSE (t8_cmesh_tree_face_is_boundary (cmesh, 1, checkface))
           << "Face is wrongly detected as a boundary.";
@@ -191,6 +203,9 @@ TEST_P (cmesh_face_boundary_two_trees, check_face_is_boundary_two_trees)
         ASSERT_EQ (face_neighbor, 0) << "Wrong face neighbor computed. Expected 0 got " << face_neighbor << ".";
         ASSERT_EQ (dual_face, checkface) << "Wrong dual face. Expected " << checkface << " got " << dual_face << ".";
         ASSERT_EQ (orientation, 0) << "Wrong orientation. Expected 0 got " << orientation << ".";
+        // Check t8_cmesh_get_tree_face_neighbor_eclass
+        const t8_eclass_t neighbor_class_tree1 = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, 1, checkface);
+        EXPECT_EQ (neighbor_class_tree1, eclass) << "Wrong eclass of face neighbor computed.";
       }
     }
     t8_cmesh_destroy (&cmesh);
