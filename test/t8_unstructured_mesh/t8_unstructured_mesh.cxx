@@ -52,15 +52,14 @@ TEST (t8_unstructured_mesh, test_iterator)
   }
 
   // Version with cached level variable.
-  //unstructured_mesh.cache_level ();
   // Iterate with the iterator over all unstructured mesh elements and check the level.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     ASSERT_EQ (level, (*it).get_level ());
   }
 
   // Define an unstructured mesh for the forest.
-  t8_unstructured_mesh<t8_unstructured_mesh_element<ComputeLevel>> unstructured_mesh_calculate
-    = t8_unstructured_mesh<t8_unstructured_mesh_element<ComputeLevel>> (forest);
+  t8_unstructured_mesh<t8_unstructured_mesh_element<>> unstructured_mesh_calculate
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<>> (forest);
 
   // Version without cache.
   // Iterate with the iterator over all unstructured mesh elements and check the level.
@@ -68,8 +67,7 @@ TEST (t8_unstructured_mesh, test_iterator)
     ASSERT_EQ (level, it->get_level ());
   }
 
-  // Version with cached level variable.
-  //unstructured_mesh.cache_level ();
+  // Version with calculated level variable.
   // Iterate with the iterator over all unstructured mesh elements and check the level.
   for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
     ASSERT_EQ (level, (*it).get_level ());

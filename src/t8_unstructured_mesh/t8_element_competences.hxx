@@ -63,21 +63,4 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
   int m_level = -1;
 };
 
-template <typename TUnderlying>
-struct ComputeLevel: t8_crtp_operator<TUnderlying, ComputeLevel>
-{
- public:
-  t8_element_level
-  get_level ()
-  {
-    const t8_eclass_t tree_class = t8_forest_get_tree_class (
-      this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id ());
-    const t8_element_t* element
-      = t8_forest_get_leaf_element_in_tree (this->underlying ().get_unstructured_mesh ()->get_forest (),
-                                            this->underlying ().get_tree_id (), this->underlying ().get_element_id ());
-    return t8_forest_get_scheme (this->underlying ().get_unstructured_mesh ()->get_forest ())
-      ->element_get_level (tree_class, element);
-  }
-};
-
 #endif

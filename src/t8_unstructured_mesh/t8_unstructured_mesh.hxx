@@ -248,13 +248,19 @@ class t8_unstructured_mesh_element: public competence<t8_unstructured_mesh_eleme
   /* Design choice: Decided to not define the class inside of \ref t8_unstructured_mesh although the classes are strongly connected,
 * because the class also would not have access to private members and inheritance of the element class would be complicated.
 */
+  using Self = t8_unstructured_mesh_element<competence...>;
+
+  // Checks if one of the crtp mix ins (like CacheLevel) defines get_level()
+  static constexpr bool get_level_defined = (false || ... || requires (competence<Self>& c) { c.get_level (); });
+
  public:
   t8_unstructured_mesh_element (t8_unstructured_mesh<t8_unstructured_mesh_element<competence...>>* unstructured_mesh,
                                 t8_locidx_t tree_id, t8_locidx_t element_id)
     : m_tree_id (tree_id), m_element_id (element_id), m_unstructured_mesh (unstructured_mesh)
   {
   }
-
+  // // Brings get_level from CacheLevel back into scope
+  // using competence<Self>::get_level...;
   /**
    * Getter for the refinement level of the unstructured mesh element.
    * \return Refinement level of the unstructured mesh element.
@@ -273,6 +279,15 @@ class t8_unstructured_mesh_element: public competence<t8_unstructured_mesh_eleme
   get_unstructured_mesh ()
   {
     return m_unstructured_mesh;
+  }
+
+  t8_element_level
+  get_level ()
+  {
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
+    const t8_element_t* element
+      = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+    return t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_level (tree_class, element);
   }
 
  private:
