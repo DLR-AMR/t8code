@@ -64,10 +64,11 @@ struct t8_example_netcdf_adapt_data
 * \note A detailed description of the adaption process is found in step 3 of the tutorial located in 't8code/example/tutorials'.
 */
 int
-t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+t8_example_netcdf_adapt_fn (t8_forest_t forest_from, t8_locidx_t which_tree,
                             [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
                             [[maybe_unused]] const t8_scheme *scheme, const int is_family,
-                            [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+                            [[maybe_unused]] const int num_elements, t8_element_t *elements[],
+                            [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
   t8_3D_point element_centroid;
   double distance;
