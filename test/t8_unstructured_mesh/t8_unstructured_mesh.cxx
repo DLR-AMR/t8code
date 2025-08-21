@@ -21,6 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 #include "t8_unstructured_mesh/t8_unstructured_mesh.hxx"
+#include "t8_unstructured_mesh/t8_element_competences.hxx"
 #include <gtest/gtest.h>
 #include <t8.h>
 #include <t8_cmesh.h>
@@ -41,7 +42,8 @@ TEST (t8_unstructured_mesh, test_iterator)
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
   // Define an unstructured mesh for the forest.
-  t8_unstructured_mesh unstructured_mesh = t8_unstructured_mesh (forest);
+  t8_unstructured_mesh<t8_unstructured_mesh_element<CacheLevel>> unstructured_mesh
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<CacheLevel>> (forest);
 
   // Version without cache.
   // Iterate with the iterator over all unstructured mesh elements and check the level.
@@ -53,6 +55,23 @@ TEST (t8_unstructured_mesh, test_iterator)
   //unstructured_mesh.cache_level ();
   // Iterate with the iterator over all unstructured mesh elements and check the level.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    ASSERT_EQ (level, (*it).get_level ());
+  }
+
+  // Define an unstructured mesh for the forest.
+  t8_unstructured_mesh<t8_unstructured_mesh_element<ComputeLevel>> unstructured_mesh_calculate
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<ComputeLevel>> (forest);
+
+  // Version without cache.
+  // Iterate with the iterator over all unstructured mesh elements and check the level.
+  for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
+    ASSERT_EQ (level, it->get_level ());
+  }
+
+  // Version with cached level variable.
+  //unstructured_mesh.cache_level ();
+  // Iterate with the iterator over all unstructured mesh elements and check the level.
+  for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
     ASSERT_EQ (level, (*it).get_level ());
   }
 

@@ -35,10 +35,12 @@
 #include <iterator>
 #include <memory>
 #include <vector>
+#include <t8_unstructured_mesh/t8_element_competences.hxx>
 
 /* Forward declaration of the default unstructured element class because used as default template parameter in
  * t8_unstructured_mesh but t8_unstructured_mesh is also needed to define the element class.
  */
+template <template <typename> class... competence>
 class t8_unstructured_mesh_element;
 
 /**
@@ -51,7 +53,7 @@ class t8_unstructured_mesh_element;
  *  you may also write a derived class of t8_unstructured_mesh.
  * \tparam unstructured_mesh_element The element class that should be used for the unstructured mesh elements. 
  */
-template <class TUnstructuredMeshElement = t8_unstructured_mesh_element>
+template <class TUnstructuredMeshElement = t8_unstructured_mesh_element<>>
 class t8_unstructured_mesh {
   using element_vector = std::vector<TUnstructuredMeshElement>;
 
@@ -65,7 +67,6 @@ class t8_unstructured_mesh {
    */
   t8_unstructured_mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
-    m_scheme = t8_forest_get_scheme (m_forest);
     update_elements ();
   }
 
@@ -226,9 +227,14 @@ class t8_unstructured_mesh {
     return t8_unstructured_iterator (this, t8_forest_get_num_local_trees (m_forest), 0);
   }
 
+  t8_forest_t
+  get_forest ()
+  {
+    return m_forest;
+  }
+
  private:
   t8_forest_t m_forest; /**< The forest the unstructured mesh should be defined for. */
-  const t8_scheme* m_scheme;
   t8_locidx_t m_num_local_trees;
   std::vector<element_vector> m_elements;
 };
@@ -237,12 +243,13 @@ class t8_unstructured_mesh {
  * Default element of an unstructured mesh. 
  * For this element, the following properties can be accessed: Level, TODO.
  */
-class t8_unstructured_mesh_element {
+template <template <typename> class... competence>
+class t8_unstructured_mesh_element: public competence<t8_unstructured_mesh_element<competence...>>... {
   /* Design choice: Decided to not define the class inside of \ref t8_unstructured_mesh although the classes are strongly connected,
 * because the class also would not have access to private members and inheritance of the element class would be complicated.
 */
  public:
-  t8_unstructured_mesh_element (t8_unstructured_mesh<t8_unstructured_mesh_element>* unstructured_mesh,
+  t8_unstructured_mesh_element (t8_unstructured_mesh<t8_unstructured_mesh_element<competence...>>* unstructured_mesh,
                                 t8_locidx_t tree_id, t8_locidx_t element_id)
     : m_tree_id (tree_id), m_element_id (element_id), m_unstructured_mesh (unstructured_mesh)
   {
@@ -252,13 +259,26 @@ class t8_unstructured_mesh_element {
    * Getter for the refinement level of the unstructured mesh element.
    * \return Refinement level of the unstructured mesh element.
    */
-  t8_element_level
-  get_level ();
+  t8_locidx_t
+  get_tree_id ()
+  {
+    return m_tree_id;
+  }
+  t8_locidx_t
+  get_element_id ()
+  {
+    return m_element_id;
+  }
+  t8_unstructured_mesh<t8_unstructured_mesh_element<competence...>>*
+  get_unstructured_mesh ()
+  {
+    return m_unstructured_mesh;
+  }
 
  private:
   t8_locidx_t m_tree_id,
     m_element_id; /**< The tree id and the element id of the element in the forest defined in the unstructured mesh. */
-  t8_unstructured_mesh<t8_unstructured_mesh_element>*
+  t8_unstructured_mesh<t8_unstructured_mesh_element<competence...>>*
     m_unstructured_mesh; /**< Pointer to the unstructured mesh the element is defined for. */
 };
 
