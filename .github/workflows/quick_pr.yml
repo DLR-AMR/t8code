@@ -44,8 +44,6 @@ jobs:
         steps:
         - uses: actions/checkout@v4
           with:
-                repository: ${{ github.event.repository.full_name }}
-                ref: ${{ github.event.pull_request.head.ref }}
                 fetch-depth: 0
 
         - name: "Set up environment"
