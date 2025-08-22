@@ -239,7 +239,7 @@ class t8_unstructured_mesh {
   std::vector<element_vector> m_elements;
 };
 
-/** 
+/** TODO
  * Default element of an unstructured mesh. 
  * For this element, the following properties can be accessed: Level, TODO.
  */
@@ -251,38 +251,34 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
 
   using SelfType = t8_unstructured_mesh_element<TCompetence...>;
 
+  // --- Variables to check which functionality is defined in TCompetence. ---
   // Checks if one of the competences (like CacheLevel) defines the function get_level().
   static constexpr bool get_level_defined
     = (false || ... || requires (TCompetence<SelfType>& competence) { competence.get_level (); });
 
  public:
+  /**
+   * Constructor of the unstructured mesh element.
+   * \param unstructured_mesh Reference to the unstructured mesh the element should belong to.
+   * \param tree_id The tree id of the element in the forest defining the unstructured mesh.
+   * \param element_id The element id of the element in the forest defining the unstructured mesh.
+   */
   t8_unstructured_mesh_element (t8_unstructured_mesh<SelfType>* unstructured_mesh, t8_locidx_t tree_id,
                                 t8_locidx_t element_id)
     : m_tree_id (tree_id), m_element_id (element_id), m_unstructured_mesh (unstructured_mesh)
   {
   }
 
+  // --- Functionality for the default versions of the unstructured mesh element (calculate instead of caching functionality). ---
+  /* Make get_level function available if defined in TCompetence. 
+  * This is necessary because of the get_level() defined below for the case of no defined function in TCompetence.
+  */
+  using TCompetence<SelfType>::get_level...;
   /**
    * Getter for the refinement level of the unstructured mesh element.
+   * This function calculates the level if called and is only available if there is no cached version defined in TCompetence.
    * \return Refinement level of the unstructured mesh element.
    */
-  t8_locidx_t
-  get_tree_id ()
-  {
-    return m_tree_id;
-  }
-  t8_locidx_t
-  get_element_id ()
-  {
-    return m_element_id;
-  }
-  t8_unstructured_mesh<SelfType>*
-  get_unstructured_mesh ()
-  {
-    return m_unstructured_mesh;
-  }
-  // Brings get_level from CacheLevel back into scope
-  using TCompetence<SelfType>::get_level...;
   t8_element_level
   get_level ()
     requires (!get_level_defined)
@@ -291,6 +287,35 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     const t8_element_t* element
       = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
     return t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_level (tree_class, element);
+  }
+
+  //--- Getter for the member variables. ---
+  /**
+   * Getter for the tree id of the unstructured mesh element.
+   */
+  t8_locidx_t
+  get_tree_id ()
+  {
+    return m_tree_id;
+  }
+
+  /**
+   * Getter for the element id of the unstructured mesh element.
+   */
+  t8_locidx_t
+  get_element_id ()
+  {
+    return m_element_id;
+  }
+
+  /**
+   * Getter for the unstructured mesh to which the unstructured mesh element is belonging.
+   *\return Reference to the unstructured mesh.
+   */
+  t8_unstructured_mesh<SelfType>*
+  get_unstructured_mesh ()
+  {
+    return m_unstructured_mesh;
   }
 
  private:

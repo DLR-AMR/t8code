@@ -22,23 +22,27 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #ifndef T8_ELEMENT_COMPETENCES_HXX
 #define T8_ELEMENT_COMPETENCES_HXX
-#include "t8_types/t8_operators.hxx"
 
 #include <t8.h>
-
+#include <t8_types/t8_operators.hxx>
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_element.h>
-#include <t8_schemes/t8_scheme.hxx>
 
+/**
+ *TODO
+ */
 template <typename TUnderlying>
 struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
 {
  public:
-  // function for returning cache
+  /**
+   * Returns the cached level for an unstructured mesh element or accesses it and puts in the cache if the variable has not been cached previously.
+   * \return The refinement level of the unstructured mesh element.
+   */
   t8_element_level
   get_level ()
   {
+    // Check if the cache is already filled. If not, fill it.
     if (m_level == -1) {
       const t8_eclass_t tree_class = t8_forest_get_tree_class (
         this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id ());
@@ -48,9 +52,13 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
       m_level = t8_forest_get_scheme (this->underlying ().get_unstructured_mesh ()->get_forest ())
                   ->element_get_level (tree_class, element);
     }
+    // m_level is stored as an int to use a negative value as "not yet cached".
     return t8_element_level (m_level);
   }
 
+  /**
+   * Reset the cache.
+   */
   void
   reset_cache ()
   {
@@ -58,8 +66,7 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
   }
 
  private:
-  //cache
-  int m_level = -1;
+  int m_level = -1; /**< Cache for the level variable. -1 means no cached value. */
 };
 
-#endif
+#endif /* !T8_ELEMENT_COMPETENCES_HXX */
