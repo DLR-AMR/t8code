@@ -48,7 +48,6 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
       m_level = t8_forest_get_scheme (this->underlying ().get_unstructured_mesh ()->get_forest ())
                   ->element_get_level (tree_class, element);
     }
-
     return t8_element_level (m_level);
   }
 

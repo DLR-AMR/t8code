@@ -40,7 +40,7 @@
 /* Forward declaration of the default unstructured element class because used as default template parameter in
  * t8_unstructured_mesh but t8_unstructured_mesh is also needed to define the element class.
  */
-template <template <typename> class... competence>
+template <template <typename> class... TCompetence>
 class t8_unstructured_mesh_element;
 
 /**
@@ -243,24 +243,25 @@ class t8_unstructured_mesh {
  * Default element of an unstructured mesh. 
  * For this element, the following properties can be accessed: Level, TODO.
  */
-template <template <typename> class... competence>
-class t8_unstructured_mesh_element: public competence<t8_unstructured_mesh_element<competence...>>... {
+template <template <typename> class... TCompetence>
+class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_element<TCompetence...>>... {
   /* Design choice: Decided to not define the class inside of \ref t8_unstructured_mesh although the classes are strongly connected,
 * because the class also would not have access to private members and inheritance of the element class would be complicated.
 */
-  using Self = t8_unstructured_mesh_element<competence...>;
 
-  // Checks if one of the crtp mix ins (like CacheLevel) defines get_level()
-  static constexpr bool get_level_defined = (false || ... || requires (competence<Self>& c) { c.get_level (); });
+  using SelfType = t8_unstructured_mesh_element<TCompetence...>;
+
+  // Checks if one of the competences (like CacheLevel) defines the function get_level().
+  static constexpr bool get_level_defined
+    = (false || ... || requires (TCompetence<SelfType>& competence) { competence.get_level (); });
 
  public:
-  t8_unstructured_mesh_element (t8_unstructured_mesh<t8_unstructured_mesh_element<competence...>>* unstructured_mesh,
-                                t8_locidx_t tree_id, t8_locidx_t element_id)
+  t8_unstructured_mesh_element (t8_unstructured_mesh<SelfType>* unstructured_mesh, t8_locidx_t tree_id,
+                                t8_locidx_t element_id)
     : m_tree_id (tree_id), m_element_id (element_id), m_unstructured_mesh (unstructured_mesh)
   {
   }
-  // // Brings get_level from CacheLevel back into scope
-  // using competence<Self>::get_level...;
+
   /**
    * Getter for the refinement level of the unstructured mesh element.
    * \return Refinement level of the unstructured mesh element.
@@ -275,14 +276,16 @@ class t8_unstructured_mesh_element: public competence<t8_unstructured_mesh_eleme
   {
     return m_element_id;
   }
-  t8_unstructured_mesh<t8_unstructured_mesh_element<competence...>>*
+  t8_unstructured_mesh<SelfType>*
   get_unstructured_mesh ()
   {
     return m_unstructured_mesh;
   }
-
+  // Brings get_level from CacheLevel back into scope
+  using TCompetence<SelfType>::get_level...;
   t8_element_level
   get_level ()
+    requires (!get_level_defined)
   {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
     const t8_element_t* element
@@ -293,7 +296,7 @@ class t8_unstructured_mesh_element: public competence<t8_unstructured_mesh_eleme
  private:
   t8_locidx_t m_tree_id,
     m_element_id; /**< The tree id and the element id of the element in the forest defined in the unstructured mesh. */
-  t8_unstructured_mesh<t8_unstructured_mesh_element<competence...>>*
+  t8_unstructured_mesh<SelfType>*
     m_unstructured_mesh; /**< Pointer to the unstructured mesh the element is defined for. */
 };
 
