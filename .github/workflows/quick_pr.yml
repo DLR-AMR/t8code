@@ -42,7 +42,7 @@ jobs:
         outputs:
             ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
         steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v5
           with:
                 fetch-depth: 0
 
