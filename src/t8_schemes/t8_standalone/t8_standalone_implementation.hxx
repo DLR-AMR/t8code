@@ -263,7 +263,7 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (element));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
     T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[TEclass]);
-    T8_ASSERTF (t8_standalone_lut_facecorner<T8_ECLASS_TRIANGLE>[0][1][1] == 2, "LUT falsch!");
+    T8_ASSERTF (t8_standalone_lut_facecorner<T8_ECLASS_TRIANGLE>[0][1][1] == 2, "LUT is wrong!");
 
     if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       return (corner >> face & 1) + 2 * face;
@@ -287,7 +287,7 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     switch (TEclass) {
     case T8_ECLASS_VERTEX:
       SC_ABORT ("Vertices do not have faces.\n");
@@ -645,33 +645,6 @@ struct t8_standalone_scheme
   static constexpr int
   elements_are_family (t8_element_t *const *fam) noexcept
   {
-    // #if T8_ENABLE_DEBUG
-    //     const int num_siblings = element_get_num_siblings (fam[0]);
-    //     for (int isib = 0; isib < num_siblings; isib++) {
-    //       T8_ASSERT (element_is_valid (fam[isib]));
-    //     }
-    // #endif
-
-    //     t8_standalone_element<TEclass> parent, compare;
-    //     /* Take the parent of the first element as baseline to compare against */
-    //     element_get_parent ((const t8_element_t *) fam[0], (t8_element_t *) &parent);
-    //     const int num_children = element_get_num_children ((const t8_element_t *) &parent);
-    //     for (int childid = 0; childid < num_children; childid++) {
-    //       /* check whether each element has the same parent */
-    //       element_get_parent ((const t8_element_t *) fam[childid], (t8_element_t *) &compare);
-    //       if (element_compare ((const t8_element_t *) &parent, (const t8_element_t *) &compare)) {
-    //         return 0;
-    //       }
-
-    //       /* check whether each element is the correct child of the collective parent */
-    //       /* Could be replaced by type comparison as level is already checked in parent comparison */
-    //       element_get_child ((const t8_element_t *) &parent, childid, (t8_element_t *) &compare);
-
-    //       if (element_compare ((const t8_element_t *) fam[childid], (const t8_element_t *) &compare)) {
-    //         return 0;
-    //       }
-    //     }
-    //     return 1;
     if (element_get_child_id (fam[0]) != 0) {
       return 0;
     }
@@ -705,7 +678,7 @@ struct t8_standalone_scheme
     const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
     const t8_standalone_element<TEclass> *el2 = (const t8_standalone_element<TEclass> *) elem2;
     /* get the first possible level of the nca*/
-    int cube_ancestor_level = element_get_cube_nca_level (el1, el2);
+    const int cube_ancestor_level = element_get_cube_nca_level (el1, el2);
     int real_level = cube_ancestor_level;
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       t8_element_type<TEclass> ancestor_type, ancestor2_type;
@@ -866,8 +839,8 @@ struct t8_standalone_scheme
       return face;
     }
     else {
-      t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
-      int child_id
+      const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+      const int child_id
         = t8_standalone_lut_type_face_facechildid_to_childid<TEclass>[el->type.to_ulong ()][face][face_child];
       return t8_standalone_lut_type_childid_face_to_childface<TEclass>[el->type.to_ulong ()][child_id][face];
     }
@@ -1017,16 +990,10 @@ struct t8_standalone_scheme
         }
         // all edges containing dim must be fulfilled with x_d-a_d >= x_j-a_j or x_j-a_j <= x_d-a_d
         if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-          for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
-            if (t8_type_edge_equations<TEclass>[ieq][0] == dim) {
-              if (el->type[ieq]) {
-                return 0;
-              }
-            }
-            else if (t8_type_edge_equations<TEclass>[ieq][1] == dim) {
-              if (!el->type[ieq]) {
-                return 0;
-              }
+          for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ++ieq) {
+            if ((t8_type_edge_equations<TEclass>[ieq][0] == dim && el->type[ieq])
+                || (t8_type_edge_equations<TEclass>[ieq][1] == dim && !el->type[ieq])) {
+              return 0;
             }
           }
         }
@@ -1040,15 +1007,9 @@ struct t8_standalone_scheme
         // all edges containing dimid must be fulfilled with x_d-a_d <= x_j-a_j or x_j-a_j >= x_d-a_d
         if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
           for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
-            if (t8_type_edge_equations<TEclass>[ieq][0] == dim) {
-              if (!el->type[ieq]) {
-                return 0;
-              }
-            }
-            else if (t8_type_edge_equations<TEclass>[ieq][1] == dim) {
-              if (el->type[ieq]) {
-                return 0;
-              }
+            if ((t8_type_edge_equations<TEclass>[ieq][0] == dim && !el->type[ieq])
+                || (t8_type_edge_equations<TEclass>[ieq][1] == dim && el->type[ieq])) {
+              return 0;
             }
           }
         }
@@ -1059,7 +1020,7 @@ struct t8_standalone_scheme
       // get graph edge e (or ieq) = (xi,xj)
       // ai = aj is necessary and sufficient
       if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        int ieq = t8_standalone_lut_type_face_to_typebit<TEclass>[el->type.to_ulong ()][face];
+        const int ieq = t8_standalone_lut_type_face_to_typebit<TEclass>[el->type.to_ulong ()][face];
         if (el->coords[t8_type_edge_equations<TEclass>[ieq][0]]
             != el->coords[t8_type_edge_equations<TEclass>[ieq][1]]) {
           return 0;
@@ -1127,7 +1088,7 @@ struct t8_standalone_scheme
     t8_standalone_element<TEclass> *neighbor = (t8_standalone_element<TEclass> *) neigh;
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      int internal_face = t8_standalone_lut_face_internal<TEclass>[el->type.to_ulong ()][face];
+      const int internal_face = t8_standalone_lut_face_internal<TEclass>[el->type.to_ulong ()][face];
       if (internal_face) {
         /**Determine typebit*/
         int typebit = t8_standalone_lut_type_face_to_typebit<TEclass>[el->type.to_ulong ()][face];
@@ -1156,7 +1117,7 @@ struct t8_standalone_scheme
 
     /**Adapt typebits*/
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      for (size_t ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
+      for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         /**For all neighboring typebits, change typebit*/
         if (t8_type_edge_equations<TEclass>[ieq][0] == facenormal_dim
             || t8_type_edge_equations<TEclass>[ieq][1] == facenormal_dim) {
@@ -1467,8 +1428,8 @@ struct t8_standalone_scheme
     T8_ASSERT (level <= T8_ELEMENT_MAXLEVEL[TEclass]);
     T8_ASSERT (level >= 0);
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      t8_linearidx_t two_to_l = 1LL << level;
-      t8_linearidx_t eight_to_l = 1LL << (3 * level);
+      const t8_linearidx_t two_to_l = 1LL << level;
+      const t8_linearidx_t eight_to_l = 1LL << (3 * level);
       return ((eight_to_l << 2) - two_to_l) / 3;
     }
     return 1LL << (level * T8_ELEMENT_DIM[TEclass]);
@@ -1551,7 +1512,7 @@ struct t8_standalone_scheme
     t8_element_coord length = element_get_len (element_get_level (elem));
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      double tmp_coords[T8_ELEMENT_DIM[TEclass]] = {};
+      double tmp_coords[T8_ELEMENT_DIM[TEclass]] = { 0.0 };
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; ++idim) {
         for (int jdim = 0; jdim < T8_ELEMENT_DIM[TEclass]; ++jdim) {
           tmp_coords[idim]
@@ -1748,11 +1709,11 @@ struct t8_standalone_scheme
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
 
     t8_debugf ("level: %i\n", el->level);
-    for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
-      t8_debugf ("x_%i: %i \n", i, el->coords[i]);
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      t8_debugf ("x_%i: %i \n", idim, el->coords[idim]);
     }
-    for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
-      t8_debugf ("t_%i: %i \n", e, el->type[e]);
+    for (int e_num = 0; e_num < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e_num++) {
+      t8_debugf ("t_%i: %i \n", e_num, el->type[e_num]);
     }
   }
 
@@ -2032,8 +1993,8 @@ struct t8_standalone_scheme
   {
     T8_ASSERT (leveldiff <= get_maxlevel ());
     if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      t8_linearidx_t two_to_l = 1LL << leveldiff;
-      t8_linearidx_t eight_to_l = 1LL << (3 * leveldiff);
+      const t8_linearidx_t two_to_l = 1LL << leveldiff;
+      const t8_linearidx_t eight_to_l = 1LL << (3 * leveldiff);
       if (element_get_shape (elem) == T8_ECLASS_PYRAMID) {
         return ((eight_to_l << 2) - two_to_l) / 3;
       }
@@ -2057,7 +2018,7 @@ struct t8_standalone_scheme
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
-      int8_t type = el->type.to_ulong ();
+      const int8_t type = el->type.to_ulong ();
       int tmp_out_coords[T8_ELEMENT_DIM[TEclass]] = {};
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         coords[idim]
@@ -2243,7 +2204,7 @@ struct t8_standalone_scheme
     }
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
-        int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
+        const int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
         if (ifaceeq != -1) {
           boundary->type[ifaceeq] = el->type[ieq];
         }
@@ -2316,14 +2277,15 @@ struct t8_standalone_scheme
       t8_element_type<TEclass> root_type = 0;
       el->type = root_type;
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
-        int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
+        const int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
         if (ifaceeq != -1) {
           el->type[ieq] = face->type[ifaceeq];
         }
       }
       /** Set those typebits, that are connected to the face_normaldim of root_face*/
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
-        int facenormal_dim = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[root_type.to_ulong ()][root_face];
+        const int facenormal_dim
+          = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[root_type.to_ulong ()][root_face];
         if (t8_type_edge_equations<TEclass>[ieq][0] == facenormal_dim) {
           el->type[ieq] = !t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type.to_ulong ()][root_face];
         }
@@ -2549,7 +2511,7 @@ t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused
   const t8_standalone_element<T8_ECLASS_TRIANGLE> *el1 = (const t8_standalone_element<T8_ECLASS_TRIANGLE> *) elem1;
   t8_standalone_element<T8_ECLASS_TRIANGLE> *el2 = (t8_standalone_element<T8_ECLASS_TRIANGLE> *) elem2;
 
-  t8_element_coord h = element_get_len (el1->level);
+  const t8_element_coord length = element_get_len (el1->level);
 
   // copy elem1 in tmp so that results can directly be set in elem2
   t8_standalone_element<T8_ECLASS_TRIANGLE> tmp;
@@ -2574,7 +2536,7 @@ t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused
       tmp.coords[1] = el1->coords[0] - el1->coords[1];
     }
     else {
-      tmp.coords[1] = el1->coords[0] - el1->coords[1] - h;
+      tmp.coords[1] = el1->coords[0] - el1->coords[1] - length;
     }
   }
 
@@ -2595,22 +2557,22 @@ t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused
     element_copy ((t8_element_t *) &tmp, (t8_element_t *) el2);
     break;
   case 1:
-    el2->coords[0] = get_root_len () - h - tmp.coords[1];
+    el2->coords[0] = get_root_len () - length - tmp.coords[1];
     if (tmp.type == 0) {
       el2->coords[1] = tmp.coords[0] - tmp.coords[1];
     }
     else {
-      el2->coords[1] = tmp.coords[0] - tmp.coords[1] - h;
+      el2->coords[1] = tmp.coords[0] - tmp.coords[1] - length;
     }
     break;
   case 2:
     if (tmp.type == 0) {
-      el2->coords[0] = get_root_len () - h + tmp.coords[1] - tmp.coords[0];
+      el2->coords[0] = get_root_len () - length + tmp.coords[1] - tmp.coords[0];
     }
     else {
       el2->coords[0] = get_root_len () + tmp.coords[1] - tmp.coords[0];
     }
-    el2->coords[1] = get_root_len () - h - tmp.coords[0];
+    el2->coords[1] = get_root_len () - length - tmp.coords[0];
     break;
   default:
     SC_ABORT_NOT_REACHED ();
