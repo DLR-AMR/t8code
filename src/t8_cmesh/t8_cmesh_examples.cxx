@@ -323,7 +323,7 @@ t8_cmesh_new_hex (sc_MPI_Comm comm)
 
   t8_cmesh_init (&cmesh);
   /* Use linear geometry */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+  t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices, 8);
   t8_cmesh_commit (cmesh, comm);
