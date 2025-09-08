@@ -75,7 +75,7 @@ elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_MEDIUM" )
     set(T8_TEST_LEVEL_INT 1)
 elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_FULL" )
     set(T8_TEST_LEVEL_INT 0)
-else() 
+else()
     message( FATAL_ERROR "Invalid string for T8CODE_TEST_LEVEL: ${T8CODE_TEST_LEVEL}. Valid options are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC.")
 endif()
 
@@ -163,6 +163,7 @@ else()
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+    add_library(SC INTERFACE)
     # Capture the list of variables after adding the subdirectory
     get_cmake_property(_vars_after_sc VARIABLES )
     # Compute the difference (new variables added by the subdirectory)
@@ -175,6 +176,38 @@ else()
 
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_sc_vars} )
+
+    ########################## Fix for OpenMPI ############################################
+    # OpenMPI sometimes has a mismatch between their C and CXX interface which produces a warning in SC.
+    # The warning makes t8codes build fail when Werror is activated. This fix checks if t8code
+    # is linked against OpenMPI and then suppresses that Werror treats this warning as error.
+    # The warning is still displayed while compiling.
+    # We compile a test program mich checks if a OpenMPI specific macro is defined and then apply the fix.
+
+    include(CheckIncludeFile)
+
+    # Check if mpi.h is available
+    check_include_file("mpi.h" MPI_HEADER_FOUND)
+
+    if(MPI_HEADER_FOUND)
+        # Create a temporary C++ source file to check for OpenMPI-specific macros
+        include(CheckCXXSourceCompiles)
+        check_cxx_source_compiles("
+        #include <mpi.h>
+        #ifndef OPEN_MPI
+        #error 'Not OpenMPI'
+        #endif
+        int main() { return 0; }" HAS_OPENMPI)
+
+        if(HAS_OPENMPI)
+            message(STATUS "OpenMPI detected via mpi.h")
+            # Suppress warning
+            target_compile_options(SC::SC INTERFACE -Wno-error=cast-function-type)
+        endif()
+    else()
+        message(WARNING "mpi.h not found!")
+    endif()
+    ########################## End of fix for OpenMPI ############################################
 endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
