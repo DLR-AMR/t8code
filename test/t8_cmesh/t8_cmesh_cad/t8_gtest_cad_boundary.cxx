@@ -61,16 +61,17 @@ read_brep_file (std::string fileprefix)
   return cad_shape;
 }
 
-class t8_gtest_cad_boundary: public testing::Test {
+class t8_gtest_cad_boundary: public testing::TestWithParam<int> {
  protected:
   void
   SetUp () override
   {
-    cad_shape = read_brep_file ("test/testfiles/coladose");
+    cad_shape = read_brep_file (brep_files[GetParam ()]);
     TopExp::MapShapes (cad_shape, TopAbs_VERTEX, cad_shape_vertex_map);
     TopExp::MapShapes (cad_shape, TopAbs_EDGE, cad_shape_edge_map);
     TopExp::MapShapes (cad_shape, TopAbs_FACE, cad_shape_face_map);
-    cmesh = t8_cmesh_from_msh_file ("test/testfiles/coladose", 0, sc_MPI_COMM_WORLD, 3, 0, 0);
+
+    cmesh = t8_cmesh_from_msh_file (mesh_files[GetParam ()], 0, sc_MPI_COMM_WORLD, 3, 0, 0);
   }
   void
   TearDown () override
@@ -83,20 +84,41 @@ class t8_gtest_cad_boundary: public testing::Test {
   TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
   TopTools_IndexedMapOfShape cad_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
   t8_cmesh_t cmesh;
+
+  const char* mesh_files[7] /* .msh file prefixes */
+    = { "test/testfiles/simple_test_case_168",
+        "test/testfiles/simple_test_case_288",
+        "test/testfiles/simple_test_case_1414",
+        "test/testfiles/simple_test_case_5147",
+        "test/testfiles/simple_test_case_30596",
+        "test/testfiles/D150_1791",
+        "test/testfiles/D150_5129" };
+
+  const char* brep_files[7] /* .brep file prefixes */
+    = { "test/testfiles/simple_test_case",
+        "test/testfiles/simple_test_case",
+        "test/testfiles/simple_test_case",
+        "test/testfiles/simple_test_case",
+        "test/testfiles/simple_test_case",
+        "test/testfiles/D150",
+        "test/testfiles/D150" };
+
+  int file;
 };
 
-TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
+TEST_P (t8_gtest_cad_boundary, geom_data_map_test)
 {
   double tolerance = 1e-6;
 
   t8_boundary_node_geom_data_map boundary_node_map = t8_boundary_node_geom_data_map (cad_shape, cmesh, tolerance);
   std::unordered_map geom_data_map = boundary_node_map.get_boundary_node_geom_data_map ();
-  t8_debugf ("Geom Data Map Created with the size %lu\n", geom_data_map.size ());
+  t8_productionf ("Geom Data Map Created with the size %lu\n", geom_data_map.size ());
   ASSERT_EQ (cmesh->boundary_node_list->get_boundary_node_list ().size (), geom_data_map.size ());
 
   for (auto iter : geom_data_map) {
-
     gp_Pnt point;
+
+    /* Get coordinates of mesh node */
     const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (iter.first);
     t8_locidx_t local_tree_id = tree_list.at (0).first;
     int local_vertex_id = tree_list.at (0).second;
@@ -105,15 +127,14 @@ TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
     const double cmesh_y_coords = vertices[3 * local_vertex_id + 1];
     const double cmesh_z_coords = vertices[3 * local_vertex_id + 2];
 
+    /* For vertices of geometry */
     if (iter.second.entity_dim == 0) {
       try {
-        // Check that entity_tag is a valid index in the edge map
+        /* Check that entity_tag is a valid index in the edge map */
         ASSERT_GE (iter.second.entity_tag, 1) << "entity_tag index too low";
         ASSERT_LE (iter.second.entity_tag, cad_shape_vertex_map.Extent ()) << "entity_tag index too high";
 
         point = BRep_Tool::Pnt (TopoDS::Vertex (cad_shape_vertex_map.FindKey (iter.second.entity_tag)));
-
-        //ASSERT_FALSE (point.IsNull ()) << "Null curve handle for edge " << iter.second.entity_tag;
 
         double dx = cmesh_x_coords - point.X ();
         double dy = cmesh_y_coords - point.Y ();
@@ -121,20 +142,22 @@ TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
 
         double dist = std::sqrt (dx * dx + dy * dy + dz * dz);
 
+        /* Check that distance between mesh node and geometry vertex is less or equal than tolerance */
         EXPECT_LE (dist, tolerance) << "Distance exceeds tolerance for edge " << iter.second.entity_tag;
 
-      } catch (const Standard_Failure& e) {
+      } catch (const Standard_Failure& e) { /* OCC Exception Handling*/
         FAIL () << "Open CASCADE exception: " << e.GetMessageString ();
       } catch (...) {
         FAIL () << "Unknown exception caught during curve evaluation";
       }
     }
 
-    if (iter.second.entity_dim == 1) {
+    /* For curves of geometry */
+    else if (iter.second.entity_dim == 1) {
       try {
         Standard_Real first, last;
 
-        // Check that entity_tag is a valid index in the edge map
+        /* Check that entity_tag is a valid index in the edge map */
         ASSERT_GE (iter.second.entity_tag, 1) << "entity_tag index too low";
         ASSERT_LE (iter.second.entity_tag, cad_shape_edge_map.Extent ()) << "entity_tag index too high";
 
@@ -143,6 +166,7 @@ TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
 
         ASSERT_FALSE (curve.IsNull ()) << "Null curve handle for edge " << iter.second.entity_tag;
 
+        /* Reverse projection */
         curve->D0 (iter.second.location_on_curve[0], point);
 
         double dx = cmesh_x_coords - point.X ();
@@ -151,17 +175,19 @@ TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
 
         double dist = std::sqrt (dx * dx + dy * dy + dz * dz);
 
+        /* Check that distance between mesh node and geometry curve is less or equal than tolerance */
         EXPECT_LE (dist, tolerance) << "Distance exceeds tolerance for edge " << iter.second.entity_tag;
 
-      } catch (const Standard_Failure& e) {
+      } catch (const Standard_Failure& e) { /* OCC Exception Handling*/
         FAIL () << "Open CASCADE exception: " << e.GetMessageString ();
       } catch (...) {
         FAIL () << "Unknown exception caught during curve evaluation";
       }
     }
+
     else if (iter.second.entity_dim == 2) {
       try {
-        // Check that entity_tag is a valid index in the edge map
+        /* Check that entity_tag is a valid index in the edge map */
         ASSERT_GE (iter.second.entity_tag, 1) << "entity_tag index too low";
         ASSERT_LE (iter.second.entity_tag, cad_shape_face_map.Extent ()) << "entity_tag index too high";
 
@@ -170,6 +196,7 @@ TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
 
         ASSERT_FALSE (surface.IsNull ()) << "Null curve handle for edge " << iter.second.entity_tag;
 
+        /* Reverse projection */
         surface->D0 (iter.second.location_on_curve[0], iter.second.location_on_curve[1], point);
 
         double dx = cmesh_x_coords - point.X ();
@@ -178,9 +205,10 @@ TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
 
         double dist = std::sqrt (dx * dx + dy * dy + dz * dz);
 
+        /* Check that distance between mesh node and geometry curve is less or equal than tolerance */
         EXPECT_LE (dist, tolerance) << "Distance exceeds tolerance for edge " << iter.second.entity_tag;
 
-      } catch (const Standard_Failure& e) {
+      } catch (const Standard_Failure& e) { /* OCC Exception Handling*/
         FAIL () << "Open CASCADE exception: " << e.GetMessageString ();
       } catch (...) {
         FAIL () << "Unknown exception caught during curve evaluation";
@@ -188,3 +216,5 @@ TEST_F (t8_gtest_cad_boundary, geom_data_map_test)
     }
   }
 }
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_geom_data_map, t8_gtest_cad_boundary, testing::Range (0, 7));

@@ -41,7 +41,7 @@ class t8_boundary_node_list {
 
   /** Getter Function
    * 
-   * \return   A std:.unordered_set with the global IDs of boundary nodes
+   * \return   A std::unordered_set with the global IDs of boundary nodes
    */
   std::unordered_set<t8_gloidx_t>
   get_boundary_node_list ();

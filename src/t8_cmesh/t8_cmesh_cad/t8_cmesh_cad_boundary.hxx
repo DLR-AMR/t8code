@@ -55,7 +55,7 @@ class t8_boundary_node_geom_data_map {
   * \param [in] tolerance   A user defined tolerance to specify the precision of the boundary node remapping. Defaulted to 1e-7.
   * 
   */
-  t8_boundary_node_geom_data_map (TopoDS_Shape& shape_in, t8_cmesh_t cmesh_in, double tolerance = 1e-7);
+  t8_boundary_node_geom_data_map (TopoDS_Shape& shape_in, t8_cmesh_t cmesh_in, const double tolerance = 1e-7);
 
   /** Getter function for the geometry data map
    * 
@@ -70,21 +70,12 @@ class t8_boundary_node_geom_data_map {
   void
   compute_geom_data_map ();
 
-  /* CAD Geometry and corresponding mesh */
-  TopoDS_Shape& shape;
-  t8_cmesh_t cmesh;
-
-  /* User specified tolerance */
-  double tolerance;
-
-  /* Empty map to be filled on construction */
-  t8_geom_data geom_data;
-
-  /* Boundary node list of the given cmesh */
-  std::unordered_set<t8_gloidx_t> boundary_node_list;
-
-  /*Hashmap with key-value pairs of global_index - geom_data*/
-  std::unordered_map<t8_gloidx_t, t8_geom_data> boundary_node_geom_data_map;
+  TopoDS_Shape& shape;                                /** CAD Geometry */
+  t8_cmesh_t cmesh;                                   /** Corresponding mesh */
+  const double tolerance;                             /** User specified tolerance */
+  std::unordered_set<t8_gloidx_t> boundary_node_list; /** Boundary node list of the given cmesh */
+  std::unordered_map<t8_gloidx_t, t8_geom_data>
+    boundary_node_geom_data_map; /** Hashmap with key-value pairs of global_index - geom_data */
 
   TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
   TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
