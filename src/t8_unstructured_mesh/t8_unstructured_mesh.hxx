@@ -35,23 +35,19 @@
 #include <iterator>
 #include <memory>
 #include <vector>
+#include <tuple>
 #include <t8_unstructured_mesh/t8_element_competences.hxx>
 
-/* Forward declaration of the default unstructured element class because used as default template parameter in
- * t8_unstructured_mesh but t8_unstructured_mesh is also needed to define the element class.
+/* Forward declaration of the default unstructured element class used as default template parameter in
+ * t8_unstructured_mesh.
  */
 template <template <typename> class... TCompetence>
 class t8_unstructured_mesh_element;
 
 /**
- * Wrapper for a forest to be handled like an unstructured mesh object. 
- * The default class t8_unstructured_mesh_element provides access to the default functionality needed.
- * In the unstructured mesh class, you can decide which parameters should be cached and which should be calculated on the fly. 
- * Per default, the parameters will be calculated and not cached, please call the related functions to cache variables.
- * If you want to access more element parameters than the default ones, that should not be cached, you can write a derived class of 
- * t8_unstructured_mesh_element and use the derived class as template parameter. If the additional variable(s) should be cached,
- *  you may also write a derived class of t8_unstructured_mesh.
+ * Wrapper for a forest that enables it to be handled like an unstructured mesh object.
  * \tparam unstructured_mesh_element The element class that should be used for the unstructured mesh elements. 
+ * This template parameter defines which element functionality is available and if it is cached or calculated.
  */
 template <class TUnstructuredMeshElement = t8_unstructured_mesh_element<>>
 class t8_unstructured_mesh {
@@ -70,12 +66,18 @@ class t8_unstructured_mesh {
     update_elements ();
   }
 
+  /** 
+   * Update the storage of the unstructured mesh elements according to the input forest. 
+   * Can be used for example after the forest is adapted.  
+   */
   void
   update_elements ()
   {
+    // Clear the element vector if already created.
     if (!m_elements.empty ()) {
       m_elements.clear ();
     }
+    // Iterate through forest elements and fill the element vector with newly created unstructured mesh elements.
     m_num_local_trees = t8_forest_get_num_local_trees (m_forest);
     for (t8_locidx_t itree = 0; itree < m_num_local_trees; ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
@@ -116,6 +118,8 @@ class t8_unstructured_mesh {
         m_inner_iterator = m_outer_iterator->begin () + current_element_id;
       }
       else {
+        // If the outer iterator points to the end of the vector, define the current position of the inner
+        // iterator to end() of the last vector in the element vector. This is also the natural way for increment.
         m_inner_iterator = (m_unstructured_mesh->m_elements.end () - 1)->end ();
       }
     }
@@ -205,8 +209,9 @@ class t8_unstructured_mesh {
 
    private:
     t8_unstructured_mesh* m_unstructured_mesh; /**< The unstructured mesh the iterator is defined for. */
-    std::vector<element_vector>::iterator m_outer_iterator;
-    element_vector::iterator m_inner_iterator;
+    typename std::vector<element_vector>::iterator
+      m_outer_iterator;                                 /**< The iterator for the outer vector of the element vector. */
+    typename element_vector::iterator m_inner_iterator; /**< The iterator for the inner vector of the element vector. */
   };
 
   /**
@@ -227,6 +232,9 @@ class t8_unstructured_mesh {
     return t8_unstructured_iterator (this, t8_forest_get_num_local_trees (m_forest), 0);
   }
 
+  /**
+   * Getter for the forest the unstructured mesh is defined for.
+   */
   t8_forest_t
   get_forest ()
   {
@@ -234,13 +242,22 @@ class t8_unstructured_mesh {
   }
 
  private:
-  t8_forest_t m_forest; /**< The forest the unstructured mesh should be defined for. */
-  t8_locidx_t m_num_local_trees;
-  std::vector<element_vector> m_elements;
+  t8_forest_t m_forest;          /**< The forest the unstructured mesh should be defined for. */
+  t8_locidx_t m_num_local_trees; /**< The forest the unstructured mesh should be defined for. */
+  std::vector<element_vector>
+    m_elements; /**< Vector storing the unstructured mesh elements. One element vector per (local) tree. */
 };
 
-/** TODO
- * Default element of an unstructured mesh. 
+// TODO probiere mal mit 2. competenz ohne get_level und nur mit einer anderen, zb mittelpunkt!!!!
+/** 
+ * Unstructured mesh element class.
+ * There are multiple functionalities implemented as a function to calculate the refinement level of the element or the coordinates 
+ * of the points of the element. All the functionality is calculated when calling the function to keep the 
+ The default class t8_unstructured_mesh_element provides access to the default functionality needed.
+ * In the unstructured mesh class, you can decide which parameters should be cached and which should be calculated on the fly. 
+ * Per default, the parameters will be calculated and not cached, please give the corresponding template parameters to cache variables.
+ * If you want to access more element parameters than the default ones, that should not be cached, you can write a derived class of 
+ * t8_unstructured_mesh_element and use the derived class as template parameter. 
  * For this element, the following properties can be accessed: Level, TODO.
  */
 template <template <typename> class... TCompetence>

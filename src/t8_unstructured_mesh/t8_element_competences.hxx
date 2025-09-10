@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_operators.hxx>
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 
 /**
  *TODO
@@ -54,15 +55,6 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
     }
     // m_level is stored as an int to use a negative value as "not yet cached".
     return t8_element_level (m_level);
-  }
-
-  /**
-   * Reset the cache.
-   */
-  void
-  reset_cache ()
-  {
-    m_level = -1;
   }
 
  private:
