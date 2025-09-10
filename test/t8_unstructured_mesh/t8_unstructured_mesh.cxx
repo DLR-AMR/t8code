@@ -52,7 +52,6 @@ TEST (t8_unstructured_mesh, test_iterator)
   // Test dereference operator. (Here the cached value should be used.)
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     ASSERT_EQ (level, (*it).get_level ());
-    (*it).reset_cache ();
   }
 
   // --- Version with calculated level variable. ---
@@ -61,6 +60,51 @@ TEST (t8_unstructured_mesh, test_iterator)
 
   for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
     ASSERT_EQ (level, it->get_level ());
+  }
+
+  // Unref the forest.
+  t8_forest_unref (&forest);
+}
+
+TEST (t8_unstructured_mesh, test_centroid)
+{
+  const int level = 1;
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  const t8_scheme *scheme = t8_scheme_new_default ();
+
+  // Start with a uniform forest.
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  ASSERT_EQ (true, t8_forest_is_committed (forest));
+
+  // --- Version with cached level variable. ---
+  // Define an unstructured mesh for the forest.
+  t8_unstructured_mesh<t8_unstructured_mesh_element<CacheCentroid>> unstructured_mesh
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<CacheCentroid>> (forest);
+
+  // Iterate with the iterator over all unstructured mesh elements and check the level.
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+      EXPECT_GE (1, it->get_centroid ()[coord]);
+      EXPECT_LE (0, it->get_centroid ()[coord]);
+    }
+  }
+  // Test dereference operator. (Here the cached value should be used.)
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+      EXPECT_GE (1, (*it).get_centroid ()[coord]);
+      EXPECT_LE (0, (*it).get_centroid ()[coord]);
+    }
+  }
+
+  // --- Version with calculated level variable. ---
+  t8_unstructured_mesh<t8_unstructured_mesh_element<>> unstructured_mesh_calculate
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<>> (forest);
+
+  for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
+    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+      EXPECT_GE (1, (*it).get_centroid ()[coord]);
+      EXPECT_LE (0, (*it).get_centroid ()[coord]);
+    }
   }
 
   // Unref the forest.

@@ -41,7 +41,7 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
    * \return The refinement level of the unstructured mesh element.
    */
   t8_element_level
-  get_level ()
+  get_level_cached ()
   {
     // Check if the cache is already filled. If not, fill it.
     if (m_level == -1) {
@@ -59,6 +59,36 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
 
  private:
   int m_level = -1; /**< Cache for the level variable. -1 means no cached value. */
+};
+
+/**
+ *TODO
+ */
+template <typename TUnderlying>
+struct CacheCentroid: t8_crtp_operator<TUnderlying, CacheCentroid>
+{
+ public:
+  /**
+   * TODO
+   */
+  double*
+  get_centroid_cached ()
+  {
+    // Check if the cache is already filled. If not, fill it.
+    if (m_coordinates == nullptr) {
+      m_coordinates = new double[t8_forest_get_dimension (this->underlying ().get_unstructured_mesh ()->get_forest ())];
+      const t8_element_t* element = t8_forest_get_leaf_element_in_tree (
+        this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id (),
+        this->underlying ().get_element_id ());
+      t8_forest_element_centroid (this->underlying ().get_unstructured_mesh ()->get_forest (),
+                                  this->underlying ().get_tree_id (), element, m_coordinates);
+    }
+    // m_level is stored as an int to use a negative value as "not yet cached".
+    return m_coordinates;
+  }
+
+ private:
+  double* m_coordinates = nullptr; /**< TODO. */
 };
 
 #endif /* !T8_ELEMENT_COMPETENCES_HXX */

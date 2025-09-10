@@ -30,6 +30,7 @@
 
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <t8_element.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <iterator>
@@ -271,7 +272,9 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   // --- Variables to check which functionality is defined in TCompetence. ---
   // Checks if one of the competences (like CacheLevel) defines the function get_level().
   static constexpr bool get_level_defined
-    = (false || ... || requires (TCompetence<SelfType>& competence) { competence.get_level (); });
+    = (false || ... || requires (TCompetence<SelfType>& competence) { competence.get_level_cached (); });
+  static constexpr bool get_centroid_defined
+    = (false || ... || requires (TCompetence<SelfType>& competence) { competence.get_centroid_cached (); });
 
  public:
   /**
@@ -287,10 +290,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   }
 
   // --- Functionality for the default versions of the unstructured mesh element (calculate instead of caching functionality). ---
-  /* Make get_level function available if defined in TCompetence. 
-  * This is necessary because of the get_level() defined below for the case of no defined function in TCompetence.
-  */
-  using TCompetence<SelfType>::get_level...;
+
   /**
    * Getter for the refinement level of the unstructured mesh element.
    * This function calculates the level if called and is only available if there is no cached version defined in TCompetence.
@@ -298,12 +298,33 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    */
   t8_element_level
   get_level ()
-    requires (!get_level_defined)
   {
-    const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
-    const t8_element_t* element
-      = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
-    return t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_level (tree_class, element);
+    if constexpr (get_level_defined) {
+      return this->get_level_cached ();
+    }
+    else {
+      const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
+      const t8_element_t* element
+        = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+      return t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_level (tree_class, element);
+    }
+  }
+
+  double*
+  get_centroid ()
+  {
+    if constexpr (get_centroid_defined) {
+      return this->get_centroid_cached ();
+    }
+    else {
+      double* coordinates = new double[t8_forest_get_dimension (m_unstructured_mesh->m_forest)];
+      const t8_element_t* element
+        = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+
+      t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, element, coordinates);
+
+      return coordinates;
+    }
   }
 
   //--- Getter for the member variables. ---
