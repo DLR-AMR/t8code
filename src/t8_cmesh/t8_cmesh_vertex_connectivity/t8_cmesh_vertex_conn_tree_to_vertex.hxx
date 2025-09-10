@@ -46,7 +46,7 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <span>
 
-/** forward declaration of ttv class needed since the two class headers include each other. */
+/** forward declaration of the class needed since the two class headers include each other. */
 class t8_cmesh_vertex_conn_vertex_to_tree;
 
 /**
@@ -77,7 +77,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
    * \param [in] cmesh      An initialized but not committed cmesh that is to be derived from \a cmesh_from.
    * \param [in] vtt        A committed vertex to tree connectivity for \a cmesh_from.
    *
-   * As a result a tree to vertec connectivity for \a cmesh will be constructed.
+   * As a result a tree to vertex connectivity for \a cmesh will be constructed.
    * \note \a cmesh_from must be committed.
    * \note \a cmesh must not be committed.
    * \note \a vtt must be committed.
