@@ -20,6 +20,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_element_competences.hxx
+ * Definition of the additional competences/functionalities that can be used for the unstructured mesh class.
+ * Especially, competences to cache functionalities of elements instead of calculating them each time a function
+ * is called are provided.
+ */
+
 #ifndef T8_ELEMENT_COMPETENCES_HXX
 #define T8_ELEMENT_COMPETENCES_HXX
 
@@ -30,14 +36,19 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 
 /**
- *TODO
+ * Competence to cache the refinement level of an element at the first function call.
+ * Used the CRTP pattern as we need to access members of the derived class \ref t8_unstructured_element. 
+ * Use t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
+ * we need functionality of TUnderlying).
+ * \tparam Use the t8_unstructured_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
 {
  public:
   /**
-   * Returns the cached level for an unstructured mesh element or accesses it and puts in the cache if the variable has not been cached previously.
+   * Returns the cached level for an unstructured mesh element or accesses it and puts in the cache if the variable has
+   * not been cached previously.
    * \return The refinement level of the unstructured mesh element.
    */
   t8_element_level
@@ -62,14 +73,20 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
 };
 
 /**
- *TODO
+ * Competence to cache the centroid of an element at the first function call.
+ * Used the CRTP pattern as we need to access members of the derived class \ref t8_unstructured_element. 
+ * Use t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
+ * we need functionality of TUnderlying).
+ * \tparam Use the t8_unstructured_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct CacheCentroid: t8_crtp_operator<TUnderlying, CacheCentroid>
 {
  public:
   /**
-   * TODO
+   * Returns the cached centroid coordinates for an unstructured mesh element or accesses it and 
+   * puts in the cache if the variable has not been cached previously.
+   * \return The coordinates of the centroid of the unstructured mesh element.
    */
   double*
   get_centroid_cached ()
@@ -83,12 +100,12 @@ struct CacheCentroid: t8_crtp_operator<TUnderlying, CacheCentroid>
       t8_forest_element_centroid (this->underlying ().get_unstructured_mesh ()->get_forest (),
                                   this->underlying ().get_tree_id (), element, m_coordinates);
     }
-    // m_level is stored as an int to use a negative value as "not yet cached".
     return m_coordinates;
   }
 
  private:
-  double* m_coordinates = nullptr; /**< TODO. */
+  double* m_coordinates
+    = nullptr; /**< Cache for the coordinates of the centroid. nullptr if there is no cached value. */
 };
 
 #endif /* !T8_ELEMENT_COMPETENCES_HXX */

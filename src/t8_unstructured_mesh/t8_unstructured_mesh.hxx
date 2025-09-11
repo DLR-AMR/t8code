@@ -55,7 +55,7 @@ class t8_unstructured_mesh {
   using element_vector = std::vector<TUnstructuredMeshElement>;
 
  public:
-  // Declare unstructured mesh element as friend such that the forest and cached variables can be accessed.
+  // Declare unstructured mesh element as friend such that the forest can be accessed.
   friend TUnstructuredMeshElement;
 
   /** 
@@ -68,7 +68,7 @@ class t8_unstructured_mesh {
   }
 
   /** 
-   * Update the storage of the unstructured mesh elements according to the input forest. 
+   * Update the storage of the unstructured mesh elements according to the current forest. 
    * Can be used for example after the forest is adapted.  
    */
   void
@@ -79,8 +79,7 @@ class t8_unstructured_mesh {
       m_elements.clear ();
     }
     // Iterate through forest elements and fill the element vector with newly created unstructured mesh elements.
-    m_num_local_trees = t8_forest_get_num_local_trees (m_forest);
-    for (t8_locidx_t itree = 0; itree < m_num_local_trees; ++itree) {
+    for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
       element_vector temp;
       temp.reserve (num_elems);
@@ -115,6 +114,7 @@ class t8_unstructured_mesh {
       : m_unstructured_mesh (unstructured_mesh)
     {
       m_outer_iterator = m_unstructured_mesh->m_elements.begin () + current_tree_id;
+      // Check if the outer iterator is pointing to an valid vector.
       if (m_outer_iterator != m_unstructured_mesh->m_elements.end ()) {
         m_inner_iterator = m_outer_iterator->begin () + current_element_id;
       }
@@ -131,9 +131,7 @@ class t8_unstructured_mesh {
      */
     reference
     operator* () const
-    { /* Define new unstructured mesh element instead of caching the current one because it is possible that the iterator 
-       * should point to an element following the last (local) element, e.g., end().
-       */
+    {
       return (*m_inner_iterator);
     }
 
@@ -154,8 +152,11 @@ class t8_unstructured_mesh {
     t8_unstructured_iterator&
     operator++ ()
     {
+      // Check if the iterator is at the end of the current tree vector. Next vector if yes and inner iterator increment if not.
       if (m_inner_iterator == (*m_outer_iterator).end () - 1) {
         m_outer_iterator++;
+        // If the outer iterator does not point to a valid vector anymore,
+        // set the inner iterator also to end(), else, to begin() of the new tree vector.
         if (m_outer_iterator != m_unstructured_mesh->m_elements.end ()) {
           m_inner_iterator = m_outer_iterator->begin ();
         }
@@ -243,34 +244,34 @@ class t8_unstructured_mesh {
   }
 
  private:
-  t8_forest_t m_forest;          /**< The forest the unstructured mesh should be defined for. */
-  t8_locidx_t m_num_local_trees; /**< The forest the unstructured mesh should be defined for. */
+  t8_forest_t m_forest; /**< The forest the unstructured mesh should be defined for. */
   std::vector<element_vector>
     m_elements; /**< Vector storing the unstructured mesh elements. One element vector per (local) tree. */
 };
 
-// TODO probiere mal mit 2. competenz ohne get_level und nur mit einer anderen, zb mittelpunkt!!!!
 /** 
- * Unstructured mesh element class.
- * There are multiple functionalities implemented as a function to calculate the refinement level of the element or the coordinates 
- * of the points of the element. All the functionality is calculated when calling the function to keep the 
- The default class t8_unstructured_mesh_element provides access to the default functionality needed.
- * In the unstructured mesh class, you can decide which parameters should be cached and which should be calculated on the fly. 
- * Per default, the parameters will be calculated and not cached, please give the corresponding template parameters to cache variables.
- * If you want to access more element parameters than the default ones, that should not be cached, you can write a derived class of 
- * t8_unstructured_mesh_element and use the derived class as template parameter. 
- * For this element, the following properties can be accessed: Level, TODO.
+ * Unstructured mesh element class. 
+ * The unstructured element without specified template parameters provides default implementations for basic functionality 
+ * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
+ * the function is called. 
+ * Use the competences defined in t8_element_competences.hxx as template parameter to cache the functionality instead of 
+ * calculating them each time. 
+ * To add functionality to the element, you can simply write you own competence class and give it as a template parameter.
+ * You can access the functions implemented in your competence via the element. 
+ *
+ * The inheritance pattern is inspired by the \ref T8Type class.
+ * We decided to use this structure 1.) to be able to add new functionality easily and 
+ *    2.) for the cached options to keep the number of class member variables of the default to a minimum to safe memory.
+ * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
+ *
+ * \tparam The competences you want to add to the default functionality of the element.
  */
 template <template <typename> class... TCompetence>
 class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_element<TCompetence...>>... {
-  /* Design choice: Decided to not define the class inside of \ref t8_unstructured_mesh although the classes are strongly connected,
-* because the class also would not have access to private members and inheritance of the element class would be complicated.
-*/
-
   using SelfType = t8_unstructured_mesh_element<TCompetence...>;
 
   // --- Variables to check which functionality is defined in TCompetence. ---
-  // Checks if one of the competences (like CacheLevel) defines the function get_level().
+  // Checks if one of the competences (like CacheLevel) defines the function get_level_cached().
   static constexpr bool get_level_defined
     = (false || ... || requires (TCompetence<SelfType>& competence) { competence.get_level_cached (); });
   static constexpr bool get_centroid_defined
@@ -289,11 +290,11 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   {
   }
 
-  // --- Functionality for the default versions of the unstructured mesh element (calculate instead of caching functionality). ---
+  // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
 
   /**
    * Getter for the refinement level of the unstructured mesh element.
-   * This function calculates the level if called and is only available if there is no cached version defined in TCompetence.
+   * This function uses the cached version defined in TCompetence if available and calculates the refinement level if not.
    * \return Refinement level of the unstructured mesh element.
    */
   t8_element_level
@@ -310,6 +311,11 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     }
   }
 
+  /**
+   * Getter for the center of mass of the unstructured mesh element.
+   * This function uses the cached version defined in TCompetence if available and calculates if not.
+   * \return Coordinates of the center.
+   */
   double*
   get_centroid ()
   {
@@ -320,9 +326,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
       double* coordinates = new double[t8_forest_get_dimension (m_unstructured_mesh->m_forest)];
       const t8_element_t* element
         = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
-
       t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, element, coordinates);
-
       return coordinates;
     }
   }
@@ -348,7 +352,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
 
   /**
    * Getter for the unstructured mesh to which the unstructured mesh element is belonging.
-   *\return Reference to the unstructured mesh.
+   * \return Reference to the unstructured mesh.
    */
   t8_unstructured_mesh<SelfType>*
   get_unstructured_mesh ()
