@@ -14,6 +14,7 @@ bin_PROGRAMS += \
 	tutorials/general/t8_step7_interpolation \
 	tutorials/general/t8_tutorial_build_cmesh \
 	tutorials/general/t8_tutorial_search \
+	tutorials/general/t8_tutorial_search_partition \
 	tutorials/features/t8_features_curved_meshes
 
 dist_t8data_DATA += \
@@ -57,6 +58,8 @@ tutorials_general_t8_tutorial_build_cmesh_SOURCES = \
 tutorials_general_t8_tutorial_search_SOURCES = \
 	tutorials/general/t8_tutorial_search.cxx \
 	tutorials/general/t8_step3_adapt_forest.cxx
+tutorials_general_t8_tutorial_search_partition_SOURCES = \
+	tutorials/general/t8_tutorial_search_partition.cxx
 tutorials_features_t8_features_curved_meshes_SOURCES = \
   tutorials/features/t8_features_curved_meshes.cxx
 
