@@ -60,7 +60,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   using SelfType = t8_unstructured_mesh_element<TCompetence...>;
 
   // --- Variables to check which functionality is defined in TCompetence. ---
-  // Checks if one of the competences (like CacheLevel) defines the function get_level_cached().
+  // Checks if one of the competences (like t8_cache_level) defines the function get_level_cached().
   // Helper function.
   template <template <typename> class T>
   static constexpr bool
@@ -124,7 +124,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
       return this->get_centroid_cached ();
     }
     else {
-      double* coordinates = new double[t8_forest_get_dimension (m_unstructured_mesh->m_forest)];
+      double* coordinates = new double[T8_ECLASS_MAX_DIM];
       const t8_element_t* element
         = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
       t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, element, coordinates);

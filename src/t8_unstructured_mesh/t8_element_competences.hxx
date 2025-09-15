@@ -43,7 +43,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \tparam Use the t8_unstructured_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
+struct t8_cache_level: t8_crtp_operator<TUnderlying, t8_cache_level>
 {
  public:
   /**
@@ -80,7 +80,7 @@ struct CacheLevel: t8_crtp_operator<TUnderlying, CacheLevel>
  * \tparam Use the t8_unstructured_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct CacheCentroid: t8_crtp_operator<TUnderlying, CacheCentroid>
+struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
 {
  public:
   /**
@@ -93,7 +93,7 @@ struct CacheCentroid: t8_crtp_operator<TUnderlying, CacheCentroid>
   {
     // Check if the cache is already filled. If not, fill it.
     if (m_coordinates == nullptr) {
-      m_coordinates = new double[t8_forest_get_dimension (this->underlying ().get_unstructured_mesh ()->get_forest ())];
+      m_coordinates = new double[T8_ECLASS_MAX_DIM];
       const t8_element_t* element = t8_forest_get_leaf_element_in_tree (
         this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id (),
         this->underlying ().get_element_id ());

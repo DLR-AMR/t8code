@@ -49,7 +49,7 @@ TEST (t8_unstructured_mesh, test_iterator)
   // Iterate with the iterator over all unstructured mesh elements and check the level.
   for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
     EXPECT_EQ (level, it->get_level ());
-    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
       EXPECT_GE (1, it->get_centroid ()[coord]);
       EXPECT_LE (0, it->get_centroid ()[coord]);
     }
@@ -57,7 +57,7 @@ TEST (t8_unstructured_mesh, test_iterator)
   // Test dereference operator.
   for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
     EXPECT_EQ (level, (*it).get_level ());
-    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
       EXPECT_GE (1, (*it).get_centroid ()[coord]);
       EXPECT_LE (0, (*it).get_centroid ()[coord]);
     }
@@ -77,13 +77,13 @@ TEST (t8_unstructured_mesh, test_competences)
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Version with cached level variable. ---
-  t8_unstructured_mesh<t8_unstructured_mesh_element<CacheLevel>> unstructured_mesh_level
-    = t8_unstructured_mesh<t8_unstructured_mesh_element<CacheLevel>> (forest);
+  t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_level>> unstructured_mesh_level
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_level>> (forest);
 
   // Iterate with the iterator over all unstructured mesh elements and check the level.
   for (auto it = unstructured_mesh_level.begin (); it != unstructured_mesh_level.end (); ++it) {
     EXPECT_EQ (level, it->get_level ());
-    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
       EXPECT_GE (1, it->get_centroid ()[coord]);
       EXPECT_LE (0, it->get_centroid ()[coord]);
     }
@@ -94,13 +94,13 @@ TEST (t8_unstructured_mesh, test_competences)
   }
 
   // --- Version with cached centroid variable. ---
-  t8_unstructured_mesh<t8_unstructured_mesh_element<CacheCentroid>> unstructured_mesh_centroid
-    = t8_unstructured_mesh<t8_unstructured_mesh_element<CacheCentroid>> (forest);
+  t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_centroid>> unstructured_mesh_centroid
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_centroid>> (forest);
 
   // Iterate with the iterator over all unstructured mesh elements.
   for (auto it = unstructured_mesh_centroid.begin (); it != unstructured_mesh_centroid.end (); ++it) {
     EXPECT_EQ (level, it->get_level ());
-    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
       EXPECT_GE (1, it->get_centroid ()[coord]);
       // Second call (here cached value should be used).
       EXPECT_LE (0, it->get_centroid ()[coord]);
@@ -121,13 +121,13 @@ TEST (t8_unstructured_mesh, test_2_competences)
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Use competences to cache level and centroid. ---
-  t8_unstructured_mesh<t8_unstructured_mesh_element<CacheLevel, CacheCentroid>> unstructured_mesh
-    = t8_unstructured_mesh<t8_unstructured_mesh_element<CacheLevel, CacheCentroid>> (forest);
+  t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_level, t8_cache_centroid>> unstructured_mesh
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_level, t8_cache_centroid>> (forest);
 
   // Iterate with the iterator over all unstructured mesh elements.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     EXPECT_EQ (level, it->get_level ());
-    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
       EXPECT_GE (1, it->get_centroid ()[coord]);
       EXPECT_LE (0, it->get_centroid ()[coord]);
     }
@@ -135,7 +135,7 @@ TEST (t8_unstructured_mesh, test_2_competences)
   // Test dereference operator. (Here the cached values should be used.)
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     EXPECT_EQ (level, (*it).get_level ());
-    for (int coord = 0; coord < t8_forest_get_dimension (forest); ++coord) {
+    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
       EXPECT_GE (1, (*it).get_centroid ()[coord]);
       EXPECT_LE (0, (*it).get_centroid ()[coord]);
     }
