@@ -162,7 +162,9 @@ else()
 
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES )
+    list( APPEND CMAKE_MESSAGE_CONTEXT "sc" )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+    list( POP_BACK CMAKE_MESSAGE_CONTEXT )
     add_library(SC INTERFACE)
     # Capture the list of variables after adding the subdirectory
     get_cmake_property(_vars_after_sc VARIABLES )
@@ -218,7 +220,9 @@ else()
 
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property( _vars_before_p4est VARIABLES )
+    list( APPEND CMAKE_MESSAGE_CONTEXT "p4est" )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
+    list( POP_BACK CMAKE_MESSAGE_CONTEXT )
     # Capture the list of variables after adding the subdirectory
     get_cmake_property( _vars_after_p4est VARIABLES )
     # Compute the difference (new variables added by the subdirectory)
