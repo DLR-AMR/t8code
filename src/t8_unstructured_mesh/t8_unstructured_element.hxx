@@ -61,10 +61,11 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
 
   // --- Variables to check which functionality is defined in TCompetence. ---
   // Checks if one of the competences (like CacheLevel) defines the function get_level_cached().
+
   static constexpr bool get_level_defined
-    = (false || ... || requires (TCompetence<SelfType>& competence) { competence.get_level_cached (); });
+    = (false || ... || (requires (TCompetence<SelfType>& competence) { competence.get_level_cached (); }));
   static constexpr bool get_centroid_defined
-    = (false || ... || requires (TCompetence<SelfType>& competence) { competence.get_centroid_cached (); });
+    = (false || ... || (requires (TCompetence<SelfType>& competence) { competence.get_centroid_cached (); }));
 
  public:
   /**
