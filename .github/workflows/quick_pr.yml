@@ -47,7 +47,7 @@ jobs:
                 fetch-depth: 0
 
         - name: "Set up environment"
-          run: echo "GITHUB_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
+          run: echo "GH_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
 
         - name: "Create Issue"
           id: create_issue_and_output_number
