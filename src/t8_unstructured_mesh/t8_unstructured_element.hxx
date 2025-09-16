@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
+#include <array>
 #include <t8_schemes/t8_scheme.hxx>
 
 /* Forward declaration of the unstructured mesh class.
@@ -117,17 +118,17 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
-  double*
+  std::array<double, T8_ECLASS_MAX_DIM>
   get_centroid ()
   {
     if constexpr (get_centroid_defined) {
       return this->get_centroid_cached ();
     }
     else {
-      double* coordinates = new double[T8_ECLASS_MAX_DIM];
+      std::array<double, T8_ECLASS_MAX_DIM> coordinates;
       const t8_element_t* element
         = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
-      t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, element, coordinates);
+      t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, element, coordinates.data ());
       return coordinates;
     }
   }

@@ -34,6 +34,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
+#include <array>
+#include <optional>
 
 /**
  * Competence to cache the refinement level of an element at the first function call.
@@ -88,24 +90,24 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
    * puts in the cache if the variable has not been cached previously.
    * \return The coordinates of the centroid of the unstructured mesh element.
    */
-  double*
+  std::array<double, T8_ECLASS_MAX_DIM>
   get_centroid_cached ()
   {
     // Check if the cache is already filled. If not, fill it.
-    if (m_coordinates == nullptr) {
-      m_coordinates = new double[T8_ECLASS_MAX_DIM];
+    if (!m_coordinates.has_value ()) {
       const t8_element_t* element = t8_forest_get_leaf_element_in_tree (
         this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id (),
         this->underlying ().get_element_id ());
+      m_coordinates = { -1 };  // Necessary such that the value() call is valid.
       t8_forest_element_centroid (this->underlying ().get_unstructured_mesh ()->get_forest (),
-                                  this->underlying ().get_tree_id (), element, m_coordinates);
+                                  this->underlying ().get_tree_id (), element, m_coordinates.value ().data ());
     }
-    return m_coordinates;
+    return m_coordinates.value ();
   }
 
  private:
-  double* m_coordinates
-    = nullptr; /**< Cache for the coordinates of the centroid. nullptr if there is no cached value. */
+  std::optional<std::array<double, T8_ECLASS_MAX_DIM>>
+    m_coordinates; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 
 #endif /* !T8_ELEMENT_COMPETENCES_HXX */
