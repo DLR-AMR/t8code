@@ -117,11 +117,11 @@ t8_step5_create_element_data (t8_forest_t forest)
 
   /* Let us now fill the data with something.
    * For this, we iterate through all trees and for each tree through all its elements, calling
-   * t8_forest_get_element_in_tree to get a pointer to the current element.
+   * t8_forest_get_leaf_element_in_tree to get a pointer to the current element.
    * This is the recommended and most performant way.
    * An alternative is to iterate over the number of local elements and use
    * t8_forest_get_leaf_element. However, this function needs to perform a binary search
-   * for the element and the tree it is in, while t8_forest_get_element_in_tree has a
+   * for the element and the tree it is in, while t8_forest_get_leaf_element_in_tree has a
    * constant look up time. You should only use t8_forest_get_leaf_element if you do not know
    * in which tree an element is.
    */
