@@ -33,7 +33,7 @@
 constexpr uint8_t T8_ELEMENT_DIM[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
 
 /** Maximum level of the standalone element types
- * \note The maxlevel is lower than 255 so that we can use \ref t8_element_level (uint8_t)
+ * \note The maxlevel is lower than 255 so that we can use \ref t8_scheme::element_get_level (uint8_t)
  * to iterate to maxlevel:
  * for (t8_element_level level = 0; level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_VERTEX]; ++level)
  * Otherwise, t8_element_level would overflow after 255 and we would have an infinite loop.
@@ -67,6 +67,8 @@ using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
 
 template <t8_eclass_t TEclass>
 using t8_element_coords = std::array<t8_element_coord, T8_ELEMENT_DIM[TEclass]>;
+
+/** The data container describing a refined element in a refined tree, where the root element has class \a TEclass */
 template <t8_eclass_t TEclass>
 struct t8_standalone_element
 {
