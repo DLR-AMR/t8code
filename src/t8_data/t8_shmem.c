@@ -33,15 +33,15 @@
  * The array uses sc_shmem shared memory.*/
 typedef struct t8_shmem_array
 {
-  void *array;          /*!< Pointer to the actual memory. */
-  size_t elem_size;     /*!< Size of one entry in byte. */
-  size_t elem_count;    /*!< Total count of entries. */
-  sc_MPI_Comm comm;     /*!< MPI communicator. */
-  int writing_possible; /*!< True if we can currently write into this array. False if not. */
+  void *array;          /**< Pointer to the actual memory. */
+  size_t elem_size;     /**< Size of one entry in byte. */
+  size_t elem_count;    /**< Total count of entries. */
+  sc_MPI_Comm comm;     /**< MPI communicator. */
+  int writing_possible; /**< True if we can currently write into this array. False if not. */
   int
-    write_start_called; /*!< True if t8_shmem_array_start_writing was called and no call to t8_shmem_array_end_writing happened yet. */
+    write_start_called; /**< True if t8_shmem_array_start_writing was called and no call to t8_shmem_array_end_writing happened yet. */
 #if T8_ENABLE_DEBUG
-  sc_shmem_type_t shmem_type; /*!< Shared memory type of the communicator (at time of initializing the array). */
+  sc_shmem_type_t shmem_type; /**< Shared memory type of the communicator (at time of initializing the array). */
 #endif
 } t8_shmem_array_struct_t;
 

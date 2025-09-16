@@ -47,17 +47,17 @@
 class t8_element_array_iterator {
 
  private:
-  const t8_scheme* scheme;         /*!< The scheme of the elements residing within the array. */
-  const sc_array_t* elements;      /*!< A pointer to the actual serialized array of element pointers. */
-  t8_locidx_t current_index { 0 }; /*!< The index the iterator currently points to. */
-  t8_eclass_t tree_class;          /*!< The tree class of the elements in the array. */
+  const t8_scheme* scheme;         /**< The scheme of the elements residing within the array. */
+  const sc_array_t* elements;      /**< A pointer to the actual serialized array of element pointers. */
+  t8_locidx_t current_index { 0 }; /**< The index the iterator currently points to. */
+  t8_eclass_t tree_class;          /**< The tree class of the elements in the array. */
 
  public:
-  using iterator_category = std::random_access_iterator_tag; /*!< The iterator category. */
-  using difference_type = std::ptrdiff_t;                    /*!< The difference type for the iterator. */
-  using pointer = t8_element_t**;                            /*!< The pointer type for the iterator. */
-  using value_type = t8_element_t*;                          /*!< The value type for the iterator. */
-  using reference = t8_element_t*&;                          /*!< The reference type for the iterator. */
+  using iterator_category = std::random_access_iterator_tag; /**< The iterator category. */
+  using difference_type = std::ptrdiff_t;                    /**< The difference type for the iterator. */
+  using pointer = t8_element_t**;                            /**< The pointer type for the iterator. */
+  using value_type = t8_element_t*;                          /**< The value type for the iterator. */
+  using reference = t8_element_t*&;                          /**< The reference type for the iterator. */
 
   /* Constructors */
   t8_element_array_iterator () = delete;
