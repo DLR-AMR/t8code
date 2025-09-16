@@ -748,7 +748,7 @@ t8_element_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const i
 * \param [in] scheme        The scheme to use.
 * \param [in] tree_class    The eclass of the current tree.
 * \param [in] length   The number of elements to be initialized.
-* \param [in,out] elems On input an array of \a length many allocated
+* \param [in,out] elem On input an array of \a length many allocated
 *                       elements.
 * \note In debugging mode, an element that was passed to \ref t8_element_init
 * must pass \ref t8_element_is_valid.
