@@ -156,11 +156,12 @@ class t8_scheme {
     return std::holds_alternative<TEclassScheme> (eclass_schemes[tree_class]);
   }
 
-  /** Get the eclass an eclass scheme is valid for. \Note: This function should return the input value as long as the
-   * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
-   * function will make more sense.
+  /** Get the eclass an eclass scheme is valid for. 
    * \param [in] tree_class     The eclass of the current tree.
    * \return                    The valid tree class for the eclass scheme.
+   * \note This function should return the input value as long as the
+   * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
+   * function will make more sense.
    */
   inline t8_eclass_t
   get_eclass_scheme_eclass (const t8_eclass_t tree_class) const
@@ -257,6 +258,7 @@ class t8_scheme {
   /**
    * Indicates if an element is refinable. Possible reasons for being not refinable could be
    * that the element has reached its max level.
+   * \param [in] tree_class The eclass of the current tree.
    * \param [in] element   The element to check.
    * \return            True if the element is refinable.
    */
@@ -459,7 +461,7 @@ class t8_scheme {
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
    * It is valid to call this function with element = c[0].
-   * \see t8_element_num_children
+   * \see element_get_num_children
    */
   inline void
   element_get_children (const t8_eclass_t tree_class, const t8_element_t *element, const int length,
@@ -554,7 +556,7 @@ class t8_scheme {
    *                      They will be stored in order of their linear id.
    * \param [in] num_children The number of elements in \a children. Must match
    *                      the number of children that touch \a face.
-   *                      \ref t8_element_num_face_children
+   *                      \ref element_get_num_face_children
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
    *                      on output its i-th entry is the child_id of the i-th face_child.
    * It is valid to call this function with element = children[0].
@@ -587,7 +589,7 @@ class t8_scheme {
    * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
    *                      specifying a child of \a element that shares a face with \a face.
    *                      These children are counted in linear order. This coincides with
-   *                      the order of children from a call to \ref t8_element_children_at_face.
+   *                      the order of children from a call to \ref element_get_children_at_face.
    * \return              The face number of the face of a child of \a element
    *                      that coincides with \a face_child.
    */
@@ -619,7 +621,7 @@ class t8_scheme {
   /** Given an element and a face of this element. If the face lies on the
    * tree boundary, return the face number of the tree face.
    * If not the return value is arbitrary.
-   * You can call \ref t8_element_is_root_boundary to query whether the face is
+   * You can call \ref element_is_root_boundary to query whether the face is
    * at the tree boundary.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] element     The element.
@@ -891,7 +893,7 @@ class t8_scheme {
    *  reference space of the tree.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] element         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -949,14 +951,14 @@ class t8_scheme {
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] element  The element to be checked.
    * \return          True if \a element is safe to use. False otherwise.
-   * \note            An element that is constructed with \ref t8_element_new
+   * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
-   * \note            An element for which \ref t8_element_init was called must pass
+   * \note            An element for which \ref element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
    *                  These can for example occur when an element points to a region
    *                  of memory which should not be interpreted as an element.
-   * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (element))
+   * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (element))
    *                  in the implementation of each of the functions in this file.
    */
   inline int
@@ -984,6 +986,7 @@ class t8_scheme {
  * \param [in] tree_class    The eclass of the current tree.
  * \param[in] element The element to translate into human-readable information
  * \param[in, out] debug_string The string to fill. 
+ * \param[in] string_size The length of \a debug_string.
  */
   inline void
   element_to_string (const t8_eclass_t tree_class, const t8_element_t *element, char *debug_string,
@@ -998,82 +1001,82 @@ class t8_scheme {
    * and put pointers to the elements in the provided array.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] length   The number of elements to be allocated.
-   * \param [in,out] elems On input an array of \a length many element pointers.
+   * \param [in,out] elements On input an array of \a length many element pointers.
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
    * \note There are two ways to create multiple elements of the same type. Create an
-   * array of element pointers and fill it with t8_element_new, or allocate memory
-   * for \a length times \a element_size many bytes, and fill them with t8_element_init.
+   * array of element pointers and fill it with \ref element_new, or allocate memory
+   * for \a length times \a element_size many bytes, and fill them with element_init.
    * To access a specific element, offset calculation needs to be done manually, as
-   * t8_element_t is incomplete.
-   * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid (for example the root element).
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \note Every call to \ref t8_element_new must be matched by a call to \ref t8_element_destroy
-   * \see t8_element_destroy
-   * \see t8_element_init
-   * \see t8_element_is_valid
+   * \ref t8_element_t is incomplete.
+   * \note In debugging mode, an element that was created with \ref element_new
+   * must pass \ref element_is_valid (for example the root element).
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \note Every call to \ref element_new must be matched by a call to \ref element_destroy
+   * \see element_destroy
+   * \see element_init
+   * \see element_is_valid
    */
   inline void
-  element_new (const t8_eclass_t tree_class, const int length, t8_element_t **element) const
+  element_new (const t8_eclass_t tree_class, const int length, t8_element_t **elements) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_new (length, element); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_new (length, elements); },
                        eclass_schemes[tree_class]);
   };
 
   /** Initialize an array of allocated elements.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] length   The number of elements to be initialized.
-   * \param [in,out] elems On input an array of \a length many allocated
+   * \param [in,out] elements On input an array of \a length many allocated
    *                       elements.
-   * \note In debugging mode, an element that was passed to \ref t8_element_init
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_init should initialize an element
-   * in the same way as a call to \ref t8_element_new would.
-   * \note Every call to \ref t8_element_init must be matched by a call to \ref t8_element_deinit
-   * \see t8_element_deinit
-   * \see t8_element_new
-   * \see t8_element_is_valid
+   * \note In debugging mode, an element that was passed to \ref element_init
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_init should initialize an element
+   * in the same way as a call to \ref element_new would.
+   * \note Every call to \ref element_init must be matched by a call to \ref element_deinit
+   * \see element_deinit
+   * \see element_new
+   * \see element_is_valid
    */
   inline void
-  element_init (const t8_eclass_t tree_class, const int length, t8_element_t *element) const
+  element_init (const t8_eclass_t tree_class, const int length, t8_element_t *elements) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_init (length, element); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_init (length, elements); },
                        eclass_schemes[tree_class]);
   };
 
   /** Deinitialize an array of allocated elements.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] length   The number of elements to be deinitialized.
-   * \param [in,out] elems On input an array of \a length many allocated
+   * \param [in,out] elements On input an array of \a length many allocated
    *                       and initialized elements, on output an array of
    *                       \a length many allocated, but not initialized elements.
-   * \note Call this function if you called t8_element_init on the element pointers.
-   * \see t8_element_init
+   * \note Call this function if you called \ref element_init on the element pointers.
+   * \see element_init
    */
   inline void
-  element_deinit (const t8_eclass_t tree_class, const int length, t8_element_t *element) const
+  element_deinit (const t8_eclass_t tree_class, const int length, t8_element_t *elements) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_deinit (length, element); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_deinit (length, elements); },
                        eclass_schemes[tree_class]);
   };
 
   /** Deallocate an array of elements.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] length   The number of elements in the array.
-   * \param [in,out] element On input an array of \a length many allocated
+   * \param [in,out] elements On input an array of \a length many allocated
    *                      element pointers.
    *                      On output all these pointers will be freed.
    *                      \a element itself will not be freed by this function.
-   * \see t8_element_new
+   * \see element_new
    */
   inline void
-  element_destroy (const t8_eclass_t tree_class, const int length, t8_element_t **element) const
+  element_destroy (const t8_eclass_t tree_class, const int length, t8_element_t **elements) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_destroy (length, element); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_destroy (length, elements); },
                        eclass_schemes[tree_class]);
   };
 
