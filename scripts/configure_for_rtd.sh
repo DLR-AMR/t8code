@@ -10,7 +10,7 @@ mkdir build
 cd build
 
 # Run cmake with the specified options
-cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF -GNinja
+cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF
 
 # Return to the parent directory
 cd ..
