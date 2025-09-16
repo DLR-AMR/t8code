@@ -38,7 +38,7 @@
 #include <ranges>
 
 /**
- * \typedef t8_search_element_callback
+ *  t8_search_element_callback
  *  A callback function type used for searching elements in a forest.
  *
  * This callback function is invoked during the search process in a forest. It allows
@@ -82,7 +82,7 @@ using t8_search_query_callback = std::function<bool (
   const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index, const Query_T &query, Udata *user_data)>;
 
 /**
- * \typedef t8_search_batched_queries_callback
+ *  t8_search_batched_queries_callback
  *  A callback function type used for search queries within a forest. Processes a batch of queries.
  *
  * \tparam Query_T The type of the query.
@@ -106,7 +106,7 @@ using t8_search_batched_queries_callback = std::function<void (
   const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches, Udata *user_data)>;
 
 /**
- * \typedef t8_partition_search_element_callback
+ *  t8_partition_search_element_callback
  *  A callback function type used for searching elements in the partition of a forest.
  *
  * This callback function is invoked during the partition search process in a forest. It allows
@@ -128,7 +128,7 @@ using t8_partition_search_element_callback
                         const int pfirst, const int plast, Udata *user_data)>;
 
 /**
- * \typedef t8_partition_search_query_callback
+ *  t8_partition_search_query_callback
  *  A callback function type used for searching queries in the partition of a forest.
  *
  * \tparam Query_T The type of the query.
@@ -148,7 +148,7 @@ using t8_partition_search_query_callback
                         const int pfirst, const int plast, const Query_T &query, Udata *user_data)>;
 
 /**
- * \typedef t8_partition_search_batched_queries_callback
+ *  t8_partition_search_batched_queries_callback
  *  A callback function type used for searching queries in the partition of a forest. Processes a batch of queries.
  *
  * \tparam Query_T The type of the query.
