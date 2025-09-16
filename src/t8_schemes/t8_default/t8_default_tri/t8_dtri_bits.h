@@ -57,9 +57,9 @@ int
 t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2);
 
 /** Compute the parent of a triangle.
- * \param [in]  elem Input triangle.
+ * \param [in]  t Input triangle.
  * \param [in,out] parent Existing triangle whose data will be filled with the data of elem's parent.
- * \note \a elem may point to the same triangle as \a parent.
+ * \note \a t may point to the same triangle as \a parent.
  */
 void
 t8_dtri_parent (const t8_dtri_t *t, t8_dtri_t *parent);
@@ -172,6 +172,7 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1, const t8_dtri_t *t2, t8_dt
  *                      stored. They will be stored in order of their child_id.
  * \param [in] num_children The number of triangles in \a children. Must match the number of children that touch 
  *                      \a face.
+ * \param [in,out] child_indices The indices of the children in \a children. Only filled if this is null previously.
  */
 void
 t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[], int num_children, int *child_indices);
@@ -210,8 +211,8 @@ t8_dtri_tree_face (t8_dtri_t *t, int face);
 /** Given a triangle and a face of the root triangle. If the triangle lies on the tree boundary, return the 
  * corresponding face number of the triangle. If not the return value is arbitrary.
  * \param [in] t        The triangle.
- * \param [in] face     The index of a face of the root element.
- * \return The index of the face of \a t that is a subface of \a face, if \a t is on the tree boundary.
+ * \param [in] root_face     The index of a face of the root element.
+ * \return The index of the face of \a t that is a subface of \a root_face, if \a t is on the tree boundary.
  *         Any arbitrary integer if \a t is not at a tree boundary.
  * \note For boundary triangles, this function is the inverse of \ref t8_dtri_tree_face
  */

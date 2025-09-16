@@ -64,8 +64,10 @@
  *  This is useful to convert boundary coordinates from prism to triangle. */
 #define T8_DPRISM_ROOT_BY_DLINE_ROOT (1 << (T8_DLINE_MAXLEVEL - T8_DPRISM_MAXLEVEL))
 
+/** Type of an integer coordinate for a node of a prism element. */
 typedef int32_t t8_dprism_coord_t;
 
+/** The data container describing a refined element in a refined tree for the prism element class. */
 typedef struct t8_dprism
 {
   t8_dline_t line; /*z coordinate + level */

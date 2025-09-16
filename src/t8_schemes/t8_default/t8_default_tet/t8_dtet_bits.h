@@ -36,7 +36,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Compute the coordinates of a vertex of a tetrahedron.
- * \param [in] t    Input tetrahedron.
+ * \param [in] elem    Input tetrahedron.
  * \param [in] vertex The number of the vertex.
  * \param [out] coordinates An array of 3 t8_dtet_coord_t that will be filled with the coordinates of the vertex.
  */
@@ -97,9 +97,9 @@ int
 t8_dtet_equal (const t8_dtet_t *elem1, const t8_dtet_t *elem2);
 
 /** Compute the parent of a tetrahedron.
- * \param [in]  elem Input tetrahedron.
+ * \param [in]  t Input tetrahedron.
  * \param [in,out] parent Existing tetrahedron whose data will be filled with the data of elem's parent.
- * \note \a elem may point to the same tetrahedron as \a parent.
+ * \note \a t may point to the same tetrahedron as \a parent.
  */
 void
 t8_dtet_parent (const t8_dtet_t *t, t8_dtet_t *parent);
@@ -115,7 +115,7 @@ void
 t8_dtet_ancestor (const t8_dtet_t *t, int level, t8_dtet_t *ancestor);
 
 /** Compute the childid-th child in Morton order of a tetrahedron t.
- * \param [in] t    Input tetrahedron.
+ * \param [in] elem    Input tetrahedron.
  * \param [in,out] childid The id of the child, 0..7 in Bey order.
  * \param [out] child  Existing tetrahedron whose data will be filled with the date of t's childid-th child.
  */
@@ -170,6 +170,7 @@ t8_dtet_nearest_common_ancestor (const t8_dtet_t *t1, const t8_dtet_t *t2, t8_dt
  *                      stored. They will be stored in order of their child_id.
  * \param [in] num_children The number of tetrahedra in \a children. Must match the number of children that touch 
  *                      \a face.
+ * \param [in,out] child_indices The indices of the children in \a children. Only filled if this is null previously.
  */
 void
 t8_dtet_children_at_face (const t8_dtet_t *tet, int face, t8_dtet_t *children[], int num_children, int *child_indices);
@@ -186,9 +187,9 @@ t8_dtet_face_child_face (const t8_dtet_t *tet, int face, int face_child);
 
 /** Given a face of an tet return the face number of the parent of the tet that matches the tet's face. Or return -1 if
  * no face of the parent matches the face.
- * \param [in]  elem  The tet.
+ * \param [in]  tet  The tet.
  * \param [in]  face  Then number of the face.
- * \return            If \a face of \a elem is also a face of \a elem's parent, the face number of this face. 
+ * \return            If \a face of \a tet is also a face of \a tet's parent, the face number of this face. 
  *                    Otherwise -1.
  */
 int
@@ -208,8 +209,8 @@ t8_dtet_tree_face (t8_dtet_t *t, int face);
 /** Given a tetrahedron and a face of the root tetrahedron. If the tetrahedron lies on the tree boundary, 
  * return the corresponding face number of the tetrahedron. If not the return value is arbitrary.
  * \param [in] t    The tetrahedron.
- * \param [in] face The index of a face of the root tetrahedron.
- * \return The index of the face of \a t that is a subface of \a face, if \a t is on the tree boundary.
+ * \param [in] root_face The index of a face of the root tetrahedron.
+ * \return The index of the face of \a t that is a subface of \a root_face, if \a t is on the tree boundary.
  *         Any arbitrary integer if \a t is not at a tree boundary.
  * \note For boundary tetrahedra, this function is the inverse of \ref t8_dtet_tree_face.
  */

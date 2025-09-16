@@ -103,8 +103,8 @@ void
 t8_dline_face_neighbour (const t8_dline_t *l, t8_dline_t *neigh, int face, int *dual_face);
 
 /** Computes the nearest common ancestor of two lines in the same tree.
- * \param [in]     l1 First input line.
- * \param [in]     l2 Second input line.
+ * \param [in]     t1 First input line.
+ * \param [in]     t2 Second input line.
  * \param [in,out] r Existing line whose data will be filled.
  * \note \a l1, \a l2, \a r may point to the same line.
  */
@@ -182,7 +182,7 @@ t8_dline_init_linear_id (t8_dline_t *l, int level, t8_linearidx_t id);
 
 /** Computes the successor of a line in a uniform grid of level \a level.
  * \param [in] l  line whose id will be computed.
- * \param [in,out] s Existing line whose data will be filled with the
+ * \param [in,out] succ Existing line whose data will be filled with the
  *                data of \a l's successor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
@@ -194,8 +194,8 @@ t8_dline_successor (const t8_dline_t *l, t8_dline_t *succ, int level);
  *  and given the orientation of the tree connection, construct the face
  *  Line of the respective tree neighbor that logically coincides with e
  *  but lies in the coordinate system of the neighbor tree.
- *  \param [in] elem1     The face element.
- *  \param [in,out] elem2 On return the face element \a elem1 with respect
+ *  \param [in] line1     The face element.
+ *  \param [in,out] line2 On return the face element \a line1 with respect
  *                        to the coordinate system of the other tree.
  *  \param [in] orientation The orientation of the tree-tree connection.
  *                        0 if vertex 0 of face 0 coincides with vertex 0 of face 1.
@@ -247,7 +247,7 @@ t8_dline_vertex_integer_coords (const t8_dline_t *elem, const int vertex, int co
 
 /** Compute the coordinates of a vertex of a line when the 
  * tree (level 0 line) is embedded in [0,1]^1.
- * \param [in] t    Input line.
+ * \param [in] elem    Input line.
  * \param [in] vertex The number of the vertex.
  * \param [out] coordinates An array of 1 double that
  * 		     will be filled with the reference coordinates of the vertex.
@@ -274,7 +274,8 @@ t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coo
                                    const size_t skip_coords, double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
- * \param [in] line  Line whose id will be computed.
+ * \param [in] elem  Pointer to a line element whose id will be computed.
+ * \param [in] level Refinement level of the line element.
  * \return Returns the linear position of this line on a grid.
  */
 t8_linearidx_t

@@ -50,8 +50,10 @@
 /** The length of a hex at a given level in integer coordinates. */
 #define T8_DHEX_LEN(l) (1 << (T8_DHEX_MAXLEVEL - (l)))
 
+/** Type of an integer coordinate for a node of a hex element. */
 typedef int32_t t8_dhex_coord_t;
 
+/** The data container describing a refined element in a refined tree for the hex element class. */
 typedef struct t8_dhex
 {
   int8_t level;

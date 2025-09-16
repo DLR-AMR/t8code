@@ -33,7 +33,7 @@
 #include <sc_containers.h>
 #include <utility>
 
-/* Macro to check whether a pointer (VAR) to a base class, comes from an
+/** Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
@@ -84,6 +84,9 @@ count_leaves_from_level (const int element_level, const int refinement_level, co
   return element_level > refinement_level ? 0 : (1ULL << (dimension * (refinement_level - element_level)));
 }
 
+/** Common interface of the default schemes for each element shape.
+ * \tparam TUnderlyingEclassScheme The default scheme class of the element shape.
+ */
 template <class TUnderlyingEclassScheme>
 class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme, t8_default_scheme_common> {
  private:

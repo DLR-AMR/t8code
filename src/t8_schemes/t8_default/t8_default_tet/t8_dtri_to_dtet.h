@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtet_to_dtri.h
+/** \file t8_dtri_to_dtet.h
  */
 
 #ifndef T8_DTRI_TO_DTET_H
@@ -32,7 +32,7 @@ T8_EXTERN_C_BEGIN ();
 
 #define T8_DTRI_TO_DTET
 
-/* redefine macros */
+/** redefine macros */
 #define T8_DTRI_MAXLEVEL T8_DTET_MAXLEVEL
 #define T8_DTRI_ROOT_LEN T8_DTET_ROOT_LEN
 #define T8_DTRI_LEN T8_DTET_LEN
@@ -44,13 +44,13 @@ T8_EXTERN_C_BEGIN ();
 #define T8_DTRI_CORNERS T8_DTET_CORNERS
 #define T8_DTRI_NUM_TYPES T8_DTET_NUM_TYPES
 
-/* redefine types */
+/** redefine types */
 #define t8_dtri_coord_t t8_dtet_coord_t
 #define t8_dtri_type_t t8_dtet_type_t
 #define t8_dtri_t t8_dtet_t
 #define t8_dtri_cube_id_t t8_dtet_cube_id_t
 
-/* external variables */
+/** external variables */
 #define t8_dtri_cid_type_to_parenttype t8_dtet_cid_type_to_parenttype
 #define t8_dtri_type_of_child t8_dtet_type_of_child
 #define t8_dtri_type_of_child_morton t8_dtet_type_of_child_morton
@@ -64,7 +64,7 @@ T8_EXTERN_C_BEGIN ();
 #define t8_dtri_type_cid_to_Iloc t8_dtet_type_cid_to_Iloc
 #define t8_dtri_face_corner t8_dtet_face_corner
 
-/* functions in d8_dtri_bits.h */
+/** functions in d8_dtri_bits.h */
 #define t8_dtri_is_equal t8_dtet_is_equal
 #define t8_dtri_copy t8_dtet_copy
 #define t8_dtri_compare t8_dtet_compare
