@@ -129,6 +129,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     for (int icorner = 0; icorner < num_corners; ++icorner) {
       std::array<double, T8_ECLASS_MAX_DIM> vertex;
       t8_forest_element_coordinate (m_unstructured_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
+      vertex_coordinates.push_back (vertex);
     }
     return vertex_coordinates;
   }
