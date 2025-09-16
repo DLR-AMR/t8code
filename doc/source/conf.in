@@ -52,7 +52,7 @@ if read_the_docs_build:
     output_dir = 'build'
     configureDoxyfile(input_dir, output_dir)
     subprocess.call('doxygen', shell=True)
-    breathe_projects["T8code"] = output_dir + '/xml'
+    breathe_projects["t8code"] = output_dir + '/xml'
 
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
@@ -61,7 +61,7 @@ html_theme_options = {
 html_static_path = ['_static']
 html_logo = '../../t8code_logo.png'
 
-breathe_default_project = "T8code"
+breathe_default_project = "t8code"
 breathe_implementation_filename_extensions = ['.c', '.cpp']
 
 # Setup the exhale extension
