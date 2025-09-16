@@ -151,7 +151,7 @@ T8_EXTERN_C_BEGIN ();
  */
 struct t8_forest_c_search
 {
-  t8_search<void *> *cpp_search;    /**< The C++ search object. */
+  t8_search<void *> *cpp_search; /**< The C++ search object. */
 };
 
 void
@@ -199,7 +199,7 @@ t8_forest_search_destroy (t8_forest_search_c_wrapper search)
  */
 struct t8_forest_search_with_queries
 {
-  t8_search_with_queries<void *, void *> *cpp_search;   /**< The C++ search object with queries. */
+  t8_search_with_queries<void *, void *> *cpp_search; /**< The C++ search object with queries. */
 };
 
 void
@@ -270,8 +270,8 @@ t8_forest_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper s
  */
 struct t8_forest_search_with_batched_queries
 {
-  t8_search_with_batched_queries<void *, void *> *cpp_search;     /**< The C++ search object. */
-  t8_search_batched_queries_callback_c_wrapper queries_callback;  /**< The C++ query object. */
+  t8_search_with_batched_queries<void *, void *> *cpp_search;    /**< The C++ search object. */
+  t8_search_batched_queries_callback_c_wrapper queries_callback; /**< The C++ query object. */
 
   /**
    * A wrapper function that converts the C callback to the C++ callback.

@@ -331,7 +331,7 @@ class t8_search_base {
 template <typename Udata = void>
 class t8_search: public t8_search_base {
  public:
- /**
+  /**
   * Constructor for the t8_search class.
   * \param[in] element_callback A callback function to be called for each element during the search.
   * \param[in] forest A pointer to the forest to be searched. Defaults to nullptr
@@ -564,7 +564,7 @@ class t8_search_with_queries: public t8_search<Udata> {
 template <typename Query_T, typename Udata = void>
 class t8_search_with_batched_queries: public t8_search<Udata> {
  public:
- /**
+  /**
   * Constructor for the t8_search_with_batched_queries class.
   * \param[in] element_callback A callback function to be called for each element during the search.
   * \param[in] queries_callback A callback function to be called for processing batched queries.
@@ -831,7 +831,7 @@ class t8_partition_search: public t8_partition_search_base {
   Udata *user_data;
 
  private:
- /**
+  /**
   *  In the partition search without queries, the search never stops due to empty queries.
   */
   bool
@@ -1027,7 +1027,7 @@ class t8_partition_search_with_queries: public t8_partition_search<Udata> {
 template <typename Query_T, typename Udata = void>
 class t8_partition_search_with_batched_queries: public t8_partition_search<Udata> {
  public:
- /**
+  /**
   * Constructor for the t8_partition_search_with_batched_queries class.
   * This constructor initializes a t8_partition_search_with_batched_queries object with the given
   * element callback, queries callback, forest, and user data. If the forest is not null, it increments
