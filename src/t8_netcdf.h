@@ -47,14 +47,20 @@ typedef enum t8_netcdf_variable_type {
   T8_NETCDF_DOUBLE = 2
 } t8_netcdf_variable_type_t;
 
-/* Struct for elementwise data variable for a NetCDF file */
+/** Struct for elementwise data variable for a NetCDF file */
 typedef struct
 {
+  /** short name of the variable*/
   const char *variable_name;
+  /** long name of the variable*/
   const char *variable_long_name;
+  /** unit of the variable*/
   const char *variable_units;
+  /** datatype of the variable*/
   t8_netcdf_variable_type_t datatype;
+  /** Dimension id of the user??? TODO!!*/
   int var_user_dimid;
+  /** user data for the variable*/
   sc_array_t *var_user_data;
 } t8_netcdf_variable_t;
 
@@ -64,7 +70,6 @@ typedef struct
  * \param [in]  var_long_name    A string describing the variable a bit more and what it is about.
  * \param [in]  var_unit    The units in which the data is provided.
  * \param [in]  var_data    A sc_array_t holding the elementwise data of the variable.
- * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
 t8_netcdf_create_var (t8_netcdf_variable_type_t var_type, const char *var_name, const char *var_long_name,
@@ -75,7 +80,6 @@ t8_netcdf_create_var (t8_netcdf_variable_type_t var_type, const char *var_name, 
  * \param [in]  var_long_name    A string describing the variable a bit more and what it is about.
  * \param [in]  var_unit    The units in which the data is provided.
  * \param [in]  var_data    A sc_array_t holding the elementwise data of the variable.
- * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
 t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name, const char *var_unit,
@@ -86,7 +90,6 @@ t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name, c
  * \param [in]  var_long_name    A string describing the variable a bit more and what it is about.
  * \param [in]  var_unit    The units in which the data is provided.
  * \param [in]  var_data    A sc_array_t holding the elementwise data of the variable.
- * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
 t8_netcdf_create_double_var (const char *var_name, const char *var_long_name, const char *var_unit,
