@@ -31,7 +31,7 @@
 #include <functional>
 
 /**
- * \brief An implementation of strong type with additional competences.
+ *  An implementation of strong type with additional competences.
  *
  * This class template allows the creation of a type that can be extended with
  * multiple competences. Each competence is a template class that takes the
@@ -58,7 +58,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   }
 
   /**
-   * \brief Construct a new T8Type object
+   *  Construct a new T8Type object
    * 
    * \tparam T_ref 
    * \param value 
@@ -81,7 +81,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   }
 
   /**
-   * \brief Get a reference to the stored value.
+   *  Get a reference to the stored value.
    *
    * \return A reference to the stored value.
    */
@@ -92,7 +92,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   }
 
   /**
-   * \brief Get a const reference to the stored value.
+   *  Get a const reference to the stored value.
    *
    * \return A const reference to the stored value.
    */
@@ -123,7 +123,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
 namespace std
 {
 /**
- * \brief Functor for hashing T8Type objects.
+ *  Functor for hashing T8Type objects.
  *
  * This struct defines a functor that computes the hash value of a T8Type object.
  * It uses the std::hash function to generate the hash value based on the underlying

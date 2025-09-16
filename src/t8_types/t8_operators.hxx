@@ -66,7 +66,7 @@ struct t8_crtp_operator
  */
 
 /**
- * \brief A template for addable types. Provides the + operator.
+ *  A template for addable types. Provides the + operator.
  * 
  * \tparam TUnderlying
  */
@@ -87,7 +87,7 @@ struct Addable: t8_crtp_operator<TUnderlying, Addable>
 };
 
 /**
- * \brief A template for subtractable types. Provides the - operator.
+ *  A template for subtractable types. Provides the - operator.
  * 
  * \tparam TUnderlying 
  */
@@ -108,7 +108,7 @@ struct Subtractable: t8_crtp_operator<TUnderlying, Subtractable>
 };
 
 /**
- * \brief A template for multipliable types. Provides the * operator.
+ *  A template for multipliable types. Provides the * operator.
  * 
  * \tparam TUnderlying 
  */
@@ -129,7 +129,7 @@ struct Multipliable: t8_crtp_operator<TUnderlying, Multipliable>
 };
 
 /**
- * \brief A template for dividable types. Provides the / operator.
+ *  A template for dividable types. Provides the / operator.
  * 
  * \tparam TUnderlying 
  */
@@ -150,7 +150,7 @@ struct Dividable: t8_crtp_operator<TUnderlying, Dividable>
 };
 
 /**
- * \brief A template for add-assignable types. Provides the += operator.
+ *  A template for add-assignable types. Provides the += operator.
  * 
  * \tparam TUnderlying 
  */
@@ -172,7 +172,7 @@ struct AddAssignable: t8_crtp_operator<TUnderlying, AddAssignable>
 };
 
 /**
- * \brief A template for incrementable types. Provides the ++ operator.
+ *  A template for incrementable types. Provides the ++ operator.
  * 
  * \tparam TUnderlying
  * 
@@ -195,7 +195,7 @@ struct PrefixIncrementable: t8_crtp_operator<TUnderlying, PrefixIncrementable>
 };
 
 /**
- * \brief A template for decrementable types. Provides the -- operator.
+ *  A template for decrementable types. Provides the -- operator.
  * 
  * \tparam TUnderlying 
  * 
@@ -218,7 +218,7 @@ struct PrefixDecrementable: t8_crtp_operator<TUnderlying, PrefixDecrementable>
 };
 
 /**
- * \brief A template for printable types. Provides the << operator.
+ *  A template for printable types. Provides the << operator.
  * 
  * \tparam TUnderlying 
  */
@@ -241,7 +241,7 @@ struct Printable: t8_crtp_operator<TUnderlying, Printable>
 };
 
 /**
- * \brief A template for swapping types. Used to make a type swappable.
+ *  A template for swapping types. Used to make a type swappable.
  * 
  * \tparam TUnderlying 
  */
@@ -262,7 +262,7 @@ struct Swapable: t8_crtp_operator<TUnderlying, Swapable>
 };
 
 /**
- * \brief A template for equality comparable types. Provides the == operator.
+ *  A template for equality comparable types. Provides the == operator.
  * 
  * \tparam TUnderlying 
  */
@@ -296,7 +296,7 @@ struct EqualityComparable: t8_crtp_operator<TUnderlying, EqualityComparable>
 };
 
 /**
- * \brief A template for hashable types. Used to make a type hashable.
+ *  A template for hashable types. Used to make a type hashable.
  * 
  * \tparam TUnderlying
  */
@@ -308,7 +308,7 @@ struct Hashable
 };
 
 /**
- * \brief A template for random accessible types. Provides the [] operator.
+ *  A template for random accessible types. Provides the [] operator.
  * 
  * \tparam TUnderlying
  */
