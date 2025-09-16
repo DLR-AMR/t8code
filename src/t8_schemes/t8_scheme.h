@@ -381,7 +381,7 @@ t8_element_get_face_shape (const t8_scheme_c *scheme, const t8_eclass_t tree_cla
  *                      They will be stored in order of their linear id.
  * \param [in] num_children The number of elements in \a children. Must match
  *                      the number of children that touch \a face.
- *                      \ref element_get_num_face_children
+ *                      \ref t8_scheme::element_get_num_face_children
  * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
  *                      on output its i-th entry is the child_id of the i-th face_child.
  * It is valid to call this function with element = children[0].
@@ -408,7 +408,7 @@ t8_element_get_children_at_face (const t8_scheme_c *scheme, const t8_eclass_t tr
  * \param [in] face_child A number 0 <= \a face_child < num_face_children,
  *                        specifying a child of \a element that shares a face with \a face.
  *                        These children are counted in linear order. This coincides with
- *                        the order of children from a call to \ref element_get_children_at_face.
+ *                        the order of children from a call to \ref t8_scheme::element_get_children_at_face.
  * \return                The face number of the face of a child of \a element
  *                        that coincides with \a face_child.
  */
@@ -611,7 +611,9 @@ t8_element_get_linear_id (const t8_scheme_c *scheme, const t8_eclass_t tree_clas
  * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] element     The element whose descendant is computed.
  * \param [out] desc    The first element in a uniform refinement of \a element
- *                      of the maximum possible level.
+ *                      at level \a level.
+ * \param [in] level    The uniform refinement level at which the descendant is computed.
+ *                      \a level must be greater or equal to the level of \a element.
  */
 void
 t8_element_get_first_descendant (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
@@ -623,6 +625,8 @@ t8_element_get_first_descendant (const t8_scheme_c *scheme, const t8_eclass_t tr
  * \param [in] element     The element whose descendant is computed.
  * \param [out] desc    The last element in a uniform refinement of \a element
  *                      of the maximum possible level.
+ * \param [in] level    The uniform refinement level at which the descendant is computed.
+ *                      \a level must be greater or equal to the level of \a element.
  */
 void
 t8_element_get_last_descendant (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
@@ -633,7 +637,6 @@ t8_element_get_last_descendant (const t8_scheme_c *scheme, const t8_eclass_t tre
  * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elem1      The element whose successor should be constructed.
  * \param [in,out] elem2  The element whose entries will be set.
- * \param [in] level      The level of the uniform refinement to consider.
  */
 void
 t8_element_get_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
@@ -641,32 +644,34 @@ t8_element_get_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_clas
 
 /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] t      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
+   * \param [in] scheme        The scheme of the forest.
+   * \param [in] tree_class    The eclass of tree the elements are part of.
+   * \param [in] element      The element to be considered.
+   * \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
-   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   * \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
    *                      all coords might be used. 
    */
 void
-t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *t,
-                                        const int vertex, double coords[]);
+t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
+                                        const t8_element_t *element, const int vertex, double coords[]);
 
 /** Count how many leaf descendants of a given uniform level an element would produce.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
- * \param [in] t      The element to be checked.
+ * \param [in] element      The element to be checked.
  * \param [in] level  A refinement level.
- * \return Suppose \a t is uniformly refined up to level \a level. The return value
+ * \return Suppose \a element is uniformly refined up to level \a level. The return value
  * is the resulting number of elements (of the given level).
- * If \a level < t8_element_get_level(t), the return value should be 0.
+ * If \a level < t8_element_get_level(element), the return value should be 0.
  *
- * Example: If \a t is a line element that refines into 2 line elements on each level,
+ * Example: If \a element is a line element that refines into 2 line elements on each level,
  *  then the return value is max(0, 2^{\a level - level(\a t)}).
- *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
+ *  Thus, if \a element's level is 0, and \a level = 3, the return value is 2^3 = 8.
  */
 t8_gloidx_t
-t8_element_count_leaves (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *t,
+t8_element_count_leaves (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
                          const int level);
 
 /** Count how many leaf descendants of a given uniform level the root element will produce.
@@ -693,7 +698,7 @@ t8_element_count_leaves_from_root (const t8_scheme_c *scheme, const t8_eclass_t 
    * \return          True if \a element is safe to use. False otherwise.
    * \note            An element that is constructed with \ref t8_element_new
    *                  must pass this test.
-   * \note            An element for which \ref t8_element_init was called must pass
+   * \note            An element for which \ref t8_scheme::element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
    *                  These can for example occur when an element points to a region
@@ -719,8 +724,11 @@ t8_element_debug_print (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
 /**
  * \brief Fill a string with readable information about the element
  * 
- * \param[in] element The element to translate into human-readable information
+ * \param [in] scheme        The scheme of the forest.
+ * \param [in] tree_class    The eclass of the current tree.
+ * \param[in] element The element to translate into human-readable information.
  * \param[in, out] debug_string The string to fill. 
+ * \param[in] string_size The length of \a debug_string.
  */
 void
 t8_element_to_string (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
@@ -735,14 +743,14 @@ t8_element_to_string (const t8_scheme_c *scheme, const t8_eclass_t tree_class, c
  *                        On output all these pointers will point to an allocated and initialized element.
  * \note Not every element that is created in t8code will be created by a call
  * to this function. However, if an element is not created using \ref t8_element_new,
- * then it is guaranteed that \ref t8_element_init is called on it.
+ * then it is guaranteed that \ref t8_scheme::element_init is called on it.
  * \note In debugging mode, an element that was created with \ref t8_element_new
  * must pass \ref t8_element_is_valid.
- * \note If an element was created by \ref t8_element_new then \ref t8_element_init
+ * \note If an element was created by \ref t8_element_new then \ref t8_scheme::element_init
  * may not be called for it. Thus, \ref t8_element_new should initialize an element
- * in the same way as a call to \ref t8_element_init would.
+ * in the same way as a call to \ref t8_scheme::element_init would.
  * \see t8_element_init
- * \see t8_element_is_valid
+ * \see element_is_valid
  */
 void
 t8_element_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int length, t8_element_t **elems);

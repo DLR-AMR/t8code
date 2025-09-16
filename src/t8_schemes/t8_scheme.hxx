@@ -984,7 +984,7 @@ class t8_scheme {
   /**
  * Fill a string with readable information about the element
  * \param [in] tree_class    The eclass of the current tree.
- * \param[in] element The element to translate into human-readable information
+ * \param[in] element The element to translate into human-readable information.
  * \param[in, out] debug_string The string to fill. 
  * \param[in] string_size The length of \a debug_string.
  */
