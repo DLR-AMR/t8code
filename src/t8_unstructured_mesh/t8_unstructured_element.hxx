@@ -31,8 +31,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_element.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <array>
 #include <t8_schemes/t8_scheme.hxx>
+#include <array>
+#include <vector>
 
 /* Forward declaration of the unstructured mesh class.
  */
@@ -111,6 +112,25 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
         = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
       return t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_level (tree_class, element);
     }
+  }
+
+  /**
+   * TODO
+   */
+  std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
+  get_vertex_coordinates ()
+  {
+    std::vector<std::array<double, T8_ECLASS_MAX_DIM>> vertex_coordinates;
+    const t8_element_t* element
+      = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
+    const int num_corners
+      = t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_num_corners (tree_class, element);
+    for (int icorner = 0; icorner < num_corners; ++icorner) {
+      std::array<double, T8_ECLASS_MAX_DIM> vertex;
+      t8_forest_element_coordinate (m_unstructured_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
+    }
+    return vertex_coordinates;
   }
 
   /**

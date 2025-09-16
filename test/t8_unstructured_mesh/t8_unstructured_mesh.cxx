@@ -53,6 +53,13 @@ TEST (t8_unstructured_mesh, test_iterator)
       EXPECT_GE (1, it->get_centroid ()[coord]);
       EXPECT_LE (0, it->get_centroid ()[coord]);
     }
+    auto vertex_coordinates = it->get_vertex_coordinates ();
+    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
+      for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
+        EXPECT_GE (1, vertex_coordinates[ivertex][coord]);
+        EXPECT_LE (0, vertex_coordinates[ivertex][coord]);
+      }
+    }
   }
   // Test dereference operator.
   for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {

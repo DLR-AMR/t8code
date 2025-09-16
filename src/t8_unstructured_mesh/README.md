@@ -1,4 +1,6 @@
 # t8_unstructured_mesh #
+**This is a first version of the unstructured mesh interface and will be extended by further functionality in the near future.**
+
 In this folder, we define an unstructured mesh interface.  
 Some application codes are designed for unstructured or uniform meshes and cannot use t8code's tree-based structures directly. For this purpose, an iterable mesh data structure is created as an intermediate level in this folder.
 

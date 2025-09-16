@@ -98,7 +98,7 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
       const t8_element_t* element = t8_forest_get_leaf_element_in_tree (
         this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id (),
         this->underlying ().get_element_id ());
-      m_coordinates = { -1 };  // Necessary such that the value() call is valid.
+      m_coordinates = { -1. };  // Necessary such that the value() call is valid.
       t8_forest_element_centroid (this->underlying ().get_unstructured_mesh ()->get_forest (),
                                   this->underlying ().get_tree_id (), element, m_coordinates.value ().data ());
     }
