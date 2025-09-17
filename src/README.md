@@ -6,7 +6,7 @@ Here is an overview over the different modules:
 
 ## [src](https://github.com/DLR-AMR/t8code/tree/main/src)
 
-The main source folder, it holds main header files like [t8.h](https://github.com/DLR-AMR/t8code/blob/main/src/t8.h), [t8_cmesh.hxx] (https://github.com/DLR-AMR/t8code/blob/main/src/t8_cmesh.hxx) and more.
+The main source folder, it holds main header files like [t8.h](https://github.com/DLR-AMR/t8code/blob/main/src/t8.h), [t8_cmesh.hxx](https://github.com/DLR-AMR/t8code/blob/main/src/t8_cmesh.hxx) and more.
 
 ## [src/t8_cmesh](https://github.com/DLR-AMR/t8code/tree/main/src/t8_cmesh)
 
