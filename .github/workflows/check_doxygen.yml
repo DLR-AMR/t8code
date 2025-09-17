@@ -4,7 +4,7 @@ name: "Upload newest documentation to website"
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element types in parallel.
 #
-#  Copyright (C) 2015 the developers
+#  Copyright (C) 2025 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -51,16 +51,12 @@ jobs:
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
     # This step is necessary to get the newest package data
-    - name: Install zlib
-      run: sudo apt-get install libz-dev
     - name: Install doxygen
       run: sudo apt-get install doxygen-latex
     - name: init submodules
       run: git submodule init
     - name: update submodules
       run: git submodule update
-    - name: bootstrap
-      run: ./bootstrap
 
 # build config vars
     - name: build CFLAGS and CXXFLAGS variables
@@ -76,34 +72,15 @@ jobs:
       run: echo "Checking debug mode"
     - name: configure
       run: mkdir build_debug && cd build_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
-    - name: make doxygen
-      run: cd build_debug && make doxygen
-
-# upload documentation
-    - name: Checkout t8code-website repo
-      uses: actions/checkout@v5
-      with:
-        ref: ${{ github.head_ref }}
-        repository: DLR-AMR/t8code-website
-        path: t8code-website
-        token: ${{ secrets.T8DDY_TOKEN }}
-    - name: Add documentation to website
+    - name: check doxygen
+      run: cd doc && doxygen Doxyfile >> output 2>&1
+    - name: check for doxygen warnings
       run: |
-        cd t8code-website/content
-        rm -rf doc/dev/*
-        mkdir -p doc/dev
-        cp -r ../../build_debug/doc/html/* doc/dev/
-    - name: check_diff
-      run: |
-        cd t8code-website
-        if [ ! -z "$(git status --porcelain --untracked-files=no )" ]; then echo "COMMIT_NEW_DOC=true" >> $GITHUB_ENV; fi
-    - name: Commit and push files
-      if: ${{ env.COMMIT_NEW_DOC == 'true' }}
-      run: |
-        cd t8code-website
-        git config --local user.email "t8ddy.bot@gmail.com"
-        git config --local user.name "t8ddy"
-        git add content/doc/dev/
-        git commit -m "Add newest documentation"
-        git push --force-with-lease
+        if grep -i warning doc/output; then
+          echo "Doxygen warnings found!"
+          exit 1
+        else
+          echo "No doxygen warnings found."
+        fi
+    
 
