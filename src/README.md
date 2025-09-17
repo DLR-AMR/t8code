@@ -34,3 +34,21 @@ See [geometry README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_geometr
 Contains data handling classes and algorithms for schemes. Schemes are the implementation of the space-filling curve for each element shape.
 A scheme describes how elements refine, construct their neighbors, etc.
 See [scheme README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_schemes/README).
+
+## [src/t8_types](https://github.com/DLR-AMR/t8code/tree/main/src/t8_types)
+
+Custom data types and strong types. Also contains t8_vec vector implementation.
+See [types README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_schemes/README).
+
+## [src/t8_vector_helper](https://github.com/DLR-AMR/t8code/tree/main/src/t8_vector_helper)
+
+Contains specialized algorithms on std::vector in particular `vector_split`.
+See [vector helper README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_vector_helper/README).
+
+## [src/t8_vtk](https://github.com/DLR-AMR/t8code/tree/main/src/t8_vtk)
+
+Contains algorithms and data structures for the VTK interface.
+See [vtk README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_vtk/README).
+
+
+
