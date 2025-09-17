@@ -43,7 +43,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
     - name: Configure for documentation only
-      run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_DOXYGEN=ON
+      run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON
     - name: check doxygen
       run: cd doc && doxygen Doxyfile >> output 2>&1
     - name: check for doxygen warnings
