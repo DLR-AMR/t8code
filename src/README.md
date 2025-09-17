@@ -21,7 +21,7 @@ See [data README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_data/README
 
 #### [src/t8_forest](https://github.com/DLR-AMR/t8code/tree/main/src/t8_forest)
 
-Contains implemenation details of algorithms and data structures related to the forest, i.e. the actual computational mesh.
+Contains implementation details of algorithms and data structures related to the forest, i.e. the actual computational mesh.
 See [forest README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_forest/README) and the tutorials, [Step 2](https://github.com/DLR-AMR/t8code/wiki/Step-2---Creating-a-uniform-forest), [Step 3](https://github.com/DLR-AMR/t8code/wiki/Step-3---Adapting-a-forest), [Step 4](https://github.com/DLR-AMR/t8code/wiki/Step-3---Adapting-a-forest).
 
 #### [src/t8_geometry](https://github.com/DLR-AMR/t8code/tree/main/src/t8_geometry)
