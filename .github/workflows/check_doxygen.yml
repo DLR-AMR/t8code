@@ -38,7 +38,7 @@ jobs:
     timeout-minutes: 10
     steps:
     - name: Configure for documentation only
-      run: mkdir build_debug && cd build_debug && cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_DOXYGEN=ON
+      run: mkdir build_debug && cmake -Bbuild_debug -H. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_DOXYGEN=ON
     - name: check doxygen
       run: cd doc && doxygen Doxyfile >> output 2>&1
     - name: check for doxygen warnings
