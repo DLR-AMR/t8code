@@ -48,14 +48,20 @@ T8_EXTERN_C_BEGIN ();
  */
 
 /** 
- * MYTODO: comment 
+ * Initialize a ghost type of a forest.
+ * 
+ * \param[out] pghost     Pointer to the forest's ghost.
+ * \param[in]  ghost_type The type of the ghost elements, \see t8_ghost_type_t.
  */
 void
 t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type);
 
 /** 
- * MYTODO: document 
- * returns 0 if ghost structure doesnt exist 
+ * Return the number of trees in a ghost.
+ *
+ * \param[in] forest  The forest.
+ * 
+ * \return The number of trees in the forest's ghost (or 0 if ghost structure does not exist).
  */
 t8_locidx_t
 t8_forest_ghost_num_trees (const t8_forest_t forest);
@@ -100,7 +106,12 @@ t8_locidx_t
 t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid);
 
 /**
- * MYTODO: document 
+  * Given an index in the ghost_tree array, return this tree's element class.
+  * 
+  * \param[in] forest       A committed forest.
+  * \param[in] lghost_tree  The tree's local index in the ghost_tree array.
+  * 
+  * \return The element class of the given tree.
  */
 t8_eclass_t
 t8_forest_ghost_get_tree_class (const t8_forest_t forest, const t8_locidx_t lghost_tree);

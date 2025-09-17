@@ -363,7 +363,13 @@ t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *c
   }
 }
 
-/** MYTODO: Document */
+/**
+ *  Fill the already defined NetCDF-variables and calculate the 'nMesh_node' (global number of nodes) -dimension
+ * 
+ * \param[in]     forest    The forest.
+ * \param[in,out] context   Data required to work with the NetCDF file.
+ * \param[in]     comm      The MPI communicator.
+*/
 static void
 t8_forest_write_netcdf_data ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_netcdf_context_t *context,
                              [[maybe_unused]] sc_MPI_Comm comm)

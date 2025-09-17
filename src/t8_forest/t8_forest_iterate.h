@@ -34,7 +34,16 @@
 #include <t8_forest/t8_forest_general.h>
 
 /**
- * MYTODO: Document
+ * Callback function used in \see t8_forest_iterate_faces.
+ * 
+ * \param[in] forest          The forest.
+ * \param[in] ltreeid         Local index of the tree containing the \a element.
+ * \param[in] element         The considered element.
+ * \param[in] face            The integer index of the considered face of \a element.
+ * \param[in] user_data       Some user-defined data, as void pointer.
+ * \param[in] tree_leaf_index Tree-local index the first leaf.
+ * 
+ * \return Nonzero if the element may touch the face and the top-down search shall be continued, zero otherwise.
  */
 typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                           int face, void *user_data, t8_locidx_t tree_leaf_index);
@@ -42,7 +51,6 @@ typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreei
 /**
  * A call-back function used by \ref t8_forest_search describing a search-criterion. Is called on an element and the 
  * search criterion should be checked on that element. Return true if the search criterion is met, false otherwise.  
- *
  *
  * \param[in] forest              the forest
  * \param[in] ltreeid             the local tree id of the current tree
@@ -144,7 +152,7 @@ void
 t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets);
 
 /**
- * Iterate over all leaves of an element that touch a given face of the element
+ * Iterate over all leaves of an element that touch a given face of the element.
  * Callback is called in each recursive step with element as input.
  * leaf_index is only not negative if element is a leaf, in which case it indicates
  * the index of the leaf in the leaves of the tree. If it is negative, it is
@@ -152,7 +160,14 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
  * Top-down iteration and callback is called on each intermediate level.
  * If it returns false, the current element is not traversed further 
  * 
- * MYTODO: Check description and add params
+ * \param[in] forest                    A committed forest.
+ * \param[in] ltreeid                   Local index of the tree containing the \a element.
+ * \param[in] element                   The considered element.
+ * \param[in] face                      The integer index of the considered face of \a element.
+ * \param[in] leaf_elements             The array of leaf elements that are descendants of \a element. Sorted by linear index.
+ * \param[in] user_data                 The user data passed to the \a callback function.
+ * \param[in] tree_lindex_of_first_leaf Tree-local index of the first leaf.
+ * \param[in] callback                  The callback function.
  */
 void
 t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
@@ -164,9 +179,12 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
  * intermediate element. The search will enter each tree at least once.
  * If the callback returns false for an element, its descendants
  * are not further searched.
- * To pass user data to the search_fn function use \ref t8_forest_set_user_data
+ * To pass user data to the search_fn function use \ref t8_forest_set_user_data.
  *  
- * MYTODO: Check description and add params
+ * \param[in] forest    The forest.
+ * \param[in] search_fn The callback function describing the search criterion.
+ * \param[in] query_fn  The query function.
+ * \param[in] queries   The array of queries.
  */
 void
 t8_forest_search (t8_forest_t forest, t8_forest_search_fn search_fn, t8_forest_query_fn query_fn, sc_array_t *queries);

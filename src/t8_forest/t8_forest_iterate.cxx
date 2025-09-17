@@ -164,7 +164,8 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   }
 }
 
-/* The recursion that is called from t8_forest_search_tree
+/**
+ * The recursion that is called from t8_forest_search_tree.
  * Input is an element and an array of all leaf elements of this element.
  * The callback function is called on element and if it returns true,
  * the search continues with the children of the element.
@@ -176,6 +177,17 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
  * for the parent element.
  * If the callback function (search_fn) returns false for an element,
  * the query function is not called for this element.
+ * 
+ * \param[in] forest                    A committed forest.
+ * \param[in] ltreeid                   The local index of the tree.
+ * \param[in] element                   The considered element.
+ * \param[in] tree_class                The element class of the tree.
+ * \param[in] leaf_elements             The array of leaf elements that are descendants of \a element. Sorted by linear index.
+ * \param[in] tree_lindex_of_first_leaf Tree-local index of the first leaf.
+ * \param[in] search_fn                 The search callback function, \see t8_forest_search_fn.
+ * \param[in] query_fn                  The query function \see t8_forest_query_fn.
+ * \param[in] queries                   The array of queries.
+ * \param[in] active_queries            The active queries, given as an array of indices within the \a queries array.
  */
 static void
 t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_element_t *element,
@@ -294,7 +306,16 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
   }
 }
 
-/* Perform a top-down search in one tree of the forest */
+/** 
+ *  Perform a top-down search in one tree of the forest 
+ *  
+ * \param[in] forest          The forest.
+ * \param[in] ltreeid         The local index of the tree to search in.
+ * \param[in] search_fn       The callback function describing the search criterion.
+ * \param[in] query_fn        The callback function used for queries.
+ * \param[in] queries         The array of queries.
+ * \param[in] active_queries  The active queries within \a queries.
+*/
 static void
 t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search_fn search_fn,
                        t8_forest_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)

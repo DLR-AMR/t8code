@@ -46,43 +46,69 @@ void
 t8_forest_set_profiling (t8_forest_t forest, int set_profiling);
 
 /**
- * MYTODO: document 
+ * Compute the profiling stats.
+ * 
+ * \param[in,out] forest  A committed forest.
  */
 void
 t8_forest_compute_profile (t8_forest_t forest);
 
 /**
- * MYTODO: document 
+ * Return this forest's profiling statistics for adaptation.
+ * 
+ * \param[in] forest  A committed forest.
+ * 
+ * \return The profiling stats of adaptation as pointer to const sc_statinfo_t.
  */
 const sc_statinfo_t *
 t8_forest_profile_get_adapt_stats (t8_forest_t forest);
 
 /**
- * MYTODO: document 
+ * Return this forest's profiling statistics for ghost computations.
+ * 
+ * \param[in] forest  A committed forest.
+ * 
+ * \return The profiling stats of ghost computation as pointer to const sc_statinfo_t.
  */
 const sc_statinfo_t *
 t8_forest_profile_get_ghost_stats (t8_forest_t forest);
 
 /**
- * MYTODO: document 
+ * Return this forest's profiling statistics for partitioning.
+ * 
+ * \param[in] forest  A committed forest.
+ * 
+ * \return The profiling stats of partitioning as pointer to const sc_statinfo_t.
  */
 const sc_statinfo_t *
 t8_forest_profile_get_partition_stats (t8_forest_t forest);
 
 /**
- * MYTODO: document 
+ * Return this forest's profiling statistics for committing.
+ * 
+ * \param[in] forest  A committed forest.
+ * 
+ * \return The profiling stats of commit as pointer to const sc_statinfo_t.
  */
 const sc_statinfo_t *
 t8_forest_profile_get_commit_stats (t8_forest_t forest);
 
 /**
- * MYTODO: document 
+ * Return this forest's profiling statistics for balancing.
+ * 
+ * \param[in] forest  A committed forest.
+ * 
+ * \return The profiling stats of balancing as pointer to const sc_statinfo_t.
  */
 const sc_statinfo_t *
 t8_forest_profile_get_balance_stats (t8_forest_t forest);
 
 /**
- * MYTODO: document 
+ * Return this forest's profiling statistics for the performed balance rounds.
+ * 
+ * \param[in] forest  A committed forest.
+ * 
+ * \return The profiling stats of the balance rounds as pointer to const sc_statinfo_t.
  */
 const sc_statinfo_t *
 t8_forest_profile_get_balance_rounds_stats (t8_forest_t forest);

@@ -46,17 +46,17 @@ typedef struct t8_forest_ghost *t8_forest_ghost_t; /**< Defined below */
  * The latter 3 can be combined, in which case the order is
  * 1. Adapt, 2. Partition, 3. Balance.
  * We store the methods in an int8_t and use these defines to
- * distinguish between them.
+ * distinguish between them. 
  */
 typedef int8_t t8_forest_from_t;
 
-#define T8_FOREST_FROM_FIRST 0       /**< MYTODO: Document */
+#define T8_FOREST_FROM_FIRST 0       /**< Lowest valid value of t8_forest_from_t. */
 #define T8_FOREST_FROM_COPY 0        /**< Must be zero, such that |= with another options overwrites it  */
-#define T8_FOREST_FROM_ADAPT 0x1     /**< MYTODO: Document */
-#define T8_FOREST_FROM_PARTITION 0x2 /**< MYTODO: Document */
-#define T8_FOREST_FROM_BALANCE 0x4   /**< MYTODO: Document */
+#define T8_FOREST_FROM_ADAPT 0x1     /**< Value of t8_forest_from_t indicating the forest is derived via adapt. */
+#define T8_FOREST_FROM_PARTITION 0x2 /**< Value of t8_forest_from_t indicating the forest is derived via partition. */
+#define T8_FOREST_FROM_BALANCE 0x4   /**< Value of t8_forest_from_t indicating the forest is derived via balancing. */
 #define T8_FOREST_FROM_NONE 0x8 /**< A value that is not reached by adding up the other values. No from method used */
-#define T8_FOREST_FROM_LAST T8_FOREST_FROM_NONE /**< MYTODO: Document */
+#define T8_FOREST_FROM_LAST T8_FOREST_FROM_NONE /**<  A value higher than any valid value of t8_forest_from_t. */
 
 #define T8_FOREST_BALANCE_REPART 1    /**< Value of forest->set_balance if balancing with repartitioning */
 #define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
@@ -220,7 +220,7 @@ typedef struct t8_forest_ghost
                                                 Array of int's. */
 
   sc_mempool_t *glo_tree_mempool;    /**< The global tree memory pool. */
-  sc_mempool_t *proc_offset_mempool; /**< MYTODO: Document. */
+  sc_mempool_t *proc_offset_mempool; /**< The process offset memory pool. */
 } t8_forest_ghost_struct_t;
 
 #endif /* ! T8_FOREST_TYPES_H */

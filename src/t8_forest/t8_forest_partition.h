@@ -34,8 +34,11 @@
 
 T8_EXTERN_C_BEGIN ();
 /**
- *  MYTODO: document 
- */
+ * Populate a forest with the partitioned elements of forest->set_from.
+ * Currently the elements are distributed evenly (each element has the same weight).
+ * 
+ * \param [in,out]  forest  The forest.
+*/
 void
 t8_forest_partition (t8_forest_t forest);
 

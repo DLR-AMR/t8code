@@ -36,8 +36,14 @@
 T8_EXTERN_C_BEGIN ();
 
 /**
- * MYTODO: document
- * only temporary and will be replaced in future 
+ * Balance the forest.
+ * 
+ * This function adjust the forest such that it satisfies a 2:1 balance condition: The levels of neighboring 
+ * elements may differ by at most one. Such a balanced forest simplifies many algorithms, making balancing 
+ * an important procedure for both developers and external users.
+ * 
+ * \param[in,out] forest      The forest to be balanced.
+ * \param[in]     repartition Switch deciding whether the forest is repartitioned after balancing.
  */
 void
 t8_forest_balance (t8_forest_t forest, int repartition);

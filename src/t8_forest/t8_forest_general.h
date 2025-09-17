@@ -36,9 +36,7 @@
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
 
-/**
- * MYTODO: document
-*/
+/** Opaque pointer to a tree implementation. */
 typedef struct t8_tree *t8_tree_t;
 
 /** This type controls, which neighbors count as ghost elements.
@@ -189,7 +187,7 @@ t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b);
  * \param [in,out] forest       The forest whose cmesh variable will be set.
  * \param [in]     cmesh        The cmesh to be set.  We take ownership.
  *                              This can be prevented by referencing \b cmesh.
- * \param [in]     comm         The MPI communicator
+ * \param [in]     comm         The MPI communicator.
  */
 void
 t8_forest_set_cmesh (t8_forest_t forest, t8_cmesh_t cmesh, sc_MPI_Comm comm);
@@ -366,11 +364,11 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
 /** Like \ref t8_forest_set_ghost but with the additional options to change the
  * ghost algorithm. This is used for debugging and timing the algorithm.
  * An application should almost always use \ref t8_forest_set_ghost.
- * \param [in]      forest        The forest
+ * \param [in]      forest        The forest.
  * \param [in]      do_ghost      If non-zero a ghost layer will be created.
  * \param [in]      ghost_type    Controls which neighbors count as ghost elements,
  *                                currently only T8_GHOST_FACES is supported. This value
- *                                is ignored if \a do_ghost = 0
+ *                                is ignored if \a do_ghost = 0.
  * \param [in]      ghost_version If 1, the iterative ghost algorithm for balanced forests is used.
  *                                If 2, the iterative algorithm for unbalanced forests.
  *                                If 3, the top-down search algorithm for unbalanced forests.
@@ -380,8 +378,10 @@ void
 t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version);
 
 /**
- *  MYTODO: use assertions and document that the forest_set (..., from) and
- *       set_load are mutually exclusive. 
+ *  Use assertions and document that the forest_set (..., from) and
+ *  set_load are mutually exclusive. 
+ * 
+ *  TODO: Unused function -> remove?
  */
 void
 t8_forest_set_load (t8_forest_t forest, const char *filename);
