@@ -58,7 +58,7 @@ typedef struct
   const char *variable_units;
   /** datatype of the variable*/
   t8_netcdf_variable_type_t datatype;
-  /** Dimension id of the user??? TODO!!*/
+  /** The unique identifier netCDF assigns to this variable once it is defined in the file*/
   int var_user_dimid;
   /** user data for the variable*/
   sc_array_t *var_user_data;
