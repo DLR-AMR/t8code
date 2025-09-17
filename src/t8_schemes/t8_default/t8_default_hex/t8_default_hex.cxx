@@ -631,12 +631,12 @@ t8_default_scheme_hex::element_init ([[maybe_unused]] const int length, [[maybe_
 
 #if T8_ENABLE_DEBUG
 int
-t8_default_scheme_hex::element_is_valid (const t8_element_t *elem) const
+t8_default_scheme_hex::element_is_valid (const t8_element_t *element) const
 {
   /* TODO: additional checks? do we set pad8 or similar?
    */
-  return p8est_quadrant_is_extended ((const p8est_quadrant_t *) elem)
-         && T8_QUAD_GET_TDIM ((const p8est_quadrant_t *) elem) == 3;
+  return p8est_quadrant_is_extended ((const p8est_quadrant_t *) element)
+         && T8_QUAD_GET_TDIM ((const p8est_quadrant_t *) element) == 3;
 }
 
 void

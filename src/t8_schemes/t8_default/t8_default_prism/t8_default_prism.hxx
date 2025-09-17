@@ -497,13 +497,13 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
    * refinement level. All element vertices have integer coordinates in this cube.
-   *   \param [in] t        The element to be considered.
+   *   \param [in] element       The element to be considered.
    *   \param [in] vertex   The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords  An array of at least as many integers as the element's dimension whose entries will be 
    *                        filled with the coordinates of \a vertex.
    */
   void
-  element_get_vertex_integer_coords (const t8_element_t *t, int vertex, int coords[]) const;
+  element_get_vertex_integer_coords (const t8_element_t *element, int vertex, int coords[]) const;
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
@@ -541,7 +541,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
-   * \param [in]      t  The element to be checked.
+   * \param [in]      element  The element to be checked.
    * \return          True if \a t is safe to use. False otherwise.
    * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
@@ -554,7 +554,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    *                  in the implementation of each of the functions in this file.
    */
   int
-  element_is_valid (const t8_element_t *t) const;
+  element_is_valid (const t8_element_t *element) const;
 
   /**
   * Print a given element. For a example for a triangle print the coordinates

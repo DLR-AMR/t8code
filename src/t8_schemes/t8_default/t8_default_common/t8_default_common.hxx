@@ -247,18 +247,18 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
-   * \param [in] t     The element to be checked.
+   * \param [in] element     The element to be checked.
    * \param [in] level A refinement level.
-   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * \return Suppose \a element is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
    * \note This function is overwritten by the pyramid implementation.
    */
   inline t8_gloidx_t
-  element_count_leaves (const t8_element_t *t, int level) const
+  element_count_leaves (const t8_element_t *element, int level) const
   {
-    const int element_level = this->underlying ().element_get_level (t);
+    const int element_level = this->underlying ().element_get_level (element);
     const int dim = t8_eclass_to_dimension[eclass];
     return count_leaves_from_level (element_level, level, dim);
   }
