@@ -34,9 +34,6 @@ def configureDoxyfile(input_dir, output_dir):
 
     filedata = filedata.replace('@top_srcdir@', input_dir)
     filedata = filedata.replace('@top_builddir@', output_dir)
-    filedata = filedata.replace('@PACKAGE_PREFIX@', 't8code')
-    filedata = filedata.replace('@PACKAGE_NAME@', 't8code')
-    filedata = filedata.replace('@VERSION@', '4.0.0')
 
     with open('../Doxyfile', 'w') as file:
         file.write(filedata)
