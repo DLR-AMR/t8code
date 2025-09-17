@@ -52,7 +52,7 @@
 /** The data container describing a refined element in a refined tree for the vertex element class. */
 typedef struct t8_dvertex
 {
-  uint8_t level;
+  uint8_t level; /**< The refinement level of the element relative to the root at level 0. */
 } t8_dvertex_t;
 
 #endif /* T8_DVERTEX_H */

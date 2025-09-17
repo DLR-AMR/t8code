@@ -38,7 +38,7 @@
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the element_new callback in \ref t8_eclass_scheme.
+ * It is suitable as the element_new callback in \ref t8_default_scheme_common..
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] scheme_context   An element is allocated in this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to allocate.
@@ -57,7 +57,7 @@ t8_default_mempool_alloc (sc_mempool_t *scheme_context, int length, t8_element_t
 }
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the element_destroy callback in \ref t8_default_common.
+ * It is suitable as the element_destroy callback in \ref t8_default_scheme_common.
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] scheme_context   An element is returned to this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to destroy.
@@ -220,6 +220,14 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     t8_default_mempool_free ((sc_mempool_t *) scheme_context, length, elem);
   }
 
+  /** Deinitialize an array of allocated elements.
+   * \param [in] length   The number of elements to be deinitialized.
+   * \param [in,out] elem On input an array of \a length many allocated
+   *                       and initialized elements, on output an array of
+   *                       \a length many allocated, but not initialized elements.
+   * \note Call this function if you called element_init on the element pointers.
+   * \see element_init
+   */
   inline void
   element_deinit ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
   {
@@ -301,6 +309,12 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   }
 
 #if T8_ENABLE_DEBUG
+  /**
+   * Print a given element. For a example for a triangle print the coordinates
+   * and the level of the triangle. This function is only available in the
+   * debugging configuration. 
+   * \param [in]        elem  The element to print
+   */
   inline void
   element_debug_print (const t8_element_t *elem) const
   {

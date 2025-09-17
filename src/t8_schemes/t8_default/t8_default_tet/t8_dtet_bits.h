@@ -379,13 +379,38 @@ t8_dtet_is_valid (const t8_dtet_t *t);
 void
 t8_dtet_init (t8_dtet_t *t);
 
+/** Packs an array of tet elements into contiguous memory. 
+ * Tets are packed as x, y, z coordinates, type and level.
+ * Compare MPI_Pack function.
+ * \param [in] elements The element array to be packed.
+ * \param [in] count Number of elements to be packed.
+ * \param [out] send_buffer Output buffer.
+ * \param [in] buffer_size Output buffer size.
+ * \param [in,out] position Current position in buffer.
+ * \param [in] comm Communicator.
+ */
 void
 t8_dtet_element_pack (t8_dtet_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
                       int *position, sc_MPI_Comm comm);
 
+/** Returns the upper bound on the amount of space needed to pack \a count elements.
+ * Compare MPI_Pack_size function.
+ * \param [in] count Number of packed elements.
+ * \param [in] comm Communicator.
+ * \param [out] pack_size Upper bound on size of packed elements.
+ */
 void
 t8_dtet_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size);
 
+/** Unpack a buffer of tet elements into contiguous memory.
+ * Compare MPI_Unpack function.
+ * \param [in] recvbuf Buffer to be unpacked.
+ * \param [in] buffer_size Size of \a recvbuf.
+ * \param [in,out] position Current position in buffer.
+ * \param [out] elements Array with the tet elements (output buffer).
+ * \param [in] count Number of elements to be unpacked.
+ * \param [in] comm Communicator.
+ */
 void
 t8_dtet_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtet_t **elements,
                         const unsigned int count, sc_MPI_Comm comm);

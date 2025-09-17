@@ -1594,12 +1594,6 @@ t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *r
   }
 }
 
-/**
- * Compute the ancestor of \a pyra on level \a level.
- * \param[in]       pyra    Input pyramid
- * \param[in]       level   The level at which we want to compute \a ancestoranc
- * \param[in, out]  ancestor     Allocated input element which will be filled by the data of the ancestor of \a pyra at level \a level
- */
 void
 t8_dpyramid_ancestor (const t8_dpyramid_t *pyra, const int level, t8_dpyramid_t *ancestor)
 {

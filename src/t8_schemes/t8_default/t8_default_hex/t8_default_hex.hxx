@@ -57,9 +57,9 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   size_t
   get_element_size (void) const;
 
-  /** Allocate memory for an array of hexaedra and initialize them.
+  /** Allocate memory for an array of hexahedra and initialize them.
    * \param [in] length   The number of hex to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated
+   * \param [in,out] elem On input an array of \b length many unallocated
    *                      element pointers.
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
@@ -559,7 +559,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
-   * \param [in]      elem  The element to be checked.
+   * \param [in]      t  The element to be checked.
    * \return          True if \a elem is safe to use. False otherwise.
    * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
