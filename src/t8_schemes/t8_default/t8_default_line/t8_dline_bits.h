@@ -34,119 +34,119 @@
 T8_EXTERN_C_BEGIN ();
 
 /** Compute the level of a line.
- * \param [in] l    Line whose level is computed.
- * \return          The level of \a l.
+ * \param [in] line    Line whose level is computed.
+ * \return          The level of \a line.
  */
 int
-t8_dline_get_level (const t8_dline_t *l);
+t8_dline_get_level (const t8_dline_t *line);
 
 /** Copy all values from one line to another.
- * \param [in] l    The line to be copied.
+ * \param [in] line    The line to be copied.
  * \param [in,out] dest Existing line whose data will be filled with the data
- *                   of \a l.
+ *                   of \a line.
  */
 void
-t8_dline_copy (const t8_dline_t *l, t8_dline_t *dest);
+t8_dline_copy (const t8_dline_t *line, t8_dline_t *dest);
 
-/** Compare two elements. returns negative if l1 < l2, zero if l1 equals l2
- *  and positive if l1 > l2.
- *  If l2 is a copy of l1 then the elements are equal.
+/** Compare two elements. returns negative if line1 < line2, zero if line1 equals line2
+ *  and positive if line1 > line2.
+ *  If line2 is a copy of line1 then the elements are equal.
  */
 int
-t8_dline_compare (const t8_dline_t *l1, const t8_dline_t *l2);
+t8_dline_compare (const t8_dline_t *line1, const t8_dline_t *line2);
 
 /** Check if two elements are equal.
-* \param [in] elem1  The first element.
-* \param [in] elem2  The second element.
+* \param [in] line1  The first element.
+* \param [in] line2  The second element.
 * \return            1 if the elements are equal, 0 if they are not equal
 */
 int
-t8_dline_equal (const t8_dline_t *elem1, const t8_dline_t *elem2);
+t8_dline_equal (const t8_dline_t *line1, const t8_dline_t *line2);
 
 /** Compute the parent of a line.
- * \param [in]  l   The input line.
+ * \param [in]  line   The input line.
  * \param [in,out] parent Existing line whose data will be filled with the parent
- *                  data of \a l.
+ *                  data of \a line.
  */
 void
-t8_dline_parent (const t8_dline_t *l, t8_dline_t *parent);
+t8_dline_parent (const t8_dline_t *line, t8_dline_t *parent);
 
 /** Compute the ancestor of a line at a given level.
- * \param [in]  t   Input line.
- * \param [in]  level A smaller level than \a t.
+ * \param [in]  line   Input line.
+ * \param [in]  level A smaller level than \a line.
  * \param [in,out] ancestor Existing line whose data will
- *                  be filled with the data of \a t's ancestor on
+ *                  be filled with the data of \a line's ancestor on
  *                  level \a level.
- * \note The line \a ancestor may point to the same line as \a t.
+ * \note The line \a ancestor may point to the same line as \a line.
  */
 void
-t8_dline_ancestor (const t8_dline_t *t, int level, t8_dline_t *ancestor);
+t8_dline_ancestor (const t8_dline_t *line, int level, t8_dline_t *ancestor);
 
 /** Compute the childid-th child in Morton order of a line.
- * \param [in] l    Input Line.
+ * \param [in] line    Input Line.
  * \param [in] childid The id of the child, 0 or 1, in Morton order.
  * \param [in,out] child  Existing Line whose data will be filled
  * 		    with the date of l's childid-th child.
  */
 void
-t8_dline_child (const t8_dline_t *l, int childid, t8_dline_t *child);
+t8_dline_child (const t8_dline_t *line, int childid, t8_dline_t *child);
 
 /** Compute the face neighbor of a line.
- * \param [in]     l      Input line.
+ * \param [in]     line      Input line.
  * \param [in,out] neigh  Existing line whose data will be filled.
  * \param [in]     face   The face across which to generate the neighbor.
  * \param [out]    dual_face If not NULL, the face number as seen from \a neigh
  *                        is stored.
- * \note \a l may point to the same line as \a n.
+ * \note \a line may point to the same line as \a neigh.
  */
 void
-t8_dline_face_neighbour (const t8_dline_t *l, t8_dline_t *neigh, int face, int *dual_face);
+t8_dline_face_neighbour (const t8_dline_t *line, t8_dline_t *neigh, int face, int *dual_face);
 
 /** Computes the nearest common ancestor of two lines in the same tree.
- * \param [in]     t1 First input line.
- * \param [in]     t2 Second input line.
- * \param [in,out] r Existing line whose data will be filled.
- * \note \a l1, \a l2, \a r may point to the same line.
+ * \param [in]     line1 First input line.
+ * \param [in]     line2 Second input line.
+ * \param [in,out] nca Existing line whose data will be filled.
+ * \note \a line1, \a line2, \a nca may point to the same line.
  */
 void
-t8_dline_nearest_common_ancestor (const t8_dline_t *t1, const t8_dline_t *t2, t8_dline_t *r);
+t8_dline_nearest_common_ancestor (const t8_dline_t *line1, const t8_dline_t *line2, t8_dline_t *nca);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
- * \param [in] l  line to be considered.
+ * \param [in] line  line to be considered.
  * \param [in] level level to be considered.
  * \return Returns its child id 0 or 1.
  */
 int
-t8_dline_ancestor_id (const t8_dline_t *l, int level);
+t8_dline_ancestor_id (const t8_dline_t *line, int level);
 
 /** Given a face of a line return the face number
  * of the parent of the line that matches the line's face. Or return -1 if
  * no face of the parent matches the face.
 
- * \param [in]  l       The line.
+ * \param [in]  line       The line.
  * \param [in]  face    The number of the face.
- * \return              If \a face of \a l is also a face of \a l's parent,
+ * \return              If \a face of \a line is also a face of \a line's parent,
  *                      the face number of this face. Otherwise -1.
  */
 int
-t8_dline_face_parent_face (const t8_dline_t *l, int face);
+t8_dline_face_parent_face (const t8_dline_t *line, int face);
 
 /** Compute the position of the ancestor of this child at level \a level within
  * its siblings.
- * \param [in] t  line to be considered.
+ * \param [in] line  line to be considered.
  * \return Returns its child id in 0,1
  */
 int
-t8_dline_child_id (const t8_dline_t *t);
+t8_dline_child_id (const t8_dline_t *line);
 
 /** Compute the 2 children of a line, array version.
- * \param [in]     t  Input line.
+ * \param [in]     line  Input line.
  * \param [in,out] c  Pointers to the 2 computed children in Morton order.
  *                    t may point to the same quadrant as c[0].
  */
 void
-t8_dline_childrenpv (const t8_dline_t *t, t8_dline_t *c[T8_DLINE_CHILDREN]);
+t8_dline_childrenpv (const t8_dline_t *line, t8_dline_t *c[T8_DLINE_CHILDREN]);
 
 /** Check whether a collection of two lines is a family in Morton order.
  * \param [in]     f  An array of two lines.
@@ -156,38 +156,38 @@ int
 t8_dline_is_familypv (const t8_dline_t *f[]);
 
 /** Compute whether a given line shares a given face with its root tree.
- * \param [in] p        The input line.
- * \param [in] face     A face of \a p.
+ * \param [in] line       The input line.
+ * \param [in] face     A face of \a line.
  * \return              True if \a face is a subface of the line's root element.
  */
 int
-t8_dline_is_root_boundary (const t8_dline_t *p, int face);
+t8_dline_is_root_boundary (const t8_dline_t *line, int face);
 
 /** Test if a line lies inside of the root line,
  *  that is the line of level 0, anchor node (0,0)
- *  \param [in]     l Input line.
- *  \return true    If \a l lies inside of the root line.
+ *  \param [in]     line Input line.
+ *  \return true    If \a line lies inside of the root line.
  */
 int
-t8_dline_is_inside_root (const t8_dline_t *l);
+t8_dline_is_inside_root (const t8_dline_t *line);
 
 /** Initialize a line as the line with a given global id in a uniform
  *  refinement of a given level. *
- * \param [in,out] l  Existing line whose data will be filled.
+ * \param [in,out] line  Existing line whose data will be filled.
  * \param [in] id     Index to be considered.
  * \param [in] level  level of uniform grid to be considered.
  */
 void
-t8_dline_init_linear_id (t8_dline_t *l, int level, t8_linearidx_t id);
+t8_dline_init_linear_id (t8_dline_t *line, int level, t8_linearidx_t id);
 
 /** Computes the successor of a line in a uniform grid of level \a level.
- * \param [in] l  line whose id will be computed.
+ * \param [in] line  line whose id will be computed.
  * \param [in,out] succ Existing line whose data will be filled with the
- *                data of \a l's successor on level \a level.
+ *                data of \a line's successor on level \a level.
  * \param [in] level level of uniform grid to be considered.
  */
 void
-t8_dline_successor (const t8_dline_t *l, t8_dline_t *succ, int level);
+t8_dline_successor (const t8_dline_t *line, t8_dline_t *succ, int level);
 
 /** Suppose we have two trees that share a common face f.
  *  Given a Line e that is a subface of f in one of the trees
@@ -217,47 +217,47 @@ t8_dline_extrude_face (const t8_dvertex_t *face, int root_face, t8_dline_t *line
 
 /** Compute the first descendant of a line at a given level. This is the descendant of
  * the line in a uniform level refinement that has the smallest id.
- * \param [in] l        Line whose descendant is computed.
- * \param [out] s       Existing line whose data will be filled with the data
- *                      of \a l's first descendant on level \a level.
- * \param [in] level    The refinement level. Must be greater than \a l's refinement
+ * \param [in] line       Line whose descendant is computed.
+ * \param [out] desc       Existing line whose data will be filled with the data
+ *                      of \a line's first descendant on level \a level.
+ * \param [in] level    The refinement level. Must be greater than \a line's refinement
  *                      level.
  */
 void
-t8_dline_first_descendant (const t8_dline_t *l, t8_dline_t *s, int level);
+t8_dline_first_descendant (const t8_dline_t *line, t8_dline_t *desc, int level);
 
 /** Compute the last descendant of a line at a given level. This is the descendant of
  * the line in a uniform level refinement that has the largest id.
- * \param [in] l        Line whose descendant is computed.
- * \param [out] s       Existing line whose data will be filled with the data
- *                      of \a l's last descendant on level \a level.
- * \param [in] level    The refinement level. Must be greater than \a l's refinement
+ * \param [in] line        Line whose descendant is computed.
+ * \param [out] desc       Existing line whose data will be filled with the data
+ *                      of \a line's last descendant on level \a level.
+ * \param [in] level    The refinement level. Must be greater than \a line's refinement
  *                      level.
  */
 void
-t8_dline_last_descendant (const t8_dline_t *l, t8_dline_t *s, int level);
+t8_dline_last_descendant (const t8_dline_t *line, t8_dline_t *desc, int level);
 
 /** Compute the first or second vertex of a line.
- * \param [in] elem     Line whose vertex is computed.
- * \param [in] vertex   The number of the vertex of \a elem
+ * \param [in] line     Line whose vertex is computed.
+ * \param [in] vertex   The number of the vertex of \a line
  * \param [out] coords   The coordinates of the computed vertex
  */
 void
-t8_dline_vertex_integer_coords (const t8_dline_t *elem, const int vertex, int coords[]);
+t8_dline_vertex_integer_coords (const t8_dline_t *line, const int vertex, int coords[]);
 
 /** Compute the coordinates of a vertex of a line when the 
  * tree (level 0 line) is embedded in [0,1]^1.
- * \param [in] elem    Input line.
+ * \param [in] line    Input line.
  * \param [in] vertex The number of the vertex.
  * \param [out] coordinates An array of 1 double that
  * 		     will be filled with the reference coordinates of the vertex.
  */
 void
-t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coordinates[1]);
+t8_dline_vertex_ref_coords (const t8_dline_t *line, const int vertex, double coordinates[1]);
 
 /** Convert points in the reference space of a line element to points in the
  *  reference space of the tree (level 0) embedded in [0,1]^1.
- * \param [in]  elem       Input line.
+ * \param [in]  line       Input line.
  * \param [in]  ref_coords The reference coordinates in the line
  *                         (\a num_coords times \f$ [0,1]^1 \f$)
  * \param [in]  num_coords Number of coordinates to evaluate
@@ -270,31 +270,31 @@ t8_dline_vertex_ref_coords (const t8_dline_t *elem, const int vertex, double coo
  *                         of the points on the line.
  */
 void
-t8_dline_compute_reference_coords (const t8_dline_t *elem, const double *ref_coords, const size_t num_coords,
+t8_dline_compute_reference_coords (const t8_dline_t *line, const double *ref_coords, const size_t num_coords,
                                    const size_t skip_coords, double *out_coords);
 
 /** Computes the linear position of a line in an uniform grid.
- * \param [in] elem  Pointer to a line element whose id will be computed.
+ * \param [in] line  Pointer to a line element whose id will be computed.
  * \param [in] level Refinement level of the line element.
  * \return Returns the linear position of this line on a grid.
  */
 t8_linearidx_t
-t8_dline_linear_id (const t8_dline_t *elem, int level);
+t8_dline_linear_id (const t8_dline_t *line, int level);
 
 /** Query whether all entries of a line are in valid ranges.
- * \param [in] l  line to be considered.
- * \return        True, if \a l is a valid line and it is safe to call any
- *                function in this file on \a l.
+ * \param [in] line  line to be considered.
+ * \return        True, if \a line is a valid line and it is safe to call any
+ *                function in this file on \a line.
  *                False otherwise.
  */
 int
-t8_dline_is_valid (const t8_dline_t *l);
+t8_dline_is_valid (const t8_dline_t *line);
 
 /** Set default values for a line, such that it passes \ref t8_dline_is_valid.
- * \param [in] l  line to be initialized
+ * \param [in] line  line to be initialized
  */
 void
-t8_dline_init (t8_dline_t *l);
+t8_dline_init (t8_dline_t *line);
 
 T8_EXTERN_C_END ();
 
