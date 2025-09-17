@@ -257,11 +257,11 @@ t8_dtet_is_parent (const t8_dtet_t *tet, const t8_dtet_t *child);
 
 /** Test if a tetrahedron is an ancestor of another tetrahedron.
  * \param [in] tet tetrahedron to be tested.
- * \param [in] anc Descendent tetrahedron.
- * \return true if \a tet is equal to or an ancestor of \a anc.
+ * \param [in] c Descendent tetrahedron.
+ * \return true if \a tet is equal to or an ancestor of \a c.
  */
 int
-t8_dtet_is_ancestor (const t8_dtet_t *tet, const t8_dtet_t *anc);
+t8_dtet_is_ancestor (const t8_dtet_t *tet, const t8_dtet_t *c);
 
 /** Computes the linear position of a tetrahedron in a uniform grid.
  * \param [in] tet  tetrahedron whose id will be computed.
