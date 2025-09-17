@@ -28,16 +28,21 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * This struct stores query data about the elements within the forest.
+ */
 typedef struct
 {
-  const t8_scheme *scheme;
-  t8_eclass_t tree_class;
-  int level;
-  int num_children;
+  const t8_scheme *scheme; /**< The scheme. */
+  t8_eclass_t tree_class;  /**< The tree class. */
+  int level;               /**< The refinement level. */
+  int num_children;        /**< The number of children. */
 } t8_forest_child_type_query_t;
 
-/* This is the function that we call in sc_split_array to determine for an
- * element E that is a descendant of an element e, of which of e's children, E is a descendant. */
+/** 
+ * This is the function that we call in sc_split_array to determine for an
+ * element E that is a descendant of an element e, of which of e's children, E is a descendant. 
+ */
 static size_t
 t8_forest_determine_child_type (sc_array_t *leaf_elements, size_t index, void *data)
 {

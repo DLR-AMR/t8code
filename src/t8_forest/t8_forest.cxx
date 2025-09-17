@@ -2068,12 +2068,11 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
  * It contains the linear id of the element that we look for and
  * a pointer to the forest, we also store the index of the biggest owner process.
  */
-
 struct find_owner_data_t
 {
-  t8_linearidx_t linear_id;
-  t8_forest_t forest;
-  int last_owner;
+  t8_linearidx_t linear_id; /**< The linear id of the element we look for. */
+  t8_forest_t forest;       /**< Pointer to the forest. */
+  int last_owner;           /**< Index of the owner process with the highest index. */
 };
 
 static int

@@ -45,19 +45,45 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_forest_set_profiling (t8_forest_t forest, int set_profiling);
 
-/* TODO: document */
+/**
+ * MYTODO: document 
+ */
 void
 t8_forest_compute_profile (t8_forest_t forest);
+
+/**
+ * MYTODO: document 
+ */
 const sc_statinfo_t *
 t8_forest_profile_get_adapt_stats (t8_forest_t forest);
+
+/**
+ * MYTODO: document 
+ */
 const sc_statinfo_t *
 t8_forest_profile_get_ghost_stats (t8_forest_t forest);
+
+/**
+ * MYTODO: document 
+ */
 const sc_statinfo_t *
 t8_forest_profile_get_partition_stats (t8_forest_t forest);
+
+/**
+ * MYTODO: document 
+ */
 const sc_statinfo_t *
 t8_forest_profile_get_commit_stats (t8_forest_t forest);
+
+/**
+ * MYTODO: document 
+ */
 const sc_statinfo_t *
 t8_forest_profile_get_balance_stats (t8_forest_t forest);
+
+/**
+ * MYTODO: document 
+ */
 const sc_statinfo_t *
 t8_forest_profile_get_balance_rounds_stats (t8_forest_t forest);
 
@@ -97,7 +123,7 @@ t8_forest_profile_get_partition_time (t8_forest_t forest, int *procs_sent);
 
 /** Get the runtime of the last call to \ref t8_forest_balance.
  * \param [in]   forest         The forest.
- * \param [out]  balance_rounts On output the number of rounds in balance
+ * \param [out]  balance_rounds On output the number of rounds in balance
  *                              if profiling was activated.
  * \return                      The runtime of balance if profiling was activated.
  *                              0 otherwise.
@@ -108,7 +134,8 @@ t8_forest_profile_get_partition_time (t8_forest_t forest, int *procs_sent);
 double
 t8_forest_profile_get_balance_time (t8_forest_t forest, int *balance_rounds);
 
-/** Get the runtime of the last call to \ref t8_forest_create_ghosts.
+/** 
+ * Get the runtime of the last call to \ref t8_forest_ghost_create.
  * \param [in]   forest         The forest.
  * \param [out]  ghosts_sent    On output the number of ghost elements sent to other processes
  *                              if profiling was activated.

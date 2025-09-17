@@ -33,7 +33,9 @@
 #include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
-/* TODO: document */
+/**
+ *  MYTODO: document 
+ */
 void
 t8_forest_partition (t8_forest_t forest);
 
@@ -73,7 +75,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest);
 
 /** \brief Re-Partition an array accordingly to a partitioned forest. 
  * 
- * \param[in] forest_form The forest before the partitioning step.
+ * \param[in] forest_from The forest before the partitioning step.
  * \param[in] forest_to The partitioned forest of \a forest_from.
  * \param[in] data_in A pointer to an sc_array_t holding data (one value per element) accordingly to \a forest_from.
  * \param[in,out] data_out A pointer to an already allocated sc_array_t capable of holding data accordingly to \a forest_to.
