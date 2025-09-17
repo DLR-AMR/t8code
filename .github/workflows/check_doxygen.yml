@@ -27,51 +27,18 @@ name: "Upload newest documentation to website"
 #
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   update_dev_doc:
-
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-#
-# Setup and bootstrap
-#
-    - uses: actions/checkout@v5    
-      with:
-        fetch-tags: true # required to get version tags
-        fetch-depth: 0    # required to get all history, especially the version tags
-    - name: Update packages
-      run: sudo apt-get update && sudo apt-get upgrade -y
-    # This step is necessary to get the newest package data
-    - name: Install doxygen
-      run: sudo apt-get install doxygen-latex
-    - name: init submodules
-      run: git submodule init
-    - name: update submodules
-      run: git submodule update
-
-# build config vars
-    - name: build CFLAGS and CXXFLAGS variables
-      run: echo CFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
-        && echo CXXFLAGS_var="-Wall -pedantic -O3" >> $GITHUB_ENV
-    - name: build config variables
-      run: export CONFIG_OPTIONS="--without-blas ${TEST_LEVEL_FLAG}"
-           && export CONFIG_SERIAL_DEBUG="$CONFIG_OPTIONS --enable-debug --with-sc=$SC_SERIAL_DEBUG/install --with-p4est=$P4EST_SERIAL_DEBUG/install"
-    - name: Check vars
-      run: echo "[$CONFIG_SERIAL_DEBUG]"
-# configure and generate doxygen
-    - name: check debugging mode
-      run: echo "Checking debug mode"
-    - name: configure
-      run: mkdir build_debug && cd build_debug && ../configure $CONFIG_SERIAL_DEBUG CFLAGS="$CFLAGS_var" CXXFLAGS="$CXXFLAGS_var"
+    - name: Configure for documentation only
+      run: mkdir build_debug && cd build_debug && cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_DOXYGEN=ON
     - name: check doxygen
       run: cd doc && doxygen Doxyfile >> output 2>&1
     - name: check for doxygen warnings
@@ -82,5 +49,3 @@ jobs:
         else
           echo "No doxygen warnings found."
         fi
-    
-
