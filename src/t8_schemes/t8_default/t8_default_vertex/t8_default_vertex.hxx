@@ -605,8 +605,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
-   * \param [in]      t  The element to be checked.
-   * \return          True if \a t is safe to use. False otherwise.
+   * \param [in]      element  The element to be checked.
+   * \return          True if \a element is safe to use. False otherwise.
    * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
    * \note            An element for which \ref element_init was called must pass
@@ -618,7 +618,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    *                  in the implementation of each of the functions in this file.
    */
   static int
-  element_is_valid (const t8_element_t *t);
+  element_is_valid (const t8_element_t *element);
 
   /**
   * Print a given element. For a example for a triangle print the coordinates
