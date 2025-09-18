@@ -65,3 +65,9 @@ jobs:
         else
           echo "No doxygen warnings found."
         fi
+    - name: Upload doxygen output if warnings found
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: doxygen-output
+        path: doc/output
