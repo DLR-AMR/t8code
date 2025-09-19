@@ -31,7 +31,6 @@ build:
     python: "3.12"
   apt_packages:
     - cmake
-    #- ninja-build
   jobs:
     post_checkout:
       - git fetch --unshallow --tags || true  # Fetch all tags to ensure we can build documentation for any version
