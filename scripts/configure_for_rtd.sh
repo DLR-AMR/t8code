@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element types in parallel.
@@ -18,27 +20,17 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-include(FindPackageHandleStandardArgs)
+git submodule init
+git submodule update
 
-find_package(PythonInterp)
-if(PYTHONINTERP_FOUND)
-    get_filename_component(_PYTHON_DIR "${PYTHON_EXECUTABLE}" DIRECTORY)
-    set(
-        _PYTHON_PATHS
-        "${_PYTHON_DIR}"
-        "{_PYTHON_DIR}/bin"
-        "{_PYTHON_DIR}/Scripts"
-    )
-endif()
+# Create the build directory
+mkdir build
 
-#Look for an executable called sphinx-build
-find_program(SPHINX_EXECUTABLE
-             NAMES sphinx-build sphinx-build.exe sphinx-build.py
-             HINTS ${_PYTHON_PATHS}
-             DOC "Path to sphinx-build executable")
+# Navigate into the build directory
+cd build
 
 
-#Handle standard arguments to find_package like REQUIRED and QUIET
-find_package_handle_standard_args(Sphinx
-                                  "Failed to find sphinx-build executable"
-                                  SPHINX_EXECUTABLE)
+cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF
+
+# Return to the parent directory
+cd ..
