@@ -30,13 +30,15 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* For each tree that we send elements from to other processes,
- * we send this information to the other process */
+/**
+ * For each tree that we send elements from to other processes,
+ * we send the information stored in this struct to the other process 
+ */
 typedef struct
 {
-  t8_gloidx_t gtree_id; /* The global id of that tree */ /* TODO: we could optimize this out */
-  t8_eclass_t eclass;                                    /* The element class of that tree */
-  t8_locidx_t num_elements;                              /* The number of elements from this tree that were sent */
+  t8_gloidx_t gtree_id;     /**< The global id of that tree. TODO: we could optimize this out */
+  t8_eclass_t eclass;       /**< The element class of that tree. */
+  t8_locidx_t num_elements; /**< The number of elements from this tree that were sent. */
 } t8_forest_partition_tree_info_t;
 
 /* Given the element offset array and a rank, return the first local element id of this rank */

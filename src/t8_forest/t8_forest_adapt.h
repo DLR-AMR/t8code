@@ -33,7 +33,11 @@
 #include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
-/* TODO: comment */
+/**
+ *  Adapt a forest.
+ * 
+ *  \param[in, out] forest The forest to be adapted
+ */
 void
 t8_forest_adapt (t8_forest_t forest);
 
