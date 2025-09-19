@@ -63,11 +63,11 @@ t8_dpyramid_copy (const t8_dpyramid_t *source, t8_dpyramid_t *dest);
 t8_linearidx_t
 t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level);
 
-/** Compute the childid-th child in Morton order of a pyramid.
+/** Compute the child_id-th child in Morton order of a pyramid.
  * \param [in] elem         Input pyramid.
- * \param [in,out] childid  The id of the child, 0..7 in Morton order.
+ * \param [in,out] child_id  The id of the child, 0..7 in Morton order.
  * \param [out] child       Existing pyramid whose data will be filled
- * 		                      with the date of t's childid-th child.
+ * 		                      with the date of t's child_id-th child.
  */
 void
 t8_dpyramid_child (const t8_dpyramid_t *elem, const int child_id, t8_dpyramid_t *child);
@@ -81,9 +81,9 @@ t8_dpyramid_children (const t8_dpyramid_t *p, t8_dpyramid_t **c);
 
 /** Given a pyramid and a face, compute all children touching this face
  * \param [in] p                  Input pyramid
- * \param [in] face               The face to compute the childran at
+ * \param [in] face               The face to compute the children at
  * \param [in, out] children      The children of \a p at \a face
- * \param [in] num_childrem       The number of children at this face
+ * \param [in] num_children       The number of children at this face
  * \param [in, out] child_indices An array to be filled with the local-ids of the children.
  */
 void
@@ -200,8 +200,8 @@ t8_dpyramid_tet_boundary (const t8_dpyramid_t *p, const int face);
 
 /** compute if a given element lies on the tree boundary and return the face number of the tree face. 
  * If not the return value is arbitrary
- * \param [in] elem     pyramid
- * \param [in] face     a face of \a elem
+ * \param [in] p     pyramid
+ * \param [in] face     a face of \a p
  * \return              See description
  */
 int
@@ -348,7 +348,7 @@ t8_dpyramid_successor (const t8_dpyramid_t *elem, t8_dpyramid_t *s, const int le
 /** Compute the reference coordinates of a vertex of a pyramid when the tree (level 0 triangle) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem    Input pyramid.
  * \param [in] vertex The number of the vertex.
- * \param [out] coordinates An array of 3 double that will be filled with the reference coordinates of the vertex.
+ * \param [out] coords An array of 3 double that will be filled with the reference coordinates of the vertex.
  */
 void
 t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem, const int vertex, double coords[]);
