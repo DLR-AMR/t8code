@@ -33,7 +33,9 @@ build:
     - cmake
   jobs:
     post_checkout:
-      - git fetch --unshallow --tags || true  # Fetch all tags to ensure we can build documentation for any version
+      # Fetch all tags to ensure we can build documentation for any version
+      # The tags are needed to determine the version number of the documentation
+      - git fetch --unshallow --tags || true  
     post_install:
       - bash ./scripts/configure_for_rtd.sh
 
