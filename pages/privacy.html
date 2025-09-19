@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	
+	<!-- TITLE OF SITE -->
+	<title>Privacy | t8code</title>
+
+
+	
+	<!-- META DATA -->
+    <meta name="description" content="t8code - Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."/>
+ 
+	<meta name="keywords" content="t8code, adaptive mesh refinement, amr, dlr, hpc, adaptive meshes, exascale, simulation, cpp, numerical, finite volume, discontinuous galerkin, Open Source">
+	<meta name="author" content="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)">
+
+	
+
+	<!-- Mobile Specific Meta -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+ 
+   <!-- =========================
+      FAV AND TOUCH ICONS  
+    ============================== -->
+
+	<!-- ****** faviconit.com Favicons ****** -->
+	<link rel="shortcut icon" href="https://dlr-amr.github.io/t8code/theme/images/icon/t8code.ico">
+	<link rel="icon" sizes="16x16 32x32 64x64" href="https://dlr-amr.github.io/t8code/theme/images/icon/t8code.ico">
+	<link rel="icon" type="image/png" sizes="196x196" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-192.png">
+	<link rel="icon" type="image/png" sizes="160x160" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-160.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-96.png">
+	<link rel="icon" type="image/png" sizes="64x64" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-64.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-16.png">
+	<link rel="apple-touch-icon" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-57.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-114.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-144.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-60.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-120.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-76.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-180.png">
+	<meta name="msapplication-TileColor" content="#FFFFFF">
+	<meta name="msapplication-TileImage" content="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-144.png">
+	<meta name="msapplication-config" content="https://dlr-amr.github.io/t8code/theme/browserconfig.xml">
+	<!-- ****** faviconit.com Favicons ****** -->
+
+    <!-- =========================
+       STYLESHEETS 
+    ============================== -->
+    <!-- PRELOADER -->
+    <link rel="stylesheet" href="https://dlr-amr.github.io/t8code/theme/css/preloader.css">
+	
+	<!-- Bootstrap v3.3.4 -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- icon fonts Font Awesome 4.3.0 -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/font-awesome.min.css" rel="stylesheet"> 
+	<!-- code highlighting from pygments -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/pygments.css" rel="stylesheet"> 
+	<!-- Plugins  -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/jquery.fs.boxer.css" rel="stylesheet" /> 
+	<link rel="stylesheet" href="https://dlr-amr.github.io/t8code/theme/css/owl.carousel.css"> 
+	
+	<!-- Import Custom Styles -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/style.css" rel="stylesheet"> 
+	
+</head>
+
+
+<body class="">
+	<!-- Pre Loader -->
+	<div class="pre-loader">
+		<div class="spinner"></div>
+	</div>
+	<span id="page-top"></span>
+	<!-- Main Menu -->
+	<div class="main-menu-container navbar-fixed-top-">
+		<div id="main-menu" class="navbar navbar-default" role="navigation">
+			<div class="container">
+
+				<div class="navbar-header">
+					<!-- responsive navigation -->
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<i class="fa fa-bars"></i>
+					</button> <!-- /.navbar-toggle -->
+					<!-- Logo -->
+					<h1 class="logo">
+						<a class="navbar-brand" href="https://dlr-amr.github.io/t8code/">
+							<img height="50px" src="https://dlr-amr.github.io/t8code/images/t8code_logo_small.png" alt="">
+						</a><!-- /.navbar-brand -->
+					</h1>
+				</div> <!-- /.navbar-header -->
+
+				<nav class="collapse navbar-collapse">
+					<!-- Main navigation -->
+					<ul id="mainNavigation" class="main-mav nav navbar-nav pull-right">
+						<li><a class="not-in-home"class="active" href="https://dlr-amr.github.io/t8code/#page-top">Home</a>
+						</li>
+
+
+					<!--	<li><a href="https://dlr-amr.github.io/t8code/#contents">What is TiGL?</a></li>   -->
+						
+						<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/#contents">About t8code</a></li>
+						<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/#news">News</a></li>
+
+ 
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/showcase.html">Showcase</a></li>
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/documentation.html">Documentation</a></li>
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/contact.html">Contact</a></li>
+
+
+
+						<li><a class="donate red" href="https://dlr-amr.github.io/t8code/pages/download.html">Download</a></li>     
+					</ul> <!-- /#mainNavigation -->
+				</nav> <!-- /.navbar-collapse  -->
+			</div> <!-- /.container -->
+		</div><!-- /#main-menu -->
+	</div><!-- /.main-menu-container -->
+	<!-- Main Menu End -->
+
+<section id="content">
+
+	<div class="page-name background-bg page-name-bg">
+		<div class="overlay">
+			<div class="container">
+				<h2 class="page-title m0">
+					Privacy
+				</h2>
+				<div class="page-location">
+					<a href="https://dlr-amr.github.io/t8code/">Home</a> <span> Privacy </span>
+				</div>
+			</div><!-- /.container -->
+		</div><!-- /.overlay -->
+	</div><!-- /.page-name -->
+
+
+
+	<section id="team"> 
+		<div id="contents"> 
+			<div class="container section-padding"> 
+				<h2 class="section-title">Privacy</h2>
+				
+		<p><strong>In&shy;for&shy;ma&shy;tion about Da&shy;ta Pro&shy;tec&shy;tion</strong></p>
+<p>DLR takes the protection of personal data very seriously. We want you to know when we store data, which types of data are stored and how it is used. As an incorporated entity under German civil law, we are subject to the provisions of the&nbsp;<a title="External link  General Data Protection Regulation GDPR" href="https://gdpr-info.eu/" target="_blank">EU General Data Protection Regulation (GDPR)</a>, the&nbsp;<a title="External link Federal Data Protection Act (BDSG)" href="https://www.gesetze-im-internet.de/englisch_bdsg/index.html" target="_blank">Federal Data Protection Act (BDSG)</a>&nbsp;and the <a href="https://www.gesetze-im-internet.de/ttdsg/">Telecommunications Telemedia Data Protection Act (TTDPA)</a>. This Data Protection Declaration explains which data we collect as well as the purposes we use this data for. It also explains how, and for which purpose the information is collected. We have taken technical and organisational measures to ensure our compliance and the compliance of external service providers with the data protection regulation.</p>
+<p>This website uses SSL &ndash; that is, TLS encryption &ndash; in order to protect the transfer of personal data and other confidential information (for example, orders or enquiries sent to the controller). A connection is encrypted if you see the character sequence 'https://' and the padlock icon in your browser's address bar.</p>
+<p>We herewith advise you that the transmission of data via the Internet (i.e., through e-mail communications) may be prone to security gaps. It is not possible to completely protect data against third-party access.</p>
+<p>&nbsp;</p>
+<p><strong>I. Name and address of the controller</strong></p>
+<p>The controller in the meaning of the General Data Protection Regulation, other national data protection laws in the Member States and related data protection regulations is:</p>
+<p>Deutsches Zentrum f&uuml;r Luft- und Raumfahrt e. V. (DLR)<br /> Linder H&ouml;he<br /> 51147 Cologne</p>
+<p>Telephone: +49 2203 601-0<br /> Email: datenschutz@dlr.de<br /> WWW: <a href="https://www.dlr.de">https://www.dlr.de</a></p>
+<p>&nbsp;</p>
+<p><strong>II. Name and address of the data protection officer</strong></p>
+<p>The controller&rsquo;s appointed data protection officer is:</p>
+<p>Uwe Gorsch&uuml;tz, Deutsches Zentrum f&uuml;r Luft- und Raumfahrt e. V., Linder H&ouml;he, 51147 Cologne<br /> Email: <a href="mailto:datenschutz@dlr.de">datenschutz@dlr.de</a></p>
+<p>&nbsp;</p>
+<p><strong>III. Definition of terms</strong></p>
+<p>Among others, we use the following terms in this Privacy Policy, set out in the General Data Protection Regulation and the Federal Data Protection Act:</p>
+<p><em>1. Personal data</em></p>
+<p>Personal data refers to any information relating to an identified or identifiable natural person (hereinafter: &lsquo;data subject&rsquo;). An identifiable natural person is one who can be identified &ndash; directly or indirectly &ndash; in particular by reference to an identifier such as a name, an identification number, location data, an online identifier or to one or more factors specific to the physical, physiological, genetic, mental, economic, cultural or social identity of that natural person.</p>
+<p><em>2. Data subject</em></p>
+<p>A data subject is any identified or identifiable natural person whose personal data is processed by the controller.</p>
+<p><em>3. Processing</em></p>
+<p>Processing is any operation or set of operations performed on personal data or on sets of personal data &ndash; whether or not by automated means &ndash; such as collection, recording, organisation, structuring, storage, adaptation or alteration, retrieval, consultation, use, disclosure by transmission, dissemination or otherwise making available, alignment or combination, restriction, deletion or destruction.</p>
+<p><em>4. Restriction of processing</em></p>
+<p>Restriction of processing means the marking of stored personal data with the aim of limiting its processing in the future.</p>
+<p><em>5. Profiling</em></p>
+<p>Profiling means any form of automated processing of personal data consisting of the use of personal data to evaluate certain personal aspects relating to a natural person, in particular to analyse or predict aspects concerning that natural person&rsquo;s performance at work, economic situation, health, personal preferences, interests, reliability, behaviour, location or movements.</p>
+<p><em>6. Pseudonymisation</em></p>
+<p>Pseudonymisation means the processing of personal data in such a manner that the personal data can no longer be attributed to a specific data subject without the use of additional information, provided that such additional information is kept separately and is subject to technical and organisational measures to ensure that the personal data are not attributed to an identified or identifiable natural person.</p>
+<p><em>7. Controller or data processing controller</em></p>
+<p>Controller or data processing controller means the natural or legal person, public authority, agency or other body which, alone or jointly with others, determines the purposes and means of the processing of personal data; where the purposes and means of such processing are determined by Union or Member State law, the controller or the specific criteria for its nomination may be provided for by Union or Member State law.</p>
+<p><em>8. Processor</em></p>
+<p>Processor means a natural or legal person, public authority, agency or other body that processes personal data on behalf of the controller.</p>
+<p><em>9. Recipient</em></p>
+<p>Recipient means a natural or legal person, public authority, agency or another body, to which the personal data are disclosed, whether a third party or not. However, public authorities that may receive personal data in the framework of a particular inquiry in accordance with Union or Member State law shall not be regarded as recipients.</p>
+<p><em>10. Third party</em></p>
+<p>Third party means a natural or legal person, public authority, agency or body other than the data subject, controller, processor and persons who, under the direct authority of the controller or processor, are authorised to process personal data.</p>
+<p><em>11.Consent</em></p>
+<p>Consent of the data subject means any freely given, specific, informed and unambiguous indication of the data subject&rsquo;s wishes by which he or she, by a statement or by a clear affirmative action, signifies agreement to the processing of personal data relating to him or her.</p>
+<p>&nbsp;</p>
+<p><strong>IV. </strong><strong>General information on data processing</strong></p>
+<p><em>1. Scope of processing of personal data</em></p>
+<p>We process personal data concerning our users exclusively to the extent required to provide a functioning website, as well as our content and services. Ordinarily, we will only process the personal data of our users after obtaining their consent. An exception to this rule is where obtaining prior consent is factually impossible and the processing of the data is permitted by law.</p>
+<p><em>2. Legal grounds for the processing of personal data</em></p>
+<p>Where we obtain consent from the data subject for the processing of personal data, the legal grounds are set out in Art. 6, paragraph 1, part (a) of the EU General Data Protection Regulation (GDPR).</p>
+<p>Where personal data is processed for the performance of a contract in which the data subject is a contractual partner, the legal grounds are set out in Art. 6, paragraph 1, part (b) of the GDPR. This also applies to processing that is necessary for pre-contractual measures.</p>
+<p>Where personal data is processed for compliance with a legal obligation to which our research centre is subject, the legal grounds are set out in Art. 6, paragraph 1, part (c) of the GDPR.</p>
+<p>Where processing of personal data is necessary for the protection of vital interests of the data subject or another natural person, the legal grounds are set out in Art. 6, paragraph 1, part (d) of the GDPR.</p>
+<p>Where processing is necessary for the legitimate interests of our research centre or a third party, and where the fundamental rights and freedoms of the data subject do not override the first interests, the legal grounds are set out in Art. 6, paragraph 1, part (f) of the GDPR.</p>
+<p><em>3. Data deletion and duration of data storage</em></p>
+<p>The personal data of the data subject will be deleted or blocked as soon as the purpose of storage no longer applies. In addition, storage takes place if authorised by Union or Member State directives, laws or other regulations to which the controller is subject. Blocking or deletion of the data shall also take place when a storage period stipulated by one of the above standards comes to an end, except where it is necessary to continue storing the data to enter into or perform a contract.</p>
+<p><strong>&nbsp;</strong></p>
+<p><strong>V. Server log files</strong><strong><br /> </strong><br /> The provider of this website and its pages automatically collects and stores information in so-called server log files, which your browser communicates to us automatically. The information comprises:</p>
+<ul>
+<li>The type and version of browser used</li>
+<li>The used operating system</li>
+<li>Referrer URL</li>
+<li>The hostname of the accessing computer</li>
+<li>The time of the server inquiry</li>
+<li>The IP address</li>
+</ul>
+<p>This data is not merged with other data sources.<br /> <br /> This data is recorded on the basis of Art. 6(1)(f) GDPR. The operator of the website has a legitimate interest in the technically error free depiction and the optimization of the operator&rsquo;s website. In order to achieve this, server log files must be recorded.</p>
+<p>The collection of data for the provision of our website and the storage of data in log files is crucial to operation of the website. Hence, users are not granted a right to object.</p>
+<p>&nbsp;</p>
+<p><strong>VI. </strong><strong>External Hosting</strong></p>
+<p><strong><br /> </strong>This website is hosted by an external service provider (host). Personal data collected on this website are stored on the servers of the host. These may include, but are not limited to, IP addresses, contact requests, metadata and communications, contract information, contact information, names, web page access, and other data generated through a web site.<br /> <br /> The host is used for the purpose of fulfilling the contract with our potential and existing customers (Art. 6(1)(b) GDPR) and in the interest of secure, fast, and efficient provision of our online services by a professional provider (Art. 6(1)(f) GDPR). If appropriate consent has been obtained, the processing is carried out exclusively on the basis of Art. 6 (1)(a) GDPR and &sect; 25 (1) TTDSG, insofar the consent includes the storage of cookies or the access to information in the user's end device (e.g., device fingerprinting) within the meaning of the TTDSG. This consent can be revoked at any time.<br /> <br /> Our host will only process your data to the extent necessary to fulfil its performance obligations and to follow our instructions with respect to such data.<br /> 
+	We are using the following host:<br /> <br /> GitHub, Inc.<br /> 88 Colin P Kelly Jr St<br /> San Francisco, CA 94107<br /> United States<br /> <strong><br /> Data processing<br /> </strong>We have concluded a data processing agreement (DPA) with the above-mentioned provider. This is a<br /> contract mandated by data privacy laws that guarantees that they process personal data of our website visitors only based on our instructions and in compliance with the GDPR.</p>
+<p>&nbsp;</p>
+<p><strong>VII. </strong><strong>Contact <br /> </strong><br /> Request by e-mail, telephone, or fax<strong><br /> </strong>If you contact us by e-mail, telephone or fax, your request, including all resulting personal data (name, request) will be stored and processed by us for the purpose of processing your request. We do not pass these data on without your consent.<br /> <br /> These data are processed on the basis of Art. 6(1)(b) GDPR if your inquiry is related to the fulfillment of a contract or is required for the performance of pre-contractual measures. In all other cases, the data are processed on the basis of our legitimate interest in the effective handling of inquiries submitted to us (Art. 6(1)(f) GDPR) or on the basis of your consent (Art. 6(1)(a) GDPR) if it has been obtained; the consent can be revoked at any time.<br /> <br /> The data sent by you to us via contact requests remain with us until you request us to delete, revoke your consent to the storage or the purpose for the data storage lapses (e.g. after completion of your request). Mandatory statutory provisions - in particular statutory retention periods - remain unaffected.</p>
+<p>&nbsp;</p>
+<p><strong>VIII. YouTube with expanded data protection integration<br /> <br /> </strong>Our website embeds videos of the website YouTube. The website operator is Google Ireland Limited<br /> (&ldquo;Google&rdquo;), Gordon House, Barrow Street, Dublin 4, Ireland.<br /> <br /> We use YouTube in the expanded data protection mode. According to YouTube, this mode ensures that YouTube does not store any information about visitors to this website before they watch the video. Nevertheless, this does not necessarily mean that the sharing of data with YouTube partners can be ruled out as a result of the expanded data protection mode. For instance, regardless of whether you are watching a video, YouTube will always establish a connection with the Google DoubleClick network.<br /> <br /> As soon as you start to play a YouTube video on this website, a connection to YouTube&rsquo;s servers will be established. As a result, the YouTube server will be notified, which of our pages you have visited. If you are logged into your YouTube account while you visit our site, you enable YouTube to directly allocate your browsing patterns to your personal profile. You have the option to prevent this by logging out of your YouTube account.<br /> <br /> Furthermore, after you have started to play a video, YouTube will be able to place various cookies on your device or comparable technologies for recognition (e.g. device fingerprinting). In this way YouTube will be able to obtain information about this website&rsquo;s visitors. Among other things, this information will be used to generate video statistics with the aim of improving the user friendliness of the site and to prevent attempts to commit fraud.<br /> <br /> Under certain circumstances, additional data processing transactions may be triggered after you have started to play a YouTube video, which are beyond our control.<br /> <br /> The use of YouTube is based on our interest in presenting our online content in an appealing manner.<br /> Pursuant to Art. 6(1)(f) GDPR, this is a legitimate interest. If appropriate consent has been obtained, the processing is carried out exclusively on the basis of Art. 6(1)(a) GDPR and &sect; 25 (1) TTDSG, insofar the consent includes the storage of cookies or the access to information in the user&rsquo;s end device (e.g., device fingerprinting) within the meaning of the TTDSG. This consent can be revoked at any time.<br /> <br /> For more information on how YouTube handles user data, please consult the YouTube Data Privacy Policy under:<br /> <a href="https://policies.google.com/privacy?hl=en">https://policies.google.com/privacy?hl=en</a>.</p>
+<p>&nbsp;</p>
+<p><strong>IX. Rights of the data subject</strong></p>
+<p>Where personal data concerning you is processed, you are the data subject as defined in the EU General Data Protection Regulation (GDPR) and you have the following rights with respect to the controller:</p>
+<p><em>a) Right to information</em></p>
+<p>You have the right to obtain from the controller confirmation of whether personal data concerning you is processed by us.</p>
+<p>Where such processing takes place, you have the right to obtain the following information from the controller:</p>
+<ul>
+<li>the purposes for which the personal data is processed;</li>
+<li>the categories of personal data that is processed;</li>
+<li>the recipients, or categories of recipients to whom the personal data relating to you has been or will be disclosed;</li>
+<li>the planned duration of storage of the personal data concerning you, or the criteria applied to defining the duration of storage if precise information in this regard is not available;</li>
+<li>the existence of a right to correction or deletion of the personal data concerning you, the right to restrict processing by the controller or the right to object to this processing;</li>
+<li>the right to lodge a complaint with a supervisory authority;</li>
+<li>all information available concerning the origins of the data if the personal data was not collected from the data subject;</li>
+<li>the existence of an automated decision-making process, including profiling, according to Art. 22 paragraphs 1 and 4 of the GDPR and &ndash; at least in these cases &ndash; meaningful information on the logic and implications involved, as well as on the intended effects of this kind of processing on the data subject;</li>
+<li>You also have the right to obtain information on whether the personal data concerning you has or will be transferred to a third country or to an international organisation. In this regard, you are entitled to request information on the appropriate guarantees in place with regard to this processing in accordance with Art. 46 of the GDPR.</li>
+</ul>
+<p>The controller will provide a copy of the personal data that is subject to processing. Where you request additional copies, the controller is entitled to charge an appropriate fee based on administrative costs. If you place the application by electronic means, the information will be made available in a standard electronic format, except where otherwise specified by you. The right to receive a copy in accordance with paragraph 3 of this section must not adversely affect the rights and freedoms of other persons.</p>
+<p><em>b)&nbsp;Right to correction</em></p>
+<p>As a data subject, you have the right to request from the controller the correction of inaccurate personal data concerning you without undue delay. Taking into account the purposes of the processing, you have the right to have incomplete personal data completed, including by means of providing a supplementary statement.</p>
+<p><em>c)&nbsp;Right to limit processing</em></p>
+<p>You have the right to request from the controller restriction of processing of personal data concerning you under the following conditions:</p>
+<ul>
+<li>where the accuracy of the personal data is contested by you, for a period enabling the controller to verify the accuracy of the personal data;</li>
+<li>the processing is unlawful and you oppose the deletion of the personal data, and instead request the restriction of its use;</li>
+<li>the controller no longer needs the personal data for the purposes of the processing, but it is required by you for the establishment, exercise or defence of legal claims; or</li>
+<li>if you have objected to processing pursuant to Art. 21, paragraph 1, of the GDPR, pending the verification of whether the legitimate reasons of the controller override your reasons.</li>
+</ul>
+<p>Where processing of the personal data concerning you has been restricted, such personal data shall, with the exception of storage, only be processed with your consent or for the establishment, exercise or defence of legal claims or for the protection of the rights of another natural or legal person or for reasons of important public interest of the Union or of a Member State.</p>
+<p>Where you have obtained restriction of processing under the conditions set out above, you will be informed by the controller before the restriction of processing is lifted.</p>
+<p><em>d)&nbsp;Right to deletion</em></p>
+<p>Obligation to delete</p>
+<p>You have the right to request the controller to delete personal data concerning you without undue delay, and the controller will be obliged to delete personal data immediately where one of the following grounds applies:</p>
+<ul>
+<li>the personal data is no longer necessary in relation to the purposes for which it was collected or otherwise processed;</li>
+<li>you withdraw consent on which the processing is based according to part (a) of Art. 6, paragraph 1, or part (a) of Art. 9, paragraph 2 of the GDPR, and there is no other legal basis for the processing;</li>
+<li>you object to the processing pursuant to Art. 21, paragraph 1 of the GDPR and there are no overriding legitimate grounds for the processing, or you object to the processing pursuant to Art. 21, paragraph 2 of the GDPR;<br /> the personal data concerning you has been unlawfully processed;</li>
+<li>the personal data has to be deleted to comply with a legal obligation under a Union&nbsp; or Member State law to which the controller is subject;</li>
+<li>The personal data concerning you has been collected in relation to the offer of information society services referred to in Art. 8, paragraph 1 of the GDPR.</li>
+<li>Information to third parties</li>
+</ul>
+<p>Information to third parties</p>
+<p>Where the controller has made the personal data concerning you public and is obliged pursuant to Art. 17, paragraph 1 of the GDPR to delete the personal data, the controller, taking account of available technology and the cost of implementation, is required to take reasonable steps, including technical measures, to inform controllers who are processing the personal data that you have requested to be deleted by such controllers, as well as any links to, copies or replications of such personal data.</p>
+<p>Exceptions</p>
+<p>The right to deletion does not apply to the extent that processing is necessary:</p>
+<ul>
+<li>for exercising the right of freedom of expression and information;</li>
+<li>for compliance with a legal obligation under Union or Member State law to which the controller is subject or for the performance of tasks carried out in the public interest or in the exercise of official authority vested in the controller;</li>
+<li>for reasons of public interest in the area of public health in accordance with parts (h) and (i) of Art. 9, paragraph 2 and Art. 9, paragraph 3 of the GDPR;</li>
+<li>for archiving purposes in the public interest, for scientific or historical research purposes or for statistical purposes in accordance with Art. 89, paragraph 1 of the GDPR, insofar as the rights referred to in section (a) are likely to render impossible or seriously impair the achievement of the objectives of that processing; or</li>
+<li>for the establishment, exercise or defence of legal claims.</li>
+</ul>
+<p><em>e)&nbsp;Right to notification</em></p>
+<p>Where you have exercised the right to correction, deletion or restriction of processing with the data controller, the data controller shall be obliged to notify all recipients to whom the personal data concerning you was disclosed of this correction or deletion of data or of the restriction of processing, except where compliance proves to be impossible or is associated with a disproportionate effort.</p>
+<p>In addition, you are entitled to require that the data controller inform you about these recipients.</p>
+<p><em>f)&nbsp;Right to data portability</em></p>
+<p>You have the right to receive the personal data concerning you, which you have provided to the controller, in a structured, commonly used and machine-readable format and have the right to transfer that data to another controller without hindrance from the controller to which the personal data have been provided, where:</p>
+<p>the processing is based on consent pursuant to part (a) of Article 6, paragraph 1 or part (a) of Article 9, paragraph 2 of the GDPR or in a contract pursuant to part (b) of Art. 6, paragraph 1 of the GDPR; and<br /> the processing is carried out by automated means.<br /> In exercising your right to data portability, you have the right to have the personal data concerning you transmitted directly from one controller to another, where technically feasible. This must not adversely affect the rights and freedoms of other persons.</p>
+<p>The right to data portability does not apply to processing that is necessary for the performance of a task carried out in the public interest or in the exercise of official authority vested in the controller.</p>
+<p><strong><em>g)&nbsp;Right to object</em></strong></p>
+<p><strong>You have the right to object, at any time, on grounds relating to your particular situation, to the processing of personal data concerning you, which is based on parts (e) or (f) of Art. 6, paragraph 1 of the GDPR; this includes profiling based on those provisions.</strong></p>
+<p><strong>The controller shall no longer process the personal data concerning you, unless the controller demonstrates compelling legitimate grounds for the processing which override your interests, rights and freedoms or for the establishment, exercise or defence of legal claims.</strong></p>
+<p><strong>Where personal data concerning you is processed for direct marketing purposes, you have the right to object, at any time, to the processing of personal data concerning you for the purpose of such marketing. This applies also to profiling to the extent that it is related to such direct marketing.</strong></p>
+<p><strong>Where you object to processing for direct marketing purposes, the personal data will no longer be processed for such purposes.</strong></p>
+<p><strong>In the context of the use of information society services, and notwithstanding directive 2002/58/EC, you may exercise your right to object by automated means that use technical specifications.</strong></p>
+<p><strong>Where personal data is processed for scientific or historical research purposes or for statistical purposes pursuant to Art. 89, paragraph 1 of the GDPR, you have the right, on grounds relating to your particular situation, to object to processing of personal data concerning you, except where the processing is necessary for the performance of a task carried out for reasons of public interest.</strong></p>
+<p><strong>Should you wish to exercise your right to withdraw consent or to object, please send an email to datenschutz@dlr.de.</strong></p>
+<p><em>h)&nbsp;Right to withdraw consent pursuant to Art. 7, paragraph 3 of the GDPR</em></p>
+<p>You have the right to withdraw your consent to the processing of data at any time, with future effect. In the event that you withdraw consent, we will delete the data concerned immediately, except where processing can be based on legal grounds that do not require consent. The withdrawal of consent will not affect the lawfulness of processing carried out prior to withdrawal of consent.</p>
+<p><em>i) Automated individual decision-making, including profiling</em></p>
+<p>You have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal effects for you or similarly significantly affects you.</p>
+<p>This does not apply if the decision:</p>
+<ul>
+<li>is necessary for entering into, or performance of, a contract between you and the data controller;</li>
+<li>is authorised by Union or Member State law to which the controller is subject and which also contains suitable measures to safeguard your rights, freedoms and legitimate interests; or</li>
+<li>is based on your explicit consent.</li>
+</ul>
+<p>However, these decisions must not be based on special categories of personal data referred to in Art 9, paragraph 1 of the GDPR, unless parts (a) or (g) of Art. 9, paragraph 2 of the GDPR applies and suitable measures to safeguard your rights, freedoms and legitimate interests are in place.</p>
+<p>In the cases referred to in parts (1) and (3), the data controller is required to implement suitable measures to safeguard your rights, freedoms and legitimate interests, including at least the right to obtain human intervention on the part of the controller, to express your own point of view and to contest the decision.</p>
+<p><em>j)&nbsp;Right to lodge a complaint with a supervisory authority</em></p>
+<p>Without prejudice to any other administrative or judicial remedy, you have the right to lodge a complaint with a supervisory authority, in particular in the Member State of your normal residence, you place of work or the place of the alleged infringement, if you consider that the processing of personal data relating to you infringes the GDPR.</p>
+<p>The supervisory authority with which the complaint has been lodged is required to inform the complainant on the progress and the outcome of the complaint, including the possibility of a judicial remedy pursuant to Article 78.</p>
+	
+			</div><!-- /.container -->
+		</div>
+	</section><!-- /#team -->
+
+
+	
+
+
+</section><!-- /#content -->
+
+    <div class="footer-area ">
+
+	<footer class="section-padding">
+		<div class="social-btn footer-social text-center">
+			<!--<a href="https://twitter.com" class="twitter"><i class="fa fa-twitter"></i></a>-->
+			<!--<a href="https://www.youtube.com" class="youtube"><i class="fa fa-youtube"></i></a>-->
+			<a href="https://github.com/DLR-AMR/t8code" class="github"><i class="fa fa-github"></i></a>
+		</div>
+
+
+		<div class="site-info text-center">
+			 &copy; 2022 <a href="http://www.DLR.de">Deutsches Zentrum für Luft- und Raumfahrt e.V.</a>
+
+                	&nbsp;&sdot;&nbsp;<a href="http://www.dlr.de/sc">Institute for Software Technology</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/imprint.html">Imprint</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/privacy.html">Privacy</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/terms-of-use.html">Terms of use</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/accessibility.html">Accessibility</a></li>
+
+		</div>
+
+		<div id="go-top-top">
+			  <span><i class="fa fa-chevron-up"></i></span>
+		</div>
+	</footer>
+
+	</div><!-- /footer-area -->
+
+	<!-- Include modernizr-2.8.0.min.js -->
+	<script src="https://dlr-amr.github.io/t8code/theme/js/modernizr.js"></script>
+
+	<!-- Include jquery.min.js plugin -->
+	<script src="https://dlr-amr.github.io/t8code/theme/js/jquery-2.1.0.min.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/plugins.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/onePage-nav.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/jquery.ajaxchimp.min.js"></script> 
+	<script src="https://dlr-amr.github.io/t8code/theme/js/custom.js"></script>
+
+	<script>
+	(function($) {
+		"use strict";
+		
+	        $(window).on("load",function(e){
+	        	// Main menu
+	        	$('#main-menu #mainNavigation').onePageNav({
+	        		currentClass: 'active',
+	        		changeHash: false,
+	        		scrollSpeed: 750,
+	        		scrollThreshold: 0.5,
+	        		scrollOffset: 84,
+	        		filter: ':not(.sub-menu a, .not-in-home, .donate)',
+	        		easing: 'swing'
+	        	});  
+	        });
+		$(window).on('scroll', function (){ 
+			if ($(window).scrollTop() >$(window).height()-110){
+				$('#main-menu').addClass('navbar-fixed-top'); 
+			} else {
+				$('#main-menu').removeClass('navbar-fixed-top'); 
+			} 
+		});
+	 })(jQuery);
+	</script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-134418253-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+</body>
+</html>
