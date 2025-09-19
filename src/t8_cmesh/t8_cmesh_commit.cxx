@@ -549,7 +549,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
   SC_CHECK_ABORT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM,
-                  "Dimension of the cmesh is not set properly.\n");
+                  "Dimension of the cmesh is not set properly. This error may be "
+                  "caused by empty cmesh partitions whose dimension can't be "
+                  "inferred from the element types. Try setting the dimension "
+                  "explicitly using t8_cmesh_set_dimension\n");
 
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
