@@ -59,7 +59,7 @@ t8_forest_ghost_num_trees (const t8_forest_t forest);
 /** Return the element offset of a ghost tree.
  * \param [in]      forest      The forest with constructed ghost layer.
  * \param [in]      lghost_tree A local ghost id of a ghost tree.
- * \return                      The element offset of this ghost tree.
+ * \return                      The element offset of this ghost tree within the set of local ghost elements.
  * \note forest must be committed before calling this function.
  */
 t8_locidx_t
