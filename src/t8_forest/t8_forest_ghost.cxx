@@ -1480,8 +1480,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  t8_productionf ("Into t8_forest_ghost with %i local elements.\n",
-                  t8_forest_get_local_num_leaf_elements (forest));
+  t8_productionf ("Into t8_forest_ghost with %i local elements.\n", t8_forest_get_local_num_leaf_elements (forest));
 
   /* In parallel, check forest for deleted elements. The ghost algorithm currently
   * does not work on forests with deleted elements.
