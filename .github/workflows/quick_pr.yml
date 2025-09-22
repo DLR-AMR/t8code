@@ -36,18 +36,16 @@ on:
 jobs:
     create_issue:
         runs-on: ubuntu-latest
+        outputs:
+            ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
         permissions:
           issues: write
           pull-requests: write
           contents: read
-        outputs:
-            ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
         steps:
         - uses: actions/checkout@v5
           with:
                 fetch-depth: 0
-
-
         - name: "Create Issue"
           id: create_issue_and_output_number
           run: |
@@ -87,8 +85,8 @@ jobs:
                 ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
                 echo "ISSUE_NUMBER=$ISSUE_NUMBER"
                 echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-            env:
-                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env:
+              GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         - name: "Link Issue to PR"
           id: link_issue
