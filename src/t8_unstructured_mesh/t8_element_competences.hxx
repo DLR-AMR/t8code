@@ -40,7 +40,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * Competence to cache the vertex coordinates of an element at the first function call.
- * Used the CRTP pattern as we need to access members of the derived class \ref t8_unstructured_element. 
+ * Uses the CRTP pattern as we need to access members of the derived class \ref t8_unstructured_element. 
  * Use t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
  * we need functionality of TUnderlying).
  * \tparam Use the t8_unstructured_element with specified competences as template parameter.

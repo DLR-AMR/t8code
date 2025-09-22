@@ -83,7 +83,7 @@ class t8_unstructured_mesh {
    */
   struct t8_unstructured_iterator
   {
-    /* Design choice: This Iterator is part of the unstructured mesh as it is strongly connected to the unstructured mesh 
+    /* Design choice: This iterator is part of the unstructured mesh as it is strongly connected to the unstructured mesh 
      * and we should not need derived iterators. 
      */
     using iterator_category = std::forward_iterator_tag;  //TODO: do we maybe need a bi-directional Iterator?
