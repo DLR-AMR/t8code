@@ -28,13 +28,15 @@ on:
         description: 'The default project to use for the issue'
         required: true
         default: ''
-    secrets:
-        PAT:
-          required: true
     outputs:
         ISSUE_NUMBER:
             description: 'The number of the issue that was created'
             value: ${{ jobs.create_issue.outputs.ISSUE_NUMBER }}
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
 
 jobs:
     create_issue:
@@ -47,7 +49,7 @@ jobs:
                 fetch-depth: 0
 
         - name: "Set up environment"
-          run: echo "GH_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
+          run: echo "GH_TOKEN=${{ github.token}}" >> $GITHUB_ENV
 
         - name: "Create Issue"
           id: create_issue_and_output_number
