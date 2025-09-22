@@ -46,8 +46,6 @@ jobs:
         - uses: actions/checkout@v5
           with:
                 fetch-depth: 0
-        - name: "Create Issue"
-          id: create_issue_and_output_number
         - name: "Set up PR metadata"
           id: pr_metadata
           run: |
