@@ -61,6 +61,7 @@ template <template <typename> class... TCompetence>
 class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_element<TCompetence...>>... {
   using SelfType = t8_unstructured_mesh_element<TCompetence...>;
 
+ private:
   // --- Variables to check which functionality is defined in TCompetence. ---
   // Helper function.
   template <template <typename> class T>
@@ -102,9 +103,8 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   t8_element_level
   get_level ()
   {
-    const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
-    const t8_element_t* element
-      = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+    const t8_eclass_t tree_class = get_tree_class ();
+    const t8_element_t* element = get_element ();
     return t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_level (tree_class, element);
   }
 
@@ -121,9 +121,8 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     }
     else {
       std::vector<std::array<double, T8_ECLASS_MAX_DIM>> vertex_coordinates;
-      const t8_element_t* element
-        = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
-      const t8_eclass_t tree_class = t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
+      const t8_element_t* element = get_element ();
+      const t8_eclass_t tree_class = get_tree_class ();
       const int num_corners
         = t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_num_corners (tree_class, element);
       for (int icorner = 0; icorner < num_corners; ++icorner) {
@@ -148,8 +147,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     }
     else {
       std::array<double, T8_ECLASS_MAX_DIM> coordinates;
-      const t8_element_t* element
-        = t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+      const t8_element_t* element = get_element ();
       t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, element, coordinates.data ());
       return coordinates;
     }
@@ -185,6 +183,25 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   }
 
  private:
+  //--- Private getter for internal use. ---
+  /**
+   * Getter for the leaf element of the unstructured mesh element.
+   */
+  const t8_element_t*
+  get_element ()
+  {
+    return t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+  }
+
+  /**
+   * Getter for the eclass of the unstructured mesh element.
+   */
+  t8_eclass_t
+  get_tree_class ()
+  {
+    return t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
+  }
+
   t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the unstructured mesh. */
   t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the unstructured mesh. */
   t8_unstructured_mesh<SelfType>*
