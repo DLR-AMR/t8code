@@ -48,45 +48,49 @@ jobs:
                 fetch-depth: 0
         - name: "Create Issue"
           id: create_issue_and_output_number
+        - name: "Set up PR metadata"
+          id: pr_metadata
           run: |
-                # Get the title of the triggering PR
-                TITLE="${{ github.event.pull_request.title }}"
-                AUTHOR="${{ github.event.pull_request.user.login }}"
-                ISSUE_BODY=""
-                DRAFT=$([[ "${{ github.event.pull_request.draft }}" == "true" ]] && echo "true" || echo "false")
-                if [[ "$DRAFT" == "true" ]]; then
-                  ISSUE_BODY="This Issue was created because the draft PR did not reference an Issue. Please @${AUTHOR} describe the Issue that you are solving."
-                else
-                  ISSUE_BODY="This Issue was created because the PR did not reference an Issue."
-                fi
-                echo "TITLE=$TITLE"
-                echo "AUTHOR=$AUTHOR"
-                # Create the new issue. Use the DEFAULT_PROJECT to directly add it to the project. 
-                # Letting GH add the Issue to the project by automatization can lead to a delay, 
-                # and the following worfkflows will try to move a card that doesn't exist yet.
-                # Only assign the issue if the author is not a bot
-                if [[ "$AUTHOR" == *"[bot]"* ]]; then
-                  new_issue_url=$(gh issue create \
-                  --title "$TITLE" \
-                  --body "$ISSUE_BODY" \
-                  --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \ 
-                  --project "${{ inputs.DEFAULT_PROJECT }}"
-                  )
-                else
-                  new_issue_url=$(gh issue create \
-                  --title "$TITLE" \
-                  --assignee "$AUTHOR" \
-                  --body "$ISSUE_BODY" \
-                  --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \ 
-                  --project "${{ inputs.DEFAULT_PROJECT }}"
-                  )
-                fi
-                echo "new_issue_url=$new_issue_url"
-                # Extract the issue number from the URL. 
-                # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number
-                ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
-                echo "ISSUE_NUMBER=$ISSUE_NUMBER"
-                echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+            echo "TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+            echo "AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+                echo "DRAFT=${{ github.event.pull_request.draft }}" >> $GITHUB_OUTPUT
+
+        - name: "Compose Issue Body"
+          id: compose_issue_body
+          run: |
+            if [[ "${{ steps.pr_metadata.outputs.DRAFT }}" == "true" ]]; then
+              echo "ISSUE_BODY=This Issue was created because the draft PR did not reference an Issue. Please @${{ steps.pr_metadata.outputs.AUTHOR }} describe the Issue that you are solving." >> $GITHUB_OUTPUT
+            else
+              echo "ISSUE_BODY=This Issue was created because the PR did not reference an Issue." >> $GITHUB_OUTPUT
+            fi
+
+        - name: "Create Issue"
+          id: create_issue_and_output_number
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            TITLE="${{ steps.pr_metadata.outputs.TITLE }}"
+            AUTHOR="${{ steps.pr_metadata.outputs.AUTHOR }}"
+            ISSUE_BODY="${{ steps.compose_issue_body.outputs.ISSUE_BODY }}"
+            DEFAULT_PROJECT="${{ inputs.DEFAULT_PROJECT }}"
+
+            if [[ "$AUTHOR" == *"[bot]"* ]]; then
+              new_issue_url=$(gh issue create \
+                --title "$TITLE" \
+                --body "$ISSUE_BODY" \
+                --project "$DEFAULT_PROJECT")
+            else
+              new_issue_url=$(gh issue create \
+                --title "$TITLE" \
+                --assignee "$AUTHOR" \
+                --body "$ISSUE_BODY" \
+                --project "$DEFAULT_PROJECT")
+            fi
+            echo "new_issue_url=$new_issue_url"
+            ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER"
+            echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+
         - name: "Link Issue to PR"
           id: link_issue
           run: |
