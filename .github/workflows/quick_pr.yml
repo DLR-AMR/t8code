@@ -69,6 +69,7 @@ jobs:
                   new_issue_url=$(gh issue create \
                   --title "$TITLE" \
                   --body "$ISSUE_BODY" \
+                  --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \ 
                   --project "${{ inputs.DEFAULT_PROJECT }}"
                   )
                 else
@@ -76,6 +77,7 @@ jobs:
                   --title "$TITLE" \
                   --assignee "$AUTHOR" \
                   --body "$ISSUE_BODY" \
+                  --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \ 
                   --project "${{ inputs.DEFAULT_PROJECT }}"
                   )
                 fi
@@ -85,9 +87,6 @@ jobs:
                 ISSUE_NUMBER=$(echo "$new_issue_url" | awk -F'/' '{print $NF}')
                 echo "ISSUE_NUMBER=$ISSUE_NUMBER"
                 echo "ISSUE_NUMBER=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-          env:
-              GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
         - name: "Link Issue to PR"
           id: link_issue
           run: |
