@@ -268,8 +268,6 @@ jobs:
     uses: ./.github/workflows/quick_pr.yml
     with:
         DEFAULT_PROJECT: "t8code's Issue Landing page"
-    secrets:
-        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # After the issue has been created by open_issue_for_quick_pr, move the card to Needs Review
   move_quick_pr_issue_to_Needs_Review:
