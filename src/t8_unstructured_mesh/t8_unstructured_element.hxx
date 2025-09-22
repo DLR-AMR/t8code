@@ -185,8 +185,8 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   }
 
  private:
-  t8_locidx_t m_tree_id,         /**< The tree id of the element in the forest defined in the unstructured mesh. */
-   t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the unstructured mesh. */
+  t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the unstructured mesh. */
+  t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the unstructured mesh. */
   t8_unstructured_mesh<SelfType>*
     m_unstructured_mesh; /**< Pointer to the unstructured mesh the element is defined for. */
 };
