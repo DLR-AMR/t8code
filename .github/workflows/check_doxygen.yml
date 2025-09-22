@@ -55,6 +55,8 @@ jobs:
       run: sudo apt-get install doxygen-latex
     - name: Configure for documentation only
       run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_ENABLE_MPI=OFF
+    - name: Debug print current directory
+      run: ls -la >> output 2>&1
     - name: check doxygen
       run: cd doc && doxygen Doxyfile >> output 2>&1
     - name: check for doxygen warnings
