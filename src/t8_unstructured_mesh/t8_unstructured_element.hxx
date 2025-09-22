@@ -50,7 +50,7 @@ class t8_unstructured_mesh;
  * To add functionality to the element, you can simply write you own competence class and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 
  *
- * The inheritance pattern is inspired by the \ref T8Type class.
+ * The inheritance pattern is inspired by the \ref T8Type class (which also uses the CRTP).
  * We decided to use this structure 1.) to be able to add new functionality easily and 
  *    2.) for the cached options to keep the number of class member variables of the default to a minimum to safe memory.
  * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
