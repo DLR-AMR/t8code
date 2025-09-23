@@ -59,7 +59,7 @@ jobs:
       run: cd build && cd doc && doxygen Doxyfile >> output 2>&1
     - name: check for doxygen warnings
       run: |
-        if grep -i warning doc/output; then
+        if grep -i warning build/doc/output; then
           echo "Doxygen warnings found!"
           exit 1
         else
