@@ -42,6 +42,12 @@ typedef struct
 /** 
  * This is the function that we call in sc_split_array to determine for an
  * element E that is a descendant of an element e, of which of e's children, E is a descendant. 
+ * 
+ * \param[in]   leaf_elements   The larray of eaf elements.
+ * \param[in]   index           The local id of the element within the leaf_elements array.
+ * \param[in]   data            The query data.
+ * 
+ * \return The element's ancestor id at the stored level is returned as the element's type.
  */
 static size_t
 t8_forest_determine_child_type (sc_array_t *leaf_elements, size_t index, void *data)
