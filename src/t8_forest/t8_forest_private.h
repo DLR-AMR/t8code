@@ -60,6 +60,8 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
 
 /**
  * For each tree in a forest compute its first and last descendant.
+ * \param[in] forest The forest that should be used.  
+ 
  */
 void
 t8_forest_compute_desc (t8_forest_t forest);
