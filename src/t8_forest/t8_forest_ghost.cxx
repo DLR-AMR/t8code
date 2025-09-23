@@ -34,57 +34,70 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* The information for a remote process, what data we have to send to them.
+/**
+ * The information for a remote process, what data we have to send to them.
  */
 typedef struct
 {
-  int recv_rank;           /* The rank to which we send. */
-  size_t num_bytes;        /* The number of bytes that we send. */
-  sc_MPI_Request *request; /* Communication request, not owned by this struct. */
-  char *buffer;            /* The send buffer. */
+  int recv_rank;           /**< The rank to which we send. */
+  size_t num_bytes;        /**< The number of bytes that we send. */
+  sc_MPI_Request *request; /**< Communication request, not owned by this struct. */
+  char *buffer;            /**< The send buffer. */
 } t8_ghost_mpi_send_info_t;
 
-/* The information stored for the ghost trees */
+/** 
+ * The information stored for the ghost trees 
+ */
 typedef struct
 {
-  t8_gloidx_t global_id;       /* global id of the tree */
-  t8_locidx_t element_offset;  /* The count of all ghost elements in all smaller ghost trees */
-  t8_element_array_t elements; /* The ghost elements of that tree */
-  t8_eclass_t eclass;          /* The trees element class */
+  t8_gloidx_t global_id;       /**< Global id of the tree */
+  t8_locidx_t element_offset;  /**< The count of all ghost elements in all smaller ghost trees */
+  t8_element_array_t elements; /**< The ghost elements of that tree */
+  t8_eclass_t eclass;          /**< The trees element class */
 } t8_ghost_tree_t;
 
-/* The data structure stored in the global_tree_to_ghost_tree hash table. */
+/**
+ * The data structure stored in the global_tree_to_ghost_tree hash table. 
+ */
 typedef struct
 {
-  t8_gloidx_t global_id; /* global tree id */
-  size_t index;          /* the index of that global tree in the ghost_trees array. */
+  t8_gloidx_t global_id; /**< global tree id */
+  size_t index;          /**< the index of that global tree in the ghost_trees array. */
 } t8_ghost_gtree_hash_t;
 
-/* The data structure stored in the process_offsets array. */
+/**
+ * The data structure stored in the process_offsets array. 
+ */
 typedef struct
 {
-  int mpirank;              /* rank of the process */
-  t8_locidx_t ghost_offset; /* The number of ghost elements for all previous ranks */
-  size_t tree_index;        /* index of first ghost tree of this process in ghost_trees */
-  size_t first_element;     /* the index of the first element in the elements array of the ghost tree. */
+  int mpirank;              /**< rank of the process */
+  t8_locidx_t ghost_offset; /**< The number of ghost elements for all previous ranks */
+  size_t tree_index;        /**< index of first ghost tree of this process in ghost_trees */
+  size_t first_element;     /**< the index of the first element in the elements array of the ghost tree. */
 } t8_ghost_process_hash_t;
 
-/* The information stored for the remote trees.
- * Each remote process stores an array of these */
+/**
+ * The information stored for the remote trees.
+ * Each remote process stores an array of these 
+ */
 typedef struct
 {
-  t8_gloidx_t global_id;       /* global id of the tree */
-  int mpirank;                 /* The mpirank of the remote process */
-  t8_element_array_t elements; /* The remote elements of that tree */
-  sc_array_t element_indices;  /* The (tree) local indices of the ghost elements. */
-  t8_eclass_t eclass;          /* The trees element class */
+  t8_gloidx_t global_id;       /**< global id of the tree */
+  int mpirank;                 /**< The mpirank of the remote process */
+  t8_element_array_t elements; /**< The remote elements of that tree */
+  sc_array_t element_indices;  /**< The (tree) local indices of the ghost elements. */
+  t8_eclass_t eclass;          /**< The trees element class */
 } t8_ghost_remote_tree_t;
 
+/**
+ * This struct stores information about the data that the current process needds from a specific remote_process
+ * as ghost data, such as the number of remote elements and the remote trees.
+*/
 typedef struct
 {
-  int remote_rank;          /* The rank of the remote process */
-  t8_locidx_t num_elements; /* The number of remote elements for this process */
-  sc_array_t remote_trees;  /* Array of the remote trees of this process */
+  int remote_rank;          /**< The rank of the remote process */
+  t8_locidx_t num_elements; /**< The number of remote elements for this process */
+  sc_array_t remote_trees;  /**< Array of the remote trees of this process */
 } t8_ghost_remote_t;
 
 /** 
@@ -197,20 +210,17 @@ t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_dat
   return remotea->remote_rank == remoteb->remote_rank;
 }
 
-/** This struct is used during a ghost data exchange.
+/** 
+ * This struct is used during a ghost data exchange.
  * Since we use asynchronous communication, we store the
  * send buffers and mpi requests until we end the communication.
  */
 typedef struct
 {
-  int num_remotes;
-  /** The number of processes, we send to */
-  char **send_buffers;
-  /** For each remote the send buffer */
-  sc_MPI_Request *send_requests;
-  /** For each process we send to, the MPI request used */
-  sc_MPI_Request *recv_requests;
-  /** For each process we receive from, the MPI request used */
+  int num_remotes;               /**< The number of processes, we send to. */
+  char **send_buffers;           /**< For each remote the send buffer. */
+  sc_MPI_Request *send_requests; /**< For each process we send to, the MPI request used. */
+  sc_MPI_Request *recv_requests; /**< For each process we receive from, the MPI request used. */
 } t8_ghost_data_exchange_t;
 
 void
@@ -276,7 +286,14 @@ t8_forest_ghost_get_remote (t8_forest_t forest, int remote)
   return (t8_ghost_remote_t *) sc_array_index (&forest->ghosts->remote_ghosts->a, index);
 }
 
-/* Return a remote processes info about the stored ghost elements */
+/** 
+ *  Return a remote processes info about the stored ghost elements 
+ *  
+ *  \param[in] forest A committed forest.
+ *  \param[in] remote The rank of the remote.
+ * 
+ *  \return The remote process info about the stored ghost elements, as \see t8_ghost_process_hash_t.
+ */
 static t8_ghost_process_hash_t *
 t8_forest_ghost_get_proc_info (t8_forest_t forest, int remote)
 {
@@ -300,7 +317,7 @@ t8_forest_ghost_get_proc_info (t8_forest_t forest, int remote)
   return proc_hash_found;
 }
 
-/* return the number of trees in a ghost */
+/* Return the number of trees in a ghost */
 t8_locidx_t
 t8_forest_ghost_num_trees (const t8_forest_t forest)
 {
@@ -316,7 +333,14 @@ t8_forest_ghost_num_trees (const t8_forest_t forest)
   return forest->ghosts->ghost_trees->elem_count;
 }
 
-/* Given an index into the ghost_trees array return the ghost tree */
+/** 
+ * Given an index into the ghost_trees array return the ghost tree 
+ * 
+ * \param[in] forest      A committed forest.
+ * \param[in] lghost_tree Index of the tree within the ghost_trees array.
+ * 
+ * \return The ghost tree.
+ */
 static t8_ghost_tree_t *
 t8_forest_ghost_get_tree (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
@@ -340,7 +364,7 @@ t8_forest_ghost_get_tree_element_offset (const t8_forest_t forest, const t8_loci
   return t8_forest_ghost_get_tree (forest, lghost_tree)->element_offset;
 }
 
-/* Given an index in the ghost_tree array, return this tree's number of elements */
+/** Given an index in the ghost_tree array, return this tree's number of elements */
 t8_locidx_t
 t8_forest_ghost_tree_num_leaf_elements (t8_forest_t forest, t8_locidx_t lghost_tree)
 {
@@ -404,7 +428,7 @@ t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t l
 }
 
 /* Given an index into the ghost_trees array and for that tree an element index,
- * return the corresponding element. */
+   return the corresponding element. */
 t8_element_t *
 t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t8_locidx_t lelement)
 {
@@ -418,7 +442,15 @@ t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t
   return t8_element_array_index_locidx_mutable (&ghost_tree->elements, lelement);
 }
 
-/* Initialize a t8_ghost_remote_tree_t */
+/** Initialize a t8_ghost_remote_tree_t.
+ * 
+ *  \param[in]  forest    The forest.
+ *  \param[in]  gtreeid   The global ID of the remote tree.
+ *  \param[in]  remote_rank The rank of the reomte process holding the tree.
+ *  \param[in]  tree_class  The eclass of the remote tree.
+ *  \param[in, out] remote_tree A pointer to the t8_ghost_remote_tree_t to be initialized. 
+ *                              Has to be non-NULL on input. On output, it is initialized.
+*/
 static void
 t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_rank, t8_eclass_t tree_class,
                            t8_ghost_remote_tree_t *remote_tree)
@@ -439,7 +471,8 @@ t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_r
   sc_array_init (&remote_tree->element_indices, sizeof (t8_locidx_t));
 }
 
-/* Add a new element to the remote hash table (if not already in it).
+/** 
+ * Add a new element to the remote hash table (if not already in it).
  * Must be called for elements in linear order
  * element_index is the tree local index of this element.
  * 
@@ -542,23 +575,29 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
   }
 }
 
+/**
+ * This struct stores the ghost boundary data of a forest.
+ */
 typedef struct
 {
-  sc_array_t bounds_per_level; /* For each level from the nca to the parent of the current element
-                                           we store for each face the lower and upper bounds of the owners at
-                                           this face. We also store bounds for the element's owners.
-                                           Each entry is an array of 2 * (max_num_faces + 1) integers,
-                                           | face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | */
-  sc_array_t face_owners;      /* Temporary storage for all owners at a leaf's face */
-  const t8_scheme *scheme;
-  t8_gloidx_t gtreeid;
-  int level_nca; /* The refinement level of the root element in the search.
-                                           At position element_level - level_nca in bounds_per_level are the bounds
-                                           for the parent of element. */
-  int max_num_faces;
-  t8_eclass_t eclass;
+
+  sc_array_t bounds_per_level; /**< For each level from the nca to the parent of the current element
+                                 *   we store for each face the lower and upper bounds of the owners at
+                                 *   this face. We also store bounds for the element's owners.
+                                 *   Each entry is an array of 2 * (max_num_faces + 1) integers,
+      |                          *   face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | 
+                                 */
+  sc_array_t face_owners;      /**< Temporary storage for all owners at a leaf's face. */
+  const t8_scheme *scheme;     /**< The scheme. */
+  t8_gloidx_t gtreeid;         /**< The global tree id. */
+
+  int level_nca;      /**< The refinement level of the root element in the search.
+                                     At position element_level - level_nca in bounds_per_level are the bounds
+                                     for the parent of element. */
+  int max_num_faces;  /**< The maximum number of faces. */
+  t8_eclass_t eclass; /**< The element class. */
 #if T8_ENABLE_DEBUG
-  t8_locidx_t left_out; /* Count the elements for which we skip the search */
+  t8_locidx_t left_out; /**< Count the elements for which we skip the search */
 #endif
 } t8_forest_ghost_boundary_data_t;
 
@@ -700,11 +739,14 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
   return 1;
 }
 
-/* Fill the remote ghosts of a ghost structure.
+/** 
+ * Fill the remote ghosts of a ghost structure.
  * We iterate through all elements and check if their neighbors
  * lie on remote processes. If so, we add the element to the
  * remote_ghosts array of ghost.
  * We also fill the remote_processes here.
+ * 
+ * \param[in,out] forest  the forest.
  */
 static void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
@@ -741,7 +783,8 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 #endif
 }
 
-/* Fill the remote ghosts of a ghost structure.
+/** 
+ * Fill the remote ghosts of a ghost structure.
  * We iterate through all elements and check if their neighbors
  * lie on remote processes. If so, we add the element to the
  * remote_ghosts array of ghost.
@@ -878,7 +921,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
   }
 }
 
-/* Begin sending the ghost elements from the remote ranks
+/** 
+ * Begin sending the ghost elements from the remote ranks
  * using non-blocking communication.
  * Afterwards,
  *  t8_forest_ghost_send_end
@@ -1014,6 +1058,15 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
   return send_info;
 }
 
+/**
+ *  End the communication of the ghost element sends and receives.
+ * 
+ *  \param[in] forest          A committed forest. 
+ *  \param[in] ghost           The ghost data.
+ *  \param[in, out] send_info  The send information array. On output, its memory is freed.
+ *  \param[in, out] requests   The array of MPI requests. On output, its memory is freed.
+ * 
+ */
 static void
 t8_forest_ghost_send_end ([[maybe_unused]] t8_forest_t forest, t8_forest_ghost_t ghost,
                           t8_ghost_mpi_send_info_t *send_info, sc_MPI_Request *requests)
@@ -1041,6 +1094,7 @@ t8_forest_ghost_send_end ([[maybe_unused]] t8_forest_t forest, t8_forest_ghost_t
 
 /**
  * Receive a single message from a remote process, after the message was successfully probed.
+ * Returns the allocated receive buffer and the number of bytes received 
  * 
  * \param[in] recv_rank   The receiving rank.
  * \param[in] comm        The MPI communicator.
@@ -1071,7 +1125,8 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm, sc_MPI_Status 
   return recv_buffer;
 }
 
-/* Parse a message from a remote process and correctly include the received
+/**
+ * Parse a message from a remote process and correctly include the received
  * elements in the ghost structure.
  * The message looks like:
  * num_trees | pad | treeid 0 | pad | eclass 0 | pad | num_elems 0 | pad | elements | pad | treeid 1 | ...
@@ -1092,7 +1147,6 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm, sc_MPI_Status 
  * \param[in] recv_buffer                 The receive buffer.
  * \param[in] recv_bytes                  The number of bytes received.
  */
-/* Currently we expect that the messages arrive in order of the sender's rank. */
 static void
 t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t ghost,
                                         t8_locidx_t *current_element_offset, int recv_rank, char *recv_buffer,
@@ -1220,13 +1274,15 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
   T8_ASSERT (added_process);
 }
 
-/* In forest_ghost_receive we need a lookup table to give us the position
+/**
+ * In forest_ghost_receive we need a lookup table to give us the position
  * of a process in the ghost->remote_processes array, given the rank of a process.
- * We implement this via a hash table with the following struct as entry. */
+ * We implement this via a hash table with the following struct as entry. 
+ */
 typedef struct t8_recv_list_entry_struct
 {
-  int rank;                    /* The rank of this process */
-  int pos_in_remote_processes; /* The position of this process in the remote_processes array */
+  int rank;                    /**< The rank of this process */
+  int pos_in_remote_processes; /**< The position of this process in the remote_processes array */
 } t8_recv_list_entry_t;
 
 /* We hash these entries by their rank */
@@ -1248,7 +1304,8 @@ t8_recv_list_entry_equal (const void *v1, const void *v2, [[maybe_unused]] const
   return e1->rank == e2->rank;
 }
 
-/* Probe for all incoming messages from the remote ranks and receive them.
+/**
+ * Probe for all incoming messages from the remote ranks and receive them.
  * We receive the message in the order in which they arrive. To achieve this,
  * we have to use polling. 
  * 
@@ -1278,7 +1335,8 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
   }
 
   {
-    /* This code receives the message in order of their arrival.
+    /**
+     * This code receives the message in order of their arrival.
      * This is effective in terms of runtime, but makes it more difficult
      * to store the received data, since the data has to be stored in order of
      * ascending ranks.
@@ -1457,7 +1515,8 @@ t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
   }
 }
 
-/* Create one layer of ghost elements, following the algorithm
+/**
+ * Create one layer of ghost elements, following the algorithm
  * in: p4est: Scalable Algorithms For Parallel Adaptive
  *     Mesh Refinement On Forests of Octrees
  *     C. Burstedde, L. C. Wilcox, O. Ghattas
