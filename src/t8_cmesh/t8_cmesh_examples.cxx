@@ -30,6 +30,9 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_types/t8_vec.h>
 #include <t8_mat.h>
 #include <t8_eclass.h>
@@ -3722,3 +3725,75 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
+
+t8_cmesh_t
+t8_cmesh_hyperquad(){
+  t8_cmesh_t cmesh; 
+  t8_cmesh_init(&cmesh);
+  t8_cmesh_vertex_conn_tree_to_vertex ttv;
+  cmesh->compute_boundary_node_list = 1;
+
+  for (int i_tree = 0; i_tree < 12; i_tree++){
+    if (i_tree < 4){ 
+      t8_cmesh_set_tree_class (cmesh, i_tree, T8_ECLASS_QUAD);
+    }
+    else {
+      t8_cmesh_set_tree_class (cmesh, i_tree, T8_ECLASS_TRIANGLE);
+    }
+  }
+
+  t8_cmesh_set_join(cmesh, 0, 1, 1, 0, 0);
+  t8_cmesh_set_join(cmesh, 2, 3, 1, 0, 0);
+  t8_cmesh_set_join(cmesh, 0, 2, 3, 2, 0);
+  t8_cmesh_set_join(cmesh, 1, 3, 3, 2, 0);
+
+  t8_cmesh_set_join(cmesh, 2, 4, 3, 2, 0);
+  t8_cmesh_set_join(cmesh, 4, 5, 0, 1, 0);
+  t8_cmesh_set_join(cmesh, 5, 6, 2, 1, 0);
+  t8_cmesh_set_join(cmesh, 3, 6, 3, 2, 0);
+  t8_cmesh_set_join(cmesh, 7, 4, 2, 1, 0);
+  t8_cmesh_set_join(cmesh, 7, 8, 0, 1, 0);
+  t8_cmesh_set_join(cmesh, 8, 9, 2, 1, 0);
+  t8_cmesh_set_join(cmesh, 5, 9, 0, 2, 1);
+  t8_cmesh_set_join(cmesh, 9, 10, 0, 1, 0);
+  t8_cmesh_set_join(cmesh, 10, 11, 2, 0, 1);
+  t8_cmesh_set_join(cmesh, 6, 11, 0, 1, 0);
+
+  constexpr t8_gloidx_t global_vertices_of_tree_0[4] = { 0, 1, 3, 4 };
+  constexpr t8_gloidx_t global_vertices_of_tree_1[4] = { 1, 2, 4, 5 };
+  constexpr t8_gloidx_t global_vertices_of_tree_2[4] = { 3, 4, 6, 7 };
+  constexpr t8_gloidx_t global_vertices_of_tree_3[4] = { 4, 5, 7, 8 };
+  constexpr t8_gloidx_t global_vertices_of_tree_4[3] = { 6, 7, 9 };
+  constexpr t8_gloidx_t global_vertices_of_tree_5[3] = { 7, 10, 9 };
+  constexpr t8_gloidx_t global_vertices_of_tree_6[3] = { 7, 8, 10 };
+  constexpr t8_gloidx_t global_vertices_of_tree_7[3] = { 6, 9, 11 };
+  constexpr t8_gloidx_t global_vertices_of_tree_8[3] = { 9, 12,11 };
+  constexpr t8_gloidx_t global_vertices_of_tree_9[3] = { 9, 10, 12 };
+  constexpr t8_gloidx_t global_vertices_of_tree_10[3] = { 10, 13, 12 };
+  constexpr t8_gloidx_t global_vertices_of_tree_11[3] = { 8, 13, 10 };
+
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 0, global_vertices_of_tree_0, 4);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 1, global_vertices_of_tree_1, 4);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 2, global_vertices_of_tree_2, 4);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 3, global_vertices_of_tree_3, 4);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 4, global_vertices_of_tree_4, 3);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 5, global_vertices_of_tree_5, 3);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 6, global_vertices_of_tree_6, 3);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 7, global_vertices_of_tree_7, 3);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 8, global_vertices_of_tree_8, 3);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 9, global_vertices_of_tree_9, 3);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 10, global_vertices_of_tree_10, 3);
+  t8_cmesh_set_global_vertices_of_tree(cmesh, 11, global_vertices_of_tree_11, 3);
+
+
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  return cmesh;
+}
+
+/*
+
+
+
+
+*/
