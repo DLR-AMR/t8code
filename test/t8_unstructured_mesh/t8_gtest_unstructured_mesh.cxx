@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <t8_unstructured_mesh/t8_unstructured_mesh.hxx>
+#include <t8_unstructured_mesh/t8_unstructured_element.hxx>
 #include <t8_unstructured_mesh/t8_element_competences.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>

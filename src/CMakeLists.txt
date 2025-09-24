@@ -220,6 +220,7 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
+    t8_unstructured_mesh/t8_unstructured_mesh.cxx
 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
