@@ -25,7 +25,7 @@
  * The version number of t8code is a string "X.Y.Z-HASH" where the "-HASH" part is optional.
  * Additional macros are defined in t8_config.h and the functions in this header provide
  * an interface to these macros.
- * 
+ *
  *  Macro  | Meaning | example
  * ------- | ------- | ------
  * T8_PACKAGE_STRING | The package string of t8code | "t8 0.41.1-288be-dirty"
@@ -34,11 +34,11 @@
  * T8_VERSION_MINOR | The minor version number of t8code Y as int | 42
  * T8_VERSION_POINT | The point version number of t8code Z-HASH as inst | 1-288be-dirty
  * \ref T8_VERSION_POINT_STRING | The point version number of t8code Z-HASH as string | "1-288be-dirty"
- * 
+ *
  * Attention: By design of git's version handling, T8_VERSION_POINT is not defined as a string.
  *            Since it does often contain chars we additionally define the macro \ref T8_VERSION_POINT_STRING
  *            in this header file.
- * 
+ *
  * The point version number consists of the the patch version number and the HASH part.
  * To get the patch version number Z alone use \ref t8_get_version_patch.
  */
@@ -47,9 +47,6 @@
 #define T8_VERSION_H
 
 #include <t8.h>
-#ifndef T8_CMAKE_BUILD
-#include <t8_config.h>
-#endif
 
 /** In order to convert a macro to a string, we
  * need to pass it through these two helper macros. */

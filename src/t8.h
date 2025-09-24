@@ -29,10 +29,6 @@
 #ifndef T8_H
 #define T8_H
 
-/* include config headers */
-#ifndef T8_CMAKE_BUILD
-#include <t8_config.h>
-#endif
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
 #error "MPI configured differently in t8code and libsc"
