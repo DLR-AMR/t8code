@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_writer.hxx
+ * This file contains the function to write a forest in ASCII VTK format.
+ */
+
 #ifndef T8_VTK_WRITER_HXX
 #define T8_VTK_WRITER_HXX
 
@@ -42,21 +47,7 @@
 #include <vtkDoubleArray.h>
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
-#include <vtkTetra.h>
-#include <vtkHexahedron.h>
-#include <vtkVertex.h>
-#include <vtkLine.h>
-#include <vtkQuad.h>
-#include <vtkTriangle.h>
-#include <vtkPyramid.h>
-#include <vtkWedge.h>
-#include <vtkQuadraticEdge.h>
-#include <vtkQuadraticTriangle.h>
-#include <vtkQuadraticQuad.h>
-#include <vtkQuadraticTetra.h>
-#include <vtkQuadraticHexahedron.h>
-#include <vtkQuadraticWedge.h>
-#include <vtkQuadraticPyramid.h>
+#include <vtkMergePoints.h>
 #include <vtkTypeInt64Array.h>
 #if T8_ENABLE_MPI
 #include <vtkMPI.h>
@@ -108,6 +99,12 @@ class vtk_writer {
   }
 
 #if T8_ENABLE_VTK
+  /**
+   * Convert a grid to a vtkUnstructuredGrid.
+   *
+   * \param[in] grid The forest or cmesh that is translated.
+   * \param[out] unstructuredGrid The vtkUnstructuredGrid to fill with the data of \a grid.
+   */
   void
   grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid)
   {
@@ -230,105 +227,57 @@ class vtk_writer {
  * \param elem_id The id for the element to use by vtk. 
  * \param point_id The next id to use to identify vtkpoints.
  * \param[in, out] cellTypes An int array to fill with the type of each element/tree of \a grid
- * \param[in, out] points A vtk Pointarray to fill with  points representing the points in the grid
+ * \param[in, out] points A vtkMergePoints structure to fill with points representing the points in the grid (avoid duplicates)
  * \param[in, out] cellArray A vtk Cellarray to fill with the cells representing the grid.
  * \param[in, out] vtk_treeid A vtk array to fill with the tree ids of \a grid.
  * \param[in, out] vtk_mpirank A vtk array to fill with the mpirank of each element/tree of \a grid.
  * \param[in, out] vtk_level A vtk array to fill with the level of each element/tree of \a grid.
  * \param[in, out] vtk_element_id A vtk array to fill with the id of each element/tree of \a grid.
+ * \param[in]      mergePoints A bool flag if points in the output should be merged (default = true).
+ * 
  */
   void
   t8_grid_element_to_vtk_cell (const grid_t grid, const t8_element_t *element, const t8_locidx_t itree,
                                const t8_gloidx_t offset, const int is_ghost, const int elem_id, long int *point_id,
-                               int *cellTypes, vtkSmartPointer<vtkPoints> points,
+                               int *cellTypes, vtkSmartPointer<vtkMergePoints> points,
                                vtkSmartPointer<vtkCellArray> cellArray,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
-                               vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id)
+                               vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id, bool mergePoints = true)
   {
-    vtkSmartPointer<vtkCell> pvtkCell = NULL;
-
     /* Get the shape of the current element and the respective shape of the vtk_cell. */
     const t8_element_shape_t element_shape = grid_element_shape (grid, itree, element);
     const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
 
-    if (curved_flag == 0) {
-      switch (element_shape) {
-      case T8_ECLASS_VERTEX:
-        pvtkCell = vtkSmartPointer<vtkVertex>::New ();
-        break;
-      case T8_ECLASS_LINE:
-        pvtkCell = vtkSmartPointer<vtkLine>::New ();
-        break;
-      case T8_ECLASS_QUAD:
-        pvtkCell = vtkSmartPointer<vtkQuad>::New ();
-        break;
-      case T8_ECLASS_TRIANGLE:
-        pvtkCell = vtkSmartPointer<vtkTriangle>::New ();
-        break;
-      case T8_ECLASS_HEX:
-        pvtkCell = vtkSmartPointer<vtkHexahedron>::New ();
-        break;
-      case T8_ECLASS_TET:
-        pvtkCell = vtkSmartPointer<vtkTetra>::New ();
-        break;
-      case T8_ECLASS_PRISM:
-        pvtkCell = vtkSmartPointer<vtkWedge>::New ();
-        break;
-      case T8_ECLASS_PYRAMID:
-        pvtkCell = vtkSmartPointer<vtkPyramid>::New ();
-        break;
-      default:
-        SC_ABORT_NOT_REACHED ();
-      }
-    }
-    else { /* curved_flag != 0 */
-      switch (element_shape) {
-      case T8_ECLASS_VERTEX:
-        pvtkCell = vtkSmartPointer<vtkVertex>::New ();
-        break;
-      case T8_ECLASS_LINE:
-        pvtkCell = vtkSmartPointer<vtkQuadraticEdge>::New ();
-        break;
-      case T8_ECLASS_QUAD:
-        pvtkCell = vtkSmartPointer<vtkQuadraticQuad>::New ();
-        break;
-      case T8_ECLASS_TRIANGLE:
-        pvtkCell = vtkSmartPointer<vtkQuadraticTriangle>::New ();
-        break;
-      case T8_ECLASS_HEX:
-        pvtkCell = vtkSmartPointer<vtkQuadraticHexahedron>::New ();
-        break;
-      case T8_ECLASS_TET:
-        pvtkCell = vtkSmartPointer<vtkQuadraticTetra>::New ();
-        break;
-      case T8_ECLASS_PRISM:
-        pvtkCell = vtkSmartPointer<vtkQuadraticWedge>::New ();
-        break;
-      case T8_ECLASS_PYRAMID:
-        pvtkCell = vtkSmartPointer<vtkQuadraticPyramid>::New ();
-        break;
-      default:
-        SC_ABORT_NOT_REACHED ();
-      }
-    }
+    /* Create an array with the correct number of indices per cell */
+    vtkIdType *vecCellIds = new vtkIdType[num_node];
 
     /* Compute the coordinates of the element/tree. */
     double *coordinates = T8_ALLOC (double, 3 * num_node);
 
     grid_element_to_coords (grid, itree, element, curved_flag, coordinates, num_node, element_shape);
 
+    vtkIdType ptId = -1;
     for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
       const size_t offset_3d = 3 * ivertex;
+
       /* Insert the point in the points array. */
-      points->InsertNextPoint (coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2]);
-      pvtkCell->GetPointIds ()->SetId (ivertex, *point_id);
+      double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
+      if (mergePoints) {
+        points->InsertUniquePoint (vtkCoords, ptId);
+      }
+      else {
+        ptId = points->InsertNextPoint (vtkCoords);
+      }
+      /* Add the returned point id to the cell ids*/
+      vecCellIds[ivertex] = ptId;
     }
     T8_FREE (coordinates);
 
     /* Fill the cell array. */
-    cellArray->InsertNextCell (pvtkCell);
+    cellArray->InsertNextCell (num_node, vecCellIds);
+    delete[] vecCellIds;
 
     /* Write additional information if desired. */
     if (curved_flag == 0) {
@@ -371,7 +320,7 @@ class vtk_writer {
  * \param[in, out] vtk_level A vtk array to fill with the level of each element/tree of \a grid.
  * \param[in, out] vtk_element_id A vtk array to fill with the id of each element/tree of \a grid.
  * \param[in, out] cellArray A vtk Cellarray to fill with the cells representing the grid.
- * \param[in, out] points A vtk Pointarray to fill with  points representing the points in the grid.
+ * \param[in, out] points A vtk vtkMergePoints structure to fill with points representing the points in the grid. (avoids duplicates)
  * \param[in, out] cellTypes An int array to fill with the type of each element/tree of \a grid.
  * \param[in] num_local_trees The number of local trees.
  * \param[in, out] elem_id The id of the current element. Will be increased after the call, depending on the number of elements processed.
@@ -386,9 +335,9 @@ class vtk_writer {
                              vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
                              vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
                              vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-                             vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
-                             const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id,
-                             const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree);
+                             vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points,
+                             int *cellTypes, const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id,
+                             long int *point_id, const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree);
 
   /**
  * Construct an unstructuredGrid from either a forest or cmesh. The flags can be used to define what parameters we want to write. 
@@ -402,7 +351,8 @@ class vtk_writer {
     T8_ASSERT (grid != NULL);
 
     vtkSmartPointer<vtkCellArray> cellArray = vtkSmartPointer<vtkCellArray>::New ();
-    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New ();
+    vtkSmartPointer<vtkPoints> points_store = vtkSmartPointer<vtkPoints>::New ();
+    vtkSmartPointer<vtkMergePoints> points = vtkSmartPointer<vtkMergePoints>::New ();
     vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid = vtkSmartPointer<t8_vtk_gloidx_array_type_t>::New ();
     vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank = vtkSmartPointer<t8_vtk_gloidx_array_type_t>::New ();
     vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level = vtkSmartPointer<t8_vtk_gloidx_array_type_t>::New ();
@@ -424,11 +374,29 @@ class vtk_writer {
 
     /* Check if we have to write ghosts on this process. */
     bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
+
     /* Compute the number of cells on this process. */
     t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
 
     int *cellTypes = T8_ALLOC (int, num_cells);
     T8_ASSERT (cellTypes != NULL);
+
+    /* Get the local bounds of the forest or cmesh */
+    double bounds[6];
+    grid_get_local_bounds (grid, bounds);
+
+    /* Allocate VTK Memory for the arrays */
+    const int grid_dim = grid_get_dim (grid);
+    const int maximum_cell_size = curved_flag ? t8_curved_dim_max_nodes[grid_dim] : t8_dim_max_nodes[grid_dim];
+    cellArray->AllocateEstimate (num_cells, maximum_cell_size);
+    points_store->Allocate (num_cells * maximum_cell_size);
+    vtk_treeid->Allocate (num_cells);
+    vtk_mpirank->Allocate (num_cells);
+    vtk_level->Allocate (num_cells);
+    vtk_element_id->Allocate (num_cells);
+
+    /* Initialie vtkMergePoints for insertion. It needs the bounds to create the internal acceleration structure */
+    points->InitPointInsertion (points_store, bounds);
 
     /* Iterate over all trees and translate them. */
     const t8_locidx_t num_local_trees = grid_local_num_trees (grid);
@@ -447,7 +415,7 @@ class vtk_writer {
     }
 
     /* Construct the unstructuredGrid. */
-    unstructuredGrid->SetPoints (points);
+    unstructuredGrid->SetPoints (points->GetPoints ());
     unstructuredGrid->SetCells (cellTypes, cellArray);
 
     if (this->write_treeid) {
@@ -485,6 +453,9 @@ class vtk_writer {
     for (int idata = 0; idata < num_data; idata++) {
       dataArrays[idata]->Delete ();
     }
+
+    /* Release unused memory in the arrays */
+    unstructuredGrid->Squeeze ();
 
     T8_FREE (cellTypes);
     T8_FREE (dataArrays);

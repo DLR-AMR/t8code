@@ -32,14 +32,27 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* This is the adapt function called during one round of balance.
+/** This is the adapt function called during one round of balance.
  * We refine an element if it has any face neighbor with a level larger
  * than the element's level + 1.
- */
-/* TODO: We currently do not adapt recursively since some functions such
+ *
+ * TODO: We currently do not adapt recursively since some functions such
  * as half neighbor computation require the forest to be committed. Thus,
  * we pass forest_from as a parameter. But doing so is not valid anymore
- * if we refine recursively. */
+ * if we refine recursively. 
+ * 
+ * \param[in, out] forest       The forest to be adapted / balanced.
+ * \param[in]      forest_from  The forest from which the current one is derived.
+ * \param[in]      ltree_id     The local id of the tree the element is in.
+ * \param[in]      tree_class   The element class of the tree the element is in.
+ * \param[in]      lelement_id  The local id of the element within the tree.
+ * \param[in]      scheme       The scheme class.
+ * \param[in]      is_family    A switch indicating whether the passed elements form a family.
+ * \param[in]      num_elements The number of elements passed as input.
+ * \param[in]      elements     The elements array.
+ * 
+ * \return 1 if the element(s) has/have to be refined, 0 otherwise.
+ */
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t ltree_id,
                          const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
@@ -99,7 +112,11 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
   return 0;
 }
 
-/* Collective function to compute the maximum occurring refinement level in a forest */
+/**
+ * Collective function to compute the maximum occurring refinement level in a forest 
+ * 
+ * \param[in,out] forest  The forest which the maximum refinement level is computed for and stored in.
+ */
 static void
 t8_forest_compute_max_element_level (t8_forest_t forest)
 {
@@ -111,11 +128,11 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
   /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
-    elem_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    elem_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     for (ielement = 0; ielement < elem_in_tree; ielement++) {
       /* Get the element and compute its level */
-      const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const int elem_level = scheme->element_get_level (tree_class, elem);
       local_max_level = SC_MAX (local_max_level, elem_level);
     }
@@ -140,7 +157,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   sc_statinfo_t *adap_stats, *ghost_stats, *partition_stats;
 
   t8_global_productionf ("Into t8_forest_balance with %lli global elements.\n",
-                         (long long) t8_forest_get_global_num_elements (forest->set_from));
+                         (long long) t8_forest_get_global_num_leaf_elements (forest->set_from));
   t8_log_indent_push ();
 
   /* Set default value to prevent compiler warning */
@@ -261,7 +278,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
 
   t8_log_indent_pop ();
   t8_global_productionf ("Done t8_forest_balance with %lli global elements.\n",
-                         (long long) t8_forest_get_global_num_elements (forest_temp));
+                         (long long) t8_forest_get_global_num_leaf_elements (forest_temp));
   t8_debugf ("t8_forest_balance needed %i rounds.\n", count_rounds);
   /* clean-up */
   t8_forest_unref (&forest_temp);
@@ -335,11 +352,11 @@ t8_forest_is_balanced (t8_forest_t forest)
   num_trees = t8_forest_get_num_local_trees (forest);
   /* Iterate over all trees */
   for (itree = 0; itree < num_trees; itree++) {
-    num_elements = t8_forest_get_tree_num_elements (forest, itree);
+    num_elements = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     /* Iterate over all elements of this tree */
     for (ielem = 0; ielem < num_elements; ielem++) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielem);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
       if (t8_forest_balance_adapt (forest, forest, itree, tree_class, ielem, scheme, 0, 1,

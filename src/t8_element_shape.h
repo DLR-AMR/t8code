@@ -45,7 +45,7 @@ typedef t8_eclass_t t8_element_shape_t;
 /** The maximum number of cornes a 3-dimensional element class can have. */
 #define T8_ELEMENT_SHAPE_MAX_CORNERS 8
 
-/* Maximum possible number of corner nodes of an element in a specific dimension */
+/** Maximum possible number of corner nodes of an element in a specific dimension */
 extern const int t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1];
 
 /** The number of codimension-one boundaries of an element class. */
@@ -64,9 +64,21 @@ t8_element_shape_num_vertices (int element_shape);
 int
 t8_element_shape_vtk_type (int element_shape);
 
-/** Maps the t8code corner number of the element to the vtk corner number */
+/** Maps the t8code corner number of the element to the vtk corner number 
+ * \param [in] element_shape  The shape of the element.
+ * \param [in] index          The index of the corner in z-order (t8code numeration).
+ * \return                    The corresponding vtk index. 
+*/
 int
-t8_element_shape_vtk_corner_number (int element_shape, int index);
+t8_element_shape_t8_to_vtk_corner_number (int element_shape, int index);
+
+/** Maps the vtk corner number of the element to the t8code corner number
+ * \param [in] element_shape  The shape of the element.
+ * \param [in] index          The index of the corner in vtk ordering. 
+ * \return                    The corresponding t8code index.
+ */
+int
+t8_element_shape_t8_corner_number (int element_shape, int index);
 
 /** For each element_shape, the name of this class as a string */
 const char*

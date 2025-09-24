@@ -1,3 +1,23 @@
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 if(T8CODE_BUILD_DOCUMENTATION)
     find_package(Doxygen REQUIRED)
     if (DOXYGEN_FOUND)
@@ -19,8 +39,8 @@ if(T8CODE_BUILD_DOCUMENTATION)
 
         add_custom_command( OUTPUT ${DOXYGEN_INDEX_FILE}
                             DEPENDS ${T8_PUBLIC_HEADERS}
-                            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT} 
-                            MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN} 
+                            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
+                            MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
                             COMMENT "Generating documentation"
                             VERBATIM)
 
@@ -33,9 +53,9 @@ endif(T8CODE_BUILD_DOCUMENTATION)
 
 if (T8CODE_BUILD_DOCUMENTATION_SPHINX)
     find_package(Sphinx REQUIRED)
-    
+
     configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
-    
+
     if (SPHINX_FOUND)
         set(SPHINX_SOURCE ${PROJECT_SOURCE_DIR}/doc/source)
         set(SPHINX_BUILD ${PROJECT_BINARY_DIR}/doc/sphinx)
@@ -55,7 +75,7 @@ if (T8CODE_BUILD_DOCUMENTATION_SPHINX)
         add_custom_command( OUTPUT ${SPHINX_INDEX_FILE}
                             COMMAND ${SPHINX_EXECUTABLE} -b html
                             # Tell Breathe where to find the Doxygen output
-                            -Dbreathe_projects.T8code=${DOXYGEN_OUTPUT_DIR}/xml
+                            -Dbreathe_projects.t8code=${DOXYGEN_OUTPUT_DIR}/xml
                             ${SPHINX_SOURCE} ${SPHINX_BUILD}
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                             DEPENDS
@@ -65,7 +85,7 @@ if (T8CODE_BUILD_DOCUMENTATION_SPHINX)
                             MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
                             COMMENT "Generating documentation with Sphinx")
 
-        
+
         # Nice named target so we can run the job easily
         add_custom_target(Sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
     else (SPHINX_FOUND)

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_geometry.h
+/** \file t8_cmesh_geometry.hxx
  * Internal functions that we need for the cmesh geometry.
  * TODO: document this file
  */
@@ -31,15 +31,16 @@
 #include <t8.h>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_geometry/t8_geometry_hash.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
 /** Get the hash of the geometry stored for a tree in a cmesh.
  * \param [in] cmesh   A committed cmesh.
  * \param [in] gtreeid A global tree in \a cmesh.
- * \return             The hash of the tree's geometry or if only one geometry exists, its hash.
+ * \return             The hash of the tree's geometry. If the tree does not have a geometry, returns t8_geometry_empty_hash.
  */
-size_t
+t8_geometry_hash
 t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 T8_EXTERN_C_END ();
