@@ -50,37 +50,29 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
 {
  public:
   /**
-   * Returns the cached vertex coordinates for an unstructured mesh element or accesses them and 
-   * puts in the cache if the variable has not been cached previously.
-   * \return Vector with one coordinate array for each vertex of the element.
+   * Returns the previously cached vector with the vertex coordinates of the unstructured mesh element.
+   * \return Constant reference to the cached vector with the vertex coordinates.
    */
-  std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
-  get_vertex_coordinates_cached ()
+  const std::vector<std::array<double, T8_ECLASS_MAX_DIM>>&
+  get_vertex_coordinates_cached () const
   {
-    // Check if the cache is already filled. If not, fill it.
-    if (!m_vertex_coordinates.has_value ()) {
-      const t8_element_t* element = t8_forest_get_leaf_element_in_tree (
-        this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id (),
-        this->underlying ().get_element_id ());
-      const t8_eclass_t tree_class = t8_forest_get_tree_class (
-        this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id ());
-      const int num_corners = t8_forest_get_scheme (this->underlying ().get_unstructured_mesh ()->get_forest ())
-                                ->element_get_num_corners (tree_class, element);
-      std::vector<std::array<double, T8_ECLASS_MAX_DIM>> temp_vertex_coords;
-      for (int icorner = 0; icorner < num_corners; ++icorner) {
-        std::array<double, T8_ECLASS_MAX_DIM> vertex;
-        t8_forest_element_coordinate (this->underlying ().get_unstructured_mesh ()->get_forest (),
-                                      this->underlying ().get_tree_id (), element, icorner, vertex.data ());
-        temp_vertex_coords.push_back (vertex);
-      }
-      m_vertex_coordinates = std::move (temp_vertex_coords);
-    }
-    return m_vertex_coordinates.value ();
+    return m_vertex_coordinates;
+  }
+
+  /**
+   * Setter for the cache.
+   * \param[in] new_vertex_coordinates Vector with the coordinates of the vertices of the
+   *       unstructured mesh element that should be cached.
+   */
+  void
+  set_vertex_coordinates_cached (std::vector<std::array<double, T8_ECLASS_MAX_DIM>>&& new_vertex_coordinates)
+  {
+    m_vertex_coordinates = std::move (new_vertex_coordinates);
   }
 
  private:
-  std::optional<std::vector<std::array<double, T8_ECLASS_MAX_DIM>>>
-    m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Use optional to allow no value if cache is not filled. */
+  std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
+    m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Empty vector if not filled. */
 };
 
 /**

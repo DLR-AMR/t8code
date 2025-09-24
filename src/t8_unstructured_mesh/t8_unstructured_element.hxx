@@ -110,28 +110,36 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
 
   /**
    * Getter for the vertex coordinates of the unstructured mesh element.
-   * This function uses the cached version defined in TCompetence if available and calculates if not.
+   * This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
   std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
   get_vertex_coordinates ()
   {
+    // Check if we have a cached version and if the cache has already been filled.
     if constexpr (get_vertex_coordinates_defined) {
+      auto cached_vertex = this->get_vertex_coordinates_cached ();
+      if (!cached_vertex.empty ()) {
+        return cached_vertex;
+      }
+    }
+    // Calculate the vertex coordinates.
+    const t8_element_t* element = get_element ();
+    const int num_corners
+      = t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
+    std::vector<std::array<double, T8_ECLASS_MAX_DIM>> vertex_coordinates;
+    vertex_coordinates.reserve (num_corners);
+    for (int icorner = 0; icorner < num_corners; ++icorner) {
+      std::array<double, T8_ECLASS_MAX_DIM> vertex;
+      t8_forest_element_coordinate (m_unstructured_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
+      vertex_coordinates.push_back (vertex);
+    }
+    // Fill the cache in the cached version.
+    if constexpr (get_vertex_coordinates_defined) {
+      this->set_vertex_coordinates_cached (std::move (vertex_coordinates));
       return this->get_vertex_coordinates_cached ();
     }
-    else {
-      std::vector<std::array<double, T8_ECLASS_MAX_DIM>> vertex_coordinates;
-      const t8_element_t* element = get_element ();
-      const t8_eclass_t tree_class = get_tree_class ();
-      const int num_corners
-        = t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_num_corners (tree_class, element);
-      for (int icorner = 0; icorner < num_corners; ++icorner) {
-        std::array<double, T8_ECLASS_MAX_DIM> vertex;
-        t8_forest_element_coordinate (m_unstructured_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
-        vertex_coordinates.push_back (vertex);
-      }
-      return vertex_coordinates;
-    }
+    return vertex_coordinates;
   }
 
   /**
@@ -147,8 +155,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     }
     else {
       std::array<double, T8_ECLASS_MAX_DIM> coordinates;
-      const t8_element_t* element = get_element ();
-      t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, element, coordinates.data ());
+      t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
       return coordinates;
     }
   }
