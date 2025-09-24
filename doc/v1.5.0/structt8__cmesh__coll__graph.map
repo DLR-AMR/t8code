@@ -1,0 +1,11 @@
+<map id="t8_cmesh" name="t8_cmesh">
+<area shape="rect" id="node1" title="This structure holds the connectivity data of the coarse mesh." alt="" coords="365,199,451,225"/>
+<area shape="rect" id="node2" href="$structt8__stash.html" title="The stash data structure is used to store information about the cmesh before it is committed." alt="" coords="5,95,83,121"/>
+<area shape="rect" id="node3" href="$structt8__shmem__array.html" title="Shared memory array structure." alt="" coords="107,95,239,121"/>
+<area shape="rect" id="node4" href="$structt8__scheme__cxx.html" title="The scheme holds implementations for one or more element classes." alt="" coords="264,95,387,121"/>
+<area shape="rect" id="node5" href="$structt8__eclass__scheme.html" title="This struct holds virtual functions for a particular element class." alt="" coords="255,5,396,32"/>
+<area shape="rect" id="node6" href="$structt8__geometry__handler.html" title=" " alt="" coords="411,95,573,121"/>
+<area shape="rect" id="node7" href="$structt8__geometry.html" title=" " alt="" coords="439,5,545,32"/>
+<area shape="rect" id="node8" href="$structt8__cmesh__trees.html" title=" " alt="" coords="597,95,723,121"/>
+<area shape="rect" id="node9" href="$structt8__cprofile.html" title="This struct is used to profile cmesh algorithms." alt="" coords="747,95,837,121"/>
+</map>

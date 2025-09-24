@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	
+	<!-- TITLE OF SITE -->
+	<title>Accessibility | t8code</title>
+
+
+	
+	<!-- META DATA -->
+    <meta name="description" content="t8code - Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."/>
+ 
+	<meta name="keywords" content="t8code, adaptive mesh refinement, amr, dlr, hpc, adaptive meshes, exascale, simulation, cpp, numerical, finite volume, discontinuous galerkin, Open Source">
+	<meta name="author" content="Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)">
+
+	
+
+	<!-- Mobile Specific Meta -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+ 
+   <!-- =========================
+      FAV AND TOUCH ICONS  
+    ============================== -->
+
+	<!-- ****** faviconit.com Favicons ****** -->
+	<link rel="shortcut icon" href="https://dlr-amr.github.io/t8code/theme/images/icon/t8code.ico">
+	<link rel="icon" sizes="16x16 32x32 64x64" href="https://dlr-amr.github.io/t8code/theme/images/icon/t8code.ico">
+	<link rel="icon" type="image/png" sizes="196x196" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-192.png">
+	<link rel="icon" type="image/png" sizes="160x160" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-160.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-96.png">
+	<link rel="icon" type="image/png" sizes="64x64" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-64.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-16.png">
+	<link rel="apple-touch-icon" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-57.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-114.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-144.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-60.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-120.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-76.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-180.png">
+	<meta name="msapplication-TileColor" content="#FFFFFF">
+	<meta name="msapplication-TileImage" content="https://dlr-amr.github.io/t8code/theme/images/icon/icon_t8code-144.png">
+	<meta name="msapplication-config" content="https://dlr-amr.github.io/t8code/theme/browserconfig.xml">
+	<!-- ****** faviconit.com Favicons ****** -->
+
+    <!-- =========================
+       STYLESHEETS 
+    ============================== -->
+    <!-- PRELOADER -->
+    <link rel="stylesheet" href="https://dlr-amr.github.io/t8code/theme/css/preloader.css">
+	
+	<!-- Bootstrap v3.3.4 -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- icon fonts Font Awesome 4.3.0 -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/font-awesome.min.css" rel="stylesheet"> 
+	<!-- code highlighting from pygments -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/pygments.css" rel="stylesheet"> 
+	<!-- Plugins  -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/jquery.fs.boxer.css" rel="stylesheet" /> 
+	<link rel="stylesheet" href="https://dlr-amr.github.io/t8code/theme/css/owl.carousel.css"> 
+	
+	<!-- Import Custom Styles -->
+	<link href="https://dlr-amr.github.io/t8code/theme/css/style.css" rel="stylesheet"> 
+	
+</head>
+
+
+<body class="">
+	<!-- Pre Loader -->
+	<div class="pre-loader">
+		<div class="spinner"></div>
+	</div>
+	<span id="page-top"></span>
+	<!-- Main Menu -->
+	<div class="main-menu-container navbar-fixed-top-">
+		<div id="main-menu" class="navbar navbar-default" role="navigation">
+			<div class="container">
+
+				<div class="navbar-header">
+					<!-- responsive navigation -->
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<i class="fa fa-bars"></i>
+					</button> <!-- /.navbar-toggle -->
+					<!-- Logo -->
+					<h1 class="logo">
+						<a class="navbar-brand" href="https://dlr-amr.github.io/t8code/">
+							<img height="50px" src="https://dlr-amr.github.io/t8code/images/t8code_logo_small.png" alt="">
+						</a><!-- /.navbar-brand -->
+					</h1>
+				</div> <!-- /.navbar-header -->
+
+				<nav class="collapse navbar-collapse">
+					<!-- Main navigation -->
+					<ul id="mainNavigation" class="main-mav nav navbar-nav pull-right">
+						<li><a class="not-in-home"class="active" href="https://dlr-amr.github.io/t8code/#page-top">Home</a>
+						</li>
+
+
+					<!--	<li><a href="https://dlr-amr.github.io/t8code/#contents">What is TiGL?</a></li>   -->
+						
+						<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/#contents">About t8code</a></li>
+						<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/#news">News</a></li>
+
+ 
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/showcase.html">Showcase</a></li>
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/documentation.html">Documentation</a></li>
+            					<li><a class="not-in-home" href="https://dlr-amr.github.io/t8code/pages/contact.html">Contact</a></li>
+
+
+
+						<li><a class="donate red" href="https://dlr-amr.github.io/t8code/pages/download.html">Download</a></li>     
+					</ul> <!-- /#mainNavigation -->
+				</nav> <!-- /.navbar-collapse  -->
+			</div> <!-- /.container -->
+		</div><!-- /#main-menu -->
+	</div><!-- /.main-menu-container -->
+	<!-- Main Menu End -->
+
+<section id="content">
+
+	<div class="page-name background-bg page-name-bg">
+		<div class="overlay">
+			<div class="container">
+				<h2 class="page-title m0">
+					Accessibility
+				</h2>
+				<div class="page-location">
+					<a href="https://dlr-amr.github.io/t8code/">Home</a> <span> Accessibility </span>
+				</div>
+			</div><!-- /.container -->
+		</div><!-- /.overlay -->
+	</div><!-- /.page-name -->
+
+
+
+	<section id="team"> 
+		<div id="contents"> 
+			<div class="container section-padding"> 
+				<h2 class="section-title">Accessibility</h2>
+				
+		<h2>Ac­ces­si­bil­i­ty state­ment</h2>
+
+		<p>This accessibility statement is valid for the website https://dlr-amr.github.io/t8code/.</p>
+		
+		<p>As a public sector body of the German Federal Government within the 
+		meaning of EU Directive 2016/2102, we endeavour to make our websites and
+		 mobile applications accessible in accordance with the provisions set 
+		out in the German Equality for Persons with Disabilities Act (BGG) and 
+		the German Barrier-Free Information Technology Ordinance (BITV 2.0) in 
+		order to implement EU Directive 2016/2102.</p>
+		
+		<h3>Compliance status</h3>
+		
+		<p>The accessibility requirements stem from Sections 3 (1) to (4) and 4 of BITV 2.0, adopted on the basis of Section 12d BGG.</p>
+		
+		<p>At present, the website is partially compliant with the aforementioned requirements. 
+		The website is currently being reviewed with regard to accessibility. It is therefore 
+		possible that not all accessibility requirements have been fully met. We
+		are working on addressing all identified accessibility problems.</p>
+		
+		<h3>Preparation of this accessibility statement</h3>
+		
+		<p>This statement was prepared on 18.07.2022. <!--[and last updated on [Datum]]--></p>
+		
+		<h3>Reporting barriers: feedback and contact information</h3>
+		
+		<p>Would you like to notify us of existing barriers or request information regarding the implementation of accessibility?</p>
+		
+		<p>If you would like to give us your feedback and for further information, please contact <a>barrierefreiheit@dlr.de</a>.</p>
+		
+		<h3>Conciliation procedure</h3>
+		
+		<p>If no satisfactory solution is found following your feedback, then 
+		you can turn to the conciliation body, pursuant to Section 16 BGG. The 
+		BGG conciliation body is tasked with helping to settle 
+		accessibility-related disputes out of court between people with 
+		disabilities and federal public bodies. The conciliation procedure is 
+		free of charge. No legal assistance is required.</p>
+		
+		<p>For more information on the conciliation procedure and the options for filing an application, please visit: <a>www.schlichtungsstelle-bgg.de</a></p>
+		
+		<p>You can contact the BGG conciliation body directly at: <a>info@schlichtungsstelle-bgg.de</a></p>
+		
+	
+			</div><!-- /.container -->
+		</div>
+	</section><!-- /#team -->
+
+
+	
+
+
+</section><!-- /#content -->
+
+    <div class="footer-area ">
+
+	<footer class="section-padding">
+		<div class="social-btn footer-social text-center">
+			<!--<a href="https://twitter.com" class="twitter"><i class="fa fa-twitter"></i></a>-->
+			<!--<a href="https://www.youtube.com" class="youtube"><i class="fa fa-youtube"></i></a>-->
+			<a href="https://github.com/DLR-AMR/t8code" class="github"><i class="fa fa-github"></i></a>
+		</div>
+
+
+		<div class="site-info text-center">
+			 &copy; 2022 <a href="http://www.DLR.de">Deutsches Zentrum für Luft- und Raumfahrt e.V.</a>
+
+                	&nbsp;&sdot;&nbsp;<a href="http://www.dlr.de/sc">Institute for Software Technology</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/imprint.html">Imprint</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/privacy.html">Privacy</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/terms-of-use.html">Terms of use</a></li>
+                	&nbsp;&sdot;&nbsp;<a href="https://dlr-amr.github.io/t8code/pages/accessibility.html">Accessibility</a></li>
+
+		</div>
+
+		<div id="go-top-top">
+			  <span><i class="fa fa-chevron-up"></i></span>
+		</div>
+	</footer>
+
+	</div><!-- /footer-area -->
+
+	<!-- Include modernizr-2.8.0.min.js -->
+	<script src="https://dlr-amr.github.io/t8code/theme/js/modernizr.js"></script>
+
+	<!-- Include jquery.min.js plugin -->
+	<script src="https://dlr-amr.github.io/t8code/theme/js/jquery-2.1.0.min.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/plugins.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/onePage-nav.js"></script>
+	<script src="https://dlr-amr.github.io/t8code/theme/js/jquery.ajaxchimp.min.js"></script> 
+	<script src="https://dlr-amr.github.io/t8code/theme/js/custom.js"></script>
+
+	<script>
+	(function($) {
+		"use strict";
+		
+	        $(window).on("load",function(e){
+	        	// Main menu
+	        	$('#main-menu #mainNavigation').onePageNav({
+	        		currentClass: 'active',
+	        		changeHash: false,
+	        		scrollSpeed: 750,
+	        		scrollThreshold: 0.5,
+	        		scrollOffset: 84,
+	        		filter: ':not(.sub-menu a, .not-in-home, .donate)',
+	        		easing: 'swing'
+	        	});  
+	        });
+		$(window).on('scroll', function (){ 
+			if ($(window).scrollTop() >$(window).height()-110){
+				$('#main-menu').addClass('navbar-fixed-top'); 
+			} else {
+				$('#main-menu').removeClass('navbar-fixed-top'); 
+			} 
+		});
+	 })(jQuery);
+	</script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-134418253-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+</body>
+</html>

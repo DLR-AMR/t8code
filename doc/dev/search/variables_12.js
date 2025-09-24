@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['scheme_3417',['scheme',['../structt8__forest__ghost__boundary__data__t.html#a09ab016f227200edca7b51b427fe15c8',1,'t8_forest_ghost_boundary_data_t::scheme()'],['../structt8__forest__child__type__query__t.html#a297b69d3794db8c8143cb76e7a31da72',1,'t8_forest_child_type_query_t::scheme()'],['../structt8__forest.html#a81d1861515be655a49bd458e4ab51ec4',1,'t8_forest::scheme()'],['../structt8__element__array__t.html#a9efee184a15b1635d0f22204137fbd54',1,'t8_element_array_t::scheme()']]],
+  ['scheme_5fcontext_3418',['scheme_context',['../classt8__default__scheme__common.html#a3655aaa7c577bf21c3c3e2aec755c68b',1,'t8_default_scheme_common::scheme_context()'],['../structt8__standalone__scheme.html#a92c6a09ce6f750cc322f8134b846829e',1,'t8_standalone_scheme::scheme_context()']]],
+  ['send_5fbuffers_3419',['send_buffers',['../structt8__ghost__data__exchange__t.html#acaa04d4c52c21e027ae1acfe27cbf3e8',1,'t8_ghost_data_exchange_t']]],
+  ['send_5frequests_3420',['send_requests',['../structt8__ghost__data__exchange__t.html#a386bb3c507c5a37a9a4cb1bc475c3014',1,'t8_ghost_data_exchange_t']]],
+  ['set_5fadapt_5ffn_3421',['set_adapt_fn',['../structt8__forest.html#a740d9e97a497bd4f3c770075213295f3',1,'t8_forest']]],
+  ['set_5fadapt_5frecursive_3422',['set_adapt_recursive',['../structt8__forest.html#a6c156d096986ce67df6cd2c59bf333c5',1,'t8_forest']]],
+  ['set_5fbalance_3423',['set_balance',['../structt8__forest.html#ad09d746d84b99d63395a9dc029e7d55a',1,'t8_forest']]],
+  ['set_5ffor_5fcoarsening_3424',['set_for_coarsening',['../structt8__forest.html#a6efaf1b2e8381ea1ffceda709b591b10',1,'t8_forest']]],
+  ['set_5ffrom_3425',['set_from',['../structt8__cmesh.html#aec383dae73ac96ff01ca624ee1216208',1,'t8_cmesh::set_from()'],['../structt8__forest.html#acbe2f168b1632db097d7761fd20d192e',1,'t8_forest::set_from()']]],
+  ['set_5flevel_3426',['set_level',['../structt8__forest.html#abcaf8a2be6368e1b276bb9329a090596',1,'t8_forest']]],
+  ['set_5fpartition_3427',['set_partition',['../structt8__cmesh.html#a11ad220c640167922d321663076680ea',1,'t8_cmesh']]],
+  ['set_5fpartition_5flevel_3428',['set_partition_level',['../structt8__cmesh.html#a7e1926d5e95da7d4ee5db5ef36290efc',1,'t8_cmesh']]],
+  ['set_5fpartition_5fscheme_3429',['set_partition_scheme',['../structt8__cmesh.html#a5dbc906a4ffc10d1dbfc10482d04af64',1,'t8_cmesh']]],
+  ['shmem_5ftype_3430',['shmem_type',['../structt8__shmem__array.html#a7fdda3b46ab8bc3bf0e8c8698fc9c8a6',1,'t8_shmem_array']]],
+  ['start_5findex_3431',['start_index',['../structt8__cmesh__netcdf__context__t.html#a84a68c997975e800c507c20c0ea3c587',1,'t8_cmesh_netcdf_context_t::start_index()'],['../structt8__forest__netcdf__context__t.html#a0fd4992e144e3b8c8bd9cd4385382ba4',1,'t8_forest_netcdf_context_t::start_index()']]],
+  ['stash_3432',['stash',['../structt8__cmesh.html#a8cd04fd30455ce17719573ad556858c8',1,'t8_cmesh']]],
+  ['stats_3433',['stats',['../structt8__forest.html#a1a8521de69a64fb5df70923229f4535d',1,'t8_forest']]],
+  ['stats_5fcomputed_3434',['stats_computed',['../structt8__forest.html#a54e5b370904c5c4f0333f12d27709f83',1,'t8_forest']]],
+  ['switch_5fshape_5fat_5flevel_3435',['switch_shape_at_level',['../structt8__dpyramid.html#a271fceccb3f5af95332227f47974b609',1,'t8_dpyramid']]]
+];
