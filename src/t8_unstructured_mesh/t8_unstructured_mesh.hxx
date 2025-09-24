@@ -102,15 +102,17 @@ class t8_unstructured_mesh {
                               t8_locidx_t current_element_id)
       : m_unstructured_mesh (unstructured_mesh)
     {
-      m_outer_iterator = m_unstructured_mesh->m_elements.begin () + current_tree_id;
-      // Check if the outer iterator is pointing to an valid vector.
-      if (m_outer_iterator != m_unstructured_mesh->m_elements.end ()) {
-        m_inner_iterator = m_outer_iterator->begin () + current_element_id;
-      }
-      else {
-        // If the outer iterator points to the end of the vector, define the current position of the inner
-        // iterator to end() of the last vector in the element vector. This is also the natural way for increment.
-        m_inner_iterator = (m_unstructured_mesh->m_elements.end () - 1)->end ();
+      if (!m_unstructured_mesh->m_elements.empty ()) {
+        m_outer_iterator = m_unstructured_mesh->m_elements.begin () + current_tree_id;
+        // Check if the outer iterator is pointing to an valid vector.
+        if (m_outer_iterator != m_unstructured_mesh->m_elements.end ()) {
+          m_inner_iterator = m_outer_iterator->begin () + current_element_id;
+        }
+        else {
+          // If the outer iterator points to the end of the vector, define the current position of the inner
+          // iterator to end() of the last vector in the element vector. This is also the natural way for increment.
+          m_inner_iterator = (m_unstructured_mesh->m_elements.end () - 1)->end ();
+        }
       }
     }
 
