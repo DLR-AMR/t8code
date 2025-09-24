@@ -150,14 +150,20 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   std::array<double, T8_ECLASS_MAX_DIM>
   get_centroid ()
   {
+    // Check if we have a cached version and if the cache has already been filled.
     if constexpr (get_centroid_defined) {
-      return this->get_centroid_cached ();
+      auto cached_centroid = this->get_centroid_cached ();
+      if (cached_centroid.has_value ()) {
+        return cached_centroid.value ();
+      }
     }
-    else {
-      std::array<double, T8_ECLASS_MAX_DIM> coordinates;
-      t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
-      return coordinates;
+    std::array<double, T8_ECLASS_MAX_DIM> coordinates;
+    t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
+    // Fill the cache in the cached version.
+    if constexpr (get_centroid_defined) {
+      this->set_centroid_cached (coordinates);
     }
+    return coordinates;
   }
 
   //--- Getter for the member variables. ---

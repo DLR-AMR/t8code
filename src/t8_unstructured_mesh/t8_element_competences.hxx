@@ -87,23 +87,24 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
 {
  public:
   /**
-   * Returns the cached centroid coordinates for an unstructured mesh element or accesses it and 
-   * puts in the cache if the variable has not been cached previously.
-   * \return The coordinates of the centroid of the unstructured mesh element.
+   * Returns an optional with the centroid coordinates for an unstructured mesh element if previously cached.
+   * \return Optional with coordinates of the centroid of the unstructured mesh element.
    */
-  std::array<double, T8_ECLASS_MAX_DIM>
+  std::optional<std::array<double, T8_ECLASS_MAX_DIM>>
   get_centroid_cached ()
   {
-    // Check if the cache is already filled. If not, fill it.
-    if (!m_coordinates.has_value ()) {
-      const t8_element_t* element = t8_forest_get_leaf_element_in_tree (
-        this->underlying ().get_unstructured_mesh ()->get_forest (), this->underlying ().get_tree_id (),
-        this->underlying ().get_element_id ());
-      m_coordinates = { -1. };  // Necessary such that the value() call is valid.
-      t8_forest_element_centroid (this->underlying ().get_unstructured_mesh ()->get_forest (),
-                                  this->underlying ().get_tree_id (), element, m_coordinates.value ().data ());
-    }
-    return m_coordinates.value ();
+    return m_coordinates;
+  }
+
+  /**
+   * Setter for the cache.
+   * \param[in] new_centroid_coordinates Array with the coordinates of the centroid of the
+   *       unstructured mesh element that should be cached.
+   */
+  void
+  set_centroid_cached (std::array<double, T8_ECLASS_MAX_DIM> new_centroid_coordinates)
+  {
+    m_coordinates = new_centroid_coordinates;
   }
 
  private:
