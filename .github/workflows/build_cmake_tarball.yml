@@ -30,7 +30,7 @@ env:
 
 
 on:
-  workflow_call: 
+  workflow_call:
     inputs:
       TEST_LEVEL:
         required: true
@@ -47,7 +47,7 @@ jobs:
     timeout-minutes: 90
     steps:
 #
-# Setup and bootstrap
+# Setup
 #
     - uses: actions/checkout@v5
       with:
@@ -66,7 +66,7 @@ jobs:
       run: git submodule update
 
 #
-#  T8CODE 
+#  T8CODE
 #     with p4est and sc as internal dependencies which is needed for make dist
 #
 #
@@ -107,7 +107,7 @@ jobs:
     - name: update Github_env
       run: export TAR_DIR="$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" &&
           echo TAR_DIR="$TAR_DIR" >>$GITHUB_ENV
-          
+
 # build config vars
     - name: Set test level
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
@@ -128,7 +128,7 @@ jobs:
     - name: build
       run: cd build_tar && ninja
     - name: install
-      run: cd build_tar && ninja install 
+      run: cd build_tar && ninja install
     - name: check serial
       run: cd build_tar && ctest -R _serial
     - name: check parallel
