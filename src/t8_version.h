@@ -23,8 +23,6 @@
 /** \file t8_version.h
  * This file offers additional functions and support regarding the t8code version.
  * The version number of t8code is a string "X.Y.Z-HASH" where the "-HASH" part is optional.
- * Additional macros are defined in t8_config.h and the functions in this header provide
- * an interface to these macros.
  *
  *  Macro  | Meaning | example
  * ------- | ------- | ------
