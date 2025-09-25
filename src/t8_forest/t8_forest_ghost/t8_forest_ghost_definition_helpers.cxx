@@ -44,7 +44,7 @@ t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, [[maybe_unused]] con
 }
 
 /* The equal function for two global tree hash objects.
- * Two t8_ghost_gtree_hash_t are considered equal if theit global tree ids are the same.
+ * Two t8_ghost_gtree_hash_t are considered equal if the global tree ids are the same.
  */
 static int
 t8_ghost_gtree_equal_function (const void *ghost_gtreea, const void *ghost_gtreeb, [[maybe_unused]] const void *user)
