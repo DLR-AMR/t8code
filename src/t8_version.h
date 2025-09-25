@@ -91,7 +91,7 @@ int
 t8_get_version_minor ();
 
 /** Return the patch version number of t8code.
- * \return The patch version unmber of t8code.
+ * \return The patch version number of t8code.
  */
 int
 t8_get_version_patch ();
