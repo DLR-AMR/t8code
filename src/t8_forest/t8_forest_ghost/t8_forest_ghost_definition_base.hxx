@@ -140,7 +140,7 @@ struct t8_forest_ghost_definition
 
   /**
    * Constructor for the derived classes to set the correct type for them.
-   * \param [in] g_type   The type (faces, edges, userdefind, ...) of the ghost_definition
+   * \param [in] g_type   The type (faces, edges, user_defined, ...) of the ghost_definition
    */
   explicit t8_forest_ghost_definition (t8_ghost_type_t g_type): ghost_type (g_type)
   {

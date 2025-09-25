@@ -50,7 +50,7 @@ extern const char *t8_ghost_type_to_string[T8_GHOST_COUNT];
 /**
  * Satisfy the C interface of forest
  * Create a new ghost_definition of type face with given version
- * \param [in]    version version of the used ghost_algorithm (1,2 or 3), 3 is default 
+ * \param [in]    version version of the used ghost_algorithm (1,2 or 3), 3 is default
  * \return a pointer to a new ghost definition of type face
  */
 t8_forest_ghost_definition_c *
@@ -70,12 +70,12 @@ t8_forest_ghost_definition_face_get_version (const t8_forest_ghost_definition_c 
  * Satisfy the C interface of forest
  * Return the type of a ghost_definition
  * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_definition or a derived class
- * \return the type of a ghost definition (T8_GHOST_NONE, T8_GHOST_FACES, T8_GHOST_USERDEFINED, ...)
+ * \return the type of a ghost definition (T8_GHOST_NONE, T8_GHOST_FACES, T8_GHOST_USER_DEFINED, ...)
  */
 t8_ghost_type_t
 t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_definition);
 
-/** 
+/**
  * Satisfy the C interface of forest
  * Do a ref on the ghost_definition
  * Needed in t8_forest_commit
@@ -84,7 +84,7 @@ t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_d
 void
 t8_forest_ghost_definition_ref (t8_forest_ghost_definition_c *ghost_definition);
 
-/** 
+/**
  * Satisfy the C interface of forest
  * Do a unref on the ghost_definition
  * Needed in t8_forest_commit and t8_forest_set_ghost_ext
