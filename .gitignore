@@ -6,14 +6,6 @@ build/
 .deps/
 .libs/
 
-Makefile
-Makefile.in
-Makefile.t8.mk
-Makefile.t8.pre
-
-aclocal.m4
-autom4te.cache
-
 libtool
 configure
 config.log
@@ -26,11 +18,6 @@ CMakeCache.txt
 CMakeFiles/
 version.txt
 Testing/
-
-src/stamp-h1
-src/t8_config.h
-src/pre_config.h
-src/pre_config.h.in
 
 *.o
 *.lo
@@ -99,8 +86,3 @@ test/t8_schemes/t8_test_pyra_face_neigh
 test/t8_schemes/t8_test_successor
 test/t8_test_netcdf_linkage
 test/t8_test_vtk_linkage
-config/libtool.m4
-config/ltoptions.m4
-config/ltsugar.m4
-config/ltversion.m4
-config/lt~obsolete.m4
