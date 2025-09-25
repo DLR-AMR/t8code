@@ -91,11 +91,7 @@ int
 t8_get_version_minor ();
 
 /** Return the patch version number of t8code.
- * \return The patch version unmber of t8code. negative on error.
- * \note In contrast to \ref t8_get_version_major and \ref t8_get_version_minor
- *  the patch version number must be computed from \a T8_VERSION_POINT
- *  This computation may result in an error or an invalid patch number.
- *  In that case a negative patch version is returned.
+ * \return The patch version unmber of t8code.
  */
 int
 t8_get_version_patch ();
