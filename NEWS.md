@@ -1,3 +1,28 @@
+# Ghost interface restructuring
+The ghost interface is one of the oldest parts of t8code and needed a restructuring to be fit for future changes. Until now, only face-neighbor ghosts communication was allowed. The new modular interface allows for arbitrary ghost definitions and is designed similar to the already known geometry and scheme interfaces.
+
+## What has changed?
+The ghost module consisted basically of two very large files, a source and a header file. This is now broken down into multiple files inside a ghost folder. There are now two relevant parts which are separated.
+
+### Ghost definitions
+Ghost definitions define, as the name suggests, what exactly a ghost is. This means that there now is the already known definition of a face-neighbor ghost. It is encapsulated in its own class, which derives from a common ghost definition base class `t8_forest_ghost_definition`.
+Every newly defined ghost definition has to either derive from this base class or from its derived class `t8_forest_ghost_definition_w_search`, which implements a tree-search based ghost definition. This means, that only the search data and search query have to be defined to have a valid ghost definition. In contrast, the base class requires the implementation of all functions, but there are still helper functions defined in `t8_forest_ghost_definition_helpers.hxx`.
+To use these ghost definitions, they can be added to the forest via `t8_forest_set_ghost_ext`.
+
+### Ghost element access
+The second part of the ghost module is the ghost element access. This part is encapsulated in `t8_ghost.h` and `t8_ghost.cxx`.
+The ghost element access happens during the traversal of the elements of a process. Mostly, this is not needed by the user and automatically called when users want to access neighbors of elements. But in more complex neighborship relations, it can be necessary to access the ghost elements directly via the functions defined here.
+
+## What do I have to change?
+If you only used face-neighbor ghosts, you do not have to change anything. If you used different versions of the face ghost via `t8_forest_set_ghost_ext` you now have to construct the ghost definition object directly and pass it to `t8_forest_set_ghost_ext`.
+```cpp
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
+
+t8_forest_set_ghost_ext (forest_ghost, 1, new t8_forest_ghost_definition_face (<ghost_version>>));
+```
+If you used a custom ghost definition, you now have to derive from the base class or the search-based derived class. You can look at the already implemented face-neighbor ghost definition for an example.
+
+
 # Updated contribution workflow.
 
 The team of main-developers of t8code and contributors to t8code is getting bigger and we needed an improved workflow to manage all of our contributions.
@@ -19,7 +44,7 @@ Please execute the steps in this order to ensure that your issue has the correct
 No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no issues are referenced using the Closes-keyword, an issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
 
 
-# User Updates for the upcoming t8code v4.0.0
+# New element-scheme structure
 
 We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to [change](#what-do-you-have-to-change) to be on par with the upcoming t8code v4.0.0
 
@@ -194,4 +219,4 @@ t8_scheme_new_default (void){
 
 ## Renaming of macros T8_WITH_ to T8_ENABLE_
 We renamed the macros T8_WITH_... to T8_ENABLE_... for consistency reasons with the related cmake options (T8CODE_ENABLE...) and other macros. We are currently working on an automatized way to check for wrong usages.
-Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script. 
+Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script.
