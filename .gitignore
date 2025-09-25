@@ -1,13 +1,11 @@
 sc/
 p4est/
-build-aux/
 build/
 
 .deps/
 .libs/
 
 libtool
-configure
 config.log
 config.status
 
