@@ -13,8 +13,8 @@
 # Adds compiler flags necessary to be able to collect coverage information.
 # 
 function(append_coverage_compiler_flags)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --coverage" PARENT_SCOPE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g --coverage" PARENT_SCOPE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --coverage -O0" PARENT_SCOPE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g --coverage -O0" PARENT_SCOPE)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage" PARENT_SCOPE)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage" PARENT_SCOPE)
 endfunction() # append_coverage_compiler_flags
@@ -79,8 +79,6 @@ function(setup_target_for_coverage)
 
     # Generate HTML file using genhtml.
     COMMAND ${GENHTML_PATH} -o ${Coverage_NAME} ${Coverage_NAME}.info
-    # Show result in terminal.
-    COMMAND ${LCOV_PATH} --list ${Coverage_NAME}.info
 
     BYPRODUCTS
       ${Coverage_NAME}.base
@@ -98,6 +96,6 @@ endfunction() # setup_target_for_coverage
 append_coverage_compiler_flags()
 setup_target_for_coverage(
   NAME coverage
-  EXCLUDE "${CMAKE_SOURCE_DIR}/sc*"
-  LCOV_ARGS "--no-external"
+  EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*"
+  LCOV_ARGS --no-external --ignore-errors gcov,mismatch --demangle-cpp
 )
