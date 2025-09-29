@@ -54,7 +54,7 @@ for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
   /* Get the number of elements in the tree itree. */
   const t8_locidx_t num_elems = t8_forest_get_tree_num_elements (forest, itree);
   /* Loop over all elements */
-  for (t8locidx_t ielem = 0; ielem < num_elems; ++ielem){
+  for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem){
     /* Get the element with tree-local-id ielem */
     const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
     /* Call a function on that element */
@@ -74,7 +74,7 @@ for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree){
   /* Get the class of the tree. */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
   /* Loop over all elements */
-  for (t8locidx_t ielem = 0; ielem < num_elems; ++ielem){
+  for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem){
     /* Get the element with tree-local-id ielem */
     const t8_element_t *elem = t8_forest_get_element_in_tree (forest, itree, ielem);
     /* Call a function on that element */
@@ -124,7 +124,7 @@ A list of all renamings (without considering the deletion of the prefix) is here
 - `t8_element_linear_id` -> `element_set_linear_id`
 - `t8_element_first_descendant` -> `element_get_first_descendant`
 - `t8_element_last_descendant` -> `element_get_last_descendant`
-- `t8_element_successor` -> `element_construct_successsor`
+- `t8_element_successor` -> `element_construct_successor`
 - `t8_element_anchor` -> `element_get_anchor`
 - `t8_element_vertex_integer_coords` -> `element_get_vertex_integer_coords`
 - `t8_element_vertex_reference_coords` -> `element_get_vertex_reference_coords`

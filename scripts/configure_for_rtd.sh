@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element types in parallel.
@@ -18,20 +20,17 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-include( CheckCSourceCompiles )
-function( check_netcdf_par )
-  set( CMAKE_REQUIRED_LIBRARIES NetCDF::NetCDF )
+git submodule init
+git submodule update
 
-  check_c_source_compiles(
-    "
-        #include <netcdf.h>
-        #include <netcdf_par.h>
+# Create the build directory
+mkdir build
 
-        int main() {
-          return 0;
-        }
-    "
-    NETCDF_HAVE_NETCDF_PAR)
-endfunction()
+# Navigate into the build directory
+cd build
 
-check_netcdf_par()
+
+cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF
+
+# Return to the parent directory
+cd ..

@@ -35,14 +35,27 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* This is the adapt function called during one round of balance.
+/** This is the adapt function called during one round of balance.
  * We refine an element if it has any face neighbor with a level larger
  * than the element's level + 1.
- */
-/* TODO: We currently do not adapt recursively since some functions such
+ *
+ * TODO: We currently do not adapt recursively since some functions such
  * as half neighbor computation require the forest to be committed. Thus,
  * we pass forest_from as a parameter. But doing so is not valid anymore
- * if we refine recursively. */
+ * if we refine recursively. 
+ * 
+ * \param[in, out] forest       The forest to be adapted / balanced.
+ * \param[in]      forest_from  The forest from which the current one is derived.
+ * \param[in]      ltree_id     The local id of the tree the element is in.
+ * \param[in]      tree_class   The element class of the tree the element is in.
+ * \param[in]      lelement_id  The local id of the element within the tree.
+ * \param[in]      scheme       The scheme class.
+ * \param[in]      is_family    A switch indicating whether the passed elements form a family.
+ * \param[in]      num_elements The number of elements passed as input.
+ * \param[in]      elements     The elements array.
+ * 
+ * \return 1 if the element(s) has/have to be refined, 0 otherwise.
+ */
 static int
 t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t ltree_id,
                          const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
@@ -102,7 +115,11 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
   return 0;
 }
 
-/* Collective function to compute the maximum occurring refinement level in a forest */
+/**
+ * Collective function to compute the maximum occurring refinement level in a forest 
+ * 
+ * \param[in,out] forest  The forest which the maximum refinement level is computed for and stored in.
+ */
 static void
 t8_forest_compute_max_element_level (t8_forest_t forest)
 {
