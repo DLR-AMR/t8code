@@ -97,5 +97,5 @@ append_coverage_compiler_flags()
 setup_target_for_coverage(
   NAME coverage
   EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*"
-  LCOV_ARGS --no-external --ignore-errors gcov,mismatch
+  LCOV_ARGS --no-external --ignore-errors gcov
 )

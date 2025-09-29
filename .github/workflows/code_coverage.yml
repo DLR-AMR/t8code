@@ -62,15 +62,8 @@ jobs:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
       run: tar -xf artifact.tar && rm artifact.tar
-    ## Install lcov.
-    - name: Install lcov
-      run: sudo apt-get install -y lcov
-    - name: Print lcov version
-      run: lcov --version
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
-    - name: Print lcov version
-      run: lcov --version
       # This seems to be necessary because of the docker container.
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -85,6 +78,11 @@ jobs:
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
+    ## Install lcov.
+    - name: Install lcov
+      run: sudo apt-get install -y lcov
+    - name: Print lcov version
+      run: lcov --version
 
 #
 #  T8CODE
