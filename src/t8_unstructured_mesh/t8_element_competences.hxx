@@ -31,9 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <t8_types/t8_operators.hxx>
-#include <t8_element.h>
-#include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
+#include <t8_eclass.h>
 #include <array>
 #include <vector>
 #include <optional>
