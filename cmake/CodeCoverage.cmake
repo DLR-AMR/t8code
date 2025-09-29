@@ -93,6 +93,8 @@ function(setup_target_for_coverage)
 endfunction() # setup_target_for_coverage
 
 # Call functions defined above with customized arguments.
+# Attention: For some gcov versions, you have to add --ignore-errors mismatch to the LCOV_ARGS.
+# This seems to be a common gcov problem.
 append_coverage_compiler_flags()
 setup_target_for_coverage(
   NAME coverage
