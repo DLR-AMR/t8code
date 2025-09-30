@@ -40,8 +40,8 @@
 
 /**
  * A struct to hold the information about a ghost facejoin.
- * 
- * It contains the global id of the ghost, the local id of the ghost, 
+ *
+ * It contains the global id of the ghost, the local id of the ghost,
  * and the current number of inserted ghost attributes.
  */
 typedef struct ghost_facejoins_struct
@@ -514,7 +514,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
 /**
  * Commit a cmesh from stash.
- * 
+ *
  * \param[in] cmesh The cmesh to commit.
  * \param[in] comm The MPI communicator to use.
  */
@@ -563,6 +563,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
+  cmesh->mpicomm = comm;
+
   if (cmesh->set_from != NULL) {
     cmesh->dimension = cmesh->set_from->dimension;
     if (cmesh->face_knowledge == -1) {
