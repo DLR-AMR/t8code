@@ -66,7 +66,7 @@ t8_cmesh_get_num_local_vertices (const t8_cmesh_t cmesh);
 /** Get the global vertex indices of a tree in its local vertex order.
  * \param [in] cmesh A committed cmesh.
  * \param [in] local_tree A local tree in \a cmesh.
- * \param [out] num_vertices The number of vertices of \a local_tree
+ * \param [out] num_vertices The number of vertices of \a local_tree, if not null
  * \return The global vertices of \a local_tree
  */
 const t8_gloidx_t *
