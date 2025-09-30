@@ -234,7 +234,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_flops_snap (&fi, &snapshot);
 #endif
 
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  T8_ASSERT (t8_cmesh_get_mpicomm (cmesh) == comm);
 
   if (cmesh->face_knowledge != 3) {
     t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");

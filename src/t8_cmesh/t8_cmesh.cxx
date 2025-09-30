@@ -868,7 +868,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   if (!meta_info.pre_commit) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh_out));
-    T8_ASSERT (t8_cmesh_comm_is_valid (cmesh_out, comm));
+    T8_ASSERT (t8_cmesh_get_mpicomm (cmesh_out) == comm);
   }
 #endif
   return cmesh_out;
@@ -1242,7 +1242,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
      * This is useful for debugging. */
     if (t8_cmesh_is_committed (cmesh)) {
       comm = t8_shmem_array_get_comm (cmesh->tree_offsets);
-      T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+      T8_ASSERT (t8_cmesh_get_mpicomm (cmesh) == comm);
     }
 #endif
     /* Destroy the shared memory array */
