@@ -125,19 +125,22 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
     for (; edge_iter != cad_shape_edge_map.cend (); ++edge_iter) {
       int index = cad_shape_edge_map.FindIndex (*edge_iter);
       const TopoDS_Edge& edge = TopoDS::Edge (*edge_iter);
-      if (!BRep_Tool::Degenerated (edge)
-          && !edge_bboxes[index].IsOut (mesh_pt)) { /* Check if mesh node within bounding box */
+
+      /* Check if mesh node within bounding box */
+      if (!BRep_Tool::Degenerated (edge) && !edge_bboxes[index].IsOut (mesh_pt)) {
         Standard_Real first, last;
         Handle (Geom_Curve) curve = BRep_Tool::Curve (edge, first, last);
         GeomAPI_ProjectPointOnCurve proj (mesh_pt, curve, first, last);
-        if (proj.NbPoints ()
-            && proj.LowerDistance ()
-                 <= tolerance) { /* Check if projection was successful and mesh node within tolerance of curve*/
+
+        /* Check if projection was successful and mesh node within tolerance of curve*/
+        if (proj.NbPoints () && proj.LowerDistance () <= tolerance) {
           t8_geom_data gd;
           gd.entity_dim = 1;
           gd.entity_tag = index;
           gd.location_on_curve = { proj.LowerDistanceParameter (), -1 };
-          boundary_node_geom_data_map.insert ({ *bnl_iter, gd }); /* append {global ID, t8_geom_data} to map */
+
+          /* append {global ID, t8_geom_data} to map */
+          boundary_node_geom_data_map.insert ({ *bnl_iter, gd });
           break;
         }
       }
@@ -156,16 +159,18 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
         Handle (Geom_Surface) surface = BRep_Tool::Surface (face);
         GeomAPI_ProjectPointOnSurf proj (mesh_pt, surface);
         proj.Perform (mesh_pt);
-        if (proj.NbPoints ()
-            && proj.LowerDistance ()
-                 <= tolerance) { /* Check if projection was successful and mesh node within tolerance of curve*/
+
+        /* Check if projection was successful and mesh node within tolerance of curve*/
+        if (proj.NbPoints () && proj.LowerDistance () <= tolerance) {
           double u, v;
           proj.LowerDistanceParameters (u, v);
           t8_geom_data gd;
           gd.entity_dim = 2;
           gd.entity_tag = index;
           gd.location_on_curve = { u, v };
-          boundary_node_geom_data_map.insert ({ *bnl_iter, gd }); /* append {global ID, t8_geom_data} to map */
+
+          /* append {global ID, t8_geom_data} to map */
+          boundary_node_geom_data_map.insert ({ *bnl_iter, gd });
           break;
         }
       }

@@ -130,8 +130,6 @@ add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOUR
 add_t8_cpp_test( NAME t8_gtest_multiple_attributes_parallel                 SOURCES t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOURCES t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
-add_t8_cpp_test( NAME t8_gtest_boundary_node_list_serial                    SOURCES t8_cmesh/t8_cmesh_cad/t8_gtest_boundary_node_list.cxx )
-add_t8_cpp_test( NAME t8_gtest_cad_boundar_serial                           SOURCES t8_cmesh/t8_cmesh_cad/t8_gtest_cad_boundary.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
 add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
@@ -159,6 +157,9 @@ add_t8_cpp_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_forest_in
 
 if( T8_ENABLE_OCC )
     add_t8_cpp_test( NAME t8_gtest_geometry_cad_serial                  SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
+    add_t8_cpp_test( NAME t8_gtest_boundary_node_list_serial                    SOURCES t8_cmesh/t8_cmesh_cad/t8_gtest_boundary_node_list.cxx )
+    add_t8_cpp_test( NAME t8_gtest_cad_boundar_serial                           SOURCES t8_cmesh/t8_cmesh_cad/t8_gtest_cad_boundary.cxx )
+
 endif()
 add_t8_cpp_test( NAME t8_gtest_geometry_linear_serial                   SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
 add_t8_cpp_test( NAME t8_gtest_geometry_lagrange_serial                 SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange.cxx )

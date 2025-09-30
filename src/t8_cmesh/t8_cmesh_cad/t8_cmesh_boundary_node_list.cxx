@@ -22,7 +22,10 @@
 
 /** \file t8_cmesh_boundary_node_list.cxx
  *
- * TODO: document this file
+ * Class for boundary node list for a given cmesh. The class stores an unordered_set
+ * of global node indices that are taken from the tree-to-vertex list. 
+ * This class is used for the remapping of the nodes to the geometry in t8_cmesh_cad_boundary
+ * 
  */
 
 #include <t8_cmesh.h>
@@ -49,16 +52,20 @@ t8_boundary_node_list::compute_boundary_node ()
   for (t8_locidx_t i_tree = 0; i_tree < num_trees; i_tree++) {
     const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, i_tree);
     int num_faces = t8_eclass_num_faces[(int) eclass];
+
+    /* Get global node IDs of i_tree */
     const std::span<const t8_gloidx_t> global_vertices_of_tree
-      = cmesh->vertex_connectivity->get_global_vertices_of_tree (i_tree); /* Get global node IDs of i_tree */
-    for (int i_face = 0; i_face < num_faces; i_face++) {                  /* Iterate through faces of i_tree */
+      = cmesh->vertex_connectivity->get_global_vertices_of_tree (i_tree);
+
+    /* Iterate through faces of i_tree */
+    for (int i_face = 0; i_face < num_faces; i_face++) {
       const int vertex_per_face = t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_face]];
 
-      if (t8_cmesh_tree_face_is_boundary (cmesh, i_tree, i_face)) { /* Check if i_face is boundary face*/
+      /* Check if i_face is boundary face*/
+      if (t8_cmesh_tree_face_is_boundary (cmesh, i_tree, i_face)) {
         for (int count = 0; count < vertex_per_face; count++) {
-          boundary_node_list.insert (
-            global_vertices_of_tree[t8_face_vertex_to_tree_vertex[eclass][i_face]
-                                                                 [count]]); /* Append global node IDs of i_face*/
+          /* Append global node IDs of i_face*/
+          boundary_node_list.insert (global_vertices_of_tree[t8_face_vertex_to_tree_vertex[eclass][i_face][count]]);
         }
       }
     }

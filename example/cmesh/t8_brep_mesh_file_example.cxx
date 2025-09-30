@@ -1,4 +1,3 @@
-#include <t8.h>
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
 #include <TopoDS_Shape.hxx>

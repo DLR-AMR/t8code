@@ -21,11 +21,11 @@
 */
 
 /** \file t8_cmesh_cad_boundary.hxx
- * Enables the correct identification and remapping of boundary nodes on a geometry
+ * Enables the correct remapping of boundary nodes on a geometry
  */
 
-#ifndef T8_CMESH_CAD
-#define T8_CMESH_CAD
+#ifndef T8_CMESH_CAD_BOUNDARY
+#define T8_CMESH_CAD_BOUNDARY
 
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_types.h>
@@ -82,4 +82,4 @@ class t8_boundary_node_geom_data_map {
   TopTools_IndexedMapOfShape cad_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
 };
 
-#endif /* T8_CMESH_CAD */
+#endif /* T8_CMESH_CAD_BOUNDARY */
