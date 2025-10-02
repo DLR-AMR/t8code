@@ -26,7 +26,10 @@
 # We have to use the -i argument, so that clang-format directly alters the
 # files instead of printing the changes to stdout. The --style=file
 # arguments tells clang-format to look for a *.clang-format file.
-FORMAT_OPTIONS="-i --style=file"
+#
+# If you call this script with "NO_CHANGE" as first argument it will run
+# in dry-mode, not changing the file contents.
+FORMAT_OPTIONS="--Werror -i --style=file"
 
 # Required version of the clang format program.
 REQUIRED_VERSION_MAJOR="17"
@@ -56,15 +59,99 @@ if [[ "$MAJOR" != "$REQUIRED_VERSION_MAJOR" || $MINOR != "$REQUIRED_VERSION_MINO
   exit 1
 fi
 
+#
+#  Parsing of input files and throwing out files to be ignored
+#
+# Read all lines from the IGNORE_FILE 
+# that are not empty and are not comments (i.e. start with '#').
+# Determine base directory of git repo
+GIT_REPO_PATH=$(git rev-parse --show-toplevel)
+
+IGNORE_FILE=${GIT_REPO_PATH}/scripts/t8indent_ignore.sh
+files_to_ignore=()
+while read line; do
+    if [[ ${line:0:1} != "#" ]] && [[ $line != "" ]]
+    then
+        files_to_ignore+=("$line")
+    fi
+done <$IGNORE_FILE
+
+#
+# Check if first argument is "NO_CHANGE", if so
+# the file content is not changed.
+#
+OUTFILE_OPTION=
+NO_CHANGE=FALSE
+if [[ $1 == "NO_CHANGE" ]]
+then
+  shift # Removes first argument from $@ list
+  NO_CHANGE=TRUE
+  FORMAT_OPTIONS="${FORMAT_OPTIONS} --dry-run"
+fi
+
+
+# Iterate over all arguments and throw
+# aways those filenames that we should ignore.
+# Also check if suffix is ".c" ".cxx" ".h" or ".hxx"
+for arg in "$@"
+do
+  FILE_SUFFIX="${arg##*.}"
+  if ! [ $FILE_SUFFIX = "c" -o $FILE_SUFFIX = "h" -o $FILE_SUFFIX = "cxx" -o $FILE_SUFFIX = "hxx" ]
+  then
+    echo "ERROR: File "$arg" does not have valid suffix (.c .h .cxx .hxx)."
+    exit 1
+  fi
+
+  ignore_arg=0
+  # Iterate over each ignore filename
+  for ignore_file in "${files_to_ignore[@]}"
+    do
+    if [[ "$arg" -ef "${GIT_REPO_PATH}/$ignore_file" ]]
+    then 
+      # arg matches and will be ignored
+      echo The file \"$arg\" will be ignored by indentation as specified in \"$IGNORE_FILE\".
+      ignore_arg=1
+    fi
+  done
+  # Now add all non-ignored files to a new argument array
+  if [[ $ignore_arg == 0 ]]
+  then
+    newargs+=("$arg")
+  fi
+done
+
+
 for arg in "$@" ; do
   if [ "x$arg" == "x-o" ]; then
     WANTSOUT=1
   fi
 done
 if [ -z "$WANTSOUT" ]; then
-  for NAME in "$@" ; do
-    $FORMAT $FORMAT_OPTIONS "$NAME"
+  for NAME in "${newargs[@]}" ; do
+    if [[ $NO_CHANGE == "TRUE" ]]
+    then
+      $FORMAT $FORMAT_OPTIONS "$NAME" 2>&1
+      status=$?
+    else
+      $FORMAT $FORMAT_OPTIONS "$NAME"
+      status=$?
+    fi
   done
 else
-  $FORMAT $FORMAT_OPTIONS $@
+  if [[ $NO_CHANGE == "TRUE" ]]
+  then
+    $FORMAT $FORMAT_OPTIONS ${newargs[@]} 2>&1
+    status=$?
+  else
+    $FORMAT $FORMAT_OPTIONS ${newargs[@]}
+    status=$?
+  fi  
+fi
+
+# If the file content was not change, the return
+# value determines whether or not the file was
+# indented.
+if [[ $NO_CHANGE == "TRUE" ]]
+then
+  exit $status
 fi
