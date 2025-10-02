@@ -50,7 +50,9 @@ make_grid<t8_forest_t> ()
 {
   t8_cmesh_t cmesh = make_grid<t8_cmesh_t> ();
   const t8_scheme *scheme = t8_scheme_new_default ();
-  return t8_forest_new_uniform (cmesh, scheme, 2, 0, sc_MPI_COMM_WORLD);
+  const int uniform_level = 2;
+  const int do_ghosts = 1;
+  return t8_forest_new_uniform (cmesh, scheme, uniform_level, do_ghosts, sc_MPI_COMM_WORLD);
 }
 
 /**
@@ -114,6 +116,24 @@ use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, [[ma
 #endif
 }
 
+void
+vtk_writer_test_fill_data (const t8_locidx_t cells_to_write_count, std::vector<double> &scalar_data,
+                           std::vector<double> &vector_data)
+{
+  scalar_data.resize (cells_to_write_count);
+  vector_data.resize (3 * cells_to_write_count);
+  // Fill scalar data vector with entries 0,1/10,...,(N-1)/10
+  //    vector[n] = (n/10.)
+  // Fill vector data vector with entries (0, 0, 42), (0.1,-0.1,42), ...
+  //    vector[n] = (n/10.,-n/10., 42)
+  std::generate (scalar_data.begin (), scalar_data.end (), [n = 0] () mutable { return (n++) / 10.; });
+  std::generate (vector_data.begin (), vector_data.end (), [n = 0, scalar_data] () mutable {
+    double scalar_value = scalar_data[n / 3];
+    double vector_values[3] = { scalar_value, -scalar_value, 42. };
+    return vector_values[n++ % 3];
+  });
+}
+
 /**
  * Templated class to test the vtk writer for forests and cmeshes. 
  * 
@@ -126,14 +146,28 @@ class vtk_writer_test: public testing::Test {
   SetUp () override
   {
     grid = make_grid<grid_t> ();
-    writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk"), 0, NULL,
-                                     sc_MPI_COMM_WORLD);
+    const t8_locidx_t cells_to_write_count = num_cells_to_write (grid, 1);
+
+    // Fill the test data vectors with dummy data.
+    vtk_writer_test_fill_data (cells_to_write_count, scalar_data, vector_data);
+
+    // Fill the vtk_data descriptors
+    vtk_data[0].type = T8_VTK_SCALAR;
+    strncpy (vtk_data[0].description, "Testdata scalar i/10.", BUFSIZ);
+    vtk_data[0].data = scalar_data.data ();
+    vtk_data[1].type = T8_VTK_VECTOR;
+    strncpy (vtk_data[1].description, "Testdata vector (i/10.,-i/10.,42)", BUFSIZ);
+    vtk_data[1].data = vector_data.data ();
+
+    writer = new vtk_writer<grid_t> (true, true, true, true, true, true, std::string ("test_vtk_writer"), num_vtk_data,
+                                     vtk_data, sc_MPI_COMM_WORLD);
   }
 
   int
   grid_c_interface ()
   {
-    return use_c_interface (grid, "test_vtk_c_interface", 1, 1, 1, 1, 1, 1, 0, NULL, sc_MPI_COMM_WORLD);
+    return use_c_interface (grid, "test_vtk_writer_c_interface", 1, 1, 1, 1, 1, 1, num_vtk_data, vtk_data,
+                            sc_MPI_COMM_WORLD);
   }
 
   void
@@ -148,6 +182,10 @@ class vtk_writer_test: public testing::Test {
 
   grid_t grid;
   vtk_writer<grid_t> *writer;
+  std::vector<double> scalar_data;             // Scalar data used for data output
+  std::vector<double> vector_data;             // Vector data used for data output
+  static constexpr int num_vtk_data = 2;       // Number of data items
+  t8_vtk_data_field_t vtk_data[num_vtk_data];  // The metadata descriptor for data output
 };
 
 TYPED_TEST_SUITE_P (vtk_writer_test);
