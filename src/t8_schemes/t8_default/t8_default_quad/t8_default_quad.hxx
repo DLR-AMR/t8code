@@ -541,6 +541,58 @@ class t8_default_scheme_quad: public t8_default_scheme_common<t8_default_scheme_
   void
   element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
 
+  constexpr int
+  element_max_num_vertex_neighbors () const
+  {
+    return 4;
+  }
+
+  inline void
+  element_vertex_neighbors (const t8_element_t *element, const int vertex, int *num_neighbors, t8_element_t **neighbors,
+                            int *neigh_ivertices) const
+  {
+    const p4est_quadrant_t *elem = (p4est_quadrant_t *) element;
+    const p4est_qcoord_t len = P4EST_QUADRANT_LEN (elem->level);
+    *num_neighbors = 0;
+    constexpr int num_possible_neighbors = 4;
+    for (int icube = 0; icube < num_possible_neighbors; icube++) {
+      p4est_qcoord_t shift = (vertex & 1) + (icube & 1);
+      shift -= 1;
+      shift *= len;
+      ((p4est_quadrant_t *) neighbors[*num_neighbors])->x = elem->x + shift;
+      const int mask = 1 << 1;
+      shift = (vertex & mask) + (icube & mask);
+      shift >>= 1;
+      shift -= 1;
+      shift *= len;
+      ((p4est_quadrant_t *) neighbors[*num_neighbors])->y = elem->y + shift;
+
+      ((p4est_quadrant_t *) neighbors[*num_neighbors])->level = elem->level;
+
+      const int neigh_cube_vertex = num_possible_neighbors - 1 - icube;
+      neigh_ivertices[*num_neighbors] = neigh_cube_vertex;
+      if (element_is_equal (element, neighbors[*num_neighbors])
+          || ((p4est_quadrant_t *) neighbors[*num_neighbors])->x < 0
+          || ((p4est_quadrant_t *) neighbors[*num_neighbors])->x >= P4EST_ROOT_LEN
+          || ((p4est_quadrant_t *) neighbors[*num_neighbors])->y < 0
+          || ((p4est_quadrant_t *) neighbors[*num_neighbors])->y >= P4EST_ROOT_LEN) {
+        continue;
+      }
+      ++(*num_neighbors);
+    }
+  }
+
+  inline void
+  element_corner_descendant (const t8_element_t *element, int vertex, int level, t8_element_t *descendant) const
+  {
+    const p4est_quadrant_t *elem = (const p4est_quadrant_t *) element;
+    p4est_quadrant_t *desc = (p4est_quadrant_t *) descendant;
+    const p4est_qcoord_t coord_offset = P4EST_QUADRANT_LEN (elem->level) - P4EST_QUADRANT_LEN (level);
+    desc->x = elem->x + coord_offset * ((vertex & 1 << 0) >> 0);
+    desc->y = elem->y + coord_offset * ((vertex & 1 << 1) >> 1);
+    desc->level = level;
+  }
+
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 

@@ -229,7 +229,7 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
   t8_forest_ghost_t ghost;
 
   /* We currently only support face-neighbor ghosts */
-  T8_ASSERT (ghost_type == T8_GHOST_FACES);
+  T8_ASSERT (ghost_type == T8_GHOST_FACES || ghost_type == T8_GHOST_VERTICES);
 
   /* Allocate memory for ghost */
   ghost = *pghost = T8_ALLOC_ZERO (t8_forest_ghost_struct_t, 1);
@@ -615,9 +615,69 @@ typedef struct
  *  \return 0 if the element and its face neighbors are completely owned by the current rank; 1 otherwise.
  */
 static int
-t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                 const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
-                                 const t8_locidx_t tree_leaf_index)
+t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                        const int is_leaf, const t8_element_array_t *leaves,
+                                        const t8_locidx_t tree_leaf_index)
+{
+  T8_ASSERT (t8_forest_get_num_global_trees (forest) == 1);
+  T8_ASSERT (ltreeid == 0);
+
+  if (!is_leaf) {
+    /** TODO: Cut off search if all neighbors are owned by ourselves.
+      * Use bounds to efficiently check */
+    return 1;
+  }
+
+  /**
+   * Determine all vertex neighbors and determine their owner.
+  */
+
+  t8_eclass_t eclass = t8_forest_get_eclass (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+
+  t8_debugf ("enter t8_forest_ghost_search_vertex_boundary for :\n");
+#ifdef T8_ENABLE_DEBUG
+  scheme->element_debug_print (eclass, element);
+#endif
+  const int max_neighs = scheme->element_max_num_vertex_neighbors (eclass);
+  t8_element_t **vertex_neighbors = T8_ALLOC (t8_element_t *, max_neighs);
+  scheme->element_new (eclass, max_neighs, vertex_neighbors);
+  int *neigh_ivertices = T8_ALLOC (int, max_neighs);
+  t8_element_t *vertex_descendant;
+  scheme->element_new (eclass, 1, &vertex_descendant);
+  for (int ivertex = 0; ivertex < scheme->element_get_num_corners (eclass, element); ivertex++) {
+    int num_neighbors;
+    t8_debugf ("determine vertex neighbors around vertex %i\n", ivertex);
+    scheme->element_vertex_neighbors (eclass, element, ivertex, &num_neighbors, vertex_neighbors, neigh_ivertices);
+    t8_debugf ("Found %i possible neighbors\n", num_neighbors);
+    for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+      t8_debugf ("neigh %i, neigh_ivertex%i\n", ineigh, neigh_ivertices[ineigh]);
+      scheme->element_corner_descendant (eclass, vertex_neighbors[ineigh], neigh_ivertices[ineigh],
+                                         scheme->get_maxlevel (eclass), vertex_neighbors[ineigh]);
+      t8_debugf ("corner_descendant of neigh %i:\n", ineigh);
+#ifdef T8_ENABLE_DEBUG
+      scheme->element_debug_print (eclass, vertex_neighbors[ineigh]);
+#endif
+      const int remote_rank
+        = t8_forest_element_find_owner_ext (forest, t8_forest_global_tree_id (forest, ltreeid),
+                                            vertex_neighbors[ineigh], eclass, 0, forest->mpisize - 1, 0, 1);
+      t8_debugf ("add remote for rank %i\n", remote_rank);
+      if (remote_rank != forest->mpirank) {
+        t8_ghost_add_remote (forest, forest->ghosts, remote_rank, ltreeid, element, tree_leaf_index);
+      }
+    }
+  }
+  scheme->element_destroy (eclass, 1, &vertex_descendant);
+  scheme->element_destroy (eclass, max_neighs, vertex_neighbors);
+  T8_FREE (neigh_ivertices);
+  T8_FREE (vertex_neighbors);
+  return 0;
+}
+
+static int
+t8_forest_ghost_search_face_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
+                                      const t8_locidx_t tree_leaf_index)
 {
   t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
   int num_faces, iface, faces_totally_owned, level;
@@ -771,7 +831,17 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   /* Set the user data for the search routine */
   t8_forest_set_user_data (forest, &data);
   /* Loop over the trees of the forest */
-  t8_forest_search (forest, t8_forest_ghost_search_boundary, NULL, NULL);
+
+  switch (forest->ghost_type) {
+  case T8_GHOST_FACES:
+    t8_forest_search (forest, t8_forest_ghost_search_face_boundary, NULL, NULL);
+    break;
+  case T8_GHOST_VERTICES:
+    t8_forest_search (forest, t8_forest_ghost_search_vertex_boundary, NULL, NULL);
+    break;
+  default:
+    SC_ABORT ("Edge ghosts not yet implemented!");
+  }
 
   /* Reset the user data from before search */
   t8_forest_set_user_data (forest, store_user_data);
@@ -1582,17 +1652,19 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
       return;
     }
     /* Currently we only support face ghosts */
-    T8_ASSERT (forest->ghost_type == T8_GHOST_FACES);
+    T8_ASSERT (forest->ghost_type == T8_GHOST_FACES || forest->ghost_type == T8_GHOST_VERTICES);
 
     /* Initialize the ghost structure */
     t8_forest_ghost_init (&forest->ghosts, forest->ghost_type);
     ghost = forest->ghosts;
 
     if (unbalanced_version == -1) {
+      t8_debugf ("remote v3\n");
       t8_forest_ghost_fill_remote_v3 (forest);
     }
     else {
       /* Construct the remote elements and processes. */
+      t8_debugf ("remote old\n");
       t8_forest_ghost_fill_remote (forest, ghost, unbalanced_version != 0);
     }
 
