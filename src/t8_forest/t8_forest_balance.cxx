@@ -39,8 +39,8 @@ T8_EXTERN_C_BEGIN ();
  * TODO: We currently do not adapt recursively since some functions such
  * as half neighbor computation require the forest to be committed. Thus,
  * we pass forest_from as a parameter. But doing so is not valid anymore
- * if we refine recursively. 
- * 
+ * if we refine recursively.
+ *
  * \param[in, out] forest       The forest to be adapted / balanced.
  * \param[in]      forest_from  The forest from which the current one is derived.
  * \param[in]      ltree_id     The local id of the tree the element is in.
@@ -50,7 +50,7 @@ T8_EXTERN_C_BEGIN ();
  * \param[in]      is_family    A switch indicating whether the passed elements form a family.
  * \param[in]      num_elements The number of elements passed as input.
  * \param[in]      elements     The elements array.
- * 
+ *
  * \return 1 if the element(s) has/have to be refined, 0 otherwise.
  */
 static int
@@ -113,8 +113,8 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
 }
 
 /**
- * Collective function to compute the maximum occurring refinement level in a forest 
- * 
+ * Collective function to compute the maximum occurring refinement level in a forest
+ *
  * \param[in,out] forest  The forest which the maximum refinement level is computed for and stored in.
  */
 static void
@@ -206,7 +206,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
     }
     forest_temp->t8code_data = &done;
-    /* If profiling is enabled, measure ghost/adapt rumtimes */
+    /* If profiling is enabled, measure ghost/adapt runtimes */
     if (forest->profile != NULL) {
       t8_forest_set_profiling (forest_temp, 1);
     }
@@ -247,7 +247,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       forest_partition->maxlevel_existing = forest_temp->maxlevel_existing;
       t8_forest_set_partition (forest_partition, forest_temp, 0);
       t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
-      /* If profiling is enabled, measure partition rumtimes */
+      /* If profiling is enabled, measure partition runtimes */
       if (forest->profile != NULL) {
         t8_forest_set_profiling (forest_partition, 1);
       }
