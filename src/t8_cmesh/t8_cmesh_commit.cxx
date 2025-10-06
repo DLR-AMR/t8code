@@ -40,8 +40,8 @@
 
 /**
  * A struct to hold the information about a ghost facejoin.
- * 
- * It contains the global id of the ghost, the local id of the ghost, 
+ *
+ * It contains the global id of the ghost, the local id of the ghost,
  * and the current number of inserted ghost attributes.
  */
 typedef struct ghost_facejoins_struct
@@ -514,7 +514,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
 /**
  * Commit a cmesh from stash.
- * 
+ *
  * \param[in] cmesh The cmesh to commit.
  * \param[in] comm The MPI communicator to use.
  */
@@ -534,7 +534,7 @@ t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 /* TODO: set boundary face connections here.
- *       not trivial if replicated and not level 3 face_knowledg
+ *       not trivial if replicated and not level 3 face_knowledge
  *       Edit: boundary face is default. If no face-connection is added then
  *             we assume a boundary face.
  * TODO: Implement a debug check for mesh consistency between processes.

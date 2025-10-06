@@ -214,7 +214,7 @@ t8_cmesh_trees_start_part (const t8_cmesh_trees_t trees, const int proc, const t
 }
 
 /**
- * 
+ *
  * Helper struct for sorting the number of ghost attributes by global id.
  * In order to sort them, we need the part ghost id to access the global id.
  * Thus, we store both the part id and the number of attributes.
@@ -262,7 +262,7 @@ t8_cmesh_allocate_ghost_num_atts_array (t8_locidx_t part_num_ghosts)
  * stored temporarily in the att_offset variable
  * we grow the part array by the needed amount of memory and set the
  * offsets appropriately */
-/* The workflow can be: call start_part, set tree and ghost classes maually, call
+/* The workflow can be: call start_part, set tree and ghost classes manually, call
  * init_attributes, call finish_part, successively call add_attributes
  * and also set all face neighbors (TODO: write function)*/
 void

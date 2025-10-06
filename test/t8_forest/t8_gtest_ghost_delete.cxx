@@ -39,7 +39,7 @@
  */
 
 /* refine elements, whose lower left y coordinate is 0, so that the lowest row is refined
- * delete elements, whose lower left y coordniate is 0.25, so that the second row is deleted
+ * delete elements, whose lower left y coordinate is 0.25, so that the second row is deleted
  */
 static int
 test_adapt_holes ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,

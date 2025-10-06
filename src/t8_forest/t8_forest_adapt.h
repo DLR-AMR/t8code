@@ -21,7 +21,7 @@
 */
 
 /** \file t8_forest_adapt.h
- * We define the adapt routine to refine and corsen a forest of trees in this file.
+ * We define the adapt routine to refine and coarsen a forest of trees in this file.
  */
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_adapt */
