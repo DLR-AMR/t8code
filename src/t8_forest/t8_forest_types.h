@@ -36,8 +36,8 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
 
-typedef struct t8_profile t8_profile_t;            /* Defined below */
-typedef struct t8_forest_ghost *t8_forest_ghost_t; /* Defined below */
+typedef struct t8_profile t8_profile_t;            /**< Defined below */
+typedef struct t8_forest_ghost *t8_forest_ghost_t; /**< Defined below */
 
 /** If a forest is to be derived from another forest, there are different
  * possibilities how the original forest is modified.
@@ -46,17 +46,17 @@ typedef struct t8_forest_ghost *t8_forest_ghost_t; /* Defined below */
  * The latter 3 can be combined, in which case the order is
  * 1. Adapt, 2. Partition, 3. Balance.
  * We store the methods in an int8_t and use these defines to
- * distinguish between them.
+ * distinguish between them. 
  */
 typedef int8_t t8_forest_from_t;
 
-#define T8_FOREST_FROM_FIRST 0
-#define T8_FOREST_FROM_COPY 0 /* must be zero, such that |= with another options overwrites it  */
-#define T8_FOREST_FROM_ADAPT 0x1
-#define T8_FOREST_FROM_PARTITION 0x2
-#define T8_FOREST_FROM_BALANCE 0x4
-#define T8_FOREST_FROM_NONE 0x8 /* A value that is not reached by adding up the other values. No from method used */
-#define T8_FOREST_FROM_LAST T8_FOREST_FROM_NONE
+#define T8_FOREST_FROM_FIRST 0       /**< Lowest valid value of t8_forest_from_t. */
+#define T8_FOREST_FROM_COPY 0        /**< Must be zero, such that |= with another options overwrites it  */
+#define T8_FOREST_FROM_ADAPT 0x1     /**< Value of t8_forest_from_t indicating the forest is derived via adapt. */
+#define T8_FOREST_FROM_PARTITION 0x2 /**< Value of t8_forest_from_t indicating the forest is derived via partition. */
+#define T8_FOREST_FROM_BALANCE 0x4   /**< Value of t8_forest_from_t indicating the forest is derived via balancing. */
+#define T8_FOREST_FROM_NONE 0x8 /**< A value that is not reached by adding up the other values. No from method used */
+#define T8_FOREST_FROM_LAST T8_FOREST_FROM_NONE /**<  A value higher than any valid value of t8_forest_from_t. */
 
 #define T8_FOREST_BALANCE_REPART 1    /**< Value of forest->set_balance if balancing with repartitioning */
 #define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
@@ -108,14 +108,14 @@ typedef struct t8_forest
   int mpisize;                    /**< Number of MPI processes. */
   int mpirank;                    /**< Number of this MPI process. */
 
-  t8_gloidx_t first_local_tree; /**< The global index of the first local tree on this process. 
+  t8_gloidx_t first_local_tree;       /**< The global index of the first local tree on this process. 
                                              If first_local_tree is larger than last_local_tree then 
                                              this processor/forest is empty.
                                              See https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
-  t8_gloidx_t last_local_tree;  /**< The global index of the last local tree on this process.
+  t8_gloidx_t last_local_tree;        /**< The global index of the last local tree on this process.
                                              -1 if this processor is empty. */
-  t8_gloidx_t global_num_trees; /**< The total number of global trees */
-  sc_array_t *trees;
+  t8_gloidx_t global_num_trees;       /**< The total number of global trees. */
+  sc_array_t *trees;                  /**< The array of trees. */
   t8_forest_ghost_t ghosts;           /**< If not NULL, the ghost elements. \see t8_forest_ghost.h */
   t8_shmem_array_t element_offsets;   /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,
@@ -134,8 +134,8 @@ typedef struct t8_forest
   t8_locidx_t local_num_leaf_elements;  /**< Number of leaf elements on this processor. */
   t8_gloidx_t global_num_leaf_elements; /**< Number of leaf elements on all processors. */
   t8_profile_t *profile; /**< If not NULL, runtimes and statistics about forest_commit are stored here. */
-  sc_statinfo_t stats[T8_PROFILE_NUM_STATS];
-  int stats_computed;
+  sc_statinfo_t stats[T8_PROFILE_NUM_STATS]; /**< The SC profiling stats of the forest.*/
+  int stats_computed; /**< Switch indicating whether the profiling stats have been compute (1) or not (0) */
 } t8_forest_struct_t;
 
 /** The t8 tree datatype */
@@ -159,6 +159,10 @@ typedef struct t8_tree
 
 /** The number of statistics collected by a profile struct. */
 #define T8_PROFILE_NUM_STATS 14
+
+/**
+ * This struct holds profiling information, such as timings or statistics about communication.
+*/
 typedef struct t8_profile
 {
   t8_locidx_t partition_elements_shipped; /**< The number of elements this process has
@@ -186,7 +190,10 @@ typedef struct t8_profile
 
 } t8_profile_struct_t;
 
-/* TODO: document */
+/** 
+ * This struct stores various information about a forest's ghost elements and ghost trees.
+ * 
+ */
 typedef struct t8_forest_ghost
 {
   t8_refcount_t rc; /**< The reference counter. */
@@ -212,8 +219,8 @@ typedef struct t8_forest_ghost
   sc_array_t *remote_processes;         /**< The ranks of the processes for which local elements are ghost.
                                                 Array of int's. */
 
-  sc_mempool_t *glo_tree_mempool;
-  sc_mempool_t *proc_offset_mempool;
+  sc_mempool_t *glo_tree_mempool;    /**< The global tree memory pool. */
+  sc_mempool_t *proc_offset_mempool; /**< The process offset memory pool. */
 } t8_forest_ghost_struct_t;
 
 #endif /* ! T8_FOREST_TYPES_H */
