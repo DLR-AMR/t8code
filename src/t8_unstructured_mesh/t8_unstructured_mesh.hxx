@@ -26,8 +26,8 @@
 
 #ifndef T8_UNSTRUCTURED_MESH_HXX
 #define T8_UNSTRUCTURED_MESH_HXX
-#include <t8.h>
 
+#include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <iterator>
 #include <memory>
@@ -36,7 +36,7 @@
 
 /**
  * Wrapper for a forest that enables it to be handled like an unstructured mesh object.
- * \tparam unstructured_mesh_element The element class that should be used for the unstructured mesh elements. 
+ * \tparam TUnstructuredMeshElement The element class that should be used for the unstructured mesh elements. 
  * This template parameter defines which element functionality is available and if it is cached or calculated.
  */
 template <class TUnstructuredMeshElement = t8_unstructured_mesh_element<>>

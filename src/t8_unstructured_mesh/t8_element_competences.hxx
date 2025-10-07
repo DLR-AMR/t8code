@@ -46,7 +46,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 template <typename TUnderlying>
 struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_vertex_coordinates>
 {
- public:
+ private:
   /**
    * Returns the previously cached vector with the vertex coordinates of the unstructured mesh element.
    * \return Constant reference to the cached vector with the vertex coordinates.
@@ -68,7 +68,6 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
     m_vertex_coordinates = std::move (new_vertex_coordinates);
   }
 
- private:
   std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
     m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Empty vector if not filled. */
 };
@@ -78,12 +77,12 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
  * Used the CRTP pattern as we need to access members of the derived class \ref t8_unstructured_element. 
  * Use t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
  * we need functionality of TUnderlying).
- * \tparam Use the t8_unstructured_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the t8_unstructured_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
 {
- public:
+ private:
   /**
    * Returns an optional with the centroid coordinates for an unstructured mesh element if previously cached.
    * \return Optional with coordinates of the centroid of the unstructured mesh element.
@@ -96,7 +95,7 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
 
   /**
    * Setter for the cache.
-   * \param[in] new_centroid_coordinates Array with the coordinates of the centroid of the
+   * \param [in] new_centroid_coordinates Array with the coordinates of the centroid of the
    *       unstructured mesh element that should be cached.
    */
   void
@@ -105,7 +104,6 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
     m_coordinates = new_centroid_coordinates;
   }
 
- private:
   std::optional<std::array<double, T8_ECLASS_MAX_DIM>>
     m_coordinates; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };

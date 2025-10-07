@@ -56,7 +56,7 @@ class t8_unstructured_mesh;
  *    2.) for the cached options to keep the number of class member variables of the default to a minimum to safe memory.
  * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
  *
- * \tparam The competences you want to add to the default functionality of the element.
+ * \tparam TCompetence The competences you want to add to the default functionality of the element.
  */
 template <template <typename> class... TCompetence>
 class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_element<TCompetence...>>... {
@@ -85,9 +85,9 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
  public:
   /**
    * Constructor of the unstructured mesh element.
-   * \param unstructured_mesh Reference to the unstructured mesh the element should belong to.
-   * \param tree_id The tree id of the element in the forest defining the unstructured mesh.
-   * \param element_id The element id of the element in the forest defining the unstructured mesh.
+   * \param [in] unstructured_mesh Reference to the unstructured mesh the element should belong to.
+   * \param [in] tree_id The tree id of the element in the forest defining the unstructured mesh.
+   * \param [in] element_id The element id of the element in the forest defining the unstructured mesh.
    */
   t8_unstructured_mesh_element (t8_unstructured_mesh<SelfType>* unstructured_mesh, t8_locidx_t tree_id,
                                 t8_locidx_t element_id)
