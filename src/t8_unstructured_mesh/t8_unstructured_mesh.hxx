@@ -94,9 +94,9 @@ class t8_unstructured_mesh {
 
     /** 
      * Constructor for the element iterator. 
-     * \param [in] unstructured_mesh Pointer to the unstructured mesh the iterator should be created for. 
-     * \param [in] current_tree_id Initial tree id of the iterator. 
-     * \param [in] current_element_id Initial element id in the tree of the iterator. 
+     * \param [in] unstructured_mesh   Pointer to the unstructured mesh the iterator should be created for. 
+     * \param [in] current_tree_id     Initial tree id of the iterator. 
+     * \param [in] current_element_id  Initial element id in the tree of the iterator. 
      */
     t8_unstructured_iterator (t8_unstructured_mesh* unstructured_mesh, t8_locidx_t current_tree_id,
                               t8_locidx_t current_element_id)
