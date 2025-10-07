@@ -202,7 +202,7 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
 // Reactive this line when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv, get_global)
 #else
-// Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
+// Delete this line and the cmesh_vertex_conn_ttv_temp class when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
 #endif
 {
@@ -232,7 +232,7 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
 // Reactive this line when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes, get_global)
 #else
-// Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
+// Delete this line and the cmesh_vertex_conn_ttv_temp class when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, convert_to_vtt)
 #endif
 {
@@ -388,7 +388,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
 // Reactive this line when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv, get_global)
 #else
-// Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
+// Delete this line and the cmesh_vertex_conn_ttv_temp class when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions_temp, get_global)
 #endif
 {
