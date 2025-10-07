@@ -37,7 +37,7 @@
 /**
  * Wrapper for a forest that enables it to be handled like an unstructured mesh object.
  * \tparam TUnstructuredMeshElement The element class that should be used for the unstructured mesh elements. 
- * This template parameter defines which element functionality is available and if it is cached or calculated.
+ *                                  This template parameter defines which element functionality is available and if it is cached or calculated.
  */
 template <class TUnstructuredMeshElement = t8_unstructured_mesh_element<>>
 class t8_unstructured_mesh {

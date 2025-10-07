@@ -85,9 +85,9 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
  public:
   /**
    * Constructor of the unstructured mesh element.
-   * \param [in] unstructured_mesh Reference to the unstructured mesh the element should belong to.
-   * \param [in] tree_id The tree id of the element in the forest defining the unstructured mesh.
-   * \param [in] element_id The element id of the element in the forest defining the unstructured mesh.
+   * \param [in] unstructured_mesh     Reference to the unstructured mesh the element should belong to.
+   * \param [in] tree_id               The tree id of the element in the forest defining the unstructured mesh.
+   * \param [in] element_id            The element id of the element in the forest defining the unstructured mesh.
    */
   t8_unstructured_mesh_element (t8_unstructured_mesh<SelfType>* unstructured_mesh, t8_locidx_t tree_id,
                                 t8_locidx_t element_id)

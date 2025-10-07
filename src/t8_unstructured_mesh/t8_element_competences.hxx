@@ -60,7 +60,7 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
   /**
    * Setter for the cache.
    * \param [in] new_vertex_coordinates Vector with the coordinates of the vertices of the
-   *       unstructured mesh element that should be cached.
+   *                                    unstructured mesh element that should be cached.
    */
   void
   set_vertex_coordinates_cached (std::vector<std::array<double, T8_ECLASS_MAX_DIM>>&& new_vertex_coordinates)
@@ -96,7 +96,7 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
   /**
    * Setter for the cache.
    * \param [in] new_centroid_coordinates Array with the coordinates of the centroid of the
-   *       unstructured mesh element that should be cached.
+   *                                      unstructured mesh element that should be cached.
    */
   void
   set_centroid_cached (std::array<double, T8_ECLASS_MAX_DIM> new_centroid_coordinates)
