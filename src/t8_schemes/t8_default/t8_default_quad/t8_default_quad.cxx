@@ -562,7 +562,7 @@ t8_default_scheme_quad::element_get_first_descendant_face (const t8_element_t *e
 
   /* Get the first corner of q that belongs to face */
   first_face_corner = p4est_face_corners[face][0];
-  /* Construce the descendant in that corner */
+  /* Construct the descendant in that corner */
   p4est_quadrant_corner_descendant (q, desc, first_face_corner, level);
 }
 
@@ -580,7 +580,7 @@ t8_default_scheme_quad::element_get_last_descendant_face (const t8_element_t *el
 
   /* Get the last corner of q that belongs to face */
   last_face_corner = p4est_face_corners[face][1];
-  /* Construce the descendant in that corner */
+  /* Construct the descendant in that corner */
   p4est_quadrant_corner_descendant (q, desc, last_face_corner, level);
 }
 
