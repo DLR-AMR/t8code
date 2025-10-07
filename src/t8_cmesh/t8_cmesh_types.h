@@ -107,6 +107,7 @@ typedef struct t8_cmesh
                                   existing cmesh by copy or more elaborate
                                   modification, we store a pointer to this
                                   other cmesh here. */
+  sc_MPI_Comm mpicomm;         /**< MPI communicator associated to the cmesh */
   int mpirank;                 /**< Number of this MPI process. */
   int mpisize;                 /**< Number of MPI processes. */
   t8_refcount_t rc;            /**< The reference count of the cmesh. */

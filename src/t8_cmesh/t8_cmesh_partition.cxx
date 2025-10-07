@@ -131,7 +131,7 @@ t8_cmesh_gather_trees_per_eclass (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_gloidx_t temp_trees_per_eclass[T8_ECLASS_COUNT];
   int ieclass;
 
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  T8_ASSERT (t8_cmesh_get_mpicomm (cmesh) == comm);
 
   if (cmesh->set_partition) {
     /* Copy the local values */
@@ -191,7 +191,7 @@ t8_cmesh_gather_treecount_ext (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const i
   if (check_commit) {
     T8_ASSERT (t8_cmesh_is_committed (cmesh));
   }
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  T8_ASSERT (t8_cmesh_get_mpicomm (cmesh) == comm);
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 : cmesh->first_tree;
   if (cmesh->tree_offsets == NULL) {
@@ -983,7 +983,7 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *num_r
   int8_t *ghost_flag_send;  /* For each local tree and ghost set to 1 if it is in send_as_ghost */
   const t8_gloidx_t *offset_from, *offset_to;
 
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  T8_ASSERT (t8_cmesh_get_mpicomm (cmesh) == comm);
   /* We use two different flag arrays here, since ghost_flag_send needs to
    * be reset for each process we send to, while ghost_flag_keep keeps is entries.
    * Otherwise we could have set bitflags and only use one array */
@@ -1613,7 +1613,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /*        Done with local num and tree_offset      */
   /***************************************************/
   t8_cmesh_partition_given (cmesh, cmesh->set_from, tree_offsets, comm);
-  /* Deactivate the active tree. Tree related data (such as vertices) might have been moved by the new partition and 
+  /* Deactivate the active tree. Tree related data (such as vertices) might have been moved by the new partition and
    * has to be loaded again if needed. */
   if (cmesh->geometry_handler != NULL) {
     cmesh->geometry_handler->deactivate_tree ();
@@ -1793,7 +1793,7 @@ t8_cmesh_offset_percent (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const int per
 #endif
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  T8_ASSERT (t8_cmesh_get_mpicomm (cmesh) == comm);
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);

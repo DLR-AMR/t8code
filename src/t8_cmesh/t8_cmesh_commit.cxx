@@ -234,7 +234,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_flops_snap (&fi, &snapshot);
 #endif
 
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  T8_ASSERT (t8_cmesh_get_mpicomm (cmesh) == comm);
 
   if (cmesh->face_knowledge != 3) {
     t8_global_errorf ("Expected a face knowledge of 3.\nAbort commit.");
@@ -563,6 +563,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (comm, &cmesh->mpirank);
   SC_CHECK_MPI (mpiret);
+  cmesh->mpicomm = comm;
+
   if (cmesh->set_from != NULL) {
     cmesh->dimension = cmesh->set_from->dimension;
     if (cmesh->face_knowledge == -1) {
