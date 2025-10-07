@@ -144,6 +144,7 @@ typedef struct t8_cmesh
     *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
 
 #if T8_ENABLE_DEBUG
+  int negative_volume_check;   /**< Whether the negative volume check will be performed */
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
   t8_locidx_t inserted_ghosts; /**< Count the number of inserted ghosts to
