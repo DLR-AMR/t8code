@@ -91,7 +91,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    */
   t8_unstructured_mesh_element (t8_unstructured_mesh<SelfType>* unstructured_mesh, t8_locidx_t tree_id,
                                 t8_locidx_t element_id)
-    : m_tree_id (tree_id), m_element_id (element_id), m_unstructured_mesh (unstructured_mesh)
+    : m_unstructured_mesh (unstructured_mesh), m_tree_id (tree_id), m_element_id (element_id)
   {
   }
 
@@ -216,10 +216,10 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     return t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
   }
 
+  t8_unstructured_mesh<SelfType>*
+    m_unstructured_mesh;    /**< Pointer to the unstructured mesh the element is defined for. */
   t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the unstructured mesh. */
   t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the unstructured mesh. */
-  t8_unstructured_mesh<SelfType>*
-    m_unstructured_mesh; /**< Pointer to the unstructured mesh the element is defined for. */
 };
 
 #endif /* !T8_UNSTRUCTURED_ELEMENT_HXX */

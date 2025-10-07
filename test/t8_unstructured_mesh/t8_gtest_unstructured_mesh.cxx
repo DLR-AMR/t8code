@@ -34,9 +34,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-/** Construct a forest of a hypercube with volume 1. If the elements are refined uniformly,
- * all elements have volume 1/global_num_elements. 
- */
 class t8_unstructured_mesh_test: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
  protected:
   void
