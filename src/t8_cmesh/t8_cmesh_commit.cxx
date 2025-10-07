@@ -534,7 +534,7 @@ t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 /* TODO: set boundary face connections here.
- *       not trivial if replicated and not level 3 face_knowledg
+ *       not trivial if replicated and not level 3 face_knowledge
  *       Edit: boundary face is default. If no face-connection is added then
  *             we assume a boundary face.
  * TODO: Implement a debug check for mesh consistency between processes.
@@ -549,7 +549,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
   SC_CHECK_ABORT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM,
-                  "Dimension of the cmesh is not set properly.\n");
+                  "Dimension of the cmesh is not set properly. This error may be "
+                  "caused by empty cmesh partitions whose dimension can't be "
+                  "inferred from the element types. Try setting the dimension "
+                  "explicitly using t8_cmesh_set_dimension\n");
 
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
@@ -604,9 +607,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * but only if the vertex_to_tree instance is not yet committed
    * and if the tree_to_vertex instance is not empty.
    */
-  if (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 0
-      && cmesh->vertex_connectivity->get_tree_to_vertex_state () == 1) {
-    cmesh->vertex_connectivity->build_vertex_to_tree (cmesh);
+  if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
+    cmesh->vertex_connectivity->build_vertex_to_tree ();
   }
 
 #if T8_ENABLE_DEBUG
@@ -626,7 +628,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_stash_destroy (&cmesh->stash);
   }
 
-  t8_debugf ("committed cmesh with %li local and %lli global trees and"
+  t8_debugf ("Committed cmesh with %li local and %lli global trees and"
              " %li ghosts.\n",
              (long) cmesh->num_local_trees, (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
 #if T8_ENABLE_DEBUG

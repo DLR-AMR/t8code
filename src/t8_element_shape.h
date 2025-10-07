@@ -42,10 +42,10 @@ typedef t8_eclass_t t8_element_shape_t;
 
 /** The maximum number of boundary faces an element class can have. */
 #define T8_ELEMENT_SHAPE_MAX_FACES 6
-/** The maximum number of cornes a 3-dimensional element class can have. */
+/** The maximum number of corners a 3-dimensional element class can have. */
 #define T8_ELEMENT_SHAPE_MAX_CORNERS 8
 
-/* Maximum possible number of corner nodes of an element in a specific dimension */
+/** Maximum possible number of corner nodes of an element in a specific dimension */
 extern const int t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1];
 
 /** The number of codimension-one boundaries of an element class. */
@@ -84,13 +84,13 @@ t8_element_shape_t8_corner_number (int element_shape, int index);
 const char*
 t8_element_shape_to_string (int element_shape);
 
-/** Compare two element_shapees of the same dimension
+/** Compare two element_shapes of the same dimension
  *  as necessary for face neighbor orientation.
  *  The implemented order is Triangle < Square in 2D and
  *  Tet < Hex < Prism < Pyramid in 3D.
  *  \param [in] element_shape1 The first element_shape to compare.
  *  \param [in] element_shape2 The second element_shape to compare.
- *  \return 0 if the element_shapees are equal, 1 if element_shape1 > element_shape2
+ *  \return 0 if the element_shapes are equal, 1 if element_shape1 > element_shape2
  *            and -1 if element_shape1 < element_shape2
  */
 int

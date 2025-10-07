@@ -54,26 +54,19 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 
 /* Definitions for attribute identifiers that are reserved for a special purpose.
  * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
-/** Used to store vertex coordinates. */
-#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0
-/** Used to store global vertex ids. */
-#define T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY 1
-/** Used to store the name of a tree's geometry. */
-#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 2
-/** Used to store which edge is linked to which geometry */
-#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY 3
-/** Used to store edge parameters */
-#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY 4
-/** Used to store which face is linked to which surface */
-#define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY \
-  T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY \
-  +T8_ECLASS_MAX_EDGES
-/** Used to store face parameters */
-#define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1
-/** Used to store parameters of lagrangian polynomials */
-#define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES
-/** The next free value for a t8code attribute key */
-#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1
+/* clang-format off */
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY             0 /** Used to store vertex coordinates. */
+#define T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY      1 /** Used to store global vertex ids. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY             2 /** Used to store the name of a tree's geometry. */
+#define T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY        3 /** Used to store the geometry dimension and tag of the nodes of a tree. */
+#define T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY      4 /** Used to store node parameters of a tree. Used in combination with T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY */
+#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY             5 /** Used to store which edge is linked to which geometry */
+#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY  6 /** Used to store edge parameters */
+#define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY             T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES  /** Used to store which face is linked to which surface */
+#define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY  T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1                               /** Used to store face parameters */
+#define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY           T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES  /** Used to store parameters of lagrangian polynomials */
+#define T8_CMESH_NEXT_POSSIBLE_KEY                  T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1                             /** The next free value for a t8code attribute key */
+/* clang-format on */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole

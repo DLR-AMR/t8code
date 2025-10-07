@@ -75,7 +75,7 @@ elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_MEDIUM" )
     set(T8_TEST_LEVEL_INT 1)
 elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_FULL" )
     set(T8_TEST_LEVEL_INT 0)
-else() 
+else()
     message( FATAL_ERROR "Invalid string for T8CODE_TEST_LEVEL: ${T8CODE_TEST_LEVEL}. Valid options are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC.")
 endif()
 
@@ -89,6 +89,14 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   # Set the possible values of build type for cmake-gui
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
     "Debug" "Release" "RelWithDebInfo")
+endif()
+
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+  # Option to generate code coverage target.
+  option( T8CODE_CODE_COVERAGE "Enable code coverage reporting" OFF)
+  if(T8CODE_CODE_COVERAGE)
+    include(./cmake/CodeCoverage.cmake)
+  endif()
 endif()
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -131,11 +139,11 @@ if( T8CODE_ENABLE_OCC )
 endif( T8CODE_ENABLE_OCC )
 
 if( T8CODE_ENABLE_NETCDF )
-    find_package( netCDF REQUIRED )
-    if(netCDF_FOUND)
-        message("Found netCDF")
+    find_package( NetCDF REQUIRED )
+    if(NetCDF_FOUND)
+        message("Found NetCDF")
         include(cmake/CheckNetCDFPar.cmake)
-    endif (netCDF_FOUND)
+    endif (NetCDF_FOUND)
 endif( T8CODE_ENABLE_NETCDF )
 
 # Override default for this libsc option
@@ -162,7 +170,10 @@ else()
 
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES )
+    list( APPEND CMAKE_MESSAGE_CONTEXT "sc" )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
+    list( POP_BACK CMAKE_MESSAGE_CONTEXT )
+    add_library(SC INTERFACE)
     # Capture the list of variables after adding the subdirectory
     get_cmake_property(_vars_after_sc VARIABLES )
     # Compute the difference (new variables added by the subdirectory)
@@ -175,6 +186,38 @@ else()
 
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_sc_vars} )
+
+    ########################## Fix for OpenMPI ############################################
+    # OpenMPI sometimes has a mismatch between their C and CXX interface which produces a warning in SC.
+    # The warning makes t8codes build fail when Werror is activated. This fix checks if t8code
+    # is linked against OpenMPI and then suppresses that Werror treats this warning as error.
+    # The warning is still displayed while compiling.
+    # We compile a test program mich checks if a OpenMPI specific macro is defined and then apply the fix.
+
+    include(CheckIncludeFile)
+
+    # Check if mpi.h is available
+    check_include_file("mpi.h" MPI_HEADER_FOUND)
+
+    if(MPI_HEADER_FOUND)
+        # Create a temporary C++ source file to check for OpenMPI-specific macros
+        include(CheckCXXSourceCompiles)
+        check_cxx_source_compiles("
+        #include <mpi.h>
+        #ifndef OPEN_MPI
+        #error 'Not OpenMPI'
+        #endif
+        int main() { return 0; }" HAS_OPENMPI)
+
+        if(HAS_OPENMPI)
+            message(STATUS "OpenMPI detected via mpi.h")
+            # Suppress warning
+            target_compile_options(SC::SC INTERFACE -Wno-error=cast-function-type)
+        endif()
+    else()
+        message(WARNING "mpi.h not found!")
+    endif()
+    ########################## End of fix for OpenMPI ############################################
 endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
@@ -185,7 +228,9 @@ else()
 
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property( _vars_before_p4est VARIABLES )
+    list( APPEND CMAKE_MESSAGE_CONTEXT "p4est" )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
+    list( POP_BACK CMAKE_MESSAGE_CONTEXT )
     # Capture the list of variables after adding the subdirectory
     get_cmake_property( _vars_after_p4est VARIABLES )
     # Compute the difference (new variables added by the subdirectory)

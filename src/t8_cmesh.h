@@ -33,8 +33,8 @@
 #include <t8_element.h>
 #include <t8_schemes/t8_scheme.h>
 
-/* Forward pointer reference to hidden cmesh implementation.
- * This reference needs to be known by t8_geometry, hence we
+/** Forward pointer reference to hidden cmesh implementation.
+ * This reference needs to be known by t8_geometry, hence we 
  * put it before the include. */
 typedef struct t8_cmesh *t8_cmesh_t;
 
@@ -54,9 +54,11 @@ typedef struct t8_cmesh *t8_cmesh_t;
  *       edit: This should be achieved now.
  */
 
-/* Forward pointer references to hidden implementations of
- * tree and ghost tree. */
+/** Forward pointer references to hidden implementations of
+ * tree. */
 typedef struct t8_ctree *t8_ctree_t;
+/** Forward pointer references to hidden implementations of
+ * ghost tree. */
 typedef struct t8_cghost *t8_cghost_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -139,7 +141,7 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from);
  * \param [in]      mpisize The number of processes.
  * \param [in]      comm    The MPI communicator to use. Its mpisize must match \a mpisize.
  *                  The shared memory type must have been set. Best practice would be
- *                  calling \ref sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
+ *                  calling sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
  * \return          A t8_shmem_array struct that stores \a mpisize + 1 t8_gloidx_t entries.
  * \see t8_shmem.h
  */
@@ -744,7 +746,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
 /** Calculate the section of a uniform forest for the current rank.
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    level         The uniform refinement level to be created.
- * \param [in]    scheme            The element scheme for which to compute the bounds.
+ * \param [in]    tree_scheme      The element scheme for which to compute the bounds.
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
  * \param [out]   child_in_tree_begin The tree-local index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
@@ -763,7 +765,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
 /**
  * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially 
  * meshes where not all elements refine into 1:2^dim manner. The section is calculated without assuming such refinement
- * and each process computes its number of elements on the given \var level, communicates the number to other processes,
+ * and each process computes its number of elements on the given \a level, communicates the number to other processes,
  * and the correct section is computed based on this information. 
  * 
  * \param [in] cmesh        The cmesh to be considered.
@@ -812,7 +814,6 @@ t8_cmesh_unref (t8_cmesh_t *pcmesh);
  * \param [in,out]  pcmesh      This cmesh must have a reference count of one.
  *                              It can be in any state (committed or not).
  *                              Then it effectively calls \ref t8_cmesh_unref.
- * \param [in]      comm        A mpi communicator that is valid with \a cmesh.
  */
 void
 t8_cmesh_destroy (t8_cmesh_t *pcmesh);
