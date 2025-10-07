@@ -41,7 +41,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Uses the CRTP pattern as we need to access members of the derived class \ref t8_unstructured_element. 
  * Use t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
  * we need functionality of TUnderlying).
- * \tparam Use the t8_unstructured_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the t8_unstructured_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_vertex_coordinates>
@@ -59,7 +59,7 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
 
   /**
    * Setter for the cache.
-   * \param[in] new_vertex_coordinates Vector with the coordinates of the vertices of the
+   * \param [in] new_vertex_coordinates Vector with the coordinates of the vertices of the
    *       unstructured mesh element that should be cached.
    */
   void

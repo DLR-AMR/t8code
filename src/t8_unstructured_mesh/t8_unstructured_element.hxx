@@ -26,8 +26,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #ifndef T8_UNSTRUCTURED_ELEMENT_HXX
 #define T8_UNSTRUCTURED_ELEMENT_HXX
-#include <t8.h>
 
+#include <t8.h>
 #include <t8_element.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
