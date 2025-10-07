@@ -468,12 +468,10 @@ t8_cmesh_t
 t8_cmesh_load_and_distribute (const char *fileprefix, int num_files, sc_MPI_Comm comm, t8_load_mode_t mode,
                               int procs_per_node);
 
-/** Check whether a given MPI communicator assigns the same rank and mpisize
-  * as stored in a cmesh.
+/** Check whether a given MPI communicator matches the cmesh communicator.
   * \param [in] cmesh       The cmesh to be considered.
   * \param [in] comm        A MPI communicator.
-  * \return                 True if mpirank and mpisize from \a comm are the same as
-  *                         the values stored in \a cmesh.
+  * \return                 True if \a comm is the communicator \a cmesh was commited with.
   *                         False otherwise.
   * \a cmesh must be committed before calling this function.
   * */
