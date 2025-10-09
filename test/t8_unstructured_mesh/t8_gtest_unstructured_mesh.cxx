@@ -63,11 +63,11 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Check default functionality. ---
-  t8_unstructured_mesh<t8_unstructured_mesh_element<>> unstructured_mesh_calculate
+  t8_unstructured_mesh<t8_unstructured_mesh_element<>> unstructured_mesh
     = t8_unstructured_mesh<t8_unstructured_mesh_element<>> (forest);
 
   // Iterate with the iterator over all unstructured mesh elements and check some functionality.
-  for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     EXPECT_EQ (level, it->get_level ());
     for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
       EXPECT_GE (1, it->get_centroid ()[coord]);
@@ -80,9 +80,16 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
         EXPECT_LE (0, vertex_coordinates[ivertex][coord]);
       }
     }
+    if (it->get_num_faces () > 0) {
+      int *dual_faces; /**< The face indices of the neighbor elements */
+      auto neigh = it->get_face_neighbors (0, &dual_faces);
+      for (const auto &neighbor : neigh) {
+        EXPECT_EQ (level, neighbor.get ().get_level ());
+      }
+    }
   }
   // Test dereference operator.
-  for (auto it = unstructured_mesh_calculate.begin (); it != unstructured_mesh_calculate.end (); ++it) {
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     EXPECT_EQ (level, (*it).get_level ());
   }
 }

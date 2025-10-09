@@ -32,9 +32,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_balance.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <array>
 #include <vector>
+#include <functional>
 
 /* Forward declaration of the unstructured mesh class.
  */
@@ -102,11 +104,23 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * \return Refinement level of the unstructured mesh element.
    */
   t8_element_level
-  get_level ()
+  get_level () const
   {
     const t8_eclass_t tree_class = get_tree_class ();
     const t8_element_t* element = get_element ();
     return t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_level (tree_class, element);
+  }
+
+  /**
+   * Getter for the number of faces of the unstructured mesh element.
+   * For this easily accessible variable, it makes no sense to provide a cached version.
+   * \return Number of faces of the unstructured mesh element.
+   */
+  int
+  get_num_faces () const
+  {
+    return t8_forest_get_scheme (m_unstructured_mesh->m_forest)
+      ->element_get_num_faces (get_tree_class (), get_element ());
   }
 
   /**
@@ -115,7 +129,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * \return Vector with one coordinate array for each vertex of the element.
    */
   std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
-  get_vertex_coordinates ()
+  get_vertex_coordinates () const
   {
     // Check if we have a cached version and if the cache has already been filled.
     if constexpr (get_vertex_coordinates_defined) {
@@ -149,7 +163,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * \return Coordinates of the center.
    */
   std::array<double, T8_ECLASS_MAX_DIM>
-  get_centroid ()
+  get_centroid () const
   {
     // Check if we have a cached version and if the cache has already been filled.
     if constexpr (get_centroid_defined) {
@@ -167,12 +181,43 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     return coordinates;
   }
 
+  std::vector<std::reference_wrapper<SelfType>>
+  get_face_neighbors (int face, int* dual_faces[]) const
+  {
+    std::vector<std::reference_wrapper<SelfType>> neighbor_elements;
+    int num_neighbors;        /**< Number of neighbors for each face */
+    t8_locidx_t* neighids;    /**< Indices of the neighbor elements */
+    t8_element_t** neighbors; /*< Neighboring elements. */
+    t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
+    t8_gloidx_t gneightree;
+    t8_forest_leaf_face_neighbors_ext (m_unstructured_mesh->m_forest, m_tree_id, get_element (), &neighbors, face,
+                                       dual_faces, &num_neighbors, &neighids, &neigh_class,
+                                       t8_forest_is_balanced (m_unstructured_mesh->m_forest), &gneightree, NULL);
+    if (num_neighbors > 0) {
+      t8_locidx_t ltree_id = t8_forest_get_local_id (m_unstructured_mesh->m_forest, gneightree);
+      for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+        t8_locidx_t lelement_id
+          = neighids[ineigh] - t8_forest_get_tree_element_offset (m_unstructured_mesh->m_forest, ltree_id);
+        neighbor_elements[ineigh] = m_unstructured_mesh->m_elements[ltree_id][lelement_id];
+      }
+    }
+
+    if (num_neighbors > 0) {
+      /* Free allocated memory. */
+      t8_forest_get_scheme (m_unstructured_mesh->m_forest)
+        ->element_destroy (get_tree_class (), num_neighbors, neighbors);
+      T8_FREE (neighbors);
+      T8_FREE (neighids);
+    }
+    return neighbor_elements;
+  }
+
   //--- Getter for the member variables. ---
   /**
    * Getter for the tree id of the unstructured mesh element.
    */
   t8_locidx_t
-  get_tree_id ()
+  get_tree_id () const
   {
     return m_tree_id;
   }
@@ -181,7 +226,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the element id of the unstructured mesh element.
    */
   t8_locidx_t
-  get_element_id ()
+  get_element_id () const
   {
     return m_element_id;
   }
@@ -202,7 +247,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the leaf element of the unstructured mesh element.
    */
   const t8_element_t*
-  get_element ()
+  get_element () const
   {
     return t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
   }
@@ -211,7 +256,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the eclass of the unstructured mesh element.
    */
   t8_eclass_t
-  get_tree_class ()
+  get_tree_class () const
   {
     return t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
   }
