@@ -32,7 +32,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * For each tree that we send elements from to other processes,
- * we send the information stored in this struct to the other process 
+ * we send the information stored in this struct to the other process
  */
 typedef struct
 {
@@ -202,7 +202,7 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
     return;
   }
   if (forest->mpirank == forest->mpisize - 1) {
-    /* The last process can only share a tree with process rank-1. 
+    /* The last process can only share a tree with process rank-1.
      * However, this is already tested by process rank-1. */
     return;
   }
@@ -211,7 +211,7 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
     /* The first tree on process rank+1 is not shared with current rank, nothing to do */
     return;
   }
-  /* The first tree on process rank+1 may be shared but empty. 
+  /* The first tree on process rank+1 may be shared but empty.
    * Thus, the first descendant id of rank+1 is not of the first local tree. */
   if (local_tree_num_elements == 0) {
     /* check if first not shared tree of process rank+1 contains elements */
@@ -428,12 +428,58 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
+  auto weight_fcn = []( auto&&... ) -> double { return 1.; }; // should give same result as before
+
+  double const partition_weight = [&](){
+    double retval = 0.;
+    for (int ltreeid = 0; ltreeid < t8_forest_get_num_local_trees(forest); ++ltreeid){
+      for ( int elm_in_tree = 0; elm_in_tree < t8_forest_get_tree_num_leaf_elements(forest, ltreeid); ++elm_in_tree ){
+        retval += weight_fcn( forest, ltreeid, elm_in_tree );
+      }
+    }
+    return retval;
+  }();
+
+  double const partition_weight_offset = [&](){
+    double retval = 0.;
+    sc_MPI_Scan(&partition_weight, &retval, 1, sc_MPI_DOUBLE, sc_MPI_SUM, forest->mpicomm);
+    return retval;
+  }();
+
+  double const target_weight = [&](){
+    double total_forest_weight = partition_weight_offset + partition_weight;
+    sc_MPI_Bcast(&total_forest_weight, 1, sc_MPI_DOUBLE, mpisize-1, forest->mpicomm);
+    return total_forest_weight / mpisize;
+  }();
+
+  t8_gloidx_t const partition_offset = t8_forest_get_first_local_leaf_element_id(forest);
+
   if (t8_shmem_array_start_writing (forest->element_offsets)) {
     if (forest_from->global_num_leaf_elements > 0) {
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+
+      t8_locidx_t current_tree = 0;
+      t8_locidx_t current_elm_in_tree = 0;
+      double accumulated_weight = partition_weight_offset;
       for (i = 0; i < mpisize; i++) {
-        /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
-        new_first_element_id = (((double) i * (long double) forest_from->global_num_leaf_elements) / (double) mpisize);
+        if (i*target_weight < partition_weight_offset or
+            i*target_weight > partition_weight_offset + partition_weight) {
+          continue; // the new first element for the i-th partition is not here
+        }
+        while (accumulated_weight < i*target_weight){
+          T8_ASSERT(current_tree < t8_forest_get_num_local_trees(forest));
+          T8_ASSERT(current_elm_in_tree < t8_forest_get_tree_num_leaf_elements(forest, current_tree));
+          accumulated_weight += weight_fcn( forest, current_tree, current_elm_in_tree );
+          ++current_elm_in_tree;
+          if ( current_elm_in_tree == t8_forest_get_tree_num_leaf_elements(forest, current_tree)){
+            ++current_tree;
+            current_elm_in_tree = 0;
+          }
+        }
+        /* Calculate the first element index for the i-th process */
+        new_first_element_id = partition_offset
+                             + t8_forest_get_tree_element_offset(forest, current_tree)
+                             + current_elm_in_tree;
         T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
         element_offsets[i] = new_first_element_id;
       }
