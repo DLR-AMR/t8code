@@ -84,6 +84,16 @@ class t8_unstructured_mesh {
   }
 
   /**
+   * Getter for an unstructured mesh element given its local index.
+   * \return Reference to the unstructured mesh element.
+   */
+  const TUnstructuredMeshElement&
+  operator[] (t8_locidx_t local_index) const
+  {
+    return m_elements[local_index];
+  }
+
+  /**
    * Getter for the forest the unstructured mesh is defined for.
    */
   t8_forest_t
