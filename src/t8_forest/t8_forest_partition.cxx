@@ -406,7 +406,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 /* Calculate the new element_offset for forest from
  * the element in forest->set_from assuming a partition without element weights */
 static void
-t8_forest_partition_compute_new_offset (t8_forest_t forest)
+t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t* weight_fcn)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (forest->set_from != NULL);
@@ -422,16 +422,18 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   /* Initialize the shmem array */
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), forest->mpisize + 1, comm);
 
-  auto weight_fcn = [] (auto &&...) -> double { return 1.; };  // should give same result as before
+  if (weight_fcn == nullptr){
+    weight_fcn = [] (t8_forest_t, t8_locidx_t, t8_locidx_t) -> double { return 1.; };
+  }
 
   // Compute the weight of all the partition-local elements as a whole
   double const partition_weight = [&] () {
     double retval = 0.;
     // t8_forest_get_num_local_trees & t8_forest_get_tree_num_leaf_elements assume a
     // commited forest, which is not the case here yet...
-    for (int ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest); ++ltreeid) {
-      for (int ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest, ltreeid); ++ielm) {
-        retval += weight_fcn (forest, ltreeid, ielm);  // first pass
+    for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest); ++ltreeid) {
+      for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest, ltreeid); ++ielm) {
+        retval += weight_fcn (forest, ltreeid, ielm);
       }
     }
     return retval;
@@ -472,7 +474,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
         while (accumulated_weight < i * target_weight) {
           T8_ASSERT (current_tree < t8_forest_get_num_local_trees (forest));
           T8_ASSERT (current_elm_in_tree < t8_forest_get_tree_num_leaf_elements (forest, current_tree));
-          accumulated_weight += weight_fcn (forest, current_tree, current_elm_in_tree);  // second pass
+          accumulated_weight += weight_fcn (forest, current_tree, current_elm_in_tree);
           ++current_elm_in_tree;
           if (current_elm_in_tree == t8_forest_get_tree_num_leaf_elements (forest, current_tree)) {
             ++current_tree;
@@ -1218,7 +1220,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_arr
  * Currently the elements are distributed evenly (each element has the same weight).
  */
 void
-t8_forest_partition (t8_forest_t forest)
+t8_forest_partition (t8_forest_t forest, weight_fcn_t* weight_callback)
 {
   t8_forest_t forest_from;
   int create_offset_from = 0;
@@ -1248,7 +1250,7 @@ t8_forest_partition (t8_forest_t forest)
   /* TODO: if offsets already exist on forest_from, check it for consistency */
 
   /* We now calculate the new element offsets */
-  t8_forest_partition_compute_new_offset (forest);
+  t8_forest_partition_compute_new_offset (forest, weight_callback);
   t8_forest_partition_given (forest, 0, NULL, NULL);
 
   T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest_from) == forest_from->trees->elem_count);

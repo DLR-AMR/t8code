@@ -32,15 +32,24 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 
+/**
+ * The prototype a weight function for the t8_forest_partition algorithm.
+ * The function should be pure, and return a positive weight given a forest, a local tree index and an element index within the local tree
+ */
+using weight_fcn_t = double(t8_forest_t, t8_locidx_t, t8_locidx_t);
+
 T8_EXTERN_C_BEGIN ();
 /**
  * Populate a forest with the partitioned elements of forest->set_from.
  * Currently the elements are distributed evenly (each element has the same weight).
- * 
+ *
  * \param [in,out]  forest  The forest.
+ * \param [in]      weight_callback A callback function defining element weights for the partitioning
+ * \pre \a weight_callback must be free of side-effects, the behavior is undefined otherwise
+ * \note If \a weight_callback is null, then all the elements are assumed to have the same weight
 */
 void
-t8_forest_partition (t8_forest_t forest);
+t8_forest_partition (t8_forest_t forest, weight_fcn_t* weight_callback = nullptr);
 
 /** Create the element_offset array of a partitioned forest.
  * \param [in,out]  forest The forest.
@@ -76,13 +85,13 @@ t8_forest_partition_create_first_desc (t8_forest_t forest);
 void
 t8_forest_partition_create_tree_offsets (t8_forest_t forest);
 
-/** \brief Re-Partition an array accordingly to a partitioned forest. 
- * 
+/** \brief Re-Partition an array accordingly to a partitioned forest.
+ *
  * \param[in] forest_from The forest before the partitioning step.
  * \param[in] forest_to The partitioned forest of \a forest_from.
  * \param[in] data_in A pointer to an sc_array_t holding data (one value per element) accordingly to \a forest_from.
  * \param[in,out] data_out A pointer to an already allocated sc_array_t capable of holding data accordingly to \a forest_to.
- * 
+ *
  * \note \a data_in has to be of size equal to the number of local elements of \a forest_from
  * \a data_out has to be already allocated and has to be of size equal to the number of local elements of \a forest_to.
 */
