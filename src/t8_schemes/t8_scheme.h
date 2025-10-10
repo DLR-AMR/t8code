@@ -766,7 +766,7 @@ t8_element_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const i
 * \note If an element was created by \ref t8_element_new then \ref t8_element_init
 * may not be called for it. Thus, \ref t8_element_init should initialize an element
 * in the same way as a call to \ref t8_element_new would.
-* \note Every call to \ref t8_element_init must be matched by a call to \ref t8_element_deinit
+* \note Every call to \see t8_element_init must be matched by a call to \see t8_element_deinit
 * \see t8_element_deinit
 * \see t8_element_new
 * \see t8_element_is_valid

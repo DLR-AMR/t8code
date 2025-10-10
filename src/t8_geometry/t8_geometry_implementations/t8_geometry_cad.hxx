@@ -142,6 +142,11 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
     return true;
   }
 
+  /**
+   * Getter function for the CAD manager.
+   * 
+   * \return The member variable cad_manager.
+  */
   std::shared_ptr<t8_cad>
   get_cad_manager () const
   {
