@@ -102,7 +102,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * \return Refinement level of the unstructured mesh element.
    */
   t8_element_level
-  get_level ()
+  get_level () const
   {
     const t8_eclass_t tree_class = get_tree_class ();
     const t8_element_t* element = get_element ();
@@ -172,7 +172,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the tree id of the unstructured mesh element.
    */
   t8_locidx_t
-  get_tree_id ()
+  get_tree_id () const
   {
     return m_tree_id;
   }
@@ -181,7 +181,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the element id of the unstructured mesh element.
    */
   t8_locidx_t
-  get_element_id ()
+  get_element_id () const
   {
     return m_element_id;
   }
@@ -190,8 +190,8 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the unstructured mesh to which the unstructured mesh element is belonging.
    * \return Reference to the unstructured mesh.
    */
-  t8_unstructured_mesh<SelfType>*
-  get_unstructured_mesh ()
+  const t8_unstructured_mesh<SelfType>*
+  get_unstructured_mesh () const
   {
     return m_unstructured_mesh;
   }
@@ -202,7 +202,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the leaf element of the unstructured mesh element.
    */
   const t8_element_t*
-  get_element ()
+  get_element () const
   {
     return t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
   }
@@ -211,7 +211,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the eclass of the unstructured mesh element.
    */
   t8_eclass_t
-  get_tree_class ()
+  get_tree_class () const
   {
     return t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
   }

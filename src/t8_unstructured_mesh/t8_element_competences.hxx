@@ -88,7 +88,7 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
    * \return Optional with coordinates of the centroid of the unstructured mesh element.
    */
   std::optional<std::array<double, T8_ECLASS_MAX_DIM>>
-  get_centroid_cached ()
+  get_centroid_cached () const
   {
     return m_coordinates;
   }

@@ -229,7 +229,7 @@ class t8_unstructured_mesh {
    * Getter for the forest the unstructured mesh is defined for.
    */
   t8_forest_t
-  get_forest ()
+  get_forest () const
   {
     return m_forest;
   }
