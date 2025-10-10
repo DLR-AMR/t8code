@@ -33,6 +33,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_types/t8_vec.hxx>
 #include <array>
 #include <vector>
 
@@ -114,7 +115,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
-  std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
+  std::vector<t8_3D_vec>
   get_vertex_coordinates ()
   {
     // Check if we have a cached version and if the cache has already been filled.
@@ -128,10 +129,10 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     const t8_element_t* element = get_element ();
     const int num_corners
       = t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
-    std::vector<std::array<double, T8_ECLASS_MAX_DIM>> vertex_coordinates;
+    std::vector<t8_3D_vec> vertex_coordinates;
     vertex_coordinates.reserve (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
-      std::array<double, T8_ECLASS_MAX_DIM> vertex;
+      t8_3D_vec vertex;
       t8_forest_element_coordinate (m_unstructured_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
       vertex_coordinates.push_back (vertex);
     }
@@ -148,7 +149,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
-  std::array<double, T8_ECLASS_MAX_DIM>
+  t8_3D_vec
   get_centroid ()
   {
     // Check if we have a cached version and if the cache has already been filled.
@@ -158,7 +159,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
         return cached_centroid.value ();
       }
     }
-    std::array<double, T8_ECLASS_MAX_DIM> coordinates;
+    t8_3D_vec coordinates;
     t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
     // Fill the cache in the cached version.
     if constexpr (get_centroid_defined) {
