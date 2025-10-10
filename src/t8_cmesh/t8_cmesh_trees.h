@@ -501,8 +501,8 @@ t8_cmesh_tree_to_face_encode (const int dimension, const t8_locidx_t face, const
 void
 t8_cmesh_tree_to_face_decode (const int dimension, const int8_t tree_to_face, int *face, int *orientation);
 
-/* TODO: To fit to the interface a trees struct is given as parameter here,
- *       however we could just take the one associated to the cmesh given.*/
+// TODO: To fit to the interface a trees struct is given as parameter here,
+//       however we could just take the one associated to the cmesh given.
 /** Print the trees,ghosts and their neighbors in ASCII format t stdout.
  * This function is used for debugging purposes.
  * \param [in]      cmesh A coarse mesh structure that must be committed.
