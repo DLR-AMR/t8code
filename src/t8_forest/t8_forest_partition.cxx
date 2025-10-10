@@ -441,6 +441,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   double const partition_weight_offset = [&](){
     double retval = 0.;
     sc_MPI_Scan(&partition_weight, &retval, 1, sc_MPI_DOUBLE, sc_MPI_SUM, forest->mpicomm);
+    retval -= partition_weight; // This is semantically equivalent to calling MPI_Exscan, without the rank 0 quirks
     return retval;
   }();
 
