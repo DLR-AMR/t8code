@@ -404,9 +404,9 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 }
 
 /* Calculate the new element_offset for forest from
- * the element in forest->set_from assuming a partition without element weights */
+ * the element in forest->set_from using the provided weight function */
 static void
-t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t* weight_fcn)
+t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t *weight_fcn)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (forest->set_from != NULL);
@@ -422,7 +422,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t* weight
   /* Initialize the shmem array */
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), forest->mpisize + 1, comm);
 
-  if (weight_fcn == nullptr){
+  if (weight_fcn == nullptr) {
     weight_fcn = [] (t8_forest_t, t8_locidx_t, t8_locidx_t) -> double { return 1.; };
   }
 
@@ -1220,7 +1220,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_arr
  * Currently the elements are distributed evenly (each element has the same weight).
  */
 void
-t8_forest_partition (t8_forest_t forest, weight_fcn_t* weight_callback)
+t8_forest_partition (t8_forest_t forest, weight_fcn_t *weight_callback)
 {
   t8_forest_t forest_from;
   int create_offset_from = 0;

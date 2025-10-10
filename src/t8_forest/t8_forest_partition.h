@@ -36,7 +36,7 @@
  * The prototype a weight function for the t8_forest_partition algorithm.
  * The function should be pure, and return a positive weight given a forest, a local tree index and an element index within the local tree
  */
-using weight_fcn_t = double(t8_forest_t, t8_locidx_t, t8_locidx_t);
+using weight_fcn_t = double (t8_forest_t, t8_locidx_t, t8_locidx_t);
 
 T8_EXTERN_C_BEGIN ();
 /**
@@ -49,7 +49,7 @@ T8_EXTERN_C_BEGIN ();
  * \note If \a weight_callback is null, then all the elements are assumed to have the same weight
 */
 void
-t8_forest_partition (t8_forest_t forest, weight_fcn_t* weight_callback = nullptr);
+t8_forest_partition (t8_forest_t forest, weight_fcn_t *weight_callback = nullptr);
 
 /** Create the element_offset array of a partitioned forest.
  * \param [in,out]  forest The forest.
