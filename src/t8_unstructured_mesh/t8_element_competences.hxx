@@ -24,6 +24,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Definition of the additional competences/functionalities that can be used for the unstructured mesh class.
  * Especially, competences to cache functionalities of elements instead of calculating them each time a function
  * is called are provided.
+ *
+ * All competences have the same inheritance pattern: 
+ * We use the CRTP pattern as we may need to access members of the derived class \ref t8_unstructured_element. 
+ * The t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
+ * we need functionality of TUnderlying).
+ * Especially for the competences to cache functionality, the access of members is not necessary, 
+ * such that it is not obvious why we use the crtp. For competences that extend the functionality of the element, 
+ * this is required. 
+ * We use it for all competences for consistency and compatibility with the t8_unstructured_element class.
  */
 
 #ifndef T8_ELEMENT_COMPETENCES_HXX
@@ -31,6 +40,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <t8_types/t8_operators.hxx>
+#include <t8_types/t8_vec.hxx>
 #include <t8_eclass.h>
 #include <array>
 #include <vector>
@@ -38,9 +48,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * Competence to cache the vertex coordinates of an element at the first function call.
- * Uses the CRTP pattern as we need to access members of the derived class \ref t8_unstructured_element. 
- * Use t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
- * we need functionality of TUnderlying).
  * \tparam TUnderlying Use the t8_unstructured_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
@@ -51,7 +58,7 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
    * Returns the previously cached vector with the vertex coordinates of the unstructured mesh element.
    * \return Constant reference to the cached vector with the vertex coordinates.
    */
-  const std::vector<std::array<double, T8_ECLASS_MAX_DIM>>&
+  const std::vector<t8_3D_vec>&
   get_vertex_coordinates_cached () const
   {
     return m_vertex_coordinates;
@@ -63,20 +70,17 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
    *                                    unstructured mesh element that should be cached.
    */
   void
-  set_vertex_coordinates_cached (std::vector<std::array<double, T8_ECLASS_MAX_DIM>>&& new_vertex_coordinates)
+  set_vertex_coordinates_cached (std::vector<t8_3D_vec>&& new_vertex_coordinates)
   {
     m_vertex_coordinates = std::move (new_vertex_coordinates);
   }
 
-  std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
+  std::vector<t8_3D_vec>
     m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Empty vector if not filled. */
 };
 
 /**
  * Competence to cache the centroid of an element at the first function call.
- * Used the CRTP pattern as we need to access members of the derived class \ref t8_unstructured_element. 
- * Use t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
- * we need functionality of TUnderlying).
  * \tparam TUnderlying Use the t8_unstructured_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
@@ -87,8 +91,8 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
    * Returns an optional with the centroid coordinates for an unstructured mesh element if previously cached.
    * \return Optional with coordinates of the centroid of the unstructured mesh element.
    */
-  std::optional<std::array<double, T8_ECLASS_MAX_DIM>>
-  get_centroid_cached ()
+  std::optional<t8_3D_vec>
+  get_centroid_cached () const
   {
     return m_coordinates;
   }
@@ -99,12 +103,12 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
    *                                      unstructured mesh element that should be cached.
    */
   void
-  set_centroid_cached (std::array<double, T8_ECLASS_MAX_DIM> new_centroid_coordinates)
+  set_centroid_cached (t8_3D_vec new_centroid_coordinates)
   {
     m_coordinates = new_centroid_coordinates;
   }
 
-  std::optional<std::array<double, T8_ECLASS_MAX_DIM>>
+  std::optional<t8_3D_vec>
     m_coordinates; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 
