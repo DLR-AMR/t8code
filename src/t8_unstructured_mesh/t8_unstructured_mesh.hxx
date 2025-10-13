@@ -66,6 +66,16 @@ class t8_unstructured_mesh {
   }
 
   /**
+   * Getter for the number of local ghost elements.
+   * \return Number of local ghost elements in the unstructured mesh.
+   */
+  t8_locidx_t
+  get_local_num_ghosts () const
+  {
+    return t8_forest_get_num_ghosts (m_forest);
+  }
+
+  /**
    * Returns an iterator to the first (local) unstructured mesh element.
    */
   t8_unstructured_iterator
@@ -87,10 +97,15 @@ class t8_unstructured_mesh {
    * Getter for an unstructured mesh element given its local index.
    * \return Reference to the unstructured mesh element.
    */
-  const TUnstructuredMeshElement&
-  operator[] (t8_locidx_t local_index) const
+  TUnstructuredMeshElement&
+  operator[] (t8_locidx_t local_index)
   {
-    return m_elements[local_index];
+    if (local_index < get_local_num_elements ()) {
+      return m_elements[local_index];
+    }
+    else {
+      return m_ghosts[local_index - get_local_num_elements ()];
+    }
   }
 
   /**
@@ -132,11 +147,34 @@ class t8_unstructured_mesh {
         m_elements.emplace_back (this, itree, ielem);
       }
     }
+
+    update_ghost_elements ();
+  }
+
+  void
+  update_ghost_elements ()
+  {
+    if (!m_ghosts.empty ()) {
+      m_ghosts.clear ();
+    }
+    m_ghosts.reserve (get_local_num_ghosts ());
+
+    auto num_loc_trees = t8_forest_get_num_local_trees (m_forest);
+
+    t8_forest_ghost_t ghost = m_forest->ghosts;
+
+    for (t8_locidx_t itree = num_loc_trees; itree < num_loc_trees + t8_forest_get_num_ghost_trees (m_forest); ++itree) {
+      const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
+      for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
+        m_ghosts.emplace_back (this, itree, ielem);
+      }
+    }
   }
 
   t8_forest_t m_forest; /**< The forest the unstructured mesh should be defined for. */
   std::vector<TUnstructuredMeshElement>
     m_elements; /**< Vector storing the unstructured mesh elements. One element vector per (local) tree. */
+  std::vector<TUnstructuredMeshElement> m_ghosts; /**< TODO */
 };
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */
