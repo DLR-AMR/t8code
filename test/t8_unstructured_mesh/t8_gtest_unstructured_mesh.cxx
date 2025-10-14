@@ -106,8 +106,15 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
   t8_forest_ghost_print (forest);
 
   // --- Check default functionality. ---
-  // t8_unstructured_mesh<t8_unstructured_mesh_element<>> unstructured_mesh
-  //   = t8_unstructured_mesh<t8_unstructured_mesh_element<>> (forest);
+  t8_unstructured_mesh<> unstructured_mesh = t8_unstructured_mesh<> (forest);
+
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    EXPECT_EQ (level, it->get_level ());
+  }
+  for (int ielement = unstructured_mesh.get_local_num_elements ();
+       ielement < unstructured_mesh.get_local_num_elements () + unstructured_mesh.get_local_num_ghosts (); ielement++) {
+    EXPECT_EQ (level, unstructured_mesh[ielement].get_level ());
+  }
 
   // // for (int ielement = 0; ielement < unstructured_mesh.get_local_num_elements (); ielement++) {
   // //   std::cout<<"tree: "<<unstructured_mesh[ielement].get_tree_id()<<" element: "<<unstructured_mesh[ielement].get_element_id()<<std::endl;

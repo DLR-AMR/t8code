@@ -41,7 +41,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /* Forward declaration of the unstructured mesh class.
  */
-template <class TUnstructuredMeshElement>
+template <template <typename> class... TCompetence>
 class t8_unstructured_mesh;
 
 /** 
@@ -65,7 +65,7 @@ template <template <typename> class... TCompetence>
 class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_element<TCompetence...>>... {
   using SelfType = t8_unstructured_mesh_element<TCompetence...>;
 
- private:
+ protected:
   // --- Variables to check which functionality is defined in TCompetence. ---
   // Helper function.
   template <template <typename> class T>
@@ -92,7 +92,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * \param [in] tree_id               The tree id of the element in the forest defining the unstructured mesh.
    * \param [in] element_id            The element id of the element in the forest defining the unstructured mesh.
    */
-  t8_unstructured_mesh_element (t8_unstructured_mesh<SelfType>* unstructured_mesh, t8_locidx_t tree_id,
+  t8_unstructured_mesh_element (t8_unstructured_mesh<TCompetence...>* unstructured_mesh, t8_locidx_t tree_id,
                                 t8_locidx_t element_id)
     : m_unstructured_mesh (unstructured_mesh), m_tree_id (tree_id), m_element_id (element_id)
   {
@@ -228,13 +228,13 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * Getter for the unstructured mesh to which the unstructured mesh element is belonging.
    * \return Reference to the unstructured mesh.
    */
-  const t8_unstructured_mesh<SelfType>*
+  const t8_unstructured_mesh<TCompetence...>*
   get_unstructured_mesh () const
   {
     return m_unstructured_mesh;
   }
 
- private:
+ protected:
   //--- Private getter for internal use. ---
   /**
    * Getter for the leaf element of the unstructured mesh element.
@@ -254,7 +254,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     return t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
   }
 
-  t8_unstructured_mesh<SelfType>*
+  t8_unstructured_mesh<TCompetence...>*
     m_unstructured_mesh;    /**< Pointer to the unstructured mesh the element is defined for. */
   t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the unstructured mesh. */
   t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the unstructured mesh. */

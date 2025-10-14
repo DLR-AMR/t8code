@@ -30,6 +30,8 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_unstructured_mesh/t8_unstructured_element.hxx>
+#include <t8_unstructured_mesh/t8_unstructured_ghost.hxx>
+#include <t8_forest/t8_forest_ghost.h>
 #include <iterator>
 #include <memory>
 #include <vector>
@@ -39,13 +41,14 @@
  * \tparam TUnstructuredMeshElement The element class that should be used for the unstructured mesh elements. 
  *                                  This template parameter defines which element functionality is available and if it is cached or calculated.
  */
-template <class TUnstructuredMeshElement = t8_unstructured_mesh_element<>>
+template <template <typename> class... TCompetence>
 class t8_unstructured_mesh {
  public:
   // Declare unstructured mesh element as friend such that private members (e.g. the forest) can be accessed.
-  friend TUnstructuredMeshElement;
-
-  using t8_unstructured_iterator = typename std::vector<TUnstructuredMeshElement>::iterator;
+  using t8_unstructured_element = t8_unstructured_mesh_element<TCompetence...>;
+  friend t8_unstructured_element;
+  using t8_unstructured_ghost = t8_unstructured_ghost_element<TCompetence...>;
+  using t8_unstructured_iterator = typename std::vector<t8_unstructured_element>::iterator;
   /** 
    * Constructor for an unstructured mesh. 
    * \param [in] input_forest The forest from which the unstructured mesh should be created. 
@@ -97,7 +100,7 @@ class t8_unstructured_mesh {
    * Getter for an unstructured mesh element given its local index.
    * \return Reference to the unstructured mesh element.
    */
-  TUnstructuredMeshElement&
+  t8_unstructured_element&
   operator[] (t8_locidx_t local_index)
   {
     if (local_index < get_local_num_elements ()) {
@@ -161,20 +164,18 @@ class t8_unstructured_mesh {
 
     auto num_loc_trees = t8_forest_get_num_local_trees (m_forest);
 
-    t8_forest_ghost_t ghost = m_forest->ghosts;
-
-    for (t8_locidx_t itree = num_loc_trees; itree < num_loc_trees + t8_forest_get_num_ghost_trees (m_forest); ++itree) {
-      const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
+    for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (m_forest); ++itree) {
+      const t8_locidx_t num_elems = t8_forest_ghost_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_ghosts.emplace_back (this, itree, ielem);
+        m_ghosts.emplace_back (this, num_loc_trees + itree, itree, ielem);
       }
     }
   }
 
   t8_forest_t m_forest; /**< The forest the unstructured mesh should be defined for. */
-  std::vector<TUnstructuredMeshElement>
+  std::vector<t8_unstructured_element>
     m_elements; /**< Vector storing the unstructured mesh elements. One element vector per (local) tree. */
-  std::vector<TUnstructuredMeshElement> m_ghosts; /**< TODO */
+  std::vector<t8_unstructured_ghost> m_ghosts; /**< TODO */
 };
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */
