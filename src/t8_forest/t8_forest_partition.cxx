@@ -406,38 +406,32 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 // Computes the weight of the forest, the weight of the local partition, and the local offset (i.e. the weight
 // of all the partitions of lower rank combined)
 // If weight_fcn is null, all the elements are assumed to be of unit weight.
-static std::tuple< double, double, double >
+static std::tuple<double, double, double>
 t8_forest_integrate_leaf_weights (t8_forest_t forest, weight_fcn_t *weight_fcn)
 {
-    T8_ASSERT( t8_forest_is_committed(forest) );
+  T8_ASSERT (t8_forest_is_committed (forest));
 
-    if (weight_fcn == nullptr) {
-      return {
-        t8_forest_get_global_num_leaf_elements (forest),
-        t8_forest_get_local_num_leaf_elements (forest),
-        t8_forest_get_first_local_leaf_element_id (forest)
-      };
+  if (weight_fcn == nullptr) {
+    return { t8_forest_get_global_num_leaf_elements (forest), t8_forest_get_local_num_leaf_elements (forest),
+             t8_forest_get_first_local_leaf_element_id (forest) };
+  }
+
+  double local_partition_weight = 0.;
+  for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest); ++ltreeid) {
+    for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest, ltreeid); ++ielm) {
+      local_partition_weight += weight_fcn (forest, ltreeid, ielm);
     }
+  }
 
-    double local_partition_weight = 0.;
-    for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest); ++ltreeid) {
-      for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest, ltreeid); ++ielm) {
-        local_partition_weight += weight_fcn (forest, ltreeid, ielm);
-      }
-    }
+  double local_partition_weight_offset = 0.;
+  sc_MPI_Scan (&local_partition_weight, &local_partition_weight_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, forest->mpicomm);
+  local_partition_weight_offset
+    -= local_partition_weight;  // This is semantically equivalent to calling MPI_Exscan, without the rank 0 quirks
 
-    double local_partition_weight_offset = 0.;
-    sc_MPI_Scan (&local_partition_weight, &local_partition_weight_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, forest->mpicomm);
-    local_partition_weight_offset -= local_partition_weight;  // This is semantically equivalent to calling MPI_Exscan, without the rank 0 quirks
+  double forest_weight = local_partition_weight_offset + local_partition_weight;
+  sc_MPI_Bcast (&forest_weight, 1, sc_MPI_DOUBLE, forest->mpisize - 1, forest->mpicomm);
 
-    double forest_weight = local_partition_weight_offset + local_partition_weight;
-    sc_MPI_Bcast (&forest_weight, 1, sc_MPI_DOUBLE, forest->mpisize - 1, forest->mpicomm);
-
-    return {
-        forest_weight,
-        local_partition_weight,
-        local_partition_weight_offset
-    };
+  return { forest_weight, local_partition_weight, local_partition_weight_offset };
 }
 
 /* Calculate the new element_offset for forest from
@@ -459,7 +453,8 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t *weight
   /* Initialize the shmem array */
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), forest->mpisize + 1, comm);
 
-  auto const [forest_weight, partition_weight, partition_weight_offset] = t8_forest_integrate_leaf_weights(forest_from, weight_fcn);
+  auto const [forest_weight, partition_weight, partition_weight_offset]
+    = t8_forest_integrate_leaf_weights (forest_from, weight_fcn);
 
   t8_gloidx_t const partition_offset = t8_forest_get_first_local_leaf_element_id (forest_from);
 
@@ -472,8 +467,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t *weight
       double accumulated_weight = partition_weight_offset;
       for (int i = 0; i < mpisize; i++) {
         double const target = forest_weight * i / mpisize;
-        if (target < partition_weight_offset
-            or target > partition_weight_offset + partition_weight) {
+        if (target < partition_weight_offset or target > partition_weight_offset + partition_weight) {
           continue;  // the new first element for the i-th partition is not here
         }
         // this while loop is a very ugly way to say "find the element where the partial sum
@@ -495,8 +489,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t *weight
         }
         /* Calculate the first element index for the i-th process */
         t8_gloidx_t new_first_element_id
-          = partition_offset + t8_forest_get_tree_element_offset (forest_from, current_tree)
-            + current_elm_in_tree;
+          = partition_offset + t8_forest_get_tree_element_offset (forest_from, current_tree) + current_elm_in_tree;
         T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
         element_offsets[i] = new_first_element_id;
       }
