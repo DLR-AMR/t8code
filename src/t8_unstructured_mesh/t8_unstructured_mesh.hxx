@@ -87,8 +87,8 @@ class t8_unstructured_mesh {
    * Getter for an unstructured mesh element given its local index.
    * \return Reference to the unstructured mesh element.
    */
-  const TUnstructuredMeshElement&
-  operator[] (t8_locidx_t local_index) const
+  TUnstructuredMeshElement&
+  operator[] (t8_locidx_t local_index)
   {
     return m_elements[local_index];
   }
