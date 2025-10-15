@@ -464,32 +464,23 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t *weight
 
       if (weight_fcn == nullptr) {  // in this case forest_weight = global_num_leaf_elements
         for (int i = 0; i < mpisize; i++) {
-          element_offsets[i] = static_cast< t8_gloidx_t >( forest_weight * i / mpisize );
+          element_offsets[i] = static_cast<t8_gloidx_t> (forest_weight * i / mpisize);
         }
       }
       else {
-        t8_locidx_t current_tree = 0;
-        t8_locidx_t current_elm_in_tree = 0;
         double accumulated_weight = partition_weight_offset;
-        for (int i = 0; i < mpisize; i++) {
-          double const target = forest_weight * i / mpisize;
-          if (target < partition_weight_offset or target > partition_weight_offset + partition_weight) {
-            continue;  // the new first element for the i-th partition is not here
-          }
-          // this while loop is a very ugly way to say "find the element where the partial sum
-          // of all the weights up to this point matches the target"
-          while (accumulated_weight < target) {
-            T8_ASSERT (current_tree < t8_forest_get_num_local_trees (forest_from));
-            T8_ASSERT (current_elm_in_tree < t8_forest_get_tree_num_leaf_elements (forest_from, current_tree));
-            accumulated_weight += weight_fcn (forest_from, current_tree, current_elm_in_tree);
-            ++current_elm_in_tree;
-            if (current_elm_in_tree == t8_forest_get_tree_num_leaf_elements (forest_from, current_tree)) {
-              ++current_tree;
-              current_elm_in_tree = 0;
+        t8_gloidx_t global_elm_idx = partition_offset;
+        int i = std::ceil (partition_weight_offset * mpisize / forest_weight);
+
+        for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest); ++ltreeid) {
+          for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest, ltreeid); ++ielm) {
+            accumulated_weight += weight_fcn (forest, ltreeid, ielm);
+            ++global_elm_idx;
+            if (accumulated_weight > forest_weight * i / mpisize) {
+              element_offsets[i] = global_elm_idx;
+              ++i;
             }
           }
-          element_offsets[i]
-            = partition_offset + t8_forest_get_tree_element_offset (forest_from, current_tree) + current_elm_in_tree;
         }
       }
       element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
