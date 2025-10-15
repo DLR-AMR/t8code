@@ -68,20 +68,19 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   // Helper function.
   template <template <typename> class T>
   static constexpr bool
-  has_get_vertex_coordinates_cached ()
+  cache_vertex_coordinates_defined ()
   {
-    return requires (T<SelfType>& competence) { competence.get_vertex_coordinates_cached (); };
+    return requires (T<SelfType>& competence) { competence.cache_vertex_coordinates (); };
   }
-  static constexpr bool get_vertex_coordinates_defined
-    = (false || ... || has_get_vertex_coordinates_cached<TCompetence> ());
+  static constexpr bool cache_vertex_coordinates = (false || ... || cache_vertex_coordinates_defined<TCompetence> ());
 
   template <template <typename> class T>
   static constexpr bool
-  has_get_centroid_cached ()
+  cache_centroid_defined ()
   {
-    return requires (T<SelfType>& competence) { competence.get_centroid_cached (); };
+    return requires (T<SelfType>& competence) { competence.cache_centroid (); };
   }
-  static constexpr bool get_centroid_defined = (false || ... || has_get_centroid_cached<TCompetence> ());
+  static constexpr bool cache_centroid = (false || ... || cache_centroid_defined<TCompetence> ());
 
  public:
   /**
@@ -119,10 +118,9 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   get_vertex_coordinates ()
   {
     // Check if we have a cached version and if the cache has already been filled.
-    if constexpr (get_vertex_coordinates_defined) {
-      auto cached_vertex = this->get_vertex_coordinates_cached ();
-      if (!cached_vertex.empty ()) {
-        return cached_vertex;
+    if constexpr (cache_vertex_coordinates) {
+      if (this->m_vertex_coordinates.empty ()) {
+        return this->m_vertex_coordinates;
       }
     }
     // Calculate the vertex coordinates.
@@ -137,9 +135,9 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
       vertex_coordinates.push_back (vertex);
     }
     // Fill the cache in the cached version.
-    if constexpr (get_vertex_coordinates_defined) {
-      this->set_vertex_coordinates_cached (std::move (vertex_coordinates));
-      return this->get_vertex_coordinates_cached ();
+    if constexpr (cache_vertex_coordinates) {
+      this->m_vertex_coordinates = std::move (vertex_coordinates);
+      return this->m_vertex_coordinates;
     }
     return vertex_coordinates;
   }
@@ -153,17 +151,16 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   get_centroid ()
   {
     // Check if we have a cached version and if the cache has already been filled.
-    if constexpr (get_centroid_defined) {
-      auto cached_centroid = this->get_centroid_cached ();
-      if (cached_centroid.has_value ()) {
-        return cached_centroid.value ();
+    if constexpr (cache_centroid) {
+      if (this->m_centroid.has_value ()) {
+        return this->m_centroid.value ();
       }
     }
     t8_3D_vec coordinates;
     t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
     // Fill the cache in the cached version.
-    if constexpr (get_centroid_defined) {
-      this->set_centroid_cached (coordinates);
+    if constexpr (cache_centroid) {
+      this->m_centroid = coordinates;
     }
     return coordinates;
   }

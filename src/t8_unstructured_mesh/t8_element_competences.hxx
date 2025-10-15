@@ -53,28 +53,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 template <typename TUnderlying>
 struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_vertex_coordinates>
 {
- private:
+ public:
   /**
-   * Returns the previously cached vector with the vertex coordinates of the unstructured mesh element.
-   * \return Constant reference to the cached vector with the vertex coordinates.
+   * Dummy function for the element to check if a cache for the vertex coordinates exists.
+   * \return true as this competence provides a cache for the vertex_coordinates.
    */
-  const std::vector<t8_3D_vec>&
-  get_vertex_coordinates_cached () const
+  bool
+  cache_vertex_coordinates () const
   {
-    return m_vertex_coordinates;
+    return true;
   }
 
-  /**
-   * Setter for the cache.
-   * \param [in] new_vertex_coordinates Vector with the coordinates of the vertices of the
-   *                                    unstructured mesh element that should be cached.
-   */
-  void
-  set_vertex_coordinates_cached (std::vector<t8_3D_vec>&& new_vertex_coordinates)
-  {
-    m_vertex_coordinates = std::move (new_vertex_coordinates);
-  }
-
+ protected:
   std::vector<t8_3D_vec>
     m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Empty vector if not filled. */
 };
@@ -86,30 +76,20 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
 template <typename TUnderlying>
 struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
 {
- private:
+ public:
   /**
-   * Returns an optional with the centroid coordinates for an unstructured mesh element if previously cached.
-   * \return Optional with coordinates of the centroid of the unstructured mesh element.
+   * Dummy function for the element to check if a cache for the centroid exists.
+   * \return true as this competence provides a cache for the centroid.
    */
-  std::optional<t8_3D_vec>
-  get_centroid_cached () const
+  bool
+  cache_centroid () const
   {
-    return m_coordinates;
+    return true;
   }
 
-  /**
-   * Setter for the cache.
-   * \param [in] new_centroid_coordinates Array with the coordinates of the centroid of the
-   *                                      unstructured mesh element that should be cached.
-   */
-  void
-  set_centroid_cached (t8_3D_vec new_centroid_coordinates)
-  {
-    m_coordinates = new_centroid_coordinates;
-  }
-
+ protected:
   std::optional<t8_3D_vec>
-    m_coordinates; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
+    m_centroid; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 
 #endif /* !T8_ELEMENT_COMPETENCES_HXX */
