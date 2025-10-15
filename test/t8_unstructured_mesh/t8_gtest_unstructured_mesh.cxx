@@ -68,15 +68,15 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
 
   // Iterate with the iterator over all unstructured mesh elements and check some functionality.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
-    EXPECT_EQ (level, it->get_level ());
-    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
-      EXPECT_GE (1, it->get_centroid ()[coord]);
-      EXPECT_LE (0, it->get_centroid ()[coord]);
+    auto centroid = it->get_centroid ();
+    for (int coord = 0; coord < 3; ++coord) {
+      EXPECT_GE (1, centroid[coord]);
+      EXPECT_LE (0, centroid[coord]);
     }
     // Test dereference operator.
     auto vertex_coordinates = (*it).get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
+      for (int coord = 0; coord < 3; ++coord) {
         EXPECT_GE (1, vertex_coordinates[ivertex][coord]);
         EXPECT_LE (0, vertex_coordinates[ivertex][coord]);
       }
@@ -102,13 +102,14 @@ TEST_P (t8_unstructured_mesh_test, test_competences)
   for (auto it = unstructured_mesh_vertex_coordinates.begin (); it != unstructured_mesh_vertex_coordinates.end ();
        ++it) {
     EXPECT_EQ (level, it->get_level ());
-    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
-      EXPECT_GE (1, it->get_centroid ()[coord]);
-      EXPECT_LE (0, it->get_centroid ()[coord]);
+    auto centroid = it->get_centroid ();
+    for (int coord = 0; coord < 3; ++coord) {
+      EXPECT_GE (1, centroid[coord]);
+      EXPECT_LE (0, centroid[coord]);
     }
     auto vertex_coordinates = it->get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
+      for (int coord = 0; coord < 3; ++coord) {
         EXPECT_GE (1, vertex_coordinates[ivertex][coord]);
         EXPECT_LE (0, vertex_coordinates[ivertex][coord]);
       }
@@ -119,7 +120,7 @@ TEST_P (t8_unstructured_mesh_test, test_competences)
        ++it) {
     auto vertex_coordinates = it->get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
+      for (int coord = 0; coord < 3; ++coord) {
         EXPECT_GE (1, vertex_coordinates[ivertex][coord]);
         EXPECT_LE (0, vertex_coordinates[ivertex][coord]);
       }
@@ -132,7 +133,7 @@ TEST_P (t8_unstructured_mesh_test, test_competences)
 
   // Iterate with the iterator over all unstructured mesh elements.
   for (auto it = unstructured_mesh_centroid.begin (); it != unstructured_mesh_centroid.end (); ++it) {
-    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
+    for (int coord = 0; coord < 3; ++coord) {
       EXPECT_GE (1, it->get_centroid ()[coord]);
       // Second call (here cached value should be used).
       EXPECT_LE (0, it->get_centroid ()[coord]);
@@ -152,13 +153,14 @@ TEST_P (t8_unstructured_mesh_test, test_2_competences)
   // Iterate with the iterator over all unstructured mesh elements.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     EXPECT_EQ (level, it->get_level ());
-    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
-      EXPECT_GE (1, it->get_centroid ()[coord]);
-      EXPECT_LE (0, it->get_centroid ()[coord]);
+    auto centroid = it->get_centroid ();
+    for (int coord = 0; coord < 3; ++coord) {
+      EXPECT_GE (1, centroid[coord]);
+      EXPECT_LE (0, centroid[coord]);
     }
     auto vertex_coordinates = it->get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
+      for (int coord = 0; coord < 3; ++coord) {
         EXPECT_GE (1, vertex_coordinates[ivertex][coord]);
         EXPECT_LE (0, vertex_coordinates[ivertex][coord]);
       }
@@ -167,13 +169,14 @@ TEST_P (t8_unstructured_mesh_test, test_2_competences)
   // Test dereference operator. (Here the cached values should be used.)
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     EXPECT_EQ (level, (*it).get_level ());
-    for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
-      EXPECT_GE (1, (*it).get_centroid ()[coord]);
-      EXPECT_LE (0, (*it).get_centroid ()[coord]);
+    auto centroid = (*it).get_centroid ();
+    for (int coord = 0; coord < 3; ++coord) {
+      EXPECT_GE (1, centroid[coord]);
+      EXPECT_LE (0, centroid[coord]);
     }
     auto vertex_coordinates = it->get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
+      for (int coord = 0; coord < 3; ++coord) {
         EXPECT_GE (1, vertex_coordinates[ivertex][coord]);
         EXPECT_LE (0, vertex_coordinates[ivertex][coord]);
       }
