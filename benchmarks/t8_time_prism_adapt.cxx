@@ -100,7 +100,7 @@ t8_time_refine (int start_level, int end_level, [[maybe_unused]] int create_fore
     t8_forest_set_cmesh (forest, t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD), sc_MPI_COMM_WORLD);
   }
   else {
-    t8_forest_set_cmesh (forest, t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0), sc_MPI_COMM_WORLD);
+    t8_forest_set_cmesh (forest, t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0, 0), sc_MPI_COMM_WORLD);
   }
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, start_level);

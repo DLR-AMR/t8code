@@ -49,7 +49,7 @@ class forest_user_data: public testing::TestWithParam<int> {
 TEST_P (forest_user_data, test_user_data)
 {
   /* Build a forest */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0, 0);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
   /* Define user data */
   double data = 42.42;
@@ -106,7 +106,7 @@ t8_test_function_second (void)
 TEST_P (forest_user_data, test_user_function)
 {
   /* Build a forest */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0, 0);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
   double (*funpointer) (int);

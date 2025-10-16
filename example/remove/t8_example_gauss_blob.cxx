@@ -145,7 +145,7 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
   if (eclass != 0) {
     T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM
                || eclass == T8_ECLASS_PYRAMID);
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0, 0);
   }
   else {
     cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);

@@ -68,7 +68,7 @@ TEST_P (forest_halt_neighbors, test_create_cmesh)
   case 0:
     return t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
   case 1:
-    return t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    return t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0, 0);
   case 2:
     return t8_cmesh_new_bigmesh (eclass, 100, sc_MPI_COMM_WORLD);
   default:

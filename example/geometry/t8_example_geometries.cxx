@@ -705,7 +705,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_global_productionf ("This forest will get refined at the boundary to level %i.\n", level);
     {
       /* Circle geometry on triangulated unit square. */
-      t8_cmesh_t tri_square = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
+      t8_cmesh_t tri_square = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0, 0);
       t8_cmesh_set_derive (cmesh, tri_square);
       t8_cmesh_register_geometry<t8_geometry_circle> (cmesh);
       snprintf (vtuname, BUFSIZ, "forest_circle_lvl_%i", level);

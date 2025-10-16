@@ -60,7 +60,7 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
   int ret, mpirank, mpiret;
 
   if (mshfile == NULL) {
-    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, sc_MPI_COMM_WORLD, 0, 1, 0);
+    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, sc_MPI_COMM_WORLD, 0, 1, 0, 0);
   }
   else {
     t8_cmesh_t cmesh_partition;

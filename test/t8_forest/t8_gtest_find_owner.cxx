@@ -64,7 +64,7 @@ t8_test_create_cmesh (int i, t8_eclass_t tree_class, sc_MPI_Comm comm)
   case 0:
     return t8_cmesh_new_from_class (tree_class, comm);
   case 1:
-    return t8_cmesh_new_hypercube (tree_class, comm, 0, 0, 0);
+    return t8_cmesh_new_hypercube (tree_class, comm, 0, 0, 0, 0);
   case 2:
     return t8_cmesh_new_bigmesh (tree_class, 100, comm);
   default:

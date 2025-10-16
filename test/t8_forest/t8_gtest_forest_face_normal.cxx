@@ -43,7 +43,7 @@ class class_forest_face_normal: public testing::TestWithParam<std::tuple<std::tu
     scheme = create_from_scheme_id (scheme_id);
     eclass = std::get<1> (std::get<0> (GetParam ()));
     level = std::get<1> (GetParam ());
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0, 0);
     const int do_face_ghost = 1;
     forest = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, sc_MPI_COMM_WORLD);
   }

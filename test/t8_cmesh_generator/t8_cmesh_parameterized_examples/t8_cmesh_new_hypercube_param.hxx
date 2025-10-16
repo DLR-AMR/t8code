@@ -32,48 +32,54 @@ namespace new_hypercube_cmesh
 {
 std::string
 make_param_string (const t8_eclass_t eclass, const sc_MPI_Comm comm, const int do_bcast, const int do_partition,
-                   const int periodic)
+                   const int periodic, const int axis_aligned)
 {
   std::string delimiter = std::string ("_");
   std::string bcast = do_bcast ? std::string ("bcast") : std::string ("noBcast");
   std::string partition = do_partition ? std::string ("partition") : std::string ("noPartition");
   std::string periodic_string = periodic ? std::string ("periodic") : std::string ("noPeriodic");
+  std::string axis = axis_aligned ? std::string ("axisAligned") : std::string ("noAxisAligned");
   std::string params
-    = delimiter + t8_eclass_to_string[eclass] + delimiter + bcast + delimiter + partition + delimiter + periodic_string;
+    = delimiter + t8_eclass_to_string[eclass] + delimiter + bcast + delimiter + partition + delimiter + periodic_string + delimiter + axis;
 
   return params;
 }
 
-std::function<std::string (const t8_eclass_t, const sc_MPI_Comm, const int, const int, const int)> param_to_string
+std::function<std::string (const t8_eclass_t, const sc_MPI_Comm, const int, const int, const int, const int)> param_to_string
   = make_param_string;
 
 std::vector<t8_eclass_t> periodic_eclasses = { T8_ECLASS_VERTEX, T8_ECLASS_LINE, T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE,
                                                T8_ECLASS_HEX,    T8_ECLASS_TET,  T8_ECLASS_PRISM };
 
-std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm, int, int, int)> cmesh_wrapper = t8_cmesh_new_hypercube;
+std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm, int, int, int, int)> cmesh_wrapper = t8_cmesh_new_hypercube;
 
 std::vector<t8_eclass_t> nonperiodic_eclasses = { T8_ECLASS_PYRAMID };
+
+std::vector<int> axis_aligned = { 0 };
 
 example_set *cmesh_example = (example_set *) new cmesh_cartesian_product_params<
   decltype (periodic_eclasses.begin ()), decltype (cmesh_params::my_comms.begin ()),
   decltype (cmesh_params::do_bcast.begin ()), decltype (cmesh_params::partition.begin ()),
-  decltype (cmesh_params::periodic.begin ())> (
+  decltype (cmesh_params::periodic.begin ()), decltype (axis_aligned.begin ())> (
   std::make_pair (periodic_eclasses.begin (), periodic_eclasses.end ()),
   std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
   std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()),
   std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
-  std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()), cmesh_wrapper, param_to_string,
+  std::make_pair (cmesh_params::periodic.begin (), cmesh_params::periodic.end ()),
+  std::make_pair (axis_aligned.begin (), axis_aligned.end ()),
+  cmesh_wrapper, param_to_string,
   "t8_cmesh_new_hypercube");
 
 example_set *cmesh_example_pyra = (example_set *) new cmesh_cartesian_product_params<
   decltype (periodic_eclasses.begin ()), decltype (cmesh_params::my_comms.begin ()),
   decltype (cmesh_params::do_bcast.begin ()), decltype (cmesh_params::partition.begin ()),
-  decltype (cmesh_params::no_periodic.begin ())> (
+  decltype (cmesh_params::no_periodic.begin ()), decltype (axis_aligned.begin ())> (
   std::make_pair (nonperiodic_eclasses.begin (), nonperiodic_eclasses.end ()),
   std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()),
   std::make_pair (cmesh_params::do_bcast.begin (), cmesh_params::do_bcast.end ()),
   std::make_pair (cmesh_params::partition.begin (), cmesh_params::partition.end ()),
-  std::make_pair (cmesh_params::no_periodic.begin (), cmesh_params::no_periodic.end ()), cmesh_wrapper, param_to_string,
+  std::make_pair (cmesh_params::no_periodic.begin (), cmesh_params::no_periodic.end ()), 
+  std::make_pair (axis_aligned.begin (), axis_aligned.end()), cmesh_wrapper, param_to_string,
   "t8_cmesh_new_hypercube");
 }  // namespace new_hypercube_cmesh
 

@@ -63,7 +63,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
 
   /* Build a coarse mesh of 2 prism trees that form a cube. */
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0, 0);
   t8_global_productionf (" [step2] Constructed coarse mesh with 2 prism trees.\n");
 
   return cmesh;

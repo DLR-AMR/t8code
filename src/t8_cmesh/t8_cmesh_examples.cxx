@@ -657,7 +657,7 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, [[maybe_unused]] int do_partiti
  */
 /* TODO: upgrade with int x,y,z for periodic faces */
 t8_cmesh_t
-t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic)
+t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic, int use_axis_aligned)
 {
   t8_cmesh_t cmesh;
   int num_trees_for_hypercube[T8_ECLASS_COUNT] = { 1, 1, 1, 2, 1, 6, 2, 3 };
@@ -679,6 +679,8 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   /* clang-format on */
 
   SC_CHECK_ABORT (eclass != T8_ECLASS_PYRAMID || !periodic, "The pyramid cube mesh cannot be periodic.\n");
+
+  const int num_vertices = use_axis_aligned ? 2 : t8_eclass_num_vertices[eclass];
 
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
@@ -712,9 +714,15 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       [[fallthrough]];
     case T8_ECLASS_VERTEX:
       vertices[0] = 0;
+      if (use_axis_aligned) {
+        if (eclass == T8_ECLASS_QUAD)
+          vertices[1] = 3;
+        else if (eclass == T8_ECLASS_HEX)
+          vertices[1] = 7;
+      }
       t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices,
-                                                     t8_eclass_num_vertices[eclass]);
-      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, t8_eclass_num_vertices[eclass]);
+                                                     num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, num_vertices);
       break;
     case T8_ECLASS_PRISM:
       t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
@@ -724,14 +732,12 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       vertices[3] = 4;
       vertices[4] = 5;
       vertices[5] = 7;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 6);
-      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 6);
-      vertices[1] = 3;
-      vertices[2] = 2;
-      vertices[4] = 7;
-      vertices[5] = 6;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 6);
-      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 6);
+      if (use_axis_aligned ){
+        vertices[1] = 7;
+      }
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, num_vertices);
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
         t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
@@ -742,18 +748,22 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
     case T8_ECLASS_TRIANGLE:
       t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
       vertices[0] = 0;
-      vertices[1] = 1;
+      vertices[1] = use_axis_aligned ? 3 : 1;
       vertices[2] = 3;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 3);
-      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 3);
+
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, num_vertices);
       vertices[1] = 3;
       vertices[2] = 2;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 3);
-      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 3);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, num_vertices);
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
         t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
       }
+      t8_debugf("[D] vertices_coords: v1 (%f %f %f) v2 (%f %f %f)\n",
+                attr_vertices[0], attr_vertices[1], attr_vertices[2],
+                attr_vertices[3], attr_vertices[4], attr_vertices[5]);
       break;
     case T8_ECLASS_TET:
       t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
@@ -763,31 +773,31 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
       t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
       t8_cmesh_set_join (cmesh, 5, 0, 2, 1, 0);
       vertices[0] = 0;
-      vertices[1] = 1;
+      vertices[1] = use_axis_aligned ? 7 : 1;
       vertices[2] = 5;
       vertices[3] = 7;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 4);
-      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, 4);
-      vertices[1] = 3;
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 0, attr_vertices, num_vertices);
+      vertices[1] = use_axis_aligned ? 7 : 3;
       vertices[2] = 1;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 4);
-      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 4);
-      vertices[1] = 2;
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, num_vertices);
+      vertices[1] = use_axis_aligned ? 7 : 2;
       vertices[2] = 3;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 4);
-      t8_cmesh_set_tree_vertices (cmesh, 2, attr_vertices, 4);
-      vertices[1] = 6;
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 2, attr_vertices, num_vertices);
+      vertices[1] = use_axis_aligned ? 7 : 6;
       vertices[2] = 2;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 4);
-      t8_cmesh_set_tree_vertices (cmesh, 3, attr_vertices, 4);
-      vertices[1] = 4;
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 3, attr_vertices, num_vertices);
+      vertices[1] = use_axis_aligned ? 7 : 4;
       vertices[2] = 6;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 4);
-      t8_cmesh_set_tree_vertices (cmesh, 4, attr_vertices, 4);
-      vertices[1] = 5;
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 4, attr_vertices, num_vertices);
+      vertices[1] = use_axis_aligned ? 7 : 5;
       vertices[2] = 4;
-      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 4);
-      t8_cmesh_set_tree_vertices (cmesh, 5, attr_vertices, 4);
+      t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, num_vertices);
+      t8_cmesh_set_tree_vertices (cmesh, 5, attr_vertices, num_vertices);
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 4, 0, 3, 0);
         t8_cmesh_set_join (cmesh, 1, 3, 0, 3, 2);
@@ -837,7 +847,17 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
   /* Use linear geometry */
   /* We need to set the geometry after broadcasting, since we
    * cannot bcast the geometries. */
-  t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+  if (use_axis_aligned) {
+    const int ieclass = (int) eclass;
+    if (ieclass == T8_ECLASS_TRIANGLE || ieclass == T8_ECLASS_PRISM || ieclass == T8_ECLASS_TET) {
+      t8_cmesh_register_geometry<t8_geometry_tri_axis_aligned> (cmesh);
+    }
+    else {
+      t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
+    }
+  } else {
+    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+  }
 
   /* Check whether the cmesh will be partitioned */
   if (do_partition) {

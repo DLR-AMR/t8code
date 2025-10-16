@@ -60,7 +60,7 @@ t8_step1_build_tetcube_coarse_mesh (sc_MPI_Comm comm)
    *   do_partition - If non-zero the cmesh will be partitioned among the processes. If 0 each process has a copy of the whole cmesh.
    *   periodic     - If non-zero the cube will have periodic boundaries. That is, i.e. the left face is connected to the right face.
    */
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 0, 0);
+  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TET, comm, 0, 0, 0, 0);
 
   return cmesh;
 }

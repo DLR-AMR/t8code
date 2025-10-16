@@ -241,7 +241,7 @@ class t8_test_partition_data_test: public testing::TestWithParam<std::tuple<int,
 TEST_P (t8_test_partition_data_test, test_partition_data)
 {
   /* Build a forest */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0, 0);
   t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
   /* Adapt the forest exemplary. */

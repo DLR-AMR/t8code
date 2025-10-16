@@ -240,7 +240,7 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm, int gh
 
   if (eclass < T8_ECLASS_COUNT) {
     // Build a hypercube out of the given eclass
-    cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
+    cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0, 0);
   }
   else if (eclass == T8_ECLASS_COUNT) {
     // Build a 3D hybrid hypercube with tets, hexes and prisms

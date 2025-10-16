@@ -140,7 +140,7 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   }
   /* If no prefix given, create hypercube */
   else {
-    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
+    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0, 0);
   }
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);

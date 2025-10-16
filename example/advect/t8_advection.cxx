@@ -865,11 +865,11 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type, const char *mshfile, in
       return t8_cmesh_new_hypercube_hybrid (comm, 0, 1);
     }
     else if (cube_type == 9) {
-      return t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, comm, 0, 0, 0);
+      return t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, comm, 0, 0, 0, 0);
     }
     else {
       T8_ASSERT (T8_ECLASS_ZERO <= cube_type && cube_type < T8_ECLASS_COUNT);
-      return t8_cmesh_new_hypercube ((t8_eclass_t) cube_type, comm, 0, 0, 1);
+      return t8_cmesh_new_hypercube ((t8_eclass_t) cube_type, comm, 0, 0, 1, 0);
     }
   }
 }

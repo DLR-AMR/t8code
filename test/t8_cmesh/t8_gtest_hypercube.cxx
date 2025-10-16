@@ -40,7 +40,7 @@ class cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass,
     bcast = std::get<1> (GetParam ());
     partition = std::get<2> (GetParam ());
 
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, bcast, partition, 0);
+    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, bcast, partition, 0, 0);
   }
   void
   TearDown () override

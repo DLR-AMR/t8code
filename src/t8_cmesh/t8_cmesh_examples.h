@@ -88,9 +88,12 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm);
  * \param [in] do_partition Create a partitioned cmesh.
  * \param [in] periodic     If true, the coarse mesh will be periodic in each direction.
  *                          Not possible with \a eclass pyramid.
+ * \param [in] use_axis_aligned Use the axis-aligned geometry. If used, only two points per tree are stored. Not possible with \a eclass pyramid or \a eclass tet.
+ * \return                      A committed t8_cmesh structure with
+ *                              one hypercube of class \a eclass.
  */
 t8_cmesh_t
-t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic);
+t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic, int use_axis_aligned);
 
 /** Construct a hypercube forest from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension of the cube.
