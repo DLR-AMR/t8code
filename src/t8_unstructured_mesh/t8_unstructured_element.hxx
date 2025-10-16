@@ -119,7 +119,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   {
     // Check if we have a cached version and if the cache has already been filled.
     if constexpr (cache_vertex_coordinates) {
-      if (this->m_vertex_coordinates.empty ()) {
+      if (!this->m_vertex_coordinates.empty ()) {
         return this->m_vertex_coordinates;
       }
     }
