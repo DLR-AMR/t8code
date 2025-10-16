@@ -1811,8 +1811,8 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
  * \param[in, out] first_or_last_local_tree The global id of the first/last tree of the current process.
  * \param[in, out] first_tree_shared The first tree shared flag. Only used if we send the start message. Set to NULL if not used. 
  * \param[in, out] child_in_tree_end_or_begin The tree-local id of the first/last element in the tree. Set to NULL if not used.
- * \param[in] global_num_elements The global number of elements in the cmesh.
  * \param[in, out] expect_start_or_end_message If true, we expect a start or end message from the process.
+ * \param[in] global_num_elements The global number of elements in the cmesh.
  * \param[in] comm The MPI communicator.
  * 
  */
