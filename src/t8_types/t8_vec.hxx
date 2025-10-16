@@ -222,7 +222,7 @@ t8_dot (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y)
  * \param [in]  vec_y  A 2D vector.
  * \return             The cross product of \a vec_x and \a vec_y.
  */
-static inline double
+constexpr double
 t8_cross_2D (const t8_vec<2> &vec_x, const t8_vec<2> &vec_y)
 {
   return vec_x[0] * vec_y[1] - vec_x[1] * vec_y[0];

@@ -33,8 +33,10 @@
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_tri_axis_aligned.hxx>
 #include <t8_element.h>
 #include <t8_types/t8_vec.hxx>
+#include <t8_vtk/t8_vtk_writer.h>
 
 class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
  public:
@@ -53,7 +55,8 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
     eclass = std::get<1> (GetParam ());
     t8_cmesh_init (&cmesh);
     if (geom_int == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED
-        && !(eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX)) {
+        && !(eclass == T8_ECLASS_LINE || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_PRISM || 
+          eclass == T8_ECLASS_TET || eclass == T8_ECLASS_HEX)) {
       GTEST_SKIP ();
     }
 
@@ -71,13 +74,18 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
       t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
       break;
     case T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED:
-      geom = new t8_geometry_linear_axis_aligned ();
       /* Copy last vertex to the second position*/
       vertices[3] = vertices[3 * (num_vertices - 1)];
       vertices[4] = vertices[3 * (num_vertices - 1) + 1];
       vertices[5] = vertices[3 * (num_vertices - 1) + 2];
-
-      t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
+      if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_TET) {
+        geom = new t8_geometry_tri_axis_aligned ();
+        t8_cmesh_register_geometry<t8_geometry_tri_axis_aligned> (cmesh);
+      }
+      else {
+        geom = new t8_geometry_linear_axis_aligned ();
+        t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
+      }
       break;
     default:
       break;
@@ -85,6 +93,20 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
     t8_cmesh_set_tree_vertices (cmesh, 0, vertices,
                                 geom_int == T8_GEOMETRY_TYPE_LINEAR ? t8_eclass_num_vertices[eclass] : 2);
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+
+    std::string filename = "debug_" + std::string(geom->t8_geom_get_name()) + "_" + std::string(t8_eclass_to_string[eclass]);
+    t8_cmesh_vtk_write_file_via_API(cmesh, filename.c_str(), sc_MPI_COMM_WORLD);
+    if (geom_int == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED && (eclass != T8_ECLASS_VERTEX)) {
+      // Create a uniform forest of level 3
+      const t8_scheme *scheme = t8_scheme_new_default();
+      forest = t8_forest_new_uniform( cmesh, scheme, 3, false, sc_MPI_COMM_WORLD);
+      ASSERT_TRUE(forest != nullptr) << "Failed to create uniform forest.";
+
+      // Write the forest to a VTK file
+      std::string forest_vtk_filename = "uniform_forest_level3_" + std::string(geom->t8_geom_get_name()) + "_" + std::string(t8_eclass_to_string[eclass]);
+      t8_forest_vtk_write_file_via_API(forest, forest_vtk_filename.c_str(), true, true, true, true, false, false, 0, NULL);
+
+    }
     T8_TESTSUITE_FREE (vertices);
   }
   void
@@ -94,11 +116,14 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
       delete geom;
       geom = nullptr;
     }
-    t8_cmesh_unref (&cmesh);
+    else {
+      t8_cmesh_unref (&cmesh);
+    }
   }
   t8_eclass_t eclass;
   t8_geometry_with_vertices *geom = nullptr;
   t8_cmesh_t cmesh;
+  t8_forest_t forest;
 };
 
 int geometry_test::seed;

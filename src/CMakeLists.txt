@@ -186,6 +186,7 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx 
+    t8_geometry/t8_geometry_implementations/t8_geometry_tri_axis_aligned.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx 
     t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx 

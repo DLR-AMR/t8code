@@ -321,7 +321,7 @@ struct RandomAccessible: t8_crtp_operator<TUnderlying, RandomAccessible>
    * \param [in] index The index of the element to get.
    * \return The element at the given index.
    */
-  auto
+  constexpr auto
   operator[] (std::size_t index) -> decltype (auto)
   {
     return this->underlying ().get ()[index];
@@ -333,7 +333,7 @@ struct RandomAccessible: t8_crtp_operator<TUnderlying, RandomAccessible>
    * \param [in] index The index of the element to get.
    * \return The element at the given index.
    */
-  auto
+  constexpr auto
   operator[] (std::size_t index) const -> decltype (auto)
   {
     return this->underlying ().get ()[index];

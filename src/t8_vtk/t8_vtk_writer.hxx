@@ -286,7 +286,7 @@ class vtk_writer {
     else {
       cellTypes[elem_id - offset] = t8_curved_eclass_vtk_type[element_shape];
     }
-    if (write_treeid == 1) {
+    if (write_treeid) {
       const t8_gloidx_t gtree_id = tree_local_to_global_id (grid, itree);
       if (is_ghost) {
         vtk_treeid->InsertNextValue (-1);

@@ -1,0 +1,150 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2025 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+#ifndef T8_GEOMETRY_TRI_AXIS_ALIGNED_HXX
+#define T8_GEOMETRY_TRI_AXIS_ALIGNED_HXX
+
+#include <t8.h>
+#include <t8_geometry/t8_geometry_with_vertices.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.h>
+
+/**
+ * Linear and axis-aligned geometry for cartesian grids. Interpolates in the cartesian
+ * space opened by two points. Needs only two vertices per tree, regardless of the
+ * dimension. Only valid for line, quad and hex trees.
+ */
+struct t8_geometry_tri_axis_aligned: public t8_geometry_with_vertices
+{
+ public:
+  /**
+   * Constructor of the linear, axis-aligned geometry with a given dimension.
+   * The geometry is only viable for the line/quad/hex tree types and uses two
+   * vertices (min and max coords) per tree. The vertices are saved via
+   * the \ref t8_cmesh_set_tree_vertices function. Sets the
+   * name to "t8_geom_linear_axis_aligned"
+   */
+  t8_geometry_tri_axis_aligned ();
+
+  /** The destructor.
+   */
+  virtual ~t8_geometry_tri_axis_aligned ();
+
+  /**
+   * Get the type of this geometry.
+   * \return The type.
+   */
+  inline t8_geometry_type_t
+  t8_geom_get_type () const
+  {
+    return T8_GEOMETRY_TYPE_TRI_AXIS_ALIGNED;
+  };
+
+  /**
+   * Maps points in the reference space \f$ [0,1]^\mathrm{dim} \to \mathbb{R}^3 \f$.
+   * \param [in]  cmesh       The cmesh in which the point lies.
+   * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
+   * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
+   */
+  virtual void
+  t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                    double *out_coords) const;
+
+  /**
+   * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  cmesh      The cmesh in which the point lies.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
+   * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
+   *                          correspond to the \f$ i \f$-th column of the jacobian  (Entry \f$ 3 \cdot i + j \f$ is \f$ \frac{\partial f_j}{\partial x_i} \f$).
+   */
+  virtual void
+  t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
+                             double *jacobian) const;
+
+  /**
+   * \param[in] forest            The forest of the element.
+   * \param[in] ltreeid           The local tree id of the element's tree
+   * \param[in] element           The element
+   * \param[in] points            points to check
+   * \param[in] num_points        Number of points to check
+   * \param[in, out] is_inside    Array to fill with flags whether the point is inside or not
+   * \param[in] tolerance         Tolerance of the inside-check
+   */
+  virtual void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance) const;
+
+  /**
+   * Check if the currently active tree has a negative volume.
+   * \return                True if the currently loaded tree has a negative volume.
+   */
+  virtual bool
+  t8_geom_tree_negative_volume () const;
+
+  /**
+   * Check for compatibility of the currently loaded tree with the geometry.
+   * Only line, quad and hex elements are supported by this geometry.
+   * \return                True if the geometry is compatible with the tree.
+   */
+  bool
+  t8_geom_check_tree_compatibility () const
+  {
+    if (active_tree_class != T8_ECLASS_LINE && active_tree_class != T8_ECLASS_QUAD && active_tree_class != T8_ECLASS_HEX
+        && active_tree_class != T8_ECLASS_TRIANGLE && active_tree_class != T8_ECLASS_PRISM && active_tree_class != T8_ECLASS_TET) {
+      t8_productionf (
+        "tri-axis-aligned geometry is not compatible with tree type %s\n It is only compatible with line, tri, "
+        "quad and hex elements.\n",
+        t8_eclass_to_string[active_tree_class]);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Compute the bounding box of the currently active tree.
+   * \param[in] cmesh The cmesh to check compatibility with.
+   * \param[in, out] bounds The bounding box of the cmesh.
+   * \return True if the geometry is compatible with the cmesh, false otherwise.
+   */
+  virtual bool
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const
+  {
+    T8_ASSERT (cmesh != NULL);
+    T8_ASSERT (active_tree_vertices != NULL);
+    /* For axis aligned geometries the active tree vertices already describe the bounding box.
+     * We only have to reorder them.  */
+    bounds[0] = active_tree_vertices[0];
+    bounds[1] = active_tree_vertices[3];
+    bounds[2] = active_tree_vertices[1];
+    bounds[3] = active_tree_vertices[4];
+    bounds[4] = active_tree_vertices[2];
+    bounds[5] = active_tree_vertices[5];
+
+    return true;
+  }
+};
+
+#endif /* T8_GEOMETRY_TRI_AXIS_ALIGNED_HXX */
