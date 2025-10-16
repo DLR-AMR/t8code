@@ -22,15 +22,45 @@ binom (int n, int k) noexcept
                                   : binom (n - 1, k) * n / (n - k);
 }
 
-/// TODO Access to elment with U_DIM > 1
+template <t8_eclass TShape>
+static constexpr unsigned short
+t8_eclass_DIM ()
+{
+  if constexpr (TShape == T8_ECLASS_LINE)
+    return 1;
+  else if constexpr (TShape == T8_ECLASS_TRIANGLE || TShape == T8_ECLASS_QUAD)
+    return 2;
+  else if constexpr (TShape == T8_ECLASS_TET || TShape == T8_ECLASS_HEX || TShape == T8_ECLASS_PRISM
+                     || TShape == T8_ECLASS_PYRAMID)
+    return 3;
+  else
+    static_assert (false, "Invalid element class");
+}
+
+template <t8_eclass TShape>
+static constexpr unsigned short
+t8_eclass_NUM_CHILDREN ()
+{
+  if constexpr (TShape == T8_ECLASS_LINE)
+    return 2;
+  else if constexpr (TShape == T8_ECLASS_TRIANGLE || TShape == T8_ECLASS_QUAD)
+    return 4;
+  else if constexpr (TShape == T8_ECLASS_TET || TShape == T8_ECLASS_HEX || TShape == T8_ECLASS_PRISM
+                     || TShape == T8_ECLASS_PYRAMID)
+    return 8;  /// TODO
+  else
+    static_assert (false, "Invalid element class");
+}
+
 /// TODO template specialization
 /// TOOD change to std::array
 template <t8_eclass TShape, unsigned short U, unsigned short P>
 struct data_per_element
 {
+
   static constexpr t8_eclass Shape = TShape;
-  static constexpr unsigned short DIM = 2;  /// TODO
-  static constexpr unsigned short NUM_CHILDREN = 4;
+  static constexpr unsigned short DIM = t8_eclass_DIM<TShape> ();
+  static constexpr unsigned short NUM_CHILDREN = t8_eclass_NUM_CHILDREN<TShape> ();
   static constexpr unsigned short U_DIM = U;
 
   static constexpr unsigned short P_DIM = P;
