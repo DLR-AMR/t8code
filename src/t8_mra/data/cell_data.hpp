@@ -73,10 +73,6 @@ struct data_per_element
 
   std::array<int, 3> order;  // Point order
 
-  // explicit data_per_element ()
-  //   : u_coeffs (U_DIM * DOF, {}), d_coeffs (U_DIM * W_DOF, {}), significant (false), order ({})
-  // {
-  // }
   explicit data_per_element (): u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), order ({})
   {
   }
@@ -108,8 +104,10 @@ concept data_has_triangle = T::Shape == T8_ECLASS_TRIANGLE;
 template <typename T>
 struct forest_data
 {
+  using levelmultiindex = levelmultiindex<T::Shape>;
+
   sc_array_t *lmi_idx;
-  t8_mra::levelindex_map<T> *lmi_map;
+  t8_mra::levelindex_map<levelmultiindex, T> *lmi_map;
 
   /// Global information needed for refinement/coarsening
   int current_refinement_level;  // Which level do we refine?
