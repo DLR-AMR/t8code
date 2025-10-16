@@ -1194,6 +1194,16 @@ t8_cmesh_partition_sendloop (t8_cmesh_t cmesh, t8_cmesh_t cmesh_from, int *num_r
   return num_send_mpi;
 }
 
+/**
+ * Receive a partition message from another process.
+ * \param[in] cmesh The cmesh to receive the partition message for.
+ * \param[in] comm The MPI communicator to use for the communication.
+ * \param[in] proc_recv The rank of the process to receive the message from.
+ * \param[in, out] status The MPI status object containing the message information.
+ * \param[in] local_procid The local process id's of the processes that we receive from.
+ * \param[in] recv_first The first process rank that we receive from.
+ * \param[in, out] num_ghosts The number of ghosts that we received in this message.
+ */
 void
 t8_cmesh_partition_receive_message (t8_cmesh_t cmesh, sc_MPI_Comm comm, const int proc_recv, sc_MPI_Status *status,
                                     const int *local_procid, const int recv_first, t8_locidx_t *num_ghosts)
@@ -1569,8 +1579,10 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* Compute first and last tree index */
     T8_ASSERT (cmesh->tree_offsets == NULL);
     T8_ASSERT (scheme != NULL);
-    t8_cmesh_uniform_bounds (cmesh_from, cmesh->set_partition_level, scheme, &cmesh->first_tree, NULL, &last_tree, NULL,
-                             &cmesh->first_tree_shared);
+    t8_cmesh_uniform_bounds_for_irregular_refinement (cmesh_from, cmesh->set_partition_level, scheme,
+                                                      &cmesh->first_tree, NULL, &last_tree, NULL,
+                                                      &cmesh->first_tree_shared, comm);
+
     cmesh->num_local_trees = last_tree - cmesh->first_tree + 1;
     /* Compute the tree offset */
     t8_cmesh_gather_treecount_nocommit (cmesh, comm);

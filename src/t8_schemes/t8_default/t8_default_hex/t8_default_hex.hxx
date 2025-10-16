@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_default_hex.h
+/** \file t8_default_hex.hxx
  */
 
 #ifndef T8_DEFAULT_HEX_HXX
@@ -42,6 +42,7 @@ class t8_scheme;
  */
 typedef p8est_quadrant_t t8_phex_t;
 
+/** Default implementation of the scheme for the hex element class. */
 class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_hex> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
@@ -56,9 +57,9 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   size_t
   get_element_size (void) const;
 
-  /** Allocate memory for an array of hexaedra and initialize them.
+  /** Allocate memory for an array of hexahedra and initialize them.
    * \param [in] length   The number of hex to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated
+   * \param [in,out] elem On input an array of \b length many unallocated
    *                      element pointers.
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
@@ -76,14 +77,10 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   void
   element_new (const int length, t8_element_t **elem) const;
 
-  /** Initialize an array of allocated hexaedra.
+  /** Initialize an array of allocated hexahedra.
    * \param [in] length   The number of hex to be initialized.
-   * \param [in,out] elems On input an array of \b length many allocated
+   * \param [in,out] elem On input an array of \b length many allocated
    *                       elements.
-   * \param [in] called_new True if the elements in \a elem were created by a call
-   *                       to \ref element_new. False if no element in \a elem
-   *                       was created in this way. The case that only some elements
-   *                       were created by \ref element_new should never occur.
    * \note In debugging mode, an element that was passed to \ref element_init
    * must pass \ref element_is_valid.
    * \note If an element was created by \ref element_new then \ref element_init
@@ -130,7 +127,6 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Check if two elements are equal.
-  * \param [in] scheme     Implementation of a class scheme.
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            1 if the elements are equal, 0 if they are not equal
@@ -495,9 +491,8 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] elem    The element whose successor should be constructed.
+   * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
   element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
@@ -544,7 +539,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    *  reference space of the tree.
    * 
    * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -564,8 +559,8 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
-   * \param [in]      elem  The element to be checked.
-   * \return          True if \a elem is safe to use. False otherwise.
+   * \param [in]      element  The element to be checked.
+   * \return          True if \a element is safe to use. False otherwise.
    * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
    * \note            An element for which \ref element_init was called must pass
@@ -577,7 +572,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    *                  in the implementation of each of the functions in this file.
    */
   int
-  element_is_valid (const t8_element_t *t) const;
+  element_is_valid (const t8_element_t *element) const;
 
   /**
   * Print a given element. For a example for a triangle print the coordinates
@@ -585,6 +580,8 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   * debugging configuration. 
   * 
   * \param [in]        elem  The element to print
+  * \param [in]        debug_string  String printed to debug
+  * \param [in]        string_size  String size of \a debug_string.
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;

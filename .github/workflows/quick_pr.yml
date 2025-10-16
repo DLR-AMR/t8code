@@ -42,14 +42,12 @@ jobs:
         outputs:
             ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
         steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v5
           with:
-                repository: ${{ github.event.repository.full_name }}
-                ref: ${{ github.event.pull_request.head.ref }}
                 fetch-depth: 0
 
         - name: "Set up environment"
-          run: echo "GITHUB_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
+          run: echo "GH_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
 
         - name: "Create Issue"
           id: create_issue_and_output_number
@@ -69,12 +67,21 @@ jobs:
                 # Create the new issue. Use the DEFAULT_PROJECT to directly add it to the project. 
                 # Letting GH add the Issue to the project by automatization can lead to a delay, 
                 # and the following worfkflows will try to move a card that doesn't exist yet.
-                new_issue_url=$(gh issue create \
-                    --title "$TITLE" \
-                    --assignee "$AUTHOR" \
-                    --body "$ISSUE_BODY" \
-                    --project "${{ inputs.DEFAULT_PROJECT }}"
-                )
+                # Only assign the issue if the author is not a bot
+                if [[ "$AUTHOR" == *"[bot]"* ]]; then
+                  new_issue_url=$(gh issue create \
+                  --title "$TITLE" \
+                  --body "$ISSUE_BODY" \
+                  --project "${{ inputs.DEFAULT_PROJECT }}"
+                  )
+                else
+                  new_issue_url=$(gh issue create \
+                  --title "$TITLE" \
+                  --assignee "$AUTHOR" \
+                  --body "$ISSUE_BODY" \
+                  --project "${{ inputs.DEFAULT_PROJECT }}"
+                  )
+                fi
                 echo "new_issue_url=$new_issue_url"
                 # Extract the issue number from the URL. 
                 # The URL is in the format https://github.com/orga-name/repo-name/issues/issues_number

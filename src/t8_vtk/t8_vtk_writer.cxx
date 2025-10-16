@@ -28,8 +28,8 @@
 
 #if T8_ENABLE_VTK
 /**
- * \brief template specialization for forests. 
- * 
+ * Template specialization for forests.
+ *
  */
 template <>
 void
@@ -37,7 +37,7 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
   const t8_forest_t forest, [[maybe_unused]] vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points, int *cellTypes,
   const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
   const bool ghosts, const t8_locidx_t itree)
 {
@@ -68,8 +68,8 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
 }
 
 /**
- * \brief template specialization for cmeshes. 
- * 
+ * Template specialization for cmeshes.
+ *
  */
 template <>
 void
@@ -77,7 +77,7 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   const t8_cmesh_t cmesh, [[maybe_unused]] vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points, int *cellTypes,
   [[maybe_unused]] const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id,
   const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree)
 {
@@ -89,6 +89,9 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
 }
 #endif /* T8_ENABLE_VTK */
 
+/**
+ * Write a forest to a VTK file in ASCII format.
+ */
 template <>
 bool
 vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
@@ -98,11 +101,14 @@ vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
                                     this->data);
 }
 
+/**
+ * Write a cmesh to a VTK file in ASCII format.
+ */
 template <>
 bool
-vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t forest)
+vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t cmesh)
 {
-  return t8_cmesh_vtk_write_ASCII (forest, this->fileprefix.c_str ());
+  return t8_cmesh_vtk_write_ASCII (cmesh, this->fileprefix.c_str ());
 }
 
 /* Implementation of the c-interface */

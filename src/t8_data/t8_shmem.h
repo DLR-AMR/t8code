@@ -30,7 +30,7 @@
 #include <t8.h>
 #include <sc_shmem.h>
 
-typedef struct t8_shmem_array *t8_shmem_array_t;
+typedef struct t8_shmem_array *t8_shmem_array_t; /**< A shared memory array structure. */
 
 /** Defines the shared memory type that is best suited for t8code and the
  * current machine.
@@ -140,7 +140,7 @@ t8_shmem_array_copy (t8_shmem_array_t dest, t8_shmem_array_t source);
  * \param[in] sendbuf         the source from this process
  * \param[in] sendcount       the number of items to allgather
  * \param[in] sendtype        the type of items to allgather
- * \param[in,out] recvbuf     the destination shmem array
+ * \param[in,out] recvarray   the destination shmem array
  * \param[in] recvcount       the number of items to allgather
  * \param[in] recvtype        the type of items to allgather
  * \note Writing mode must be disabled for \a recvarray.
@@ -266,8 +266,11 @@ t8_shmem_array_index (t8_shmem_array_t array, size_t index);
 void *
 t8_shmem_array_index_for_writing (t8_shmem_array_t array, size_t index);
 
-/* TODO: implement and comment */
-/* returns true if arrays are equal
+/**
+ * Check if two t8_shmem arrays are equal.
+ * \param [in]          array_a The first t8_shmem_array to compare.
+ * \param [in]          array_b The second t8_shmem_array to compare.
+ * \return              1 if the arrays are equal, 0 otherwise.
  * \note Writing mode must be disabled for \a array_a and \a array_b.
  */
 int
@@ -279,6 +282,20 @@ t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b);
  */
 void
 t8_shmem_array_destroy (t8_shmem_array_t *parray);
+
+/**
+ * Perform a binary search in a t8_shmem_array.
+ * 
+ * \param [in]      array   The t8_shmem_array to search in.
+ * \param [in]      value   The value to search for.
+ * \param [in]      size    The number of elements in the array.
+ * \param [in]      compare A function that compares an element of the array with the value.
+ * 
+ * \return The index of the element in \a array that matches \a value.
+ */
+int
+t8_shmem_array_binary_search (t8_shmem_array_t array, const t8_gloidx_t value, const int size,
+                              int (*compare) (t8_shmem_array_t, const int, const t8_gloidx_t));
 
 T8_EXTERN_C_END ();
 

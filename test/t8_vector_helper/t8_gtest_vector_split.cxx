@@ -51,9 +51,9 @@ class test_vector_split: public testing::TestWithParam<int> {
   {
   }
 
-#if T8CODE_TEST_LEVEL == 2
+#if T8_TEST_LEVEL_INT == 2
   const size_t num_entries = 10;
-#elif T8CODE_TEST_LEVEL == 1
+#elif T8_TEST_LEVEL_INT == 1
   const size_t num_entries = 100;
 #else
   const size_t num_entries = 100000;

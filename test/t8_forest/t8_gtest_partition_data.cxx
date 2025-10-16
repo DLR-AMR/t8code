@@ -129,13 +129,13 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_sa
 }
 
 /**
- * \brief This function generates example data of the type \tparam T corresponding to the global 
- * element id of each element. It constructs one value per element. The data is defined according 
+ * \brief This function generates example data of the type \tparam T corresponding to the global
+ * element id of each element. It constructs one value per element. The data is defined according
  * to the partition of \a initial_forest. Afterwards a call to \see t8_forest_partition_data() is made
  * which redistributes the example data array accordingly to the partition of \a partitioned_forest.
  * Once the partitioning of the example data array is finished, we check whether each process obtained
  * the correct data entries in the proper ordering.
- * 
+ *
  * \tparam T The datatype of which example data will be generated.
  * \param initial_forest The forest before a partitioning step.
  * \param partitioned_forest The 'same' forest after a partitioning step.
@@ -196,7 +196,7 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
 }
 
 /**
- * \brief An examplary adaptation function which refines only the the first global tree in the forest
+ * \brief An exemplary adaptation function which refines only the the first global tree in the forest
  * to a pre-set refinement level.
  */
 static int
@@ -234,7 +234,7 @@ class t8_test_partition_data_test: public testing::TestWithParam<std::tuple<int,
  * to a pre-set refinement level stated within the adaptation function \see t8_test_partition_data_adapt.
  * The adapted forest is partitioned thereafter.
  * Afterwards example data of different data types is generated according to the partition of the adapted
- * forest. The data is then re-partitioned by calling \see t8_forest_partition_data according to the 
+ * forest. The data is then re-partitioned by calling \see t8_forest_partition_data according to the
  * partition given by the partitioned forest.
  * At last the data is checked for compliance with the partition of the partitioned forest.
  */
@@ -244,7 +244,7 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
-  /* Adapt the forest examplary. */
+  /* Adapt the forest exemplary. */
   t8_forest_t initial_forest = t8_forest_new_adapt (base_forest, t8_test_partition_data_adapt, 1, 0, NULL);
 
   /* Reference the forest in order to keep it after the partition step. */
@@ -257,7 +257,7 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_forest_set_partition (partitioned_forest, initial_forest, partition_for_coarsening);
   t8_forest_commit (partitioned_forest);
 
-  /* Test the examplary partition_data with some arithmetic data types as well as with a custom struct. */
+  /* Test the exemplary partition_data with some arithmetic data types as well as with a custom struct. */
   TestPartitionData<int32_t> (initial_forest, partitioned_forest);
   TestPartitionData<float> (initial_forest, partitioned_forest);
   TestPartitionData<double> (initial_forest, partitioned_forest);
@@ -268,4 +268,4 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_forest_unref (&partitioned_forest);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_data, t8_test_partition_data_test, AllSchemes, print_all_schemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_partition_data, t8_test_partition_data_test, AllSchemes, print_all_schemes);

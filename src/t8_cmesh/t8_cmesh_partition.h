@@ -77,7 +77,13 @@ t8_cmesh_gather_treecount (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void
 t8_cmesh_gather_treecount_nocommit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
-/* TODO: document, only for debug */
+/**
+ * Print the offset array of a cmesh to stdout.
+ * This function is used for debugging purposes only.
+ * \warning The function definition will be empty if not in debug mode!
+ * \param [in]      cmesh   A cmesh that is committed and partitioned.
+ * \param [in]      comm    A valid MPI communicator for cmesh.
+ */
 void
 t8_cmesh_offset_print (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 

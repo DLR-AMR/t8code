@@ -21,7 +21,7 @@
 */
 
 /**
- * \file This files gives a template for strong types in t8code.
+ * \file t8_type.hxx This files gives a template for strong types in t8code.
  */
 
 #ifndef T8_TYPE_HXX
@@ -31,7 +31,7 @@
 #include <functional>
 
 /**
- * \brief An implementation of strong type with additional competences.
+ *  An implementation of strong type with additional competences.
  *
  * This class template allows the creation of a type that can be extended with
  * multiple competences. Each competence is a template class that takes the
@@ -46,16 +46,19 @@
 template <typename T, typename Parameter, template <typename> class... competence>
 class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
+  /** The type of the value stored in this strong type. */
   using value_type = T;
 
+  /** Default constructor */
   explicit constexpr T8Type () = default;
 
+  /** Constructor with value */
   explicit constexpr T8Type (const T& value): value_ (value)
   {
   }
 
   /**
-   * \brief Construct a new T8Type object
+   *  Construct a new T8Type object
    * 
    * \tparam T_ref 
    * \param value 
@@ -69,6 +72,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   {
   }
 
+  /** Copy constructor */
   constexpr T8Type&
   operator= (const T& value)
   {
@@ -76,12 +80,22 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
     return *this;
   }
 
+  /**
+   *  Get a reference to the stored value.
+   *
+   * \return A reference to the stored value.
+   */
   constexpr T&
   get () noexcept
   {
     return value_;
   }
 
+  /**
+   *  Get a const reference to the stored value.
+   *
+   * \return A const reference to the stored value.
+   */
   constexpr T const&
   get () const noexcept
   {
@@ -109,7 +123,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
 namespace std
 {
 /**
- * \brief Functor for hashing T8Type objects.
+ *  Functor for hashing T8Type objects.
  *
  * This struct defines a functor that computes the hash value of a T8Type object.
  * It uses the std::hash function to generate the hash value based on the underlying
@@ -125,9 +139,17 @@ namespace std
 template <typename T, typename Parameter, template <typename> class... competence>
 struct hash<T8Type<T, Parameter, competence...>>
 {
+  /** The implementation of the T8Type with the given competences. */
   using T8TypeImpl = T8Type<T, Parameter, competence...>;
+  /** Check if the T8TypeImpl is hashable. */
   using checkIfHashable = typename std::enable_if<T8TypeImpl::is_hashable, void>::type;
 
+  /**
+   * Compute the hash value of a T8Type object.
+   *
+   * \param x The T8Type object to hash.
+   * \return The computed hash value.
+   */
   size_t
   operator() (T8Type<T, Parameter, competence...> const& x) const
   {
