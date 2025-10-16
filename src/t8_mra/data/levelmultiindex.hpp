@@ -1,7 +1,5 @@
 #pragma once
 
-#include <type_traits>
-
 #include <t8_mra/data/triangle_order.hpp>
 
 #include <t8_eclass.h>
@@ -44,8 +42,15 @@ struct levelmultiindex: public lmi_properties<TShape>
   levelmultiindex () {
     // SC_ABORTF ("levelmultiindex has not been implemented for shape %d", TShape);
   };
+
   levelmultiindex (size_t _basecell) noexcept;
   levelmultiindex (size_t _basecell, const t8_element_t *elem, const t8_scheme *scheme) noexcept;
+
+  bool
+  operator== (const levelmultiindex &other) const noexcept
+  {
+    return index == other.index;
+  }
 
   [[nodiscard]] unsigned int
   level () const noexcept;
@@ -225,5 +230,23 @@ children_lmi (TLmi lmi)
 }
 
 }  // namespace t8_mra
+
+namespace std
+{
+
+template <t8_mra::lmi_type TLmi>
+struct hash<TLmi>
+{
+  using is_transparent = void;  // enable heterogeneous overloadsc
+  using is_avalanching = void;
+
+  size_t
+  operator() (const TLmi &lmi) const
+  {
+    return lmi.index;
+  }
+};
+
+}  // namespace std
 
 #endif
