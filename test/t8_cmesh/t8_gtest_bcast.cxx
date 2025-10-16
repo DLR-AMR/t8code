@@ -38,8 +38,8 @@ class cmesh_hypercube: public testing::TestWithParam<t8_eclass> {
   {
     eclass = GetParam ();
 
-    cmesh_bcast = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 1, 0, 0);
-    cmesh_check = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    cmesh_bcast = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 1, 0, 0, 0);
+    cmesh_check = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0, 0);
   }
   void
   TearDown () override
