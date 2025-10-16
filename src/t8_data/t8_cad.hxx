@@ -33,6 +33,9 @@
 #include <Geom_Surface.hxx>
 #include <Geom_Curve.hxx>
 
+/**
+ * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
+*/
 class t8_cad {
  public:
   /**
@@ -182,7 +185,7 @@ class t8_cad {
    * \param [in]  face_index     The index of the cad face, on to which the edge parameters should be converted.
    * \param [in]  num_face_nodes The number of the face nodes of the evaluated element. Only needed for closed surface check, otherwise NULL.
    * \param [in]  edge_param     The parameter on the edge.
-   * \param [in]  surface_param  The parameters of the surface nodes.
+   * \param [in]  surface_params The parameters of the surface nodes.
    *                             When provided, there are additional checks for closed geometries.
    *                             If there are no surface parameter
    *                             to pass in to the function, you can pass NULL.
@@ -194,7 +197,7 @@ class t8_cad {
                                              double *face_params) const;
 
   /** Finds the parametric bounds of an cad face.
-   * \param [in]  face_index   The index of the cad face.
+   * \param [in]  surface_index   The index of the cad face.
    * \param [out] bounds          The parametric bounds of the cad face.
    */
   void
