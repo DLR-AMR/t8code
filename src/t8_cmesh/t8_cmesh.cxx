@@ -1723,9 +1723,8 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
  * \param[in, out] first_tree_shared The first tree shared flag. Only used if we send the start message. Set to NULL if not used. 
  * \param[in, out] child_in_tree_end_or_begin The tree-local id of the first/last element in the tree. Set to NULL if not used.
  * \param[in, out] expect_start_or_end_message If true, we expect a start or end message from the process.
+ * \param[in] global_num_elements The global number of elements in the cmesh.
  * \param[in] comm The MPI communicator.
- * \param[in, out] num_received_start_or_end_messages The number of received start or end messages. Only used if T8_ENABLE_DEBUG is defined.
- * \param[in, out] num_message_sent The number of sent messages. Only used if T8_ENABLE_DEBUG is defined.
  * 
  */
 static void
@@ -1795,6 +1794,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
  * \param[in, out] child_in_tree_begin_temp   On input empty but allocated, on output the global id of the first element in the tree of the current process.
  * \param[in] global_num_elements             The global number of elements in the mesh.
  * \param[in] cmesh                           The cmesh.
+ * \param[in] recv_from                       The rank to receive a message from.
  * \param[in] comm                            The MPI communicator.
  */
 static void
