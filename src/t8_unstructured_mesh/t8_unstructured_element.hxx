@@ -182,7 +182,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   //--- Getter for the member variables. ---
   /**
    * Getter for the tree id of the unstructured mesh element.
-    \return The element's tree id.
+   * \return The element's tree id.
    */
   t8_locidx_t
   get_tree_id () const

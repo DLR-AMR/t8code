@@ -68,7 +68,6 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
 
   // Iterate with the iterator over all unstructured mesh elements and check some functionality.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
-    EXPECT_EQ (level, it->get_level ());
     for (int coord = 0; coord < T8_ECLASS_MAX_DIM; ++coord) {
       EXPECT_GE (1, it->get_centroid ()[coord]);
       EXPECT_LE (0, it->get_centroid ()[coord]);
@@ -86,6 +85,10 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
   // Check loop with indices.
   for (int ielement = 0; ielement < unstructured_mesh.get_local_num_elements (); ielement++) {
     EXPECT_EQ (level, unstructured_mesh[ielement].get_level ());
+  }
+  // Check loop with const iterator.
+  for (auto it = unstructured_mesh.cbegin (); it != unstructured_mesh.cend (); ++it) {
+    EXPECT_EQ (level, it->get_level ());
   }
 }
 

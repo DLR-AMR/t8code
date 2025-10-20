@@ -37,7 +37,8 @@
 /**
  * Wrapper for a forest that enables it to be handled like an unstructured mesh object.
  * \tparam TUnstructuredMeshElement The element class that should be used for the unstructured mesh elements. 
- *                                  This template parameter defines which element functionality is available and if it is cached or calculated.
+ *                                  This template parameter defines which element functionality is available 
+ *                                  and if it is cached or calculated.
  */
 template <class TUnstructuredMeshElement = t8_unstructured_mesh_element<>>
 class t8_unstructured_mesh {
@@ -46,6 +47,7 @@ class t8_unstructured_mesh {
   friend TUnstructuredMeshElement;
 
   using t8_unstructured_iterator = typename std::vector<TUnstructuredMeshElement>::iterator;
+  using t8_unstructured_const_iterator = typename std::vector<TUnstructuredMeshElement>::const_iterator;
 
   /** 
    * Constructor for an unstructured mesh. 
@@ -87,8 +89,28 @@ class t8_unstructured_mesh {
   }
 
   /**
+   * Const version of \ref begin.
+   * \return Constant iterator to the first (local) unstructured mesh element.
+   */
+  t8_unstructured_const_iterator
+  cbegin () const
+  {
+    return m_elements.cbegin ();
+  }
+
+  /**
+   * Const version of \ref end.
+   * \return Constant iterator to the mesh element following the last (local) element of the unstructured mesh.
+   */
+  t8_unstructured_const_iterator
+  cend () const
+  {
+    return m_elements.cend ();
+  }
+
+  /**
    * Getter for an unstructured mesh element given its local index.
-   *\param[in] local_index The local index of the element to access.
+   * \param [in] local_index The local index of the element to access.
    * \return Reference to the unstructured mesh element.
    */
   TUnstructuredMeshElement&
@@ -99,7 +121,7 @@ class t8_unstructured_mesh {
 
   /**
    * Getter for the forest the unstructured mesh is defined for.
-   * \return The forest  the unstructured mesh is defined for.
+   * \return The forest the unstructured mesh is defined for.
    */
   t8_forest_t
   get_forest () const
