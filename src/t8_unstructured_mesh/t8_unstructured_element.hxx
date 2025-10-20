@@ -65,22 +65,33 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
 
  private:
   // --- Variables to check which functionality is defined in TCompetence. ---
-  // Helper function.
+  /** Helper function to check if class T implements the function get_vertex_coordinates_cached.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
   template <template <typename> class T>
   static constexpr bool
   has_get_vertex_coordinates_cached ()
   {
     return requires (T<SelfType>& competence) { competence.get_vertex_coordinates_cached (); };
   }
+  /* This variable is true if any of the given competences \ref TCompetence implements 
+  a function get_vertex_coordinates_cached. */
   static constexpr bool get_vertex_coordinates_defined
     = (false || ... || has_get_vertex_coordinates_cached<TCompetence> ());
 
+  /** Helper function to check if class T implements the function get_centroid_cached.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
   template <template <typename> class T>
   static constexpr bool
   has_get_centroid_cached ()
   {
     return requires (T<SelfType>& competence) { competence.get_centroid_cached (); };
   }
+  /* This variable is true if any of the given competences \ref TCompetence implements 
+  a function get_centroid_cached. */
   static constexpr bool get_centroid_defined = (false || ... || has_get_centroid_cached<TCompetence> ());
 
  public:
