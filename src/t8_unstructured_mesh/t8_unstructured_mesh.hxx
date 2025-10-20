@@ -29,10 +29,10 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_unstructured_mesh/t8_unstructured_element.hxx>
 #include <iterator>
 #include <memory>
 #include <vector>
-#include <t8_unstructured_mesh/t8_unstructured_element.hxx>
 
 /**
  * Wrapper for a forest that enables it to be handled like an unstructured mesh object.
@@ -46,6 +46,7 @@ class t8_unstructured_mesh {
   friend TUnstructuredMeshElement;
 
   using t8_unstructured_iterator = typename std::vector<TUnstructuredMeshElement>::iterator;
+
   /** 
    * Constructor for an unstructured mesh. 
    * \param [in] input_forest The forest from which the unstructured mesh should be created. 
@@ -67,6 +68,7 @@ class t8_unstructured_mesh {
 
   /**
    * Returns an iterator to the first (local) unstructured mesh element.
+   * \return Iterator to the first (local) unstructured mesh element.
    */
   t8_unstructured_iterator
   begin ()
@@ -76,6 +78,7 @@ class t8_unstructured_mesh {
 
   /**
    * Returns an iterator to an unstructured mesh element following the last (local) element of the unstructured mesh.
+   * \return Iterator to the mesh element following the last (local) element of the unstructured mesh.
    */
   t8_unstructured_iterator
   end ()
@@ -85,6 +88,7 @@ class t8_unstructured_mesh {
 
   /**
    * Getter for an unstructured mesh element given its local index.
+   *\param[in] local_index The local index of the element to access.
    * \return Reference to the unstructured mesh element.
    */
   TUnstructuredMeshElement&
@@ -95,6 +99,7 @@ class t8_unstructured_mesh {
 
   /**
    * Getter for the forest the unstructured mesh is defined for.
+   * \return The forest  the unstructured mesh is defined for.
    */
   t8_forest_t
   get_forest () const
@@ -136,7 +141,7 @@ class t8_unstructured_mesh {
 
   t8_forest_t m_forest; /**< The forest the unstructured mesh should be defined for. */
   std::vector<TUnstructuredMeshElement>
-    m_elements; /**< Vector storing the unstructured mesh elements. One element vector per (local) tree. */
+    m_elements; /**< Vector storing the unstructured mesh elements. */
 };
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */
