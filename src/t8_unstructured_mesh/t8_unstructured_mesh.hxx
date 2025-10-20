@@ -139,9 +139,8 @@ class t8_unstructured_mesh {
     }
   }
 
-  t8_forest_t m_forest; /**< The forest the unstructured mesh should be defined for. */
-  std::vector<TUnstructuredMeshElement>
-    m_elements; /**< Vector storing the unstructured mesh elements. */
+  t8_forest_t m_forest;                             /**< The forest the unstructured mesh should be defined for. */
+  std::vector<TUnstructuredMeshElement> m_elements; /**< Vector storing the unstructured mesh elements. */
 };
 
 #endif /* !T8_UNSTRUCTURED_MESH_HXX */
