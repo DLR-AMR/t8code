@@ -75,7 +75,7 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
     m_vertex_coordinates = std::move (new_vertex_coordinates);
   }
 
-  std::vector<t8_3D_vec>
+  mutable std::vector<t8_3D_vec>
     m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Empty vector if not filled. */
 };
 
@@ -108,7 +108,7 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
     m_coordinates = new_centroid_coordinates;
   }
 
-  std::optional<t8_3D_vec>
+  mutable std::optional<t8_3D_vec>
     m_coordinates; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 

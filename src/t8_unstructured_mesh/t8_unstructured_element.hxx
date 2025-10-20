@@ -127,7 +127,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * \return Vector with one coordinate array for each vertex of the element.
    */
   std::vector<t8_3D_vec>
-  get_vertex_coordinates ()
+  get_vertex_coordinates () const
   {
     // Check if we have a cached version and if the cache has already been filled.
     if constexpr (get_vertex_coordinates_defined) {
@@ -161,7 +161,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    * \return Coordinates of the center.
    */
   t8_3D_vec
-  get_centroid ()
+  get_centroid () const
   {
     // Check if we have a cached version and if the cache has already been filled.
     if constexpr (get_centroid_defined) {
