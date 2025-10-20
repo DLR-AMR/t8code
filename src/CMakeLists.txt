@@ -293,6 +293,7 @@ install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
   )
 install( DIRECTORY t8_types TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_unstructured_mesh TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
 
 install( TARGETS T8 LIBRARY )
 install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
