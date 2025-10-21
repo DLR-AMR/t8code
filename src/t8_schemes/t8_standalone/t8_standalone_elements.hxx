@@ -153,8 +153,9 @@ typedef uint8_t t8_element_level;
 typedef uint8_t t8_cube_id;
 typedef uint8_t t8_child_id;
 
-template <t8_eclass TEclass>
-using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
+//template <t8_eclass TEclass>
+//using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
+//using t8_element_type = u_int8_t;
 
 template <t8_eclass TEclass>
 using t8_element_coords = std::array<t8_element_coord, T8_ELEMENT_DIM[TEclass]>;
@@ -168,7 +169,7 @@ struct t8_standalone_element
   /** The refinement level of the element relative to the root at level 0. */
   t8_element_level level;
   /** Bit array: which inequality is fulfilled at which level. */
-  t8_element_type<TEclass> type;
+  u_int8_t type;
 };
 
 #endif /* T8_STANDALONE_ELEMENTS_HXX */
