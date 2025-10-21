@@ -248,10 +248,6 @@ endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
-if( T8CODE_BUILD_MESH_INTERFACE )
-  add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src/t8_unstructured_mesh )
-endif()
-
 if ( T8CODE_BUILD_TESTS )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/test )
 endif()

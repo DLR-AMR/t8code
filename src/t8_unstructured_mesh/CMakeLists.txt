@@ -21,13 +21,15 @@
 # Define own library for mesh interface.
 if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
     add_library( T8_MESH_INTERFACE SHARED )
+    set_target_properties( T8_MESH_INTERFACE PROPERTIES POSITION_INDEPENDENT_CODE ON )
 else()
     add_library( T8_MESH_INTERFACE STATIC )
 endif()
 
-target_compile_features( T8_MESH_INTERFACE PUBLIC c_std_11 cxx_std_20 )
 add_library( T8CODE::T8_MESH_INTERFACE ALIAS T8_MESH_INTERFACE )
+set_target_properties(T8_MESH_INTERFACE PROPERTIES OUTPUT_NAME t8_mesh_interface)
 
+target_sources(T8_MESH_INTERFACE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/t8_unstructured_mesh.cxx)
 install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
 
 target_include_directories( T8_MESH_INTERFACE PUBLIC
@@ -38,6 +40,7 @@ target_include_directories( T8_MESH_INTERFACE PUBLIC
 target_link_libraries(T8_MESH_INTERFACE PUBLIC T8)
 
 install( TARGETS T8_MESH_INTERFACE LIBRARY )
+install( TARGETS T8_MESH_INTERFACE EXPORT ${PROJECT_NAME}-targets )
 
 if( T8CODE_EXPORT_COMPILE_COMMANDS )
     set_target_properties( T8_MESH_INTERFACE PROPERTIES EXPORT_COMPILE_COMMANDS ON )
