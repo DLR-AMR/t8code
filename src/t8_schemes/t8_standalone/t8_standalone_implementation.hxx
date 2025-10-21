@@ -649,10 +649,22 @@ struct t8_standalone_scheme
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
     t8_standalone_element<TEclass> ancestor;
+    const int length = element_get_len (level);
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
-    element_get_ancestor (el, level, &ancestor);
-    return element_get_child_id ((const t8_element_t *) &ancestor);
+    int cube_id = 0;
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      cube_id |= (el->coords[idim] & length) ? (1 << idim) : 0;
+    }
+    int child_id;
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      u_int8_t type = element_compute_type_at_level (el, level);
+      child_id = t8_element_type_cubeid_to_Iloc<TEclass>[type][cube_id];
+    }
+    else {
+      child_id = cube_id;
+    }
+    return child_id;
   }
 
   /** Query whether a given set of elements is a family or not.
