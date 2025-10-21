@@ -51,10 +51,6 @@ if( T8CODE_EXPORT_COMPILE_COMMANDS )
   set_target_properties( T8 PROPERTIES EXPORT_COMPILE_COMMANDS ON )
 endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-if( T8CODE_BUILD_MESH_INTERFACE )
-  add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/t8_unstructured_mesh )
-endif()
-
 if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC NetCDF::NetCDF )
   target_compile_definitions(T8 PUBLIC
