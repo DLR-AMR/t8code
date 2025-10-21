@@ -79,7 +79,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
 
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
-    EXPECT_EQ (level, it->get_level_dummy ())
+    EXPECT_EQ (level, it->get_level_dummy ());
   }
 
   // Test with two custom competences and a predefined competence.
@@ -90,11 +90,13 @@ TEST (t8_gtest_custom_competence, custom_competence)
   for (auto it = unstructured_mesh_2competences.begin (); it != unstructured_mesh_2competences.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
+    EXPECT_FALSE (it->centroid_cache_filled ());
     auto centroid = it->get_centroid ();
-    for (int coord = 0; coord < 3; ++coord) {
-      EXPECT_GE (1, centroid[coord]);
-      EXPECT_LE (0, centroid[coord]);
+    for (const auto &coordinate : centroid) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
     }
+    EXPECT_TRUE (it->centroid_cache_filled ());
   }
 
   // Unref the forest.

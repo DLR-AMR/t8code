@@ -55,13 +55,13 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
 {
  public:
   /**
-   * Dummy function for the element to check if a cache for the vertex coordinates exists.
-   * \return true as this competence provides a cache for the vertex_coordinates.
+   * Function that checks if the cache for the vertex coordinates has been filled.
+   * \return true if the cache for the vertex coordinates has been filled, false otherwise.
    */
   bool
-  cache_vertex_coordinates () const
+  vertex_cache_filled () const
   {
-    return true;
+    return !m_vertex_coordinates.empty ();
   }
 
  protected:
@@ -78,13 +78,13 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
 {
  public:
   /**
-   * Dummy function for the element to check if a cache for the centroid exists.
-   * \return true as this competence provides a cache for the centroid.
+   * Function that checks if the cache for the centroid has been filled.
+   * \return true if the cache for the centroid has been filled, false otherwise.
    */
   bool
-  cache_centroid () const
+  centroid_cache_filled () const
   {
-    return true;
+    return m_centroid.has_value ();
   }
 
  protected:

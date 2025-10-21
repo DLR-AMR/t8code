@@ -70,7 +70,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   static constexpr bool
   cache_vertex_coordinates_defined ()
   {
-    return requires (T<SelfType>& competence) { competence.cache_vertex_coordinates (); };
+    return requires (T<SelfType>& competence) { competence.vertex_cache_filled (); };
   }
   static constexpr bool cache_vertex_coordinates = (false || ... || cache_vertex_coordinates_defined<TCompetence> ());
 
@@ -78,7 +78,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   static constexpr bool
   cache_centroid_defined ()
   {
-    return requires (T<SelfType>& competence) { competence.cache_centroid (); };
+    return requires (T<SelfType>& competence) { competence.centroid_cache_filled (); };
   }
   static constexpr bool cache_centroid = (false || ... || cache_centroid_defined<TCompetence> ());
 
@@ -119,7 +119,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   {
     // Check if we have a cached version and if the cache has already been filled.
     if constexpr (cache_vertex_coordinates) {
-      if (!this->m_vertex_coordinates.empty ()) {
+      if (this->vertex_cache_filled ()) {
         return this->m_vertex_coordinates;
       }
     }
@@ -152,7 +152,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   {
     // Check if we have a cached version and if the cache has already been filled.
     if constexpr (cache_centroid) {
-      if (this->m_centroid.has_value ()) {
+      if (this->centroid_cache_filled ()) {
         return this->m_centroid.value ();
       }
     }
