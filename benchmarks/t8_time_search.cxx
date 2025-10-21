@@ -51,6 +51,7 @@ struct t8_tutorial_search_user_data_t
 {
   std::vector<int> *particles_per_element; /* For each element the number of particles inside it. */
   t8_locidx_t num_elements_searched;       /* The total number of elements created. */
+  t8_locidx_t num_queries;       /* The total number of elements created. */
 };
 
 static int
@@ -93,6 +94,7 @@ t8_time_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, co
   t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
   /* Ensure user_data is present. */
   T8_ASSERT (user_data != NULL);
+  user_data->num_queries += num_active_queries;
   std::vector<int> *particles_per_element = user_data->particles_per_element;
   /* Ensure that the data is actually set. */
   T8_ASSERT (particles_per_element != NULL);
@@ -101,16 +103,16 @@ t8_time_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, co
   /* Test whether the particles are inside this element. */
   t8_forest_element_points_inside (forest, ltreeid, element, coords, num_active_queries, query_matches, tolerance);
   T8_FREE (coords);
-  for (size_t matches_id = 0; matches_id < num_active_queries; matches_id++) {
-    if (query_matches[matches_id]) {
-      if (is_leaf) {
+  if (is_leaf) {
+    t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
+    for (size_t matches_id = 0; matches_id < num_active_queries; matches_id++) {
+      if (query_matches[matches_id]) {
         /* The particle is inside and this element is a leaf element.
        * We mark the particle for being inside the partition and we increase
        * the particles_per_element counter of this element. */
         /* In order to find the index of the element inside the array, we compute the
        * index of the first element of this tree plus the index of the element within
        * the tree. */
-        t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest, ltreeid) + tree_leaf_index;
         /* Get the correct particle_id */
         size_t particle_id = *(size_t *) sc_array_index_int (query_indices, matches_id);
         t8_tutorial_search_particle_t *particle
@@ -212,7 +214,7 @@ t8_time_search_vtk (t8_forest_t forest, std::vector<int> *particles_per_element,
 static void
 t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statinfo_t *times, int with_vtk)
 {
-  t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t ielement;
   t8_locidx_t global_num_searched_elements;
   t8_gloidx_t global_num_elements;
@@ -229,15 +231,19 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statin
     (*user_data->particles_per_element)[ielement] = 0;
   }
   user_data->num_elements_searched = 0;
+  user_data->num_queries = 0;
 
   /* Perform the search of the forest. The second argument is the search callback function,
    * then the query callback function and the last argument is the array of queries. */
+  MPI_Barrier(t8_forest_get_mpicomm(forest));
   double time_search = -sc_MPI_Wtime ();
   t8_forest_search (forest, t8_time_search_callback, t8_time_search_query_callback, particles);
+  MPI_Barrier(t8_forest_get_mpicomm(forest));
   time_search += sc_MPI_Wtime ();
 
   sc_stats_accumulate (&times[2], time_search);
   sc_stats_accumulate (&times[5], user_data->num_elements_searched);
+  sc_stats_accumulate (&times[6], user_data->num_queries);
 
 }
 
@@ -249,7 +255,7 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
   t8_element_array_t *leaf_elements;
   t8_locidx_t itree, num_trees;
 
-  const int local_count = t8_forest_get_local_num_elements (forest);
+  const int local_count = t8_forest_get_local_num_leaf_elements (forest);
   // const int global_count = t8_forest_get_global_num_elements (forest);
 
   local_particles = sc_array_new_count (sizeof (t8_tutorial_search_particle_t), local_count);
@@ -259,7 +265,7 @@ t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
   t8_debugf ("num_trees: %i\n", num_trees);
   for (itree = 0; itree < num_trees; itree++) {
     t8_debugf ("itree: %i\n", itree);
-    leaf_elements = t8_forest_tree_get_leaves (forest, itree);
+    leaf_elements = t8_forest_tree_get_leaf_elements (forest, itree);
     t8_debugf ("leaf_elements: %li\n", leaf_elements->array.elem_count);
     for (t8_locidx_t ielement = 0; (size_t) ielement < leaf_elements->array.elem_count; ielement++) {
       if (iparticle >= local_count) {
@@ -316,9 +322,9 @@ t8_benchmark_print_forest_information (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the local number of elements. */
-  local_num_elements = t8_forest_get_local_num_elements (forest);
+  local_num_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the global number of elements. */
-  global_num_elements = t8_forest_get_global_num_elements (forest);
+  global_num_elements = t8_forest_get_global_num_leaf_elements (forest);
   t8_global_productionf (" [step3] Local number of elements:\t\t%i\n", local_num_elements);
   t8_global_productionf (" [step3] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
 }
@@ -337,22 +343,25 @@ main (int argc, char **argv)
   int eclass_option;
   int repetitions;
   int help = 0, with_vtk = 0;
-  t8_tutorial_search_user_data_t user_data;
-  std::vector<int> particles_per_element (0, 0);
-
-  /* Initialize the user data with the particles per element array and 0 elements searched. */
-  user_data.particles_per_element = &particles_per_element;
-  user_data.num_elements_searched = 0;
-  /* Store this user data as the user data of the forest such that we can
-   * access it in the search callbacks. */
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
   /* Error check the MPI return value. */
   SC_CHECK_MPI (mpiret);
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_ESSENTIAL);
   comm = sc_MPI_COMM_WORLD;
+
+  t8_tutorial_search_user_data_t user_data;
+  std::vector<int> particles_per_element (0, 0);
+  /* Initialize the user data with the particles per element array and 0 elements searched. */
+  user_data.particles_per_element = &particles_per_element;
+  t8_debugf("address of ppe: %p\n", user_data.particles_per_element);
+  user_data.num_elements_searched = 0;
+  user_data.num_queries = 0;
+  /* Store this user data as the user data of the forest such that we can
+   * access it in the search callbacks. */
+
 
   /* Print a message on the root process. */
   t8_global_productionf (" [search] \n");
@@ -384,42 +393,52 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 0;
   }
+  t8_debugf("address of ppe before stats: %p\n", user_data.particles_per_element);
 
   double total_time = 0;
   double time_refine = 0;
   double time_search = 0;
   double time_new = 0;
   double time_partition = 0;
-  sc_statinfo_t times[5];
-  int num_stats=8;
+  int num_stats=9;
+  sc_statinfo_t times[num_stats];
   sc_stats_init (&times[0], "total");
   sc_stats_init (&times[1], "new");
   sc_stats_init (&times[2], "search");
   sc_stats_init (&times[3], "refine");
   sc_stats_init (&times[4], "partition");
   sc_stats_init (&times[5], "num_searched");
-  sc_stats_init (&times[6], "num_before");
-  sc_stats_init (&times[7], "num_after");
+  sc_stats_init (&times[6], "num_queried");
+  sc_stats_init (&times[7], "num_before");
+  sc_stats_init (&times[8], "num_after");
 
 
   total_time -= sc_MPI_Wtime ();
+  t8_debugf("address of ppe before cmesh: %p\n", user_data.particles_per_element);
 
   cmesh = t8_cmesh_new_from_class ((t8_eclass) eclass_option, comm);
   /* Build a uniform forest on it. */
 
   for(int i_repition = 0; i_repition < repetitions; i_repition++){
     t8_cmesh_ref(cmesh);
+    t8_debugf("address of ppe before new_uniform: %p\n", user_data.particles_per_element);
 
+    MPI_Barrier(comm);
     time_new = -sc_MPI_Wtime ();
     forest = t8_forest_new_uniform (cmesh, t8_time_search_scheme (scheme_option), level, 0, comm);
+    {
+      const t8_scheme *scheme = t8_forest_get_scheme(forest);
+      t8_global_essentialf("element size: %d\n",scheme->get_element_size((t8_eclass)eclass_option));
+    }
     time_new += sc_MPI_Wtime ();
     sc_stats_accumulate (&times[1], time_new);
-    sc_stats_accumulate (&times[6], t8_forest_get_local_num_elements(forest));
+    sc_stats_accumulate (&times[7], t8_forest_get_local_num_leaf_elements(forest));
+    t8_debugf("address of ppe before search leaf particles: %p\n", user_data.particles_per_element);
 
     /* Create an array with particles on each leaf. */
     sc_array_t *particles = t8_time_search_leaf_particles (forest,comm);
 
-
+    t8_debugf("address of ppe before setting: %p\n", user_data.particles_per_element);
     t8_forest_set_user_data (forest, &user_data);
 
     /* Print information of our new forest. */
@@ -438,16 +457,20 @@ main (int argc, char **argv)
     /* Ensure that the data is actually set. */
     T8_ASSERT (particles_per_element != NULL);
 
+    MPI_Barrier(comm);
     time_refine = -sc_MPI_Wtime ();
     forest = t8_time_adapt_forest (forest);
+    MPI_Barrier(comm);
     time_refine += sc_MPI_Wtime ();
     sc_stats_accumulate (&times[3], time_refine);
 
+    MPI_Barrier(comm);
     time_partition = -sc_MPI_Wtime ();
     forest = t8_time_partition_forest (forest);
+    MPI_Barrier(comm);
     time_partition += sc_MPI_Wtime ();
     sc_stats_accumulate (&times[4], time_partition);
-    sc_stats_accumulate (&times[7], t8_forest_get_local_num_elements(forest));
+    sc_stats_accumulate (&times[8], t8_forest_get_local_num_leaf_elements(forest));
 
     /* Destroy the forest. */
     t8_forest_unref (&forest);
