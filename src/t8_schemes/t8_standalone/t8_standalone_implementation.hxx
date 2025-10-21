@@ -677,27 +677,21 @@ struct t8_standalone_scheme
       T8_ASSERT (element_is_valid (fam[isib]));
     }
 #endif
+    /**  In a correctly refined forest without holes, a set of elements is a family if the first element has
+     *  childid 0 and all elements are on the same level.
+     */
 
-    t8_standalone_element<TEclass> parent, compare;
-    /* Take the parent of the first element as baseline to compare against */
-    element_get_parent ((const t8_element_t *) fam[0], (t8_element_t *) &parent);
-    const int num_children = element_get_num_children ((const t8_element_t *) &parent);
-    for (int childid = 0; childid < num_children; childid++) {
-      /* check whether each element has the same parent */
-      element_get_parent ((const t8_element_t *) fam[childid], (t8_element_t *) &compare);
-      if (element_compare ((const t8_element_t *) &parent, (const t8_element_t *) &compare)) {
-        return 0;
-      }
+    if (element_get_child_id (fam[0]) != 0) {
+      return 0;
+    }
 
-      /* check whether each element is the correct child of the collective parent */
-      /* Could be replaced by type comparison as level is already checked in parent comparison */
-      element_get_child ((const t8_element_t *) &parent, childid, (t8_element_t *) &compare);
-
-      if (element_compare ((const t8_element_t *) fam[childid], (const t8_element_t *) &compare)) {
+    const int num_siblings = element_get_num_siblings (fam[0]);
+    const int level = element_get_level (fam[0]);
+    for (int ielement = 1; ielement < num_siblings; ielement++) {
+      if (element_get_level (fam[ielement]) != level) {
         return 0;
       }
     }
-    return 1;
   }
 
   /** Compute the nearest common ancestor of two elements. That is,
