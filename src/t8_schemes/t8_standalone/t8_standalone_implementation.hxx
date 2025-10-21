@@ -652,7 +652,7 @@ struct t8_standalone_scheme
     const int length = element_get_len (level);
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
-      int cube_id = 0;
+    int cube_id = 0;
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       cube_id |= (el->coords[idim] & length) ? (1 << idim) : 0;
     }
@@ -660,7 +660,8 @@ struct t8_standalone_scheme
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       u_int8_t type = element_compute_type_at_level (el, level);
       child_id = t8_element_type_cubeid_to_Iloc<TEclass>[type][cube_id];
-    }else{
+    }
+    else {
       child_id = cube_id;
     }
     return child_id;
