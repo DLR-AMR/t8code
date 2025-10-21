@@ -158,7 +158,7 @@ typedef struct t8_tree
  */
 
 /** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 14
+#define T8_PROFILE_NUM_STATS 17
 
 /**
  * This struct holds profiling information, such as timings or statistics about communication.
@@ -187,6 +187,9 @@ typedef struct t8_profile
   double ghost_waittime;    /**< Amount of synchronisation time in ghost. */
   double balance_runtime;   /**< The runtime of the last call to \a t8_forest_balance. */
   double commit_runtime;    /**< The runtime of the last call to \a t8_cmesh_commit. */
+  double cmesh_offsets_runtime;    /**< The runtime of the last call to \a t8_forest_partition_create_tree_offsets. */
+  double forest_offsets_runtime;    /**< The runtime of the last call to \a t8_forest_partition_create_offsets. */
+  double first_descendant_runtime;    /**< The runtime of the last call to \a t8_forest_partition_create_first_desc. */
 
 } t8_profile_struct_t;
 
