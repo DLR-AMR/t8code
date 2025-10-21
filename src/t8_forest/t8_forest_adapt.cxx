@@ -146,7 +146,7 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, const t8_scheme *sche
   /* Get parent of a family member by coarsening last member. */
   scheme->element_get_parent (tree_class, element, element_parent);
 
-  /* Loop backward over all possible familie members until we hit an 
+  /* Loop backward over all possible family members until we hit an 
    * element that is not part of the family or we have reached the 
    * maximum number of member. */
   t8_locidx_t el_iter; /* Loop running variable */
@@ -414,7 +414,7 @@ t8_forest_adapt (t8_forest_t forest)
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
-    t8_global_productionf ("Start adadpt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
+    t8_global_productionf ("Start adapt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
   }
 
   forest_from = forest->set_from;
@@ -682,7 +682,7 @@ t8_forest_adapt (t8_forest_t forest)
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.
      * Only delete the line, if you know what you are doing. */
-    t8_global_productionf ("End adadpt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
+    t8_global_productionf ("End adapt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
   }
 }
 

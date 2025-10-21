@@ -37,6 +37,7 @@
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
 
+/** Default implementation of the scheme for the tet element class. */
 class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_tet> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
@@ -53,7 +54,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
 
   /** Allocate memory for an array of tetrahedra and initialize them.
    * \param [in] length   The number of tet elements to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated element pointers. On output all these 
+   * \param [in,out] elem On input an array of \b length many unallocated element pointers. On output all these 
    *                       pointers will point to an allocated and initialized element.
    * \note Not every element that is created in t8code will be created by a call
    * to this function. However, if an element is not created using \ref element_new,
@@ -71,11 +72,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
 
   /** Initialize an array of allocated tet elements.
    * \param [in] length   The number of tet elements to be initialized.
-   * \param [in,out] elems On input an array of \b length many allocated elements.
-   * \param [in] called_new True if the elements in \a elem were created by a call
-   *                       to \ref element_new. False if no element in \a elem
-   *                       was created in this way. The case that only some elements
-   *                       were created by \ref element_new should never occur.
+   * \param [in,out] elem On input an array of \b length many allocated elements.
    * \note In debugging mode, an element that was passed to \ref element_init
    * must pass \ref element_is_valid.
    * \note If an element was created by \ref element_new then \ref element_init
@@ -120,7 +117,6 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Check if two elements are equal.
-  * \param [in] scheme     Implementation of a class scheme.
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            1 if the elements are equal, 0 if they are not equal
@@ -451,9 +447,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] elem    The element whose successor should be constructed.
+   * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
   element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
@@ -495,7 +490,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
    *  reference space of the tree.
    * 
    * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -515,8 +510,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
-   * \param [in]      elem  The element to be checked.
-   * \return          True if \a elem is safe to use. False otherwise.
+   * \param [in]      element  The element to be checked.
+   * \return          True if \a element is safe to use. False otherwise.
    * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
    * \note            An element for which \ref element_init was called must pass
@@ -528,7 +523,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
    *                  in the implementation of each of the functions in this file.
    */
   int
-  element_is_valid (const t8_element_t *t) const;
+  element_is_valid (const t8_element_t *element) const;
 
   /**
   * Print a given element. For a example for a triangle print the coordinates
@@ -536,6 +531,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   * debugging configuration. 
   * 
   * \param [in]        elem  The element to print
+  * \param [in]        debug_string  String printed to debug
+  * \param [in]        string_size  String size of \a debug_string.
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;

@@ -160,11 +160,12 @@ class t8_scheme {
     return std::holds_alternative<TEclassScheme> (eclass_schemes[tree_class]);
   }
 
-  /** Get the eclass an eclass scheme is valid for. \Note: This function should return the input value as long as the
-   * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
-   * function will make more sense.
+  /** Get the eclass an eclass scheme is valid for. 
    * \param [in] tree_class     The eclass of the current tree.
    * \return                    The valid tree class for the eclass scheme.
+   * \note This function should return the input value as long as the
+   * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
+   * function will make more sense.
    */
   inline t8_eclass_t
   get_eclass_scheme_eclass (const t8_eclass_t tree_class) const
@@ -207,13 +208,13 @@ class t8_scheme {
 
   /** Return the level of a particular element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem    The element whose level should be returned.
-   * \return             The level of \a elem.
+   * \param [in] element    The element whose level should be returned.
+   * \return             The level of \a element.
    */
   inline int
-  element_get_level (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_get_level (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_level (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_level (element); }, eclass_schemes[tree_class]);
   };
 
   /** Copy all entries of \a source to \a dest. \a dest must be an existing
@@ -261,114 +262,117 @@ class t8_scheme {
   /**
    * Indicates if an element is refinable. Possible reasons for being not refinable could be
    * that the element has reached its max level.
-   * \param [in] elem   The element to check.
+   * \param [in] tree_class The eclass of the current tree.
+   * \param [in] element   The element to check.
    * \return            True if the element is refinable.
    */
   inline bool
-  element_is_refinable (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_is_refinable (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_is_refinable (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_is_refinable (element); },
+                       eclass_schemes[tree_class]);
   };
 
-  /** Compute the parent of a given element \a elem and store it in \a parent.
+  /** Compute the parent of a given element \a element and store it in \a parent.
    *  \a parent needs to be an existing element. No memory is allocated by this function.
-   *  \a elem and \a parent can point to the same element, then the entries of
-   *  \a elem are overwritten by the ones of its parent.
+   *  \a element and \a parent can point to the same element, then the entries of
+   *  \a element are overwritten by the ones of its parent.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem   The element whose parent will be computed.
+   * \param [in] element   The element whose parent will be computed.
    * \param [in,out] parent This element's entries will be overwritten by those
-   *                    of \a elem's parent.
+   *                    of \a element's parent.
    *                    The storage for this element must exist
    *                    and match the element class of the parent.
    *                    For a pyramid, for example, it may be either a
-   *                    tetrahedron or a pyramid depending on \a elem's childid.
+   *                    tetrahedron or a pyramid depending on \a element's childid.
    */
   inline void
-  element_get_parent (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *parent) const
+  element_get_parent (const t8_eclass_t tree_class, const t8_element_t *element, t8_element_t *parent) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_parent (elem, parent); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_parent (element, parent); },
                        eclass_schemes[tree_class]);
   };
 
   /** Compute the number of siblings of an element. That is the number of 
    * Children of its parent.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem The element.
+   * \param [in] element The element.
    * \return          The number of siblings of \a element.
    * Note that this number is >= 1, since we count the element itself as a sibling.
    */
   inline int
-  element_get_num_siblings (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_get_num_siblings (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_siblings (elem); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_siblings (element); },
                        eclass_schemes[tree_class]);
   };
 
-  /** Compute a specific sibling of a given element \a elem and store it in \a sibling.
+  /** Compute a specific sibling of a given element \a element and store it in \a sibling.
    *  \a sibling needs to be an existing element. No memory is allocated by this function.
-   *  \a elem and \a sibling can point to the same element, then the entries of
-   *  \a elem are overwritten by the ones of its sibid-th sibling.
+   *  \a element and \a sibling can point to the same element, then the entries of
+   *  \a element are overwritten by the ones of its sibid-th sibling.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem   The element whose sibling will be computed.
+   * \param [in] element   The element whose sibling will be computed.
    * \param [in] sibid  The id of the sibling computed.
    * \param [in,out] sibling This element's entries will be overwritten by those
-   *                    of \a elem's sibid-th sibling.
+   *                    of \a element's sibid-th sibling.
    *                    The storage for this element must exist
    *                    and match the element class of the sibling.
    */
   inline void
-  element_get_sibling (const t8_eclass_t tree_class, const t8_element_t *elem, const int sibid,
+  element_get_sibling (const t8_eclass_t tree_class, const t8_element_t *element, const int sibid,
                        t8_element_t *sibling) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_sibling (elem, sibid, sibling); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_sibling (element, sibid, sibling); },
                        eclass_schemes[tree_class]);
   };
 
   /** Compute the number of corners of a given element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem The element.
-   * \return          The number of corners of \a elem.
+   * \param [in] element The element.
+   * \return          The number of corners of \a element.
    */
   inline int
-  element_get_num_corners (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_get_num_corners (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_corners (elem); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_corners (element); },
                        eclass_schemes[tree_class]);
   };
 
   /** Compute the number of faces of a given element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem The element.
-   * \return          The number of faces of \a elem.
+   * \param [in] element The element.
+   * \return          The number of faces of \a element.
    */
   inline int
-  element_get_num_faces (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_get_num_faces (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_faces (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_faces (element); },
+                       eclass_schemes[tree_class]);
   };
 
   /** Compute the maximum number of faces of a given element and all of its
    *  descendants.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem The element.
-   * \return          The maximum number of faces of \a elem and its descendants.
+   * \param [in] element The element.
+   * \return          The maximum number of faces of \a element and its descendants.
    */
   inline int
-  element_get_max_num_faces (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_get_max_num_faces (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_max_num_faces (elem); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_max_num_faces (element); },
                        eclass_schemes[tree_class]);
   };
 
   /** Return the number of children of an element when it is refined.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem   The element whose number of children is returned.
-   * \return            The number of children of \a elem if it is to be refined.
+   * \param [in] element   The element whose number of children is returned.
+   * \return            The number of children of \a element if it is to be refined.
    */
   inline int
-  element_get_num_children (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_get_num_children (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_children (elem); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_children (element); },
                        eclass_schemes[tree_class]);
   };
 
@@ -384,14 +388,14 @@ class t8_scheme {
 
   /** Return the number of children of an element's face when the element is refined.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem   The element whose face is considered.
-   * \param [in] face   A face of \a elem.
-   * \return            The number of children of \a face if \a elem is to be refined.
+   * \param [in] element   The element whose face is considered.
+   * \param [in] face   A face of \a element.
+   * \return            The number of children of \a face if \a element is to be refined.
    */
   inline int
-  element_get_num_face_children (const t8_eclass_t tree_class, const t8_element_t *elem, const int face) const
+  element_get_num_face_children (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_face_children (elem, face); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_face_children (element, face); },
                        eclass_schemes[tree_class]);
   };
 
@@ -439,61 +443,62 @@ class t8_scheme {
 
   /** Construct the child element of a given number.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     This must be a valid element, bigger than maxlevel.
+   * \param [in] element     This must be a valid element, bigger than maxlevel.
    * \param [in] childid  The number of the child to construct.
    * \param [in,out] child        The storage for this element must exist.
    *                              On output, a valid element.
-   * It is valid to call this function with elem = child.
+   * It is valid to call this function with element = child.
    */
   inline void
-  element_get_child (const t8_eclass_t tree_class, const t8_element_t *elem, const int childid,
+  element_get_child (const t8_eclass_t tree_class, const t8_element_t *element, const int childid,
                      t8_element_t *child) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_child (elem, childid, child); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_child (element, childid, child); },
                        eclass_schemes[tree_class]);
   };
 
   /** Construct all children of a given element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     This must be a valid element, bigger than maxlevel.
+   * \param [in] element     This must be a valid element, bigger than maxlevel.
    * \param [in] length   The length of the output array \a c must match
    *                      the number of children.
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
-   * It is valid to call this function with elem = c[0].
-   * \see t8_element_num_children
+   * It is valid to call this function with element = c[0].
+   * \see element_get_num_children
    */
   inline void
-  element_get_children (const t8_eclass_t tree_class, const t8_element_t *elem, const int length,
+  element_get_children (const t8_eclass_t tree_class, const t8_element_t *element, const int length,
                         t8_element_t *c[]) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_children (elem, length, c); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_children (element, length, c); },
                        eclass_schemes[tree_class]);
   };
 
   /** Compute the child id of an element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     This must be a valid element.
-   * \return              The child id of elem.
+   * \param [in] element     This must be a valid element.
+   * \return              The child id of element.
    */
   inline int
-  element_get_child_id (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_get_child_id (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_child_id (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_child_id (element); },
+                       eclass_schemes[tree_class]);
   };
 
   /** Compute the ancestor id of an element, that is the child id
    * at a given level.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
-   * \return              The child_id of \a elem in regard to its \a level ancestor.
-   * \note The ancestor id at elem.level is the same as the child id.
+   * \param [in] element     This must be a valid element.
+   * \param [in] level    A refinement level. Must satisfy \a level <= element.level
+   * \return              The child_id of \a element in regard to its \a level ancestor.
+   * \note The ancestor id at element.level is the same as the child id.
    */
   inline int
-  element_get_ancestor_id (const t8_eclass_t tree_class, const t8_element_t *elem, const int level) const
+  element_get_ancestor_id (const t8_eclass_t tree_class, const t8_element_t *element, const int level) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_ancestor_id (elem, level); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_ancestor_id (element, level); },
                        eclass_schemes[tree_class]);
   };
 
@@ -531,42 +536,42 @@ class t8_scheme {
 
   /** Compute the shape of the face of an element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The element.
-   * \param [in] face     A face of \a elem.
+   * \param [in] element     The element.
+   * \param [in] face     A face of \a element.
    * \return              The element shape of the face.
    * I.e. T8_ECLASS_LINE for quads, T8_ECLASS_TRIANGLE for tets
    *      and depending on the face number either T8_ECLASS_QUAD or
    *      T8_ECLASS_TRIANGLE for prisms.
    */
   inline t8_element_shape_t
-  element_get_face_shape (const t8_eclass_t tree_class, const t8_element_t *elem, const int face) const
+  element_get_face_shape (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_face_shape (elem, face); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_face_shape (element, face); },
                        eclass_schemes[tree_class]);
   };
 
   /** Given an element and a face of the element, compute all children of
    * the element that touch the face.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The element.
-   * \param [in] face     A face of \a elem.
-   * \param [in,out] children Allocated elements, in which the children of \a elem
+   * \param [in] element     The element.
+   * \param [in] face     A face of \a element.
+   * \param [in,out] children Allocated elements, in which the children of \a element
    *                      that share a face with \a face are stored.
    *                      They will be stored in order of their linear id.
    * \param [in] num_children The number of elements in \a children. Must match
    *                      the number of children that touch \a face.
-   *                      \ref t8_element_num_face_children
+   *                      \ref element_get_num_face_children
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
    *                      on output its i-th entry is the child_id of the i-th face_child.
-   * It is valid to call this function with elem = children[0].
+   * It is valid to call this function with element = children[0].
    */
   inline void
-  element_get_children_at_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+  element_get_children_at_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face,
                                 t8_element_t *children[], int num_children, int *child_indices) const
   {
     return std::visit (
       [&] (auto &&scheme) {
-        return scheme.element_get_children_at_face (elem, face, children, num_children, child_indices);
+        return scheme.element_get_children_at_face (element, face, children, num_children, child_indices);
       },
       eclass_schemes[tree_class]);
   };
@@ -579,24 +584,24 @@ class t8_scheme {
       |      |   |      x           |   x--x
       |      |   |                  |      |
       x ---- x   x                  x ---- x
-       elem    face  face_child    Returns the face number f
+       element    face  face_child    Returns the face number f
      \endverbatim
 
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in]  elem    The element.
+   * \param [in]  element    The element.
    * \param [in]  face    Then number of the face.
    * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
-   *                      specifying a child of \a elem that shares a face with \a face.
+   *                      specifying a child of \a element that shares a face with \a face.
    *                      These children are counted in linear order. This coincides with
-   *                      the order of children from a call to \ref t8_element_children_at_face.
-   * \return              The face number of the face of a child of \a elem
+   *                      the order of children from a call to \ref element_get_children_at_face.
+   * \return              The face number of the face of a child of \a element
    *                      that coincides with \a face_child.
    */
   inline int
-  element_face_get_child_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+  element_face_get_child_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face,
                                const int face_child) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_face_get_child_face (elem, face, face_child); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_face_get_child_face (element, face, face_child); },
                        eclass_schemes[tree_class]);
   };
 
@@ -604,27 +609,27 @@ class t8_scheme {
    * of the parent of the element that matches the element's face. Or return -1 if
    * no face of the parent matches the face.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in]  elem    The element.
+   * \param [in]  element    The element.
    * \param [in]  face    Then number of the face.
-   * \return              If \a face of \a elem is also a face of \a elem's parent,
+   * \return              If \a face of \a element is also a face of \a element's parent,
    *                      the face number of this face. Otherwise -1.
    * \note For the root element this function always returns \a face.
    */
   inline int
-  element_face_get_parent_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face) const
+  element_face_get_parent_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_face_get_parent_face (elem, face); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_face_get_parent_face (element, face); },
                        eclass_schemes[tree_class]);
   };
 
   /** Given an element and a face of this element. If the face lies on the
    * tree boundary, return the face number of the tree face.
    * If not the return value is arbitrary.
-   * You can call \ref t8_element_is_root_boundary to query whether the face is
+   * You can call \ref element_is_root_boundary to query whether the face is
    * at the tree boundary.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The element.
-   * \param [in] face     The index of a face of \a elem.
+   * \param [in] element     The element.
+   * \param [in] face     The index of a face of \a element.
    * \return The index of the tree face that \a face is a subface of, if
    *         \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
@@ -632,9 +637,9 @@ class t8_scheme {
    *   the element does not lie on the root boundary.
    */
   inline int
-  element_get_tree_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face) const
+  element_get_tree_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_tree_face (elem, face); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_tree_face (element, face); },
                        eclass_schemes[tree_class]);
   };
 
@@ -674,96 +679,96 @@ class t8_scheme {
    *  face.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] face     A face element.
-   * \param [in,out] elem An allocated element. The entries will be filled with
+   * \param [in,out] element An allocated element. The entries will be filled with
    *                      the data of the element that has \a face as a face and
    *                      lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
    *                      lies.
-   * \return              The face number of the face of \a elem that coincides
+   * \return              The face number of the face of \a element that coincides
    *                      with \a face.
    */
   inline int
-  element_extrude_face (const t8_eclass_t tree_class, const t8_element_t *face, t8_element_t *elem,
+  element_extrude_face (const t8_eclass_t tree_class, const t8_element_t *face, t8_element_t *element,
                         const int root_face) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_extrude_face (face, elem, root_face, this); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_extrude_face (face, element, root_face, this); },
                        eclass_schemes[tree_class]);
   };
 
   /** Construct the boundary element at a specific face.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The input element.
+   * \param [in] element     The input element.
    * \param [in] face     The index of the face of which to construct the
    *                      boundary element.
    * \param [in,out] boundary An allocated element of dimension of \a element
    *                      minus 1. The entries will be filled with the entries
    *                      of the face of \a element.
-   * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
+   * If \a element is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
    * and will not be modified.
    */
   inline void
-  element_get_boundary_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+  element_get_boundary_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face,
                              t8_element_t *boundary) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_boundary_face (elem, face, boundary, this); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_boundary_face (element, face, boundary, this); },
                        eclass_schemes[tree_class]);
   };
 
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem      The input element.
-   * \param [in] face      A face of \a elem.
+   * \param [in] element      The input element.
+   * \param [in] face      A face of \a element.
    * \param [in, out] first_desc An allocated element. This element's data will be
-   *                       filled with the data of the first descendant of \a elem
+   *                       filled with the data of the first descendant of \a element
    *                       that shares a face with \a face.
    * \param [in] level     The level, at which the first descendant is constructed
    */
   inline void
-  element_get_first_descendant_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+  element_get_first_descendant_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face,
                                      t8_element_t *first_desc, const int level) const
   {
     return std::visit (
-      [&] (auto &&scheme) { return scheme.element_get_first_descendant_face (elem, face, first_desc, level); },
+      [&] (auto &&scheme) { return scheme.element_get_first_descendant_face (element, face, first_desc, level); },
       eclass_schemes[tree_class]);
   };
 
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem      The input element.
-   * \param [in] face      A face of \a elem.
+   * \param [in] element      The input element.
+   * \param [in] face      A face of \a element.
    * \param [in, out] last_desc An allocated element. This element's data will be
-   *                       filled with the data of the last descendant of \a elem
+   *                       filled with the data of the last descendant of \a element
    *                       that shares a face with \a face.
    * \param [in] level     The level, at which the last descendant is constructed
    */
   inline void
-  element_get_last_descendant_face (const t8_eclass_t tree_class, const t8_element_t *elem, const int face,
+  element_get_last_descendant_face (const t8_eclass_t tree_class, const t8_element_t *element, const int face,
                                     t8_element_t *last_desc, const int level) const
   {
     return std::visit (
-      [&] (auto &&scheme) { return scheme.element_get_last_descendant_face (elem, face, last_desc, level); },
+      [&] (auto &&scheme) { return scheme.element_get_last_descendant_face (element, face, last_desc, level); },
       eclass_schemes[tree_class]);
   };
 
   /** Compute whether a given element shares a given face with its root tree.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The input element.
-   * \param [in] face     A face of \a elem.
+   * \param [in] element     The input element.
+   * \param [in] face     A face of \a element.
    * \return              True if \a face is a subface of the element's root element.
    * \note You can compute the corresponding face number of the tree via \ref element_get_tree_face.
    */
   inline bool
-  element_is_root_boundary (const t8_eclass_t tree_class, const t8_element_t *elem, const int face) const
+  element_is_root_boundary (const t8_eclass_t tree_class, const t8_element_t *element, const int face) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_is_root_boundary (elem, face); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_is_root_boundary (element, face); },
                        eclass_schemes[tree_class]);
   };
 
   /** Construct the face neighbor of a given element if this face neighbor
    * is inside the root tree. Return 0 otherwise.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem The element to be considered.
-   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
+   * \param [in] element The element to be considered.
+   * \param [in,out] neigh If the face neighbor of \a element along \a face is inside
    *                  the root tree, this element's data is filled with the
    *                  data of the face neighbor. Otherwise the data can be modified
    *                  arbitrarily.
@@ -776,11 +781,11 @@ class t8_scheme {
    *                  on output.
    */
   inline int
-  element_get_face_neighbor_inside (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *neigh,
+  element_get_face_neighbor_inside (const t8_eclass_t tree_class, const t8_element_t *element, t8_element_t *neigh,
                                     const int face, int *neigh_face) const
   {
     return std::visit (
-      [&] (auto &&scheme) { return scheme.element_get_face_neighbor_inside (elem, neigh, face, neigh_face); },
+      [&] (auto &&scheme) { return scheme.element_get_face_neighbor_inside (element, neigh, face, neigh_face); },
       eclass_schemes[tree_class]);
   };
 
@@ -788,91 +793,91 @@ class t8_scheme {
    * For example, a child of an element can be an element of a different shape
    * and has to be handled differently - according to its shape.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The element to be considered
+   * \param [in] element     The element to be considered
    * \return              The shape of the element as an eclass
    */
   inline t8_element_shape_t
-  element_get_shape (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_get_shape (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_shape (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_shape (element); }, eclass_schemes[tree_class]);
   };
 
   /** Initialize the entries of an allocated element according to a
    * given linear id in a uniform refinement.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in,out] elem The element whose entries will be set.
+   * \param [in,out] element The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    * \param [in] id       The linear id.
    *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   inline void
-  element_set_linear_id (const t8_eclass_t tree_class, t8_element_t *elem, const int level,
+  element_set_linear_id (const t8_eclass_t tree_class, t8_element_t *element, const int level,
                          const t8_linearidx_t id) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_set_linear_id (elem, level, id); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_set_linear_id (element, level, id); },
                        eclass_schemes[tree_class]);
   };
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The element whose id we compute.
+   * \param [in] element     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
    */
   inline t8_linearidx_t
-  element_get_linear_id (const t8_eclass_t tree_class, const t8_element_t *elem, const int level) const
+  element_get_linear_id (const t8_eclass_t tree_class, const t8_element_t *element, const int level) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_linear_id (elem, level); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_linear_id (element, level); },
                        eclass_schemes[tree_class]);
   };
 
   /** Compute the first descendant of a given element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The first element in a uniform refinement of \a elem
+   * \param [in] element     The element whose descendant is computed.
+   * \param [out] desc    The first element in a uniform refinement of \a element
    *                      of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
   inline void
-  element_get_first_descendant (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *desc,
+  element_get_first_descendant (const t8_eclass_t tree_class, const t8_element_t *element, t8_element_t *desc,
                                 const int level) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_first_descendant (elem, desc, level); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_first_descendant (element, desc, level); },
                        eclass_schemes[tree_class]);
   };
 
   /** Compute the last descendant of a given element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The last element in a uniform refinement of \a elem
+   * \param [in] element     The element whose descendant is computed.
+   * \param [out] desc    The last element in a uniform refinement of \a element
    *                      of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
   inline void
-  element_get_last_descendant (const t8_eclass_t tree_class, const t8_element_t *elem, t8_element_t *desc,
+  element_get_last_descendant (const t8_eclass_t tree_class, const t8_element_t *element, t8_element_t *desc,
                                const int level) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_last_descendant (elem, desc, level); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_get_last_descendant (element, desc, level); },
                        eclass_schemes[tree_class]);
   };
 
   /** Construct the successor in a uniform refinement of a given element.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
+   * \param [in] element    The element whose successor should be constructed.
+   * \param [in,out] successor  The element whose entries will be set to the successor of \a element.
    */
   inline void
-  element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *t, t8_element_t *s) const
+  element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *element, t8_element_t *successor) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_successor (t, s); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_successor (element, successor); },
                        eclass_schemes[tree_class]);
   };
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    * that is embedded into [0,1]^d (d = dimension).
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] t      The element to be considered.
+   * \param [in] element      The element to be considered.
    * \param [in] vertex The id of the vertex whose coordinates shall be computed.
    * \param [out] coords An array of at least as many doubles as the element's dimension
    *                    whose entries will be filled with the coordinates of \a vertex.
@@ -880,29 +885,30 @@ class t8_scheme {
    *                    all coords might be used. 
    */
   inline void
-  element_get_vertex_reference_coords (const t8_eclass_t tree_class, const t8_element_t *t, const int vertex,
+  element_get_vertex_reference_coords (const t8_eclass_t tree_class, const t8_element_t *element, const int vertex,
                                        double coords[]) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_vertex_reference_coords (t, vertex, coords); },
-                       eclass_schemes[tree_class]);
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_get_vertex_reference_coords (element, vertex, coords); },
+      eclass_schemes[tree_class]);
   };
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] element         The element.
+   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
    *                          reference space of the tree.
    */
   inline void
-  element_get_reference_coords (const t8_eclass_t tree_class, const t8_element_t *elem, const double *ref_coords,
+  element_get_reference_coords (const t8_eclass_t tree_class, const t8_element_t *element, const double *ref_coords,
                                 const size_t num_coords, double *out_coords) const
   {
     return std::visit (
-      [&] (auto &&scheme) { return scheme.element_get_reference_coords (elem, ref_coords, num_coords, out_coords); },
+      [&] (auto &&scheme) { return scheme.element_get_reference_coords (element, ref_coords, num_coords, out_coords); },
       eclass_schemes[tree_class]);
   };
 
@@ -947,22 +953,22 @@ class t8_scheme {
    *  For example this could mean that all coordinates are in valid ranges
    *  and other membervariables do have meaningful values.
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem  The element to be checked.
-   * \return          True if \a elem is safe to use. False otherwise.
-   * \note            An element that is constructed with \ref t8_element_new
+   * \param [in] element  The element to be checked.
+   * \return          True if \a element is safe to use. False otherwise.
+   * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
-   * \note            An element for which \ref t8_element_init was called must pass
+   * \note            An element for which \ref element_init was called must pass
    *                  this test.
    * \note            This function is used for debugging to catch certain errors.
    *                  These can for example occur when an element points to a region
    *                  of memory which should not be interpreted as an element.
-   * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (elem))
+   * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (element))
    *                  in the implementation of each of the functions in this file.
    */
   inline int
-  element_is_valid (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_is_valid (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_is_valid (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_is_valid (element); }, eclass_schemes[tree_class]);
   };
 
   /**
@@ -970,25 +976,27 @@ class t8_scheme {
  * and the level of the triangle. This function is only available in the
  * debugging configuration.
  * \param [in] tree_class    The eclass of the current tree. 
- * \param [in] elem  The element to print
+ * \param [in] element  The element to print
  */
   inline void
-  element_debug_print (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  element_debug_print (const t8_eclass_t tree_class, const t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_debug_print (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_debug_print (element); },
+                       eclass_schemes[tree_class]);
   };
 
   /**
  * Fill a string with readable information about the element
  * \param [in] tree_class    The eclass of the current tree.
- * \param[in] elem The element to translate into human-readable information
+ * \param[in] element The element to translate into human-readable information.
  * \param[in, out] debug_string The string to fill. 
+ * \param[in] string_size The length of \a debug_string.
  */
   inline void
-  element_to_string (const t8_eclass_t tree_class, const t8_element_t *elem, char *debug_string,
+  element_to_string (const t8_eclass_t tree_class, const t8_element_t *element, char *debug_string,
                      const int string_size) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_to_string (elem, debug_string, string_size); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_to_string (element, debug_string, string_size); },
                        eclass_schemes[tree_class]);
   };
 #endif
@@ -997,91 +1005,93 @@ class t8_scheme {
    * and put pointers to the elements in the provided array.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] length   The number of elements to be allocated.
-   * \param [in,out] elems On input an array of \a length many element pointers.
+   * \param [in,out] elements On input an array of \a length many element pointers.
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
    * \note There are two ways to create multiple elements of the same type. Create an
-   * array of element pointers and fill it with t8_element_new, or allocate memory
-   * for \a length times \a element_size many bytes, and fill them with t8_element_init.
+   * array of element pointers and fill it with \ref element_new, or allocate memory
+   * for \a length times \a element_size many bytes, and fill them with element_init.
    * To access a specific element, offset calculation needs to be done manually, as
-   * t8_element_t is incomplete.
-   * \note In debugging mode, an element that was created with \ref t8_element_new
-   * must pass \ref t8_element_is_valid (for example the root element).
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_new should initialize an element
-   * in the same way as a call to \ref t8_element_init would.
-   * \note Every call to \ref t8_element_new must be matched by a call to \ref t8_element_destroy
-   * \see t8_element_destroy
-   * \see t8_element_init
-   * \see t8_element_is_valid
+   * \ref t8_element_t is incomplete.
+   * \note In debugging mode, an element that was created with \ref element_new
+   * must pass \ref element_is_valid (for example the root element).
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_new should initialize an element
+   * in the same way as a call to \ref element_init would.
+   * \note Every call to \ref element_new must be matched by a call to \ref element_destroy
+   * \see element_destroy
+   * \see element_init
+   * \see element_is_valid
    */
   inline void
-  element_new (const t8_eclass_t tree_class, const int length, t8_element_t **elem) const
+  element_new (const t8_eclass_t tree_class, const int length, t8_element_t **elements) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_new (length, elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_new (length, elements); },
+                       eclass_schemes[tree_class]);
   };
 
   /** Initialize an array of allocated elements.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] length   The number of elements to be initialized.
-   * \param [in,out] elems On input an array of \a length many allocated
+   * \param [in,out] elements On input an array of \a length many allocated
    *                       elements.
-   * \note In debugging mode, an element that was passed to \ref t8_element_init
-   * must pass \ref t8_element_is_valid.
-   * \note If an element was created by \ref t8_element_new then \ref t8_element_init
-   * may not be called for it. Thus, \ref t8_element_init should initialize an element
-   * in the same way as a call to \ref t8_element_new would.
-   * \note Every call to \ref t8_element_init must be matched by a call to \ref t8_element_deinit
-   * \see t8_element_deinit
-   * \see t8_element_new
-   * \see t8_element_is_valid
+   * \note In debugging mode, an element that was passed to \ref element_init
+   * must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init
+   * may not be called for it. Thus, \ref element_init should initialize an element
+   * in the same way as a call to \ref element_new would.
+   * \note Every call to \ref element_init must be matched by a call to \ref element_deinit
+   * \see element_deinit
+   * \see element_new
+   * \see element_is_valid
    */
   inline void
-  element_init (const t8_eclass_t tree_class, const int length, t8_element_t *elem) const
+  element_init (const t8_eclass_t tree_class, const int length, t8_element_t *elements) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_init (length, elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.element_init (length, elements); },
+                       eclass_schemes[tree_class]);
   };
 
   /** Deinitialize an array of allocated elements.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] length   The number of elements to be deinitialized.
-   * \param [in,out] elems On input an array of \a length many allocated
+   * \param [in,out] elements On input an array of \a length many allocated
    *                       and initialized elements, on output an array of
    *                       \a length many allocated, but not initialized elements.
-   * \note Call this function if you called t8_element_init on the element pointers.
-   * \see t8_element_init
+   * \note Call this function if you called \ref element_init on the element pointers.
+   * \see element_init
    */
   inline void
-  element_deinit (const t8_eclass_t tree_class, const int length, t8_element_t *elem) const
+  element_deinit (const t8_eclass_t tree_class, const int length, t8_element_t *elements) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_deinit (length, elem); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_deinit (length, elements); },
                        eclass_schemes[tree_class]);
   };
 
   /** Deallocate an array of elements.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] length   The number of elements in the array.
-   * \param [in,out] elem On input an array of \a length many allocated
+   * \param [in,out] elements On input an array of \a length many allocated
    *                      element pointers.
    *                      On output all these pointers will be freed.
-   *                      \a elem itself will not be freed by this function.
-   * \see t8_element_new
+   *                      \a element itself will not be freed by this function.
+   * \see element_new
    */
   inline void
-  element_destroy (const t8_eclass_t tree_class, const int length, t8_element_t **elem) const
+  element_destroy (const t8_eclass_t tree_class, const int length, t8_element_t **elements) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_destroy (length, elem); },
+    return std::visit ([&] (auto &&scheme) { return scheme.element_destroy (length, elements); },
                        eclass_schemes[tree_class]);
   };
 
   /** create the root element
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in,out] elem The element that is filled with the root
+   * \param [in,out] element The element that is filled with the root
    */
   inline void
-  set_to_root (const t8_eclass_t tree_class, t8_element_t *elem) const
+  set_to_root (const t8_eclass_t tree_class, t8_element_t *element) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.set_to_root (elem); }, eclass_schemes[tree_class]);
+    return std::visit ([&] (auto &&scheme) { return scheme.set_to_root (element); }, eclass_schemes[tree_class]);
   };
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
