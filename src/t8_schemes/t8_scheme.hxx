@@ -83,7 +83,7 @@ class t8_scheme {
   };
 
   /* clang-format off */
-  
+
   /** Variant to hold an eclass scheme. */
   using scheme_var = std::variant<
                                 /* Default schemes */
@@ -156,17 +156,27 @@ class t8_scheme {
     return std::holds_alternative<TEclassScheme> (eclass_schemes[tree_class]);
   }
 
-  /** Get the eclass an eclass scheme is valid for. 
+  /** Get the eclass an eclass scheme is valid for.
    * \param [in] tree_class     The eclass of the current tree.
    * \return                    The valid tree class for the eclass scheme.
    * \note This function should return the input value as long as the
-   * eclass schemes are soreted correctly. In the future, the trees will access the schemes by a key and then this
+   * eclass schemes are sorted correctly. In the future, the trees will access the schemes by a key and then this
    * function will make more sense.
    */
   inline t8_eclass_t
   get_eclass_scheme_eclass (const t8_eclass_t tree_class) const
   {
     return std::visit ([&] (auto &&scheme) { return scheme.get_eclass (); }, eclass_schemes[tree_class]);
+  }
+
+  /** Get the dimension of the eclass scheme.
+   * \param [in] tree_class     The eclass of the current tree.
+   * \return                    The dimension of the eclass scheme.
+   */
+  inline size_t
+  get_eclass_scheme_dimension (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.get_dimension (); }, eclass_schemes[tree_class]);
   }
 
   /** Return the size of any element of a given class.
@@ -289,7 +299,7 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
-  /** Compute the number of siblings of an element. That is the number of 
+  /** Compute the number of siblings of an element. That is the number of
    * Children of its parent.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] element The element.
@@ -629,7 +639,7 @@ class t8_scheme {
    * \return The index of the tree face that \a face is a subface of, if
    *         \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
-   * \warning The return value may look like a valid face of the tree even if 
+   * \warning The return value may look like a valid face of the tree even if
    *   the element does not lie on the root boundary.
    */
   inline int
@@ -878,7 +888,7 @@ class t8_scheme {
    * \param [out] coords An array of at least as many doubles as the element's dimension
    *                    whose entries will be filled with the coordinates of \a vertex.
    * \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                    all coords might be used. 
+   *                    all coords might be used.
    */
   inline void
   element_get_vertex_reference_coords (const t8_eclass_t tree_class, const t8_element_t *element, const int vertex,
@@ -971,7 +981,7 @@ class t8_scheme {
  * Print a given element. For a example for a triangle print the coordinates
  * and the level of the triangle. This function is only available in the
  * debugging configuration.
- * \param [in] tree_class    The eclass of the current tree. 
+ * \param [in] tree_class    The eclass of the current tree.
  * \param [in] element  The element to print
  */
   inline void
@@ -985,7 +995,7 @@ class t8_scheme {
  * Fill a string with readable information about the element
  * \param [in] tree_class    The eclass of the current tree.
  * \param[in] element The element to translate into human-readable information.
- * \param[in, out] debug_string The string to fill. 
+ * \param[in, out] debug_string The string to fill.
  * \param[in] string_size The length of \a debug_string.
  */
   inline void
