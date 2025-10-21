@@ -87,6 +87,10 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
   for (int ielement = 0; ielement < unstructured_mesh.get_local_num_elements (); ielement++) {
     EXPECT_EQ (level, unstructured_mesh[ielement].get_level ());
   }
+  // Check loop with const iterator.
+  for (auto it = unstructured_mesh.cbegin (); it != unstructured_mesh.cend (); ++it) {
+    EXPECT_EQ (level, it->get_level ());
+  }
 }
 
 /** Test competences. */
