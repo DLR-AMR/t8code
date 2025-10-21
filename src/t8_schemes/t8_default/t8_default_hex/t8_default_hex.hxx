@@ -43,10 +43,10 @@ class t8_scheme;
 typedef p8est_quadrant_t t8_phex_t;
 
 /** Default implementation of the scheme for the hex element class. */
-class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_hex> {
+class t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_default_scheme_hex> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_hex () noexcept: t8_default_scheme_common (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
+  t8_default_scheme_hex () noexcept: t8_default_scheme_common (sizeof (t8_phex_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_hex () {};
@@ -499,8 +499,8 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and
+   * L the maximum refinement level.
    * All element vertices have integer coordinates in this cube and the anchor
    * node is the first of all vertices (index 0). It also has the lowest x,y and z
    * coordinates.
@@ -512,8 +512,8 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and
+   * L the maximum refinement level.
    * All element vertices have integer coordinates in this cube.
    *   \param [in] elem   The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
@@ -530,14 +530,14 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   *                      all coords might be used.
    */
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
    * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
@@ -577,8 +577,8 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
-  * debugging configuration. 
-  * 
+  * debugging configuration.
+  *
   * \param [in]        elem  The element to print
   * \param [in]        debug_string  String printed to debug
   * \param [in]        string_size  String size of \a debug_string.

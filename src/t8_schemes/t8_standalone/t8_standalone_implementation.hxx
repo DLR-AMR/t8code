@@ -27,11 +27,12 @@
 #include <t8_eclass.h>
 #include <sc_functions.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
+#include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
 
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
-struct t8_standalone_scheme
+struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_scheme<TEclass>>
 {
  public:
   /** Constructor
@@ -100,15 +101,6 @@ struct t8_standalone_scheme
   }
 
   // ################################################____GENERAL INFO____################################################
-
-  /** Return the tree class of this scheme.
-   * \return The tree class of this scheme.
-   */
-  constexpr t8_eclass_t
-  get_eclass (void) const
-  {
-    return TEclass;
-  }
 
   /** Return the size of any element of a given class.
    * \return                      The size of an element.
@@ -379,7 +371,7 @@ struct t8_standalone_scheme
     T8_ASSERT (element_is_valid (parent));
   }
 
-  /** Compute the number of siblings of an element. That is the number of 
+  /** Compute the number of siblings of an element. That is the number of
    * elements with the same parent (if available).
    * \param [in] elem The element.
    * \return          The number of siblings of \a element.
@@ -941,7 +933,7 @@ struct t8_standalone_scheme
    * \return The index of the tree face that \a face is a subface of, if
    *         \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
-   * \warning The return value may look like a valid face of the tree even if 
+   * \warning The return value may look like a valid face of the tree even if
    *   the element does not lie on the root boundary.
    */
   static constexpr int
@@ -1191,7 +1183,7 @@ struct t8_standalone_scheme
       element_get_ancestor (el, level, &ancestor);
     }
     else {
-      /* Start with the input element. 
+      /* Start with the input element.
        Copy to have a mutable element. */
       element_copy ((const t8_element_t *) el, (t8_element_t *) &ancestor);
     }
@@ -1250,7 +1242,7 @@ struct t8_standalone_scheme
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
    * \param [in] elem  The element to be checked.
-   * \param [in] level A refinement level. 
+   * \param [in] level A refinement level.
    * \return Suppose \a elem is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
    * If \a level < t8_element_level(t), the return value should be 0.
@@ -1352,7 +1344,7 @@ struct t8_standalone_scheme
 
   /** Convert a point in the reference space of an element to a point in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
    * \param [in] ref_coords   The coordinates of the point in the reference space of the element.
    * \param [in] num_coords   The number of coordinates to evaluate.
@@ -1518,8 +1510,8 @@ struct t8_standalone_scheme
   /**
  * Print a given element. For a example for a triangle print the coordinates
  * and the level of the triangle. This function is only available in the
- * debugging configuration. 
- * 
+ * debugging configuration.
+ *
  * \param [in]        elem  The element to print
  */
   static constexpr void
@@ -1670,7 +1662,7 @@ struct t8_standalone_scheme
 
   /**
  * Compute the ancestor of \a el at a given level via the equation properties
- * 
+ *
  * \param[in] elem            Input element
  * \param[in] level           Level of the ancestor to compute
  * \param[in, out] ancestor   Allocated element that will be filled with the data of the ancestor.
@@ -1708,8 +1700,8 @@ struct t8_standalone_scheme
   element_get_cube_nca_level (const t8_standalone_element<TEclass> *elem1,
                               const t8_standalone_element<TEclass> *elem2) noexcept
   {
-    /* XOR all coordinates. The number of zeros on the left determines the level needed, so that the coordinates equal. 
-    OR over all these bit representations. The number of zeros on the left in this new number equals the coarses of all of these levels. 
+    /* XOR all coordinates. The number of zeros on the left determines the level needed, so that the coordinates equal.
+    OR over all these bit representations. The number of zeros on the left in this new number equals the coarses of all of these levels.
     Therefore this is the level needed so that all coordinates equal.*/
     t8_element_coord maxexclor = 0;
 
@@ -1736,8 +1728,8 @@ struct t8_standalone_scheme
   }
 
   /**
- * Set the \a shift last bits of every coordinate to zero. 
- * 
+ * Set the \a shift last bits of every coordinate to zero.
+ *
  * \param[in, out]  elem     Input element
  * \param[in]       shift Number of bits to set to zero
  */
@@ -1751,12 +1743,12 @@ struct t8_standalone_scheme
   }
 
   /**
- * Set the least significant coordinates bits to zero. 
- * 
+ * Set the least significant coordinates bits to zero.
+ *
  * \param[in]  elem        Input element
  * \param[in, out]       parent_elem Parent element
  * \param[in]       length      int that is 1 at the level of the input element
- * Note length is used as additional input to avoid recomputation. 
+ * Note length is used as additional input to avoid recomputation.
  */
   static constexpr void
   set_coords_at_level_to_zero (const t8_standalone_element<TEclass> *elem, t8_standalone_element<TEclass> *parent_elem,
@@ -1769,12 +1761,12 @@ struct t8_standalone_scheme
 
   /**
  * Adjust the coordinates based on the cube ID.
- * 
+ *
  * \param[in]           parent       Input element
  * \param[in, out]      child     Output element
- * \param[in]           length   int that is 1 at the level of the child element 
+ * \param[in]           length   int that is 1 at the level of the child element
  * \param[in]           cube_id  Cube ID for bitwise operation
- * Note length is used as additional input to avoid recomputation. 
+ * Note length is used as additional input to avoid recomputation.
  */
   static constexpr void
   put_cube_id_at_level (const t8_standalone_element<TEclass> *parent, t8_standalone_element<TEclass> *child,
@@ -1785,7 +1777,7 @@ struct t8_standalone_scheme
     }
   }
 
-  /** Compute the length of the root element of the current TEclass. The length for a Vertex root element is always 0. 
+  /** Compute the length of the root element of the current TEclass. The length for a Vertex root element is always 0.
    * \return The length of the root element
   */
 
@@ -1800,10 +1792,10 @@ struct t8_standalone_scheme
     }
   }
 
-  /** Get the number of descendants of an element at a given leveldiff. 
+  /** Get the number of descendants of an element at a given leveldiff.
    * \param[in] elem      Input element
    * \param[in] leveldiff Difference between the level of the element
-   * \return             number of descendants 
+   * \return             number of descendants
    * Note Caller is responsible for taking the absolute value of leveldiff
   */
   static constexpr t8_linearidx_t
@@ -1984,10 +1976,10 @@ struct t8_standalone_scheme
         const int ifacedim = get_facedim (idim, root_face);
 
         if (ifacedim != -1) {
-          /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element. 
+          /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element.
           * This leads to invalid shift inputs.*/
           if constexpr (TFaceEclass != T8_ECLASS_VERTEX) {
-            /** Set the boundary coordinates to the corresponding coordinates of the element,  
+            /** Set the boundary coordinates to the corresponding coordinates of the element,
            * adjusted to the maxlevel of the face-scheme*/
             boundary->coords[ifacedim] = el->coords[idim]
                                          << (T8_ELEMENT_MAXLEVEL[TFaceEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
@@ -2023,7 +2015,7 @@ struct t8_standalone_scheme
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
     T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) face));
     T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
-    /** Loop over elemdim, get corresponding facedim and set elem coord accordingly 
+    /** Loop over elemdim, get corresponding facedim and set elem coord accordingly
    * If elemdim is faceboundary, find out if 0 or 1 boundary
    */
     T8_ASSERT (0 <= face->level && face->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
@@ -2069,7 +2061,7 @@ struct t8_standalone_scheme
     }
   }
 
-  /* Compute the index of the corner of a face 
+  /* Compute the index of the corner of a face
   \ref element_get_face_corner
   */
   static constexpr int

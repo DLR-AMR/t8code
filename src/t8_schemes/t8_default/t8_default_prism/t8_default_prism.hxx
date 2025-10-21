@@ -42,10 +42,10 @@ class t8_scheme;
  * It is written as a self-contained library in the t8_dprism_* files.
  */
 
-class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme_prism> {
+class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, t8_default_scheme_prism> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_prism () noexcept: t8_default_scheme_common (T8_ECLASS_PRISM, sizeof (t8_dprism_t)) {};
+  t8_default_scheme_prism () noexcept: t8_default_scheme_common (sizeof (t8_dprism_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_prism () {};
@@ -138,7 +138,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \b elem are overwritten by the ones of its parent.
    * \param [in] elem       The element whose parent will be computed.
    * \param [in,out] parent This element's entries will be overwritten by those
-   *                        of \b elem's parent. The storage for this element must exist and match the element class of 
+   *                        of \b elem's parent. The storage for this element must exist and match the element class of
    *                        the parent. For a pyramid, for example, it may be either a tetrahedron or a pyramid depending on \b elem's childid.
    */
   void
@@ -261,7 +261,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   int
   elements_are_family (t8_element_t *const *fam) const;
 
-  /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has 
+  /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has
    * both given elements as descendants.
    * \param [in] elem1    The first of the two input elements.
    * \param [in] elem2    The second of the two input elements.
@@ -282,11 +282,11 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   /** Given an element and a face of the element, compute all children of the element that touch the face.
    * \param [in] elem         The element.
    * \param [in] face         A face of \a elem.
-   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face 
+   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face
    *                          are stored. They will be stored in order of their prism id.
    * \param [in] num_children The number of elements in \a children. Must match the number of children that touch \a face.
    *                          \ref element_get_num_face_children
-   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th 
+   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th
    *                               entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
    */
@@ -307,15 +307,15 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
 
    * \param [in]  elem        The element.
    * \param [in]  face        Then number of the face.
-   * \param [in]  face_child  A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that shares 
-   *                          a face with \a face. These children are counted in linear order. This coincides with the 
+   * \param [in]  face_child  A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that shares
+   *                          a face with \a face. These children are counted in linear order. This coincides with the
    *                          order of children from a call to \ref element_get_children_at_face.
    * \return                  The face number of the face of a child of \a elem that coincides with \a face_child.
    */
   int
   element_face_get_child_face (const t8_element_t *elem, int face, int face_child) const;
 
-  /** Given a face of an element return the face number of the parent of the element that matches the element's face. 
+  /** Given a face of an element return the face number of the parent of the element that matches the element's face.
    * Or return -1 if no face of the parent matches the face.
    * \param [in]  elem    The element.
    * \param [in]  face    Then number of the face.
@@ -485,7 +485,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs.
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum 
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum
    * refinement level.  All element vertices have integer coordinates in this cube and the anchor node is the first of
    * all vertices (index 0). It also has the lowest x,y and z coordinates.
    * \param [in] elem   The element.
@@ -494,12 +494,12 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   void
   element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
+  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs.
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
    * refinement level. All element vertices have integer coordinates in this cube.
    *   \param [in] element       The element to be considered.
    *   \param [in] vertex   The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords  An array of at least as many integers as the element's dimension whose entries will be 
+   *   \param [out] coords  An array of at least as many integers as the element's dimension whose entries will be
    *                        filled with the coordinates of \a vertex.
    */
   void
@@ -512,14 +512,14 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   *                      all coords might be used.
    */
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
    * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
@@ -559,8 +559,8 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
-  * debugging configuration. 
-  * 
+  * debugging configuration.
+  *
   * \param [in]        elem  The element to print
   * \param [in]        debug_string  String printed to debug
   * \param [in]        string_size  String size of \a debug_string.
