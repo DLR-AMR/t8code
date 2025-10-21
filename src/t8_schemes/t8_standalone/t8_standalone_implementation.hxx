@@ -2384,7 +2384,7 @@ struct t8_standalone_scheme
       }
       else {
         T8_ASSERT (coord_v0 > coord_v1);
-        T8_ASSERT (!(type & (u_int8_t) (1 << e)).all ());
+        T8_ASSERT (!(type & (u_int8_t) (1 << e)));
       }
     }
     return type;
