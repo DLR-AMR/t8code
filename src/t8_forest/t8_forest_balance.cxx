@@ -164,6 +164,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   adap_stats = ghost_stats = partition_stats = NULL;
 
   if (forest->profile != NULL) {
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier(forest->mpicomm);
+#endif
     /* Profiling is enable, so we measure the runtime of balance */
     forest->profile->balance_runtime = -sc_MPI_Wtime ();
     /* We store the individual adapt, ghost, and partition runtimes */
@@ -285,6 +288,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
 
   if (forest->profile != NULL) {
     /* Profiling is enabled, so we measure the runtime of balance. */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier(forest->mpicomm);
+#endif
     forest->profile->balance_runtime += sc_MPI_Wtime ();
     forest->profile->balance_rounds = count_rounds;
     /* Print the runtime of adapt/ghost/partition */
