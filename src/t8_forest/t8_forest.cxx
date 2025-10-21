@@ -3337,6 +3337,11 @@ t8_forest_commit (t8_forest_t forest)
              (long) forest->local_num_leaf_elements, (long long) forest->global_num_leaf_elements,
              (long long) forest->first_local_tree, (long long) forest->last_local_tree);
 
+             
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of commit */
+    forest->profile->bigarray_runtime= -sc_MPI_Wtime ();
+  }
   if (forest->tree_offsets == NULL) {
     /* Compute the tree offset array */
     t8_forest_partition_create_tree_offsets (forest);
@@ -3348,6 +3353,10 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->global_first_desc == NULL) {
     /* Compute global first desc array */
     t8_forest_partition_create_first_desc (forest);
+  }
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of commit */
+    forest->profile->bigarray_runtime+= sc_MPI_Wtime ();
   }
 
   if (forest->profile != NULL) {

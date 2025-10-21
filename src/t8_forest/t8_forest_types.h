@@ -183,6 +183,7 @@ typedef struct t8_profile
   double ghost_waittime;    /**< Amount of synchronisation time in ghost. */
   double balance_runtime;   /**< The runtime of the last call to \a t8_forest_balance. */
   double commit_runtime;    /**< The runtime of the last call to \a t8_cmesh_commit. */
+  double bigarray_runtime;    /**< The runtime of the last call to \a t8_cmesh_commit. */
 
 } t8_profile_struct_t;
 
