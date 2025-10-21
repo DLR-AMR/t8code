@@ -67,7 +67,7 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
 TEST (t8_gtest_custom_competence, custom_competence)
 {
   // Define forest to construct unstructured mesh.
-  int level = 3;
+  const int level = 1;
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
@@ -79,6 +79,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
 
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
+    EXPECT_EQ (level, it->get_level_dummy ())
   }
 
   // Test with two custom competences and a predefined competence.
