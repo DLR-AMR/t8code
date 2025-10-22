@@ -65,9 +65,13 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
   // --- Check default functionality. ---
   t8_unstructured_mesh<t8_unstructured_mesh_element<>> unstructured_mesh
     = t8_unstructured_mesh<t8_unstructured_mesh_element<>> (forest);
+  EXPECT_FALSE (t8_unstructured_mesh_element<>::has_vertex_cache ());
+  EXPECT_FALSE (t8_unstructured_mesh_element<>::has_centroid_cache ());
 
   // Iterate with the iterator over all unstructured mesh elements and check some functionality.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    EXPECT_FALSE (it->has_vertex_cache ());
+    EXPECT_FALSE (it->has_centroid_cache ());
     auto centroid = it->get_centroid ();
     for (const auto& coordinate : centroid) {
       EXPECT_GE (1, coordinate);
@@ -99,8 +103,11 @@ TEST_P (t8_unstructured_mesh_test, test_competences)
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Version with cached vertex coordinates. ---
-  t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_vertex_coordinates>> unstructured_mesh_vertex_coordinates
-    = t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_vertex_coordinates>> (forest);
+  using mesh_element_vertex = t8_unstructured_mesh_element<t8_cache_vertex_coordinates>;
+  t8_unstructured_mesh<mesh_element_vertex> unstructured_mesh_vertex_coordinates
+    = t8_unstructured_mesh<mesh_element_vertex> (forest);
+  EXPECT_TRUE (mesh_element_vertex::has_vertex_cache ());
+  EXPECT_FALSE (mesh_element_vertex::has_centroid_cache ());
 
   // Iterate with the iterator over all unstructured mesh elements and check functionality.
   for (auto it = unstructured_mesh_vertex_coordinates.begin (); it != unstructured_mesh_vertex_coordinates.end ();
@@ -134,8 +141,11 @@ TEST_P (t8_unstructured_mesh_test, test_competences)
   }
 
   // --- Version with cached centroid variable. ---
-  t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_centroid>> unstructured_mesh_centroid
-    = t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_centroid>> (forest);
+  using mesh_element_centroid = t8_unstructured_mesh_element<t8_cache_centroid>;
+  t8_unstructured_mesh<mesh_element_centroid> unstructured_mesh_centroid
+    = t8_unstructured_mesh<mesh_element_centroid> (forest);
+  EXPECT_FALSE (mesh_element_centroid::has_vertex_cache ());
+  EXPECT_TRUE (mesh_element_centroid::has_centroid_cache ());
 
   // Iterate with the iterator over all unstructured mesh elements.
   for (auto it = unstructured_mesh_centroid.begin (); it != unstructured_mesh_centroid.end (); ++it) {
@@ -160,8 +170,10 @@ TEST_P (t8_unstructured_mesh_test, test_2_competences)
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Use competences to cache level and centroid. ---
-  t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_vertex_coordinates, t8_cache_centroid>> unstructured_mesh
-    = t8_unstructured_mesh<t8_unstructured_mesh_element<t8_cache_vertex_coordinates, t8_cache_centroid>> (forest);
+  using mesh_element = t8_unstructured_mesh_element<t8_cache_vertex_coordinates, t8_cache_centroid>;
+  t8_unstructured_mesh<mesh_element> unstructured_mesh = t8_unstructured_mesh<mesh_element> (forest);
+  EXPECT_TRUE (mesh_element::has_vertex_cache ());
+  EXPECT_TRUE (mesh_element::has_centroid_cache ());
 
   // Iterate with the iterator over all unstructured mesh elements.
   for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
