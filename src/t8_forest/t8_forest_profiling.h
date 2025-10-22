@@ -252,7 +252,6 @@ t8_forest_profile_get_search_check_element_runtime (t8_forest_t forest);
 double
 t8_forest_profile_get_search_total_runtime (t8_forest_t forest);
 
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_PROFILING_H */
