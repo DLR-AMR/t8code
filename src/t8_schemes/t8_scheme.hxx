@@ -984,6 +984,7 @@ class t8_scheme {
     return std::visit ([&] (auto &&scheme) { return scheme.element_debug_print (element); },
                        eclass_schemes[tree_class]);
   };
+#endif
 
   /**
  * Fill a string with readable information about the element
@@ -999,7 +1000,19 @@ class t8_scheme {
     return std::visit ([&] (auto &&scheme) { return scheme.element_to_string (element, debug_string, string_size); },
                        eclass_schemes[tree_class]);
   };
-#endif
+
+  /**
+ * Print a given element. For a example for a triangle print the coordinates
+ * and the level of the triangle. This function is only available in the
+ * debugging configuration.
+ * \param [in] tree_class    The eclass of the current tree. 
+ * \param [in] element  The element to print
+ */
+  inline void
+  element_print (const t8_eclass_t tree_class, const t8_element_t *element) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_print (element); }, eclass_schemes[tree_class]);
+  };
 
   /** Allocate memory for \a length many elements of a given class and initialize them,
    * and put pointers to the elements in the provided array.

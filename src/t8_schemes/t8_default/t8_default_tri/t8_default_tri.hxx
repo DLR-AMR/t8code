@@ -516,6 +516,7 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
    */
   int
   element_is_valid (const t8_element_t *element) const;
+#endif
 
   /**
   * Print a given element. For a example for a triangle print the coordinates
@@ -528,7 +529,6 @@ class t8_default_scheme_tri: public t8_default_scheme_common<t8_default_scheme_t
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
-#endif
 
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.

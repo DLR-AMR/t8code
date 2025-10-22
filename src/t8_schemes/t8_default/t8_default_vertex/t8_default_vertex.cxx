@@ -317,6 +317,7 @@ t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t 
   const t8_dvertex_t *vertex = (t8_dvertex_t *) element;
   return vertex->level <= T8_DVERTEX_MAXLEVEL;
 }
+#endif
 
 void
 t8_default_scheme_vertex::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
@@ -326,7 +327,6 @@ t8_default_scheme_vertex::element_to_string (const t8_element_t *elem, char *deb
   t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
   snprintf (debug_string, string_size, "level: %i", vertex->level);
 }
-#endif
 
 int
 t8_default_scheme_vertex::refines_irregular () const

@@ -1734,7 +1734,7 @@ struct t8_standalone_scheme
       t8_debugf ("t_%i: %i \n", e_num, get_typebit (el->type, e_num));
     }
   }
-
+#endif
   /**
  * Fill a string with readable information about the element
  * \param[in] elem The element to translate into human-readable information
@@ -1752,7 +1752,20 @@ struct t8_standalone_scheme
     }
   }
 
-#endif
+  static constexpr void
+  element_print (const t8_element_t *elem) noexcept
+  {
+
+    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+
+    t8_productionf ("level: %i\n", el->level);
+    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      t8_productionf ("x_%i: %i \n", idim, el->coords[idim]);
+    }
+    for (int e_num = 0; e_num < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e_num++) {
+      t8_productionf ("t_%i: %i \n", e_num, get_typebit (el->type, e_num));
+    }
+  }
 
   // ################################################____MPI____################################################
 
