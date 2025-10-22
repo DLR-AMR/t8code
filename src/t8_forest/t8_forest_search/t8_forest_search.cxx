@@ -92,7 +92,6 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
     return;
   }
 
-
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->search_split_array_time -= sc_MPI_Wtime ();
