@@ -21,7 +21,10 @@
 */
 
 /** \file t8_unstructured_mesh.cxx
- * TODO
+ * This file is only necessary for cmake to build the library as static or shared library. 
+ * (At least one source file is needed.)
+ * The implementation of the unstructured mesh class is in the header file
+ * t8_unstructured_mesh.hxx as it is a template class.
  */
 
 #include <t8_unstructured_mesh/t8_unstructured_element.hxx>
