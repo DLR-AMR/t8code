@@ -92,6 +92,9 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
 {
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->forest_offsets_runtime = -sc_MPI_Wtime ();
   }
 
@@ -120,6 +123,9 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
   t8_shmem_array_end_writing (forest->element_offsets);
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->forest_offsets_runtime += sc_MPI_Wtime ();
   }
 }
@@ -266,6 +272,9 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
 {
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->first_descendant_runtime = -sc_MPI_Wtime ();
   }
   sc_MPI_Comm comm;
@@ -348,6 +357,9 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
 #endif
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->first_descendant_runtime += sc_MPI_Wtime ();
   }
 }
@@ -358,6 +370,9 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->cmesh_offsets_runtime = -sc_MPI_Wtime ();
   }
 
@@ -426,6 +441,9 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   }
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->cmesh_offsets_runtime += sc_MPI_Wtime ();
   }
 }
@@ -1209,6 +1227,9 @@ t8_forest_partition (t8_forest_t forest)
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->partition_runtime = sc_MPI_Wtime ();
 
     /* DO NOT DELETE THE FOLLOWING line.
@@ -1239,6 +1260,9 @@ t8_forest_partition (t8_forest_t forest)
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->partition_runtime = sc_MPI_Wtime () - forest->profile->partition_runtime;
 
     /* DO NOT DELETE THE FOLLOWING line.
