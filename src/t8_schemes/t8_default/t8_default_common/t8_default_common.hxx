@@ -307,7 +307,19 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     const int dim = t8_eclass_to_dimension[eclass];
     return count_leaves_from_level (0, level, dim);
   }
-
+  /**
+   * Print a given element. For a example for a triangle print the coordinates
+   * and the level of the triangle. This function is only available in the
+   * debugging configuration. 
+   * \param [in]        elem  The element to print
+   */
+  inline void
+  element_print (const t8_element_t *elem) const
+  {
+    char debug_string[BUFSIZ];
+    this->underlying ().element_to_string (elem, debug_string, BUFSIZ);
+    t8_productionf ("%s\n", debug_string);
+  }
 #if T8_ENABLE_DEBUG
   /**
    * Print a given element. For a example for a triangle print the coordinates

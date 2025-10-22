@@ -751,6 +751,7 @@ t8_default_scheme_quad::element_is_valid (const t8_element_t *element) const
    */
   return p4est_quadrant_is_extended ((const p4est_quadrant_t *) element);
 }
+#endif
 
 void
 t8_default_scheme_quad::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
@@ -760,7 +761,6 @@ t8_default_scheme_quad::element_to_string (const t8_element_t *elem, char *debug
   p4est_quadrant_t *quad = (p4est_quadrant_t *) elem;
   snprintf (debug_string, string_size, "x: %i, y: %i, level: %i", quad->x, quad->y, quad->level);
 }
-#endif
 
 void
 t8_default_scheme_quad::set_to_root (t8_element_t *elem) const

@@ -369,6 +369,7 @@ t8_element_debug_print (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
 {
   return scheme->element_debug_print (tree_class, elem);
 }
+#endif
 
 void
 t8_element_to_string (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,
@@ -378,7 +379,12 @@ t8_element_to_string (const t8_scheme_c *scheme, const t8_eclass_t tree_class, c
 
   return scheme->element_to_string (tree_class, elem, debug_string, string_size);
 }
-#endif
+
+void
+t8_element_print (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem)
+{
+  return scheme->element_print (tree_class, elem);
+}
 
 void
 t8_element_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int length, t8_element_t **elems)

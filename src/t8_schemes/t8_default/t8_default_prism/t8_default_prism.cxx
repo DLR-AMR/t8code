@@ -441,6 +441,7 @@ t8_default_scheme_prism::element_is_valid (const t8_element_t *element) const
   T8_ASSERT (element != NULL);
   return t8_dprism_is_valid ((const t8_dprism_t *) element);
 }
+#endif /* T8_ENABLE_DEBUG */
 
 void
 t8_default_scheme_prism::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
@@ -451,8 +452,6 @@ t8_default_scheme_prism::element_to_string (const t8_element_t *elem, char *debu
   snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i", prism->tri.x, prism->tri.y,
             prism->line.x, prism->tri.type, prism->tri.level);
 }
-
-#endif /* T8_ENABLE_DEBUG */
 
 void
 t8_default_scheme_prism::set_to_root (t8_element_t *elem) const
