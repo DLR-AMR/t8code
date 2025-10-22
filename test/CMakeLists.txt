@@ -202,7 +202,8 @@ endif()
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial               SOURCES t8_vector_helper/t8_gtest_vector_split.cxx )
 
 if(T8CODE_BUILD_MESH_INTERFACE)
-    add_t8_cpp_test( NAME t8_gtest_unstructured_mesh_serial          SOURCES t8_unstructured_mesh/t8_gtest_unstructured_mesh.cxx )
+  add_t8_cpp_test( NAME t8_gtest_unstructured_mesh_serial          SOURCES t8_unstructured_mesh/t8_gtest_unstructured_mesh.cxx )
+  add_t8_cpp_test( NAME t8_gtest_unstructured_custom_comp_serial   SOURCES t8_unstructured_mesh/t8_gtest_custom_competence.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
