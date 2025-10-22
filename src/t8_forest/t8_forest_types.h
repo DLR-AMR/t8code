@@ -179,17 +179,17 @@ typedef struct t8_profile
   int ghosts_remotes;                     /**< The number of processes this process have sent ghost elements to
                                                   (and received from). */
   int balance_rounds;                     /**< The number of iterations during balance. */
-  double adapt_runtime;     /**< The runtime of the last call to \a t8_forest_adapt (not counting adaptation
+  double adapt_runtime;            /**< The runtime of the last call to \a t8_forest_adapt (not counting adaptation
                                                   in t8_forest_balance). */
-  double partition_runtime; /**< The runtime of the last call to \a t8_cmesh_partition (not count in
+  double partition_runtime;        /**< The runtime of the last call to \a t8_cmesh_partition (not count in
                                                   partition in t8_forest_balance). */
-  double ghost_runtime;     /**< The runtime of the last call to \a t8_forest_ghost_create. */
-  double ghost_waittime;    /**< Amount of synchronisation time in ghost. */
-  double balance_runtime;   /**< The runtime of the last call to \a t8_forest_balance. */
-  double commit_runtime;    /**< The runtime of the last call to \a t8_cmesh_commit. */
+  double ghost_runtime;            /**< The runtime of the last call to \a t8_forest_ghost_create. */
+  double ghost_waittime;           /**< Amount of synchronisation time in ghost. */
+  double balance_runtime;          /**< The runtime of the last call to \a t8_forest_balance. */
+  double commit_runtime;           /**< The runtime of the last call to \a t8_cmesh_commit. */
   double cmesh_offsets_runtime;    /**< The runtime of the last call to \a t8_forest_partition_create_tree_offsets. */
-  double forest_offsets_runtime;    /**< The runtime of the last call to \a t8_forest_partition_create_offsets. */
-  double first_descendant_runtime;    /**< The runtime of the last call to \a t8_forest_partition_create_first_desc. */
+  double forest_offsets_runtime;   /**< The runtime of the last call to \a t8_forest_partition_create_offsets. */
+  double first_descendant_runtime; /**< The runtime of the last call to \a t8_forest_partition_create_first_desc. */
 
 } t8_profile_struct_t;
 

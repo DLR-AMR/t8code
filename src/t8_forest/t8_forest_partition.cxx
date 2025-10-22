@@ -345,7 +345,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     }
   }
   t8_forest_partition_test_desc (forest);
-  #endif
+#endif
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->first_descendant_runtime += sc_MPI_Wtime ();
