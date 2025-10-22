@@ -376,6 +376,9 @@ struct t8_standalone_scheme
     const t8_standalone_element<TEclass> *el2 = (const t8_standalone_element<TEclass> *) elem2;
     if (el1->level != el2->level)
       return 0;
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       if (el1->coords[idim] != el2->coords[idim])
         return 0;
@@ -411,6 +414,9 @@ struct t8_standalone_scheme
   {
     t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
     el->level = 0;
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       el->coords[idim] = 0;
     }
@@ -652,6 +658,9 @@ struct t8_standalone_scheme
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
     int cube_id = 0;
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       cube_id |= (el->coords[idim] & length) ? (1 << idim) : 0;
     }
@@ -772,6 +781,9 @@ struct t8_standalone_scheme
     /* Shift the coords to the eighth cube. The type of the last descendant
     * is the type of the input element */
     t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       d->coords[idim] |= coord_offset;
     }
@@ -981,6 +993,9 @@ struct t8_standalone_scheme
       last_descendant->type = el->type; /**TODO: Check if this is always true! */
     }
 
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       int multiplier = 1;
       if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
@@ -1019,6 +1034,9 @@ struct t8_standalone_scheme
         }
         // all edges containing dim must be fulfilled with x_d-a_d >= x_j-a_j or x_j-a_j <= x_d-a_d
         if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
           for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ++ieq) {
             if ((t8_type_edge_equations<TEclass>[ieq][0] == dim && get_typebit (el->type, ieq))
                 || (t8_type_edge_equations<TEclass>[ieq][1] == dim && !get_typebit (el->type, ieq))) {
@@ -1035,6 +1053,9 @@ struct t8_standalone_scheme
         }
         // all edges containing dimid must be fulfilled with x_d-a_d <= x_j-a_j or x_j-a_j >= x_d-a_d
         if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
           for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
             if ((t8_type_edge_equations<TEclass>[ieq][0] == dim && !get_typebit (el->type, ieq))
                 || (t8_type_edge_equations<TEclass>[ieq][1] == dim && get_typebit (el->type, ieq))) {
@@ -1146,6 +1167,9 @@ struct t8_standalone_scheme
 
     /**Adapt typebits*/
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         /**For all neighboring typebits, change typebit*/
         if (t8_type_edge_equations<TEclass>[ieq][0] == facenormal_dim
@@ -1517,6 +1541,9 @@ struct t8_standalone_scheme
       int coords_int[T8_ELEMENT_DIM[TEclass]];
       T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[TEclass]);
       element_compute_coords (el, vertex, coords_int);
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         coords[idim] = coords_int[idim] / (double) get_root_len ();
       }
@@ -1542,7 +1569,13 @@ struct t8_standalone_scheme
 
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       double tmp_coords[T8_ELEMENT_DIM[TEclass]] = { 0.0 };
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; ++idim) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
         for (int jdim = 0; jdim < T8_ELEMENT_DIM[TEclass]; ++jdim) {
           tmp_coords[idim]
             += t8_standalone_lut_transform_coords<TEclass>[el->type][idim][jdim] * current_ref_coords[jdim];
@@ -1554,17 +1587,29 @@ struct t8_standalone_scheme
 
       for (size_t coord = 0; coord < num_coords; ++coord) {
         double tmp_out_coords[T8_ELEMENT_DIM[TEclass]] = {};
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
         for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
           current_out_coords[dim] = el->coords[dim] + tmp_coords[dim] * length;
 
           current_out_coords[dim] /= (double) get_root_len ();
         }
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
         for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
           for (int jdim = 0; jdim < T8_ELEMENT_DIM[TEclass]; ++jdim) {
             tmp_out_coords[dim]
               += t8_standalone_lut_backtransform_coords<TEclass>[0][dim][jdim] * current_out_coords[jdim];
           }
         }
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
         for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
           current_out_coords[dim] = tmp_out_coords[dim];
         }
@@ -1576,6 +1621,9 @@ struct t8_standalone_scheme
 
     else {
       for (size_t coord = 0; coord < num_coords; ++coord) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
         for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
           current_out_coords[dim] = el->coords[dim] + current_ref_coords[dim] * length;
 
@@ -1784,6 +1832,9 @@ struct t8_standalone_scheme
     t8_standalone_element<TEclass> **els = (t8_standalone_element<TEclass> **) elements;
 
     for (unsigned int ielem = 0; ielem < count; ielem++) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         mpiret = sc_MPI_Pack (&(els[ielem]->coords[idim]), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
         SC_CHECK_MPI (mpiret);
@@ -1838,6 +1889,9 @@ struct t8_standalone_scheme
     t8_standalone_element<TEclass> **els = (t8_standalone_element<TEclass> **) elements;
 
     for (unsigned int ielem = 0; ielem < count; ielem++) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(els[ielem]->coords[idim]), 1, sc_MPI_INT, comm);
         SC_CHECK_MPI (mpiret);
@@ -1878,6 +1932,9 @@ struct t8_standalone_scheme
 
     /* The cube id of the root element is 0.*/
     if (level != 0) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
         cube_id |= ((elem->coords[i] & h) ? 1 << i : 0);
       }
@@ -1930,6 +1987,9 @@ struct t8_standalone_scheme
     Therefore this is the level needed so that all coordinates equal.*/
     t8_element_coord maxexclor = 0;
 
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       maxexclor |= (elem1->coords[idim] ^ elem2->coords[idim]);
     }
@@ -1962,6 +2022,9 @@ struct t8_standalone_scheme
   element_cut_coordinates (t8_standalone_element<TEclass> *elem, const int shift) noexcept
   {
     T8_ASSERT (0 <= shift && shift <= T8_ELEMENT_MAXLEVEL[TEclass]);
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       elem->coords[idim] = (elem->coords[idim] >> shift) << shift;
     }
@@ -1979,6 +2042,9 @@ struct t8_standalone_scheme
   set_coords_at_level_to_zero (const t8_standalone_element<TEclass> *elem, t8_standalone_element<TEclass> *parent_elem,
                                const t8_element_coord length) noexcept
   {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       parent_elem->coords[idim] = elem->coords[idim] & ~length;
     }
@@ -1997,6 +2063,9 @@ struct t8_standalone_scheme
   put_cube_id_at_level (const t8_standalone_element<TEclass> *parent, t8_standalone_element<TEclass> *child,
                         const t8_element_coord length, const t8_cube_id cube_id) noexcept
   {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       child->coords[idim] = parent->coords[idim] + ((cube_id & (1 << idim)) ? length : 0);
     }
@@ -2055,15 +2124,24 @@ struct t8_standalone_scheme
       t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
       const int8_t type = el->type;
       int tmp_out_coords[T8_ELEMENT_DIM[TEclass]] = {};
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         coords[idim]
           = el->coords[idim] + t8_type_vertex_dim_to_binary<TEclass>[type][vertex][idim] * element_get_len (el->level);
       }
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; ++idim) {
         for (int jdim = 0; jdim < T8_ELEMENT_DIM[TEclass]; ++jdim) {
           tmp_out_coords[idim] += t8_standalone_lut_backtransform_coords<TEclass>[0][idim][jdim] * coords[jdim];
         }
       }
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; ++idim) {
         coords[idim] = tmp_out_coords[idim];
       }
@@ -2071,6 +2149,9 @@ struct t8_standalone_scheme
     }
     else {
       //Hypercubes
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         coords[idim] = elem->coords[idim] + ((vertex & (1 << idim)) >> idim) * element_get_len (elem->level);
       }
@@ -2221,6 +2302,9 @@ struct t8_standalone_scheme
       boundary->type = 0;
       boundary->level = el->level;
       /* Delete the coordinate orthogonal to the given face and combine the remaining coordinates*/
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         const int ifacedim = get_facedim (idim, root_face);
 
@@ -2240,6 +2324,9 @@ struct t8_standalone_scheme
       }
     }
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         const int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
         if (ifaceeq != -1) {
@@ -2279,6 +2366,9 @@ struct t8_standalone_scheme
 
     else {
       el->level = face->level;
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
         const int ifacedim = get_facedim (idim, root_face);
 
@@ -2313,6 +2403,9 @@ struct t8_standalone_scheme
     else {
       u_int8_t root_type = 0;
       el->type = root_type;
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         const int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
         if (ifaceeq != -1) {
@@ -2320,6 +2413,9 @@ struct t8_standalone_scheme
         }
       }
       /** Set those typebits, that are connected to the face_normaldim of root_face*/
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         const int facenormal_dim = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[root_type][root_face];
         if (t8_type_edge_equations<TEclass>[ieq][0] == facenormal_dim) {
@@ -2385,6 +2481,9 @@ struct t8_standalone_scheme
     u_int8_t type = 0;
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
+#if T8_ENABLE_STANDALONE_LOOP_UNROLL
+#pragma GCC unroll 4
+#endif
     for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
       t8_element_coord coord_v0 = el->coords[t8_type_edge_equations<TEclass>[e][0]];
       t8_element_coord coord_v1 = el->coords[t8_type_edge_equations<TEclass>[e][1]];
