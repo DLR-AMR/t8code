@@ -62,7 +62,7 @@ typedef int8_t t8_forest_from_t;
 #define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
 
 /** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 14
+#define T8_PROFILE_NUM_STATS 17
 
 /** This structure is private to the implementation. */
 typedef struct t8_forest
@@ -156,9 +156,6 @@ typedef struct t8_tree
  * it is nonzero, various runtimes and data measurements are stored here.
  * \see t8_cmesh_set_profiling and \see t8_cmesh_print_profile
  */
-
-/** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 17
 
 /**
  * This struct holds profiling information, such as timings or statistics about communication.
