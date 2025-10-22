@@ -380,7 +380,12 @@ struct t8_standalone_scheme
       if (el1->coords[idim] != el2->coords[idim])
         return 0;
     }
-    return el1->type == el2->type;
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return el1->type == el2->type;
+    }
+    else {
+      return 1;
+    }
   }
 
   // ################################################____ACCESSOR____################################################
