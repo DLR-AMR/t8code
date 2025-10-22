@@ -3958,7 +3958,7 @@ t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
   return 0;
 }
 double
-t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
+t8_forest_profile_get_cmesh_offsets_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -3968,7 +3968,7 @@ t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
 }
 
 double
-t8_forest_profile_get_forest_offset_runtime (t8_forest_t forest)
+t8_forest_profile_get_forest_offsets_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -3996,7 +3996,7 @@ t8_forest_profile_get_search_check_element_runtime (t8_forest_t forest)
   return 0;
 }
 double
-t8_forest_profile_search_check_query_runtime (t8_forest_t forest)
+t8_forest_profile_get_search_check_query_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -4005,7 +4005,7 @@ t8_forest_profile_search_check_query_runtime (t8_forest_t forest)
   return 0;
 }
 double
-t8_forest_profile_search_split_array_runtime (t8_forest_t forest)
+t8_forest_profile_get_search_split_array_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -4014,7 +4014,7 @@ t8_forest_profile_search_split_array_runtime (t8_forest_t forest)
   return 0;
 }
 double
-t8_forest_profile_search_total_runtime (t8_forest_t forest)
+t8_forest_profile_get_search_total_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
