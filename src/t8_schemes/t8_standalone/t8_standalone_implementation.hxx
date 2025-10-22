@@ -648,7 +648,6 @@ struct t8_standalone_scheme
     T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> ancestor;
     const int length = element_get_len (level);
     T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
