@@ -2080,8 +2080,10 @@ struct t8_standalone_scheme
 
     /**Check that we are in the correct cube*/
     if (std::all_of (ancestor.coords.begin (), ancestor.coords.end (), [] (int coord) { return coord == 0; })) {
-      return ancestor.type == 0;
-      //TODO: root type
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        return ancestor.type == 0;
+      }
+      return 1;
     }
     else {
       return 0;
