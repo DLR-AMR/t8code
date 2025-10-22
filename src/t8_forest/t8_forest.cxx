@@ -3033,7 +3033,7 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
 #if T8_ENABLE_PROFILE_BARRIER
-    sc_MPI_Barrier(forest->mpicomm);
+    sc_MPI_Barrier (forest->mpicomm);
 #endif
     forest->profile->commit_runtime = sc_MPI_Wtime ();
   }
@@ -3251,7 +3251,7 @@ t8_forest_commit (t8_forest_t forest)
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
 #if T8_ENABLE_PROFILE_BARRIER
-    sc_MPI_Barrier(forest->mpicomm);
+    sc_MPI_Barrier (forest->mpicomm);
 #endif
     forest->profile->commit_runtime = sc_MPI_Wtime () - forest->profile->commit_runtime;
   }
