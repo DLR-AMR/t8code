@@ -20,7 +20,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** Tests for the unstructured mesh class. */
+/**
+ * \file t8_gtest_unstructured_mesh.cxx
+ * Tests if the unstructured mesh class works as intended for different types of predefined template parameter classes. 
+ */
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>

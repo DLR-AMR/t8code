@@ -20,7 +20,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** Checks that custom competences can be used in the unstructured mesh interface. */
+/**
+ * \file t8_gtest_custom_competence.cxx
+ * Checks that custom-defined competences can be used as template parameters for the unstructured mesh interface. 
+ */
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>

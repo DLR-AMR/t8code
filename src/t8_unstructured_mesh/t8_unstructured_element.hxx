@@ -71,13 +71,13 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    */
   template <template <typename> class T>
   static constexpr bool
-  cache_vertex_coordinates_defined ()
+  vertex_cache_defined ()
   {
     return requires (T<SelfType>& competence) { competence.vertex_cache_filled (); };
   }
   /* This variable is true if any of the given competences \ref TCompetence implements 
   a function vertex_cache_filled */
-  static constexpr bool vertex_cache_exists = (false || ... || cache_vertex_coordinates_defined<TCompetence> ());
+  static constexpr bool vertex_cache_exists = (false || ... || vertex_cache_defined<TCompetence> ());
 
   /** Helper function to check if class T implements the function centroid_cache_filled.
    * \tparam T The competence to be checked.
@@ -85,13 +85,13 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
    */
   template <template <typename> class T>
   static constexpr bool
-  cache_centroid_defined ()
+  centroid_cache_defined ()
   {
     return requires (T<SelfType>& competence) { competence.centroid_cache_filled (); };
   }
   /* This variable is true if any of the given competences \ref TCompetence implements 
   a function centroid_cache_filled. */
-  static constexpr bool centroid_cache_exists = (false || ... || cache_centroid_defined<TCompetence> ());
+  static constexpr bool centroid_cache_exists = (false || ... || centroid_cache_defined<TCompetence> ());
 
  public:
   /**
