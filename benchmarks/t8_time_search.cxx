@@ -162,7 +162,6 @@ t8_time_adapt_forest (t8_forest_t forest)
   /* Check that forest is a committed, that is valid and usable, forest. */
   T8_ASSERT (t8_forest_is_committed (forest));
 
-
   t8_forest_init (&forest_adapt);
   t8_forest_set_adapt (forest_adapt, forest, t8_time_search_adapt_callback, 0);
   t8_forest_set_profiling (forest_adapt, 1);
@@ -213,7 +212,7 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statin
 #if T8_ENABLE_PROFILE_BARRIER
   MPI_Barrier (t8_forest_get_mpicomm (forest));
 #endif
-  t8_forest_set_profiling(forest, 1);
+  t8_forest_set_profiling (forest, 1);
   double time_search = -sc_MPI_Wtime ();
   t8_forest_search (forest, t8_time_search_callback, t8_time_search_query_callback, particles);
 #if T8_ENABLE_PROFILE_BARRIER
@@ -383,12 +382,12 @@ main (int argc, char **argv)
     MPI_Barrier (comm);
 #endif
     time_new = -sc_MPI_Wtime ();
-  t8_forest_init(&forest);
-  t8_forest_set_cmesh (forest, cmesh, comm);
-  t8_forest_set_scheme (forest, t8_time_search_scheme (scheme_option));
-  t8_forest_set_level (forest, level);
-  t8_forest_set_profiling(forest,1);
-  t8_forest_commit (forest);
+    t8_forest_init (&forest);
+    t8_forest_set_cmesh (forest, cmesh, comm);
+    t8_forest_set_scheme (forest, t8_time_search_scheme (scheme_option));
+    t8_forest_set_level (forest, level);
+    t8_forest_set_profiling (forest, 1);
+    t8_forest_commit (forest);
 
     time_new += sc_MPI_Wtime ();
     sc_stats_accumulate (&times[1], time_new);
