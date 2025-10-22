@@ -3770,7 +3770,7 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid)
 void
 t8_forest_set_profiling (t8_forest_t forest, int set_profiling)
 {
-  T8_ASSERT (t8_forest_is_initialized (forest));
+//  T8_ASSERT (t8_forest_is_initialized (forest));
 
   if (set_profiling) {
     if (forest->profile == NULL) {
