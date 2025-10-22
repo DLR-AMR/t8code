@@ -154,7 +154,7 @@ struct t8_standalone_scheme
   static constexpr void
   set_typebit (u_int8_t *type, u_int8_t pos, u_int8_t bit)
   {
-    *type &= !(1 << pos);
+    *type &= ~(1 << pos);
     set_typebit_from_zero (type, pos, bit);
   }
 
@@ -2204,8 +2204,8 @@ struct t8_standalone_scheme
     if constexpr (T8_ELEMENT_DIM[TFaceEclass] >= T8_ELEMENT_DIM[TEclass]) {
       return;
     }
-
     else {
+      boundary->type = 0;
       boundary->level = el->level;
       /* Delete the coordinate orthogonal to the given face and combine the remaining coordinates*/
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
@@ -2230,7 +2230,7 @@ struct t8_standalone_scheme
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         const int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
         if (ifaceeq != -1) {
-          set_typebit_from_zero (&boundary->type, ifaceeq, get_typebit (el->type, ieq));
+          set_typebit (&boundary->type, ifaceeq, get_typebit (el->type, ieq));
         }
       }
       T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) boundary));
@@ -2303,19 +2303,17 @@ struct t8_standalone_scheme
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         const int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
         if (ifaceeq != -1) {
-          set_typebit_from_zero (&el->type, ieq, get_typebit (face->type, ifaceeq));
+          set_typebit (&el->type, ieq, get_typebit (face->type, ifaceeq));
         }
       }
       /** Set those typebits, that are connected to the face_normaldim of root_face*/
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         const int facenormal_dim = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[root_type][root_face];
         if (t8_type_edge_equations<TEclass>[ieq][0] == facenormal_dim) {
-          set_typebit_from_zero (&el->type, ieq,
-                                 !t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type][root_face]);
+          set_typebit (&el->type, ieq, !t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type][root_face]);
         }
         else if (t8_type_edge_equations<TEclass>[ieq][1] == facenormal_dim) {
-          set_typebit_from_zero (&el->type, ieq,
-                                 t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type][root_face]);
+          set_typebit (&el->type, ieq, t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type][root_face]);
         }
       }
       return t8_standalone_lut_type_rootface_to_face<TEclass>[el->type][root_face];
@@ -2382,7 +2380,7 @@ struct t8_standalone_scheme
       coord_v1 = (coord_v1 << level) & ((1 << T8_ELEMENT_MAXLEVEL[TEclass]) - 1);
 
       if (coord_v0 == coord_v1) {
-        set_typebit_from_zero (&type, e, get_typebit (el->type, e) | get_typebit (type, e));
+        set_typebit (&type, e, get_typebit (el->type, e) | get_typebit (type, e));
       }
       else if (coord_v0 < coord_v1) {
         type |= (1 << e);
