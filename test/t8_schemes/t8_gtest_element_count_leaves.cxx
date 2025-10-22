@@ -72,7 +72,7 @@ adapt_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t for
 
 TEST_P (class_element_leaves, test_element_count_leaves_root)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlevel = 4;
 #else
   const int maxlevel = 6;
