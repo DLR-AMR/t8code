@@ -21,18 +21,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file t8_element_competences.hxx
- * Definition of the additional competences/functionalities that can be used for the unstructured mesh class.
+ * Definition of the additional competences/functionalities that can be used for the mesh class.
  * Especially, competences to cache functionalities of elements instead of calculating them each time a function
  * is called are provided.
  *
  * All competences have the same inheritance pattern: 
- * We use the CRTP pattern as we may need to access members of the derived class \ref t8_unstructured_element. 
+ * We use the CRTP pattern as we may need to access members of the derived class \ref t8_interface_element. 
  * The t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
  * we need functionality of TUnderlying).
  * Especially for the competences to cache functionality, the access of members is not necessary, 
  * such that it is not obvious why we use the crtp. For competences that extend the functionality of the element, 
  * this is required. 
- * We use it for all competences for consistency and compatibility with the t8_unstructured_element class.
+ * We use it for all competences for consistency and compatibility with the \ref t8_interface_element class.
  */
 
 #ifndef T8_ELEMENT_COMPETENCES_HXX
@@ -48,7 +48,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * Competence to cache the vertex coordinates of an element at the first function call.
- * \tparam TUnderlying Use the t8_unstructured_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the \ref t8_interface_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_vertex_coordinates>
@@ -71,7 +71,7 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
 
 /**
  * Competence to cache the centroid of an element at the first function call.
- * \tparam TUnderlying Use the t8_unstructured_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the \ref t8_interface_element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>

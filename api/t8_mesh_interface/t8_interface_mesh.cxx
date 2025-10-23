@@ -20,11 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_unstructured_mesh.cxx
+/** \file t8_interface_mesh.cxx
  * This file is only necessary for cmake to build the library as static or shared library. 
  * (At least one source file is needed.)
- * The implementation of the unstructured mesh class is in the header file
- * t8_unstructured_mesh.hxx as it is a template class.
+ * The implementation of the mesh class of the interface is in the header file
+ * t8_interface_mesh.hxx as it is a template class.
  */
 
-#include <t8_unstructured_mesh/t8_unstructured_element.hxx>
+#include <t8_mesh_interface/t8_interface_mesh.hxx>

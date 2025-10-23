@@ -20,12 +20,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_unstructured_element.hxx
- * Definition of the elements used in the unstructured mesh element.
+/** \file t8_interface_element.hxx
+ * Definition of the elements used in the mesh class of the interface.
  */
 
-#ifndef T8_UNSTRUCTURED_ELEMENT_HXX
-#define T8_UNSTRUCTURED_ELEMENT_HXX
+#ifndef T8_INTERFACE_ELEMENT_HXX
+#define T8_INTERFACE_ELEMENT_HXX
 
 #include <t8.h>
 #include <t8_element.h>
@@ -37,14 +37,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <array>
 #include <vector>
 
-/* Forward declaration of the unstructured mesh class.
+/* Forward declaration of the mesh class of the interface.
  */
-template <class TUnstructuredMeshElement>
-class t8_unstructured_mesh;
+template <class TMeshElement>
+class t8_interface_mesh;
 
 /** 
- * Unstructured mesh element class. 
- * The unstructured element without specified template parameters provides default implementations for basic functionality 
+ * Class for the elements of the mesh interface. 
+ * The element without specified template parameters provides default implementations for basic functionality 
  * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
  * the function is called. 
  * Use the competences defined in t8_element_competences.hxx as template parameter to cache the functionality instead of 
@@ -60,8 +60,8 @@ class t8_unstructured_mesh;
  * \tparam TCompetence The competences you want to add to the default functionality of the element.
  */
 template <template <typename> class... TCompetence>
-class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_element<TCompetence...>>... {
-  using SelfType = t8_unstructured_mesh_element<TCompetence...>;
+class t8_interface_element: public TCompetence<t8_interface_element<TCompetence...>>... {
+  using SelfType = t8_interface_element<TCompetence...>;
 
  private:
   // --- Variables to check which functionality is defined in TCompetence. ---
@@ -95,14 +95,13 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
 
  public:
   /**
-   * Constructor of the unstructured mesh element.
-   * \param [in] unstructured_mesh     Pointer to the unstructured mesh the element should belong to.
-   * \param [in] tree_id               The tree id of the element in the forest defining the unstructured mesh.
-   * \param [in] element_id            The element id of the element in the forest defining the unstructured mesh.
+   * Constructor of the elements of the mesh interface.
+   * \param [in] interface_mesh      Pointer to the mesh the element should belong to.
+   * \param [in] tree_id             The tree id of the element in the forest defining the mesh.
+   * \param [in] element_id          The element id of the element in the forest defining the mesh.
    */
-  t8_unstructured_mesh_element (t8_unstructured_mesh<SelfType>* unstructured_mesh, t8_locidx_t tree_id,
-                                t8_locidx_t element_id)
-    : m_unstructured_mesh (unstructured_mesh), m_tree_id (tree_id), m_element_id (element_id)
+  t8_interface_element (t8_interface_mesh<SelfType>* interface_mesh, t8_locidx_t tree_id, t8_locidx_t element_id)
+    : m_interface_mesh (interface_mesh), m_tree_id (tree_id), m_element_id (element_id)
   {
   }
 
@@ -129,20 +128,20 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
 
   // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
   /**
-   * Getter for the refinement level of the unstructured mesh element.
+   * Getter for the refinement level of the mesh element.
    * For this easily accessible variable, it makes no sense to provide a cached version.
-   * \return Refinement level of the unstructured mesh element.
+   * \return Refinement level of the mesh element.
    */
   t8_element_level
   get_level () const
   {
     const t8_eclass_t tree_class = get_tree_class ();
     const t8_element_t* element = get_element ();
-    return t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_level (tree_class, element);
+    return t8_forest_get_scheme (m_interface_mesh->m_forest)->element_get_level (tree_class, element);
   }
 
   /**
-   * Getter for the vertex coordinates of the unstructured mesh element.
+   * Getter for the vertex coordinates of the mesh element.
    * This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
@@ -158,12 +157,12 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
     // Calculate the vertex coordinates.
     const t8_element_t* element = get_element ();
     const int num_corners
-      = t8_forest_get_scheme (m_unstructured_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
+      = t8_forest_get_scheme (m_interface_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
     std::vector<t8_3D_vec> vertex_coordinates;
     vertex_coordinates.reserve (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
       t8_3D_vec vertex;
-      t8_forest_element_coordinate (m_unstructured_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
+      t8_forest_element_coordinate (m_interface_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
       vertex_coordinates.push_back (vertex);
     }
     // Fill the cache in the cached version.
@@ -175,7 +174,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   }
 
   /**
-   * Getter for the center of mass of the unstructured mesh element.
+   * Getter for the center of mass of the mesh element.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
@@ -189,7 +188,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
       }
     }
     t8_3D_vec coordinates;
-    t8_forest_element_centroid (m_unstructured_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
+    t8_forest_element_centroid (m_interface_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
     // Fill the cache in the cached version.
     if constexpr (centroid_cache_exists) {
       this->m_centroid = coordinates;
@@ -199,7 +198,7 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
 
   //--- Getter for the member variables. ---
   /**
-   * Getter for the tree id of the unstructured mesh element.
+   * Getter for the tree id of the mesh element.
    * \return The element's tree id.
    */
   t8_locidx_t
@@ -209,8 +208,8 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   }
 
   /**
-   * Getter for the element id of the unstructured mesh element.
-   * \return The element id of the unstructured mesh element.
+   * Getter for the element id of the mesh element.
+   * \return The element id of the mesh element.
    */
   t8_locidx_t
   get_element_id () const
@@ -219,41 +218,40 @@ class t8_unstructured_mesh_element: public TCompetence<t8_unstructured_mesh_elem
   }
 
   /**
-   * Getter for the unstructured mesh to which the unstructured mesh element is belonging.
-   * \return Reference to the unstructured mesh.
+   * Getter for the mesh of the interface to which the mesh element is belonging.
+   * \return Reference to the mesh.
    */
-  const t8_unstructured_mesh<SelfType>*
-  get_unstructured_mesh () const
+  const t8_interface_mesh<SelfType>*
+  get_interface_mesh () const
   {
-    return m_unstructured_mesh;
+    return m_interface_mesh;
   }
 
  private:
   //--- Private getter for internal use. ---
   /**
-   * Getter for the leaf element of the unstructured mesh element.
+   * Getter for the leaf element of the mesh element.
    * \return The leaf element.
    */
   const t8_element_t*
   get_element () const
   {
-    return t8_forest_get_leaf_element_in_tree (m_unstructured_mesh->m_forest, m_tree_id, m_element_id);
+    return t8_forest_get_leaf_element_in_tree (m_interface_mesh->m_forest, m_tree_id, m_element_id);
   }
 
   /**
-   * Getter for the eclass of the unstructured mesh element.
+   * Getter for the eclass of the mesh element.
    * \return The element's eclass.
    */
   t8_eclass_t
   get_tree_class () const
   {
-    return t8_forest_get_tree_class (m_unstructured_mesh->m_forest, m_tree_id);
+    return t8_forest_get_tree_class (m_interface_mesh->m_forest, m_tree_id);
   }
 
-  t8_unstructured_mesh<SelfType>*
-    m_unstructured_mesh;    /**< Pointer to the unstructured mesh the element is defined for. */
-  t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the unstructured mesh. */
-  t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the unstructured mesh. */
+  t8_interface_mesh<SelfType>* m_interface_mesh; /**< Pointer to the mesh the element is defined for. */
+  t8_locidx_t m_tree_id;                         /**< The tree id of the element in the forest defined in the mesh. */
+  t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
 };
 
-#endif /* !T8_UNSTRUCTURED_ELEMENT_HXX */
+#endif /* !T8_INTERFACE_ELEMENT_HXX */

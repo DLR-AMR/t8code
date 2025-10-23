@@ -31,10 +31,10 @@ set_target_properties(T8_MESH_INTERFACE PROPERTIES OUTPUT_NAME t8_mesh_interface
 
 target_include_directories( T8_MESH_INTERFACE PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
-  $<INSTALL_INTERFACE:include/t8_unstructured_mesh>
+  $<INSTALL_INTERFACE:include/t8_mesh_interface>
 ) 
 
-target_sources(T8_MESH_INTERFACE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/t8_unstructured_mesh.cxx)
+target_sources(T8_MESH_INTERFACE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/t8_interface_mesh.cxx)
 install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
 
 target_link_libraries(T8_MESH_INTERFACE PUBLIC T8)

@@ -21,8 +21,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file t8_gtest_unstructured_mesh.cxx
- * Tests if the unstructured mesh class works as intended for different types of predefined template parameter classes. 
+ * \file t8_gtest_mesh_interface.cxx
+ * Tests if the mesh class of the interface works as intended for different types of predefined template parameter classes. 
  */
 
 #include <gtest/gtest.h>
@@ -30,15 +30,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_macros.hxx>
 #include <t8.h>
 
-#include <t8_unstructured_mesh/t8_unstructured_mesh.hxx>
-#include <t8_unstructured_mesh/t8_unstructured_element.hxx>
-#include <t8_unstructured_mesh/t8_element_competences.hxx>
+#include <t8_mesh_interface/t8_interface_mesh.hxx>
+#include <t8_mesh_interface/t8_interface_element.hxx>
+#include <t8_mesh_interface/t8_interface_competences.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-class t8_unstructured_mesh_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+class t8_mesh_interface_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
   void
   SetUp () override
@@ -60,19 +60,18 @@ class t8_unstructured_mesh_test: public testing::TestWithParam<std::tuple<t8_ecl
   int level;
 };
 
-/** Test some default functionality and the iterator class of the unstructured mesh. */
-TEST_P (t8_unstructured_mesh_test, test_iterator)
+/** Test some default functionality and the iterator of t8_interface_mesh class. */
+TEST_P (t8_mesh_interface_test, test_iterator)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Check default functionality. ---
-  t8_unstructured_mesh<t8_unstructured_mesh_element<>> unstructured_mesh
-    = t8_unstructured_mesh<t8_unstructured_mesh_element<>> (forest);
-  EXPECT_FALSE (t8_unstructured_mesh_element<>::has_vertex_cache ());
-  EXPECT_FALSE (t8_unstructured_mesh_element<>::has_centroid_cache ());
+  t8_interface_mesh<t8_interface_element<>> mesh = t8_interface_mesh<t8_interface_element<>> (forest);
+  EXPECT_FALSE (t8_interface_element<>::has_vertex_cache ());
+  EXPECT_FALSE (t8_interface_element<>::has_centroid_cache ());
 
-  // Iterate with the iterator over all unstructured mesh elements and check some functionality.
-  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+  // Iterate with the iterator over all mesh elements and check some functionality.
+  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
     EXPECT_FALSE (it->has_vertex_cache ());
     EXPECT_FALSE (it->has_centroid_cache ());
     auto centroid = it->get_centroid ();
@@ -91,30 +90,28 @@ TEST_P (t8_unstructured_mesh_test, test_iterator)
   }
 
   // Check loop with indices.
-  for (int ielement = 0; ielement < unstructured_mesh.get_local_num_elements (); ielement++) {
-    EXPECT_EQ (level, unstructured_mesh[ielement].get_level ());
+  for (int ielement = 0; ielement < mesh.get_local_num_elements (); ielement++) {
+    EXPECT_EQ (level, mesh[ielement].get_level ());
   }
   // Check loop with const iterator.
-  for (auto it = unstructured_mesh.cbegin (); it != unstructured_mesh.cend (); ++it) {
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     EXPECT_EQ (level, it->get_level ());
   }
 }
 
 /** Test competences. */
-TEST_P (t8_unstructured_mesh_test, test_competences)
+TEST_P (t8_mesh_interface_test, test_competences)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Version with cached vertex coordinates. ---
-  using mesh_element_vertex = t8_unstructured_mesh_element<t8_cache_vertex_coordinates>;
-  t8_unstructured_mesh<mesh_element_vertex> unstructured_mesh_vertex_coordinates
-    = t8_unstructured_mesh<mesh_element_vertex> (forest);
+  using mesh_element_vertex = t8_interface_element<t8_cache_vertex_coordinates>;
+  t8_interface_mesh<mesh_element_vertex> mesh_vertex_coordinates = t8_interface_mesh<mesh_element_vertex> (forest);
   EXPECT_TRUE (mesh_element_vertex::has_vertex_cache ());
   EXPECT_FALSE (mesh_element_vertex::has_centroid_cache ());
 
-  // Iterate with the iterator over all unstructured mesh elements and check functionality.
-  for (auto it = unstructured_mesh_vertex_coordinates.begin (); it != unstructured_mesh_vertex_coordinates.end ();
-       ++it) {
+  // Iterate with the iterator over all mesh elements and check functionality.
+  for (auto it = mesh_vertex_coordinates.begin (); it != mesh_vertex_coordinates.end (); ++it) {
     EXPECT_FALSE (it->vertex_cache_filled ());
     EXPECT_EQ (level, it->get_level ());
     auto centroid = it->get_centroid ();
@@ -131,8 +128,7 @@ TEST_P (t8_unstructured_mesh_test, test_competences)
     }
   }
   // Check cached value.
-  for (auto it = unstructured_mesh_vertex_coordinates.begin (); it != unstructured_mesh_vertex_coordinates.end ();
-       ++it) {
+  for (auto it = mesh_vertex_coordinates.begin (); it != mesh_vertex_coordinates.end (); ++it) {
     EXPECT_TRUE (it->vertex_cache_filled ());
     auto vertex_coordinates = it->get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
@@ -144,14 +140,13 @@ TEST_P (t8_unstructured_mesh_test, test_competences)
   }
 
   // --- Version with cached centroid variable. ---
-  using mesh_element_centroid = t8_unstructured_mesh_element<t8_cache_centroid>;
-  t8_unstructured_mesh<mesh_element_centroid> unstructured_mesh_centroid
-    = t8_unstructured_mesh<mesh_element_centroid> (forest);
+  using mesh_element_centroid = t8_interface_element<t8_cache_centroid>;
+  t8_interface_mesh<mesh_element_centroid> mesh_centroid = t8_interface_mesh<mesh_element_centroid> (forest);
   EXPECT_FALSE (mesh_element_centroid::has_vertex_cache ());
   EXPECT_TRUE (mesh_element_centroid::has_centroid_cache ());
 
-  // Iterate with the iterator over all unstructured mesh elements.
-  for (auto it = unstructured_mesh_centroid.begin (); it != unstructured_mesh_centroid.end (); ++it) {
+  // Iterate with the iterator over all mesh elements.
+  for (auto it = mesh_centroid.begin (); it != mesh_centroid.end (); ++it) {
     EXPECT_FALSE (it->centroid_cache_filled ());
     auto centroid = it->get_centroid ();
     for (const auto& coordinate : centroid) {
@@ -167,19 +162,19 @@ TEST_P (t8_unstructured_mesh_test, test_competences)
   }
 }
 
-/** Test unstructured mesh (element) class with more than one competence. */
-TEST_P (t8_unstructured_mesh_test, test_2_competences)
+/** Test mesh (element) class with more than one competence. */
+TEST_P (t8_mesh_interface_test, test_2_competences)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Use competences to cache level and centroid. ---
-  using mesh_element = t8_unstructured_mesh_element<t8_cache_vertex_coordinates, t8_cache_centroid>;
-  t8_unstructured_mesh<mesh_element> unstructured_mesh = t8_unstructured_mesh<mesh_element> (forest);
+  using mesh_element = t8_interface_element<t8_cache_vertex_coordinates, t8_cache_centroid>;
+  t8_interface_mesh<mesh_element> mesh = t8_interface_mesh<mesh_element> (forest);
   EXPECT_TRUE (mesh_element::has_vertex_cache ());
   EXPECT_TRUE (mesh_element::has_centroid_cache ());
 
-  // Iterate with the iterator over all unstructured mesh elements.
-  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+  // Iterate with the iterator over all mesh elements.
+  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
     EXPECT_FALSE (it->centroid_cache_filled ());
     EXPECT_FALSE (it->vertex_cache_filled ());
     EXPECT_EQ (level, it->get_level ());
@@ -197,7 +192,7 @@ TEST_P (t8_unstructured_mesh_test, test_2_competences)
     }
   }
   // Test dereference operator. (Here the cached values should be used.)
-  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
     EXPECT_TRUE (it->centroid_cache_filled ());
     EXPECT_TRUE (it->vertex_cache_filled ());
     EXPECT_EQ (level, (*it).get_level ());
@@ -216,5 +211,4 @@ TEST_P (t8_unstructured_mesh_test, test_2_competences)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_unstructured_mesh, t8_unstructured_mesh_test,
-                          testing::Combine (AllEclasses, testing::Range (2, 3)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_interface_test, testing::Combine (AllEclasses, testing::Range (2, 3)));

@@ -20,47 +20,47 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_unstructured_mesh.hxx
- * Definition of the unstructured mesh class.
+/** \file t8_interface_mesh.hxx
+ * Definition of the mesh class of the interface.
  */
 
-#ifndef T8_UNSTRUCTURED_MESH_HXX
-#define T8_UNSTRUCTURED_MESH_HXX
+#ifndef T8_INTERFACE_MESH_HXX
+#define T8_INTERFACE_MESH_HXX
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_unstructured_mesh/t8_unstructured_element.hxx>
+#include <t8_mesh_interface/t8_interface_element.hxx>
 #include <iterator>
 #include <memory>
 #include <vector>
 
 /**
- * Wrapper for a forest that enables it to be handled like an unstructured mesh object.
- * \tparam TUnstructuredMeshElement The element class that should be used for the unstructured mesh elements. 
+ * Wrapper for a forest that enables it to be handled as an interface mesh object.
+ * \tparam TMeshElement The element class that should be used for the elements in the mesh interface class. 
  *                                  This template parameter defines which element functionality is available 
  *                                  and if it is cached or calculated.
  */
-template <class TUnstructuredMeshElement = t8_unstructured_mesh_element<>>
-class t8_unstructured_mesh {
+template <class TMeshElement = t8_interface_element<>>
+class t8_interface_mesh {
  public:
-  // Declare unstructured mesh element as friend such that private members (e.g. the forest) can be accessed.
-  friend TUnstructuredMeshElement;
+  // Declare mesh element as friend such that private members (e.g. the forest) can be accessed.
+  friend TMeshElement;
 
-  using t8_unstructured_iterator = typename std::vector<TUnstructuredMeshElement>::iterator;
-  using t8_unstructured_const_iterator = typename std::vector<TUnstructuredMeshElement>::const_iterator;
+  using t8_mesh_iterator = typename std::vector<TMeshElement>::iterator;
+  using t8_mesh_const_iterator = typename std::vector<TMeshElement>::const_iterator;
 
   /** 
-   * Constructor for an unstructured mesh. 
-   * \param [in] input_forest The forest from which the unstructured mesh should be created. 
+   * Constructor for a mesh of the interface. 
+   * \param [in] input_forest The forest from which the mesh should be created. 
    */
-  t8_unstructured_mesh (t8_forest_t input_forest): m_forest (input_forest)
+  t8_interface_mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
     update_elements ();
   }
 
   /**
-  * Getter for the number of local elements in the unstructured mesh.
-  * \return Number of local elements in the unstructured mesh.
+  * Getter for the number of local elements in the mesh.
+  * \return Number of local elements in the mesh.
   */
   t8_locidx_t
   get_local_num_elements () const
@@ -69,20 +69,20 @@ class t8_unstructured_mesh {
   }
 
   /**
-   * Returns an iterator to the first (local) unstructured mesh element.
-   * \return Iterator to the first (local) unstructured mesh element.
+   * Returns an iterator to the first (local) mesh element.
+   * \return Iterator to the first (local) mesh element.
    */
-  t8_unstructured_iterator
+  t8_mesh_iterator
   begin ()
   {
     return m_elements.begin ();
   }
 
   /**
-   * Returns an iterator to an unstructured mesh element following the last (local) element of the unstructured mesh.
-   * \return Iterator to the mesh element following the last (local) element of the unstructured mesh.
+   * Returns an iterator to a mesh element following the last (local) element of the mesh.
+   * \return Iterator to the mesh element following the last (local) element of the mesh.
    */
-  t8_unstructured_iterator
+  t8_mesh_iterator
   end ()
   {
     return m_elements.end ();
@@ -90,9 +90,9 @@ class t8_unstructured_mesh {
 
   /**
    * Const version of \ref begin.
-   * \return Constant iterator to the first (local) unstructured mesh element.
+   * \return Constant iterator to the first (local) mesh element.
    */
-  t8_unstructured_const_iterator
+  t8_mesh_const_iterator
   cbegin () const
   {
     return m_elements.cbegin ();
@@ -100,28 +100,28 @@ class t8_unstructured_mesh {
 
   /**
    * Const version of \ref end.
-   * \return Constant iterator to the mesh element following the last (local) element of the unstructured mesh.
+   * \return Constant iterator to the mesh element following the last (local) element of the mesh.
    */
-  t8_unstructured_const_iterator
+  t8_mesh_const_iterator
   cend () const
   {
     return m_elements.cend ();
   }
 
   /**
-   * Getter for an unstructured mesh element given its local index.
+   * Getter for a mesh element given its local index.
    * \param [in] local_index The local index of the element to access.
-   * \return Reference to the unstructured mesh element.
+   * \return Reference to the mesh element.
    */
-  TUnstructuredMeshElement&
+  TMeshElement&
   operator[] (t8_locidx_t local_index)
   {
     return m_elements[local_index];
   }
 
   /**
-   * Getter for the forest the unstructured mesh is defined for.
-   * \return The forest the unstructured mesh is defined for.
+   * Getter for the forest the mesh is defined for.
+   * \return The forest the mesh is defined for.
    */
   t8_forest_t
   get_forest () const
@@ -131,7 +131,7 @@ class t8_unstructured_mesh {
 
   /** 
   * Setter for the forest. 
-  * \param [in] input_forest The forest from which the unstructured mesh should be a wrapper. 
+  * \param [in] input_forest The forest from which the mesh should be a wrapper. 
   */
   void
   set_forest (t8_forest_t input_forest)
@@ -142,7 +142,7 @@ class t8_unstructured_mesh {
 
  private:
   /** 
-   * Update the storage of the unstructured mesh elements according to the current forest. 
+   * Update the storage of the mesh elements according to the current forest. 
    */
   void
   update_elements ()
@@ -152,7 +152,7 @@ class t8_unstructured_mesh {
       m_elements.clear ();
     }
     m_elements.reserve (get_local_num_elements ());
-    // Iterate through forest elements and fill the element vector with newly created unstructured mesh elements.
+    // Iterate through forest elements and fill the element vector with newly created mesh elements.
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
@@ -161,8 +161,8 @@ class t8_unstructured_mesh {
     }
   }
 
-  t8_forest_t m_forest;                             /**< The forest the unstructured mesh should be defined for. */
-  std::vector<TUnstructuredMeshElement> m_elements; /**< Vector storing the unstructured mesh elements. */
+  t8_forest_t m_forest;                 /**< The forest the mesh should be defined for. */
+  std::vector<TMeshElement> m_elements; /**< Vector storing the mesh elements. */
 };
 
-#endif /* !T8_UNSTRUCTURED_MESH_HXX */
+#endif /* !T8_INTERFACE_MESH_HXX */
