@@ -136,17 +136,17 @@ t8_time_search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, co
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_time_search_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+t8_time_search_adapt_callback ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                                [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                               [[maybe_unused]] const t8_scheme *scheme, const int is_family,
-                               [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+                               [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                               [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
 {
   t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest_from);
 
   t8_locidx_t element_index = t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
-  T8_ASSERT (&user_data != NULL);
+  T8_ASSERT (user_data != NULL);
   std::vector<int> *particles_per_element = user_data->particles_per_element;
-  T8_ASSERT (&particles_per_element != NULL);
+  T8_ASSERT (particles_per_element != NULL);
 
   double num_particles = (*particles_per_element)[element_index];
   if (num_particles >= 1) {
@@ -186,17 +186,12 @@ t8_time_partition_forest (t8_forest_t forest)
 /* Perform the actual search and write the forest with the number of particles per element
  * to vtu files. */
 static void
-t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statinfo_t *times, int with_vtk)
+t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statinfo_t *times)
 {
   t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t ielement;
-  t8_locidx_t global_num_searched_elements;
-  t8_gloidx_t global_num_elements;
-  const char *prefix = "t8_benchmark_search";
-  t8_global_productionf (" [search] Starting search for %zd particles.\n", particles->elem_count);
   t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
   T8_ASSERT (user_data != NULL);
-  // std::vector<int> *particles_per_element = user_data->particles_per_element;
   T8_ASSERT (user_data->particles_per_element != NULL);
 
   user_data->particles_per_element->resize (num_local_elements);
@@ -230,7 +225,7 @@ t8_time_search_for_particles (t8_forest_t forest, sc_array *particles, sc_statin
 }
 
 static sc_array *
-t8_time_search_leaf_particles (t8_forest_t forest, sc_MPI_Comm comm)
+t8_time_search_leaf_particles (t8_forest_t forest)
 {
   sc_array *local_particles;
 
@@ -297,7 +292,7 @@ main (int argc, char **argv)
   int scheme_option;
   int eclass_option;
   int repetitions;
-  int help = 0, with_vtk = 0;
+  int help = 0;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -325,7 +320,6 @@ main (int argc, char **argv)
 
   opt = sc_options_new (argv[1]);
   sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
-  sc_options_add_switch (opt, 'v', "with-vtk", &with_vtk, "Write vtk output.");
   sc_options_add_int (opt, 's', "scheme", &scheme_option, 2,
                       "Option to choose the scheme, 1: standalone scheme, 2: default scheme");
   sc_options_add_int (opt, 'l', "level", &level, 5, "The level of the forest.");
@@ -350,11 +344,10 @@ main (int argc, char **argv)
 
   double total_time = 0;
   double time_refine = 0;
-  double time_search = 0;
   double time_new = 0;
   double time_partition = 0;
   double bigarray_time = 0;
-  int num_stats = 14;
+  constexpr int num_stats = 14;
   sc_statinfo_t times[num_stats];
   sc_stats_init (&times[0], "total");
   sc_stats_init (&times[1], "new");
@@ -397,14 +390,14 @@ main (int argc, char **argv)
     sc_stats_accumulate (&times[9], bigarray_time);
 
     /* Create an array with particles on each leaf. */
-    sc_array_t *particles = t8_time_search_leaf_particles (forest, comm);
+    sc_array_t *particles = t8_time_search_leaf_particles (forest);
 
     t8_forest_set_user_data (forest, &user_data);
 
     /* 
   * Search for particles.
   */
-    t8_time_search_for_particles (forest, particles, times, with_vtk);
+    t8_time_search_for_particles (forest, particles, times);
 
     t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
     /* Ensure user_data is present. */
