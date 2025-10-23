@@ -400,11 +400,9 @@ main (int argc, char **argv)
     t8_time_search_for_particles (forest, particles, times);
 
     t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
-    /* Ensure user_data is present. */
     T8_ASSERT (user_data != NULL);
-    std::vector<int> *particles_per_element = user_data->particles_per_element;
     /* Ensure that the data is actually set. */
-    T8_ASSERT (particles_per_element != NULL);
+    T8_ASSERT (user_data->particles_per_element != NULL);
 
 #if T8_ENABLE_PROFILE_BARRIER
     MPI_Barrier (comm);
