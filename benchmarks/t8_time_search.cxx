@@ -369,7 +369,7 @@ main (int argc, char **argv)
   cmesh = t8_cmesh_new_from_class ((t8_eclass) eclass_option, comm);
   /* Build a uniform forest on it. */
 
-  for (int i_repition = 0; i_repition < repetitions; i_repition++) {
+  for (int i_repetition = 0; i_repetition < repetitions; i_repetition++) {
     t8_cmesh_ref (cmesh);
 #if T8_ENABLE_PROFILE_BARRIER
     MPI_Barrier (comm);
