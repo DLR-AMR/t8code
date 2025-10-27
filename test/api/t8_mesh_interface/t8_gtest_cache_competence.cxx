@@ -39,11 +39,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
-/** TODO. */
+/** Child class of t8_cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct t8_cache_vertex_coordinates_overwrite: public t8_cache_vertex_coordinates<TUnderlying>
 {
  public:
+  /** Overwrites the cache variable for the vertex coordinates.
+   * \param [in] new_vec New cache vector. 
+   */
   void
   overwrite_cache (std::vector<t8_3D_vec> new_vec)
   {
@@ -51,17 +54,50 @@ struct t8_cache_vertex_coordinates_overwrite: public t8_cache_vertex_coordinates
   }
 };
 
-/** TODO */
-TEST (t8_gtest_cache_competence, cache_competence)
+/** Child class of t8_cache_centroid that allows to modify the cache variable for test purposes. */
+template <typename TUnderlying>
+struct t8_cache_centroid_overwrite: public t8_cache_centroid<TUnderlying>
 {
-  // Define forest to construct mesh.
-  const int level = 1;
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  const t8_scheme *scheme = t8_scheme_new_default ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+ public:
+  /** Overwrites the cache variable for the centroid.
+   * \param [in] new_vec New cache vector. 
+   */
+  void
+  overwrite_cache (t8_3D_vec new_vec)
+  {
+    this->m_centroid = new_vec;
+  }
+};
+
+class t8_gtest_cache_competence: public testing::Test {
+ protected:
+  void
+  SetUp () override
+  {
+    level = 1;
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+    const t8_scheme *scheme = t8_scheme_new_default ();
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  }
+
+  void
+  TearDown () override
+  {
+    t8_forest_unref (&forest);
+  }
+
+  t8_forest_t forest;
+  int level;
+};
+
+/** Use child class of t8_cache_vertex_coordinates class to check that the cache is actually set 
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+ * checking that the functionality actually outputs this unrealistic value.
+ */
+TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
+{
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  // Check mesh with custom defined competence.
   using mesh_element = t8_interface_element<t8_cache_vertex_coordinates_overwrite>;
   t8_interface_mesh<mesh_element> mesh = t8_interface_mesh<mesh_element> (forest);
   EXPECT_TRUE (mesh_element::has_vertex_cache ());
@@ -69,7 +105,9 @@ TEST (t8_gtest_cache_competence, cache_competence)
 
   std::vector<t8_3D_vec> unrealistic_vertex = { t8_3D_vec ({ 41, 42, 43 }), t8_3D_vec ({ 99, 100, 101 }) };
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+    // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->vertex_cache_filled ());
+    // Check that values are valid.
     auto vertex_coordinates = it->get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
       for (const auto &coordinate : vertex_coordinates[ivertex]) {
@@ -77,13 +115,43 @@ TEST (t8_gtest_cache_competence, cache_competence)
         EXPECT_LE (0, coordinate);
       }
     }
+    // Check that cache is set.
     EXPECT_TRUE (it->vertex_cache_filled ());
     // Overwrite the cache with unrealistic values.
     it->overwrite_cache (unrealistic_vertex);
-    EXPECT_TRUE (it->vertex_cache_filled ());
+    // Check that the cache is actually used.
     EXPECT_EQ (it->get_vertex_coordinates (), unrealistic_vertex);
   }
+}
 
-  // Unref the forest.
-  t8_forest_unref (&forest);
+/** Use child class of t8_cache_centroid class to check that the cache is actually set 
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+ * checking that the functionality actually outputs this unrealistic value.
+ */
+TEST_F (t8_gtest_cache_competence, cache_centroid)
+{
+  ASSERT_EQ (true, t8_forest_is_committed (forest));
+
+  using mesh_element = t8_interface_element<t8_cache_centroid_overwrite>;
+  t8_interface_mesh<mesh_element> mesh = t8_interface_mesh<mesh_element> (forest);
+  EXPECT_FALSE (mesh_element::has_vertex_cache ());
+  EXPECT_TRUE (mesh_element::has_centroid_cache ());
+
+  t8_3D_vec unrealistic_centroid ({ 999, 1000, 998 });
+  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+    // Check that cache is empty at the beginning.
+    EXPECT_FALSE (it->centroid_cache_filled ());
+    // Check that values are valid.
+    auto centroid = it->get_centroid ();
+    for (const auto &coordinate : centroid) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
+    }
+    // Check that cache is set.
+    EXPECT_TRUE (it->centroid_cache_filled ());
+    // Overwrite the cache with unrealistic values.
+    it->overwrite_cache (unrealistic_centroid);
+    // Check that the cache is actually used.
+    EXPECT_EQ (it->get_centroid (), unrealistic_centroid);
+  }
 }
