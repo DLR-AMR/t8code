@@ -1777,6 +1777,12 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
   /* At first we compute the same lave face neighbor element of leaf. For this, we need the
    * neighbor tree's eclass and scheme. */
   const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, ltreeid, leaf_or_ghost, face);
+  if (neigh_class == T8_ECLASS_INVALID) {
+    // No face neighbor exists.
+    t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (pneighbor_leaves, dual_faces, num_neighbors,
+                                                                pelement_indices, gneigh_tree);
+    return;
+  }
   if (pneigh_eclass != NULL) {
     *pneigh_eclass = neigh_class;
   }
@@ -1898,6 +1904,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
           || scheme->check_eclass_scheme_type<t8_default_scheme_quad> (eclass)
           || scheme->check_eclass_scheme_type<t8_default_scheme_line> (eclass)
           || scheme->check_eclass_scheme_type<t8_default_scheme_vertex> (eclass)
+          || scheme->check_eclass_scheme_type<t8_default_scheme_tri> (eclass)
+          || scheme->check_eclass_scheme_type<t8_default_scheme_prism> (eclass)
           || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_QUAD>> (eclass)
           || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_HEX>> (eclass)
           || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_LINE>> (eclass)
