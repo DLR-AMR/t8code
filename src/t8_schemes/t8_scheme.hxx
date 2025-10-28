@@ -870,6 +870,53 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
+  /** Returns the maximal number of same level vertex neighbors in a uniform refinement .
+   * \param [in] tree_class    The eclass of the current tree.
+   * \return                   maximal number of same level elements that touch at a vertex
+   */
+  inline int
+  element_max_num_vertex_neighbors (const t8_eclass_t tree_class) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_max_num_vertex_neighbors (); },
+                       eclass_schemes[tree_class]);
+  }
+
+  /** Construct the vertex neighbors in a uniform refinement of a given element.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] element    The element whose neighbors should be constructed.
+   * \param [in] vertex     The vertex
+   * \param [out] num_neighbors The actual number of neighbors found.
+   * \param [out] neighbors The constructed neighbors
+   * \param [out] neigh_ivertices The vertex ids of the common vertex in the reference of the neighbors
+   */
+  inline void
+  element_vertex_neighbors (const t8_eclass_t tree_class, const t8_element_t *element, const int vertex,
+                            int *num_neighbors, t8_element_t **neighbors, int *neigh_ivertices) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) {
+        return scheme.element_vertex_neighbors (element, vertex, num_neighbors, neighbors, neigh_ivertices);
+      },
+      eclass_schemes[tree_class]);
+  }
+
+  /** Construct the corner descendant of a given element.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] element     The element whose descendant is computed.
+   * \param [in] vertex   The vertex, for which the descendant should be constructed
+   * \param [in] level    The level, at which the descendant is computed.
+   * \param [out] descendant The descendant of \a element in a uniform refinement of \a level touching
+   *                      \a vertex of \a element.
+   */
+  inline void
+  element_corner_descendant (const t8_eclass_t tree_class, const t8_element_t *element, int vertex, int level,
+                             t8_element_t *descendant) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_corner_descendant (element, vertex, level, descendant); },
+      eclass_schemes[tree_class]);
+  }
+
   /** Compute the coordinates of a given element vertex inside a reference tree
    * that is embedded into [0,1]^d (d = dimension).
    * \param [in] tree_class    The eclass of the current tree.

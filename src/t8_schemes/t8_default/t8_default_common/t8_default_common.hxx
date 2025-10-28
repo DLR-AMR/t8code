@@ -308,6 +308,27 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     return count_leaves_from_level (0, level, dim);
   }
 
+  inline int
+  element_max_num_vertex_neighbors () const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  element_vertex_neighbors ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int vertex,
+                            [[maybe_unused]] int *num_neighbors, [[maybe_unused]] t8_element_t **neighbors,
+                            [[maybe_unused]] int *neigh_ivertices) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
+  inline void
+  element_corner_descendant ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int vertex,
+                             [[maybe_unused]] int level, [[maybe_unused]] t8_element_t *descendant) const
+  {
+    SC_ABORT ("Not implemented for this eclass\n");
+  }
+
 #if T8_ENABLE_DEBUG
   /**
    * Print a given element. For a example for a triangle print the coordinates

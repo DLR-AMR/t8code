@@ -23,6 +23,34 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
 /* clang-format off */
+const int t8_tri_lut_type_vertex_to_cubevertex[2][4] = 
+{
+   {0, 1, 3},
+   {0, 2, 3}
+};
+
+const int t8_tri_lut_cubevertex_to_num_adj[4] =
+{
+  2,1,1,2
+};
+
+const int t8_tri_lut_cubevertex_adj_to_type[4][2] = 
+{
+  {0, 1},
+  {0, -1},
+  {1, -1},
+  {0, 1}
+};
+const int t8_tri_lut_cubevertex_adj_to_elementvertex[4][2] =
+{
+  {0, 0},
+  {1, -1},
+  {1, -1},
+  {2, 2}
+};
+
+
+
 const int t8_dtri_cid_type_to_parenttype[4][2] = { 
   { 0, 1 }, 
   { 0, 0 }, 
