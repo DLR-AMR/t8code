@@ -207,7 +207,7 @@ grid_element_to_coords<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itr
   const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[shape][curved_flag];
   const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (grid, itree);
   const t8_eclass_t eclass = t8_cmesh_get_tree_class (grid, itree);
-  const int num_nodes =  t8_get_number_of_vtk_nodes (eclass, curved_flag);
+  const int num_nodes = t8_get_number_of_vtk_nodes (eclass, curved_flag);
 
   t8_geometry_evaluate (grid, gtree_id, ref_coords, num_nodes, coordinates);
 }
