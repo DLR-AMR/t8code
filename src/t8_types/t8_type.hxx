@@ -60,15 +60,13 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   /**
    *  Construct a new T8Type object
    *
-   * \tparam T_ref
    * \param value
    *
    * \note This constructor is only enabled if T is not a reference.
    */
-  template <typename T_ref = T>
-  explicit constexpr T8Type (T&& value,
-                             typename std::enable_if<!std::is_reference_v<T_ref> {}, std::nullptr_t>::type = nullptr)
-    : value_ (std::move (value))
+  explicit constexpr T8Type (T&& value)
+    requires (!std::is_reference_v<T>)
+    : value_ (std::forward<T> (value))
   {
   }
 
