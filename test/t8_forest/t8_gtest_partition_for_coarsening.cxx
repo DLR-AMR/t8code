@@ -113,7 +113,7 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
 
     //    - Determine parent of first local element.
     t8_locidx_t ltree_id;
-    t8_element_t *element = t8_forest_get_element (forest, 0, &ltree_id);
+    t8_element_t *element = t8_forest_get_leaf_element (forest, 0, &ltree_id);
 
     //    - Set scheme and eclass to the parameters currently tested
     const t8_scheme_c *newscheme = tested_scheme;
@@ -124,7 +124,7 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
     int max_children = 10;
 
     //    - Throw error if partition gets too small.
-    int num_loc_elems = t8_forest_get_local_num_elements (forest);
+    int num_loc_elems = t8_forest_get_local_num_leaf_elements (forest);
     ASSERT_LE (max_children, num_loc_elems)
       << "This test requires that each process has more elements than max_children";
     t8_debugf ("Packing the last %i elements into array.\n", max_children);
@@ -139,7 +139,7 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
       int i_loc_elem = num_loc_elems - max_children + i;
 
       //  - Write element into array lastElems.
-      element = t8_forest_get_element (forest, i_loc_elem, &ltree_id);
+      element = t8_forest_get_leaf_element (forest, i_loc_elem, &ltree_id);
       ASSERT_TRUE (newscheme->element_is_valid (eclass, element));
       newscheme->element_copy (eclass, element, lastElems[i]);
     }
@@ -256,7 +256,7 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
 
     //    - Get the first local element and its parent
     t8_locidx_t ltree_id;
-    t8_element_t *element = t8_forest_get_element (forest, 0, &ltree_id);
+    t8_element_t *element = t8_forest_get_leaf_element (forest, 0, &ltree_id);
     newscheme->element_get_parent (eclass, element, start_parent);
 
     //    - Get the size of the potential family, i.e., the number of children of the start element's parent.
@@ -270,7 +270,7 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
     for (int i_loc_elem = 1; i_loc_elem < num_children; i_loc_elem++) {
 
       //    - Get current element and its parent
-      element = t8_forest_get_element (forest, i_loc_elem, &ltree_id);
+      element = t8_forest_get_leaf_element (forest, i_loc_elem, &ltree_id);
       newscheme->element_get_parent (eclass, element, cur_parent);
 
       //  - Terminate the loop if the current element is no sibling of the first element,

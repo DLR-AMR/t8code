@@ -194,7 +194,7 @@ t8_forest_pfc_family_range_around_border (const t8_forest_t forest, const t8_glo
   newscheme->element_get_parent (eclass, element, parent);
 
   // Get global ID of first (process-)local element
-  t8_gloidx_t first_tree_element = t8_forest_get_first_local_element_id (forest) + tree->elements_offset;
+  t8_gloidx_t first_tree_element = t8_forest_get_first_local_leaf_element_id (forest) + tree->elements_offset;
 
   // Determine range of global IDs forming the family of first_tree_element, by calling the helper function
   // t8_forest_pfc_extreme_local_sibling twice, i.e., searching in the direction of in- and decreasing indices.
@@ -310,7 +310,7 @@ t8_forest_pfc_correction_offsets (const t8_forest_t forest)
   const t8_shmem_array_t partition_new = forest->element_offsets;
   std::vector<t8_gloidx_t> corrected_local_offsets;
 
-  if (t8_forest_get_local_num_elements (forest_old) != 0) {
+  if (t8_forest_get_local_num_leaf_elements (forest_old) != 0) {
     // Send requests to other processes
     std::vector<sc_MPI_Request> requests;
     t8_forest_pfc_send_loop_range<t8_forest_pfc_message_c> (forest_old, requests);
