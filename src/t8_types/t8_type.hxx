@@ -62,7 +62,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
    *
    * \param value
    *
-   * \note This constructor is only enabled if T is not a reference.
+   * \note This constructor is only enabled if T is not a reference value.
    */
   explicit constexpr T8Type (T&& value)
     requires (!std::is_reference_v<T>)
