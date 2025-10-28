@@ -22,16 +22,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_custom_competence.cxx
- * Checks that custom-defined competences can be used as template parameters for the mesh interface. 
+ * Checks that custom-defined competences can be used as template parameters for the mesh. 
  */
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <t8.h>
 
-#include <t8_mesh_interface/t8_interface_mesh.hxx>
-#include <t8_mesh_interface/t8_interface_element.hxx>
-#include <t8_mesh_interface/t8_interface_competences.hxx>
+#include <t8_mesh_handle/mesh.hxx>
+#include <t8_mesh_handle/element.hxx>
+#include <t8_mesh_handle/competences.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -46,7 +46,7 @@ struct dummy_get_level: public t8_crtp_operator<TUnderlying, dummy_get_level>
   t8_element_level
   get_level_dummy () const
   {
-    auto forest = this->underlying ().get_interface_mesh ()->get_forest ();
+    auto forest = this->underlying ().get_mesh ()->get_forest ();
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, this->underlying ().get_tree_id ());
     const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, this->underlying ().get_tree_id (),
                                                                       this->underlying ().get_element_id ());
@@ -79,8 +79,8 @@ TEST (t8_gtest_custom_competence, custom_competence)
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
   // Check mesh with custom defined competence.
-  t8_interface_mesh<t8_interface_element<dummy_get_level>> mesh
-    = t8_interface_mesh<t8_interface_element<dummy_get_level>> (forest);
+  t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level>> mesh
+    = t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level>> (forest);
 
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
@@ -88,8 +88,10 @@ TEST (t8_gtest_custom_competence, custom_competence)
   }
 
   // Test with two custom competences and a predefined competence.
-  t8_interface_mesh<t8_interface_element<dummy_get_level, dummy_trivial, t8_cache_centroid>> mesh_2competences
-    = t8_interface_mesh<t8_interface_element<dummy_get_level, dummy_trivial, t8_cache_centroid>> (forest);
+  t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>>
+    mesh_2competences
+    = t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>> (
+      forest);
 
   for (auto it = mesh_2competences.begin (); it != mesh_2competences.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());

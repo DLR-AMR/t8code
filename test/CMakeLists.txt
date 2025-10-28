@@ -40,12 +40,12 @@ function( add_t8_test )
 
     # Check if test is a Fortran file and if MPI is enabled.
     string ( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file  )
-    string( FIND ${TEST_BUILD_DIR} "t8_mesh_interface" is_mesh_interface_file)
+    string( FIND ${TEST_BUILD_DIR} "t8_mesh_handle" is_mesh_handle_file)
     if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI ) 
       target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
       target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread MPI::MPI_Fortran )
-    elseif( (${is_mesh_interface_file} GREATER_EQUAL 0 ))
-      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread T8_MESH_INTERFACE )
+    elseif( (${is_mesh_handle_file} GREATER_EQUAL 0 ))
+      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread T8_MESH_HANDLE )
     else()
       target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
     endif ()
@@ -201,9 +201,9 @@ endif()
 
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial               SOURCES t8_vector_helper/t8_gtest_vector_split.cxx )
 
-if( T8CODE_BUILD_MESH_INTERFACE )
-  add_t8_cpp_test( NAME t8_gtest_mesh_interface_parallel        SOURCES api/t8_mesh_interface/t8_gtest_mesh_interface.cxx )
-  add_t8_cpp_test( NAME t8_gtest_interface_custom_comp_serial   SOURCES api/t8_mesh_interface/t8_gtest_custom_competence.cxx )
+if( T8CODE_BUILD_MESH_HANDLE )
+  add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel        SOURCES api/t8_mesh_handle/t8_gtest_mesh_handle.cxx )
+  add_t8_cpp_test( NAME t8_gtest_custom_competence_serial   SOURCES api/t8_mesh_handle/t8_gtest_custom_competence.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )

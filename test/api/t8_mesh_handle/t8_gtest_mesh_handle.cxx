@@ -21,8 +21,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file t8_gtest_mesh_interface.cxx
- * Tests if the mesh class of the interface works as intended for different types of predefined template parameter classes. 
+ * \file t8_gtest_mesh_handle.cxx
+ * Tests if the mesh class of the handle works as intended for different types of predefined template parameter classes. 
  */
 
 #include <gtest/gtest.h>
@@ -30,15 +30,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_macros.hxx>
 #include <t8.h>
 
-#include <t8_mesh_interface/t8_interface_mesh.hxx>
-#include <t8_mesh_interface/t8_interface_element.hxx>
-#include <t8_mesh_interface/t8_interface_competences.hxx>
+#include <t8_mesh_handle/mesh.hxx>
+#include <t8_mesh_handle/element.hxx>
+#include <t8_mesh_handle/competences.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-class t8_mesh_interface_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
   void
   SetUp () override
@@ -60,15 +60,15 @@ class t8_mesh_interface_test: public testing::TestWithParam<std::tuple<t8_eclass
   int level;
 };
 
-/** Test some default functionality and the iterator of t8_interface_mesh class. */
-TEST_P (t8_mesh_interface_test, test_iterator)
+/** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh class. */
+TEST_P (t8_mesh_handle_test, test_iterator)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Check default functionality. ---
-  t8_interface_mesh<t8_interface_element<>> mesh = t8_interface_mesh<t8_interface_element<>> (forest);
-  EXPECT_FALSE (t8_interface_element<>::has_vertex_cache ());
-  EXPECT_FALSE (t8_interface_element<>::has_centroid_cache ());
+  t8_mesh_handle::mesh<t8_mesh_handle::element<>> mesh = t8_mesh_handle::mesh<t8_mesh_handle::element<>> (forest);
+  EXPECT_FALSE (t8_mesh_handle::element<>::has_vertex_cache ());
+  EXPECT_FALSE (t8_mesh_handle::element<>::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements and check some functionality.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
@@ -100,13 +100,14 @@ TEST_P (t8_mesh_interface_test, test_iterator)
 }
 
 /** Test competences. */
-TEST_P (t8_mesh_interface_test, test_competences)
+TEST_P (t8_mesh_handle_test, test_competences)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Version with cached vertex coordinates. ---
-  using mesh_element_vertex = t8_interface_element<t8_cache_vertex_coordinates>;
-  t8_interface_mesh<mesh_element_vertex> mesh_vertex_coordinates = t8_interface_mesh<mesh_element_vertex> (forest);
+  using mesh_element_vertex = t8_mesh_handle::element<t8_mesh_handle::cache_vertex_coordinates>;
+  t8_mesh_handle::mesh<mesh_element_vertex> mesh_vertex_coordinates
+    = t8_mesh_handle::mesh<mesh_element_vertex> (forest);
   EXPECT_TRUE (mesh_element_vertex::has_vertex_cache ());
   EXPECT_FALSE (mesh_element_vertex::has_centroid_cache ());
 
@@ -140,8 +141,8 @@ TEST_P (t8_mesh_interface_test, test_competences)
   }
 
   // --- Version with cached centroid variable. ---
-  using mesh_element_centroid = t8_interface_element<t8_cache_centroid>;
-  t8_interface_mesh<mesh_element_centroid> mesh_centroid = t8_interface_mesh<mesh_element_centroid> (forest);
+  using mesh_element_centroid = t8_mesh_handle::element<t8_mesh_handle::cache_centroid>;
+  t8_mesh_handle::mesh<mesh_element_centroid> mesh_centroid = t8_mesh_handle::mesh<mesh_element_centroid> (forest);
   EXPECT_FALSE (mesh_element_centroid::has_vertex_cache ());
   EXPECT_TRUE (mesh_element_centroid::has_centroid_cache ());
 
@@ -163,13 +164,14 @@ TEST_P (t8_mesh_interface_test, test_competences)
 }
 
 /** Test mesh (element) class with more than one competence. */
-TEST_P (t8_mesh_interface_test, test_2_competences)
+TEST_P (t8_mesh_handle_test, test_2_competences)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   // --- Use competences to cache level and centroid. ---
-  using mesh_element = t8_interface_element<t8_cache_vertex_coordinates, t8_cache_centroid>;
-  t8_interface_mesh<mesh_element> mesh = t8_interface_mesh<mesh_element> (forest);
+  using mesh_element
+    = t8_mesh_handle::element<t8_mesh_handle::cache_vertex_coordinates, t8_mesh_handle::cache_centroid>;
+  t8_mesh_handle::mesh<mesh_element> mesh = t8_mesh_handle::mesh<mesh_element> (forest);
   EXPECT_TRUE (mesh_element::has_vertex_cache ());
   EXPECT_TRUE (mesh_element::has_centroid_cache ());
 
@@ -211,4 +213,4 @@ TEST_P (t8_mesh_interface_test, test_2_competences)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_interface_test, testing::Combine (AllEclasses, testing::Range (2, 3)));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_handle_test, testing::Combine (AllEclasses, testing::Range (2, 3)));
