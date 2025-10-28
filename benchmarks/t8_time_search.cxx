@@ -372,9 +372,7 @@ main (int argc, char **argv)
   /* Build a uniform forest on it. */
 
   for (int i_repetition = 0; i_repetition < repetitions + 1; i_repetition++) {
-#if T8_ENABLE_PROFILE_BARRIER
     MPI_Barrier (comm);
-#endif
     total_time = -sc_MPI_Wtime ();
     time_new = -sc_MPI_Wtime ();
     t8_cmesh_ref (cmesh);
