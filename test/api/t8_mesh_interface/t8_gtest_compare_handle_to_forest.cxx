@@ -43,19 +43,31 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
   // Define forest to construct mesh.
   const int level = 2;
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  const t8_scheme *scheme = t8_scheme_new_default ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  const t8_scheme *init_scheme = t8_scheme_new_default ();
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
   // Check mesh with custom defined competence.
   t8_interface_mesh<t8_interface_element<>> mesh = t8_interface_mesh<t8_interface_element<>> (forest);
 
-  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
-    t8_element_level level_handle = it->get_level ();
-    t8_element_level level_forest = t8_forest_get_scheme (forest)->element_get_level (
-      t8_forest_get_tree_class (forest, it->get_tree_id ()),
-      t8_forest_get_leaf_element_in_tree (forest, it->get_tree_id (), it->get_element_id ()));
-    EXPECT_EQ (level_handle, level_forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  auto mesh_iterator = mesh.cbegin ();
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {
+      const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
+      //-- Compare elements. ---
+      EXPECT_EQ (mesh_iterator->get_tree_id (), itree);
+      EXPECT_EQ (mesh_iterator->get_element_id (), ielem);
+      //--- Compare level. ---
+      EXPECT_EQ (mesh_iterator->get_level (), scheme->element_get_level (tree_class, elem));
+      // --- Compare centroid. ---
+      t8_3D_vec centroid;
+      t8_forest_element_centroid (forest, itree, elem, centroid.data ());
+      EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
+      // -- Evolve mesh iterator. ---
+      mesh_iterator++;
+    }
   }
 
   // Unref the forest.
