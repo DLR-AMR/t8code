@@ -499,9 +499,9 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
         t8_gloidx_t global_elm_idx = partition_offset;
         int i = std::ceil (partition_weight_offset * mpisize / forest_weight);
 
-        for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest); ++ltreeid) {
-          for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest, ltreeid); ++ielm) {
-            accumulated_weight += weight_fcn (forest, ltreeid, ielm);
+        for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
+          for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest_from, ltreeid); ++ielm) {
+            accumulated_weight += weight_fcn (forest_from, ltreeid, ielm);
             ++global_elm_idx;
             if (accumulated_weight > forest_weight * i / mpisize) {
               element_offsets[i] = global_elm_idx;
