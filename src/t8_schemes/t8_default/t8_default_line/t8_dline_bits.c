@@ -321,44 +321,6 @@ t8_dline_last_descendant (const t8_dline_t *line, t8_dline_t *desc, int level)
   desc->x = line->x + T8_DLINE_LEN (line->level) - T8_DLINE_LEN (level);
 }
 
-void
-t8_dline_vertex_integer_coords (const t8_dline_t *line, const int vertex, int coords[])
-{
-  T8_ASSERT (vertex == 0 || vertex == 1);
-  if (vertex == 0) {
-    coords[0] = line->x;
-  }
-  else if (vertex == 1) {
-    coords[0] = line->x + T8_DLINE_LEN (line->level);
-  }
-}
-
-void
-t8_dline_vertex_ref_coords (const t8_dline_t *line, const int vertex, double coordinates[1])
-{
-  /* we need to set and initial value to prevent compiler warning. */
-  int coords_int = -1;
-  T8_ASSERT (vertex == 0 || vertex == 1);
-
-  /* Compute integer coordinates and divide by root length. */
-  t8_dline_vertex_integer_coords (line, vertex, &coords_int);
-  coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
-}
-
-void
-t8_dline_compute_reference_coords (const t8_dline_t *line, const double *ref_coords, const size_t num_coords,
-                                   const size_t skip_coords, double *out_coords)
-{
-  T8_ASSERT (t8_dline_is_valid (line));
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t offset = coord * (1 + skip_coords);
-    const size_t offset_3d = coord * 3;
-    out_coords[offset] = line->x;
-    out_coords[offset] += T8_DLINE_LEN (line->level) * ref_coords[offset_3d];
-    out_coords[offset] /= (double) T8_DLINE_ROOT_LEN;
-  }
-}
-
 t8_linearidx_t
 t8_dline_linear_id (const t8_dline_t *line, int level)
 {

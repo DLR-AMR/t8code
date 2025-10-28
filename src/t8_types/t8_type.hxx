@@ -36,7 +36,7 @@
  * This class template allows the creation of a type that can be extended with
  * multiple competences. Each competence is a template class that takes the
  * main type as a template parameter.
- * 
+ *
  * This is heavily inspired by (and taken from) https://www.fluentcpp.com/2016/12/08/strong-types-for-strong-interfaces/
  *
  * \tparam T The type of the value to be stored.
@@ -59,10 +59,10 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
 
   /**
    *  Construct a new T8Type object
-   * 
-   * \tparam T_ref 
-   * \param value 
-   * 
+   *
+   * \tparam T_ref
+   * \param value
+   *
    * \note This constructor is only enabled if T is not a reference.
    */
   template <typename T_ref = T>
@@ -105,7 +105,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   /** Implicit conversion to value type
    * to cast a variable instance of this class into its
    * value_type for example for printing.
-   * 
+   *
    * \note to future devs: If this causes trouble in the future when we create a
    *  type that is not easily (or should not be) convertible to its base type,
    *  we can wrap this inside an enable_if condition and only allow the conversion

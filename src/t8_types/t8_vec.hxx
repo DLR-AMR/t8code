@@ -30,9 +30,6 @@
 #include <t8_types/t8_type.hxx>
 #include <t8_types/t8_operators.hxx>
 #include <t8.h>
-// template <std::size_t N>
-// using t8_point_t = std::array<double, N>;
-// typedef t8_point_t<3> t8_3D_point;
 
 #include <algorithm>
 #include <numeric>
@@ -42,34 +39,117 @@ struct t8_vec_tag
 {
 };
 
-template <std::size_t dim>
-struct t8_point_tag
-{
-};
-
 /**
  * Type alias for a vector.
- * \tparam dim Dimension of the vector.
+ * \tparam TDim Dimension of the vector.
  */
-template <std::size_t dim>
-using t8_vec = T8Type<std::array<double, dim>, t8_vec_tag<dim>, EqualityComparable, Swapable, RandomAccessible>;
+template <std::size_t TDim>
+using t8_vec = T8Type<std::array<double, TDim>, t8_vec_tag<TDim>, EqualityComparable, Swapable, RandomAccessible>;
 
 /** Type alias for a 3D vector.
  * \note This is a convenience type alias for 3D vectors.
  */
 using t8_3D_vec = t8_vec<3>;
 
-/** 
- * Type alias for a point in N-dimensional space.
- * \tparam dim Dimension of the point.
+/* -----------------------Concepts for t8_vec----------------------- */
+
+/** Type trait to check whether a given type is a t8_vec  */
+template <typename TType, std::size_t TExpectedLength = static_cast<std::size_t> (-1)>
+struct is_t8_vec: std::false_type
+{
+};
+
+/** Specialization for is_t8_vec with a specific matching length. */
+template <std::size_t TExpectedLength>
+struct is_t8_vec<t8_vec<TExpectedLength>, TExpectedLength>: std::true_type
+{
+};
+
+/** Specialization for is_t8_vec with arbitrary length. */
+template <std::size_t TExpectedLength, std::size_t TActualLength>
+struct is_t8_vec<t8_vec<TActualLength>, TExpectedLength>:
+  std::bool_constant<TExpectedLength == static_cast<std::size_t> (-1)>
+{
+};
+
+/** Concept that checks whether a type is a t8_vec<N>. N can be either fixed or left open.
+ * \tparam TType             The type to check.
+ * \tparam TExpectedLength   Optional length restriction (default = wildcard).
  */
+template <typename TType, std::size_t TExpectedLength = static_cast<std::size_t> (-1)>
+concept T8VecType = is_t8_vec<std::remove_cvref_t<TType>, TExpectedLength>::value;
+
+/** Concept that checks whether a type is a container of t8_vec<N>. N can be either fixed or left open.
+ * \tparam TType     The type to check.
+ * \tparam TLength   Optional length restriction (default = wildcard).
+ */
+template <typename TType, std::size_t TExpectedLength = static_cast<std::size_t> (-1)>
+concept T8VecContainerType = std::ranges::range<std::remove_cvref_t<TType>>
+                             && T8VecType<std::ranges::range_value_t<std::remove_cvref_t<TType>>, TExpectedLength>;
+
+/* -----------------------End concepts for t8_vec----------------------- */
+
 template <std::size_t dim>
-using t8_point = T8Type<std::array<double, dim>, t8_point_tag<dim>, EqualityComparable, Swapable, RandomAccessible>;
+struct t8_point_tag
+{
+};
+
+/**
+ * Type alias for a point in N-dimensional space.
+ * \tparam TDim Dimension of the point.
+ */
+template <std::size_t TDim>
+using t8_point = T8Type<std::array<double, TDim>, t8_point_tag<TDim>, EqualityComparable, Swapable, RandomAccessible>;
+
+template <std::size_t TDim>
+using t8_point_view_base = std::span<double, TDim>;
+
+template <std::size_t TDim>
+using t8_point_view
+  = T8Type<t8_point_view_base<TDim>, t8_point_tag<TDim>, EqualityComparable, Swapable, RandomAccessible>;
 
 /** Type alias for a 3D point.
  * \note This is a convenience type alias for 3D points.
  */
 using t8_3D_point = t8_point<3>;
+
+/* -----------------------Concepts for t8_point----------------------- */
+
+/** Type trait to check whether a given type is a t8_point  */
+template <typename TType, std::size_t TExpectedLength = static_cast<std::size_t> (-1)>
+struct is_t8_point: std::false_type
+{
+};
+
+/** Specialization for is_t8_point with a specific matching length. */
+template <std::size_t TExpectedLength>
+struct is_t8_point<t8_point<TExpectedLength>, TExpectedLength>: std::true_type
+{
+};
+
+/** Specialization for is_t8_point with arbitrary length. */
+template <std::size_t TExpectedLength, std::size_t TActualLength>
+struct is_t8_point<t8_point<TActualLength>, TExpectedLength>:
+  std::bool_constant<TExpectedLength == static_cast<std::size_t> (-1)>
+{
+};
+
+/** Concept that checks whether a type is a t8_point<N>. N can be either fixed or left open.
+ * \tparam TType             The type to check.
+ * \tparam TExpectedLength   Optional length restriction (default = wildcard).
+ */
+template <typename TType, std::size_t TExpectedLength = static_cast<std::size_t> (-1)>
+concept T8PointType = is_t8_point<std::remove_cvref_t<TType>, TExpectedLength>::value;
+
+/** Concept that checks whether a type is a container of t8_point<N>. N can be either fixed or left open.
+ * \tparam TType     The type to check.
+ * \tparam TLength   Optional length restriction (default = wildcard).
+ */
+template <typename TType, std::size_t TExpectedLength = static_cast<std::size_t> (-1)>
+concept T8PointContainerType = std::ranges::range<std::remove_cvref_t<TType>>
+                               && T8PointType<std::ranges::range_value_t<std::remove_cvref_t<TType>>, TExpectedLength>;
+
+/* -----------------------End concepts for t8_point----------------------- */
 
 /** Vector norm.
  * \param [in] vec  An N-dimensional vector.
@@ -254,12 +334,12 @@ t8_diff (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y, t8_vec<dim> &diff)
 }
 
 /**
- * Check the equality of two vectors or points elementwise 
- * 
- * \param[in] vec_x 
- * \param[in] vec_y 
- * \param[in] tol 
- * \return true, if the vectors are equal up to \a tol 
+ * Check the equality of two vectors or points elementwise
+ *
+ * \param[in] vec_x
+ * \param[in] vec_y
+ * \param[in] tol
+ * \return true, if the vectors are equal up to \a tol
  */
 template <typename T>
 constexpr bool

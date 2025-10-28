@@ -34,45 +34,6 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 
 T8_EXTERN_C_BEGIN ();
-
-/** Compute the coordinates of a vertex of a tetrahedron.
- * \param [in] elem    Input tetrahedron.
- * \param [in] vertex The number of the vertex.
- * \param [out] coordinates An array of 3 t8_dtet_coord_t that will be filled with the coordinates of the vertex.
- */
-void
-t8_dtet_compute_integer_coords (const t8_dtet_t *elem, int vertex, t8_dtet_coord_t coordinates[3]);
-
-/** Compute the coordinates of a vertex of a tetrahedron when the 
- * tree (level 0 tetrahedron) is embedded in \f$ [0,1]^3 \f$.
- * \param [in] elem         Input tetrahedron.
- * \param [in] vertex       The number of the vertex.
- * \param [out] coordinates An array of 3 double that will be filled with the reference coordinates of the vertex.
- */
-void
-t8_dtet_compute_vertex_ref_coords (const t8_dtet_t *elem, int vertex, double coordinates[3]);
-
-/** Convert points in the reference space of a tet element to points in the
- *  reference space of the tree (level 0) embedded in \f$ [0,1]^3 \f$.
- * \param [in]  tet       Input tet.
- * \param [in]  ref_coords The reference coordinates in the tet
- *                         (\a num_coords times \f$ [0,1]^3 \f$)
- * \param [in]  num_coords Number of coordinates to evaluate
- * \param [out] out_coords An array of \a num_coords x 3 x double that
- * 		                     will be filled with the reference coordinates
- *                         of the points on the tet.
- */
-void
-t8_dtet_compute_reference_coords (const t8_dtet_t *tet, const double *ref_coords, const size_t num_coords,
-                                  double *out_coords);
-
-/** Compute the coordinates of the four vertices of a tetrahedron.
- * \param [in] tet         Input tetrahedron.
- * \param [out] coordinates An array of 4x3 t8_dtet_coord_t that will be filled with the coordinates of t's vertices.
- */
-void
-t8_dtet_compute_all_coords (const t8_dtet_t *tet, t8_dtet_coord_t coordinates[4][3]);
-
 /** Copy the values of one tetrahedron to another.
  * \param [in] tet Tetrahedron whose values will be copied.
  * \param [in,out] dest Existing tetrahedron whose data will be filled with the data of \a tet.
@@ -138,7 +99,7 @@ t8_dtet_is_familypv (const t8_dtet_t *f[]);
 
 /** Compute a specific sibling of a tetrahedron.
  * \param [in]     tet  Input tetrahedron.
- * \param [in,out] sibling  Existing tetrahedron whose data will be filled with the data of sibling no. sibling_id of 
+ * \param [in,out] sibling  Existing tetrahedron whose data will be filled with the data of sibling no. sibling_id of
  *                          \a tet.
  * \param [in]     sibid The id of the sibling computed, 0..7 in Bey order.
  */
@@ -168,7 +129,7 @@ t8_dtet_nearest_common_ancestor (const t8_dtet_t *tet1, const t8_dtet_t *tet2, t
  * \param [in] face     A face of \a tet.
  * \param [in,out] children Allocated tetrahedra, in which the children of \a tet that share a face with \a face are
  *                      stored. They will be stored in order of their child_id.
- * \param [in] num_children The number of tetrahedra in \a children. Must match the number of children that touch 
+ * \param [in] num_children The number of tetrahedra in \a children. Must match the number of children that touch
  *                      \a face.
  * \param [in,out] child_indices The indices of the children in \a children. Only filled if this is null previously.
  */
@@ -189,13 +150,13 @@ t8_dtet_face_child_face (const t8_dtet_t *tet, int face, int face_child);
  * no face of the parent matches the face.
  * \param [in]  tet  The tet.
  * \param [in]  face  Then number of the face.
- * \return            If \a face of \a tet is also a face of \a tet's parent, the face number of this face. 
+ * \return            If \a face of \a tet is also a face of \a tet's parent, the face number of this face.
  *                    Otherwise -1.
  */
 int
 t8_dtet_face_parent_face (const t8_dtet_t *tet, int face);
 
-/** Given a tetrahedron and a face of this tetrahedron. If the face lies on the tree boundary, return the face number 
+/** Given a tetrahedron and a face of this tetrahedron. If the face lies on the tree boundary, return the face number
  * of the tree face. If not the return value is arbitrary.
  * \param [in] tet    The tetrahedron.
  * \param [in] face The index of a face of \a tet.
@@ -206,7 +167,7 @@ t8_dtet_face_parent_face (const t8_dtet_t *tet, int face);
 int
 t8_dtet_tree_face (t8_dtet_t *tet, int face);
 
-/** Given a tetrahedron and a face of the root tetrahedron. If the tetrahedron lies on the tree boundary, 
+/** Given a tetrahedron and a face of the root tetrahedron. If the tetrahedron lies on the tree boundary,
  * return the corresponding face number of the tetrahedron. If not the return value is arbitrary.
  * \param [in] tet    The tetrahedron.
  * \param [in] root_face The index of a face of the root tetrahedron.
@@ -379,7 +340,7 @@ t8_dtet_is_valid (const t8_dtet_t *tet);
 void
 t8_dtet_init (t8_dtet_t *tet);
 
-/** Packs an array of tet elements into contiguous memory. 
+/** Packs an array of tet elements into contiguous memory.
  * Tets are packed as x, y, z coordinates, type and level.
  * Compare MPI_Pack function.
  * \param [in] elements The element array to be packed.

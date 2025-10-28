@@ -334,6 +334,9 @@ void
 t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *t,
                                         const int vertex, double coords[])
 {
+  t8_3D_point pnt
+  {
+  }
   return scheme->element_get_vertex_reference_coords (tree_class, t, vertex, coords);
 }
 
@@ -341,6 +344,7 @@ void
 t8_element_get_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *t,
                                  const double *ref_coords, const size_t num_coords, double coords[])
 {
+
   return scheme->element_get_reference_coords (tree_class, t, ref_coords, num_coords, coords);
 }
 

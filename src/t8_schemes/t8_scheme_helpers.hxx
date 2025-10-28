@@ -59,6 +59,32 @@ class t8_scheme_helpers: public t8_crtp<TUnderlyingEclassScheme> {
   {
     return TEclass;
   }
+
+ protected:
+  /** Checks if the contents of a container have the same or a higher dimension than the element.
+   * \tparam TCoordinateContainer The container type.
+   * \param [in] coord_container The container holding coordinate tuples.
+  */
+  template <typename TCoordinateContainer>
+  static constexpr void
+  assert_coord_container_dimensionality (const TCoordinateContainer &coord_container) noexcept
+  {
+    using coord_type = typename TCoordinateContainer::value_type;
+    assert_coord_dimensionality (std::declval<coord_type> ());
+  }
+
+  /** Checks if a tuple has the same or a higher dimension than the element.
+   * \tparam TCoord The tuple type.
+   * \param [in] coords The tuple holding coordinate values.
+  */
+  template <typename TCoord>
+  static constexpr void
+  assert_coord_dimensionality (const TCoord &coords) noexcept
+  {
+    constexpr std::size_t coord_type_dim = std::tuple_size_v<TCoord>;
+    constexpr std::size_t elem_dim = t8_eclass_to_dimension[TEclass];
+    static_assert (coord_type_dim >= elem_dim, "Input dimension for element_get_reference_coords is too small.");
+  }
 };
 
 #endif /* T8_SCHEME_HELPERS */
