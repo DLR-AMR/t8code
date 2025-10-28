@@ -36,7 +36,7 @@
  * This class template allows the creation of a type that can be extended with
  * multiple competences. Each competence is a template class that takes the
  * main type as a template parameter.
- * 
+ *
  * This is heavily inspired by (and taken from) https://www.fluentcpp.com/2016/12/08/strong-types-for-strong-interfaces/
  *
  * \tparam T The type of the value to be stored.
@@ -59,15 +59,15 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
 
   /**
    *  Construct a new T8Type object
-   * 
-   * \tparam T_ref 
-   * \param value 
-   * 
+   *
+   * \tparam T_ref
+   * \param value
+   *
    * \note This constructor is only enabled if T is not a reference.
    */
   template <typename T_ref = T>
   explicit constexpr T8Type (T&& value,
-                             typename std::enable_if<!std::is_reference<T_ref> {}, std::nullptr_t>::type = nullptr)
+                             typename std::enable_if<!std::is_reference_v<T_ref> {}, std::nullptr_t>::type = nullptr)
     : value_ (std::move (value))
   {
   }
