@@ -38,6 +38,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
+/** Parametrized test fixture for the mesh handle tests. */
 class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
   void

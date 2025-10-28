@@ -98,9 +98,9 @@ class element: public TCompetence<element<TCompetence...>>... {
  public:
   /**
    * Constructor for an element of a mesh.
-   * \param [in] mesh      Pointer to the mesh the element should belong to.
-   * \param [in] tree_id             The tree id of the element in the forest defining the mesh.
-   * \param [in] element_id          The element id of the element in the forest defining the mesh.
+   * \param [in] mesh           Pointer to the mesh the element should belong to.
+   * \param [in] tree_id        The tree id of the element in the forest defining the mesh.
+   * \param [in] element_id     The element id of the element in the forest defining the mesh.
    */
   element (mesh<SelfType>* mesh, t8_locidx_t tree_id, t8_locidx_t element_id)
     : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id)

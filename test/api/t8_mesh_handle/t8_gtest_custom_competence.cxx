@@ -67,8 +67,9 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
 };
 
 /** This tests checks that custom defined competences can be used for the mesh class 
- * and that we can use the functionality defined in the competence. 
- * Also checks that we can use more than one custom competence and that predefined competences can be additionally used. */
+ *  and that we can use the functionality defined in the competence. 
+ * Also checks that we can use more than one custom competence and that predefined competences can be additionally used.
+ */
 TEST (t8_gtest_custom_competence, custom_competence)
 {
   // Define forest to construct mesh.

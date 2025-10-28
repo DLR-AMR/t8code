@@ -203,7 +203,7 @@ add_t8_cpp_test( NAME t8_gtest_vector_split_serial               SOURCES t8_vect
 
 if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel        SOURCES api/t8_mesh_handle/t8_gtest_mesh_handle.cxx )
-  add_t8_cpp_test( NAME t8_gtest_custom_competence_serial   SOURCES api/t8_mesh_handle/t8_gtest_custom_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_custom_competence_serial    SOURCES api/t8_mesh_handle/t8_gtest_custom_competence.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
