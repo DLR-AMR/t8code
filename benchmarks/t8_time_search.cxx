@@ -397,12 +397,7 @@ main (int argc, char **argv)
     /* 
   * Search for particles.
   */
-    t8_time_search_for_particles (forest, particles, times);
-
-    t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
-    T8_ASSERT (user_data != NULL);
-    /* Ensure that the data is actually set. */
-    T8_ASSERT (user_data->particles_per_element != NULL);
+    t8_time_search_for_particles (forest, particles, times[i_repetition]);
 
 #if T8_ENABLE_PROFILE_BARRIER
     MPI_Barrier (comm);
