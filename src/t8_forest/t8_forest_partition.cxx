@@ -502,11 +502,11 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
         for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
           for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest_from, ltreeid); ++ielm) {
             accumulated_weight += weight_fcn (forest_from, ltreeid, ielm);
-            ++global_elm_idx;
             if (accumulated_weight > forest_weight * i / mpisize) {
               element_offsets[i] = global_elm_idx;
               ++i;
             }
+            ++global_elm_idx;
           }
         }
       }
