@@ -348,33 +348,36 @@ main (int argc, char **argv)
   double time_partition = 0;
   double bigarray_time = 0;
   constexpr int num_stats = 14;
-  sc_statinfo_t times[num_stats];
-  sc_stats_init (&times[0], "total");
-  sc_stats_init (&times[1], "new");
-  sc_stats_init (&times[2], "search");
-  sc_stats_init (&times[3], "refine");
-  sc_stats_init (&times[4], "partition");
-  sc_stats_init (&times[5], "num_searched");
-  sc_stats_init (&times[6], "num_queried");
-  sc_stats_init (&times[7], "num_before");
-  sc_stats_init (&times[8], "num_after");
-  sc_stats_init (&times[9], "big_array");
-  sc_stats_init (&times[10], "search_check_element");
-  sc_stats_init (&times[11], "search_query");
-  sc_stats_init (&times[12], "search_split");
-  sc_stats_init (&times[13], "search_total");
+  sc_statinfo_t **times = T8_ALLOC (sc_statinfo_t *, repetitions + 1);
 
-  total_time -= sc_MPI_Wtime ();
+  for (int i = 0; i < repetitions + 1; i++) {
+    times[i] = T8_ALLOC (sc_statinfo_t, num_stats);
+    sc_stats_init (&times[i][0], "total");
+    sc_stats_init (&times[i][1], "new");
+    sc_stats_init (&times[i][2], "search");
+    sc_stats_init (&times[i][3], "refine");
+    sc_stats_init (&times[i][4], "partition");
+    sc_stats_init (&times[i][5], "num_searched");
+    sc_stats_init (&times[i][6], "num_queried");
+    sc_stats_init (&times[i][7], "num_before");
+    sc_stats_init (&times[i][8], "num_after");
+    sc_stats_init (&times[i][9], "big_array");
+    sc_stats_init (&times[i][10], "search_check_element");
+    sc_stats_init (&times[i][11], "search_query");
+    sc_stats_init (&times[i][12], "search_split");
+    sc_stats_init (&times[i][13], "search_total");
+  }
 
   cmesh = t8_cmesh_new_from_class ((t8_eclass) eclass_option, comm);
   /* Build a uniform forest on it. */
 
-  for (int i_repetition = 0; i_repetition < repetitions; i_repetition++) {
-    t8_cmesh_ref (cmesh);
+  for (int i_repetition = 0; i_repetition < repetitions + 1; i_repetition++) {
 #if T8_ENABLE_PROFILE_BARRIER
     MPI_Barrier (comm);
 #endif
+    total_time = -sc_MPI_Wtime ();
     time_new = -sc_MPI_Wtime ();
+    t8_cmesh_ref (cmesh);
     t8_forest_init (&forest);
     t8_forest_set_cmesh (forest, cmesh, comm);
     t8_forest_set_scheme (forest, t8_time_search_scheme (scheme_option));
@@ -383,11 +386,11 @@ main (int argc, char **argv)
     t8_forest_commit (forest);
 
     time_new += sc_MPI_Wtime ();
-    sc_stats_accumulate (&times[1], time_new);
-    sc_stats_accumulate (&times[7], t8_forest_get_local_num_leaf_elements (forest));
+    sc_stats_accumulate (&times[i_repetition][1], time_new);
+    sc_stats_accumulate (&times[i_repetition][7], t8_forest_get_local_num_leaf_elements (forest));
 
     bigarray_time = t8_time_get_bigarray_time (forest);
-    sc_stats_accumulate (&times[9], bigarray_time);
+    sc_stats_accumulate (&times[i_repetition][9], bigarray_time);
 
     /* Create an array with particles on each leaf. */
     sc_array_t *particles = t8_time_search_leaf_particles (forest);
@@ -408,10 +411,10 @@ main (int argc, char **argv)
     MPI_Barrier (comm);
 #endif
     time_refine += sc_MPI_Wtime ();
-    sc_stats_accumulate (&times[3], time_refine);
+    sc_stats_accumulate (&times[i_repetition][3], time_refine);
 
     bigarray_time = t8_time_get_bigarray_time (forest);
-    sc_stats_accumulate (&times[9], bigarray_time);
+    sc_stats_accumulate (&times[i_repetition][9], bigarray_time);
 
 #if T8_ENABLE_PROFILE_BARRIER
     MPI_Barrier (comm);
@@ -422,22 +425,29 @@ main (int argc, char **argv)
     MPI_Barrier (comm);
 #endif
     time_partition += sc_MPI_Wtime ();
-    sc_stats_accumulate (&times[4], time_partition);
-    sc_stats_accumulate (&times[8], t8_forest_get_local_num_leaf_elements (forest));
+    sc_stats_accumulate (&times[i_repetition][4], time_partition);
+    sc_stats_accumulate (&times[i_repetition][8], t8_forest_get_local_num_leaf_elements (forest));
 
     bigarray_time = t8_time_get_bigarray_time (forest);
-    sc_stats_accumulate (&times[9], bigarray_time);
+    sc_stats_accumulate (&times[i_repetition][9], bigarray_time);
+
+    total_time += sc_MPI_Wtime ();
+    sc_stats_accumulate (&times[i_repetition][0], total_time);
 
     /* Destroy the forest. */
     t8_forest_unref (&forest);
     sc_array_destroy (particles);
   }
   t8_cmesh_unref (&cmesh);
-  total_time += sc_MPI_Wtime ();
-  sc_stats_accumulate (&times[0], total_time);
 
-  sc_stats_compute (comm, num_stats, times);
-  sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, num_stats, times, 1, 1);
+  //Skip first measurement
+  T8_FREE (times[0]);
+  for (int i = 1; i < repetitions + 1; i++) {
+    sc_stats_compute (comm, num_stats, times[i]);
+    sc_stats_print (t8_get_package_id (), SC_LP_ESSENTIAL, num_stats, times[i], 1, 1);
+    T8_FREE (times[i]);
+  }
+  T8_FREE (times);
   sc_options_destroy (opt);
   sc_finalize ();
 
