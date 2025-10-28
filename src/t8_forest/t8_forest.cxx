@@ -1428,6 +1428,9 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
   return t8_cmesh_get_tree_face_neighbor_eclass (cmesh, cmesh_local_tree_id, face);
 }
 
+/* TODO: If the forest has no ghosts, then skip the ghosts
+         parts. In that case, process boundary elements will have 0 neighbors. 
+*/
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
                                  t8_eclass_t neigh_eclass, int face, int *neigh_face)
@@ -1491,7 +1494,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     // < num_local_trees -> local tree
     // > num_local_trees -> ghost
     const bool neighbor_is_local = lcneigh_id >= 0 && lcneigh_id < t8_cmesh_get_num_local_trees (cmesh);
-    const bool neighbor_is_ghost = lcneigh_id > t8_cmesh_get_num_local_trees (cmesh);
+    const bool neighbor_is_ghost = lcneigh_id >= t8_cmesh_get_num_local_trees (cmesh);
     if (!neighbor_is_local && !neighbor_is_ghost) {
       // The neighbor is neither local nor ghost.
       // We have no way of figuring out the face neighbor.
@@ -1720,6 +1723,9 @@ t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (const t8_element_t *
   }
 }
 
+/* TODO: If the forest has no ghosts, then skip the ghosts
+         parts. In that case, process boundary elements will have 0 neighbors. 
+*/
 void
 t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
                                    const t8_element_t **pneighbor_leaves[], int face, int *dual_faces[],
