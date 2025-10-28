@@ -106,8 +106,6 @@ jobs:
         path: build/CMakeFiles/CMakeOutput.log
     - name: build
       run: cd build && cmake --build . $MAKEFLAGS
-    - name: install
-      run: cd build && cmake --install .
     # Generate code coverage report.
     - name: Generate code coverage report
       run: cd build && cmake --build . --target coverage
