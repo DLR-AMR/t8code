@@ -330,7 +330,8 @@ t8_forest_get_user_function (const t8_forest_t forest);
  * this setting.
  */
 void
-t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening, t8_weight_fcn_t *weight_callback);
+t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening,
+                         t8_weight_fcn_t *weight_callback);
 
 /** Set a source forest to be balanced during commit.
  * A forest is said to be balanced if each element has face neighbors of level

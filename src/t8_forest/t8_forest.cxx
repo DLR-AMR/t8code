@@ -2814,7 +2814,8 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 }
 
 void
-t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening, t8_weight_fcn_t* weight_callback)
+t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening,
+                         t8_weight_fcn_t *weight_callback)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -3165,7 +3166,8 @@ t8_forest_commit (t8_forest_t forest)
           /* forest_partition should not change ownership of forest->set_from */
           t8_forest_ref (forest->set_from);
         }
-        t8_forest_set_partition (forest_partition, forest->set_from, forest->set_for_coarsening, forest->weight_function);
+        t8_forest_set_partition (forest_partition, forest->set_from, forest->set_for_coarsening,
+                                 forest->weight_function);
         /* activate profiling, if this forest has profiling */
         t8_forest_set_profiling (forest_partition, forest->profile != NULL);
         /* Commit the partitioned forest */
