@@ -407,7 +407,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 // of all the partitions of lower rank combined)
 // If weight_fcn is null, all the elements are assumed to be of unit weight.
 static std::tuple<double, double, double>
-t8_forest_integrate_leaf_weights (t8_forest_t forest, weight_fcn_t *weight_fcn)
+t8_forest_integrate_leaf_weights (t8_forest_t forest, t8_weight_fcn_t *weight_fcn)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -437,7 +437,7 @@ t8_forest_integrate_leaf_weights (t8_forest_t forest, weight_fcn_t *weight_fcn)
 /* Calculate the new element_offset for forest from
  * the element in forest->set_from using the provided weight function */
 static void
-t8_forest_partition_compute_new_offset (t8_forest_t forest, weight_fcn_t *weight_fcn)
+t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *weight_fcn)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (forest->set_from != NULL);
@@ -1219,7 +1219,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_arr
  * Currently the elements are distributed evenly (each element has the same weight).
  */
 void
-t8_forest_partition (t8_forest_t forest, weight_fcn_t *weight_callback)
+t8_forest_partition (t8_forest_t forest, t8_weight_fcn_t *weight_callback)
 {
   t8_forest_t forest_from;
   int create_offset_from = 0;

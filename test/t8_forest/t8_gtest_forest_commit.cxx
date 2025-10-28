@@ -104,7 +104,7 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
 #if T8_TEST_LEVEL_INT < 2
   t8_forest_set_balance (forest_ada_bal_par, NULL, 0);
 #endif
-  t8_forest_set_partition (forest_ada_bal_par, NULL, 0);
+  t8_forest_set_partition (forest_ada_bal_par, NULL, 0, nullptr);
   t8_forest_commit (forest_ada_bal_par);
 
   return forest_ada_bal_par;
@@ -137,9 +137,9 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
 
   /* partition the forest */
 #if T8_TEST_LEVEL_INT < 2
-  t8_forest_set_partition (forest_partition, forest_balance, 0);
+  t8_forest_set_partition (forest_partition, forest_balance, 0, nullptr);
 #else
-  t8_forest_set_partition (forest_partition, forest_adapt, 0);
+  t8_forest_set_partition (forest_partition, forest_adapt, 0, nullptr);
 #endif
   t8_forest_commit (forest_partition);
 
