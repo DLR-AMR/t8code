@@ -320,8 +320,8 @@ main (int argc, char **argv)
 
   opt = sc_options_new (argv[1]);
   sc_options_add_switch (opt, 'h', "help", &help, "Display a short help message.");
-  sc_options_add_int (opt, 's', "scheme", &scheme_option, 2,
-                      "Option to choose the scheme, 1: standalone scheme, 2: default scheme");
+  sc_options_add_int (opt, 's', "scheme", &scheme_option, 0,
+                      "Option to choose the scheme, 0: standalone scheme, 1: default scheme");
   sc_options_add_int (opt, 'l', "level", &level, 5, "The level of the forest.");
   sc_options_add_int (opt, 'e', "elements", &eclass_option, 4,
                       "Specify the type of elements to use.\n"
