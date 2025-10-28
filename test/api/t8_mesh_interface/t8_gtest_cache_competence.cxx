@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_cache_competence.cxx
- * Checks that the competences to cache functionality actually use the cache. 
+ * Checks that the cache os actually used if the element gets a cache competence as template parameter. 
  */
 
 #include <gtest/gtest.h>
@@ -69,6 +69,7 @@ struct t8_cache_centroid_overwrite: public t8_cache_centroid<TUnderlying>
   }
 };
 
+/** Test fixture for cache competence tests. */
 class t8_gtest_cache_competence: public testing::Test {
  protected:
   void

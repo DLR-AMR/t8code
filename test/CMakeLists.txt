@@ -202,9 +202,10 @@ endif()
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial               SOURCES t8_vector_helper/t8_gtest_vector_split.cxx )
 
 if( T8CODE_BUILD_MESH_INTERFACE )
-  add_t8_cpp_test( NAME t8_gtest_mesh_interface_parallel        SOURCES api/t8_mesh_interface/t8_gtest_mesh_interface.cxx )
-  add_t8_cpp_test( NAME t8_gtest_interface_custom_comp_serial   SOURCES api/t8_mesh_interface/t8_gtest_custom_competence.cxx )
-  add_t8_cpp_test( NAME t8_gtest_interface_cache_comp_serial   SOURCES api/t8_mesh_interface/t8_gtest_cache_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mesh_interface_parallel          SOURCES api/t8_mesh_interface/t8_gtest_mesh_interface.cxx )
+  add_t8_cpp_test( NAME t8_gtest_interface_custom_comp_serial     SOURCES api/t8_mesh_interface/t8_gtest_custom_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_interface_cache_comp_serial      SOURCES api/t8_mesh_interface/t8_gtest_cache_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_compare_handle_to_forest_serial  SOURCES api/t8_mesh_interface/t8_gtest_compare_handle_to_forest.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
