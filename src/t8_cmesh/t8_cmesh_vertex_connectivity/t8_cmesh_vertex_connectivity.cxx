@@ -60,7 +60,9 @@ t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t 
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   const auto global_vertices = cmesh->vertex_connectivity->get_global_vertices_of_tree (local_tree);
-  *num_vertices = global_vertices.size ();
+  if (num_vertices) {
+    *num_vertices = global_vertices.size ();
+  }
   return global_vertices.data ();
 }
 

@@ -3,7 +3,7 @@
 The team of main-developers of t8code and contributors to t8code is getting bigger and we needed an improved workflow to manage all of our contributions.
 With the latest version of t8code, we decided to use github project boards to have a good track of our development. Having a look at [t8code's Issue Landing page](https://github.com/orgs/DLR-AMR/projects/13), you will find the state of all issues concerning t8code. If you have a good solution for an issue that has the state "ToDo" / is in the "ToDo"-column, feel free to assign yourself and work on it. It is highly appreciated. In the future we will have specialized Project-boards, where issues to a certain topic are summarized. But at first, all issues will occur on t8code's Issue Landing page.
 
-## What does change for me as a developer/contributer?
+## What does change for me as a developer/contributor?
 We tried to minimize the additional overhead for you as much as possible. Nearly all of the steps that an issue will do on the project board are automated. An issue should have the following life-cycle:
 
 1. Opening an issue: It will automatically added to the project and have the status "In-Box".
@@ -91,7 +91,7 @@ In summary there are two major changes:
 All element-specific function got an additional argument, the class of the tree. In your application we recommend to get the scheme of a forest only once. It is very likely, that you already got the information about the tree-class using the element function in its old way. All other function arguments have stayed the same.
 
 ### Renaming of some element functions
-As you might have reconnized already, some of the element functions have been renamed. We try to get closer to the getter/setter style there and to make more clear what the function does.
+As you might have recognized already, some of the element functions have been renamed. We try to get closer to the getter/setter style there and to make more clear what the function does.
 
 Furthermore we applied our naming-guidelines to the scheme functions and got rid of all `t8_`-prefixes for functions that are now a member of t8code class.
 

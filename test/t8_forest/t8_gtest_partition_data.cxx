@@ -196,7 +196,7 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
 }
 
 /**
- * \brief An examplary adaptation function which refines only the the first global tree in the forest
+ * \brief An exemplary adaptation function which refines only the the first global tree in the forest
  * to a pre-set refinement level.
  */
 static int
@@ -244,7 +244,7 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
-  /* Adapt the forest examplary. */
+  /* Adapt the forest exemplary. */
   t8_forest_t initial_forest = t8_forest_new_adapt (base_forest, t8_test_partition_data_adapt, 1, 0, NULL);
 
   /* Reference the forest in order to keep it after the partition step. */
@@ -257,7 +257,7 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_forest_set_partition (partitioned_forest, initial_forest, partition_for_coarsening);
   t8_forest_commit (partitioned_forest);
 
-  /* Test the examplary partition_data with some arithmetic data types as well as with a custom struct. */
+  /* Test the exemplary partition_data with some arithmetic data types as well as with a custom struct. */
   TestPartitionData<int32_t> (initial_forest, partitioned_forest);
   TestPartitionData<float> (initial_forest, partitioned_forest);
   TestPartitionData<double> (initial_forest, partitioned_forest);
