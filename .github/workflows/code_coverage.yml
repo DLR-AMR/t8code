@@ -100,7 +100,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
