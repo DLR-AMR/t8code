@@ -3040,9 +3040,6 @@ t8_forest_commit (t8_forest_t forest)
   T8_ASSERT (!forest->committed);
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
-#if T8_ENABLE_PROFILE_BARRIER
-    sc_MPI_Barrier (forest->mpicomm);
-#endif
     forest->profile->commit_runtime = sc_MPI_Wtime ();
   }
 
@@ -3054,7 +3051,9 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->scheme != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
     T8_ASSERT (forest->incomplete_trees == -1);
-
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     /* Check if the scheme is valid
      * TODO: Remove when trees access schemes via key.
      * Also remove the complete function t8_forest_scheme_is_valid */
@@ -3091,7 +3090,9 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST && forest->from_method < T8_FOREST_FROM_LAST);
     T8_ASSERT (forest->set_from->incomplete_trees > -1);
-
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest_from->mpicomm);
+#endif
     /* TODO: optimize all this when forest->set_from has reference count one */
     /* TODO: Get rid of duping the communicator */
     /* we must prevent the case that set_from frees the source communicator */
