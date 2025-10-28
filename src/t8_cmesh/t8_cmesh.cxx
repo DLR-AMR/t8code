@@ -128,9 +128,17 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
   return 1;
 }
 
+void
+t8_cmesh_disable_negative_volume_check ([[maybe_unused]] t8_cmesh_t cmesh)
+{
+#if T8_ENABLE_DEBUG
+  cmesh->negative_volume_check = 0;
+#endif
+}
+
 #if T8_ENABLE_DEBUG
 int
-t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume)
 {
   /* After a cmesh is committed, check whether all trees in a cmesh are compatible
  * with their geometry and if they have positive volume.
@@ -155,7 +163,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
         return false;
       }
-      if (geometry_compatible) {
+      else if (check_for_negative_volume) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
         const int negative_volume
           = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
@@ -210,6 +218,9 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
   cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
+#if T8_ENABLE_DEBUG
+  cmesh->negative_volume_check = 1;
+#endif /* T8_ENABLE_DEBUG */
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -522,107 +533,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const t8_
 #endif
 }
 
-/* Given a set of vertex coordinates for a tree of a given eclass.
- * Query whether the geometric volume of the tree with this coordinates
- * would be negative.
- * Returns true if a tree of the given eclass with the given vertex
- * coordinates does have negative volume.
- */
-int
-t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices)
-{
-  T8_ASSERT (num_vertices == t8_eclass_num_vertices[eclass]);
-
-  /* Points and lines do not have a volume orientation. */
-  if (t8_eclass_to_dimension[eclass] < 2) {
-    return 0;
-  }
-
-  T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TET
-             || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
-
-  /* Skip negative volume check (orientation of face normal) of 2D elements
-   * when z-coordinates are not (almost) zero. */
-  if (t8_eclass_to_dimension[eclass] < 3) {
-    for (int ivert = 0; ivert < num_vertices; ivert++) {
-      const double z_coordinate = vertices[3 * ivert + 2];
-      if (std::abs (z_coordinate) > 10 * T8_PRECISION_EPS) {
-        return false;
-      }
-    }
-  }
-
-  /*
-   *      z             For 2D meshes we enforce the right-hand-rule in terms
-   *      |             of node ordering. The volume is defined by the parallelepiped
-   *      | 2- - -(3)   spanned by the vectors between nodes 0:1 and 0:2 as well as the
-   *      |/____ /      unit vector in z-direction. This definition works for both triangles and quads.
-   *      0     1
-   *
-   *      6 ______  7   For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
-   *       /|     /     the volume is negative. This is the case if and only if
-   *    4 /_____5/|     the scalar product of v_4 with the cross product of v_1 and v_2 is
-   *      | | _ |_|     smaller 0:
-   *      | 2   | / 3   < v_4, v_1 x v_2 > < 0
-   *      |/____|/
-   *     0      1
-   *
-   *
-   *    For tets/prisms, if the vertex 3 is below/above the 0-1-2 plane, the volume
-   *    is negative. This is the case if and only if
-   *    the scalar product of v_3 with the cross product of v_1 and v_2 is
-   *    greater 0:
-   *
-   *    < v_3, v_1 x v_2 > > 0
-   *
-   */
-
-  /* Build the vectors v_i as vertices_i - vertices_0. */
-  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
-
-  if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD) {
-    for (int i = 0; i < 3; i++) {
-      v_1[i] = vertices[3 + i] - vertices[i];
-      v_2[i] = vertices[6 + i] - vertices[i];
-    }
-
-    /* Unit vector in z-direction. */
-    v_j[0] = 0.0;
-    v_j[1] = 0.0;
-    v_j[2] = 1.0;
-
-    /* Compute cross = v_1 x v_2. */
-    t8_cross_3D (v_1, v_2, cross);
-    /* Compute sc_prod = <v_j, cross>. */
-    sc_prod = t8_dot (v_j, cross);
-
-    T8_ASSERT (sc_prod != 0);
-    return sc_prod < 0;
-  }
-
-  int j;
-  if (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM) {
-    /* In the tet/prism case, the third vector is v_3 */
-    j = 3;
-  }
-  else {
-    /* For pyramids and Hexes, the third vector is v_4 */
-    j = 4;
-  }
-  for (int i = 0; i < 3; i++) {
-    v_1[i] = vertices[3 + i] - vertices[i];
-    v_2[i] = vertices[6 + i] - vertices[i];
-    v_j[i] = vertices[3 * j + i] - vertices[i];
-  }
-  /* compute cross = v_1 x v_2 */
-  t8_cross_3D (v_1, v_2, cross);
-  /* Compute sc_prod = <v_j, cross> */
-  sc_prod = t8_dot (v_j, cross);
-
-  T8_ASSERT (sc_prod != 0);
-  return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
-}
-
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const double *vertices,
                             const int num_vertices)
@@ -843,6 +753,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       cmesh_out->num_local_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
     }
 #if T8_ENABLE_DEBUG
+    cmesh_out->negative_volume_check = meta_info.cmesh.negative_volume_check;
     int result;
     mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
     SC_CHECK_MPI (mpiret);
@@ -1812,9 +1723,8 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
  * \param[in, out] first_tree_shared The first tree shared flag. Only used if we send the start message. Set to NULL if not used. 
  * \param[in, out] child_in_tree_end_or_begin The tree-local id of the first/last element in the tree. Set to NULL if not used.
  * \param[in, out] expect_start_or_end_message If true, we expect a start or end message from the process.
+ * \param[in] global_num_elements The global number of elements in the cmesh.
  * \param[in] comm The MPI communicator.
- * \param[in, out] num_received_start_or_end_messages The number of received start or end messages. Only used if T8_ENABLE_DEBUG is defined.
- * \param[in, out] num_message_sent The number of sent messages. Only used if T8_ENABLE_DEBUG is defined.
  * 
  */
 static void
@@ -1884,6 +1794,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
  * \param[in, out] child_in_tree_begin_temp   On input empty but allocated, on output the global id of the first element in the tree of the current process.
  * \param[in] global_num_elements             The global number of elements in the mesh.
  * \param[in] cmesh                           The cmesh.
+ * \param[in] recv_from                       The rank to receive a message from.
  * \param[in] comm                            The MPI communicator.
  */
 static void

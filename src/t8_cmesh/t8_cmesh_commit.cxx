@@ -577,6 +577,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       cmesh->geometry_handler->ref ();
     }
 
+#if T8_ENABLE_DEBUG
+    /* Copy negative volume check from set_from */
+    cmesh->negative_volume_check = cmesh->set_from->negative_volume_check;
+#endif /* T8_ENABLE_DEBUG */
+
     if (cmesh->set_partition) {
       /* The cmesh should be partitioned */
       t8_cmesh_partition (cmesh, comm);
@@ -626,9 +631,14 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_debugf ("Committed cmesh with %li local and %lli global trees and"
              " %li ghosts.\n",
              (long) cmesh->num_local_trees, (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
-
+#if T8_ENABLE_DEBUG
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (t8_cmesh_validate_geometry (cmesh));
+  T8_ASSERTF (
+    t8_cmesh_validate_geometry (cmesh, cmesh->negative_volume_check),
+    "There were either problems with incompatible trees and geometries or negative volumes in the trees.\n"
+    "The negative volume check for cmeshes can be deactivated, but we instead recommend fixing the input mesh or "
+    "creating an issue.");
+#endif /* T8_ENABLE_DEBUG */
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
     cmesh->profile->commit_runtime = sc_MPI_Wtime () - cmesh->profile->commit_runtime;
