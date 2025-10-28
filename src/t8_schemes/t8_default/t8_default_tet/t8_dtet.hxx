@@ -20,14 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtet.h */
+/** \file t8_dtet.hxx */
 
 #ifndef T8_DTET_H
 #define T8_DTET_H
 
 #include <t8.h>
+#include <t8_eclass.h>
 
-/** \file t8_dtet.h
+/** \file t8_dtet.hxx
  * TODO: document this.
  */
 
@@ -78,6 +79,7 @@ typedef struct t8_dtet
   t8_dtet_coord_t x; /**< The x integer coordinate of the anchor node. */
   t8_dtet_coord_t y; /**< The y integer coordinate of the anchor node. */
   t8_dtet_coord_t z; /**< The z integer coordinate of the anchor node. */
+  static constexpr t8_eclass_t eclass = T8_ECLASS_TET;
 } t8_dtet_t;
 
 #endif /* T8_DTET_H */

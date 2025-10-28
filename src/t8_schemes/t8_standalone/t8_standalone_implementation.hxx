@@ -29,6 +29,7 @@
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
+#include <t8_types/t8_vec.hxx>
 
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
@@ -39,6 +40,9 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   */
   t8_standalone_scheme () noexcept
     : element_size (sizeof (t8_standalone_element<TEclass>)), scheme_context (sc_mempool_new (element_size)) {};
+
+  /** Alias for the helper class */
+  using helpers = t8_scheme_helpers<TEclass, t8_standalone_scheme<TEclass>>;
 
  protected:
   size_t element_size;  /**< The size in bytes of an element of class \a eclass */
@@ -1318,14 +1322,18 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
+   * \param [in] elem      The element.
+   * \param [in] vertex    The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords   A tuple of atleast dimension 3 which will be filled with the coordinates of \a vertex.
+   * \tparam TOutCoords    Tuple with atleast dimension 3.
+   * \warning              \a coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                       all coords might be used.
    */
+  template <T8PointType TOutCoords>
   static constexpr void
-  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) noexcept
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, TOutCoords &out_coords) noexcept
   {
+    helpers::template assert_coord_dimensionality<TOutCoords> ();
     T8_ASSERT (element_is_valid (elem));
 
     const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
@@ -1337,37 +1345,40 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[TEclass]);
       element_compute_coords (el, vertex, coords_int);
       for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-        coords[idim] = coords_int[idim] / (double) get_root_len ();
+        out_coords[idim] = coords_int[idim] / (double) get_root_len ();
       }
     }
   }
 
-  /** Convert a point in the reference space of an element to a point in the
+  /** Converts points in the reference space of an element to points in the
    *  reference space of the tree.
    *
    * \param [in] elem         The element.
    * \param [in] ref_coords   The coordinates of the point in the reference space of the element.
-   * \param [in] num_coords   The number of coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree. Has to be at least the same size as \a ref_coords.
+   * \tparam TRefCoords       Container holding t8_point with atleast the same dimension as the element.
+   * \tparam TOutCoords       Container holding t8_point with atleast the same dimension as the element.
    */
+  template <T8PointContainerType TRefCoords, T8PointContainerType TOutCoords>
   static constexpr void
-  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                double *out_coords) noexcept
+  element_get_reference_coords (const t8_element_t *elem, const TRefCoords &ref_coords, TOutCoords &out_coords) noexcept
   {
-    double *current_ref_coords = (double *) ref_coords;
-    double *current_out_coords = out_coords;
-    t8_element_coord length = element_get_len (element_get_level (elem));
+    helpers::template assert_coord_container_dimensionality<TRefCoords> ();
+    helpers::template assert_coord_container_dimensionality<TOutCoords> ();
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (std::ranges::size (ref_coords) <= std::ranges::size (out_coords));
 
-    for (size_t coord = 0; coord < num_coords; ++coord) {
-      for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
-        current_out_coords[dim]
-          = ((t8_standalone_element<TEclass> *) elem)->coords[dim] + current_ref_coords[dim] * length;
+    const t8_element_coord length = element_get_len (element_get_level (elem));
 
-        current_out_coords[dim] /= (double) get_root_len ();
+    auto coord_in_it = std::begin (ref_coords);
+    auto coord_out_it = std::begin (out_coords);
+    for (; coord_in_it != std::end (ref_coords); ++coord_in_it, ++coord_out_it) {
+      auto &coord_in = *coord_in_it;
+      auto &coord_out = *coord_out_it;
+      for (size_t dim = 0; dim < t8_standalone_scheme::get_dimension (); ++dim) {
+        coord_out[dim] = ((t8_standalone_element<TEclass> *) elem)->coords[dim] + coord_in[dim] * length;
+        coord_out[dim] /= (double) get_root_len ();
       }
-
-      current_ref_coords += T8_ECLASS_MAX_DIM;
-      current_out_coords += T8_ELEMENT_DIM[TEclass];
     }
   }
 

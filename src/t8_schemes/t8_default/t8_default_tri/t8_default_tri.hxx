@@ -23,19 +23,30 @@
 /** \file t8_default_tri.hxx
  * The default implementation for triangles. Interface between the
  * \file t8_default_common.hxx definitions and the element type specific
- * implementations in \file t8_dtri_bits.h
+ * implementations in \file t8_dtri_bits.hxx
  */
 
 #ifndef T8_DEFAULT_TRI_HXX
 #define T8_DEFAULT_TRI_HXX
 
 #include <t8_element.h>
+#ifndef T8_DTRI_TO_DTET
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
+#endif
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.hxx>
+#include <t8_types/t8_vec.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
+
+/* --------------------- helper implementations for simplex conversion --------------------- */
+/** Concept for limiting the type of elements passed to the simplex functions to simplices (tris and tets) */
+template <typename TSimplexType>
+concept SimplexType = std::same_as<TSimplexType, t8_dtri_t> || std::same_as<TSimplexType, t8_dtet_t>;
+
+/* --------------------- end helper implementations for simplex conversion --------------------- */
 
 /** Default implementation of the scheme for the triangular element class. */
 class t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE, t8_default_scheme_tri> {
@@ -45,6 +56,38 @@ class t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE,
 
   /** Destructor */
   ~t8_default_scheme_tri () {};
+
+  /** Alias for the helper class */
+  using helpers = t8_scheme_helpers<T8_ECLASS_TRIANGLE, t8_default_scheme_tri>;
+
+ private:
+  /* --------------------- helper functions --------------------- */
+  template <SimplexType TSimplex>
+  static constexpr auto
+  get_simplex_root_length ([[maybe_unused]] const TSimplex *simplex) noexcept
+  {
+    if constexpr (std::is_same_v<TSimplex, t8_dtri_t>) {
+      return T8_DTRI_ROOT_LEN;
+    }
+    else if constexpr (std::is_same_v<TSimplex, t8_dtet_t>) {
+      return T8_DTET_ROOT_LEN;
+    }
+  }
+
+  template <SimplexType TSimplex>
+  static constexpr auto
+  get_simplex_length (const TSimplex *simplex) noexcept
+  {
+    if constexpr (std::is_same_v<TSimplex, t8_dtri_t>) {
+      return T8_DTRI_LEN (simplex->level);
+    }
+    else if constexpr (std::is_same_v<TSimplex, t8_dtet_t>) {
+      return T8_DTET_LEN (simplex->level);
+    }
+  }
+
+ public:
+  /* --------------------- scheme functions --------------------- */
 
   /** Return the size of a tri element.
    * \return  The size of an element of class tri.
@@ -455,49 +498,264 @@ class t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE,
   void
   element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs.
+  /** Compute the integer coordinates of a given simplex vertex. The default scheme implements the Morton type SFCs.
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
    * refinement level. All element vertices have integer coordinates in this cube.
    *   \param [in] elem      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many integers as the element's dimension whose entries will be
-   *                          filled with the coordinates of \a vertex.
+   *   \param [in] vertex    The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords   An array of at least as many integers as the element's dimension whose entries will be
+   *                         filled with the coordinates of \a vertex.
    */
-  void
-  element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
+  template <SimplexType TSimplexType>
+  static void
+  element_get_vertex_integer_coords (const TSimplexType *simplex, int vertex, int coords[]) noexcept
+  {
+    /* Calculate the vertex coordinates of a triangle/tetrahedron in relation to its orientation. Orientations are
+    * described here: https://doi.org/10.1137/15M1040049
+    * 1---------------------2
+    * |   orientation     /  2
+    * |       1         /  / |
+    * |               /  /   |
+    * |             /  /     |
+    * |           /  /       |
+    * |         /  /         |
+    * |       /  /           |
+    * |     /  /             |
+    * |   /  /  orientation  |
+    * | /  /        0        |
+    * 0  /                   |
+    *   0--------------------1
+    *
+    *   y
+    *   ^
+    *   |
+    *   z--> x
+    */
+    constexpr bool is_tet = TSimplexType::eclass == T8_ECLASS_TET;
 
-  /** Compute the coordinates of a given element vertex inside a reference tree
+    int ei;
+    [[maybe_unused]] int ej;
+    T8_ASSERT (0 <= vertex && vertex < (int) (is_tet ? 4 : 3));
+
+    const auto h = get_simplex_length (simplex);
+    const t8_dtri_type_t type = simplex->type;
+    if constexpr (!is_tet) {
+      /* --begin tri logic-- */
+      ei = type;
+      /* --end tri logic-- */
+    }
+    else {
+      /* --begin tet logic-- */
+      ei = type / 2;
+      ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
+      /* --end tet logic-- */
+    }
+
+    coords[0] = simplex->x;
+    coords[1] = simplex->y;
+    if constexpr (is_tet) {
+      /* --begin tet logic-- */
+      coords[2] = simplex->z;
+      /* --end tet logic-- */
+    }
+    if (vertex == 0) {
+      return;
+    }
+    coords[ei] += h;
+    if constexpr (!is_tet) {
+      /* --begin tri logic-- */
+      if (vertex == 2) {
+        coords[1 - ei] += h;
+        return;
+      }
+      /* --end tri logic-- */
+    }
+    else {
+      /* --begin tet logic-- */
+      if (vertex == 2) {
+        coords[ej] += h;
+        return;
+      }
+      if (vertex == 3) {
+        coords[(ei + 1) % 3] += h;
+        coords[(ei + 2) % 3] += h;
+      }
+      /* --end tet logic-- */
+    }
+  }
+
+  /** Compute the coordinates of a given triangle vertex inside a reference triangle tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used.
+   * \param [in] elem      The triangle element.
+   * \param [in] vertex    The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords   A tuple of atleast dimension 3 which will be filled with the coordinates of \a vertex.
+   * \tparam TOutCoords    Tuple with atleast dimension 3.
+   * \warning              \a coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                       all coords might be used.
    */
-  void
-  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
+  template <T8PointType TOutCoords>
+  static constexpr void
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, TOutCoords &coords) noexcept
+  {
+    helpers::template assert_coord_dimensionality<TOutCoords> ();
+    T8_ASSERT (element_is_valid (elem));
+    element_get_vertex_reference_coords_impl ((t8_dtri_t *) elem, vertex, coords);
+  }
 
-  /** Convert points in the reference space of an element to points in the
-   *  reference space of the tree.
-   *
-   * \param [in] elem         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
-   *                          in the reference space of the element.
-   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the points in the
-   *                          reference space of the tree.
+  /** Compute the coordinates of a given simplex vertex inside a reference simplex tree
+   *  that is embedded into [0,1]^d (d = dimension).
+   * \param [in] elem      The simplex element.
+   * \param [in] vertex    The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords   A t8_point with at least the same dimension as the element's dimension
+   *                       whose entries will be filled with the coordinates of \a vertex.
+   * \tparam TOutCoords    A t8_point with at least the same dimension as the element's dimension
+   * \warning              \a coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                       all coords might be used.
    */
-  void
-  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                double *out_coords) const;
+  template <T8PointType TOutCoords, SimplexType TSimplexType>
+  static void
+  element_get_vertex_reference_coords_impl (const TSimplexType *elem, const int vertex, TOutCoords &coords) noexcept
+  {
+    constexpr bool is_tet = TSimplexType::eclass == T8_ECLASS_TET;
+    int coords_int[is_tet ? 3 : 2];
+    T8_ASSERT (0 <= vertex && vertex < (is_tet ? 4 : 3));
+
+    element_get_vertex_integer_coords (elem, vertex, coords_int);
+    /* Since the integer coordinates are coordinates w.r.t to
+     * the embedding into [0,root_len]^d, we just need
+     * to divide them by the root length. */
+    for (size_t dim = 0; dim < (is_tet ? 3 : 2); ++dim) {
+      coords[dim] = coords_int[dim] / (double) get_simplex_root_length (elem);
+    }
+  }
+
+  /** Converts points in the reference space of a triangle to points in the
+   *  reference space of the triangle tree.
+   *
+   * \param [in] elem         The triangle element.
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   *                          in the reference space of the element.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree. Has to be at least the same size as \a ref_coords.
+   * \tparam TRefCoords       Container holding t8_point with atleast the same dimension as the element.
+   * \tparam TOutCoords       Container holding t8_point with atleast the same dimension as the element.
+   */
+  template <T8PointContainerType TRefCoords, T8PointContainerType TOutCoords>
+  static constexpr void
+  element_get_reference_coords (const t8_element_t *elem, const TRefCoords &ref_coords, TOutCoords &out_coords) noexcept
+  {
+    helpers::template assert_coord_container_dimensionality<TRefCoords> ();
+    helpers::template assert_coord_container_dimensionality<TOutCoords> ();
+    T8_ASSERT (std::ranges::size (ref_coords) <= std::ranges::size (out_coords));
+    T8_ASSERT (element_is_valid (elem));
+    return element_get_reference_coords_ext ((t8_dtri_t *) elem, ref_coords, out_coords);
+  }
+
+  /** Converts points in the reference space of a simplex to points in the
+   *  reference space of the simplex tree.
+   *
+   * \param [in] elem         The simplex element.
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   *                          in the reference space of the element.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree. Has to be at least the same size as \a ref_coords.
+   * \tparam TRefCoords       Container holding t8_point with atleast the same dimension as the element.
+   * \tparam TOutCoords       Container holding t8_point with atleast the same dimension as the element.
+   */
+  template <T8PointContainerType TRefCoords, T8PointContainerType TOutCoords, SimplexType TSimplexType>
+  static constexpr void
+  element_get_reference_coords_ext (const TSimplexType *simplex, const TRefCoords &ref_coords,
+                                    TOutCoords &out_coords) noexcept
+  {
+    /* Calculate the reference coordinates of a triangle/tetrahedron in
+   * relation to its orientation. Orientations are described here:
+   * https://doi.org/10.1137/15M1040049
+   * 1---------------------2
+   * |   orientation     /  2
+   * |       1         /  / |
+   * |               /  /   |
+   * |             /  /     |
+   * |           /  /       |
+   * |         /  /         |
+   * |       /  /           |
+   * |     /  /             |
+   * |   /  /  orientation  |
+   * | /  /        0        |
+   * 0  /                   |
+   *   0--------------------1
+   *
+   *   y
+   *   ^
+   *   |
+   *   z--> x
+   */
+
+    constexpr bool is_tet = TSimplexType::eclass == T8_ECLASS_TET;
+    const t8_dtri_type_t type = simplex->type;
+    const t8_dtri_coord_t h = T8_DTRI_LEN (simplex->level);
+
+    int tri_orientation;
+    int tet_orientation0;
+    int tet_orientation1;
+    int tet_orientation2;
+
+    if constexpr (!is_tet) {
+      /* --begin tri logic-- */
+      tri_orientation = type;
+      /* --end tri logic-- */
+    }
+    else {
+      /* --begin tet logic-- */
+      /* These integers define the sequence, in which the ref_coords are added
+       * to the out_coords */
+      tet_orientation0 = type / 2;
+      tet_orientation1 = (tet_orientation0 + ((type % 2 == 0) ? 1 : 2)) % 3;
+      tet_orientation2 = (tet_orientation0 + ((type % 2 == 0) ? 2 : 1)) % 3;
+      /* --end tet logic-- */
+    }
+    auto coord_in_it = std::begin (ref_coords);
+    auto coord_out_it = std::begin (out_coords);
+    for (; coord_in_it != std::end (ref_coords); ++coord_in_it, ++coord_out_it) {
+      auto &coord_in = *coord_in_it;
+      auto &coord_out = *coord_out_it;
+      coord_out[0] = simplex->x;
+      coord_out[1] = simplex->y;
+      if constexpr (is_tet) {
+        /* --begin tet logic-- */
+        coord_out[2] = simplex->z;
+
+        coord_out[tet_orientation0] += h * coord_in[0];
+        coord_out[tet_orientation1] += h * coord_in[1];
+        coord_out[tet_orientation2] += h * coord_in[2];
+        /* --end tet logic-- */
+      }
+      else {
+        /* --begin tri logic-- */
+        coord_out[tri_orientation] += h * coord_in[0];
+        coord_out[1 - tri_orientation] += h * coord_in[1];
+        /* --end tri logic-- */
+      }
+
+      /* Since the integer coordinates are coordinates w.r.t to
+     * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
+     * to divide them by the root length. */
+      coord_out[0] /= (double) get_simplex_root_length (simplex);
+      coord_out[1] /= (double) get_simplex_root_length (simplex);
+      if constexpr (is_tet) {
+        /* --begin tet logic-- */
+        coord_out[2] /= (double) get_simplex_root_length (simplex);
+        /* --end tet logic-- */
+      }
+    }
+  }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
    * * \return           0, because tris refine regularly
    */
-  int
-  refines_irregular (void) const;
+  static constexpr int
+  refines_irregular (void) noexcept
+  {
+    return 0;
+  }
 
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
@@ -514,8 +772,11 @@ class t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE,
    * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
-  int
-  element_is_valid (const t8_element_t *element) const;
+  static int
+  element_is_valid (const t8_element_t *element) noexcept
+  {
+    return t8_dtri_is_valid ((const t8_dtri_t *) element);
+  }
 
   /**
   * Print a given element. For a example for a triangle print the coordinates

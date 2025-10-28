@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtri_bits.h
+/** \file t8_dtri_bits.hxx
  * Definitions of triangle-specific functions.
  */
 
@@ -28,7 +28,8 @@
 #define T8_DTRI_BITS_H
 
 #include <t8_element.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -67,54 +68,12 @@ t8_dtri_parent (const t8_dtri_t *element, t8_dtri_t *parent);
 /** Compute the ancestor of a triangle at a given level.
  * \param [in]  element   Input triangle.
  * \param [in]  level A smaller level than \a element.
- * \param [in,out] ancestor Existing triangle whose data will be filled with the data of \a element's ancestor on level 
+ * \param [in,out] ancestor Existing triangle whose data will be filled with the data of \a element's ancestor on level
  *                 \a level.
  * \note The triangle \a ancestor may point to the same triangle as \a element.
  */
 void
 t8_dtri_ancestor (const t8_dtri_t *element, int level, t8_dtri_t *ancestor);
-
-/** Compute the coordinates of a vertex of a triangle.
- * \param [in] element         Input triangle.
- * \param [in] vertex       The number of the vertex.
- * \param [out] coordinates An array of 2 t8_dtri_coord_t that will be filled with the coordinates of the vertex.
- */
-void
-t8_dtri_compute_integer_coords (const t8_dtri_t *element, const int vertex, t8_dtri_coord_t coordinates[2]);
-
-/** Compute the reference coordinates of a vertex of a triangle when the 
- * tree (level 0 triangle) is embedded in \f$ [0,1]^2 \f$.
- * \param [in] element         Input triangle.
- * \param [in] vertex       The number of the vertex.
- * \param [out] coordinates An array of 2 double that will be filled with the reference coordinates of the vertex.
- */
-void
-t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *element, const int vertex, double coordinates[2]);
-
-/** Convert points in the reference space of a tri element to points in the
- *  reference space of the tree (level 0) embedded in \f$ [0,1]^2 \f$.
- * \param [in]  element       Input triangle.
- * \param [in]  ref_coords The reference coordinates in the triangle
- *                         (\a num_coords times \f$ [0,1]^2 \f$)
- * \param [in]  num_coords Number of coordinates to evaluate
- * \param [in]  skip_coords Only used for batch computation of prisms.
- *                          In all other cases 0.
- *                          Skip coordinates in the \a ref_coords and
- *                          \a out_coords array.
- * \param [out] out_coords An array of \a num_coords x 2 x double that
- * 		                     will be filled with the reference coordinates
- *                         of the points on the triangle.
- */
-void
-t8_dtri_compute_reference_coords (const t8_dtri_t *element, const double *ref_coords, const size_t num_coords,
-                                  const size_t skip_coords, double *out_coords);
-
-/** Compute the coordinates of the four vertices of a triangle.
- * \param [in] element         Input triangle.
- * \param [out] coordinates An array of 4x3 t8_dtri_coord_t that will be filled with the coordinates of t's vertices.
- */
-void
-t8_dtri_compute_all_coords (const t8_dtri_t *element, t8_dtri_coord_t coordinates[3][2]);
 
 /** Compute the childid-th child in Morton order of a triangle.
  * \param [in] element    Input triangle.
@@ -141,7 +100,7 @@ t8_dtri_is_familypv (const t8_dtri_t *f[]);
 /** Compute a specific sibling of a triangle.
  * \param [in]     element  Input triangle.
  * \param [in]     sibid The id of the sibling computed, 0..7 in Bey order.
- * \param [in,out] sibling  Existing triangle whose data will be filled with the data of sibling no. sibling_id of 
+ * \param [in,out] sibling  Existing triangle whose data will be filled with the data of sibling no. sibling_id of
  *                          \a element.
  */
 void
@@ -168,9 +127,9 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *element1, const t8_dtri_t *ele
 /** Given a triangle and a face of the triangle, compute all children of the triangle that touch the face.
  * \param [in] element      The triangle.
  * \param [in] face     A face of \a element.
- * \param [in,out] children Allocated triangles, in which the children of \a element that share a face with \a face are 
+ * \param [in,out] children Allocated triangles, in which the children of \a element that share a face with \a face are
  *                      stored. They will be stored in order of their child_id.
- * \param [in] num_children The number of triangles in \a children. Must match the number of children that touch 
+ * \param [in] num_children The number of triangles in \a children. Must match the number of children that touch
  *                      \a face.
  * \param [in,out] child_indices The indices of the children in \a children. Only filled if this is null previously.
  */
@@ -178,7 +137,7 @@ void
 t8_dtri_children_at_face (const t8_dtri_t *element, int face, t8_dtri_t *children[], int num_children,
                           int *child_indices);
 
-/** Given a face of a triangle and a child number of a child of that face, return the face number of the child of the 
+/** Given a face of a triangle and a child number of a child of that face, return the face number of the child of the
  * triangle that matches the child face.
  * \param [in]  triangle The triangle.
  * \param [in]  face    Then number of the face.
@@ -188,28 +147,28 @@ t8_dtri_children_at_face (const t8_dtri_t *element, int face, t8_dtri_t *childre
 int
 t8_dtri_face_child_face (const t8_dtri_t *triangle, int face, int face_child);
 
-/** Given a face of an triangle return the face number of the parent of the triangle that matches the triangle's face. 
+/** Given a face of an triangle return the face number of the parent of the triangle that matches the triangle's face.
  * Or return -1 if no face of the parent matches the face.
  * \param [in]  triangle The triangle.
  * \param [in]  face    Then number of the face.
- * \return              If \a face of \a elem is also a face of \a elem's parent, the face number of this face. 
+ * \return              If \a face of \a elem is also a face of \a elem's parent, the face number of this face.
  *                      Otherwise -1.
  */
 int
 t8_dtri_face_parent_face (const t8_dtri_t *triangle, int face);
 
-/** Given a triangle and a face of this triangle. If the face lies on the tree boundary, return the face number of the 
+/** Given a triangle and a face of this triangle. If the face lies on the tree boundary, return the face number of the
  * tree face. If not the return value is arbitrary.
  * \param [in] element        The triangle.
  * \param [in] face     The index of a face of \a element.
- * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary. Any arbitrary 
+ * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary. Any arbitrary
  *         integer if \a element is not at a tree boundary.
  * \note For boundary triangles, this function is the inverse of \ref t8_dtri_root_face_to_face
  */
 int
 t8_dtri_tree_face (t8_dtri_t *element, int face);
 
-/** Given a triangle and a face of the root triangle. If the triangle lies on the tree boundary, return the 
+/** Given a triangle and a face of the root triangle. If the triangle lies on the tree boundary, return the
  * corresponding face number of the triangle. If not the return value is arbitrary.
  * \param [in] element        The triangle.
  * \param [in] root_face     The index of a face of the root element.
@@ -220,18 +179,18 @@ t8_dtri_tree_face (t8_dtri_t *element, int face);
 int
 t8_dtri_root_face_to_face (t8_dtri_t *element, int root_face);
 
-/** Suppose we have two trees that share a common triangle f. Given a triangle e that is a subface of f in one of the 
- * trees and given the orientation of the tree connection, construct the face triangle of the respective tree neighbor 
+/** Suppose we have two trees that share a common triangle f. Given a triangle e that is a subface of f in one of the
+ * trees and given the orientation of the tree connection, construct the face triangle of the respective tree neighbor
  * that logically coincides with e but lies in the coordinate system of the neighbor tree.
  *  \param [in] trianglein     The face triangle.
- *  \param [in,out] triangle2 On return the face triangle \a triangle1 with respective to the coordinate system of the 
+ *  \param [in,out] triangle2 On return the face triangle \a triangle1 with respective to the coordinate system of the
  *                            other tree.
  *  \param [in] orientation The orientation of the tree-tree connection. \see t8_cmesh_set_join
- *  \param [in] sign      Depending on the topological orientation of the two tree faces, either 0 
+ *  \param [in] sign      Depending on the topological orientation of the two tree faces, either 0
  *                        (both faces have opposite orientation) or 1 (both faces have the same top. orientattion).
  *                        \ref t8_eclass_face_orientation
  *  \param [in] is_smaller_face Flag to declare whether \a triangle1 belongs to the smaller face. A face f of tree T is
- *                        smaller than f' of T' if either the eclass of T is smaller or if the classes are equal and 
+ *                        smaller than f' of T' if either the eclass of T is smaller or if the classes are equal and
  *                        f<f'. The orientation is defined in relation to the smaller face.
  * \note \a trianglein and \a triangle2 may point to the same element.
  */
@@ -294,7 +253,7 @@ t8_linearidx_t
 t8_dtri_linear_id (const t8_dtri_t *element, int level);
 
 /**
- * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a tetrahedron lying in a 
+ * Same as init_linear_id, but we only consider the subtree. Used for computing the index of a tetrahedron lying in a
  * pyramid
  * \param [in, out] element   Existing triangle whose data will be filled
  * \param [in] id            Index to be considered
@@ -406,8 +365,8 @@ void
 t8_dtri_init (t8_dtri_t *element);
 #endif
 
-/** Packs an array of triangle elements into contiguous memory. 
- * Triangles are packed as x and y coordinates, type and level. 
+/** Packs an array of triangle elements into contiguous memory.
+ * Triangles are packed as x and y coordinates, type and level.
  * Compare MPI_Pack function.
  * \param [in] elements The element array to be packed.
  * \param [in] count Number of elements to be packed.

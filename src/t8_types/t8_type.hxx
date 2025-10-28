@@ -51,7 +51,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
   using tag = Parameter;
 
   /** Default constructor */
-  explicit constexpr T8Type () = default;
+  constexpr T8Type () = default;
 
   /** Constructor with value */
   explicit constexpr T8Type (const T& value): value_ (value)

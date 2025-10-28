@@ -24,7 +24,6 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
-#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -666,45 +665,6 @@ t8_default_scheme_quad::element_get_anchor (const t8_element_t *elem, int coord[
 }
 
 void
-t8_default_scheme_quad::element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
-{
-  const p4est_quadrant_t *q1 = (const p4est_quadrant_t *) elem;
-
-  T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (0 <= vertex && vertex < 4);
-  /* Get the length of the quadrant */
-  const int len = P4EST_QUADRANT_LEN (q1->level);
-  /* Compute the x and y coordinates of the vertex depending on the
-   * vertex number */
-  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
-  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-}
-
-void
-t8_default_scheme_quad::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                             double coords[]) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (0 <= vertex && vertex < 4);
-
-  int coords_int[2];
-  element_get_vertex_integer_coords (elem, vertex, coords_int);
-
-  /* We divide the integer coordinates by the root length of the quad
-   * to obtain the reference coordinates. */
-  coords[0] = coords_int[0] / (double) P4EST_ROOT_LEN;
-  coords[1] = coords_int[1] / (double) P4EST_ROOT_LEN;
-}
-
-void
-t8_default_scheme_quad::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                      const size_t num_coords, double *out_coords) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dquad_compute_reference_coords ((const p4est_quadrant_t *) elem, ref_coords, num_coords, out_coords);
-}
-
-void
 t8_default_scheme_quad::element_new (int length, t8_element_t **elem) const
 {
   /* allocate memory for a quad */
@@ -744,14 +704,6 @@ t8_default_scheme_quad::refines_irregular () const
 }
 
 #if T8_ENABLE_DEBUG
-int
-t8_default_scheme_quad::element_is_valid (const t8_element_t *element) const
-{
-  /* TODO: additional checks? do we set pad8 or similar?
-   */
-  return p4est_quadrant_is_extended ((const p4est_quadrant_t *) element);
-}
-
 void
 t8_default_scheme_quad::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {

@@ -275,49 +275,7 @@ t8_default_scheme_vertex::element_get_anchor ([[maybe_unused]] const t8_element_
   anchor[2] = 0;
 }
 
-void
-t8_default_scheme_vertex::element_get_vertex_integer_coords ([[maybe_unused]] const t8_element_t *elem,
-                                                             [[maybe_unused]] int vertex, int coords[]) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (vertex == 0);
-
-  coords[0] = 0;
-}
-
-void
-t8_default_scheme_vertex::element_get_vertex_reference_coords ([[maybe_unused]] const t8_element_t *elem,
-                                                               [[maybe_unused]] const int vertex, double coords[]) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (vertex == 0);
-
-  coords[0] = 0;
-}
-
-void
-t8_default_scheme_vertex::element_get_reference_coords ([[maybe_unused]] const t8_element_t *elem,
-                                                        [[maybe_unused]] const double *ref_coords,
-                                                        const size_t num_coords, double *out_coords) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (fabs (ref_coords[0]) <= T8_PRECISION_EPS);
-
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    out_coords[coord] = 0;
-  }
-}
-
 #if T8_ENABLE_DEBUG
-int
-t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t *element)
-
-{
-  /* Check maxlevel, nothing else is saved in a vertex. */
-  const t8_dvertex_t *vertex = (t8_dvertex_t *) element;
-  return vertex->level <= T8_DVERTEX_MAXLEVEL;
-}
-
 void
 t8_default_scheme_vertex::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {

@@ -22,9 +22,9 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -274,7 +274,7 @@ t8_default_scheme_tri::element_transform_face (const t8_element_t *elem1, t8_ele
 /* Construct the inner element from a boundary element. */
 /* This function is defined here instead of in t8_dri_bits.c since
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
- * both in t8_dtri_bits.c. This would be needed by an implementation, at least
+ * both in t8_dtri_bits.cxx. This would be needed by an implementation, at least
  * for tets. */
 int
 t8_default_scheme_tri::element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face,
@@ -471,43 +471,7 @@ t8_default_scheme_tri::element_get_anchor (const t8_element_t *elem, int anchor[
   anchor[2] = 0;
 }
 
-void
-t8_default_scheme_tri::element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dtri_compute_integer_coords ((const t8_dtri_t *) elem, vertex, coords);
-}
-
-void
-t8_default_scheme_tri::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                            double coords[]) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dtri_compute_vertex_ref_coords ((const t8_dtri_t *) elem, vertex, coords);
-}
-
-void
-t8_default_scheme_tri::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                     const size_t num_coords, double *out_coords) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dtri_compute_reference_coords ((const t8_dtri_t *) elem, ref_coords, num_coords, 0, out_coords);
-}
-
-int
-t8_default_scheme_tri::refines_irregular () const
-{
-  /*tris refine regularly */
-  return 0;
-}
-
 #if T8_ENABLE_DEBUG
-int
-t8_default_scheme_tri::element_is_valid (const t8_element_t *element) const
-{
-  return t8_dtri_is_valid ((const t8_dtri_t *) element);
-}
-
 void
 t8_default_scheme_tri::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {

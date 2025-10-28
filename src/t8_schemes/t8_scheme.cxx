@@ -24,6 +24,9 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_types/t8_vec.hxx>
+
+#include <vector>
 
 void
 t8_scheme_ref (t8_scheme_c *scheme)
@@ -334,14 +337,28 @@ void
 t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *t,
                                         const int vertex, double coords[])
 {
-  return scheme->element_get_vertex_reference_coords (tree_class, t, vertex, coords);
+  t8_3D_point_view coords_view = make_t8_3D_point_view (coords);
+  return scheme->element_get_vertex_reference_coords (tree_class, t, vertex, coords_view);
 }
 
 void
 t8_element_get_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *t,
                                  const double *ref_coords, const size_t num_coords, double coords[])
 {
-  return scheme->element_get_reference_coords (tree_class, t, ref_coords, num_coords, coords);
+  /* Vertices need one coord even though they have dim 0 */
+  const size_t ref_coords_dim = t8_eclass_to_dimension[tree_class] == 0 ? 1 : t8_eclass_to_dimension[tree_class];
+
+  std::vector<t8_3D_point_view<const double>> ref_coords_view;
+  ref_coords_view.reserve (num_coords);
+  for (std::size_t coord = 0; coord < num_coords; ++coord)
+    ref_coords_view.emplace_back (make_t8_3D_point_view (ref_coords + coord * ref_coords_dim));
+
+  std::vector<t8_3D_point_view<double>> out_coords_view;
+  out_coords_view.reserve (num_coords);
+  for (std::size_t coord = 0; coord < num_coords; ++coord)
+    out_coords_view.emplace_back (make_t8_3D_point_view (coords + coord * 3));
+
+  return scheme->element_get_reference_coords (tree_class, t, ref_coords_view, out_coords_view);
 }
 
 t8_gloidx_t

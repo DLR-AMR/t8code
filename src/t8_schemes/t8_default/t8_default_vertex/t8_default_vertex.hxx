@@ -26,6 +26,7 @@
 #include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_types/t8_vec.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
@@ -566,34 +567,65 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTEX
    *   \param [out] coords An array of at least as many integers as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
-  void
-  element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
+  static void
+  element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) noexcept
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (vertex == 0);
+
+    coords[0] = 0;
+  }
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used.
+   * \param [in] elem      The element.
+   * \param [in] vertex    The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords   A tuple with at least one entry.
+   * \tparam TOutCoords    Tuple with atleast one entry.
+   * \warning              \a coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                       all coords might be used.
    */
-  void
-  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
+  template <T8PointType TOutCoords>
+  static void
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, TOutCoords &coords) noexcept
+  {
+    constexpr std::size_t coord_type_dim = t8_dim_v<TOutCoords>;
+    T8_ASSERTF (coord_type_dim >= 1,
+                "Input dimension for element_get_vertex_reference_coords for element class vertex is too small.");
 
-  /** Convert points in the reference space of an element to points in the
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (vertex == 0);
+
+    coords[0] = 0;
+  }
+
+  /** Converts points in the reference space of an element to points in the
    *  reference space of the tree.
    *
    * \param [in] elem         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
-   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the points in the
-   *                          reference space of the tree.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree. Has to be at least the same size as \a ref_coords.
+   * \tparam TRefCoords       Iterable container holding tuples with atleast length 1.
+   * \tparam TOutCoords       Iterable container holding tuples with atleast length 1.
    */
-  void
-  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                double *out_coords) const;
+  template <T8PointContainerType TRefCoords, T8PointContainerType TOutCoords>
+  static void
+  element_get_reference_coords (const t8_element_t *elem, const TRefCoords &ref_coords, TOutCoords &out_coords) noexcept
+  {
+    using coord_type = typename TRefCoords::value_type;
+    constexpr std::size_t coord_type_dim = t8_dim_v<coord_type>;
+    T8_ASSERTF (coord_type_dim >= 1,
+                "Input dimension for element_get_reference_coords for element class vertex is too small.");
+    T8_ASSERT (std::ranges::size (ref_coords) == std::ranges::size (out_coords));
+
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (fabs (ref_coords[0][0]) <= T8_PRECISION_EPS);
+
+    for (auto &coord : out_coords) {
+      coord[0] = 0;
+    }
+  }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
@@ -618,7 +650,12 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTEX
    *                  in the implementation of each of the functions in this file.
    */
   static int
-  element_is_valid (const t8_element_t *element);
+  element_is_valid (const t8_element_t *element) noexcept
+  {
+    /* Check maxlevel, nothing else is saved in a vertex. */
+    const t8_dvertex_t *vertex = (t8_dvertex_t *) element;
+    return vertex->level <= T8_DVERTEX_MAXLEVEL;
+  }
 
   /**
   * Print a given element. For a example for a triangle print the coordinates

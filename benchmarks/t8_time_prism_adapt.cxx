@@ -23,8 +23,8 @@
 #include <sc_refcount.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet.hxx>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
@@ -181,7 +181,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }

@@ -23,7 +23,7 @@
 #ifndef T8_DTRI_H
 #define T8_DTRI_H
 
-/** \file t8_dtri.h
+/** \file t8_dtri.hxx
  * TODO: document this.
  */
 
@@ -71,6 +71,7 @@ typedef struct t8_dtri
   t8_dtri_type_t type; /**< Type of the triangle (0 or 1). */
   t8_dtri_coord_t x;   /**< The x integer coordinate of the anchor node. */
   t8_dtri_coord_t y;   /**< The y integer coordinate of the anchor node. */
+  static constexpr t8_eclass_t eclass = T8_ECLASS_TRIANGLE;
 } t8_dtri_t;
 
 T8_EXTERN_C_END ();

@@ -23,9 +23,9 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 
 typedef t8_dpyramid_t t8_default_pyramid_t;
@@ -383,14 +383,6 @@ t8_default_scheme_pyramid::element_get_anchor (const t8_element_t *elem, int anc
 }
 
 void
-t8_default_scheme_pyramid::element_get_vertex_integer_coords (const t8_element_t *element, int vertex,
-                                                              int coords[]) const
-{
-  T8_ASSERT (element_is_valid (element));
-  t8_dpyramid_compute_integer_coords ((const t8_dpyramid_t *) element, vertex, coords);
-}
-
-void
 t8_default_scheme_pyramid::element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2,
                                             t8_element_t *nca) const
 {
@@ -402,22 +394,6 @@ t8_default_scheme_pyramid::element_get_nca (const t8_element_t *elem1, const t8_
   T8_ASSERT (element_is_valid (nca));
 }
 
-void
-t8_default_scheme_pyramid::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                                double coords[]) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dpyramid_vertex_reference_coords ((const t8_dpyramid_t *) elem, vertex, coords);
-}
-
-void
-t8_default_scheme_pyramid::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                         const size_t num_coords, double *out_coords) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dpyramid_compute_reference_coords ((const t8_dpyramid_t *) elem, ref_coords, num_coords, out_coords);
-}
-
 int
 t8_default_scheme_pyramid::refines_irregular () const
 {
@@ -426,13 +402,6 @@ t8_default_scheme_pyramid::refines_irregular () const
 }
 
 #if T8_ENABLE_DEBUG
-int
-t8_default_scheme_pyramid::element_is_valid (const t8_element_t *element) const
-{
-  T8_ASSERT (element != NULL);
-  return t8_dpyramid_is_valid ((const t8_dpyramid_t *) element);
-}
-
 void
 t8_default_scheme_pyramid::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {

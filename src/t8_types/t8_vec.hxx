@@ -260,7 +260,7 @@ concept T8DimensionalType = T8PointType<TType, TDim> || T8VecType<TType, TDim>;
   * \return                  The dimension.
   */
 template <T8DimensionalType TDimensional>
-constexpr std::size_t dim_v = std::remove_cvref_t<TDimensional>::tag_type::dim;
+constexpr std::size_t t8_dim_v = std::remove_cvref_t<TDimensional>::tag::dim;
 
 /** Vector norm.
   * \param [in] vec  An N-dimensional vector.
@@ -350,16 +350,16 @@ t8_axb (const TVecX &vec_x, TVecY &vec_y, const double alpha, const double b)
 }
 
 /** Y = Y + alpha * X
-  * \param [in]  vec_x  An N-dimensional vector.
-  * \param [in,out] vec_y On input, An N-dimensional vector.
-  *                      On output set \a to vec_y + \a alpha * \a vec_x
+  * \param [in]  dim_x  A dimensional type.
+  * \param [in,out] dim_y On input, a dimensional type.
+  *                      On output set \a to dim_y + \a alpha * \a dim_x
   * \param [in]  alpha  A factor.
   */
-template <T8VecType TVecX, T8VecType TVecY>
+template <T8DimensionalType TDimX, T8DimensionalType TDimY>
 constexpr void
-t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
+t8_axpy (const TDimX &dim_x, TDimY &dim_y, const double alpha)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_y.begin (),
+  std::transform (dim_x.begin (), dim_x.end (), dim_y.begin (), dim_y.begin (),
                   [alpha] (double x, double y) { return y + alpha * x; });
 }
 
@@ -369,11 +369,11 @@ t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
   * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
   * \param [in]  alpha  A factor for the multiplication of \a vec_x.
   */
-template <T8VecType TVecX, T8VecType TVecY, T8VecType TVecZ>
+template <T8VecType TVecX, T8PointType TPointY, T8PointType TPointZ>
 constexpr void
-t8_axpyz (const TVecX &vec_x, const TVecY &vec_y, TVecZ &vec_z, const double alpha)
+t8_axpyz (const TVecX &vec_x, const TPointY &point_y, TPointZ &point_z, const double alpha)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_z.begin (),
+  std::transform (vec_x.begin (), vec_x.end (), point_y.begin (), point_z.begin (),
                   [alpha] (double x, double y) { return y + alpha * x; });
 }
 
@@ -465,8 +465,8 @@ template <T8VecType<3> TVecP1, T8VecType<3> TVecP2, T8VecType<3> TVecP3, T8VecTy
 static inline void
 t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNormal &normal)
 {
-  TVec a;
-  TVec b;
+  t8_3D_vec a;
+  t8_3D_vec b;
   std::transform (p2.begin (), p2.end (), p1.begin (), a.begin (), std::minus<double> ());
   std::transform (p3.begin (), p3.end (), p1.begin (), b.begin (), std::minus<double> ());
   t8_cross_3D (a, b, normal);

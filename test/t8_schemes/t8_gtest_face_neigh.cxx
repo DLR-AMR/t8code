@@ -26,7 +26,7 @@
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.hxx>
 
 class face_neigh: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:

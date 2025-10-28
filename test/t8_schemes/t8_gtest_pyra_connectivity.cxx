@@ -27,7 +27,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.h>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.hxx>
 
 /**
  * Check if the two possible ways to compute the type of a parent give the same result
@@ -54,7 +54,7 @@ TEST (pyramid_connectivity, cid_type_to_parenttype_check)
  * Given the type of a parent element, iterate over all local ids of the children
  * and look-up their type and cube-id. Using these to compute the parent-type again
  * and check if it is equal to the input.
- * 
+ *
  */
 TEST (pyramid_connectivity, cid_type_parenttype)
 {

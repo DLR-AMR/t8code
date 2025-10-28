@@ -551,47 +551,6 @@ t8_default_scheme_hex::element_get_anchor (const t8_element_t *elem, int coord[3
   coord[2] = q->z;
 }
 
-void
-t8_default_scheme_hex::element_get_vertex_integer_coords (const t8_element_t *elem, const int vertex,
-                                                          int coords[]) const
-{
-  const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
-
-  T8_ASSERT (0 <= vertex && vertex < 8);
-  /* Get the length of the quadrant */
-  const int len = P8EST_QUADRANT_LEN (q1->level);
-  /* Compute the x, y and z coordinates of the vertex depending on the
-   * vertex number */
-  coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
-  coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
-  coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
-}
-
-void
-t8_default_scheme_hex::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                            double coords[]) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (0 <= vertex && vertex < 8);
-
-  int coords_int[3];
-  element_get_vertex_integer_coords (elem, vertex, coords_int);
-
-  /* We divide the integer coordinates by the root length of the hex
-   * to obtain the reference coordinates. */
-  coords[0] = coords_int[0] / (double) P8EST_ROOT_LEN;
-  coords[1] = coords_int[1] / (double) P8EST_ROOT_LEN;
-  coords[2] = coords_int[2] / (double) P8EST_ROOT_LEN;
-}
-
-void
-t8_default_scheme_hex::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                     const size_t num_coords, double *out_coords) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dhex_compute_reference_coords ((const t8_dhex_t *) elem, ref_coords, num_coords, out_coords);
-}
-
 int
 t8_default_scheme_hex::refines_irregular () const
 {
@@ -630,15 +589,6 @@ t8_default_scheme_hex::element_init ([[maybe_unused]] const int length, [[maybe_
 }
 
 #if T8_ENABLE_DEBUG
-int
-t8_default_scheme_hex::element_is_valid (const t8_element_t *element) const
-{
-  /* TODO: additional checks? do we set pad8 or similar?
-   */
-  return p8est_quadrant_is_extended ((const p8est_quadrant_t *) element)
-         && T8_QUAD_GET_TDIM ((const p8est_quadrant_t *) element) == 3;
-}
-
 void
 t8_default_scheme_hex::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {

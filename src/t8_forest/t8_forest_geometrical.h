@@ -58,28 +58,6 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
 /** Compute the coordinates of a point inside an element inside a tree.
  *  The point is given in reference coordinates inside the element and gets
  *  converted to reference coordinates inside the tree. After that, the point
- *  is converted to global coordinates inside the domain. If needed, the element
- *  is stretched by the given stretch factors (the resulting mesh is then 
- *  no longer non-overlapping).
- * \param [in]      forest            The forest.
- * \param [in]      ltreeid           The forest local id of the tree in which the element is.
- * \param [in]      element           The element.
- * \param [in]      ref_coords        The reference coordinates of the point inside the element.
- * \param [in]      num_coords        The number of coordinate sets in ref_coord (dimension x double).
- * \param [out]     coords_out        On input an allocated array to store 3 doubles, on output
- *                                    the x, y and z coordinates of the point inside the domain.
- * \param [in]      stretch_factors   If provided, elements are stretched according to the stretch factors
- *                                    of the tree.
- */
-
-void
-t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                       const double *ref_coords, const size_t num_coords, double *coords_out,
-                                       const double *stretch_factors);
-
-/** Compute the coordinates of a point inside an element inside a tree.
- *  The point is given in reference coordinates inside the element and gets
- *  converted to reference coordinates inside the tree. After that, the point
  *  is converted to global coordinates inside the domain.
  * \param [in]      forest            The forest.
  * \param [in]      ltreeid           The forest local id of the tree in which the element is.

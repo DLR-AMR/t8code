@@ -25,7 +25,7 @@
 #include <t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
+#include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -64,17 +64,17 @@ class t8_forest_volume: public testing::TestWithParam<std::tuple<std::tuple<int,
 /**
  * Compute the volume of a pyramid descending of a root-pyramid with volume 1/3
  * Pyramids need a special handling of the control-volume computation, because
- * they subdivide into pyramids and tetrahedra. Therefore in every refinement three 
+ * they subdivide into pyramids and tetrahedra. Therefore in every refinement three
  * types of elements occur:
- * 
+ *
  * 1. A pyramid with 1/8 of its parents volume
  * 2. A tetrahedron with a pyramid parent, having 1/16th of its parents volume.
  * 3. A tetrahedron with a tet-parent, having 1/8th of its parents volume.
- * 
+ *
  * On a leaf-level we therefore can have many different volumes for the
- * elements and compute it element-specific. 
+ * elements and compute it element-specific.
  * \param[in] pyra A pyramid
- * \return The volume of the pyramid 
+ * \return The volume of the pyramid
  */
 double
 pyramid_control_volume (t8_dpyramid_t *pyra)
@@ -82,8 +82,8 @@ pyramid_control_volume (t8_dpyramid_t *pyra)
   double control_volume = 1.0 / 3.0;
   /* Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
   control_volume /= 1 << ((pyra->pyramid.level) * 3);
-  /* Ancestors switch the shape. A tetrahedron has a 1/16th of its parents volume. 
-   * For all levels we already divided the control-volume by 8, hence we 
+  /* Ancestors switch the shape. A tetrahedron has a 1/16th of its parents volume.
+   * For all levels we already divided the control-volume by 8, hence we
    * divide it by 2 once. */
   if (pyra->switch_shape_at_level > 0) {
     control_volume /= 2;
