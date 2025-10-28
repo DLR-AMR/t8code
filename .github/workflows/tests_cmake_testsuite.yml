@@ -199,7 +199,7 @@ jobs:
     needs: preparation
     uses: ./.github/workflows/code_coverage.yml
     with:
-      MAKEFLAGS: -j4
+      MAKEFLAGS: -j1
       MPI: ON
       BUILD_TYPE: Debug
       TEST_LEVEL: T8_TEST_LEVEL_BASIC

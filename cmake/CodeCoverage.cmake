@@ -11,9 +11,11 @@
 
 #
 # Adds compiler flags necessary to be able to collect coverage information.
+# Also disable some optimizations as elision and inlining to get more deterministic coverage information. 
 # 
 function(append_coverage_compiler_flags)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --coverage -O0" PARENT_SCOPE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --coverage -O0 -fno-elide-constructors -fno-inline \
+    -fno-reorder-blocks -fno-reorder-functions -fno-var-tracking-assignments -frandom-seed=1" PARENT_SCOPE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g --coverage -O0" PARENT_SCOPE)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage" PARENT_SCOPE)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage" PARENT_SCOPE)
@@ -99,5 +101,5 @@ append_coverage_compiler_flags()
 setup_target_for_coverage(
   NAME coverage
   EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*"
-  LCOV_ARGS --no-external --ignore-errors gcov
+  LCOV_ARGS --no-external --ignore-errors gcov --ignore-errors mismatch 
 )
