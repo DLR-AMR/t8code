@@ -235,9 +235,16 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
       is_leaf = 1;
     }
   }
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_check_element_time -= sc_MPI_Wtime ();
+  }
   /* Call the callback function for the element */
   const int ret = search_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
-
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_check_element_time += sc_MPI_Wtime ();
+  }
   if (!ret) {
     /* The function returned false. We abort the recursion */
     return;
@@ -254,14 +261,21 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
     }
     int *active_queries_matches = T8_ALLOC (int, num_active);
     T8_ASSERT (query_fn != NULL);
+    if (forest->profile != NULL) {
+      /* If profiling is enabled, we measure the runtime of partition */
+      forest->profile->search_check_query_time -= sc_MPI_Wtime ();
+    }
     query_fn (forest, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf, queries, active_queries,
               active_queries_matches, num_active);
-
     for (size_t iactive = 0; iactive < num_active; iactive++) {
       if (!is_leaf && active_queries_matches[iactive]) {
         size_t query_index = *(size_t *) sc_array_index (active_queries, iactive);
         *(size_t *) sc_array_push (new_active_queries) = query_index;
       }
+    }
+    if (forest->profile != NULL) {
+      /* If profiling is enabled, we measure the runtime of partition */
+      forest->profile->search_check_query_time += sc_MPI_Wtime ();
     }
     T8_FREE (active_queries_matches);
   }
@@ -276,6 +290,10 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
     sc_array_destroy (new_active_queries);
     return;
   }
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_split_array_time -= sc_MPI_Wtime ();
+  }
 
   /* Enter the recursion (the element is definitely not a leaf at this point) */
   /* We compute all children of E, compute their leaf arrays and call search_recursion */
@@ -289,6 +307,10 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
   scheme->element_get_children (tree_class, element, num_children, children);
   /* Split the leaves array in portions belonging to the children of element */
   t8_forest_split_array (element, leaf_elements, split_offsets);
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_split_array_time += sc_MPI_Wtime ();
+  }
   for (int ichild = 0; ichild < num_children; ichild++) {
     /* Check if there are any leaf elements for this child */
     const size_t indexa = split_offsets[ichild];     /* first leaf of this child */
@@ -351,6 +373,13 @@ t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search
 void
 t8_forest_search (t8_forest_t forest, t8_forest_search_fn search_fn, t8_forest_query_fn query_fn, sc_array_t *queries)
 {
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_time = -sc_MPI_Wtime ();
+    forest->profile->search_split_array_time = 0;
+    forest->profile->search_check_query_time = 0;
+    forest->profile->search_check_element_time = 0;
+  }
   /* If we have queries build a list of all active queries,
    * thus all queries in the array */
   sc_array_t *active_queries = NULL;
@@ -367,7 +396,10 @@ t8_forest_search (t8_forest_t forest, t8_forest_search_fn search_fn, t8_forest_q
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     t8_forest_search_tree (forest, itree, search_fn, query_fn, queries, active_queries);
   }
-
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_time += sc_MPI_Wtime ();
+  }
   if (active_queries != NULL) {
     sc_array_destroy (active_queries);
   }
