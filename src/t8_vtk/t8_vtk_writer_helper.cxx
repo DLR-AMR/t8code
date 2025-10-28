@@ -37,15 +37,15 @@ t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_fl
 }
 
 void
-t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int vertex,
+t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                  const int curved_flag, double *out_coords)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   const t8_element_shape_t element_shape = scheme->element_get_shape (tree_class, element);
-  const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][vertex];
-  const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, num_node, out_coords);
+  const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][0];
+  const int num_nodes = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, num_nodes, out_coords);
 }
 
 template <>
@@ -192,21 +192,24 @@ grid_element_shape<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree,
 template <>
 void
 grid_element_to_coords<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element,
-                                     const int curved_flag, double *coordinates, [[maybe_unused]] const int num_node,
+                                     const int curved_flag, double *coordinates,
                                      [[maybe_unused]] const t8_element_shape_t shape)
 {
-  t8_forest_vtk_get_element_nodes (grid, itree, element, 0, curved_flag, coordinates);
+  t8_forest_vtk_get_element_nodes (grid, itree, element, curved_flag, coordinates);
 }
 
 template <>
 void
 grid_element_to_coords<t8_cmesh_t> (const t8_cmesh_t grid, const t8_locidx_t itree,
                                     [[maybe_unused]] const t8_element_t *element, const int curved_flag,
-                                    double *coordinates, const int num_node, const t8_element_shape_t shape)
+                                    double *coordinates, const t8_element_shape_t shape)
 {
   const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[shape][curved_flag];
   const t8_gloidx_t gtree_id = t8_cmesh_get_global_id (grid, itree);
-  t8_geometry_evaluate (grid, gtree_id, ref_coords, num_node, coordinates);
+  const t8_eclass_t eclass = t8_cmesh_get_tree_class (grid, itree);
+  const int num_nodes =  t8_get_number_of_vtk_nodes (eclass, curved_flag);
+
+  t8_geometry_evaluate (grid, gtree_id, ref_coords, num_nodes, coordinates);
 }
 
 template <>
