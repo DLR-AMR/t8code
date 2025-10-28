@@ -175,8 +175,8 @@ const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT] = {
   { 5, 8, 1, 4, 0, 0, 0, 0 }   /* pyramid */
 };
 
-const char *t8_eclass_to_string[T8_ECLASS_COUNT]
-  = { "Vertex", "Line", "Quad", "Triangle", "Hex", "Tet", "Prism", "Pyramid" };
+const char *t8_eclass_to_string[T8_ECLASS_INVALID]
+  = { "Vertex", "Line", "Quad", "Triangle", "Hex", "Tet", "Prism", "Pyramid", "invalid" };
 
 int
 t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
