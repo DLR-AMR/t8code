@@ -30,12 +30,13 @@ env:
 
 
 on:
-  workflow_call: 
+  workflow_call:
     inputs:
       TEST_LEVEL:
         required: true
-        type: number
-        description: 'Test level used for configuring (0 for full tests, 1 for less thorough tests, 2 for minimal tests)'
+        type: string
+        description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
+        default: 'T8_TEST_LEVEL_FULL'
 
 jobs:
   build:
@@ -46,9 +47,9 @@ jobs:
     timeout-minutes: 90
     steps:
 #
-# Setup and bootstrap
+# Setup
 #
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-tags: true # required to get version tags
         fetch-depth: 0    # required to get all history, especially the version tags
@@ -65,7 +66,7 @@ jobs:
       run: git submodule update
 
 #
-#  T8CODE 
+#  T8CODE
 #     with p4est and sc as internal dependencies which is needed for make dist
 #
 #
@@ -97,7 +98,7 @@ jobs:
     timeout-minutes: 90
     steps:
     - name: Download tarball
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
           name: tarballs
           path: tarballs
@@ -106,10 +107,9 @@ jobs:
     - name: update Github_env
       run: export TAR_DIR="$RUNNER_TEMP/`basename tarballs/*.tar.gz .tar.gz`" &&
           echo TAR_DIR="$TAR_DIR" >>$GITHUB_ENV
-          
+
 # build config vars
     - name: Set test level
-      if: ${{ inputs.TEST_LEVEL != 0 }}
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
@@ -128,7 +128,7 @@ jobs:
     - name: build
       run: cd build_tar && ninja
     - name: install
-      run: cd build_tar && ninja install 
+      run: cd build_tar && ninja install
     - name: check serial
       run: cd build_tar && ctest -R _serial
     - name: check parallel

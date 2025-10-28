@@ -150,7 +150,7 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
 /**
  * \brief This function checks whether each tree only holds elements that are on the refinement level given by \a expected_elem_level_per_tree
  * 
- * \param [in] balanced_forest A forest consinsting of gtest_balance::kNumTrees trees
+ * \param [in] balanced_forest A forest consisting of gtest_balance::kNumTrees trees
  * \param [in] expected_elem_level_per_tree An array holding a refinement level for each tree id
  * \return true If each element with a tree corresponds to the given refinement level supplied by the array \var expected_elem_level_per_tree
  * \return false If not every element complies to the given refinement level per tree
@@ -162,14 +162,14 @@ t8_gtest_check_custom_balanced_forest (t8_forest_t balanced_forest,
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (balanced_forest);
 
   for (t8_locidx_t tree_id = 0; tree_id < num_local_trees; ++tree_id) {
-    const t8_locidx_t num_tree_local_elems = t8_forest_get_tree_num_elements (balanced_forest, tree_id);
+    const t8_locidx_t num_tree_local_elems = t8_forest_get_tree_num_leaf_elements (balanced_forest, tree_id);
 
     const t8_gloidx_t gtree_id = t8_forest_global_tree_id (balanced_forest, tree_id);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (balanced_forest, tree_id);
     const t8_scheme *scheme = t8_forest_get_scheme (balanced_forest);
 
     for (t8_locidx_t elem_id = 0; elem_id < num_tree_local_elems; ++elem_id) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (balanced_forest, tree_id, elem_id);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (balanced_forest, tree_id, elem_id);
 
       const int elem_level = scheme->element_get_level (tree_class, element);
 
@@ -247,9 +247,9 @@ TEST_P (gtest_balance, balance_consistency_test)
   t8_forest_unref (&balanced_forest);
   t8_forest_unref (&already_balanced_forest);
 }
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
 const int maxlvl = 3;
-#elif T8CODE_TEST_LEVEL >= 1
+#elif T8_TEST_LEVEL_INT >= 1
 const int maxlvl = 4;
 #else
 const int maxlvl = 5;

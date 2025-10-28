@@ -29,26 +29,6 @@
 #include <t8_cmesh/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
-/*
-Use case
-
-initialize cmeesh
-Add trees
-Add tree to vertex information
-Start commit cmesh
-  commit cmesh internally
-  build vertex to tree information
-Finish commit cmesh
-
-Access vtt and ttv information
-
--> ttv must be added before commit
-global tree id -> vertex_list
-
--> vtt must be added after commit (not by user)
-
-*/
-
 /* Setter functions */
 
 void
@@ -76,22 +56,27 @@ t8_cmesh_get_num_local_vertices (const t8_cmesh_t cmesh)
 }
 
 const t8_gloidx_t *
-t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices)
+t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, int *num_vertices)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  return cmesh->vertex_connectivity->get_global_vertices_of_tree (cmesh, local_tree, num_vertices);
+  const auto global_vertices = cmesh->vertex_connectivity->get_global_vertices_of_tree (local_tree);
+  if (num_vertices) {
+    *num_vertices = global_vertices.size ();
+  }
+  return global_vertices.data ();
 }
 
 t8_gloidx_t
-t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
-                                    const int num_vertices)
+t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  const t8_gloidx_t *vertices_of_tree = t8_cmesh_get_global_vertices_of_tree (cmesh, local_tree, num_vertices);
+  int num_vertices;
+  const t8_gloidx_t *vertices_of_tree = t8_cmesh_get_global_vertices_of_tree (cmesh, local_tree, &num_vertices);
+  T8_ASSERT (num_vertices > local_tree_vertex);
   return vertices_of_tree[local_tree_vertex];
 }
 
-const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list &
+const tree_vertex_list &
 t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_vertex)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));

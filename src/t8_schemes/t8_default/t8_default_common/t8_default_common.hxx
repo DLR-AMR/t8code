@@ -33,12 +33,12 @@
 #include <sc_containers.h>
 #include <utility>
 
-/* Macro to check whether a pointer (VAR) to a base class, comes from an
+/** Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the element_new callback in \ref t8_eclass_scheme.
+ * It is suitable as the element_new callback in \ref t8_default_scheme_common..
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] scheme_context   An element is allocated in this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to allocate.
@@ -57,7 +57,7 @@ t8_default_mempool_alloc (sc_mempool_t *scheme_context, int length, t8_element_t
 }
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the element_destroy callback in \ref t8_default_common.
+ * It is suitable as the element_destroy callback in \ref t8_default_scheme_common.
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] scheme_context   An element is returned to this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to destroy.
@@ -84,6 +84,9 @@ count_leaves_from_level (const int element_level, const int refinement_level, co
   return element_level > refinement_level ? 0 : (1ULL << (dimension * (refinement_level - element_level)));
 }
 
+/** Common interface of the default schemes for each element shape.
+ * \tparam TUnderlyingEclassScheme The default scheme class of the element shape.
+ */
 template <class TUnderlyingEclassScheme>
 class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme, t8_default_scheme_common> {
  private:
@@ -191,6 +194,15 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     return t8_eclass_num_vertices[eclass];
   }
 
+  /** Return the max number of children of an eclass.
+   * \return            The max number of children of \a element.
+   */
+  inline int
+  get_max_num_children () const
+  {
+    return t8_eclass_max_num_children[eclass];
+  }
+
   /** Allocate space for a bunch of elements.
    * \param [in] length The number of elements to allocate.
    * \param [out] elem  The elements to allocate.
@@ -208,6 +220,14 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     t8_default_mempool_free ((sc_mempool_t *) scheme_context, length, elem);
   }
 
+  /** Deinitialize an array of allocated elements.
+   * \param [in] length   The number of elements to be deinitialized.
+   * \param [in,out] elem On input an array of \a length many allocated
+   *                       and initialized elements, on output an array of
+   *                       \a length many allocated, but not initialized elements.
+   * \note Call this function if you called element_init on the element pointers.
+   * \see element_init
+   */
   inline void
   element_deinit ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
   {
@@ -227,18 +247,18 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
-   * \param [in] t     The element to be checked.
+   * \param [in] element     The element to be checked.
    * \param [in] level A refinement level.
-   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * \return Suppose \a element is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
    * \note This function is overwritten by the pyramid implementation.
    */
   inline t8_gloidx_t
-  element_count_leaves (const t8_element_t *t, int level) const
+  element_count_leaves (const t8_element_t *element, int level) const
   {
-    const int element_level = this->underlying ().element_get_level (t);
+    const int element_level = this->underlying ().element_get_level (element);
     const int dim = t8_eclass_to_dimension[eclass];
     return count_leaves_from_level (element_level, level, dim);
   }
@@ -289,6 +309,12 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   }
 
 #if T8_ENABLE_DEBUG
+  /**
+   * Print a given element. For a example for a triangle print the coordinates
+   * and the level of the triangle. This function is only available in the
+   * debugging configuration. 
+   * \param [in]        elem  The element to print
+   */
   inline void
   element_debug_print (const t8_element_t *elem) const
   {

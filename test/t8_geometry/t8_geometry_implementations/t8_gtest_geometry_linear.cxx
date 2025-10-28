@@ -59,7 +59,7 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
 
     const int num_vertices = t8_eclass_num_vertices[eclass];
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
-    double *vertices = T8_ALLOC_ZERO (double, num_vertices *T8_ECLASS_MAX_DIM);
+    double *vertices = T8_TESTSUITE_ALLOC_ZERO (double, num_vertices *T8_ECLASS_MAX_DIM);
     for (int i_vertex = 0; i_vertex < num_vertices; ++i_vertex) {
       for (int dim = 0; dim < T8_ECLASS_MAX_DIM; ++dim) {
         vertices[i_vertex * T8_ECLASS_MAX_DIM + dim] = t8_element_corner_ref_coords[eclass][i_vertex][dim];
@@ -85,7 +85,7 @@ class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
     t8_cmesh_set_tree_vertices (cmesh, 0, vertices,
                                 geom_int == T8_GEOMETRY_TYPE_LINEAR ? t8_eclass_num_vertices[eclass] : 2);
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
-    T8_FREE (vertices);
+    T8_TESTSUITE_FREE (vertices);
   }
   void
   TearDown () override
@@ -129,7 +129,7 @@ TEST_P (geometry_test, cmesh_geometry)
      * These are seen as reference coordinates in the single
      * cmesh tree. Our geometry will map them into the physical
      * space. Since this space is also [0,1] and the cmesh only
-     * has one tree, the mapped coordinates must be the same as the 
+     * has one tree, the mapped coordinates must be the same as the
      * reference coordinates. */
     for (int idim = 0; idim < t8_eclass_to_dimension[eclass]; ++idim) {
       point[idim] = (double) rand () / RAND_MAX;
@@ -182,7 +182,7 @@ TEST (test_geometry_linear, incompatible_geometry)
   /* Register the t8_geometry_linear_axis_aligned geometry to this cmesh. */
   t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
   /* Should return true since the t8_geometry_linear_axis_aligned geometry is compatible with quads. */
-  ASSERT_TRUE (t8_cmesh_validate_geometry (cmesh));
+  ASSERT_TRUE (t8_cmesh_validate_geometry (cmesh, 0));
   t8_cmesh_destroy (&cmesh);
 
   /* Build a simple set geometries for the tree. */
@@ -198,7 +198,7 @@ TEST (test_geometry_linear, incompatible_geometry)
   t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (cmesh);
   /* Check validity after committing to circumvent the assertion.
    * Should return false since the t8_geometry_linear_axis_aligned geometry is not compatible with triangles. */
-  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));
+  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh, 0));
   t8_cmesh_destroy (&cmesh);
 }
 #endif /* T8_ENABLE_DEBUG */

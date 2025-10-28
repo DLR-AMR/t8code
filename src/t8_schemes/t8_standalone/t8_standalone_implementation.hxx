@@ -29,6 +29,7 @@
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <utility>
 
+/** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
 struct t8_standalone_scheme
 {
@@ -476,6 +477,15 @@ struct t8_standalone_scheme
     return T8_ELEMENT_NUM_CHILDREN[TEclass];
   }
 
+  /** Return the max number of children of an eclass.
+   * \return            The max number of children of \a element.
+   */
+  static constexpr int
+  get_max_num_children () noexcept
+  {
+    return T8_ELEMENT_NUM_CHILDREN[TEclass];
+  }
+
   /**
    * Indicates if an element is refinable. Possible reasons for being not refinable could be
    * that the element has reached its max level.
@@ -712,7 +722,7 @@ struct t8_standalone_scheme
    *                      They will be stored in order of their linear id.
    * \param [in] num_children The number of elements in \a children. Must match
    *                      the number of children that touch \a face.
-   *                      \ref t8_element_num_face_children
+   *                      \ref element_get_num_face_children
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
    *                      on output its i-th entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
@@ -757,7 +767,7 @@ struct t8_standalone_scheme
     * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
     *                      specifying a child of \a elem that shares a face with \a face.
     *                      These children are counted in linear order. This coincides with
-    *                      the order of children from a call to \ref t8_element_children_at_face.
+    *                      the order of children from a call to \ref element_get_children_at_face.
     * \return              The face number of the face of a child of \a elem
     *                      that coincides with \a face_child.
     */
@@ -873,7 +883,7 @@ struct t8_standalone_scheme
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
    * \return              True if \a face is a subface of the element's root element.
-   * \note You can compute the corresponding face number of the tree via \ref t8_element_tree_face.
+   * \note You can compute the corresponding face number of the tree via \ref element_get_tree_face.
    */
   static constexpr int
   element_is_root_boundary (const t8_element_t *elem, const int face) noexcept
@@ -1239,15 +1249,15 @@ struct t8_standalone_scheme
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
-   * \param [in] t     The element to be checked.
+   * \param [in] elem  The element to be checked.
    * \param [in] level A refinement level. 
-   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * \return Suppose \a elem is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
    * If \a level < t8_element_level(t), the return value should be 0.
    *
-   * Example: If \a t is a line element that refines into 2 line elements on each level,
+   * Example: If \a elem is a line element that refines into 2 line elements on each level,
    *  then the return value is max(0, 2^{\a level - level(\a t)}).
-   *  Thus, if \a t's level is 0, and \a level = 3, the return value is 2^3 = 8.
+   *  Thus, if \a elem's level is 0, and \a level = 3, the return value is 2^3 = 8.
    */
   static constexpr t8_gloidx_t
   element_count_leaves (const t8_element_t *elem, const t8_element_level level) noexcept
@@ -1344,8 +1354,8 @@ struct t8_standalone_scheme
    *  reference space of the tree.
    * 
    * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates of the point in the reference space of the element.
-   * \param [in] user_data    User data.
+   * \param [in] ref_coords   The coordinates of the point in the reference space of the element.
+   * \param [in] num_coords   The number of coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
    */
   static constexpr void
@@ -1391,22 +1401,22 @@ struct t8_standalone_scheme
   /* TODO: would it be better to directly allocate an array of elements,
    *       not element pointers? */
   void
-  element_new (const int length, t8_element_t **elem) const noexcept
+  element_new (const int length, t8_element_t **elems) const noexcept
   {
     /* allocate memory */
     T8_ASSERT (this->scheme_context != NULL);
     T8_ASSERT (0 <= length);
-    T8_ASSERT (elem != NULL);
+    T8_ASSERT (elems != NULL);
 
     for (int i = 0; i < length; ++i) {
-      elem[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) this->scheme_context);
+      elems[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) this->scheme_context);
     }
 
 /* in debug mode, set sensible default values. */
 #if T8_ENABLE_DEBUG
     {
       for (int i = 0; i < length; i++) {
-        element_init (1, elem[i]);
+        element_init (1, elems[i]);
       }
     }
 #endif
@@ -1425,10 +1435,10 @@ struct t8_standalone_scheme
    * \see element_is_valid
    */
   static inline void
-  element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
+  element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elems) noexcept
   {
 #if T8_ENABLE_DEBUG
-    t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elems;
     /* Set all values to 0 */
     for (int ielem = 0; ielem < length; ielem++) {
       element_set_linear_id ((t8_element_t *) (el + ielem), 0, 0);
@@ -1446,7 +1456,7 @@ struct t8_standalone_scheme
    * \see element_init
    */
   static constexpr void
-  element_deinit ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elem) noexcept
+  element_deinit ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elems) noexcept
   {
   }
 
@@ -1455,16 +1465,16 @@ struct t8_standalone_scheme
    * \param [in,out] elems On input an array of \b length many allocated
    *                      element pointers.
    *                      On output all these pointers will be freed.
-   *                      \b elem itself will not be freed by this function.
+   *                      \b elems itself will not be freed by this function.
    */
   void
-  element_destroy (const int length, t8_element_t **elem) const noexcept
+  element_destroy (const int length, t8_element_t **elems) const noexcept
   {
     T8_ASSERT (this->scheme_context != NULL);
     T8_ASSERT (0 <= length);
-    T8_ASSERT (elem != NULL);
+    T8_ASSERT (elems != NULL);
     for (int i = 0; i < length; ++i) {
-      sc_mempool_free ((sc_mempool_t *) scheme_context, elem[i]);
+      sc_mempool_free ((sc_mempool_t *) scheme_context, elems[i]);
     }
   }
 
@@ -1528,6 +1538,12 @@ struct t8_standalone_scheme
     * ToDo-Type */
   }
 
+  /**
+ * Fill a string with readable information about the element
+ * \param[in] elem The element to translate into human-readable information
+ * \param[in, out] debug_string The string to fill.
+ * \param[in] string_size Buffer size of c-string
+ */
   static constexpr void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) noexcept
   {
@@ -2132,6 +2148,23 @@ t8_standalone_scheme<T8_ECLASS_VERTEX>::element_transform_face ([[maybe_unused]]
   return;
 };
 
+/** Implementation of \ref element_transform_face for lines
+ *  \param [in] elem1     The face element.
+ *  \param [in,out] elem2 On return the face element \a elem1 with respective
+ *                        to the coordinate system of the other tree.
+ *  \param [in] orientation The orientation of the tree-tree connection.
+ *                        \see t8_cmesh_set_join
+ *  \param [in] sign      Depending on the topological orientation of the two tree faces,
+ *                        either 0 (both faces have opposite orientation)
+ *                        or 1 (both faces have the same top. orientation).
+ *                        \ref t8_eclass_face_orientation
+ *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
+ *                        the smaller face. A face f of tree T is smaller than
+ *                        f' of T' if either the eclass of T is smaller or if
+ *                        the classes are equal and f<f'. The orientation is
+ *                        defined in relation to the smaller face.
+ * \note \a elem1 and \a elem2 may point to the same element.
+ */
 template <>
 inline void
 t8_standalone_scheme<T8_ECLASS_LINE>::element_transform_face (const t8_element_t *elem1,
@@ -2154,6 +2187,24 @@ t8_standalone_scheme<T8_ECLASS_LINE>::element_transform_face (const t8_element_t
   T8_ASSERT (t8_standalone_scheme<T8_ECLASS_LINE>::element_is_valid ((t8_element_t *) el2));
   return;
 };
+
+/** Implementation of \ref element_transform_face for quads
+ *  \param [in] elem1     The face element.
+ *  \param [in,out] elem2 On return the face element \a elem1 with respective
+ *                        to the coordinate system of the other tree.
+ *  \param [in] orientation The orientation of the tree-tree connection.
+ *                        \see t8_cmesh_set_join
+ *  \param [in] sign      Depending on the topological orientation of the two tree faces,
+ *                        either 0 (both faces have opposite orientation)
+ *                        or 1 (both faces have the same top. orientation).
+ *                        \ref t8_eclass_face_orientation
+ *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
+ *                        the smaller face. A face f of tree T is smaller than
+ *                        f' of T' if either the eclass of T is smaller or if
+ *                        the classes are equal and f<f'. The orientation is
+ *                        defined in relation to the smaller face.
+ * \note \a elem1 and \a elem2 may point to the same element.
+ */
 
 template <>
 inline void
@@ -2225,6 +2276,24 @@ t8_standalone_scheme<T8_ECLASS_QUAD>::element_transform_face (const t8_element_t
   el2->level = tmp.level;
   return;
 };
+
+/** Implementation of \ref element_transform_face for triangles.
+ *  \param [in] elem1     The face element.
+ *  \param [in,out] elem2 On return the face element \a elem1 with respective
+ *                        to the coordinate system of the other tree.
+ *  \param [in] orientation The orientation of the tree-tree connection.
+ *                        \see t8_cmesh_set_join
+ *  \param [in] sign      Depending on the topological orientation of the two tree faces,
+ *                        either 0 (both faces have opposite orientation)
+ *                        or 1 (both faces have the same top. orientation).
+ *                        \ref t8_eclass_face_orientation
+ *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
+ *                        the smaller face. A face f of tree T is smaller than
+ *                        f' of T' if either the eclass of T is smaller or if
+ *                        the classes are equal and f<f'. The orientation is
+ *                        defined in relation to the smaller face.
+ * \note \a elem1 and \a elem2 may point to the same element.
+ */
 
 template <>
 inline void

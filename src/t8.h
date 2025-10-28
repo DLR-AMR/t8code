@@ -29,10 +29,6 @@
 #ifndef T8_H
 #define T8_H
 
-/* include config headers */
-#ifndef T8_CMAKE_BUILD
-#include <t8_config.h>
-#endif
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
 #error "MPI configured differently in t8code and libsc"
@@ -112,6 +108,8 @@ typedef int64_t t8_gloidx_t;
 #define T8_MPI_GLOIDX sc_MPI_LONG_LONG_INT
 /** Macro to get the absolute value of a t8_gloidx_t */
 #define T8_GLOIDX_ABS(x) ((t8_gloidx_t) llabs ((long long) (x)))
+/** Maximum possible value of a t8_gloidx_t*/
+#define T8_GLOIDX_MAX INT64_MAX
 /** Comparison function for t8_gloidx_t */
 #define t8_compare_gloidx(v, w) sc_int64_compare (v, w)
 
@@ -120,19 +118,25 @@ typedef uint64_t t8_linearidx_t;
 /** The MPI datatype of t8_linearidx_t */
 #define T8_MPI_LINEARIDX sc_MPI_UNSIGNED_LONG_LONG
 
+/** The padding size is the size of a void pointer*/
 #define T8_PADDING_SIZE (sizeof (void *))
 /** Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) ((T8_PADDING_SIZE - ((_x) % T8_PADDING_SIZE)) % T8_PADDING_SIZE)
 
-/** Define precisions for computations */
+/** Define machine precision for computations */
 #define T8_PRECISION_EPS SC_EPS
+/** Define square root of machine precision for computations */
 #define T8_PRECISION_SQRT_EPS sqrt (T8_PRECISION_EPS)
 
 /** Access multidimensional data on one-dimensional C arrays. */
+/** Access onedimensional data on one-dimensional C arrays. */
 #define T8_1D_TO_1D(nx, i) (i)
+/** Access twodimensional data on one-dimensional C arrays. */
 #define T8_2D_TO_1D(nx, ny, i, j) ((i) * (ny) + (j))
+/** Access threedimensional data on one-dimensional C arrays. */
 #define T8_3D_TO_1D(nx, ny, nz, i, j, k) (((i) * (ny) + (j)) * (nz) + (k))
+/** Access fourdimensional data on one-dimensional C arrays. */
 #define T8_4D_TO_1D(nx, ny, nz, nl, i, j, k, l) ((((i) * (ny) + (j)) * (nz) + (k)) * (nl) + (l))
 
 /** Communication tags used internal to t8code. */
@@ -142,6 +146,8 @@ typedef enum {
   T8_MPI_PARTITION_FOREST,              /**< Used for forest partitioning */
   T8_MPI_GHOST_FOREST,                  /**< Used for for ghost layer creation */
   T8_MPI_GHOST_EXC_FOREST,              /**< Used for ghost data exchange */
+  T8_MPI_CMESH_UNIFORM_BOUNDS_START,    /**< Used for cmesh uniform bounds computation. */
+  T8_MPI_CMESH_UNIFORM_BOUNDS_END,      /**< Used for cmesh uniform bounds computation. */
   T8_MPI_TEST_ELEMENT_PACK_TAG,         /**< Used for testing mpi pack and unpack functionality */
   T8_MPI_TAG_LAST
 } t8_MPI_tag_t;
@@ -266,6 +272,14 @@ t8_errorf (const char *fmt, ...)
 #endif
   ;
 
+/**
+ * Set a custom logging function to be used by t8code.
+ * When setting a custom logging function, the t8code internal logging function will be ignored.
+ * \param [in] log_fcn      A function pointer to a logging function
+ */
+void
+t8_set_external_log_fcn (void (*log_fcn) (int category, int priority, const char *msg));
+
 /** Register t8code with libsc and print version and variable information.
  * \param [in] log_threshold Declared in sc.h.  SC_LP_DEFAULT is fine.
  *                           You can also choose from log levels SC_LP_*.
@@ -274,11 +288,12 @@ void
 t8_init (int log_threshold);
 
 /** Return a pointer to an array element indexed by a t8_locidx_t.
+ * \param [in] array The array of elements.
  * \param [in] index needs to be in [0]..[elem_count-1].
- * \return           A void * pointing to entry \a it in \a array.
+ * \return           A void * pointing to entry \a index in \a array.
  */
 void *
-t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it);
+t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t index);
 
 /* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();

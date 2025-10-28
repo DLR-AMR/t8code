@@ -47,12 +47,28 @@ struct t8_point_tag
 {
 };
 
+/**
+ * Type alias for a vector.
+ * \tparam dim Dimension of the vector.
+ */
 template <std::size_t dim>
 using t8_vec = T8Type<std::array<double, dim>, t8_vec_tag<dim>, EqualityComparable, Swapable, RandomAccessible>;
+
+/** Type alias for a 3D vector.
+ * \note This is a convenience type alias for 3D vectors.
+ */
 using t8_3D_vec = t8_vec<3>;
 
+/** 
+ * Type alias for a point in N-dimensional space.
+ * \tparam dim Dimension of the point.
+ */
 template <std::size_t dim>
 using t8_point = T8Type<std::array<double, dim>, t8_point_tag<dim>, EqualityComparable, Swapable, RandomAccessible>;
+
+/** Type alias for a 3D point.
+ * \note This is a convenience type alias for 3D points.
+ */
 using t8_3D_point = t8_point<3>;
 
 /** Vector norm.
@@ -78,14 +94,18 @@ t8_normalize (t8_vec<dim> &vec)
 }
 
 /** Make a copy of a vector or point.
- * \param [in]  src
-t8_type_copy (T const &src, T const &dest)
-static inline void
-*/
+ * \param [in]  src  The source vector or point.
+ * \param [out] dest The destination vector or point.
+ */
 template <typename T>
 static inline void
 t8_copy (const T &src, T &dest);
 
+/**
+ * Copy a vector.
+ * \param [in]  src  The source vector.
+ * \param [out] dest The destination vector.
+ */
 template <std::size_t dim>
 constexpr void
 t8_copy (const t8_vec<dim> &src, t8_vec<dim> &dest)
@@ -93,6 +113,11 @@ t8_copy (const t8_vec<dim> &src, t8_vec<dim> &dest)
   std::copy (src.begin (), src.end (), dest.begin ());
 }
 
+/**
+ * Copy a point.
+ * \param [in]  src  The source point.
+ * \param [out] dest The destination point.
+ */
 template <std::size_t dim>
 constexpr void
 t8_copy (const t8_point<dim> &src, t8_point<dim> &dest)
@@ -128,7 +153,7 @@ t8_ax (t8_vec<dim> &vec_x, const double alpha)
 
 /** Compute Y = alpha * X
  * \param [in]  vec_x  An N-dimensional vector.
- * \param [out] vec_z  On output set to \a alpha * \a vec_x.
+ * \param [out] vec_y  On output set to \a alpha * \a vec_x.
  * \param [in]  alpha  A factor.
  */
 template <std::size_t dim>
@@ -171,6 +196,7 @@ t8_axpy (const t8_vec<dim> &vec_x, t8_vec<dim> &vec_y, const double alpha)
  * \param [in]  vec_x  An N-dimensional vector.
  * \param [in]  vec_y  An N-dimensional vector.
  * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
+ * \param [in]  alpha  A factor for the multiplication of \a vec_x.
  */
 template <std::size_t dim>
 constexpr void
@@ -194,7 +220,7 @@ t8_dot (const t8_vec<dim> &vec_x, const t8_vec<dim> &vec_y)
 /** Cross product of X and Y
  * \param [in]  vec_x  A 2D vector.
  * \param [in]  vec_y  A 2D vector.
- * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
+ * \return             The cross product of \a vec_x and \a vec_y.
  */
 static inline double
 t8_cross_2D (const t8_vec<2> &vec_x, const t8_vec<2> &vec_y)
@@ -259,7 +285,7 @@ t8_rescale (t8_vec<dim> &vec, const double new_length)
  * \param [in]  p1  A 3D vector.
  * \param [in]  p2  A 3D vector.
  * \param [in]  p3  A 3D vector.
- * \param [out] Normal vector of the triangle. (Not necessarily of length 1!)
+ * \param [out] normal vector of the triangle. (Not necessarily of length 1!)
  */
 static inline void
 t8_normal_of_tri (const t8_3D_vec &p1, const t8_3D_vec &p2, const t8_3D_vec &p3, t8_3D_vec &normal)

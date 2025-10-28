@@ -112,7 +112,6 @@ int
 t8_offset_next_nonempty_rank (const int rank, const int mpisize, const t8_gloidx_t *offset)
 {
   int next_nonempty = rank + 1;
-
   while (next_nonempty < mpisize && t8_offset_empty (next_nonempty, offset)) {
     next_nonempty++;
   }
@@ -525,6 +524,14 @@ t8_offset_range_send (const int start, const int end, const int mpirank, const t
   return count;
 }
 
+/**
+ * Print the offsets of a partition.
+ * 
+ * This function prints the offsets of a partition in a debug message.
+ * 
+ * \param [in] offset  The offsets to print.
+ * \param [in] comm    The MPI communicator to use for printing.
+ */
 void
 t8_offset_print (__attribute__ ((unused)) const t8_shmem_array_t offset, __attribute__ ((unused)) sc_MPI_Comm comm)
 {

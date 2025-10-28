@@ -58,14 +58,23 @@ int
 t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_locidx_t el_considered,
                                 t8_element_t **elements, const int elements_size);
 
-/* For each tree in a forest compute its first and last descendant */
+/**
+ * For each tree in a forest compute its first and last descendant.
+ * \param[in] forest The forest that should be used.  
+ 
+ */
 void
 t8_forest_compute_desc (t8_forest_t forest);
 
-/* Create the elements on this process given a uniform partition
- * of the coarse mesh. */
+/**
+ * Create the elements on this process given a uniform partition
+ * of the coarse mesh.
+ * 
+ * \param[in, out] forest The forest to be populated.
+ * \param[in] irregular   Flag indicating if a tree in the forest does not refine in a 1:2^dim manner.
+ */
 void
-t8_forest_populate (t8_forest_t forest);
+t8_forest_populate (t8_forest_t forest, const int irregular);
 
 /** Return the scheme associated to a forest.
  * This function does not check whether the given forest is committed, use with
@@ -121,7 +130,8 @@ t8_forest_first_tree_shared (t8_forest_t forest);
 int
 t8_forest_last_tree_shared (t8_forest_t forest);
 
-/* Allocate memory for trees and set their values as in from.
+/**
+ * Allocate memory for trees and set their values as in from.
  * For each tree allocate enough element memory to fit the elements of from.
  * If copy_elements is true, copy the elements of from into the element memory.
  * Do not copy the first and last desc for each tree, as this is done outside in commit
@@ -156,41 +166,56 @@ t8_forest_get_coarse_tree_ext (t8_forest_t forest, t8_locidx_t ltreeid, t8_locid
 void
 t8_forest_compute_elements_offset (t8_forest_t forest);
 
-/** Return an element of a tree. Const version.
+/** Return a leaf element of a tree. Const version.
  * \param [in]  tree  The tree.
- * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the element with index \a elem_in_tree of the
+ * \param [in]  elem_in_tree The index of the leaf element within the tree.
+ * \return      Returns the leaf element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 const t8_element_t *
-t8_forest_get_tree_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_leaf_element (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return an element of a tree. Mutable version.
+/** Return a leaf element of a tree. Mutable version.
  * \param [in]  tree  The tree.
- * \param [in]  elem_in_tree The index of the element within the tree.
- * \return      Returns the element with index \a elem_in_tree of the
+ * \param [in]  elem_in_tree The index of the leaf element within the tree.
+ * \return      Returns the leaf element with index \a elem_in_tree of the
  *              element array of \a tree.
  */
 t8_element_t *
-t8_forest_get_tree_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
+t8_forest_get_tree_leaf_element_mutable (t8_tree_t tree, t8_locidx_t elem_in_tree);
 
-/** Return the array of elements of a tree. Const version.
+/** Return the array of leaf elements of a tree. Const version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of elements of the tree.
+ * \return      Returns the array of leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
 const t8_element_array_t *
-t8_forest_get_tree_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_leaf_element_array (t8_forest_t forest, t8_locidx_t ltreeid);
 
-/** Return the array of elements of a tree. Mutable version.
+/** Return the array of leaf elements of a tree. Mutable version.
  * \param [in]  forest   The forest.
  * \param [in]  ltreeid  The local id of a local tree. Must be a valid local tree id.
- * \return      Returns the array of elements of the tree.
+ * \return      Returns the array of leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
 t8_element_array_t *
-t8_forest_get_tree_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
+t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_locidx_t ltreeid);
+
+/** Search for a linear element id in a sorted array of
+ * elements. If the element does not exist, return the largest index i
+ * such that the element at position i has a smaller id than the given one.
+ * If no such i exists, return -1.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element_id  The linear id of the element to search for.
+ * \param [in]     element_level The level of the element to search for. Thus, the level at which \a element_id was computed.
+ * \return                     The largest index \a i of an element with linear_id smaller than or equal to \a element_id in \a elements if it exists.
+ *                             -1 if no such element was found in \a elements.
+ */
+t8_locidx_t
+t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
@@ -228,6 +253,8 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
  * \param [in]    upper_bound A known upper bound for the owner process.
  * \param [in]    guess   An initial guess for the owner. Must satisfy
  *                        \a lower_bound <= \a guess <= \a upper_bound
+ * \param [in]    element_is_desc   This should be true, if \a element is its own first_descendant at
+ *                                  the maximum level. Must be false otherwise.
  * \return                The mpirank of the process that owns \a element.
  * \note If \a lower_bound = \a upper_bound, the function assumes that \a lower_bound
  *       is the owner process and immediately returns.
@@ -252,7 +279,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
  * \param [in]  eclass      The element class of the tree.
  * \param [in]  rank        An mpi rank.
  * \param [in]  element_is_desc This should be true, if \a element is its own first_descendant at
- *                          the maximum level. Must be false otherwise.
+ *                              the maximum level. Must be false otherwise.
  * \return      True if and only if \a rank is the (first) owner process of \a element.
  */
 int
@@ -371,7 +398,7 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
  * \param [in]     face    The number of the face of \a elem.
  * \param [in]     num_neighs The number of allocated element in \a neighs. Must match the
  *                         number of face neighbors of one bigger refinement level.
- * \param [out]    dual_face If not NULL, on output the face id's of the neighboring elements' faces.
+ * \param [out]    dual_faces If not NULL, on output the face id's of the neighboring elements' faces.
  * \return                 The global id of the tree in which the neighbors are.
  *        -1 if there exists no neighbor across that face.
  */
@@ -392,12 +419,12 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
 
 /** Compute whether for a given element there exist leaf or ghost leaf elements in
  * the local forest that are a descendant of the element but not the element itself
- * \param [in]  forest    The forest.
- * \param [in]  gtreeid   The global id of the tree the element is in
- * \param [in]  element   The element
- * \param [in]  scheme        The eclass of \a element.
- * \return                True if in the forest there exists a local leaf or ghost
- *                        leaf that is a descendant of \a element but not equal to \a element.
+ * \param [in]  forest      The forest.
+ * \param [in]  gtreeid     The global id of the tree the element is in
+ * \param [in]  element     The element
+ * \param [in]  tree_class  The eclass of \a element.
+ * \return                  True if in the forest there exists a local leaf or ghost
+ *                          leaf that is a descendant of \a element but not equal to \a element.
  * \note If no ghost layer was created for the forest, only local elements are tested.
  * \note \a forest must be committed before calling this function.
  */
