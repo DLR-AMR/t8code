@@ -34,6 +34,8 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
+#include <t8_types/t8_vec.hxx>
+#include <t8_vector_helper/t8_zip.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
@@ -497,39 +499,79 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
   /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs.
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
    * refinement level. All element vertices have integer coordinates in this cube.
-   *   \param [in] element       The element to be considered.
+   *   \param [in] element  The element to be considered.
    *   \param [in] vertex   The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords  An array of at least as many integers as the element's dimension whose entries will be
    *                        filled with the coordinates of \a vertex.
    */
-  void
-  element_get_vertex_integer_coords (const t8_element_t *element, int vertex, int coords[]) const;
+  static void
+  element_get_vertex_integer_coords (const t8_element_t *element, int vertex, int coords[]) noexcept
+  {
+    const t8_dprism_t *prism = (t8_dprism_t *) element;
+    T8_ASSERT (vertex >= 0 && vertex < 6);
+    T8_ASSERT (prism->line.level == prism->tri.level);
+    /*Compute x and y coordinate */
+    t8_default_scheme_tri::element_get_vertex_integer_coords (&prism->tri, vertex % 3, coords);
+    /* Compute z coordinate coords[0] *= T8_DPRISM_ROOT_BY_DTRI_ROOT; */
+    t8_default_scheme_line::element_get_vertex_integer_coords ((t8_element_t *) &prism->line, vertex / 3, &coords[2]);
+    coords[0] /= T8_DPRISM_ROOT_BY_DTRI_ROOT;
+    coords[1] /= T8_DPRISM_ROOT_BY_DTRI_ROOT;
+    coords[2] /= T8_DPRISM_ROOT_BY_DLINE_ROOT;
+  }
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used.
+   * \param [in] elem      The element.
+   * \param [in] vertex    The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords   A t8_point with at least the same dimension as the element's dimension
+   *                       whose entries will be filled with the coordinates of \a vertex.
+   * \tparam TOutCoords    A t8_point with at least the same dimension as the element's dimension
+   * \warning              \a coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                       all coords might be used.
    */
-  void
-  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
+  template <T8PointType TOutCoords>
+  static void
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, TOutCoords &coords) noexcept
+  {
+    assert_coord_dimensionality (coords);
+    int coords_int[3];
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (vertex >= 0 && vertex < 6);
 
-  /** Convert points in the reference space of an element to points in the
+    /* Compute the integer coordinates in [0, root_len]^3 */
+    element_get_vertex_integer_coords (elem, vertex, coords_int);
+
+    /* Divide by the root length. */
+    coords[0] = coords_int[0] / (double) T8_DPRISM_ROOT_LEN;
+    coords[1] = coords_int[1] / (double) T8_DPRISM_ROOT_LEN;
+    coords[2] = coords_int[2] / (double) T8_DPRISM_ROOT_LEN;
+  }
+
+  /** Converts points in the reference space of an element to points in the
    *  reference space of the tree.
    *
    * \param [in] elem         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
-   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the points in the
-   *                          reference space of the tree.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree. Has to be at least the same size as \a ref_coords.
+   * \tparam TRefCoords       Container holding t8_point with atleast the same dimension as the element.
+   * \tparam TOutCoords       Container holding t8_point with atleast the same dimension as the element.
    */
-  void
-  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                double *out_coords) const;
+  template <T8PointContainerType TRefCoords, T8PointContainerType TOutCoords>
+  static void
+  element_get_reference_coords (const t8_element_t *elem, const TRefCoords &ref_coords, TOutCoords &out_coords) noexcept
+  {
+    assert_coord_container_dimensionality (ref_coords);
+    assert_coord_container_dimensionality (out_coords);
+    T8_ASSERT (std::ranges::size (ref_coords) <= std::ranges::size (out_coords));
+    t8_dprism_t *prism = (t8_dprism_t *) elem;
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (prism->line.level == prism->tri.level);
+    /*Compute x and y coordinate */
+    t8_default_scheme_tri::element_get_reference_coords_ext (&prism->tri, ref_coords, out_coords);
+    /*Compute z coordinate */
+    t8_default_scheme_line::element_get_reference_coords_ext (&prism->line, ref_coords, 2, out_coords);
+  }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
@@ -553,8 +595,12 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
    * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
-  int
-  element_is_valid (const t8_element_t *element) const;
+  static int
+  element_is_valid (const t8_element_t *element) noexcept
+  {
+    T8_ASSERT (element != NULL);
+    return t8_dprism_is_valid ((const t8_dprism_t *) element);
+  }
 
   /**
   * Print a given element. For a example for a triangle print the coordinates

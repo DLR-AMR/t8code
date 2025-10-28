@@ -14,7 +14,7 @@
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -22,9 +22,9 @@
 
 /**
  * \file t8_vector_algorithms.hxx
- * 
+ *
  * Contains specialized algorithms on std::vector
- * 
+ *
  */
 
 #ifndef T8_VECTOR_ALGORITHMS
@@ -41,7 +41,7 @@
  * The value type of the iterator should be comparable with <.
  * The categories are defined by the std::function \a category_func passed as input argument.
  * This is a re-implementation of sc_array_split.
- * 
+ *
  * /tparam TIterator            An input iterator type
  * /tparam TSentinel            A sentinel type for the iterator
  * /tparam TContainer           A container type that holds the offsets. It should be a contiguous container

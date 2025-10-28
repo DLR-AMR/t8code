@@ -21,7 +21,9 @@
 */
 
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtri_to_dtet.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.cxx>
+
+T8_EXTERN_C_BEGIN ();
 
 int
 t8_dtet_is_familypv (const t8_dtri_t *f[])
@@ -73,3 +75,5 @@ t8_dtet_is_familypv (const t8_dtri_t *f[])
           && coords2[dir3] == coords0[dir3] && f[7]->x == f[0]->x + inc && f[7]->y == f[0]->y + inc
           && f[7]->z == f[0]->z + inc);
 }
+
+T8_EXTERN_C_END ();

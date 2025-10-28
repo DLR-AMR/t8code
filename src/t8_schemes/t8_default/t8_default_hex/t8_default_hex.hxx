@@ -27,11 +27,13 @@
 #define T8_DEFAULT_HEX_HXX
 
 #include <p8est.h>
+#include <p8est_bits.h>
 #include <t8_element.h>
 #include <t8_schemes/t8_default/t8_default_hex/t8_dhex.h>
-#include <t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
+#include <t8_types/t8_vec.hxx>
+#include <t8_vector_helper/t8_zip.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
 class t8_scheme;
@@ -515,39 +517,90 @@ class t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_d
    * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and
    * L the maximum refinement level.
    * All element vertices have integer coordinates in this cube.
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many integers as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
+   * \param [in] elem   The element to be considered.
+   * \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords An array of at least as many integers as the element's dimension
+   *                    whose entries will be filled with the coordinates of \a vertex.
    */
-  void
-  element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const;
+  static void
+  element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) noexcept
+  {
+    const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
+
+    T8_ASSERT (0 <= vertex && vertex < 8);
+    /* Get the length of the quadrant */
+    const int len = P8EST_QUADRANT_LEN (q1->level);
+    /* Compute the x, y and z coordinates of the vertex depending on the
+   * vertex number */
+    coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
+    coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
+    coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
+  }
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used.
+   * \param [in] elem      The element.
+   * \param [in] vertex    The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords   A t8_point with at least the same dimension as the element's dimension
+   *                       whose entries will be filled with the coordinates of \a vertex.
+   * \tparam TOutCoords    A t8_point with at least the same dimension as the element's dimension
+   * \warning              \a coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
+   *                       all coords might be used.
    */
-  void
-  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
+  template <T8PointType TOutCoords>
+  static void
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, TOutCoords &coords) noexcept
+  {
+    assert_coord_dimensionality (coords);
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (0 <= vertex && vertex < 8);
 
-  /** Convert points in the reference space of an element to points in the
+    int coords_int[3];
+    element_get_vertex_integer_coords (elem, vertex, coords_int);
+
+    /* We divide the integer coordinates by the root length of the hex
+   * to obtain the reference coordinates. */
+    coords[0] = coords_int[0] / (double) P8EST_ROOT_LEN;
+    coords[1] = coords_int[1] / (double) P8EST_ROOT_LEN;
+    coords[2] = coords_int[2] / (double) P8EST_ROOT_LEN;
+  }
+
+  /** Converts points in the reference space of an element to points in the
    *  reference space of the tree.
    *
    * \param [in] elem         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
-   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the points in the
-   *                          reference space of the tree.
+   * \param [out] out_coords  The coordinates of the point in the reference space of the tree. Has to be at least the same size as \a ref_coords.
+   * \tparam TRefCoords       Container holding t8_point with atleast the same dimension as the element.
+   * \tparam TOutCoords       Container holding t8_point with atleast the same dimension as the element.
    */
-  void
-  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                double *out_coords) const;
+  template <T8PointContainerType TRefCoords, T8PointContainerType TOutCoords>
+  static void
+  element_get_reference_coords (const t8_element_t *elem, const TRefCoords &ref_coords, TOutCoords &out_coords) noexcept
+  {
+    assert_coord_container_dimensionality (ref_coords);
+    assert_coord_container_dimensionality (out_coords);
+    T8_ASSERT (std::ranges::size (ref_coords) <= std::ranges::size (out_coords));
+    const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
+
+    /* Get the length of the quadrant */
+    const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
+
+    for (auto &[coord_in, coord_out] : std::ranges::views::zip (ref_coords, out_coords)) {
+      /* Compute the x, y and z coordinates of the point depending on the
+       * reference coordinates */
+      coord_out[0] = q1->x + coord_in[0] * len;
+      coord_out[1] = q1->y + coord_in[1] * len;
+      coord_out[2] = q1->z + coord_in[2] * len;
+
+      /* We divide the integer coordinates by the root length of the hex
+       * to obtain the reference coordinates. */
+      coord_out[0] /= (double) P8EST_ROOT_LEN;
+      coord_out[1] /= (double) P8EST_ROOT_LEN;
+      coord_out[2] /= (double) P8EST_ROOT_LEN;
+    }
+  }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.
@@ -571,8 +624,12 @@ class t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_d
    * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
-  int
-  element_is_valid (const t8_element_t *element) const;
+  static int
+  element_is_valid (const t8_element_t *element) noexcept
+  {
+    return p8est_quadrant_is_extended ((const p8est_quadrant_t *) element)
+           && T8_QUAD_GET_TDIM ((const p8est_quadrant_t *) element) == 3;
+  }
 
   /**
   * Print a given element. For a example for a triangle print the coordinates

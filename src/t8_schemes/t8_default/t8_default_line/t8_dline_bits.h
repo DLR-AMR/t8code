@@ -237,42 +237,6 @@ t8_dline_first_descendant (const t8_dline_t *line, t8_dline_t *desc, int level);
 void
 t8_dline_last_descendant (const t8_dline_t *line, t8_dline_t *desc, int level);
 
-/** Compute the first or second vertex of a line.
- * \param [in] line     Line whose vertex is computed.
- * \param [in] vertex   The number of the vertex of \a line
- * \param [out] coords   The coordinates of the computed vertex
- */
-void
-t8_dline_vertex_integer_coords (const t8_dline_t *line, const int vertex, int coords[]);
-
-/** Compute the coordinates of a vertex of a line when the 
- * tree (level 0 line) is embedded in [0,1]^1.
- * \param [in] line    Input line.
- * \param [in] vertex The number of the vertex.
- * \param [out] coordinates An array of 1 double that
- * 		     will be filled with the reference coordinates of the vertex.
- */
-void
-t8_dline_vertex_ref_coords (const t8_dline_t *line, const int vertex, double coordinates[1]);
-
-/** Convert points in the reference space of a line element to points in the
- *  reference space of the tree (level 0) embedded in [0,1]^1.
- * \param [in]  line       Input line.
- * \param [in]  ref_coords The reference coordinates in the line
- *                         (\a num_coords times \f$ [0,1]^1 \f$)
- * \param [in]  num_coords Number of coordinates to evaluate
- * \param [in]  skip_coords Only used for batch computation of prisms.
- *                          In all other cases 0.
- *                          Skip coordinates in the \a ref_coords and
- *                          \a out_coords array.
- * \param [out] out_coords An array of \a num_coords x 1 x double that
- * 		                     will be filled with the reference coordinates
- *                         of the points on the line.
- */
-void
-t8_dline_compute_reference_coords (const t8_dline_t *line, const double *ref_coords, const size_t num_coords,
-                                   const size_t skip_coords, double *out_coords);
-
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Pointer to a line element whose id will be computed.
  * \param [in] level Refinement level of the line element.

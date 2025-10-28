@@ -22,11 +22,13 @@
 
 #ifndef T8_DTRI_TO_DTET
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 #else
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #endif
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
+
+T8_EXTERN_C_BEGIN ();
 
 typedef int8_t t8_dtri_cube_id_t;
 
@@ -56,8 +58,8 @@ compute_cubeid (const t8_dtri_t *element, int level)
   return id;
 }
 
-/* A routine to compute the type of t's ancestor of level "level", if its type at an intermediate level is already 
- * known. If "level" equals t's level then t's type is returned. It is not allowed to call this function with "level" 
+/* A routine to compute the type of t's ancestor of level "level", if its type at an intermediate level is already
+ * known. If "level" equals t's level then t's type is returned. It is not allowed to call this function with "level"
  * greater than t->level. This method runs in O(t->level - level).
  */
 static t8_dtri_type_t
@@ -85,8 +87,8 @@ compute_type_ext (const t8_dtri_t *element, int level, t8_dtri_type_t known_type
   return type;
 }
 
-/* A routine to compute the type of t's ancestor of level "level". If "level" equals t's level then t's type is 
- * returned. It is not allowed to call this function with "level" greater than t->level. This method runs in 
+/* A routine to compute the type of t's ancestor of level "level". If "level" equals t's level then t's type is
+ * returned. It is not allowed to call this function with "level" greater than t->level. This method runs in
  * O(t->level - level).
  */
 static t8_dtri_type_t
@@ -285,171 +287,6 @@ t8_dtri_ancestor (const t8_dtri_t *element, int level, t8_dtri_t *ancestor)
   ancestor->level = level;
 }
 
-/* Compute the coordinates of a given vertex of a triangle/tet */
-void
-t8_dtri_compute_integer_coords (const t8_dtri_t *element, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
-{
-  /* Calculate the vertex coordinates of a triangle/tetrahedron in relation to its orientation. Orientations are 
-   * described here: https://doi.org/10.1137/15M1040049
-   * 1---------------------2
-   * |   orientation     /  2
-   * |       1         /  / |
-   * |               /  /   |
-   * |             /  /     |
-   * |           /  /       |
-   * |         /  /         |
-   * |       /  /           |
-   * |     /  /             |
-   * |   /  /  orientation  |
-   * | /  /        0        |
-   * 0  /                   |
-   *   0--------------------1
-   *
-   *   y
-   *   ^
-   *   |
-   *   z--> x
-   */
-  t8_dtri_type_t type;
-  int ei;
-#ifdef T8_DTRI_TO_DTET
-  int ej;
-#endif
-  t8_dtri_coord_t h;
-  T8_ASSERT (0 <= vertex && vertex < T8_DTRI_FACES);
-
-  type = element->type;
-  h = T8_DTRI_LEN (element->level);
-#ifndef T8_DTRI_TO_DTET
-  ei = type;
-#else
-  ei = type / 2;
-  ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
-#endif
-
-  coordinates[0] = element->x;
-  coordinates[1] = element->y;
-#ifdef T8_DTRI_TO_DTET
-  coordinates[2] = element->z;
-#endif
-  if (vertex == 0) {
-    return;
-  }
-  coordinates[ei] += h;
-#ifndef T8_DTRI_TO_DTET
-  if (vertex == 2) {
-    coordinates[1 - ei] += h;
-    return;
-  }
-#else
-  if (vertex == 2) {
-    coordinates[ej] += h;
-    return;
-  }
-  if (vertex == 3) {
-    coordinates[(ei + 1) % 3] += h;
-    coordinates[(ei + 2) % 3] += h;
-  }
-  /* done 3D */
-#endif
-}
-
-void
-t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *element, const int vertex, double coordinates[T8_DTRI_DIM])
-{
-  int coords_int[T8_DTRI_DIM];
-  T8_ASSERT (0 <= vertex && vertex < T8_DTRI_CORNERS);
-
-  t8_dtri_compute_integer_coords (element, vertex, coords_int);
-  /* Since the integer coordinates are coordinates w.r.t to
-   * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
-   * to divide them by the root length. */
-  coordinates[0] = coords_int[0] / (double) T8_DTRI_ROOT_LEN;
-  coordinates[1] = coords_int[1] / (double) T8_DTRI_ROOT_LEN;
-#ifdef T8_DTRI_TO_DTET
-  coordinates[2] = coords_int[2] / (double) T8_DTRI_ROOT_LEN;
-#endif
-}
-
-void
-t8_dtri_compute_reference_coords (const t8_dtri_t *element, const double *ref_coords, const size_t num_coords,
-#ifndef T8_DTRI_TO_DTET
-                                  const size_t skip_coords,
-#endif
-                                  double *out_coords)
-{
-  /* Calculate the reference coordinates of a triangle/tetrahedron in
-   * relation to its orientation. Orientations are described here:
-   * https://doi.org/10.1137/15M1040049
-   * 1---------------------2
-   * |   orientation     /  2
-   * |       1         /  / |
-   * |               /  /   |
-   * |             /  /     |
-   * |           /  /       |
-   * |         /  /         |
-   * |       /  /           |
-   * |     /  /             |
-   * |   /  /  orientation  |
-   * | /  /        0        |
-   * 0  /                   |
-   *   0--------------------1
-   *
-   *   y
-   *   ^
-   *   |
-   *   z--> x
-   */
-  T8_ASSERT (ref_coords != NULL);
-
-  t8_dtri_type_t type;
-  t8_dtri_coord_t h;
-
-  type = element->type;
-  h = T8_DTRI_LEN (element->level);
-#ifndef T8_DTRI_TO_DTET
-  const int tri_orientation = type;
-#else
-  /* These integers define the sequence, in which the ref_coords are added
-   * to the out_coords */
-  const int tet_orientation0 = type / 2;
-  const int tet_orientation1 = (tet_orientation0 + ((type % 2 == 0) ? 1 : 2)) % 3;
-  const int tet_orientation2 = (tet_orientation0 + ((type % 2 == 0) ? 2 : 1)) % 3;
-#endif
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    /* offset defines, how many coordinates to skip in an iteration. */
-#ifndef T8_DTRI_TO_DTET
-    const size_t offset = (2 + skip_coords) * coord;
-    const size_t offset_3d = 3 * coord;
-#else
-    const size_t offset = 3 * coord;
-#endif
-    out_coords[offset + 0] = element->x;
-    out_coords[offset + 1] = element->y;
-#ifdef T8_DTRI_TO_DTET
-    out_coords[offset + 2] = element->z;
-#endif
-#ifndef T8_DTRI_TO_DTET
-    out_coords[offset + tri_orientation] += h * ref_coords[offset_3d + 0];
-    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset_3d + 1];
-#else
-    out_coords[offset + tet_orientation0] += h * ref_coords[offset + 0];
-    out_coords[offset + tet_orientation1] += h * ref_coords[offset + 1];
-    out_coords[offset + tet_orientation2] += h * ref_coords[offset + 2];
-
-    /* done 3D */
-#endif
-    /* Since the integer coordinates are coordinates w.r.t to
-     * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
-     * to divide them by the root length. */
-    out_coords[offset + 0] /= (double) T8_DTRI_ROOT_LEN;
-    out_coords[offset + 1] /= (double) T8_DTRI_ROOT_LEN;
-#ifdef T8_DTRI_TO_DTET
-    out_coords[offset + 2] /= (double) T8_DTRI_ROOT_LEN;
-#endif
-  }
-}
-
 /* Compute the coordinates of each vertex of a triangle/tet */
 void
 t8_dtri_compute_all_coords (const t8_dtri_t *element, t8_dtri_coord_t coordinates[T8_DTRI_FACES][T8_DTRI_DIM])
@@ -520,7 +357,7 @@ t8_dtri_compute_all_coords (const t8_dtri_t *element, t8_dtri_coord_t coordinate
     int ivertex;
     t8_dtri_coord_t coords[T8_DTRI_DIM];
     for (ivertex = 0; ivertex < T8_DTRI_FACES; ivertex++) {
-      t8_dtri_compute_integer_coords (element, ivertex, coords);
+      t8_default_scheme_tri::element_get_vertex_integer_coords (element, ivertex, coords);
       T8_ASSERT (coords[0] == coordinates[ivertex][0]);
       T8_ASSERT (coords[1] == coordinates[ivertex][1]);
 #ifdef T8_DTRI_TO_DTET
@@ -562,7 +399,7 @@ t8_dtri_child (const t8_dtri_t *element, int childid, t8_dtri_t *child)
     vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    t8_dtri_compute_integer_coords (element, vertex, t_coordinates);
+    t8_default_scheme_tri::element_get_vertex_integer_coords (element, vertex, t_coordinates);
     c->x = (element->x + t_coordinates[0]) >> 1;
     c->y = (element->y + t_coordinates[1]) >> 1;
 #ifdef T8_DTRI_TO_DTET
@@ -1776,3 +1613,5 @@ t8_dtri_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_
     SC_CHECK_MPI (mpiret);
   }
 }
+
+T8_EXTERN_C_END ();

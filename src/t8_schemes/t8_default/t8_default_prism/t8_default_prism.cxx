@@ -244,7 +244,7 @@ t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_elem
   t8_dprism_extrude_face (face, elem, root_face);
   T8_ASSERT (element_is_valid (elem));
   /* For the quad-faces of prisms it holds that only the corner-children touch the faces of the parent and
-   * their face-numbers coincide. 
+   * their face-numbers coincide.
    * for the triangular-faces (bottom and top) the faces always have the same number and we can return the
    * root face-number as well. */
   return root_face;
@@ -396,29 +396,6 @@ t8_default_scheme_prism::element_get_anchor (const t8_element_t *elem, int ancho
   anchor[2] = prism->line.x / T8_DLINE_ROOT_LEN * T8_DPRISM_ROOT_LEN;
 }
 
-void
-t8_default_scheme_prism::element_get_vertex_integer_coords (const t8_element_t *element, int vertex, int coords[]) const
-{
-  T8_ASSERT (element_is_valid (element));
-  t8_dprism_vertex_integer_coords ((const t8_dprism_t *) element, vertex, coords);
-}
-
-void
-t8_default_scheme_prism::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                              double coords[]) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dprism_vertex_ref_coords ((const t8_dprism_t *) elem, vertex, coords);
-}
-
-void
-t8_default_scheme_prism::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                       const size_t num_coords, double *out_coords) const
-{
-  T8_ASSERT (element_is_valid (elem));
-  t8_dprism_compute_reference_coords ((const t8_dprism_t *) elem, ref_coords, num_coords, out_coords);
-}
-
 t8_linearidx_t
 t8_default_scheme_prism::element_get_linear_id (const t8_element_t *elem, int level) const
 {
@@ -434,14 +411,6 @@ t8_default_scheme_prism::refines_irregular (void) const
 }
 
 #if T8_ENABLE_DEBUG
-
-int
-t8_default_scheme_prism::element_is_valid (const t8_element_t *element) const
-{
-  T8_ASSERT (element != NULL);
-  return t8_dprism_is_valid ((const t8_dprism_t *) element);
-}
-
 void
 t8_default_scheme_prism::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
@@ -451,7 +420,6 @@ t8_default_scheme_prism::element_to_string (const t8_element_t *elem, char *debu
   snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i", prism->tri.x, prism->tri.y,
             prism->line.x, prism->tri.type, prism->tri.level);
 }
-
 #endif /* T8_ENABLE_DEBUG */
 
 void
