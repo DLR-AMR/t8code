@@ -47,7 +47,6 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  // Check mesh with custom defined competence.
   t8_interface_mesh<t8_interface_element<>> mesh = t8_interface_mesh<t8_interface_element<>> (forest);
 
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
@@ -65,6 +64,13 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       t8_3D_vec centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());
       EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
+      // --- Compare vertex coordinates. ---
+      auto vertex_coordinates = mesh_iterator->get_vertex_coordinates ();
+      for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
+        t8_3D_vec vertex_forest;
+        t8_forest_element_coordinate (forest, itree, elem, ivertex, vertex_forest.data ());
+        EXPECT_EQ (vertex_forest, vertex_coordinates[ivertex]);
+      }
       // -- Evolve mesh iterator. ---
       mesh_iterator++;
     }
