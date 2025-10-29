@@ -22,16 +22,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_cache_competence.cxx
- * Checks that the cache os actually used if the element gets a cache competence as template parameter. 
+ * Checks that the cache is actually used if the element gets a cache competence as template parameter. 
  */
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <t8.h>
 
-#include <t8_mesh_interface/t8_interface_mesh.hxx>
-#include <t8_mesh_interface/t8_interface_element.hxx>
-#include <t8_mesh_interface/t8_interface_competences.hxx>
+#include <t8_mesh_handle/mesh.hxx>
+#include <t8_mesh_handle/element.hxx>
+#include <t8_mesh_handle/competences.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -39,9 +39,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
-/** Child class of t8_cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
+/** Child class of \ref cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
-struct t8_cache_vertex_coordinates_overwrite: public t8_cache_vertex_coordinates<TUnderlying>
+struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_coordinates<TUnderlying>
 {
  public:
   /** Overwrites the cache variable for the vertex coordinates.
@@ -54,9 +54,9 @@ struct t8_cache_vertex_coordinates_overwrite: public t8_cache_vertex_coordinates
   }
 };
 
-/** Child class of t8_cache_centroid that allows to modify the cache variable for test purposes. */
+/** Child class of \ref cache_centroid that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
-struct t8_cache_centroid_overwrite: public t8_cache_centroid<TUnderlying>
+struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlying>
 {
  public:
   /** Overwrites the cache variable for the centroid.
@@ -91,7 +91,7 @@ class t8_gtest_cache_competence: public testing::Test {
   int level;
 };
 
-/** Use child class of t8_cache_vertex_coordinates class to check that the cache is actually set 
+/** Use child class of \ref cache_vertex_coordinates class to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -99,8 +99,8 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  using mesh_element = t8_interface_element<t8_cache_vertex_coordinates_overwrite>;
-  t8_interface_mesh<mesh_element> mesh = t8_interface_mesh<mesh_element> (forest);
+  using mesh_element = t8_mesh_handle::element<cache_vertex_coordinates_overwrite>;
+  t8_mesh_handle::mesh<mesh_element> mesh = t8_mesh_handle::mesh<mesh_element> (forest);
   EXPECT_TRUE (mesh_element::has_vertex_cache ());
   EXPECT_FALSE (mesh_element::has_centroid_cache ());
 
@@ -125,7 +125,7 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
   }
 }
 
-/** Use child class of t8_cache_centroid class to check that the cache is actually set 
+/** Use child class of \ref cache_centroid class to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -133,8 +133,8 @@ TEST_F (t8_gtest_cache_competence, cache_centroid)
 {
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  using mesh_element = t8_interface_element<t8_cache_centroid_overwrite>;
-  t8_interface_mesh<mesh_element> mesh = t8_interface_mesh<mesh_element> (forest);
+  using mesh_element = t8_mesh_handle::element<cache_centroid_overwrite>;
+  t8_mesh_handle::mesh<mesh_element> mesh = t8_mesh_handle::mesh<mesh_element> (forest);
   EXPECT_FALSE (mesh_element::has_vertex_cache ());
   EXPECT_TRUE (mesh_element::has_centroid_cache ());
 

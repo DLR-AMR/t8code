@@ -20,12 +20,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_interface_element.hxx
- * Definition of the elements used in the mesh class of the interface.
+/** \file element.hxx
+ * Definition of the elements used in the mesh class.
  */
 
-#ifndef T8_INTERFACE_ELEMENT_HXX
-#define T8_INTERFACE_ELEMENT_HXX
+#ifndef T8_ELEMENT_HXX
+#define T8_ELEMENT_HXX
 
 #include <t8.h>
 #include <t8_element.h>
@@ -37,19 +37,21 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <array>
 #include <vector>
 
-/* Forward declaration of the mesh class of the interface.
+namespace t8_mesh_handle
+{
+/* Forward declaration of the mesh class of the handle.
  */
 template <class TMeshElement>
-class t8_interface_mesh;
+class mesh;
 
 /** 
- * Class for the elements of the mesh interface. 
+ * Class for the elements of the mesh handle. 
  * The element without specified template parameters provides default implementations for basic functionality 
  * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
  * the function is called. 
- * Use the competences defined in t8_element_competences.hxx as template parameter to cache the functionality instead of 
+ * Use the competences defined in competences.hxx as template parameter to cache the functionality instead of 
  * recalculating in every function call.
- * To add functionality to the element, you can simply write you own competence class and give it as a template parameter.
+ * To add functionality to the element, you can also simply write your own competence class and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 
  *
  * The inheritance pattern is inspired by the \ref T8Type class (which also uses the CRTP).
@@ -60,8 +62,8 @@ class t8_interface_mesh;
  * \tparam TCompetence The competences you want to add to the default functionality of the element.
  */
 template <template <typename> class... TCompetence>
-class t8_interface_element: public TCompetence<t8_interface_element<TCompetence...>>... {
-  using SelfType = t8_interface_element<TCompetence...>;
+class element: public TCompetence<element<TCompetence...>>... {
+  using SelfType = element<TCompetence...>;
 
  private:
   // --- Variables to check which functionality is defined in TCompetence. ---
@@ -95,13 +97,13 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
 
  public:
   /**
-   * Constructor of the elements of the mesh interface.
-   * \param [in] interface_mesh      Pointer to the mesh the element should belong to.
-   * \param [in] tree_id             The tree id of the element in the forest defining the mesh.
-   * \param [in] element_id          The element id of the element in the forest defining the mesh.
+   * Constructor for an element of a mesh.
+   * \param [in] mesh           Pointer to the mesh the element should belong to.
+   * \param [in] tree_id        The tree id of the element in the forest defining the mesh.
+   * \param [in] element_id     The element id of the element in the forest defining the mesh.
    */
-  t8_interface_element (t8_interface_mesh<SelfType>* interface_mesh, t8_locidx_t tree_id, t8_locidx_t element_id)
-    : m_interface_mesh (interface_mesh), m_tree_id (tree_id), m_element_id (element_id)
+  element (mesh<SelfType>* mesh, t8_locidx_t tree_id, t8_locidx_t element_id)
+    : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id)
   {
   }
 
@@ -137,7 +139,7 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
   {
     const t8_eclass_t tree_class = get_tree_class ();
     const t8_element_t* element = get_element ();
-    return t8_forest_get_scheme (m_interface_mesh->m_forest)->element_get_level (tree_class, element);
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_level (tree_class, element);
   }
 
   /**
@@ -157,12 +159,12 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
     // Calculate the vertex coordinates.
     const t8_element_t* element = get_element ();
     const int num_corners
-      = t8_forest_get_scheme (m_interface_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
+      = t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
     std::vector<t8_3D_point> vertex_coordinates;
     vertex_coordinates.reserve (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
       t8_3D_point vertex;
-      t8_forest_element_coordinate (m_interface_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
+      t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
       vertex_coordinates.push_back (vertex);
     }
     // Fill the cache in the cached version.
@@ -188,7 +190,7 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
       }
     }
     t8_3D_point coordinates;
-    t8_forest_element_centroid (m_interface_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
+    t8_forest_element_centroid (m_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
     // Fill the cache in the cached version.
     if constexpr (centroid_cache_exists) {
       this->m_centroid = coordinates;
@@ -218,13 +220,13 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
   }
 
   /**
-   * Getter for the mesh of the interface to which the mesh element is belonging.
+   * Getter for the mesh to which the mesh element is belonging.
    * \return Reference to the mesh.
    */
-  const t8_interface_mesh<SelfType>*
-  get_interface_mesh () const
+  const mesh<SelfType>*
+  get_mesh () const
   {
-    return m_interface_mesh;
+    return m_mesh;
   }
 
  private:
@@ -236,7 +238,7 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
   const t8_element_t*
   get_element () const
   {
-    return t8_forest_get_leaf_element_in_tree (m_interface_mesh->m_forest, m_tree_id, m_element_id);
+    return t8_forest_get_leaf_element_in_tree (m_mesh->m_forest, m_tree_id, m_element_id);
   }
 
   /**
@@ -246,12 +248,13 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
   t8_eclass_t
   get_tree_class () const
   {
-    return t8_forest_get_tree_class (m_interface_mesh->m_forest, m_tree_id);
+    return t8_forest_get_tree_class (m_mesh->m_forest, m_tree_id);
   }
 
-  t8_interface_mesh<SelfType>* m_interface_mesh; /**< Pointer to the mesh the element is defined for. */
-  t8_locidx_t m_tree_id;                         /**< The tree id of the element in the forest defined in the mesh. */
+  mesh<SelfType>* m_mesh;   /**< Pointer to the mesh the element is defined for. */
+  t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
   t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
 };
 
-#endif /* !T8_INTERFACE_ELEMENT_HXX */
+}  // namespace t8_mesh_handle
+#endif /* !T8_ELEMENT_HXX */

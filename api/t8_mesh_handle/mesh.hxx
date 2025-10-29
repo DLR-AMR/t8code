@@ -20,40 +20,43 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_interface_mesh.hxx
- * Definition of the mesh class of the interface.
+/** \file mesh.hxx
+ * Definition of the mesh class of the handle.
  */
 
-#ifndef T8_INTERFACE_MESH_HXX
-#define T8_INTERFACE_MESH_HXX
+#ifndef T8_MESH_HXX
+#define T8_MESH_HXX
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_mesh_interface/t8_interface_element.hxx>
+#include <t8_mesh_handle/element.hxx>
 #include <iterator>
 #include <memory>
 #include <vector>
 
+namespace t8_mesh_handle
+{
+
 /**
- * Wrapper for a forest that enables it to be handled as an interface mesh object.
- * \tparam TMeshElement The element class that should be used for the elements in the mesh interface class. 
+ * Wrapper for a forest that enables it to be handled as a simple mesh object.
+ * \tparam TMeshElement The element class that should be used for the elements in the mesh class. 
  *                                  This template parameter defines which element functionality is available 
  *                                  and if it is cached or calculated.
  */
-template <class TMeshElement = t8_interface_element<>>
-class t8_interface_mesh {
+template <class TMeshElement = element<>>
+class mesh {
  public:
   // Declare mesh element as friend such that private members (e.g. the forest) can be accessed.
   friend TMeshElement;
 
-  using t8_mesh_iterator = typename std::vector<TMeshElement>::iterator;
-  using t8_mesh_const_iterator = typename std::vector<TMeshElement>::const_iterator;
+  using mesh_iterator = typename std::vector<TMeshElement>::iterator;
+  using mesh_const_iterator = typename std::vector<TMeshElement>::const_iterator;
 
   /** 
-   * Constructor for a mesh of the interface. 
+   * Constructor for a mesh of the handle. 
    * \param [in] input_forest The forest from which the mesh should be created. 
    */
-  t8_interface_mesh (t8_forest_t input_forest): m_forest (input_forest)
+  mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
     update_elements ();
   }
@@ -72,7 +75,7 @@ class t8_interface_mesh {
    * Returns an iterator to the first (local) mesh element.
    * \return Iterator to the first (local) mesh element.
    */
-  t8_mesh_iterator
+  mesh_iterator
   begin ()
   {
     return m_elements.begin ();
@@ -82,7 +85,7 @@ class t8_interface_mesh {
    * Returns an iterator to a mesh element following the last (local) element of the mesh.
    * \return Iterator to the mesh element following the last (local) element of the mesh.
    */
-  t8_mesh_iterator
+  mesh_iterator
   end ()
   {
     return m_elements.end ();
@@ -92,7 +95,7 @@ class t8_interface_mesh {
    * Const version of \ref begin.
    * \return Constant iterator to the first (local) mesh element.
    */
-  t8_mesh_const_iterator
+  mesh_const_iterator
   cbegin () const
   {
     return m_elements.cbegin ();
@@ -102,7 +105,7 @@ class t8_interface_mesh {
    * Const version of \ref end.
    * \return Constant iterator to the mesh element following the last (local) element of the mesh.
    */
-  t8_mesh_const_iterator
+  mesh_const_iterator
   cend () const
   {
     return m_elements.cend ();
@@ -165,4 +168,5 @@ class t8_interface_mesh {
   std::vector<TMeshElement> m_elements; /**< Vector storing the mesh elements. */
 };
 
-#endif /* !T8_INTERFACE_MESH_HXX */
+}  // namespace t8_mesh_handle
+#endif /* !T8_MESH_HXX */

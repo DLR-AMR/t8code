@@ -30,9 +30,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <test/t8_gtest_macros.hxx>
 #include <t8.h>
 
-#include <t8_mesh_interface/t8_interface_mesh.hxx>
-#include <t8_mesh_interface/t8_interface_element.hxx>
-#include <t8_mesh_interface/t8_interface_competences.hxx>
+#include <t8_mesh_handle/mesh.hxx>
+#include <t8_mesh_handle/element.hxx>
+#include <t8_mesh_handle/competences.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -47,7 +47,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  t8_interface_mesh<t8_interface_element<>> mesh = t8_interface_mesh<t8_interface_element<>> (forest);
+  t8_mesh_handle::mesh<t8_mesh_handle::element<>> mesh = t8_mesh_handle::mesh<t8_mesh_handle::element<>> (forest);
 
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   auto mesh_iterator = mesh.cbegin ();
