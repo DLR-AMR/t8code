@@ -129,7 +129,6 @@ class element: public TCompetence<element<TCompetence...>>... {
     return centroid_cache_exists;
   }
 
-
   /**
    * TODO
    */
@@ -228,16 +227,13 @@ class element: public TCompetence<element<TCompetence...>>... {
     t8_element_t** neighbors; /*< Neighboring elements. */
     t8_locidx_t* neighids;    /*< Neighboring elements ids. */
     t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
-    
 
-    t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, get_element (), &neighbors, face,
-                                   dual_faces, num_neighbors, &neighids, &neigh_class,
-                                   t8_forest_is_balanced (m_mesh->m_forest));
+    t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, get_element (), &neighbors, face, dual_faces,
+                                   num_neighbors, &neighids, &neigh_class, t8_forest_is_balanced (m_mesh->m_forest));
     std::vector<t8_locidx_t> neighbor_ids_vector (neighids, neighids + *num_neighbors);
     if (*num_neighbors > 0) {
       /* Free allocated memory. */
-      t8_forest_get_scheme (m_mesh->m_forest)
-        ->element_destroy (get_tree_class (), *num_neighbors, neighbors);
+      t8_forest_get_scheme (m_mesh->m_forest)->element_destroy (get_tree_class (), *num_neighbors, neighbors);
       T8_FREE (neighbors);
       T8_FREE (neighids);
     }

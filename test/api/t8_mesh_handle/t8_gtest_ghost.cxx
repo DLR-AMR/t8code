@@ -71,11 +71,11 @@ TEST_P (t8_mesh_handle_test, test_iterator)
 
   // --- Check default functionality. ---
   t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
-  EXPECT_EQ(mesh.get_local_num_ghosts (),t8_forest_get_num_ghosts (forest));
+  EXPECT_EQ (mesh.get_local_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   // Iterate with the iterator over all mesh elements and check some functionality.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
-    EXPECT_FALSE(it->is_ghost_element ());
+    EXPECT_FALSE (it->is_ghost_element ());
     auto centroid = it->get_centroid ();
     for (const auto& coordinate : centroid) {
       EXPECT_GE (1, coordinate);
@@ -90,14 +90,15 @@ TEST_P (t8_mesh_handle_test, test_iterator)
     }
   }
 
-  for (int ighost=mesh.get_local_num_elements (); ighost<mesh.get_local_num_elements ()+mesh.get_local_num_ghosts (); ++ighost) {
-    
-    if (auto*  ghost = static_cast<t8_mesh_handle::ghost_element<>*>(&mesh[ighost])) {
-          EXPECT_TRUE(ghost->is_ghost_element ());
+  for (int ighost = mesh.get_local_num_elements ();
+       ighost < mesh.get_local_num_elements () + mesh.get_local_num_ghosts (); ++ighost) {
+
+    if (auto* ghost = static_cast<t8_mesh_handle::ghost_element<>*> (&mesh[ighost])) {
+      EXPECT_TRUE (ghost->is_ghost_element ());
     }
 
-    // Idea: virtual class element with childs mesh_element and ghost_element.
-    // Alternative is to let the user choose the right function ghost or not ghost with []. 
+    // Idea: virtual class element with children mesh_element and ghost_element.
+    // Alternative is to let the user choose the right function ghost or not ghost with [].
 
     // auto centroid = it->get_centroid ();
     // for (const auto& coordinate : centroid) {
@@ -112,7 +113,6 @@ TEST_P (t8_mesh_handle_test, test_iterator)
     //   }
     // }
   }
-
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_handle_test, testing::Combine (AllEclasses, testing::Range (2, 3)));

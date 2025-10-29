@@ -34,14 +34,14 @@
 
 namespace t8_mesh_handle
 {
-    /* Forward declaration of the mesh class of the handle.
+/* Forward declaration of the mesh class of the handle.
  */
 template <template <typename> class... TCompetence>
 class mesh;
 
 template <template <typename> class... TCompetence>
 class ghost_element: public element<TCompetence...> {
-    public:
+ public:
   using Base = element<TCompetence...>;
 
   ghost_element (mesh<TCompetence...>* mesh, t8_locidx_t tree_id, t8_locidx_t lghost_tree_id, t8_locidx_t element_id)
@@ -49,7 +49,7 @@ class ghost_element: public element<TCompetence...> {
   {
   }
 
-   /**
+  /**
    * TODO
    */
   static constexpr bool
