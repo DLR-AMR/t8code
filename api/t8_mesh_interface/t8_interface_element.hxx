@@ -145,7 +145,7 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
    * This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
-  std::vector<t8_3D_vec>
+  std::vector<t8_3D_point>
   get_vertex_coordinates () const
   {
     // Check if we have a cached version and if the cache has already been filled.
@@ -158,10 +158,10 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
     const t8_element_t* element = get_element ();
     const int num_corners
       = t8_forest_get_scheme (m_interface_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
-    std::vector<t8_3D_vec> vertex_coordinates;
+    std::vector<t8_3D_point> vertex_coordinates;
     vertex_coordinates.reserve (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
-      t8_3D_vec vertex;
+      t8_3D_point vertex;
       t8_forest_element_coordinate (m_interface_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
       vertex_coordinates.push_back (vertex);
     }
@@ -178,7 +178,7 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
-  t8_3D_vec
+  t8_3D_point
   get_centroid () const
   {
     // Check if we have a cached version and if the cache has already been filled.
@@ -187,7 +187,7 @@ class t8_interface_element: public TCompetence<t8_interface_element<TCompetence.
         return this->m_centroid.value ();
       }
     }
-    t8_3D_vec coordinates;
+    t8_3D_point coordinates;
     t8_forest_element_centroid (m_interface_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
     // Fill the cache in the cached version.
     if constexpr (centroid_cache_exists) {

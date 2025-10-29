@@ -55,23 +55,23 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {
       const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
-      //-- Compare elements. ---
+      // --- Compare elements. ---
       EXPECT_EQ (mesh_iterator->get_tree_id (), itree);
       EXPECT_EQ (mesh_iterator->get_element_id (), ielem);
-      //--- Compare level. ---
+      // --- Compare level. ---
       EXPECT_EQ (mesh_iterator->get_level (), scheme->element_get_level (tree_class, elem));
       // --- Compare centroid. ---
-      t8_3D_vec centroid;
+      t8_3D_point centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());
       EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
       // --- Compare vertex coordinates. ---
       auto vertex_coordinates = mesh_iterator->get_vertex_coordinates ();
       for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-        t8_3D_vec vertex_forest;
+        t8_3D_point vertex_forest;
         t8_forest_element_coordinate (forest, itree, elem, ivertex, vertex_forest.data ());
         EXPECT_EQ (vertex_forest, vertex_coordinates[ivertex]);
       }
-      // -- Evolve mesh iterator. ---
+      // --- Evolve mesh iterator. ---
       mesh_iterator++;
     }
   }

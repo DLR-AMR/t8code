@@ -65,7 +65,7 @@ struct t8_cache_vertex_coordinates: t8_crtp_operator<TUnderlying, t8_cache_verte
   }
 
  protected:
-  mutable std::vector<t8_3D_vec>
+  mutable std::vector<t8_3D_point>
     m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Empty vector if not filled. */
 };
 
@@ -88,7 +88,7 @@ struct t8_cache_centroid: t8_crtp_operator<TUnderlying, t8_cache_centroid>
   }
 
  protected:
-  mutable std::optional<t8_3D_vec>
+  mutable std::optional<t8_3D_point>
     m_centroid; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 
