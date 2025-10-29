@@ -465,8 +465,8 @@ template <T8VecType<3> TVecP1, T8VecType<3> TVecP2, T8VecType<3> TVecP3, T8VecTy
 static inline void
 t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNormal &normal)
 {
-  t8_3D_vec a;
-  t8_3D_vec b;
+  TVec a;
+  TVec b;
   std::transform (p2.begin (), p2.end (), p1.begin (), a.begin (), std::minus<double> ());
   std::transform (p3.begin (), p3.end (), p1.begin (), b.begin (), std::minus<double> ());
   t8_cross_3D (a, b, normal);
