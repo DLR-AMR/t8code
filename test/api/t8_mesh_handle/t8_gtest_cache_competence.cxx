@@ -99,8 +99,9 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  using mesh_element = t8_mesh_handle::element<cache_vertex_coordinates_overwrite>;
-  t8_mesh_handle::mesh<mesh_element> mesh = t8_mesh_handle::mesh<mesh_element> (forest);
+  using mesh_class = t8_mesh_handle::mesh<cache_vertex_coordinates_overwrite>;
+  using mesh_element =mesh_class::mesh_element;
+  mesh_class mesh = mesh_class (forest);
   EXPECT_TRUE (mesh_element::has_vertex_cache ());
   EXPECT_FALSE (mesh_element::has_centroid_cache ());
 
@@ -133,8 +134,9 @@ TEST_F (t8_gtest_cache_competence, cache_centroid)
 {
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  using mesh_element = t8_mesh_handle::element<cache_centroid_overwrite>;
-  t8_mesh_handle::mesh<mesh_element> mesh = t8_mesh_handle::mesh<mesh_element> (forest);
+  using mesh_class = t8_mesh_handle::mesh<cache_centroid_overwrite>;
+  using mesh_element =mesh_class::mesh_element;
+  mesh_class mesh = mesh_class (forest);
   EXPECT_FALSE (mesh_element::has_vertex_cache ());
   EXPECT_TRUE (mesh_element::has_centroid_cache ());
 
