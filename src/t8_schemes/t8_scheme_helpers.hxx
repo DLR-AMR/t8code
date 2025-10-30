@@ -39,6 +39,10 @@
 template <t8_eclass_t TEclass, class TUnderlyingEclassScheme>
 class t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme> {
  protected:
+  /**
+   * Default constructor which is only accessible by derived classes.
+   * This class cannot be constructed on its own.
+   */
   t8_scheme_helpers () noexcept {};
 
  public:
