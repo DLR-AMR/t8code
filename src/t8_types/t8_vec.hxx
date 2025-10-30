@@ -63,6 +63,30 @@ using t8_3D_vec = t8_vec<3>;
   */
 using t8_3D_vec_view = t8_vec_view<3>;
 
+/** Convenience function to create a vector view from a raw array.
+ *
+ * \tparam TDim            The dimension of the array.
+ * \param [in] ptr         The pointer to the array.
+ * \return                 The view.
+ */
+template <std::size_t TDim>
+constexpr t8_vec_view<TDim>
+make_t8_vec_view (double *ptr) noexcept
+{
+  return t8_vec_view<TDim> (std::span<double, TDim> (ptr, TDim));
+}
+
+/** Convenience function to create a 3D vector view from a raw array.
+ *
+ * \param [in] ptr         The pointer to the array.
+ * \return                 The view.
+ */
+inline t8_3D_vec_view
+make_t8_3D_vec_view (double *ptr) noexcept
+{
+  return make_t8_vec_view<3> (ptr);
+}
+
 /* -----------------------Concepts for t8_vec----------------------- */
 
 /** Type trait to check whether a given type is a t8_vec  */
@@ -128,6 +152,30 @@ using t8_3D_point = t8_point<3>;
 /** Type alias for a non-owning 3D point view.
   */
 using t8_3D_point_view = t8_point_view<3>;
+
+/** Convenience function to create a point view from a raw array.
+ *
+ * \tparam TDim            The dimension of the array.
+ * \param [in] ptr         The pointer to the array.
+ * \return                 The view.
+ */
+template <std::size_t TDim>
+constexpr t8_point_view<TDim>
+make_t8_point_view (double *ptr) noexcept
+{
+  return t8_point_view<TDim> (std::span<double, TDim> (ptr, TDim));
+}
+
+/** Convenience function to create a 3D point view from a raw array.
+ *
+ * \param [in] ptr         The pointer to the array.
+ * \return                 The view.
+ */
+inline t8_3D_point_view
+make_t8_3D_point_view (double *ptr) noexcept
+{
+  return make_t8_point_view<3> (ptr);
+}
 
 /* -----------------------Concepts for t8_point----------------------- */
 
