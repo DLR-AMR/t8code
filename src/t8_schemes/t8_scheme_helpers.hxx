@@ -24,8 +24,8 @@
  * Provides helper functions for the easier implementation of schemes.
  */
 
-#ifndef T8_SCHEME_HELPERS
-#define T8_SCHEME_HELPERS
+#ifndef T8_SCHEME_HELPERS_HXX
+#define T8_SCHEME_HELPERS_HXX
 
 #include <t8_element.h>
 #include <t8_types/t8_crtp.hxx>
@@ -61,4 +61,4 @@ class t8_scheme_helpers: public t8_crtp<TUnderlyingEclassScheme> {
   }
 };
 
-#endif /* T8_SCHEME_HELPERS */
+#endif /* T8_SCHEME_HELPERS_HXX */
