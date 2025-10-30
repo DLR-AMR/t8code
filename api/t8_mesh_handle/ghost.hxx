@@ -41,14 +41,17 @@ class mesh;
 
 template <template <typename> class... TCompetence>
 class ghost_element: public element<TCompetence...> {
- public:
   using Base = element<TCompetence...>;
+  using mesh_class = mesh<TCompetence...>;
+  friend mesh_class;
 
+ protected:
   ghost_element (mesh<TCompetence...>* mesh, t8_locidx_t tree_id, t8_locidx_t lghost_tree_id, t8_locidx_t element_id)
     : Base (mesh, tree_id, element_id), m_lghost_tree_id (lghost_tree_id)
   {
   }
 
+ public:
   /**
    * TODO
    */

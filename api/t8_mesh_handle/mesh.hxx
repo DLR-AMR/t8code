@@ -178,7 +178,7 @@ class mesh {
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_elements.emplace_back (this, itree, ielem);
+        m_elements.push_back (mesh_element (this, itree, ielem));
       }
     }
     update_ghost_elements ();
@@ -199,7 +199,7 @@ class mesh {
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_ghost_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_ghosts.emplace_back (this, num_loc_trees + itree, itree, ielem);
+        m_ghosts.push_back (mesh_ghost_element (this, num_loc_trees + itree, itree, ielem));
       }
     }
   }

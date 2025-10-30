@@ -65,6 +65,8 @@ class mesh;
 template <template <typename> class... TCompetence>
 class element: public TCompetence<element<TCompetence...>>... {
   using SelfType = element<TCompetence...>;
+  using mesh_class = mesh<TCompetence...>;
+  friend mesh_class;
 
  protected:
   // --- Variables to check which functionality is defined in TCompetence. ---
@@ -96,7 +98,6 @@ class element: public TCompetence<element<TCompetence...>>... {
   a function centroid_cache_filled. */
   static constexpr bool centroid_cache_exists = (false || ... || centroid_cache_defined<TCompetence> ());
 
- public:
   /**
    * Constructor for an element of a mesh.
    * \param [in] mesh           Pointer to the mesh the element should belong to.
@@ -108,6 +109,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   {
   }
 
+ public:
   // --- Functions to check if caches exist. ---
   /**
    * Function that checks if a cache for the vertex coordinates exists.
