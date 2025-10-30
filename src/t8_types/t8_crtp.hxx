@@ -38,7 +38,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
   * \note There is also a CRTP pattern for operators \ref t8_crtp_operator in \ref t8_operators.hxx.
   */
 template <typename TUnderlying>
-struct t8_crtp
+struct t8_crtp_basic
 {
   /**
     * Get the underlying type.

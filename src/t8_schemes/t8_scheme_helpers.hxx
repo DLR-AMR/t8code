@@ -37,7 +37,7 @@
   * \tparam TUnderlyingEclassScheme The scheme this helper class is adding functionality to.
   */
 template <t8_eclass_t TEclass, class TUnderlyingEclassScheme>
-class t8_scheme_helpers: public t8_crtp<TUnderlyingEclassScheme> {
+class t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme> {
  protected:
   t8_scheme_helpers () noexcept {};
 

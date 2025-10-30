@@ -38,7 +38,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \tparam TUnderlying The Underlying type.
  * \tparam crtpType    The type to add via CRTP.
  *
- * \note There is also the basic CRTP pattern \ref t8_crtp without nested templates in \ref t8_crtp.hxx.
+ * \note There is also the basic CRTP pattern \ref t8_crtp_basic without nested templates in \ref t8_crtp.hxx.
  *       Use this pattern only if the nested templates are needed.
  */
 template <typename TUnderlying, template <typename> class crtpType>
