@@ -80,8 +80,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
   // Check mesh with custom defined competence.
-  t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level>> mesh
-    = t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level>> (forest);
+  t8_mesh_handle::mesh<dummy_get_level> mesh = t8_mesh_handle::mesh<dummy_get_level> (forest);
 
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
@@ -89,12 +88,10 @@ TEST (t8_gtest_custom_competence, custom_competence)
   }
 
   // Test with two custom competences and a predefined competence.
-  t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>>
-    mesh_2competences
-    = t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>> (
-      forest);
+  using mesh_class = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  mesh_class mesh_more_competences = mesh_class (forest);
 
-  for (auto it = mesh_2competences.begin (); it != mesh_2competences.end (); ++it) {
+  for (auto it = mesh_more_competences.begin (); it != mesh_more_competences.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());

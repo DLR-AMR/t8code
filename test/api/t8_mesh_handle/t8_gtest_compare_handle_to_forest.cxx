@@ -47,7 +47,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  t8_mesh_handle::mesh<t8_mesh_handle::element<>> mesh = t8_mesh_handle::mesh<t8_mesh_handle::element<>> (forest);
+  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
 
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   auto mesh_iterator = mesh.cbegin ();
