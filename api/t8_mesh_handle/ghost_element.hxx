@@ -24,11 +24,11 @@
  * TODO
  */
 
-#ifndef T8_GHOST_HXX
-#define T8_GHOST_HXX
+#ifndef T8_GHOST_ELEMENT_HXX
+#define T8_GHOST_ELEMENT_HXX
 
 #include <t8.h>
-#include <t8_mesh_handle/element.hxx>
+#include <t8_mesh_handle/abstract_element.hxx>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
 
@@ -40,12 +40,11 @@ template <template <typename> class... TCompetence>
 class mesh;
 
 template <template <typename> class... TCompetence>
-class ghost_element: public element<TCompetence...> {
-  using Base = element<TCompetence...>;
+class ghost_element: public abstract_element<TCompetence...> {
+  using Base = abstract_element<TCompetence...>;
   using mesh_class = mesh<TCompetence...>;
   friend mesh_class;
 
- protected:
   ghost_element (mesh<TCompetence...>* mesh, t8_locidx_t tree_id, t8_locidx_t lghost_tree_id, t8_locidx_t element_id)
     : Base (mesh, tree_id, element_id), m_lghost_tree_id (lghost_tree_id)
   {
@@ -55,15 +54,15 @@ class ghost_element: public element<TCompetence...> {
   /**
    * TODO
    */
-  static constexpr bool
-  is_ghost_element ()
+  constexpr bool
+  is_ghost_element () override
   {
     return true;
   }
 
-  /** It is not possible for ghosts to compute their neighbors. */
-  std::vector<t8_locidx_t>
-  get_face_neighbors (int face, int* num_neighbors, int* dual_faces[]) = delete;
+  // /** It is not possible for ghosts to compute their neighbors. */
+  // std::vector<t8_locidx_t>
+  // get_face_neighbors (int face, int* num_neighbors, int* dual_faces[]) =delete;
 
  private:
   const t8_element_t*
@@ -76,4 +75,4 @@ class ghost_element: public element<TCompetence...> {
 };
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_GHOST_HXX */
+#endif /* !T8_GHOST_ELEMENT_HXX */

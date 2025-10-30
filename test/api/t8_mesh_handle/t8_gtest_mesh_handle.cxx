@@ -31,7 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <t8_mesh_handle/mesh.hxx>
-#include <t8_mesh_handle/element.hxx>
+#include <t8_mesh_handle/mesh_element.hxx>
 #include <t8_mesh_handle/competences.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -68,10 +68,10 @@ TEST_P (t8_mesh_handle_test, test_iterator)
 
   // --- Check default functionality. ---
   using mesh_class = t8_mesh_handle::mesh<>;
-  using mesh_element = mesh_class::mesh_element;
+  using element_class = mesh_class::abstract_element_class;
   mesh_class mesh = mesh_class (forest);
-  EXPECT_FALSE (mesh_element::has_vertex_cache ());
-  EXPECT_FALSE (mesh_element::has_centroid_cache ());
+  EXPECT_FALSE (element_class::has_vertex_cache ());
+  EXPECT_FALSE (element_class::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements and check some functionality.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
@@ -109,10 +109,10 @@ TEST_P (t8_mesh_handle_test, test_competences)
 
   // --- Version with cached vertex coordinates. ---
   using mesh_class_vertex = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates>;
-  using mesh_element_vertex = mesh_class_vertex::mesh_element;
+  using element_class_vertex = mesh_class_vertex::abstract_element_class;
   mesh_class_vertex mesh_vertex = mesh_class_vertex (forest);
-  EXPECT_TRUE (mesh_element_vertex::has_vertex_cache ());
-  EXPECT_FALSE (mesh_element_vertex::has_centroid_cache ());
+  EXPECT_TRUE (element_class_vertex::has_vertex_cache ());
+  EXPECT_FALSE (element_class_vertex::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements and check functionality.
   for (auto it = mesh_vertex.begin (); it != mesh_vertex.end (); ++it) {
@@ -145,10 +145,10 @@ TEST_P (t8_mesh_handle_test, test_competences)
 
   // --- Version with cached centroid variable. ---
   using mesh_class_centroid = t8_mesh_handle::mesh<t8_mesh_handle::cache_centroid>;
-  using mesh_element_centroid = mesh_class_centroid::mesh_element;
+  using element_class_centroid = mesh_class_centroid::abstract_element_class;
   mesh_class_centroid mesh_centroid = mesh_class_centroid (forest);
-  EXPECT_FALSE (mesh_element_centroid::has_vertex_cache ());
-  EXPECT_TRUE (mesh_element_centroid::has_centroid_cache ());
+  EXPECT_FALSE (element_class_centroid::has_vertex_cache ());
+  EXPECT_TRUE (element_class_centroid::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements.
   for (auto it = mesh_centroid.begin (); it != mesh_centroid.end (); ++it) {
@@ -174,10 +174,10 @@ TEST_P (t8_mesh_handle_test, test_2_competences)
 
   // --- Use competences to cache level and centroid. ---
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates, t8_mesh_handle::cache_centroid>;
-  using mesh_element = mesh_class::mesh_element;
+  using element_class = mesh_class::abstract_element_class;
   mesh_class mesh = mesh_class (forest);
-  EXPECT_TRUE (mesh_element::has_vertex_cache ());
-  EXPECT_TRUE (mesh_element::has_centroid_cache ());
+  EXPECT_TRUE (element_class::has_vertex_cache ());
+  EXPECT_TRUE (element_class::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
