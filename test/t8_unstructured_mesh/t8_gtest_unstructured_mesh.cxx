@@ -1,0 +1,220 @@
+/*
+This file is part of t8code.
+t8code is a C library to manage a collection (a forest) of multiple
+connected adaptive space-trees of general element classes in parallel.
+
+Copyright (C) 2025 the developers
+
+t8code is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+t8code is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with t8code; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+/**
+ * \file t8_gtest_unstructured_mesh.cxx
+ * Tests if the unstructured mesh class works as intended for different types of predefined template parameter classes. 
+ */
+
+#include <gtest/gtest.h>
+#include <test/t8_gtest_schemes.hxx>
+#include <test/t8_gtest_macros.hxx>
+#include <t8.h>
+
+#include <t8_unstructured_mesh/t8_unstructured_mesh.hxx>
+#include <t8_unstructured_mesh/t8_unstructured_element.hxx>
+#include <t8_unstructured_mesh/t8_element_competences.hxx>
+#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_schemes/t8_default/t8_default.hxx>
+
+class t8_unstructured_mesh_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+ protected:
+  void
+  SetUp () override
+  {
+    scheme = t8_scheme_new_default ();
+    eclass = std::get<0> (GetParam ());
+    level = std::get<1> (GetParam ());
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
+  }
+  void
+  TearDown () override
+  {
+    t8_forest_unref (&forest);
+  }
+  t8_forest_t forest;
+  const t8_scheme* scheme;
+  t8_eclass_t eclass;
+  int level;
+};
+
+/** Test some default functionality and the iterator class of the unstructured mesh. */
+TEST_P (t8_unstructured_mesh_test, test_iterator)
+{
+  ASSERT_TRUE (t8_forest_is_committed (forest));
+
+  // --- Check default functionality. ---
+  t8_unstructured_mesh<t8_unstructured_mesh_element<>> unstructured_mesh
+    = t8_unstructured_mesh<t8_unstructured_mesh_element<>> (forest);
+  EXPECT_FALSE (t8_unstructured_mesh_element<>::has_vertex_cache ());
+  EXPECT_FALSE (t8_unstructured_mesh_element<>::has_centroid_cache ());
+
+  // Iterate with the iterator over all unstructured mesh elements and check some functionality.
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    EXPECT_FALSE (it->has_vertex_cache ());
+    EXPECT_FALSE (it->has_centroid_cache ());
+    auto centroid = it->get_centroid ();
+    for (const auto& coordinate : centroid) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
+    }
+    // Test dereference operator.
+    auto vertex_coordinates = (*it).get_vertex_coordinates ();
+    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
+      for (const auto& coordinate : vertex_coordinates[ivertex]) {
+        EXPECT_GE (1, coordinate);
+        EXPECT_LE (0, coordinate);
+      }
+    }
+  }
+
+  // Check loop with indices.
+  for (int ielement = 0; ielement < unstructured_mesh.get_local_num_elements (); ielement++) {
+    EXPECT_EQ (level, unstructured_mesh[ielement].get_level ());
+  }
+  // Check loop with const iterator.
+  for (auto it = unstructured_mesh.cbegin (); it != unstructured_mesh.cend (); ++it) {
+    EXPECT_EQ (level, it->get_level ());
+  }
+}
+
+/** Test competences. */
+TEST_P (t8_unstructured_mesh_test, test_competences)
+{
+  ASSERT_TRUE (t8_forest_is_committed (forest));
+
+  // --- Version with cached vertex coordinates. ---
+  using mesh_element_vertex = t8_unstructured_mesh_element<t8_cache_vertex_coordinates>;
+  t8_unstructured_mesh<mesh_element_vertex> unstructured_mesh_vertex_coordinates
+    = t8_unstructured_mesh<mesh_element_vertex> (forest);
+  EXPECT_TRUE (mesh_element_vertex::has_vertex_cache ());
+  EXPECT_FALSE (mesh_element_vertex::has_centroid_cache ());
+
+  // Iterate with the iterator over all unstructured mesh elements and check functionality.
+  for (auto it = unstructured_mesh_vertex_coordinates.begin (); it != unstructured_mesh_vertex_coordinates.end ();
+       ++it) {
+    EXPECT_FALSE (it->vertex_cache_filled ());
+    EXPECT_EQ (level, it->get_level ());
+    auto centroid = it->get_centroid ();
+    for (const auto& coordinate : centroid) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
+    }
+    auto vertex_coordinates = it->get_vertex_coordinates ();
+    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
+      for (const auto& coordinate : vertex_coordinates[ivertex]) {
+        EXPECT_GE (1, coordinate);
+        EXPECT_LE (0, coordinate);
+      }
+    }
+  }
+  // Check cached value.
+  for (auto it = unstructured_mesh_vertex_coordinates.begin (); it != unstructured_mesh_vertex_coordinates.end ();
+       ++it) {
+    EXPECT_TRUE (it->vertex_cache_filled ());
+    auto vertex_coordinates = it->get_vertex_coordinates ();
+    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
+      for (const auto& coordinate : vertex_coordinates[ivertex]) {
+        EXPECT_GE (1, coordinate);
+        EXPECT_LE (0, coordinate);
+      }
+    }
+  }
+
+  // --- Version with cached centroid variable. ---
+  using mesh_element_centroid = t8_unstructured_mesh_element<t8_cache_centroid>;
+  t8_unstructured_mesh<mesh_element_centroid> unstructured_mesh_centroid
+    = t8_unstructured_mesh<mesh_element_centroid> (forest);
+  EXPECT_FALSE (mesh_element_centroid::has_vertex_cache ());
+  EXPECT_TRUE (mesh_element_centroid::has_centroid_cache ());
+
+  // Iterate with the iterator over all unstructured mesh elements.
+  for (auto it = unstructured_mesh_centroid.begin (); it != unstructured_mesh_centroid.end (); ++it) {
+    EXPECT_FALSE (it->centroid_cache_filled ());
+    auto centroid = it->get_centroid ();
+    for (const auto& coordinate : centroid) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
+    }
+    EXPECT_TRUE (it->centroid_cache_filled ());
+    auto centroid_cached = it->get_centroid ();
+    for (const auto& coordinate : centroid_cached) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
+    }
+  }
+}
+
+/** Test unstructured mesh (element) class with more than one competence. */
+TEST_P (t8_unstructured_mesh_test, test_2_competences)
+{
+  ASSERT_TRUE (t8_forest_is_committed (forest));
+
+  // --- Use competences to cache level and centroid. ---
+  using mesh_element = t8_unstructured_mesh_element<t8_cache_vertex_coordinates, t8_cache_centroid>;
+  t8_unstructured_mesh<mesh_element> unstructured_mesh = t8_unstructured_mesh<mesh_element> (forest);
+  EXPECT_TRUE (mesh_element::has_vertex_cache ());
+  EXPECT_TRUE (mesh_element::has_centroid_cache ());
+
+  // Iterate with the iterator over all unstructured mesh elements.
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    EXPECT_FALSE (it->centroid_cache_filled ());
+    EXPECT_FALSE (it->vertex_cache_filled ());
+    EXPECT_EQ (level, it->get_level ());
+    auto centroid = it->get_centroid ();
+    for (const auto& coordinate : centroid) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
+    }
+    auto vertex_coordinates = it->get_vertex_coordinates ();
+    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
+      for (const auto& coordinate : vertex_coordinates[ivertex]) {
+        EXPECT_GE (1, coordinate);
+        EXPECT_LE (0, coordinate);
+      }
+    }
+  }
+  // Test dereference operator. (Here the cached values should be used.)
+  for (auto it = unstructured_mesh.begin (); it != unstructured_mesh.end (); ++it) {
+    EXPECT_TRUE (it->centroid_cache_filled ());
+    EXPECT_TRUE (it->vertex_cache_filled ());
+    EXPECT_EQ (level, (*it).get_level ());
+    auto centroid = (*it).get_centroid ();
+    for (const auto& coordinate : centroid) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
+    }
+    auto vertex_coordinates = it->get_vertex_coordinates ();
+    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
+      for (const auto& coordinate : vertex_coordinates[ivertex]) {
+        EXPECT_GE (1, coordinate);
+        EXPECT_LE (0, coordinate);
+      }
+    }
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_unstructured_mesh, t8_unstructured_mesh_test,
+                          testing::Combine (AllEclasses, testing::Range (2, 3)));
