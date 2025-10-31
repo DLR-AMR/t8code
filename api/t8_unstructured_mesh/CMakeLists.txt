@@ -19,7 +19,7 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 # Define own library for mesh interface.
-if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
+if ( T8CODE_BUILD_AS_SHARED_LIBRARY )
     add_library( T8_MESH_INTERFACE SHARED )
     set_target_properties( T8_MESH_INTERFACE PROPERTIES POSITION_INDEPENDENT_CODE ON )
 else()
@@ -30,17 +30,24 @@ add_library( T8CODE::T8_MESH_INTERFACE ALIAS T8_MESH_INTERFACE )
 set_target_properties(T8_MESH_INTERFACE PROPERTIES OUTPUT_NAME t8_mesh_interface)
 
 target_include_directories( T8_MESH_INTERFACE PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
-  $<INSTALL_INTERFACE:include/t8_unstructured_mesh>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/t8_unstructured_mesh>
 ) 
 
 target_sources(T8_MESH_INTERFACE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/t8_unstructured_mesh.cxx)
-install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+         DESTINATION include/
+         FILES_MATCHING PATTERN "*.hxx"
+)
 
 target_link_libraries(T8_MESH_INTERFACE PUBLIC T8)
 
-install( TARGETS T8_MESH_INTERFACE LIBRARY )
-install( TARGETS T8_MESH_INTERFACE EXPORT ${PROJECT_NAME}-targets )
+install( TARGETS T8_MESH_INTERFACE
+         EXPORT ${PROJECT_NAME}-targets
+         ARCHIVE DESTINATION lib
+         LIBRARY DESTINATION lib
+         RUNTIME DESTINATION bin
+)
 
 if( T8CODE_EXPORT_COMPILE_COMMANDS )
     set_target_properties( T8_MESH_INTERFACE PROPERTIES EXPORT_COMPILE_COMMANDS ON )
