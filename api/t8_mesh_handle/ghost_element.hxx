@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file ghost.hxx
- * TODO
+/** \file ghost_element.hxx
+ * Implementation of the ghost element class of the mesh handle.
  */
 
 #ifndef T8_GHOST_ELEMENT_HXX
@@ -39,12 +39,27 @@ namespace t8_mesh_handle
 template <template <typename> class... TCompetence>
 class mesh;
 
+/** 
+ * Class for the ghost elements of the mesh handle. 
+ * This class is a child class of the abstract element class and implements the functionality specific to ghost elements.
+ * See \ref abstract_element for more information, especially on the template parameter.
+ *
+ * \tparam TCompetence The competences you want to add to the default functionality of the element.
+ */
 template <template <typename> class... TCompetence>
 class ghost_element: public abstract_element<TCompetence...> {
   using Base = abstract_element<TCompetence...>;
   using mesh_class = mesh<TCompetence...>;
   friend mesh_class;
 
+  /**
+   * Constructor for a ghost element. This constructor can only be called by the friend mesh class as
+   * the user should use the mesh class to construct ghost elements.
+   * \param [in] mesh             Pointer to the mesh the ghost element should belong to.
+   * \param [in] tree_id          The tree id of the element (normally the number of local trees + local ghost tree id).
+   * \param [in] lghost_tree_id   The ghost tree id of the element in the forest defining the mesh.
+   * \param [in] element_id       The element id of the element in the forest defining the mesh.
+   */
   ghost_element (mesh<TCompetence...>* mesh, t8_locidx_t tree_id, t8_locidx_t lghost_tree_id, t8_locidx_t element_id)
     : Base (mesh, tree_id, element_id), m_lghost_tree_id (lghost_tree_id)
   {
@@ -52,7 +67,8 @@ class ghost_element: public abstract_element<TCompetence...> {
 
  public:
   /**
-   * TODO
+   * Implementation of the function to check if the element is a ghost element.
+   * \return Always true for the ghost element class.
    */
   constexpr bool
   is_ghost_element () override
@@ -60,13 +76,13 @@ class ghost_element: public abstract_element<TCompetence...> {
     return true;
   }
 
-  // /** It is not possible for ghosts to compute their neighbors. */
-  // std::vector<t8_locidx_t>
-  // get_face_neighbors (int face, int* num_neighbors, int* dual_faces[]) =delete;
-
  private:
+  /**
+   * Implementation of the getter for the leaf element of the ghost element.
+   * \return The leaf element.
+   */
   const t8_element_t*
-  get_element () const
+  get_element () const override
   {
     return t8_forest_ghost_get_leaf_element (this->m_mesh->m_forest, m_lghost_tree_id, this->m_element_id);
   }

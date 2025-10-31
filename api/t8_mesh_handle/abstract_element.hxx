@@ -20,8 +20,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file element.hxx
- * Definition of the elements used in the mesh class.
+/** \file abstract_element.hxx
+ * Common interface of the mesh elements and the ghost elements of the mesh handle.
  */
 
 #ifndef T8_ABSTRACT_ELEMENT_HXX
@@ -46,14 +46,15 @@ template <template <typename> class... TCompetence>
 class mesh;
 
 /** 
- * Class for the elements of the mesh handle. 
- * The element without specified template parameters provides default implementations for basic functionality 
+ * Common interface of the mesh elements and the ghost elements of the mesh handle.
+ * An element without specified template parameters provides default implementations for basic functionality 
  * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
  * the function is called. 
  * Use the competences defined in competences.hxx as template parameter to cache the functionality instead of 
  * recalculating in every function call.
  * To add functionality to the element, you can also simply write your own competence class and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 
+ * Please note that the competence should be valid for both, mesh elements and ghost elements.
  *
  * The inheritance pattern is inspired by the \ref T8Type class (which also uses the CRTP).
  * We decided to use this structure 1.) to be able to add new functionality easily and 
@@ -70,7 +71,8 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   friend mesh_class;
 
   /**
-   * Constructor for an element of a mesh.
+   * Protected constructor for an element of a mesh. 
+   * This constructor of the abstract class should only be called by child classes.
    * \param [in] mesh           Pointer to the mesh the element should belong to.
    * \param [in] tree_id        The tree id of the element in the forest defining the mesh.
    * \param [in] element_id     The element id of the element in the forest defining the mesh.
@@ -92,7 +94,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
     return requires (T<SelfType>& competence) { competence.vertex_cache_filled (); };
   }
   /* This variable is true if any of the given competences \ref TCompetence implements 
-  a function vertex_cache_filled */
+  a function vertex_cache_filled. */
   static constexpr bool vertex_cache_exists = (false || ... || vertex_cache_defined<TCompetence> ());
 
   /** Helper function to check if class T implements the function centroid_cache_filled.
@@ -131,18 +133,11 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
     return centroid_cache_exists;
   }
 
-  /**
-   * TODO
-   */
-  virtual constexpr bool
-  is_ghost_element ()
-    = 0;
-
   // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
   /**
-   * Getter for the refinement level of the mesh element.
+   * Getter for the refinement level of the element.
    * For this easily accessible variable, it makes no sense to provide a cached version.
-   * \return Refinement level of the mesh element.
+   * \return Refinement level of the element.
    */
   t8_element_level
   get_level () const
@@ -153,9 +148,9 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   }
 
   /**
-   * Getter for the number of faces of the mesh element.
+   * Getter for the number of faces of the element.
    * For this easily accessible variable, it makes no sense to provide a cached version.
-   * \return Number of faces of the mesh element.
+   * \return Number of faces of the element.
    */
   int
   get_num_faces () const
@@ -164,7 +159,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   }
 
   /**
-   * Getter for the vertex coordinates of the mesh element.
+   * Getter for the vertex coordinates of the element.
    * This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
@@ -197,7 +192,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   }
 
   /**
-   * Getter for the center of mass of the mesh element.
+   * Getter for the center of mass of the element.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
@@ -221,7 +216,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
 
   //--- Getter for the member variables. ---
   /**
-   * Getter for the tree id of the mesh element.
+   * Getter for the tree id of the element.
    * \return The element's tree id.
    */
   t8_locidx_t
@@ -231,8 +226,8 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   }
 
   /**
-   * Getter for the element id of the mesh element.
-   * \return The element id of the mesh element.
+   * Getter for the element id of the element.
+   * \return The element id of the element.
    */
   t8_locidx_t
   get_element_id () const
@@ -241,7 +236,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   }
 
   /**
-   * Getter for the mesh to which the mesh element is belonging.
+   * Getter for the mesh to which the element is belonging.
    * \return Reference to the mesh.
    */
   const mesh<TCompetence...>*
@@ -250,10 +245,19 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
     return m_mesh;
   }
 
+  /**
+   * Virtual function to check if the element is a ghost element.
+   * \return true if the element is a ghost element, false otherwise.
+   */
+  virtual constexpr bool
+  is_ghost_element ()
+    = 0;
+
  protected:
   //--- Private getter for internal use. ---
   /**
-   * Getter for the leaf element of the mesh element.
+   * Getter for the leaf element of the element.
+   * Has to be implemented differently for mesh elements and ghost elements.
    * \return The leaf element.
    */
   virtual const t8_element_t*
@@ -261,7 +265,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
     = 0;
 
   /**
-   * Getter for the eclass of the mesh element.
+   * Getter for the eclass of the element.
    * \return The element's eclass.
    */
   t8_eclass_t

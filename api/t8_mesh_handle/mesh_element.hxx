@@ -20,15 +20,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file element.hxx TODO
- * Definition of the elements used in the mesh class.
+/** \file mesh_element.hxx
+ * Implementation of the mesh element class of the mesh handle.
  */
 
 #ifndef T8_MESH_ELEMENT_HXX
 #define T8_MESH_ELEMENT_HXX
 
-#include <t8_mesh_handle/abstract_element.hxx>
 #include <t8.h>
+#include <t8_mesh_handle/abstract_element.hxx>
 #include <t8_element.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
@@ -47,19 +47,9 @@ template <template <typename> class... TCompetence>
 class mesh;
 
 /** 
- * Class for the elements of the mesh handle. 
- * The element without specified template parameters provides default implementations for basic functionality 
- * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
- * the function is called. 
- * Use the competences defined in competences.hxx as template parameter to cache the functionality instead of 
- * recalculating in every function call.
- * To add functionality to the element, you can also simply write your own competence class and give it as a template parameter.
- * You can access the functions implemented in your competence via the element. 
- *
- * The inheritance pattern is inspired by the \ref T8Type class (which also uses the CRTP).
- * We decided to use this structure 1.) to be able to add new functionality easily and 
- *    2.) for the cached options to keep the number of class member variables of the default to a minimum to save memory.
- * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
+ * Class for the mesh elements of the mesh handle. 
+ * This class is a child class of the abstract element class and implements the functionality specific to mesh elements 
+ * (meaning non-ghost elements). See \ref abstract_element for more information, especially on the template parameter.
  *
  * \tparam TCompetence The competences you want to add to the default functionality of the element.
  */
@@ -71,8 +61,9 @@ class mesh_element: public abstract_element<TCompetence...> {
   friend mesh_class;
 
   /**
-   * Constructor for an element of a mesh.
-   * \param [in] mesh           Pointer to the mesh the element should belong to.
+   * Constructor for a mesh element. This constructor can only be called by the friend mesh class as
+   * the user should use the mesh class to construct the elements.
+   * \param [in] mesh           Pointer to the mesh the mesh element should belong to.
    * \param [in] tree_id        The tree id of the element in the forest defining the mesh.
    * \param [in] element_id     The element id of the element in the forest defining the mesh.
    */
@@ -82,20 +73,8 @@ class mesh_element: public abstract_element<TCompetence...> {
   }
 
  public:
-  // --- Functions to check if caches exist. ---
-
-  /**
-   * TODO
-   */
-  constexpr bool
-  is_ghost_element () override
-  {
-    return false;
-  }
-
-  // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
-
-  /** TODO*/
+  // --- Functionality special to the mesh element. ---
+  /** TODO Not possible for ghosts to calculate, see docu of t8_forest... and dont forget to state the necessary free calls. */
   std::vector<t8_locidx_t>
   get_face_neighbors (int face, int* num_neighbors, int* dual_faces[]) const
   {
@@ -118,10 +97,20 @@ class mesh_element: public abstract_element<TCompetence...> {
     return neighbor_ids_vector;
   }
 
+  /**
+   * Implementation of the function to check if the element is a ghost element.
+   * \return Always false for the mesh element class.
+   */
+  constexpr bool
+  is_ghost_element () override
+  {
+    return false;
+  }
+
  protected:
   //--- Private getter for internal use. ---
   /**
-   * Getter for the leaf element of the mesh element.
+   * Implementation of the getter for the leaf element of the mesh element.
    * \return The leaf element.
    */
   const t8_element_t*

@@ -45,6 +45,7 @@ namespace t8_mesh_handle
  * \tparam TCompetence TODO The element class that should be used for the elements in the mesh class. 
  *                                  This template parameter defines which element functionality is available 
  *                                  and if it is cached or calculated.
+ TODO: also update some functions
  */
 template <template <typename> class... TCompetence>
 class mesh {
@@ -52,7 +53,7 @@ class mesh {
   using abstract_element_class = abstract_element<TCompetence...>;
   using mesh_element_class = mesh_element<TCompetence...>;
   using ghost_element_class = ghost_element<TCompetence...>;
-  // Declare mesh element as friend such that private members (e.g. the forest) can be accessed.
+  // Declare all element classes as friend such that private members (e.g. the forest) can be accessed.
   friend abstract_element_class;
   friend mesh_element_class;
   friend ghost_element_class;
