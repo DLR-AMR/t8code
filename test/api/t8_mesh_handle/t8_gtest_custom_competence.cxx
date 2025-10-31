@@ -30,7 +30,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <t8_mesh_handle/mesh.hxx>
-#include <t8_mesh_handle/element.hxx>
 #include <t8_mesh_handle/competences.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
