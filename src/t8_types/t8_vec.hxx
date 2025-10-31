@@ -124,11 +124,11 @@ make_t8_3D_vec_view (TType *ptr) noexcept
   * \tparam TExpectedDim   Optional dimensional restriction (default = wildcard).
   */
 template <typename T, std::size_t Expected = static_cast<std::size_t> (-1)>
-concept T8VecType = requires { typename std::remove_cvref_t<T>::Tag; } && requires {
+concept T8VecType = requires { typename std::remove_cvref_t<T>::tag; } && requires {
   {
-    std::remove_cvref_t<T>::Tag::dim
+    std::remove_cvref_t<T>::tag::dim
   } -> std::convertible_to<std::size_t>;
-} && (Expected == static_cast<std::size_t> (-1) || std::remove_cvref_t<T>::Tag::dim == Expected);
+} && (Expected == static_cast<std::size_t> (-1) || std::remove_cvref_t<T>::tag::dim == Expected);
 
 /** Concept that checks whether a type is a container of elements of type t8_vec<N>. N can be either fixed or left open.
   * \tparam TType     The type to check.
@@ -230,11 +230,11 @@ make_t8_3D_point_view (TType *ptr) noexcept
   * \tparam TExpectedDim   Optional dimensional restriction (default = wildcard).
   */
 template <typename T, std::size_t Expected = static_cast<std::size_t> (-1)>
-concept T8PointType = requires { typename std::remove_cvref_t<T>::Tag; } && requires {
+concept T8PointType = requires { typename std::remove_cvref_t<T>::tag; } && requires {
   {
-    std::remove_cvref_t<T>::Tag::dim
+    std::remove_cvref_t<T>::tag::dim
   } -> std::convertible_to<std::size_t>;
-} && (Expected == static_cast<std::size_t> (-1) || std::remove_cvref_t<T>::Tag::dim == Expected);
+} && (Expected == static_cast<std::size_t> (-1) || std::remove_cvref_t<T>::tag::dim == Expected);
 
 /** Concept that checks whether a type is a container of elements of type t8_point<N>.
    * N can be either fixed or left open.

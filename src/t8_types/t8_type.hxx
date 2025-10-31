@@ -48,7 +48,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
   /** The type of the value stored in this strong type. */
   using value_type = T;
-  using Tag = Parameter;
+  using tag = Parameter;
 
   /** Default constructor */
   explicit constexpr T8Type () = default;
