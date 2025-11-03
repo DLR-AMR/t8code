@@ -42,10 +42,8 @@ namespace t8_mesh_handle
 
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
- * \tparam TCompetence TODO The element class that should be used for the elements in the mesh class. 
- *                                  This template parameter defines which element functionality is available 
- *                                  and if it is cached or calculated.
- TODO: also update some functions
+ * \tparam TCompetence The competences you want to add to the default functionality of the mesh.
+ *         \see abstract_element for more details on the choice of the template parameter.   
  */
 template <template <typename> class... TCompetence>
 class mesh {
@@ -82,7 +80,7 @@ class mesh {
 
   /**
    * Getter for the number of local ghost elements.
-   * \return Number of local ghost elements in the unstructured mesh.
+   * \return Number of local ghost elements in the mesh.
    */
   t8_locidx_t
   get_local_num_ghosts () const
@@ -102,6 +100,7 @@ class mesh {
 
   /**
    * Returns an iterator to a mesh element following the last (local) element of the mesh.
+   * The iterator only refers to local mesh element and excludes ghost elements.
    * \return Iterator to the mesh element following the last (local) element of the mesh.
    */
   mesh_iterator
@@ -131,9 +130,11 @@ class mesh {
   }
 
   /**
-   * Getter for a mesh element given its local index.
+   * Getter for an element given its local index. This could be a (local) mesh element or a ghost element. 
+   * The indices 0, 1, ... num_local_el - 1 refer to local mesh elements and 
+   *    num_local_el , ... , num_local_el + num_ghosts - 1 refer to ghost elements.
    * \param [in] local_index The local index of the element to access.
-   * \return Reference to the mesh element.
+   * \return Reference to the element.
    */
   abstract_element_class&
   operator[] (t8_locidx_t local_index)
@@ -195,6 +196,7 @@ class mesh {
   void
   update_ghost_elements ()
   {
+    // Clear the ghost vector if already created.
     if (!m_ghosts.empty ()) {
       m_ghosts.clear ();
     }
