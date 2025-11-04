@@ -45,13 +45,12 @@
  *
  */
 static int
-t8_adapt_menger_quad (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                      [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                      [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+t8_adapt_menger_quad ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                      t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                       [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                      t8_element_t *elements[])
+                      t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements get removed, 0 else */
 
@@ -79,13 +78,12 @@ t8_adapt_menger_quad (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_fr
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_sierpinski_tri (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                         [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                         [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+t8_adapt_sierpinski_tri ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                         t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                         t8_element_t *elements[])
+                         t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -106,13 +104,12 @@ t8_adapt_sierpinski_tri (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest
  * of the mesh or leave them untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_menger_hex (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                     [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                     [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+t8_adapt_menger_hex ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                     t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                      [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                     t8_element_t *elements[])
+                     t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -157,13 +154,12 @@ t8_adapt_menger_hex (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_fro
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_sierpinski_tet (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                         [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                         [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+t8_adapt_sierpinski_tet ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                         t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                         t8_element_t *elements[])
+                         t8_element_t *elements[], [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -184,13 +180,13 @@ t8_adapt_sierpinski_tet (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_sierpinski_prism (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                           [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+t8_adapt_sierpinski_prism ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                           t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                            [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                           t8_element_t *elements[])
+                           t8_element_t *elements[], [[maybe_unused]] void *user_data,
+                           [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -211,13 +207,13 @@ t8_adapt_sierpinski_prism (t8_forest_t forest, [[maybe_unused]] t8_forest_t fore
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
-t8_adapt_sierpinski_pyramid (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                             [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                             [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+t8_adapt_sierpinski_pyramid ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                             t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                              [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                             t8_element_t *elements[])
+                             t8_element_t *elements[], [[maybe_unused]] void *user_data,
+                             [[maybe_unused]] void *t8code_data)
 {
-  const int *adapt_data = (const int *) t8_forest_get_user_data (forest);
+  const int *adapt_data = (const int *) user_data;
   const int level_max = adapt_data[0];
   const int ret = adapt_data[1]; /* -2 if elements shall be removed, 0 else */
 
@@ -235,11 +231,11 @@ t8_adapt_sierpinski_pyramid (t8_forest_t forest, [[maybe_unused]] t8_forest_t fo
 
 /* Coarse every family in the mesh. */
 static int
-t8_adapt_coarse ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                 [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
-                 [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
-                 const int is_family, [[maybe_unused]] const int num_elements,
-                 [[maybe_unused]] t8_element_t *elements[])
+t8_adapt_coarse ([[maybe_unused]] t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,
+                 [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                 [[maybe_unused]] const t8_scheme *scheme, const int is_family, [[maybe_unused]] const int num_elements,
+                 [[maybe_unused]] t8_element_t *elements[], [[maybe_unused]] void *user_data,
+                 [[maybe_unused]] void *t8code_data)
 {
   if (is_family) {
     return -1;
