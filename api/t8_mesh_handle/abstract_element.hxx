@@ -160,7 +160,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
 
   /**
    * Getter for the vertex coordinates of the element.
-   * This function uses or sets the cached version defined in TCompetence if available and calculates if not.
+   * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
   std::vector<t8_3D_point>

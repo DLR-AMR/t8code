@@ -65,7 +65,7 @@ class t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, 
 };
 
 /** Check the implementation of ghosts and all functions accessible by ghosts. */
-TEST_P (t8_mesh_ghost_test, check_get_face_neighbors)
+TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
   t8_forest_ghost_print (forest);
@@ -117,7 +117,8 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
-  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
+  t8_mesh_handle::mesh<t8_mesh_handle::cache_neighbors> mesh
+    = t8_mesh_handle::mesh<t8_mesh_handle::cache_neighbors> (forest);
   EXPECT_EQ (mesh.get_local_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   const t8_scheme* scheme = t8_forest_get_scheme (forest);
@@ -144,12 +145,12 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
                                        &neigh_eclass, forest_is_balanced);
         // --- Get neighbors from mesh element. ---
         int num_neighbors_handle;
-        int* dual_faces_handle;
+        std::vector<int> dual_faces_handle;
         auto neighbor_ids_handle = mesh_iterator->get_face_neighbors (iface, &num_neighbors_handle, &dual_faces_handle);
         // --- Compare results. ---
         EXPECT_EQ ((int) neighbor_ids_handle.size (), num_neighbors_handle);
         EXPECT_EQ (num_neighbors, num_neighbors_handle);
-        EXPECT_TRUE (std::equal (dual_faces, dual_faces + num_neighbors, dual_faces_handle));
+        EXPECT_EQ (dual_faces_handle, std::vector<int> (dual_faces, dual_faces + num_neighbors));
         EXPECT_EQ (neighbor_ids_handle, std::vector<t8_locidx_t> (neigh_ids, neigh_ids + num_neighbors));
         // Free memory.
         if (num_neighbors > 0) {
@@ -157,7 +158,6 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
           T8_FREE (neigh_ids);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
-          T8_FREE (dual_faces_handle);
         }
       }
       // Evolve mesh iterator.

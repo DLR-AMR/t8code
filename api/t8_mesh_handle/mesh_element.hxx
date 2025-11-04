@@ -60,6 +60,21 @@ class mesh_element: public abstract_element<TCompetence...> {
   using mesh_class = Base::mesh_class;
   friend mesh_class;
 
+  // --- Variables to check which functionality is defined in TCompetence. ---
+  /** Helper function to check if class T implements the function neighbor_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  neighbor_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.neighbor_cache_filled (0); };
+  }
+  /* This variable is true if any of the given competences \ref TCompetence implements 
+  a function neighbor_cache_filled. */
+  static constexpr bool neighbor_cache_exists = (false || ... || neighbor_cache_defined<TCompetence> ());
+
   /**
    * Constructor for a mesh element. This constructor can only be called by the friend mesh class as
    * the user should use the mesh class to construct the elements.
@@ -70,42 +85,61 @@ class mesh_element: public abstract_element<TCompetence...> {
   mesh_element (mesh<TCompetence...>* mesh, t8_locidx_t tree_id, t8_locidx_t element_id)
     : Base (mesh, tree_id, element_id)
   {
+    if constexpr (neighbor_cache_exists) {
+      // Resize neighbor caches for clean access to the caches.
+      const int num_faces = this->get_num_faces ();
+      this->m_num_neighbors.resize (num_faces);
+      this->m_dual_faces.resize (num_faces);
+      this->m_neighbor_indices.resize (num_faces);
+    }
   }
 
  public:
   // --- Functionality special to the mesh element. ---
   /** Getter for the face neighbors of the mesh element at given face.
-   * For ghost elements, the functionality to calculate face neighbors is not provided.
+   * For ghost elements, the functionality to calculate face neighbors is currently not provided.
+   * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in]  face          The index of the face across which the face neighbors are searched.
    * \param [out] num_neighbors On output the number of neighbor elements.
    * \param [out] dual_faces    On output the face id's of the neighboring elements' faces.
    * \return Vector of length \ref num_neighbors with the element indices of the face neighbors.
    *         0, 1, ... num_local_el - 1 for local mesh elements and 
    *         num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
-   * \note Important! This routine allocates memory for \ref dual_faces which must be freed. Do it like this:
-   *
-   *   if (num_neighbors > 0) {
-   *     T8_FREE (dual_faces);
-   *   }
    */
   std::vector<t8_locidx_t>
-  get_face_neighbors (int face, int* num_neighbors, int* dual_faces[]) const
+  get_face_neighbors (int face, int* num_neighbors, std::vector<int>* dual_faces) const
   {
+    if constexpr (neighbor_cache_exists) {
+      if (this->neighbor_cache_filled (face)) {
+        num_neighbors = &this->m_num_neighbors[face];
+        dual_faces = &(this->m_dual_faces[face]);
+        return this->m_neighbor_indices[face];
+      }
+    }
     std::vector<std::reference_wrapper<SelfType>> neighbor_elements;
     t8_element_t** neighbors; /*< Neighboring elements. */
+    int* dual_faces_internal; /**< The face indices of the neighbor elements. */
     t8_locidx_t* neighids;    /*< Neighboring elements ids. */
     t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
 
     t8_forest_leaf_face_neighbors (this->m_mesh->m_forest, this->m_tree_id, get_element (), &neighbors, face,
-                                   dual_faces, num_neighbors, &neighids, &neigh_class,
+                                   &dual_faces_internal, num_neighbors, &neighids, &neigh_class,
                                    t8_forest_is_balanced (this->m_mesh->m_forest));
+    dual_faces->assign (dual_faces_internal, dual_faces_internal + *num_neighbors);
     std::vector<t8_locidx_t> neighbor_ids_vector (neighids, neighids + *num_neighbors);
     if (*num_neighbors > 0) {
       /* Free allocated memory. */
       t8_forest_get_scheme (this->m_mesh->m_forest)
         ->element_destroy (this->get_tree_class (), *num_neighbors, neighbors);
       T8_FREE (neighbors);
+      T8_FREE (dual_faces_internal);
       T8_FREE (neighids);
+    }
+    if constexpr (neighbor_cache_exists) {
+      this->m_num_neighbors[face] = *num_neighbors;
+      this->m_dual_faces[face] = *dual_faces;
+      this->m_neighbor_indices[face] = std::move (neighbor_ids_vector);
+      return this->m_neighbor_indices[face];
     }
     return neighbor_ids_vector;
   }

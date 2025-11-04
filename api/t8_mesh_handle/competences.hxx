@@ -95,5 +95,35 @@ struct cache_centroid: t8_crtp_operator<TUnderlying, cache_centroid>
     m_centroid; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 
+/**
+ * TODO
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_neighbors: t8_crtp_operator<TUnderlying, cache_centroid>
+{
+ public:
+  /**
+   * Function that checks if the cache for the centroid has been filled.
+   * \return true if the cache for the centroid has been filled, false otherwise.
+   */
+  bool
+  neighbor_cache_filled (int face) const
+  {
+    if (!m_neighbor_indices.empty ())
+      return false;
+    if ((int) m_neighbor_indices.size () <= face)
+      return false;
+    return !m_neighbor_indices[face].empty ();
+  }
+
+ protected:
+  mutable std::vector<std::vector<t8_locidx_t>>
+    m_neighbor_indices; /**< Element indices of the neighbors at each face. The length of the vectors is stored in \ref m_num_neighbors. */
+  mutable std::vector<int> m_num_neighbors; /**< Vector with the numbers of neighbor elements at each face. */
+  mutable std::vector<std::vector<int>>
+    m_dual_faces; /**< Face id's of the neighboring elements' faces for each face. */
+};
+
 }  // namespace t8_mesh_handle
 #endif /* !T8_COMPETENCES_HXX */
