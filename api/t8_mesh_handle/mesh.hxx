@@ -46,11 +46,11 @@ namespace t8_mesh_handle
 template <class TMeshElement = element<>>
 class mesh {
  public:
-  // Declare mesh element as friend such that private members (e.g. the forest) can be accessed.
-  friend TMeshElement;
+  friend TMeshElement; /**< Make the element class a friend to access private members of the mesh (e.g. the forest). */
 
-  using mesh_iterator = typename std::vector<TMeshElement>::iterator;
-  using mesh_const_iterator = typename std::vector<TMeshElement>::const_iterator;
+  using mesh_iterator = typename std::vector<TMeshElement>::iterator; /**< Iterator type for the mesh elements. */
+  using mesh_const_iterator =
+    typename std::vector<TMeshElement>::const_iterator; /**< Constant iterator type for the mesh elements. */
 
   /** 
    * Constructor for a mesh of the handle. 

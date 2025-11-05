@@ -49,7 +49,7 @@ class mesh;
  * The element without specified template parameters provides default implementations for basic functionality 
  * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
  * the function is called. 
- * Use the competences defined in competences.hxx as template parameter to cache the functionality instead of 
+ * Use the competences defined in \ref competences.hxx as template parameter to cache the functionality instead of 
  * recalculating in every function call.
  * To add functionality to the element, you can also simply write your own competence class and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 

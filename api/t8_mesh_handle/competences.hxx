@@ -26,13 +26,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * is called are provided.
  *
  * All competences have the same inheritance pattern: 
- * We use the CRTP pattern as we may need to access members of the derived class \ref element. 
+ * We use the CRTP pattern as we may need to access members of the derived class \ref t8_mesh_handle::element. 
  * The t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
  * we need functionality of TUnderlying).
  * Especially for the competences to cache functionality, the access of members is not necessary, 
  * such that it is not obvious why we use the crtp. For competences that extend the functionality of the element, 
  * this is required. 
- * We use it for all competences for consistency and compatibility with the \ref element class.
+ * We use it for all competences for consistency and compatibility with the \ref t8_mesh_handle::element class.
  */
 
 #ifndef T8_COMPETENCES_HXX
