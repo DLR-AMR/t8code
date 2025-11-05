@@ -96,6 +96,16 @@ class mesh_element: public abstract_element<TCompetence...> {
 
  public:
   // --- Functionality special to the mesh element. ---
+  /**
+   * Function that checks if a cache for the face neighbors exists.
+   * \return true if a cache exists, false otherwise.
+   */
+  static constexpr bool
+  has_face_neighbor_cache ()
+  {
+    return neighbor_cache_exists;
+  }
+
   /** Getter for the face neighbors of the mesh element at given face.
    * For ghost elements, the functionality to calculate face neighbors is currently not provided.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
@@ -111,8 +121,8 @@ class mesh_element: public abstract_element<TCompetence...> {
   {
     if constexpr (neighbor_cache_exists) {
       if (this->neighbor_cache_filled (face)) {
-        num_neighbors = &this->m_num_neighbors[face];
-        dual_faces = &(this->m_dual_faces[face]);
+        *num_neighbors = this->m_num_neighbors[face].value ();
+        *dual_faces = this->m_dual_faces[face];
         return this->m_neighbor_indices[face];
       }
     }
@@ -129,8 +139,7 @@ class mesh_element: public abstract_element<TCompetence...> {
     std::vector<t8_locidx_t> neighbor_ids_vector (neighids, neighids + *num_neighbors);
     if (*num_neighbors > 0) {
       /* Free allocated memory. */
-      t8_forest_get_scheme (this->m_mesh->m_forest)
-        ->element_destroy (this->get_tree_class (), *num_neighbors, neighbors);
+      t8_forest_get_scheme (this->m_mesh->m_forest)->element_destroy (this->get_eclass (), *num_neighbors, neighbors);
       T8_FREE (neighbors);
       T8_FREE (dual_faces_internal);
       T8_FREE (neighids);
@@ -142,6 +151,20 @@ class mesh_element: public abstract_element<TCompetence...> {
       return this->m_neighbor_indices[face];
     }
     return neighbor_ids_vector;
+  }
+
+  /**
+   * Function to fill the face neighbor cache for all faces of the mesh element.
+   */
+  void
+  fill_face_neighbor_cache () const
+    requires (neighbor_cache_exists)
+  {
+    for (int iface = 0; iface < this->get_num_faces (); iface++) {
+      int num_neighbors;
+      std::vector<int> dual_faces;
+      get_face_neighbors (iface, &num_neighbors, &dual_faces);
+    }
   }
 
   /**

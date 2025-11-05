@@ -142,9 +142,9 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   t8_element_level
   get_level () const
   {
-    const t8_eclass_t tree_class = get_tree_class ();
+    const t8_eclass_t eclass = get_eclass ();
     const t8_element_t* element = get_element ();
-    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_level (tree_class, element);
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_level (eclass, element);
   }
 
   /**
@@ -155,7 +155,17 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   int
   get_num_faces () const
   {
-    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_faces (get_tree_class (), get_element ());
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_faces (get_eclass (), get_element ());
+  }
+
+  /**
+   * Getter for the element class of the element.
+   * \return The element class of the element.
+   */
+  t8_eclass_t
+  get_eclass () const
+  {
+    return t8_forest_get_tree_class (m_mesh->m_forest, m_tree_id);
   }
 
   /**
@@ -174,8 +184,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
     }
     // Calculate the vertex coordinates.
     const t8_element_t* element = get_element ();
-    const int num_corners
-      = t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
+    const int num_corners = t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_corners (get_eclass (), element);
     std::vector<t8_3D_point> vertex_coordinates;
     vertex_coordinates.reserve (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
@@ -263,16 +272,6 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   virtual const t8_element_t*
   get_element () const
     = 0;
-
-  /**
-   * Getter for the eclass of the element.
-   * \return The element's eclass.
-   */
-  t8_eclass_t
-  get_tree_class () const
-  {
-    return t8_forest_get_tree_class (m_mesh->m_forest, m_tree_id);
-  }
 
   mesh<TCompetence...>* m_mesh; /**< Pointer to the mesh the element is defined for. */
   t8_locidx_t m_tree_id;        /**< The tree id of the element in the forest defined in the mesh. */

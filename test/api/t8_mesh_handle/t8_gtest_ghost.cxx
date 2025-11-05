@@ -117,8 +117,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
-  t8_mesh_handle::mesh<t8_mesh_handle::cache_neighbors> mesh
-    = t8_mesh_handle::mesh<t8_mesh_handle::cache_neighbors> (forest);
+  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
   EXPECT_EQ (mesh.get_local_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   const t8_scheme* scheme = t8_forest_get_scheme (forest);
@@ -152,6 +151,9 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
         EXPECT_EQ (num_neighbors, num_neighbors_handle);
         EXPECT_EQ (dual_faces_handle, std::vector<int> (dual_faces, dual_faces + num_neighbors));
         EXPECT_EQ (neighbor_ids_handle, std::vector<t8_locidx_t> (neigh_ids, neigh_ids + num_neighbors));
+        for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
+          EXPECT_EQ (neigh_eclass, mesh[neighbor_ids_handle[ineigh]].get_eclass ());
+        }
         // Free memory.
         if (num_neighbors > 0) {
           scheme->element_destroy (neigh_eclass, num_neighbors, neighbors);
@@ -162,6 +164,63 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
       }
       // Evolve mesh iterator.
       mesh_iterator++;
+    }
+  }
+}
+
+/** Child class of \ref cache_neighbors that allows to modify the cache variables for test purposes. */
+template <typename TUnderlying>
+struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderlying>
+{
+ public:
+  /** Overwrites the cache variables for the a \ref face.
+   * \param [in] face              Face for which the cache should be overwritten.
+   * \param [in] neighbor_indices  New cache vector for the neighbor indices.
+   * \param [in] num_neighbors     New cache value for the number of neighbors.
+   * \param [in] dual_faces        New cache vector for the dual faces.
+   */
+  void
+  overwrite_cache (int face, std::vector<t8_locidx_t> neighbor_indices, int num_neighbors, std::vector<int> dual_faces)
+  {
+    this->m_neighbor_indices[face] = neighbor_indices;
+    this->m_num_neighbors[face] = num_neighbors;
+    this->m_dual_faces[face] = dual_faces;
+  }
+};
+
+/** Use child class of \ref cache_neighbors class to check that the cache is actually set 
+ * and accessed correctly. This is done by modifying the cache variables to a unrealistic values and 
+ * checking that the functionality actually outputs this unrealistic value.
+ */
+TEST_P (t8_mesh_ghost_test, cache_neighbors)
+{
+  ASSERT_TRUE (t8_forest_is_committed (forest));
+  using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
+  using element_class = mesh_class::mesh_element_class;
+  mesh_class mesh = mesh_class (forest);
+  EXPECT_TRUE (element_class::has_face_neighbor_cache ());
+
+  const std::vector<t8_locidx_t> unrealistic_neighbor_indices = { 9999, 99989997 };
+  const int unrealistic_num_neighbors = 2;
+  const std::vector<int> unrealistic_dual_faces = { 100, 1012000 };
+  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+    // Check that cache is empty at the beginning.
+    EXPECT_FALSE (it->neighbor_cache_filled_any ());
+    it->fill_face_neighbor_cache ();
+    for (int iface = 0; iface < it->get_num_faces (); iface++) {
+      EXPECT_TRUE (it->neighbor_cache_filled (iface));
+      int num_neighbors = -1;
+      std::vector<int> dual_faces;
+      auto neighbor_ids = it->get_face_neighbors (iface, &num_neighbors, &dual_faces);
+      EXPECT_EQ ((int) neighbor_ids.size (), num_neighbors);
+      // Overwrite cache with unrealistic values.
+      it->overwrite_cache (iface, unrealistic_neighbor_indices, unrealistic_num_neighbors, unrealistic_dual_faces);
+      EXPECT_TRUE (it->neighbor_cache_filled (iface));
+      neighbor_ids = it->get_face_neighbors (iface, &num_neighbors, &dual_faces);
+      // --- Compare results. ---
+      EXPECT_EQ (neighbor_ids, unrealistic_neighbor_indices);
+      EXPECT_EQ (num_neighbors, unrealistic_num_neighbors);
+      EXPECT_EQ (dual_faces, unrealistic_dual_faces);
     }
   }
 }

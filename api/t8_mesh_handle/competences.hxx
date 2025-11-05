@@ -96,7 +96,7 @@ struct cache_centroid: t8_crtp_operator<TUnderlying, cache_centroid>
 };
 
 /**
- * TODO
+ * Competence to cache the neighbors of an element at a specific face at the first function call.
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
@@ -104,23 +104,36 @@ struct cache_neighbors: t8_crtp_operator<TUnderlying, cache_centroid>
 {
  public:
   /**
-   * Function that checks if the cache for the centroid has been filled.
-   * \return true if the cache for the centroid has been filled, false otherwise.
+   * Function that checks if the neighbor cache for a face has been filled.
+   * \param [in] face The face for which the cache should be checked.
+   * \return true if the cache has been filled, false otherwise.
    */
   bool
   neighbor_cache_filled (int face) const
   {
-    if (!m_neighbor_indices.empty ())
-      return false;
-    if ((int) m_neighbor_indices.size () <= face)
-      return false;
-    return !m_neighbor_indices[face].empty ();
+    return m_num_neighbors[face].has_value ();
+  }
+
+  /**
+   * Function that checks if the neighbor cache for any face has been filled.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  neighbor_cache_filled_any () const
+  {
+    for (int iface = 0; iface < this->underlying ().get_num_faces (); ++iface) {
+      if (neighbor_cache_filled (iface)) {
+        return true;
+      }
+    }
+    return false;
   }
 
  protected:
   mutable std::vector<std::vector<t8_locidx_t>>
     m_neighbor_indices; /**< Element indices of the neighbors at each face. The length of the vectors is stored in \ref m_num_neighbors. */
-  mutable std::vector<int> m_num_neighbors; /**< Vector with the numbers of neighbor elements at each face. */
+  mutable std::vector<std::optional<int>>
+    m_num_neighbors; /**< Vector with the numbers of neighbor elements at each face. */
   mutable std::vector<std::vector<int>>
     m_dual_faces; /**< Face id's of the neighboring elements' faces for each face. */
 };
