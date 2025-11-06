@@ -114,7 +114,7 @@ typedef struct
    * element as well and is communicated with other processes in ghost_exchange. */
   sc_array_t *phi_values; /**< For each element and ghost its phi value. */
   sc_array_t
-    *phi_values_adapt; /**< phi values for the adapted forest, used during adaptaption to interpolate values. */
+    *phi_values_adapt; /**< phi values for the adapted forest, used during adaptation to interpolate values. */
   sc_MPI_Comm comm;    /**< MPI communicator used */
   sc_statinfo_t stats[ADVECT_NUM_STATS]; /**< Runtimes and other statistics. */
   double t;                              /**< Current simulation time */
@@ -142,7 +142,7 @@ typedef struct
   t8_3D_point midpoint;           /**< coordinates of element midpoint in R^3 */
   double vol;                     /**< Volume of this element */
   double phi_new;                 /**< Value of solution at midpoint in next time step */
-  double *fluxes[MAX_FACES];      /**< The fluxes to each neeighbor at a given face */
+  double *fluxes[MAX_FACES];      /**< The fluxes to each neighbor at a given face */
   int flux_valid[MAX_FACES];      /**< If > 0, this flux was computed, if 0 memory was allocated
                                                    for this flux, but not computed. If < 0, no memory was allocated. */
   int level;                      /**< The refinement level of the element. */
@@ -343,7 +343,7 @@ t8_advect_flux_upwind_1d (const t8_advect_problem_t *problem, const t8_locidx_t 
   }
   /* Compute u at the interval boundary. */
   problem->u (x_j_half, problem->t, u_at_x_j_half);
-  /* In 1D we are only interested in the firs coordinate of u */
+  /* In 1D we are only interested in the first coordinate of u */
 
   sign = face == 0 ? -1 : 1;
   if (sign * u_at_x_j_half[0] >= 0) {
@@ -929,7 +929,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_l
   problem->num_time_steps = 0;            /* current time step */
   problem->comm = comm;                   /* MPI communicator */
   problem->vtk_count = 0;                 /* number of pvtu files written */
-  problem->band_width = band_width;       /* width of the refinemen band around 0 level-set */
+  problem->band_width = band_width;       /* width of the refinement band around 0 level-set */
   problem->dim = dim;                     /* dimension of the mesh */
   problem->dummy_op = dummy_op;           /* If true, emulate more computational load per element */
 
