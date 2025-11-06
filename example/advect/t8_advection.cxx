@@ -112,10 +112,9 @@ typedef struct
     *element_data_adapt; /**< element_data for the adapted forest, used during adaptation to interpolate values */
   /* We store the phi values in an extra array, since this data must exist for ghost
    * element as well and is communicated with other processes in ghost_exchange. */
-  sc_array_t *phi_values; /**< For each element and ghost its phi value. */
-  sc_array_t
-    *phi_values_adapt; /**< phi values for the adapted forest, used during adaptation to interpolate values. */
-  sc_MPI_Comm comm;    /**< MPI communicator used */
+  sc_array_t *phi_values;       /**< For each element and ghost its phi value. */
+  sc_array_t *phi_values_adapt; /**< phi values for the adapted forest, used during adaptation to interpolate values. */
+  sc_MPI_Comm comm;             /**< MPI communicator used */
   sc_statinfo_t stats[ADVECT_NUM_STATS]; /**< Runtimes and other statistics. */
   double t;                              /**< Current simulation time */
   double T;                              /**< End time */
