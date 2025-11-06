@@ -257,21 +257,6 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename
       tree_vertices[3 * i + 1] = vertices[dim * tcorners[i] + 1];
       tree_vertices[3 * i + 2] = dim == 2 ? 0 : vertices[dim * tcorners[i] + 2];
     }
-    if (dim == 3 && t8_cmesh_tree_vertices_negative_volume (T8_ECLASS_TET, tree_vertices, dim + 1)) {
-      /* The volume described is negative. We need to switch two
-       * vertices. */
-      double temp;
-
-      T8_ASSERT (dim == 3);
-      t8_debugf ("Correcting negative volume of tree %li\n", static_cast<long> (triangle - triangle_offset));
-      /* We switch vertex 0 and vertex 1 */
-      for (i = 0; i < 3; i++) {
-        temp = tree_vertices[i];
-        tree_vertices[i] = tree_vertices[3 + i];
-        tree_vertices[3 + i] = temp;
-      }
-      T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (T8_ECLASS_TET, tree_vertices, dim + 1));
-    }
     t8_cmesh_set_tree_vertices (cmesh, triangle - triangle_offset, tree_vertices, dim + 1);
   }
   fclose (fp);
@@ -331,7 +316,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
   /* tneighbors stores the neighbor trees on each face of an root element
    * or -1 if there is no neighbor.
    * The trees are sorted in the same order as in the cmesh.
-   * The order of the neighboring elements is not consistent with the 
+   * The order of the neighboring elements is not consistent with the
    * t8code face enumeration */
   tneighbors = T8_ALLOC (t8_locidx_t, num_elems * num_faces);
 
@@ -383,8 +368,8 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
         double *el_vertices2 = (double *) t8_stash_get_attribute (cmesh->stash, neighbor);
 
         /* Get face number of element tit neighboring element neighbor.
-         * For every vertex i of element tit, check if there exists a vertex 
-         * of element neighbor which is equal to it. If no such vertex exist, 
+         * For every vertex i of element tit, check if there exists a vertex
+         * of element neighbor which is equal to it. If no such vertex exist,
          * the index of i is the facenumber we are looking for. */
         for (int ivertex = 0; ivertex < num_faces; ivertex++) {
           int vertex_count = 0;
@@ -435,7 +420,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
               && fabs (el_vertices1[3 * firstvertex + 1] - el_vertices2[3 * el_vertex + 1]) < tolerance
               && fabs (el_vertices1[3 * firstvertex + 2] - el_vertices2[3 * el_vertex + 2]) < tolerance) {
 
-            /* We identified the vertex (face2 + ivertex) % num_faces of the 
+            /* We identified the vertex (face2 + ivertex) % num_faces of the
              * neighboring element as equivalent to the first vertex of face1.*/
             /* True for triangles and tets */
             T8_ASSERT (-1 < el_vertex && el_vertex < num_faces);
