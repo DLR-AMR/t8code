@@ -1411,6 +1411,10 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   }
 }
 
+/* TODO: This function seems to be untested.
+ *       On Nov 7 2025 i found a bug in it that would have been caught by testing
+ *       (the face number of the element was used as the cmesh tree face number, which
+ *        is incorrect).*/
 t8_eclass_t
 t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *elem,
                                    const int face)
@@ -1422,10 +1426,19 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
     /* The neighbor element is inside the current tree. */
     return tree_class;
   }
+  /* We now compute the cmesh face neighbor class across the corresponding face.
+   * To do so, we first need to compute the face of the root tree corresponding to the
+   * face of the element. */
+  const int tree_face = scheme->element_get_tree_face (tree_class, elem, face);
+  // Debug check if tree_face is a valid face of the tree.
+  // Note that if elem would not be a boundary element, the return value of
+  // element_get_tree_face could still be within these bounds, even though it does not make sense.
+  // We catch that case by checking element_is_root_boundary above.
+  T8_ASSERT (0 <= tree_face && tree_face < t8_eclass_num_faces[tree_class]);
 
   const t8_locidx_t cmesh_local_tree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  return t8_cmesh_get_tree_face_neighbor_eclass (cmesh, cmesh_local_tree_id, face);
+  return t8_cmesh_get_tree_face_neighbor_eclass (cmesh, cmesh_local_tree_id, tree_face);
 }
 
 /* TODO: If the forest has no ghosts, then skip the ghosts
