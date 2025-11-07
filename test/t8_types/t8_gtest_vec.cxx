@@ -297,6 +297,13 @@ TEST (t8_gtest_vec, check_less_or_equal)
   EXPECT_VEC_EQ (one, one_minus_eps, T8_PRECISION_SQRT_EPS);
 }
 
+/**
+ * Creates a vector of vec views for plain c vectors.
+ * \tparam TDim                   The dimension of the vector.
+ * \param [in, out] c_vectors     Pointer to the raw c vectors.
+ * \param [in, out] num_vectors   Number of vectors.
+ * \return                        A std::vector containing views to the c vectors.
+ */
 template <size_t TDim>
 static inline std::vector<t8_vec_view<TDim, const double>>
 t8_convert_array_to_vec_view (const double* c_vectors, const size_t num_vectors)
@@ -309,6 +316,13 @@ t8_convert_array_to_vec_view (const double* c_vectors, const size_t num_vectors)
   return vec_views;
 }
 
+/**
+ * Create a vector of t8_vec as a copy of plain c vectors.
+ * \tparam TDim                   The dimension of the vector.
+ * \param [in, out] c_vectors     Pointer to the raw c vectors.
+ * \param [in, out] num_vectors   Number of vectors.
+ * \return                        A std::vector containing t8_vec objects.
+ */
 template <size_t TDim>
 static inline std::vector<t8_vec<TDim>>
 t8_convert_array_to_vec (const double* c_vectors, const size_t num_vectors)
