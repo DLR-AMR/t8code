@@ -26,6 +26,10 @@
 #include <t8_types/t8_vec.hxx>
 #include <t8_types/t8_vec.h>
 #include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_memory_macros.hxx>
+#include <t8_helper_functions/t8_unrolled_for.hxx>
+
+#include <random>
 
 /* test the t8_norm function */
 TEST (t8_gtest_vec, norm)
@@ -291,4 +295,59 @@ TEST (t8_gtest_vec, check_less_or_equal)
     { 1.0 - T8_PRECISION_SQRT_EPS, 1.0 - T8_PRECISION_SQRT_EPS, 1.0 - T8_PRECISION_SQRT_EPS });
 
   EXPECT_VEC_EQ (one, one_minus_eps, T8_PRECISION_SQRT_EPS);
+}
+
+template <size_t TDim>
+static inline std::vector<t8_vec_view<TDim, const double>>
+t8_convert_array_to_vec_view (const double* c_vectors, const size_t num_vectors)
+{
+  std::vector<t8_vec_view<TDim, const double>> vec_views;
+  vec_views.reserve (num_vectors);
+  for (size_t ivec = 0; ivec < num_vectors; ++ivec)
+    vec_views.emplace_back (make_t8_vec_view<TDim, const double> (c_vectors + ivec * TDim));
+  T8_ASSERT (vec_views.size () == num_vectors);
+  return vec_views;
+}
+
+template <size_t TDim>
+static inline std::vector<t8_vec<TDim>>
+t8_convert_array_to_vec (const double* c_vectors, const size_t num_vectors)
+{
+  std::vector<t8_vec<TDim>> vecs (num_vectors);
+  for (size_t ivec = 0; ivec < num_vectors; ++ivec)
+    std::copy_n (c_vectors + ivec * TDim, TDim, vecs[ivec].begin ());
+  T8_ASSERT (vecs.size () == num_vectors);
+  return vecs;
+}
+
+/** Test the vector/point views */
+TEST (t8_gtest_vec, vec_view)
+{
+  constexpr size_t seed = 12345;
+  constexpr double min = -1e10, max = 1e10;
+  std::mt19937_64 rng (seed);
+  std::uniform_real_distribution<double> dist (min, max);
+  constexpr size_t num_points = 10;
+
+  /* Test for each dimension */
+  unrolled_for (1, 4, idim, {
+    double c_vectors[idim * num_points] = { 0 };
+    /* Fill test vectors and create views. */
+    for (size_t icoord = 0; icoord < num_points * idim; ++icoord)
+      c_vectors[icoord] = dist (rng);
+    auto vecs = t8_convert_array_to_vec<idim> (c_vectors, num_points);
+    auto vec_views = t8_convert_array_to_vec_view<idim> (c_vectors, num_points);
+
+    for (size_t ipoint = 0; ipoint < num_points; ++ipoint) {
+      EXPECT_VEC_EQ (vecs[ipoint], vec_views[ipoint], T8_PRECISION_SQRT_EPS);
+      /* Also check if functions return the same, but only for 3D. */
+      if constexpr (idim == 3) {
+        /* Normalize c vectors and cpp vectors. */
+        t8_normalize (c_vectors + ipoint * idim);
+        t8_normalize (vecs[ipoint]);
+        /* Copied vector and vector view should be the same. */
+        EXPECT_VEC_EQ (vecs[ipoint], vec_views[ipoint], T8_PRECISION_SQRT_EPS);
+      }
+    }
+  });
 }
