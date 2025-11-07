@@ -1905,7 +1905,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       t8_debugf ("[H] Starting face search. neigh level %i, desc level %i\n", neighbor_level, first_desc_level);
 
       int temp_dual_face = same_level_neighbor_dual_face;
-      if (neighbor_unique) {
+      if (neighbor_unique && first_desc_level < neighbor_level) {
         t8_debugf ("[H] Starting search with first desc.\n");
         // We need to update the dual face.
         // TODO: Add element function to calculate the dual face upward in the refinement hierarchy.
@@ -1922,6 +1922,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
           t8_debugf ("\tUpdated dual face on level %i to %i\n", ilevel, temp_dual_face);
         }
         scheme->element_destroy (neigh_class, 1, &parent);
+#if 0
         SC_CHECK_ABORT (
           scheme->check_eclass_scheme_type<t8_default_scheme_hex> (eclass)
             || scheme->check_eclass_scheme_type<t8_default_scheme_quad> (eclass)
@@ -1935,6 +1936,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
             || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_LINE>> (eclass)
             || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_VERTEX>> (eclass),
           "Face neighbor computation currently only possible for default or standalone vertex/line/quad/hex scheme.");
+#endif
       }  // end if neighbor_unique
 
       const int search_element_dual_face = neighbor_unique ? temp_dual_face : same_level_neighbor_dual_face;
@@ -2808,7 +2810,7 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
     sc_array_resize (owners, 0);
     return;
   }
-  /* Aallocate memory for the neighbor element */
+  /* Allocate memory for the neighbor element */
   T8_ASSERT (T8_ECLASS_ZERO <= neigh_class && neigh_class < T8_ECLASS_COUNT);
   scheme->element_new (neigh_class, 1, &face_neighbor);
   /* clang-format off */
