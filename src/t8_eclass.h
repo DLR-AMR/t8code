@@ -260,6 +260,7 @@ inline constexpr int t8_edge_to_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2] = 
   * The normal vector is computed as the cross product of v_1 - v_0 and v_2 - v_0.
   * v_i being the i-th vertex.
   * The faces of an eclass of dimension 2 or lower are all 0 oriented.
+  * Invalid values return -1.
   */
 inline constexpr int t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES]
   = T8_ECLASS_FACE_ORIENTATION_VALUES;
@@ -276,15 +277,19 @@ inline constexpr int t8_eclass_num_edges[T8_ECLASS_COUNT] = T8_ECLASS_NUM_EDGES_
 /** The vtk cell type for the eclass */
 inline constexpr int t8_eclass_vtk_type[T8_ECLASS_COUNT] = T8_ECLASS_VTK_TYPE_VALUES;
 
-/** Map the vtk corner number to the t8 corner number */
+/** Map the vtk corner number to the t8 corner number.
+  * Invalid values return -1. */
 inline constexpr int t8_eclass_vtk_to_t8_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS]
   = T8_ECLASS_VTK_TO_T8_CORNER_NUMBER_VALUES;
 
-/** Map the t8code corner number to the vtk corner number */
+/** Map the t8code corner number to the vtk corner number.
+ *  Invalid values return -1.
+ */
 inline constexpr int t8_eclass_t8_to_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS]
   = T8_ECLASS_T8_TO_VTK_CORNER_NUMBER_VALUES;
 
-/** For each of the element classes, list the type of the faces. */
+/** For each of the element classes, list the type of the faces.
+  * Invalid values return -1. */
 inline constexpr int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = T8_ECLASS_FACE_TYPES_VALUES;
 
 /** For each of the element classes, count the boundary points. */
@@ -340,6 +345,7 @@ extern const int t8_edge_to_face[T8_ECLASS_COUNT][T8_ECLASS_MAX_EDGES][2];
   * The normal vector is computed as the cross product of v_1 - v_0 and v_2 - v_0.
   * v_i being the i-th vertex.
   * The faces of an eclass of dimension 2 or lower are all 0 oriented.
+  * Invalid values return -1.
   */
 extern const int t8_eclass_face_orientation[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
 
@@ -355,13 +361,16 @@ extern const int t8_eclass_num_edges[T8_ECLASS_COUNT];
 /** The vtk cell type for the eclass */
 extern const int t8_eclass_vtk_type[T8_ECLASS_COUNT];
 
-/** Map the vtk corner number to the t8 corner number */
+/** Map the vtk corner number to the t8 corner number.
+  * Invalid values return -1. */
 extern const int t8_eclass_vtk_to_t8_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
-/** Map the t8code corner number to the vtk corner number */
+/** Map the t8code corner number to the vtk corner number.
+  * Invalid values return -1. */
 extern const int t8_eclass_t8_to_vtk_corner_number[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS];
 
-/** For each of the element classes, list the type of the faces. */
+/** For each of the element classes, list the type of the faces.
+  * Invalid values return -1. */
 extern const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
 
 /** For each of the element classes, count the boundary points. */
