@@ -859,7 +859,8 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
  *                  constructed.
  * \param [out] neigh_face The number of the face viewed from perspective of \a neigh.
  * \return The global tree-id of the tree in which \a neigh is in.
- *        -1 if there exists no neighbor across that face.
+ *        -1 if there exists no neighbor across that face. Domain boundary.
+ *        -2 if the neighbor is not in a local tree or ghost tree. Process/Ghost boundary.
  */
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
