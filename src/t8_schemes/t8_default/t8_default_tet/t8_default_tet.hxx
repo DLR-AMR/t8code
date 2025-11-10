@@ -38,10 +38,10 @@
 class t8_scheme;
 
 /** Default implementation of the scheme for the tet element class. */
-class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_tet> {
+class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_default_scheme_tet> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_tet () noexcept: t8_default_scheme_common (T8_ECLASS_TET, sizeof (t8_dtet_t)) {};
+  t8_default_scheme_tet () noexcept: t8_default_scheme_common (sizeof (t8_dtet_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_tet () {};
@@ -54,7 +54,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
 
   /** Allocate memory for an array of tetrahedra and initialize them.
    * \param [in] length   The number of tet elements to be allocated.
-   * \param [in,out] elem On input an array of \b length many unallocated element pointers. On output all these 
+   * \param [in,out] elem On input an array of \b length many unallocated element pointers. On output all these
    *                       pointers will point to an allocated and initialized element.
    * \note Not every element that is created in t8code will be created by a call
    * to this function. However, if an element is not created using \ref element_new,
@@ -98,7 +98,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   int
   get_maxlevel (void) const;
 
-  /** Copy all entries of \b source to \b dest. \b dest must be an existing element. 
+  /** Copy all entries of \b source to \b dest. \b dest must be an existing element.
    * No memory is allocated by this function.
    * \param [in] source   The element whose entries will be copied to \b dest.
    * \param [in,out] dest This element's entries will be overwritten with the entries of \b source.
@@ -212,7 +212,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   /** Construct all children of a given element.
    * \param [in] elem   This must be a valid element, bigger than maxlevel.
    * \param [in] length The length of the output array \a c must match the number of children.
-   * \param [in,out] c  The storage for these \a length elements must exist and match the element class in the 
+   * \param [in,out] c  The storage for these \a length elements must exist and match the element class in the
    *                    children's ordering. On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    * \see element_get_num_children
@@ -266,12 +266,12 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   /** Given an element and a face of the element, compute all children of the element that touch the face.
    * \param [in] elem     The element.
    * \param [in] face     A face of \a elem.
-   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face are 
+   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face are
    *                          stored. They will be stored in order of their linear id.
-   * \param [in] num_children The number of elements in \a children. Must match the number of children that touch 
+   * \param [in] num_children The number of elements in \a children. Must match the number of children that touch
    *                          \a face. \ref element_get_num_face_children
-   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th 
-   *                               entry is the child_id of the i-th face_child. It is valid to call this function 
+   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th
+   *                               entry is the child_id of the i-th face_child. It is valid to call this function
    *                               with elem = children[0].
    */
   void
@@ -292,7 +292,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
    * \param [in]  elem    The element.
    * \param [in]  face    Then number of the face.
    * \param [in]  face_child A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that shares
-   *                         a face with \a face. These children are counted in linear order. This coincides with the 
+   *                         a face with \a face. These children are counted in linear order. This coincides with the
    *                         order of children from a call to \ref element_get_children_at_face.
    * \return              The face number of the face of a child of \a elem that coincides with \a face_child.
    */
@@ -303,34 +303,34 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
    * Or return -1 if no face of the parent matches the face.
    * \param [in]  elem    The element.
    * \param [in]  face    Then number of the face.
-   * \return              If \a face of \a elem is also a face of \a elem's parent, the face number of this face. 
+   * \return              If \a face of \a elem is also a face of \a elem's parent, the face number of this face.
    *                      Otherwise -1.
    * \note For the root element this function always returns \a face.
    */
   int
   element_face_get_parent_face (const t8_element_t *elem, int face) const;
 
-  /** Given an element and a face of this element. If the face lies on the tree boundary, return the face number of 
+  /** Given an element and a face of this element. If the face lies on the tree boundary, return the face number of
    *  the tree face. If not the return value is arbitrary.
    * \param [in] elem     The element.
    * \param [in] face     The index of a face of \a elem.
-   * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary. Any arbitrary 
+   * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary. Any arbitrary
    *          integer if \a is not at a tree boundary.
    */
   int
   element_get_tree_face (const t8_element_t *elem, int face) const;
 
-  /** Suppose we have two trees that share a common face f. Given an element e that is a subface of f in one of the 
+  /** Suppose we have two trees that share a common face f. Given an element e that is a subface of f in one of the
    * trees and given the orientation of the tree connection, construct the face element of the respective tree neighbor
    * that logically coincides with e but lies in the coordinate system of the neighbor tree.
    *  \param [in] elem1     The face element.
    *  \param [in,out] elem2 On return the face element \a elem1 with respect to the coordinate system of the other tree.
    *  \param [in] orientation The orientation of the tree-tree connection. \see t8_cmesh_set_join
-   *  \param [in] sign      Depending on the topological orientation of the two tree faces, either 0 
+   *  \param [in] sign      Depending on the topological orientation of the two tree faces, either 0
    *                        (both faces have opposite orientation) or 1 (both faces have the same top. orientattion).
    *                        \ref t8_eclass_face_orientation
-   *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to the smaller face. A face f of tree T 
-   *                        is smaller than f' of T' if either the eclass of T is smaller or if the classes are equal 
+   *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to the smaller face. A face f of tree T
+   *                        is smaller than f' of T' if either the eclass of T is smaller or if the classes are equal
    *                        and f<f'. The orientation is defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
@@ -372,7 +372,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
-   * \param [in, out] last_desc An allocated element. This element's data will be filled with the data of the last 
+   * \param [in, out] last_desc An allocated element. This element's data will be filled with the data of the last
    *                       descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the last descendant is constructed
    */
@@ -401,13 +401,13 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
 
   /** Construct the face neighbor of a given element if this face neighbor is inside the root tree. Return 0 otherwise.
    * \param [in] elem The element to be considered.
-   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside the root tree, this element's data 
+   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside the root tree, this element's data
    *                  q is filled with the data of the face neighbor. Otherwise the data can be modified
    *                  arbitrarily.
    * \param [in] face The number of the face along which the neighbor should be constructed.
-   * \param [out] neigh_face The number of \a face as viewed from \a neigh. An arbitrary value, 
+   * \param [out] neigh_face The number of \a face as viewed from \a neigh. An arbitrary value,
    *                  if the neighbor is not inside the root tree.
-   * \return          True if \a neigh is inside the root tree. False if not. In this case \a neigh's data can be 
+   * \return          True if \a neigh is inside the root tree. False if not. In this case \a neigh's data can be
    *                  arbitrary on output.
    */
   int
@@ -454,8 +454,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs.
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
-   * refinement level. All element vertices have integer coordinates in this cube and the anchor node is the first of 
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
+   * refinement level. All element vertices have integer coordinates in this cube and the anchor node is the first of
    * all vertices (index 0). It also has the lowest x,y and z coordinates.
    * \param [in] elem   The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
@@ -463,8 +463,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   void
   element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
+  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs.
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
    * refinement level. All element vertices have integer coordinates in this cube.
    *   \param [in] elem    The element to be considered.
    *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
@@ -481,14 +481,14 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   *                      all coords might be used.
    */
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
    * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
@@ -528,8 +528,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<t8_default_scheme_t
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
-  * debugging configuration. 
-  * 
+  * debugging configuration.
+  *
   * \param [in]        elem  The element to print
   * \param [in]        debug_string  String printed to debug
   * \param [in]        string_size  String size of \a debug_string.
