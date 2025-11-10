@@ -1458,12 +1458,9 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
   else {
     /* The neighbor does not lie inside the current tree. The content of neigh is undefined right now. */
     t8_element_t *face_element;
-    t8_gloidx_t global_neigh_id;
-    t8_locidx_t lcneigh_id;
-    int8_t *ttf;
     int tree_neigh_face;
+    int orientation;
     int is_smaller, eclass_compare;
-    int F, sign;
 
     const t8_cmesh_t cmesh = forest->cmesh;
     /* Get the scheme associated to the element class of the boundary element. */
@@ -1471,59 +1468,24 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     const int tree_face = scheme->element_get_tree_face (eclass, elem, face);
     /* compute coarse tree id */
     const t8_locidx_t lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-    const bool cmesh_tree_is_local = lctree_id < t8_cmesh_get_num_local_trees (cmesh);
-    if (t8_cmesh_tree_face_is_boundary (cmesh, lctree_id, tree_face)) {
+    T8_ASSERT (lctree_id >= 0);
+    const bool cmesh_tree_is_local = t8_cmesh_treeid_is_local_tree (cmesh, lctree_id);
+    T8_ASSERT (cmesh_tree_is_local || t8_cmesh_treeid_is_ghost (cmesh, lctree_id));
+
+    const t8_locidx_t neighbor_ctreeid
+      = t8_cmesh_get_face_neighbor (cmesh, lctree_id, tree_face, &tree_neigh_face, &orientation);
+
+    if (neighbor_ctreeid < 0) {
       /* This face is a domain boundary. We do not need to continue */
       return -1;
     }
+
     /* Get the eclass for the boundary */
     const t8_eclass_t boundary_class = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
     /* Allocate the face element */
     scheme->element_new (boundary_class, 1, &face_element);
     /* Compute the face element. */
     scheme->element_get_boundary_face (eclass, elem, face, face_element);
-    /* Get the coarse tree that contains elem.
-     * Also get the face neighbor information of the coarse tree. */
-    if (cmesh_tree_is_local) {
-      t8_locidx_t *face_neighbor;
-      (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, lctree_id, &face_neighbor, &ttf);
-      /* Compute the local id of the face neighbor tree. */
-      lcneigh_id = face_neighbor[tree_face];
-      // Compute the global id of the face neighbor tree.
-      global_neigh_id = t8_cmesh_get_global_id (cmesh, lcneigh_id);
-      T8_ASSERT (neigh_eclass == t8_cmesh_get_tree_class (cmesh, lcneigh_id));
-    }
-    else {
-      const t8_locidx_t lcghost_id = lctree_id - t8_cmesh_get_num_local_trees (cmesh);
-      t8_gloidx_t *face_neighbor;
-      (void) t8_cmesh_trees_get_ghost_ext (cmesh->trees, lcghost_id, &face_neighbor, &ttf);
-      /* Compute the global id of the face neighbor tree. */
-      global_neigh_id = face_neighbor[tree_face];
-      lcneigh_id = t8_cmesh_get_local_id (cmesh, global_neigh_id);
-    }
-    // lcneigh_id is either
-    // < 0  -> not a local or ghost tree
-    // < num_local_trees -> local tree
-    // > num_local_trees -> ghost
-    const bool neighbor_is_local = lcneigh_id >= 0 && lcneigh_id < t8_cmesh_get_num_local_trees (cmesh);
-    const bool neighbor_is_ghost = lcneigh_id >= t8_cmesh_get_num_local_trees (cmesh);
-    if (!neighbor_is_local && !neighbor_is_ghost) {
-      // The neighbor is neither local nor ghost.
-      // We have no way of figuring out the face neighbor.
-      return -2;
-    }
-    /* F is needed to compute the neighbor face number and the orientation.
-     * tree_neigh_face = ttf % F
-     * or = ttf / F
-     */
-    F = t8_eclass_max_num_faces[cmesh->dimension];
-    /* compute the neighbor face */
-    const t8_gloidx_t global_ctree_id = t8_cmesh_get_global_id (cmesh, lctree_id);
-    tree_neigh_face = ttf[tree_face] % F;
-    if (global_neigh_id == global_ctree_id && tree_face == tree_neigh_face) {
-      /* This face is a domain boundary and there is no neighbor */
-      return -1;
-    }
 
     /* We need to find out which face is the smaller one that is the one
      * according to which the orientation was computed.
@@ -1546,13 +1508,17 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
       /* Check if the face of the current tree has a smaller index then the face of the neighbor tree. */
       is_smaller = tree_face <= tree_neigh_face;
     }
+
     /* We now transform the face element to the other tree. */
-    sign = t8_eclass_face_orientation[eclass][tree_face] == t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
-    scheme->element_transform_face (boundary_class, face_element, face_element, ttf[tree_face] / F, sign, is_smaller);
+    const int sign
+      = t8_eclass_face_orientation[eclass][tree_face] == t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
+    scheme->element_transform_face (boundary_class, face_element, face_element, orientation, sign, is_smaller);
     /* And now we extrude the face to the new neighbor element */
     *neigh_face = scheme->element_extrude_face (neigh_eclass, face_element, neigh, tree_neigh_face);
     /* Free the face_element */
     scheme->element_destroy (boundary_class, 1, &face_element);
+
+    const t8_gloidx_t global_neigh_id = t8_cmesh_get_global_id (cmesh, neighbor_ctreeid);
 
     return global_neigh_id;
   }
