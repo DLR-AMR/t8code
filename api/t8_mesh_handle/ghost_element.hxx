@@ -42,10 +42,9 @@ namespace t8_mesh_handle
  *
  * \tparam TCompetence The competences you want to add to the default functionality of the element.
  */
-template <template <typename> class... TCompetence>
-class ghost_element: public abstract_element<TCompetence...> {
-  using Base = abstract_element<TCompetence...>;
-  using mesh_class = Base::mesh_class;
+template <typename mesh_class, template <typename> class... TCompetence>
+class ghost_element: public abstract_element<mesh_class, TCompetence...> {
+  using Base = abstract_element<mesh_class, TCompetence...>;
   friend mesh_class;
 
   /**

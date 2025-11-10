@@ -41,11 +41,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
-/* Forward declaration of the mesh class of the handle.
- */
-template <typename Competences>
-class mesh;
-
 /** 
  * Common interface of the mesh elements and the ghost elements of the mesh handle.
  * An element without specified template parameters provides default implementations for basic functionality 
@@ -64,11 +59,10 @@ class mesh;
  *
  * \tparam TCompetence The competences you want to add to the default functionality of the element.
  */
-template <template <typename> class... TCompetence>
-class abstract_element: public TCompetence<abstract_element<TCompetence...>>... {
+template <typename mesh_class, template <typename> class... TCompetence>
+class abstract_element: public TCompetence<abstract_element<mesh_class, TCompetence...>>... {
  protected:
-  using SelfType = abstract_element<TCompetence...>;
-  using mesh_class = mesh<competence_pack<TCompetence...>>;
+  using SelfType = abstract_element<mesh_class, TCompetence...>;
   friend mesh_class;
 
   /**

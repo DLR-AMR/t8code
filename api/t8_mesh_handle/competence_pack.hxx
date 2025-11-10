@@ -38,8 +38,8 @@ struct competence_pack
   /** Apply the competence pack to a template class, e.g. the \ref abstract_element class.
    * \tparam Target The target template class to apply the \ref TCompetence pack to.
    */
-  template <template <template <typename> class...> class Target>
-  using apply = Target<TCompetence...>;
+  template <typename mesh_class, template <typename, template <typename> class...> class Target>
+  using apply = Target<mesh_class, TCompetence...>;
 
   using is_competence_pack = void;  // Tag to identify this class.
 };

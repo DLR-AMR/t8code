@@ -48,13 +48,14 @@ namespace t8_mesh_handle
  *         \see abstract_element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref competence_pack class.
  */
-template <typename TCompetencePack = competence_pack<>>
+template <typename TCompetencePack = competence_pack<>, typename TUserData = void>
 class mesh {
 
  public:
-  using abstract_element_class = TCompetencePack::template apply<abstract_element>;
-  using mesh_element_class = TCompetencePack::template apply<mesh_element>;
-  using ghost_element_class = TCompetencePack::template apply<ghost_element>;
+  using SelfType = mesh<TCompetencePack, TUserData>;
+  using abstract_element_class = TCompetencePack::template apply<SelfType, abstract_element>;
+  using mesh_element_class = TCompetencePack::template apply<SelfType, mesh_element>;
+  using ghost_element_class = TCompetencePack::template apply<SelfType, ghost_element>;
   // Declare all element classes as friend such that private members (e.g. the forest) can be accessed.
   friend abstract_element_class;
   friend mesh_element_class;
@@ -65,11 +66,12 @@ class mesh {
 
   /** 
    * Constructor for a mesh of the handle. 
-   * \param [in] input_forest The forest from which the mesh should be created. 
+   * \param [in] forest The forest from which the mesh should be created. 
    */
-  mesh (t8_forest_t input_forest): m_forest (input_forest)
+  mesh (t8_forest_t forest): m_forest (forest)
   {
     T8_ASSERT ((std::is_same<typename TCompetencePack::is_competence_pack, void>::value));
+    T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
   }
 
@@ -206,6 +208,17 @@ class mesh {
     update_elements ();
   }
 
+  /** 
+    * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
+    * \param [in] data The user data. Data will never be touched by mesh handling routines.
+    */
+  void
+  set_user_data (TUserData data)
+    requires (!std::is_void_v<TUserData>)
+  {
+    m_user_data = data;
+  }
+
  private:
   /** 
    * Update the storage of the mesh elements according to the current forest. 
@@ -252,6 +265,8 @@ class mesh {
   t8_forest_t m_forest;                       /**< The forest the mesh should be defined for. */
   std::vector<mesh_element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<ghost_element_class> m_ghosts;  /**< Vector storing the (local) ghost elements. */
+  std::conditional_t<!std::is_void_v<TUserData>, TUserData, std::nullptr_t>
+    m_user_data; /**< User data associated with the mesh. */
 };
 
 }  // namespace t8_mesh_handle
