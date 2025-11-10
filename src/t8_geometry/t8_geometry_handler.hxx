@@ -273,6 +273,18 @@ struct t8_geometry_handler
     }
   }
 
+  auto
+  begin ()
+  {
+    return registered_geometries.begin ();
+  }
+
+  auto
+  end ()
+  {
+    return registered_geometries.end ();
+  }
+
  private:
   /**
    * Add a geometry to the geometry handler.

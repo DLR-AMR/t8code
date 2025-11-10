@@ -71,6 +71,7 @@ add_t8_example( NAME t8_cmesh_set_join_by_vertices      SOURCES cmesh/t8_cmesh_s
 add_t8_example( NAME t8_cmesh_geometry_examples         SOURCES cmesh/t8_cmesh_geometry_examples.cxx )
 add_t8_example( NAME t8_cmesh_create_partitioned        SOURCES cmesh/t8_cmesh_create_partitioned.cxx )
 add_t8_example( NAME t8_cmesh_hypercube_pad             SOURCES cmesh/t8_cmesh_hypercube_pad.cxx )
+add_t8_example( NAME t8_cmesh_mesh_deformation_example  SOURCES cmesh/t8_cmesh_mesh_deformation_example.cxx )
 
 add_t8_example( NAME t8_test_ghost                      SOURCES forest/t8_test_ghost.cxx )
 add_t8_example( NAME t8_test_face_iterate               SOURCES forest/t8_test_face_iterate.cxx )
