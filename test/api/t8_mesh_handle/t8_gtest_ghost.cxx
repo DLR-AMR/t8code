@@ -32,6 +32,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8_mesh_handle/mesh.hxx>
 #include <t8_mesh_handle/competences.hxx>
+#include <t8_mesh_handle/competence_pack.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -195,8 +196,8 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
-  using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
-  using element_class = mesh_class::mesh_element_class;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
+  using element_class = typename mesh_class::mesh_element_class;
   mesh_class mesh = mesh_class (forest);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 

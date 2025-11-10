@@ -28,6 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #define T8_ABSTRACT_ELEMENT_HXX
 
 #include <t8.h>
+#include <t8_mesh_handle/competence_pack.hxx>
 #include <t8_element.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
@@ -42,7 +43,7 @@ namespace t8_mesh_handle
 {
 /* Forward declaration of the mesh class of the handle.
  */
-template <template <typename> class... TCompetence>
+template <typename Competences>
 class mesh;
 
 /** 
@@ -67,7 +68,7 @@ template <template <typename> class... TCompetence>
 class abstract_element: public TCompetence<abstract_element<TCompetence...>>... {
  protected:
   using SelfType = abstract_element<TCompetence...>;
-  using mesh_class = mesh<TCompetence...>;
+  using mesh_class = mesh<competence_pack<TCompetence...>>;
   friend mesh_class;
 
   /**
@@ -77,7 +78,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
    * \param [in] tree_id        The tree id of the element in the forest defining the mesh.
    * \param [in] element_id     The element id of the element in the forest defining the mesh.
    */
-  abstract_element (mesh<TCompetence...>* mesh, t8_locidx_t tree_id, t8_locidx_t element_id)
+  abstract_element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t element_id)
     : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id)
   {
   }
@@ -248,7 +249,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
    * Getter for the mesh to which the element is belonging.
    * \return Reference to the mesh.
    */
-  const mesh<TCompetence...>*
+  const mesh_class*
   get_mesh () const
   {
     return m_mesh;
@@ -273,9 +274,9 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   get_element () const
     = 0;
 
-  mesh<TCompetence...>* m_mesh; /**< Pointer to the mesh the element is defined for. */
-  t8_locidx_t m_tree_id;        /**< The tree id of the element in the forest defined in the mesh. */
-  t8_locidx_t m_element_id;     /**< The element id of the element in the forest defined in the mesh. */
+  mesh_class* m_mesh;       /**< Pointer to the mesh the element is defined for. */
+  t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
+  t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
 };
 
 }  // namespace t8_mesh_handle

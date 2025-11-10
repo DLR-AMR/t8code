@@ -32,25 +32,29 @@
 #include <t8_mesh_handle/abstract_element.hxx>
 #include <t8_mesh_handle/mesh_element.hxx>
 #include <t8_mesh_handle/ghost_element.hxx>
+#include <t8_mesh_handle/competence_pack.hxx>
 #include <t8_forest/t8_forest_ghost.h>
 #include <iterator>
 #include <memory>
 #include <vector>
+#include <type_traits>
 
 namespace t8_mesh_handle
 {
 
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
- * \tparam TCompetence The competences you want to add to the default functionality of the mesh.
+ * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
  *         \see abstract_element for more details on the choice of the template parameter.   
+ *         \note Please pack your competences using the \ref competence_pack class.
  */
-template <template <typename> class... TCompetence>
+template <typename TCompetencePack = competence_pack<>>
 class mesh {
+
  public:
-  using abstract_element_class = abstract_element<TCompetence...>;
-  using mesh_element_class = mesh_element<TCompetence...>;
-  using ghost_element_class = ghost_element<TCompetence...>;
+  using abstract_element_class = TCompetencePack::template apply<abstract_element>;
+  using mesh_element_class = TCompetencePack::template apply<mesh_element>;
+  using ghost_element_class = TCompetencePack::template apply<ghost_element>;
   // Declare all element classes as friend such that private members (e.g. the forest) can be accessed.
   friend abstract_element_class;
   friend mesh_element_class;
@@ -65,6 +69,7 @@ class mesh {
    */
   mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
+    T8_ASSERT ((std::is_same<typename TCompetencePack::is_competence_pack, void>::value));
     update_elements ();
   }
 

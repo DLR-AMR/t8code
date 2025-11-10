@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8_mesh_handle/mesh.hxx>
 #include <t8_mesh_handle/competences.hxx>
+#include <t8_mesh_handle/competence_pack.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -98,8 +99,8 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  using mesh_class = t8_mesh_handle::mesh<cache_vertex_coordinates_overwrite>;
-  using element_class = mesh_class::abstract_element_class;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_vertex_coordinates_overwrite>>;
+  using element_class = typename mesh_class::abstract_element_class;
   mesh_class mesh = mesh_class (forest);
   EXPECT_TRUE (element_class::has_vertex_cache ());
   EXPECT_FALSE (element_class::has_centroid_cache ());
@@ -133,7 +134,7 @@ TEST_F (t8_gtest_cache_competence, cache_centroid)
 {
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  using mesh_class = t8_mesh_handle::mesh<cache_centroid_overwrite>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_centroid_overwrite>>;
   using element_class = mesh_class::abstract_element_class;
   mesh_class mesh = mesh_class (forest);
   EXPECT_FALSE (element_class::has_vertex_cache ());

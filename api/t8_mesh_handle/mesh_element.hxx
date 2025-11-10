@@ -41,11 +41,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
-/* Forward declaration of the mesh class of the handle.
- */
-template <template <typename> class... TCompetence>
-class mesh;
-
 /** 
  * Class for the mesh elements of the mesh handle. 
  * This class is a child class of the abstract element class and implements the functionality specific to mesh elements 
@@ -82,8 +77,7 @@ class mesh_element: public abstract_element<TCompetence...> {
    * \param [in] tree_id        The tree id of the element in the forest defining the mesh.
    * \param [in] element_id     The element id of the element in the forest defining the mesh.
    */
-  mesh_element (mesh<TCompetence...>* mesh, t8_locidx_t tree_id, t8_locidx_t element_id)
-    : Base (mesh, tree_id, element_id)
+  mesh_element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t element_id): Base (mesh, tree_id, element_id)
   {
     if constexpr (neighbor_cache_exists) {
       // Resize neighbor caches for clean access to the caches.

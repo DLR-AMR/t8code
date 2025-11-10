@@ -34,10 +34,6 @@
 
 namespace t8_mesh_handle
 {
-/* Forward declaration of the mesh class of the handle.
- */
-template <template <typename> class... TCompetence>
-class mesh;
 
 /** 
  * Class for the ghost elements of the mesh handle. 
@@ -49,7 +45,7 @@ class mesh;
 template <template <typename> class... TCompetence>
 class ghost_element: public abstract_element<TCompetence...> {
   using Base = abstract_element<TCompetence...>;
-  using mesh_class = mesh<TCompetence...>;
+  using mesh_class = Base::mesh_class;
   friend mesh_class;
 
   /**
@@ -60,7 +56,7 @@ class ghost_element: public abstract_element<TCompetence...> {
    * \param [in] lghost_tree_id   The ghost tree id of the element in the forest defining the mesh.
    * \param [in] element_id       The element id of the element in the forest defining the mesh.
    */
-  ghost_element (mesh<TCompetence...>* mesh, t8_locidx_t tree_id, t8_locidx_t lghost_tree_id, t8_locidx_t element_id)
+  ghost_element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t lghost_tree_id, t8_locidx_t element_id)
     : Base (mesh, tree_id, element_id), m_lghost_tree_id (lghost_tree_id)
   {
   }

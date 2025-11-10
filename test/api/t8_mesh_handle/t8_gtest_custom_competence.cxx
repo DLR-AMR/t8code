@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8_mesh_handle/mesh.hxx>
 #include <t8_mesh_handle/competences.hxx>
+#include <t8_mesh_handle/competence_pack.hxx>
 #include <t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -79,7 +80,8 @@ TEST (t8_gtest_custom_competence, custom_competence)
   ASSERT_EQ (true, t8_forest_is_committed (forest));
 
   // Check mesh with custom defined competence.
-  t8_mesh_handle::mesh<dummy_get_level> mesh = t8_mesh_handle::mesh<dummy_get_level> (forest);
+  using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<dummy_get_level>>;
+  mesh_class_custom mesh = mesh_class_custom (forest);
 
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
@@ -87,7 +89,8 @@ TEST (t8_gtest_custom_competence, custom_competence)
   }
 
   // Test with two custom competences and a predefined competence.
-  using mesh_class = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  using competences = t8_mesh_handle::competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  using mesh_class = t8_mesh_handle::mesh<competences>;
   mesh_class mesh_more_competences = mesh_class (forest);
 
   for (auto it = mesh_more_competences.begin (); it != mesh_more_competences.end (); ++it) {
