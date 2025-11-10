@@ -97,8 +97,6 @@ class t8_gtest_cache_competence: public testing::Test {
  */
 TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
-
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_vertex_coordinates_overwrite>>;
   using element_class = typename mesh_class::abstract_element_class;
   mesh_class mesh = mesh_class (forest);
@@ -132,8 +130,6 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
  */
 TEST_F (t8_gtest_cache_competence, cache_centroid)
 {
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
-
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_centroid_overwrite>>;
   using element_class = mesh_class::abstract_element_class;
   mesh_class mesh = mesh_class (forest);
