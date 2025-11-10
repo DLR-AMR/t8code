@@ -65,12 +65,12 @@ struct unrolled_index
  *  Usage:
  *  int x = 1
  *  unrolled_for<0, 3>([&](auto loop_count) {
-        do_something<loop_count>(x);
-    };
-    expands to:
-    do_something<0>(x);
-    do_something<1>(x);
-    do_something<2>(x);
+ *      do_something<loop_count>(x);
+ *  };
+ *  expands to:
+ *  do_something<0>(x);
+ *  do_something<1>(x);
+ *  do_something<2>(x);
  */
 template <std::size_t first, std::size_t last, typename TFunction>
 constexpr void
