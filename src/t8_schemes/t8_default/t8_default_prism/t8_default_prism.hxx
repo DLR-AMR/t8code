@@ -58,7 +58,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
 
   /** Allocate memory for an array of prisms and initialize them.
    * \param [in] length     The number of prism elements to be allocated.
-   * \param [in,out] elem  On input an array of \b length many unallocated
+   * \param [in,out] elem   On input an array of \b length many unallocated
    *                        element pointers.
    *                        On output all these pointers will point to an allocated
    *                        and initialized element.
@@ -78,7 +78,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
 
   /** Initialize an array of allocated prism elements.
    * \param [in] length     The number of prism elements to be initialized.
-   * \param [in,out] elem  On input an array of \b length many allocated
+   * \param [in,out] elem   On input an array of \b length many allocated
    *                        elements.
    * \note In debugging mode, an element that was passed to \ref element_init
    * must pass \ref element_is_valid.
@@ -342,20 +342,20 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
    *  and given the orientation of the tree connection, construct the face
    *  element of the respective tree neighbor that logically coincides with e
    *  but lies in the coordinate system of the neighbor tree.
-   *  \param [in] elem1     The face element.
-   *  \param [in,out] elem2 On return the face element \a elem1 with respect
-   *                        to the coordinate system of the other tree.
-   *  \param [in] orientation The orientation of the tree-tree connection.
-   *                        \see t8_cmesh_set_join
-   *  \param [in] sign      Depending on the topological orientation of the two tree faces,
-   *                        either 0 (both faces have opposite orientation)
-   *                        or 1 (both faces have the same top. orientattion).
-   *                        \ref t8_eclass_face_orientation
+   *  \param [in] elem1           The face element.
+   *  \param [in,out] elem2       On return the face element \a elem1 with respect
+   *                              to the coordinate system of the other tree.
+   *  \param [in] orientation     The orientation of the tree-tree connection.
+   *                              \see t8_cmesh_set_join
+   *  \param [in] sign            Depending on the topological orientation of the two tree faces,
+   *                              either 0 (both faces have opposite orientation)
+   *                              or 1 (both faces have the same top. orientation).
+   *                              \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
-   *                        the smaller face. A face f of tree T is smaller than
-   *                        f' of T' if either the eclass of T is smaller or if
-   *                        the classes are equal and f<f'. The orientation is
-   *                        defined in relation to the smaller face.
+   *                              the smaller face. A face f of tree T is smaller than
+   *                              f' of T' if either the eclass of T is smaller or if
+   *                              the classes are equal and f<f'. The orientation is
+   *                              defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   void
@@ -370,33 +370,33 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face.
-   * \param [in] face     A face element.
-   * \param [in,out] elem An allocated element. The entries will be filled with
-   *                      the data of the element that has \a face as a face and
-   *                      lies within the root tree.
+   * \param [in] face      A face element.
+   * \param [in,out] elem  An allocated element. The entries will be filled with
+   *                       the data of the element that has \a face as a face and
+   *                       lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
-   *                      lies.
-   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
-   * \return              The face number of the face of \a elem that coincides
-   *                      with \a face.
+   *                       lies.
+   * \param [in] scheme    The scheme collection with a scheme for the eclass of the face.
+   * \return               The face number of the face of \a elem that coincides
+   *                       with \a face.
    */
   int
   element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
-   * \param [in] elem      The input element.
-   * \param [in] face      A face of \a elem.
+   * \param [in] elem            The input element.
+   * \param [in] face            A face of \a elem.
    * \param [in, out] first_desc An allocated element. This element's data will be
-   *                       filled with the data of the first descendant of \a elem
-   *                       that shares a face with \a face.
-   * \param [in] level     The level, at which the first descendant is constructed
+   *                             filled with the data of the first descendant of \a elem
+   *                             that shares a face with \a face.
+   * \param [in] level           The level, at which the first descendant is constructed
    */
   void
   element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
 
   /** Construct the last descendant of an element at a given level that touches a given face.
-   * \param [in] elem      The input element.
-   * \param [in] face      A face of \a elem.
+   * \param [in] elem           The input element.
+   * \param [in] face           A face of \a elem.
    * \param [in, out] last_desc An allocated element. This element's data will be
    *                       filled with the data of the last descendant of \a elem
    *                       that shares a face with \a face.
@@ -478,7 +478,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem    The element whose successor should be constructed.
+   * \param [in] elem      The element whose successor should be constructed.
    * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
@@ -488,7 +488,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum
    * refinement level.  All element vertices have integer coordinates in this cube and the anchor node is the first of
    * all vertices (index 0). It also has the lowest x,y and z coordinates.
-   * \param [in] elem   The element.
+   * \param [in] elem    The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   void
@@ -497,7 +497,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
   /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs.
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
    * refinement level. All element vertices have integer coordinates in this cube.
-   *   \param [in] element       The element to be considered.
+   *   \param [in] element  The element to be considered.
    *   \param [in] vertex   The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords  An array of at least as many integers as the element's dimension whose entries will be
    *                        filled with the coordinates of \a vertex.
@@ -507,8 +507,8 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem    The element to be considered.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
@@ -521,7 +521,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
    *  reference space of the tree.
    *
    * \param [in] elem         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -576,32 +576,32 @@ class t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, 
   set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-   * \param [in] elements Array of elements that are to be packed
-   * \param [in] count Number of elements to pack
+   * \param [in] elements        Array of elements that are to be packed
+   * \param [in] count           Number of elements to pack
    * \param [in,out] send_buffer Buffer in which to pack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-   * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] comm MPI Communicator
+   * \param [in] buffer_size     size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position   the position of the first byte that is not already packed
+   * \param [in] comm            MPI Communicator
   */
   void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                     int *position, sc_MPI_Comm comm) const;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
-   * \param [in] count Number of elements to pack
-   * \param [in] comm MPI Communicator
+   * \param [in] count      Number of elements to pack
+   * \param [in] comm       MPI Communicator
    * \param [out] pack_size upper bound on the message size
   */
   void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-   * \param [in] recvbuf Buffer from which to unpack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in] recvbuf       Buffer from which to unpack the elements
+   * \param [in] buffer_size   size of the buffer (in order to check that we don't access out of range)
    * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] elements Array of initialised elements that is to be filled from the message
-   * \param [in] count Number of elements to unpack
-   * \param [in] comm MPI Communicator
+   * \param [in] elements      Array of initialised elements that is to be filled from the message
+   * \param [in] count         Number of elements to unpack
+   * \param [in] comm          MPI Communicator
   */
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,

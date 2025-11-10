@@ -461,7 +461,7 @@ t8_element_get_tree_face (const t8_scheme_c *scheme, const t8_eclass_t tree_clas
  *                       \see t8_cmesh_set_join
  * \param [in] sign      Depending on the topological orientation of the two tree faces,
  *                       either 0 (both faces have opposite orientation)
- *                       or 1 (both faces have the same top. orientattion).
+ *                       or 1 (both faces have the same top. orientation).
  *                       \ref t8_eclass_face_orientation
  * \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
  *                       the smaller face. A face f of tree T is smaller than

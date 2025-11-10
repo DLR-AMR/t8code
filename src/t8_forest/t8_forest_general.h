@@ -571,7 +571,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, pneighbor_leaves);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -613,7 +613,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
- *     scheme->element_destroy (pneigh_eclass, num_neighbors, neighbors);
+ *     scheme->element_destroy (pneigh_eclass, num_neighbors, pneighbor_leaves);
  *     T8_FREE (pneighbor_leaves);
  *     T8_FREE (pelement_indices);
  *     T8_FREE (dual_faces);
@@ -913,7 +913,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, const t8_scheme_c *scheme, const int le
 /** Build a adapted forest from another forest.
  * \param [in]    forest_from The forest to refine
  * \param [in]    adapt_fn    Adapt function to use
- * \param [in]    recursive   If true adptation is recursive
+ * \param [in]    recursive   If true adaptation is recursive
  * \param [in]    do_face_ghost If true, a layer of ghost elements is created for the forest.
  * \param [in]    user_data   If not NULL, the user data pointer of the forest is set to this value.
  * \return        A new forest that is adapted from \a forest_from.
