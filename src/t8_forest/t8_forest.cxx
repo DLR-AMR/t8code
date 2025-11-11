@@ -1663,12 +1663,7 @@ t8_forest_leaf_face_neighbors_iterate (t8_forest_t forest, t8_locidx_t ltreeid, 
   }
   return 1;
 }
-#if 0
-todo: neighbor element in quad case /test/t8_forest/t8_gtest_leaf_face_neighbors_parallel --gtest_filter=*t8_cmesh_new_periodic_hybrid*
-triangle to quad, quad is invalid -1,-1,-1...where???
-Already in face callback?
-or before copy or after final copy?
-#endif
+
 /* 
  Set the proper return values of the leaf face neighbor computation
  in case that no neighbors are found.
