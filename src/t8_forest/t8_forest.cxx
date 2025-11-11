@@ -1604,18 +1604,20 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
   return orientation;
 }
 
+/** Internal data used for t8_forest_leaf_face_neighbors_iterate
+ * to buffer face neighbor information during leaf face neighbor search
+ * \ref t8_forest_leaf_face_neighbors_ext
+ * 
+ * Given an element and a face, the search iterates through all leafs
+ * at that face and stores their information in this buffer.
+ * After the search the entries of the buffer are used and the
+ * search can start again with a clean buffer.
+*/
 struct t8_lfn_user_data
 {
-  std::vector<t8_locidx_t> element_indices;
-  std::vector<int> dual_faces;
-  std::vector<const t8_element_t *> neighbors;
-  const t8_scheme &scheme;
-  t8_eclass_t eclass;
-
- public:
-  t8_lfn_user_data (const t8_scheme &scheme, t8_eclass_t eclass): scheme (scheme), eclass (eclass)
-  {
-  }
+  std::vector<t8_locidx_t> element_indices;    /**< Element indices of the found neighbors. */
+  std::vector<int> dual_faces;                 /**< Dual faces of the found neighbors. */
+  std::vector<const t8_element_t *> neighbors; /**< Pointers to the actual neighbor elements. */
 };
 
 static int
@@ -1824,7 +1826,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
     }
   }
 
-  struct t8_lfn_user_data user_data (*scheme, eclass);
+  struct t8_lfn_user_data user_data;
 
   // Now we iterate over the leaf arrays of the neighbor tree
   // or neighbor ghost tree and find all leaf face neighbors of the element.
