@@ -20,9 +20,7 @@ A clear and concise description of what you expected to happen.
 
 **Log files**
 - If possible, add any output and error messages that you got
-- Please upload the `config.log` file (when building with autotools)
-- For failing tests, please upload the `test-suite.log` file (when building with autotools)
-- When building with CMake please upload
+- Please upload the build and test logs
   - `CMakeCache.txt`
   - `CMakeFiles/CMakeError.log`
   - `CMakeFiles/CMakeOutput.log`
@@ -34,13 +32,13 @@ A clear and concise description of what you expected to happen.
  - Compiler: [e.g., gcc, icc, mpicc]
  - Compiler version: [e.g. the output of 'gcc --version']
  - MPI version (if MPI is used): [The output of 'mpirun --version' or 'mpiexec --version']
- 
+
 **Estimated priority**
 Which of these is most applicable (remove the others):
 
-"Priority: high"  Should be solved as soon as possible 
+"Priority: high"  Should be solved as soon as possible
 
-"Priority: medium"  Should be solved within half a year 
+"Priority: medium"  Should be solved within half a year
 
 "Priority: low" Should be solved eventually
 

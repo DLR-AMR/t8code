@@ -38,11 +38,17 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
+/**
+ * A struct to hold the information about a ghost facejoin.
+ *
+ * It contains the global id of the ghost, the local id of the ghost,
+ * and the current number of inserted ghost attributes.
+ */
 typedef struct ghost_facejoins_struct
 {
-  t8_gloidx_t ghost_id; /* The id of the ghost */
-  t8_locidx_t local_id; /* The local id of the ghost */
-  t8_gloidx_t attr_id;  /* The current number of inserted ghost attributes */
+  t8_gloidx_t ghost_id; /**< The id of the ghost */
+  t8_locidx_t local_id; /**< The local id of the ghost */
+  t8_gloidx_t attr_id;  /**< The current number of inserted ghost attributes */
 } t8_ghost_facejoin_t;
 
 static int
@@ -506,6 +512,12 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #endif
 }
 
+/**
+ * Commit a cmesh from stash.
+ *
+ * \param[in] cmesh The cmesh to commit.
+ * \param[in] comm The MPI communicator to use.
+ */
 void
 t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
@@ -522,7 +534,7 @@ t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 
 /* TODO: set boundary face connections here.
- *       not trivial if replicated and not level 3 face_knowledg
+ *       not trivial if replicated and not level 3 face_knowledge
  *       Edit: boundary face is default. If no face-connection is added then
  *             we assume a boundary face.
  * TODO: Implement a debug check for mesh consistency between processes.
@@ -537,7 +549,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
   T8_ASSERT (!cmesh->committed);
   SC_CHECK_ABORT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM,
-                  "Dimension of the cmesh is not set properly.\n");
+                  "Dimension of the cmesh is not set properly. This error may be "
+                  "caused by empty cmesh partitions whose dimension can't be "
+                  "inferred from the element types. Try setting the dimension "
+                  "explicitly using t8_cmesh_set_dimension\n");
 
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
@@ -561,6 +576,11 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       cmesh->geometry_handler = cmesh->set_from->geometry_handler;
       cmesh->geometry_handler->ref ();
     }
+
+#if T8_ENABLE_DEBUG
+    /* Copy negative volume check from set_from */
+    cmesh->negative_volume_check = cmesh->set_from->negative_volume_check;
+#endif /* T8_ENABLE_DEBUG */
 
     if (cmesh->set_partition) {
       /* The cmesh should be partitioned */
@@ -587,9 +607,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * but only if the vertex_to_tree instance is not yet committed
    * and if the tree_to_vertex instance is not empty.
    */
-  if (cmesh->vertex_connectivity->get_vertex_to_tree_state () == 0
-      && cmesh->vertex_connectivity->get_tree_to_vertex_state () == 1) {
-    cmesh->vertex_connectivity->build_vertex_to_tree (cmesh);
+  if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
+    cmesh->vertex_connectivity->build_vertex_to_tree ();
   }
 
 #if T8_ENABLE_DEBUG
@@ -609,12 +628,17 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_stash_destroy (&cmesh->stash);
   }
 
-  t8_debugf ("committed cmesh with %li local and %lli global trees and"
+  t8_debugf ("Committed cmesh with %li local and %lli global trees and"
              " %li ghosts.\n",
              (long) cmesh->num_local_trees, (long long) cmesh->num_trees, (long) cmesh->num_ghosts);
-
+#if T8_ENABLE_DEBUG
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  T8_ASSERT (t8_cmesh_validate_geometry (cmesh));
+  T8_ASSERTF (
+    t8_cmesh_validate_geometry (cmesh, cmesh->negative_volume_check),
+    "There were either problems with incompatible trees and geometries or negative volumes in the trees.\n"
+    "The negative volume check for cmeshes can be deactivated, but we instead recommend fixing the input mesh or "
+    "creating an issue.");
+#endif /* T8_ENABLE_DEBUG */
   /* If profiling is enabled, we measure the runtime of  commit. */
   if (cmesh->profile != NULL) {
     cmesh->profile->commit_runtime = sc_MPI_Wtime () - cmesh->profile->commit_runtime;

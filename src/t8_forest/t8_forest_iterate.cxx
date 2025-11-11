@@ -28,16 +28,27 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * This struct stores query data about the elements within the forest.
+ */
 typedef struct
 {
-  const t8_scheme *scheme;
-  t8_eclass_t tree_class;
-  int level;
-  int num_children;
+  const t8_scheme *scheme; /**< The scheme. */
+  t8_eclass_t tree_class;  /**< The tree class. */
+  int level;               /**< The refinement level. */
+  int num_children;        /**< The number of children. */
 } t8_forest_child_type_query_t;
 
-/* This is the function that we call in sc_split_array to determine for an
- * element E that is a descendant of an element e, of which of e's children, E is a descendant. */
+/** 
+ * This is the function that we call in sc_split_array to determine for an
+ * element E that is a descendant of an element e, of which of e's children, E is a descendant. 
+ * 
+ * \param[in]   leaf_elements   The larray of eaf elements.
+ * \param[in]   index           The local id of the element within the leaf_elements array.
+ * \param[in]   data            The query data.
+ * 
+ * \return The element's ancestor id at the stored level is returned as the element's type.
+ */
 static size_t
 t8_forest_determine_child_type (sc_array_t *leaf_elements, size_t index, void *data)
 {
@@ -175,7 +186,8 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
   T8_FREE (split_offsets);
 }
 
-/* The recursion that is called from t8_forest_search_tree
+/**
+ * The recursion that is called from t8_forest_search_tree.
  * Input is an element and an array of all leaf elements of this element.
  * The callback function is called on element and if it returns true,
  * the search continues with the children of the element.
@@ -187,6 +199,17 @@ t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_eleme
  * for the parent element.
  * If the callback function (search_fn) returns false for an element,
  * the query function is not called for this element.
+ * 
+ * \param[in] forest                    A committed forest.
+ * \param[in] ltreeid                   The local index of the tree.
+ * \param[in] element                   The considered element.
+ * \param[in] tree_class                The element class of the tree.
+ * \param[in] leaf_elements             The array of leaf elements that are descendants of \a element. Sorted by linear index.
+ * \param[in] tree_lindex_of_first_leaf Tree-local index of the first leaf.
+ * \param[in] search_fn                 The search callback function, \see t8_forest_search_fn.
+ * \param[in] query_fn                  The query function \see t8_forest_query_fn.
+ * \param[in] queries                   The array of queries.
+ * \param[in] active_queries            The active queries, given as an array of indices within the \a queries array.
  */
 static void
 t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_element_t *element,
@@ -305,7 +328,16 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
   }
 }
 
-/* Perform a top-down search in one tree of the forest */
+/** 
+ *  Perform a top-down search in one tree of the forest 
+ *  
+ * \param[in] forest          The forest.
+ * \param[in] ltreeid         The local index of the tree to search in.
+ * \param[in] search_fn       The callback function describing the search criterion.
+ * \param[in] query_fn        The callback function used for queries.
+ * \param[in] queries         The array of queries.
+ * \param[in] active_queries  The active queries within \a queries.
+*/
 static void
 t8_forest_search_tree (t8_forest_t forest, t8_locidx_t ltreeid, t8_forest_search_fn search_fn,
                        t8_forest_query_fn query_fn, sc_array_t *queries, sc_array_t *active_queries)
@@ -450,14 +482,14 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
               }
             }
             T8_ASSERT (family_size <= scheme->element_get_num_children (tree_class, elem_new));
-#if T8_DEBUG
+#if T8_ENABLE_DEBUG
             /* Check whether elem_old is the first element of the family */
             for (t8_locidx_t ielem = 1;
                  ielem < scheme->element_get_num_children (tree_class, elem_old) && ielem_old - ielem >= 0; ielem++) {
               const t8_element_t *elem_old_debug
                 = t8_forest_get_leaf_element_in_tree (forest_old, itree, ielem_old - ielem);
               scheme->element_get_parent (tree_class, elem_old_debug, elem_parent);
-              SC_CHECK_ABORT (!scheme->t8_element_equal (elem_new, elem_parent),
+              SC_CHECK_ABORT (!scheme->element_is_equal (tree_class, elem_new, elem_parent),
                               "elem_old is not the first of the family.");
             }
 #endif

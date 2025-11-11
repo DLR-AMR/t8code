@@ -85,7 +85,7 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
  * \param[in] precision_expr Name of the precision
  * \param[in] vec_1 First vector to compare
  * \param[in] vec_2 Second vector to compare
- * \param[in] precision Test equality up to this prescision
+ * \param[in] precision Test equality up to this precision
  * \return testing::AssertionResult 
  */
 template <typename T>
