@@ -1727,7 +1727,6 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
                   "Ghost structure is needed for t8_forest_leaf_face_neighbors "
                   "but was not found in forest.\n");
 
-  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   if (orientation) {
