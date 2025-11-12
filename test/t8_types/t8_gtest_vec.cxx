@@ -24,10 +24,12 @@
 
 #include <gtest/gtest.h>
 #include <t8_types/t8_vec.hxx>
+#include <t8_types/t8_vec.h>
 #include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_memory_macros.hxx>
+#include <t8_helper_functions/t8_unrolled_for.hxx>
 
-/* Accuracy used for comparisons with correct result */
-#define epsilon 1e-9
+#include <random>
 
 /* test the t8_norm function */
 TEST (t8_gtest_vec, norm)
@@ -40,8 +42,8 @@ TEST (t8_gtest_vec, norm)
   const double normarbitrary = 42.117360883;
 
   EXPECT_EQ (t8_norm (zero), 0);
-  EXPECT_NEAR (t8_norm (onetwothree), normonetwothree, epsilon);
-  EXPECT_NEAR (t8_norm (arbitrary), normarbitrary, epsilon);
+  EXPECT_NEAR (t8_norm (onetwothree), normonetwothree, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_norm (arbitrary), normarbitrary, T8_PRECISION_SQRT_EPS);
 }
 
 /* test the t8_dist function */
@@ -52,12 +54,12 @@ TEST (t8_gtest_vec, dist)
   const t8_3D_point arbitrary ({ -.05, 3.14159, 42 });
   const double distzeroonetwothree = sqrt (1 + 4 + 9);
   const double distarbitraryonetwothree = 39.030830477;
-  EXPECT_VEC_EQ (zero, zero, T8_PRECISION_EPS);
-  EXPECT_VEC_EQ (onetwothree, onetwothree, T8_PRECISION_EPS);
-  EXPECT_NEAR (t8_dist (onetwothree, zero), distzeroonetwothree, epsilon);
-  EXPECT_NEAR (t8_dist (zero, onetwothree), distzeroonetwothree, epsilon);
-  EXPECT_NEAR (t8_dist (arbitrary, onetwothree), distarbitraryonetwothree, epsilon);
-  EXPECT_NEAR (t8_dist (onetwothree, arbitrary), distarbitraryonetwothree, epsilon);
+  EXPECT_VEC_EQ (zero, zero, T8_PRECISION_SQRT_EPS);
+  EXPECT_VEC_EQ (onetwothree, onetwothree, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_dist (onetwothree, zero), distzeroonetwothree, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_dist (zero, onetwothree), distzeroonetwothree, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_dist (arbitrary, onetwothree), distarbitraryonetwothree, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_dist (onetwothree, arbitrary), distarbitraryonetwothree, T8_PRECISION_SQRT_EPS);
 }
 
 /* test the t8_ax function */
@@ -78,9 +80,9 @@ TEST (t8_gtest_vec, ax)
 
   /* Check results */
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (zero[i], alpha * czero[i], epsilon);
-    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], epsilon);
-    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], epsilon);
+    EXPECT_NEAR (zero[i], alpha * czero[i], T8_PRECISION_SQRT_EPS);
+    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], T8_PRECISION_SQRT_EPS);
+    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], T8_PRECISION_SQRT_EPS);
   }
 }
 
@@ -102,9 +104,9 @@ TEST (t8_gtest_vec, axy)
 
   /* Check results */
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (zero[i], alpha * czero[i], epsilon);
-    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], epsilon);
-    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], epsilon);
+    EXPECT_NEAR (zero[i], alpha * czero[i], T8_PRECISION_SQRT_EPS);
+    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i], T8_PRECISION_SQRT_EPS);
+    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i], T8_PRECISION_SQRT_EPS);
   }
 }
 
@@ -127,9 +129,9 @@ TEST (t8_gtest_vec, axb)
 
   /* Check results */
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (zero[i], alpha * czero[i] + b, epsilon);
-    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i] + b, epsilon);
-    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i] + b, epsilon);
+    EXPECT_NEAR (zero[i], alpha * czero[i] + b, T8_PRECISION_SQRT_EPS);
+    EXPECT_NEAR (onetwothree[i], alpha * conetwothree[i] + b, T8_PRECISION_SQRT_EPS);
+    EXPECT_NEAR (arbitrary[i], alpha * carbitrary[i] + b, T8_PRECISION_SQRT_EPS);
   }
 }
 
@@ -153,9 +155,9 @@ TEST (t8_gtest_vec, axpy)
 
   /* Check results */
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (zero[i], init[i] + alpha * czero[i], epsilon);
-    EXPECT_NEAR (onetwothree[i], init[i] + alpha * conetwothree[i], epsilon);
-    EXPECT_NEAR (arbitrary[i], init[i] + alpha * carbitrary[i], epsilon);
+    EXPECT_NEAR (zero[i], init[i] + alpha * czero[i], T8_PRECISION_SQRT_EPS);
+    EXPECT_NEAR (onetwothree[i], init[i] + alpha * conetwothree[i], T8_PRECISION_SQRT_EPS);
+    EXPECT_NEAR (arbitrary[i], init[i] + alpha * carbitrary[i], T8_PRECISION_SQRT_EPS);
   }
 }
 
@@ -172,17 +174,17 @@ TEST (t8_gtest_vec, axpyz)
   /* Z = init + alpha * zero */
   t8_axpyz (czero, init, Z, alpha);
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (Z[i], init[i] + alpha * czero[i], epsilon);
+    EXPECT_NEAR (Z[i], init[i] + alpha * czero[i], T8_PRECISION_SQRT_EPS);
   }
   /* Z = init + alpha * conetwothree */
   t8_axpyz (conetwothree, init, Z, alpha);
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (Z[i], init[i] + alpha * conetwothree[i], epsilon);
+    EXPECT_NEAR (Z[i], init[i] + alpha * conetwothree[i], T8_PRECISION_SQRT_EPS);
   }
   /* Z = init + alpha * carbitrary */
   t8_axpyz (carbitrary, init, Z, alpha);
   for (int i = 0; i < 3; ++i) {
-    EXPECT_NEAR (Z[i], init[i] + alpha * carbitrary[i], epsilon);
+    EXPECT_NEAR (Z[i], init[i] + alpha * carbitrary[i], T8_PRECISION_SQRT_EPS);
   }
 }
 
@@ -206,14 +208,14 @@ TEST (t8_gtest_vec, dot)
   for (int i = 0; i < 3; ++i) {
     result += conetwothree[i] * carbitrary[i];
   }
-  EXPECT_NEAR (t8_dot (conetwothree, carbitrary), result, epsilon);
+  EXPECT_NEAR (t8_dot (conetwothree, carbitrary), result, T8_PRECISION_SQRT_EPS);
 
   /* For the dot-product of a vector with itself we use the square of its norm */
   result = t8_norm (conetwothree) * t8_norm (conetwothree);
-  EXPECT_NEAR (t8_dot (conetwothree, conetwothree), result, epsilon);
+  EXPECT_NEAR (t8_dot (conetwothree, conetwothree), result, T8_PRECISION_SQRT_EPS);
 
   result = t8_norm (carbitrary) * t8_norm (carbitrary);
-  EXPECT_NEAR (t8_dot (carbitrary, carbitrary), result, epsilon);
+  EXPECT_NEAR (t8_dot (carbitrary, carbitrary), result, T8_PRECISION_SQRT_EPS);
 }
 
 /* test the t8_cross_3D function */
@@ -241,11 +243,11 @@ TEST (t8_gtest_vec, cross_3D)
 
   /* e1 x e2 = e3 */
   t8_cross_3D (e1, e2, cross);
-  EXPECT_VEC_EQ (cross, e3, T8_PRECISION_EPS);
+  EXPECT_VEC_EQ (cross, e3, T8_PRECISION_SQRT_EPS);
 
   /* e2 x e3 = e1 */
   t8_cross_3D (e2, e3, cross);
-  EXPECT_VEC_EQ (cross, e1, T8_PRECISION_EPS);
+  EXPECT_VEC_EQ (cross, e1, T8_PRECISION_SQRT_EPS);
 }
 
 TEST (t8_gtest_vec, cross_2D)
@@ -289,7 +291,77 @@ TEST (t8_gtest_vec, cross_2D)
 TEST (t8_gtest_vec, check_less_or_equal)
 {
   const t8_3D_vec one ({ 1.0, 1.0, 1.0 });
-  const t8_3D_vec one_minus_eps ({ 1.0 - T8_PRECISION_EPS, 1.0 - T8_PRECISION_EPS, 1.0 - T8_PRECISION_EPS });
+  const t8_3D_vec one_minus_eps (
+    { 1.0 - T8_PRECISION_SQRT_EPS, 1.0 - T8_PRECISION_SQRT_EPS, 1.0 - T8_PRECISION_SQRT_EPS });
 
-  EXPECT_VEC_EQ (one, one_minus_eps, T8_PRECISION_EPS);
+  EXPECT_VEC_EQ (one, one_minus_eps, T8_PRECISION_SQRT_EPS);
+}
+
+/**
+ * Creates a vector of vec views for plain c vectors.
+ * \tparam TDim                   The dimension of the vector.
+ * \param [in, out] c_vectors     Pointer to the raw c vectors.
+ * \param [in, out] num_vectors   Number of vectors.
+ * \return                        A std::vector containing views to the c vectors.
+ */
+template <size_t TDim>
+static inline std::vector<t8_vec_view<TDim, const double>>
+t8_convert_array_to_vec_view (const double* c_vectors, const size_t num_vectors)
+{
+  std::vector<t8_vec_view<TDim, const double>> vec_views;
+  vec_views.reserve (num_vectors);
+  for (size_t ivec = 0; ivec < num_vectors; ++ivec)
+    vec_views.emplace_back (make_t8_vec_view<TDim, const double> (c_vectors + ivec * TDim));
+  T8_ASSERT (vec_views.size () == num_vectors);
+  return vec_views;
+}
+
+/**
+ * Create a vector of t8_vec as a copy of plain c vectors.
+ * \tparam TDim                   The dimension of the vector.
+ * \param [in, out] c_vectors     Pointer to the raw c vectors.
+ * \param [in, out] num_vectors   Number of vectors.
+ * \return                        A std::vector containing t8_vec objects.
+ */
+template <size_t TDim>
+static inline std::vector<t8_vec<TDim>>
+t8_convert_array_to_vec (const double* c_vectors, const size_t num_vectors)
+{
+  std::vector<t8_vec<TDim>> vecs (num_vectors);
+  for (size_t ivec = 0; ivec < num_vectors; ++ivec)
+    std::copy_n (c_vectors + ivec * TDim, TDim, vecs[ivec].begin ());
+  T8_ASSERT (vecs.size () == num_vectors);
+  return vecs;
+}
+
+/** Test the vector/point views */
+TEST (t8_gtest_vec, vec_view)
+{
+  constexpr size_t seed = 12345;
+  constexpr double min = -1e10, max = 1e10;
+  std::mt19937_64 rng (seed);
+  std::uniform_real_distribution<double> dist (min, max);
+  constexpr size_t num_points = 10;
+
+  /* Test for each dimension */
+  unrolled_for (1, 4, idim, {
+    double c_vectors[idim * num_points] = { 0 };
+    /* Fill test vectors and create views. */
+    for (size_t icoord = 0; icoord < num_points * idim; ++icoord)
+      c_vectors[icoord] = dist (rng);
+    auto vecs = t8_convert_array_to_vec<idim> (c_vectors, num_points);
+    auto vec_views = t8_convert_array_to_vec_view<idim> (c_vectors, num_points);
+
+    for (size_t ipoint = 0; ipoint < num_points; ++ipoint) {
+      EXPECT_VEC_EQ (vecs[ipoint], vec_views[ipoint], T8_PRECISION_SQRT_EPS);
+      /* Also check if functions return the same, but only for 3D. */
+      if constexpr (idim == 3) {
+        /* Normalize c vectors and cpp vectors. */
+        t8_normalize (c_vectors + ipoint * idim);
+        t8_normalize (vecs[ipoint]);
+        /* Copied vector and vector view should be the same. */
+        EXPECT_VEC_EQ (vecs[ipoint], vec_views[ipoint], T8_PRECISION_SQRT_EPS);
+      }
+    }
+  });
 }

@@ -102,7 +102,6 @@ endfunction()
 
 add_t8_cpp_test( NAME t8_gtest_cmesh_bcast_parallel     SOURCES t8_cmesh/t8_gtest_bcast.cxx )
 add_t8_cpp_test( NAME t8_gtest_eclass_serial            SOURCES t8_gtest_eclass.cxx )
-add_t8_cpp_test( NAME t8_gtest_vec_serial               SOURCES t8_gtest_vec.cxx )
 add_t8_cpp_test( NAME t8_gtest_mat_serial               SOURCES t8_gtest_mat.cxx )
 add_t8_cpp_test( NAME t8_gtest_refcount_serial          SOURCES t8_gtest_refcount.cxx )
 add_t8_cpp_test( NAME t8_gtest_occ_linkage_serial       SOURCES t8_gtest_occ_linkage.cxx )
@@ -113,6 +112,7 @@ add_t8_cpp_test( NAME t8_gtest_vtk_linkage_serial       SOURCES t8_gtest_vtk_lin
 
 add_t8_cpp_test( NAME t8_gtest_type_serial                  SOURCES t8_types/t8_gtest_type.cxx )
 add_t8_cpp_test( NAME t8_gtest_random_accessible_serial     SOURCES t8_types/t8_gtest_random_accessible.cxx )
+add_t8_cpp_test( NAME t8_gtest_vec_serial                   SOURCES t8_types/t8_gtest_vec.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_hypercube_parallel                           SOURCES t8_cmesh/t8_gtest_hypercube.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_readmshfile_serial                     SOURCES t8_cmesh/t8_gtest_cmesh_readmshfile.cxx )
@@ -199,7 +199,7 @@ if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_parallel    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )
 endif()
 
-add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_vector_helper/t8_gtest_vector_split.cxx )
+add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_functions/t8_gtest_vector_split.cxx )
 
 copy_test_file( test_cube_unstructured_1.inp )
 copy_test_file( test_cube_unstructured_2.inp )

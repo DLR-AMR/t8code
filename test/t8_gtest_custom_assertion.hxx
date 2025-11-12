@@ -33,16 +33,16 @@
 
 /**
  * \brief Test two elements for equality and print the elements if they aren't equal
- * 
+ *
  * \param[in] ts_expr The name of the scheme \a ts
- * \param[in] tree_class_expr The name of the tree class 
+ * \param[in] tree_class_expr The name of the tree class
  * \param[in] elem_1_expr The name of the first element \a elem_1
  * \param[in] elem_2_expr The name of the second element \a elem_2
  * \param[in] scheme The scheme to use to check the equality
  * \param[in] tree_class The eclass of the tree the elements are part of
  * \param[in] elem_1 The element to compare with \a elem_2
  * \param[in] elem_2 the element to compare with \a elem_1
- * \return testing::AssertionResult 
+ * \return testing::AssertionResult
  */
 testing::AssertionResult
 element_equality (const char *ts_expr, const char *tree_class_expr, const char *elem_1_expr, const char *elem_2_expr,
@@ -78,30 +78,32 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
   ASSERT_PRED_FORMAT4 (element_equality, (scheme), (tree_class), (elem1), (elem2))
 
 /**
- * \brief Test if two 3D vectors are equal with respect to a given precision
- * 
- * \param[in] vec_1_expr Name of the first vector
- * \param[in] vec_2_expr Name of the second vector
+ * \brief Test if two 3D Dimensionaltors are equal with respect to a given precision
+ *
+ * \tparam TDimensional2 Type of the first Dimensionaltor.
+ * \param[in] Dimensional_1_expr Name of the first Dimensionaltor
+ * \param[in] Dimensional_2_expr Name of the second Dimensionaltor
  * \param[in] precision_expr Name of the precision
- * \param[in] vec_1 First vector to compare
- * \param[in] vec_2 Second vector to compare
+ * \param[in] Dimensional_1 First Dimensionaltor to compare
+ * \param[in] Dimensional_2 Second Dimensionaltor to compare
  * \param[in] precision Test equality up to this precision
- * \return testing::AssertionResult 
+ * \return testing::AssertionResult
  */
-template <typename T>
+template <T8DimensionalType TDimensional1, T8DimensionalType TDimensional2>
 static inline testing::AssertionResult
-vec_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precision_expr, const T &vec_1,
-              const T &vec_2, const double precision)
+dimensional_equality (const char *Dimensional_1_expr, const char *Dimensional_2_expr, const char *precision_expr,
+                      const TDimensional1 &Dimensional_1, const TDimensional2 &Dimensional_2, const double precision)
 {
-  if (t8_eq (vec_1, vec_2, precision)) {
+  if (t8_eq (Dimensional_1, Dimensional_2, precision)) {
     return testing::AssertionSuccess ();
   }
   else {
-    return testing::AssertionFailure () << vec_1_expr << " is not equal to " << vec_2_expr << " \n"
+    return testing::AssertionFailure () << Dimensional_1_expr << " is not equal to " << Dimensional_2_expr << " \n"
                                         << "Precision given by " << precision_expr << " " << precision;
   }
 }
 
-#define EXPECT_VEC_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec_equality, (vec_1), (vec_2), (precision))
+#define EXPECT_VEC_EQ(Dimensional_1, Dimensional_2, precision) \
+  EXPECT_PRED_FORMAT3 (dimensional_equality, (Dimensional_1), (Dimensional_2), (precision))
 
 #endif /* CUSTOM_ASSERTION_HXX */
