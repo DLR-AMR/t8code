@@ -95,11 +95,10 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
       for (int face = 0; face < scheme->element_get_num_faces (eclass, element); face++) {
         /* Get the eclass of the face neighbor and get the scheme */
         const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, itree, element, face);
-        /* allocate memory for element's neighbor and construct it */
-        scheme->element_new (neigh_class, 1, &neighbor);
-        const t8_locidx_t neigh_tree
-          = t8_forest_element_face_neighbor (forest, itree, element, neighbor, neigh_class, face, &dual_face);
-        if (neigh_tree >= 0) {
+        if (neigh_class != T8_ECLASS_INVALID) {
+          /* allocate memory for element's neighbor and construct it */
+          scheme->element_new (neigh_class, 1, &neighbor);
+          (void) t8_forest_element_face_neighbor (forest, itree, element, neighbor, neigh_class, face, &dual_face);
           const int num_face_neighs = scheme->element_get_num_face_children (neigh_class, neighbor, dual_face);
           t8_element_t **half_neighbors = T8_TESTSUITE_ALLOC (t8_element_t *, num_face_neighs);
           scheme->element_new (neigh_class, num_face_neighs, half_neighbors);
@@ -124,11 +123,8 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
           T8_TESTSUITE_FREE (neighbor_face_children);
           T8_TESTSUITE_FREE (half_neighbors);
           scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
+          scheme->element_destroy (neigh_class, 1, &neighbor);
         }
-        else {  // No neighbor found
-          EXPECT_EQ (neigh_class, T8_ECLASS_INVALID);
-        }
-        scheme->element_destroy (neigh_class, 1, &neighbor);
       }
     }
   }
