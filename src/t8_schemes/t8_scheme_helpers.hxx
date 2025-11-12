@@ -75,14 +75,13 @@ class t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme> {
    * \return              If \a face of \a element is a subface of a face of \a element's ancestor at level \a ancestor_level,
    *                      the face number of this face. Otherwise -1.
    * \note For the root element this function always returns \a face.
-   * // TODO Check this note. is it still true?
    */
   inline int
-  element_face_get_ancestor_face (const t8_eclass_t tree_class, const t8_element_t *element, const int ancestor_level,
-                                  const int face) const
+  element_face_get_ancestor_face (const t8_element_t *element, const int ancestor_level, const int face) const
   {
+    auto underlying_impl = this->underlying ();  // Reference to the underlying scheme implementation
 
-    const int element_level = scheme->element_get_level (tree_class, element);
+    const int element_level = underlying_impl.element_get_level (element);
     T8_ASSERT (element_level >= ancestor_level);
     if (element_level == ancestor_level) {
       // On the same level, the return value is the face itself
@@ -90,23 +89,22 @@ class t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme> {
     }
     // Allocate memory for a temporary element.
     t8_element_t *parent;
-    auto underlying_impl = this->underlying ();  // Reference to the underlying scheme implementation
-    underlying_impl->element_new (1, &parent);
+    underlying_impl.element_new (1, &parent);
     // Pointer to a temoporary element, that will move up the refinement hierarchy
     const t8_element_t *temp_element = element;
-    int temp_face;
+    int temp_face = face;
     for (int ilevel = element_level; ilevel > ancestor_level; --ilevel) {
       // Go one level up in the refinement hierarchy with the face
-      temp_face = underlying_impl->element_face_get_parent_face (temp_neigh, temp_dual_face);
+      temp_face = underlying_impl.element_face_get_parent_face (temp_element, temp_face);
       if (temp_face == -1) {
         // This face is not a subface of an ancestor face.
-        underlying_impl->element_destroy (1, &parent);
+        underlying_impl.element_destroy (1, &parent);
         return -1;
       }
-      underlying_impl->element_get_parent (temp_neigh, parent);
+      underlying_impl.element_get_parent (temp_element, parent);
       temp_element = parent;
     }
-    underlying_impl->element_destroy (1, &parent);
+    underlying_impl.element_destroy (1, &parent);
     return temp_face;
   }
 };
