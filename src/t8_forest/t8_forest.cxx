@@ -1579,6 +1579,10 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
   const t8_gloidx_t neighbor_tree = t8_forest_element_face_neighbor (forest, ltreeid, elem, same_level_neighbor,
                                                                      neigh_class, face, &same_level_dual_face);
 
+  if (neighbor_tree < 0) {
+    // No face neighbor exists
+    return -1;
+  }
   // Double check that there is a neighbor tree.
   // We expect the user to only call this function if neighbors exists (neigh_calls being an input argument).
   T8_ASSERT (neighbor_tree >= 0 && neighbor_tree < t8_forest_get_num_global_trees (forest));
