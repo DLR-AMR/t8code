@@ -1129,12 +1129,12 @@ t8_cmesh_get_tree_face_neighbor_eclass (const t8_cmesh_t cmesh, const t8_locidx_
     // Neighbor was found and is a ghost.
     // Translate ltreeid from range num_local_trees <= ltreeid < num_local_trees + num_ghost_trees
     // into 0 <= lghost_id < num_ghost_trees
-    const t8_locidx_t lghost_neihgbor_id = neighbor_id - t8_cmesh_get_num_local_trees (cmesh);
+    const t8_locidx_t lghost_neighbor_id = neighbor_id - t8_cmesh_get_num_local_trees (cmesh);
 
-    t8_debugf ("in: %i out: %i, num t: %i num g: %i\n", neighbor_id, lghost_neihgbor_id,
+    t8_debugf ("in: %i out: %i, num t: %i num g: %i\n", neighbor_id, lghost_neighbor_id,
                t8_cmesh_get_num_local_trees (cmesh), t8_cmesh_get_num_ghosts (cmesh));
     // Look up ghost tree class
-    return t8_cmesh_get_ghost_class (cmesh, lghost_neihgbor_id);
+    return t8_cmesh_get_ghost_class (cmesh, lghost_neighbor_id);
   }
 }
 

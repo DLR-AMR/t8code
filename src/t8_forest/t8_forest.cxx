@@ -1602,7 +1602,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * to buffer face neighbor information during leaf face neighbor search
  * \ref t8_forest_leaf_face_neighbors_ext
  * 
- * Given an element and a face, the search iterates through all leafs
+ * Given an element and a face, the search iterates through all leaves
  * at that face and stores their information in this buffer.
  * After the search the entries of the buffer are used and the
  * search can start again with a clean buffer.
