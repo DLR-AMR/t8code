@@ -1860,39 +1860,10 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
       const t8_element_t *search_this_element = neighbor_unique ? first_descendant : same_level_neighbor;
       t8_debugf ("[H] Starting face search. neigh level %i, desc level %i\n", neighbor_level, first_desc_level);
 
-      int temp_dual_face = same_level_neighbor_dual_face;
-      if (neighbor_unique && first_desc_level < neighbor_level) {
-        t8_debugf ("[H] Starting search with first desc.\n");
-        // We need to update the dual face.
-        // TODO: Add element function to calculate the dual face upward in the refinement hierarchy.
-        const t8_element_t *temp_neigh = same_level_neighbor;
-        t8_element_t *parent;
-        scheme->element_new (neigh_class, 1, &parent);
-        t8_debugf ("\tIterating through dual face. Starting with %i at level %i up to level %i.\n", temp_dual_face,
-                   neighbor_level, first_desc_level);
-        for (int ilevel = neighbor_level; ilevel > first_desc_level; --ilevel) {
-          // Go one level up in the refinement hierarchy with the dual face
-          temp_dual_face = scheme->element_face_get_parent_face (neigh_class, temp_neigh, temp_dual_face);
-          scheme->element_get_parent (neigh_class, temp_neigh, parent);
-          temp_neigh = parent;
-          t8_debugf ("\tUpdated dual face on level %i to %i\n", ilevel, temp_dual_face);
-        }
-        scheme->element_destroy (neigh_class, 1, &parent);
-#if 0
-        SC_CHECK_ABORT (
-          scheme->check_eclass_scheme_type<t8_default_scheme_hex> (eclass)
-            || scheme->check_eclass_scheme_type<t8_default_scheme_quad> (eclass)
-            || scheme->check_eclass_scheme_type<t8_default_scheme_line> (eclass)
-            || scheme->check_eclass_scheme_type<t8_default_scheme_vertex> (eclass)
-            || scheme->check_eclass_scheme_type<t8_default_scheme_tri> (eclass)
-            || scheme->check_eclass_scheme_type<t8_default_scheme_tet> (eclass)
-            || scheme->check_eclass_scheme_type<t8_default_scheme_prism> (eclass)
-            || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_QUAD>> (eclass)
-            || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_HEX>> (eclass)
-            || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_LINE>> (eclass)
-            || scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_VERTEX>> (eclass),
-          "Face neighbor computation currently only possible for default or standalone vertex/line/quad/hex scheme.");
-#endif
+      int temp_dual_face;
+      if (neighbor_unique && first_desc_level <= neighbor_level) {
+        temp_dual_face = scheme->element_face_get_ancestor_face (neigh_class, same_level_neighbor,
+                                                                 same_level_neighbor_dual_face, first_desc_level);
       }  // end if neighbor_unique
 
       const int search_element_dual_face = neighbor_unique ? temp_dual_face : same_level_neighbor_dual_face;
