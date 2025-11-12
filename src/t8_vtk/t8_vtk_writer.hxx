@@ -382,8 +382,8 @@ class vtk_writer {
     T8_ASSERT (cellTypes != NULL);
 
     /* Get the local bounds of the forest or cmesh */
+    double bounds[6] = { 0 };
     if (num_cells > 0) {
-      double bounds[6];
       // This function expects a non-empty partition, so we only call it
       // if we have cells.
       grid_get_local_bounds (grid, bounds);
