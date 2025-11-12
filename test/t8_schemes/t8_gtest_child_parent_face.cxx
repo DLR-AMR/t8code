@@ -27,6 +27,9 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
+/* TODO: extend this test or new test. On each level,
+ *        go multiple levels below and check against ancestor face */
+
 class class_child_parent_face: public TestDFS {
   void
   check_element () override
@@ -49,6 +52,17 @@ class class_child_parent_face: public TestDFS {
         const int parentface = scheme->element_face_get_parent_face (eclass, children[ifacechild], childface);
         /* Check, that this is equal to the face that we started with */
         EXPECT_EQ (iface, parentface);
+        const int element_level = scheme->element_get_level (eclass, element);
+        // Check the ancestor face function when input is the child and the level of the child.
+        // We expect the output face to be the input face
+        const int anc_face_same_level
+          = scheme->element_face_get_ancestor_face (eclass, children[ifacechild], element_level + 1, childface);
+        EXPECT_EQ (childface, anc_face_same_level);
+        // Check the ancestor face function when input is the element level/
+        // We expect the output face to be the original face
+        const int anc_face_one_level_higher
+          = scheme->element_face_get_ancestor_face (eclass, children[ifacechild], element_level, childface);
+        EXPECT_EQ (iface, anc_face_one_level_higher);
       }
       scheme->element_destroy (eclass, num_face_children, children);
       T8_TESTSUITE_FREE (children);
