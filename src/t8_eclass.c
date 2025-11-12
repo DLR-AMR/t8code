@@ -65,7 +65,7 @@ const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] = T8_ECLASS
 
 const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT] = T8_ECLASS_BOUNDARY_COUNT_VALUES;
 
-const char *t8_eclass_to_string[T8_ECLASS_COUNT] = T8_ECLASS_TO_STRING_VALUES;
+const char *t8_eclass_to_string[T8_ECLASS_INVALID] = T8_ECLASS_TO_STRING_VALUES;
 
 int
 t8_eclass_count_boundary (t8_eclass_t theclass, int min_dim, int *per_eclass)
