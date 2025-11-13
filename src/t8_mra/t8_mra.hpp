@@ -101,10 +101,7 @@ class multiscale: public multiscale_data<TShape> {
   t8_forest_t forest;
   bool balanced;
 
-  // /// Function class for callbacks
-  // std::function<int (t8_forest_t, t8_forest_t, t8_locidx_t, const t8_eclass_t, t8_locidx_t, const t8_scheme_c*,
-  //                    const int, const int, t8_element_t**)>
-  //   thres_callback;
+  // /// Function class for callbacks std::function<int (t8_forest_t, t8_forest_t, t8_locidx_t, const t8_eclass_t, t8_locidx_t, const t8_scheme_c*, const int, const int, t8_element_t**)> thres_callback;
 
   sc_MPI_Comm comm;
 
@@ -145,6 +142,30 @@ class multiscale: public multiscale_data<TShape> {
     for (auto i = 0; i < 3; ++i)
       t8_forest_element_coordinate (forest, tree_idx, element, i, vertices[order[i]]);
 
+    // DEBUG: Print vertices for first element (tree 0, element 0)
+    static bool printed_debug = false;
+    static bool print_this_element = false;
+    if (!printed_debug && tree_idx == 0) {
+      print_this_element = true;
+      printf ("\n=== PROJECTION DEBUG (first element in tree 0) ===\n");
+      printf ("Order array: [%d, %d, %d]\n", order[0], order[1], order[2]);
+      printf ("Physical vertices passed to DG_basis:\n");
+      for (int i = 0; i < 3; ++i) {
+        printf ("  vertices[%d] = (%.6f, %.6f, %.6f)\n", i, vertices[i][0], vertices[i][1], vertices[i][2]);
+      }
+      printf ("T8code vertices (direct):\n");
+      for (int i = 0; i < 3; ++i) {
+        double coords[3];
+        t8_forest_element_coordinate (forest, tree_idx, element, i, coords);
+        printf ("  t8_vertex[%d] = (%.6f, %.6f, %.6f)\n", i, coords[0], coords[1], coords[2]);
+      }
+      printf ("First 3 dunavant ref quad points (xi, eta):\n");
+      for (int i = 0; i < 3 && i < DG_basis.num_quad_points; ++i) {
+        printf ("  ref_quad[%d] = (%.6f, %.6f)\n", i, DG_basis.ref_quad_points[2 * i],
+                DG_basis.ref_quad_points[2 * i + 1]);
+      }
+    }
+
     auto [trafo_mat, perm] = DG_basis.trafo_matrix_to_ref_element (vertices);
     const auto deref_quad_points = DG_basis.deref_quad_points (vertices);
 
@@ -160,6 +181,18 @@ class multiscale: public multiscale_data<TShape> {
         const auto ref = DG_basis.ref_point (trafo_mat, perm, { x_deref, y_deref, 1.0 });
         const auto f_val = func (x_deref, y_deref);
         const auto basis_val = DG_basis.basis_value (ref);
+
+        // DEBUG: Print first few quadrature points for first element
+        if (print_this_element && i == 0 && j < 3) {
+          printf ("  Quad point %d: phys(%.6f, %.6f) -> ref(%.6f, %.6f) -> func_val=%.6f\n", (int) j, x_deref, y_deref,
+                  ref[0], ref[1], f_val[0]);
+        }
+
+        if (print_this_element && i == DOF - 1 && j == DG_basis.num_quad_points - 1) {
+          printed_debug = true;
+          print_this_element = false;
+          printf ("=== END PROJECTION DEBUG ===\n\n");
+        }
 
         for (auto k = 0u; k < U_DIM; ++k)
           sum[k] += DG_basis.quad_weights[j] * f_val[k] * scaling_factor * basis_val[i];
