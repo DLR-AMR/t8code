@@ -29,17 +29,17 @@ class mat {
                                "and number rows");
   }
 
-  mat (const mat&) = default;
-  mat&
-  operator= (const mat&)
+  mat (const mat &) = default;
+  mat &
+  operator= (const mat &)
     = default;
-  mat (mat&&) = default;
-  mat&
-  operator= (mat&&)
+  mat (mat &&) = default;
+  mat &
+  operator= (mat &&)
     = default;
 
-  mat&
-  operator= (const std::initializer_list<double>& l)
+  mat &
+  operator= (const std::initializer_list<double> &l)
   {
     if (l.size () != num_rows * num_cols)
       throw std::out_of_range ("number elements in t8_mra::util::mat does not fit to number columns "
@@ -50,12 +50,12 @@ class mat {
     return *this;
   }
 
-  double&
+  double &
   operator() (size_t i, size_t j);
   double
   operator() (size_t i, size_t j) const;
 
-  mat&
+  mat &
   operator= (double v);
 
   void
@@ -67,7 +67,7 @@ class mat {
   cols () const noexcept;
 };
 
-inline double&
+inline double &
 mat::operator() (size_t i, size_t j)
 {
   if (i >= num_rows || j >= num_cols)
@@ -109,7 +109,7 @@ mat::cols () const noexcept
 /// below diagonal: L
 /// Remaining matrix: U
 inline void
-lu_factors (mat& A, std::vector<size_t>& p)
+lu_factors (mat &A, std::vector<size_t> &p)
 {
   if (A.rows () != A.cols ())
     throw std::logic_error ("Matrix in t8_mra::util::lr_factor is not a square matrix");
@@ -149,7 +149,7 @@ lu_factors (mat& A, std::vector<size_t>& p)
 }
 
 inline void
-lu_solve (const mat& A, const std::vector<size_t>& p, vec& x)
+lu_solve (const mat &A, const std::vector<size_t> &p, vec &x)
 {
   if (A.rows () != A.cols ())
     throw std::logic_error ("Matrix in t8_mra::util::lr_solve is not a square matrix");
@@ -175,7 +175,7 @@ lu_solve (const mat& A, const std::vector<size_t>& p, vec& x)
 }
 
 inline void
-lu_solve (const mat& A, const std::vector<size_t>& p, std::vector<double>& x)
+lu_solve (const mat &A, const std::vector<size_t> &p, std::vector<double> &x)
 {
   if (A.rows () != A.cols ())
     throw std::logic_error ("Matrix in t8_mra::util::lr_solve is not a square matrix");
