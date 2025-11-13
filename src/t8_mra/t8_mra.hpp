@@ -254,6 +254,178 @@ class multiscale: public multiscale_data<TShape> {
     t8_forest_set_user_data (forest, user_data);
   }
 
+  void
+  multiscale_transformation (unsigned int l_min, unsigned int l_max)
+  {
+    index_set I_set;
+    element_t data_on_coarse;
+
+    std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
+
+    for (auto l = l_max; l > l_min; --l) {
+      for (const auto &[lmi, _] : get_user_data ()->lmi_map->operator[] (l))
+        I_set.emplace (t8_mra::parent_lmi (lmi));
+
+      d_map[l - 1].reserve (get_user_data ()->lmi_map->size (l));
+
+      for (const auto &lmi : I_set) {
+        const auto siblings_lmi = t8_mra::children_lmi (lmi);
+
+        // Load children - LMI structure encodes the ordering
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+          data_on_siblings[k] = get_user_data ()->lmi_map->get (siblings_lmi[k]);
+
+        for (auto u = 0u; u < U_DIM; ++u) {
+          /// Single scale of lmi
+          for (auto i = 0u; i < DOF; ++i) {
+            auto sum = 0.0;
+
+            for (auto j = 0u; j < DOF; ++j)
+              for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+                sum += data_on_siblings[k].u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](j, i);
+
+            data_on_coarse.u_coeffs[element_t::dg_idx (u, i)] = sum;
+            data_on_coarse.vol = data_on_siblings[0].vol * levelmultiindex::NUM_CHILDREN;
+          }
+
+          /// Details as differences
+          for (auto i = 0u; i < DOF; ++i)
+            for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+              auto sum = 0.0;
+              for (auto j = 0u; j < DOF; ++j)
+                sum += mask_coefficients[k](i, j) * data_on_coarse.u_coeffs[element_t::dg_idx (u, j)];
+
+              data_on_coarse.d_coeffs[element_t::wavelet_idx (k, u, i)]
+                = data_on_siblings[k].u_coeffs[element_t::dg_idx (u, i)] - sum;
+            }
+        }
+
+        // Copy vertex order from first child and compute parent order
+        data_on_coarse.order = data_on_siblings[0].order;
+        triangle_order::get_parent_order (data_on_coarse.order);
+
+        get_user_data ()->lmi_map->insert (lmi, data_on_coarse);
+        d_map[l - 1].emplace (lmi, data_on_coarse);
+      }
+
+      get_user_data ()->lmi_map->erase (l);
+      I_set.clear ();
+    }
+  }
+
+  /// TODO Check mask coeffs in mst/inverse_mst
+  void
+  inverse_multiscale_transformation (unsigned int l_min, unsigned int l_max)
+  {
+    element_t new_data;
+    std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_children;
+
+    for (auto l = l_min; l < l_max; ++l) {
+      get_user_data ()->lmi_map->operator[] (l + 1).reserve (d_map[l].size ());
+
+      for (const auto &[lmi, d] : d_map[l]) {
+        const auto children_lmi = t8_mra::children_lmi (lmi);
+        const auto lmi_data = get_user_data ()->lmi_map->get (lmi);
+        const auto &details = d.d_coeffs;
+
+        // Apply mask coefficients - LMI structure encodes ordering
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          for (auto u = 0u; u < U_DIM; ++u) {
+            for (auto i = 0u; i < DOF; ++i) {
+              auto sum = 0.0;
+
+              for (auto j = 0u; j < DOF; ++j)
+                sum += lmi_data.u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](i, j);
+
+              new_data.u_coeffs[element_t::dg_idx (u, i)] = details[element_t::wavelet_idx (k, u, i)] + sum;
+            }
+          }
+
+          // Compute child's vertex order from parent order
+          new_data.order = lmi_data.order;
+          triangle_order::get_point_order (new_data.order, k);
+          new_data.vol = lmi_data.vol / levelmultiindex::NUM_CHILDREN;
+          get_user_data ()->lmi_map->insert (children_lmi[k], new_data);
+        }
+
+        get_user_data ()->lmi_map->erase (lmi);
+      }
+
+      d_map.erase (l);
+    }
+  }
+
+  void
+  sync_d_with_td (unsigned int l_min, unsigned int l_max)
+  {
+    /// Add significant lmis
+    for (auto l = l_min; l < l_max; ++l) {
+      for (const auto &lmi : td_set[l]) {
+        if (!d_map.contains (lmi)) {
+          d_map.insert (lmi, element_t {});
+          refinement_set.insert (lmi);
+        }
+      }
+    }
+
+    /// Remove non-significant lmis
+    const auto d_copy = d_map;
+    for (auto l = static_cast<int> (l_max) - 1; l >= static_cast<int> (l_min); --l) {
+      for (const auto &[lmi, _] : d_copy[l]) {
+        if (!td_set.contains (lmi)) {
+          d_map.erase (lmi);
+          for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+            coarsening_set.insert (t8_mra::children_lmi (lmi)[k]);
+          }
+        }
+      }
+    }
+  }
+
+  void
+  generate_td_tree (unsigned int l_min, unsigned int l_max)
+  {
+    for (auto l = static_cast<int> (l_max) - 1; l > static_cast<int> (l_min); --l) {
+      for (const auto &lmi : td_set[l]) {
+        const auto parent_lmi = t8_mra::parent_lmi (lmi);
+        if (!td_set.contains (parent_lmi))
+          td_set.insert (parent_lmi);
+      }
+    }
+  }
+
+  /// TODO need function for potential neighs on same level
+  void
+  restore_balancing (unsigned int l_min, unsigned int l_max)
+  {
+    for (auto l = static_cast<int> (l_max) - 1; l > static_cast<int> (l_min); --l) {
+      for (const auto &lmi : td_set) {
+        /// TODO
+        const auto pot_neighs = std::vector<size_t> {};
+
+        for (const auto &neigh : pot_neighs) {
+          const auto parent_lmi = t8_mra::parent_lmi (lmi);
+          if (!td_set.contains (parent_lmi))
+            td_set.insert (parent_lmi);
+        }
+      }
+    }
+  }
+
+  // void
+  // initialize_adaptiv_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, auto &&func)
+  // {
+  //   initialize_data (mesh, scheme, 1, func);
+  //   /// scaling due to (2.39)
+  //   c_scaling = threshold_scaling_factor ();
+  //
+  //   for (auto l = 1; l < maximum_level; ++l) {
+  //     t8_forest_t new_forest;
+  //     t8_forest_ref (forest);
+  //     get_user_data ()->current_refinement_level = l;
+  //   }
+  // }
+
   /// TODO Order of mask coefficients changed (i,j) -> (j,i)
   void
   two_scale_transformation (const levelmultiindex &lmi)
