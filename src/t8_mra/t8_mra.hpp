@@ -3,6 +3,8 @@
 #ifdef T8_ENABLE_MRA
 
 #include <algorithm>
+#include <unordered_set>
+#include <map>
 
 #include "t8.h"
 #include "t8_eclass.h"
@@ -11,16 +13,20 @@
 #include "t8_forest/t8_forest_iterate.h"
 #include "t8_forest/t8_forest_geometrical.h"
 #include "t8_schemes/t8_scheme.hxx"
+#include "t8_schemes/t8_default/t8_default_tri/t8_dtri.h"
+#include "t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h"
 
 #include "t8_mra/data/cell_data.hpp"
 #include "t8_mra/data/levelmultiindex.hpp"
 #include "t8_mra/data/levelindex_map.hpp"
+#include "t8_mra/data/levelindex_set.hpp"
 #include "t8_mra/num/dunavant.hxx"
 #include "t8_mra/num/mask_coefficients.hpp"
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/mat.hpp"
 
 #include "t8_mra/t8_basis.hpp"
+#include "t8_mra/t8_mra_fixes.hpp"
 
 /// TODO std:vectoren/std::arrays -> modern structures
 /// TODO is there an option to get the leaf-cell for a given point x
@@ -208,7 +214,6 @@ class multiscale: public multiscale_data<TShape> {
   void
   initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, auto &&func)
   {
-
     forest = t8_forest_new_uniform (mesh, scheme, level, 0, comm);
 
     levelmultiindex *elem_data;
@@ -590,8 +595,8 @@ class multiscale: public multiscale_data<TShape> {
                             const t8_eclass_t tree_class, const t8_scheme *scheme, int refine, int num_outgoing,
                             t8_locidx_t first_outgoing, int num_incoming, t8_locidx_t first_incoming)
   {
-    auto* old_user_data = get_user_data ();
-    auto* new_user_data = t8_mra::get_mra_forest_data<element_t> (forest_new);
+    auto *old_user_data = get_user_data ();
+    auto *new_user_data = t8_mra::get_mra_forest_data<element_t> (forest_new);
 
     first_incoming += t8_forest_get_tree_element_offset (forest_new, which_tree);
     first_outgoing += t8_forest_get_tree_element_offset (forest_old, which_tree);
@@ -614,13 +619,23 @@ class multiscale: public multiscale_data<TShape> {
       new_user_data->lmi_map->erase (old_lmi);
 
       const auto children = t8_mra::children_lmi (old_lmi);
+      for (const auto &child : children)
+        if (new_user_data->lmi_map->contains (child))
+          std::cout << "child found\n";
+        else if (new_user_data->lmi_map->contains (old_lmi))
+          std::cout << "old_lmi found\n";
+
       const auto lmi_data = old_user_data->lmi_map->get (old_lmi);
+
+      printf ("refine!\n");
+      element_t child_data;
+      child_data.order = lmi_data.order;
+      child_data.u_coeffs = {};
 
       for (auto i = 0u; i < children.size (); ++i) {
         t8_mra::set_lmi_forest_data (new_user_data, first_incoming + i, children[i]);
-        element_t child_data;
+        child_data.u_coeffs = lmi_data.u_coeffs;
 
-        child_data.order = lmi_data.order;
         child_data.u_coeffs = lmi_data.u_coeffs;
         new_user_data->lmi_map->insert (children[i], child_data);
       }
@@ -660,15 +675,15 @@ class multiscale: public multiscale_data<TShape> {
   {
     static auto static_coarsening_callback
       = [this] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
-                t8_locidx_t local_ele_idx, const t8_scheme_c* scheme, const int is_family, const int num_elements,
-                t8_element_t* elements[]) -> int {
+                t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, const int is_family, const int num_elements,
+                t8_element_t *elements[]) -> int {
       return coarsening_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
                                   num_elements, elements);
     };
 
     static auto static_iterate_replace_callback
       = [this] (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                const t8_scheme* scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+                const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
                 t8_locidx_t first_incoming) -> void {
       iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
                                 first_outgoing, num_incoming, first_incoming);
@@ -685,8 +700,8 @@ class multiscale: public multiscale_data<TShape> {
 
       new_forest = t8_forest_new_adapt (
         forest,
-        [] (auto* forest, auto* forest_from, auto which_tree, auto tree_class, auto local_ele_idx, auto* scheme,
-            const auto is_family, const auto num_elements, auto* elements[]) -> int {
+        [] (auto *forest, auto *forest_from, auto which_tree, auto tree_class, auto local_ele_idx, auto *scheme,
+            const auto is_family, const auto num_elements, auto *elements[]) -> int {
           return static_coarsening_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme,
                                              is_family, num_elements, elements);
         },
@@ -705,10 +720,10 @@ class multiscale: public multiscale_data<TShape> {
           return balanced_forest;
         }();
 
-      t8_mra::forest_data<element_t>* new_user_data;
+      t8_mra::forest_data<element_t> *new_user_data;
       new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
 
-      new_user_data->lmi_map = new t8_mra::levelindex_map<element_t> (maximum_level);
+      new_user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (maximum_level);
       std::swap (new_user_data->lmi_map, get_user_data ()->lmi_map);
 
       const auto num_new_local_elements = t8_forest_get_local_num_leaf_elements (new_forest);
@@ -718,7 +733,7 @@ class multiscale: public multiscale_data<TShape> {
       t8_forest_set_user_data (new_forest, new_user_data);
       t8_forest_iterate_replace (
         new_forest, forest,
-        [] (auto* forest_old, auto* forest_new, auto which_tree, const auto tree_class, const auto* scheme, auto refine,
+        [] (auto *forest_old, auto *forest_new, auto which_tree, const auto tree_class, const auto *scheme, auto refine,
             auto num_outgoing, auto first_outgoing, auto num_incoming, t8_locidx_t first_incoming) -> void {
           static_iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
                                            first_outgoing, num_incoming, first_incoming);
@@ -727,6 +742,7 @@ class multiscale: public multiscale_data<TShape> {
       cleanup ();
       forest = new_forest;
     }
+  }
 
   void
   coarsening_new (int min_level, int max_level)
@@ -1054,6 +1070,74 @@ class multiscale: public multiscale_data<TShape> {
     // }
   }
 
+  // void
+  // refinement (int min_level, int max_level)
+  // {
+  //   // static auto static_refinement_callback
+  //   //   = [&, this] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+  //   //                t8_locidx_t local_ele_idx, const t8_scheme_c* scheme, const int is_family, const int num_elements,
+  //   //                t8_element_t* elements[]) -> int {
+  //   //   if (!is_family)
+  //   //     return 0;
+  //   //
+  //   //   const auto element_level = scheme->element_get_level (tree_class, elements[0]);
+  //   //
+  //   //   /// check that
+  //   //   if (element_level != get_user_data ()->current_refinement_level || element_level >= max_level)
+  //   //     return 0;
+  //   // };
+  //   //
+  //   // static auto static_iterate_replace_callback
+  //   //   = [this] (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+  //   //             const t8_scheme* scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+  //   //             t8_locidx_t first_incoming) -> void {
+  //   //   iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+  //   //                             first_outgoing, num_incoming, first_incoming);
+  //   // };
+  //
+  //   // for (auto l = min_level; l < max_level; ++l) {
+  //   // t8_forest_t new_forest;
+  //   // t8_forest_ref (forest);
+  //
+  //   std::unordered_set<t8_locidx_t> to_refine;
+  //
+  //   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+  //   auto global_idx = 0u;
+  //
+  //   for (auto i = 0u; i < num_local_trees; ++i) {
+  //     const auto num_local_ele = t8_forest_get_tree_num_leaf_elements (forest, i);
+  //     const auto tree_class = t8_forest_get_tree_class (forest, i);
+  //
+  //     for (auto idx = 0u; idx < num_local_ele; ++idx, ++global_idx) {
+  //       const auto *ele = t8_forest_get_leaf_element_in_tree (forest, i, idx);
+  //       const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), global_idx);
+  //       if (lmi.level () == 0 || lmi.level () == maximum_level)
+  //         continue;
+  //
+  //       printf ("blii\n");
+  //       two_scale_transformation (lmi);
+  //       printf ("bla\n");
+  //       hartens_prediction (lmi, idx, tree_class, ele);
+  //       // to_refine.merge (hartens_prediction (t8_mra::parent_lmi (lmi), idx, tree_class, ele));
+  //       printf ("blupp\n");
+  //     }
+  //   }
+  //
+  //   printf ("size unordered: %zu\n", to_refine.size ());
+  //   // }
+  //
+  //   // const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+  //   // auto global_idx = 0u;
+  //   // for (auto i = 0u; i < num_local_trees; ++i) {
+  //   //   const auto num_local_ele = t8_forest_get_tree_num_leaf_elements (forest, i);
+  //   //   const auto tree_class = t8_forest_get_tree_class (forest, i);
+  //   //
+  //   //   for (auto idx = 0u; idx < num_local_ele; ++idx, ++global_idx) {
+  //   //     const auto* ele = t8_forest_get_leaf_element_in_tree (forest, i, idx);
+  //   //
+  //   //     const auto neighs = get_neighbors (i, idx, tree_class, ele);
+  // }
+
   /// scaling (2.39)
   std::array<double, U>
   threshold_scaling_factor ()
@@ -1083,7 +1167,7 @@ class multiscale: public multiscale_data<TShape> {
   }
 
   std::array<double, U_DIM>
-  local_detail_norm (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
+  local_detail_norm (const levelmultiindex &lmi, t8_locidx_t tree_idx, const t8_element_t *t8_elem)
   {
     std::array<double, U_DIM> tmp = {};
     const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, t8_elem);
@@ -1125,7 +1209,7 @@ class multiscale: public multiscale_data<TShape> {
   /// Local threshold value
   /// Uniform subdivision (see Veli eq. (2.44))
   double
-  local_treshold_value (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* elem)
+  local_threshold_value (const levelmultiindex &lmi, t8_locidx_t tree_idx, const t8_element_t *elem)
   {
     const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, elem);
 
@@ -1281,18 +1365,49 @@ class multiscale: public multiscale_data<TShape> {
   }
 
   bool
-  hard_thresholding (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* t8_elem)
+  hard_thresholding (const levelmultiindex &lmi, t8_locidx_t tree_idx, const t8_element_t *t8_elem)
   {
-    /// TODO different L^p norms?
     auto tmp = local_detail_norm (lmi, tree_idx, t8_elem);
 
     for (auto u = 0u; u < U_DIM; ++u)
       tmp[u] /= c_scaling[u];
 
     const auto local_norm = *std::max_element (tmp.begin (), tmp.end ());
-    const auto local_eps = c_thresh * local_treshold_value (lmi, tree_idx, t8_elem);
+    const auto local_eps = c_thresh * local_threshold_value (lmi, tree_idx, t8_elem);
 
     return local_norm <= local_eps;
+  }
+
+  void
+  update_vertex_orders ()
+  {
+    // Update vertex order for all elements based on actual t8code elements
+    // This is necessary because order depends on ancestor.type which is not stored in LMI
+    if (forest == nullptr)
+      return;
+
+    auto *forest_data = get_user_data ();
+    const auto *forest_scheme = t8_forest_get_scheme (forest);
+    t8_locidx_t elem_offset = 0;
+
+    for (t8_locidx_t tree_idx = 0; tree_idx < t8_forest_get_num_local_trees (forest); ++tree_idx) {
+      const auto num_elems = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+      const auto base_element = tree_idx;
+
+      for (t8_locidx_t elem_idx = 0; elem_idx < num_elems; ++elem_idx) {
+        const auto *elem = t8_forest_get_leaf_element_in_tree (forest, tree_idx, elem_idx);
+        const auto lmi = t8_mra::get_lmi_from_forest_data<element_t> (forest_data, elem_offset + elem_idx);
+
+        if (forest_data->lmi_map->contains (lmi)) {
+          std::array<int, 3> correct_order;
+          t8_mra::triangle_order::get_point_order_at_level (base_element, elem, forest_scheme, correct_order);
+
+          auto &elem_data = forest_data->lmi_map->get (lmi);
+          elem_data.order = correct_order;
+        }
+      }
+      elem_offset += num_elems;
+    }
   }
 
   void
