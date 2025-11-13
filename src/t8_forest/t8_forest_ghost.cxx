@@ -90,7 +90,7 @@ typedef struct
 } t8_ghost_remote_tree_t;
 
 /**
- * This struct stores information about the data that the current process needds from a specific remote_process
+ * This struct stores information about the data that the current process needs from a specific remote_process
  * as ghost data, such as the number of remote elements and the remote trees.
 */
 typedef struct

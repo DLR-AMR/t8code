@@ -218,7 +218,7 @@ t8_step5_output_data_to_vtu (t8_forest_t forest, struct t8_step5_data_per_elemen
   }
   {
     /* To write user defined data, we need to extended output function t8_forest_vtk_write_file
-     * from t8_forest_vtk.h. Despite writin user data, it also offers more control over which
+     * from t8_forest_vtk.h. Despite writing user data, it also offers more control over which
      * properties of the forest to write. */
     int write_treeid = 1;
     int write_mpirank = 1;

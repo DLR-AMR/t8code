@@ -18,7 +18,7 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
+if ( T8CODE_BUILD_AS_SHARED_LIBRARY )
     add_library( T8 SHARED )
     set_target_properties( T8 PROPERTIES VERSION ${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH} SOVERSION ${T8CODE_VERSION_RAW})
     set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
