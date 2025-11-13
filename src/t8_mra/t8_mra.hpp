@@ -1102,12 +1102,44 @@ class multiscale: public multiscale_data<TShape> {
     return tmp;
   }
 
+  std::array<double, U_DIM>
+  local_detail_norm (const levelmultiindex &lmi)
+  {
+    std::array<double, U_DIM> tmp = {};
+    const auto vol = d_map.get (lmi).vol;
+
+    for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+      for (auto u = 0u; u < U_DIM; ++u)
+        for (auto i = 0u; i < DOF; ++i) {
+          const auto d = d_map.get (lmi).d_coeffs[element_t::wavelet_idx (k, u, i)];
+          tmp[u] += d * d;
+        }
+    }
+
+    for (auto u = 0u; u < U_DIM; ++u)
+      tmp[u] = std::sqrt (tmp[u] / vol);
+
+    return tmp;
+  }
+
   /// Local threshold value
   /// Uniform subdivision (see Veli eq. (2.44))
   double
   local_treshold_value (const levelmultiindex& lmi, t8_locidx_t tree_idx, const t8_element_t* elem)
   {
     const auto vol = levelmultiindex::NUM_CHILDREN * t8_forest_element_volume (forest, tree_idx, elem);
+
+    const auto level_diff = maximum_level - lmi.level ();
+    const auto h_lambda = std::sqrt (vol);
+    const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
+
+    return h_max_level / h_lambda;
+  }
+
+  double
+  local_threshold_value (const levelmultiindex &lmi)
+  {
+    const auto vol = d_map.get (lmi).vol;
 
     const auto level_diff = maximum_level - lmi.level ();
     const auto h_lambda = std::sqrt (vol);
