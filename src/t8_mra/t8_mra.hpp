@@ -500,6 +500,91 @@ class multiscale: public multiscale_data<TShape> {
     return 0;
   }
 
+  int
+  coarsening_callback_new (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                           t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, const int is_family,
+                           const int num_elements, t8_element_t *elements[])
+  {
+    if (!is_family)
+      return 0;
+
+    const auto element_level = scheme->element_get_level (tree_class, elements[0]);
+
+    if (element_level != get_user_data ()->current_refinement_level)
+      return 0;
+
+    const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
+    const auto elem_idx = local_ele_idx + offset;
+
+    const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
+
+    return coarsening_set.contains (lmi) ? -1 : 0;
+  }
+
+  int
+  refinement_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                       t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, const int is_family,
+                       const int num_elements, t8_element_t *elements[])
+  {
+    // if (!is_family)
+    //   return 0;
+
+    const auto element_level = scheme->element_get_level (tree_class, elements[0]);
+
+    /// check that
+    // if (element_level != get_user_data ()->current_refinement_level || element_level >= maximum_level)
+    //   return 0;
+
+    const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
+    const auto elem_idx = local_ele_idx + offset;
+
+    const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
+    // two_scale_transformation (t8_mra::parent_lmi (lmi));
+    two_scale_transformation (lmi);
+
+    const auto parent = parent_lmi (lmi);
+
+    // if (hartens_prediction (parent, which_tree, elem_idx, elements[0]))
+    //   return -1;
+    if (!hartens_prediction (parent, which_tree, elem_idx, elements[0]).empty ()) {
+      printf ("harten is triggered\n");
+
+      return 1;
+    }
+
+    return 0;
+  }
+
+  int
+  refinement_callback_new (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                           t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, const int is_family,
+                           const int num_elements, t8_element_t *elements[])
+  {
+    /// TODO...warum?
+    // if (!is_family)
+    //   return 0;
+
+    const auto element_level = scheme->element_get_level (tree_class, elements[0]);
+
+    if (element_level != get_user_data ()->current_refinement_level)
+      return 0;
+
+    const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
+    const auto elem_idx = local_ele_idx + offset;
+
+    const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
+
+    std::cout << "level: " << get_user_data ()->current_refinement_level << " size: " << refinement_set.size () << "\n";
+    // if (refinement_set.contains (t8_mra::parent_lmi (lmi)))
+    //   std::cout << "Found\n";
+    //
+    // return refinement_set.contains (t8_mra::parent_lmi (lmi)) ? 1 : 0;
+    if (refinement_set.contains ((lmi)))
+      std::cout << "Found\n";
+
+    return refinement_set.contains (lmi) ? 1 : 0;
+  }
+
   void
   iterate_replace_callback (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
                             const t8_eclass_t tree_class, const t8_scheme *scheme, int refine, int num_outgoing,
