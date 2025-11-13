@@ -13,7 +13,7 @@ namespace t8_mra
 /**
  * @brief Stores corresponding cells of an adaptive grid as a vector of hash_sets.
  * Guarantees O(1) search, insertion, deletion. For performance
- * reason we use a "dense hashmap" provided by the unordered_dense-library 
+ * reason we use a "dense hashset" provided by the unordered_dense-library 
  * (see https://github.com/martinus/unordered_dense)
  *
  * The cell data is given as a levelmultiindex = (level, multiindex) describing
@@ -54,7 +54,7 @@ class levelindex_set {
   insert (unsigned int level, size_t key);
 
   /**
-   * @brief Insert levelmuliindex -> data to map
+   * @brief Insert levelmuliindex -> data to set
    *
    * @param lmi levelmultiindex
    */
@@ -87,7 +87,7 @@ class levelindex_set {
   erase (unsigned int level);
 
   /**
-   * @brief Erase whole map
+   * @brief Erase whole set
    */
   void
   erase_all ();
@@ -127,7 +127,7 @@ class levelindex_set {
   contains (const TLmi &lmi) const;
 
   /**
-   * @brief Returns number elements stored in the map
+   * @brief Returns number elements stored in the set
    *
    * @return Number elements
    */
@@ -135,10 +135,18 @@ class levelindex_set {
   size () const noexcept;
 
   /**
+   * @brief Returns number elements stored in the set on a level
+   *
+   * @return Number elements
+   */
+  size_t
+  size (unsigned int level) const noexcept;
+
+  /**
    * @brief Get all cells of a given refinement level
    *
    * @param level Refinement level
-   * @return index_map
+   * @return index_set
    */
   set &
   operator[] (unsigned int level);
@@ -147,7 +155,7 @@ class levelindex_set {
    * @brief Get all cells of a given refinement level
    *
    * @param level Refinement level
-   * @return index_map
+   * @return index_set
    */
   const set &
   operator[] (unsigned int level) const;
@@ -208,8 +216,8 @@ template <lmi_type TLmi>
 inline void
 levelindex_set<TLmi>::erase_all ()
 {
-  for (auto &map : level_set)
-    map.clear ();
+  for (auto &set : level_set)
+    set.clear ();
 }
 
 template <lmi_type TLmi>
@@ -277,11 +285,38 @@ levelindex_set<TLmi>::size () const noexcept
 }
 
 template <lmi_type TLmi>
+inline size_t
+levelindex_set<TLmi>::size (unsigned int level) const noexcept
+{
+  check_level (level);
+
+  return level_set[level].size ();
+}
+
+template <lmi_type TLmi>
+inline typename levelindex_set<TLmi>::set &
+levelindex_set<TLmi>::operator[] (unsigned int level)
+{
+  check_level (level);
+
+  return level_set[level];
+}
+
+template <lmi_type TLmi>
+inline const typename levelindex_set<TLmi>::set &
+levelindex_set<TLmi>::operator[] (unsigned int level) const
+{
+  check_level (level);
+
+  return level_set[level];
+}
+
+template <lmi_type TLmi>
 inline void
 levelindex_set<TLmi>::check_level (unsigned int level) const
 {
 #if T8_ENABLE_DEBUG
-  if (level >= level_map.size ()) {
+  if (level >= level_set.size ()) {
     throw std::out_of_range ("Level out of range.");
   }
 #endif
