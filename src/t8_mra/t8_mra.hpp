@@ -728,21 +728,98 @@ class multiscale: public multiscale_data<TShape> {
       forest = new_forest;
     }
 
-    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
-    auto global_idx = 0u;
-    for (auto i = 0u; i < num_local_trees; ++i) {
-      const auto num_local_ele = t8_forest_get_tree_num_leaf_elements (forest, i);
-      const auto tree_class = t8_forest_get_tree_class (forest, i);
+  void
+  coarsening_new (int min_level, int max_level)
+  {
+    static auto static_coarsening_callback
+      = [this] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, const int is_family, const int num_elements,
+                t8_element_t *elements[]) -> int {
+      return coarsening_callback_new (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
+                                      num_elements, elements);
+    };
 
-      for (auto idx = 0u; idx < num_local_ele; ++idx, ++global_idx) {
-        const auto* ele = t8_forest_get_leaf_element_in_tree (forest, i, idx);
+    static auto static_iterate_replace_callback
+      = [this] (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+                t8_locidx_t first_incoming) -> void {
+      iterate_replace_callback_new (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+                                    first_outgoing, num_incoming, first_incoming);
+    };
 
-        const auto neighs = get_neighbors (i, idx, tree_class, ele);
-        printf ("size: %d\n", neighs.size ());
-        printf ("%d -> ", global_idx);
-        for (auto k = 0u; k < neighs.size (); ++k)
-          printf ("%d ", neighs[k]);
-        printf ("\n");
+    /// scaling due to (2.39)
+    c_scaling = threshold_scaling_factor ();
+
+    for (auto l = max_level; l > min_level; --l) {
+      t8_forest_t new_forest;
+      t8_forest_ref (forest);
+
+      get_user_data ()->current_refinement_level = l;
+
+      std::cout << "Before mst: " << get_user_data ()->lmi_map->size () << "\n";
+      multiscale_transformation (l - 1, l);
+      hard_thresholding (l - 1, l);
+      // restore_balancing (l - 1, l); /// TODO
+      generate_td_tree (l - 1, l);
+      sync_d_with_td (min_level, max_level);
+
+      inverse_multiscale_transformation (l - 1, l);
+
+      std::cout << "After mst: " << get_user_data ()->lmi_map->size () << "\n";
+      std::cout << "  Level " << (l - 1) << " in map: " << get_user_data ()->lmi_map->operator[] (l - 1).size ()
+                << "\n";
+      std::cout << "  Level " << l << " in map: " << get_user_data ()->lmi_map->operator[] (l).size () << "\n";
+      std::cout << "  coarsening_set[" << l << "] size: " << coarsening_set[l].size () << "\n";
+
+      new_forest = t8_forest_new_adapt (
+        forest,
+        [] (auto *forest, auto *forest_from, auto which_tree, auto tree_class, auto local_ele_idx, auto *scheme,
+            const auto is_family, const auto num_elements, auto *elements[]) -> int {
+          return static_coarsening_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme,
+                                             is_family, num_elements, elements);
+        },
+        0, 0, get_user_data ());
+
+      t8_mra::forest_data<element_t> *new_user_data;
+      new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+
+      new_user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (maximum_level);
+      std::swap (new_user_data->lmi_map, get_user_data ()->lmi_map);
+
+      const auto num_new_local_elements = t8_forest_get_local_num_leaf_elements (new_forest);
+      const auto num_new_ghost_elements = t8_forest_get_num_ghosts (new_forest);
+      new_user_data->lmi_idx
+        = sc_array_new_count (sizeof (levelmultiindex), num_new_local_elements + num_new_ghost_elements);
+      t8_forest_set_user_data (new_forest, new_user_data);
+      t8_forest_iterate_replace (
+        new_forest, forest,
+        [] (auto *forest_old, auto *forest_new, auto which_tree, const auto tree_class, const auto *scheme, auto refine,
+            auto num_outgoing, auto first_outgoing, auto num_incoming, t8_locidx_t first_incoming) -> void {
+          static_iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+                                           first_outgoing, num_incoming, first_incoming);
+        });
+
+      // Debug: Count elements at each level in the forest
+      {
+        std::map<int, int> level_counts;
+        auto *new_forest_data = t8_mra::get_mra_forest_data<element_t> (new_forest);
+        const auto *new_scheme = t8_forest_get_scheme (new_forest);
+
+        for (t8_locidx_t tree_idx = 0; tree_idx < t8_forest_get_num_local_trees (new_forest); ++tree_idx) {
+          const auto tree_class = t8_forest_get_tree_class (new_forest, tree_idx);
+          const auto num_elems = t8_forest_get_tree_num_leaf_elements (new_forest, tree_idx);
+          for (t8_locidx_t elem_idx = 0; elem_idx < num_elems; ++elem_idx) {
+            const auto *elem = t8_forest_get_leaf_element_in_tree (new_forest, tree_idx, elem_idx);
+            const int elem_level = new_scheme->element_get_level (tree_class, elem);
+            level_counts[elem_level]++;
+          }
+        }
+
+        std::cout << "  Forest elements by level: ";
+        for (const auto &[lev, cnt] : level_counts) {
+          std::cout << "L" << lev << "=" << cnt << " ";
+        }
+        std::cout << "\n";
       }
     }
   }
