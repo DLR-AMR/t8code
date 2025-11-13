@@ -17,7 +17,7 @@ struct triangle_order
   static constexpr t8_eclass ECLASS = T8_ECLASS_TRIANGLE;
 
   static void
-  get_point_order (std::array<int, 3>& order, int cube_id)
+  get_point_order (std::array<int, 3> &order, int cube_id)
   {
 
     const auto idx = (order == std::array { 0, 1, 2 })   ? 0
@@ -33,7 +33,7 @@ struct triangle_order
   }
 
   static void
-  invert_order (std::array<int, 3>& order)
+  invert_order (std::array<int, 3> &order)
   {
     const auto idx = (order == std::array { 0, 1, 2 })   ? 0
                      : (order == std::array { 0, 2, 1 }) ? 1
@@ -48,13 +48,13 @@ struct triangle_order
   }
 
   static int
-  get_children_order (int type, int child_id, const std::array<int, 3>& order)
+  get_children_order (int type, int child_id, const std::array<int, 3> &order)
   {
     return 0;
   }
 
   static void
-  get_parent_order (std::array<int, 3>& order)
+  get_parent_order (std::array<int, 3> &order)
   {
     const auto idx = (order == std::array { 0, 1, 2 })   ? 0
                      : (order == std::array { 2, 0, 1 }) ? 1
@@ -67,7 +67,7 @@ struct triangle_order
   }
 
   static int
-  get_reference_children_order (int type, int child_id, const std::array<int, 3>& order)
+  get_reference_children_order (int type, int child_id, const std::array<int, 3> &order)
   {
     const auto idx = (order == std::array { 0, 1, 2 })   ? 0
                      : (order == std::array { 2, 0, 1 }) ? 1
@@ -80,8 +80,8 @@ struct triangle_order
   }
 
   static void
-  get_point_order_at_level (size_t basecell, const t8_element_t* elem, const t8_scheme* scheme,
-                            std::array<int, 3>& order)
+  get_point_order_at_level (size_t basecell, const t8_element_t *elem, const t8_scheme *scheme,
+                            std::array<int, 3> &order)
   {
     order = { 0, 1, 2 };
     const auto elem_level = scheme->element_get_level (ECLASS, elem);
@@ -89,7 +89,7 @@ struct triangle_order
 
     for (auto l = 0u; l < elem_level; ++l) {
       const auto ancestor_id = scheme->element_get_ancestor_id (ECLASS, elem, l + 1);
-      t8_dtri_ancestor ((t8_dtri_t*) elem, l, &ancestor);
+      t8_dtri_ancestor ((t8_dtri_t *) elem, l, &ancestor);
       get_point_order (order, t8_dtri_type_cid_to_beyid[ancestor.type][ancestor_id]);
     }
   }
