@@ -1,4 +1,5 @@
 #include <t8_mra/t8_mra.hpp>
+#include <t8_mra/t8_mra_vtk.hpp>
 
 #include "t8.h"
 #include "t8_cmesh.hxx"
@@ -8,6 +9,9 @@
 #include "t8_geometry/t8_geometry_with_vertices.h"
 #include "t8_mra/data/cell_data.hpp"
 #include "t8_vtk.h"
+
+#include <vector>
+#include <cmath>
 
 t8_cmesh_t
 t8_cmesh_square (sc_MPI_Comm comm)
@@ -89,14 +93,14 @@ t8_cmesh_l_shape (sc_MPI_Comm comm)
 
 template <typename T>
 void
-t8_write_vtu (t8_forest_t forest, const char* prefix)
+t8_write_vtu (t8_forest_t forest, const char *prefix)
 {
   const auto total_num_elements = t8_forest_get_global_num_leaf_elements (forest);
 
   constexpr auto U_DIM = T::U_DIM;
   auto num_fields_to_write = U_DIM;
 
-  std::array<double*, U_DIM> element_data;
+  std::array<double *, U_DIM> element_data;
   for (auto k = 0u; k < U_DIM; ++k)
     element_data[k] = T8_ALLOC (double, total_num_elements);
 
@@ -107,14 +111,14 @@ t8_write_vtu (t8_forest_t forest, const char* prefix)
     vtk_data[k].data = element_data[k];
   }
 
-  const t8_element_t* element;
+  const t8_element_t *element;
   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
 
   auto current_index = 0u;
   for (auto tree_idx = 0u, current_index = 0u; tree_idx < num_local_trees; ++tree_idx) {
     const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
 
-    auto* data = t8_mra::get_mra_forest_data<T> (forest);
+    auto *data = t8_mra::get_mra_forest_data<T> (forest);
     for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx, ++current_index) {
       element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
 
@@ -139,7 +143,7 @@ t8_write_vtu (t8_forest_t forest, const char* prefix)
 }
 
 int
-main (int argc, char** argv)
+main (int argc, char **argv)
 {
   int mpiret;
   sc_MPI_Comm comm;
@@ -182,42 +186,149 @@ main (int argc, char** argv)
     return { (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x) };
   };
 
-  auto max_level = 7u;
-  auto c_thresh = 0.8;
+  auto max_level = 5u;
+  auto c_thresh = 1.0;
   auto gamma = 1.0;  /// Order of convergence
   auto dunavant_rule = 10;
 
-  bool balanced = true;
+  bool balanced = false;
 
-  constexpr int P = 4;
+  constexpr int P = 3;
   constexpr int U = 1;
 
   using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
   using mra_type = t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P>;
 
-  auto* test_scheme = t8_scheme_new_default ();
-  // t8_cmesh_t cmesh = t8_cmesh_square (comm);
-  t8_cmesh_t cmesh = t8_cmesh_l_shape (comm);
+  auto *test_scheme = t8_scheme_new_default ();
+  t8_cmesh_t cmesh = t8_cmesh_square (comm);
+  // t8_cmesh_t cmesh = t8_cmesh_l_shape (comm);
   printf ("created test_scheme and cmesh\n");
 
   mra_type mra_test (max_level, c_thresh, gamma, dunavant_rule, balanced, comm);
   printf ("created mra object\n");
 
   mra_test.initialize_data (cmesh, test_scheme, max_level, f3);
-  printf ("Initialize data\n");
+  // printf ("create mra object\n");
+  // mra_test.multiscale_transformation (0, max_level);
+  // printf ("Size init data: %zu\n", mra_test.get_lmi_map ()->size ());
+  // printf ("Initialize data\n");
+  // mra_test.inverse_multiscale_transformation (0, max_level);
+  // printf ("Size init data: %zu\n", mra_test.get_lmi_map ()->size ());
+
   printf ("Size init data: %zu\n", mra_test.get_lmi_map ()->size ());
 
-  // t8_write_vtu<element_data_type> (mra_test.forest, ("reference_f3_" + std::to_string (init_level)).c_str ());
+  // Manual verification: Check first element
+  {
+    auto *mra_data = t8_mra::get_mra_forest_data<element_data_type> (mra_test.forest);
+    const auto *element = t8_forest_get_leaf_element_in_tree (mra_test.forest, 0, 0);
+    const auto lmi = t8_mra::get_lmi_from_forest_data<element_data_type> (mra_data, 0);
+    const auto &elem_data = mra_data->lmi_map->get (lmi);
+    const auto volume = t8_forest_element_volume (mra_test.forest, 0, element);
 
-  mra_test.coarsening (0, max_level);
+    printf ("\n=== Manual Verification (First Element) ===\n");
+    printf ("Volume: %.8e\n", volume);
+    printf ("Mean value: %.8e\n", t8_mra::mean_val<element_data_type> (mra_test.forest, 0, lmi, element)[0]);
 
-  printf ("Size after coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
+    // Get physical vertices DIRECTLY from t8code (no permutation yet)
+    printf ("T8code vertices (BEFORE permutation):\n");
+    for (int v = 0; v < 3; ++v) {
+      double coords[3];
+      t8_forest_element_coordinate (mra_test.forest, 0, element, v, coords);
+      printf ("  t8_vertex_%d: (%.6f, %.6f)\n", v, coords[0], coords[1]);
+    }
 
-  t8_write_vtu<element_data_type> (
-    mra_test.forest,
-    ("f3_l_shape_balanced_coarsening_P" + std::to_string (P) + "_" + std::to_string (max_level)).c_str ());
+    printf ("Vertex order from elem_data: [%d, %d, %d]\n", elem_data.order[0], elem_data.order[1], elem_data.order[2]);
 
-  printf ("Finished writing file\n");
+    // Get physical vertices
+    double vertices[9];
+    for (int v = 0; v < 3; ++v) {
+      double coords[3];
+      t8_forest_element_coordinate (mra_test.forest, 0, element, v, coords);
+      const int perm_v = elem_data.order[v];
+      vertices[3 * perm_v] = coords[0];
+      vertices[3 * perm_v + 1] = coords[1];
+      vertices[3 * perm_v + 2] = coords[2];
+    }
+
+    printf ("Vertices (AFTER permutation for DG reference):\n");
+    for (int v = 0; v < 3; ++v) {
+      printf ("  v%d: (%.6f, %.6f)\n", v, vertices[3 * v], vertices[3 * v + 1]);
+    }
+
+    // TEST: Try swapping vertices 1 and 2 manually
+    printf ("\n=== TESTING: Swap vertices 1 and 2 ===\n");
+    double vertices_swapped[9];
+    for (int v = 0; v < 3; ++v) {
+      double coords[3];
+      t8_forest_element_coordinate (mra_test.forest, 0, element, v, coords);
+      // Map: t8_vertex_0 -> ref_vertex_0, t8_vertex_1 -> ref_vertex_2, t8_vertex_2 -> ref_vertex_1
+      int ref_v = (v == 1) ? 2 : (v == 2) ? 1 : 0;
+      vertices_swapped[3 * ref_v] = coords[0];
+      vertices_swapped[3 * ref_v + 1] = coords[1];
+      vertices_swapped[3 * ref_v + 2] = coords[2];
+    }
+    printf ("Swapped vertices:\n");
+    for (int v = 0; v < 3; ++v) {
+      printf ("  v%d: (%.6f, %.6f)\n", v, vertices_swapped[3 * v], vertices_swapped[3 * v + 1]);
+    }
+
+    // Evaluate at some test points
+    printf ("DG evaluation at test points:\n");
+    std::vector<std::array<double, 2>> test_pts = {
+      { 0.0, 0.0 }, { 1.0, 0.0 }, { 0.0, 1.0 }, { 0.5, 0.0 }, { 0.5, 0.5 }, { 0.0, 0.5 }, { 1.0 / 3.0, 1.0 / 3.0 }
+    };
+
+    for (const auto &pt : test_pts) {
+      auto val = t8_mra::evaluate_dg_at_point (elem_data, pt[0], pt[1], volume);
+      // Map to physical coordinates
+      const double lambda0 = 1.0 - pt[0] - pt[1];
+      const double lambda1 = pt[0];
+      const double lambda2 = pt[1];
+      double phys_x = lambda0 * vertices[0] + lambda1 * vertices[3] + lambda2 * vertices[6];
+      double phys_y = lambda0 * vertices[1] + lambda1 * vertices[4] + lambda2 * vertices[7];
+
+      // Evaluate exact function at physical point
+      auto exact = f3 (phys_x, phys_y);
+
+      printf ("  ref(%.3f, %.3f) -> phys(%.6f, %.6f): DG=%.6e, exact=%.6e, diff=%.3e\n", pt[0], pt[1], phys_x, phys_y,
+              val[0], exact[0], std::abs (val[0] - exact[0]));
+    }
+    printf ("==========================================\n\n");
+  }
+  // t8_write_vtu<element_data_type> (mra_test.forest,
+  //                                  ("refinement_test/test_init_" + std::to_string (max_level)).c_str ());
+  t8_mra::write_forest_lagrange_vtk<element_data_type> (mra_test.forest, "refinement_test/lagrange_init", P,
+                                                        true);  // Quadratic Lagrange with debug
+
+  mra_test.coarsening_new (0u, max_level);
+  t8_mra::write_forest_lagrange_vtk<element_data_type> (mra_test.forest, "refinement_test/lagrange_coarse", P,
+                                                        false);  // Quadratic Lagrange with debug
+  // t8_write_vtu<element_data_type> (mra_test.forest,
+  //                                  ("refinement_test/test_step_1_" + std::to_string (max_level)).c_str ());
+  // printf ("Size first coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
+  //
+  mra_test.refinement_new (0u, max_level);
+  t8_mra::write_forest_lagrange_vtk<element_data_type> (mra_test.forest, "refinement_test/lagrange_refine", P,
+                                                        false);  // Quadratic Lagrange with debug
+  // t8_write_vtu<element_data_type> (mra_test.forest,
+  //                                  ("refinement_test/test_step_2_" + std::to_string (max_level)).c_str ());
+  // printf ("Size first refinement: %zu\n", mra_test.get_lmi_map ()->size ());
+  //
+  // mra_test.coarsening_new (0u, max_level);
+  // t8_write_vtu<element_data_type> (mra_test.forest,
+  //                                  ("refinement_test/test_step_3_" + std::to_string (max_level)).c_str ());
+  // printf ("Size second coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
+
+  // mra_test.coarsening (0, max_level);
+  // // mra_test.refinement (1, 2);
+  // printf ("Size after coarsening: %zu\n", mra_test.get_lmi_map ()->size ());
+  // // mra_test.refinement (1, 2);
+  // // printf ("Size after refinement: %zu\n", mra_test.get_lmi_map ()->size ());
+  //
+  // t8_write_vtu<element_data_type> (mra_test.forest,
+  //                                  ("f3_refine_test" + std::to_string (P) + "_" + std::to_string (max_level)).c_str ());
+  //
+  // printf ("Finished writing file\n");
 
   mra_test.cleanup ();
   printf ("cleaned everything...\n");
