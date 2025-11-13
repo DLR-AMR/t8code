@@ -76,12 +76,17 @@ struct dg_basis_base<T8_ECLASS_TRIANGLE>
   }
 
   std::vector<double>
-  ref_point (const t8_mra::mat& trafo_mat, const std::vector<size_t>& permuation_vec,
-             const std::vector<double>& grid_point)
+  ref_point (const t8_mra::mat &trafo_mat, const std::vector<size_t> &permuation_vec,
+             const std::vector<double> &grid_point)
   {
     std::vector<double> ret = { grid_point[0], grid_point[1], 1.0 };
     t8_mra::lu_solve (trafo_mat, permuation_vec, ret);
 
+    // CRITICAL FIX: ret contains barycentric coordinates [λ0, λ1, λ2]
+    // Reference coordinates (xi, eta) correspond to (λ1, λ2), NOT (λ0, λ1)!
+    // OLD (WRONG): return ret;  // This returned [λ0, λ1, λ2]
+    // NEW (CORRECT): Return [λ1, λ2, ...] as (xi, eta) coordinates
+    // return { ret[1], ret[2], ret[0] };  // Reorder to [λ1, λ2, λ0]
     return ret;
   }
 };
@@ -108,7 +113,7 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
   }
 
   std::array<double, DOF>
-  basis_value (const std::vector<double>& x_ref)
+  basis_value (const std::vector<double> &x_ref)
   {
     std::array<double, DOF> res;
     ///TODO scaling_functions für allgemeine shapes machen
