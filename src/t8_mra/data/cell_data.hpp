@@ -70,6 +70,7 @@ struct data_per_element
   std::vector<double> u_coeffs;  // Single-scale coefficients
   /// TODO get rid of details
   std::vector<double> d_coeffs;  // Detail coefficients
+  double vol;
 
   std::array<int, 3> order;  // Point order
 
@@ -104,10 +105,10 @@ concept data_has_triangle = T::Shape == T8_ECLASS_TRIANGLE;
 template <typename T>
 struct forest_data
 {
-  using levelmultiindex = levelmultiindex<T::Shape>;
+  using lmi_type = levelmultiindex<T::Shape>;
 
   sc_array_t *lmi_idx;
-  t8_mra::levelindex_map<levelmultiindex, T> *lmi_map;
+  t8_mra::levelindex_map<lmi_type, T> *lmi_map;
 
   /// Global information needed for refinement/coarsening
   int current_refinement_level;  // Which level do we refine?
