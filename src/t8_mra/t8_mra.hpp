@@ -821,7 +821,237 @@ class multiscale: public multiscale_data<TShape> {
         }
         std::cout << "\n";
       }
+
+      d_map.erase_all ();
+      td_set.erase_all ();
+      refinement_set.erase_all ();
+      coarsening_set.erase_all ();
+
+      cleanup ();
+      forest = new_forest;
+
+      // Update vertex orders after adaptation
+      update_vertex_orders ();
     }
+  }
+
+  void
+  refinement (int min_level, int max_level)
+  {
+    static auto static_refinement_callback
+      = [this] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, const int is_family, const int num_elements,
+                t8_element_t *elements[]) -> int {
+      return refinement_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
+                                  num_elements, elements);
+    };
+
+    static auto static_iterate_replace_callback
+      = [this] (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+                t8_locidx_t first_incoming) -> void {
+      iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+                                first_outgoing, num_incoming, first_incoming);
+    };
+
+    /// scaling due to (2.39)
+    // c_scaling = threshold_scaling_factor ();
+
+    // for (auto l = min_level; l < max_level; ++l) {
+    for (auto l = min_level; l < max_level; ++l) {
+      t8_forest_t new_forest;
+      t8_forest_ref (forest);
+
+      get_user_data ()->current_refinement_level = l;
+
+      new_forest = t8_forest_new_adapt (
+        forest,
+        [] (auto *forest, auto *forest_from, auto which_tree, auto tree_class, auto local_ele_idx, auto *scheme,
+            const auto is_family, const auto num_elements, auto *elements[]) -> int {
+          return static_refinement_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme,
+                                             is_family, num_elements, elements);
+        },
+        0, 0, get_user_data ());
+
+      if (balanced)
+        new_forest = [&] () {
+          t8_forest_t balanced_forest;
+          t8_forest_t unbalanced_forest = new_forest;
+
+          t8_forest_init (&balanced_forest);
+          /// TODO partition
+          t8_forest_set_balance (balanced_forest, unbalanced_forest, 0);
+          t8_forest_commit (balanced_forest);
+
+          return balanced_forest;
+        }();
+
+      t8_mra::forest_data<element_t> *new_user_data;
+      new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+
+      new_user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (maximum_level);
+      std::swap (new_user_data->lmi_map, get_user_data ()->lmi_map);
+
+      const auto num_new_local_elements = t8_forest_get_local_num_leaf_elements (new_forest);
+      const auto num_new_ghost_elements = t8_forest_get_num_ghosts (new_forest);
+
+      new_user_data->lmi_idx
+        = sc_array_new_count (sizeof (levelmultiindex), num_new_local_elements + num_new_ghost_elements);
+      t8_forest_set_user_data (new_forest, new_user_data);
+
+      t8_forest_iterate_replace (
+        new_forest, forest,
+        [] (auto *forest_old, auto *forest_new, auto which_tree, const auto tree_class, const auto *scheme, auto refine,
+            auto num_outgoing, auto first_outgoing, auto num_incoming, t8_locidx_t first_incoming) -> void {
+          static_iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+                                           first_outgoing, num_incoming, first_incoming);
+        });
+
+      cleanup ();
+      forest = new_forest;
+    }
+  }
+
+  void
+  refinement_new (int min_level, int max_level)
+  {
+    /// CONTINUE
+    static auto static_refinement_callback
+      = [this] (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class,
+                t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, const int is_family, const int num_elements,
+                t8_element_t *elements[]) -> int {
+      return refinement_callback_new (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
+                                      num_elements, elements);
+    };
+
+    static auto static_iterate_replace_callback
+      = [this] (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree, const t8_eclass_t tree_class,
+                const t8_scheme *scheme, int refine, int num_outgoing, t8_locidx_t first_outgoing, int num_incoming,
+                t8_locidx_t first_incoming) -> void {
+      iterate_replace_callback_new (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+                                    first_outgoing, num_incoming, first_incoming);
+    };
+
+    /// scaling due to (2.39)
+    c_scaling = threshold_scaling_factor ();
+
+    // for (auto l = min_level; l <= max_level; ++l) {
+    // for (auto l = max_level; l > min_level; --l) {
+
+    std::cout << "start!\n";
+
+    // get_user_data ()->current_refinement_level = l;
+
+    for (auto ll = 0; ll <= max_level; ++ll)
+      std::cout << "Level: " << ll << "\tbefore mst: " << get_lmi_map ()->operator[] (ll).size () << "\n";
+
+    // For refinement: transform from where elements currently exist (l) down to parent level (l-1)
+    // This computes the detail coefficients for elements at level l
+    // std::cout << "level: " << l << " -> " << l + 1 << "\n";
+    // multiscale_transformation (l, l + 1);
+    multiscale_transformation (min_level, max_level);
+    std::cout << "after mst!\n";
+
+    for (auto ll = 0; ll <= max_level; ++ll)
+      std::cout << "Level: " << ll << "\tafter mst: " << d_map[ll].size () << "\n";
+
+    // The details are stored at level l-1 (parent level)
+    for (auto l = min_level; l <= max_level; ++l)
+      for (const auto &[lmi, _] : d_map[l])
+        td_set.insert (lmi);
+
+    for (auto ll = 0; ll <= max_level; ++ll)
+      std::cout << "Level: " << ll << "\tafter td_insert: " << td_set[ll].size () << "\n";
+
+    // hartens_prediction (l, l + 1);
+    hartens_prediction (min_level, max_level);
+    for (auto ll = 0; ll <= max_level; ++ll)
+      std::cout << "Level: " << ll << "\tafter mst: " << d_map[ll].size () << "\n";
+    std::cout << "after harten\n";
+    // restore_balancing (l - 1, l); /// TODO
+    generate_td_tree (min_level, max_level);
+    for (auto ll = 0; ll <= max_level; ++ll)
+      std::cout << "Level: " << ll << "\tafter mst: " << d_map[ll].size () << "\n";
+    std::cout << "after td_tree\n";
+    sync_d_with_td (min_level, max_level);
+    for (auto ll = 0; ll <= max_level; ++ll)
+      std::cout << "Level: " << ll << "\tafter mst: " << d_map[ll].size () << "\n";
+    std::cout << "after sync\n";
+
+    for (auto l = min_level; l < max_level; ++l) {
+      // inverse_multiscale_transformation (min_level, max_level);
+      inverse_multiscale_transformation (l, l + 1);
+      std::cout << "after imst\n";
+
+      for (auto ll = 0; ll <= max_level; ++ll)
+        std::cout << "Level: " << ll << "\tSolution after imst: " << get_lmi_map ()->operator[] (ll).size () << "\n";
+
+      for (auto ll = 0; ll <= max_level; ++ll)
+        std::cout << "Level: " << ll << "\td_map after imst: " << d_map[ll].size () << "\n";
+
+      for (auto ll = 0; ll <= max_level; ++ll)
+        std::cout << "Level: " << ll << "\tRefinement set Size: " << refinement_set[ll].size () << "\n";
+
+      t8_forest_t new_forest;
+      t8_forest_ref (forest);
+
+      std::cout << "start min_level: " << l << "\n";
+      get_user_data ()->current_refinement_level = l;
+
+      // if (refinement_set[l].empty ())
+      //   continue;
+
+      new_forest = t8_forest_new_adapt (
+        forest,
+        [] (auto *forest, auto *forest_from, auto which_tree, auto tree_class, auto local_ele_idx, auto *scheme,
+            const auto is_family, const auto num_elements, auto *elements[]) -> int {
+          return static_refinement_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme,
+                                             is_family, num_elements, elements);
+        },
+        0, 0, get_user_data ());
+
+      std::cout << "refinement callback\n";
+
+      t8_mra::forest_data<element_t> *new_user_data;
+      new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+
+      new_user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (maximum_level);
+      std::swap (new_user_data->lmi_map, get_user_data ()->lmi_map);
+
+      std::cout << "swapped user data\n";
+
+      std::cout << "old size: " << t8_forest_get_local_num_leaf_elements (forest) << "\n";
+
+      const auto num_new_local_elements = t8_forest_get_local_num_leaf_elements (new_forest);
+      const auto num_new_ghost_elements = t8_forest_get_num_ghosts (new_forest);
+
+      std::cout << "new size: " << t8_forest_get_local_num_leaf_elements (new_forest) << "\n";
+      new_user_data->lmi_idx
+        = sc_array_new_count (sizeof (levelmultiindex), num_new_local_elements + num_new_ghost_elements);
+      t8_forest_set_user_data (new_forest, new_user_data);
+      t8_forest_iterate_replace (
+        new_forest, forest,
+        [] (auto *forest_old, auto *forest_new, auto which_tree, const auto tree_class, const auto *scheme, auto refine,
+            auto num_outgoing, auto first_outgoing, auto num_incoming, t8_locidx_t first_incoming) -> void {
+          static_iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
+                                           first_outgoing, num_incoming, first_incoming);
+        });
+
+      std::cout << "iterate_replace callback\n";
+
+      cleanup ();
+      forest = new_forest;
+    }
+
+    d_map.erase_all ();
+    td_set.erase_all ();
+    refinement_set.erase_all ();
+    coarsening_set.erase_all ();
+
+    // Update vertex orders after adaptation
+    update_vertex_orders ();
+
+    // }
   }
 
   /// scaling (2.39)
