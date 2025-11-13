@@ -33,16 +33,16 @@ namespace t8_mra
 
 ///TODO Prototypes
 template <typename T>
-t8_mra::forest_data<T>*
+t8_mra::forest_data<T> *
 get_mra_forest_data (t8_forest_t forest);
 
 template <typename T>
 std::array<double, T::U_DIM>
-mean_val (t8_forest_t forest, int tree_idx, const t8_mra::levelmultiindex<T::Shape>& lmi, const t8_element_t* element);
+mean_val (t8_forest_t forest, int tree_idx, const t8_mra::levelmultiindex<T::Shape> &lmi, const t8_element_t *element);
 
 template <typename T>
 std::array<double, T::U_DIM>
-mean_val (t8_forest_t forest, int tree_idx, int ele_idx, const t8_element_t* element);
+mean_val (t8_forest_t forest, int tree_idx, int ele_idx, const t8_element_t *element);
 
 template <t8_eclass TShape>
 struct multiscale_data
@@ -67,7 +67,10 @@ template <t8_eclass TShape, int U, int P>
 class multiscale: public multiscale_data<TShape> {
  public:
   using element_t = data_per_element<TShape, U, P>;
-  using levelmultiindex = levelmultiindex<TShape>;
+  using levelmultiindex = t8_mra::levelmultiindex<TShape>;
+  /// TODO Konsistenz...
+  using index_set = ankerl::unordered_dense::set<levelmultiindex>;
+  static constexpr auto Shape = TShape;
 
   static constexpr unsigned int DIM = element_t::DIM;
   static constexpr unsigned int U_DIM = U;
@@ -79,8 +82,8 @@ class multiscale: public multiscale_data<TShape> {
   using multiscale_data<TShape>::mask_coefficients;
   using multiscale_data<TShape>::inverse_mask_coefficients;
 
- public:  /// Debugging
-  int maximum_level;
+ public:  /// Debugging -> private
+  unsigned int maximum_level;
   double c_thresh;
   std::array<double, U> c_scaling;
   int gamma;
@@ -113,13 +116,13 @@ class multiscale: public multiscale_data<TShape> {
     return forest;
   }
 
-  t8_mra::forest_data<element_t>*
+  t8_mra::forest_data<element_t> *
   get_user_data ()
   {
-    return reinterpret_cast<t8_mra::forest_data<element_t>*> (t8_forest_get_user_data (forest));
+    return reinterpret_cast<t8_mra::forest_data<element_t> *> (t8_forest_get_user_data (forest));
   }
 
-  t8_mra::levelindex_map<element_t>*
+  t8_mra::levelindex_map<levelmultiindex, element_t> *
   get_lmi_map ()
   {
     return get_user_data ()->lmi_map;
@@ -127,8 +130,8 @@ class multiscale: public multiscale_data<TShape> {
 
   /// Projection -> TODO auslagern
   void
-  project (std::vector<double>& dg_coeffs, int tree_idx, const t8_element_t* element, const std::array<int, 3>& order,
-           std::function<std::array<double, U_DIM> (double, double)>&& func)
+  project (std::vector<double> &dg_coeffs, int tree_idx, const t8_element_t *element, const std::array<int, 3> &order,
+           std::function<std::array<double, U_DIM> (double, double)> &&func)
   {
     double vertices[3][3];
     for (auto i = 0; i < 3; ++i)
@@ -160,14 +163,15 @@ class multiscale: public multiscale_data<TShape> {
     }
   }
 
+  /// TODO rename -> initialize_uniform_data
   void
-  initialize_data (t8_cmesh_t mesh, const t8_scheme* scheme, int level, auto&& func)
+  initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, auto &&func)
   {
 
     forest = t8_forest_new_uniform (mesh, scheme, level, 0, comm);
 
-    levelmultiindex* elem_data;
-    t8_mra::forest_data<element_t>* user_data;
+    levelmultiindex *elem_data;
+    t8_mra::forest_data<element_t> *user_data;
 
     user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
     elem_data = T8_ALLOC (levelmultiindex, 1);
@@ -188,7 +192,7 @@ class multiscale: public multiscale_data<TShape> {
 
       for (auto ele_idx = 0u; ele_idx < num_elements_in_treee; ++ele_idx, ++current_idx) {
         element_t data_element;
-        const auto* element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
         const auto lmi = levelmultiindex (base_element, element, scheme);
 
         std::array<int, 3> point_order;
@@ -210,11 +214,13 @@ class multiscale: public multiscale_data<TShape> {
 
   /// TODO Order of mask coefficients changed (i,j) -> (j,i)
   void
-  two_scale_transformation (const levelmultiindex& lmi)
+  two_scale_transformation (const levelmultiindex &lmi)
   {
+    const auto parent_lmi = t8_mra::parent_lmi (lmi);
+    const auto siblings_lmi = t8_mra::children_lmi (parent_lmi);
+
     element_t lmi_data;
 
-    const auto siblings_lmi = t8_mra::children_lmi (lmi);
     std::array<element_t, levelmultiindex::NUM_CHILDREN> siblings_data;
 
     for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
@@ -247,7 +253,7 @@ class multiscale: public multiscale_data<TShape> {
         }
     }
 
-    get_user_data ()->lmi_map->insert (lmi, lmi_data);
+    get_user_data ()->lmi_map->insert (parent_lmi, lmi_data);
   }
 
   ///TODO Performance problem: can I filter for elements on a current level,
@@ -553,20 +559,20 @@ class multiscale: public multiscale_data<TShape> {
 
 /// FREE FUNCTIONS for eval
 template <typename T>
-t8_mra::forest_data<T>*
+t8_mra::forest_data<T> *
 get_mra_forest_data (t8_forest_t forest)
 {
-  return reinterpret_cast<t8_mra::forest_data<T>*> (t8_forest_get_user_data (forest));
+  return reinterpret_cast<t8_mra::forest_data<T> *> (t8_forest_get_user_data (forest));
 }
 
 template <typename T>
 std::array<double, T::U_DIM>
-mean_val (t8_forest_t forest, int tree_idx, const t8_mra::levelmultiindex<T::Shape>& lmi, const t8_element_t* element)
+mean_val (t8_forest_t forest, int tree_idx, const t8_mra::levelmultiindex<T::Shape> &lmi, const t8_element_t *element)
 {
   using mst_class = t8_mra::multiscale<T::Shape, T::U_DIM, T::P_DIM>;
   std::array<double, T::U_DIM> res = {};
 
-  auto* mra_data = get_mra_forest_data<T> (forest);
+  auto *mra_data = get_mra_forest_data<T> (forest);
   const auto vol = t8_forest_element_volume (forest, tree_idx, element);
   const auto scaling = t8_mra::skalierungsfunktion (0, 0.0, 0.0) * std::sqrt (1.0 / (2.0 * vol));
 
@@ -578,7 +584,7 @@ mean_val (t8_forest_t forest, int tree_idx, const t8_mra::levelmultiindex<T::Sha
 
 template <typename T>
 std::array<double, T::U_DIM>
-mean_val (t8_forest_t forest, int tree_idx, int ele_idx, const t8_element_t* element)
+mean_val (t8_forest_t forest, int tree_idx, int ele_idx, const t8_element_t *element)
 {
   const auto lmi = t8_mra::get_lmi_from_forest_data<T> (get_mra_forest_data<T> (forest), ele_idx);
 
