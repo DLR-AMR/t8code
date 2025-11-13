@@ -156,6 +156,7 @@ if( T8CODE_ENABLE_MRA )
   install( FILES
     t8_mra/t8_mra.hpp
     t8_mra/data/levelindex_map.hpp
+    t8_mra/data/levelindex_set.hpp
     t8_mra/data/cell_data.hpp
     t8_mra/data/levelmultiindex.hpp
     t8_mra/data/triangle_order.hpp
