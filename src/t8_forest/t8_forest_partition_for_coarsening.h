@@ -45,7 +45,7 @@ T8_EXTERN_C_BEGIN ();
  *                                      are split across the process boundaries.
 */
 void
-t8_forest_pfc_correction_offsets (const t8_forest_t forest);
+t8_forest_pfc_correction_offsets (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
 #endif /* T8_FOREST_ITERATE_H */

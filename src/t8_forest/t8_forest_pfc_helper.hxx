@@ -26,20 +26,6 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_eclass.h>
 
-// /** Make available to test */
-// void
-// t8_forest_pfc_determine_communication_range (t8_shmem_array_t partition_shmem, int rank, t8_gloidx_t relevant_begin,
-//                                              t8_locidx_t relevant_end, int &begin, int &end, int &num_interactions,
-//                                              bool skip_self);
-
-// void
-// t8_forest_pfc_determine_send_range (t8_shmem_array_t partition_shmem, int rank, t8_procidx_t &begin_procid,
-//                                     t8_procidx_t &end_procid, t8_procidx_t &num_sends, bool skip_self);
-
-// void
-// t8_forest_pfc_determine_recv_range (t8_shmem_array_t partition_shmem, int rank, t8_procidx_t &begin_procid,
-//                                     t8_procidx_t &end_procid, t8_procidx_t &num_recvs, bool skip_self);
-
 /** Determine the sibling with the biggest difference in IDs
  * 
  * \param[in] newscheme                 the refinement scheme

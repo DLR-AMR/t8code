@@ -24,7 +24,7 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, const t8_tree
   // Determine start element from tree and start ID within tree.
   const t8_element_t *start_element = t8_forest_get_tree_leaf_element (tree, start_element_id_in_tree);
 
-  // If the start element is of level zero, return TODO
+  // If the start element is of level zero, i.e., the root, it does not have any siblings.
   if (newscheme->element_get_level (tree_class, start_element) == 0)
     return start_element_id_in_tree;
 

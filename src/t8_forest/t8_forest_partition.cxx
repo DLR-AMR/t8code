@@ -1225,6 +1225,8 @@ t8_forest_partition (t8_forest_t forest)
     t8_global_productionf ("Start partition %f %f\n", sc_MPI_Wtime (), forest->profile->partition_runtime);
   }
 
+
+
   if (forest_from->element_offsets == NULL) {
     /* We create the partition table of forest_from */
     create_offset_from = 1;

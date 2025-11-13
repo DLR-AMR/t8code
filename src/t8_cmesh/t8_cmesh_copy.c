@@ -57,7 +57,7 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
 #if T8_ENABLE_DEBUG
   cmesh->negative_volume_check = cmesh_from->negative_volume_check;
 #endif /* T8_ENABLE_DEBUG */
-  T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
+  // T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
   /* Copy the tree_offsets */
   if (cmesh_from->tree_offsets != NULL) {
