@@ -13,8 +13,8 @@ namespace t8_mra
 
 template <>
 void
-initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, size_t dof, std::vector<t8_mra::mat>& mask_coeffs,
-                                                  std::vector<t8_mra::mat>& inv_mask_coeffs)
+initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, size_t dof, std::vector<t8_mra::mat> &mask_coeffs,
+                                                  std::vector<t8_mra::mat> &inv_mask_coeffs)
 {
   mask_coeffs.resize (4, t8_mra::mat { dof, dof });
   inv_mask_coeffs.resize (4, t8_mra::mat { 3 * dof, dof });
@@ -35,6 +35,46 @@ initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, size_t dof, std:
     break;
 
   case 2:
+    /// TODO Fix that (is transpose)
+    // mask_coeffs[0](0, 0) = 1. / 2.;
+    // mask_coeffs[0](0, 1) = 0.;
+    // mask_coeffs[0](0, 2) = 0.;
+    // mask_coeffs[0](1, 0) = 0.;
+    // mask_coeffs[0](1, 1) = 1. / 8.;
+    // mask_coeffs[0](1, 2) = -1. / 8. * std::sqrt (3.);
+    // mask_coeffs[0](2, 0) = 0.;
+    // mask_coeffs[0](2, 1) = 1. / 8. * std::sqrt (3.);
+    // mask_coeffs[0](2, 2) = 1. / 8.;
+    //
+    // mask_coeffs[1](0, 0) = 1. / 2.;
+    // mask_coeffs[1](0, 1) = 0.;
+    // mask_coeffs[1](0, 2) = 0.;
+    // mask_coeffs[1](1, 0) = -1. / 4. * std::sqrt (2.);
+    // mask_coeffs[1](1, 1) = 1. / 4.;
+    // mask_coeffs[1](1, 2) = 0.;
+    // mask_coeffs[1](2, 0) = -1. / 4. * std::sqrt (2.) * sqrt (3.);
+    // mask_coeffs[1](2, 1) = 0.;
+    // mask_coeffs[1](2, 2) = 1. / 4.;
+    //
+    // mask_coeffs[2](0, 0) = 1. / 2.;
+    // mask_coeffs[2](0, 1) = 0.;
+    // mask_coeffs[2](0, 2) = 0.;
+    // mask_coeffs[2](1, 0) = 1. / 2. * std::sqrt (2.);
+    // mask_coeffs[2](1, 1) = -1. / 8.;
+    // mask_coeffs[2](1, 2) = -1. / 8. * std::sqrt (3.);
+    // mask_coeffs[2](2, 0) = 0.;
+    // mask_coeffs[2](2, 1) = 1. / 8. * std::sqrt (3.);
+    // mask_coeffs[2](2, 2) = -1. / 8.;
+    //
+    // mask_coeffs[3](0, 0) = 1. / 2.;
+    // mask_coeffs[3](0, 1) = 0.;
+    // mask_coeffs[3](0, 2) = 0.;
+    // mask_coeffs[3](1, 0) = -1. / 4. * std::sqrt (2.);
+    // mask_coeffs[3](1, 1) = -1. / 8.;
+    // mask_coeffs[3](1, 2) = 1. / 8. * std::sqrt (3.);
+    // mask_coeffs[3](2, 0) = 1. / 4. * std::sqrt (2.) * sqrt (3.);
+    // mask_coeffs[3](2, 1) = -1. / 8. * std::sqrt (3.);
+    // mask_coeffs[3](2, 2) = -1. / 8.;
     mask_coeffs[0] = { 1. / 2., 0., 0., 0., 1. / 8., -1. / 8. * std::sqrt (3.), 0., 1. / 8. * std::sqrt (3.), 1. / 8. };
     mask_coeffs[1]
       = { 1. / 2., 0.,     0., -1. / 4. * std::sqrt (2.), 1. / 4., 0., -1. / 4. * std::sqrt (2.) * std::sqrt (3.),
