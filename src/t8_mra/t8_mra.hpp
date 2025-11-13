@@ -625,7 +625,35 @@ class multiscale: public multiscale_data<TShape> {
         new_user_data->lmi_map->insert (children[i], child_data);
       }
     }
-  };
+  }
+
+  void
+  iterate_replace_callback_new (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
+                                const t8_eclass_t tree_class, const t8_scheme *scheme, int refine, int num_outgoing,
+                                t8_locidx_t first_outgoing, int num_incoming, t8_locidx_t first_incoming)
+  {
+    auto *old_user_data = get_user_data ();
+    auto *new_user_data = t8_mra::get_mra_forest_data<element_t> (forest_new);
+
+    first_incoming += t8_forest_get_tree_element_offset (forest_new, which_tree);
+    first_outgoing += t8_forest_get_tree_element_offset (forest_old, which_tree);
+
+    const auto old_lmi = t8_mra::get_lmi_from_forest_data (old_user_data, first_outgoing);
+
+    if (refine == 0) {
+      t8_mra::set_lmi_forest_data (new_user_data, first_incoming, old_lmi);
+    }
+    else if (refine == -1) {
+      const auto parent_lmi = t8_mra::parent_lmi (old_lmi);
+      t8_mra::set_lmi_forest_data (new_user_data, first_incoming, parent_lmi);
+    }
+    else {
+      const auto children = t8_mra::children_lmi (old_lmi);
+
+      for (auto i = 0u; i < children.size (); ++i)
+        t8_mra::set_lmi_forest_data (new_user_data, first_incoming + i, children[i]);
+    }
+  }
 
   void
   coarsening (int min_level, int max_level)
