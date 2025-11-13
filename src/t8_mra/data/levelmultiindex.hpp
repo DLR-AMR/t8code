@@ -181,7 +181,8 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGL
   std::array<levelmultiindex<T8_ECLASS_TRIANGLE>, levelmultiindex<T8_ECLASS_TRIANGLE>::NUM_CHILDREN> child_vec;
 
   for (size_t j = 0u; j < NUM_CHILDREN; ++j)
-    child_vec[j] = jth_child (lmi.index, j);
+    child_vec[j] = jth_child (lmi, j);
+  // child_vec[j] = jth_child (lmi.index, j);
 
   return child_vec;
 }
