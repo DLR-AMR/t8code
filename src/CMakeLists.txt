@@ -155,6 +155,8 @@ if( T8CODE_ENABLE_MRA )
 
   install( FILES
     t8_mra/t8_mra.hpp
+    t8_mra/t8_mra_cartesian.hpp
+    t8_mra/t8_basis.hpp
     t8_mra/data/levelindex_map.hpp
     t8_mra/data/levelindex_set.hpp
     t8_mra/data/cell_data.hpp
@@ -165,6 +167,10 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/vecmat.hxx
     t8_mra/num/basis_functions.hxx
     t8_mra/num/dunavant.hxx
+    t8_mra/num/legendre_basis.hxx
+    t8_mra/num/quadrature.hxx
+    t8_mra/num/multiindex.hxx
+    t8_mra/num/geometry.hxx
     t8_mra/num/mask_coefficients.hpp
     tr_mra/num/mask_coeffs_triangle.hpp
     t8_mra/mask_coefficients.hxx
