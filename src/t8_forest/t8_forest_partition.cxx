@@ -32,7 +32,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * For each tree that we send elements from to other processes,
- * we send the information stored in this struct to the other process 
+ * we send the information stored in this struct to the other process
  */
 typedef struct
 {
@@ -211,7 +211,7 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
     return;
   }
   if (forest->mpirank == forest->mpisize - 1) {
-    /* The last process can only share a tree with process rank-1. 
+    /* The last process can only share a tree with process rank-1.
      * However, this is already tested by process rank-1. */
     return;
   }
@@ -220,7 +220,7 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
     /* The first tree on process rank+1 is not shared with current rank, nothing to do */
     return;
   }
-  /* The first tree on process rank+1 may be shared but empty. 
+  /* The first tree on process rank+1 may be shared but empty.
    * Thus, the first descendant id of rank+1 is not of the first local tree. */
   if (local_tree_num_elements == 0) {
     /* check if first not shared tree of process rank+1 contains elements */
@@ -430,48 +430,100 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   }
 }
 
-/* Calculate the new element_offset for forest from
- * the element in forest->set_from assuming a partition without element weights */
+// Compute forest->element_offsets according to the weight function, if provided
 static void
-t8_forest_partition_compute_new_offset (t8_forest_t forest)
+t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *weight_fcn)
 {
-  t8_forest_t forest_from;
-  sc_MPI_Comm comm;
-  t8_gloidx_t new_first_element_id;
-  int i, mpiret, mpisize;
-
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (forest->set_from != NULL);
-
-  forest_from = forest->set_from;
-  comm = forest->mpicomm;
-
   T8_ASSERT (forest->element_offsets == NULL);
-  /* Set the shmem array type to comm */
+
+  t8_forest_t forest_from = forest->set_from;
+  sc_MPI_Comm comm = forest_from->mpicomm;
+  int const mpirank = forest_from->mpirank;
+  int const mpisize = forest_from->mpisize;
+  t8_gloidx_t const global_num_leaf_elements = forest_from->global_num_leaf_elements;
+
+  /* Initialize the shmem array */
   t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-  /* Initialize the shmem array */
-  t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), forest->mpisize + 1, comm);
-  mpiret = sc_MPI_Comm_size (comm, &mpisize);
-  SC_CHECK_MPI (mpiret);
+  t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
+
+  if (global_num_leaf_elements == 0) {
+    if (t8_shmem_array_start_writing (forest->element_offsets)) {
+      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+      std::fill_n (element_offsets, mpisize + 1, t8_gloidx_t { 0 });
+    }
+    t8_shmem_array_end_writing (forest->element_offsets);
+    return;
+  }
+
+  if (not weight_fcn) {
+    if (t8_shmem_array_start_writing (forest->element_offsets)) {
+      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+      for (int i = 0; i < mpisize; ++i) {
+        element_offsets[i] = std::floor (static_cast<double> (global_num_leaf_elements) * i / mpisize);
+      }
+      element_offsets[mpisize] = global_num_leaf_elements;
+    }
+    t8_shmem_array_end_writing (forest->element_offsets);
+    return;
+  }
+
+  double const partition_weight = [&] () {  // sum of the weights on the local partition
+    double local_sum = 0.;
+    for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
+      for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest_from, ltreeid); ++ielm) {
+        local_sum += weight_fcn (forest_from, ltreeid, ielm);
+      }
+    }
+    return local_sum;
+  }();
+
+  double const partition_weight_offset = [&] () {  // partial sum of the partition weights, excluding the local rank
+    double local_offset = 0.;
+    double local_partition_weight = partition_weight;  // because MPI does not like const variables
+    sc_MPI_Exscan (&local_partition_weight, &local_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+    return mpirank > 0 ? local_offset : 0;  // because the result of MPI_Exscan is undefined on rank 0
+  }();
+
+  double const forest_weight = [&] () {  // complete sum of the partition weights
+    double total_weight = partition_weight_offset + partition_weight;
+    sc_MPI_Bcast (&total_weight, 1, sc_MPI_DOUBLE, mpisize - 1, comm);
+    return total_weight;
+  }();
+
+  // The [rank_begin, rank_end) slice of the new offsets land in the local partition
+  int const rank_begin = std::ceil (mpisize * partition_weight_offset / forest_weight);
+  int const rank_end = std::ceil (mpisize * (partition_weight_offset + partition_weight) / forest_weight);
+  std::vector<t8_gloidx_t> local_offsets (rank_end - rank_begin, 0);
+
+  double accumulated_weight = partition_weight_offset;
+  t8_gloidx_t global_elm_idx = t8_forest_get_first_local_leaf_element_id (forest_from);
+  int i = rank_begin;
+
+  for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
+    for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest_from, ltreeid); ++ielm) {
+      T8_ASSERT (0 <= global_elm_idx && global_elm_idx < global_num_leaf_elements);
+      accumulated_weight += weight_fcn (forest_from, ltreeid, ielm);
+      while (accumulated_weight
+             > forest_weight * i / mpisize) {  // there may be empty partitions, hence while and not if
+        T8_ASSERT (rank_begin <= i && i < rank_end);
+        local_offsets[i - rank_begin] = global_elm_idx;
+        ++i;
+      }
+      ++global_elm_idx;
+    }
+  }
+  T8_ASSERT (i == rank_end);  // i.e. local_offsets has been filled properly
+
+  t8_shmem_array_allgatherv (local_offsets.data (), local_offsets.size (), T8_MPI_GLOIDX, forest->element_offsets,
+                             T8_MPI_GLOIDX, comm);
 
   if (t8_shmem_array_start_writing (forest->element_offsets)) {
-    if (forest_from->global_num_leaf_elements > 0) {
-      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-      for (i = 0; i < mpisize; i++) {
-        /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
-        new_first_element_id = (((double) i * (long double) forest_from->global_num_leaf_elements) / (double) mpisize);
-        T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
-        element_offsets[i] = new_first_element_id;
-      }
-      element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
-    }
-    else {
-      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-      for (i = 0; i <= mpisize; i++) {
-        element_offsets[i] = 0;
-      }
-    }
+    t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+    element_offsets[0] = 0;
+    element_offsets[mpisize] = global_num_leaf_elements;
   }
   t8_shmem_array_end_writing (forest->element_offsets);
 }
@@ -1196,7 +1248,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_arr
  * Currently the elements are distributed evenly (each element has the same weight).
  */
 void
-t8_forest_partition (t8_forest_t forest)
+t8_forest_partition (t8_forest_t forest, t8_weight_fcn_t *weight_callback)
 {
   t8_forest_t forest_from;
   int create_offset_from = 0;
@@ -1226,7 +1278,7 @@ t8_forest_partition (t8_forest_t forest)
   /* TODO: if offsets already exist on forest_from, check it for consistency */
 
   /* We now calculate the new element offsets */
-  t8_forest_partition_compute_new_offset (forest);
+  t8_forest_partition_compute_new_offset (forest, weight_callback);
   t8_forest_partition_given (forest, 0, NULL, NULL);
 
   T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest_from) == forest_from->trees->elem_count);
