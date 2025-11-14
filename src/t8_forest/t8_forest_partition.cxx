@@ -496,7 +496,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
   // The [rank_begin, rank_end) slice of the new offsets land in the local partition
   int const rank_begin = std::ceil (mpisize * partition_weight_offset / forest_weight);
   int const rank_end = std::ceil (mpisize * (partition_weight_offset + partition_weight) / forest_weight);
-  std::vector<t8_gloidx_t> local_offsets ( rank_end - rank_begin, 0 );
+  std::vector<t8_gloidx_t> local_offsets (rank_end - rank_begin, 0);
 
   double accumulated_weight = partition_weight_offset;
   t8_gloidx_t global_elm_idx = t8_forest_get_first_local_leaf_element_id (forest_from);
