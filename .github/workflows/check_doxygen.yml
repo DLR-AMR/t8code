@@ -50,12 +50,14 @@ jobs:
       run: wget https://www.doxygen.nl/files/doxygen-1.13.2.linux.bin.tar.gz
     - name: Unpack doxygen tar file
       run: tar xf doxygen-1.13.2.linux.bin.tar.gz 
+    - name: Set ${DOXYGEN_EXECUTABLE}
+      run: export DOXYGEN_EXECUTABLE=$(pwd)/doxygen-1.13.2/bin/doxygen
     - name: Echo doxygen version
-      run: doxygen-1.13.2/bin/doxygen --version
+      run: ${DOXYGEN_EXECUTABLE} --version
     - name: Configure for documentation only
       run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_ENABLE_MPI=OFF
     - name: check doxygen
-      run: cd build && cd doc && doxygen-1.13.2/bin/doxygen Doxyfile >> output 2>&1
+      run: cd build && cd doc && ${DOXYGEN_EXECUTABLE} Doxyfile >> output 2>&1
     - name: check for doxygen warnings
       run: |
         if grep -i warning build/doc/output; then
