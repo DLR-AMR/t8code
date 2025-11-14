@@ -53,6 +53,8 @@ jobs:
       run: sudo apt-get install libz-dev
     - name: Install doxygen
       run: sudo apt-get install doxygen-latex
+    - name: Echo doxygen version
+      run: doxygen --version
     - name: Configure for documentation only
       run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_ENABLE_MPI=OFF
     - name: check doxygen
