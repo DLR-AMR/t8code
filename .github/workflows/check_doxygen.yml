@@ -51,7 +51,7 @@ jobs:
     - name: Unpack doxygen tar file
       run: tar xf doxygen-1.13.2.linux.bin.tar.gz 
     - name: Set ${DOXYGEN_EXECUTABLE}
-      run: export DOXYGEN_EXECUTABLE=$(pwd)/doxygen-1.13.2/bin/doxygen
+      run: export DOXYGEN_EXECUTABLE=doxygen-1.13.2/bin/doxygen
     - name: Echo doxygen version
       run: ${DOXYGEN_EXECUTABLE} --version
     - name: Configure for documentation only
