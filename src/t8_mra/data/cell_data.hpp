@@ -52,6 +52,31 @@ t8_eclass_NUM_CHILDREN ()
     static_assert (false, "Invalid element class");
 }
 
+/**
+ * @brief Compute number of DOF for a given element type and polynomial order
+ *
+ * For simplex elements (TRIANGLE, TET): uses binomial coefficient
+ * For cartesian elements (LINE, QUAD, HEX): uses tensor product P^DIM
+ */
+template <t8_eclass TShape, unsigned short P>
+static constexpr unsigned short
+compute_DOF ()
+{
+  constexpr unsigned short DIM = t8_eclass_DIM<TShape> ();
+
+  if constexpr (TShape == T8_ECLASS_TRIANGLE || TShape == T8_ECLASS_TET)
+    return binom (DIM + P - 1, DIM);
+  else if constexpr (TShape == T8_ECLASS_LINE)
+    return P;
+  else if constexpr (TShape == T8_ECLASS_QUAD)
+    return P * P;
+  else if constexpr (TShape == T8_ECLASS_HEX)
+    return P * P * P;
+  else {
+    static_assert (false, "Unsupported element type for DOF computation");
+  }
+}
+
 /// TODO template specialization
 /// TOOD change to std::array
 template <t8_eclass TShape, unsigned short U, unsigned short P>
@@ -64,7 +89,7 @@ struct data_per_element
   static constexpr unsigned short U_DIM = U;
 
   static constexpr unsigned short P_DIM = P;
-  static constexpr unsigned short DOF = binom (DIM + P_DIM - 1, DIM);
+  static constexpr unsigned short DOF = compute_DOF<TShape, P> ();
   static constexpr unsigned short W_DOF = DOF * NUM_CHILDREN;
 
   std::vector<double> u_coeffs;  // Single-scale coefficients
