@@ -13,6 +13,8 @@
 #include "t8_mra/t8_mra.hpp"
 #include "t8_mra/data/cell_data.hpp"
 #include "t8_mra/num/basis_functions.hxx"
+#include "t8_mra/num/legendre_basis.hxx"
+#include "t8_mra/num/multiindex.hxx"
 
 namespace t8_mra
 {
@@ -95,6 +97,90 @@ get_lagrange_nodes_triangle (int order)
 }
 
 /**
+ * @brief Get Lagrange node positions for a quad of given order in reference coordinates
+ *
+ * Uses equidistant nodes. For quads, the reference element is: [0,1] x [0,1]
+ * Nodes are ordered following VTK's Lagrange quad ordering:
+ * - First 4 nodes: vertices (0,0), (1,0), (1,1), (0,1)
+ * - Next 4*(order-1) nodes: edge nodes
+ * - Remaining nodes: interior nodes
+ *
+ * @param order The polynomial order for Lagrange nodes
+ * @return Vector of reference coordinates [xi_0, eta_0, xi_1, eta_1, ...]
+ */
+/// TODO There is something wrong
+inline std::vector<double>
+get_lagrange_nodes_quad (int order)
+{
+  std::vector<double> nodes;
+  const int num_nodes = (order + 1) * (order + 1);
+  nodes.reserve (2 * num_nodes);
+
+  if (order == 1) {
+    // Bilinear quad: just the 4 vertices in VTK order
+    nodes = { 0.0, 0.0,    // vertex 0
+              1.0, 0.0,    // vertex 1
+              1.0, 1.0,    // vertex 2
+              0.0, 1.0 };  // vertex 3
+    return nodes;
+  }
+
+  /// TODO is there a bug in vtk ordering?
+  // For higher order, follow VTK's Lagrange quad ordering
+  // First 4 corners
+  nodes.push_back (0.0);
+  nodes.push_back (0.0);  // v0
+  nodes.push_back (1.0);
+  nodes.push_back (0.0);  // v1
+  nodes.push_back (1.0);
+  nodes.push_back (1.0);  // v2
+  nodes.push_back (0.0);
+  nodes.push_back (1.0);  // v3
+
+  // Edge 0: from v0 to v1 (bottom edge, eta=0)
+  for (int i = 1; i < order; ++i) {
+    double xi = static_cast<double> (i) / order;
+    nodes.push_back (xi);
+    nodes.push_back (0.0);
+  }
+
+  // Edge 1: from v1 to v2 (right edge, xi=1)
+  for (int i = 1; i < order; ++i) {
+    double eta = static_cast<double> (i) / order;
+    nodes.push_back (1.0);
+    nodes.push_back (eta);
+  }
+
+  // Edge 2: from v2 to v3 (top edge, eta=1)
+  for (int i = 1; i < order; ++i) {
+    double xi = 1.0 - static_cast<double> (i) / order;
+    nodes.push_back (xi);
+    nodes.push_back (1.0);
+  }
+
+  // Edge 3: from v3 to v0 (left edge, xi=0)
+  for (int i = 1; i < order; ++i) {
+    double eta = 1.0 - static_cast<double> (i) / order;
+    nodes.push_back (0.0);
+    nodes.push_back (eta);
+  }
+
+  // Interior nodes (if order >= 2)
+  if (order >= 2) {
+    for (int j = 1; j < order; ++j) {
+      for (int i = 1; i < order; ++i) {
+        double xi = static_cast<double> (i) / order;
+        double eta = static_cast<double> (j) / order;
+        nodes.push_back (xi);
+        nodes.push_back (eta);
+      }
+    }
+  }
+
+  return nodes;
+}
+
+/**
  * @brief Evaluate the DG modal representation at given reference coordinates
  *
  * The coefficients are stored such that:
@@ -117,19 +203,44 @@ evaluate_dg_at_point (const T &data, double xi, double eta, double volume)
 {
   std::array<double, T::U_DIM> result = {};
 
-  // The scaling factor: matches mean_val function
-  const double scaling = std::sqrt (1.0 / (2.0 * volume));
+  if constexpr (T::Shape == T8_ECLASS_TRIANGLE) {
+    // Triangle elements use scaling functions with special normalization
+    const double scaling = std::sqrt (1.0 / (2.0 * volume));
 
-  // Convert from reference coords (xi, eta) to barycentric coords (λ0, λ1)
-  // Reference: xi = λ1, eta = λ2, so λ0 = 1 - xi - eta
-  const double lambda0 = 1.0 - xi - eta;
-  const double lambda1 = xi;
+    // Convert from reference coords (xi, eta) to barycentric coords (λ0, λ1)
+    // Reference: xi = λ1, eta = λ2, so λ0 = 1 - xi - eta
+    const double lambda0 = 1.0 - xi - eta;
+    const double lambda1 = xi;
 
-  for (auto u = 0u; u < T::U_DIM; ++u) {
-    for (auto i = 0u; i < T::DOF; ++i) {
-      // Basis functions expect barycentric coords (λ0, λ1), not (xi, eta)
-      const double basis_val = t8_mra::skalierungsfunktion (i, lambda0, lambda1);
-      result[u] += data.u_coeffs[T::dg_idx (u, i)] * basis_val * scaling;
+    for (auto u = 0u; u < T::U_DIM; ++u) {
+      for (auto i = 0u; i < T::DOF; ++i) {
+        // Basis functions expect barycentric coords (λ0, λ1), not (xi, eta)
+        const double basis_val = t8_mra::skalierungsfunktion (i, lambda0, lambda1);
+        result[u] += data.u_coeffs[T::dg_idx (u, i)] * basis_val * scaling;
+      }
+    }
+  }
+  else if constexpr (T::Shape == T8_ECLASS_QUAD || T::Shape == T8_ECLASS_LINE) {
+    // Cartesian elements: use tensor product of Legendre polynomials
+    constexpr unsigned int DIM = (T::Shape == T8_ECLASS_LINE) ? 1 : 2;
+    std::array<double, DIM> x_ref;
+    x_ref[0] = xi;
+    if constexpr (DIM == 2) {
+      x_ref[1] = eta;
+    }
+
+    // Get multiindex set for this polynomial order
+    const auto pset = generate_tensor_pset<DIM> (T::P_DIM);
+
+    for (auto u = 0u; u < T::U_DIM; ++u) {
+      for (auto i = 0u; i < T::DOF; ++i) {
+        // Evaluate tensor product Legendre basis
+        double basis_val = 1.0;
+        for (unsigned int d = 0; d < DIM; ++d) {
+          basis_val *= phi_1d (x_ref[d], pset[i][d]);
+        }
+        result[u] += data.u_coeffs[T::dg_idx (u, i)] * basis_val;
+      }
     }
   }
 
@@ -169,6 +280,46 @@ ref_to_physical_triangle (const double vertices[9], double xi, double eta)
 }
 
 /**
+ * @brief Map reference quad coordinates to physical coordinates
+ *
+ * IMPORTANT: t8code quad vertex ordering is different from VTK!
+ * t8code uses: v0=(0,0), v1=(1,0), v2=(0,1), v3=(1,1) (row-major)
+ * VTK expects: v0=(0,0), v1=(1,0), v2=(1,1), v3=(0,1) (counter-clockwise)
+ *
+ * We need to swap vertices 2 and 3 when coming from t8code.
+ *
+ * @param vertices Array of 12 doubles from t8code: [v0_xyz, v1_xyz, v2_xyz, v3_xyz]
+ * @param xi Reference coordinate in [0,1]
+ * @param eta Reference coordinate in [0,1]
+ * @return Physical coordinates [x, y, z]
+ */
+inline std::array<double, 3>
+ref_to_physical_quad (const double vertices[12], double xi, double eta)
+{
+  // Bilinear shape functions for quad (VTK ordering)
+  // v0: (0,0), v1: (1,0), v2: (1,1), v3: (0,1)
+  const double N0 = (1.0 - xi) * (1.0 - eta);
+  const double N1 = xi * (1.0 - eta);
+  const double N2 = xi * eta;
+  const double N3 = (1.0 - xi) * eta;
+
+  // Map from t8code ordering to VTK ordering:
+  // t8[0] -> vtk[0] (0,0)
+  // t8[1] -> vtk[1] (1,0)
+  // t8[2] -> vtk[3] (0,1)  <- swapped!
+  // t8[3] -> vtk[2] (1,1)  <- swapped!
+
+  std::array<double, 3> result;
+  for (int i = 0; i < 3; ++i) {
+    result[i] = N0 * vertices[i]         // t8[0] = vtk[0]
+                + N1 * vertices[3 + i]   // t8[1] = vtk[1]
+                + N2 * vertices[9 + i]   // t8[3] = vtk[2] (swapped!)
+                + N3 * vertices[6 + i];  // t8[2] = vtk[3] (swapped!)
+  }
+  return result;
+}
+
+/**
  * @brief Get VTK cell type for Lagrange triangle
  *
  * VTK cell types:
@@ -178,10 +329,29 @@ ref_to_physical_triangle (const double vertices[9], double xi, double eta)
 inline int
 get_vtk_lagrange_triangle_type (int order)
 {
-  if (order == 1) {
+  if (order == 1)
     return 5;  // VTK_TRIANGLE
-  }
+
   return 69;  // VTK_LAGRANGE_TRIANGLE
+}
+
+/**
+ * @brief Get VTK cell type for Lagrange quad
+ *
+ * VTK cell types:
+ * - 9: VTK_QUAD (bilinear, 4 nodes)
+ * - 70: VTK_LAGRANGE_QUADRILATERAL (higher order)
+ *
+ * @param order Polynomial order
+ * @return VTK cell type code
+ */
+inline int
+get_vtk_lagrange_quad_type (int order)
+{
+  if (order == 1)
+    return 9;  // VTK_QUAD
+
+  return 70;  // VTK_LAGRANGE_QUADRILATERAL
 }
 
 /**
@@ -200,17 +370,33 @@ template <typename T>
 void
 write_forest_lagrange_vtk (t8_forest_t forest, const char *prefix, int lagrange_order = 2, bool debug_output = false)
 {
-  SC_CHECK_ABORT (T::Shape == T8_ECLASS_TRIANGLE, "Only triangles are currently supported");
+  SC_CHECK_ABORT (T::Shape == T8_ECLASS_TRIANGLE || T::Shape == T8_ECLASS_QUAD,
+                  "Only triangles and quads are currently supported");
 
   const auto num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
   constexpr auto U_DIM = T::U_DIM;
 
-  const int nodes_per_element = ((lagrange_order + 1) * (lagrange_order + 2)) / 2;
-  const int total_points = num_local_elements * nodes_per_element;
+  // Determine nodes per element based on shape
+  int nodes_per_element;
+  int vtk_cell_type;
+  int num_vertices;
+  std::vector<double> lagrange_nodes_ref;
 
-  // Get Lagrange node positions in reference coordinates
-  const auto lagrange_nodes_ref = get_lagrange_nodes_triangle (lagrange_order);
+  if constexpr (T::Shape == T8_ECLASS_TRIANGLE) {
+    nodes_per_element = ((lagrange_order + 1) * (lagrange_order + 2)) / 2;
+    vtk_cell_type = get_vtk_lagrange_triangle_type (lagrange_order);
+    num_vertices = 3;
+    lagrange_nodes_ref = get_lagrange_nodes_triangle (lagrange_order);
+  }
+  else if constexpr (T::Shape == T8_ECLASS_QUAD) {
+    nodes_per_element = (lagrange_order + 1) * (lagrange_order + 1);
+    vtk_cell_type = get_vtk_lagrange_quad_type (lagrange_order);
+    num_vertices = 4;
+    lagrange_nodes_ref = get_lagrange_nodes_quad (lagrange_order);
+  }
+
+  const int total_points = num_local_elements * nodes_per_element;
 
   // Open output file
   std::string filename = std::string (prefix) + ".vtu";
@@ -251,46 +437,83 @@ write_forest_lagrange_vtk (t8_forest_t forest, const char *prefix, int lagrange_
 
       const auto &elem_data_for_geom = mra_data->lmi_map->get (lmi_for_geom);
 
-      // Get physical vertices from t8code and apply permutation to match DG reference convention
-      // The elem_data.order array tells us how to map t8code vertices to DG reference vertices
-      // If order = [0,1,2], then t8_vertex[0]->ref_v[0], t8_vertex[1]->ref_v[1], t8_vertex[2]->ref_v[2]
-      // If order = [0,2,1], then t8_vertex[0]->ref_v[0], t8_vertex[1]->ref_v[2], t8_vertex[2]->ref_v[1]
-      double vertices[9] = { 0 };  // Initialize to zero
+      // Get physical vertices from t8code
+      // For triangles: apply permutation from elem_data.order
+      // For quads: no permutation needed (cartesian elements have standard ordering)
 
-      for (int v = 0; v < 3; ++v) {
-        double coords[3];
-        t8_forest_element_coordinate (forest, tree_idx, element, v, coords);
+      if constexpr (T::Shape == T8_ECLASS_TRIANGLE) {
+        double vertices[9] = { 0 };
 
-        // Apply permutation: t8code vertex v maps to DG reference vertex order[v]
-        const int ref_v = elem_data_for_geom.order[v];
-        vertices[3 * ref_v] = coords[0];
-        vertices[3 * ref_v + 1] = coords[1];
-        vertices[3 * ref_v + 2] = coords[2];
-      }
-
-      // Debug: Print vertices of first element
-      if (debug_output && current_element_idx == 0) {
-        printf ("=== First element vertices (physical coordinates) ===\n");
-        printf ("  Vertex ordering from element data: [%d, %d, %d]\n", elem_data_for_geom.order[0],
-                elem_data_for_geom.order[1], elem_data_for_geom.order[2]);
         for (int v = 0; v < 3; ++v) {
-          printf ("  Vertex %d (after permutation): (%.6f, %.6f, %.6f)\n", v, vertices[3 * v], vertices[3 * v + 1],
-                  vertices[3 * v + 2]);
+          double coords[3];
+          t8_forest_element_coordinate (forest, tree_idx, element, v, coords);
+
+          // Apply permutation: t8code vertex v maps to DG reference vertex order[v]
+          const int ref_v = elem_data_for_geom.order[v];
+          vertices[3 * ref_v] = coords[0];
+          vertices[3 * ref_v + 1] = coords[1];
+          vertices[3 * ref_v + 2] = coords[2];
         }
-        printf ("=== Lagrange nodes (reference -> physical) ===\n");
-      }
 
-      // Write coordinates of all Lagrange nodes for this element
-      for (int node = 0; node < nodes_per_element; ++node) {
-        const double xi = lagrange_nodes_ref[2 * node];
-        const double eta = lagrange_nodes_ref[2 * node + 1];
-
-        auto phys_coords = ref_to_physical_triangle (vertices, xi, eta);
-        vtu_file << "          " << phys_coords[0] << " " << phys_coords[1] << " " << phys_coords[2] << "\n";
-
-        // Debug: Print node mapping for first element
+        // Debug: Print vertices of first element
         if (debug_output && current_element_idx == 0) {
-          printf ("  Node %d: ref(%.3f, %.3f) -> phys(%.6f, %.6f)\n", node, xi, eta, phys_coords[0], phys_coords[1]);
+          printf ("=== First element vertices (physical coordinates) ===\n");
+          printf ("  Vertex ordering from element data: [%d, %d, %d]\n", elem_data_for_geom.order[0],
+                  elem_data_for_geom.order[1], elem_data_for_geom.order[2]);
+          for (int v = 0; v < 3; ++v) {
+            printf ("  Vertex %d (after permutation): (%.6f, %.6f, %.6f)\n", v, vertices[3 * v], vertices[3 * v + 1],
+                    vertices[3 * v + 2]);
+          }
+          printf ("=== Lagrange nodes (reference -> physical) ===\n");
+        }
+
+        // Write coordinates of all Lagrange nodes for this element
+        for (int node = 0; node < nodes_per_element; ++node) {
+          const double xi = lagrange_nodes_ref[2 * node];
+          const double eta = lagrange_nodes_ref[2 * node + 1];
+
+          auto phys_coords = ref_to_physical_triangle (vertices, xi, eta);
+          vtu_file << "          " << phys_coords[0] << " " << phys_coords[1] << " " << phys_coords[2] << "\n";
+
+          // Debug: Print node mapping for first element
+          if (debug_output && current_element_idx == 0) {
+            printf ("  Node %d: ref(%.3f, %.3f) -> phys(%.6f, %.6f)\n", node, xi, eta, phys_coords[0], phys_coords[1]);
+          }
+        }
+      }
+      else if constexpr (T::Shape == T8_ECLASS_QUAD) {
+        double vertices[12] = { 0 };
+
+        // Quads don't need vertex reordering - get vertices directly
+        for (int v = 0; v < 4; ++v) {
+          double coords[3];
+          t8_forest_element_coordinate (forest, tree_idx, element, v, coords);
+          vertices[3 * v] = coords[0];
+          vertices[3 * v + 1] = coords[1];
+          vertices[3 * v + 2] = coords[2];
+        }
+
+        // Debug: Print vertices of first element
+        if (debug_output && current_element_idx == 0) {
+          printf ("=== First element vertices (physical coordinates) ===\n");
+          for (int v = 0; v < 4; ++v) {
+            printf ("  Vertex %d: (%.6f, %.6f, %.6f)\n", v, vertices[3 * v], vertices[3 * v + 1], vertices[3 * v + 2]);
+          }
+          printf ("=== Lagrange nodes (reference -> physical) ===\n");
+        }
+
+        // Write coordinates of all Lagrange nodes for this element
+        for (int node = 0; node < nodes_per_element; ++node) {
+          const double xi = lagrange_nodes_ref[2 * node];
+          const double eta = lagrange_nodes_ref[2 * node + 1];
+
+          auto phys_coords = ref_to_physical_quad (vertices, xi, eta);
+          vtu_file << "          " << phys_coords[0] << " " << phys_coords[1] << " " << phys_coords[2] << "\n";
+
+          // Debug: Print node mapping for first element
+          if (debug_output && current_element_idx == 0) {
+            printf ("  Node %d: ref(%.3f, %.3f) -> phys(%.6f, %.6f)\n", node, xi, eta, phys_coords[0], phys_coords[1]);
+          }
         }
       }
     }
@@ -322,8 +545,7 @@ write_forest_lagrange_vtk (t8_forest_t forest, const char *prefix, int lagrange_
   vtu_file << "\n";
   vtu_file << "        </DataArray>\n";
 
-  // Cell types
-  const int vtk_cell_type = get_vtk_lagrange_triangle_type (lagrange_order);
+  // Cell types (already determined at the beginning)
   vtu_file << "        <DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n";
   vtu_file << "          ";
   for (int cell = 0; cell < num_local_elements; ++cell) {
@@ -448,13 +670,29 @@ template <typename T>
 void
 write_forest_cell_average_vtk (t8_forest_t forest, const char *prefix)
 {
-  SC_CHECK_ABORT (T::Shape == T8_ECLASS_TRIANGLE, "Only triangles are currently supported");
+  SC_CHECK_ABORT (T::Shape == T8_ECLASS_TRIANGLE || T::Shape == T8_ECLASS_QUAD || T::Shape == T8_ECLASS_LINE,
+                  "Only triangles, quads, and lines are currently supported");
 
   const auto num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
   constexpr auto U_DIM = T::U_DIM;
 
-  const int nodes_per_element = 3;  // Linear triangles
+  // Determine nodes per element and VTK cell type based on shape
+  int nodes_per_element;
+  int vtk_cell_type;
+  if constexpr (T::Shape == T8_ECLASS_TRIANGLE) {
+    nodes_per_element = 3;
+    vtk_cell_type = 5;  // VTK_TRIANGLE
+  }
+  else if constexpr (T::Shape == T8_ECLASS_QUAD) {
+    nodes_per_element = 4;
+    vtk_cell_type = 9;  // VTK_QUAD
+  }
+  else if constexpr (T::Shape == T8_ECLASS_LINE) {
+    nodes_per_element = 2;
+    vtk_cell_type = 3;  // VTK_LINE
+  }
+
   const int total_points = num_local_elements * nodes_per_element;
 
   // Open output file
@@ -480,8 +718,8 @@ write_forest_cell_average_vtk (t8_forest_t forest, const char *prefix)
     for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx) {
       const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
 
-      // Write the 3 vertices
-      for (int v = 0; v < 3; ++v) {
+      // Write the vertices
+      for (int v = 0; v < nodes_per_element; ++v) {
         double coords[3];
         t8_forest_element_coordinate (forest, tree_idx, element, v, coords);
         vtu_file << "          " << coords[0] << " " << coords[1] << " " << coords[2] << "\n";
@@ -498,7 +736,11 @@ write_forest_cell_average_vtk (t8_forest_t forest, const char *prefix)
   // Connectivity
   vtu_file << "        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n";
   for (int cell = 0; cell < num_local_elements; ++cell) {
-    vtu_file << "          " << (cell * 3) << " " << (cell * 3 + 1) << " " << (cell * 3 + 2) << "\n";
+    vtu_file << "          ";
+    for (int v = 0; v < nodes_per_element; ++v) {
+      vtu_file << (cell * nodes_per_element + v) << " ";
+    }
+    vtu_file << "\n";
   }
   vtu_file << "        </DataArray>\n";
 
@@ -506,16 +748,16 @@ write_forest_cell_average_vtk (t8_forest_t forest, const char *prefix)
   vtu_file << "        <DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n";
   vtu_file << "          ";
   for (int cell = 0; cell < num_local_elements; ++cell) {
-    vtu_file << ((cell + 1) * 3) << " ";
+    vtu_file << ((cell + 1) * nodes_per_element) << " ";
   }
   vtu_file << "\n";
   vtu_file << "        </DataArray>\n";
 
-  // Cell types (5 = VTK_TRIANGLE)
+  // Cell types
   vtu_file << "        <DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n";
   vtu_file << "          ";
   for (int cell = 0; cell < num_local_elements; ++cell) {
-    vtu_file << "5 ";
+    vtu_file << vtk_cell_type << " ";
   }
   vtu_file << "\n";
   vtu_file << "        </DataArray>\n";
