@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <array>
+#include <type_traits>
 
 #include "t8_eclass.h"
 #include "t8_mra/num/basis_functions.hxx"
@@ -14,6 +15,9 @@ namespace t8_mra
 {
 
 template <t8_eclass TShape>
+concept is_cartesian = (TShape == T8_ECLASS_LINE || TShape == T8_ECLASS_QUAD || TShape == T8_ECLASS_HEX);
+
+template <t8_eclass TShape, typename = void>
 struct dg_basis_base
 {
   static constexpr unsigned int DIM = 0;
@@ -25,6 +29,25 @@ struct dg_basis_base
   /// TODO error message
 };
 
+template <t8_eclass T>
+struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
+{
+  static constexpr unsigned int DIM = T == T8_ECLASS_LINE ? 1 : (T == T8_ECLASS_QUAD ? 2 : 3);
+  static constexpr t8_eclass Shape = T;
+
+  int num_quad_points_1d;  // Number of 1D quadrature points
+  size_t num_quad_points;  // Total number of quad points (num_quad_points_1d^DIM)
+  int P;                   // Polynomial order (stored for pset generation)
+
+  std::vector<double> ref_quad_points_1d;  // 1D quadrature points
+  std::vector<double> quad_weights_1d;     // 1D quadrature weights
+
+  std::vector<double> ref_quad_points;  // Multi-D quadrature points (flattened)
+  std::vector<double> quad_weights;     // Multi-D quadrature weights
+
+  dg_basis_base () = default;
+
+};
 template <>
 struct dg_basis_base<T8_ECLASS_TRIANGLE>
 {
