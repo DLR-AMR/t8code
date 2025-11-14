@@ -130,6 +130,7 @@ add_t8_cpp_test( NAME t8_gtest_multiple_attributes_parallel                 SOUR
 add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOURCES t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
 
+
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
 add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
 
@@ -147,6 +148,7 @@ add_t8_cpp_test( NAME t8_gtest_forest_commit_parallel       SOURCES t8_forest/t8
 add_t8_cpp_test( NAME t8_gtest_forest_face_normal_serial    SOURCES t8_forest/t8_gtest_forest_face_normal.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_is_leaf_serial       SOURCES t8_forest/t8_gtest_element_is_leaf.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_data_parallel      SOURCES t8_forest/t8_gtest_partition_data.cxx )
+add_t8_cpp_test( NAME t8_gtest_stdvectortest                    SOURCES t8_forest/t8_gtest_stdvectortest.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_cpp_test( NAME t8_gtest_recursive_serial             SOURCES t8_forest_incomplete/t8_gtest_recursive.cxx )
