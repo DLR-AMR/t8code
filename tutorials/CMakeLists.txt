@@ -69,6 +69,7 @@ add_t8_tutorial( NAME t8_mra_example             	      SOURCES general/t8_mra_e
 add_t8_tutorial( NAME t8_new_mra_example             	  SOURCES general/t8_new_mra_example.cxx )
 add_t8_tutorial( NAME t8_mra_vtk_example             	  SOURCES general/t8_mra_vtk_example.cxx )
 add_t8_tutorial( NAME test_basis_eval                    SOURCES general/test_basis_eval.cxx )
+add_t8_tutorial( NAME t8_cartesian_projection_example    SOURCES general/t8_cartesian_projection_example.cxx )
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_hex.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_quad.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tet.geo)
