@@ -440,6 +440,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
 
   t8_forest_t forest_from = forest->set_from;
   sc_MPI_Comm comm = forest_from->mpicomm;
+  int const mpirank = forest_from->mpirank;
   int const mpisize = forest_from->mpisize;
   t8_gloidx_t const global_num_leaf_elements = forest_from->global_num_leaf_elements;
 
@@ -481,9 +482,9 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
 
   double const partition_weight_offset = [&] () {  // partial sum of the partition weights, excluding the local rank
     double local_offset = 0.;
-    sc_MPI_Scan (&partition_weight, &local_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
-    return local_offset
-           - partition_weight;  // This is semantically equivalent to calling MPI_Exscan, without the rank 0 quirks
+    double local_partition_weight = partition_weight;  // because MPI does not like const variables
+    sc_MPI_Exscan (&local_partition_weight, &local_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+    return mpirank > 0 ? local_offset : 0;  // because the result of MPI_Exscan is undefined on rank 0
   }();
 
   double const forest_weight = [&] () {  // complete sum of the partition weights
