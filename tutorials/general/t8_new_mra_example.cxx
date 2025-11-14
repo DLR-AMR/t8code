@@ -193,7 +193,7 @@ main (int argc, char **argv)
 
   bool balanced = false;
 
-  constexpr int P = 3;
+  constexpr int P = 4;
   constexpr int U = 1;
 
   using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
@@ -207,6 +207,7 @@ main (int argc, char **argv)
   mra_type mra_test (max_level, c_thresh, gamma, dunavant_rule, balanced, comm);
   printf ("created mra object\n");
 
+  /// TODO f4 seems to be buggy
   mra_test.initialize_data (cmesh, test_scheme, max_level, f3);
   // printf ("create mra object\n");
   // mra_test.multiscale_transformation (0, max_level);
@@ -309,6 +310,10 @@ main (int argc, char **argv)
   //
   mra_test.refinement_new (0u, max_level);
   t8_mra::write_forest_lagrange_vtk<element_data_type> (mra_test.forest, "refinement_test/lagrange_refine", P,
+                                                        false);  // Quadratic Lagrange with debug
+
+  mra_test.coarsening_new (0u, max_level);
+  t8_mra::write_forest_lagrange_vtk<element_data_type> (mra_test.forest, "refinement_test/lagrange_coarse2", P,
                                                         false);  // Quadratic Lagrange with debug
   // t8_write_vtu<element_data_type> (mra_test.forest,
   //                                  ("refinement_test/test_step_2_" + std::to_string (max_level)).c_str ());
