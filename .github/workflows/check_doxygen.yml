@@ -1,0 +1,74 @@
+name: "Check Doxygen Documentation"
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+#
+# This github CI script runs on every push or merged pr on the main branch.
+# It generates the doxygen documentation of the main branch and uploads it
+# to the t8code website
+#
+
+on:
+  workflow_call:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  update_dev_doc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v5    
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        fetch-depth: 0
+    - name: init submodules
+      run: git submodule init
+    - name: update submodules
+      run: git submodule update
+    - name: Download precompiled doxygen version 1.13.2 from official website
+      run: wget https://www.doxygen.nl/files/doxygen-1.13.2.linux.bin.tar.gz
+    - name: Unpack doxygen tar file
+      run: tar xf doxygen-1.13.2.linux.bin.tar.gz 
+    - name: Set ${DOXYGEN_EXECUTABLE}
+      run: export DOXYGEN_EXECUTABLE=doxygen-1.13.2/bin/doxygen
+    - name: Echo doxygen version
+      run: ${DOXYGEN_EXECUTABLE} --version
+    - name: Configure for documentation only
+      run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_ENABLE_MPI=OFF
+    - name: check doxygen
+      run: cd build && cd doc && ${DOXYGEN_EXECUTABLE} Doxyfile >> output 2>&1
+    - name: check for doxygen warnings
+      run: |
+        if grep -i warning build/doc/output; then
+          echo "Doxygen warnings found!"
+          exit 1
+        else
+          echo "No doxygen warnings found."
+        fi
+    - name: Upload doxygen output if warnings found
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: doxygen-output
+        path: doc/output
