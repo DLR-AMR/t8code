@@ -140,8 +140,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
    * \b sibling needs to be an existing element. No memory is allocated by this function.
    * \b elem and \b sibling can point to the same element, then the entries of
    * \b elem are overwritten by the ones of its \b sibid -th sibling.
-   * \param [in] elem   The element whose sibling will be computed.
-   * \param [in] sibid  The id of the sibling computed.
+   * \param [in] elem        The element whose sibling will be computed.
+   * \param [in] sibid       The id of the sibling computed.
    * \param [in,out] sibling This element's entries will be overwritten by those of \b elem's sibid-th sibling.
    *                    The storage for this element must exist and match the element class of the sibling.
    */
@@ -200,8 +200,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
   }
 
   /** Construct the child element of a given number.
-   * \param [in] elem     This must be a valid element, bigger than maxlevel.
-   * \param [in] childid  The number of the child to construct.
+   * \param [in] elem      This must be a valid element, bigger than maxlevel.
+   * \param [in] childid   The number of the child to construct.
    * \param [in,out] child The storage for this element must exist and match the element class of the child.
    *                       On output, a valid element.
    * It is valid to call this function with elem = child.
@@ -264,8 +264,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
   element_get_face_shape (const t8_element_t *elem, int face) const;
 
   /** Given an element and a face of the element, compute all children of the element that touch the face.
-   * \param [in] elem     The element.
-   * \param [in] face     A face of \a elem.
+   * \param [in] elem         The element.
+   * \param [in] face         A face of \a elem.
    * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face are
    *                          stored. They will be stored in order of their linear id.
    * \param [in] num_children The number of elements in \a children. Must match the number of children that touch
@@ -289,8 +289,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
        elem    face  face_child    Returns the face number f
      \endverbatim
 
-   * \param [in]  elem    The element.
-   * \param [in]  face    Then number of the face.
+   * \param [in]  elem       The element.
+   * \param [in]  face       Then number of the face.
    * \param [in]  face_child A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that shares
    *                         a face with \a face. These children are counted in linear order. This coincides with the
    *                         order of children from a call to \ref element_get_children_at_face.
@@ -327,7 +327,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
    *  \param [in,out] elem2 On return the face element \a elem1 with respect to the coordinate system of the other tree.
    *  \param [in] orientation The orientation of the tree-tree connection. \see t8_cmesh_set_join
    *  \param [in] sign      Depending on the topological orientation of the two tree faces, either 0
-   *                        (both faces have opposite orientation) or 1 (both faces have the same top. orientattion).
+   *                        (both faces have opposite orientation) or 1 (both faces have the same top. orientation).
    *                        \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to the smaller face. A face f of tree T
    *                        is smaller than f' of T' if either the eclass of T is smaller or if the classes are equal
@@ -345,15 +345,15 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face.
-   * \param [in] face     A face element.
-   * \param [in,out] elem An allocated element. The entries will be filled with
-   *                      the data of the element that has \a face as a face and
-   *                      lies within the root tree.
+   * \param [in] face      A face element.
+   * \param [in,out] elem  An allocated element. The entries will be filled with
+   *                       the data of the element that has \a face as a face and
+   *                       lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
-   *                      lies.
-   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
-   * \return              The face number of the face of \a elem that coincides
-   *                      with \a face.
+   *                       lies.
+   * \param [in] scheme    The scheme collection with a scheme for the eclass of the face.
+   * \return               The face number of the face of \a elem that coincides
+   *                       with \a face.
    */
   int
   element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
@@ -447,7 +447,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem    The element whose successor should be constructed.
+   * \param [in] elem      The element whose successor should be constructed.
    * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
@@ -457,7 +457,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
    * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
    * refinement level. All element vertices have integer coordinates in this cube and the anchor node is the first of
    * all vertices (index 0). It also has the lowest x,y and z coordinates.
-   * \param [in] elem   The element.
+   * \param [in] elem    The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   void
@@ -476,8 +476,8 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem    The element to be considered.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
@@ -490,7 +490,7 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
    *  reference space of the tree.
    *
    * \param [in] elem         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -545,32 +545,32 @@ class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_d
   set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-   * \param [in] elements Array of elements that are to be packed
-   * \param [in] count Number of elements to pack
+   * \param [in] elements        Array of elements that are to be packed
+   * \param [in] count           Number of elements to pack
    * \param [in,out] send_buffer Buffer in which to pack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-   * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] comm MPI Communicator
+   * \param [in] buffer_size     size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position   the position of the first byte that is not already packed
+   * \param [in] comm            MPI Communicator
   */
   void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                     int *position, sc_MPI_Comm comm) const;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
-   * \param [in] count Number of elements to pack
-   * \param [in] comm MPI Communicator
+   * \param [in] count      Number of elements to pack
+   * \param [in] comm       MPI Communicator
    * \param [out] pack_size upper bound on the message size
   */
   void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-   * \param [in] recvbuf Buffer from which to unpack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in] recvbuf       Buffer from which to unpack the elements
+   * \param [in] buffer_size   size of the buffer (in order to check that we don't access out of range)
    * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] elements Array of initialised elements that is to be filled from the message
-   * \param [in] count Number of elements to unpack
-   * \param [in] comm MPI Communicator
+   * \param [in] elements      Array of initialised elements that is to be filled from the message
+   * \param [in] count         Number of elements to unpack
+   * \param [in] comm          MPI Communicator
   */
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
