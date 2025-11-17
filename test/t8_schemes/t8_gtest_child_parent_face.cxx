@@ -55,14 +55,14 @@ class class_child_parent_face: public TestDFS {
         const int element_level = scheme->element_get_level (eclass, element);
         // Check the ancestor face function when input is the child and the level of the child.
         // We expect the output face to be the input face
-        const int anc_face_same_level
+        const int ancestor_face_same_level
           = scheme->element_face_get_ancestor_face (eclass, children[ifacechild], element_level + 1, childface);
-        EXPECT_EQ (childface, anc_face_same_level);
+        EXPECT_EQ (childface, ancestor_face_same_level);
         // Check the ancestor face function when input is the element level/
         // We expect the output face to be the original face
-        const int anc_face_one_level_higher
+        const int ancestor_face_one_level_higher
           = scheme->element_face_get_ancestor_face (eclass, children[ifacechild], element_level, childface);
-        EXPECT_EQ (iface, anc_face_one_level_higher);
+        EXPECT_EQ (iface, ancestor_face_one_level_higher);
       }
       scheme->element_destroy (eclass, num_face_children, children);
       T8_TESTSUITE_FREE (children);
