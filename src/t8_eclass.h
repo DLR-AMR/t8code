@@ -203,7 +203,7 @@ typedef enum t8_eclass {
   { 5, 8, 1, 4, 0, 0, 0, 0 }   /* pyramid */  \
 }
 
-#define T8_ECLASS_TO_STRING_VALUES { "Vertex", "Line", "Quad", "Triangle", "Hex", "Tet", "Prism", "Pyramid" }
+#define T8_ECLASS_TO_STRING_VALUES { "Vertex", "Line", "Quad", "Triangle", "Hex", "Tet", "Prism", "Pyramid", "Invalid" }
 
 /* clang-format on */
 
@@ -296,7 +296,7 @@ inline constexpr int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES] 
 inline constexpr int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT] = T8_ECLASS_BOUNDARY_COUNT_VALUES;
 
 /** For each eclass, the name of this class as a string */
-inline constexpr const char *t8_eclass_to_string[T8_ECLASS_COUNT] = T8_ECLASS_TO_STRING_VALUES;
+inline constexpr const char *t8_eclass_to_string[T8_ECLASS_INVALID] = T8_ECLASS_TO_STRING_VALUES;
 } /* namespace t8cpp */
 
 using namespace t8cpp;
@@ -377,7 +377,7 @@ extern const int t8_eclass_face_types[T8_ECLASS_COUNT][T8_ECLASS_MAX_FACES];
 extern const int t8_eclass_boundary_count[T8_ECLASS_COUNT][T8_ECLASS_COUNT];
 
 /** For each eclass, the name of this class as a string */
-extern const char *t8_eclass_to_string[T8_ECLASS_COUNT];
+extern const char *t8_eclass_to_string[T8_ECLASS_INVALID];
 
 #endif /* !__cplusplus */
 
