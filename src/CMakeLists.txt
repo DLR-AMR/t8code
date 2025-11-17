@@ -108,12 +108,12 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
     target_sources(T8 PRIVATE 
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
-      t8_data/t8_cad.cxx
+      t8_cad/t8_cad.cxx
     )
     install( FILES 
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
-      t8_data/t8_cad.hxx
+      t8_cad/t8_cad.hxx
       DESTINATION include
     )
 endif()
