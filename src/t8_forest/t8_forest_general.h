@@ -594,9 +594,9 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  *
  */
 void
-t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
-                               const t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass);
+t8_forest_leaf_face_neighbors (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *leaf,
+                               const t8_element_t **pneighbor_leaves[], const int face, int *dual_faces[],
+                               int *num_neighbors, t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass);
 
 /** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation. 
  * \param [in]    forest  The forest. Must have a valid ghost layer.
@@ -632,10 +632,11 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  *
  */
 void
-t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
-                                   const t8_element_t **pneighbor_leaves[], int face, int *dual_faces[],
-                                   int *num_neighbors, t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass,
-                                   t8_gloidx_t *gneigh_tree, int *orientation);
+t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                   const t8_element_t *leaf_or_ghost, const t8_element_t **pneighbor_leaves[],
+                                   const int face, int *dual_faces[], int *num_neighbors,
+                                   t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, t8_gloidx_t *gneigh_tree,
+                                   int *orientation);
 
 /** Given a leaf element or ghost index in "all local elements + ghosts" enumeration
  * compute the index of the face neighbor of the element - provided that only one or no
@@ -652,7 +653,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
  * \note Do not call if you are unsure about the number of face neighbors. In particular if the forest is adapted and not uniform.
  */
 t8_locidx_t
-t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_locidx_t element_index,
+t8_forest_same_level_leaf_face_neighbor_index (const t8_forest_t forest, const t8_locidx_t element_index,
                                                const int face_index, const t8_gloidx_t global_treeid, int *dual_face);
 
 /** Exchange ghost information of user defined element data.

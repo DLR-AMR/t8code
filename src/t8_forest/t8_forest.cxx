@@ -1682,10 +1682,11 @@ t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (const t8_element_t *
          parts. In that case, process boundary elements will have 0 neighbors. 
 */
 void
-t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf_or_ghost,
-                                   const t8_element_t **pneighbor_leaves[], int face, int *dual_faces[],
-                                   int *num_neighbors, t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass,
-                                   t8_gloidx_t *gneigh_tree, int *orientation)
+t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                   const t8_element_t *leaf_or_ghost, const t8_element_t **pneighbor_leaves[],
+                                   const int face, int *dual_faces[], int *num_neighbors,
+                                   t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, t8_gloidx_t *gneigh_tree,
+                                   int *orientation)
 {
   /* We compute all face neighbor leaf elements of E via the following strategy:
    * - Compute the same level face neighbor N
@@ -1999,16 +2000,16 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
 }
 
 void
-t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
-                               const t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass)
+t8_forest_leaf_face_neighbors (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *leaf,
+                               const t8_element_t **pneighbor_leaves[], const int face, int *dual_faces[],
+                               int *num_neighbors, t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass)
 {
   t8_forest_leaf_face_neighbors_ext (forest, ltreeid, leaf, pneighbor_leaves, face, dual_faces, num_neighbors,
                                      pelement_indices, pneigh_eclass, NULL, NULL);
 }
 
 t8_locidx_t
-t8_forest_same_level_leaf_face_neighbor_index (t8_forest_t forest, const t8_locidx_t element_index,
+t8_forest_same_level_leaf_face_neighbor_index (const t8_forest_t forest, const t8_locidx_t element_index,
                                                const int face_index, const t8_gloidx_t global_treeid, int *dual_face)
 {
   const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
