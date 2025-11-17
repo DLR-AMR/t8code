@@ -42,23 +42,7 @@
 bool
 test_face_neighbors_skip_cmesh (const t8_cmesh_t cmesh)
 {
-#if 0
-  // We only allow cmeshes with pure quad or hex elements.
-  // So we check all eclass and if the cmesh contains any of those
-  // we skip the cmesh.
-  for (int eclass = T8_ECLASS_ZERO; eclass < T8_ECLASS_COUNT; ++eclass) {
-    if (  //eclass == T8_ECLASS_LINE ||
-      //eclass == T8_ECLASS_TRIANGLE ||
-      //eclass == T8_ECLASS_PRISM ||
-      //eclass == T8_ECLASS_TET || 
-      eclass == T8_ECLASS_PYRAMID) {
-      if (cmesh->num_trees_per_eclass[eclass] > 0) {
-        return true;
-      }
-    }
-  }
-#endif
-  // Additionally, we skip empty cmeshes.
+  // We skip empty cmeshes.
   return t8_cmesh_is_empty (cmesh);
 }
 
