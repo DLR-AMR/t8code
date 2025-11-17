@@ -89,9 +89,10 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
 }
 
 void
-t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                         const t8_element_array_t *const leaf_elements, t8_locidx_t tree_lindex_of_first_leaf,
-                         t8_forest_iterate_face_fn callback, void *user_data)
+t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                         const int face, const t8_element_array_t *const leaf_elements,
+                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback,
+                         void *user_data)
 {
   t8_debugf ("Entering t8_forest_iterate_faces with leaf_index %i and %li total leaves.\n", tree_lindex_of_first_leaf,
              t8_element_array_get_count (leaf_elements));
