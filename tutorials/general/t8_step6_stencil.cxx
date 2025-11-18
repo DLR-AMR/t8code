@@ -418,7 +418,7 @@ t8_step6_main (int argc, char **argv)
   /* Compute stencil. */
   t8_step6_compute_stencil (forest, data);
 
-  /* Exchange the neighboring data at MPI process boundaries again,
+  /* Exchange the neighboring data at MPI process boundaries again.
    * This ensures that also the computed schlieren and curvature
    * data are properly written to the ghost elements.
    * For the sake of this example this step is only necessary in order
