@@ -91,7 +91,7 @@ fi
 
 
 # Iterate over all arguments and throw
-# aways those filenames that we should ignore.
+# away those filenames that we should ignore.
 # Also check if suffix is ".c" ".cxx" ".h" or ".hxx"
 for arg in "$@"
 do
