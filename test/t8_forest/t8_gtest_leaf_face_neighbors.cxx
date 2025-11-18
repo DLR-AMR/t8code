@@ -97,12 +97,6 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
       t8_debugf ("writing forest to \'debug_face_neigh\'");
     }
 #endif
-    if (!forest_is_uniform) {
-      // Currently, adaptive forest is not working properly due to a bug in the
-      // face neighbor computation.
-      // We hence currently skip the test for adaptive forests.
-      // break;
-    }
     const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
     const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
     const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
