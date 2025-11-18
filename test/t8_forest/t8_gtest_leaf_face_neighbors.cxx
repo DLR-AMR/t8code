@@ -231,9 +231,9 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
             t8_debugf ("Checking neighbor element %p in (global) tree %li.\n", (void *) neighbor, gneigh_tree);
             t8_debugf ("dual face is %i, index is %i\n", dual_face, neigh_index);
-            scheme->element_debug_print (neigh_class, neighbor);
 
 #if T8_ENABLE_DEBUG
+            scheme->element_debug_print (neigh_class, neighbor);
             ASSERT_TRUE (scheme->element_is_valid (neigh_class, neighbor))
               << "Neighbor element " << ineigh << " is not valid";
 #endif
@@ -268,10 +268,12 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                                                &neigh_dual_faces, &neigh_num_neighbors, &neigh_element_indices,
                                                &neigh_neigh_class, &neigh_gneigh_tree, &neigh_orientation);
 
+#if T8_ENABLE_DEBUG
             t8_debugf ("original element\n");
             scheme->element_debug_print (tree_class, element);
             t8_debugf ("neighbor element\n");
             scheme->element_debug_print (neigh_class, neighbor);
+#endif
             fflush (stdout);
             // We must have found at least one face neighbor, namely the original element.
             EXPECT_GE (neigh_num_neighbors, 1);
@@ -293,7 +295,9 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
               // Check that the neighbor of the neighbor element is the original element
               const t8_element_t *neigh_of_neigh = neigh_neighbor_leaves[ineighneigh];
               t8_debugf ("Checking neighbor of neighbor #%i:\n", ineighneigh);
+#if T8_ENABLE_DEBUG
               scheme->element_debug_print (tree_class, neigh_of_neigh);
+#endif
               if (scheme->element_is_equal (tree_class, element, neigh_of_neigh)) {
                 position_of_original_element = ineighneigh;
                 found_original = true;  // Stop the for loop

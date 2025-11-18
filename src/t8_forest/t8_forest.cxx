@@ -1475,8 +1475,10 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     /* compute coarse tree id */
     const t8_locidx_t lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
     T8_ASSERT (lctree_id >= 0);
+#if T8_ENABLE_DEBUG
     const bool cmesh_tree_is_local = t8_cmesh_treeid_is_local_tree (cmesh, lctree_id);
     T8_ASSERT (cmesh_tree_is_local || t8_cmesh_treeid_is_ghost (cmesh, lctree_id));
+#endif
 
     const t8_locidx_t neighbor_ctreeid
       = t8_cmesh_get_face_neighbor (cmesh, lctree_id, tree_face, &tree_neigh_face, &orientation);
