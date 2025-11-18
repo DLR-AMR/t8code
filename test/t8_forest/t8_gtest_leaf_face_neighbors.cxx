@@ -69,6 +69,12 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
     t8_forest_ref (forests[0]);
     forests[1] = t8_forest_new_adapt (forests[0], t8_test_adapt_first_child, do_recursive_adapt, do_ghost,
                                       (void *) &max_adapt_level);
+    t8_forest_ref (forests[0]);
+    // Add another adapted forest that does not create a ghost layer to test
+    // the face neighbor algorithm on forests without ghost.
+    const bool dont_do_ghost = false;
+    forests[2] = t8_forest_new_adapt (forests[0], t8_test_adapt_first_child, do_recursive_adapt, dont_do_ghost,
+                                      (void *) &max_adapt_level);
   }
 
   void
@@ -81,7 +87,7 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
     }
   }
 
-  t8_forest_t forests[2] { nullptr, nullptr };
+  t8_forest_t forests[3] { nullptr, nullptr, nullptr };
 };
 
 TEST_P (forest_face_neighbors, test_face_neighbors)
@@ -90,6 +96,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
   bool forest_is_uniform = true;  // The first forest is uniform. We set this to false at the end of the for loop.
   for (auto &forest : forests) {
     const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+    const bool has_ghost = forest->ghosts != NULL;
 #if T8_ENABLE_DEBUG
     if (t8_cmesh_get_tree_geometry (cmesh, 0) != NULL) {
       // Debug vtk output, only if cmesh has a registered geometry
@@ -183,7 +190,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                 EXPECT_EQ (num_neighbors, 1)
                   << "Inner local element should have exactly 1 neighbor, has " << num_neighbors << ".";
               }
-              else {
+              else if (has_ghost) {
                 // In an adaptive forest we have 1 or more neighbors.
                 EXPECT_GE (num_neighbors, 1)
                   << "Inner local element should have at least 1 neighbor, has " << num_neighbors << ".";
@@ -195,7 +202,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                 EXPECT_TRUE (num_neighbors == 0 || num_neighbors == 1)
                   << "Inner ghost element should have exactly 1 or 0 neighbors, has " << num_neighbors << ".";
               }
-              else {
+              else if (has_ghost) {
                 // In an adaptive forest a ghost element has 0 or more neighbors.
                 EXPECT_GE (num_neighbors, 0)
                   << "Inner ghost element should have 0 or more neighbors, has " << num_neighbors << ".";

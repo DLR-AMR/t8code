@@ -1721,9 +1721,6 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
 #endif
   SC_CHECK_ABORT (!forest->incomplete_trees, "Leaf face neighbor is not supported for "
                                              "forests with deleted elements.\n");
-  SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
-                  "Ghost structure is needed for t8_forest_leaf_face_neighbors "
-                  "but was not found in forest.\n");
 
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
@@ -1973,7 +1970,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
   scheme->element_destroy (neigh_class, 1, &same_level_neighbor);
 #if T8_ENABLE_DEBUG
   // Debugging checks
-  if (tree_is_local) {
+  if (tree_is_local && forest->ghosts != NULL) {
     // For local elements we must have found face neighbors by now.
     T8_ASSERT (*num_neighbors > 0);
   }
