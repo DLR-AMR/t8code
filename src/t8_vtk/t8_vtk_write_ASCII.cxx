@@ -386,7 +386,7 @@ t8_forest_vtk_cells_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_i
   int dim, idim;
 
   if (modus == T8_VTK_KERNEL_EXECUTE) {
-    dim = 3;
+    const int dim = 3;
     T8_ASSERT (forest->dimension <= 3);
     /* For local elements access the data array, for ghosts, write 0 */
     const t8_locidx_t data_index = t8_forest_compute_data_index (forest, ltree_id, element_index);
