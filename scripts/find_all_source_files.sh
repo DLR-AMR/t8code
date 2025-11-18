@@ -45,6 +45,7 @@ fi
 
 suffixes="c|cxx|h|hxx"
 
+# Find a suitable find program. Either 'find' or 'gfind'.
 if find --version >/dev/null 2>&1; then
     FIND=find
 else
