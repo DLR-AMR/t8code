@@ -24,7 +24,7 @@ GIT_REPO_PATH=$(git rev-parse --show-toplevel)
 
 INDENT_SCRIPT=${GIT_REPO_PATH}/scripts/t8indent.sh
 
-usage="$0 [FILE_TO_INDENT]"
+usage="USAGE: $0 [FILE_TO_INDENT]"
 
 # Check if first argument given
 if [ ${1-x} = x ]
