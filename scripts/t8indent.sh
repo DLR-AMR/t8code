@@ -121,32 +121,14 @@ do
 done
 
 
-for arg in "$@" ; do
-  if [ "x$arg" == "x-o" ]; then
-    WANTSOUT=1
-  fi
-done
-if [ -z "$WANTSOUT" ]; then
-  for NAME in "${newargs[@]}" ; do
-    if [[ $NO_CHANGE == "TRUE" ]]
-    then
-      $FORMAT $FORMAT_OPTIONS "$NAME" 2>&1
-      status=$?
-    else
-      $FORMAT $FORMAT_OPTIONS "$NAME"
-      status=$?
-    fi
-  done
+if [[ $NO_CHANGE == "TRUE" ]]
+then
+  $FORMAT $FORMAT_OPTIONS ${newargs[@]} 2>&1
+  status=$?
 else
-  if [[ $NO_CHANGE == "TRUE" ]]
-  then
-    $FORMAT $FORMAT_OPTIONS ${newargs[@]} 2>&1
-    status=$?
-  else
-    $FORMAT $FORMAT_OPTIONS ${newargs[@]}
-    status=$?
-  fi  
-fi
+  $FORMAT $FORMAT_OPTIONS ${newargs[@]}
+  status=$?
+fi  
 
 # If the file content was not change, the return
 # value determines whether or not the file was
