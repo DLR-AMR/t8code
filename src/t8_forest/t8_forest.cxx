@@ -1864,8 +1864,8 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
 
       int temp_dual_face;
       if (neighbor_unique && first_desc_level <= neighbor_level) {
-        temp_dual_face = scheme->element_face_get_ancestor_face (neigh_class, same_level_neighbor,
-                                                                 same_level_neighbor_dual_face, first_desc_level);
+        temp_dual_face = scheme->element_face_get_ancestor_face (neigh_class, same_level_neighbor, first_desc_level,
+                                                                 same_level_neighbor_dual_face);
       }  // end if neighbor_unique
 
       const int search_element_dual_face = neighbor_unique ? temp_dual_face : same_level_neighbor_dual_face;
