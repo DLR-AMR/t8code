@@ -565,8 +565,8 @@ int
 t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme_c *scheme,
                                  const t8_element_t *leaf, const int face);
 
-/** Compute the leaf face neighbors of a forest.
- * \param [in]    forest  The forest. Must have a valid ghost layer.
+/** Compute the leaf face neighbors of a forest leaf element or ghost leaf.
+ * \param [in]    forest  The forest.
  * \param [in]    ltreeid A local tree id (could also be a ghost tree). 0 <= \a ltreeid < num_local trees+num_ghost_trees
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
  * \param [out]   pneighbor_leaves Unallocated on input. On output the neighbor
@@ -583,7 +583,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * \note If there are no face neighbors, then *pneighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note \a forest must be committed before calling this function.
- *
+ * \note If \a forest does not have a ghost layer then leaf elements at the process boundaries have 0 neighbors. (The function output for leaf elements then depends on the parallel partition.)
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
