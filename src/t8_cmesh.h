@@ -33,7 +33,7 @@
 #include <t8_element.h>
 #include <t8_schemes/t8_scheme.h>
 
-/* Forward pointer reference to hidden cmesh implementation.
+/** Forward pointer reference to hidden cmesh implementation.
  * This reference needs to be known by t8_geometry, hence we 
  * put it before the include. */
 typedef struct t8_cmesh *t8_cmesh_t;
@@ -54,9 +54,11 @@ typedef struct t8_cmesh *t8_cmesh_t;
  *       edit: This should be achieved now.
  */
 
-/* Forward pointer references to hidden implementations of
- * tree and ghost tree. */
+/** Forward pointer references to hidden implementations of
+ * tree. */
 typedef struct t8_ctree *t8_ctree_t;
+/** Forward pointer references to hidden implementations of
+ * ghost tree. */
 typedef struct t8_cghost *t8_cghost_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -98,31 +100,24 @@ t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 int
 t8_cmesh_is_committed (const t8_cmesh_t cmesh);
 
-#if T8_ENABLE_DEBUG
-/** Check the geometry of the mesh for validity.
- * \param [in] cmesh            This cmesh is examined.
- * \return                      True if the geometry of the cmesh is valid.
+/** Disable the debug check for negative volumes in trees during \ref t8_cmesh_commit.
+ *  Does nothing outside of debug mode.
+ * \param [in, out] cmesh
  */
-int
-t8_cmesh_validate_geometry (const t8_cmesh_t cmesh);
-#endif
+void
+t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
 
-/** Given a set of vertex coordinates for a tree of a given eclass.
- * Query whether the geometric volume of the tree with this coordinates
- * would be negative.
- * \param [in]  eclass          The eclass of a tree.
- * \param [in]  vertices        The coordinates of the tree's vertices.
- * \param [in]  num_vertices    The number of vertices. \a vertices must hold
- *                              3 * \a num_vertices many doubles.
- *                              \a num_vertices must match \ref t8_eclass_num_vertices[\a eclass]
- * \return                      True if the geometric volume describe by \a vertices is negative.
- *                              False otherwise.
- * Returns true if a tree of the given eclass with the given vertex
- * coordinates does have negative volume.
+#if T8_ENABLE_DEBUG
+/** Check the geometry of the mesh for validity, this means checking if trees and their geometries
+ *  are compatible and if they have negative volume.
+ * \param [in] cmesh                      This cmesh is examined.
+ * \param [in] check_for_negative_volume  Enable the negative volume check.
+ * \return                                True if the geometry of the cmesh is valid.
  */
-/* TODO: write a test for this function */
 int
-t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices);
+
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume);
+#endif
 
 /* TODO: Currently it is not possible to destroy set_from before
  *       cmesh is destroyed. */
@@ -146,7 +141,7 @@ t8_cmesh_set_derive (t8_cmesh_t cmesh, t8_cmesh_t set_from);
  * \param [in]      mpisize The number of processes.
  * \param [in]      comm    The MPI communicator to use. Its mpisize must match \a mpisize.
  *                  The shared memory type must have been set. Best practice would be
- *                  calling \ref sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
+ *                  calling sc_shmem_set_type (comm, T8_SHMEM_BEST_TYPE).
  * \return          A t8_shmem_array struct that stores \a mpisize + 1 t8_gloidx_t entries.
  * \see t8_shmem.h
  */
@@ -318,7 +313,7 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
  * \param [in]     face1        The face number of the first tree.
  * \param [in]     face2        The face number of the second tree.
  * \param [in]     orientation  Specify how face1 and face2 are oriented to each other
- * 
+ *
  * \note The orientation is defined as:
  * Let my_face and other_face be the two face numbers of the connecting trees.
  * We chose a main_face from them as follows: Either both trees have the same
@@ -403,7 +398,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 /** Register a geometry in the cmesh. The cmesh takes ownership of the geometry.
  * \param [in,out] cmesh        The cmesh.
  * \param [in]     geometry     The geometry to register.
- * 
+ *
  * If no geometry is registered and cmesh is modified from another cmesh then
  * the other cmesh's geometries are used.
  * \note If you need to use \ref t8_cmesh_bcast, then all geometries must be
@@ -433,10 +428,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /**
  * Save the cmesh to a file with the given fileprefix.
- * 
+ *
  * \param[in] cmesh The cmesh to save.
  * \param[in] fileprefix The prefix of the file to save the cmesh to.
- * 
+ *
  * \note Currently, it is only legal to save cmeshes that use the linear geometry.
  */
 int
@@ -444,7 +439,7 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
 
 /**
  * Load a cmesh from a file.
- * 
+ *
  * \param[in] filename The name of the file to load the cmesh from.
  * \param[in] comm The MPI communicator to use.
  */
@@ -453,13 +448,13 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
 
 /**
  * Load a cmesh from multiple files and distribute it across the processes.
- * 
+ *
  * \param[in] fileprefix The prefix of the files to load the cmesh from.
  * \param[in] num_files The number of files to load.
  * \param[in] comm The MPI communicator to use.
  * \param[in] mode The load mode to use, see \ref t8_load_mode_t.
  * \param[in] procs_per_node The number of processes per node, only relevant in JUQUEEN mode.
- * 
+ *
  * \note \a procs_per_node is only relevant in mode==JUQUEEN. If \a num_files = 1 a replicated cmesh is constructed.
  */
 t8_cmesh_t
@@ -719,7 +714,7 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
  * \param [in]     key          A key used to identify the attribute under all
  *                              attributes of this tree with the same \a package_id.
  * \param [in]     ltree_id     The local number of the tree.
- * \param [in]     data_count   The number of entries in the array that are requested. 
+ * \param [in]     data_count   The number of entries in the array that are requested.
  *                              This must be smaller or equal to the \a data_count parameter
  *                              of the corresponding call to \ref t8_cmesh_set_attribute_gloidx_array
  * \return         The attribute pointer of the tree \a ltree_id or NULL if the attribute is not found.
@@ -751,20 +746,45 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
 /** Calculate the section of a uniform forest for the current rank.
  * \param [in]    cmesh         The cmesh to be considered.
  * \param [in]    level         The uniform refinement level to be created.
- * \param [in]    scheme            The element scheme for which to compute the bounds.
+ * \param [in]    tree_scheme      The element scheme for which to compute the bounds.
  * \param [out]   first_local_tree  The first tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
+ * \param [out]   child_in_tree_begin The tree-local index of the first element belonging to the calling processor. Not computed if NULL.
  * \param [out]   last_local_tree  The last tree that contains elements belonging to the calling processor.
- * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
+ * \param [out]   child_in_tree_end The tree-local index of the first element that does not belonging to
  *                                  the calling processor anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
- *                                 same as \a last_local_tree on the next process.
- * \a cmesh must be committed before calling this function. *
+ *                                 same as \a last_local_tree on the previous process.
+ * \a cmesh must be committed before calling this function. 
  */
 void
-t8_cmesh_uniform_bounds (t8_cmesh_t cmesh, const int level, const t8_scheme_c *scheme, t8_gloidx_t *first_local_tree,
-                         t8_gloidx_t *child_in_tree_begin, t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
-                         int8_t *first_tree_shared);
+t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, const t8_scheme_c *tree_scheme,
+                                             t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
+                                             t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
+                                             int8_t *first_tree_shared);
+
+/**
+ * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially 
+ * meshes where not all elements refine into 1:2^dim manner. The section is calculated without assuming such refinement
+ * and each process computes its number of elements on the given \a level, communicates the number to other processes,
+ * and the correct section is computed based on this information. 
+ * 
+ * \param [in] cmesh        The cmesh to be considered.
+ * \param [in] level        The uniform refinement level to be created.
+ * \param [in] scheme       The element scheme for which to compute the bounds.
+ * \param [out]   first_local_tree  The global index of the first tree that contains elements belonging to the calling process.
+ * \param [out]   child_in_tree_begin The global index of the first element belonging to the calling processor. Not computed if NULL.
+ * \param [out]   last_local_tree  The global index of the last tree that contains elements belonging to the calling process.
+ * \param [out]   child_in_tree_end The global index of the first element that does not belonging to
+ *                                  the calling process anymore. Not computed if NULL.
+ * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
+ *                                 same as \a last_local_tree on the previous process.
+ * \param [in] comm         The communicator 
+ */
+void
+t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const int level, const t8_scheme_c *scheme,
+                                                  t8_gloidx_t *first_local_tree, t8_gloidx_t *child_in_tree_begin,
+                                                  t8_gloidx_t *last_local_tree, t8_gloidx_t *child_in_tree_end,
+                                                  int8_t *first_tree_shared, sc_MPI_Comm comm);
 
 /** Increase the reference counter of a cmesh.
  * \param [in,out] cmesh        On input, this cmesh must exist with positive
@@ -794,13 +814,12 @@ t8_cmesh_unref (t8_cmesh_t *pcmesh);
  * \param [in,out]  pcmesh      This cmesh must have a reference count of one.
  *                              It can be in any state (committed or not).
  *                              Then it effectively calls \ref t8_cmesh_unref.
- * \param [in]      comm        A mpi communicator that is valid with \a cmesh.
  */
 void
 t8_cmesh_destroy (t8_cmesh_t *pcmesh);
 
 /** Compute y = ax + b on an array of doubles, interpreting
- * each 3 as one vector x 
+ * each 3 as one vector x
  * \param[in]   coords_in         The incoming coordinates of the vectors
  * \param[out]  coords_out        The computed coordinates of the vectors
  * \param[in]   num_vertices      The number of vertices/vectors
@@ -810,7 +829,7 @@ t8_cmesh_destroy (t8_cmesh_t *pcmesh);
 void
 t8_cmesh_coords_axb (const double *coords_in, double *coords_out, int num_vertices, double alpha, const double b[3]);
 
-/** Compute y = x + translate on an array of doubles, interpreting 
+/** Compute y = x + translate on an array of doubles, interpreting
  * each 3 as one vector x
  * \param[in]   coords_in         The incoming coordinates of the vectors
  * \param[out]  coords_out        The computed coordinates of the vectors
@@ -827,11 +846,11 @@ t8_cmesh_new_translate_vertices_to_attributes (const t8_locidx_t *tvertices, con
                                                double *attr_vertices, const int num_vertices);
 
 /**
- * \warning This function is only available in debug-modus and should only 
+ * \warning This function is only available in debug-modus and should only
  * be used in debug-modus.
- * 
+ *
  * Prints the vertices of each tree of each process
- * 
+ *
  * \param[in] cmesh   Source-cmesh, which trees get printed.
  * \param[in] comm    The MPI communicator to use for printing.
  */
@@ -847,7 +866,7 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
  * bounds[3] = y_max
  * bounds[4] = z_min
  * bounds[5] = z_max
- * 
+ *
  * \param [in] cmesh    The cmesh to be considered.
  * \param [out] bounds  The bounding box of the cmesh. If the box is flat (for quads for example, z_min == z_max)
  *

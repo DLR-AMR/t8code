@@ -50,19 +50,19 @@ Note to future developers:
     2. derive a cmesh from it
     3. Add vertices to the direved cmesh
     4. commit the derived cmesh
-  
-  This is implemented in the 
+
+  This is implemented in the
     cmesh_vertex_conn_ttv_with_core_classes
     cmesh_vertex_conn_ttv_with_cmesh_functions
   test suites.
-  
+
   However, as of now (i.e. April 2025), we cannot not add attributes (and hence vertices)
   while deriving a cmesh.
   It is only possible to add attributes when constructing a new cmesh from scratch.
   Thus, the test suites are currently disabled/commented out with #if 0 blocks.
 
   Instead, we currently create a bunch of test cmeshes ourself from scratch.
-  This is implemented in the 
+  This is implemented in the
     cmesh_vertex_conn_ttv_with_core_classes_temp
     cmesh_vertex_conn_ttv_with_cmesh_functions_temp
   test suites.
@@ -127,12 +127,13 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes, DISABLED_get_global)
     const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
     /* Get all vertices */
-    const t8_gloidx_t *global_vertices = ttv.get_global_vertices (cmesh, itree, num_tree_vertices);
+    auto global_vertices = ttv.get_global_vertices (cmesh, itree);
+    EXPECT_EQ (global_vertices.size (), num_tree_vertices);
 
     const t8_gloidx_t start_index = itree * T8_ECLASS_MAX_CORNERS;
     for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
       /* Get the stored global vertex id */
-      const t8_gloidx_t global_vertex = ttv.get_global_vertex (cmesh, itree, ivertex, num_tree_vertices);
+      const t8_gloidx_t global_vertex = ttv.get_global_vertex (cmesh, itree, ivertex);
       /* Check value */
       EXPECT_EQ (global_vertex, start_index + ivertex);
       EXPECT_EQ (global_vertices[ivertex], start_index + ivertex);
@@ -144,7 +145,13 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes, DISABLED_get_global)
  *       as soon as we can enable the tests cmesh_vertex_conn_ttv.
  *       That is as soon as we can add attributes to cmeshes while deriving. */
 
+#if T8_TEST_LEVEL_INT >= 2
+#define VTT_TEST_MAX_NUM_TREES 10
+#elif T8_TEST_LEVEL_INT == 1
+#define VTT_TEST_MAX_NUM_TREES 50
+#else
 #define VTT_TEST_MAX_NUM_TREES 100
+#endif
 
 class cmesh_vertex_conn_ttv_with_core_classes_temp:
   public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>> {
@@ -195,7 +202,7 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
 // Reactive this line when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv, get_global)
 #else
-// Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
+// Delete this line and the cmesh_vertex_conn_ttv_temp class when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
 #endif
 {
@@ -206,13 +213,14 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
     const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
     /* Get all vertices */
-    const t8_gloidx_t *global_vertices = ttv.get_global_vertices (cmesh, itree, num_tree_vertices);
+    auto global_vertices = ttv.get_global_vertices (cmesh, itree);
+    EXPECT_EQ (global_vertices.size (), num_tree_vertices);
 
     const t8_gloidx_t global_tree_id = t8_cmesh_get_global_id (cmesh, itree);
     const t8_gloidx_t start_index = global_tree_id * T8_ECLASS_MAX_CORNERS;
     for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
       /* Get the stored global vertex id */
-      const t8_gloidx_t global_vertex = ttv.get_global_vertex (cmesh, itree, ivertex, num_tree_vertices);
+      const t8_gloidx_t global_vertex = ttv.get_global_vertex (cmesh, itree, ivertex);
       /* Check value */
       EXPECT_EQ (global_vertex, start_index + ivertex);
       EXPECT_EQ (global_vertices[ivertex], start_index + ivertex);
@@ -224,7 +232,7 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, get_global)
 // Reactive this line when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes, get_global)
 #else
-// Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
+// Delete this line and the cmesh_vertex_conn_ttv_temp class when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, convert_to_vtt)
 #endif
 {
@@ -232,9 +240,9 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes_temp, convert_to_vtt)
   t8_cmesh_vertex_conn_vertex_to_tree vtt;
   vtt.build_from_ttv (cmesh, ttv);
   /* Since global tree i is mapped to vertices:
-   *  i*T8_ECLASS_MAX_CORNERS, i*T8_ECLASS_MAX_CORNERS + 1, ... 
+   *  i*T8_ECLASS_MAX_CORNERS, i*T8_ECLASS_MAX_CORNERS + 1, ...
    *  and this mapping is unique, we know that the list for vertex j
-   *  must contain 
+   *  must contain
    *  global tree j / T8_ECLASS_MAX_CORNERS
    *  with local vertex j % T8_ECLASS_MAX_CORNERS */
   ASSERT_TRUE (vtt.is_committed ());
@@ -314,12 +322,14 @@ TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions, DISABLED_get_global)
     const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
     /* Get all vertices */
-    const t8_gloidx_t *global_vertices = t8_cmesh_get_global_vertices_of_tree (cmesh, itree, num_tree_vertices);
+    int returned_num_vertices = -1;
+    const t8_gloidx_t *global_vertices = t8_cmesh_get_global_vertices_of_tree (cmesh, itree, &returned_num_vertices);
+    EXPECT_EQ (returned_num_vertices, num_tree_vertices);
 
     const t8_gloidx_t start_index = itree * T8_ECLASS_MAX_CORNERS;
     for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
       /* Get the stored global vertex id */
-      const t8_gloidx_t global_vertex = t8_cmesh_get_global_vertex_of_tree (cmesh, itree, ivertex, num_tree_vertices);
+      const t8_gloidx_t global_vertex = t8_cmesh_get_global_vertex_of_tree (cmesh, itree, ivertex);
       /* Check value */
       EXPECT_EQ (global_vertex, start_index + ivertex);
       EXPECT_EQ (global_vertices[ivertex], start_index + ivertex);
@@ -330,8 +340,6 @@ TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions, DISABLED_get_global)
 /* TODO: Remove the tests belonging to cmesh_vertex_conn_ttv_temp
  *       as soon as we can enable the tests cmesh_vertex_conn_ttv.
  *       That is as soon as we can add attributes to cmeshes while deriving. */
-
-#define VTT_TEST_MAX_NUM_TREES 100
 
 class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
   public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>> {
@@ -380,7 +388,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
 // Reactive this line when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv, get_global)
 #else
-// Delete this line and the cmesh_vertex_conn_ttv_temp class wehen we enable the tests with derived attributes
+// Delete this line and the cmesh_vertex_conn_ttv_temp class when we enable the tests with derived attributes
 TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions_temp, get_global)
 #endif
 {
@@ -391,13 +399,14 @@ TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions_temp, get_global)
     const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
     /* Get all vertices */
-    const t8_gloidx_t *global_vertices = t8_cmesh_get_global_vertices_of_tree (cmesh, itree, num_tree_vertices);
+    int returned_num_vertices = -1;
+    const t8_gloidx_t *global_vertices = t8_cmesh_get_global_vertices_of_tree (cmesh, itree, &returned_num_vertices);
 
     const t8_gloidx_t global_tree_id = t8_cmesh_get_global_id (cmesh, itree);
     const t8_gloidx_t start_index = global_tree_id * T8_ECLASS_MAX_CORNERS;
     for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
       /* Get the stored global vertex id */
-      const t8_gloidx_t global_vertex = t8_cmesh_get_global_vertex_of_tree (cmesh, itree, ivertex, num_tree_vertices);
+      const t8_gloidx_t global_vertex = t8_cmesh_get_global_vertex_of_tree (cmesh, itree, ivertex);
       /* Check value */
       EXPECT_EQ (global_vertex, start_index + ivertex);
       EXPECT_EQ (global_vertices[ivertex], start_index + ivertex);

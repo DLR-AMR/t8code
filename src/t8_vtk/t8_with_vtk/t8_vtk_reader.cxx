@@ -25,6 +25,7 @@
 #include <t8_vtk/t8_vtk_types.h>
 #include <t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
 #include <t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx>
 #include <t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx>
@@ -46,65 +47,6 @@
 #include <vtkSTLReader.h>
 #include <vtkXMLPolyDataReader.h>
 
-/**
- * If the vertices of a tree describe a negative \param, 
- * permute the tree vertices. 
- * 
- * \param[in, out] tree_vertices The vertices of a tree
- * \param[in] eclass             The eclass of the tree.
- */
-static void
-t8_cmesh_correct_volume (double *tree_vertices, t8_eclass_t eclass)
-{
-  /* The \param described is negative. We need to change vertices.
-   * For tets we switch 0 and 3.
-   * For prisms we switch 0 and 3, 1 and 4, 2 and 5.
-   * For hexahedra we switch 0 and 4, 1 and 5, 2 and 6, 3 and 7.
-   * For pyramids we switch 0 and 4 */
-  double temp;
-  int num_switches = 0;
-  int switch_indices[4] = { 0 };
-  int iswitch;
-  T8_ASSERT (t8_eclass_to_dimension[eclass] == 3);
-  t8_debugf ("Correcting negative volume.\n");
-  switch (eclass) {
-  case T8_ECLASS_TET:
-    /* We switch vertex 0 and vertex 3 */
-    num_switches = 1;
-    switch_indices[0] = 3;
-    break;
-  case T8_ECLASS_PRISM:
-    num_switches = 3;
-    switch_indices[0] = 3;
-    switch_indices[1] = 4;
-    switch_indices[2] = 5;
-    break;
-  case T8_ECLASS_HEX:
-    num_switches = 4;
-    switch_indices[0] = 4;
-    switch_indices[1] = 5;
-    switch_indices[2] = 6;
-    switch_indices[3] = 7;
-    break;
-  case T8_ECLASS_PYRAMID:
-    num_switches = 1;
-    switch_indices[0] = 4;
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-  }
-
-  for (iswitch = 0; iswitch < num_switches; ++iswitch) {
-    /* We switch vertex 0 + iswitch and vertex switch_indices[iswitch] */
-    for (int i = 0; i < 3; i++) {
-      temp = tree_vertices[3 * iswitch + i];
-      tree_vertices[3 * iswitch + i] = tree_vertices[3 * switch_indices[iswitch] + i];
-      tree_vertices[3 * switch_indices[iswitch] + i] = temp;
-    }
-  }
-  T8_ASSERT (!t8_cmesh_tree_vertices_negative_volume (eclass, tree_vertices, t8_eclass_num_vertices[eclass]));
-}
-
 vtk_read_success_t
 t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, const int main_proc,
                     sc_MPI_Comm comm, const vtk_file_type_t vtk_file_type)
@@ -123,7 +65,7 @@ t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, c
    * We read the file if:
    * - We do not use a partitioned read, every process reads the vtk-file, or if
    * - We use a partitioned read for a non-parallel filetype and the main-process reaches the code-block, or if
-   * - We use a parallel file-type and use a partitioned read, every proc reads its chunk of the files. 
+   * - We use a parallel file-type and use a partitioned read, every proc reads its chunk of the files.
    */
   if (!partition || mpirank == main_proc || vtk_file_type & VTK_PARALLEL_FILE) {
     switch (vtk_file_type) {
@@ -177,9 +119,9 @@ t8_file_to_vtkGrid (const char *filename, vtkSmartPointer<vtkDataSet> vtkGrid, c
 
 /**
  * Get the dimension of a vtkDataSet
- * 
+ *
  * \param[in] vtkGrid The vtkDataSet
- * \return The dimension of \a vtkGrid. 
+ * \return The dimension of \a vtkGrid.
  */
 int
 t8_vtk_grid_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
@@ -207,13 +149,15 @@ t8_vtk_grid_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
 
 /**
  * Iterate over all cells of a vtkDataset and construct a cmesh representing
- * the vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This 
- * function constructs a cmesh on a single process. 
- * 
+ * the vtkGrid. Each cell in the vtkDataSet becomes a tree in the cmesh. This
+ * function constructs a cmesh on a single process.
+ *
  * \param[in] vtkGrid       The vtkGrid that gets translated
- * \param[in, out] cmesh    An empty cmesh that is filled with the data. 
- * \param[in] first_tree    The global id of the first tree. Will be the global id of the first tree on this proc. 
- * \param[in] comm        A communicator. 
+ * \param[in, out] cmesh    An empty cmesh that is filled with the data.
+ * \param[in] first_tree    The global id of the first tree. Will be the global id of the first tree on this proc.
+ * \param[in] comm        A communicator.
+ * \param[in] package_id  The package id of the cmesh.
+ * \param[in] starting_key The starting key of the attributes in the cmesh.
  * \return  The number of elements that have been read by the process.
  */
 
@@ -228,10 +172,9 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
   vtkCellIterator *cell_it;
   vtkSmartPointer<vtkPoints> points;
   vtkSmartPointer<vtkCellData> cell_data = vtkGrid->GetCellData ();
-  const int max_cell_points = vtkGrid->GetMaxCellSize ();
 
-  T8_ASSERT (max_cell_points >= 0);
-  double *vertices = T8_ALLOC (double, 3 * max_cell_points);
+  std::array<double, T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM> vertices;
+  std::array<t8_gloidx_t, T8_ECLASS_MAX_CORNERS> global_vertex_indices;
   /* Get cell iterator */
   cell_it = vtkGrid->NewCellIterator ();
   /* get the number of data-arrays per cell */
@@ -254,7 +197,6 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
 
   /* Iterate over all cells */
   for (cell_it->InitTraversal (); !cell_it->IsDoneWithTraversal (); cell_it->GoToNextCell ()) {
-
     /* Set the t8_eclass of the cell */
     const t8_eclass_t cell_type = t8_cmesh_vtk_type_to_t8_type[cell_it->GetCellType ()];
     SC_CHECK_ABORTF (t8_eclass_is_valid (cell_type), "vtk-cell-type %i not supported by t8code\n", cell_type);
@@ -265,13 +207,17 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
     points = cell_it->GetPoints ();
 
     for (int ipoint = 0; ipoint < num_points; ipoint++) {
-      points->GetPoint (t8_element_shape_vtk_corner_number (cell_type, ipoint), &vertices[3 * ipoint]);
+      points->GetPoint (t8_element_shape_t8_to_vtk_corner_number (cell_type, ipoint), &vertices[3 * ipoint]);
     }
-    /* The order of the vertices in vtk might give a tree with negative \param */
-    if (t8_cmesh_tree_vertices_negative_volume (cell_type, vertices, num_points)) {
-      t8_cmesh_correct_volume (vertices, cell_type);
+    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices.data (), num_points);
+    vtkIdList *id_list = cell_it->GetPointIds ();
+    const int num_id = id_list->GetNumberOfIds ();
+    T8_ASSERT (num_id == num_points);
+
+    for (int i_vertex = 0; i_vertex < num_id; i_vertex++) {
+      global_vertex_indices[i_vertex] = id_list->GetId (t8_element_shape_t8_to_vtk_corner_number (cell_type, i_vertex));
     }
-    t8_cmesh_set_tree_vertices (cmesh, tree_id, vertices, num_points);
+    t8_cmesh_set_global_vertices_of_tree (cmesh, tree_id, global_vertex_indices.data (), num_id);
 
     /* TODO: Avoid magic numbers in the attribute setting. */
     /* Get and set the data of each cell */
@@ -292,20 +238,19 @@ t8_vtk_iterate_cells (vtkSmartPointer<vtkDataSet> vtkGrid, t8_cmesh_t cmesh, con
     }
     T8_FREE (tuples);
   }
-  T8_FREE (vertices);
   return;
 }
 
 /**
  * Set the partition for cmesh coming from a distributed vtkGrid (like pvtu)
- * 
+ *
  * \param[in, out] cmesh On input a cmesh, on output a cmesh with a partition according to the number of trees read on each proc
  * \param[in] mpirank The mpirank of this proc
  * \param[in] mpisize The size of the mpicommunicator
  * \param[in] num_trees The number of trees read on this proc. Must be >= 0
  * \param[in] dim     The dimension of the cells
- * \param[in] comm    The mpi-communicator to use. 
- * \return            the global id of the first tree on this proc. 
+ * \param[in] comm    The mpi-communicator to use.
+ * \return            the global id of the first tree on this proc.
  */
 static t8_gloidx_t
 t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_gloidx_t num_trees,
@@ -379,12 +324,11 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   if (partition) {
     first_tree = t8_vtk_partition (cmesh, mpirank, mpisize, num_trees, dim, comm);
   }
-
-  /* Translation of vtkGrid to cmesh 
+  /* Translation of vtkGrid to cmesh
    * We translate the file if:
    * - We do not use a partitioned read, every process has read the vtk-file and shall now translate it, or if
    * - We use a partitioned read for a non-parallel filetype and the main-process reaches the code-block, or if
-   * - We use a parallel file-type and use a partitioned read, every proc translates its chunk of the grid. 
+   * - We use a parallel file-type and use a partitioned read, every proc translates its chunk of the grid.
    */
   if (!partition || mpirank == main_proc || distributed_grid) {
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm, package_id, starting_key);

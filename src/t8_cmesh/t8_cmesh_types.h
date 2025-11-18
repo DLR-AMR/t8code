@@ -52,28 +52,21 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
  *       and provide informative error messages both in debug and non-debug.
  */
 
-/* Definitions for attribute identifiers that are reserved for a special purpose. 
+/* Definitions for attribute identifiers that are reserved for a special purpose.
  * T8_CMESH_NEXT_POSSIBLE_KEY is the first unused key, hence it can be repurposed for different attributes.*/
-/** Used to store vertex coordinates. */
-#define T8_CMESH_VERTICES_ATTRIBUTE_KEY 0
-/** Used to store global vertex ids. */
-#define T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY 1
-/** Used to store the name of a tree's geometry. */
-#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY 2
-/** Used to store which edge is linked to which geometry */
-#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY 3
-/** Used to store edge parameters */
-#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY 4
-/** Used to store which face is linked to which surface */
-#define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY \
-  T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY \
-  +T8_ECLASS_MAX_EDGES
-/** Used to store face parameters */
-#define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1
-/** Used to store parameters of lagrangian polynomials */
-#define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES
-/** The next free value for a t8code attribute key */
-#define T8_CMESH_NEXT_POSSIBLE_KEY T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1
+/* clang-format off */
+#define T8_CMESH_VERTICES_ATTRIBUTE_KEY             0 /**< Used to store vertex coordinates. */
+#define T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY      1 /**< Used to store global vertex ids. */
+#define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY             2 /**< Used to store the name of a tree's geometry. */
+#define T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY        3 /**< Used to store the geometry dimension and tag of the nodes of a tree. */
+#define T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY      4 /**< Used to store node parameters of a tree. Used in combination with T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY */
+#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY             5 /**< Used to store which edge is linked to which geometry */
+#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY  6 /**< Used to store edge parameters */
+#define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY             T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES  /**< Used to store which face is linked to which surface */
+#define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY  T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1                               /**< Used to store face parameters */
+#define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY           T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES  /**< Used to store parameters of lagrangian polynomials */
+#define T8_CMESH_NEXT_POSSIBLE_KEY                  T8_CMESH_LAGRANGE_POLY_DEGREE_KEY + 1                             /**< The next free value for a t8code attribute key */
+/* clang-format on */
 
 /** This structure holds the connectivity data of the coarse mesh.
  *  It can either be replicated, then each process stores a copy of the whole
@@ -118,7 +111,7 @@ typedef struct t8_cmesh
   int mpisize;                 /**< Number of MPI processes. */
   t8_refcount_t rc;            /**< The reference count of the cmesh. */
   t8_gloidx_t num_trees;       /**< The global number of trees */
-  t8_locidx_t num_local_trees; /**< If partitioned the number of trees on this process. 
+  t8_locidx_t num_local_trees; /**< If partitioned the number of trees on this process.
                                     Otherwise the global number of trees. */
   t8_locidx_t num_ghosts;      /**< If partitioned the number of neighbor trees
                                     owned by different processes. */
@@ -134,10 +127,10 @@ typedef struct t8_cmesh
 
   t8_cmesh_trees_t trees; /**< structure that holds all local trees and ghosts */
 
-  t8_gloidx_t first_tree;   /**< The global index of the first local tree on this process. 
+  t8_gloidx_t first_tree;   /**< The global index of the first local tree on this process.
                                        Zero if the cmesh is not partitioned. -1 if this processor is empty.
                                        See also https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
-  int8_t first_tree_shared; /**< If partitioned true if the first tree on this process is also the last tree 
+  int8_t first_tree_shared; /**< If partitioned true if the first tree on this process is also the last tree
                                   on the next process. Always zero if num_local_trees = 0 */
 
   t8_shmem_array_t tree_offsets; /**< If partitioned for each process the global index of its first local tree
@@ -151,6 +144,7 @@ typedef struct t8_cmesh
     *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
 
 #if T8_ENABLE_DEBUG
+  int negative_volume_check;   /**< Whether the negative volume check will be performed */
   t8_locidx_t inserted_trees;  /**< Count the number of inserted trees to
                                            check at commit if it equals the total number. */
   t8_locidx_t inserted_ghosts; /**< Count the number of inserted ghosts to
@@ -271,7 +265,7 @@ typedef struct t8_part_tree
 /* TODO: Extend this structure with meaningful entries.
  *       Maybe the number of shipped trees per process is useful?
  */
-/** 
+/**
  * This struct is used to profile cmesh algorithms.
  * The cmesh struct stores a pointer to a profile struct, and if
  * it is nonzero, various runtimes and data measurements are stored here.
