@@ -239,7 +239,6 @@ class vtk_writer {
   void
   t8_grid_element_to_vtk_cell (const grid_t grid, const t8_element_t *element, const t8_locidx_t itree,
                                const t8_gloidx_t offset, const bool is_ghost, const int elem_id, long int *point_id,
-                               const t8_gloidx_t offset, const int is_ghost, const int elem_id, long int *point_id,
                                int *cellTypes, vtkSmartPointer<vtkMergePoints> points,
                                vtkSmartPointer<vtkCellArray> cellArray,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
@@ -375,6 +374,7 @@ class vtk_writer {
 
     /* Check if we have to write ghosts on this process. */
     const bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
+
     /* Compute the number of cells on this process. */
     const t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
 
