@@ -21,7 +21,7 @@
 */
 
 #include <t8.h>
-#include <t8_data/t8_cad.hxx>
+#include <t8_cad/t8_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <TopoDS.hxx>
 #include <BRep_Builder.hxx>
