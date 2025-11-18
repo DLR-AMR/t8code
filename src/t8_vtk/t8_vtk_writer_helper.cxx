@@ -147,7 +147,7 @@ grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
     else {
       t8_locidx_t num_ghost_elements = 0;
       for (t8_locidx_t itree = 0; itree < num_ghost_trees; itree++) {
-        num_ghost_elements += t8_forest_ghost_tree_num_elements (grid, itree);
+        num_ghost_elements += t8_forest_ghost_tree_num_leaf_elements (grid, itree);
       }
       return num_ghost_elements > 0;
     }

@@ -354,7 +354,7 @@ t8_forest_compute_data_index (const t8_forest_t forest,
     // Compute the offset among ghost elements
     const t8_locidx_t ghost_tree_offset = t8_forest_ghost_get_tree_element_offset (forest, ghost_tree_id);
     // Add the local element count
-    const t8_locidx_t ghost_element_offset = ghost_tree_offset + t8_forest_get_local_num_elements (forest);
+    const t8_locidx_t ghost_element_offset = ghost_tree_offset + t8_forest_get_local_num_leaf_elements (forest);
     return ghost_element_offset + element_in_tree_index;
   }
 }
