@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_types.h
+ * This file contains types and constants used in the vtk writer.
+ */
+
 #ifndef T8_VTK_TYPES
 #define T8_VTK_TYPES
 
@@ -63,6 +68,10 @@ typedef enum vtk_file_type {
   VTK_NUM_TYPES = 5
 } vtk_file_type_t;
 
+/**
+ * Enumerator for the success of reading a vtk file.
+ * This is used to indicate whether the reading was successful or not.
+ */
 typedef enum vtk_read_success { read_failure = 0, read_success = 1 } vtk_read_success_t;
 
 #endif /* T8_VTK_TYPES */

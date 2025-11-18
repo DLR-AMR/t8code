@@ -1132,7 +1132,7 @@ t8_forest_compute_desc (t8_forest_t forest)
 
 /* Create the elements on this process given a uniform partition of the coarse mesh. */
 void
-t8_forest_populate (t8_forest_t forest)
+t8_forest_populate (t8_forest_t forest, const int irregular)
 {
   t8_gloidx_t child_in_tree_begin;
   t8_gloidx_t child_in_tree_end;
@@ -1149,10 +1149,16 @@ t8_forest_populate (t8_forest_t forest)
   int is_empty;
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
-  /* TODO: create trees and quadrants according to uniform refinement */
-  t8_cmesh_uniform_bounds (forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree,
-                           &child_in_tree_begin, &forest->last_local_tree, &child_in_tree_end, NULL);
-
+  if (irregular) {
+    t8_cmesh_uniform_bounds_for_irregular_refinement (
+      forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree, &child_in_tree_begin,
+      &forest->last_local_tree, &child_in_tree_end, NULL, forest->mpicomm);
+  }
+  else {
+    t8_cmesh_uniform_bounds_equal_element_count (forest->cmesh, forest->set_level, forest->scheme,
+                                                 &forest->first_local_tree, &child_in_tree_begin,
+                                                 &forest->last_local_tree, &child_in_tree_end, NULL);
+  }
   /* True if the forest has no elements */
   is_empty = forest->first_local_tree > forest->last_local_tree
              || (forest->first_local_tree == forest->last_local_tree && child_in_tree_begin >= child_in_tree_end);
@@ -1406,41 +1412,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
     forest->global_num_leaf_elements = 0;
     forest->incomplete_trees = -1;
   }
-}
-
-/** \brief Search for a linear element id (at forest->maxlevel) in a sorted array of
- * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
- * If no such i exists, return -1.
- */
-static t8_locidx_t
-t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id, const int maxlevel)
-{
-  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
-  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
-  /* At first, we check whether any element has smaller id than the
-   * given one. */
-  const t8_element_t *query = t8_element_array_index_int (elements, 0);
-  const t8_linearidx_t query_id = scheme->element_get_linear_id (tree_class, query, maxlevel);
-  if (query_id > element_id) {
-    /* No element has id smaller than the given one. */
-    return -1;
-  }
-
-  /* We search for the first element in the array that is greater than the given element id. */
-  auto elem_iter
-    = std::upper_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element_id,
-                        [&maxlevel, &scheme, &tree_class] (const t8_linearidx_t element_id_,
-                                                           const t8_element_array_iterator::value_type &elem_ptr) {
-                          return (element_id_ < scheme->element_get_linear_id (tree_class, elem_ptr, maxlevel));
-                        });
-
-  /* After we found the element with an id greater than the given one, we are able to jump one index back.
-   * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
-   * In case we do not find an element that is greater than the given element_id, the binary search returns
-   * the end-iterator of the element array. In that case, we want to return the last index from the element
-   * array. */
-  return elem_iter.get_current_index () - 1;
 }
 
 t8_eclass_t
@@ -2092,15 +2063,16 @@ t8_forest_element_check_owner (t8_forest_t forest, t8_element_t *element, t8_glo
   return 0;
 }
 
-/* The data that we use as key in the binary owner search.
+/**
+ * The data that we use as key in the binary owner search.
  * It contains the linear id of the element that we look for and
  * a pointer to the forest, we also store the index of the biggest owner process.
  */
 struct find_owner_data_t
 {
-  t8_linearidx_t linear_id;
-  t8_forest_t forest;
-  int last_owner;
+  t8_linearidx_t linear_id; /**< The linear id of the element we look for. */
+  t8_forest_t forest;       /**< Pointer to the forest. */
+  int last_owner;           /**< Index of the owner process with the highest index. */
 };
 
 static int
@@ -2996,32 +2968,6 @@ t8_forest_comm_global_num_leaf_elements (t8_forest_t forest)
   forest->global_num_leaf_elements = global_num_el;
 }
 
-/** Adapt callback function to refine every element in the forest.
- * It is merely used to build a new forest with pyramids. 
- * 
- * \param [in] forest       The forest to which the new elements belong
- * \param [in] forest_from  The forest that is adapted.
- * \param [in] which_tree   The local tree containing \a elements.
- * \param [in] tree_class   The eclass of \a which_tree.
- * \param [in] lelement_id  The local element id in \a forest_old in the tree of the current element
- * \param [in] scheme           The eclass scheme of the tree
- * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
- * \param [in] num_elements The number of entries in \a elements that are defined
- * \param [in] elements     Pointers to a family or, if \a is_family is zero,
- *                          pointer to one element.
- * \return                  Always return 1, to refine every element
- */
-static int
-t8_forest_refine_everything ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                             [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
-                             [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
-                             [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                             [[maybe_unused]] t8_element_t *elements[])
-{
-
-  return 1;
-}
-
 /**
  * Check if any tree in a forest refines irregularly.
  * An irregular refining tree is a tree with an element that does not
@@ -3052,44 +2998,6 @@ t8_forest_refines_irregular (t8_forest_t forest)
   SC_CHECK_MPI (mpiret);
 
   return irregular_all_procs;
-}
-
-/** Algorithm to populate a forest, if any tree refines irregularly.
- * Create the elements on this process given a uniform partition
- * of the coarse mesh. We can not use the function t8_forest_populate, because
- * it assumes a regular refinement for all trees.
- * \param[in] forest  The forest to populate
-*/
-static void
-t8_forest_populate_irregular (t8_forest_t forest)
-{
-  t8_forest_t forest_zero;
-  t8_forest_t forest_tmp;
-  t8_forest_t forest_tmp_partition;
-  t8_cmesh_ref (forest->cmesh);
-  forest->scheme->ref ();
-  /* We start with a level 0 uniform refinement */
-  t8_forest_init (&forest_zero);
-  t8_forest_set_level (forest_zero, 0);
-  t8_forest_set_cmesh (forest_zero, forest->cmesh, forest->mpicomm);
-  t8_forest_set_scheme (forest_zero, forest->scheme);
-  t8_forest_commit (forest_zero);
-
-  /* Up to the specified level we refine every element. */
-  for (int i = 1; i <= forest->set_level; i++) {
-    t8_forest_init (&forest_tmp);
-    t8_forest_set_level (forest_tmp, i);
-    t8_forest_set_adapt (forest_tmp, forest_zero, t8_forest_refine_everything, 0);
-    t8_forest_commit (forest_tmp);
-    /* Partition the forest to even the load */
-    t8_forest_init (&forest_tmp_partition);
-    t8_forest_set_partition (forest_tmp_partition, forest_tmp, 0);
-    t8_forest_commit (forest_tmp_partition);
-    forest_zero = forest_tmp_partition;
-  }
-  /* Copy all elements over to the original forest. */
-  t8_forest_copy_trees (forest, forest_zero, 1);
-  t8_forest_unref (&forest_tmp_partition);
 }
 
 #if T8_ENABLE_DEBUG
@@ -3158,13 +3066,8 @@ t8_forest_commit (t8_forest_t forest)
     t8_forest_compute_maxlevel (forest);
     T8_ASSERT (forest->set_level <= forest->maxlevel);
     /* populate a new forest with tree and quadrant objects */
-    if (t8_forest_refines_irregular (forest) && forest->set_level > 0) {
-      /* On root level we will also use the normal algorithm */
-      t8_forest_populate_irregular (forest);
-    }
-    else {
-      t8_forest_populate (forest);
-    }
+    const bool irregular = t8_forest_refines_irregular (forest);
+    t8_forest_populate (forest, irregular);
     forest->global_num_trees = t8_cmesh_get_num_trees (forest->cmesh);
     forest->incomplete_trees = 0;
   }
@@ -3893,6 +3796,9 @@ t8_forest_compute_profile (t8_forest_t forest)
     sc_stats_set1 (&forest->stats[11], profile->ghost_waittime, "forest: Ghost waittime.");
     sc_stats_set1 (&forest->stats[12], profile->balance_runtime, "forest: Balance runtime.");
     sc_stats_set1 (&forest->stats[13], profile->balance_rounds, "forest: Balance rounds.");
+    sc_stats_set1 (&forest->stats[14], profile->balance_rounds, "forest: Tree offset runtime.");
+    sc_stats_set1 (&forest->stats[15], profile->balance_rounds, "forest: offset runtime.");
+    sc_stats_set1 (&forest->stats[16], profile->balance_rounds, "forest: first descendant runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, forest->stats);
     forest->stats_computed = 1;
@@ -4030,6 +3936,35 @@ t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
   if (forest->profile != NULL) {
     *balance_rounds = forest->profile->balance_rounds;
     return forest->profile->balance_runtime;
+  }
+  return 0;
+}
+double
+t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->cmesh_offsets_runtime;
+  }
+  return 0;
+}
+
+double
+t8_forest_profile_get_forest_offset_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->forest_offsets_runtime;
+  }
+  return 0;
+}
+
+double
+t8_forest_profile_get_first_descendant_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->first_descendant_runtime;
   }
   return 0;
 }

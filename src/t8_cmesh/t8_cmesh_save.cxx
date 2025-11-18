@@ -39,8 +39,10 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 
-/* This macro is called to check a condition and if not fulfilled
- * close the file and exit the function */
+/**
+ * This macro is called to check a condition and if not fulfilled
+ * close the file and exit the function
+ */
 #define T8_SAVE_CHECK_CLOSE(x, fp) \
   if (!(x)) { \
     t8_errorf ("file i/o error. Condition %s not fulfilled. " \

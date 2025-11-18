@@ -29,16 +29,17 @@
 
 #include <t8_element.h>
 #include <t8_types/t8_operators.hxx>
+#include <t8_schemes/t8_scheme_helpers.hxx>
 #include <sc_functions.h>
 #include <sc_containers.h>
 #include <utility>
 
-/* Macro to check whether a pointer (VAR) to a base class, comes from an
+/** Macro to check whether a pointer (VAR) to a base class, comes from an
  * implementation of a child class (TYPE). */
 #define T8_COMMON_IS_TYPE(VAR, TYPE) ((dynamic_cast<TYPE> (VAR)) != NULL)
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the element_new callback in \ref t8_eclass_scheme.
+ * It is suitable as the element_new callback in \ref t8_default_scheme_common..
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] scheme_context   An element is allocated in this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to allocate.
@@ -57,7 +58,7 @@ t8_default_mempool_alloc (sc_mempool_t *scheme_context, int length, t8_element_t
 }
 
 /** This class independent function assumes an sc_mempool_t as context.
- * It is suitable as the element_destroy callback in \ref t8_default_common.
+ * It is suitable as the element_destroy callback in \ref t8_default_scheme_common.
  * We assume that the mempool has been created with the correct element size.
  * \param [in,out] scheme_context   An element is returned to this sc_mempool_t.
  * \param [in]     length       Non-negative number of elements to destroy.
@@ -84,21 +85,23 @@ count_leaves_from_level (const int element_level, const int refinement_level, co
   return element_level > refinement_level ? 0 : (1ULL << (dimension * (refinement_level - element_level)));
 }
 
-template <class TUnderlyingEclassScheme>
-class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme, t8_default_scheme_common> {
+/** Common interface of the default schemes for each element shape.
+ * \tparam TUnderlyingEclassScheme The default scheme class of the element shape.
+ */
+template <t8_eclass_t TEclass, class TUnderlyingEclassScheme>
+class t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEclassScheme> {
  private:
   friend TUnderlyingEclassScheme;
   /** Private constructor which can only be used by derived schemes.
    * \param [in] tree_class The tree class of this element scheme.
    * \param [in] elem_size  The size of the elements this scheme holds.
   */
-  t8_default_scheme_common (const t8_eclass_t tree_class, const size_t elem_size) noexcept
-    : element_size (elem_size), scheme_context (sc_mempool_new (elem_size)), eclass (tree_class) {};
+  t8_default_scheme_common (const size_t elem_size) noexcept
+    : element_size (elem_size), scheme_context (sc_mempool_new (elem_size)) {};
 
  protected:
   size_t element_size;  /**< The size in bytes of an element of class \a eclass */
   void *scheme_context; /**< Anonymous implementation context. */
-  t8_eclass_t eclass;   /**< The tree class */
 
  public:
   /** Destructor for all default schemes */
@@ -111,8 +114,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
 
   /** Move constructor */
   t8_default_scheme_common (t8_default_scheme_common &&other) noexcept
-    : element_size (other.element_size), scheme_context (std::exchange (other.scheme_context, nullptr)),
-      eclass (other.eclass)
+    : element_size (other.element_size), scheme_context (std::exchange (other.scheme_context, nullptr))
   {
   }
 
@@ -128,7 +130,6 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
 
       // Transfer ownership of resources
       element_size = other.element_size;
-      eclass = other.eclass;
       scheme_context = other.scheme_context;
 
       // Leave the source object in a valid state
@@ -139,7 +140,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
 
   /** Copy constructor */
   t8_default_scheme_common (const t8_default_scheme_common &other)
-    : element_size (other.element_size), scheme_context (sc_mempool_new (other.element_size)), eclass (other.eclass) {};
+    : element_size (other.element_size), scheme_context (sc_mempool_new (other.element_size)) {};
 
   /** Copy assignment operator */
   t8_default_scheme_common &
@@ -153,19 +154,9 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
 
       // Copy the values from the source object
       element_size = other.element_size;
-      eclass = other.eclass;
       scheme_context = sc_mempool_new (other.element_size);
     }
     return *this;
-  }
-
-  /** Return the tree class of this scheme.
-   * \return The tree class of this scheme.
-   */
-  inline t8_eclass_t
-  get_eclass (void) const
-  {
-    return eclass;
   }
 
   /** Return the size of any element of a given class.
@@ -188,7 +179,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
-    return t8_eclass_num_vertices[eclass];
+    return t8_eclass_num_vertices[TEclass];
   }
 
   /** Return the max number of children of an eclass.
@@ -197,7 +188,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   inline int
   get_max_num_children () const
   {
-    return t8_eclass_max_num_children[eclass];
+    return t8_eclass_max_num_children[TEclass];
   }
 
   /** Allocate space for a bunch of elements.
@@ -217,12 +208,20 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     t8_default_mempool_free ((sc_mempool_t *) scheme_context, length, elem);
   }
 
+  /** Deinitialize an array of allocated elements.
+   * \param [in] length   The number of elements to be deinitialized.
+   * \param [in,out] elem On input an array of \a length many allocated
+   *                       and initialized elements, on output an array of
+   *                       \a length many allocated, but not initialized elements.
+   * \note Call this function if you called element_init on the element pointers.
+   * \see element_init
+   */
   inline void
   element_deinit ([[maybe_unused]] int length, [[maybe_unused]] t8_element_t *elem) const
   {
   }
 
-  /** Return the shape of an element 
+  /** Return the shape of an element
    * \param [in] elem The element.
    * \return The shape of the element.
    * \note This function is overwritten by the pyramid implementation.
@@ -232,23 +231,23 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   {
     /* use the lookup table of the eclasses.
      * Pyramids should implement their own version of this function. */
-    return eclass;
+    return TEclass;
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
-   * \param [in] t     The element to be checked.
-   * \param [in] level A refinement level.
-   * \return Suppose \a t is uniformly refined up to level \a level. The return value
+   * \param [in] element   The element to be checked.
+   * \param [in] level     A refinement level.
+   * \return Suppose \a element is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
    * \note This function is overwritten by the pyramid implementation.
    */
   inline t8_gloidx_t
-  element_count_leaves (const t8_element_t *t, int level) const
+  element_count_leaves (const t8_element_t *element, int level) const
   {
-    const int element_level = this->underlying ().element_get_level (t);
-    const int dim = t8_eclass_to_dimension[eclass];
+    const int element_level = this->underlying ().element_get_level (element);
+    const int dim = t8_eclass_to_dimension[TEclass];
     return count_leaves_from_level (element_level, level, dim);
   }
 
@@ -266,7 +265,7 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
     return this->underlying ().element_get_level (elem) < this->underlying ().get_maxlevel ();
   }
 
-  /** Compute the number of siblings of an element. That is the number of 
+  /** Compute the number of siblings of an element. That is the number of
    * Children of its parent.
    * \param [in] elem The element.
    * \return          The number of siblings of \a element.
@@ -276,8 +275,8 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   inline int
   element_get_num_siblings ([[maybe_unused]] const t8_element_t *elem) const
   {
-    const int dim = t8_eclass_to_dimension[eclass];
-    T8_ASSERT (eclass != T8_ECLASS_PYRAMID);
+    const int dim = t8_eclass_to_dimension[TEclass];
+    T8_ASSERT (TEclass != T8_ECLASS_PYRAMID);
     return sc_intpow (2, dim);
   }
 
@@ -290,14 +289,20 @@ class t8_default_scheme_common: public t8_crtp_operator<TUnderlyingEclassScheme,
   inline t8_gloidx_t
   count_leaves_from_root (const int level) const
   {
-    if (eclass == T8_ECLASS_PYRAMID) {
+    if (TEclass == T8_ECLASS_PYRAMID) {
       return 2 * sc_intpow64u (8, level) - sc_intpow64u (6, level);
     }
-    const int dim = t8_eclass_to_dimension[eclass];
+    const int dim = t8_eclass_to_dimension[TEclass];
     return count_leaves_from_level (0, level, dim);
   }
 
 #if T8_ENABLE_DEBUG
+  /**
+   * Print a given element. For a example for a triangle print the coordinates
+   * and the level of the triangle. This function is only available in the
+   * debugging configuration.
+   * \param [in]        elem  The element to print
+   */
   inline void
   element_debug_print (const t8_element_t *elem) const
   {

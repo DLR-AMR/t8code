@@ -28,19 +28,19 @@
 
 /* In this file we test the functionality of t8_geom_triangular_interpolation.
  * The function maps reference coordinates inside the reference triangle or tetrahedron
- * to the coordinate space of a triagle or tetrahedron given by its corner coordinates.
+ * to the coordinate space of a triangle or tetrahedron given by its corner coordinates.
  * We currently check that the reference coordinates of the corners are mapped correctly
  * to the corners of the interpolated triangle/tet. */
 
 /* TODO:
- *       - Check corner_value_dim > 1 
+ *       - Check corner_value_dim > 1
  *       - Check different coefficient coordinates (for example midpoint)
  *       - Check different corner values
  *       - The 2d and 3d example contain a lot of nearly duplicate code.
  *         Can we simplify?
  */
 
-/* Check that the corner interpolation coordinates are 
+/* Check that the corner interpolation coordinates are
  * mapped to the corners of a triangle. */
 TEST (triangular_interpolation, corners_map_to_corners_2d)
 {
@@ -81,7 +81,7 @@ TEST (triangular_interpolation, corners_map_to_corners_2d)
   EXPECT_NEAR (cornerC[1], result[1], T8_PRECISION_EPS);
 }
 
-/* Check that the corner interpolation coordinates are 
+/* Check that the corner interpolation coordinates are
  * mapped to the corners of a tetrahedron. */
 TEST (triangular_interpolation, corners_map_to_corners_3d)
 {
