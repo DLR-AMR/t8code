@@ -54,13 +54,13 @@ T8_EXTERN_C_BEGIN ();
 */
 struct t8_example_netcdf_adapt_data
 {
-  t8_3D_point midpoint;             /* Midpoint of a aphere */
+  t8_3D_point midpoint;             /* Midpoint of a sphere */
   double refine_if_inside_radius;   /* refine all elements inside this radius from the sphere's midpoint */
   double coarsen_if_outside_radius; /* coarsen all element families outside of this radius from the sphere's midpoint */
 };
 
 /** This functions describe an adapt_function, an adapt_function describes the refinement/coarsening rules for a forest
-* \note If an element is inside a given radius from the midpoint of the hypercube, this element is refined. If a family of elements is outiside a given radius from the midpoint of the hypercube, it is coarsened. 
+* \note If an element is inside a given radius from the midpoint of the hypercube, this element is refined. If a family of elements is outside a given radius from the midpoint of the hypercube, it is coarsened. 
 * \note A detailed description of the adaption process is found in step 3 of the tutorial located in 't8code/example/tutorials'.
 */
 int
@@ -109,7 +109,7 @@ t8_example_netcdf_adapt (t8_forest_t forest)
 {
   t8_forest_t forest_adapt;
 
-  /* The adapt data which controls which elements will be refined or corsened based on the given radii */
+  /* The adapt data which controls which elements will be refined or coarsened based on the given radii */
   struct t8_example_netcdf_adapt_data adapt_data = {
     t8_3D_point ({ 0.5, 0.5, 0.5 }), /* Midpoints of the sphere. */
     0.2,                             /* Refine if inside this radius. */
@@ -195,20 +195,20 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   /* Construct a 3D hybrid hypercube as a cmesh */
   cmesh = t8_cmesh_new_hypercube_hybrid (comm, 1, 0);
 
-  /* Build a (partioined) uniform forest */
+  /* Build a (partitioned) uniform forest */
   forest = t8_forest_new_uniform (cmesh, default_scheme, forest_refinement_level, 0, comm);
 
   /* If the adapt_forest flag is set, the forest will be adapted */
   if (adapt_forest) {
     forest = t8_example_netcdf_adapt (forest);
   }
-  num_elements = t8_forest_get_local_num_elements (forest);
+  num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_productionf ("Number of process-local elements: %ld\n", static_cast<long> (num_elements));
 
   /* If additional data should be written to the netCDF file, the two variables are created in the following section */
   if (with_additional_data) {
     /* Get the number of process-local elements */
-    num_elements = t8_forest_get_local_num_elements (forest);
+    num_elements = t8_forest_get_local_num_leaf_elements (forest);
     /** Create an integer netCDF variables **/
     /* Create an 64-bit Integer variable (j* MPI_Rank) which holds the rank each element lays on multiplied with j */
     var_rank = T8_ALLOC (t8_nc_int64_t, num_elements);
@@ -244,7 +244,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
   }
 
   t8_global_productionf ("The uniformly refined forest (refinement level = %d) has %ld global elements.\n",
-                         forest_refinement_level, static_cast<long> (t8_forest_get_global_num_elements (forest)));
+                         forest_refinement_level, static_cast<long> (t8_forest_get_global_num_leaf_elements (forest)));
 
   t8_global_productionf (
     "The different netCDF variable storage patterns and mpi variable access patterns are getting tested/timed...\n");
@@ -343,12 +343,12 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
 
   t8_global_productionf ("New cmesh was created\n");
 
-  /* Build a (partioined) uniform forest */
+  /* Build a (partitioned) uniform forest */
   forest = t8_forest_new_uniform (cmesh, default_scheme, level, 0, comm);
 
   t8_global_productionf ("New forest was created\n");
 
-  /* Eventually, adapt the forest (based on the flag aadapt_forest) */
+  /* Eventually, adapt the forest (based on the flag adapt_forest) */
   if (adapt_forest) {
     /** \note The forest is not repartitioned after the adapt-step.
    * Therefore, the workload may not be evenly distributed among the processes.
@@ -359,7 +359,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
   }
 
   /* Print out the number of local elements of each process */
-  num_elements = t8_forest_get_local_num_elements (forest);
+  num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_debugf ("[t8] Rank %d has %ld elements\n", mpirank, static_cast<long> (num_elements));
 
   /* *Example user-defined NetCDF variable* */

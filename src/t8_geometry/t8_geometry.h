@@ -47,6 +47,8 @@ typedef enum t8_geometry_type {
   T8_GEOMETRY_TYPE_CAD,
   /** This is no geometry type but can be used as the number of geometry types. */
   T8_GEOMETRY_TYPE_COUNT,
+  /** This is no geometry type but is used as error type to describe invalid geometries */
+  T8_GEOMETRY_TYPE_INVALID,
   /** This is no geometry type but is used for every geometry, where no type is defined */
   T8_GEOMETRY_TYPE_UNDEFINED
 } t8_geometry_type_t;
@@ -96,17 +98,17 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
 /** This function returns the geometry type of a tree.
  * \param[in] cmesh       The cmesh
  * \param[in] gtreeid     The global id of the tree
- * \return                The geometry type of the tree with id \ref gtreeid
+ * \return                The geometry type of the tree with id \a gtreeid
  */
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
 /**
  * Check if a tree has a negative volume
- * 
+ *
  * \param[in] cmesh       The cmesh to check
  * \param[in] gtreeid     The global id of the tree
- * \return                True if the tree with id \ref gtreeid has a negative volume. False otherwise.  
+ * \return                True if the tree with id \a gtreeid has a negative volume. False otherwise.
  */
 int
 t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);

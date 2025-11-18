@@ -50,10 +50,25 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
 }
 
 template <>
+void
+grid_get_local_bounds<t8_cmesh_t> (const t8_cmesh_t grid, double bounds[6])
+{
+  t8_cmesh_get_local_bounding_box (grid, bounds);
+}
+
+template <>
+void
+grid_get_local_bounds<t8_forest_t> (const t8_forest_t grid, double bounds[6])
+{
+  auto cmesh = t8_forest_get_cmesh (grid);
+  t8_cmesh_get_local_bounding_box (cmesh, bounds);
+}
+
+template <>
 t8_locidx_t
 grid_local_num_elements<t8_forest_t> (const t8_forest_t grid)
 {
-  return t8_forest_get_local_num_elements (grid);
+  return t8_forest_get_local_num_leaf_elements (grid);
 }
 
 template <>
@@ -95,7 +110,7 @@ template <>
 t8_gloidx_t
 grid_first_local_id<t8_forest_t> (const t8_forest_t grid)
 {
-  return t8_forest_get_first_local_element_id (grid);
+  return t8_forest_get_first_local_leaf_element_id (grid);
 }
 
 template <>
@@ -132,7 +147,7 @@ grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const bool write_ghosts)
     else {
       t8_locidx_t num_ghost_elements = 0;
       for (t8_locidx_t itree = 0; itree < num_ghost_trees; itree++) {
-        num_ghost_elements += t8_forest_ghost_tree_num_elements (grid, itree);
+        num_ghost_elements += t8_forest_ghost_tree_num_leaf_elements (grid, itree);
       }
       return num_ghost_elements > 0;
     }
@@ -221,4 +236,18 @@ grid_element_level<t8_cmesh_t> ([[maybe_unused]] const t8_cmesh_t grid, [[maybe_
                                 [[maybe_unused]] const t8_element_t *element)
 {
   return 0;
+}
+
+template <>
+int
+grid_get_dim<t8_forest_t> (const t8_forest_t grid)
+{
+  return t8_forest_get_dimension (grid);
+}
+
+template <>
+int
+grid_get_dim<t8_cmesh_t> (const t8_cmesh_t grid)
+{
+  return t8_cmesh_get_dimension (grid);
 }

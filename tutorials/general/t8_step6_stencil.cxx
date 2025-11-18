@@ -116,7 +116,7 @@ t8_step6_create_element_data (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   t8_locidx_t num_ghost_elements = t8_forest_get_num_ghosts (forest);
   /* Get the scheme of the forest */
@@ -133,11 +133,11 @@ t8_step6_create_element_data (t8_forest_t forest)
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
 
     /* Get the number of elements of this tree. */
-    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
       /* Pointer to our current element data struct. */
       struct data_per_element *edat = &element_data[current_index];
@@ -192,11 +192,11 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
 
-    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
       /* Gather center point of the 3x3 stencil. */
       stencil[1][1] = element_data[current_index].height;
@@ -284,7 +284,7 @@ static void
 t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
 {
   sc_array *sc_array_wrapper;
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
 
   /* t8_forest_ghost_exchange_data expects an sc_array (of length num_local_elements + num_ghosts).
@@ -309,7 +309,7 @@ t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
 static void
 t8_step6_output_data_to_vtu (t8_forest_t forest, struct data_per_element *data, const char *prefix)
 {
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
 
   /* We need to allocate a new array to store the data on their own.
    * These arrays have one entry per local element. */

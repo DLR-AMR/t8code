@@ -20,16 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_gtest_custom_assertion.cxx
+/** \file t8_gtest_custom_assertion.hxx
 * Provide customized GoogleTest functions for improved error-output
 */
+
+#ifndef T8_GTEST_CUSTOM_ASSERTION_HXX
+#define T8_GTEST_CUSTOM_ASSERTION_HXX
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
-
-#ifndef CUSTOM_ASSERTION_HXX
-#define CUSTOM_ASSERTION_HXX
 
 /**
  * \brief Test two elements for equality and print the elements if they aren't equal
@@ -85,7 +85,7 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
  * \param[in] precision_expr Name of the precision
  * \param[in] vec_1 First vector to compare
  * \param[in] vec_2 Second vector to compare
- * \param[in] precision Test equality up to this prescision
+ * \param[in] precision Test equality up to this precision
  * \return testing::AssertionResult 
  */
 template <typename T>
@@ -104,4 +104,4 @@ vec_equality (const char *vec_1_expr, const char *vec_2_expr, const char *precis
 
 #define EXPECT_VEC_EQ(vec_1, vec_2, precision) EXPECT_PRED_FORMAT3 (vec_equality, (vec_1), (vec_2), (precision))
 
-#endif /* CUSTOM_ASSERTION_HXX */
+#endif /* T8_GTEST_CUSTOM_ASSERTION_HXX */

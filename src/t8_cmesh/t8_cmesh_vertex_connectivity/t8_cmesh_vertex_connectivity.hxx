@@ -30,30 +30,34 @@
 
 #include <memory>
 #include <t8_cmesh.h>
+#include <t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
+/**
+ * A class to hold the vertex connectivity of a cmesh.
+ */
 struct t8_cmesh_vertex_connectivity
 {
  public:
   /**
    * Constructor.
    */
-  t8_cmesh_vertex_connectivity (): global_number_of_vertices (0), local_number_of_vertices (0) {};
+  t8_cmesh_vertex_connectivity ()
+    : current_state (state::INITIALIZED), global_number_of_vertices (0), local_number_of_vertices (0),
+      associated_cmesh (nullptr) {};
 
   /**
    * Destructor.
    */
   ~t8_cmesh_vertex_connectivity () {};
 
-  /* Given a cmesh, build up the vertex_to_tree and tree_to_vertex members.
-   * \return: some error value to be specified.
-   * On error, \state will be set to ERROR. 
-   * The cmesh must not be committed, but all tree information and neighbor information must
-   * have been set. 
-   * Currently, \a cmesh has to be replicated. */
-  void
-  build (const t8_cmesh_t cmesh);
+  /** The state this connectivity can be in. */
+  enum class state {
+    INITIALIZED,          /**< Initialized but not filled */
+    TREE_TO_VERTEX_VALID, /**< Ready to use, but only tree_to_vertex functionality. */
+    VALID                 /**< Ready to use for full vertex connectivity. Cannot be altered anymore. */
+  };
 
   /* Setter functions */
 
@@ -70,36 +74,29 @@ struct t8_cmesh_vertex_connectivity
                                           const t8_gloidx_t *global_tree_vertices, const int num_vertices)
   {
     T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+    T8_ASSERT (!t8_cmesh_is_committed (cmesh));
+    T8_ASSERT (current_state != state::VALID);
+    current_state = state::TREE_TO_VERTEX_VALID;
+    if (associated_cmesh == nullptr) {
+      associated_cmesh = cmesh;
+    }
+    T8_ASSERT (associated_cmesh == cmesh);
     return tree_to_vertex.set_global_vertex_ids_of_tree_vertices (cmesh, global_tree, global_tree_vertices,
                                                                   num_vertices);
   }
 
-  /** The state this connectivity can be in. */
-  enum t8_cmesh_vertex_connectivity_state_t {
-    INITIALIZED,          /*< Initialized but not valid. I.e. not ready to use. */
-    VERTEX_TO_TREE_VALID, /*< Ready to use, but only vertex_to_tree functionality. */
-    TREE_TO_VERTEX_VALID, /*< Ready to use, but only tree_to_vertex functionality. */
-    VTT_AND_TTV_VALID     /*< Ready to use with both ttv and vtt functinoality. */
-  };
-
-  /** Build vertex_to_tree from existing tree_to_vertex
-   * \param [in] cmesh A 
-   */
-
-  /** Function to fill vtt from a cmesh with ttv information.
+  /** Function to fill vtt from the stored ttv information.
    * Sets all global ids and associated tree vertices from
-   * the given input cmesh.
-   * Afterwards, the vtt is set to committed and can be used.
-   *
-   * \param [in] cmesh A committed cmesh with set tree to vertex entries (stored in this object)
-   * \param [in] ttv A filled tree to vertex list for \a cmesh.
+   * the associated cmesh.
+   * Afterwards, this class is ready to be used and cannot be altered.
   */
   void
-  build_vertex_to_tree (const t8_cmesh_t cmesh)
+  build_vertex_to_tree ()
   {
-    vertex_to_tree.build_from_ttv (cmesh, tree_to_vertex);
+    T8_ASSERT (current_state == state::TREE_TO_VERTEX_VALID);
+    vertex_to_tree.build_from_ttv (associated_cmesh, tree_to_vertex);
     global_number_of_vertices = vertex_to_tree.vertex_to_tree.size ();
-    state = VTT_AND_TTV_VALID;
+    current_state = state::VALID;
   }
 
   /* Getter functions */
@@ -108,14 +105,14 @@ struct t8_cmesh_vertex_connectivity
    * \return The total number of global vertices of \a cmesh.
   */
   inline t8_gloidx_t
-  get_global_number_of_vertices ()
+  get_global_number_of_vertices () const
   {
     return global_number_of_vertices;
   }
 
   /** Return the number of process local global vertices of a cmesh.
- * \return The number of process local global vertices of \a cmesh.
-*/
+   * \return The number of process local global vertices of \a cmesh.
+  */
   inline t8_gloidx_t
   get_local_number_of_vertices ()
   {
@@ -125,28 +122,39 @@ struct t8_cmesh_vertex_connectivity
 
   /** Return the state of the connectivity.
    * \return The current state (initialized, committed, etc) of this object.
-   * \ref t8_cmesh_vertex_connectivity_state_t
+   * \ref state
    */
-  inline t8_cmesh_vertex_connectivity_state_t
-  get_state ()
+  inline state
+  get_state () const
   {
-    return state;
+    return current_state;
   }
 
   /** Given a global vertex id, return the list of trees that share this vertex.
    * \param [in] vertex_id A global vertex id.
    * \return The trees and their local vertex ids matching \a vertex_id.
    */
-  inline const t8_cmesh_vertex_conn_vertex_to_tree::vtt_storage_type &
-  vertex_to_trees (const t8_gloidx_t vertex_id);
+  inline const tree_vertex_list &
+  vertex_to_trees (const t8_gloidx_t vertex_id) const
+  {
+    T8_ASSERT (vertex_to_tree.is_committed ());
+    T8_ASSERT (current_state == state::VALID);
+    return vertex_to_tree.get_tree_list_of_vertex (vertex_id);
+  }
 
   /** Given a local tree (or ghost) return the list of global vertices
    * this tree has (in order of its local vertices).
    * \param [in] ltree A local tree id.
    * \return The list of global vertices that this tree has.
    */
-  inline const t8_locidx_t *
-  tree_to_vertices (const t8_locidx_t ltree);
+  inline const std::span<const t8_gloidx_t>
+  tree_to_vertices (const t8_locidx_t ltree) const
+  {
+    T8_ASSERT (current_state >= state::TREE_TO_VERTEX_VALID);
+    T8_ASSERT (tree_to_vertex.get_state () == t8_cmesh_vertex_conn_tree_to_vertex::state::FILLED);
+    T8_ASSERT (associated_cmesh != nullptr);
+    return tree_to_vertex.get_global_vertices (associated_cmesh, ltree);
+  }
 
   /** Given a local tree (or ghost) and a local vertex of that tree
    * return the global vertex id of that vertex.
@@ -155,44 +163,50 @@ struct t8_cmesh_vertex_connectivity
    * \return The global vertex associated with \a ltree_vertex.
    */
   inline t8_gloidx_t
-  treevertex_to_vertex (const t8_locidx_t ltree, const t8_locidx_t ltree_vertex);
+  treevertex_to_vertex (const t8_locidx_t ltree, const t8_locidx_t ltree_vertex) const
+  {
+    T8_ASSERT (current_state >= state::TREE_TO_VERTEX_VALID);
+    T8_ASSERT (tree_to_vertex.get_state () == t8_cmesh_vertex_conn_tree_to_vertex::state::FILLED);
+    T8_ASSERT (associated_cmesh != nullptr);
+    return tree_to_vertex.get_global_vertex (associated_cmesh, ltree, ltree_vertex);
+  }
 
   /** Get the global vertex indices of a tree in its local vertex order.
-   * \param [in] cmesh A committed cmesh.
    * \param [in] local_tree A local tree in \a cmesh.
-   * \param [in] num_vertices The number of vertices of \a local_tree
    * \return The global vertices of \a local_tree
    */
-  inline const t8_gloidx_t *
-  get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices)
+  inline const std::span<const t8_gloidx_t>
+  get_global_vertices_of_tree (const t8_locidx_t local_tree) const
   {
-    return tree_to_vertex.get_global_vertices (cmesh, local_tree, num_vertices);
+    T8_ASSERT (current_state >= state::TREE_TO_VERTEX_VALID);
+    T8_ASSERT (tree_to_vertex.get_state () == t8_cmesh_vertex_conn_tree_to_vertex::state::FILLED);
+    T8_ASSERT (associated_cmesh != nullptr);
+    return tree_to_vertex.get_global_vertices (associated_cmesh, local_tree);
   }
 
   /** Get a single global vertex index of a local tree's local vertex.
-  * \param [in] cmesh A committed cmesh.
   * \param [in] local_tree A local tree in \a cmesh.
   * \param [in] local_tree_vertex A local vertex of \a local_tree
-  * \param [in] num_vertices The number of vertices of \a local_tree
   * \return The global vertex matching \a local_tree_vertex of \a local_tree.
   */
   inline t8_gloidx_t
-  get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
-                             const int num_vertices)
+  get_global_vertex_of_tree (const t8_locidx_t local_tree, const int local_tree_vertex) const
   {
-    T8_ASSERT (t8_cmesh_is_committed (cmesh));
-    const t8_gloidx_t *vertices_of_tree = get_global_vertices_of_tree (cmesh, local_tree, num_vertices);
+    T8_ASSERT (associated_cmesh != nullptr);
+    auto vertices_of_tree = get_global_vertices_of_tree (local_tree);
+    T8_ASSERT (vertices_of_tree.size () > static_cast<size_t> (local_tree_vertex));
     return vertices_of_tree[local_tree_vertex];
   }
 
   /** Get the list of global trees and local vertex ids a global vertex is connected to.
-   * 
+   *
    * \param [in] global_vertex_id The global id of a vertex in the cmesh.
    * \return The list of global tree ids and local vertex ids of \a global_vertex_id.
    */
-  inline const t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_list &
-  get_tree_list_of_vertex (const t8_gloidx_t global_vertex_id)
+  inline const tree_vertex_list &
+  get_tree_list_of_vertex (const t8_gloidx_t global_vertex_id) const
   {
+    T8_ASSERT (current_state == state::VALID);
     return vertex_to_tree.get_tree_list_of_vertex (global_vertex_id);
   }
 
@@ -202,32 +216,15 @@ struct t8_cmesh_vertex_connectivity
    * Example: For a quad where all 4 vertices map to a single global vertex this function will return 4.
    */
   inline int
-  get_num_trees_at_vertex (const t8_gloidx_t global_vertex_id)
+  get_num_trees_at_vertex (const t8_gloidx_t global_vertex_id) const
   {
+    T8_ASSERT (current_state == state::VALID);
     return get_tree_list_of_vertex (global_vertex_id).size ();
   }
 
-  /** Get the current state of the vertex_to_tree instance.
-   * \return The current state of vertex_to_tree.
-   */
-  inline int
-  get_vertex_to_tree_state ()
-  {
-    return vertex_to_tree.get_state ();
-  }
-
-  /** Get the current state of the tree_to_vertex instance.
-   * \return The current state of tree_to_vertex.
-   */
-  inline int
-  get_tree_to_vertex_state ()
-  {
-    return tree_to_vertex.get_state ();
-  }
-
  private:
-  /** The internal state. Indicating whether no, the vtt, the ttv, or both are valid and ready to use. */
-  t8_cmesh_vertex_connectivity_state_t state;
+  /** The internal state. Indicating whether this structure is new and unfilled, the ttv was filled or the vertex conn was built completely. */
+  state current_state;
 
   /** The process global number of global vertices. */
   t8_gloidx_t global_number_of_vertices;
@@ -241,6 +238,9 @@ struct t8_cmesh_vertex_connectivity
 
   /** The internal tree to vertex storage. */
   t8_cmesh_vertex_conn_tree_to_vertex tree_to_vertex;
+
+  /** A pointer to the cmesh for attribute retrieval */
+  t8_cmesh_t associated_cmesh;
 };
 
 #endif /* !T8_CMESH_VERTEX_CONNECTIVITY */
