@@ -38,15 +38,17 @@ REQUIRED_VERSION_STRING="${REQUIRED_VERSION_MAJOR}.${REQUIRED_VERSION_MINOR}"
 
 FORMAT=`which clang-format 2> /dev/null`
 
+# Check if ${FORMAT} exists
 if [ -z "$FORMAT" ]
 then
-  # Exit if the spell checking script was not found
+  # Exit if the indentation script was not found
   echo "ERROR: clang-format not found."
   echo "Please install clang-format version ${REQUIRED_VERSION_STRING}."
   echo "See https://github.com/ssciwr/clang-format-wheel"
   exit 1
 fi
 
+# Get indentation script version and split it into Major, minor, patch
 CLANG_VERSION_STRING=`$FORMAT --version`
 
 VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
@@ -54,6 +56,7 @@ MAJOR=`echo $VERSION | cut -d. -f1`
 MINOR=`echo $VERSION | cut -d. -f2`
 PATCH=`echo $VERSION | cut -d. -f3`
 
+# Check if version matches required version
 if [[ "$MAJOR" != "$REQUIRED_VERSION_MAJOR" || $MINOR != "$REQUIRED_VERSION_MINOR" ]]; then
   echo "Please install clang-format version $REQUIRED_VERSION_STRING"
   exit 1
@@ -120,7 +123,10 @@ do
   fi
 done
 
-
+#
+# Do the actual indentation.
+# If NO_CHANGE was set, this does a dry run and we additionally print stderr to stdout.
+#
 if [[ $NO_CHANGE == "TRUE" ]]
 then
   $FORMAT $FORMAT_OPTIONS ${newargs[@]} 2>&1
@@ -130,7 +136,7 @@ else
   status=$?
 fi  
 
-# If the file content was not change, the return
+# If the file content was not changed, the return
 # value determines whether or not the file was
 # indented.
 if [[ $NO_CHANGE == "TRUE" ]]
