@@ -45,8 +45,10 @@
  * 
  * \return Nonzero if the element may touch the face and the top-down search shall be continued, zero otherwise.
  */
-typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                          int face, void *user_data, t8_locidx_t tree_leaf_index);
+typedef int (*t8_forest_iterate_face_fn) (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                          const t8_element_t *element, const int face, const int is_leaf,
+                                          const t8_element_array_t *leaf_elements, const t8_locidx_t tree_leaf_index,
+                                          void *user_data);
 
 /**
  * A call-back function used by \ref t8_forest_search describing a search-criterion. Is called on an element and the 
@@ -151,6 +153,10 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets);
 
+/* TODO: comment */
+// TODO: Test this function. Uniform mesh test. Refine always same corner, know that neighbors follow geometric series.
+// TODO: user data should be a template parameter in the long run
+// TODO: adapt to search interface
 /**
  * Iterate over all leaves of an element that touch a given face of the element.
  * Callback is called in each recursive step with element as input.
@@ -168,11 +174,16 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
  * \param[in] user_data                 The user data passed to the \a callback function.
  * \param[in] tree_lindex_of_first_leaf Tree-local index of the first leaf.
  * \param[in] callback                  The callback function.
+ * \param[in] tree_lindex_of_first_leaf Index of the first leaf of \a element in the tree's leaves.
+ *                                       The corresponding leaf does not necessarily lie on the face of \a element.
+ *                                      \note \a tree_lindex_of_first_leaf is not an index in \a leaf_elements. \a leaf_elements may only be a part of the tree's leaves.
+ * \param[in] callback                  The callback function.
  */
 void
-t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                         const t8_element_array_t *leaf_elements, void *user_data,
-                         t8_locidx_t tree_lindex_of_first_leaf, t8_forest_iterate_face_fn callback);
+t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                         const int face, const t8_element_array_t *const leaf_elements,
+                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback,
+                         void *user_data);
 
 /** 
  * Perform a top-down search of the forest, executing a callback on each
