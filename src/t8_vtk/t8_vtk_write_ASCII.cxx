@@ -383,7 +383,6 @@ t8_forest_vtk_cells_vector_kernel (t8_forest_t forest, const t8_locidx_t ltree_i
                                    [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const int is_ghost,
                                    FILE *vtufile, int *columns, void **data, T8_VTK_KERNEL_MODUS modus)
 {
-  int dim, idim;
 
   if (modus == T8_VTK_KERNEL_EXECUTE) {
     const int dim = 3;
