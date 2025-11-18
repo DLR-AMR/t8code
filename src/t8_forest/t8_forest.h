@@ -31,5 +31,7 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_neighbor/t8_forest_element_face_neighbor.h>
+#include <t8_forest/t8_forest_neighbor/t8_forest_leaf_face_neighbor.h>
 
 #endif /* !T8_FOREST_H */

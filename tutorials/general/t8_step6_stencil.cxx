@@ -42,9 +42,7 @@
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
 #include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>             /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
+#include <t8_forest/t8_forest.h>                /* forest definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <tutorials/general/t8_step3.h>
@@ -206,15 +204,15 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
       /* Loop over all faces of an element. */
       int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; iface++) {
-        int num_neighbors;        /**< Number of neighbors for each face */
-        int *dual_faces;          /**< The face indices of the neighbor elements */
-        t8_locidx_t *neighids;    /**< Indices of the neighbor elements */
-        t8_element_t **neighbors; /*< Neighboring elements. */
-        t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
+        int num_neighbors;              /**< Number of neighbors for each face */
+        int *dual_faces;                /**< The face indices of the neighbor elements */
+        t8_locidx_t *neighids;          /**< Indices of the neighbor elements */
+        const t8_element_t **neighbors; /*< Neighboring elements. */
+        t8_eclass_t neigh_class;        /*< Neighboring elements tree class. */
 
         /* Collect all neighbors at the current face. */
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
-                                       &neighids, &neigh_class, 1);
+                                       &neighids, &neigh_class);
 
         /* Retrieve the `height` of the face neighbor. Account for two neighbors in case
            of a non-conforming interface by computing the average. */
@@ -248,7 +246,6 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
 
         if (num_neighbors > 0) {
           /* Free allocated memory. */
-          scheme->element_destroy (tree_class, num_neighbors, neighbors);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
           T8_FREE (neighids);

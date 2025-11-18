@@ -30,6 +30,8 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
+#include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_offset.h>
@@ -45,6 +47,7 @@
 #include <t8_data/t8_element_array_iterator.hxx>
 
 #include <algorithm>
+#include <vector>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -1414,543 +1417,6 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
   }
 }
 
-t8_eclass_t
-t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, int face)
-{
-  t8_ctree_t coarse_tree;
-  int tree_face;
-  t8_locidx_t lcoarse_neighbor;
-  t8_cmesh_t cmesh;
-
-  /* Get a pointer to the tree to read its element class */
-  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t tree_class = tree->eclass;
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  if (!scheme->element_is_root_boundary (tree_class, elem, face)) {
-    /* The neighbor element is inside the current tree. */
-    return tree_class;
-  }
-  else {
-    /* The neighbor is in a neighbor tree */
-    /* If the face neighbor is not inside the tree, we have to find out the tree
-     * face and the tree's face neighbor along that face. */
-    tree_face = scheme->element_get_tree_face (tree_class, elem, face);
-
-    cmesh = t8_forest_get_cmesh (forest);
-    /* Get the coarse tree corresponding to tree */
-    coarse_tree = t8_forest_get_coarse_tree (forest, ltreeid);
-    /* Get the (coarse) local id of the tree neighbor */
-    lcoarse_neighbor = t8_cmesh_trees_get_face_neighbor (coarse_tree, tree_face);
-    T8_ASSERT (0 <= lcoarse_neighbor);
-    if (lcoarse_neighbor < t8_cmesh_get_num_local_trees (cmesh)) {
-      /* The tree neighbor is a local tree */
-      return t8_cmesh_get_tree_class (cmesh, lcoarse_neighbor);
-    }
-    else {
-      T8_ASSERT (lcoarse_neighbor - t8_cmesh_get_num_local_trees (cmesh) < cmesh->num_ghosts);
-      /* The tree neighbor is a ghost */
-      return t8_cmesh_get_ghost_class (cmesh, lcoarse_neighbor - t8_cmesh_get_num_local_trees (cmesh));
-    }
-  }
-}
-
-t8_gloidx_t
-t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
-                                 t8_eclass_t neigh_eclass, int face, int *neigh_face)
-{
-  /* Get a pointer to the tree to read its element class */
-  const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t eclass = tree->eclass;
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  if (neigh_eclass == eclass && scheme->element_get_face_neighbor_inside (eclass, elem, neigh, face, neigh_face)) {
-    /* The neighbor was constructed and is inside the current tree. */
-    return ltreeid + t8_forest_get_first_local_tree_id (forest);
-  }
-  else {
-    /* The neighbor does not lie inside the current tree. The content of neigh is undefined right now. */
-    t8_eclass_t neigh_eclass;
-    t8_element_t *face_element;
-    t8_cmesh_t cmesh;
-    t8_locidx_t lctree_id, lcneigh_id;
-    t8_locidx_t *face_neighbor;
-    t8_gloidx_t global_neigh_id;
-    t8_cghost_t ghost;
-    int8_t *ttf;
-    int tree_face, tree_neigh_face;
-    int is_smaller, eclass_compare;
-    int F, sign;
-
-    cmesh = forest->cmesh;
-    /* Get the scheme associated to the element class of the boundary element. */
-    /* Compute the face of elem_tree at which the face connection is. */
-    tree_face = scheme->element_get_tree_face (eclass, elem, face);
-    /* compute coarse tree id */
-    lctree_id = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-    if (t8_cmesh_tree_face_is_boundary (cmesh, lctree_id, tree_face)) {
-      /* This face is a domain boundary. We do not need to continue */
-      return -1;
-    }
-    /* Get the eclass for the boundary */
-    const t8_eclass_t boundary_class = (t8_eclass_t) t8_eclass_face_types[eclass][tree_face];
-    /* Allocate the face element */
-    scheme->element_new (boundary_class, 1, &face_element);
-    /* Compute the face element. */
-    scheme->element_get_boundary_face (eclass, elem, face, face_element);
-    /* Get the coarse tree that contains elem.
-     * Also get the face neighbor information of the coarse tree. */
-    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, lctree_id, &face_neighbor, &ttf);
-    /* Compute the local id of the face neighbor tree. */
-    lcneigh_id = face_neighbor[tree_face];
-    /* F is needed to compute the neighbor face number and the orientation.
-     * tree_neigh_face = ttf % F
-     * or = ttf / F
-     */
-    F = t8_eclass_max_num_faces[cmesh->dimension];
-    /* compute the neighbor face */
-    tree_neigh_face = ttf[tree_face] % F;
-    if (lcneigh_id == lctree_id && tree_face == tree_neigh_face) {
-      /* This face is a domain boundary and there is no neighbor */
-      return -1;
-    }
-    /* We now compute the eclass of the neighbor tree. */
-    if (lcneigh_id < t8_cmesh_get_num_local_trees (cmesh)) {
-      /* The face neighbor is a local tree */
-      /* Get the eclass of the neighbor tree */
-      neigh_eclass = t8_cmesh_get_tree_class (cmesh, lcneigh_id);
-      global_neigh_id = lcneigh_id + t8_cmesh_get_first_treeid (cmesh);
-    }
-    else {
-      /* The face neighbor is a ghost tree */
-      T8_ASSERT (cmesh->num_local_trees <= lcneigh_id && lcneigh_id < cmesh->num_ghosts + cmesh->num_local_trees);
-      /* Get the eclass of the neighbor tree */
-      ghost = t8_cmesh_trees_get_ghost (cmesh->trees, lcneigh_id - t8_cmesh_get_num_local_trees (cmesh));
-      neigh_eclass = ghost->eclass;
-      global_neigh_id = ghost->treeid;
-    }
-    /* We need to find out which face is the smaller one that is the one
-     * according to which the orientation was computed.
-     * face_a is smaller then face_b if either eclass_a < eclass_b
-     * or eclass_a = eclass_b and face_a < face_b. */
-    /* -1 eclass < neigh_eclass, 0 eclass = neigh_eclass, 1 eclass > neigh_eclass */
-    eclass_compare = t8_eclass_compare (eclass, neigh_eclass);
-    is_smaller = 0;
-    if (eclass_compare == -1) {
-      /* The face in the current tree is the smaller one */
-      is_smaller = 1;
-    }
-    else if (eclass_compare == 1) {
-      /* The face in the other tree is the smaller one */
-      is_smaller = 0;
-    }
-    else {
-
-      T8_ASSERT (eclass_compare == 0);
-      /* Check if the face of the current tree has a smaller index then the face of the neighbor tree. */
-      is_smaller = tree_face <= tree_neigh_face;
-    }
-    /* We now transform the face element to the other tree. */
-    sign = t8_eclass_face_orientation[eclass][tree_face] == t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
-    scheme->element_transform_face (boundary_class, face_element, face_element, ttf[tree_face] / F, sign, is_smaller);
-    /* And now we extrude the face to the new neighbor element */
-    *neigh_face = scheme->element_extrude_face (neigh_eclass, face_element, neigh, tree_neigh_face);
-    /* Free the face_element */
-    scheme->element_destroy (boundary_class, 1, &face_element);
-
-    return global_neigh_id;
-  }
-}
-
-t8_gloidx_t
-t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem,
-                                       t8_element_t *neighs[], t8_eclass_t neigh_class, int face, int num_neighs,
-                                       int dual_faces[])
-{
-  t8_tree_t tree;
-  t8_element_t **children_at_face;
-  t8_gloidx_t neighbor_tree = -1;
-#if T8_ENABLE_DEBUG
-  t8_gloidx_t last_neighbor_tree = -1;
-#endif
-  int num_children_at_face, child_it;
-  int child_face;
-  int neigh_face;
-
-  /* Get the current tree and its element class */
-  tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t eclass = tree->eclass;
-  /* The scheme for the current tree */
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  SC_CHECK_ABORT (scheme->element_get_level (eclass, elem) < t8_forest_get_maxlevel (forest),
-                  "Trying to refine an element beyond its maximum allowed level.");
-  /* The number of children of elem at face */
-  T8_ASSERT (num_neighs == scheme->element_get_num_face_children (eclass, elem, face));
-  num_children_at_face = num_neighs;
-  /* Allocate memory for the children of elem that share a face with face. */
-  children_at_face = T8_ALLOC (t8_element_t *, num_children_at_face);
-  scheme->element_new (eclass, num_children_at_face, children_at_face);
-
-  /* Construct the children of elem at face
-   *
-   *  a-----b                     x--b
-   *  |     |           =>        |  |
-   *  |     | <- face             x--x
-   *  |     |                     |  |
-   *  c-----d                     x--d
-   *
-   */
-  scheme->element_get_children_at_face (eclass, elem, face, children_at_face, num_children_at_face, NULL);
-  /* For each face_child build its neighbor */
-  for (child_it = 0; child_it < num_children_at_face; child_it++) {
-    /* The face number of the face of the child that coincides with face
-     * is not necessarily the same as the face number of elem. (which is the integer face)
-     * We thus have to compute the face number of the child first.
-     */
-    child_face = scheme->element_face_get_child_face (eclass, elem, face, child_it);
-    neighbor_tree = t8_forest_element_face_neighbor (forest, ltreeid, children_at_face[child_it], neighs[child_it],
-                                                     neigh_class, child_face, &neigh_face);
-    if (dual_faces != NULL) {
-      /* Store the dual face */
-      dual_faces[child_it] = neigh_face;
-    }
-    /* For each of the neighbors, the neighbor tree must be the same. */
-    T8_ASSERT (child_it == 0 || neighbor_tree == last_neighbor_tree);
-#if T8_ENABLE_DEBUG
-    last_neighbor_tree = neighbor_tree;
-#endif
-  }
-  /* Clean-up the memory */
-  scheme->element_destroy (eclass, num_children_at_face, children_at_face);
-  T8_FREE (children_at_face);
-  return neighbor_tree;
-}
-
-int
-t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme *scheme,
-                                 const t8_element_t *leaf, int face)
-{
-  int orientation = 0;
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-  if (scheme->element_is_root_boundary (tree_class, leaf, face)) {
-    t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-    t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-    int iface_in_tree = scheme->element_get_tree_face (tree_class, leaf, face);
-    t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, iface_in_tree, NULL, &orientation);
-  }
-
-  return orientation;
-}
-
-void
-t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
-                                   t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                                   t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced,
-                                   t8_gloidx_t *gneigh_tree, int *orientation)
-{
-  t8_eclass_t eclass;
-  t8_gloidx_t gneigh_treeid;
-  t8_locidx_t lneigh_treeid = -1;
-  t8_locidx_t lghost_treeid = -1, *element_indices, element_index;
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_element_t *ancestor;
-  t8_element_t **neighbor_leaves;
-  t8_linearidx_t neigh_id;
-  int num_children_at_face, at_maxlevel;
-  int ineigh, *owners, different_owners, have_ghosts;
-
-  T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
-  T8_ASSERT (!forest_is_balanced || t8_forest_is_balanced (forest));
-  SC_CHECK_ABORT (forest_is_balanced, "leaf face neighbors is not implemented "
-                                      "for unbalanced forests.\n"); /* TODO: write version for unbalanced forests */
-  SC_CHECK_ABORT (forest->mpisize == 1 || forest->ghosts != NULL,
-                  "Ghost structure is needed for t8_forest_leaf_face_neighbors "
-                  "but was not found in forest.\n");
-
-  if (forest_is_balanced) {
-    /* In a balanced forest, the leaf neighbor of a leaf is either the neighbor element itself,
-     * its parent or its children at the face. */
-    eclass = t8_forest_get_tree_class (forest, ltreeid);
-
-    if (orientation) {
-      *orientation = t8_forest_leaf_face_orientation (forest, ltreeid, scheme, leaf, face);
-    }
-
-    /* At first we compute these children of the face neighbor elements of leaf. For this, we need the
-     * neighbor tree's eclass, scheme, and tree id */
-    *pneigh_eclass = t8_forest_element_neighbor_eclass (forest, ltreeid, leaf, face);
-    /* If we are at the maximum refinement level, we compute the neighbor instead */
-    at_maxlevel = scheme->element_get_level (eclass, leaf) == t8_forest_get_maxlevel (forest);
-    if (at_maxlevel) {
-      num_children_at_face = 1;
-      neighbor_leaves = *pneighbor_leaves = T8_ALLOC (t8_element_t *, 1);
-      *dual_faces = T8_ALLOC (int, 1);
-      scheme->element_new (*pneigh_eclass, num_children_at_face, neighbor_leaves);
-      /* Compute neighbor element and global treeid of the neighbor */
-      gneigh_treeid = t8_forest_element_face_neighbor (forest, ltreeid, leaf, neighbor_leaves[0], *pneigh_eclass, face,
-                                                       *dual_faces);
-    }
-    else {
-      /* Allocate neighbor element */
-      num_children_at_face = scheme->element_get_num_face_children (eclass, leaf, face);
-      neighbor_leaves = *pneighbor_leaves = T8_ALLOC (t8_element_t *, num_children_at_face);
-      *dual_faces = T8_ALLOC (int, num_children_at_face);
-      scheme->element_new (*pneigh_eclass, num_children_at_face, neighbor_leaves);
-      /* Compute neighbor elements and global treeid of the neighbor */
-      gneigh_treeid = t8_forest_element_half_face_neighbors (forest, ltreeid, leaf, neighbor_leaves, *pneigh_eclass,
-                                                             face, num_children_at_face, *dual_faces);
-    }
-    if (gneigh_tree) {
-      *gneigh_tree = gneigh_treeid;
-    }
-    if (gneigh_treeid < 0) {
-      /* There exists no face neighbor across this face, we return with this info */
-      scheme->element_destroy (*pneigh_eclass, num_children_at_face, neighbor_leaves);
-      T8_FREE (neighbor_leaves);
-      T8_FREE (*dual_faces);
-      *dual_faces = NULL;
-      *num_neighbors = 0;
-      *pelement_indices = NULL;
-      *pneighbor_leaves = NULL;
-      return;
-    }
-    T8_ASSERT (gneigh_treeid >= 0 && gneigh_treeid < forest->global_num_trees);
-    /* We have computed the half face neighbor elements, we now compute their owners,
-     * if they differ, we know that the half face neighbors are the neighbor leaves.
-     * If the owners do not differ, we have to check if the neighbor leaf is their
-     * parent or grandparent. */
-    owners = T8_ALLOC (int, num_children_at_face);
-    different_owners = 0;
-    have_ghosts = 0;
-    for (ineigh = 0; ineigh < num_children_at_face; ineigh++) {
-      /* At first, we check whether the current rank owns the neighbor, since
-       * this is a constant time check and it is the most common case */
-      if (t8_forest_element_check_owner (forest, neighbor_leaves[ineigh], gneigh_treeid, *pneigh_eclass,
-                                         forest->mpirank, at_maxlevel)) {
-        owners[ineigh] = forest->mpirank;
-        /* The neighbor tree is also a local tree. we store its local treeid */
-        lneigh_treeid = t8_forest_get_local_id (forest, gneigh_treeid);
-      }
-      else {
-        owners[ineigh] = t8_forest_element_find_owner (forest, gneigh_treeid, neighbor_leaves[ineigh], *pneigh_eclass);
-        /* Store that at least one neighbor is a ghost */
-        have_ghosts = 1;
-      }
-      if (ineigh > 0) {
-        /* Check if all owners are the same for all neighbors or not */
-        different_owners = different_owners || (owners[ineigh] != owners[ineigh - 1]);
-      }
-    }
-    if (have_ghosts) {
-      /* At least one neighbor is a ghost, we compute the ghost treeid of the neighbor
-       * tree. */
-      lghost_treeid = t8_forest_ghost_get_ghost_treeid (forest, gneigh_treeid);
-      T8_ASSERT (lghost_treeid >= 0);
-    }
-    /* TODO: Maybe we do not need to compute the owners. It suffices to know
-     * whether the neighbor is owned by mpirank or not. */
-
-    if (!different_owners) {
-      /* The face neighbors belong to the same process, we thus need to determine
-       * if they are leaves or their parent or grandparent. */
-      neigh_id = scheme->element_get_linear_id (*pneigh_eclass, neighbor_leaves[0], forest->maxlevel);
-      if (owners[0] != forest->mpirank) {
-        /* The elements are ghost elements of the same owner */
-        const t8_element_array_t *element_array = t8_forest_ghost_get_tree_leaf_elements (forest, lghost_treeid);
-        /* Find the index in element_array of the leaf ancestor of the first neighbor.
-         * This is either the neighbor itself or its parent, or its grandparent */
-        element_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
-        T8_ASSERT (element_index >= 0);
-
-        /* Get the element */
-        ancestor = t8_forest_ghost_get_leaf_element (forest, lghost_treeid, element_index);
-        /* Add the number of ghost elements on previous ghost trees and the number of local elements. */
-        element_index += t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
-        element_index += t8_forest_get_local_num_leaf_elements (forest);
-        T8_ASSERT (forest->local_num_leaf_elements <= element_index
-                   && element_index < forest->local_num_leaf_elements + t8_forest_get_num_ghosts (forest));
-      }
-      else {
-        /* the elements are local elements */
-        const t8_element_array_t *element_array = t8_forest_get_tree_leaf_element_array (forest, lneigh_treeid);
-        /* Find the index in element_array of the leaf ancestor of the first neighbor.
-         * This is either the neighbor itself or its parent, or its grandparent */
-        element_index = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
-        /* Get the element */
-        ancestor = t8_forest_get_tree_leaf_element (t8_forest_get_tree (forest, lneigh_treeid), element_index);
-        /* Add the element offset of this tree to the index */
-        element_index += t8_forest_get_tree_element_offset (forest, lneigh_treeid);
-      }
-      if (scheme->element_compare (*pneigh_eclass, ancestor, neighbor_leaves[0]) < 0) {
-        /* ancestor is a real ancestor, and thus the neighbor is either the parent
-         * or the grandparent of the half neighbors. We can return it and the indices. */
-        /* We need to determine the dual face */
-        if (scheme->element_get_level (*pneigh_eclass, ancestor) == scheme->element_get_level (eclass, leaf)) {
-          /* The ancestor is the same-level neighbor of leaf */
-          if (!at_maxlevel) {
-            /* its dual face is the face of the parent of the first neighbor leaf */
-            *dual_faces[0] = scheme->element_face_get_parent_face (*pneigh_eclass, neighbor_leaves[0], *dual_faces[0]);
-          }
-        }
-        else {
-          /* The ancestor is the parent of the parent */
-          T8_ASSERT (scheme->element_get_level (*pneigh_eclass, ancestor)
-                     == scheme->element_get_level (eclass, leaf) - 1);
-
-          *dual_faces[0] = scheme->element_face_get_parent_face (*pneigh_eclass, neighbor_leaves[0], *dual_faces[0]);
-          if (!at_maxlevel) {
-            /* We need to compute the dual face of the grandparent. */
-            /* Construct the parent of the grand child */
-            scheme->element_get_parent (*pneigh_eclass, neighbor_leaves[0], neighbor_leaves[0]);
-            /* Compute the face id of the parent's face */
-            *dual_faces[0] = scheme->element_face_get_parent_face (*pneigh_eclass, neighbor_leaves[0], *dual_faces[0]);
-          }
-        }
-
-        /* free memory */
-        scheme->element_destroy (*pneigh_eclass, num_children_at_face - 1, neighbor_leaves + 1);
-        /* copy the ancestor */
-        scheme->element_copy (*pneigh_eclass, ancestor, neighbor_leaves[0]);
-        /* set return values */
-        *num_neighbors = 1;
-        *pelement_indices = T8_ALLOC (t8_locidx_t, 1);
-        (*pelement_indices)[0] = element_index;
-
-        T8_FREE (owners);
-        return;
-      }
-    }
-    /* The leaves are the face neighbors that we are looking for. */
-    /* The face neighbors either belong to different processes and thus must be leaves
-     * in the forest, or the ancestor leaf of the first half neighbor is the half
-     * neighbor itself and thus all half neighbors must be leaves.
-     * Since the forest is balanced, we found all neighbor leaves.
-     * It remains to compute their local ids */
-    *num_neighbors = num_children_at_face;
-    *pelement_indices = T8_ALLOC (t8_locidx_t, num_children_at_face);
-    element_indices = *pelement_indices;
-    for (ineigh = 0; ineigh < num_children_at_face; ineigh++) {
-      /* Compute the linear id at maxlevel of the neighbor leaf */
-      neigh_id = scheme->element_get_linear_id (*pneigh_eclass, neighbor_leaves[ineigh], forest->maxlevel);
-      /* Get a pointer to the element array in which the neighbor lies and search for the element's index in this array.
-       * This is either the local leaf array of the local tree or the corresponding leaf array in the ghost structure */
-      if (owners[ineigh] == forest->mpirank) {
-        /* The neighbor is a local leaf */
-        const t8_element_array_t *element_array = t8_forest_get_tree_leaf_element_array (forest, lneigh_treeid);
-        /* Find the index of the neighbor in the array */
-        element_indices[ineigh] = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
-        T8_ASSERT (element_indices[ineigh] >= 0);
-        /* We have to add the tree's element offset to the index found to get the actual local element id */
-        element_indices[ineigh] += t8_forest_get_tree_element_offset (forest, lneigh_treeid);
-#if T8_ENABLE_DEBUG
-        /* We check whether the element is really the element at this local id */
-        {
-          t8_locidx_t check_ltreeid;
-          const t8_element_t *check_element
-            = t8_forest_get_leaf_element (forest, element_indices[ineigh], &check_ltreeid);
-          T8_ASSERT (check_ltreeid == lneigh_treeid);
-          T8_ASSERT (scheme->element_is_equal (*pneigh_eclass, check_element, neighbor_leaves[ineigh]));
-        }
-#endif
-      }
-      else {
-        /* The neighbor is a ghost */
-        const t8_element_array_t *element_array = t8_forest_ghost_get_tree_leaf_elements (forest, lghost_treeid);
-        /* Find the index of the neighbor in the array */
-        element_indices[ineigh] = t8_forest_bin_search_lower (element_array, neigh_id, forest->maxlevel);
-
-#if T8_ENABLE_DEBUG
-        /* We check whether the element is really the element at this local id */
-        {
-          t8_element_t *check_element;
-          check_element = t8_forest_ghost_get_leaf_element (forest, lghost_treeid, element_indices[ineigh]);
-          T8_ASSERT (scheme->element_is_equal (*pneigh_eclass, check_element, neighbor_leaves[ineigh]));
-        }
-#endif
-        /* Add the element offset of previous ghosts to this index */
-        element_indices[ineigh] += t8_forest_ghost_get_tree_element_offset (forest, lghost_treeid);
-        /* Add the number of all local elements to this index */
-        element_indices[ineigh] += t8_forest_get_local_num_leaf_elements (forest);
-      }
-    } /* End for loop over neighbor leaves */
-    T8_FREE (owners);
-  }
-  else {
-    /* TODO: implement unbalanced version */
-    SC_ABORT_NOT_REACHED ();
-  }
-}
-
-void
-t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf,
-                               t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
-                               t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced)
-{
-  t8_forest_leaf_face_neighbors_ext (forest, ltreeid, leaf, pneighbor_leaves, face, dual_faces, num_neighbors,
-                                     pelement_indices, pneigh_eclass, forest_is_balanced, NULL, NULL);
-}
-
-void
-t8_forest_print_all_leaf_neighbors (t8_forest_t forest)
-{
-  t8_locidx_t ltree, ielem;
-  t8_element_t **neighbor_leaves;
-  int iface, num_neighbors, ineigh;
-  t8_eclass_t eclass, neigh_eclass;
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  t8_locidx_t *element_indices;
-  int *dual_faces;
-  char buffer[BUFSIZ];
-  int allocate_first_desc = 0, allocate_tree_offset = 0;
-  int allocate_el_offset = 0;
-
-  if (forest->tree_offsets == NULL) {
-    allocate_tree_offset = 1;
-    t8_forest_partition_create_tree_offsets (forest);
-  }
-  if (forest->global_first_desc == NULL) {
-    allocate_first_desc = 1;
-    t8_forest_partition_create_first_desc (forest);
-  }
-  if (forest->element_offsets == NULL) {
-    allocate_el_offset = 1;
-    t8_forest_partition_create_offsets (forest);
-  }
-  for (ielem = 0; ielem < t8_forest_get_local_num_leaf_elements (forest); ielem++) {
-    /* Get a pointer to the ielem-th element, its eclass, treeid and scheme */
-    const t8_element_t *leaf = t8_forest_get_leaf_element (forest, ielem, &ltree);
-    eclass = t8_forest_get_tree_class (forest, ltree);
-    /* Iterate over all faces */
-    for (iface = 0; iface < scheme->element_get_num_faces (eclass, leaf); iface++) {
-      t8_forest_leaf_face_neighbors (forest, ltree, leaf, &neighbor_leaves, iface, &dual_faces, &num_neighbors,
-                                     &element_indices, &neigh_eclass, 1);
-      t8_debugf ("Element %li across face %i has %i leaf neighbors (with dual faces).\n", (long) ielem, iface,
-                 num_neighbors);
-      snprintf (buffer, BUFSIZ, "\tIndices:\t");
-      for (ineigh = 0; ineigh < num_neighbors; ineigh++) {
-        snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), "%li  (%i)  ", (long) element_indices[ineigh],
-                  dual_faces[iface]);
-      }
-      t8_debugf ("%s\n", buffer);
-      if (num_neighbors > 0) {
-        scheme->element_destroy (neigh_eclass, num_neighbors, neighbor_leaves);
-
-        T8_FREE (element_indices);
-        T8_FREE (neighbor_leaves);
-        T8_FREE (dual_faces);
-      }
-    }
-  }
-  if (allocate_tree_offset) {
-    t8_shmem_array_destroy (&forest->tree_offsets);
-  }
-  if (allocate_first_desc) {
-    t8_shmem_array_destroy (&forest->global_first_desc);
-  }
-  if (allocate_el_offset) {
-    t8_shmem_array_destroy (&forest->element_offsets);
-  }
-}
-
 int
 t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
 {
@@ -1961,36 +1427,36 @@ t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
 int
 t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree)
 {
-  T8_ASSERT (t8_forest_is_committed (forest));
+  bool check_ghost = false;
   T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+  return t8_forest_element_is_leaf_or_ghost (forest, element, local_tree, check_ghost);
+}
+
+int
+t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree,
+                                    const int check_ghost)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+#if T8_ENABLE_DEBUG
+  if (!check_ghost) {
+    T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+  }
+  else {
+    T8_ASSERT (0 <= local_tree && local_tree < t8_forest_get_num_ghost_trees (forest));
+  }
+#endif
 
   /* We get the array of the tree's elements and then search in the array of elements for our 
    * element candidate. */
   /* Get the array */
-  const t8_element_array_t *elements = t8_forest_get_tree_leaf_element_array (forest, local_tree);
+  const t8_element_array_t *elements = !check_ghost ? t8_forest_get_tree_leaf_element_array (forest, local_tree)
+                                                    : t8_forest_ghost_get_tree_leaf_elements (forest, local_tree);
+
   T8_ASSERT (elements != NULL);
 
-  /* In order to find the element, we need to compute its linear id.
-   * To do so, we need the scheme and the level of the element. */
-  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
-  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
-  const int element_level = scheme->element_get_level (tree_class, element);
-  /* Compute the linear id. */
-  const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, element, element_level);
-  /* Search for the element.
-   * The search returns the largest index i,
-   * such that the element at position i has a smaller id than the given one.
-   * If no such i exists, it returns -1. */
-  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
-  if (search_result < 0) {
-    /* The element was not found. */
-    return 0;
-  }
-  /* An element was found but it may not be the candidate element. 
-   * To identify whether the element was found, we compare these two. */
-  const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
-  T8_ASSERT (check_element != NULL);
-  return (scheme->element_is_equal (tree_class, element, check_element));
+  // Search for the element in the array, return true if it was found,
+  // false if not.
+  return t8_element_array_find (elements, element) >= 0;
 }
 
 /* Check if an element is owned by a specific rank */
@@ -2563,7 +2029,12 @@ t8_forest_element_owners_at_neigh_face (t8_forest_t forest, t8_locidx_t ltreeid,
   int dual_face;
   t8_gloidx_t neigh_tree;
 
-  /* Aallocate memory for the neighbor element */
+  if (neigh_class == T8_ECLASS_INVALID) {
+    /* There is no face neighbor, we indicate this by setting the array to 0 */
+    sc_array_resize (owners, 0);
+    return;
+  }
+  /* Allocate memory for the neighbor element */
   T8_ASSERT (T8_ECLASS_ZERO <= neigh_class && neigh_class < T8_ECLASS_COUNT);
   scheme->element_new (neigh_class, 1, &face_neighbor);
   /* clang-format off */
@@ -2591,6 +2062,12 @@ t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t l
   int dual_face;
   t8_gloidx_t neigh_tree;
 
+  if (neigh_class == T8_ECLASS_INVALID) {
+    // There is no face neighbor, so there is no owner
+    *lower = 1;
+    *upper = 0;
+    return;
+  }
   if (*lower >= *upper) {
     /* There is no owner or it is unique */
     return;
