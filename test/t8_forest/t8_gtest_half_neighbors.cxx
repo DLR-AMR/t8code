@@ -119,10 +119,10 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
               << "ineigh = " << ineigh << " face = " << face;
           }
           scheme->element_destroy (neigh_class, num_face_neighs, neighbor_face_children);
+          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
           T8_TESTSUITE_FREE (child_ids);
           T8_TESTSUITE_FREE (neighbor_face_children);
           T8_TESTSUITE_FREE (half_neighbors);
-          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
         }
         scheme->element_destroy (neigh_class, 1, &neighbor);
       }
