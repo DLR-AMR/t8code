@@ -71,7 +71,7 @@ struct t8_return_data
   int *callbacks;
 };
 
-/** Inside the callback of iterate_replace we compare \a refine 
+/** Inside the callback of iterate_replace we compare \a refine
  * with the according return value of the callback of forest_adapt.
  * If true, we check the parameter \a num_outgoing, \a first_outgoing
  * \a num_incoming and \a first_incoming for correctness. */
@@ -210,11 +210,11 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
   if (do_adapt) {
     t8_forest_set_adapt (forest_new, forest_from, adapt_fn, 0);
     if (do_partition) {
-      t8_forest_set_partition (forest_new, NULL, 0);
+      t8_forest_set_partition (forest_new, NULL, 0, nullptr);
     }
   }
   else if (do_partition) {
-    t8_forest_set_partition (forest_new, forest_from, 0);
+    t8_forest_set_partition (forest_new, forest_from, 0, nullptr);
   }
   if (user_data != NULL) {
     t8_forest_set_user_data (forest_new, user_data);

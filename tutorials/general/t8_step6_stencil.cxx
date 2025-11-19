@@ -23,10 +23,10 @@
 /* See also: https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils
  *
  * This is step6 of the t8code tutorials using the C++ interface of t8code.
- * In the following we will store data in the individual elements of our forest. 
- * To do this, we will create a uniform forest in 2D, which will get adapted, 
+ * In the following we will store data in the individual elements of our forest.
+ * To do this, we will create a uniform forest in 2D, which will get adapted,
  * partitioned, balanced and create ghost elements all in one go.
- * After adapting the forest we build a data array and gather data for 
+ * After adapting the forest we build a data array and gather data for
  * the local elements. Next, we exchange the data values of the ghost elements and compute
  * various stencils resp. finite differences. Finally, vtu files are stored with three
  * custom data fields.
@@ -98,7 +98,7 @@ t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
   t8_forest_init (&forest_apbg);
   t8_forest_set_user_data (forest_apbg, &adapt_data);
   t8_forest_set_adapt (forest_apbg, forest, t8_step3_adapt_callback, 0);
-  t8_forest_set_partition (forest_apbg, NULL, 0);
+  t8_forest_set_partition (forest_apbg, NULL, 0, nullptr);
   t8_forest_set_balance (forest_apbg, NULL, 0);
   t8_forest_set_ghost (forest_apbg, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_apbg);
@@ -299,7 +299,7 @@ t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
 }
 
 /* Write the forest as vtu and also write the element's volumes in the file.
- * 
+ *
  * t8code supports writing element based data to vtu as long as its stored
  * as doubles. Each of the data fields to write has to be provided in its own
  * array of length num_local_elements.
