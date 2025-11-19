@@ -76,7 +76,7 @@ const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
 
 /* translate the t8code vertex number to the .msh file vertex number.
  * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
-const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
+[[maybe_unused]] const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0 },                      /* VERTEX */
   { 0, 1 },                   /* LINE */
   { 0, 1, 3, 2 },             /* QUAD */
