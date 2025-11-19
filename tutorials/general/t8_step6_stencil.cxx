@@ -147,7 +147,7 @@ t8_step6_create_element_data (t8_forest_t forest)
       t8_forest_element_centroid (forest, itree, element, edat->midpoint);
 
       /* Compute vertex coordinates. */
-      double verts[4][3]{};
+      double verts[4][3] {};
       scheme->element_get_vertex_reference_coords (tree_class, element, 0, verts[0]);
       scheme->element_get_vertex_reference_coords (tree_class, element, 1, verts[1]);
       scheme->element_get_vertex_reference_coords (tree_class, element, 2, verts[2]);
@@ -182,7 +182,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
   /* Get the scheme of the forest */
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
-  double stencil[3][3]{};
+  double stencil[3][3] {};
   double dx[3] = { 0 };
   double dy[3] = { 0 };
 

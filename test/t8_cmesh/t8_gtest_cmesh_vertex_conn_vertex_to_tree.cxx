@@ -68,7 +68,7 @@ class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example
     const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
 
     t8_debugf ("Starting test with cmesh of dim %i and %li global, %i local trees.\n", cmesh->dimension,
-               static_cast<long>(t8_cmesh_get_num_trees (cmesh)), num_local_trees);
+               static_cast<long> (t8_cmesh_get_num_trees (cmesh)), num_local_trees);
 
     /* look over all local trees */
     for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; ++itree) {
@@ -77,7 +77,7 @@ class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example
       /* loop over all vertices of this tree */
       for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
         /* Set global id of this tree and this vertex to 1 */
-        t8_debugf ("Adding vertex %li to tree %i v %i\n", static_cast<long>(global_vertex_id), itree, ivertex);
+        t8_debugf ("Adding vertex %li to tree %i v %i\n", static_cast<long> (global_vertex_id), itree, ivertex);
         vtt_all_to_one.add_vertex_to_tree (cmesh, global_vertex_id, itree, ivertex);
         /* We assign a arbitrary but computable global id to this vertex.
          * We compute the id to be (tree_index * vertex_index) mod num_local_trees + 1 */
