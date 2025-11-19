@@ -89,8 +89,8 @@ class t8_test_partition_data_t {
   };
 
  private:
-  t8_locidx_t a;
-  char b;
+  [[maybe_unused]] t8_locidx_t a;
+  [[maybe_unused]] char b;
   t8_gloidx_t data { 0 };
 };
 
