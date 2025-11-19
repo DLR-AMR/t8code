@@ -239,7 +239,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 0 <= initial_level && radius_inner <= radius_outer && radius_inner >= 0
-           && (eclass_int > 3 && eclass_int < 8 || eclass_int == 0) && remove_scope >= 0 && remove_scope < 3) {
+           && ((eclass_int > 3 && eclass_int < 8) || eclass_int == 0) && remove_scope >= 0 && remove_scope < 3) {
     t8_construct_spheres (initial_level, radius_inner, radius_outer, remove_scope, (t8_eclass_t) eclass_int, vtuname);
   }
   else {
