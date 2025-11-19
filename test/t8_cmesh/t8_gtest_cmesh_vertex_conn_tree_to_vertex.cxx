@@ -85,7 +85,7 @@ class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cme
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (committed_cmesh);
 
     t8_debugf ("Starting test with cmesh of dim %i and %li global, %i local trees.\n", cmesh->dimension,
-               t8_cmesh_get_num_trees (committed_cmesh), num_local_trees);
+               static_cast<long>(t8_cmesh_get_num_trees (committed_cmesh)), num_local_trees);
     for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
 
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (committed_cmesh, itree);
@@ -163,7 +163,7 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
     const t8_eclass_t tree_class = std::get<1> (GetParam ());
     t8_cmesh_init (&cmesh);
 
-    t8_debugf ("Testing cmesh with %li trees of class %s\n", num_trees, t8_eclass_to_string[tree_class]);
+    t8_debugf ("Testing cmesh with %li trees of class %s\n", static_cast<long>(num_trees), t8_eclass_to_string[tree_class]);
 
     for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
       /* Set this tree's class. */
@@ -281,7 +281,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (committed_cmesh);
 
     t8_debugf ("Starting test with cmesh of dim %i and %li global, %i local trees.\n", cmesh->dimension,
-               t8_cmesh_get_num_trees (committed_cmesh), num_local_trees);
+               static_cast<long>(t8_cmesh_get_num_trees (committed_cmesh)), num_local_trees);
     for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
 
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (committed_cmesh, itree);
@@ -351,7 +351,7 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
     const t8_eclass_t tree_class = std::get<1> (GetParam ());
     t8_cmesh_init (&cmesh);
 
-    t8_debugf ("Testing cmesh with %li trees of class %s\n", num_trees, t8_eclass_to_string[tree_class]);
+    t8_debugf ("Testing cmesh with %li trees of class %s\n", static_cast<long>(num_trees), t8_eclass_to_string[tree_class]);
 
     for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
       /* Set this tree's class. */
