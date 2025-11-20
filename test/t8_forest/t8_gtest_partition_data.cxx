@@ -66,16 +66,6 @@ class t8_test_partition_data_t {
     return old;
   };
 
-  t8_test_partition_data_t&
-  operator= (const t8_test_partition_data_t&)
-    = default;
-  t8_test_partition_data_t&
-  operator= (const t8_gloidx_t& value)
-  {
-    this->data = value;
-    return *this;
-  };
-
   explicit
   operator t8_gloidx_t ()
   {
@@ -89,8 +79,8 @@ class t8_test_partition_data_t {
   };
 
  private:
-  t8_locidx_t a;
-  char b;
+  [[maybe_unused]] t8_locidx_t a;
+  [[maybe_unused]] char b;
   t8_gloidx_t data { 0 };
 };
 
