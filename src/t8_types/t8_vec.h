@@ -44,12 +44,12 @@ t8_norm (const double vec[3]);
 void
 t8_normalize (double vec[3]);
 
-/** Make a copy of a vector.
- * \param [in]  vec_in
- * \param [out] vec_out
+/** Make a copy of a dimensional object.
+ * \param [in]  dimensional_in
+ * \param [out] dimensional_out
  */
 void
-t8_copy (const double vec_in[3], double vec_out[3]);
+t8_copy (const double dimensional_in[3], double dimensional_out[3]);
 
 /** Euclidean distance of X and Y.
  * \param [in]  vec_x  A 3D vector.
@@ -136,12 +136,12 @@ void
 t8_diff (const double vec_x[3], const double vec_y[3], double diff[3]);
 
 /**
- * Check the equality of two vectors elementwise 
- * 
- * \param[in] vec_x 
- * \param[in] vec_y 
- * \param[in] tol 
- * \return true, if the vectors are equal up to \a tol 
+ * Check the equality of two vectors elementwise
+ *
+ * \param[in] vec_x
+ * \param[in] vec_y
+ * \param[in] tol
+ * \return true, if the vectors are equal up to \a tol
  */
 int
 t8_eq (const double vec_x[3], const double vec_y[3], const double tol);
