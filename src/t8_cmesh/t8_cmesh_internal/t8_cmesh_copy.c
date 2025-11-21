@@ -26,12 +26,12 @@
  */
 
 #include <t8_data/t8_shmem.h>
-#include <t8_cmesh.h>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_partition.h"
-#include "t8_cmesh_trees.h"
-#include "t8_cmesh_copy.h"
-#include "t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h"
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.h>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
 
 void
 t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)

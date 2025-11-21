@@ -153,21 +153,21 @@ target_sources( T8 PRIVATE
     t8_vtk.c 
     t8_cmesh/t8_cmesh.cxx 
     t8_cmesh/t8_cmesh_cad.cxx 
-    t8_cmesh/t8_cmesh_triangle.cxx 
-    t8_cmesh/t8_cmesh_stash.c 
-    t8_cmesh/t8_cmesh_save.cxx 
-    t8_cmesh/t8_cmesh_trees.cxx 
-    t8_cmesh/t8_cmesh_commit.cxx 
-    t8_cmesh/t8_cmesh_partition.cxx 
-    t8_cmesh/t8_cmesh_copy.c 
     t8_cmesh/t8_cmesh_geometry.cxx 
-    t8_cmesh/t8_cmesh_examples.cxx 
-    t8_cmesh/t8_cmesh_helpers.cxx 
-    t8_cmesh/t8_cmesh_offset.c 
+    t8_cmesh/t8_cmesh_examples.cxx
+    t8_cmesh/t8_cmesh_helpers.cxx
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_commit.cxx 
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.c 
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c 
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx 
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c 
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.cxx 
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx 
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx 
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx 
-    t8_cmesh/t8_cmesh_readmshfile.cxx
+    t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.cxx
+    t8_cmesh/t8_cmesh_io/t8_cmesh_save.cxx 
+    t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.cxx 
     t8_data/t8_shmem.c 
     t8_data/t8_containers.cxx 
     t8_forest/t8_forest_adapt.cxx 
@@ -236,11 +236,6 @@ target_compile_definitions( T8 PUBLIC T8_LIBS="${T8_LIBS}" )
 
 install( FILES
     t8.h
-    t8_cmesh.h
-    t8_cmesh.hxx
-    t8_cmesh_readmshfile.h
-    t8_cmesh_tetgen.h
-    t8_cmesh_triangle.h
     t8_eclass.h
     t8_element.h
     t8_element_shape.h
@@ -253,13 +248,17 @@ install( FILES
     TYPE INCLUDE
 )
 
+# Note: Some of the created install directories will be empty, for example t8_cmesh/t8_cmesh_internal
+# since none of the files in them should be installed.
+# However, CMake still creates the folder. It would be better if it did not do so.
+# It seems like we cannot force CMake to not create the folder.
+# See https://gitlab.kitware.com/cmake/cmake/-/issues/19189
+
 install ( DIRECTORY t8_vector_helper DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
 
 install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
-  PATTERN "t8_cmesh/t8_cmesh_copy.h"      EXCLUDE
-  PATTERN "t8_cmesh/t8_cmesh_offset.h"    EXCLUDE 
-  PATTERN "t8_cmesh/t8_cmesh_partition.h" EXCLUDE
-  PATTERN "t8_cmesh/t8_cmesh_trees.h"     EXCLUDE 
+  PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
+  PATTERN "t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h" EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
 

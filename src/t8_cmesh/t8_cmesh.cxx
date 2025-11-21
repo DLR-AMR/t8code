@@ -21,7 +21,7 @@
 */
 
 #include <sc_statistics.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
@@ -32,14 +32,14 @@
 #include <t8_data/t8_shmem.h>
 #include <t8_types/t8_vec.h>
 #include <t8_eclass.h>
-#include "t8_cmesh_types.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_vector_helper/t8_vector_algorithms.hxx>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #if T8_ENABLE_METIS
 #include <metis.h>
 
 #endif
-#include "t8_cmesh_trees.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 
 #include <t8_element.h>
 
