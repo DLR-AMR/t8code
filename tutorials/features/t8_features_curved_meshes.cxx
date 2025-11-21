@@ -37,8 +37,8 @@
 
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <sc_options.h>                         /* CLI parser */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_types.h>            /* For the attribute keys.  */
+#include <t8_cmesh/t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>            /* For the attribute keys.  */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
@@ -47,7 +47,7 @@
 #if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx> /* Curved geometry calculation of trees */
 #endif
-#include <t8_cmesh_readmshfile.h> /* msh file reader */
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h> /* msh file reader */
 #include <string>                 /* std::string */
 #include <array>                  /* std::array */
 

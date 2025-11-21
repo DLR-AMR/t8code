@@ -24,9 +24,9 @@
 #include <unistd.h> /* Needed to check for file access */
 #include <t8.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh_readmshfile.h>
-#include "t8_cmesh/t8_cmesh_trees.h"
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 
 /* In this file we test the msh file (gmsh) reader of the cmesh.
  * Currently, we support version 2 and 4 ascii.
