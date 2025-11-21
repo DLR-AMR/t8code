@@ -30,7 +30,7 @@
 
 #include <t8.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>

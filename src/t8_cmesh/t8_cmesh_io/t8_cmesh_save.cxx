@@ -29,11 +29,11 @@
 
 #include <t8_version.h>
 #include <t8_eclass.h>
-#include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_trees.h>
-#include <t8_cmesh/t8_cmesh_save.h>
-#include <t8_cmesh/t8_cmesh_partition.h>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_save.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_handler.hxx>

@@ -32,7 +32,7 @@
 #define T8_CMESH_OFFSET_H
 
 #include <t8.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 
 T8_EXTERN_C_BEGIN ();
 

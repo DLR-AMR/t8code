@@ -29,8 +29,8 @@
 #define T8_CMESH_VERTEX_CONNECTIVITY
 
 #include <memory>
-#include <t8_cmesh.h>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 

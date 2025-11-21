@@ -41,8 +41,8 @@
 #define T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
 
 #include <algorithm>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <span>
 

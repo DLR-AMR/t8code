@@ -30,7 +30,7 @@
 #include <stdexcept>
 #include <vector>
 #include <unordered_map>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
 

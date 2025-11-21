@@ -37,7 +37,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <cmath>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 
 class t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithParam<std::tuple<int, int, int>> {
  protected:

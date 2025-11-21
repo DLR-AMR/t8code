@@ -28,8 +28,8 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
-#include "t8_cmesh_stash.h"
-#include "t8_cmesh_trees.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 
 /** This struct is needed as a key to search
  * for an argument in the arguments array of a tree */

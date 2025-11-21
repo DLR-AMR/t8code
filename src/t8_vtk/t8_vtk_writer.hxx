@@ -28,7 +28,7 @@
 #ifndef T8_VTK_WRITER_HXX
 #define T8_VTK_WRITER_HXX
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>

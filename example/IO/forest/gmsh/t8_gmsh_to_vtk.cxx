@@ -26,11 +26,11 @@
 
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <sc_options.h>                         /* CLI parser. */
-#include <t8_cmesh.h>                           /* Cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                           /* Cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* Create forest. */
 #include <t8_forest/t8_forest_io.h>             /* Save forest. */
 #include <t8_schemes/t8_default/t8_default.hxx> /* Default refinement scheme. */
-#include <t8_cmesh_readmshfile.h>               /* Msh file reader. */
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>               /* Msh file reader. */
 
 int
 main (int argc, char **argv)

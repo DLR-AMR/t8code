@@ -29,8 +29,8 @@
 #define T8_CMESH_PART_TREE_H
 
 #include <t8.h>
-#include <t8_cmesh.h>
-#include "t8_cmesh_types.h"
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 
 T8_EXTERN_C_BEGIN ();
 
