@@ -38,16 +38,19 @@ function( add_t8_test )
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
 
-    # Check if test is a Fortran file and if MPI is enabled.
-    string ( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file  )
-    string( FIND ${TEST_BUILD_DIR} "t8_mesh_handle" is_mesh_handle_file)
+    # Link base libraries.
+    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
+    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
+
+    # Check if test is a Fortran or mesh handle file.
+    string( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file )
+    string( FIND ${TEST_BUILD_DIR} "t8_mesh_handle" is_mesh_handle_file )
+
     if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI ) 
-      target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
-      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread MPI::MPI_Fortran )
-    elseif( (${is_mesh_handle_file} GREATER_EQUAL 0) )
-      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread T8_MESH_HANDLE )
-    else()
-      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
+        target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE MPI::MPI_Fortran )
+    endif ()
+    if ( (${is_mesh_handle_file} GREATER_EQUAL 0) )
+        target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8_MESH_HANDLE )
     endif ()
 
     set_target_properties(${ADD_T8_TEST_NAME} PROPERTIES
