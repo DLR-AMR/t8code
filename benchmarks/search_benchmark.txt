@@ -1,0 +1,14 @@
+The search benchmark constructs a partitioned uniform refinement of a single coarse mesh element.
+Afterwards, generates a single search point in the center of each local element, and finally searches for all these points
+in the local part of the mesh.
+Finally, each cell that had at least one point found, is refined (here uniform refinement, since each element has exactly one search point).
+This cycle is repeated for num_repetitions with a new mesh each time.
+
+Instructions for running the search benchmark:
+
+It has 4 relevant parameters: scheme, eclass, level, repititions
+An example call might look like:
+
+mpirun -n 8 ./t8_time_search -s1 -e4 -l6 -r20
+
+The file search_benchmark_runscript.py provides the python script used to create the benchmarks in the paper.
