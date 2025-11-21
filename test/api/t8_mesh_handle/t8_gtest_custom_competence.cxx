@@ -38,11 +38,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_operators.hxx>
 
-/** Custom competence that needs access to the public members of the elements. */
+/**
+ * Custom competence that needs access to the public members of the elements.
+ * \tparam TUnderlying Use the \ref t8_mesh_handle::element with specified competences as template parameter.
+ */
 template <typename TUnderlying>
 struct dummy_get_level: public t8_crtp_operator<TUnderlying, dummy_get_level>
 {
  public:
+  /** Getter for the level of the element. This function needs to access several members 
+  *     of the element such that we need the crtp structure here. 
+  * \return Level of the element.
+  */
   t8_element_level
   get_level_dummy () const
   {
@@ -54,11 +61,16 @@ struct dummy_get_level: public t8_crtp_operator<TUnderlying, dummy_get_level>
   }
 };
 
-/** Second custom competence. */
+/** Trivial competence to demonstrate that we can use more than one custom competence.
+ * \tparam TUnderlying Use the \ref t8_mesh_handle::element with specified competences as template parameter.
+ */
 template <typename TUnderlying>
 struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
 {
  public:
+  /** Dummy getter that always returns 1.
+   * \return Always returns 1.
+   */
   int
   get_value_dummy () const
   {

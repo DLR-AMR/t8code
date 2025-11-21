@@ -66,7 +66,7 @@ class mesh {
   * \return Number of local elements in the mesh.
   */
   t8_locidx_t
-  get_local_num_elements () const
+  get_num_local_elements () const
   {
     return t8_forest_get_local_num_leaf_elements (m_forest);
   }
@@ -154,7 +154,7 @@ class mesh {
     if (!m_elements.empty ()) {
       m_elements.clear ();
     }
-    m_elements.reserve (get_local_num_elements ());
+    m_elements.reserve (get_num_local_elements ());
     // Iterate through forest elements and fill the element vector with newly created mesh elements.
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);

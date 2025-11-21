@@ -91,7 +91,7 @@ TEST_P (t8_mesh_handle_test, test_iterator)
   }
 
   // Check loop with indices.
-  for (int ielement = 0; ielement < mesh.get_local_num_elements (); ielement++) {
+  for (int ielement = 0; ielement < mesh.get_num_local_elements (); ielement++) {
     EXPECT_EQ (level, mesh[ielement].get_level ());
   }
   // Check loop with const iterator.

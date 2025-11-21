@@ -160,7 +160,7 @@ class element: public TCompetence<element<TCompetence...>>... {
     const t8_element_t* element = get_element ();
     const int num_corners
       = t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
-    std::vector<t8_3D_vec> vertex_coordinates;
+    std::vector<t8_3D_point> vertex_coordinates;
     vertex_coordinates.reserve (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
       t8_3D_point vertex;
@@ -180,7 +180,7 @@ class element: public TCompetence<element<TCompetence...>>... {
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
-  t8_3D_vec
+  t8_3D_point
   get_centroid () const
   {
     // Check if we have a cached version and if the cache has already been filled.
