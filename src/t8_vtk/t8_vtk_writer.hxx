@@ -238,7 +238,7 @@ class vtk_writer {
  */
   void
   t8_grid_element_to_vtk_cell (const grid_t grid, const t8_element_t *element, const t8_locidx_t itree,
-                               const t8_gloidx_t offset, const int is_ghost, const int elem_id, long int *point_id,
+                               const t8_gloidx_t offset, const bool is_ghost, const int elem_id, long int *point_id,
                                int *cellTypes, vtkSmartPointer<vtkMergePoints> points,
                                vtkSmartPointer<vtkCellArray> cellArray,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
@@ -373,17 +373,21 @@ class vtk_writer {
     t8_gloidx_t elem_id = offset;
 
     /* Check if we have to write ghosts on this process. */
-    bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
+    const bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
 
     /* Compute the number of cells on this process. */
-    t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
+    const t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
 
     int *cellTypes = T8_ALLOC (int, num_cells);
     T8_ASSERT (cellTypes != NULL);
 
     /* Get the local bounds of the forest or cmesh */
-    double bounds[6];
-    grid_get_local_bounds (grid, bounds);
+    double bounds[6] = { 0 };
+    if (num_cells > 0) {
+      // This function expects a non-empty partition, so we only call it
+      // if we have cells.
+      grid_get_local_bounds (grid, bounds);
+    }
 
     /* Allocate VTK Memory for the arrays */
     const int grid_dim = grid_get_dim (grid);
@@ -438,14 +442,13 @@ class vtk_writer {
     /* Write the user defined data fields. For that we iterate over the idata, set the name, the array and then give
      * this data to the unstructured Grid Object.We differentiate between scalar and vector data.
      */
-    const t8_locidx_t num_elements = grid_local_num_elements (grid);
     for (int idata = 0; idata < num_data; idata++) {
       dataArrays[idata] = vtkDoubleArray::New ();
       const int num_components = this->data[idata].type == T8_VTK_SCALAR ? 1 : 3;
       dataArrays[idata]->SetName (this->data[idata].description); /* Set the name of the array. */
-      dataArrays[idata]->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements. */
+      dataArrays[idata]->SetNumberOfTuples (num_cells);           /* We want number of tuples=number of cells. */
       dataArrays[idata]->SetNumberOfComponents (num_components);  /* Each tuples has 3 values. */
-      dataArrays[idata]->SetVoidArray (this->data[idata].data, num_elements * num_components, 1);
+      dataArrays[idata]->SetVoidArray (this->data[idata].data, num_cells * num_components, 1);
       unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
     }
 

@@ -235,8 +235,8 @@ class t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEcl
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
-   * \param [in] element     The element to be checked.
-   * \param [in] level A refinement level.
+   * \param [in] element   The element to be checked.
+   * \param [in] level     A refinement level.
    * \return Suppose \a element is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
