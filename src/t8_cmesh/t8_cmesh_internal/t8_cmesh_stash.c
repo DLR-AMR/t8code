@@ -26,7 +26,7 @@
 
 #include <t8.h>
 #include <t8_eclass.h>
-#include "t8_cmesh_stash.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 
 void
 t8_stash_init (t8_stash_t *pstash)

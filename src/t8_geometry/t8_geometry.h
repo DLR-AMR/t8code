@@ -68,7 +68,7 @@ typedef struct t8_geometry_handler t8_geometry_handler_c;
 
 /* The t8_geometry_c type must be know to cmesh.h, thus we
  * include it after the typedef. */
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 
 T8_EXTERN_C_BEGIN ();
 

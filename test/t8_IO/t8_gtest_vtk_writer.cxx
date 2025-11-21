@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_vtk/t8_vtk_writer.hxx>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 

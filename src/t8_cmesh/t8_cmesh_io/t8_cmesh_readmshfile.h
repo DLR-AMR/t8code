@@ -30,7 +30,7 @@
 
 #include <t8.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 
 /** The supported .msh file versions.
  * Currently, we support gmsh's file version 2 and 4 in ASCII format.

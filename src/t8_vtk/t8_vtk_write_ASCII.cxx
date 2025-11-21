@@ -26,8 +26,8 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_types/t8_vec.hxx>
 #include "t8_forest/t8_forest_types.h"
-#include "t8_cmesh/t8_cmesh_trees.h"
-#include "t8_cmesh/t8_cmesh_types.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_schemes/t8_scheme.hxx>
 
 /* TODO: Currently we only use ASCII mode and no data compression.

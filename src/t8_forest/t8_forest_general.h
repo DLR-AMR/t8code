@@ -29,7 +29,7 @@
 #ifndef T8_FOREST_GENERAL_H
 #define T8_FOREST_GENERAL_H
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_element.h>
 #include <t8_data/t8_containers.h>
 

@@ -29,8 +29,8 @@
 #define T8_CMESH_GEOMETRY_H
 
 #include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_hash.hxx>
 
 T8_EXTERN_C_BEGIN ();

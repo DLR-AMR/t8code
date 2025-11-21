@@ -27,7 +27,7 @@
 #ifndef T8_CMESH_NETCDF_H
 #define T8_CMESH_NETCDF_H
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_netcdf.h>
 
 T8_EXTERN_C_BEGIN ();
