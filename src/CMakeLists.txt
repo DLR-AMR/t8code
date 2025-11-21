@@ -106,11 +106,11 @@ if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
     target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
-    target_sources(T8 PRIVATE 
+    target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
       t8_cad/t8_cad.cxx
     )
-    install( FILES 
+    install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
       t8_cad/t8_cad.hxx
@@ -143,9 +143,9 @@ if( T8CODE_BUILD_WEXTRA )
 endif()
 
 
-target_sources( T8 PRIVATE 
-    t8.c 
-    t8_eclass.c 
+target_sources( T8 PRIVATE
+    t8.c
+    t8_eclass.c
     t8_element_shape.c
     t8_element.cxx
     t8_refcount.c 
@@ -174,21 +174,21 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_partition.cxx 
     t8_forest/t8_forest.cxx 
     t8_forest/t8_forest_private.cxx
-    t8_forest/t8_forest_ghost.cxx 
-    t8_forest/t8_forest_iterate.cxx 
-    t8_forest/t8_forest_balance.cxx 
-    t8_forest/t8_forest_search/t8_forest_search.cxx 
-    t8_geometry/t8_geometry.cxx 
-    t8_geometry/t8_geometry_helpers.c 
-    t8_geometry/t8_geometry_base.cxx 
-    t8_geometry/t8_geometry_handler.cxx 
-    t8_geometry/t8_geometry_with_vertices.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx 
-    t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx 
+    t8_forest/t8_forest_ghost.cxx
+    t8_forest/t8_forest_iterate.cxx
+    t8_forest/t8_forest_balance.cxx
+    t8_forest/t8_forest_search/t8_forest_search.cxx
+    t8_geometry/t8_geometry.cxx
+    t8_geometry/t8_geometry_helpers.c
+    t8_geometry/t8_geometry_base.cxx
+    t8_geometry/t8_geometry_handler.cxx
+    t8_geometry/t8_geometry_with_vertices.cxx
+    t8_geometry/t8_geometry_implementations/t8_geometry_analytic.cxx
+    t8_geometry/t8_geometry_implementations/t8_geometry_linear.cxx
+    t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.cxx
+    t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx
+    t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx
+    t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx
     t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
@@ -199,7 +199,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.c
     t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
-    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c 
+    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c
     t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
     t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
@@ -254,7 +254,7 @@ install( FILES
 # It seems like we cannot force CMake to not create the folder.
 # See https://gitlab.kitware.com/cmake/cmake/-/issues/19189
 
-install ( DIRECTORY t8_vector_helper DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
+install ( DIRECTORY t8_helper_functions DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
 
 install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
   PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
@@ -268,23 +268,23 @@ install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
   PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
   )
-install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h" 
+install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.h" EXCLUDE)
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.h" )
 
 install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.hxx"
-  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE 
-  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx" EXCLUDE 
+  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
+  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx" EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx" EXCLUDE
 )
 
 install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
 install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx" 
+install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx" EXCLUDE)
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx" 
+install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_vtk/t8_vtk_parallel.hxx"      EXCLUDE
   PATTERN "t8_vtk/t8_vtk_polydata.hxx"      EXCLUDE
   PATTERN "t8_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
