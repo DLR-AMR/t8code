@@ -54,7 +54,7 @@ namespace t8_mesh_handle
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct cache_vertex_coordinates: t8_crtp_operator<TUnderlying, cache_vertex_coordinates>
+struct cache_vertex_coordinates: public t8_crtp_operator<TUnderlying, cache_vertex_coordinates>
 {
  public:
   /**
@@ -77,7 +77,7 @@ struct cache_vertex_coordinates: t8_crtp_operator<TUnderlying, cache_vertex_coor
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct cache_centroid: t8_crtp_operator<TUnderlying, cache_centroid>
+struct cache_centroid: public t8_crtp_operator<TUnderlying, cache_centroid>
 {
  public:
   /**
