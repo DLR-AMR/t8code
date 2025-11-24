@@ -1612,6 +1612,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
      * -> No, we cannot. Since in any case we have to compute the t8_element_count_leaves_from_root
      *    for each tree.
      */
+  *last_local_tree = -1;  // Initialize for the case of num_trees <= 0
   if (last_child <= first_child) {
     /* This process is empty. */
     /* Find the next non-empty proc */
@@ -1636,7 +1637,6 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
     T8_ASSERT (first_child_next_non_empty < last_child_next_non_empty);
     // Loop over trees to find the one containing first_child_next_non_empty, which gives us the first and last local tree.
     t8_gloidx_t current_tree_element_offset = 0;
-    *last_local_tree = -1;  // Initialize for the case of num_trees <= 0
     for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
       const t8_gloidx_t num_leaf_elems_in_tree = scheme->count_leaves_from_root (tree_class, level);
@@ -1886,6 +1886,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   if (cmesh->mpirank == 0) {
     *first_local_tree = 0;
   }
+  *last_local_tree = -1;  // Initialize for the case of num_trees <= 0
 
   /* Compute number of non-shared-trees and the local index of the first non-shared-tree */
   const int first_tree_shared_shift = cmesh->first_tree_shared ? 1 : 0;
