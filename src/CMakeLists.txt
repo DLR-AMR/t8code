@@ -108,12 +108,12 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
     target_sources(T8 PRIVATE 
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
-      t8_data/t8_cad.cxx
+      t8_cad/t8_cad.cxx
     )
     install( FILES 
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
-      t8_data/t8_cad.hxx
+      t8_cad/t8_cad.hxx
       DESTINATION include
     )
 endif()
@@ -177,7 +177,9 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_ghost.cxx 
     t8_forest/t8_forest_iterate.cxx 
     t8_forest/t8_forest_balance.cxx 
-    t8_forest/t8_forest_search/t8_forest_search.cxx 
+    t8_forest/t8_forest_search/t8_forest_search.cxx
+    t8_forest/t8_forest_neighbor/t8_forest_element_face_neighbor.cxx
+    t8_forest/t8_forest_neighbor/t8_forest_leaf_face_neighbor.cxx
     t8_geometry/t8_geometry.cxx 
     t8_geometry/t8_geometry_helpers.c 
     t8_geometry/t8_geometry_base.cxx 
