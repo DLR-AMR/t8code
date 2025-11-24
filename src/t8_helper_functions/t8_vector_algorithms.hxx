@@ -14,7 +14,7 @@
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -22,9 +22,9 @@
 
 /**
  * \file t8_vector_algorithms.hxx
- * 
+ *
  * Contains specialized algorithms on std::vector
- * 
+ *
  */
 
 #ifndef T8_VECTOR_ALGORITHMS
@@ -41,21 +41,21 @@
  * The value type of the iterator should be comparable with <.
  * The categories are defined by the std::function \a category_func passed as input argument.
  * This is a re-implementation of sc_array_split.
- * 
- * /tparam TIterator            An input iterator type
- * /tparam TSentinel            A sentinel type for the iterator
- * /tparam TContainer           A container type that holds the offsets. It should be a contiguous container
- * /tparam TCategory            The type of the category. It should be an unsigned integral type
- * /tparam Args                 The type of the arguments passed to the category_func
  *
- * /param[in] begin             An iterator pointing to the first element of the range
- * /param[in] end               An iterator pointing to the last element of the range
- * /param[in, out] offsets      A Container holding num_categories + 1 elements. Will hold indices
+ * \tparam TIterator            An input iterator type
+ * \tparam TSentinel            A sentinel type for the iterator
+ * \tparam TContainer           A container type that holds the offsets. It should be a contiguous container
+ * \tparam TCategory            The type of the category. It should be an unsigned integral type
+ * \tparam Args                 The type of the arguments passed to the category_func
+ *
+ * \param[in] begin             An iterator pointing to the first element of the range
+ * \param[in] end               An iterator pointing to the last element of the range
+ * \param[in, out] offsets      A Container holding num_categories + 1 elements. Will hold indices
  *                              j of the range \a begin and \a end that contain objects of category k, such that offsets[k] <0 j < offset[k+1]
  *                              If there are no elements of category k then offsets[k] = offsets[k +1]
- * /param[in] category_func     A function that takes an element of the value type of the iterators \a begin / \a end and
+ * \param[in] category_func     A function that takes an element of the value type of the iterators \a begin / \a end and
  *                              returns the category of the element. A category should be in [0, num_categories)
- * /param[in] args              A parameter pack of arguments passed to the category_func
+ * \param[in] args              A parameter pack of arguments passed to the category_func
  */
 template <std::input_iterator TIterator, std::sentinel_for<TIterator> TSentinel,
           std::ranges::contiguous_range TContainer, std::unsigned_integral TCategory, typename... Args>

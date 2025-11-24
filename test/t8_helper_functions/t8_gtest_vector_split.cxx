@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_vector_helper/t8_vector_algorithms.hxx>
+#include <t8_helper_functions/t8_vector_algorithms.hxx>
 #include <numeric>
 #include <t8.h>
 
