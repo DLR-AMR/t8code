@@ -58,11 +58,11 @@ if( T8CODE_ENABLE_NETCDF )
     $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR=1> )
   target_sources( T8 PRIVATE
   t8_netcdf.c
-  t8_cmesh/t8_cmesh_netcdf.c
+  t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.c
   t8_forest/t8_forest_netcdf.cxx
   )
   install( FILES
-  t8_cmesh_netcdf.h
+  t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h
   t8_forest_netcdf.h
   t8_netcdf.h
   TYPE INCLUDE )
