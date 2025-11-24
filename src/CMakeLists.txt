@@ -259,6 +259,8 @@ install ( DIRECTORY t8_helper_functions DESTINATION PRIVATE_HEADER FILES_MATCHIN
 install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
   PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h" EXCLUDE
+  PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
+)
 
 install( DIRECTORY t8_data TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
