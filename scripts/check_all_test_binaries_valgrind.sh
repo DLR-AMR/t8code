@@ -26,7 +26,15 @@
 # The script returns 1 if an error is found and 0 otherwise. 
 # This script must be executed from the scripts/ folder.
 # It is assumed that the build folder ../build/test/ with the correct test binaries exists.
+# As a first argument, you can provide the number of processes to use with mpi (default is 1).
 #
+
+# Check if a number of processes is provided as first argument. If not, set to 1.
+if [ -n "$1" ] && [[ "$1" =~ ^[0-9]+$ ]]; then
+  num_procs="$1"
+else
+  num_procs=1
+fi
 
 # Script must be executed from the scripts/ folder.
 if [ `basename $PWD` != scripts ]; then
@@ -61,7 +69,7 @@ for bin_path in $test_bin_paths; do
   counter=$(( $counter + 1 ))
   echo "[$counter/$num_paths] Valgrind check of $bin_path..."
   # Run check_valgrind script for each test binary.
-  bash ../../scripts/check_valgrind.sh $bin_path $valgrind_suppressions_file 2>&1
+  bash ../../scripts/check_valgrind.sh $bin_path $valgrind_suppressions_file $num_procs 2>&1
   status=$?
   # If status is not 0, an error occurred.
   if test $status -ne 0; then
