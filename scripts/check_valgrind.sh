@@ -27,10 +27,14 @@
 # Using "--supp=[FILE]", you can provide a path to a suppression file that is used by Valgrind to suppress certain errors.
 # With "--ntasks=[NUMBER]", you can provide the number of processes to use with MPI (default is 1).
 #
+USAGE="\nUSAGE: This script executes valgrind in parallel on a given input file. Use \n
+$0 [FILE] --supp=[SUPPRESSION_FILE] --ntasks=[NUM_TASKS]\n
+to run valgrind on FILE. Optionally you can provide a suppression file and the number of parallel processes to use with MPI.\n"
 
 # Check that an argument is given and that the argument is a file.
 if [ ${1-x} = x ]; then
-  echo ERROR: Need to provide a file as first argument.
+  echo "ERROR: Need to provide a file as first argument."
+  echo -e "$USAGE"
   exit 1
 fi
 if [ -f "$1" ]; then
@@ -41,6 +45,7 @@ else
     FILE="../$1"
   else
     echo "ERROR: Non existing file: $1"
+    echo -e "$USAGE"
     exit 1
   fi
 fi
@@ -54,6 +59,7 @@ for arg in "$@"; do
       VALGRIND_FLAGS="${VALGRIND_FLAGS} --suppressions=${supp_file}"
     else
       echo "ERROR: Suppression file '$supp_file' does not exist."
+      echo -e "$USAGE"
       exit 1
     fi
   fi
@@ -68,10 +74,13 @@ for arg in "$@"; do
       num_procs="$ntasks_val"
     else
       echo "ERROR: --ntasks value '$ntasks_val' is not a valid number."
+      echo -e "$USAGE"
       exit 1
     fi
   fi
 done
+
+echo "Valgrind check of ${FILE} using ${num_procs} processes..."
 
 # Write valgrind output to variable OUTPUT_FILE.
 OUTPUT_FILE="valgrind-output.log"
