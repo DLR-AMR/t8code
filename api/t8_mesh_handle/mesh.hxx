@@ -48,7 +48,6 @@ class mesh {
  public:
   friend TMeshElement; /**< Make the element class a friend to access private members of the mesh (e.g. the forest). */
 
-  using mesh_iterator = typename std::vector<TMeshElement>::iterator; /**< Iterator type for the mesh elements. */
   using mesh_const_iterator =
     typename std::vector<TMeshElement>::const_iterator; /**< Constant iterator type for the mesh elements. */
 
@@ -72,41 +71,21 @@ class mesh {
   }
 
   /**
-   * Returns an iterator to the first (local) mesh element.
-   * \return Iterator to the first (local) mesh element.
-   */
-  mesh_iterator
-  begin ()
-  {
-    return m_elements.begin ();
-  }
-
-  /**
-   * Returns an iterator to a mesh element following the last (local) element of the mesh.
-   * \return Iterator to the mesh element following the last (local) element of the mesh.
-   */
-  mesh_iterator
-  end ()
-  {
-    return m_elements.end ();
-  }
-
-  /**
-   * Const version of \ref begin.
+   * Returns a constant iterator to the first (local) mesh element.
    * \return Constant iterator to the first (local) mesh element.
    */
   mesh_const_iterator
-  cbegin () const
+  begin () const
   {
     return m_elements.cbegin ();
   }
 
   /**
-   * Const version of \ref end.
+   * Returns a constant iterator to a mesh element following the last (local) element of the mesh.
    * \return Constant iterator to the mesh element following the last (local) element of the mesh.
    */
   mesh_const_iterator
-  cend () const
+  end () const
   {
     return m_elements.cend ();
   }
@@ -116,8 +95,8 @@ class mesh {
    * \param [in] local_index The local index of the element to access.
    * \return Reference to the mesh element.
    */
-  TMeshElement&
-  operator[] (t8_locidx_t local_index)
+  const TMeshElement&
+  operator[] (t8_locidx_t local_index) const
   {
     return m_elements[local_index];
   }

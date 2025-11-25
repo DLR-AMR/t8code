@@ -93,10 +93,6 @@ TEST_P (t8_mesh_handle_test, test_iterator)
   for (int ielement = 0; ielement < mesh.get_num_local_elements (); ielement++) {
     EXPECT_EQ (level, mesh[ielement].get_level ());
   }
-  // Check loop with const iterator.
-  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
-    EXPECT_EQ (level, it->get_level ());
-  }
 }
 
 /** Test competences. */
