@@ -39,7 +39,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
-/* Forward declaration of the mesh class of the handle.
+/* Forward declaration of the \ref mesh class of the handle.
  */
 template <class TMeshElement>
 class mesh;
@@ -143,6 +143,16 @@ class element: public TCompetence<element<TCompetence...>>... {
   }
 
   /**
+   * Getter for the element's shape.
+   * \return The shape of the element.
+   */
+  t8_element_shape_t
+  get_shape () const
+  {
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_shape (get_tree_class (), get_element ());
+  }
+
+  /**
    * Getter for the vertex coordinates of the mesh element.
    * This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
@@ -160,12 +170,9 @@ class element: public TCompetence<element<TCompetence...>>... {
     const t8_element_t* element = get_element ();
     const int num_corners
       = t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
-    std::vector<t8_3D_point> vertex_coordinates;
-    vertex_coordinates.reserve (num_corners);
+    std::vector<t8_3D_point> vertex_coordinates (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
-      t8_3D_point vertex;
-      t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, element, icorner, vertex.data ());
-      vertex_coordinates.push_back (vertex);
+      t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, element, icorner, vertex_coordinates[icorner].data ());
     }
     // Fill the cache in the cached version.
     if constexpr (vertex_cache_exists) {
@@ -204,17 +211,17 @@ class element: public TCompetence<element<TCompetence...>>... {
    * \return The element's local tree id.
    */
   t8_locidx_t
-  get_tree_id () const
+  get_local_tree_id () const
   {
     return m_tree_id;
   }
 
   /**
-   * Getter for the element id of the mesh element.
-   * \return The element id of the mesh element.
+   * Getter for the local element id of the mesh element.
+   * \return The local element id of the mesh element.
    */
   t8_locidx_t
-  get_element_id () const
+  get_local_element_id () const
   {
     return m_element_id;
   }
@@ -242,8 +249,8 @@ class element: public TCompetence<element<TCompetence...>>... {
   }
 
   /**
-   * Getter for the eclass of the mesh element.
-   * \return The element's eclass.
+   * Getter for the eclass of the tree of the mesh element.
+   * \return The eclass of the element's tree.
    */
   t8_eclass_t
   get_tree_class () const

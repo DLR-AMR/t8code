@@ -44,8 +44,8 @@ class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
   void
   SetUp () override
   {
-    scheme = t8_scheme_new_default ();
-    eclass = std::get<0> (GetParam ());
+    const t8_scheme* scheme = t8_scheme_new_default ();
+    t8_eclass_t eclass = std::get<0> (GetParam ());
     level = std::get<1> (GetParam ());
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
@@ -55,9 +55,8 @@ class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
   {
     t8_forest_unref (&forest);
   }
+
   t8_forest_t forest;
-  const t8_scheme* scheme;
-  t8_eclass_t eclass;
   int level;
 };
 

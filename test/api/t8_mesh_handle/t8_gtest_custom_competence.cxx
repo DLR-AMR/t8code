@@ -54,9 +54,9 @@ struct dummy_get_level: public t8_crtp_operator<TUnderlying, dummy_get_level>
   get_level_dummy () const
   {
     auto forest = this->underlying ().get_mesh ()->get_forest ();
-    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, this->underlying ().get_tree_id ());
-    const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, this->underlying ().get_tree_id (),
-                                                                      this->underlying ().get_element_id ());
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, this->underlying ().get_local_tree_id ());
+    const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, this->underlying ().get_local_tree_id (),
+                                                                      this->underlying ().get_local_element_id ());
     return t8_forest_get_scheme (forest)->element_get_level (tree_class, element);
   }
 };
