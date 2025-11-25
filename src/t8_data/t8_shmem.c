@@ -60,7 +60,7 @@ t8_shmem_array_is_initialized (const t8_shmem_array_t array)
 }
 #endif
 
-void
+int
 t8_shmem_init (sc_MPI_Comm comm)
 {
   /* Check whether intranode and internode comms are set
@@ -73,8 +73,12 @@ t8_shmem_init (sc_MPI_Comm comm)
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
     /* The inter/intra comms are not set. We need to set them to 
      * initialize shared memory usage. */
-    sc_mpi_comm_get_and_attach (comm);
+    return sc_mpi_comm_get_and_attach (comm);
   }
+  int intranode_size;
+  const int mpiret = sc_MPI_Comm_size (intranode, &intranode_size);
+  SC_CHECK_MPI (mpiret);
+  return intranode_size;
 }
 
 void
