@@ -44,7 +44,7 @@ function( add_t8_test )
 
     # Check if test is a Fortran or mesh handle file.
     string( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file )
-    string( FIND ${TEST_BUILD_DIR} "t8_mesh_handle" is_mesh_handle_file )
+    string( FIND ${TEST_BUILD_DIR} "mesh_handle" is_mesh_handle_file )
 
     if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI ) 
         target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE MPI::MPI_Fortran )
@@ -208,8 +208,8 @@ endif()
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_functions/t8_gtest_vector_split.cxx )
 
 if( T8CODE_BUILD_MESH_HANDLE )
-  add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel        SOURCES api/t8_mesh_handle/t8_gtest_mesh_handle.cxx )
-  add_t8_cpp_test( NAME t8_gtest_custom_competence_serial    SOURCES api/t8_mesh_handle/t8_gtest_custom_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel        SOURCES mesh_handle/t8_gtest_mesh_handle.cxx )
+  add_t8_cpp_test( NAME t8_gtest_custom_competence_serial    SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )

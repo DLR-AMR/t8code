@@ -1,4 +1,4 @@
-# t8_mesh_handle #
+# mesh_handle #
 **REMARK: Please note that this feature is still work-in-progress, so a lot of functionality is still missing, but will be added step by step.**
 
 In this folder, we define a mesh handle.  

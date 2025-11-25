@@ -27,11 +27,11 @@ else()
 endif()
 
 add_library( T8CODE::T8_MESH_HANDLE ALIAS T8_MESH_HANDLE )
-set_target_properties(T8_MESH_HANDLE PROPERTIES OUTPUT_NAME t8_mesh_handle)
+set_target_properties(T8_MESH_HANDLE PROPERTIES OUTPUT_NAME mesh_handle)
 
 target_include_directories( T8_MESH_HANDLE PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/t8_mesh_handle>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/mesh_handle>
 ) 
 
 target_sources(T8_MESH_HANDLE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/mesh.cxx)
