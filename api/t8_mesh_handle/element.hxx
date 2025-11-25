@@ -21,7 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file element.hxx
- * Definition of the elements used in the mesh class.
+ * Definition of the elements used in the \ref t8_mesh_handle::mesh class.
  */
 
 #ifndef T8_ELEMENT_HXX
@@ -201,7 +201,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   //--- Getter for the member variables. ---
   /**
    * Getter for the tree id of the mesh element.
-   * \return The element's tree id.
+   * \return The element's local tree id.
    */
   t8_locidx_t
   get_tree_id () const
