@@ -105,5 +105,5 @@ jobs:
       run: cd build && ninja install $MAKEFLAGS
     # Execute script that runs a Valgrind check for all test binaries. 
     - name: Valgrind check
-      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh
+      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh --ntasks=3
     

@@ -32,11 +32,11 @@ This script indents all t8code source files at once. This script should only be 
 
 #### find_all_source_files.sh
 
-List all source files of t8code in the `src/` `example/` and `test/` subfolders.
+List all source files of t8code in the `src/`, `example/` and `test/` subfolders.
 
 #### check_valgrind.sh
 
-This script runs Valgrind on a binary path provided as a parameter with specified memory leak detection flags. The Valgrind output is parsed. As a second argument, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors (e.g. [valgrind_suppressions_file](valgrind_suppressions_file.supp)). You can also use mpi with Valgrind specifying the third argument.
+This script runs Valgrind on a binary path provided as a parameter with specified memory leak detection flags. The Valgrind output is parsed. Using `--supp=`, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors (e.g. [valgrind_suppressions_file](valgrind_suppressions_file.supp)). With `--ntasks=`, you can provide the number of processes to use with mpi (default is 1).
 
 #### find_all_test_binary_paths.sh
 
@@ -46,7 +46,7 @@ The paths are relative paths assuming an execution from the test/ folder in the 
 #### check_all_test_binaries_valgrind.sh
 
 This script performs a valgrind check on each test binary found by [find_all_test_binary_paths.sh](find_all_test_binary_paths.sh).
-The valgrind check is done by [check_valgrind.sh](check_valgrind.sh). It is assumed that the build folder ../build/test/ with the correct test binaries exists. You can also use mpi with Valgrind specifying the first argument.
+The valgrind check is done by [check_valgrind.sh](check_valgrind.sh). It is assumed that the build folder ../build/test/ with the correct test binaries exists. With `--ntasks=`, you can provide the number of processes to use with mpi (default is 1).
 
 ## Others
 

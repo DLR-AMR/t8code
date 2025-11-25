@@ -24,8 +24,8 @@
 # This script runs Valgrind on an input binary paths with specified memory leak detection flags. 
 # The Valgrind output is parsed. If any errors are found, they are printed and the script exits with a status of 1.
 # If errors are found, the Valgrind output is kept in the file valgrind-output.log for further inspection.
-# As a second argument, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors.
-# As a third argument, you can provide the number of processes to use with mpi (default is 1).
+# Using "--supp=", you can provide a path to a suppression file that is used by Valgrind to suppress certain errors.
+# With "--ntasks=", you can provide the number of processes to use with mpi (default is 1).
 #
 
 # Check that an argument is given and that the argument is a file.
@@ -45,23 +45,33 @@ else
   fi
 fi
 
-# Check if a second argument is provided. If yes, add the flag to incorporate the Valgrind suppression file.
+# Check if a suppression file is provided. If yes, add the flag to incorporate the Valgrind suppression file.
 VALGRIND_FLAGS=""
-if ! [ ${2-x} = x ]; then
-  if [ -f "$2" ]; then
-    VALGRIND_FLAGS="${VALGRIND_FLAGS} --suppressions=${2}"
-  else
-    echo "ERROR: If a second argument is provided, this must be a valid valgrind suppression file."
-    exit 1
+for arg in "$@"; do
+  if [[ "$arg" == --supp=* ]]; then
+    supp_file="${arg#--supp=}"
+    if [ -f "$supp_file" ]; then
+      VALGRIND_FLAGS="${VALGRIND_FLAGS} --suppressions=${supp_file}"
+    else
+      echo "ERROR: Suppression file '$supp_file' does not exist."
+      exit 1
+    fi
   fi
-fi
+done
 
-# Check if a number of processes is provided as third argument. If not, set to 1.
-if [ -n "$3" ] && [[ "$3" =~ ^[0-9]+$ ]]; then
-  num_procs="$3"
-else
-  num_procs=1
-fi
+# Check if a number of processes is provided. If not, set to 1.
+num_procs=1
+for arg in "$@"; do
+  if [[ "$arg" == --ntasks=* ]]; then
+    ntasks_val="${arg#--ntasks=}"
+    if [[ "$ntasks_val" =~ ^[0-9]+$ ]]; then
+      num_procs="$ntasks_val"
+    else
+      echo "ERROR: --ntasks value '$ntasks_val' is not a valid number."
+      exit 1
+    fi
+  fi
+done
 
 # Write valgrind output to variable OUTPUT_FILE.
 OUTPUT_FILE="valgrind-output.log"
