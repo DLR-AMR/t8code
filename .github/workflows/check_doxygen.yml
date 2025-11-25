@@ -60,19 +60,16 @@ jobs:
         doxygen --version
     - name: Configure for documentation only
       run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_ENABLE_MPI=OFF
-    - name: check doxygen
-      run: cd build && cd doc && doxygen Doxyfile >> output 2>&1
-    - name: check for doxygen warnings
+    - name: check doxygen for erors / warnings
+      run: cd build && cd doc && doxygen Doxyfile > /dev/null 2> error_warn.log
+    - name: double-check that stderr output was empty
       run: |
-        if grep -i warning build/doc/output; then
-          echo "Doxygen warnings found!"
+        if [ -s build/doc/error_warn.log ]; then
+          echo "Error: doxygen left without error but the std::err output is not empty!\n"
+          echo "It reads:\n\n"
+          echo "$(cat build/doc/error_warn.log)
           exit 1
         else
-          echo "No doxygen warnings found."
+          echo "No doxygen errors or warnings found."
         fi
-    - name: Upload doxygen output if warnings found
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: doxygen-output
-        path: doc/output
+
