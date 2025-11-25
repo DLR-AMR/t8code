@@ -450,7 +450,7 @@ t8_msh_file_2_read_nodes (FILE *fp)
       return std::nullopt;
     }
     /* Fill the node with the entries in the file */
-    retval = sscanf (line, "%li %lf %lf %lf", reinterpret_cast<long *> (&index), &coords[0], &coords[1], &coords[2]);
+    retval = sscanf (line, "%" T8_GLOIDX_FORMAT " %lf %lf %lf", &index, &coords[0], &coords[1], &coords[2]);
     if (retval != 4) {
       t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
       free (line);
@@ -741,7 +741,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
       for (int i_node = 0; i_node < num_nodes; i_node++) {
         const int t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i_node];
         T8_ASSERT (strcmp (line_modify, "\0"));
-        retval = sscanf (line_modify, "%li", reinterpret_cast<long *> (&node_indices[t8_vertex_num]));
+        retval = sscanf (line_modify, "%" T8_GLOIDX_FORMAT, &node_indices[t8_vertex_num]);
         if (retval != 1) {
           t8_global_errorf ("Premature end of line while reading tree.\n");
           t8_debugf ("The line is %s", line);
@@ -1560,7 +1560,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         for (int i_node = 0; i_node < num_nodes; i_node++) {
           const int t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i_node];
           T8_ASSERT (strcmp (line_modify, "\0"));
-          retval = sscanf (line_modify, "%li", reinterpret_cast<long *> (&node_indices[t8_vertex_num]));
+          retval = sscanf (line_modify, "%" T8_GLOIDX_FORMAT, &node_indices[t8_vertex_num]);
           if (retval != 1) {
             t8_global_errorf ("Premature end of line while reading tree.\n");
             t8_debugf ("The line is %s", line);
