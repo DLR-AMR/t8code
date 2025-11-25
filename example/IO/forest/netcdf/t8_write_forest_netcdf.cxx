@@ -243,7 +243,8 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
     num_additional_vars = 2;
   }
 
-  t8_global_productionf ("The uniformly refined forest (refinement level = %d) has %" T8_GLOIDX_FORMAT " global elements.\n",
+  t8_global_productionf ("The uniformly refined forest (refinement level = %d) has %" T8_GLOIDX_FORMAT
+                         " global elements.\n",
                          forest_refinement_level, t8_forest_get_global_num_leaf_elements (forest));
 
   t8_global_productionf (

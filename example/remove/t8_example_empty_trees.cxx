@@ -80,8 +80,8 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
                   "\tlast_local_tree:  %" T8_GLOIDX_FORMAT "\n"
                   "\tlocal_num_trees:  %" T8_LOCIDX_FORMAT "\n"
                   "\tglobal_num_trees: %" T8_GLOIDX_FORMAT "\n",
-                  forest->first_local_tree, forest->last_local_tree,
-                  t8_forest_get_num_local_trees (forest), t8_forest_get_num_global_trees (forest));
+                  forest->first_local_tree, forest->last_local_tree, t8_forest_get_num_local_trees (forest),
+                  t8_forest_get_num_global_trees (forest));
 
   t8_productionf ("The adapted forest with one empty tree:\n"
                   "\tfirst_local_tree: %" T8_GLOIDX_FORMAT "\n"
@@ -89,8 +89,7 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
                   "\tlocal_num_trees:  %" T8_LOCIDX_FORMAT "\n"
                   "\tglobal_num_trees: %" T8_GLOIDX_FORMAT "\n",
                   forest_adapt->first_local_tree, forest_adapt->last_local_tree,
-                  t8_forest_get_num_local_trees (forest_adapt),
-                  t8_forest_get_num_global_trees (forest_adapt));
+                  t8_forest_get_num_local_trees (forest_adapt), t8_forest_get_num_global_trees (forest_adapt));
 
   t8_forest_unref (&forest_adapt);
   t8_forest_unref (&forest);

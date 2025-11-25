@@ -67,8 +67,8 @@ class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
     const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
 
-    t8_debugf ("Starting test with cmesh of dim %i and %" T8_GLOIDX_FORMAT " global, %i local trees.\n", cmesh->dimension,
-               t8_cmesh_get_num_trees (cmesh), num_local_trees);
+    t8_debugf ("Starting test with cmesh of dim %i and %" T8_GLOIDX_FORMAT " global, %i local trees.\n",
+               cmesh->dimension, t8_cmesh_get_num_trees (cmesh), num_local_trees);
 
     /* look over all local trees */
     for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; ++itree) {
