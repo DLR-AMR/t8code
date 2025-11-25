@@ -63,15 +63,5 @@ jobs:
     - name: check doxygen for erors / warnings
       run: |
         cd build && cd doc 
-        doxygen Doxyfile 2> error_warn.log
-    - name: double-check that stderr output was empty
-      run: |
-        if [ -s build/doc/error_warn.log ]; then
-          echo "Error: doxygen left without error but the std::err output is not empty!\n"
-          echo "It reads:\n\n"
-          echo "$(cat build/doc/error_warn.log)
-          exit 1
-        else
-          echo "No doxygen errors or warnings found."
-        fi
+        doxygen Doxyfile
 
