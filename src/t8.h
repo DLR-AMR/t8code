@@ -29,6 +29,8 @@
 #ifndef T8_H
 #define T8_H
 
+#include <inttypes.h>
+
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
 #error "MPI configured differently in t8code and libsc"
@@ -90,6 +92,8 @@ T8_EXTERN_C_BEGIN ();
 
 /** A type for processor-local indexing. */
 typedef int32_t t8_locidx_t;
+/** The format specifier for t8_locidx_t */
+#define T8_LOCIDX_FORMAT PRId32
 /** The MPI Datatype of t8_locidx_t */
 #define T8_MPI_LOCIDX sc_MPI_INT
 /** Macro to get the absolute value of a t8_locidx_t */
@@ -101,6 +105,8 @@ typedef int32_t t8_locidx_t;
 
 /** A type for global indexing that holds really big numbers. */
 typedef int64_t t8_gloidx_t;
+/** The format specifier for t8_gloidx_t */
+#define T8_GLOIDX_FORMAT PRId64
 /** The MPI Datatype of t8_gloidx_t */
 #define T8_MPI_GLOIDX sc_MPI_LONG_LONG_INT
 /** Macro to get the absolute value of a t8_gloidx_t */
