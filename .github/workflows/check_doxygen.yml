@@ -61,7 +61,9 @@ jobs:
     - name: Configure for documentation only
       run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_ENABLE_MPI=OFF
     - name: check doxygen for erors / warnings
-      run: cd build && cd doc && doxygen Doxyfile > /dev/null 2> error_warn.log
+      run: |
+        cd build && cd doc 
+        doxygen Doxyfile 2> error_warn.log
     - name: double-check that stderr output was empty
       run: |
         if [ -s build/doc/error_warn.log ]; then
