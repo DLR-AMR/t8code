@@ -53,18 +53,18 @@ t8_geometry_handler::update_tree (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
                    "The geometry of the tree could not be loaded, because no geometries were registered.");
   T8_ASSERT (active_geometry != nullptr);
   if (active_tree != gtreeid) {
-    /* This tree is not the active tree. We need to update the 
+    /* This tree is not the active tree. We need to update the
      * active tree, its geometry and its data. */
     /* Set the new tree as active. */
     active_tree = gtreeid;
     if (num_geoms > 1) {
-      /* Find and load the geometry of that tree. 
+      /* Find and load the geometry of that tree.
        * Only necessary if we have more than one geometry. */
       const t8_geometry_hash geom_hash = t8_cmesh_get_tree_geom_hash (cmesh, gtreeid);
       active_geometry = get_geometry (geom_hash);
       SC_CHECK_ABORTF (active_geometry != nullptr,
-                       "Could not find geometry with hash %lu or tree %ld has no registered geometry.",
-                       static_cast<size_t> (geom_hash), static_cast<long> (gtreeid));
+                       "Could not find geometry with hash %lu or tree %" T8_GLOIDX_FORMAT " has no registered geometry.",
+                       static_cast<size_t> (geom_hash), gtreeid);
     }
     /* Get the user data for this geometry and this tree. */
     active_geometry->t8_geom_load_tree_data (cmesh, gtreeid);

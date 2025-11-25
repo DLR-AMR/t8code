@@ -60,7 +60,7 @@ struct t8_example_netcdf_adapt_data
 };
 
 /** This functions describe an adapt_function, an adapt_function describes the refinement/coarsening rules for a forest
-* \note If an element is inside a given radius from the midpoint of the hypercube, this element is refined. If a family of elements is outside a given radius from the midpoint of the hypercube, it is coarsened. 
+* \note If an element is inside a given radius from the midpoint of the hypercube, this element is refined. If a family of elements is outside a given radius from the midpoint of the hypercube, it is coarsened.
 * \note A detailed description of the adaption process is found in step 3 of the tutorial located in 't8code/example/tutorials'.
 */
 int
@@ -99,7 +99,7 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_loci
   }
 }
 
-/** This functions performs the adaption process of a forest and returns the adapted forest 
+/** This functions performs the adaption process of a forest and returns the adapted forest
 * \param [in] forest The forest which ought to be adapted
 * \param [out] forest_adapt The adapted forest
 * \note A detailed description of the adaption process is found in step 3 of the tutorial located in 't8code/example/tutorials'.
@@ -122,7 +122,7 @@ t8_example_netcdf_adapt (t8_forest_t forest)
   return forest_adapt;
 }
 
-/** Function that times the duration of writing out the netCDF File, given a specific variable storage and access pattern 
+/** Function that times the duration of writing out the netCDF File, given a specific variable storage and access pattern
 * \param [in] forest The forest to save in a netCDF file (using UGRID conventions).
 * \param [in] comm The MPI communicator to use.
 * \param [in] netcdf_var_storage_mode Choose if chunked or contiguous storage should be used (possible Options: NC_CONTIGUOUS, NC_CHUNKED).
@@ -162,7 +162,7 @@ t8_example_time_netcdf_writing_operation ([[maybe_unused]] t8_forest_t forest, [
 #endif
 }
 
-/** Function that stores the given (uniform) forest in a netCDF-4 File using the different netCDF variable storage and mpi-access patterns (four files are going to be put out (each combination of {NC_CONTIGUOUS; NC_CHUNKED}x{NC_INDEPENDENT; NC_COLLECTIVE})). 
+/** Function that stores the given (uniform) forest in a netCDF-4 File using the different netCDF variable storage and mpi-access patterns (four files are going to be put out (each combination of {NC_CONTIGUOUS; NC_CHUNKED}x{NC_INDEPENDENT; NC_COLLECTIVE})).
 * \param [in] comm The MPI communicator to use.
 * \param [in]   forest_refinement_level   The refinement level of the forest.
 * \param [in] adapt_forest A flag whether an adapt step should be performed (=1) or not (=0).
@@ -203,7 +203,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
     forest = t8_example_netcdf_adapt (forest);
   }
   num_elements = t8_forest_get_local_num_leaf_elements (forest);
-  t8_productionf ("Number of process-local elements: %ld\n", static_cast<long> (num_elements));
+  t8_productionf ("Number of process-local elements: %" T8_GLOIDX_FORMAT "\n", num_elements);
 
   /* If additional data should be written to the netCDF file, the two variables are created in the following section */
   if (with_additional_data) {
@@ -243,8 +243,8 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
     num_additional_vars = 2;
   }
 
-  t8_global_productionf ("The uniformly refined forest (refinement level = %d) has %ld global elements.\n",
-                         forest_refinement_level, static_cast<long> (t8_forest_get_global_num_leaf_elements (forest)));
+  t8_global_productionf ("The uniformly refined forest (refinement level = %d) has %" T8_GLOIDX_FORMAT " global elements.\n",
+                         forest_refinement_level, t8_forest_get_global_num_leaf_elements (forest));
 
   t8_global_productionf (
     "The different netCDF variable storage patterns and mpi variable access patterns are getting tested/timed...\n");
@@ -308,7 +308,7 @@ t8_example_compare_performance_netcdf_var_properties (sc_MPI_Comm comm, int fore
 #endif
 }
 
-/** An example functions that writes out a netCDF-4 File containing the information of the forest and some user-defined/random-value variables 
+/** An example functions that writes out a netCDF-4 File containing the information of the forest and some user-defined/random-value variables
 * \param [in] comm The MPI communicator to use.
 * \param [in] forest_refinement_level The initial refinement level of the forest.
 * \param [in] adapt_forest A flag whether an adapt step should be performed (=1) or not (=0).
@@ -360,7 +360,7 @@ t8_example_netcdf_write_forest (sc_MPI_Comm comm, int forest_refinement_level, i
 
   /* Print out the number of local elements of each process */
   num_elements = t8_forest_get_local_num_leaf_elements (forest);
-  t8_debugf ("[t8] Rank %d has %ld elements\n", mpirank, static_cast<long> (num_elements));
+  t8_debugf ("[t8] Rank %d has %" T8_GLOIDX_FORMAT " elements\n", mpirank, num_elements);
 
   /* *Example user-defined NetCDF variable* */
   /* Currently, integer (32bit, 64bit) and double NetCDF variables are possible */

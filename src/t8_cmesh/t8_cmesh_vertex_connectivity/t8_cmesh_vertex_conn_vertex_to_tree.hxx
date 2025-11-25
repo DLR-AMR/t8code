@@ -115,7 +115,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     try {
       return vertex_to_tree.at (global_vertex_id);
     } catch (const std::out_of_range& e) {
-      t8_errorf ("ERROR: Could not find vertex %li for cmesh.\n", static_cast<long> (global_vertex_id));
+      t8_errorf ("ERROR: Could not find vertex %" T8_GLOIDX_FORMAT " for cmesh.\n", global_vertex_id);
       SC_ABORTF ("Caught exception 'out of range': %s\n", e.what ());
     }
   }

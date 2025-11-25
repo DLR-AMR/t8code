@@ -461,7 +461,7 @@ t8_msh_file_2_read_nodes (FILE *fp)
     /* If second value is false then the node was already in the hash table.
      * This case should not occur. */
     if (emplaced.second == false) {
-      t8_global_errorf ("Node %li defined more than once.\n", static_cast<long> (index));
+      t8_global_errorf ("Node %" T8_GLOIDX_FORMAT " defined more than once.\n", index);
       free (line);
       return std::nullopt;
     }
@@ -754,7 +754,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         Node.index = node_indices[t8_vertex_num];
         const auto found_node = vertices.find (Node);
         if (found_node == vertices.end ()) {
-          t8_global_errorf ("Could not find Node %li.\n", static_cast<long> (node_indices[t8_vertex_num]));
+          t8_global_errorf ("Could not find Node %" T8_GLOIDX_FORMAT ".\n", node_indices[t8_vertex_num]);
           free (line);
           t8_cmesh_destroy (&cmesh);
           return std::nullopt;
