@@ -24,8 +24,8 @@
 # This script runs Valgrind on an input binary paths with specified memory leak detection flags. 
 # The Valgrind output is parsed. If any errors are found, they are printed and the script exits with a status of 1.
 # If errors are found, the Valgrind output is kept in the file valgrind-output.log for further inspection.
-# Using "--supp=", you can provide a path to a suppression file that is used by Valgrind to suppress certain errors.
-# With "--ntasks=", you can provide the number of processes to use with mpi (default is 1).
+# Using "--supp=[FILE]", you can provide a path to a suppression file that is used by Valgrind to suppress certain errors.
+# With "--ntasks=[NUMBER]", you can provide the number of processes to use with MPI (default is 1).
 #
 
 # Check that an argument is given and that the argument is a file.
@@ -143,6 +143,7 @@ while IFS= read -r line; do
   fi
 done < "${OUTPUT_FILE}"
 
+# Remove the output file only if the checks were error free.
 if [ "$status" -eq 0 ]; then
   rm -f "${OUTPUT_FILE}"
 fi

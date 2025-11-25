@@ -26,7 +26,7 @@
 # The script returns 1 if an error is found and 0 otherwise. 
 # This script must be executed from the scripts/ folder.
 # It is assumed that the build folder ../build/test/ with the correct test binaries exists.
-# With "--ntasks=", you can provide the number of processes to use with mpi (default is 1).
+# With "--ntasks=", you can provide the number of processes to use with MPI (default is 1).
 #
 
 # Check if a number of processes is provided. If not, set to 1.
