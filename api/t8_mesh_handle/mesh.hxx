@@ -32,7 +32,7 @@
 #include <t8_mesh_handle/abstract_element.hxx>
 #include <t8_mesh_handle/mesh_element.hxx>
 #include <t8_mesh_handle/ghost_element.hxx>
-#include <t8_mesh_handle/competence_pack.hxx>
+#include "competence_pack.hxx"
 #include <t8_forest/t8_forest_ghost.h>
 #include <iterator>
 #include <memory>
@@ -212,9 +212,9 @@ class mesh {
     * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
     * \param [in] data The user data. Data will never be touched by mesh handling routines.
     */
+  template <typename U = TUserData, typename = std::enable_if_t<!std::is_void<U>::value>>
   void
-  set_user_data (TUserData data)
-    requires (!std::is_void_v<TUserData>)
+  set_user_data (U data)
   {
     m_user_data = data;
   }
