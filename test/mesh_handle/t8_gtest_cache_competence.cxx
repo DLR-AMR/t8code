@@ -39,7 +39,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
-/** Child class of \ref cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
+/** Child class of \ref t8_mesh_handle::cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_coordinates<TUnderlying>
 {
@@ -48,22 +48,22 @@ struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_c
    * \param [in] new_vec New cache vector. 
    */
   void
-  overwrite_cache (std::vector<t8_3D_point> new_vec)
+  overwrite_cache (std::vector<t8_3D_point> new_vec) const
   {
     this->m_vertex_coordinates = new_vec;
   }
 };
 
-/** Child class of \ref cache_centroid that allows to modify the cache variable for test purposes. */
+/** Child class of \ref t8_mesh_handle::cache_centroid that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlying>
 {
  public:
   /** Overwrites the cache variable for the centroid.
-   * \param [in] new_vec New cache vector. 
+   * \param [in] new_vec New point for the cache. 
    */
   void
-  overwrite_cache (t8_3D_point new_vec)
+  overwrite_cache (t8_3D_point new_vec) const
   {
     this->m_centroid = new_vec;
   }
@@ -91,7 +91,7 @@ class t8_gtest_cache_competence: public testing::Test {
   int level;
 };
 
-/** Use child class of \ref cache_vertex_coordinates class to check that the cache is actually set 
+/** Use child class of \ref t8_mesh_handle::cache_vertex_coordinates class to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -125,7 +125,7 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
   }
 }
 
-/** Use child class of \ref cache_centroid class to check that the cache is actually set 
+/** Use child class of \ref t8_mesh_handle::cache_centroid class to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */

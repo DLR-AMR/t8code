@@ -26,21 +26,21 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_schemes.hxx>
-#include <test/t8_gtest_macros.hxx>
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/element.hxx>
-#include <mesh_handle/competences.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
+/** Tests that the functionality of the handle gives the same results as if worked with the forest directly.
+ * Therefore, we compare the results of the mesh handle with the one accessed with the forest directly.
+ */
 TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
 {
-  // Define forest to construct mesh.
+  // Define forest and mesh handle mesh.
   const int level = 2;
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *init_scheme = t8_scheme_new_default ();
@@ -49,7 +49,9 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
 
   t8_mesh_handle::mesh<t8_mesh_handle::element<>> mesh = t8_mesh_handle::mesh<t8_mesh_handle::element<>> (forest);
 
+  //Iterate over the elements of the forest and of the mesh handle simultaneously and compare results of different functions.
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  // Use iterator for the mesh handle and two nested for-loops for the forest.
   auto mesh_iterator = mesh.begin ();
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
@@ -58,8 +60,9 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Compare elements. ---
       EXPECT_EQ (mesh_iterator->get_local_tree_id (), itree);
       EXPECT_EQ (mesh_iterator->get_local_element_id (), ielem);
-      // --- Compare level. ---
+      // --- Compare basics. ---
       EXPECT_EQ (mesh_iterator->get_level (), scheme->element_get_level (tree_class, elem));
+      EXPECT_EQ (mesh_iterator->get_shape (), scheme->element_get_shape (tree_class, elem));
       // --- Compare centroid. ---
       t8_3D_point centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());
