@@ -85,37 +85,35 @@ jobs:
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
+      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
            && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-    # cmake and test with fortran
-    - name: check fortran
-      run: echo "Checking fortran"
+    # cmake and test with api options
     - name: echo cmake line
       run: echo cmake ../ $CONFIG_OPTIONS 
-    - name: cmake MPI fortran debug
-      run: mkdir build_fortran && cd build_fortran && cmake ../ $CONFIG_OPTIONS
+    - name: cmake
+      run: mkdir build_api && cd build_api && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v5
       with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_fortran.log
-        path: build_fortran/CMakeFiles/CMakeOutput.log
-    - name: make
-      run: cd build_fortran && ninja $MAKEFLAGS
+        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_api.log
+        path: build_api/CMakeFiles/CMakeOutput.log
+    - name: ninja
+      run: cd build_api && ninja $MAKEFLAGS
     - name: ninja install
-      run: cd build_fortran && ninja install $MAKEFLAGS
+      run: cd build_api && ninja install $MAKEFLAGS
     - name: serial tests (if MPI is enabled)
-      run: cd build_fortran && ctest $MAKEFLAGS -R _serial
+      run: cd build_api && ctest $MAKEFLAGS -R _serial
       if: ${{ inputs.MPI == 'ON' }}
     - name: parallel tests (if MPI is enabled)
-      run: cd build_fortran && ctest -R _parallel
+      run: cd build_api && ctest -R _parallel
       if: ${{ inputs.MPI == 'ON' }}
     - name: tests (if MPI is disabled)
-      run: cd build_fortran && ctest $MAKEFLAGS
+      run: cd build_api && ctest $MAKEFLAGS
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v5
       with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_fortran.log
-        path: build_fortran/Testing/Temporary/LastTest.log
+        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_api.log
+        path: build_api/Testing/Temporary/LastTest.log
