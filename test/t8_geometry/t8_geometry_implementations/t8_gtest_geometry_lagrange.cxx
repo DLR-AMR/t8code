@@ -34,7 +34,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_types/t8_vec.hxx>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
@@ -43,7 +43,7 @@
 
 /**
  * Generate a random double precision number in [0, 1].
- * 
+ *
  * \return  Random number.
  */
 double
@@ -54,7 +54,7 @@ random_number ()
 
 /**
  * Add random perturbation to a vector.
- * 
+ *
  * \param vec            Vector to be perturbed.
  * \param max_amplitude  Value of the maximum perturbation.
  * \return               Perturbed vector.
@@ -92,7 +92,7 @@ allclose (const U &a, const V &b, double tol = T8_PRECISION_SQRT_EPS)
 
 /**
  * Sample random points in the reference domain of an element class.
- * 
+ *
  * \param eclass   Element class.
  * \param n_point  Number of points to generate.
  * \return         Coordinates of the points, given in x,y,z.
@@ -132,10 +132,10 @@ sample (t8_eclass_t eclass, uint32_t n_point)
 
 /**
  * Create a sample t8_lagrange_element.
- * 
+ *
  * The goal of this function is to quickly instantiate a t8_lagrange_element
  * for the purpose of testing.
- * 
+ *
  * \param eclass  Element class of the element.
  * \param degree  Polynomial degree.
  * \return        t8_lagrange_element.
@@ -197,7 +197,7 @@ create_sample_element (t8_eclass_t eclass, int degree)
 
 /**
  * Common resources for all the tests.
- * 
+ *
  */
 class LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
@@ -218,7 +218,7 @@ class LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
 
 /**
  * Main test to check the correctness of the Lagrange geometries.
- * 
+ *
  */
 TEST_P (LagrangeCmesh, lagrange_mapping)
 {
@@ -274,7 +274,7 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   /* Register the t8_geometry_lagrange geometry to this cmesh. */
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   /* Should return true since the t8_geometry_lagrange geometry is compatible with quads. */
-  ASSERT_TRUE (t8_cmesh_validate_geometry (cmesh));
+  ASSERT_TRUE (t8_cmesh_validate_geometry (cmesh, 0));
   t8_cmesh_destroy (&cmesh);
 
   /* Build a simple set geometries for the tree. */
@@ -294,7 +294,7 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   /* Check validity after committing to circumvent the assertion.
    * Should return false since the t8_geometry_lagrange geometry is not compatible with prisms. */
-  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));
+  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh, 0));
   t8_cmesh_destroy (&cmesh);
 
   degree = T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE + 1;
@@ -311,7 +311,7 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   /* Check validity after committing to circumvent the assertion.
    * Should return false since the maximum polynomial degree is exceeded. */
-  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh));
+  ASSERT_FALSE (t8_cmesh_validate_geometry (cmesh, 0));
   t8_cmesh_destroy (&cmesh);
 }
 #endif /* T8_ENABLE_DEBUG */

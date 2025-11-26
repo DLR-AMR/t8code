@@ -52,7 +52,7 @@ jobs:
 # Setup
 #
     - name: Download artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
@@ -85,7 +85,7 @@ jobs:
       run: cd $SC_DEBUG && ninja test
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: sc_debug_MPI_${{ inputs.MPI }}.log
         path: $SC_DEBUG/Testing/Temporary/LastTest.log
@@ -94,7 +94,7 @@ jobs:
       run: cd $SC_RELEASE && ninja test
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: sc_release_MPI_${{ inputs.MPI }}.log
         path: $SC_RELEASE/Testing/Temporary/LastTest.log
@@ -106,7 +106,7 @@ jobs:
       run: cd $P4EST_DEBUG && ninja test
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: sp4est_debug_MPI_${{ inputs.MPI }}.log
         path: $P4EST_DEBUG/Testing/Temporary/LastTest.log
@@ -115,7 +115,7 @@ jobs:
       run: cd $P4EST_RELEASE && ninja test
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: sp4est_release_MPI_${{ inputs.MPI }}.log
         path: $P4EST_RELEASE/Testing/Temporary/LastTest.log
