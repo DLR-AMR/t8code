@@ -21,7 +21,7 @@
 */
 
 #include <cmath>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>

@@ -27,7 +27,7 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_cmesh/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
 
@@ -90,7 +90,7 @@ typedef struct
 } t8_ghost_remote_tree_t;
 
 /**
- * This struct stores information about the data that the current process needds from a specific remote_process
+ * This struct stores information about the data that the current process needs from a specific remote_process
  * as ghost data, such as the number of remote elements and the remote trees.
 */
 typedef struct

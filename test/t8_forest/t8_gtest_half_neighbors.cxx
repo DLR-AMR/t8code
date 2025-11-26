@@ -25,11 +25,11 @@
 #include <test/t8_gtest_memory_macros.hxx>
 
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
@@ -81,13 +81,10 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
 {
 
   const int level = 3;
-  sc_array_t owners;
   int dual_face;
 
   t8_debugf ("Testing half neighbors with eclass %s, cmesh type %i.\n", t8_eclass_to_string[eclass], cmesh_type);
 
-  /* initialize the array of owners to store ints */
-  sc_array_init (&owners, sizeof (int));
   /* Build a uniform forest */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   /* iterate over all elements */
@@ -98,16 +95,17 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
       for (int face = 0; face < scheme->element_get_num_faces (eclass, element); face++) {
         /* Get the eclass of the face neighbor and get the scheme */
         const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, itree, element, face);
-        const int num_face_neighs = scheme->element_get_num_face_children (eclass, element, face);
-        t8_element_t **half_neighbors = T8_TESTSUITE_ALLOC (t8_element_t *, num_face_neighs);
-        scheme->element_new (eclass, num_face_neighs, half_neighbors);
-        t8_forest_element_half_face_neighbors (forest, itree, element, half_neighbors, neigh_class, face,
-                                               num_face_neighs, NULL);
         /* allocate memory for element's neighbor and construct it */
         scheme->element_new (neigh_class, 1, &neighbor);
         const t8_locidx_t neigh_tree
           = t8_forest_element_face_neighbor (forest, itree, element, neighbor, neigh_class, face, &dual_face);
-        if (neigh_tree > 0) {
+        if (neigh_tree >= 0) {
+          const int num_face_neighs = scheme->element_get_num_face_children (neigh_class, neighbor, dual_face);
+          t8_element_t **half_neighbors = T8_TESTSUITE_ALLOC (t8_element_t *, num_face_neighs);
+          scheme->element_new (neigh_class, num_face_neighs, half_neighbors);
+          t8_forest_element_half_face_neighbors (forest, itree, element, half_neighbors, neigh_class, face,
+                                                 num_face_neighs, NULL);
+
           /* We now check whether the face children of neighbor are the half neighbors. */
           T8_ASSERT (num_face_neighs == scheme->element_get_num_face_children (neigh_class, neighbor, dual_face));
           t8_element_t **neighbor_face_children = T8_TESTSUITE_ALLOC (t8_element_t *, num_face_neighs);
@@ -121,17 +119,16 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
               << "ineigh = " << ineigh << " face = " << face;
           }
           scheme->element_destroy (neigh_class, num_face_neighs, neighbor_face_children);
+          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
           T8_TESTSUITE_FREE (child_ids);
           T8_TESTSUITE_FREE (neighbor_face_children);
+          T8_TESTSUITE_FREE (half_neighbors);
         }
         scheme->element_destroy (neigh_class, 1, &neighbor);
-        scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
-        T8_TESTSUITE_FREE (half_neighbors);
       }
     }
   }
   t8_forest_unref (&forest);
-  sc_array_reset (&owners);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_half_neighbors, forest_half_neighbors,

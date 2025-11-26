@@ -461,7 +461,7 @@ t8_element_get_tree_face (const t8_scheme_c *scheme, const t8_eclass_t tree_clas
  *                       \see t8_cmesh_set_join
  * \param [in] sign      Depending on the topological orientation of the two tree faces,
  *                       either 0 (both faces have opposite orientation)
- *                       or 1 (both faces have the same top. orientattion).
+ *                       or 1 (both faces have the same top. orientation).
  *                       \ref t8_eclass_face_orientation
  * \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
  *                       the smaller face. A face f of tree T is smaller than
@@ -766,7 +766,7 @@ t8_element_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const i
 * \note If an element was created by \ref t8_element_new then \ref t8_element_init
 * may not be called for it. Thus, \ref t8_element_init should initialize an element
 * in the same way as a call to \ref t8_element_new would.
-* \note Every call to \ref t8_element_init must be matched by a call to \ref t8_element_deinit
+* \note Every call to \see t8_element_init must be matched by a call to \see t8_element_deinit
 * \see t8_element_deinit
 * \see t8_element_new
 * \see t8_element_is_valid

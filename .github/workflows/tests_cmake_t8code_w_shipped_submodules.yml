@@ -54,7 +54,7 @@ jobs:
 #
 # Setup
 #
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with: 
         fetch-depth: 0
     - name: Update packages
@@ -94,7 +94,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: cmake_w_submodules_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
@@ -113,7 +113,7 @@ jobs:
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: test-suite_w_submodules_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/Testing/Temporary/LastTest.log

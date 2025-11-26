@@ -31,8 +31,8 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_cmesh/t8_cmesh_trees.h>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_adapt.h>
@@ -1565,62 +1565,50 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
                                        t8_element_t *neighs[], t8_eclass_t neigh_class, int face, int num_neighs,
                                        int dual_faces[])
 {
-  t8_tree_t tree;
-  t8_element_t **children_at_face;
-  t8_gloidx_t neighbor_tree = -1;
-#if T8_ENABLE_DEBUG
-  t8_gloidx_t last_neighbor_tree = -1;
-#endif
-  int num_children_at_face, child_it;
-  int child_face;
-  int neigh_face;
-
-  /* Get the current tree and its element class */
-  tree = t8_forest_get_tree (forest, ltreeid);
-  const t8_eclass_t eclass = tree->eclass;
-  /* The scheme for the current tree */
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  SC_CHECK_ABORT (scheme->element_get_level (eclass, elem) < t8_forest_get_maxlevel (forest),
-                  "Trying to refine an element beyond its maximum allowed level.");
-  /* The number of children of elem at face */
-  T8_ASSERT (num_neighs == scheme->element_get_num_face_children (eclass, elem, face));
-  num_children_at_face = num_neighs;
-  /* Allocate memory for the children of elem that share a face with face. */
-  children_at_face = T8_ALLOC (t8_element_t *, num_children_at_face);
-  scheme->element_new (eclass, num_children_at_face, children_at_face);
-
-  /* Construct the children of elem at face
-   *
-   *  a-----b                     x--b
-   *  |     |           =>        |  |
-   *  |     | <- face             x--x
-   *  |     |                     |  |
-   *  c-----d                     x--d
-   *
-   */
-  scheme->element_get_children_at_face (eclass, elem, face, children_at_face, num_children_at_face, NULL);
-  /* For each face_child build its neighbor */
-  for (child_it = 0; child_it < num_children_at_face; child_it++) {
-    /* The face number of the face of the child that coincides with face
-     * is not necessarily the same as the face number of elem. (which is the integer face)
-     * We thus have to compute the face number of the child first.
-     */
-    child_face = scheme->element_face_get_child_face (eclass, elem, face, child_it);
-    neighbor_tree = t8_forest_element_face_neighbor (forest, ltreeid, children_at_face[child_it], neighs[child_it],
-                                                     neigh_class, child_face, &neigh_face);
-    if (dual_faces != NULL) {
-      /* Store the dual face */
-      dual_faces[child_it] = neigh_face;
-    }
-    /* For each of the neighbors, the neighbor tree must be the same. */
-    T8_ASSERT (child_it == 0 || neighbor_tree == last_neighbor_tree);
-#if T8_ENABLE_DEBUG
-    last_neighbor_tree = neighbor_tree;
-#endif
+  if (num_neighs <= 0) {
+    // There are no face neighbors.
+    // This case might happen and we need to catch it here
+    // before we use neighs[0] which might not be allocated.
+    return -1;
   }
-  /* Clean-up the memory */
-  scheme->element_destroy (eclass, num_children_at_face, children_at_face);
-  T8_FREE (children_at_face);
+  // Use the first allocated element temporarily as same level neighbors.
+  t8_element_t *same_level_neighbor = neighs[0];
+
+  // Compute the same level neighbor element.
+  int same_level_dual_face;
+  const t8_gloidx_t neighbor_tree = t8_forest_element_face_neighbor (forest, ltreeid, elem, same_level_neighbor,
+                                                                     neigh_class, face, &same_level_dual_face);
+
+  if (neighbor_tree < 0) {
+    // No face neighbor exists
+    return -1;
+  }
+  // Double check that there is a neighbor tree.
+  // We expect the user to only call this function if neighbors exists (neigh_calls being an input argument).
+  T8_ASSERT (neighbor_tree >= 0 && neighbor_tree < t8_forest_get_num_global_trees (forest));
+
+  /* The scheme for the current forest */
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  // Check that we are allowed to refine the neighbor element.
+  SC_CHECK_ABORT (scheme->element_get_level (neigh_class, same_level_neighbor) < t8_forest_get_maxlevel (forest),
+                  "Trying to refine an element beyond its maximum allowed level.");
+  // Double check the number of neighbors.
+  T8_ASSERT (num_neighs
+             == scheme->element_get_num_face_children (neigh_class, same_level_neighbor, same_level_dual_face));
+
+  // Build the half face neighbors by constructing the children at the face.
+  scheme->element_get_children_at_face (neigh_class, same_level_neighbor, same_level_dual_face, neighs, num_neighs,
+                                        NULL);
+
+  // We now need to compute the dual faces of the children.
+  // We do this with the scheme function
+  if (dual_faces != NULL) {
+    for (int iface_child = 0; iface_child < num_neighs; ++iface_child) {
+      dual_faces[iface_child]
+        = scheme->element_face_get_child_face (neigh_class, same_level_neighbor, same_level_dual_face, iface_child);
+    }
+  }
+
   return neighbor_tree;
 }
 
@@ -2436,10 +2424,6 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
     if (first_owner > last_owner_entry) {
       /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
-    }
-    if (last_owner > last_owner_entry) {
-      /* We did not count this process as an owner, thus we add it */
-      *(int *) sc_array_push (owners) = last_owner;
     }
     T8_ASSERT (t8_forest_element_check_owner (forest, first_face_desc, gtreeid, eclass, first_owner, 1));
     T8_ASSERT (t8_forest_element_check_owner (forest, last_face_desc, gtreeid, eclass, first_owner, 1));
@@ -3796,6 +3780,9 @@ t8_forest_compute_profile (t8_forest_t forest)
     sc_stats_set1 (&forest->stats[11], profile->ghost_waittime, "forest: Ghost waittime.");
     sc_stats_set1 (&forest->stats[12], profile->balance_runtime, "forest: Balance runtime.");
     sc_stats_set1 (&forest->stats[13], profile->balance_rounds, "forest: Balance rounds.");
+    sc_stats_set1 (&forest->stats[14], profile->balance_rounds, "forest: Tree offset runtime.");
+    sc_stats_set1 (&forest->stats[15], profile->balance_rounds, "forest: offset runtime.");
+    sc_stats_set1 (&forest->stats[16], profile->balance_rounds, "forest: first descendant runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, forest->stats);
     forest->stats_computed = 1;
@@ -3933,6 +3920,35 @@ t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
   if (forest->profile != NULL) {
     *balance_rounds = forest->profile->balance_rounds;
     return forest->profile->balance_runtime;
+  }
+  return 0;
+}
+double
+t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->cmesh_offsets_runtime;
+  }
+  return 0;
+}
+
+double
+t8_forest_profile_get_forest_offset_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->forest_offsets_runtime;
+  }
+  return 0;
+}
+
+double
+t8_forest_profile_get_first_descendant_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->first_descendant_runtime;
   }
   return 0;
 }

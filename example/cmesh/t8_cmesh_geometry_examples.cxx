@@ -23,7 +23,7 @@
 /* Show-case several cmesh examples with curvilinear geometries. */
 
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* Cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /* Cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* Forest definition and basic interface. */
 #include <t8_forest/t8_forest_geometrical.h>    /* Forest-related geometry operations. */
 #include <t8_schemes/t8_default/t8_default.hxx> /* Default refinement scheme. */
