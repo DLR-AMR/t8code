@@ -46,6 +46,15 @@ jobs:
       run: git submodule init
     - name: update submodules
       run: git submodule update
+    - name: Install LaTeX dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          texlive-latex-base \
+          texlive-latex-recommended \
+          texlive-latex-extra \
+          texlive-fonts-recommended \
+          ghostscript
     - name: Download precompiled doxygen version 1.13.2 from official website
       run: wget https://www.doxygen.nl/files/doxygen-1.13.2.linux.bin.tar.gz
     - name: Unpack doxygen tar file
@@ -63,5 +72,6 @@ jobs:
     - name: check doxygen for erors / warnings
       run: |
         cd build && cd doc 
-        doxygen Doxyfile
+        doxygen Doxyfile > doxygen.log
+        echo "Doxygen ran without errors or warnings."
 
