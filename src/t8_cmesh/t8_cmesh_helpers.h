@@ -29,7 +29,7 @@
 #define T8_CMESH_HELPERS_H
 
 #include <t8.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_eclass.h>
 
 T8_EXTERN_C_BEGIN ();

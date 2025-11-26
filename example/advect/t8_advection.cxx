@@ -31,8 +31,8 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <example/common/t8_example_common.hxx>
-#include <t8_cmesh.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_types/t8_vec.hxx>
