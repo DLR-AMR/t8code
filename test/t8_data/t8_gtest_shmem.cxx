@@ -59,8 +59,8 @@ TEST_P (shmem, test_shmem_init_finalize)
 
   /* setup shared memory usage */
   const int intrasize_from_init = t8_shmem_init (comm);
-
   ASSERT_GT (intrasize_from_init, 0) << "Error in t8_shmem_init. No intranode communicator set.";
+
   /* Get intranode and internode comm */
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
 
