@@ -470,7 +470,8 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
     t8_shmem_array_end_writing (forest->element_offsets);
     return;
   }
-
+// Weighted load balancing:
+// ------------------------ 
   double const partition_weight = [&] () {  // sum of the weights on the local partition
     double local_sum = 0.;
     for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
