@@ -21,15 +21,14 @@ name: "Check Doxygen Documentation"
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #
-# This github CI script runs on every push or merged pr on the main branch.
-# It generates the doxygen documentation of the main branch and uploads it
-# to the t8code website
+# This github CI script runs on every push on a feature branch and in the merge queue.
+# It checks if the doxygen documentation can be built without errors and warnings.
 #
 
 on:
   workflow_call:
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Allows you to run this workflow manually from the actions tab
   workflow_dispatch:
 
 jobs:
