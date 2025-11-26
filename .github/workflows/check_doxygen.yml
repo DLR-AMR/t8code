@@ -35,6 +35,7 @@ on:
 jobs:
   update_dev_doc:
     runs-on: ubuntu-latest
+    container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@v5    
@@ -71,7 +72,12 @@ jobs:
         which doxygen
         doxygen --version
     - name: Configure for documentation only
-      run: mkdir build && cd build && cmake ../ -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_ENABLE_MPI=OFF
+      run: mkdir build && cd build && cmake ../ \
+           -DT8CODE_BUILD_DOCUMENTATION=ON \
+           -DCMAKE_BUILD_TYPE=Debug \
+           -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1 \
+           -DT8CODE_ENABLE_OCC=ON \
+           -DT8CODE_ENABLE_NETCDF=ON
     - name: check doxygen for erors / warnings
       run: |
         cd build && cd doc 
