@@ -45,8 +45,21 @@ fi
 
 suffixes="c|cxx|h|hxx"
 
-# Find all files with the appropriate suffix in the 
+# Find a suitable find program. Either 'find' or 'gfind'.
+if find --version >/dev/null 2>&1; then
+    FIND=find
+else
+    echo "GNU find not found, trying gfind..."
+    if gfind --version >/dev/null 2>&1; then
+        FIND=gfind
+    else
+        echo "Error: GNU find not found."
+        exit 1
+    fi
+fi
+
+# Find all files with the appropriate suffix in the
 # src/, example/, test/, tutorials/, benchmark/, and /api subfolders.
-files=`find ../src ../example ../test ../tutorials ../benchmarks ../api -regextype egrep -iregex ".*\.($suffixes)"`
+files=`$FIND ../src ../example ../test ../tutorials ../benchmarks ../api -regextype egrep -iregex ".*\.($suffixes)"`
 
 echo $files

@@ -31,10 +31,10 @@
 class t8_scheme;
 
 /** Default implementation of the scheme for the vertex element class. */
-class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_scheme_vertex> {
+class t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTEX, t8_default_scheme_vertex> {
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_vertex () noexcept: t8_default_scheme_common (T8_ECLASS_VERTEX, sizeof (t8_dvertex_t)) {};
+  t8_default_scheme_vertex () noexcept: t8_default_scheme_common (sizeof (t8_dvertex_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_vertex () {};
@@ -96,7 +96,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
    *  element. No memory is allocated by this function.
-   * \param [in] source The element whose entries will be copied to \b dest.
+   * \param [in] source   The element whose entries will be copied to \b dest.
    * \param [in,out] dest This element's entries will be overwritten with the
    *                    entries of \b source.
    * \note \a source and \a dest may point to the same element.
@@ -381,7 +381,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
    *                        \see t8_cmesh_set_join
    *  \param [in] sign      Depending on the topological orientation of the two tree faces,
    *                        either 0 (both faces have opposite orientation)
-   *                        or 1 (both faces have the same top. orientattion).
+   *                        or 1 (both faces have the same top. orientation).
    *                        \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
    *                        the smaller face. A face f of tree T is smaller than
@@ -397,15 +397,15 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face.
-   * \param [in] face     A face element.
-   * \param [in,out] elem An allocated element. The entries will be filled with
-   *                      the data of the element that has \a face as a face and
-   *                      lies within the root tree.
+   * \param [in] face      A face element.
+   * \param [in,out] elem  An allocated element. The entries will be filled with
+   *                       the data of the element that has \a face as a face and
+   *                       lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
-   *                      lies.
-   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
-   * \return              The face number of the face of \a elem that coincides
-   *                      with \a face.
+   *                       lies.
+   * \param [in] scheme    The scheme collection with a scheme for the eclass of the face.
+   * \return               The face number of the face of \a elem that coincides
+   *                       with \a face.
    */
   int
   element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
@@ -533,7 +533,7 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem    The element whose successor should be constructed.
+   * \param [in] elem      The element whose successor should be constructed.
    * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
@@ -545,12 +545,12 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and
+   * L the maximum refinement level.
    * All element vertices have integer coordinates in this cube and the anchor
    * node is the first of all vertices (index 0). It also has the lowest x,y and z
    * coordinates.
-   * \param [in] elem   The element.
+   * \param [in] elem    The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   void
@@ -558,8 +558,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and
+   * L the maximum refinement level.
    * All element vertices have integer coordinates in this cube.
    *   \param [in] elem    The element.
    *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
@@ -571,21 +571,21 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem    The element to be considered.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   *                      all coords might be used.
    */
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -623,8 +623,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
-  * debugging configuration. 
-  * 
+  * debugging configuration.
+  *
   * \param [in]        elem  The element to print
   * \param [in]        debug_string  String printed to debug
   * \param [in]        string_size  String size of \a debug_string.
@@ -640,32 +640,32 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<t8_default_schem
   set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-   * \param [in] elements Array of elements that are to be packed
-   * \param [in] count Number of elements to pack
+   * \param [in] elements        Array of elements that are to be packed
+   * \param [in] count           Number of elements to pack
    * \param [in,out] send_buffer Buffer in which to pack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-   * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] comm MPI Communicator
+   * \param [in] buffer_size     size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position   the position of the first byte that is not already packed
+   * \param [in] comm            MPI Communicator
   */
   void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                     int *position, sc_MPI_Comm comm) const;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
-   * \param [in] count Number of elements to pack
-   * \param [in] comm MPI Communicator
+   * \param [in] count      Number of elements to pack
+   * \param [in] comm       MPI Communicator
    * \param [out] pack_size upper bound on the message size
   */
   void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-   * \param [in] recvbuf Buffer from which to unpack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in] recvbuf       Buffer from which to unpack the elements
+   * \param [in] buffer_size   size of the buffer (in order to check that we don't access out of range)
    * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] elements Array of initialised elements that is to be filled from the message
-   * \param [in] count Number of elements to unpack
-   * \param [in] comm MPI Communicator
+   * \param [in] elements      Array of initialised elements that is to be filled from the message
+   * \param [in] count         Number of elements to unpack
+   * \param [in] comm          MPI Communicator
   */
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,

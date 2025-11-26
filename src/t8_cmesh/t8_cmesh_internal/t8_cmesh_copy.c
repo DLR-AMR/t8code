@@ -26,11 +26,12 @@
  */
 
 #include <t8_data/t8_shmem.h>
-#include <t8_cmesh.h>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_partition.h"
-#include "t8_cmesh_trees.h"
-#include "t8_cmesh_copy.h"
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.h>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
 
 void
 t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
@@ -41,6 +42,11 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
+
+  if (t8_cmesh_uses_vertex_connectivity (cmesh_from)) {
+    SC_ABORT ("Error in t8_cmesh_copy: The given cmesh cannot be copied because it uses vertex connectivity, "
+              "see https://github.com/DLR-AMR/t8code/issues/1799.\n");
+  }
 
   /* Copy all variables */
   cmesh->dimension = cmesh_from->dimension;

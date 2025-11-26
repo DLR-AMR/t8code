@@ -387,13 +387,13 @@ void
 t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                                int face, int *lower, int *upper);
 
-/** Construct all face neighbors of half size of a given element.
+/** Construct all face neighbors of half size of a given element in linear id order.
  * \param [in]     forest  The forest.
  * \param [in]     ltreeid The local tree id of the tree in which the element is.
  * \param [in]     elem    The element of which to construct the neighbors.
  * \param [in,out] neighs An array of allocated elements of the correct element class.
  *                        On output the face neighbors of \a elem across \a face of one
- *                        bigger refinement level are stored.
+ *                        bigger refinement level are stored. Ordered by their linear id.
  * \param [in]     neigh_class The eclass of the neighbors.
  * \param [in]     face    The number of the face of \a elem.
  * \param [in]     num_neighs The number of allocated element in \a neighs. Must match the

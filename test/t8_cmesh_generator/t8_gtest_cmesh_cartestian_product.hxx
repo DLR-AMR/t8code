@@ -23,7 +23,7 @@
 #ifndef T8_GTEST_CMESH_CREATOR_BASE_HXX
 #define T8_GTEST_CMESH_CREATOR_BASE_HXX
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <tuple>
 #include <functional>
 #include <iterator>

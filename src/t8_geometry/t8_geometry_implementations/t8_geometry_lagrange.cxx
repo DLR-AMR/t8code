@@ -23,8 +23,8 @@
 #include <sstream>
 
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_cmesh.hxx>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h>
 #include <t8_eclass.h>

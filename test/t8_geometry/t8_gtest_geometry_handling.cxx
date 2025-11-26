@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
