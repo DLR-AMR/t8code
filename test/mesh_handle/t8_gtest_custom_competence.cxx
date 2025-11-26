@@ -88,7 +88,6 @@ TEST (t8_gtest_custom_competence, custom_competence)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
 
   // Check mesh with custom defined competence.
   t8_mesh_handle::mesh<dummy_get_level> mesh = t8_mesh_handle::mesh<dummy_get_level> (forest);

@@ -62,8 +62,6 @@ class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
 /** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh class. */
 TEST_P (t8_mesh_handle_test, test_iterator)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
-
   // --- Check default functionality. ---
   using mesh_class = t8_mesh_handle::mesh<>;
   using element_class = mesh_class::abstract_element_class;
@@ -99,8 +97,6 @@ TEST_P (t8_mesh_handle_test, test_iterator)
 /** Test competences. */
 TEST_P (t8_mesh_handle_test, test_competences)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
-
   // --- Version with cached vertex coordinates. ---
   using mesh_class_vertex = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates>;
   using element_class_vertex = mesh_class_vertex::abstract_element_class;
@@ -164,8 +160,6 @@ TEST_P (t8_mesh_handle_test, test_competences)
 /** Test mesh (element) class with more than one competence. */
 TEST_P (t8_mesh_handle_test, test_2_competences)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
-
   // --- Use competences to cache level and centroid. ---
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates, t8_mesh_handle::cache_centroid>;
   using element_class = mesh_class::abstract_element_class;

@@ -67,6 +67,7 @@ class mesh {
    */
   mesh (t8_forest_t input_forest): m_forest (input_forest)
   {
+    T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
   }
 
@@ -179,6 +180,7 @@ class mesh {
   set_forest (t8_forest_t input_forest)
   {
     m_forest = input_forest;
+    T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
   }
 

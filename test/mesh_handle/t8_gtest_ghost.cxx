@@ -65,7 +65,6 @@ class t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, 
 /** Check the implementation of ghosts and all functions accessible by ghosts. */
 TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
   t8_forest_ghost_print (forest);
 
   t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
@@ -195,7 +194,6 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
   using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
   using element_class = mesh_class::mesh_element_class;
   mesh_class mesh = mesh_class (forest);

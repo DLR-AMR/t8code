@@ -44,7 +44,6 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
 
   t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
 
