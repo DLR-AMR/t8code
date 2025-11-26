@@ -482,7 +482,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
     return local_sum;
   }();
 
-  double const partition_weight_offset = [&] () {  // partial sum of the partition weights, excluding the local rank
+  double const partition_weight_offset = [&] () {  // partial sum of the partition weights of all lower-rank processes (excluding the local rank)
     double local_offset = 0.;
     double local_partition_weight = partition_weight;  // because MPI does not like const variables
     sc_MPI_Exscan (&local_partition_weight, &local_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
