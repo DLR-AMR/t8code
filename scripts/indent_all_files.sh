@@ -56,6 +56,7 @@ echo	$PWD/../test/
 echo	$PWD/../tutorials/
 echo	$PWD/../benchmarks/
 echo	$PWD/../api/
+echo $PWD/../mesh_handle/
 echo
 read -p "Are you sure? ('Y' or 'y' to continue)" -n 1 -r
 echo

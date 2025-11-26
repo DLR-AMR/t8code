@@ -59,7 +59,7 @@ else
 fi
 
 # Find all files with the appropriate suffix in the
-# src/, example/, test/, tutorials/, benchmark/, and /api subfolders.
-files=`$FIND ../src ../example ../test ../tutorials ../benchmarks ../api -regextype egrep -iregex ".*\.($suffixes)"`
+# src/, example/, test/, tutorials/, benchmark/, /api and mesh_handle/ subfolders.
+files=`$FIND ../src ../example ../test ../tutorials ../benchmarks ../api ../mesh_handle -regextype egrep -iregex ".*\.($suffixes)"`
 
 echo $files
