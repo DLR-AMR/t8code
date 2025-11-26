@@ -458,6 +458,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
     return;
   }
 
+  // If no weight function is provided, compute the offsets solely based on the number of elements.
   if (not weight_fcn) {
     if (t8_shmem_array_start_writing (forest->element_offsets)) {
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
