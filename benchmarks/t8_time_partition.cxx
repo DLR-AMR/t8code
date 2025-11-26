@@ -25,11 +25,11 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 #include <p4est_connectivity.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_vtk/t8_vtk_writer.h>
 
-#include <t8_cmesh/t8_cmesh_partition.h>
-#include "t8_cmesh/t8_cmesh_types.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Repartition a partitioned cmesh by shipping half of the local trees

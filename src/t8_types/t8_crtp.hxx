@@ -29,8 +29,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #ifndef T8_CRTP_HXX
 #define T8_CRTP_HXX
 
-#include <iostream>
-
 /**
   * The basic CRTP pattern.
   * \tparam TUnderlying The Underlying type.

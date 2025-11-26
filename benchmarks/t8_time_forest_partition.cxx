@@ -26,13 +26,13 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 #include <p4est_connectivity.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vtk/t8_vtk_writer.h>
 
-#include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_cad.hxx>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>

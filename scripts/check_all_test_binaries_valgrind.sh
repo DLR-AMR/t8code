@@ -26,7 +26,27 @@
 # The script returns 1 if an error is found and 0 otherwise. 
 # This script must be executed from the scripts/ folder.
 # It is assumed that the build folder ../build/test/ with the correct test binaries exists.
+# With "--ntasks=[NUMBER]", you can provide the number of processes to use with MPI (default is 1).
 #
+
+USAGE="\nUSAGE: This script executes valgrind in parallel on each test binary available. Use the syntax \n
+$0 --ntasks=[NUM_TASKS]\n 
+Providing the number of parallel processes to use with MPI is optional.\n"
+
+# Check if a number of processes is provided. If not, set to 1.
+num_procs=1
+for arg in "$@"; do
+  if [[ "$arg" == --ntasks=* ]]; then
+    ntasks_val="${arg#--ntasks=}"
+    if [[ "$ntasks_val" =~ ^[0-9]+$ ]]; then
+      num_procs="$ntasks_val"
+    else
+      echo "ERROR: --ntasks value '$ntasks_val' is not a valid number."
+      echo -e "$USAGE"
+      exit 1
+    fi
+  fi
+done
 
 # Script must be executed from the scripts/ folder.
 if [ `basename $PWD` != scripts ]; then
@@ -35,6 +55,7 @@ if [ `basename $PWD` != scripts ]; then
     pushd scripts/ > /dev/null
   else
     echo "ERROR: scripts/ directory not found."
+    echo -e "$USAGE"
     exit 1
   fi
 fi
@@ -50,6 +71,7 @@ if [ -d ../build/test ]; then
   pushd ../build/test/ > /dev/null
 else
   echo "ERROR: Couldn't find a the directory ../build/test/."
+  echo -e "$USAGE"
   exit 1
 fi
 
@@ -59,9 +81,9 @@ valgrind_suppressions_file=../../scripts/valgrind_suppressions_file.supp
 
 for bin_path in $test_bin_paths; do
   counter=$(( $counter + 1 ))
-  echo "[$counter/$num_paths] Valgrind check of $bin_path..."
+  echo -n "[$counter/$num_paths] "
   # Run check_valgrind script for each test binary.
-  bash ../../scripts/check_valgrind.sh $bin_path $valgrind_suppressions_file 2>&1
+  bash ../../scripts/check_valgrind.sh $bin_path --supp=$valgrind_suppressions_file --ntasks=$num_procs 2>&1
   status=$?
   # If status is not 0, an error occurred.
   if test $status -ne 0; then
