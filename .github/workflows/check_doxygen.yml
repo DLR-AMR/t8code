@@ -54,7 +54,10 @@ jobs:
           texlive-latex-recommended \
           texlive-latex-extra \
           texlive-fonts-recommended \
+          texlive-font-utils \
           ghostscript
+    - name: Which epstopdf
+      run: which epstopdf 
     - name: Download precompiled doxygen version 1.13.2 from official website
       run: wget https://www.doxygen.nl/files/doxygen-1.13.2.linux.bin.tar.gz
     - name: Unpack doxygen tar file
