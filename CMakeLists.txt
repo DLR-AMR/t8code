@@ -48,7 +48,7 @@ cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc
 
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
-option( T8CODE_BUILD_MESH_HANDLE "Build t8code's mesh interface" OFF )
+option( T8CODE_BUILD_MESH_HANDLE "Build t8code's mesh handle" OFF )
 option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
@@ -249,7 +249,7 @@ endif()
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
 if( T8CODE_BUILD_MESH_HANDLE )
-  add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/api/t8_mesh_handle )
+  add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/mesh_handle )
 endif()
 
 if ( T8CODE_BUILD_TESTS )

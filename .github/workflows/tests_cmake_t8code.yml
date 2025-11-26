@@ -55,7 +55,7 @@ jobs:
 # Setup
 #
     - name: Download artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
@@ -97,7 +97,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
@@ -116,7 +116,7 @@ jobs:
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/Testing/Temporary/LastTest.log

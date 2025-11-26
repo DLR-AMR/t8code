@@ -60,7 +60,7 @@ jobs:
 #
 # Setup
 #
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with: 
         fetch-depth: 0
     - name: Update packages
@@ -189,7 +189,7 @@ jobs:
 
     ## upload artifacts
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
         path: ./artifact.tar

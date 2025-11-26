@@ -65,7 +65,7 @@ t8_dpyramid_linear_id (const t8_dpyramid_t *p, const int level);
 
 /** Compute the child_id-th child in Morton order of a pyramid.
  * \param [in] elem         Input pyramid.
- * \param [in,out] child_id  The id of the child, 0..7 in Morton order.
+ * \param [in,out] child_id The id of the child, 0..7 in Morton order.
  * \param [out] child       Existing pyramid whose data will be filled
  * 		                      with the date of t's child_id-th child.
  */
@@ -126,11 +126,11 @@ t8_dpyramid_boundary_face (const t8_dpyramid_t *p, const int face, t8_element_t 
 
 /** Given a boundary face inside the root pyramids's face construct the element inside the root pyramid that has the 
  * given face as a face.
- * \param [in] face     A face element.
- * \param [in,out] p    An allocated element. The entries will be filled with the data of the element that has \a face
- *                      as a face and lies within the root tree.
+ * \param [in] face      A face element.
+ * \param [in,out] p     An allocated element. The entries will be filled with the data of the element that has \a face
+ *                       as a face and lies within the root tree.
  * \param [in] root_face The index of the face of the root tree in which \a face lies.
- * \return              The face number of the face of \a p that coincides with \a face.
+ * \return               The face number of the face of \a p that coincides with \a face.
  */
 int
 t8_dpyramid_extrude_face (const t8_element_t *face, t8_dpyramid_t *p, const int root_face);
@@ -219,12 +219,12 @@ void
 t8_dpyramid_first_descendant (const t8_dpyramid_t *p, t8_dpyramid_t *desc, const int level);
 
 /** Construct the first descendant of a pyramid touching a given face
- * \param [in] p        pyramid whose descendant is computed.
- * \param [in] face     The face at which the descendant is computed
- * \param [out] first_desc       Existing pyramid whose data will be filled with the data
- *                      of \a p's first descendant on level \a level.
- * \param [in] level    The refinement level. Must be greater than \a p's refinement
- *                      level.*/
+ * \param [in] p           pyramid whose descendant is computed.
+ * \param [in] face        The face at which the descendant is computed
+ * \param [out] first_desc Existing pyramid whose data will be filled with the data
+ *                         of \a p's first descendant on level \a level.
+ * \param [in] level       The refinement level. Must be greater than \a p's refinement
+ *                         level.*/
 void
 t8_dpyramid_first_descendant_face (const t8_dpyramid_t *p, const int face, t8_dpyramid_t *first_desc, const int level);
 
@@ -306,16 +306,16 @@ int
 t8_dpyramid_face_parent_face (const t8_dpyramid_t *elem, const int face);
 
 /** Return the child-id of the ancestor of p at level level
- * \param [in] p    Input pyramid
+ * \param [in] p     Input pyramid
  * \param [in] level The ancestor-level
- * \return          The child-id of the ancestor*/
+ * \return           The child-id of the ancestor*/
 int
 t8_dpyramid_ancestor_id (const t8_dpyramid_t *p, const int level);
 
 /**
  * Compute the ancestor of \a pyra at a given level
- * \param[in] pyra      Input pyramid
- * \param[in] level     Level of the ancestor to compute
+ * \param[in] pyra           Input pyramid
+ * \param[in] level          Level of the ancestor to compute
  * \param[in, out] ancestor  Allocated element that will be filled with the data of the ancestor.
  */
 void
@@ -347,7 +347,7 @@ t8_dpyramid_successor (const t8_dpyramid_t *elem, t8_dpyramid_t *s, const int le
 
 /** Compute the reference coordinates of a vertex of a pyramid when the tree (level 0 triangle) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem    Input pyramid.
- * \param [in] vertex The number of the vertex.
+ * \param [in] vertex  The number of the vertex.
  * \param [out] coords An array of 3 double that will be filled with the reference coordinates of the vertex.
  */
 void

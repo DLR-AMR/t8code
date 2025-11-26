@@ -31,9 +31,9 @@
 
 #include <t8.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
-#include <t8_data/t8_cad.hxx>
+#include <t8_cad/t8_cad.hxx>
 #include <memory>
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
@@ -142,6 +142,11 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
     return true;
   }
 
+  /**
+   * Getter function for the CAD manager.
+   * 
+   * \return The CAD manager of the geometry.
+  */
   std::shared_ptr<t8_cad>
   get_cad_manager () const
   {
