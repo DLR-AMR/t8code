@@ -26,7 +26,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include <t8.h>
 
@@ -38,7 +37,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-
 #include <vector>
 
 /** Parametrized test fixture for the ghost tests. */

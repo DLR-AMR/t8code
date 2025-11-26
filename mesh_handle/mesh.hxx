@@ -33,8 +33,6 @@
 #include "mesh_element.hxx"
 #include "ghost_element.hxx"
 #include <t8_forest/t8_forest_ghost.h>
-#include <iterator>
-#include <memory>
 #include <vector>
 
 namespace t8_mesh_handle

@@ -30,7 +30,6 @@
 #include <t8.h>
 #include "abstract_element.hxx"
 #include <t8_forest/t8_forest_ghost.h>
-#include <vector>
 
 namespace t8_mesh_handle
 {
