@@ -20,6 +20,12 @@
 
 cmake_minimum_required( VERSION 3.16 )
 
+# When executing cmesh test, i.e. check_c_source_compiles/check_cxx_source_compiles and others
+# we need to ignore the -Werror option, since these tests often produce warnings (see check_mpicommshared.cmake for example).
+# If theses warnings are interpreted as errors, the test fails even though we want it to pass.
+# This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
+set(CMAKE_REQUIRED_FLAGS "-w")
+
 include( cmake/GitProjectVersion.cmake )
 
 project(
