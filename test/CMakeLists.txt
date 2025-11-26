@@ -213,6 +213,7 @@ if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_handle_ghost_parallel            SOURCES mesh_handle/t8_gtest_ghost.cxx )
   add_t8_cpp_test( NAME t8_gtest_custom_competence_serial         SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial          SOURCES mesh_handle/t8_gtest_cache_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_user_data_serial                 SOURCES mesh_handle/t8_gtest_user_data.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )

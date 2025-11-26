@@ -196,9 +196,19 @@ class mesh {
     */
   template <typename U = TUserData, typename = std::enable_if_t<!std::is_void<U>::value>>
   void
-  set_user_data (U data)
+  set_user_data (const U& data)
   {
-    m_user_data = data;
+    t8_forest_set_user_data (m_forest, data);
+  }
+
+  /** 
+    * TODO
+    */
+  template <typename U = TUserData, typename = std::enable_if_t<!std::is_void<U>::value>>
+  const U&
+  get_user_data ()
+  {
+    return *static_cast<const U*> (t8_forest_get_user_data (m_forest));
   }
 
  private:
@@ -243,8 +253,6 @@ class mesh {
   t8_forest_t m_forest;                       /**< The forest the mesh should be defined for. */
   std::vector<mesh_element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<ghost_element_class> m_ghosts;  /**< Vector storing the (local) ghost elements. */
-  std::conditional_t<!std::is_void_v<TUserData>, TUserData, std::nullptr_t>
-    m_user_data; /**< User data associated with the mesh. */
 };
 
 }  // namespace t8_mesh_handle
