@@ -107,9 +107,9 @@ endif()
 
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
-      find_package( MPI COMPONENTS C Fortran REQUIRED )
+      find_package( MPI 3.0 COMPONENTS C Fortran REQUIRED )
     else()
-      find_package( MPI COMPONENTS C REQUIRED )
+      find_package( MPI 3.0 COMPONENTS C REQUIRED )
     endif()
 
     if( NOT MPIEXEC_EXECUTABLE )
