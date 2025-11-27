@@ -133,13 +133,15 @@ extract_cartesian_vertices (const double physical_vertices[][3], std::array<doub
     vertices_max[0] = physical_vertices[1][0];
   }
   else if constexpr (DIM == 2) {
-    // QUAD: t8code uses row-major ordering:
-    // vertex 0: (xmin, ymin), vertex 1: (xmax, ymin)
-    // vertex 2: (xmin, ymax), vertex 3: (xmax, ymax)
+    // QUAD: After permutation [0,1,3,2] applied in t8_mra_cartesian.hpp:
+    // vertices[0] = t8code vertex 0 = (xmin, ymin)
+    // vertices[1] = t8code vertex 1 = (xmax, ymin)
+    // vertices[2] = t8code vertex 3 = (xmax, ymax)
+    // vertices[3] = t8code vertex 2 = (xmin, ymax)
     vertices_min[0] = physical_vertices[0][0];
     vertices_min[1] = physical_vertices[0][1];
-    vertices_max[0] = physical_vertices[3][0];
-    vertices_max[1] = physical_vertices[3][1];
+    vertices_max[0] = physical_vertices[2][0];
+    vertices_max[1] = physical_vertices[2][1];
   }
   else if constexpr (DIM == 3) {
     // HEX: vertex 0 is (xmin, ymin, zmin), vertex 6 is (xmax, ymax, zmax)
