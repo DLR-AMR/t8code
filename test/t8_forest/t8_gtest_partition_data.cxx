@@ -50,7 +50,7 @@ class t8_test_partition_data_t {
 
  public:
   t8_test_partition_data_t () = default;
-  t8_test_partition_data_t (const t8_gloidx_t value): a { 42 }, b { 'b' }, data { value } {};
+  t8_test_partition_data_t (const t8_gloidx_t value): data { value } {};
 
   t8_test_partition_data_t&
   operator++ ()
@@ -92,8 +92,8 @@ class t8_test_partition_data_t {
   };
 
  private:
-  t8_locidx_t a;
-  char b;
+  t8_locidx_t a { 42 };
+  char b { 'b' };
   t8_gloidx_t data { 0 };
 };
 
