@@ -50,7 +50,7 @@ class t8_test_partition_data_t {
 
  public:
   t8_test_partition_data_t () = default;
-  t8_test_partition_data_t (const t8_gloidx_t value): data { value } {};
+  t8_test_partition_data_t (const t8_gloidx_t value): a {42}, b{'b'}, data { value } {};
 
   t8_test_partition_data_t&
   operator++ ()
@@ -73,6 +73,16 @@ class t8_test_partition_data_t {
     return data;
   };
 
+  t8_locidx_t
+  GetA() const {
+    return a;
+  }
+
+  char
+  GetB () const {
+    return b;
+  }
+
   t8_gloidx_t
   GetData () const
   {
@@ -80,8 +90,8 @@ class t8_test_partition_data_t {
   };
 
  private:
-  [[maybe_unused]] t8_locidx_t a;
-  [[maybe_unused]] char b;
+  t8_locidx_t a;
+  char b;
   t8_gloidx_t data { 0 };
 };
 
@@ -115,7 +125,9 @@ gTestCompareEQ (const T& value1, const T& value2)
 bool
 gTestCompareEQ (const t8_test_partition_data_t& value1, const t8_test_partition_data_t& value2)
 {
-  return (gTestCompareEQ (value1.GetData (), value2.GetData ()));
+  return gTestCompareEQ (value1.GetA (), value2.GetA ())
+      && gTestCompareEQ (value1.GetB (), value2.GetB ())
+      && gTestCompareEQ (value1.GetData (), value2.GetData ());
 }
 
 /**
