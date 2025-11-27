@@ -91,6 +91,19 @@ t8_cmesh_l_shape (sc_MPI_Comm comm)
   return cmesh;
 }
 
+std::array<double, 1>
+gaussian_function (double x, double y)
+{
+  const double x0 = 0.5;     // Center x
+  const double y0 = 0.5;     // Center y
+  const double sigma = 0.2;  // Standard deviation
+
+  const double r2 = (x - x0) * (x - x0) + (y - y0) * (y - y0);
+  const double val = std::exp (-r2 / (2.0 * sigma * sigma));
+
+  return { val };
+}
+
 template <typename T>
 void
 t8_write_vtu (t8_forest_t forest, const char *prefix)
@@ -185,15 +198,16 @@ main (int argc, char **argv)
     double r = x * x + y * y;
     return { (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x) };
   };
+  // auto f3 = [] (double x, double y) -> std::array<double, 1> { return { 1.0 }; };
 
-  auto max_level = 5u;
+  auto max_level = 6u;
   auto c_thresh = 1.0;
   auto gamma = 1.0;  /// Order of convergence
   auto dunavant_rule = 10;
 
   bool balanced = false;
 
-  constexpr int P = 4;
+  constexpr int P = 3;
   constexpr int U = 1;
 
   using element_data_type = t8_mra::data_per_element<T8_ECLASS_TRIANGLE, U, P>;
