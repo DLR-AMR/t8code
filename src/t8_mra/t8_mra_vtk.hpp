@@ -223,6 +223,9 @@ evaluate_dg_at_point (const T &data, double xi, double eta, double volume)
   else if constexpr (T::Shape == T8_ECLASS_QUAD || T::Shape == T8_ECLASS_LINE) {
     // Cartesian elements: use tensor product of Legendre polynomials
     constexpr unsigned int DIM = (T::Shape == T8_ECLASS_LINE) ? 1 : 2;
+    // const auto scaling = 1.0 / std::sqrt (2.0 * volume);
+    const auto scaling = 1.0;
+
     std::array<double, DIM> x_ref;
     x_ref[0] = xi;
     if constexpr (DIM == 2) {
@@ -239,7 +242,7 @@ evaluate_dg_at_point (const T &data, double xi, double eta, double volume)
         for (unsigned int d = 0; d < DIM; ++d) {
           basis_val *= phi_1d (x_ref[d], pset[i][d]);
         }
-        result[u] += data.u_coeffs[T::dg_idx (u, i)] * basis_val;
+        result[u] += data.u_coeffs[T::dg_idx (u, i)] * basis_val * scaling;
       }
     }
   }
@@ -296,25 +299,19 @@ ref_to_physical_triangle (const double vertices[9], double xi, double eta)
 inline std::array<double, 3>
 ref_to_physical_quad (const double vertices[12], double xi, double eta)
 {
-  // Bilinear shape functions for quad (VTK ordering)
-  // v0: (0,0), v1: (1,0), v2: (1,1), v3: (0,1)
+  // Bilinear shape functions for quad
+  // Vertices are already in standard ordering: v0:(0,0), v1:(1,0), v2:(1,1), v3:(0,1)
   const double N0 = (1.0 - xi) * (1.0 - eta);
   const double N1 = xi * (1.0 - eta);
   const double N2 = xi * eta;
   const double N3 = (1.0 - xi) * eta;
 
-  // Map from t8code ordering to VTK ordering:
-  // t8[0] -> vtk[0] (0,0)
-  // t8[1] -> vtk[1] (1,0)
-  // t8[2] -> vtk[3] (0,1)  <- swapped!
-  // t8[3] -> vtk[2] (1,1)  <- swapped!
-
   std::array<double, 3> result;
   for (int i = 0; i < 3; ++i) {
-    result[i] = N0 * vertices[i]         // t8[0] = vtk[0]
-                + N1 * vertices[3 + i]   // t8[1] = vtk[1]
-                + N2 * vertices[9 + i]   // t8[3] = vtk[2] (swapped!)
-                + N3 * vertices[6 + i];  // t8[2] = vtk[3] (swapped!)
+    result[i] = N0 * vertices[i]         // v0 at (0,0)
+                + N1 * vertices[3 + i]   // v1 at (1,0)
+                + N2 * vertices[6 + i]   // v2 at (1,1)
+                + N3 * vertices[9 + i];  // v3 at (0,1)
   }
   return result;
 }
@@ -427,11 +424,19 @@ write_forest_lagrange_vtk (t8_forest_t forest, const char *prefix, int lagrange_
       // Get element data to access the vertex ordering
       const auto lmi_for_geom = t8_mra::get_lmi_from_forest_data<T> (mra_data, current_element_idx);
 
+      // Debug: print LMI for first few elements
+      if (debug_output && current_element_idx < 5) {
+        std::cout << "Element " << current_element_idx << ": LMI index=" << lmi_for_geom.index
+                  << ", level=" << lmi_for_geom.level () << "\n";
+      }
+
       if (!mra_data->lmi_map->contains (lmi_for_geom)) {
         t8_global_errorf (
           "ERROR in Points section: Element %d (tree %d, ele %d) has LMI that doesn't exist in lmi_map!\n",
           current_element_idx, tree_idx, ele_idx);
         t8_global_errorf ("  LMI level: %u, raw index: %zu\n", lmi_for_geom.level (), lmi_for_geom.index);
+        t8_global_errorf ("  Map contains %zu elements at this level\n",
+                          mra_data->lmi_map->operator[] (lmi_for_geom.level ()).size ());
         SC_ABORT ("Missing LMI in map during VTK Points writing");
       }
 
@@ -484,10 +489,14 @@ write_forest_lagrange_vtk (t8_forest_t forest, const char *prefix, int lagrange_
       else if constexpr (T::Shape == T8_ECLASS_QUAD) {
         double vertices[12] = { 0 };
 
-        // Quads don't need vertex reordering - get vertices directly
+        // t8code QUAD vertex ordering: 0-1-2-3 as (0,0)-(1,0)-(0,1)-(1,1)
+        // But we need: 0-1-2-3 as (0,0)-(1,0)-(1,1)-(0,1) for standard quad
+        // So we need to swap vertices 2 and 3
+        const int vertex_perm[4] = { 0, 1, 3, 2 };  // Swap 2 and 3
+
         for (int v = 0; v < 4; ++v) {
           double coords[3];
-          t8_forest_element_coordinate (forest, tree_idx, element, v, coords);
+          t8_forest_element_coordinate (forest, tree_idx, element, vertex_perm[v], coords);
           vertices[3 * v] = coords[0];
           vertices[3 * v + 1] = coords[1];
           vertices[3 * v + 2] = coords[2];
