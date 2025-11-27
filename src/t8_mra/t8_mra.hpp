@@ -309,6 +309,11 @@ class multiscale: public multiscale_data<TShape> {
         data_on_coarse.order = data_on_siblings[0].order;
         triangle_order::get_parent_order (data_on_coarse.order);
 
+        std::cout << "u: ";
+        for (auto i = 0u; i < DOF; ++i)
+          std::cout << std::scientific << data_on_coarse.u_coeffs[element_t::dg_idx (0, i)] << " ";
+        std::cout << "\n";
+
         get_user_data ()->lmi_map->insert (lmi, data_on_coarse);
         d_map[l - 1].emplace (lmi, data_on_coarse);
       }
