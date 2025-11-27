@@ -104,6 +104,7 @@ jobs:
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
     # Execute script that runs a Valgrind check for all test binaries. 
+    # We use 3 parallel processes to run the binaries in parallel with MPI.
     - name: Valgrind check
-      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh
+      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh --ntasks=3
     
