@@ -169,7 +169,11 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 # If theses warnings are interpreted as errors, the test fails even though we want it to pass.
 # This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
 set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
-set( CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w" )
+if (WIN32)
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w")
+else
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w")
+endif
 
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED )
