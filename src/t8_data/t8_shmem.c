@@ -69,7 +69,8 @@ t8_shmem_init (sc_MPI_Comm comm)
   return 1;
 #endif
 #ifndef SC_ENABLE_MPICOMMSHARED
-  SC_ABORT ("Trying to use shared memory but SC_ENABLE_MPICOMMSHARED is not set.");
+  SC_ABORT ("Trying to use shared memory but SC_ENABLE_MPICOMMSHARED is not set. This should not happen if you use MPI "
+            "v.3.0 or higher. Maybe related to https://github.com/DLR-AMR/t8code/pull/1996.");
 #endif
   /* Check whether intranode and internode comms are set
    * for the current communicator. */
