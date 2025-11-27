@@ -70,22 +70,46 @@ generate_tensor_pset (int P)
     }
   }
   else if constexpr (DIM == 2) {
-    // 2D case: nested loops
     int idx = 0;
-    for (int i = 0; i < P; ++i) {
-      for (int j = 0; j < P; ++j) {
+    for (int j = 0; j < P; ++j) {
+      for (int i = 0; i < P; ++i) {
         pset[idx][0] = i;
         pset[idx][1] = j;
         ++idx;
       }
     }
+
+    /// TODO
+    // multiindex<DIM> buffer;
+    // for (unsigned i = 0; i < idx; ++i) {
+    //   if (pset[i][0] == 1 && pset[i][1] == 0) {
+    //     buffer = pset[1];
+    //     pset[1] = pset[i];
+    //     pset[i] = buffer;
+    //   }
+    //   if (pset[i][0] == 0 && pset[i][1] == 1) {
+    //     buffer = pset[2];
+    //     pset[2] = pset[i];
+    //     pset[i] = buffer;
+    //   }
+    // }
+
+    // Debug: print pset ordering for P=3
+    // if (P == 3) {
+    //   std::cout << "DEBUG: P=" << P << " pset ordering: ";
+    //   for (unsigned i = 0; i < idx; ++i) {
+    //     std::cout << "[" << pset[i][0] << " " << pset[i][1] << "] ";
+    //   }
+    //   std::cout << "\n";
+    // }
   }
   else if constexpr (DIM == 3) {
-    // 3D case: triple nested loops
+    // 3D case: ix-fast, then iy, then iz
+    // Loop order: k (outer), j (middle), i (inner) so i varies fastest
     int idx = 0;
-    for (int i = 0; i < P; ++i) {
+    for (int k = 0; k < P; ++k) {
       for (int j = 0; j < P; ++j) {
-        for (int k = 0; k < P; ++k) {
+        for (int i = 0; i < P; ++i) {
           pset[idx][0] = i;
           pset[idx][1] = j;
           pset[idx][2] = k;
