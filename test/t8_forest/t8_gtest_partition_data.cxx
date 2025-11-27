@@ -39,6 +39,7 @@
 #include <numeric>
 #include <type_traits>
 #include <string>
+#include <concepts>
 
 /**
  * \brief A data carrier class which is used as testable object for the partition_data functionality.
@@ -87,9 +88,9 @@ class t8_test_partition_data_t {
 /**
  * \brief Comparison function for floating point data.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_floating_point_v<T>, bool>
+template <std::floating_point T>
+bool
+gTestCompareEQ (const T& value1, const T& value2)
 {
   /* Use the internal floating comparison function from googletest. */
   const testing::internal::FloatingPoint<T> val1 { value1 };
@@ -101,9 +102,9 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_fl
 /**
  * \brief Comparison function for integer data.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_integral_v<T>, bool>
+template <std::integral T>
+bool
+gTestCompareEQ (const T& value1, const T& value2)
 {
   return (value1 == value2);
 }
@@ -111,9 +112,8 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_in
 /**
  * \brief Comparison function for the custom data type 't8_test_partition_data_t'.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_same_v<T, t8_test_partition_data_t>, bool>
+bool
+gTestCompareEQ (const t8_test_partition_data_t& value1, const t8_test_partition_data_t& value2)
 {
   return (gTestCompareEQ (value1.GetData (), value2.GetData ()));
 }
