@@ -320,8 +320,13 @@ levelmultiindex<T8_ECLASS_QUAD>::children (levelmultiindex<T8_ECLASS_QUAD> lmi) 
 {
   std::array<levelmultiindex<T8_ECLASS_QUAD>, levelmultiindex<T8_ECLASS_QUAD>::NUM_CHILDREN> child_vec;
 
-  for (size_t j = 0u; j < NUM_CHILDREN; ++j)
-    child_vec[j] = jth_child (lmi, j);
+  // t8code QUAD Morton/z-curve order for children:
+  // childid=0: (0,0), childid=1: (1,0), childid=2: (0,1), childid=3: (1,1)
+  // This is x-fast ordering, which matches mask coefficient expectations.
+  // NO permutation needed!
+
+  for (size_t k = 0u; k < NUM_CHILDREN; ++k)
+    child_vec[k] = jth_child (lmi, k);
 
   return child_vec;
 }
