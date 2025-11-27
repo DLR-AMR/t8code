@@ -164,22 +164,24 @@ set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 
 
-# When executing CMake tests for libsc, i.e. check_c_source_compiles/check_cxx_source_compiles and others
-# we need to ignore the -Werror option, since these tests often produce warnings (see check_mpicommshared.cmake for example).
-# If theses warnings are interpreted as errors, the test fails even though we want it to pass.
-# This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
-set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
-if (WIN32)
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w")
-else
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w")
-endif
+
 
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED )
 else()
     set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+
+    # When executing CMake tests for libsc, i.e. check_c_source_compiles/check_cxx_source_compiles and others
+    # we need to ignore the -Werror option, since these tests often produce warnings (see check_mpicommshared.cmake for example).
+    # If theses warnings are interpreted as errors, the test fails even though we want it to pass.
+    # This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
+    set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
+    if (WIN32)
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w")
+    else
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w")
+    endif
 
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES )
@@ -231,11 +233,12 @@ else()
         message(WARNING "mpi.h not found!")
     endif()
     ########################## End of fix for OpenMPI ############################################
+
+    # Reactivate previous CMAKE_REQUIRED_FLAGS  
+    set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
+    unset( T8CODE_OLD_CMAKE_REQUIRED_FLAGS )
 endif()
 
-# Reactivate previous CMAKE_REQUIRED_FLAGS  
-set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
-unset( T8CODE_OLD_CMAKE_REQUIRED_FLAGS )
 
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED )
