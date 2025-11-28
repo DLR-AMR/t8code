@@ -21,7 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file t8_gtest_user_data.cxx
+ * \file t8_gtest_handle_data.cxx
  * Tests to check that \ref t8_mesh_handle::mesh user data and element data functionality works as intended.
  */
 
@@ -48,7 +48,7 @@ struct dummy_user_data
 
 /** Check that user data can be set and accesses for the handle.
  */
-TEST (t8_gtest_user_data, set_and_get_user_data)
+TEST (t8_gtest_handle_data, set_and_get_user_data)
 {
   // Define forest and mesh handle.
   const int level = 2;
@@ -87,7 +87,7 @@ struct data_per_element
 /** Check that element data can be set for the handle and 
  * that the getter has exchanged data for the ghosts.
  */
-TEST (t8_gtest_user_data, set_and_get_element_data)
+TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
   // Define forest and mesh handle.
   const int level = 2;
