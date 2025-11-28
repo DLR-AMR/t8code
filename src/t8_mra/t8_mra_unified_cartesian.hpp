@@ -10,20 +10,26 @@ namespace t8_mra
 {
 
 /**
- * @brief Quad-specific multiscale implementation (partial specialization)
+ * @brief Cartesian multiscale implementation (partial specialization)
  *
+ * Generic implementation for all cartesian elements (LINE, QUAD, HEX).
  * Inherits all common MRA functionality from multiscale_base and
  * implements cartesian-specific:
  *   - Detail norm computation (uses sqrt(volume) scaling)
  *   - Projection (uses Gauss-Legendre tensor product quadrature)
- *   - No vertex ordering needed
+ *   - No vertex ordering needed (cartesian elements have standard ordering)
+ *
+ * @tparam TShape Element shape (T8_ECLASS_LINE, T8_ECLASS_QUAD, or T8_ECLASS_HEX)
+ * @tparam U Number of solution components
+ * @tparam P Polynomial order
  */
-template <int U, int P>
-class multiscale<T8_ECLASS_QUAD, U, P> : public multiscale_base<T8_ECLASS_QUAD, U, P>,
-                                          public multiscale_adaptation<multiscale<T8_ECLASS_QUAD, U, P>>
-{
+template <t8_eclass TShape, int U, int P>
+  requires is_cartesian<TShape>
+class multiscale<TShape, U, P>:
+  public multiscale_base<TShape, U, P>,
+  public multiscale_adaptation<multiscale<TShape, U, P>> {
+
  public:
-  static constexpr t8_eclass TShape = T8_ECLASS_QUAD;
   using Base = multiscale_base<TShape, U, P>;
   using Adaptation = multiscale_adaptation<multiscale<TShape, U, P>>;
   using element_t = typename Base::element_t;
@@ -33,7 +39,6 @@ class multiscale<T8_ECLASS_QUAD, U, P> : public multiscale_base<T8_ECLASS_QUAD, 
   // Make adaptation methods accessible
   using Adaptation::coarsening_new;
   using Adaptation::refinement_new;
-  using Adaptation::adapt;
 
   //=============================================================================
   // Constructor
