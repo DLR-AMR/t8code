@@ -45,7 +45,9 @@
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
 #if T8_ENABLE_OCC
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx> /* Curved geometry calculation of trees */
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>      /* Curved geometry calculation of trees */
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx> /* Mesh deformation struct */
+#include <t8_data/t8_cad.hxx>                                               /* CAD data structure */
 #endif
 #include <t8_cmesh_readmshfile.h> /* msh file reader */
 #include <string>                 /* std::string */
@@ -298,8 +300,17 @@ t8_naca_plane_refinement (t8_forest_t forest, const std::string &fileprefix, int
     rlevel         /* The max refinement level */
   };
 
+  t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   /* Moving plane loop */
   while (adapt_data.t < steps) {
+    if (adapt_data.t != 0) {
+      char brep_buf[256];
+      snprintf (brep_buf, sizeof (brep_buf), "%s%02d", "airfoil", adapt_data.t + 1);
+      std::string brep_file (brep_buf);
+      std::shared_ptr<t8_cad> cad = std::make_shared<t8_cad> (brep_file);
+      auto displacements = calculate_displacement_surface_vertices (cmesh, cad.get ());
+      apply_vertex_displacements (cmesh, displacements, cad);
+    }
     /* Adapt and balance the forest. 
      * Note, that we have to hand the adapt data to the forest before the commit. */
     t8_forest_init (&forest_new);
