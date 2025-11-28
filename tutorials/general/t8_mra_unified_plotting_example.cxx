@@ -1,12 +1,13 @@
 /**
  * @file t8_mra_unified_plotting_example.cxx
- * @brief Example showing MRA with VTK plotting
+ * @brief Example showing MRA with VTK plotting for 2D and 3D elements
  *
  * Demonstrates:
- * 1. Triangle and quad MRA with unified interface
- * 2. VTK output generation at different stages
+ * 1. Triangle, quad, and hex MRA with unified interface
+ * 2. 2D and 3D VTK output generation at different stages
  * 3. Adaptive refinement/coarsening with visualization
  * 4. Comparison between uniform and adapted meshes
+ * 5. High-order Lagrange element visualization
  */
 
 #ifdef T8_ENABLE_MRA
@@ -61,6 +62,58 @@ step_function ()
   return [] (double x, double y) -> std::array<double, U> { return { (x > 0.5 && y > 0.5) ? 1.0 : 0.0 }; };
 }
 
+/**
+ * @brief Quartercircle example
+ */
+template <int U>
+auto
+quarter_circle ()
+{
+  return [] (double x, double y) -> std::array<double, U> {
+    double r = x * x + y * y;
+    return { (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x) };
+  };
+}
+
+/**
+ * @brief 3D Gaussian bump function
+ */
+template <int U>
+auto
+gaussian_bump_3d ()
+{
+  return [] (double x, double y, double z) -> std::array<double, U> {
+    const double cx = 0.5, cy = 0.5, cz = 0.5;
+    const double sigma = 0.15;
+    const double r2 = (x - cx) * (x - cx) + (y - cy) * (y - cy) + (z - cz) * (z - cz);
+    return { std::exp (-r2 / (2 * sigma * sigma)) };
+  };
+}
+
+/**
+ * @brief 3D Sine wave function
+ */
+template <int U>
+auto
+sine_wave_3d ()
+{
+  return [] (double x, double y, double z) -> std::array<double, U> {
+    return { std::sin (2 * M_PI * x) * std::sin (2 * M_PI * y) * std::sin (2 * M_PI * z) };
+  };
+}
+
+/**
+ * @brief 3D Step function (discontinuous octant)
+ */
+template <int U>
+auto
+step_function_3d ()
+{
+  return [] (double x, double y, double z) -> std::array<double, U> {
+    return { (x > 0.5 && y > 0.5 && z > 0.5) ? 1.0 : 0.0 };
+  };
+}
+
 //=============================================================================
 // VTK Output Helpers
 //=============================================================================
@@ -77,7 +130,11 @@ write_vtk_output (MRA &mra, const std::string &prefix, int step)
   std::cout << "  Writing VTK: " << filename << ".vtu" << std::endl;
 
   // Write high-order Lagrange VTK (P-1 is polynomial degree)
-  t8_mra::write_forest_lagrange_vtk_unified (mra, filename.c_str (), MRA::P_DIM - 1);
+  /// TODO Fix 3D Bug
+  if (MRA::DIM == 3)
+    t8_mra::write_forest_lagrange_vtk_unified (mra, filename.c_str (), 1);
+  else
+    t8_mra::write_forest_lagrange_vtk_unified (mra, filename.c_str (), MRA::P_DIM - 1);
 }
 
 //=============================================================================
@@ -113,6 +170,10 @@ example_triangle_adaptive_with_plotting ()
   // Initialize with Gaussian bump
   std::cout << "1. Initializing uniform mesh at level " << max_level << "...\n";
   auto func = gaussian_bump<U> ();
+  // auto func = sine_wave<U> ();
+  // auto func = step_function<U> ();
+  // auto func = quarter_circle<U> ();
+
   mra.initialize_data (cmesh, scheme, max_level, func);
 
   auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
@@ -187,6 +248,10 @@ example_quad_adaptive_with_plotting ()
   // Initialize with Gaussian bump
   std::cout << "1. Initializing uniform mesh at level " << max_level << "...\n";
   auto func = gaussian_bump<U> ();
+  // auto func = sine_wave<U> ();
+  // auto func = step_function<U> ();
+  // auto func = quarter_circle<U> ();
+
   mra.initialize_data (cmesh, scheme, max_level, func);
 
   auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
@@ -229,7 +294,77 @@ example_quad_adaptive_with_plotting ()
 }
 
 //=============================================================================
-// Example 3: Full Adaptation Cycle with Multiple Iterations
+// Example 3: Hex MRA (3D) with Adaptation and Plotting
+//=============================================================================
+
+void
+example_hex_adaptive_with_plotting ()
+{
+  std::cout << "\n";
+  std::cout << "════════════════════════════════════════════════════════════\n";
+  std::cout << "  Hex MRA (3D): Adaptive Refinement with VTK Output\n";
+  std::cout << "════════════════════════════════════════════════════════════\n\n";
+
+  // MRA parameters
+  constexpr int U = 1;
+  constexpr int P = 3;
+  const int min_level = 0;
+  const int max_level = 5;  // Lower max level for 3D (8^4 = 4096 elements)
+  const double c_thresh = 1.0;
+  const int gamma = 1;
+  const int num_quad_points_1d = 4;
+  const bool balanced = false;
+
+  // Create multiscale object for HEX
+  t8_mra::multiscale<T8_ECLASS_HEX, U, P> mra (max_level, c_thresh, gamma, num_quad_points_1d, balanced,
+                                               sc_MPI_COMM_WORLD);
+
+  // Create 3D hypercube mesh
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
+  auto *scheme = t8_scheme_new_default ();
+
+  // Initialize with 3D Gaussian bump
+  std::cout << "1. Initializing uniform 3D mesh at level " << max_level << "...\n";
+  auto func = gaussian_bump_3d<U> ();
+  // auto func = sine_wave_3d<U> ();
+  // auto func = step_function_3d<U> ();
+
+  mra.initialize_data (cmesh, scheme, max_level, func);
+
+  auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  std::cout << "   Elements: " << num_elements << "\n";
+  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n";
+  std::cout << "   Memory estimate: ~" << ((num_elements * mra.DOF * sizeof (double)) / (1024 * 1024)) << " MB\n\n";
+
+  // Write initial uniform solution
+  write_vtk_output (mra, "unified/hex_uniform", 0);
+
+  // Perform adaptive coarsening
+  std::cout << "2. Performing adaptive coarsening...\n";
+  mra.coarsening_new (min_level, max_level);
+
+  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  std::cout << "\n   After coarsening:\n";
+  std::cout << "   Elements: " << num_elements << "\n";
+  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n";
+  std::cout << "   Memory estimate: ~" << ((num_elements * mra.DOF * sizeof (double)) / (1024 * 1024)) << " MB\n\n";
+
+  // Write coarsened solution
+  write_vtk_output (mra, "unified/hex_coarsened", 1);
+
+  // Cleanup
+  mra.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
+
+  std::cout << "✓ Hex (3D) example completed!\n\n";
+  std::cout << "NOTE: Open hex_*.vtu files in ParaView to visualize the 3D solution.\n";
+  std::cout << "      Use 'Extract Surface' filter to see the outer surface,\n";
+  std::cout << "      or 'Clip' / 'Slice' filters to see internal structure.\n\n";
+}
+
+//=============================================================================
+// Example 4: Full Adaptation Cycle with Multiple Iterations
 //=============================================================================
 
 void
@@ -268,21 +403,21 @@ example_full_adaptation_cycle ()
 
   write_vtk_output (mra, "unified/cycle_initial", 0);
 
-  // Perform multiple adaptation cycles
-  const int num_cycles = 3;
-  for (int cycle = 1; cycle <= num_cycles; ++cycle) {
-    std::cout << "─────────────────────────────────────\n";
-    std::cout << "Adaptation Cycle " << cycle << ":\n";
-    std::cout << "─────────────────────────────────────\n";
-
-    // Full adaptation (coarsening + refinement)
-    mra.adapt (min_level, max_level);
-
-    num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    std::cout << "Elements after cycle " << cycle << ": " << num_elements << "\n\n";
-
-    write_vtk_output (mra, "unified/cycle_adapted", cycle);
-  }
+  // // Perform multiple adaptation cycles
+  // const int num_cycles = 3;
+  // for (int cycle = 1; cycle <= num_cycles; ++cycle) {
+  //   std::cout << "─────────────────────────────────────\n";
+  //   std::cout << "Adaptation Cycle " << cycle << ":\n";
+  //   std::cout << "─────────────────────────────────────\n";
+  //
+  //   // Full adaptation (coarsening + refinement)
+  //   mra.adapt (min_level, max_level);
+  //
+  //   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  //   std::cout << "Elements after cycle " << cycle << ": " << num_elements << "\n\n";
+  //
+  //   write_vtk_output (mra, "unified/cycle_adapted", cycle);
+  // }
 
   // Cleanup
   mra.cleanup ();
@@ -345,14 +480,14 @@ example_comparison_test_functions ()
     const auto num_init = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
     write_vtk_output (mra, "unified/compare_" + test.name + "_uniform", 0);
 
-    // Adapt
-    mra.adapt (min_level, max_level);
-
-    const auto num_adapted = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    std::cout << "  Elements: " << num_init << " -> " << num_adapted;
-    std::cout << " (compression: " << (100.0 * (1.0 - (double) num_adapted / num_init)) << "%)\n";
-
-    write_vtk_output (mra, "unified/compare_" + test.name + "_adapted", 1);
+    // // Adapt
+    // mra.adapt (min_level, max_level);
+    //
+    // const auto num_adapted = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+    // std::cout << "  Elements: " << num_init << " -> " << num_adapted;
+    // std::cout << " (compression: " << (100.0 * (1.0 - (double) num_adapted / num_init)) << "%)\n";
+    //
+    // write_vtk_output (mra, "unified/compare_" + test.name + "_adapted", 1);
 
     // Cleanup
     mra.cleanup ();
@@ -386,8 +521,8 @@ main (int argc, char **argv)
   std::cout << "║     Unified MRA: Adaptive Refinement with VTK Output      ║\n";
   std::cout << "║                                                            ║\n";
   std::cout << "║  This example demonstrates:                               ║\n";
-  std::cout << "║  • Triangle and quad MRA with unified interface           ║\n";
-  std::cout << "║  • Adaptive refinement and coarsening                     ║\n";
+  std::cout << "║  • Triangle, quad, and hex MRA with unified interface     ║\n";
+  std::cout << "║  • 2D and 3D adaptive refinement and coarsening           ║\n";
   std::cout << "║  • VTK output generation for visualization                ║\n";
   std::cout << "║  • Comparison of different test functions                 ║\n";
   std::cout << "╚════════════════════════════════════════════════════════════╝\n";
@@ -395,6 +530,7 @@ main (int argc, char **argv)
   // Run examples
   example_triangle_adaptive_with_plotting ();
   example_quad_adaptive_with_plotting ();
+  example_hex_adaptive_with_plotting ();
   // example_full_adaptation_cycle ();
   // example_comparison_test_functions ();
 
@@ -403,24 +539,26 @@ main (int argc, char **argv)
   std::cout << "════════════════════════════════════════════════════════════\n\n";
 
   std::cout << "Generated VTK files:\n";
-  std::cout << "  Triangle:\n";
-  std::cout << "    - triangle_uniform_step0.vtu\n";
-  std::cout << "    - triangle_coarsened_step1.vtu\n";
-  std::cout << "    - triangle_refined_step2.vtu\n\n";
-  std::cout << "  Quad:\n";
-  std::cout << "    - quad_uniform_step0.vtu\n";
-  std::cout << "    - quad_coarsened_step1.vtu\n";
-  std::cout << "    - quad_refined_step2.vtu\n\n";
+  std::cout << "  Triangle (2D):\n";
+  std::cout << "    - unified/triangle_uniform_step0.vtu\n";
+  std::cout << "    - unified/triangle_coarsened_step1.vtu\n\n";
+  std::cout << "  Quad (2D):\n";
+  std::cout << "    - unified/quad_uniform_step0.vtu\n";
+  std::cout << "    - unified/quad_coarsened_step1.vtu\n\n";
+  std::cout << "  Hex (3D):\n";
+  std::cout << "    - unified/hex_uniform_step0.vtu\n";
+  std::cout << "    - unified/hex_coarsened_step1.vtu\n\n";
   std::cout << "  Cycles:\n";
-  std::cout << "    - cycle_initial_step0.vtu\n";
-  std::cout << "    - cycle_adapted_step1.vtu ... step3.vtu\n\n";
+  std::cout << "    - unified/cycle_initial_step0.vtu\n";
+  std::cout << "    - unified/cycle_adapted_step1.vtu ... step3.vtu\n\n";
   std::cout << "  Comparison:\n";
-  std::cout << "    - compare_gaussian_uniform_step0.vtu\n";
-  std::cout << "    - compare_gaussian_adapted_step1.vtu\n";
-  std::cout << "    - compare_sine_*.vtu\n";
-  std::cout << "    - compare_step_*.vtu\n\n";
+  std::cout << "    - unified/compare_gaussian_uniform_step0.vtu\n";
+  std::cout << "    - unified/compare_gaussian_adapted_step1.vtu\n";
+  std::cout << "    - unified/compare_sine_*.vtu\n";
+  std::cout << "    - unified/compare_step_*.vtu\n\n";
 
-  std::cout << "Open these files in ParaView to visualize the results!\n\n";
+  std::cout << "Open these files in ParaView to visualize the results!\n";
+  std::cout << "For 3D (hex) files, use 'Clip' or 'Slice' filters to view internal structure.\n\n";
 
   sc_finalize ();
   return 0;
