@@ -20,9 +20,10 @@ namespace t8_mra
  *   - Vertex ordering (via triangle_order)
  */
 template <int U, int P>
-class multiscale<T8_ECLASS_TRIANGLE, U, P> : public multiscale_base<T8_ECLASS_TRIANGLE, U, P>,
-                                              public multiscale_adaptation<multiscale<T8_ECLASS_TRIANGLE, U, P>>
-{
+class multiscale<T8_ECLASS_TRIANGLE, U, P>:
+  public multiscale_base<T8_ECLASS_TRIANGLE, U, P>,
+  public multiscale_adaptation<multiscale<T8_ECLASS_TRIANGLE, U, P>> {
+
  public:
   static constexpr t8_eclass TShape = T8_ECLASS_TRIANGLE;
   using Base = multiscale_base<TShape, U, P>;
@@ -34,7 +35,6 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P> : public multiscale_base<T8_ECLASS_TR
   // Make adaptation methods accessible
   using Adaptation::coarsening_new;
   using Adaptation::refinement_new;
-  using Adaptation::adapt;
 
   //=============================================================================
   // Constructor
