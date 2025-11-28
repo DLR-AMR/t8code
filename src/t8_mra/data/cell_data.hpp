@@ -137,6 +137,7 @@ struct forest_data
 
   /// Global information needed for refinement/coarsening
   int current_refinement_level;  // Which level do we refine?
+  void *mra_instance;            // Pointer to multiscale object for callbacks
 };
 
 template <typename T>
