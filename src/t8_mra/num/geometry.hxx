@@ -144,13 +144,15 @@ extract_cartesian_vertices (const double physical_vertices[][3], std::array<doub
     vertices_max[1] = physical_vertices[2][1];
   }
   else if constexpr (DIM == 3) {
-    // HEX: vertex 0 is (xmin, ymin, zmin), vertex 6 is (xmax, ymax, zmax)
+    // HEX: After permutation [0,1,3,2,4,5,7,6]:
+    // vertices[0] = t8code vertex 0 = (xmin, ymin, zmin)
+    // vertices[7] = t8code vertex 6 = (xmax, ymax, zmax) - NOTE: index 7 not 6!
     vertices_min[0] = physical_vertices[0][0];
     vertices_min[1] = physical_vertices[0][1];
     vertices_min[2] = physical_vertices[0][2];
-    vertices_max[0] = physical_vertices[6][0];
-    vertices_max[1] = physical_vertices[6][1];
-    vertices_max[2] = physical_vertices[6][2];
+    vertices_max[0] = physical_vertices[7][0];
+    vertices_max[1] = physical_vertices[7][1];
+    vertices_max[2] = physical_vertices[7][2];
   }
 }
 
