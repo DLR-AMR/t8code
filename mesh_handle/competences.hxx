@@ -48,6 +48,29 @@ namespace t8_mesh_handle
 {
 
 /**
+ * Competence to cache the volume of an element at the first function call.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_volume: public t8_crtp_operator<TUnderlying, cache_volume>
+{
+ public:
+  /**
+   * Function that checks if the cache for the volume has been filled.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  volume_cache_filled () const
+  {
+    return m_volume.has_value ();
+  }
+
+ protected:
+  mutable std::optional<double>
+    m_volume; /**< Cache for the volume. Use optional to allow no value if cache is not filled. */
+};
+
+/**
  * Competence to cache the vertex coordinates of an element at the first function call.
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */

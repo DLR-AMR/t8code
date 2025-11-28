@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
+#include <mesh_handle/competence_pack.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -67,6 +68,10 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
 
   t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
   EXPECT_EQ (mesh.get_num_local_ghosts (), t8_forest_get_num_ghosts (forest));
+  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
+    // Ensure that we actually have ghost elements in this test.
+    EXPECT_GT (mesh.get_num_local_ghosts (), 0);
+  }
 
   // Check that functionality of mesh elements is still valid.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
@@ -192,8 +197,8 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
-  using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
-  using element_class = mesh_class::mesh_element_class;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
+  using element_class = typename mesh_class::mesh_element_class;
   mesh_class mesh = mesh_class (forest);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
