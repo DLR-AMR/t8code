@@ -30,6 +30,7 @@
  */
 #include <gtest/gtest.h>
 #include <t8.h>
+#include <t8_vtk/t8_vtk_linkage.hxx>
 #if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
 #include <vtkVersionMacros.h>
@@ -37,12 +38,22 @@
 #endif
 
 /* Test correct macro dependencies.
- * Will throw a compile time error if T8_VTK_VERSION_USED
- * is defined but T8_ENABLE_VTK is not. */
-#ifndef T8_ENABLE_VTK
-#ifdef T8_VTK_VERSION_USED
-#error Configuration error: T8_VTK_VERSION_USED is defined despite \
- T8_ENABLE_VTK not being defined.
+ * Will throw a compile time error if T8CODE_ENABLE_VTK is O
+ * but T8CODE_VTK_VERSION_USED or T8CODE_VTK_MAJOR_VERSION or T8CODE_VTK_MINOR_VERSION is defined. */
+#if not T8CODE_ENABLE_VTK
+#ifdef T8CODE_VTK_VERSION_USED
+#error Configuration error: T8CODE_VTK_VERSION_USED is defined despite \
+ T8CODE_ENABLE_VTK not being defined.
+#endif
+
+#ifdef T8CODE_VTK_MAJOR_VERSION
+#error Configuration error: T8CODE_VTK_MAJOR_VERSION is defined despite \
+ T8CODE_ENABLE_VTK not being defined.
+#endif
+
+#ifdef T8CODE_VTK_MINOR_VERSION
+#error Configuration error: T8CODE_VTK_MINOR_VERSION is defined despite \
+ T8CODE_ENABLE_VTK not being defined.
 #endif
 #endif
 
@@ -52,9 +63,13 @@ TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 #if T8_ENABLE_VTK
   char vtk_version[BUFSIZ];
   snprintf (vtk_version, BUFSIZ, "%i.%i", VTK_MAJOR_VERSION, VTK_MINOR_VERSION);
-  ASSERT_FALSE (strcmp (T8_VTK_VERSION_USED, vtk_version))
+  EXPECT_FALSE (strcmp (T8_VTK_VERSION_USED, vtk_version))
     << "linked vtk version (" << vtk_version << ") does not equal the version t8code was configured with ("
     << T8_VTK_VERSION_USED << ").\n";
+  // Check our internal version macros to match VTK version
+  EXPECT_EQ (T8_VTK_MAJOR_VERSION, VTK_MAJOR_VERSION);
+  EXPECT_EQ (T8_VTK_MINOR_VERSION, VTK_MINOR_VERSION);
+
   if (!strcmp (T8_VTK_VERSION_USED, vtk_version)) {
     t8_debugf ("Using vtk version %s.\n", vtk_version);
   }

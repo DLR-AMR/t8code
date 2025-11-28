@@ -87,8 +87,8 @@ if( T8CODE_ENABLE_VTK )
     # Set link macro to 1 (will be used in t8_vtk_linkage.hxx)
     set ( T8_ENABLE_VTK 1 )
     # Define T8CODE_VTK_MAJOR/MINOR_VERSION to true, such that get defined in t8code_vtk_linkage.hxx
-    set ( T8CODE_VTK_MAJOR_VERSION 1 )
-    set ( T8CODE_VTK_MINOR_VERSION 1 )
+    set ( T8_VTK_MAJOR_VERSION 1 )
+    set ( T8_VTK_MINOR_VERSION 1 )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
@@ -110,8 +110,8 @@ else ()
   # Set link macro to 0 (will be used in t8_vtk_linkage.hxx)
   set ( T8_ENABLE_VTK 0 )
   # Ensure that these macros are not set if T8CODE_ENABLE_VTK is not set.
-  unset ( T8CODE_VTK_MAJOR_VERSION )
-  unset ( T8CODE_VTK_MINOR_VERSION )
+  unset ( T8_VTK_MAJOR_VERSION )
+  unset ( T8_VTK_MINOR_VERSION )
 endif()
 
 #
