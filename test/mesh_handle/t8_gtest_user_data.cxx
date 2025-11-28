@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_user_data.cxx
- * TODO.
+ * Tests to check that \ref t8_mesh_handle::mesh user data and element data functionality works as intended.
  */
 
 #include <gtest/gtest.h>
@@ -35,7 +35,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
+#include <vector>
 
+// --- Test for user data. ---
 // Dummy user data taken from a tutorial for test purposes.
 struct dummy_user_data
 {
@@ -44,8 +46,7 @@ struct dummy_user_data
   double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
 };
 
-/** Tests that the functionality of the handle gives the same results as if worked with the forest directly.
- * Therefore, we compare the results of the mesh handle with the one accessed with the forest directly.
+/** Check that user data can be set and accesses for the handle.
  */
 TEST (t8_gtest_user_data, set_and_get_user_data)
 {
@@ -64,11 +65,54 @@ TEST (t8_gtest_user_data, set_and_get_user_data)
     0.4                           /* Coarsen if outside this radius. */
   };
 
+  // Set user data for the mesh handle and check that the getter returns the same data.
   mesh.set_user_data (&user_data);
   auto mesh_user_data = mesh.get_user_data ();
   EXPECT_EQ (mesh_user_data.midpoint, user_data.midpoint);
   EXPECT_EQ (mesh_user_data.refine_if_inside_radius, user_data.refine_if_inside_radius);
   EXPECT_EQ (mesh_user_data.coarsen_if_outside_radius, user_data.coarsen_if_outside_radius);
+
+  // Unref the forest.
+  t8_forest_unref (&forest);
+}
+
+// --- Test for element data. ---
+// Dummy element data taken from a tutorial for test purposes.
+struct data_per_element
+{
+  int level;
+  double volume;
+};
+
+/** Check that element data can be set for the handle and 
+ * that the getter has exchanged data for the ghosts.
+ */
+TEST (t8_gtest_user_data, set_and_get_element_data)
+{
+  // Define forest and mesh handle.
+  const int level = 2;
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  const t8_scheme *init_scheme = t8_scheme_new_default ();
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 1, sc_MPI_COMM_WORLD);
+
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, void, data_per_element>;
+  mesh_class mesh = mesh_class (forest);
+  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
+    // Ensure that we actually test with ghost elements.
+    EXPECT_GT (mesh.get_num_local_ghosts (), 0);
+  }
+  // Create element data for all local mesh elements.
+  std::vector<data_per_element> element_data;
+  for (const auto &elem : mesh) {
+    element_data.push_back ({ elem.get_level (), elem.get_volume () });
+  }
+  mesh.set_element_data (element_data);
+  // Get element data and check that the data for all elements (including ghosts) is correct.
+  auto mesh_element_data = mesh.get_element_data ();
+  for (t8_locidx_t ielem = 0; ielem < mesh.get_num_local_elements () + mesh.get_num_local_ghosts (); ielem++) {
+    EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
+    EXPECT_EQ (mesh_element_data[ielem].volume, mesh[ielem].get_volume ()) << "ielem = " << ielem;
+  }
 
   // Unref the forest.
   t8_forest_unref (&forest);

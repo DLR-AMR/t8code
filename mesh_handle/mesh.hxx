@@ -45,11 +45,14 @@ namespace t8_mesh_handle
  * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
  *         \see abstract_element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref competence_pack class.
+ * \tparam TUserData The user data type you want to associate with the mesh. Use void (this is also the default) if you do not want to set user data.
+ * \tparam TElementData The element data type you want to use for each element of the mesh. 
+ *         Use void (this is also the default) if you do not want to set element data.
  */
-template <typename TCompetencePack = competence_pack<>, typename TUserData = void>
+template <typename TCompetencePack = competence_pack<>, typename TUserData = void, typename TElementData = void>
 class mesh {
  public:
-  using SelfType = mesh<TCompetencePack, TUserData>;
+  using SelfType = mesh<TCompetencePack, TUserData, TElementData>;
   /** Type definitions of the element classes with given competences. */
   using abstract_element_class = TCompetencePack::template apply<
     SelfType, abstract_element>; /**< The abstract element class of the mesh (could be a mesh element of ghost). */
@@ -95,6 +98,16 @@ class mesh {
   get_num_local_ghosts () const
   {
     return t8_forest_get_num_ghosts (m_forest);
+  }
+
+  /** 
+   * Getter for the dimension the mesh handle lives in.
+   * \return The dimension.
+   */
+  int
+  get_dimension () const
+  {
+    return t8_forest_get_dimension (m_forest);
   }
 
   /**
@@ -179,9 +192,9 @@ class mesh {
   }
 
   /** 
-  * Setter for the forest. 
-  * \param [in] input_forest The forest from which the mesh should be a wrapper. 
-  */
+   * Setter for the forest. 
+   * \param [in] input_forest The forest from which the mesh should be a wrapper. 
+   */
   void
   set_forest (t8_forest_t input_forest)
   {
@@ -191,9 +204,9 @@ class mesh {
   }
 
   /** 
-    * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
-    * \param [in] data The user data. Data will never be touched by mesh handling routines.
-    */
+   * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
+   * \param [in] data The user data of class TUserData. Data will never be touched by mesh handling routines.
+   */
   template <typename U = TUserData, typename = std::enable_if_t<!std::is_void<U>::value>>
   void
   set_user_data (const U& data)
@@ -202,13 +215,53 @@ class mesh {
   }
 
   /** 
-    * TODO
-    */
+   * Get the user data of the mesh. 
+   * \return The user data previously set using \ref set_user_data.   
+   */
   template <typename U = TUserData, typename = std::enable_if_t<!std::is_void<U>::value>>
   const U&
-  get_user_data ()
+  get_user_data () const
   {
     return *static_cast<const U*> (t8_forest_get_user_data (m_forest));
+  }
+
+  /** 
+   * Set the element data vector. The vector should have the length of num_local_elements.
+   * \param [in] element_data The element data vector to set with one entry of class TElementData 
+   *            for each local mesh element (excluding ghosts).
+   */
+  template <typename E = TElementData, typename = std::enable_if_t<!std::is_void<E>::value>>
+  void
+  set_element_data (const std::vector<E>& element_data)
+  {
+    T8_ASSERT (element_data.size () == get_num_local_elements ());
+    m_element_data.clear ();
+    m_element_data.resize (get_num_local_elements () + get_num_local_ghosts ());
+    std::copy (element_data.begin (), element_data.end (), m_element_data.begin ());
+  }
+
+  /** 
+   * Get the element data vector including ghost entries.
+   * The element data of the local mesh elements is the one set using \ref set_element_data.
+   * In this function, additionally the ghost entries are filled exchanging the correct entries of the
+   *   element vector between processes.
+   * \return Element data vector of size num_local_elements + num_local_ghosts with data of Type TElementData.
+   */
+  template <typename E = TElementData, typename = std::enable_if_t<!std::is_void<E>::value>>
+  const std::vector<E>&
+  get_element_data ()
+  {
+    // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
+    sc_array* sc_array_wrapper;
+    T8_ASSERT (m_element_data.size () == get_num_local_elements () + get_num_local_ghosts ());
+    sc_array_wrapper = sc_array_new_data (m_element_data.data (), sizeof (TElementData),
+                                          get_num_local_elements () + get_num_local_ghosts ());
+
+    // Data exchange: entries with indices > num_local_elements will get overwritten.
+    t8_forest_ghost_exchange_data (m_forest, sc_array_wrapper);
+
+    sc_array_destroy (sc_array_wrapper);
+    return m_element_data;
   }
 
  private:
@@ -218,7 +271,6 @@ class mesh {
   void
   update_elements ()
   {
-    // Clear the element vector if already created.
     m_elements.clear ();
     m_elements.reserve (get_num_local_elements ());
     // Iterate through forest elements and fill the element vector with newly created mesh elements.
@@ -237,7 +289,6 @@ class mesh {
   void
   update_ghost_elements ()
   {
-    // Clear the ghost vector if already created.
     m_ghosts.clear ();
     m_ghosts.reserve (get_num_local_ghosts ());
     t8_locidx_t num_loc_trees = t8_forest_get_num_local_trees (m_forest);
@@ -253,6 +304,8 @@ class mesh {
   t8_forest_t m_forest;                       /**< The forest the mesh should be defined for. */
   std::vector<mesh_element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<ghost_element_class> m_ghosts;  /**< Vector storing the (local) ghost elements. */
+  std::conditional_t<!std::is_void_v<TElementData>, std::vector<TElementData>, std::nullptr_t>
+    m_element_data; /**< Vector storing the (local) element data. */
 };
 
 }  // namespace t8_mesh_handle
