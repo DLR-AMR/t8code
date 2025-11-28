@@ -38,22 +38,41 @@
 #endif
 
 /* Test correct macro dependencies.
- * Will throw a compile time error if T8CODE_ENABLE_VTK is O
- * but T8CODE_VTK_VERSION_USED or T8CODE_VTK_MAJOR_VERSION or T8CODE_VTK_MINOR_VERSION is defined. */
-#if not T8CODE_ENABLE_VTK
+ * Will throw a compile time error if T8_ENABLE_VTK is O
+ * but T8CODE_VTK_VERSION_USED or T8_VTK_MAJOR_VERSION or T8_VTK_MINOR_VERSION is defined. */
+#if not T8_ENABLE_VTK
 #ifdef T8CODE_VTK_VERSION_USED
-#error Configuration error: T8CODE_VTK_VERSION_USED is defined despite \
- T8CODE_ENABLE_VTK not being defined.
+#error Configuration error: T8_VTK_VERSION_USED is defined despite \
+ T8_ENABLE_VTK not being defined.
 #endif
 
-#ifdef T8CODE_VTK_MAJOR_VERSION
-#error Configuration error: T8CODE_VTK_MAJOR_VERSION is defined despite \
- T8CODE_ENABLE_VTK not being defined.
+#ifdef T8_VTK_MAJOR_VERSION
+#error Configuration error: T8_VTK_MAJOR_VERSION is defined despite \
+ T8_ENABLE_VTK not being defined.
 #endif
 
-#ifdef T8CODE_VTK_MINOR_VERSION
-#error Configuration error: T8CODE_VTK_MINOR_VERSION is defined despite \
- T8CODE_ENABLE_VTK not being defined.
+#ifdef T8_VTK_MINOR_VERSION
+#error Configuration error: T8_VTK_MINOR_VERSION is defined despite \
+ T8_ENABLE_VTK not being defined.
+#endif
+#endif
+
+/* Test correct macro dependencies.
+ * Will throw a compile time error if T8_ENABLE_VTK is 1
+ * but one of T8CODE_VTK_VERSION_USED, T8_VTK_MAJOR_VERSION, T8_VTK_MINOR_VERSION is not defined.
+ */
+#if T8_ENABLE_VTK
+#ifndef T8_VTK_VERSION_USED
+#error Configuration error: T8_ENABLE_VTK is defined despite \
+ T8CODE_VTK_VERSION_USED not being defined.
+#endif
+#ifndef T8_VTK_MAJOR_VERSION
+#error Configuration error: T8_ENABLE_VTK is defined despite \
+ T8_VTK_MAJOR_VERSION not being defined.
+#endif
+#ifndef T8_VTK_MINOR_VERSION
+#error Configuration error: T8_ENABLE_VTK is defined despite \
+ T8_VTK_MINOR_VERSION not being defined.
 #endif
 #endif
 
@@ -72,6 +91,8 @@ TEST (t8_gtest_vtk_linkage, t8_test_vtk_version_number)
 
   if (!strcmp (T8_VTK_VERSION_USED, vtk_version)) {
     t8_debugf ("Using vtk version %s.\n", vtk_version);
+    t8_debugf ("VTK Major version: %i\n", T8_VTK_MAJOR_VERSION);
+    t8_debugf ("VTK Minor version: %i\n", T8_VTK_MINOR_VERSION);
   }
 #endif
 }
