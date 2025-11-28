@@ -166,14 +166,17 @@ TEST_P (t8_mesh_handle_test, test_2_competences)
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_competences>;
   using element_class = typename mesh_class::abstract_element_class;
   mesh_class mesh = mesh_class (forest);
+  EXPECT_TRUE (element_class::has_volume_cache ());
   EXPECT_TRUE (element_class::has_vertex_cache ());
   EXPECT_TRUE (element_class::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+    EXPECT_FALSE (it->volume_cache_filled ());
     EXPECT_FALSE (it->centroid_cache_filled ());
     EXPECT_FALSE (it->vertex_cache_filled ());
     EXPECT_EQ (level, it->get_level ());
+    EXPECT_GE (it->get_volume (), 0);
     auto centroid = it->get_centroid ();
     for (const auto& coordinate : centroid) {
       EXPECT_GE (1, coordinate);
@@ -189,9 +192,11 @@ TEST_P (t8_mesh_handle_test, test_2_competences)
   }
   // Test dereference operator. (Here the cached values should be used.)
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+    EXPECT_TRUE (it->volume_cache_filled ());
     EXPECT_TRUE (it->centroid_cache_filled ());
     EXPECT_TRUE (it->vertex_cache_filled ());
     EXPECT_EQ (level, (*it).get_level ());
+    EXPECT_GE (it->get_volume (), 0);
     auto centroid = (*it).get_centroid ();
     for (const auto& coordinate : centroid) {
       EXPECT_GE (1, coordinate);

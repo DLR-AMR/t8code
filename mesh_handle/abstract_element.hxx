@@ -75,6 +75,20 @@ class abstract_element: public TCompetence<abstract_element<mesh_class, TCompete
   }
 
   // --- Variables to check which functionality is defined in TCompetence. ---
+  /** Helper function to check if class T implements the function volume_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  volume_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.volume_cache_filled (); };
+  }
+  /* This variable is true if any of the given competences \ref TCompetence implements 
+  a function volume_cache_filled. */
+  static constexpr bool volume_cache_exists = (false || ... || volume_cache_defined<TCompetence> ());
+
   /** Helper function to check if class T implements the function vertex_cache_filled.
    * \tparam T The competence to be checked.
    * \return true if T implements the function, false if not.
@@ -105,6 +119,15 @@ class abstract_element: public TCompetence<abstract_element<mesh_class, TCompete
 
  public:
   // --- Functions to check if caches exist. ---
+  /**
+   * Function that checks if a cache for the element's volume exists.
+   * \return true if a cache exists, false otherwise.
+   */
+  static constexpr bool
+  has_volume_cache ()
+  {
+    return volume_cache_exists;
+  }
   /**
    * Function that checks if a cache for the vertex coordinates exists.
    * \return true if a cache for the vertex coordinates exists, false otherwise.
@@ -159,6 +182,25 @@ class abstract_element: public TCompetence<abstract_element<mesh_class, TCompete
   get_shape () const
   {
     return t8_forest_get_scheme (m_mesh->m_forest)->element_get_shape (get_tree_class (), get_element ());
+  }
+
+  /**
+   * Getter for the element's volume.
+   *  This function uses or sets the cached version defined in TCompetence if available and calculates if not.
+   * \return The volume of the element.
+   */
+  double
+  get_volume () const
+  {
+    if constexpr (volume_cache_exists) {
+      if (this->volume_cache_filled ()) {
+        return this->m_volume.value ();
+      }
+      // Fill cache.
+      this->m_volume = t8_forest_element_volume (m_mesh->m_forest, m_tree_id, get_element ());
+      return this->m_volume.value ();
+    }
+    return t8_forest_element_volume (m_mesh->m_forest, m_tree_id, get_element ());
   }
 
   /**
