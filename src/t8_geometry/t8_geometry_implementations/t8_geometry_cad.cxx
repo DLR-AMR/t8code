@@ -253,14 +253,14 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             interpolated_surface_parameters[dim + offset_2d] += scaled_displacement;
           }
 
-          pnt = process_surface (i_edge + num_edges, interpolated_surface_parameters, offset_2d);
+          pnt = process_surface (edges[i_edge + num_edges], interpolated_surface_parameters + offset_2d);
 
           for (int dim = 0; dim < 3; ++dim) {
             out_coords[dim + offset_3d] = pnt.Coord (dim + 1);
           }
         }
       }
-      pnt = process_surface (*faces, interpolated_surface_parameters, 0);
+      pnt = process_surface (*faces, interpolated_surface_parameters);
 
       for (int dim = 0; dim < 3; ++dim) {
         out_coords[dim] = pnt.Coord (dim + 1);
@@ -295,14 +295,14 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             /* Interpolate between the curve parameters of the current edge with the ref_intersection of each reference point */
             t8_geom_linear_interpolation (&ref_intersection[(i_edge == 0) + offset_2d], parameters, 1, 1,
                                           &interpolated_curve_parameter);
-            pnt = process_curve (i_edge, interpolated_curve_parameter);
+            pnt = process_curve (edges[i_edge], interpolated_curve_parameter);
           }
           else {
             /* Interpolate between the surface parameters of the current edge with the ref_intersection of each reference point */
             t8_geom_linear_interpolation (&ref_intersection[(i_edge == 0) + offset_2d], parameters, 2, 1,
                                           interpolated_surface_parameters + offset_2d);
 
-            pnt = process_surface (i_edge + num_edges, interpolated_surface_parameters, offset_2d);
+            pnt = process_surface (edges[i_edge + num_edges], interpolated_surface_parameters + offset_2d);
           }
           /* Determine the scaling factor by calculating the distances from the opposite vertex
           * to the glob_intersection and to the reference point */
@@ -393,7 +393,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
           t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_2d], edge_parameters, 1, 1,
                                         temp_edge_parameters);
 
-          pnt = process_curve (i_edge, temp_edge_parameters[0]);
+          pnt = process_curve (edges[i_edge], temp_edge_parameters[0]);
 
           /* Convert curve parameter to surface parameters */
           cad_manager->t8_geom_edge_parameter_to_face_parameters (
@@ -612,7 +612,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           /* Linear interpolation between parameters */
           t8_geom_linear_interpolation (&interpolation_coeff, parameters, 1, 1, &interpolated_curve_param);
 
-          pnt = process_curve (i_edge, interpolated_curve_param);
+          pnt = process_curve (edges[i_edge], interpolated_curve_param);
         }
         else { /* Check for linked surfaces */
 
@@ -620,7 +620,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           t8_geom_linear_interpolation (&interpolation_coeff, parameters, 2, 1, interpolated_surface_params);
           T8_ASSERT (edges[i_edge + num_edges] <= cad_manager->t8_geom_get_cad_shape_face_map ().Size ());
 
-          pnt = process_surface (i_edge + num_edges, interpolated_surface_params, 0);
+          pnt = process_surface (edges[i_edge + num_edges], interpolated_surface_params);
         }
 
         /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
@@ -709,7 +709,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             t8_geom_linear_interpolation (interpolation_coeff, edge_vertices_on_face, 3, 1,
                                           interpolated_edge_coordinates);
 
-            pnt = process_curve (i_tree_edge, interpolated_curve_param);
+            pnt = process_curve (edges[i_tree_edge], interpolated_curve_param);
 
             /* Calculate the same scaling factors for the neighbouring faces
             * as in the evaluation of the edges of tetrahedral tree */
@@ -735,7 +735,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           interpolated_coords[dim] += face_displacement_from_edges[dim];
         }
 
-        pnt = process_surface (i_faces, interpolated_surface_params, 0);
+        pnt = process_surface (faces[i_faces], interpolated_surface_params);
 
         /* Compute the scaling factor. The scaling happens along the straight from
         * the opposite vertex of the face to the face_intersection. */
@@ -831,14 +831,15 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], parameters, 1, 1,
                                         &interpolated_curve_param);
 
-          pnt = process_curve (i_edge, interpolated_curve_param);
+          pnt = process_curve (edges[i_edge], interpolated_curve_param);
         }
         else {
+          T8_ASSERT (edges[i_edge + num_edges] > 0);
           /* Linear interpolation between parameters */
           t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], parameters, 2, 1,
                                         interpolated_surface_params);
 
-          pnt = process_surface (i_edge + num_edges, interpolated_surface_params, 0);
+          pnt = process_surface (edges[i_edge + num_edges], interpolated_surface_params);
         }
 
         /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
@@ -947,7 +948,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], edge_vertices_on_face, 3, 1,
                                           interpolated_edge_coordinates);
 
-            pnt = process_curve (t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge],
+            pnt = process_curve (edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]],
                                  interpolated_curve_param);
 
             /* Calculate the displacement generated by the presence of the curve */
@@ -1028,7 +1029,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           interpolated_surface_params[dim] += surface_parameter_displacement_from_edges[dim];
         }
 
-        pnt = process_surface (i_faces, interpolated_surface_params, 0);
+        pnt = process_surface (faces[i_faces], interpolated_surface_params);
 
         /* Compute the displacement between surface and interpolated coords, scale them with the appropriate ref_coord
         * and add them to the out_coords. */
@@ -1126,14 +1127,14 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
           t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_prism_edge[i_edge] + offset_3d],
                                         parameters, 1, 1, &interpolated_curve_param);
 
-          pnt = process_curve (i_edge, interpolated_curve_param);
+          pnt = process_curve (edges[i_edge], interpolated_curve_param);
         }
         else {
           /* Linear interpolation between parameters */
           t8_geom_linear_interpolation (&ref_coords[t8_interpolation_coefficient_prism_edge[i_edge] + offset_3d],
                                         parameters, 2, 1, interpolated_surface_params);
 
-          pnt = process_surface (i_edge + T8_DPRISM_EDGES, interpolated_surface_params, 0);
+          pnt = process_surface (edges[i_edge + T8_DPRISM_EDGES], interpolated_surface_params);
         }
 
         /* Compute displacement between vertex interpolation and curve evaluation with interpolated parameters */
@@ -1201,7 +1202,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
             t8_geom_linear_interpolation (&ref_coords[interpolation_coeff + offset_3d], edge_vertices_on_face, 3, 1,
                                           interpolated_edge_coordinates);
 
-            pnt = process_curve (i_tree_edge, interpolated_curve_param);
+            pnt = process_curve (edges[i_tree_edge], interpolated_curve_param);
 
             /* Compute the scaling_factor of the edge displacement on the current face */
             double scaling_factor = t8_geom_get_scaling_factor_of_edge_on_face_prism (
@@ -1234,7 +1235,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
           interpolated_coords[dim] += face_displacement_from_edges[dim];
         }
 
-        pnt = process_surface (i_faces, interpolated_surface_params, 0);
+        pnt = process_surface (faces[i_faces], interpolated_surface_params);
 
         /* Compute the displacement between surface and interpolated coords, scale them with the appropriate scaling_factor
          * and add them to the out_coords. */
@@ -1271,35 +1272,34 @@ t8_geometry_cad_destroy (t8_geometry_cad_c **geom)
 }
 
 gp_Pnt
-t8_geometry_cad::process_curve (const int edge_index, const double interpolated_curve_param) const
+t8_geometry_cad::process_curve (const int curve_index, const double param) const
 {
   gp_Pnt pnt;
 
   /* Retrieve the curve of the edge */
-  auto curve = cad_manager->t8_geom_get_cad_curve (edges[edge_index]);
+  const auto curve = cad_manager->t8_geom_get_cad_curve (curve_index);
 
   /* Check if curve is valid */
   T8_ASSERT (!curve.IsNull ());
 
   /* Calculate point on curve with interpolated parameters */
-  curve->D0 (interpolated_curve_param, pnt);
+  curve->D0 (param, pnt);
 
   return pnt;
 }
 gp_Pnt
-t8_geometry_cad::process_surface (const int face_index, const double *interpolated_surface_params,
-                                  const int offset) const
+t8_geometry_cad::process_surface (const int surface_index, const double *params) const
 {
   gp_Pnt pnt;
 
   /* Retrieve the surface of the edge */
-  auto surface = cad_manager->t8_geom_get_cad_surface (faces[face_index]);
+  const auto surface = cad_manager->t8_geom_get_cad_surface (surface_index);
 
   /* Check if surface is valid */
   T8_ASSERT (!surface.IsNull ());
 
-  /* Compute point on surface with interpolated parameters */
-  surface->D0 (interpolated_surface_params[offset], interpolated_surface_params[offset + 1], pnt);
+  /* Compute point on surface with parameters */
+  surface->D0 (params[0], params[1], pnt);
 
   return pnt;
 }
