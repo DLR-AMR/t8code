@@ -58,7 +58,8 @@ TEST_P (shmem, test_shmem_init_finalize)
   int mpiret;
 
   /* setup shared memory usage */
-  t8_shmem_init (comm);
+  const int intrasize_from_init = t8_shmem_init (comm);
+  ASSERT_GT (intrasize_from_init, 0) << "Error in t8_shmem_init. No intranode communicator set.";
 
   /* Get intranode and internode comm */
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
@@ -113,7 +114,9 @@ TEST_P (shmem, test_sc_shmem_alloc)
   t8_debugf ("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type]);
 
   /* setup shared memory usage */
-  t8_shmem_init (comm);
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
+
   t8_shmem_set_type (comm, shmem_type);
 
 #if T8_ENABLE_MPI
@@ -196,7 +199,8 @@ TEST_P (shmem, test_shmem_array_allgatherv)
   const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
 
   /* setup shared memory usage */
-  t8_shmem_init (comm);
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
 #if T8_ENABLE_MPI
@@ -246,7 +250,8 @@ TEST_P (shmem, test_shmem_array_prefix)
   const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
 
   /* setup shared memory usage */
-  t8_shmem_init (comm);
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
 #if T8_ENABLE_MPI
@@ -291,7 +296,8 @@ TEST_P (shmem, test_shmem_array)
   const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
 
   /* setup shared memory usage */
-  t8_shmem_init (comm);
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
 #if T8_ENABLE_MPI

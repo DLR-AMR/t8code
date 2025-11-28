@@ -60,9 +60,18 @@ t8_shmem_array_is_initialized (const t8_shmem_array_t array)
 }
 #endif
 
-void
+int
 t8_shmem_init (sc_MPI_Comm comm)
 {
+#ifndef T8_ENABLE_MPI
+  // If we do not use MPI, there is nothing to do.
+  // We only have a single process.
+  return 1;
+#endif
+#ifndef SC_ENABLE_MPICOMMSHARED
+  SC_ABORT ("Trying to use shared memory but SC_ENABLE_MPICOMMSHARED is not set. This should not happen if you use MPI "
+            "v.3.0 or higher. Maybe related to https://github.com/DLR-AMR/t8code/pull/1996.");
+#endif
   /* Check whether intranode and internode comms are set
    * for the current communicator. */
   sc_MPI_Comm intranode;
@@ -73,8 +82,12 @@ t8_shmem_init (sc_MPI_Comm comm)
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
     /* The inter/intra comms are not set. We need to set them to 
      * initialize shared memory usage. */
-    sc_mpi_comm_get_and_attach (comm);
+    return sc_mpi_comm_get_and_attach (comm);
   }
+  int intranode_size;
+  const int mpiret = sc_MPI_Comm_size (intranode, &intranode_size);
+  SC_CHECK_MPI (mpiret);
+  return intranode_size;
 }
 
 void
