@@ -68,6 +68,7 @@ add_t8_tutorial( NAME t8_tutorial_build_scheme          SOURCES general/t8_tutor
 add_t8_tutorial( NAME t8_mra_example             	      SOURCES general/t8_mra_example.cxx )
 add_t8_tutorial( NAME t8_new_mra_example             	  SOURCES general/t8_new_mra_example.cxx )
 add_t8_tutorial( NAME t8_mra_vtk_example             	  SOURCES general/t8_mra_vtk_example.cxx )
+add_t8_tutorial( NAME t8_mra_unified_example            SOURCES general/t8_mra_unified_plotting_example.cxx )
 add_t8_tutorial( NAME test_basis_eval                    SOURCES general/test_basis_eval.cxx )
 add_t8_tutorial( NAME t8_cartesian_projection_example    SOURCES general/t8_cartesian_projection_example.cxx )
 add_t8_tutorial( NAME t8_cartesian_coarsening_example    SOURCES general/t8_cartesian_coarsening_example.cxx )
