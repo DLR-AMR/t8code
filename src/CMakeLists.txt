@@ -84,6 +84,8 @@ if ( T8CODE_ENABLE_MPI )
 endif()
 
 if( T8CODE_ENABLE_VTK )
+    # Set link macro to 1 (will be used in t8_vtk_linkage.hxx)
+    set ( T8_ENABLE_VTK 1 )
     # Define T8CODE_VTK_MAJOR/MINOR_VERSION to true, such that get defined in t8code_vtk_linkage.hxx
     set ( T8CODE_VTK_MAJOR_VERSION 1 )
     set ( T8CODE_VTK_MINOR_VERSION 1 )
@@ -105,6 +107,8 @@ if( T8CODE_ENABLE_VTK )
     DESTINATION include)
 
 else ()
+  # Set link macro to 0 (will be used in t8_vtk_linkage.hxx)
+  set ( T8_ENABLE_VTK 0 )
   # Ensure that these macros are not set if T8CODE_ENABLE_VTK is not set.
   unset ( T8CODE_VTK_MAJOR_VERSION )
   unset ( T8CODE_VTK_MINOR_VERSION )
