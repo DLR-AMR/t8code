@@ -68,6 +68,10 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
 
   t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
   EXPECT_EQ (mesh.get_num_local_ghosts (), t8_forest_get_num_ghosts (forest));
+  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
+    // Ensure that we actually have ghost elements in this test.
+    EXPECT_GT (mesh.get_num_local_ghosts (), 0);
+  }
 
   // Check that functionality of mesh elements is still valid.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
