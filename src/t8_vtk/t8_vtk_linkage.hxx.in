@@ -1,0 +1,39 @@
+/*
+  This file is part of t8code.
+  Copyright (C) 2025 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+/** 
+ * \file t8_vtk_linkage.hxx
+ * Automatically generated from t8_vtk_linkage.hxx.in
+ * This file defines the macros
+ * \ref T8CODE_ENABLE_VTK - either 0 or 1 specifying if t8code links against VTK or not.
+ * \ref T8CODE_VTK_MAJOR_VERSION - If T8CODE_ENABLE_VTK The VTK major version number.
+ * \ref T8CODE_VTK_MINOR_VERSION - If T8CODE_ENABLE_VTK The VTK minor version number.
+ */
+
+#ifndef T8CODE_VTK_LINKAGE_HXX
+#define T8CODE_VTK_LINKAGE_HXX
+
+/** Macro that is 1 if we link against VTK on 0 if we don't. */
+#cmakedefine01 T8CODE_ENABLE_VTK
+/** VTK major version number */
+#cmakedefine T8CODE_VTK_MAJOR_VERSION @VTK_MAJOR_VERSION@
+/** VTK minor version number */
+#cmakedefine T8CODE_VTK_MINOR_VERSION @VTK_MINOR_VERSION@
+
+#endif // T8CODE_VTK_LINKAGE_HXX

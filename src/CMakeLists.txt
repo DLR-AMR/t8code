@@ -84,6 +84,9 @@ if ( T8CODE_ENABLE_MPI )
 endif()
 
 if( T8CODE_ENABLE_VTK )
+    # Define T8CODE_VTK_MAJOR/MINOR_VERSION to true, such that get defined in t8code_vtk_linkage.hxx
+    set ( T8CODE_VTK_MAJOR_VERSION 1 )
+    set ( T8CODE_VTK_MINOR_VERSION 1 )
     target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
@@ -100,7 +103,23 @@ if( T8CODE_ENABLE_VTK )
       t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx
       t8_vtk/t8_with_vtk/t8_vtk_reader.hxx
     DESTINATION include)
+
+else ()
+  # Ensure that these macros are not set if T8CODE_ENABLE_VTK is not set.
+  unset ( T8CODE_VTK_MAJOR_VERSION )
+  unset ( T8CODE_VTK_MINOR_VERSION )
 endif()
+
+#
+# Setup the file t8_vtk_linkage.hxx and write macros for the VTK version
+#
+configure_file (t8_vtk/t8_vtk_linkage.hxx.in t8_vtk/t8_vtk_linkage.hxx @ONLY)
+
+# install the automatically created t8_vtk_linkage.hxx into the include/t8_vtk folder
+install (FILES 
+    ${CMAKE_CURRENT_BINARY_DIR}/t8_vtk/t8_vtk_linkage.hxx
+    DESTINATION include/t8_vtk
+)
 
 if( T8CODE_ENABLE_OCC )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
@@ -247,6 +266,7 @@ install( FILES
     t8_vtk.h
     TYPE INCLUDE
 )
+
 
 # Note: Some of the created install directories will be empty, for example t8_cmesh/t8_cmesh_internal
 # since none of the files in them should be installed.
