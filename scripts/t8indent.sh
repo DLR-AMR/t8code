@@ -48,7 +48,7 @@ then
   exit 1
 fi
 
-# Get indentation script version and split it into Major, minor, patch
+# Get indentation script version and split it into major, minor, patch
 CLANG_VERSION_STRING=`$FORMAT --version`
 
 VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
