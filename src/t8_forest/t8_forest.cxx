@@ -407,6 +407,14 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
   const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltree_id);
   /* Get the cmesh */
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+#if T8_ENABLE_DEBUG
+  if (tree_class == T8_ECLASS_TET) {
+    T8_ASSERT (vertex_coords[1] >= 0.0);
+    T8_ASSERT (vertex_coords[2] >= vertex_coords[1]);
+    T8_ASSERT (vertex_coords[0] >= vertex_coords[2]);
+    T8_ASSERT (vertex_coords[0] <= 1.0);
+  }
+#endif
   /* Evaluate the geometry */
   t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, 1, coordinates);
 }
@@ -3027,7 +3035,9 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (forest->scheme != NULL);
     T8_ASSERT (forest->from_method == T8_FOREST_FROM_LAST);
     T8_ASSERT (forest->incomplete_trees == -1);
-
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     /* Check if the scheme is valid
      * TODO: Remove when trees access schemes via key.
      * Also remove the complete function t8_forest_scheme_is_valid */
@@ -3064,7 +3074,9 @@ t8_forest_commit (t8_forest_t forest)
     T8_ASSERT (!forest->do_dup);
     T8_ASSERT (forest->from_method >= T8_FOREST_FROM_FIRST && forest->from_method < T8_FOREST_FROM_LAST);
     T8_ASSERT (forest->set_from->incomplete_trees > -1);
-
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest_from->mpicomm);
+#endif
     /* TODO: optimize all this when forest->set_from has reference count one */
     /* TODO: Get rid of duping the communicator */
     /* we must prevent the case that set_from frees the source communicator */
@@ -3231,6 +3243,9 @@ t8_forest_commit (t8_forest_t forest)
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of commit */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->commit_runtime = sc_MPI_Wtime () - forest->profile->commit_runtime;
   }
 
@@ -3740,7 +3755,7 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid)
 void
 t8_forest_set_profiling (t8_forest_t forest, int set_profiling)
 {
-  T8_ASSERT (t8_forest_is_initialized (forest));
+  //  T8_ASSERT (t8_forest_is_initialized (forest));
 
   if (set_profiling) {
     if (forest->profile == NULL) {
@@ -3783,6 +3798,10 @@ t8_forest_compute_profile (t8_forest_t forest)
     sc_stats_set1 (&forest->stats[14], profile->balance_rounds, "forest: Tree offset runtime.");
     sc_stats_set1 (&forest->stats[15], profile->balance_rounds, "forest: offset runtime.");
     sc_stats_set1 (&forest->stats[16], profile->balance_rounds, "forest: first descendant runtime.");
+    sc_stats_set1 (&forest->stats[17], profile->balance_rounds, "forest: search check element runtime.");
+    sc_stats_set1 (&forest->stats[18], profile->balance_rounds, "forest: search check queries runtime.");
+    sc_stats_set1 (&forest->stats[19], profile->balance_rounds, "forest: search split_array runtime.");
+    sc_stats_set1 (&forest->stats[20], profile->balance_rounds, "forest: search total runtime.");
     /* compute stats */
     sc_stats_compute (sc_MPI_COMM_WORLD, T8_PROFILE_NUM_STATS, forest->stats);
     forest->stats_computed = 1;
@@ -3924,7 +3943,7 @@ t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
   return 0;
 }
 double
-t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
+t8_forest_profile_get_cmesh_offsets_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -3934,7 +3953,7 @@ t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
 }
 
 double
-t8_forest_profile_get_forest_offset_runtime (t8_forest_t forest)
+t8_forest_profile_get_forest_offsets_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -3949,6 +3968,42 @@ t8_forest_profile_get_first_descendant_runtime (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
     return forest->profile->first_descendant_runtime;
+  }
+  return 0;
+}
+double
+t8_forest_profile_get_search_check_element_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->search_check_element_time;
+  }
+  return 0;
+}
+double
+t8_forest_profile_get_search_check_query_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->search_check_query_time;
+  }
+  return 0;
+}
+double
+t8_forest_profile_get_search_split_array_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->search_split_array_time;
+  }
+  return 0;
+}
+double
+t8_forest_profile_get_search_total_runtime (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  if (forest->profile != NULL) {
+    return forest->profile->search_time;
   }
   return 0;
 }
