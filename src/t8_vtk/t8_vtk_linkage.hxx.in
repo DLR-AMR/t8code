@@ -31,9 +31,9 @@
 
 /** Macro that is 1 if we link against VTK on 0 if we don't. */
 #cmakedefine01 T8_ENABLE_VTK
-/** VTK major version number */
+/** VTK major version number - Only defined if T8_ENABLE_VTK is 1 */
 #cmakedefine T8_VTK_MAJOR_VERSION @VTK_MAJOR_VERSION@
-/** VTK minor version number */
+/** VTK minor version number - Only defined if T8_ENABLE_VTK is 1 */
 #cmakedefine T8_VTK_MINOR_VERSION @VTK_MINOR_VERSION@
 
 #endif // T8CODE_VTK_LINKAGE_HXX
