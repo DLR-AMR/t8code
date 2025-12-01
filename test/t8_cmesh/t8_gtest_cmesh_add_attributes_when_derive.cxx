@@ -22,8 +22,8 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 
 /* Test if adding attributes to a cmesh when deriving it from another

@@ -32,12 +32,12 @@
 #include <t8_types/t8_type.hxx>
 #include <t8_types/t8_operators.hxx>
 
-T8_EXTERN_C_BEGIN ();
-
 /** Dummy tag for type trait usage of \ref t8_geometry_hash */
 struct t8_geometry_hash_tag
 {
 };
+
+T8_EXTERN_C_BEGIN ();
 
 /** Data type used for storing hash values of geometries. */
 using t8_geometry_hash = T8Type<size_t, t8_geometry_hash_tag, Addable, Subtractable, AddAssignable, Multipliable,

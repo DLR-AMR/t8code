@@ -22,35 +22,35 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 
 /** \file In this file we test the global cmesh vertex numbers.
- * 
+ *
  * We build a test cmesh consisting of two coarse triangles joined together
  * and associate global vertex numbers with the cmesh's vertices.
  * This cmesh has 4 global vertices in total.
- * 
+ *
  * We then perform three tests
- * 
+ *
  * 1) check_tree_to_vertex
  * Here we test the tree_to_vertex connectivity.
  * That is, given a tree id, we get a list of the global vertices of that tree
  * (in local vertex order) and check whether this list is correct.
- * 
+ *
  * 2) check_vertex_to_tree
  * Here we test the vertex_to_tree connectivity.
  * Given a global vertex index, the vertex_to_tree connectivity returns a list
  * of pairs (local tree_id, local_vertex_id) of all the local trees and their local
  * vertices that are connected to the global vertex.
  * We check whether this list is correct.
- * 
+ *
  * 3) check_global_vertex_number
  * We verify that the number of global vertices is 4.
  * We additionally verify that the process local number of global vertices is 4 as well.
  * This is true, since the cmesh is not partitioned.
- * 
+ *
  * Additionally, t8_test_cmesh_vertex_conn_partitioned is the start of a test
  * suite with partitioned cmesh that is currently disabled and could be enabled and extended
  * when cmesh vertex connectivity supports partitioned cmeshes.
@@ -72,7 +72,7 @@ class t8_test_cmesh_vertex_conn: public testing::Test {
 
                  x ----- x
                 /2\2   1/
-               /   \   / 
+               /   \   /
               /0  1 \0/
              x ----- x
 
@@ -81,10 +81,10 @@ class t8_test_cmesh_vertex_conn: public testing::Test {
                    2       3
                    x ---- x
                   /\     /
-                 /  \   / 
+                 /  \   /
                 /    \ /
              0 x ---- x 1
-     
+
     */
 
     const t8_eclass_t tree_class = T8_ECLASS_TRIANGLE;
@@ -97,7 +97,7 @@ class t8_test_cmesh_vertex_conn: public testing::Test {
     constexpr t8_gloidx_t global_vertices_of_tree_1[testcase_num_vertices_per_tree] = { 1, 3, 2 };
     t8_cmesh_set_global_vertices_of_tree (cmesh, 0, global_vertices_of_tree_0, testcase_num_vertices_per_tree);
     t8_cmesh_set_global_vertices_of_tree (cmesh, 1, global_vertices_of_tree_1, testcase_num_vertices_per_tree);
-    /* TODO: When cmesh becomes a class implement a cmesh member function to do this instead: 
+    /* TODO: When cmesh becomes a class implement a cmesh member function to do this instead:
     cmesh.set_global_vertices_of_tree (0, global_vertices_of_tree_0, testcase_num_vertices_per_tree);
     cmesh.set_global_vertices_of_tree (1, global_vertices_of_tree_1, testcase_num_vertices_per_tree);
     */
@@ -127,10 +127,14 @@ TEST_F (t8_test_cmesh_vertex_conn, check_tree_to_vertex)
   ASSERT_FALSE (t8_cmesh_is_partitioned (cmesh));
 
   /* Get the vertices of the trees and check their values. */
+  int returned_num_vertices_per_tree;
   const t8_gloidx_t *check_global_vertices_tree_0
-    = t8_cmesh_get_global_vertices_of_tree (cmesh, 0, testcase_num_vertices_per_tree);
+    = t8_cmesh_get_global_vertices_of_tree (cmesh, 0, &returned_num_vertices_per_tree);
+  EXPECT_EQ (testcase_num_vertices_per_tree, returned_num_vertices_per_tree);
   const t8_gloidx_t *check_global_vertices_tree_1
-    = t8_cmesh_get_global_vertices_of_tree (cmesh, 1, testcase_num_vertices_per_tree);
+    = t8_cmesh_get_global_vertices_of_tree (cmesh, 1, &returned_num_vertices_per_tree);
+  EXPECT_EQ (testcase_num_vertices_per_tree, returned_num_vertices_per_tree);
+
   EXPECT_EQ (check_global_vertices_tree_0[0], 0);
   EXPECT_EQ (check_global_vertices_tree_0[1], 1);
   EXPECT_EQ (check_global_vertices_tree_0[2], 2);
@@ -149,10 +153,10 @@ TEST_F (t8_test_cmesh_vertex_conn, check_vertex_to_tree)
   ASSERT_FALSE (t8_cmesh_is_partitioned (cmesh));
 
   /*
-  
+
   The vertex to tree lists should have been built up with
   the following entries ( x:y corresponding to tree x, local tree vertex y)
-  
+
   0: 0:0
   1: 0:1, 1:0
   2: 0:2, 1:2
@@ -225,8 +229,8 @@ class t8_test_cmesh_vertex_conn_partitioned: public testing::Test {
     */
 
     /* We want to have as many trees as mpiranks, so that
-     * each rank has at least one tree when partitioned. 
-     * Compute the mpisize and assign it to the number of trees: 
+     * each rank has at least one tree when partitioned.
+     * Compute the mpisize and assign it to the number of trees:
      * */
     const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
     int mpiret = sc_MPI_Comm_size (comm, &mpisize);
