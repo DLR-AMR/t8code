@@ -34,16 +34,17 @@
 #include <vector>
 
 #include <t8.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
+/** The maximum polynomial degree currently implemented. */
 #define T8_GEOMETRY_MAX_POLYNOMIAL_DEGREE 2
 
 /**
  * Mapping with Lagrange basis functions
- * 
+ *
  * The enumeration of the nodal basis functions depends on the node numbering
  * scheme. While this is a convention, we came up with the following rules to
  * guide us when constructing new mappings:
@@ -67,16 +68,16 @@
  * assigned based on increasing face IDs, then increasing edge IDs, then
  * increasing vertex IDs. For volume elements, the volume nodes are assigned
  * lastly. This hierarchical construction satisfies rule 1 at the mesh level.
- * 
+ *
  * You can verify these rules by checking the documentation of the
  * \a t8_geom_xxx_basis methods of this class
  * (e.g. t8_geometry_lagrange::t8_geom_t6_basis).
- * 
+ *
  */
 struct t8_geometry_lagrange: public t8_geometry_with_vertices
 {
  public:
-  /** 
+  /**
    * Constructor of the Lagrange geometry with a given dimension. The geometry
    * is compatible with all tree types and uses as many vertices as the number of Lagrange
    * basis functions used for the mapping.
@@ -98,19 +99,19 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
 
   /**
    * Maps points from the reference space to the physical space \f$ \mathbb{R}^3 \f$.
-   * 
+   *
    * For linear elements, it gives the same result as \ref t8_geom_compute_linear_geometry.
-   * 
+   *
    * The mapping is performed via Lagrange interpolation according to
-   * 
+   *
    * \f$ \mathbf{x}(\vec{\xi}) = \sum\limits_{i=1}^{N_{\mathrm{vertex}}} \psi_i(\vec{\xi}) \mathbf{x}_i \f$
-   * 
+   *
    * where \f$ \vec{\xi} \f$ is the point in the reference space to be mapped, \f$ \mathbf{x} \f$ is the mapped point we search,
    * \f$ \psi_i(\vec{\xi}) \f$ are the basis functions associated with the vertices, and \f$ \mathbf{x}_i \f$ are the
    * vertices of the current tree in the physical space.
-   * The basis functions are specific to the tree type, see e.g. \ref t8_geom_t6_basis.
+   * The basis functions are specific to the tree type, see e.g. t8_geom_t6_basis .
    * The vertices of the current tree were set with \ref t8_cmesh_set_tree_vertices.
-   * 
+   *
    * \param [in]  cmesh       The cmesh in which the point lies.
    * \param [in]  gtreeid     The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of tree dimension x \a num_points entries, specifying points in the reference space.
@@ -136,7 +137,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
-   * evaluated. You can use it for example to load the polynomial degree of the 
+   * evaluated. You can use it for example to load the polynomial degree of the
    * Lagrange basis into an internal buffer (as is done in the Lagrange geometry).
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
@@ -166,7 +167,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
       x --------- x
      0             1
      \endverbatim
-   * \param ref_point  Point in the reference space.
+   * \param [in] ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
   inline std::vector<double>
@@ -178,7 +179,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
       x ----x---- x
      0      2      1
      \endverbatim
-   * \param ref_point  Point in the reference space.
+   * \param [in] ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
   inline std::vector<double>
@@ -197,7 +198,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
       x --------- x
      0             1
      \endverbatim
-   * \param ref_point  Point in the reference space.
+   * \param [in] ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
   inline std::vector<double>
@@ -216,7 +217,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
       x --- x --- x
      0      5      1
      \endverbatim
-   * \param ref_point  Point in the reference space.
+   * \param [in] ref_point  Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
   inline std::vector<double>
@@ -235,7 +236,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
       x --------- x
      0             1
      \endverbatim
-   * \param ref_point  Point in the reference space.
+   * \param [in] ref_point Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
   inline std::vector<double>
@@ -254,7 +255,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
       x ----x---- x
      0      6      1
      \endverbatim
-   * \param ref_point  Point in the reference space.
+   * \param [in] ref_point Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
   inline std::vector<double>
@@ -277,7 +278,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
       x --------- x    -->
      0             1
      \endverbatim
-   * \param ref_point  Point in the reference space.
+   * \param [in] ref_point Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
   inline std::vector<double>
@@ -300,7 +301,7 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
       x ----x---- x  -->        x ----x---- x  -->        x ----x---- x  -->
      0     18     1            9     20      13          4     19      5
      \endverbatim
-   * \param ref_point  Point in the reference space.
+   * \param ref_point [in] Point in the reference space.
    * \return  Basis functions evaluated at the reference point.
    */
   inline std::vector<double>
@@ -312,9 +313,9 @@ struct t8_geometry_lagrange: public t8_geometry_with_vertices
 
 /**
  * Flatten a vector of vector into a single vector.
- * 
+ *
  * \tparam T   Template parameter of a vector.
- * \param vec  Nested vector to be flattened.
+ * \param [in] vec Nested vector to be flattened.
  * \return     Flattened vector.
  */
 template <typename T>
@@ -330,7 +331,7 @@ flatten (const std::vector<std::vector<T>> &vec)
 
 /**
  * A single coarse mesh cell with Lagrange geometry.
- * 
+ *
  * This class is essentially a wrapper around a cmesh.
  * By having a single element instead of a mesh, understanding and
  * testing is made easier. Several topological utilities are provided,
@@ -341,19 +342,19 @@ class t8_lagrange_element {
  public:
   /**
    * Construct a new t8_lagrange_element object.
-   * 
-   * \param eclass  Element class (line, quad, etc.)
-   * \param degree  Polynomial degree (1, 2, ...)
-   * \param nodes   x,y,z coordinates of the nodes, adhering to the numbering
-   *                convention.
+   *
+   * \param [in] eclass  Element class (line, quad, etc.)
+   * \param [in] degree  Polynomial degree (1, 2, ...)
+   * \param [in] nodes   x,y,z coordinates of the nodes, adhering to the numbering
+   *                     convention.
    */
   t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, std::vector<double> &nodes);
 
   /**
    * Destroy the t8_lagrange_element object.
-   * 
+   *
    * The cmesh wrapped by this class is also destroyed.
-   * 
+   *
    */
   ~t8_lagrange_element ()
   {
@@ -362,7 +363,7 @@ class t8_lagrange_element {
 
   /**
    * Get the type of the element.
-   * 
+   *
    * \return  Element class of the element.
    */
   t8_eclass_t
@@ -370,7 +371,7 @@ class t8_lagrange_element {
 
   /**
    * Element classes of the faces of this element.
-   * 
+   *
    * \return  Element classes of the faces, enumerated according to the face
    * ordering conventions of t8code.
    */
@@ -379,25 +380,25 @@ class t8_lagrange_element {
 
   /**
    * Coordinates of the specified node.
-   * 
-   * \param node  Node label. Node numbering starts at 0.
-   * \return      x,y,z coordinates of the node.
+   *
+   * \param [in] node  Node label. Node numbering starts at 0.
+   * \return           x,y,z coordinates of the node.
    */
   std::vector<double>
   get_node_coords (uint32_t node) const;
 
   /**
    * Coordinates of the specified nodes.
-   * 
-   * \param nodes  Node labels. Node numbering starts at 0.
-   * \return       x,y,z coordinates of the nodes.
+   *
+   * \param [in] nodes  Node labels. Node numbering starts at 0.
+   * \return            x,y,z coordinates of the nodes.
    */
   std::vector<std::vector<double>>
   get_node_coords (std::vector<uint32_t> &nodes) const;
 
   /**
    * Node labels on the faces of the element.
-   * 
+   *
    * \return  Node labels on each face of the element.
    */
   std::vector<std::vector<uint32_t>>
@@ -405,11 +406,11 @@ class t8_lagrange_element {
 
   /**
    * Decompose the element into its faces.
-   * 
+   *
    * t8_lagrange_element()-s of codimension 1 are created. The original element
    * is not modified and the decomposition is not recursive.
    * The faces can further be decomposed by calling this method on them.
-   * 
+   *
    * \return  Lagrange elements from the faces.
    */
   std::vector<t8_lagrange_element>
@@ -417,20 +418,20 @@ class t8_lagrange_element {
 
   /**
    * Physical coordinates of a point given in the reference domain.
-   * 
-   * \param point  Parametric coordinates of the point to be mapped.
-   *               For 2D elements, only the first two coordinates are
-   *               considered. For the 1D line element, only the first.
-   * \return       Coordinates in the physical space.
+   *
+   * \param [in] ref_point  Parametric coordinates of the point to be mapped.
+   *                        For 2D elements, only the first two coordinates are
+   *                        considered. For the 1D line element, only the first.
+   * \return                Coordinates in the physical space.
    */
   std::array<double, T8_ECLASS_MAX_DIM>
   evaluate (const std::array<double, T8_ECLASS_MAX_DIM> &ref_point) const;
 
   /**
    * Sample random points in the reference domain.
-   * 
-   * \param n_point  Number of points to generate.
-   * \return         Coordinates of the points, given in x,y,z.
+   *
+   * \param [in] n_point  Number of points to generate.
+   * \return              Coordinates of the points, given in x,y,z.
    */
   std::vector<std::array<double, T8_ECLASS_MAX_DIM>>
   sample (uint32_t n_point) const;
@@ -457,19 +458,19 @@ class t8_lagrange_element {
                                  0             1
                                       face 2
      \endverbatim
-   * 
-   * \param eclass   Element class of the element onto which we map.
-   *                 d-dimensional elements can only be mapped to the faces of
-   *                 d+1-dimensional elements.
-   * \param face_id  Face ID of the element onto which we map.
-   *                 Faces in an element are numbered according to the t8code
-   *                 conventions. The selected face must have the same type as
-   *                 the element from which we map. For instance, an element of
-   *                 type T8_ECLASS_QUAD can only be mapped onto face 4 of a
-   *                 T8_ECLASS_PYRAMID, since the other faces of a pyramidal
-   *                 element are triangles.
-   * \param coord    x,y,z coordinates of the point in this element.
-   * \return         x,y,z coordinates of the mapped point.
+   *
+   * \param [in] eclass   Element class of the element onto which we map.
+   *                      d-dimensional elements can only be mapped to the faces of
+   *                      d+1-dimensional elements.
+   * \param [in] face_id  Face ID of the element onto which we map.
+   *                      Faces in an element are numbered according to the t8code
+   *                      conventions. The selected face must have the same type as
+   *                      the element from which we map. For instance, an element of
+   *                      type \ref T8_ECLASS_QUAD can only be mapped onto face 4 of a
+   *                      \ref T8_ECLASS_PYRAMID, since the other faces of a pyramidal
+   *                      element are triangles.
+   * \param [in] coord    x,y,z coordinates of the point in this element.
+   * \return              x,y,z coordinates of the mapped point.
    */
   std::array<double, T8_ECLASS_MAX_DIM>
   map_on_face (t8_eclass eclass, const int face_id, const std::array<double, T8_ECLASS_MAX_DIM> &coord) const;
@@ -496,6 +497,11 @@ class t8_lagrange_element {
   /** Number of nodes in the Lagrange element of a given class and degree */
   static constexpr uint32_t lagrange_nodes[T8_ECLASS_COUNT][2] = { { 1, 1 }, { 2, 3 }, { 4, 9 }, { 3, 6 }, { 8, 27 } };
 
+  /** Inbuilt function to create a uniform forest.
+   * \param [in] cmesh The cmesh to use.
+   * \param [in] level The level of the uniform forest.
+   * \return           The forest.
+   */
   t8_forest_t
   create_uniform_forest (t8_cmesh_t cmesh, uint32_t level) const;
 };

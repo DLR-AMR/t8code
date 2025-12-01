@@ -20,15 +20,26 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_writer_helper.hxx
+ * 
+ * This file contains helper functions for the vtk writer.
+ */
+
 #ifndef T8_VTK_WRITER_HELPER
 #define T8_VTK_WRITER_HELPER
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
 
+/** The maximum number of corners for a quadratic vtk element */
 #define T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS 20
 /** Lookup table for number of nodes for curved eclasses. */
 const int t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] = { 1, 3, 8, 6, 20, 10, 15, 13 };
+/** Lookup table for maximal number of vtk nodes for curved eclasses per dimension */
+const int t8_curved_dim_max_nodes[4] = { 1, 3, 8, 20 };
+/** Lookup table for maximal number of vtk nodes for linear eclasses per dimension */
+const int t8_dim_max_nodes[4] = { 1, 2, 4, 8 };
 
 #if T8_ENABLE_VTK
 /** Lookup table for vtk types of curved elements */
@@ -112,6 +123,17 @@ t8_locidx_t
 grid_local_num_elements (const grid_t grid);
 
 /**
+ * Templated getter functions to get the local bounds of a forest or cmesh.
+ * 
+ * \tparam grid_t Either a cmesh or a forest.
+ * \param[in] grid The forest/cmesh to use.
+ * \param[in, out] bounds defined by xmin, xmax, ymin, ymax, zmin, zmax.
+ */
+template <typename grid_t>
+void
+grid_get_local_bounds (const grid_t grid, double bounds[6]);
+
+/**
  * Templated getter functions to use one call to get the local number of trees  for a forest(cmesh).
  * 
  * \tparam grid_t Either a cmesh or a forest.
@@ -167,7 +189,7 @@ tree_local_to_global_id (const grid_t grid, t8_locidx_t itree);
  */
 template <typename grid_t>
 bool
-grid_do_ghosts (const grid_t grid, const int write_ghosts);
+grid_do_ghosts (const grid_t grid, const bool write_ghosts);
 
 /**
  * Compute the number of cells to write on this process.
@@ -179,7 +201,7 @@ grid_do_ghosts (const grid_t grid, const int write_ghosts);
  */
 template <typename grid_t>
 t8_locidx_t
-num_cells_to_write (const grid_t grid, const int write_ghosts);
+num_cells_to_write (const grid_t grid, const bool write_ghosts);
 
 /**
  * Templated function to get the shape of an element for forests or cmeshes. If grid is a cmesh the input for
@@ -224,5 +246,16 @@ grid_element_to_coords (const grid_t grid, const t8_locidx_t itree, const t8_ele
 template <typename grid_t>
 int
 grid_element_level (const grid_t grid, const t8_locidx_t itree, const t8_element_t *element);
+
+/**
+ * Get the dimension of the grid. 
+ * 
+ * \tparam grid_t 
+ * \param[in] grid A forest/cmesh.
+ * \return The dimension of the grid.
+ */
+template <typename grid_t>
+int
+grid_get_dim (const grid_t grid);
 
 #endif /* T8_VTK_WRITER_HELPER */

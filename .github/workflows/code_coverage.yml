@@ -57,7 +57,7 @@ jobs:
 # Setup
 #
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
@@ -91,7 +91,7 @@ jobs:
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -DT8CODE_CODE_COVERAGE=ON -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
+      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -DT8CODE_CODE_COVERAGE=ON -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake -DT8CODE_BUILD_BENCHMARKS=OFF -DT8CODE_BUILD_DOCUMENTATION=OFF -DT8CODE_BUILD_EXAMPLES=OFF -DT8CODE_BUILD_TUTORIALS=OFF"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake
     - name: echo cmake line
@@ -100,14 +100,12 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
     - name: build
       run: cd build && cmake --build . $MAKEFLAGS
-    - name: install
-      run: cd build && cmake --install .
     # Generate code coverage report.
     - name: Generate code coverage report
       run: cd build && cmake --build . --target coverage

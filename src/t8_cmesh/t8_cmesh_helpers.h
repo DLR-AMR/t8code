@@ -29,12 +29,12 @@
 #define T8_CMESH_HELPERS_H
 
 #include <t8.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_eclass.h>
 
 T8_EXTERN_C_BEGIN ();
 
-/** Sets the face connectivity information of an un-committed \cmesh based on a list of tree vertices.
+/** Sets the face connectivity information of an un-committed cmesh based on a list of tree vertices.
  * \param[in,out]   cmesh               Pointer to a t8code cmesh object. If set to NULL this argument is ignored.
  * \param[in]       ntrees              Number of coarse mesh elements resp. trees.
  * \param[in]       vertices            List of per element vertices with dimensions
@@ -59,7 +59,7 @@ void
 t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const t8_eclass_t *eclasses,
                                const double *vertices, int **connectivity, const int do_both_directions);
 
-/** Sets the face connectivity information of an un-committed \cmesh based on the cmesh stash.
+/** Sets the face connectivity information of an un-committed cmesh based on the cmesh stash.
  * \param[in,out]   cmesh               An uncommitted cmesh. The trees eclasses and vertices do need to be set.
  * \param[in,out]   connectivity        If connectivity is not NULL the variable is filled with a pointer to an
  *                                      allocated face connectivity array. The ownership of this

@@ -25,6 +25,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_forest/t8_forest_ghost.h>
 
 int
 t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_flag)
@@ -46,6 +47,21 @@ t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const 
   const double *ref_coords = t8_forest_vtk_point_to_element_ref_coords[element_shape][vertex];
   const int num_node = t8_get_number_of_vtk_nodes (element_shape, curved_flag);
   t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_coords, num_node, out_coords);
+}
+
+template <>
+void
+grid_get_local_bounds<t8_cmesh_t> (const t8_cmesh_t grid, double bounds[6])
+{
+  t8_cmesh_get_local_bounding_box (grid, bounds);
+}
+
+template <>
+void
+grid_get_local_bounds<t8_forest_t> (const t8_forest_t grid, double bounds[6])
+{
+  auto cmesh = t8_forest_get_cmesh (grid);
+  t8_cmesh_get_local_bounding_box (cmesh, bounds);
 }
 
 template <>
@@ -120,39 +136,45 @@ tree_local_to_global_id<t8_cmesh_t> (const t8_cmesh_t grid, t8_locidx_t ltree)
 
 template <>
 bool
-grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
+grid_do_ghosts<t8_forest_t> (const t8_forest_t grid, const bool write_ghosts)
 {
-  bool ghosts = write_ghosts;
-  if (grid->ghosts == NULL || grid->ghosts->num_ghosts_elements == 0) {
-    /* Never write ghost elements if there aren't any */
-    ghosts = false;
+  // Do not write ghost elements if there aren't any.
+  if (write_ghosts) {
+    const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (grid);
+    if (num_ghost_trees > 0) {
+      return true;
+    }
+    else {
+      t8_locidx_t num_ghost_elements = 0;
+      for (t8_locidx_t itree = 0; itree < num_ghost_trees; itree++) {
+        num_ghost_elements += t8_forest_ghost_tree_num_leaf_elements (grid, itree);
+      }
+      return num_ghost_elements > 0;
+    }
   }
-  T8_ASSERT (grid->ghosts != NULL || !ghosts);
-  return ghosts;
+  else {
+    return false;
+  }
 }
 
 template <>
 bool
-grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
+grid_do_ghosts<t8_cmesh_t> (const t8_cmesh_t grid, const bool write_ghosts)
 {
-  bool ghosts = write_ghosts;
-  if (t8_cmesh_get_num_ghosts (grid) == 0) {
-    /* Never write ghost elements if there aren't any */
-    ghosts = false;
-  }
-  return ghosts;
+  // Do not write ghost elements if there aren't any.
+  return write_ghosts && t8_cmesh_get_num_ghosts (grid) > 0;
 }
 
 template <>
 t8_locidx_t
-num_cells_to_write<t8_forest_t> (const t8_forest_t grid, const int write_ghosts)
+num_cells_to_write<t8_forest_t> (const t8_forest_t grid, const bool write_ghosts)
 {
   return grid_local_num_elements (grid) + (write_ghosts ? t8_forest_get_num_ghosts (grid) : 0);
 }
 
 template <>
 t8_locidx_t
-num_cells_to_write<t8_cmesh_t> (const t8_cmesh_t grid, const int write_ghosts)
+num_cells_to_write<t8_cmesh_t> (const t8_cmesh_t grid, const bool write_ghosts)
 {
   return grid_local_num_elements (grid) + (write_ghosts ? t8_cmesh_get_num_ghosts (grid) : 0);
 }
@@ -161,7 +183,10 @@ template <>
 t8_element_shape_t
 grid_element_shape<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
-  const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
+  const bool is_local = t8_forest_tree_is_local (grid, itree);
+  const t8_eclass_t eclass = is_local
+                               ? t8_forest_get_eclass (grid, itree)
+                               : t8_forest_ghost_get_tree_class (grid, itree - t8_forest_get_num_local_trees (grid));
   const t8_scheme *scheme = t8_forest_get_scheme (grid);
   return scheme->element_get_shape (eclass, element);
 }
@@ -198,7 +223,10 @@ template <>
 int
 grid_element_level<t8_forest_t> (const t8_forest_t grid, const t8_locidx_t itree, const t8_element_t *element)
 {
-  const t8_eclass_t eclass = t8_forest_get_eclass (grid, itree);
+  const bool is_local = t8_forest_tree_is_local (grid, itree);
+  const t8_eclass_t eclass = is_local
+                               ? t8_forest_get_eclass (grid, itree)
+                               : t8_forest_ghost_get_tree_class (grid, itree - t8_forest_get_num_local_trees (grid));
   const t8_scheme *scheme = t8_forest_get_scheme (grid);
   return scheme->element_get_level (eclass, element);
 }
@@ -208,4 +236,18 @@ grid_element_level<t8_cmesh_t> ([[maybe_unused]] const t8_cmesh_t grid, [[maybe_
                                 [[maybe_unused]] const t8_element_t *element)
 {
   return 0;
+}
+
+template <>
+int
+grid_get_dim<t8_forest_t> (const t8_forest_t grid)
+{
+  return t8_forest_get_dimension (grid);
+}
+
+template <>
+int
+grid_get_dim<t8_cmesh_t> (const t8_cmesh_t grid)
+{
+  return t8_cmesh_get_dimension (grid);
 }

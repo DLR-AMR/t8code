@@ -24,19 +24,21 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_schemes/t8_scheme.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* For each tree that we send elements from to other processes,
- * we send this information to the other process */
+/**
+ * For each tree that we send elements from to other processes,
+ * we send the information stored in this struct to the other process 
+ */
 typedef struct
 {
-  t8_gloidx_t gtree_id; /* The global id of that tree */ /* TODO: we could optimize this out */
-  t8_eclass_t eclass;                                    /* The element class of that tree */
-  t8_locidx_t num_elements;                              /* The number of elements from this tree that were sent */
+  t8_gloidx_t gtree_id;     /**< The global id of that tree. TODO: we could optimize this out */
+  t8_eclass_t eclass;       /**< The element class of that tree. */
+  t8_locidx_t num_elements; /**< The number of elements from this tree that were sent. */
 } t8_forest_partition_tree_info_t;
 
 /* Given the element offset array and a rank, return the first local element id of this rank */
@@ -88,6 +90,11 @@ t8_forest_compute_first_local_element_id (t8_forest_t forest)
 void
 t8_forest_partition_create_offsets (t8_forest_t forest)
 {
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->forest_offsets_runtime = -sc_MPI_Wtime ();
+  }
+
   sc_MPI_Comm comm;
   t8_gloidx_t first_local_element;
 
@@ -111,6 +118,10 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
     t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize, forest->global_num_leaf_elements);
   }
   t8_shmem_array_end_writing (forest->element_offsets);
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->forest_offsets_runtime += sc_MPI_Wtime ();
+  }
 }
 
 #if T8_ENABLE_DEBUG
@@ -253,6 +264,10 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
 void
 t8_forest_partition_create_first_desc (t8_forest_t forest)
 {
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->first_descendant_runtime = -sc_MPI_Wtime ();
+  }
   sc_MPI_Comm comm;
   t8_linearidx_t local_first_desc;
   t8_element_t *first_desc = NULL;
@@ -331,11 +346,21 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   }
   t8_forest_partition_test_desc (forest);
 #endif
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->first_descendant_runtime += sc_MPI_Wtime ();
+  }
 }
 
 void
 t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 {
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->cmesh_offsets_runtime = -sc_MPI_Wtime ();
+  }
+
   t8_gloidx_t tree_offset;
   sc_MPI_Comm comm;
   int is_empty, has_empty;
@@ -398,6 +423,10 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
     }
     /* Communicate the new tree offsets */
     t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX, forest->tree_offsets, 1, T8_MPI_GLOIDX);
+  }
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->cmesh_offsets_runtime += sc_MPI_Wtime ();
   }
 }
 

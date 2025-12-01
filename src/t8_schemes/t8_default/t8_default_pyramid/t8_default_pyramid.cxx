@@ -304,11 +304,11 @@ t8_default_scheme_pyramid::element_get_shape (const t8_element_t *elem) const
 }
 
 t8_gloidx_t
-t8_default_scheme_pyramid::element_count_leaves (const t8_element_t *t, int level) const
+t8_default_scheme_pyramid::element_count_leaves (const t8_element_t *element, int level) const
 {
-  const int element_level = element_get_level (t);
-  const int dim = t8_eclass_to_dimension[eclass];
-  const t8_element_shape_t element_shape = element_get_shape (t);
+  const int element_level = element_get_level (element);
+  const int dim = get_dimension ();
+  const t8_element_shape_t element_shape = element_get_shape (element);
   if (element_shape == T8_ECLASS_PYRAMID) {
     const int level_diff = level - element_level;
     return element_level > level ? 0 : 2 * sc_intpow64 (8, level_diff) - sc_intpow64 (6, level_diff);
@@ -383,10 +383,11 @@ t8_default_scheme_pyramid::element_get_anchor (const t8_element_t *elem, int anc
 }
 
 void
-t8_default_scheme_pyramid::element_get_vertex_integer_coords (const t8_element_t *t, int vertex, int coords[]) const
+t8_default_scheme_pyramid::element_get_vertex_integer_coords (const t8_element_t *element, int vertex,
+                                                              int coords[]) const
 {
-  T8_ASSERT (element_is_valid (t));
-  t8_dpyramid_compute_integer_coords ((const t8_dpyramid_t *) t, vertex, coords);
+  T8_ASSERT (element_is_valid (element));
+  t8_dpyramid_compute_integer_coords ((const t8_dpyramid_t *) element, vertex, coords);
 }
 
 void
@@ -426,10 +427,10 @@ t8_default_scheme_pyramid::refines_irregular () const
 
 #if T8_ENABLE_DEBUG
 int
-t8_default_scheme_pyramid::element_is_valid (const t8_element_t *elem) const
+t8_default_scheme_pyramid::element_is_valid (const t8_element_t *element) const
 {
-  T8_ASSERT (elem != NULL);
-  return t8_dpyramid_is_valid ((const t8_dpyramid_t *) elem);
+  T8_ASSERT (element != NULL);
+  return t8_dpyramid_is_valid ((const t8_dpyramid_t *) element);
 }
 
 void

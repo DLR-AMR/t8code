@@ -27,7 +27,7 @@
 
 #ifndef T8_CMESH_EXAMPLES
 #define T8_CMESH_EXAMPLES
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <p4est_connectivity.h>
 #include <p8est_connectivity.h>
 
@@ -40,8 +40,8 @@ T8_EXTERN_C_BEGIN ();
  * \return          A t8_cmesh structure that holds the same connectivity information
  *                  as \a conn.
  * \note This function requires that p4est is initialized. Make sure to call
- * \ref p4est_init before using this routine. If this is not the case, a
- * warning is issued and \ref p4est_init is called from within this function.
+ * p4est_init before using this routine. If this is not the case, a
+ * warning is issued and  p4est_init is called from within this function.
  */
 t8_cmesh_t
 t8_cmesh_new_from_p4est (p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
@@ -49,13 +49,12 @@ t8_cmesh_new_from_p4est (p4est_connectivity_t *conn, sc_MPI_Comm comm, int do_pa
 /** Constructs a cmesh from a given p8est_connectivity structure.
  * \param[in]       conn       The p8est connectivity.
  * \param[in]       comm       mpi communicator to be used with the new cmesh.
- * \param[in]       do_dup     Flag whether the communicator shall be duplicated or not.
  * \param[in]       do_partition Flag whether the cmesh should be partitioned or not.
  * \return          A t8_cmesh structure that holds the same connectivity information
  *                  as \a conn.
  * \note This function requires that p4est is initialized. Make sure to call
- * \ref p4est_init before using this routine. If this is not the case, a
- * warning is issued and \ref p4est_init is called from within this function.
+ * p4est_init before using this routine. If this is not the case, a
+ * warning is issued and p4est_init is called from within this function.
  */
 t8_cmesh_t
 t8_cmesh_new_from_p8est (p8est_connectivity_t *conn, sc_MPI_Comm comm, int do_partition);
@@ -73,7 +72,6 @@ t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimensio
 /** Constructs a cmesh that consists only of one tree of a given element class.
  * \param [in]      eclass     The element class.
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
- * \param [in]      do_dup     Flag whether the communicator shall be duplicated or not.
  * \return          A committed t8_cmesh structure with one tree of class \a eclass.
  */
 t8_cmesh_t
@@ -107,15 +105,16 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  * \return                      A committed t8_cmesh structure with 
  *                              \a polygons_x * \a polygons_z * \a polygons_y many 
  *                              sub-hypercubes of class \a eclass.
+ * 
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
  * \note Every sub-hypercube contains different number of trees depending on \a eclass.
- * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
+ *  If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
  *  one tree, if _TRIANGLE or _PRISM two trees and if _TET six trees.
  *  This is done in the same way as in \see t8_cmesh_new_hypercube.
- * \example let eclass = T8_ECLASS_TRIANGLE
+ * Example: let eclass = T8_ECLASS_TRIANGLE
  *              boundary coordinates = a(0,0,0), b(3,0,0), c(0,2,0), d(3,2,0)
- *              polygons_x, _y, _z = 3, 1, 0                 
- *      
+ *              polygons_x, _y, _z = 3, 1, 0
+ *
  *    c--f--h--d     The hypercube defined by the boundary coordinates
  *    |  |  |  |     is first split into 3 sub-hypercubes. The sub-hypercubes
  *    |  |  |  |     are ordered from left to right (and top to bottom).
@@ -124,7 +123,7 @@ t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int 
  *    c--f--h--d     Each sub-hypercube is the split into 2 triangle roots.
  *    |1/|3/|5/|     The ordering is the same as in \see t8_cmesh_new_hypercube.
  *    |/0|/2|/4|     Thus, we get 6 trees, which are ordered as shown in the picture. 
- *    a--e--g--b     
+ *    a--e--g--b
  *
  * See `example/cmesh/t8_cmesh_hypercube_pad.cxx` for a working example.
  */
@@ -151,11 +150,11 @@ t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const do
  *                              \a polygons_x * \a polygons_z * \a polygons_y many 
  *                              sub-hypercubes of class \a eclass.
  * \note \a boundary must point to an array with 3*8 (3D), 3*4 (2D), 3*2 (1D), or 3 (0D) entries.
- * \note Every sub-hypercube contains different number of trees depending on \a eclass.
+ *  Every sub-hypercube contains different number of trees depending on \a eclass.
  * \note If \a eclass == T8_ECLASS_VERTEX, _LINE, _QUAD or _HEX every sub-hypercube contains
  *  one tree, if _TRIANGLE or _PRISM two trees and if _TET six trees.
  *  This is done in the same way as in \see t8_cmesh_new_hypercube.
- * \example let eclass = T8_ECLASS_TRIANGLE
+ *  Example: let eclass = T8_ECLASS_TRIANGLE
  *              boundary coordinates = a(0,0,0), b(3,0,0), c(0,2,0), d(3,2,0)
  *              polygons_x, _y, _z = 3, 1, 0                 
  *      
@@ -302,11 +301,11 @@ t8_cmesh_new_brick_3d (t8_gloidx_t num_x, t8_gloidx_t num_y, t8_gloidx_t num_z, 
  * num_x and num_y and num_z can be different for different MPI ranks.
  * \param [in] num_x       The number of trees in x direction for this rank. Must be >= 0.
  * \param [in] num_y       The number of trees in y direction for this rank. Must be >= 0.
- * \param [in] num_y       The number of trees in z direction for this rank. Must be >= 0.
+ * \param [in] num_z       The number of trees in z direction for this rank. Must be >= 0.
  *                         If nonzero, the cmesh is 3 dimensional.
  * \param [in] x_periodic  If nonzero, the local brick connectivity is periodic in x direction.
  * \param [in] y_periodic  If nonzero, the local brick connectivity is periodic in y direction.
- * \param [in] y_periodic  If nonzero and \a num_z > 0, the local brick connectivity is periodic in z direction.
+ * \param [in] z_periodic  If nonzero and \a num_z > 0, the local brick connectivity is periodic in z direction.
  * \param [in] comm        The MPI communicator used to commit the cmesh.
  * \return                 A committed and partitioned cmesh. The process local trees
  *                         form a \a num_x by \a num_y (by \a num_z) brick.
@@ -461,7 +460,7 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
                                     const int num_layers, sc_MPI_Comm comm);
 
 /** Construct a cubed sphere of given radius.
- * \param [in] inner_radius       Radius of the inner side of the shell.
+ * \param [in] radius             Radius of the inner side of the shell.
  * \param [in] comm               The MPI communicator used to commit the cmesh
  * \return                        A cmesh representing the spherical surface.
  */
