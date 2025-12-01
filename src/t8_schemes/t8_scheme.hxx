@@ -502,7 +502,7 @@ class t8_scheme {
    * \param [in] element_B An element of class \a eclass in scheme \a scheme.
    * \return     True if and only if \a element_A is an ancestor of \a element_B.
   */
-  inline bool
+  constexpr bool
   element_is_ancestor (const t8_eclass_t tree_class, const t8_element_t *element_A, const t8_element_t *element_B) const
   {
     return std::visit ([&] (auto &&scheme) { return scheme.element_is_ancestor (element_A, element_B); },
