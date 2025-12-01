@@ -28,7 +28,7 @@
 #define T8_GEOMETRY_ANALYTIC_H
 
 #include <t8.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 
 /**
  * Definition of an analytic geometry function.

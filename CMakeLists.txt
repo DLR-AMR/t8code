@@ -48,6 +48,7 @@ cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc
 
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
+option( T8CODE_BUILD_MESH_HANDLE "Build t8code's mesh handle" OFF )
 option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
@@ -107,9 +108,9 @@ endif()
 
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
-      find_package( MPI COMPONENTS C Fortran REQUIRED )
+      find_package( MPI 3.0 COMPONENTS C Fortran REQUIRED )
     else()
-      find_package( MPI COMPONENTS C REQUIRED )
+      find_package( MPI 3.0 COMPONENTS C REQUIRED )
     endif()
 
     if( NOT MPIEXEC_EXECUTABLE )
@@ -168,6 +169,17 @@ else()
     set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
 
+    # When executing CMake tests for libsc, i.e. check_c_source_compiles/check_cxx_source_compiles and others
+    # we need to ignore the -Werror option, since these tests often produce warnings (see check_mpicommshared.cmake for example).
+    # If theses warnings are interpreted as errors, the test fails even though we want it to pass.
+    # This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
+    set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
+    if (WIN32)
+        set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w" )
+    else()
+        set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w" )
+    endif()
+
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES )
     list( APPEND CMAKE_MESSAGE_CONTEXT "sc" )
@@ -218,6 +230,10 @@ else()
         message(WARNING "mpi.h not found!")
     endif()
     ########################## End of fix for OpenMPI ############################################
+
+    # Reactivate previous CMAKE_REQUIRED_FLAGS  
+    set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
+    unset( T8CODE_OLD_CMAKE_REQUIRED_FLAGS )
 endif()
 
 if ( T8CODE_USE_SYSTEM_P4EST )
@@ -246,6 +262,10 @@ else()
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
+
+if( T8CODE_BUILD_MESH_HANDLE )
+  add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/mesh_handle )
+endif()
 
 if ( T8CODE_BUILD_TESTS )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/test )
