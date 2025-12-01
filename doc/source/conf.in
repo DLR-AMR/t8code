@@ -90,9 +90,9 @@ if read_the_docs_build:
     breathe_projects["t8code"] = output_dir + '/xml'
 
 html_theme = 'sphinx_rtd_theme'
-html_theme_options = {
-    "collapse_navigation":True
-}
+#html_theme_options = {
+#    "collapse_navigation":True
+#}
 html_static_path = ['_static']
 html_logo = '../../t8code_logo.png'
 html_extra_path = ['../../build/html']
@@ -111,7 +111,7 @@ exhale_args = {
     # Suggested optional arguments
     "createTreeView":        True,
     # TIP: if using the sphinx-bootstrap-theme, you need
-    # "treeViewIsBootstrap": True,
+    "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
     "exhaleDoxygenStdin":    "INPUT = ../../src"
 }
