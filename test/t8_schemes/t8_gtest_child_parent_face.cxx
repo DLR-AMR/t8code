@@ -28,7 +28,8 @@
 #include <test/t8_gtest_macros.hxx>
 
 /* TODO: extend this test or new test. On each level,
- *        go multiple levels below and check against ancestor face */
+ *        go multiple levels below and check against ancestor face.
+ *       See https://github.com/DLR-AMR/t8code/issues/2011 */
 
 class class_child_parent_face: public TestDFS {
   void
