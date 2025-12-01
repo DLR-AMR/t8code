@@ -27,7 +27,7 @@
 #ifndef T8_CMESH_CAD_HXX
 #define T8_CMESH_CAD_HXX
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 
 /** Construct a hollow cylinder out of hexes with an inner diameter of 0.5, 
  * an outer diameter of 1 and a height of 1. The number of cells used in each direction can be specified.

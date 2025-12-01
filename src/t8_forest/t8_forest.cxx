@@ -33,8 +33,8 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_cmesh/t8_cmesh_trees.h>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_adapt.h>
@@ -2607,10 +2607,6 @@ t8_forest_element_owners_at_face_recursion (t8_forest_t forest, t8_gloidx_t gtre
     if (first_owner > last_owner_entry) {
       /* We did not count this process as an owner, thus we add it */
       *(int *) sc_array_push (owners) = first_owner;
-    }
-    if (last_owner > last_owner_entry) {
-      /* We did not count this process as an owner, thus we add it */
-      *(int *) sc_array_push (owners) = last_owner;
     }
     T8_ASSERT (t8_forest_element_check_owner (forest, first_face_desc, gtreeid, eclass, first_owner, 1));
     T8_ASSERT (t8_forest_element_check_owner (forest, last_face_desc, gtreeid, eclass, first_owner, 1));

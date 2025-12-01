@@ -25,11 +25,11 @@
 #include <test/t8_gtest_memory_macros.hxx>
 
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
@@ -119,11 +119,10 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
               << "ineigh = " << ineigh << " face = " << face;
           }
           scheme->element_destroy (neigh_class, num_face_neighs, neighbor_face_children);
+          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
           T8_TESTSUITE_FREE (child_ids);
           T8_TESTSUITE_FREE (neighbor_face_children);
           T8_TESTSUITE_FREE (half_neighbors);
-          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
-          scheme->element_destroy (neigh_class, 1, &neighbor);
         }
       }
     }

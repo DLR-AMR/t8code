@@ -38,13 +38,19 @@ function( add_t8_test )
 
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
 
-    # Check if test is a Fortran file and if MPI is enabled.
-    string ( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file  )
-    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI )
-      target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
-      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread MPI::MPI_Fortran )
-    else()
-      target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
+    # Link base libraries.
+    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
+    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
+
+    # Check if test is a Fortran or mesh handle file.
+    string( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file )
+    string( FIND ${TEST_BUILD_DIR} "mesh_handle" is_mesh_handle_file )
+
+    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI ) 
+        target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE MPI::MPI_Fortran )
+    endif ()
+    if ( (${is_mesh_handle_file} GREATER_EQUAL 0) )
+        target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8_MESH_HANDLE )
     endif ()
 
     set_target_properties(${ADD_T8_TEST_NAME} PROPERTIES
@@ -102,7 +108,6 @@ endfunction()
 
 add_t8_cpp_test( NAME t8_gtest_cmesh_bcast_parallel     SOURCES t8_cmesh/t8_gtest_bcast.cxx )
 add_t8_cpp_test( NAME t8_gtest_eclass_serial            SOURCES t8_gtest_eclass.cxx )
-add_t8_cpp_test( NAME t8_gtest_vec_serial               SOURCES t8_gtest_vec.cxx )
 add_t8_cpp_test( NAME t8_gtest_mat_serial               SOURCES t8_gtest_mat.cxx )
 add_t8_cpp_test( NAME t8_gtest_refcount_serial          SOURCES t8_gtest_refcount.cxx )
 add_t8_cpp_test( NAME t8_gtest_occ_linkage_serial       SOURCES t8_gtest_occ_linkage.cxx )
@@ -113,6 +118,7 @@ add_t8_cpp_test( NAME t8_gtest_vtk_linkage_serial       SOURCES t8_gtest_vtk_lin
 
 add_t8_cpp_test( NAME t8_gtest_type_serial                  SOURCES t8_types/t8_gtest_type.cxx )
 add_t8_cpp_test( NAME t8_gtest_random_accessible_serial     SOURCES t8_types/t8_gtest_random_accessible.cxx )
+add_t8_cpp_test( NAME t8_gtest_vec_serial                   SOURCES t8_types/t8_gtest_vec.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_hypercube_parallel                           SOURCES t8_cmesh/t8_gtest_hypercube.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_readmshfile_serial                     SOURCES t8_cmesh/t8_gtest_cmesh_readmshfile.cxx )
@@ -200,7 +206,12 @@ if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_parallel    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )
 endif()
 
-add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_vector_helper/t8_gtest_vector_split.cxx )
+add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_functions/t8_gtest_vector_split.cxx )
+
+if( T8CODE_BUILD_MESH_HANDLE )
+  add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel        SOURCES mesh_handle/t8_gtest_mesh_handle.cxx )
+  add_t8_cpp_test( NAME t8_gtest_custom_competence_serial    SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
+endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
 copy_test_file( test_cube_unstructured_2.inp )
