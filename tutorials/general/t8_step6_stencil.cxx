@@ -41,7 +41,7 @@
 #include <cmath>
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
@@ -417,6 +417,13 @@ t8_step6_main (int argc, char **argv)
 
   /* Compute stencil. */
   t8_step6_compute_stencil (forest, data);
+
+  /* Exchange the neighboring data at MPI process boundaries again.
+   * This ensures that also the computed schlieren and curvature
+   * data are properly written to the ghost elements.
+   * For the sake of this example this step is only necessary in order
+   * to visualize the values on the ghost cells in the vtu output later. */
+  t8_step6_exchange_ghost_data (forest, data);
 
   /* Output the data to vtu files. */
   t8_step6_output_data_to_vtu (forest, data, prefix_forest_with_data);

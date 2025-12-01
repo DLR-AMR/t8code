@@ -20,12 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_cmesh.hxx>
-#include <t8_cmesh_triangle.h>
-#include <t8_cmesh_tetgen.h>
+#include <t8_cmesh/t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_tetgen.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_stash.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 
 #ifdef _WIN32
 #include "t8_windows.h"
