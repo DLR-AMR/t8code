@@ -640,7 +640,7 @@ class t8_scheme {
    *                      the face number of this face. Otherwise -1.
    * \note For the root element this function always returns \a face.
    */
-  inline int
+  constexpr int
   element_face_get_ancestor_face (const t8_eclass_t tree_class, const t8_element_t *element, const int ancestor_level,
                                   const int face) const
   {
@@ -683,7 +683,7 @@ class t8_scheme {
    *                       \see t8_cmesh_set_join
    * \param [in] sign      Depending on the topological orientation of the two tree faces,
    *                       either 0 (both faces have opposite orientation)
-   *                       or 1 (both faces have the same top. orientattion).
+   *                       or 1 (both faces have the same top. orientation).
    *                       \ref t8_eclass_face_orientation
    * \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
    *                       the smaller face. A face f of tree T is smaller than
