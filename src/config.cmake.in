@@ -17,6 +17,10 @@ set( T8CODE_ENABLE_VTK @T8CODE_ENABLE_VTK@ )
 set( T8CODE_USE_SYSTEM_SC @T8CODE_USE_SYSTEM_SC@ )
 set( T8CODE_USE_SYSTEM_P4EST @T8CODE_USE_SYSTEM_P4EST@ )
 
+if(T8CODE_ENABLE_VTK)
+    find_dependency(VTK)
+endif()
+
 include( "${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake" )
 
 check_required_components( @PROJECT_NAME@ )
