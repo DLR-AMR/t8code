@@ -21,7 +21,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #
-# This script checks if a given file is correcntly indented according to the t8indent.sh script.
+# This script checks if a given file is correctly indented according to the t8indent.sh script.
 # 
 
 GIT_REPO_PATH=$(git rev-parse --show-toplevel)
