@@ -1,5 +1,3 @@
-#! /bin/bash
-
 # This file is part of t8code.
 # t8code is a C library to manage a collection (a forest) of multiple
 # connected adaptive space-trees of general element classes in parallel.
@@ -20,49 +18,18 @@
 # along with t8code; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#
-# This script checks if a given file is correctly indented according to the t8indent.sh script.
-# 
+# This is t8code's indentation ignore file.
+# All files listed here are ignored by out t8indent.sh script and thus not 
+# indented according to our indentation guidelines.
+# Since we rely on clang-format version 17 and clang-format.ignored files 
+# have only been introduced in version 18, we need to manually parse
+# this list and throw out the matching files. This happens in t8indent.sh
 
-GIT_REPO_PATH=$(git rev-parse --show-toplevel)
+# Each file that is listed here must have a comment describing why
+# it is necessary to ignore indentation for this file.
 
-INDENT_SCRIPT=${GIT_REPO_PATH}/scripts/t8indent.sh
-
-usage="USAGE:$0 [FILE_TO_CHECK]\n\nWill check if [FILE_TO_CHECK] is correctly indentend according to the script t8indent.sh."
-
-# Check if first argument given
-if [ ${1-x} = x ]
-then
-  echo ERROR: Need to provide a file as first argument.
-  echo $usage
-  exit 1
-fi
-
-# Check if first argument is a file and store it in variable
-if [ -f "$1" ]
-  then
-  file="$1"
-else
-  # Try from folder above.
-  if [ -f "../$1" ]
-  then
-    file="../$1"
-  else
-    echo "ERROR: Non existing file: $1"
-    echo $usage
-    exit 1
-  fi
-fi
-
-#
-# Check if the file is indented
-#
-$INDENT_SCRIPT NO_CHANGE $file
-status=$?
-if [ $status != 0 ]
-then
-  echo $file is not indented.
-  echo
-fi
-exit $status
-
+# t8_with_macro_error.h has a hacky way of detecting
+# the usage of macros using the character '@'.
+# This causes clang to not recognize the file as a C++
+# file and will throw an error when trying to indent it.
+src/t8_with_macro_error.h
