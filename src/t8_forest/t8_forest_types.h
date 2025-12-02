@@ -69,6 +69,10 @@ typedef struct t8_forest
 {
   t8_refcount_t rc; /**< Reference counter. */
 
+  int set_partition_range; /**< Flag indicating whether the partition range was set manually.*/
+  t8_gloidx_t
+    set_first_global_element; /**< If set_partition_range is true, the global ID of the first local element after partitioning.*/
+
   int set_level;          /**< Level to use in new construction. */
   int set_for_coarsening; /**< Change partition to allow
                                                      for one round of coarsening */
