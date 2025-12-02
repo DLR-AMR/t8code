@@ -72,14 +72,18 @@ jobs:
       run: | 
         which doxygen
         doxygen --version
+    - name: build config variables
+      run: export CONFIG_OPTIONS="-DT8CODE_BUILD_DOCUMENTATION=ON -DCMAKE_BUILD_TYPE=Debug -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1 -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_NETCDF=ON"
+        && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     - name: Configure for documentation only
-      run: mkdir build && cd build && cmake ../ \
-           -DT8CODE_BUILD_DOCUMENTATION=ON \
-           -DCMAKE_BUILD_TYPE=Debug \
-           -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1 \
-           -DT8CODE_ENABLE_OCC=ON \
-           -DT8CODE_ENABLE_NETCDF=ON
-    - name: check doxygen for erors / warnings
+      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v5
+      with:
+        name: cmake_doc_build.log
+        path: build/config.log
+    - name: check doxygen for errors / warnings
       run: |
         cd build && cd doc 
         doxygen Doxyfile > doxygen.log
