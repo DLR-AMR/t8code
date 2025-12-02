@@ -42,6 +42,8 @@ jobs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
+    - name: disable ownership checks
+      run: git config --global --add safe.directory '*'
     - name: init submodules
       run: git submodule init
     - name: update submodules
