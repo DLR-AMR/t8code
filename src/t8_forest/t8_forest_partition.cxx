@@ -497,11 +497,14 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  t8_gloidx_t *gathered_element_offsets = new t8_gloidx_t[forest->mpisize];
+  // Initialize array of manually set element offsets to nullptr.
+  t8_gloidx_t *custom_element_offsets = nullptr;
+
+  // If a custom partitioning is set, all-gather the manually set element offsets.
   if (forest->set_partition_offset != 0) {
-    int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX, gathered_element_offsets, 1,
+    custom_element_offsets = new t8_gloidx_t[forest->mpisize];
+    int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX, custom_element_offsets, 1,
                                    T8_MPI_GLOIDX, comm);
-    // retval = sc_MPI_Allgather (&context->nMesh_local_node, 1, T8_MPI_GLOIDX, node_offset, 1, T8_MPI_GLOIDX, comm);
     SC_CHECK_MPI (retval);
   }
 
@@ -509,8 +512,11 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
     if (forest_from->global_num_leaf_elements > 0) {
 
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+
+      // Distinguish whether custom element offsets were set:
       if (forest->set_partition_offset == 0) {
 
+        // Compute element offsets
         for (i = 0; i < mpisize; i++) {
           /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
           new_first_element_id
@@ -518,16 +524,16 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
           T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
           element_offsets[i] = new_first_element_id;
         }
-        element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
       }
       else {
-        // HARD-CODED for testing
+
+        // Apply manually set element offsets.
         for (i = 0; i < mpisize; i++) {
-          element_offsets[i] = gathered_element_offsets[i];
+          element_offsets[i] = custom_element_offsets[i];
         }
-        element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
-        // delete[] gathered_element_offsets;
       }
+      // The last entry is the same in both cases.
+      element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
     }
     else {
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
@@ -536,7 +542,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
       }
     }
   }
-  delete[] gathered_element_offsets;
+  delete[] custom_element_offsets;
   t8_shmem_array_end_writing (forest->element_offsets);
 }
 
