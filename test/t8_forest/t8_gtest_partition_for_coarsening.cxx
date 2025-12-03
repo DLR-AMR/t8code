@@ -20,211 +20,313 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file In this file, we test the partition-for-coarsening (PFC) functionality
+ * of t8code. Its main motivation is to avoid splitting families at process
+ * boundaries. Such a split family is problematic in that it is not recognized
+ * by the adaptation callback, making coarsening dependent on the number of
+ * processes etc.
+ *
+ * This goal is achieved by slightly softening the constraint of equal load
+ * distribution: If the PFC flag is set in t8_forest_set_partition, the
+ * standard partitioning is followed by a correction step that checks for all
+ * process boundaries whether a family is split; if so, the boundary is slightly
+ * moved to make sure the family is on one process.
+ *
+ * The test validating the PFC functionality takes the following steps:
+ *
+ * (1.) Create a uniform forest from the cmesh.
+ *
+ * (2.) Adapt the forest based on some arbitrary criterion.
+ *
+ * (3.) Apply the PFC partitioning
+ *
+ * (4.) Coarsen all families that are on one process (should be all families).
+ *
+ * (5.) Perform checks:
+ *
+ *    (5a.) Repartition the forest from step (4.) without PFC option.
+ *
+ *    (5b.) Gather forest from step (2.) on one rank and then coarsen all families
+ *      (since this whole forest lives on one rank, we know no family is split);
+ *      after that, this coarsened forest is repartitioned without PFC option.
+ *
+ *    (5c.) The forests resulting from (5a.) and (5b.) have to match!
+ */
+
 // testing
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 
-#include <t8_schemes/t8_default/t8_default.hxx>
-
 // t8code
 #include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_cmesh/t8_cmesh_copy.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_types.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_types/t8_vec.h>
 
-
-/** In this test we test the partition-for-coarsening functionality.
-  * The test is based on the following main steps:
-  *   - create and adapt an example forest and apply partition for coarsening
-  *   - send the last 10 leaf elements of a processor to the next one
-  *   - on each process, check whether a family is split across the border to the lower-rank process
-  **/
-// class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
-class t8_test_partition_for_coarsening_test: public testing::TestWithParam<cmesh_example_base *> {
-
- public:
-  
-  /** Create an example forest, adapt it, and apply partition for coarsening. */
-  // t8_forest_t
-  void
-  create_and_partition_example_forest ()
-  {
-
-    // For debugging purpose: Set to true to write vtk output.
-    bool debug_write_vtk = true;
-
-    // (1) Create cmesh and initially uniform forest.
-    // ----------------------------------------------
-    const int level = 3;
-    sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
-
-
-    t8_cmesh_t mycmesh = tested_cmesh;
-
-
-    // t8_cmesh_t other_cmesh;
-    // t8_cmesh_init (&other_cmesh);
-
-    // t8_cmesh_copy(other_cmesh,tested_cmesh, sc_MPI_COMM_SELF);
-
-    // t8_cmesh_commit(other_cmesh, sc_MPI_COMM_SELF);
-
-    // bool check = t8_cmesh_comm_is_valid(mycmesh,comm);
-    // T8_ASSERT(check);
-
-    // local_num_trees = t8_cmesh_get_num_local_trees (mycmesh);
-    // global_num_trees = t8_cmesh_get_num_trees (mycmesh);
-
-    t8_debugf("cmesh: Local number of trees: %i \n", t8_cmesh_get_num_local_trees (mycmesh));
-    t8_debugf("cmesh: Global number of trees: %li \n", t8_cmesh_get_num_trees (mycmesh));
-
-    // t8_productionf("Create uniform forest...");
-
-    // // if(tested_cmesh->mpirank == 0) {
-    int mpi_rank;
-    sc_MPI_Comm_rank (comm, &mpi_rank);   
-
-    // if(mpi_rank == 0) {
-    // t8_forest_t forest = t8_forest_new_uniform (mycmesh, tested_scheme, level, 0, sc_MPI_COMM_WORLD);
-    
-    
-    
-    
-    // //   tested_cmesh = t8_forest_get_cmesh(forest);
-
-    // // mycmesh->
-
-     t8_forest_t forest;
-     t8_forest_init(&forest);
-
-     t8_forest_set_cmesh(forest, mycmesh, comm);
-
-     t8_forest_set_scheme(forest, tested_scheme);
-
-     t8_forest_set_level(forest, level);
-
-     t8_forest_commit(forest);
-
-
-
-      t8_debugf("forest: Local number of leaves: %i \n", t8_forest_get_local_num_leaf_elements(forest));
-      t8_debugf("forest: Global number of leaves: %li \n", t8_forest_get_global_num_leaf_elements(forest));
-    // // // }
-    // t8_productionf("... done!");
-
-    // if (debug_write_vtk)
-    // {
-    //   std::string tmpName = "t8_test_pfc_uniform_";
-    //   // tmpName = tmpName.append(t8_eclass_to_string[tested_eclass]);
-    //   tmpName = tmpName.append(current_cmesh_name.c_str());
-    //   t8_forest_write_vtk (forest, tmpName.c_str());
-    // }
-
-    // }
-
-    // return forest;
-
+/**
+ * Callback to perform some arbitrary mesh adaptation within the test suite.
+ *
+ * Note: The argument list has to be the same as for \ref t8_forest_adapt_t, even
+ *       if most arguments are unused. For their meaning, please refer to \ref t8_forest_adapt_t.
+ *       (The following doxygen documentation is just to make sure it is technically documented.)
+ *
+ * \param[in] forest        "forest" argument of \ref t8_forest_adapt_t
+ * \param[in] forest_from   "forest_from" argument of \ref t8_forest_adapt_t
+ * \param[in] which_tree    "which_tree" argument of \ref t8_forest_adapt_t
+ * \param[in] tree_class    "tree_class" argument of \ref t8_forest_adapt_t
+ * \param[in] lelement_id   "lelement_id" argument of \ref t8_forest_adapt_t
+ * \param[in] scheme        "scheme" argument of \ref t8_forest_adapt_t
+ * \param[in] is_family     "is_family" argument of \ref t8_forest_adapt_t
+ * \param[in] num_elements  "num_elements" argument of \ref t8_forest_adapt_t
+ * \param[in] elements      "elements" argument of \ref t8_forest_adapt_t
+ * \return 1 if the element will be refined, 0 otherwise.
+*/
+int
+refine_some_callback ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                      [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                      [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                      [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+{
+  // Refine all elements within a radius of 0.7 from the coordinate origin.
+  double centroid[3] = { 0.0, 0.0, 0.0 };
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
+  if (sqrt (centroid[0] * centroid[0] + centroid[1] * centroid[1]) < 0.7) {
+    return 1;
   }
+  return 0;
+}
+
+/**
+ * Callback to coarsen all families (that are on the same process).
+ *
+ * This callback is crucial for testing the PFC functionality.
+ *
+ * Note: The argument list has to be the same as for \ref t8_forest_adapt_t, even
+ *       if most arguments are unused. For their meaning, please refer to \ref t8_forest_adapt_t.
+ *       (The following doxygen documentation is just to make sure it is technically documented.)
+ * \param[in] forest        "forest" argument of \ref t8_forest_adapt_t
+ * \param[in] forest_from   "forest_from" argument of \ref t8_forest_adapt_t
+ * \param[in] which_tree    "which_tree" argument of \ref t8_forest_adapt_t
+ * \param[in] tree_class    "tree_class" argument of \ref t8_forest_adapt_t
+ * \param[in] lelement_id   "lelement_id" argument of \ref t8_forest_adapt_t
+ * \param[in] scheme        "scheme" argument of \ref t8_forest_adapt_t
+ * \param[in] is_family     "is_family" argument of \ref t8_forest_adapt_t
+ * \param[in] num_elements  "num_elements" argument of \ref t8_forest_adapt_t
+ * \param[in] elements      "elements" argument of \ref t8_forest_adapt_t
+ *
+ * \return -1 if the elements are a family, 0 otherwise.
+ */
+int
+coarsen_all_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                      [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                      [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                      const int is_family, [[maybe_unused]] const int num_elements,
+                      [[maybe_unused]] t8_element_t *elements[])
+{
+  if (is_family) {
+    return -1;  // coarsen every family
+  }
+  return 0;
+}
+
+/**
+ * Class to test the partition-for-coarsening functionality.
+*/
+class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
 
  protected:
   /** During SetUp, set the scheme and the eclass based on the current testing parameters.*/
   void
   SetUp () override
   {
-    // const int scheme_id = std::get<0> (GetParam ());
-    // tested_scheme = create_from_scheme_id (scheme_id);
-    // tested_scheme->ref ();
-    tested_scheme = t8_scheme_new_default();
+    // Get scheme.
+    const int scheme_id = std::get<0> (GetParam ());
+    scheme = create_from_scheme_id (scheme_id);
 
-    // cmesh_params::my_comms.pop_back();
-    // cmesh_params::my_comms.push_back(sc_MPI_COMM_SELF);
+    // Construct cmesh and store name.
+    cmesh = std::get<1> (GetParam ())->cmesh_create ();
+    cmesh_name = std::get<1> (GetParam ())->name;
 
-    // size_t found = std::get<0> (GetParam ())->name.find (std::string ("empty"));
-    // tested_cmesh = std::get<0> (GetParam ())->cmesh_create ();
-    size_t found = (GetParam ())->name.find (std::string ("empty"));
-    tested_cmesh = (GetParam ())->cmesh_create ();
-    current_cmesh_name = (GetParam ())->name;
-    
-    if (found != std::string::npos) {
-      /* Tests not working for empty cmeshes */
-      t8_global_productionf("Skipping mesh: %s", current_cmesh_name.c_str() );
-      GTEST_SKIP ();
-    }
-    found = GetParam ()->name.find (std::string ("bigmesh"));
-    if (found != std::string::npos) {
-      /* skip bigmeshes as they do not have vertices from which to build the connectivity */
-      t8_global_productionf("Skipping mesh: %s", current_cmesh_name.c_str() );
-      GTEST_SKIP ();
-    }
-    // found = GetParam ()->name.find (std::string ("hybrid"));
-    // if (found != std::string::npos) {
-    //   /* skip bigmeshes as they do not have vertices from which to build the connectivity */
-    //   t8_global_productionf("Skipping mesh: %s", current_cmesh_name.c_str() );
-    //   GTEST_SKIP ();
-    // }
-
-    if (t8_cmesh_get_dimension(tested_cmesh)<2) {
-      t8_global_productionf("Skipping mesh: %s", current_cmesh_name.c_str() );
+    // Skip empty meshes.
+    if (t8_cmesh_is_empty (cmesh)) {
       GTEST_SKIP ();
     }
 
-    t8_global_productionf("##############################################################################");
-    t8_global_productionf("######## Testing mesh: %s", current_cmesh_name.c_str());
-    t8_global_productionf("##############################################################################");
-
+    // Skip bigmeshes
+    // TODO: Why?
+    if (cmesh_name.find (std::string ("bigmesh")) != std::string::npos) {
+      GTEST_SKIP ();
+    }
   }
 
-  /** During TearDown, decrease the scheme's reference pointer to trigger its destruction.*/
+  /**
+   * Tear down routine of the test suite.
+   *
+   * Makes sure to unref the cmesh and the scheme.
+   */
   void
   TearDown () override
   {
-    // t8_cmesh_unref (&tested_cmesh);
-    // tested_scheme->unref ();
-    t8_global_productionf("TearDown!");
+    t8_cmesh_destroy (&cmesh);
+    scheme->unref ();
+  }
+
+  /**
+   * Helper function to create vtk output for debugging purposes.
+   * Only writes output if the option is manually activated by changing
+   * write_vtk_output_flag from "false" to "true" in the code below.
+   *
+   * \param[in] forest      the forest to be written to vtk
+   * \param[in] forest_name its name used for the output file name
+   *
+   */
+  void
+  write_forest_to_vtk_if_flag_set (t8_forest_t forest, std::string forest_name)
+  {
+
+    // Manually change flag to "true" here to write vtk output.
+    bool write_vtk_output_flag = false;
+
+    // If flag is true, write vtk output.
+    if (write_vtk_output_flag) {
+      std::string fileName = cmesh_name;
+      fileName = (fileName.append ("_")).append (forest_name.c_str ());
+      t8_forest_write_vtk (forest, fileName.c_str ());
+    }
   }
 
   // Member variables: The currently tested scheme and eclass.
-  const t8_scheme *tested_scheme;
-  // t8_eclass_t tested_eclass;
-  t8_cmesh_t tested_cmesh;
-  std::string current_cmesh_name;
+  const t8_scheme *scheme; /**< The currently tested scheme. */
+  t8_cmesh_t cmesh;        /**< The currently tested cmesh. */
+  std::string cmesh_name;  /**< Name of the currently tested cmesh.*/
 };
 
 // The test's main function.
 TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
 {
 
+  t8_global_productionf ("##############################################################################\n");
+  t8_global_productionf ("######## Testing mesh: %s\n", cmesh_name.c_str ());
+  t8_global_productionf ("##############################################################################\n");
   sc_MPI_Barrier (sc_MPI_COMM_WORLD);
 
+  // -------------------------------------------
+  // ----- (1.) Create uniform base forest -----
+  // -------------------------------------------
+  t8_global_productionf ("Create uniform forest.\n");
 
-  // Create an example forest and repartition it using partition for coarsening.
-  // t8_forest_t forest = 
-  create_and_partition_example_forest ();
+  // Initial uniform refinement level
+  const int level = 2;
 
-  sc_MPI_Barrier (sc_MPI_COMM_WORLD);
-  sleep(1);
+  // Increase reference counters of cmesh and scheme to avoid reaching zero.
+  t8_cmesh_ref (cmesh);
+  scheme->ref ();
 
+  // Create initial, uniform base forest.
+  t8_forest_t uniform_forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-  // Memory deallocation: Destroy the forest, but keep the scheme.
-  // tested_scheme->ref ();
-  // t8_forest_unref (&forest);
+  // If the associated flag is set, write forest to vtk.
+  write_forest_to_vtk_if_flag_set (uniform_forest, "uniform_forest");
+
+  // -----------------------------------------------------------
+  // ----- (2.) Create adapted forest with some refinement -----
+  // -----------------------------------------------------------
+  t8_global_productionf ("Adapt uniform forest.\n");
+
+  // Create adapted base forest.
+  t8_forest_t adapted_base_forest = t8_forest_new_adapt (uniform_forest, refine_some_callback, 0, 0, nullptr);
+
+  // If the associated flag is set, write forest to vtk.
+  write_forest_to_vtk_if_flag_set (adapted_base_forest, "adapted_base_forest");
+
+  // ---------------------------------------
+  // ----- (3.) Apply PFC partitioning -----
+  // ---------------------------------------
+  t8_global_productionf ("Partition forest with PFC.\n");
+
+  // Initialize forest.
+  t8_forest_t pfc_forest;
+  t8_forest_init (&pfc_forest);
+
+  // Set partitioning mode and source.
+  t8_forest_set_partition (pfc_forest, adapted_base_forest, 1);
+
+  // Increase reference counter of base forest to avoid destruction.
+  t8_forest_ref (adapted_base_forest);
+
+  // Commit PFC-partitioned forest.
+  t8_forest_commit (pfc_forest);
+
+  // If the associated flag is set, write forest to vtk.
+  write_forest_to_vtk_if_flag_set (pfc_forest, "pfc_forest");
+
+  // -----------------------------------------------------
+  // ----- (4.) Coarsen all families on same process -----
+  // -----------------------------------------------------
+  t8_global_productionf ("Coarsen all families in PFC forest.\n");
+
+  // Create coarsened PFC forest.
+  t8_forest_t coarsened_pfc_forest = t8_forest_new_adapt (pfc_forest, coarsen_all_callback, 0, 0, nullptr);
+
+  // If the associated flag is set, write forest to vtk.
+  write_forest_to_vtk_if_flag_set (coarsened_pfc_forest, "coarsened_pfc_forest");
+
+  // ---------------------------------------
+  // ----- (5.) Checks for correctness -----
+  // ---------------------------------------
+  t8_global_productionf ("Start preparing checks.\n");
+
+  // (5a.) Repartition coarsened PFC forest:
+  // ---------------------------------------
+  t8_global_productionf ("Repartition coarsened forest without PFC option.\n");
+
+  // Initialize forest
+  t8_forest_t repartitioned_coarse_pfc_forest;
+  t8_forest_init (&repartitioned_coarse_pfc_forest);
+
+  // Set partition mode and source.
+  t8_forest_set_partition (repartitioned_coarse_pfc_forest, coarsened_pfc_forest, 0);
+
+  // Commit the forest.
+  t8_forest_commit (repartitioned_coarse_pfc_forest);
+
+  // (5b.) Take different route to allow comparison:
+  // -----------------------------------------------
+  // Steps:
+  // * Gather base base forest on one rank
+  // * Coarsen all families
+  // * Repartition without PFC
+  t8_global_productionf ("Create the same forest via different route.\n");
+
+  // Gather base forest on rank zero.
+  t8_forest_t forest_gathered = t8_forest_new_gather (adapted_base_forest, 0);
+
+  // Coarsen all families.
+  t8_forest_t coarse_gathered_forest = t8_forest_new_adapt (forest_gathered, coarsen_all_callback, 0, 0, nullptr);
+
+  // Partition without PFC option.
+  t8_forest_t repartitioned_coarse_gathered_forest;
+  t8_forest_init (&repartitioned_coarse_gathered_forest);
+  t8_forest_set_partition (repartitioned_coarse_gathered_forest, coarse_gathered_forest, 0);
+  t8_forest_commit (repartitioned_coarse_gathered_forest);
+
+  // (5c.) Verify that the two forests are equal:
+  // --------------------------------------------
+  t8_global_productionf ("Verify that the two coarsened and repartitioned forests match!\n");
+  EXPECT_TRUE (t8_forest_is_equal (repartitioned_coarse_pfc_forest, repartitioned_coarse_gathered_forest));
+
+  // --------------------------------
+  // ----- (6.) Clean up memory -----
+  // --------------------------------
+  t8_forest_unref (&repartitioned_coarse_pfc_forest);
+  t8_forest_unref (&repartitioned_coarse_gathered_forest);
 }
 
 // Instantiate parameterized test to be run for all schemes.
-INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_for_coarsening, t8_test_partition_for_coarsening_test, 
-                        AllCmeshsParam,
-                          pretty_print_base_example);
-                          
-// Instantiate parameterized test to be run for all schemes.
-// INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_for_coarsening, t8_test_partition_for_coarsening_test, 
-//                         testing::Combine (AllSchemeCollections, AllCmeshsParam),
-//                           pretty_print_base_example_scheme);
-
+INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_for_coarsening, t8_test_partition_for_coarsening_test,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);

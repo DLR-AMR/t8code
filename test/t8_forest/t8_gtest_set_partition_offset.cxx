@@ -20,30 +20,30 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** 
+/**
  * \file In this file, we test the functions t8_forest_set_partition_offset and
  * t8_forest_new_gather.
  *
- * They are closely related and allow to partition a forest according to custom 
+ * They are closely related and allow to partition a forest according to custom
  * element offsets (t8_forest_set_partition_offset) or such that all elements
  * are gathered on one process (t8_forest_new_gather).
- * 
+ *
  * The following steps are performed per example cmesh and scheme, with sanity
  * checks validating each of them:
- * 
+ *
  * (1.) A uniform, partitioned base forest is created.
- * 
- * (2.) A gathered forest is created, i.e., a copy of the base forest in which 
+ *
+ * (2.) A gathered forest is created, i.e., a copy of the base forest in which
  *      all elements and trees live on one rank.
- * 
+ *
  * (3.) A forest with custom element offsets is created. We choose some example
  *      distribution such that each process gets a different number of elements.
- * 
+ *
  * (4.) Lastly, as a sanity check, the forest with custom offsets is repartitioned
- *      back to the standard partitioning to verify the result matches the 
+ *      back to the standard partitioning to verify the result matches the
  *      original base forest.
- * 
- *  Note that "under the hood", t8_forest_new_gather is based on 
+ *
+ *  Note that "under the hood", t8_forest_new_gather is based on
  *  t8_forest_set_partition_offset, which is why we do not have to perform every
  *  check twice.
  */
@@ -99,8 +99,8 @@ class t8_test_set_partition_offset_test: public testing::TestWithParam<std::tupl
   }
 
   // Member variables:
-  const t8_scheme *scheme;
-  t8_cmesh_t cmesh;
+  const t8_scheme *scheme; /**< The currently tested scheme. */
+  t8_cmesh_t cmesh;        /**< The currently tested cmesh. */
 };
 
 /**
