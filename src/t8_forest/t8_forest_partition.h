@@ -56,15 +56,15 @@ t8_forest_t
 t8_forest_new_gather (const t8_forest_t forest_from, int gather_rank);
 
 /**
- * Manually set the partition ranges of all processes.
+ * Manually set the partition offset of the current process.
  * 
- * If set, the next partitioning of the forest will use the manually defined ranges.
+ * If set, the next partitioning of the forest will use the manually defined element offsets.
  * 
  * \param[in,out] forest                the considered forest
  * \param[in]     first_global_element  the global ID that will become the first local element
 */
 void
-t8_forest_set_partition_start (t8_forest_t forest, t8_gloidx_t first_global_element);
+t8_forest_set_partition_offset (t8_forest_t forest, t8_gloidx_t first_global_element);
 
 /** Create the element_offset array of a partitioned forest.
  * \param [in,out]  forest The forest.

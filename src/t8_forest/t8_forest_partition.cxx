@@ -106,8 +106,8 @@ t8_forest_new_gather (const t8_forest_t forest_from, int gather_rank)
     first_local_element = forest_from->global_num_leaf_elements;
   }
 
-  // Manually set the partition ranges accordingly.
-  t8_forest_set_partition_start (forest_gather, first_local_element);
+  // Set the partition offset accordingly.
+  t8_forest_set_partition_offset (forest_gather, first_local_element);
 
   // Commit the forest.
   t8_forest_commit (forest_gather);
@@ -117,10 +117,10 @@ t8_forest_new_gather (const t8_forest_t forest_from, int gather_rank)
 }
 
 void
-t8_forest_set_partition_start (t8_forest_t forest, t8_gloidx_t first_global_element)
+t8_forest_set_partition_offset (t8_forest_t forest, t8_gloidx_t first_global_element)
 {
   // Set flag indicating a manual partition.
-  forest->set_partition_range = 1;
+  forest->set_partition_offset = 1;
 
   // Set global ID of first local element.
   forest->set_first_global_element = first_global_element;
@@ -498,7 +498,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   SC_CHECK_MPI (mpiret);
 
   t8_gloidx_t *gathered_element_offsets = new t8_gloidx_t[forest->mpisize];
-  if (forest->set_partition_range != 0) {
+  if (forest->set_partition_offset != 0) {
     int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX, gathered_element_offsets, 1,
                                    T8_MPI_GLOIDX, comm);
     // retval = sc_MPI_Allgather (&context->nMesh_local_node, 1, T8_MPI_GLOIDX, node_offset, 1, T8_MPI_GLOIDX, comm);
@@ -509,7 +509,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
     if (forest_from->global_num_leaf_elements > 0) {
 
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-      if (forest->set_partition_range == 0) {
+      if (forest->set_partition_offset == 0) {
 
         for (i = 0; i < mpisize; i++) {
           /* Calculate the first element index for each process. We convert to doubles to prevent overflow */

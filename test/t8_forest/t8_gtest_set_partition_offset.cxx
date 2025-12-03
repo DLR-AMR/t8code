@@ -21,11 +21,11 @@
 */
 
 /** 
- * \file In this file, we test the functions t8_forest_set_partition_range and
+ * \file In this file, we test the functions t8_forest_set_partition_offset and
  * t8_forest_new_gather.
  *
  * They are closely related and allow to partition a forest according to custom 
- * element offsets (t8_forest_set_partition_range) or such that all elements
+ * element offsets (t8_forest_set_partition_offset) or such that all elements
  * are gathered on one process (t8_forest_new_gather).
  * 
  * The following steps are performed per example cmesh and scheme, with sanity
@@ -44,7 +44,7 @@
  *      original base forest.
  * 
  *  Note that "under the hood", t8_forest_new_gather is based on 
- *  t8_forest_set_partition_range, which is why we do not have to perform every
+ *  t8_forest_set_partition_offset, which is why we do not have to perform every
  *  check twice.
  */
 
@@ -62,9 +62,9 @@
 #include <t8_forest/t8_forest_types.h>
 
 /**
- * Test class for validating \ref t8_forest_set_partitiong_range and \ref t8_forest_new_gather.
+ * Test class for validating \ref t8_forest_set_partition_offset and \ref t8_forest_new_gather.
 */
-class t8_test_set_partition_range_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+class t8_test_set_partition_offset_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
 
  protected:
   /**
@@ -106,7 +106,7 @@ class t8_test_set_partition_range_test: public testing::TestWithParam<std::tuple
 /**
  * Main function of testing suite. See doxygen file description for details on the testing strategy.
 */
-TEST_P (t8_test_set_partition_range_test, test_set_partition_range)
+TEST_P (t8_test_set_partition_offset_test, test_set_partition_offset)
 {
 
   // -------------------------------------------
@@ -157,7 +157,7 @@ TEST_P (t8_test_set_partition_range_test, test_set_partition_range)
   // ----- (3.) Test another manual partitioning -----
   // -------------------------------------------------
 
-  t8_debugf ("Create forest with manual partition range!\n");
+  t8_debugf ("Create forest with manual partitioning.\n");
 
   // Initialization
   t8_forest_t forest_manual_partition;
@@ -176,7 +176,7 @@ TEST_P (t8_test_set_partition_range_test, test_set_partition_range)
     = base_forest->global_num_leaf_elements * (mpirank + 1) * (mpirank + 1) / (mpisize * mpisize);
 
   // Pass offset to forest.
-  t8_forest_set_partition_start (forest_manual_partition, my_element_offset);
+  t8_forest_set_partition_offset (forest_manual_partition, my_element_offset);
 
   // Create forest with custom partitioning.
   t8_forest_set_partition (forest_manual_partition, base_forest, 0);
@@ -212,5 +212,5 @@ TEST_P (t8_test_set_partition_range_test, test_set_partition_range)
 }
 
 // Instantiate parameterized test to be run for all schemes and example cmeshes.
-INSTANTIATE_TEST_SUITE_P (t8_gtest_set_partition_range, t8_test_set_partition_range_test,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_set_partition_offset, t8_test_set_partition_offset_test,
                           testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);

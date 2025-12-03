@@ -1149,7 +1149,7 @@ t8_forest_populate (t8_forest_t forest, const int irregular)
   int is_empty;
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
-  SC_CHECK_ABORT (forest->set_partition_range == 0,
+  SC_CHECK_ABORT (forest->set_partition_offset == 0,
                   "t8_forest_populate does not support manually chosen partition range.\n");
 
   if (irregular) {
@@ -2697,7 +2697,7 @@ t8_forest_init (t8_forest_t *pforest)
   forest->maxlevel_existing = -1;
   forest->stats_computed = 0;
   forest->incomplete_trees = -1;
-  forest->set_partition_range = 0;
+  forest->set_partition_offset = 0;
   forest->set_first_global_element = -1;
 }
 
