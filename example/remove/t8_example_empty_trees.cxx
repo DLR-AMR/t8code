@@ -66,7 +66,7 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
   t8_forest_t forest_adapt;
   t8_forest_init (&forest_adapt);
   t8_forest_set_adapt (forest_adapt, forest, t8_adapt_remove, 0);
-  t8_forest_set_partition (forest_adapt, NULL, 0);
+  t8_forest_set_partition (forest_adapt, NULL, 0, nullptr);
   t8_forest_set_user_data (forest_adapt, &empty_tree);
   t8_forest_commit (forest_adapt);
 
@@ -115,7 +115,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
