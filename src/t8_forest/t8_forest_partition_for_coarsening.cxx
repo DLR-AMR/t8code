@@ -204,9 +204,6 @@ t8_forest_pfc_family_range_around_border (const t8_forest_t forest, const t8_glo
   // Get global ID of first (process-)local element
   t8_gloidx_t first_tree_element = t8_forest_get_first_local_leaf_element_id (forest) + tree->elements_offset;
 
-  // TODO: Isn't the tree offset always zero because it is the first tree?
-  T8_ASSERT(tree->elements_offset==0);
-
   // Determine range of global IDs forming the family of first_tree_element, by calling the helper function
   // t8_forest_pfc_extreme_local_sibling twice, i.e., searching in the direction of in- and decreasing indices.
   // Note: The end iterator is one behind the last family member.
@@ -268,7 +265,7 @@ t8_forest_pfc_family_split_rank_all_to_first (const t8_shmem_array_t partition_n
 /** Compute the process-local corrections of the given partition.
  * 
  * \param[in]   forest                  the forest
- * \param[in]   partition_new_shmem     the current partitioning (without PFC correcton) as shared-memory array 
+ * \param[in]   partition_new_shmem     the current partitioning (without PFC correction) as shared-memory array 
  * \param[in]   messages                the PFC messages received from other processes
  * \param[out]  corrected_local_offsets a std::vector of t8_gloidx_t>
  *                                      on input:  empty
@@ -294,12 +291,6 @@ t8_forest_pfc_correct_local_offsets (const t8_forest_t forest, const t8_shmem_ar
                         t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank + 1));
   const t8_gloidx_t min_local_proc = min_local_element_pointer - partition_new;
   const t8_gloidx_t next_min_local_proc = next_min_local_element_pointer - partition_new;
-
-  // TODO: Is the above maybe only needed for empty processes?
-  // Otherwise simplify?
-  T8_ASSERT(t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank) != t8_shmem_array_get_gloidx (forest->element_offsets, forest->mpirank + 1));
-  // T8_ASSERT(min_local_proc == forest->mpirank);
-  T8_ASSERT(next_min_local_proc == forest->mpirank+1);
 
   /* adjust all local borders */
   for (t8_procidx_t border_rank = min_local_proc; border_rank < next_min_local_proc; border_rank++) {
@@ -337,7 +328,7 @@ t8_forest_pfc_correction_offsets (t8_forest_t forest)
 
   // Nothing to be done for empty processes.
   if (t8_forest_get_local_num_leaf_elements (forest_old) != 0) {
-    
+
     // Send requests to other processes.
     std::vector<sc_MPI_Request> requests;
     t8_forest_pfc_send_loop_range<t8_forest_pfc_message_c> (forest_old, requests);
@@ -357,6 +348,5 @@ t8_forest_pfc_correction_offsets (t8_forest_t forest)
   // Allgatherv the corrected local offsets, resulting in the new partition.
   t8_shmem_array_allgatherv (corrected_local_offsets.data (), corrected_local_offsets.size (), T8_MPI_GLOIDX,
                              partition_new, T8_MPI_GLOIDX, forest->mpicomm);
-
 }
 T8_EXTERN_C_END ();

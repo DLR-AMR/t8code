@@ -40,7 +40,6 @@
 */
 class t8_forest_pfc_message_c {
  public:
-
   /**
    * Pack the data to prepare sending.
    * 
@@ -101,7 +100,7 @@ class t8_forest_pfc_message_c {
   }
 
   /**
-   * Determine and return the pack size of the PFC mesage.
+   * Determine and return the pack size of the PFC message.
    * 
    * It results from the data fields to send and the associated sizes:
    *  + itree (T8_MPI_GLOIDX)
@@ -190,8 +189,7 @@ class t8_forest_pfc_message_c {
   void
   fill (t8_forest_t forest)
   {
-    
-    // 
+    //
     t8_procidx_t rank = forest->mpirank;
     const t8_gloidx_t *partition = t8_shmem_array_get_gloidx_array (forest->element_offsets);
     t8_gloidx_t closest_to_rank_gid = (iproc <= rank) ? partition[rank] : partition[rank + 1] - 1;
@@ -246,7 +244,6 @@ class t8_forest_pfc_message_c {
     return parent;
   }
 
-
   /**
    * Constructor of class t8_forest_pfc_message_c.
    * 
@@ -266,7 +263,6 @@ class t8_forest_pfc_message_c {
 
   /// No (implicit) copy constructor.
   t8_forest_pfc_message_c (const t8_forest_pfc_message_c &other) = delete;
-
 
   /**
    * Move constructor.
@@ -298,11 +294,11 @@ class t8_forest_pfc_message_c {
   t8_eclass_t eclass; /**< the tree's eclass */
   int num_siblings;   /**< the process-local number of siblings */
 
-  // Auxilliary data:
-  const t8_scheme_c *myscheme;  /**< the scheme class */
-  sc_MPI_Comm comm;             /**< the MPI communicator */
-  t8_procidx_t iproc;           /**< the process to send data to */
-  int message_tag;              /**< the TAG identifying the message */
+  // Auxiliary data:
+  const t8_scheme_c *myscheme; /**< the scheme class */
+  sc_MPI_Comm comm;            /**< the MPI communicator */
+  t8_procidx_t iproc;          /**< the process to send data to */
+  int message_tag;             /**< the TAG identifying the message */
 
  private:
   t8_element_t *parent;  /**< The parent element to be sent. */
