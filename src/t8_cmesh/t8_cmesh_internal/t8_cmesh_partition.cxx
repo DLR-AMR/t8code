@@ -195,7 +195,7 @@ t8_cmesh_gather_treecount_ext (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const i
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 : cmesh->first_tree;
   if (cmesh->tree_offsets == NULL) {
-    t8_shmem_init (comm);
+    SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup.");
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
     /* Only allocate the shmem array, if it is not already allocated */
     cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
