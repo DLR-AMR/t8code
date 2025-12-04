@@ -27,7 +27,7 @@ Please see the subsections to understand the changes in the code and what you ne
 - [Changes in the element schemes](#changes-in-the-element-schemes)
 - [Renaming of forest functions and variables](#renaming-of-forest-functions-and-variables-to-explicitly-say-leaf-elements)
 - [Renaming of macros T8_WITH_* to T8_ENABLE_*](#renaming-of-macros-t8_with_-to-t8_enable_)
-- [MPI minimum required version 3.0](#Update-to-MPI-3.0)
+- [MPI minimum required version 3.0](#update-to-mpi-3.0)
 
 # Changes in the element schemes
 
