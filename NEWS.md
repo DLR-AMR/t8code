@@ -22,11 +22,12 @@ No! If your code is only a couple of lines long AND has very little impact on th
 # User Updates for the upcoming t8code v4.0.0
 
 Among many minor changes, we have several major updates in t8code v4.0.0.
+Please see the subsections to understand the changes in the code and what you need to adapt when linking against t8code.
 
-- Changes in the element schemes
-- Renaming of forest functions and variables
-- Renaming of macros T8_WITH_* to T8_ENABLE_*
-- MPI minimum required version 3.0
+- [Changes in the element schemes](#changes-in-the-element-schemes)
+- [Renaming of forest functions and variables](#renaming-of-forest-functions-and-variables-to-explicitly-say-leaf-elements)
+- [Renaming of macros T8_WITH_* to T8_ENABLE_*](#renaming-of-macros-t8_with_-to-t8_enable_)
+- [MPI minimum required version 3.0](#Update-to-MPI-3.0)
 
 # Changes in the element schemes
 
