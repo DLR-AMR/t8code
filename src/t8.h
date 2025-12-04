@@ -98,10 +98,8 @@ typedef int32_t t8_locidx_t;
 #define T8_LOCIDX_MAX INT32_MAX
 /** Comparison function for t8_locidx_t */
 #define t8_compare_locidx(v, w) sc_int32_compare (v, w)
-
-/** MYTODO */
+/** A type for holding process ids. */
 typedef int t8_procidx_t;
-
 /** A type for global indexing that holds really big numbers. */
 typedef int64_t t8_gloidx_t;
 /** The MPI Datatype of t8_gloidx_t */
