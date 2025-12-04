@@ -266,13 +266,13 @@ module t8_fortran_interface_mod
       end Interface
 
       Interface
-            type (c_ptr) function t8_forest_get_leaf_element_in_tree (forest, ltreeid, leid_in_tree) &
-                                    bind (c, name = 't8_forest_get_leaf_element_in_tree')
+            type (c_ptr) function t8_forest_get_element_in_tree (forest, ltreeid, leid_in_tree) &
+                                    bind (c, name = 't8_forest_get_element_in_tree')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
                   IMPLICIT NONE
                   type (c_ptr), value :: forest
                   integer (c_int), value :: ltreeid, leid_in_tree
-            end function t8_forest_get_leaf_element_in_tree
+            end function t8_forest_get_element_in_tree
       end Interface
 
       Interface
