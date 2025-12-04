@@ -71,6 +71,11 @@ authors:
     email: "Ole.Albers@dlr.de"
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0009-0001-5102-151X"
+  - given-names: Lena
+    family-names: Ploetzke
+    email: lena.ploetzke@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0003-0440-1429"
   - given-names: Thomas
     family-names: Spenke
     email: thomas.spenke@dlr.de
