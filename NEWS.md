@@ -28,6 +28,7 @@ Please see the subsections to understand the changes in the code and what you ne
 - [Renaming of forest functions and variables](#renaming-of-forest-functions-and-variables-to-explicitly-say-leaf-elements)
 - [Renaming of macros T8_WITH_* to T8_ENABLE_*](#renaming-of-macros-t8_with_-to-t8_enable_)
 - [MPI minimum required version 3.0](#update-to-mpi-30)
+- [Changed cmesh folder structure](#changes-in-cmesh-folder-structure)
 
 # Changes in the element schemes
 
@@ -217,3 +218,24 @@ From version 3.0 MPI implements MPI_COMM_TYPE_SHARED, which is necessary for usi
 
 Ensure that you are linking against MPI version 3.0 or later.
 You can call `mpirun --version` to check your current MPI version.
+
+# Changes in cmesh folder structure
+
+To organize our files better, we restructured the cmesh folder.
+This change affects all include paths of cmesh files.
+
+- Moved all cmesh related headers into `src/t8_cmesh`. This requires you to change for example
+```diff
+! #include <t8_cmesh.h>
++ #include <t8_cmesh/t8_cmesh.h>
+```
+- Introduced new subfolders:
+  - `src/t8_cmesh_internal` for t8code internal files.
+  - `src/t8_cmesh_io` for io related cmesh files (like reading from Gmsh or writing VTK files).
+This requires you to update all include paths of I/O related files. For example
+```diff
+! #include <t8_cmesh_readmshfile.h>
++ #include <t8_cmesh_io/t8_cmesh_readmshfile.h>
+```
+
+For more details, see the pull request https://github.com/DLR-AMR/t8code/pull/1986
