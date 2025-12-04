@@ -21,6 +21,15 @@ No! If your code is only a couple of lines long AND has very little impact on th
 
 # User Updates for the upcoming t8code v4.0.0
 
+Among many minor changes, we have several major updates in t8code v4.0.0.
+
+- Changes in the element schemes
+- Renaming of forest functions and variables
+- Renaming of macros T8_WITH_* to T8_ENABLE_*
+- MPI minimum required version 3.0
+
+# Changes in the element schemes
+
 We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to [change](#what-do-you-have-to-change) to be on par with the upcoming t8code v4.0.0
 
 ## What is new?
@@ -34,10 +43,6 @@ We left this approach and now use a [CRTP](https://www.fluentcpp.com/2017/05/16/
 ### The scheme builder
 Furthermore, we now provide a scheme builder instead of only the default scheme with our default implementation (don't worry, the default implementation is still there and untouched, t8code will still behave in the way that you know it).
 Using the scheme builder you can now compose your schemes as you want, containing only the element-schemes that you need for your application. That way a scheme does not need to carry or provide access for the implementation of a line if your computation uses three dimensional elements only.
-
-### Require MPI minimum version 3.0
-
-We now require a minimum MPI version of 3.0 With MPI 3.0 MPI_COMM_TYPE_SHARED was introduced, which is necessary for our shared memory routines.
 
 ## But why?
 ### New is better
@@ -135,7 +140,40 @@ A list of all renamings (without considering the deletion of the prefix) is here
 - `t8_element_refines_irregular` -> `refines_irregular`
 - `t8_element_root` -> `t8_element_set_to_root`
 
-### Renaming of forest functions and variables to explicitly say leaf elements
+
+### Usage of the default scheme
+If you just want to use the default scheme you now use
+```cpp
+t8_scheme *scheme = t8_scheme_new_default ();
+```
+
+instead of
+```cpp
+t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
+```
+We only got rid of the cxx postfix. It creates the default scheme as you know it and the element specific implementations are still the same.
+
+
+## What does the default scheme actually look like?
+Ok, we admit it, the default scheme has some small tiny changes (but don't worry, the element specific implementation is still the same, we promise).
+"Under the hood" the `t8_scheme_new_default` function now uses the builder to create the eclass schemes. But it uses the same order of element-schemes as before, therefore it behaves as the default scheme as you know it:
+```cpp
+t8_scheme *
+t8_scheme_new_default (void){
+  t8_scheme_builder builder;
+  builder.add_eclass_scheme<t8_default_scheme_vertex> ();
+  builder.add_eclass_scheme<t8_default_scheme_line> ();
+  builder.add_eclass_scheme<t8_default_scheme_quad> ();
+  builder.add_eclass_scheme<t8_default_scheme_tri> ();
+  builder.add_eclass_scheme<t8_default_scheme_hex> ();
+  builder.add_eclass_scheme<t8_default_scheme_tet> ();
+  builder.add_eclass_scheme<t8_default_scheme_prism> ();
+  builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
+  return builder.build_scheme ();
+}
+```
+
+# Renaming of forest functions and variables to explicitly say leaf elements
 
 To ease code readability and to avoid misunderstandings, the names of all forest functions referring exclusively to the leaf elements now explicitly say so.
 Specifically, the following functions were renamed:
@@ -165,42 +203,16 @@ Similarly, the following member variables have been renamed:
 - In `t8_tree:`
   - `elements` -> `leaf_elements`
 
-### Usage of the default scheme
-If you just want to use the default scheme you now use
-```cpp
-t8_scheme *scheme = t8_scheme_new_default ();
-```
 
-instead of
-```cpp
-t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
-```
-We only got rid of the cxx postfix. It creates the default scheme as you know it and the element specific implementations are still the same.
+# Renaming of macros T8_WITH_ to T8_ENABLE_
+We renamed the macros T8_WITH_... to T8_ENABLE_... for consistency reasons with the related cmake options (T8CODE_ENABLE...) and other macros. We are currently working on an automatized way to check for wrong usages.
+Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script. 
 
-### Update to MPI 3.0
+
+# Update to MPI 3.0
+
+We now require MPI minimum version 3.0 if you use t8code with MPI.
+From version 3.0 MPI implements MPI_COMM_TYPE_SHARED, which is necessary for using shared memory.
 
 Ensure that you are linking against MPI version 3.0 or later.
 You can call `mpirun --version` to check your current MPI version.
-
-## What does the default scheme actually look like?
-Ok, we admit it, the default scheme has some small tiny changes (but don't worry, the element specific implementation is still the same, we promise).
-"Under the hood" the `t8_scheme_new_default` function now uses the builder to create the eclass schemes. But it uses the same order of element-schemes as before, therefore it behaves as the default scheme as you know it:
-```cpp
-t8_scheme *
-t8_scheme_new_default (void){
-  t8_scheme_builder builder;
-  builder.add_eclass_scheme<t8_default_scheme_vertex> ();
-  builder.add_eclass_scheme<t8_default_scheme_line> ();
-  builder.add_eclass_scheme<t8_default_scheme_quad> ();
-  builder.add_eclass_scheme<t8_default_scheme_tri> ();
-  builder.add_eclass_scheme<t8_default_scheme_hex> ();
-  builder.add_eclass_scheme<t8_default_scheme_tet> ();
-  builder.add_eclass_scheme<t8_default_scheme_prism> ();
-  builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
-  return builder.build_scheme ();
-}
-```
-
-## Renaming of macros T8_WITH_ to T8_ENABLE_
-We renamed the macros T8_WITH_... to T8_ENABLE_... for consistency reasons with the related cmake options (T8CODE_ENABLE...) and other macros. We are currently working on an automatized way to check for wrong usages.
-Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script. 
