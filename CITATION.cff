@@ -71,6 +71,11 @@ authors:
     email: "Ole.Albers@dlr.de"
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0009-0001-5102-151X"
+  - given-names: Thomas
+    family-names: Spenke
+    email: thomas.spenke@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-0856-8763"
   #Contributors
   - given-names: Veli
     family-names: Uenlue
@@ -90,9 +95,9 @@ authors:
     family-names: Csati
     email: csati@cerfacs.fr
     affiliation: CERFACS
-  - given-names: Alexandra
+  - given-names: Alexandre
     family-names: Dutka
-    email: adutkat@cerfacs.fr
+    email: adutka@cerfacs.fr
     affiliation: CERFACS
   - given-names: Benedict
     family-names: Geihe
