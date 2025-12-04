@@ -20,27 +20,33 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file This file declares some helper functions used for the partition-for-coarsening feature.
+*/
 #ifndef T8_FOREST_PFC_HELPER_H
 #define T8_FOREST_PFC_HELPER_H
+
 #include <t8.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_eclass.h>
 
-/** Determine the sibling with the biggest difference in IDs
- * 
- * \param[in] newscheme                 the refinement scheme
+/** Determine the sibling with the biggest difference in IDs (in the given direction).
+ *
+ * \param[in] scheme                    the refinement scheme
  * \param[in] tree                      the considered tree
- * \param[in] start_element_id_in_tree  the tree-internal ID of the considered element.
- * \param[in] min_instead_max           boolean determining whether to search in direction of in- or decreasing IDs 
- * 
- * \return The extreme sibling ID within tree, i.e., the tree-internal ID of the sibling with the biggest difference to start_element_id_in_tree.
+ * \param[in] start_element_id_in_tree  the tree-internal ID of the considered element
+ * \param[in] min_instead_max           boolean determining whether to search in direction
+ *                                      of in- or decreasing IDs
+ *
+ * \return The extreme sibling ID within tree, i.e., the tree-internal ID of the sibling
+ *         with the biggest difference to start_element_id_in_tree.
 */
 t8_locidx_t
-t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, t8_tree_t tree, t8_locidx_t start_element_id_in_tree,
+t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, t8_tree_t tree, t8_locidx_t start_element_id_in_tree,
                                      bool min_instead_max);
 
 /** Helper function for PFC that computes multiple indices for a given global element ID.
- * 
+ *
  * \param[in]   forest        the forest
  * \param[in]   gelement_id   the global element ID
  * \param[out]  gtree_id      the global ID of the tree holding the element

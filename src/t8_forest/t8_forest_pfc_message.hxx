@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file This file collects all functionality required to send elements from
+ * one process to another within the partition-for-coarsening offset correction.
+*/
+
 #ifndef T8_FOREST_PFC_MESSAGE_H
 #define T8_FOREST_PFC_MESSAGE_H
 
@@ -42,7 +47,7 @@ class t8_forest_pfc_message_c {
  public:
   /**
    * Pack the data to prepare sending.
-   * 
+   *
    * \param[in,out] buf       the sending buffer
    *                            on input: allocated (but empty)
    *                            on output: filled with the data to sent
@@ -54,25 +59,25 @@ class t8_forest_pfc_message_c {
   void
   pack (void *buf, int buf_size, int *position)
   {
-    /* itree */
+    /* pack: itree */
     sc_MPI_Pack (&itree, 1, T8_MPI_GLOIDX, buf, buf_size, position, comm);
 
-    /* eclass */
+    /* pack: eclass */
     int eclass_int = (int) eclass;
     sc_MPI_Pack (&eclass_int, 1, sc_MPI_INT, buf, buf_size, position, comm);
 
-    /* parent */
+    /* pack: parent */
     t8_element_MPI_Pack (myscheme, eclass, &parent, 1, buf, buf_size, position, comm);
 
-    /* num_siblings */
+    /* pack: num_siblings */
     sc_MPI_Pack (&num_siblings, 1, sc_MPI_INT, buf, buf_size, position, comm);
   }
 
   /**
    * Unpack the received data.
-   * 
+   *
    * Transfer the received data into the member variables of this class.
-   * 
+   *
    * \param[in]     buf       the buffer containing the received MPI data
    * \param[in]     buf_size  the size of the buffer
    * \param[in,out] position  current position within the receive buffer
@@ -82,49 +87,50 @@ class t8_forest_pfc_message_c {
   void
   unpack (void *buf, int buf_size, int *position)
   {
-    /* itree */
+    /* unpack: itree */
     sc_MPI_Unpack (buf, buf_size, position, &itree, 1, T8_MPI_GLOIDX, comm);
 
-    /* eclass */
+    /* unpack: eclass */
     int eclass_int;
     sc_MPI_Unpack (buf, buf_size, position, &eclass_int, 1, sc_MPI_INT, comm);
     eclass = (t8_eclass_t) eclass_int;
 
-    /* parent */
+    /* unpack: parent */
     t8_element_new (myscheme, eclass, 1, &parent);
     allocated_parent = true;
     t8_element_MPI_Unpack (myscheme, eclass, buf, buf_size, position, &parent, 1, comm);
 
-    /* num_siblings */
+    /* unpack: num_siblings */
     sc_MPI_Unpack (buf, buf_size, position, &num_siblings, 1, sc_MPI_INT, comm);
   }
 
   /**
    * Determine and return the pack size of the PFC message.
-   * 
+   *
    * It results from the data fields to send and the associated sizes:
    *  + itree (T8_MPI_GLOIDX)
    *  + eclass (sc_MPI_INT)
    *  + parent (via t8_element_MPI_Pack_size)
    *  + num_siblings (sc_MPI_INT)
-   * 
+   *
    * \return The pack size of the message.
   */
   int
   pack_size ()
   {
+    /* initialize sum*/
     int message_size = 0;
     int datasize;
 
-    /* itree */
+    /* add size: itree */
     sc_MPI_Pack_size (1, T8_MPI_GLOIDX, comm, &datasize);
     message_size += datasize;
 
-    /* eclass */
+    /* add size: eclass */
     sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
     message_size += datasize;
 
-    /* parent */
+    /* add size: parent */
     if (parent != NULL) {
       // t8_eclass_scheme_c *scheme = schemes->eclass_schemes[eclass];
       // scheme->t8_element_MPI_Pack_size (1, comm, &datasize);
@@ -132,7 +138,7 @@ class t8_forest_pfc_message_c {
       message_size += datasize;
     }
 
-    /* num_siblings */
+    /* add size: num_siblings */
     sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
     message_size += datasize;
     return message_size;
@@ -140,7 +146,7 @@ class t8_forest_pfc_message_c {
 
   /**
    * Send the message using non-blocking MPI send.
-   * 
+   *
    * \param[in]   forest  the forest (only used for forest->mpicomm)
    * \param[out]  request the MPI send request
   */
@@ -162,36 +168,39 @@ class t8_forest_pfc_message_c {
   }
 
   /**
-   * Receive data from another message.
-   * 
+   * Receive data from another process.
+   *
    * \param[out]  recv_buf  the receive buffer
    * \param[out]  buf_size  the size of the buffer
   */
   void
   mpi_Recv (char *&recv_buf, int &buf_size)
   {
-    /** Get needed size for packed message, and allocate */
+    /** Get needed size of message via MPI probe and allocate buffer. */
     sc_MPI_Status status;
     sc_MPI_Probe (iproc, message_tag, comm, &status);
     sc_MPI_Get_count (&status, sc_MPI_PACKED, &buf_size);
     recv_buf = T8_ALLOC (char, buf_size);
 
-    /* Actually receive buffer */
+    /* Actually receive buffer. */
     int mpiret = sc_MPI_Recv (recv_buf, buf_size, sc_MPI_PACKED, iproc, message_tag, comm, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
   }
 
   /**
-   * Fill the instance, i.e., setting the member viarables based on the given forest.
-   * 
+   * Fill this instance of class t8_forest_pfc_message_c, i.e., setting the member viarables based on the given forest.
+   *
    * \param[in] forest the forest
   */
   void
   fill (t8_forest_t forest)
   {
-    //
+    // Set mpi rank and partition element offsets.
     t8_procidx_t rank = forest->mpirank;
     const t8_gloidx_t *partition = t8_shmem_array_get_gloidx_array (forest->element_offsets);
+
+    // Determine the global element ID of the current process ("rank") that is closest to the elements of process iproc:
+    // If iproc < rank, the first element is closest to iproc; otherwise, the last one is.
     t8_gloidx_t closest_to_rank_gid = (iproc <= rank) ? partition[rank] : partition[rank + 1] - 1;
 
     // Use helper function to get various element and tree indices.
@@ -204,16 +213,14 @@ class t8_forest_pfc_message_c {
     myscheme = t8_forest_get_scheme (forest);
     eclass = t8_forest_get_eclass (forest, t8_forest_get_local_id (forest, itree));
 
-    /* if we are already the root element, we cannot be part of a split family, so we send any(the root) element and no num_siblings */
+    // If we are already the root element, we cannot be part of a split family, so we send any(the root) element and no num_siblings.
     if (myscheme->element_get_level (eclass, element_closest_to_receiver) == 0) {
       parent = element_closest_to_receiver;
       num_siblings = 0;
     }
     else {
-      /* compute parent and num_siblings*/
+      // Compute parent.
       t8_element_new (myscheme, eclass, 1, &parent);
-
-      // Set parent.
       allocated_parent = true;
       myscheme->element_get_parent (eclass, element_closest_to_receiver, parent);
 
@@ -234,7 +241,7 @@ class t8_forest_pfc_message_c {
 
   /**
    * Getter function for the parent to stay in control of memory management.
-   * 
+   *
    * \return The parent to be sent.
   */
   const t8_element_t *
@@ -246,17 +253,17 @@ class t8_forest_pfc_message_c {
 
   /**
    * Constructor of class t8_forest_pfc_message_c.
-   * 
+   *
    * The arguments are directly copied into the corresponding member variables;
    * the remaining member variables are set to default values.
-   * 
-   * \param[in] newscheme the scheme
+   *
+   * \param[in] scheme the scheme
    * \param[in] iproc     the process to send to
    * \param[in] comm      the MPI communicator
-   * 
+   *
   */
-  t8_forest_pfc_message_c (const t8_scheme_c *newscheme, t8_procidx_t iproc, sc_MPI_Comm comm)
-    : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), myscheme (newscheme), comm (comm), iproc (iproc),
+  t8_forest_pfc_message_c (const t8_scheme_c *scheme, t8_procidx_t iproc, sc_MPI_Comm comm)
+    : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), myscheme (scheme), comm (comm), iproc (iproc),
       message_tag (T8_PFC_MESSAGE), parent (NULL), allocated_parent (0)
   {
   }
@@ -266,7 +273,6 @@ class t8_forest_pfc_message_c {
 
   /**
    * Move constructor.
-   * 
   */
   t8_forest_pfc_message_c (t8_forest_pfc_message_c &&other)
     : itree { other.itree }, eclass (other.eclass), num_siblings (other.num_siblings), myscheme (other.myscheme),

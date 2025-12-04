@@ -84,18 +84,18 @@
  * \param[in] is_family     "is_family" argument of \ref t8_forest_adapt_t
  * \param[in] num_elements  "num_elements" argument of \ref t8_forest_adapt_t
  * \param[in] elements      "elements" argument of \ref t8_forest_adapt_t
+ *
  * \return 1 if the element will be refined, 0 otherwise.
 */
 int
-refine_some_callback ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                      [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                      [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                      [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+refine_some_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                      [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                      [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                      [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                      [[maybe_unused]] t8_element_t *elements[])
 {
-  // Refine all elements within a radius of 0.7 from the coordinate origin.
-  double centroid[3] = { 0.0, 0.0, 0.0 };
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-  if (sqrt (centroid[0] * centroid[0] + centroid[1] * centroid[1]) < 0.7) {
+  // Refine some elements.
+  if (lelement_id % (forest_from->mpirank + 1) == 0) {
     return 1;
   }
   return 0;
@@ -156,12 +156,6 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
     if (t8_cmesh_is_empty (cmesh)) {
       GTEST_SKIP ();
     }
-
-    // Skip bigmeshes
-    // TODO: Why?
-    if (cmesh_name.find (std::string ("bigmesh")) != std::string::npos) {
-      GTEST_SKIP ();
-    }
   }
 
   /**
@@ -191,6 +185,11 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
 
     // Manually change flag to "true" here to write vtk output.
     bool write_vtk_output_flag = false;
+
+    // Skip debug vtk output for bigmeshes.
+    if (cmesh_name.find (std::string ("bigmesh")) != std::string::npos) {
+      return;
+    }
 
     // If flag is true, write vtk output.
     if (write_vtk_output_flag) {
@@ -254,6 +253,7 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   t8_forest_init (&pfc_forest);
 
   // Set partitioning mode and source.
+  // Note: The third argument being nonzero activates the PFC correction.
   t8_forest_set_partition (pfc_forest, adapted_base_forest, 1);
 
   // Increase reference counter of base forest to avoid destruction.
