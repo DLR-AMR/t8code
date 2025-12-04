@@ -35,6 +35,10 @@ We left this approach and now use a [CRTP](https://www.fluentcpp.com/2017/05/16/
 Furthermore, we now provide a scheme builder instead of only the default scheme with our default implementation (don't worry, the default implementation is still there and untouched, t8code will still behave in the way that you know it).
 Using the scheme builder you can now compose your schemes as you want, containing only the element-schemes that you need for your application. That way a scheme does not need to carry or provide access for the implementation of a line if your computation uses three dimensional elements only.
 
+### Require MPI minimum version 3.0
+
+We now require a minimum MPI version of 3.0 With MPI 3.0 MPI_COMM_TYPE_SHARED was introduced, which is necessary for our shared memory routines.
+
 ## But why?
 ### New is better
 Why all these big changes? We are on our mission to modernize t8code and this is one of the changes that comes along with it. We believe that with modern C++ we can provide you with a much better user experience and a much more comfortable way to implement your application with t8code. We also aim to further increase (or at least not decrease) the performance of t8code, such that your application can handle its mesh as fast as possible.
@@ -172,6 +176,11 @@ instead of
 t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
 ```
 We only got rid of the cxx postfix. It creates the default scheme as you know it and the element specific implementations are still the same.
+
+### Update to MPI 3.0
+
+Ensure that you are linking against MPI version 3.0 or later.
+You can call `mpirun --version` to check your current MPI version.
 
 ## What does the default scheme actually look like?
 Ok, we admit it, the default scheme has some small tiny changes (but don't worry, the element specific implementation is still the same, we promise).
