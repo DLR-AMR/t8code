@@ -36,6 +36,7 @@
 #include <functional>
 #include <numeric>
 #include <ranges>
+#include <algorithm>
 
 /**
  * \typedef t8_search_element_callback

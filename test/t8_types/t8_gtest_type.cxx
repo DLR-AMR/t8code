@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <typeinfo>
 #include <numeric>
 #include <iostream>
+#include <algorithm>
 
 /* Tags to differencce between strong types */
 struct dummy_int
