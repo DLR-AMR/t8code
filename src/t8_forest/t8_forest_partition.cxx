@@ -85,7 +85,7 @@ t8_forest_compute_first_local_element_id (t8_forest_t forest)
 }
 
 t8_forest_t
-t8_forest_new_gather (const t8_forest_t forest_from, int gather_rank)
+t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank)
 {
   // Declare and initialize forest to be returned.
   t8_forest_t forest_gather;
@@ -117,7 +117,7 @@ t8_forest_new_gather (const t8_forest_t forest_from, int gather_rank)
 }
 
 void
-t8_forest_set_partition_offset (t8_forest_t forest, t8_gloidx_t first_global_element)
+t8_forest_set_partition_offset (t8_forest_t forest, const t8_gloidx_t first_global_element)
 {
   // Set flag indicating a manual partition.
   forest->set_partition_offset = 1;
