@@ -350,7 +350,7 @@ class vtk_writer {
  */
   void
   t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
-                                  bool merge_points = true;)
+                                  bool merge_points = true)
   {
     T8_ASSERT (grid != NULL);
 
@@ -576,11 +576,11 @@ class vtk_writer {
   bool write_element_id = false;
   bool write_ghosts = false;
   bool curved_flag = false;
-  bool merge_points = true;
   std::string fileprefix;
   int num_data = 0;
   t8_vtk_data_field_t *data = NULL;
   sc_MPI_Comm comm;
+  bool merge_points = true;
 };
 
 #endif /* T8_VTK_WRITER_HXX */
