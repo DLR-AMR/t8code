@@ -98,13 +98,8 @@ t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank)
   // To gather all elements on gather_rank, the first local element is set to
   // zero for all processes up to gather_rank and to number of elements for the
   // remaining ones.
-  t8_gloidx_t first_local_element;
-  if (forest_from->mpirank <= gather_rank) {
-    first_local_element = 0;
-  }
-  else {
-    first_local_element = forest_from->global_num_leaf_elements;
-  }
+  const t8_gloidx_t first_local_element
+    = (forest_from->mpirank <= gather_rank) ? 0 : forest_from->global_num_leaf_elements;
 
   // Set the partition offset accordingly.
   t8_forest_set_partition_offset (forest_gather, first_local_element);
@@ -528,9 +523,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
       else {
 
         // Apply manually set element offsets.
-        for (i = 0; i < mpisize; i++) {
-          element_offsets[i] = custom_element_offsets[i];
-        }
+        std::copy_n (custom_element_offsets.data (), static_cast<size_t> (mpisize), element_offsets);
       }
       // The last entry is the same in both cases.
       element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
