@@ -243,4 +243,4 @@ For more details, see the pull request https://github.com/DLR-AMR/t8code/pull/19
 
 # Documentation on readthedocs
 
-To improve our documentation, to make it more searchable and to simplify the updating process of our documentation we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependant option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster. 
+To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster. 
