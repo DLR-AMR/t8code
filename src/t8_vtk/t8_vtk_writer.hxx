@@ -392,8 +392,10 @@ class vtk_writer {
       // if we have cells. If the local bounds cannot be computed,
       // merge points will be disabled.
       merge_points = grid_get_local_bounds (grid, bounds);
-      t8_errorf (
-        "Computation of bounding box failed. VTK merge points will be disabled. VTK output is still valid. \n");
+      if (!merge_points){
+        t8_errorf (
+          "Computation of bounding box failed. VTK merge points will be disabled. VTK output is still valid. \n");
+      }
     }
 
     /* Allocate VTK Memory for the arrays */
