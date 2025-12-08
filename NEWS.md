@@ -29,6 +29,7 @@ Please see the subsections to understand the changes in the code and what you ne
 - [Renaming of macros T8_WITH_* to T8_ENABLE_*](#renaming-of-macros-t8_with_-to-t8_enable_)
 - [MPI minimum required version 3.0](#update-to-mpi-30)
 - [Changed cmesh folder structure](#changes-in-cmesh-folder-structure)
+- [Documentation on readthedocs](#documentation-on-readthedocs)
 
 # Changes in the element schemes
 
@@ -239,3 +240,7 @@ This requires you to update all include paths of I/O related files. For example
 ```
 
 For more details, see the pull request https://github.com/DLR-AMR/t8code/pull/1986
+
+# Documentation on readthedocs
+
+To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster. 
