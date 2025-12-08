@@ -497,14 +497,14 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  // Initialize array of manually set element offsets to nullptr.
-  t8_gloidx_t *custom_element_offsets = nullptr;
+  // Define vector of manually set element offsets.
+  std::vector<t8_gloidx_t> custom_element_offsets;
 
   // If a custom partitioning is set, all-gather the manually set element offsets.
   if (forest->set_partition_offset != 0) {
-    custom_element_offsets = new t8_gloidx_t[forest->mpisize];
-    int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX, custom_element_offsets, 1,
-                                   T8_MPI_GLOIDX, comm);
+    custom_element_offsets.resize (forest->mpisize);
+    const int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX,
+                                         custom_element_offsets.data (), 1, T8_MPI_GLOIDX, comm);
     SC_CHECK_MPI (retval);
   }
 
@@ -542,7 +542,6 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
       }
     }
   }
-  delete[] custom_element_offsets;
   t8_shmem_array_end_writing (forest->element_offsets);
 }
 
