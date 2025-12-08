@@ -201,6 +201,11 @@ class mesh {
     m_forest = input_forest;
     T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
+    if constexpr (!std::is_void<U>::value) {
+      t8_global_infof (
+        "The elements of the mesh handle has been updated. Please note that the element_data are not interpolated "
+        "automatically. Use the function set_element_data() to provide new adapted element data.");
+    }
   }
 
   /** 
