@@ -29,6 +29,7 @@
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
+#include <algorithm>
 
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
