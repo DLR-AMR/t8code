@@ -39,6 +39,12 @@ on:
   schedule:
       - cron:  '10 1 * * *'
 
+concurrency:
+  # Base the group on workflow name and ref to allow concurrent runs for different branches, but not multiple runs for the same branch.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Always complete runs on the merge queue.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+
 # The CI pipeline should:
 # - fully run in the merge queue with the full test suite
 # - not run on draft PRs
