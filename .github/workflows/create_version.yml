@@ -15,9 +15,9 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v6
               with:
-                  token: ${{ secrets.T8DDY_TOKEN }}
                   fetch-depth: 0
                   ref: main
+                  persist-credentials: false
             # Create version name accessible in the following steps
             - name: Set version name
               run: echo "VERSION_NAME=v4.0.0-$(date +'%Y.%m.%d')" >> $GITHUB_ENV
@@ -27,15 +27,19 @@ jobs:
                   git checkout -b new_version_${{ env.VERSION_NAME }}
                   git config user.email "t8ddy.bot@gmail.com"
                   git config user.name "t8ddy"
+                  # configure remote to use the secret token for pushing
+                  git remote set-url origin https://x-access-token:${{ secrets.T8DDY_TOKEN }}@github.com/${{ github.repository }}
                   git tag "${{ env.VERSION_NAME }}"
-                  git push --tags --set-upstream origin new_version_${{ env.VERSION_NAME }}
+                  git push --set-upstream origin new_version_${{ env.VERSION_NAME }}
+                  git push origin --tags
 
             # Create a PR for the new version tag
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v5
               with:
+                  token: ${{ secrets.T8DDY_TOKEN }}
                   commit-message: "Create new version tag ${{ env.VERSION_NAME }}"
                   title: "Create new version tag ${{ env.VERSION_NAME }}"
-                  body: "This PR creates a new version tag ${{ env.VERSION_NAME }} for the quarterly release."
+                  body: "This PR creates a new version tag ${{ env.VERSION_NAME }} for the monthly release."
                   base: main
                   branch: new_version_${{ env.VERSION_NAME }}
