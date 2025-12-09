@@ -10,11 +10,13 @@ jobs:
     monthly_release:
         runs-on: ubuntu-latest
         steps:
+            #checkout main branch
             - name: Checkout code
               uses: actions/checkout@v6
               with:
                   token: ${{ secrets.T8DDY_TOKEN }}
                   fetch-depth: 0
+                  ref: main
             #create a new branch for the new version tag
             - name: Create version tag
               run: |
