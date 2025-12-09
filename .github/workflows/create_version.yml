@@ -1,4 +1,7 @@
 name: Create a new version tag
+
+contents: write
+
 on:
     pull_request:
     workflow_dispatch:
@@ -17,7 +20,7 @@ jobs:
                   token: ${{ secrets.T8DDY_TOKEN }}
                   fetch-depth: 0
                   ref: main
-            #create a new branch for the new version tag
+            #create a new branch for the version tag
             - name: Create version tag
               run: |
                   git checkout -b new_version_4.0.0-$(date +'%Y.%m.%d')
