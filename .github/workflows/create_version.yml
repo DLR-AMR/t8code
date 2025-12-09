@@ -18,22 +18,25 @@ jobs:
                   token: ${{ secrets.T8DDY_TOKEN }}
                   fetch-depth: 0
                   ref: main
+            # Create version name accessible in the following steps
+            - name: Set version name
+              run: echo "VERSION_NAME=v4.0.0-$(date +'%Y.%m.%d')" >> $GITHUB_ENV
             #create a new branch for the version tag
             - name: Create version tag
               run: |
-                  git checkout -b new_version_4.0.0-$(date +'%Y.%m.%d')
+                  git checkout -b new_version_${{ env.VERSION_NAME }}
                   git config user.email "t8ddy.bot@gmail.com"
                   git config user.name "t8ddy"
-                  git tag "v4.0.0-$(date +'%Y.%m.%d')"
-                  git push --tags --set-upstream origin new_version_4.0.0-$(date +'%Y.%m.%d')
+                  git tag "${{ env.VERSION_NAME }}"
+                  git push --tags --set-upstream origin new_version_${{ env.VERSION_NAME }}
 
             # Create a PR for the new version tag
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v5
               with:
                   token: ${{ secrets.T8DDY_TOKEN }}
-                  commit-message: "Create new version tag v4.0.0-$(date +'%Y.%m.%d')"
-                  title: "Create new version tag v4.0.0-$(date +'%Y.%m.%d')"
-                  body: "This PR creates a new version tag v4.0.0-$(date +'%Y.%m.%d') for the quarterly release."
+                  commit-message: "Create new version tag ${{ env.VERSION_NAME }}"
+                  title: "Create new version tag ${{ env.VERSION_NAME }}"
+                  body: "This PR creates a new version tag ${{ env.VERSION_NAME }} for the quarterly release."
                   base: main
-                  branch: new_version_4.0.0-$(date +'%Y.%m.%d')
+                  branch: new_version_${{ env.VERSION_NAME }}
