@@ -35,28 +35,62 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
 #include <type_traits>
+#include <functional>
 
 namespace t8_mesh_handle
 {
+
+template <typename mesh_class>
+/** Singleton for callback. Problem is the mesh class template!*/
+class CallbackRegistry {
+ public:
+  using CoarsenCallBackType = std::function<bool (mesh_class mesh, std::vector<mesh_element>& family)>;
+
+  static void
+  register_coarsen_callback (CoarsenCallBackType Coarsencallback)
+  {
+    get_map ()[name] = std::move (cb);
+  }
+
+  static CallbackType
+  get_coarsen_callback ()
+  {
+    auto& map = get_map ();
+    auto it = map.find (name);
+    if (it != map.end ()) {
+      return it->second;
+    }
+    return nullptr;
+  }
+
+ private:
+  static std::unordered_map<std::string, CallbackType>&
+  get_map ()
+  {
+    static std::unordered_map<std::string, CallbackType> map;
+    return map;
+  }
+};
+
 template <typename mesh_class, typename mesh_element>
 using coarsen_mesh_element_family = bool (*) (mesh_class mesh, std::vector<mesh_element>& family);
 
 template <typename mesh_class, typename mesh_element>
 using refine_mesh_element = bool (*) (mesh_class mesh, mesh_element& element);
 
-template <typename coarsen_mesh_element_family, typename refine_mesh_element>
+template <typename mesh_class, typename coarsen_mesh_element_family, typename refine_mesh_element>
 int
-mesh_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+mesh_adapt_callback (mesh_class mesh, t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                      [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
                      [[maybe_unused]] const t8_scheme* scheme, const int is_family,
                      [[maybe_unused]] const int num_elements, t8_element_t* elements[])
 {
 
-  if (refine_ciretion) {
+  if (refine_mesh_element (mesh, mesh.get_mesh_element (lelement_id))) {
     /* Refine this element. */
     return 1;
   }
-  else if (is_family && coarsen_crit) {
+  else if (is_family && coarsen_mesh_element_family (mesh, )) {
     /* Coarsen this family. Note that we check for is_family before, since returning < 0
      * if we do not have a family as input is illegal. */
     return -1;
@@ -76,7 +110,8 @@ adapt_mesh (mesh_class& mesh_handle,
 
   t8_forest_t forest;
   t8_forest_init (&forest);
-  t8_forest_set_adapt (forest, forest_from, adapt_fn, recursive);
+  t8_forest_set_adapt (forest, forest_from, mesh_adapt_callback<mesh_class, coarsen_callback, refinement_callback>,
+                       recursive);
   t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
   t8_forest_set_user_data (forest, mesh_handle.get_user_data ());
 
