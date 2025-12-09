@@ -1,0 +1,40 @@
+name: Create a new version tag
+on:
+    workflow_dispatch:
+    schedule:
+        # trigger at 0:00 on the first day of each month
+        - cron: '0 0 1 * *'
+
+jobs:
+    quarterly_release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
+            #create a new branch for the version tag
+            - name: Create new branch
+              run: |
+                  git checkout -b new_version_4.0.0-$(date +'%Y.%m.%d')
+
+            - name: Create version tag
+              run: |
+                  git config user.email "t8ddy.bot@gmail.com"
+                  git config user.name "t8ddy"
+                  git tag "v4.0.0-$(date +'%Y.%m.%d')"
+                  git push origin "v4.0.0-$(date +'%Y.%m.%d')"
+            - name: Push new branch including tag
+              run: |
+                  git push --tags --set-upstream origin new_version_4.0.0-$(date +'%Y.%m.%d')
+
+            # Create a PR for the new version tag
+            - name: Create Pull Request
+              uses: peter-evans/create-pull-request@v5
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  commit-message: "Create new version tag v4.0.0-$(date +'%Y.%m.%d')"
+                  title: "Create new version tag v4.0.0-$(date +'%Y.%m.%d')"
+                  body: "This PR creates a new version tag v4.0.0-$(date +'%Y.%m.%d') for the quarterly release."
+                  base: main
+                  head: new_version_4.0.0-$(date +'%Y.%m.%d')
