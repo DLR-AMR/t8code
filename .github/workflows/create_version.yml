@@ -36,4 +36,4 @@ jobs:
                   title: "Create new version tag v4.0.0-$(date +'%Y.%m.%d')"
                   body: "This PR creates a new version tag v4.0.0-$(date +'%Y.%m.%d') for the quarterly release."
                   base: main
-                  head: new_version_4.0.0-$(date +'%Y.%m.%d')
+                  branch: new_version_4.0.0-$(date +'%Y.%m.%d')
