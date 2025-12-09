@@ -12,6 +12,7 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v2
+              token: ${{ secrets.T8DDY_TOKEN }}
               with:
                   fetch-depth: 0
             #create a new branch for the version tag
