@@ -1,5 +1,6 @@
 name: Create a new version tag
 on:
+    pull_request:
     workflow_dispatch:
     schedule:
         # trigger at 0:00 on the first day of each month
