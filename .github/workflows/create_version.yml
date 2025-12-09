@@ -16,12 +16,9 @@ jobs:
                   token: ${{ secrets.T8DDY_TOKEN }}
                   fetch-depth: 0
             #create a new branch for the version tag
-            - name: Create new branch
-              run: |
-                  git checkout -b new_version_4.0.0-$(date +'%Y.%m.%d')
-
             - name: Create version tag
               run: |
+                  git checkout -b new_version_4.0.0-$(date +'%Y.%m.%d')
                   git config user.email "t8ddy.bot@gmail.com"
                   git config user.name "t8ddy"
                   git tag "v4.0.0-$(date +'%Y.%m.%d')"
