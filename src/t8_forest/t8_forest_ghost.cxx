@@ -1551,6 +1551,9 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->ghost_runtime = -sc_MPI_Wtime ();
     /* DO NOT DELETE THE FOLLOWING line.
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
@@ -1608,6 +1611,9 @@ t8_forest_ghost_create_ext (t8_forest_t forest, int unbalanced_version)
 
   if (forest->profile != NULL) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
+#if T8_ENABLE_PROFILE_BARRIER
+    sc_MPI_Barrier (forest->mpicomm);
+#endif
     forest->profile->ghost_runtime += sc_MPI_Wtime ();
     /* We also store the number of ghosts and remotes */
     if (ghost != NULL) {
