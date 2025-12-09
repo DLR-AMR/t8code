@@ -24,22 +24,9 @@ jobs:
             #create a new branch for the version tag
             - name: Create version tag
               run: |
-                  git checkout -b new_version_${{ env.VERSION_NAME }}
                   git config user.email "t8ddy.bot@gmail.com"
                   git config user.name "t8ddy"
                   # configure remote to use the secret token for pushing
                   git remote set-url origin https://x-access-token:${{ secrets.T8DDY_TOKEN }}@github.com/${{ github.repository }}
                   git tag "${{ env.VERSION_NAME }}"
-                  git push --set-upstream origin new_version_${{ env.VERSION_NAME }}
                   git push origin --tags
-
-            # Create a PR for the new version tag
-            - name: Create Pull Request
-              uses: peter-evans/create-pull-request@v5
-              with:
-                  token: ${{ secrets.T8DDY_TOKEN }}
-                  commit-message: "Create new version tag ${{ env.VERSION_NAME }}"
-                  title: "Create new version tag ${{ env.VERSION_NAME }}"
-                  body: "This PR creates a new version tag ${{ env.VERSION_NAME }} for the monthly release."
-                  base: main
-                  branch: new_version_${{ env.VERSION_NAME }}
