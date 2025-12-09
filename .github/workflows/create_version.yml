@@ -11,9 +11,9 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
-              uses: actions/checkout@v2
-              token: ${{ secrets.T8DDY_TOKEN }}
+              uses: actions/checkout@v6
               with:
+                  token: ${{ secrets.T8DDY_TOKEN }}
                   fetch-depth: 0
             #create a new branch for the version tag
             - name: Create new branch
@@ -31,7 +31,7 @@ jobs:
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v5
               with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.T8DDY_TOKEN }}
                   commit-message: "Create new version tag v4.0.0-$(date +'%Y.%m.%d')"
                   title: "Create new version tag v4.0.0-$(date +'%Y.%m.%d')"
                   body: "This PR creates a new version tag v4.0.0-$(date +'%Y.%m.%d') for the quarterly release."
