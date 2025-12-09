@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_vtk.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
@@ -54,18 +54,18 @@
 
 /* In this file we collect tests for t8code's OpenCASCADE geometry module.
  * These tests are
- *  - linked_edges: Checks if the geometry mapping works. 
- *                  We define an OpenCASCADE curve and link it to an edge of a hexahedron. 
+ *  - linked_edges: Checks if the geometry mapping works.
+ *                  We define an OpenCASCADE curve and link it to an edge of a hexahedron.
  *                  After that we probe whether the correct coordinates inside the hexahedron are returned.
  *                  We repeat this check for all 12 edges.
- *  - linked_faces: Checks if the geometry mapping works. 
- *                  We define an OpenCASCADE surface and link it to a face of a hexahedron. 
+ *  - linked_faces: Checks if the geometry mapping works.
+ *                  We define an OpenCASCADE surface and link it to a face of a hexahedron.
  *                  After that we probe whether the correct coordinates inside the hexahedron are returned.
  *                  We repeat this check for all 6 faces.
  *  - jacobian:     Checks the resulting jacobian of an identity.
  */
 
-/** Euler rotation around intrinsic zxz. 
+/** Euler rotation around intrinsic zxz.
  * \param [in] pos_vec                Position vector of three dimensional points to rotate.
  * \param [in] rot_vec                Three dimensional rotation vector around z, x and z in rad.
  * \param [out] res_vec               Vector for resulting points.
@@ -225,7 +225,7 @@ t8_create_cad_hypercube ([[maybe_unused]] double *rot_vec, [[maybe_unused]] int 
                             parameters, 2 * sizeof (double), 0);
   }
   else {
-    /* Even if we do not want to link any geometry to the edges or faces, 
+    /* Even if we do not want to link any geometry to the edges or faces,
      * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
@@ -273,21 +273,21 @@ t8_test_geometry_cad_hex (double *rot_vec, int face, int edge, double *parameter
 TEST (t8_gtest_geometry_cad_hex, linked_faces)
 {
   /* clang-format off */
-  double test_ref_coords[24] = { 0.1, 0.1, 0.1, 
-                                 0.8, 0.1,  0.1,  
+  double test_ref_coords[24] = { 0.1, 0.1, 0.1,
+                                 0.8, 0.1,  0.1,
                                  0.15, 0.9, 0.1,
                                  0.9,  0.9,  0.3,
-                                 0.3, 0.1, 0.7, 
-                                 0.9, 0.25, 0.95, 
-                                 0.1,  0.9, 0.9, 
+                                 0.3, 0.1, 0.7,
+                                 0.9, 0.25, 0.95,
+                                 0.1,  0.9, 0.9,
                                  0.95, 0.85, 0.8 };
-  const t8_vec<24> surface_test_return_coords ({ 0.0396282769,  0.1897542602, 0.0396282769, 
-                                            0.8553975402, 0.1510451803, -0.0012778561, 
-                                            0.1434278361, 0.9117760771, 0.0909403721, 
-                                            0.9149739120, 0.8893780561,  0.2953610950, 
+  const t8_vec<24> surface_test_return_coords ({ 0.0396282769,  0.1897542602, 0.0396282769,
+                                            0.8553975402, 0.1510451803, -0.0012778561,
+                                            0.1434278361, 0.9117760771, 0.0909403721,
+                                            0.9149739120, 0.8893780561,  0.2953610950,
                                             0.2190065733, 0.1000000000, 0.7809934267,
-                                            0.9318450385,  0.1898146343, 0.9989190836, 
-                                            0.0932920308, 0.9000000000, 0.9067079692,  
+                                            0.9318450385,  0.1898146343, 0.9989190836,
+                                            0.0932920308, 0.9000000000, 0.9067079692,
                                             0.9673042609, 0.8312979801, 0.8063743210 });
 
     /* clang-format off */
@@ -316,21 +316,21 @@ TEST (t8_gtest_geometry_cad_hex, linked_faces)
 TEST (t8_gtest_geometry_cad_hex, linked_edges)
 {
   /* clang-format off */
-  double test_ref_coords[24] = { 0.1, 0.1, 0.1, 
-                                 0.8, 0.1,  0.1,  
-                                 0.15, 0.9, 0.1, 
+  double test_ref_coords[24] = { 0.1, 0.1, 0.1,
+                                 0.8, 0.1,  0.1,
+                                 0.15, 0.9, 0.1,
                                  0.9,  0.9,  0.3,
-                                 0.3, 0.1, 0.7, 
-                                 0.9, 0.25, 0.95, 
-                                 0.1,  0.9, 0.9, 
+                                 0.3, 0.1, 0.7,
+                                 0.9, 0.25, 0.95,
+                                 0.1,  0.9, 0.9,
                                  0.95, 0.85, 0.8 };
-  const t8_vec<24> curve_test_return_coords ({ 0.0955204602, 0.2235162028, 0.1217553783, 
-                                          0.7995278713, -0.0659838746, 0.2083328730, 
-                                          0.1494299582, 0.9170222805, 0.1069555502, 
-                                          0.8999105642, 0.8892289094, 0.3015732294, 
+  const t8_vec<24> curve_test_return_coords ({ 0.0955204602, 0.2235162028, 0.1217553783,
+                                          0.7995278713, -0.0659838746, 0.2083328730,
+                                          0.1494299582, 0.9170222805, 0.1069555502,
+                                          0.8999105642, 0.8892289094, 0.3015732294,
                                           0.2987855815, 0.1481519479, 0.7726155646,
-                                          0.8999520880, 0.2442297729, 0.9508428015, 
-                                          0.0999446970, 0.9015248914, 0.9002685849, 
+                                          0.8999520880, 0.2442297729, 0.9508428015,
+                                          0.0999446970, 0.9015248914, 0.9002685849,
                                           0.9499697383, 0.8472575225, 0.7998496263 });
   /* clang-format on */
 
@@ -418,7 +418,7 @@ t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edg
                             parameters, 2 * sizeof (double), 0);
   }
   else {
-    /* Even if we do not want to link any geometry to the edges or faces, 
+    /* Even if we do not want to link any geometry to the edges or faces,
      * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */
@@ -445,8 +445,8 @@ t8_test_geometry_cad_tet (const int face, const int edge, double *parameters, do
                           const t8_vec<dimension> &test_return_coords)
 {
   /* 4 coords for face --> 3 vertices of face & element centroid
-   * 2 coords for edge --> 2 vertices of edge 
-   * muliplied by 3 it is equal to the dimension template parameter
+   * 2 coords for edge --> 2 vertices of edge
+   * multiplied by 3 it is equal to the dimension template parameter
    */
   const int num_coords = (face >= 0 ? 4 : 2);
   t8_vec<dimension> out_coords;
@@ -530,8 +530,8 @@ TEST (t8_gtest_geometry_cad, jacobian)
   t8_cmesh_t cmesh;
   double jacobian[9], rot_vec[3] = { 0, 0, 0 }, ref_coords[3] = { 0.5, 0.5, 0.5 };
   /* clang-format off */
-  double jacobian_expect[9] = { 1, 0, 0, 
-                                0, 1, 0, 
+  double jacobian_expect[9] = { 1, 0, 0,
+                                0, 1, 0,
                                 0, 0, 1 };
   /* clang-format on */
   cmesh = t8_create_cad_hypercube (rot_vec, -1, -1, NULL);
@@ -550,27 +550,27 @@ class class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_ec
   SetUp () override
   {
     eclass = std::get<0> (GetParam ());
-    /* curvature prescibes if the linear of curved curve is used */
+    /* curvature prescribes if the linear of curved curve is used */
     curvature = std::get<1> (GetParam ());
     T8_ASSERT (0 <= eclass && eclass < T8_ECLASS_COUNT);
     Handle_Geom_Curve cad_curve_linear, cad_curve_curved;
     TColgp_Array1OfPnt point_array_linear (1, 2);
     TColgp_Array1OfPnt point_array_curved (1, 3);
 
-    /* LINEAR  
+    /* LINEAR
     *  x--> u-parameter
-    *   
+    *
     *                 curve
     *  ----------------------------------
-    * 
+    *
     *  0                                1
-    * 
+    *
     *  CURVED
     *  x--> u-parameter
-    *   
+    *
     *  ----____       curve       ____----
     *           ----_________----
-    * 
+    *
     *  0               0.5              1
     */
 
@@ -800,7 +800,7 @@ class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_ecla
     /*  x--> u-parameter
     *   |
     *   v v-parameter
-    * 
+    *
     *   x -> shifted point to create curved surface
     *
     *     point_array  1       2       3
@@ -952,7 +952,7 @@ t8_create_cad_reference_prism ([[maybe_unused]] int face, [[maybe_unused]] int e
                             parameters, 2 * sizeof (double), 0);
   }
   else {
-    /* Even if we do not want to link any geometry to the edges or faces, 
+    /* Even if we do not want to link any geometry to the edges or faces,
      * we have to create a geometry. Hence a cad geometry can only be created
      * with an actual shape, we just create a geometry with a curve and do not
      * link the curve to any edge. */

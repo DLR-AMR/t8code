@@ -25,11 +25,11 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 #include <p4est_connectivity.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_vtk/t8_vtk_writer.h>
 
-#include <t8_cmesh/t8_cmesh_partition.h>
-#include "t8_cmesh/t8_cmesh_types.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Repartition a partitioned cmesh by shipping half of the local trees
@@ -76,7 +76,7 @@ t8_time_cmesh_translate_coordinates (t8_cmesh_t cmesh, double x, sc_MPI_Comm com
   SC_CHECK_MPI (mpiret);
   for (itree = 0; itree < t8_cmesh_get_num_local_trees (cmesh); itree++) {
     /* loop over all trees and get a pointer to their vertices */
-    vertices = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0, itree);
+    vertices = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, itree);
     eclass = t8_cmesh_get_tree_class (cmesh, itree);
     for (ivertex = 0; ivertex < t8_eclass_num_vertices[eclass]; ivertex++) {
       /* For each tree vertex, translate its x-coordinate */

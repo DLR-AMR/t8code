@@ -28,8 +28,8 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_data/t8_containers.h>
 #include <t8_vtk/t8_vtk_writer.h>
@@ -86,12 +86,12 @@ t8_test_fiterate (t8_forest_t forest)
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
     eclass = t8_forest_get_tree_class (forest, itree);
-    const t8_element_t *first_el = t8_forest_get_element_in_tree (forest, itree, 0);
+    const t8_element_t *first_el = t8_forest_get_leaf_element_in_tree (forest, itree, 0);
     const t8_element_t *last_el
-      = t8_forest_get_element_in_tree (forest, itree, t8_forest_get_tree_num_elements (forest, itree) - 1);
+      = t8_forest_get_leaf_element_in_tree (forest, itree, t8_forest_get_tree_num_leaf_elements (forest, itree) - 1);
     scheme->element_new (eclass, 1, &nca);
     scheme->element_get_nca (eclass, first_el, last_el, nca);
-    leaf_elements = t8_forest_tree_get_leaves (forest, itree);
+    leaf_elements = t8_forest_tree_get_leaf_elements (forest, itree);
 
     for (iface = 0; iface < scheme->element_get_num_faces (eclass, nca); iface++) {
       udata.count = 0;

@@ -1,8 +1,28 @@
 name: "Move the Issue after workload and urgency is evaluated"
 
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 on:
   issues:
-    types: [labeled, assigned, unassigned, unlabeled]
+    types: [labeled, assigned, unassigned, unlabeled, opened]
   pull_request:
     types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
 
@@ -15,7 +35,17 @@ jobs:
       PRIORITY_SET: ${{ steps.check_urgency.outputs.PRIORITY_SET || 'false' }}
       WORKLOAD: ${{ steps.check_workload.outputs.WORKLOAD || 'false' }}
       PRIORITY: ${{ steps.check_urgency.outputs.PRIORITY || 'false' }}
+      CREATION_DATE: ${{ steps.get_creation_date.outputs.CREATION_DATE || 'unset' }}
     steps:
+      - name: "Extract the issues date of creation"
+        id: get_creation_date
+        run: |
+            echo "Extract the date of creation:"
+            github_date_string="${{ github.event.issue.created_at }}"
+            CREATION_DATE="${github_date_string:0:10}"
+            echo "$CREATION_DATE"
+            echo "CREATION_DATE=$CREATION_DATE" >> $GITHUB_OUTPUT
+
       - name: "Check if workload is set"
         id: check_workload
         # Check if the issue has a workload label
@@ -81,6 +111,9 @@ jobs:
   
   evaluate_pr:
     runs-on: ubuntu-latest
+    # Don't run in parallel on the same PR. Otherwise multiple issues might be created for the same PR. 
+    concurrency:
+      group: pr-move-card-${{ github.event.pull_request.id }}
     outputs:
       NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
       CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
@@ -113,6 +146,18 @@ jobs:
             # Debug output!
             echo "NUMBER_IS_SET=$NUMBER_IS_SET"
             echo "${{ github.event.action }}"
+
+  # Add the issue's date of creation to the project board card.
+  # Triggered only if the issue was newly opened or the label 'manual_trigger_date_event' has been added.
+  add_creation_date:
+    needs: [evaluate_issues]
+    if: ${{ github.event.action == 'opened' || ( github.event.action == 'labeled' && contains(join(github.event.issue.labels.*.name, ','), 'manual_trigger_date_event') ) }}
+    uses: ./.github/workflows/add_date_created.yml
+    with:
+        ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        CREATION_DATE: ${{ needs.evaluate_issues.outputs.CREATION_DATE }}
+    secrets:
+        PAT: ${{ secrets.T8DDY_PROJECTS }}
 
   # Move the issue card to ToDo if the workload and priority are set
   move_card_to_ToDo:

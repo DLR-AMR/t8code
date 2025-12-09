@@ -31,7 +31,7 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_types.h>
@@ -168,9 +168,9 @@ t8_test_transform_element (const t8_scheme *scheme, const t8_element_t *elem, co
 
 TEST_P (forest_transform, test_forest_transform_elements)
 {
-  for (int ielem = 0; ielem < t8_forest_get_local_num_elements (forest); ielem++) {
+  for (int ielem = 0; ielem < t8_forest_get_local_num_leaf_elements (forest); ielem++) {
     /* Get a pointer to the element */
-    t8_element_t *element = t8_forest_get_element (forest, ielem, NULL);
+    t8_element_t *element = t8_forest_get_leaf_element (forest, ielem, NULL);
     /* perform the transform test */
     t8_test_transform_element (scheme, element, tree_class);
   }

@@ -22,7 +22,7 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, const t8_tree
   t8_element_new (newscheme, tree_class, 1, &parent_start);
 
   // Determine start element from tree and start ID within tree.
-  const t8_element_t *start_element = t8_forest_get_tree_element (tree, start_element_id_in_tree);
+  const t8_element_t *start_element = t8_forest_get_tree_leaf_element (tree, start_element_id_in_tree);
 
   // If the start element is of level zero, return TODO
   if (newscheme->element_get_level (tree_class, start_element) == 0)
@@ -46,7 +46,7 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, const t8_tree
   else {
     increment = +1;
     extreme_check_id_in_tree
-      = SC_MIN (start_element_id_in_tree + num_children, t8_forest_get_tree_element_count (tree)) - 1;
+      = SC_MIN (start_element_id_in_tree + num_children, t8_forest_get_tree_leaf_element_count (tree)) - 1;
   }
 
   // Initialize extreme_sibling_id_in_tree.
@@ -57,7 +57,7 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, const t8_tree
        ielem += increment) {
 
     // Get element from iteration index.
-    const t8_element_t *possible_sibling = t8_forest_get_tree_element (tree, ielem);
+    const t8_element_t *possible_sibling = t8_forest_get_tree_leaf_element (tree, ielem);
 
     // Only proceed if possible_sibling is not the root element...
     if (newscheme->element_get_level (tree_class, possible_sibling) > 0) {
@@ -93,19 +93,19 @@ t8_forest_pfc_helper_index_in_tree_from_globalid (const t8_forest_t forest, cons
                                                   t8_element_t *&element)
 {
   // Determine local element ID by subtracting given and the process' first global ID.
-  t8_gloidx_t global_id_of_first_local_element = t8_forest_get_first_local_element_id (forest);
+  t8_gloidx_t global_id_of_first_local_element = t8_forest_get_first_local_leaf_element_id (forest);
   t8_locidx_t lelement_id = (t8_locidx_t) (gelement_id - global_id_of_first_local_element);
 
   // Determine the element (as pointer) and the local tree ID.
   t8_locidx_t ltree_id;
-  element = t8_forest_get_element (forest, lelement_id, &ltree_id);
+  element = t8_forest_get_leaf_element (forest, lelement_id, &ltree_id);
 
   // From local tree ID, get a pointer to the tree.
   tree = t8_forest_get_tree (forest, ltree_id);
 
   // Determine the index within the tree - and run sanity check.
   index_in_tree = lelement_id - tree->elements_offset;
-  T8_ASSERT (element == t8_forest_get_tree_element (tree, index_in_tree));
+  T8_ASSERT (element == t8_forest_get_tree_leaf_element (tree, index_in_tree));
 
   // Compute global tree ID as the local one plus the process' first tree ID.
   t8_locidx_t first_local_tree_id = t8_forest_get_first_local_tree_id (forest);

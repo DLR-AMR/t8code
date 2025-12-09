@@ -20,14 +20,14 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_conn_vertex_to_tree.cxx
+/** \file t8_cmesh_vertex_conn_vertex_to_tree.cxx
  *  This file implements the routines for the t8_cmesh_conn_vertex_to_tree struct.
  */
 
 #include <algorithm>
 #include <memory>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 
 /* Builds vertex_to_tree with existing tree_to_vertex list. */
@@ -41,15 +41,14 @@ t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_
   const t8_locidx_t num_local_trees_and_ghosts = num_local_trees + num_ghosts;
 
   for (t8_locidx_t itree = 0; itree < num_local_trees_and_ghosts; ++itree) {
-    const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, itree);
-    const int num_tree_vertices = t8_eclass_num_vertices[tree_class];
 
     /* Get the global vertex ids of this tree. */
-    const t8_gloidx_t* global_indices = ttv.get_global_vertices (cmesh, itree, num_tree_vertices);
+    auto global_indices = ttv.get_global_vertices (cmesh, itree);
 
     /* Iterate over all local tree vertices and add the global id to the list. */
-    for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
-      add_vertex_to_tree (cmesh, global_indices[ivertex], itree, ivertex);
+    int ivertex = 0;
+    for (auto global_index : global_indices) {
+      add_vertex_to_tree (cmesh, global_index, itree, ivertex++);
     }
   }
 
@@ -57,7 +56,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::build_from_ttv (const t8_cmesh_t cmesh, t8_
   state = COMMITTED;
 }
 
-/* Mark as ready for commit. Meaning that all 
+/* Mark as ready for commit. Meaning that all
   * global vertex ids have been added.
   * After commit, no vertex ids can be added anymore. */
 void
@@ -113,8 +112,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree ([[maybe_unused]] const 
  *    (\a local_tree_id_a == \a local_tree_id_b and \a local_tree_vertex_a < \a local_tree_vertex_b)
  */
 static inline bool
-t8_cmesh_tree_vertex_pair_compare (t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_a,
-                                   t8_cmesh_vertex_conn_vertex_to_tree::tree_vertex_pair const& pair_b)
+t8_cmesh_tree_vertex_pair_compare (tree_vertex_pair const& pair_a, tree_vertex_pair const& pair_b)
 {
   return pair_a.first == pair_b.first ?                              /* if tree_id_A == tree_id_B  */
            pair_a.second < pair_b.second                             /* then check vertex_id_A < vertex_id_B */
@@ -130,7 +128,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::sort_list_by_tree_id ()
   for (auto& [global_id, tree_vertex_list] : vertex_to_tree) {
     /* Check that the list contains at least one entry. */
     T8_ASSERT (tree_vertex_list.size () > 0);
-    /* Sort the list of local tree vertices according to their 
+    /* Sort the list of local tree vertices according to their
     * local tree id. */
     std::sort (tree_vertex_list.begin (), tree_vertex_list.end (), t8_cmesh_tree_vertex_pair_compare);
   }
@@ -139,8 +137,8 @@ t8_cmesh_vertex_conn_vertex_to_tree::sort_list_by_tree_id ()
 int
 t8_cmesh_vertex_conn_vertex_to_tree::contains_all_vertices (const t8_cmesh_t cmesh) const
 {
-  /* We need to check that each local tree/ghost and each vertex 
-   * exists exactly once in the list. 
+  /* We need to check that each local tree/ghost and each vertex
+   * exists exactly once in the list.
    * We do so by setting up an indicator array storing the
    * number of vertices for each tree and count down for each occurrence.
    * At the end the values must be zero. */

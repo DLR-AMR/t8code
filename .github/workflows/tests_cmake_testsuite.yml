@@ -56,7 +56,7 @@ jobs:
     outputs:
       run_ci: ${{ steps.set_run_ci.outputs.RUN_CI }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
@@ -146,7 +146,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
       
   # Run t8code linkage tests with and without MPI and in serial and debug mode
   t8code_linkage_tests:
@@ -163,7 +163,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
   # Run t8code linkage tests with and without MPI and in serial and debug mode
   t8code_api_tests:
@@ -180,7 +180,7 @@ jobs:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
   # Run Valgrind check for every t8code test binary.
   t8code_valgrind_tests:
@@ -191,7 +191,20 @@ jobs:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      TEST_LEVEL: 2 # Do Valgrind check for test level 2 for performance reasons.
+      TEST_LEVEL: T8_TEST_LEVEL_BASIC # Do Valgrind check for test level T8_TEST_LEVEL_BASIC for performance reasons.
+
+  # Generate code coverage and deploy to Codecov.
+  t8code_code_coverage:
+    if: (github.event_name != 'merge_group')
+    needs: preparation
+    uses: ./.github/workflows/code_coverage.yml
+    with:
+      MAKEFLAGS: -j4
+      MPI: ON
+      BUILD_TYPE: Debug
+      TEST_LEVEL: T8_TEST_LEVEL_BASIC
+    secrets:
+      CODE_COV: ${{ secrets.CODE_COV }}
   
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
@@ -203,11 +216,11 @@ jobs:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
   t8code_tarball:
     if: github.event.pull_request.draft == false
     uses: ./.github/workflows/build_cmake_tarball.yml
     needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
     with:
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 1 || 0 }} # Set TEST_LEVEL to 1 if the event is a PR, otherwise 0.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.

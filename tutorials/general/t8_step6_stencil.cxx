@@ -41,7 +41,7 @@
 #include <cmath>
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
@@ -116,7 +116,7 @@ t8_step6_create_element_data (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  t8_locidx_t num_local_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   t8_locidx_t num_ghost_elements = t8_forest_get_num_ghosts (forest);
   /* Get the scheme of the forest */
@@ -133,11 +133,11 @@ t8_step6_create_element_data (t8_forest_t forest)
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
 
     /* Get the number of elements of this tree. */
-    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
       /* Pointer to our current element data struct. */
       struct data_per_element *edat = &element_data[current_index];
@@ -192,11 +192,11 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
     t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
 
-    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
 
       /* Gather center point of the 3x3 stencil. */
       stencil[1][1] = element_data[current_index].height;
@@ -284,7 +284,7 @@ static void
 t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
 {
   sc_array *sc_array_wrapper;
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
 
   /* t8_forest_ghost_exchange_data expects an sc_array (of length num_local_elements + num_ghosts).
@@ -309,7 +309,7 @@ t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
 static void
 t8_step6_output_data_to_vtu (t8_forest_t forest, struct data_per_element *data, const char *prefix)
 {
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
 
   /* We need to allocate a new array to store the data on their own.
    * These arrays have one entry per local element. */
@@ -417,6 +417,13 @@ t8_step6_main (int argc, char **argv)
 
   /* Compute stencil. */
   t8_step6_compute_stencil (forest, data);
+
+  /* Exchange the neighboring data at MPI process boundaries again.
+   * This ensures that also the computed schlieren and curvature
+   * data are properly written to the ghost elements.
+   * For the sake of this example this step is only necessary in order
+   * to visualize the values on the ghost cells in the vtu output later. */
+  t8_step6_exchange_ghost_data (forest, data);
 
   /* Output the data to vtu files. */
   t8_step6_output_data_to_vtu (forest, data, prefix_forest_with_data);

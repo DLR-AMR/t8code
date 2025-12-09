@@ -41,13 +41,13 @@ typedef struct t8_element t8_element_t;
 typedef struct t8_scheme_point t8_scheme_point;
 
 /** This array holds the reference coordinates of each vertex of each element.
- *  It can e.g. be used with the \ref t8_element_reference_coords function.
+ *  It can e.g. be used with the \ref t8_scheme::element_get_reference_coords function.
  *  Usage: t8_element_corner_ref_coords[eclass][vertex][dimension]
  */
 extern const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3];
 
 /** This array holds the reference coordinates of the centroid of each element.
- *  It can e.g. be used with the \ref t8_element_reference_coords function.
+ *  It can e.g. be used with the \ref t8_scheme::element_get_reference_coords function.
  *  Usage: t8_element_centroid_ref_coords[eclass][dimension]
  */
 extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];

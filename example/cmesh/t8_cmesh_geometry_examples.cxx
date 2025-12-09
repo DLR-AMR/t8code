@@ -23,7 +23,7 @@
 /* Show-case several cmesh examples with curvilinear geometries. */
 
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* Cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /* Cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* Forest definition and basic interface. */
 #include <t8_forest/t8_forest_geometrical.h>    /* Forest-related geometry operations. */
 #include <t8_schemes/t8_default/t8_default.hxx> /* Default refinement scheme. */
@@ -35,7 +35,7 @@
 static void
 t8_write_forest_to_vtu (t8_forest_t forest, const char *prefix)
 {
-  const t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
 
   /* We need to allocate a new array to store the data on their own.
    * These arrays have one entry per local element. */
@@ -57,11 +57,11 @@ t8_write_forest_to_vtu (t8_forest_t forest, const char *prefix)
 
   /* Loop over all local trees in the forest. */
   for (t8_locidx_t itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
-    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
 
     /* Loop over all local elements in the tree and compute diameter estimate. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       diameters[current_index] = t8_forest_element_diam (forest, itree, element);
     }
   }

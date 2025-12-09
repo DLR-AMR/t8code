@@ -41,8 +41,9 @@ on:
         description: 'Build type (Release/Debug)'
       TEST_LEVEL:
         required: true
-        type: number
-        description: 'Test level used for configuring (0 for full tests, 1 for less thorough tests, 2 for minimal tests)'
+        type: string
+        description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
+        default: 'T8_TEST_LEVEL_FULL'
 
 jobs:  
   t8code_cmake_tests:
@@ -54,13 +55,13 @@ jobs:
 # Setup
 #
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
       run: tar -xf artifact.tar && rm artifact.tar
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
+      run: sudo apt-get update && sudo apt-get upgrade -y
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -81,7 +82,6 @@ jobs:
 #
     # build config vars
     - name: Set test level
-      if: ${{ inputs.TEST_LEVEL != 0 }}
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
@@ -96,7 +96,7 @@ jobs:
       run: mkdir build_netcdf && cd build_netcdf && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NETCDF=ON
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
         path: build_netcdf/CMakeFiles/CMakeOutput.log
@@ -115,7 +115,7 @@ jobs:
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
         path: build_netcdf/Testing/Temporary/LastTest.log
@@ -128,7 +128,7 @@ jobs:
       run: mkdir build_occ && cd build_occ && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
         path: build_occ/CMakeFiles/CMakeOutput.log
@@ -147,7 +147,7 @@ jobs:
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
         path: build_occ/Testing/Temporary/LastTest.log
@@ -160,7 +160,7 @@ jobs:
       run: mkdir build_vtk && cd build_vtk && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
         path: build_vtk/CMakeFiles/CMakeOutput.log
@@ -179,7 +179,7 @@ jobs:
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
         path: build_vtk/Testing/Temporary/LastTest.log

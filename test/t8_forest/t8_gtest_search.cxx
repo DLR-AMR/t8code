@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_search/t8_forest_search.hxx>
@@ -77,7 +77,8 @@ t8_test_search_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, cons
     (*user_data)[tree_offset + tree_leaf_index] = true;
     /* Test whether tree_leaf_index is actually the index of the element */
     t8_locidx_t test_ltreeid;
-    const t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
+    const t8_element_t *test_element
+      = t8_forest_get_leaf_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
 
     EXPECT_ELEM_EQ (ts, tree_class, element, test_element);
     EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
@@ -100,7 +101,8 @@ t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid
     const t8_scheme *ts = t8_forest_get_scheme (forest);
 
     const t8_locidx_t tree_offset = t8_forest_get_tree_element_offset (forest, ltreeid);
-    const t8_element_t *test_element = t8_forest_get_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
+    const t8_element_t *test_element
+      = t8_forest_get_leaf_element (forest, tree_offset + tree_leaf_index, &test_ltreeid);
     EXPECT_ELEM_EQ (ts, tree_class, element, test_element);
     EXPECT_EQ (ltreeid, test_ltreeid) << "Tree mismatch in search.";
   }
@@ -109,7 +111,7 @@ t8_test_search_query_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid
 
 TEST_P (forest_search, t8_test_search_all_fn)
 {
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* set up an array in which we flag whether an element was matched in the
    * search */
   std::vector<bool> matched_leaves (num_elements, false);
@@ -136,7 +138,7 @@ TEST_P (forest_search, test_search_one_query_matches_all)
   /* set up a single query containing our query */
   std::vector<int> queries = { 42 };
 
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* set up an array in which we flag whether an element was matched in the
    * search */
   std::vector<bool> matched_leaves (num_elements, false);
@@ -158,7 +160,7 @@ TEST_P (forest_search, test_search_one_query_matches_all)
 
   t8_forest_unref (&forest);
 }
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
 const int maxlvl = 5;
 #else
 const int maxlvl = 6;
