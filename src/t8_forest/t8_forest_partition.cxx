@@ -84,6 +84,43 @@ t8_forest_compute_first_local_element_id (t8_forest_t forest)
   return first_element;
 }
 
+t8_forest_t
+t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank)
+{
+  // Declare and initialize forest to be returned.
+  t8_forest_t forest_gather;
+  t8_forest_init (&forest_gather);
+
+  // Set partition (includes also sanity checks)
+  t8_forest_set_partition (forest_gather, forest_from, 0);
+
+  // Determine global ID of the element that will be the first local one:
+  // To gather all elements on gather_rank, the first local element is set to
+  // zero for all processes up to gather_rank and to number of elements for the
+  // remaining ones.
+  const t8_gloidx_t first_local_element
+    = (forest_from->mpirank <= gather_rank) ? 0 : forest_from->global_num_leaf_elements;
+
+  // Set the partition offset accordingly.
+  t8_forest_set_partition_offset (forest_gather, first_local_element);
+
+  // Commit the forest.
+  t8_forest_commit (forest_gather);
+
+  // Return gathered forest.
+  return forest_gather;
+}
+
+void
+t8_forest_set_partition_offset (t8_forest_t forest, const t8_gloidx_t first_global_element)
+{
+  // Set flag indicating a manual partition.
+  forest->set_partition_offset = 1;
+
+  // Set global ID of first local element.
+  forest->set_first_global_element = first_global_element;
+}
+
 /* For a committed forest create the array of element_offsets
  * and store it in forest->element_offsets
  */
@@ -455,15 +492,40 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
+  // Define vector of manually set element offsets.
+  std::vector<t8_gloidx_t> custom_element_offsets;
+
+  // If a custom partitioning is set, all-gather the manually set element offsets.
+  if (forest->set_partition_offset != 0) {
+    custom_element_offsets.resize (forest->mpisize);
+    const int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX,
+                                         custom_element_offsets.data (), 1, T8_MPI_GLOIDX, comm);
+    SC_CHECK_MPI (retval);
+  }
+
   if (t8_shmem_array_start_writing (forest->element_offsets)) {
     if (forest_from->global_num_leaf_elements > 0) {
+
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-      for (i = 0; i < mpisize; i++) {
-        /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
-        new_first_element_id = (((double) i * (long double) forest_from->global_num_leaf_elements) / (double) mpisize);
-        T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
-        element_offsets[i] = new_first_element_id;
+
+      // Distinguish whether custom element offsets were set:
+      if (forest->set_partition_offset == 0) {
+
+        // Compute element offsets
+        for (i = 0; i < mpisize; i++) {
+          /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
+          new_first_element_id
+            = (((double) i * (long double) forest_from->global_num_leaf_elements) / (double) mpisize);
+          T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
+          element_offsets[i] = new_first_element_id;
+        }
       }
+      else {
+
+        // Apply manually set element offsets.
+        std::copy_n (custom_element_offsets.data (), static_cast<size_t> (mpisize), element_offsets);
+      }
+      // The last entry is the same in both cases.
       element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
     }
     else {

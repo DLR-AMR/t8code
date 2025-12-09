@@ -42,6 +42,30 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_forest_partition (t8_forest_t forest);
 
+/**
+ * Create a new forest that gathers a given forest on one process.
+ * 
+ * This functionality is mostly required for comparison purposes and sanity checks within the testing framework.
+ * 
+ * \param[in] forest_from   the forest that should be gathered on one rank
+ * \param[in] gather_rank   the rank of the process the forest will be gathered on
+ * 
+ * \return The gathered forest: The same as \a forest_from, but all elements are on rank \a gather_rank.
+*/
+t8_forest_t
+t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank);
+
+/**
+ * Manually set the partition offset of the current process.
+ * 
+ * If set, the next partitioning of the forest will use the manually defined element offsets.
+ * 
+ * \param[in,out] forest                the considered forest
+ * \param[in]     first_global_element  the global ID that will become the first local element
+*/
+void
+t8_forest_set_partition_offset (t8_forest_t forest, const t8_gloidx_t first_global_element);
+
 /** Create the element_offset array of a partitioned forest.
  * \param [in,out]  forest The forest.
  * \a forest must be committed before calling this function.
