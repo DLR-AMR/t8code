@@ -1,7 +1,5 @@
 name: Create a new version tag
 
-contents: write
-
 on:
     pull_request:
     workflow_dispatch:
