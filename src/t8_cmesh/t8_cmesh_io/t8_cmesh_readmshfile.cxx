@@ -42,11 +42,11 @@
 #include "t8_windows.h"
 #endif
 
-/* The supported number of gmesh tree classes.
+/** The supported number of gmsh tree classes.
  * Currently, we only support first order trees.
  */
 #define T8_NUM_GMSH_ELEM_CLASSES 15
-/* look-up table to translate the gmsh tree class to a t8code tree class.
+/** Look-up table to translate the gmsh tree class to a t8code tree class.
  */
 /* clang-format off */
 const t8_eclass_t t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
@@ -65,7 +65,7 @@ const t8_eclass_t t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
 };
 /* clang-format on */
 
-/* translate the msh file vertex number to the t8code vertex number.
+/** Translate the msh file vertex number to the t8code vertex number.
  * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
 const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0 },                      /* VERTEX */
@@ -78,7 +78,7 @@ const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0, 1, 3, 2, 4 }           /* PYRAMID */
 };
 
-/* translate the t8code vertex number to the .msh file vertex number.
+/** Translate the t8code vertex number to the .msh file vertex number.
  * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
 const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0 },                      /* VERTEX */
@@ -99,7 +99,7 @@ const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
  *       creating .neigh files with tetgen/triangle is not common and even seems
  *       to not work sometimes */
 
-/* Read a the next line from a file stream that does not start with '#' or
+/** Read a the next line from a file stream that does not start with '#' or
  * contains only whitespaces (tabs etc.)
  *
  * \param [in,out] line     An allocated string to store the line.
@@ -108,7 +108,8 @@ const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
  *                          the new number of bytes is stored in n.
  * \param [in]     fp       The file stream to read from.
  * \return                  The number of read arguments of the last line read.
- *                          negative on failure */
+ *                          negative on failure 
+ */
 static int
 t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
 {

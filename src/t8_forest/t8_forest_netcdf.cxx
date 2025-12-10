@@ -54,6 +54,7 @@
 #include <t8_element_shape.h>
 #include <t8_schemes/t8_scheme.hxx>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /**
@@ -1060,4 +1061,5 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix, const char 
                               netcdf_var_storage_mode, netcdf_mpi_access);
 }
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
