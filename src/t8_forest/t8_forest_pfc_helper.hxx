@@ -20,41 +20,33 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file This file declares some helper functions used for the partition-for-coarsening feature.
+*/
 #ifndef T8_FOREST_PFC_HELPER_H
 #define T8_FOREST_PFC_HELPER_H
+
 #include <t8.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_eclass.h>
 
-// /** Make available to test */
-// void
-// t8_forest_pfc_determine_communication_range (t8_shmem_array_t partition_shmem, int rank, t8_gloidx_t relevant_begin,
-//                                              t8_locidx_t relevant_end, int &begin, int &end, int &num_interactions,
-//                                              bool skip_self);
-
-// void
-// t8_forest_pfc_determine_send_range (t8_shmem_array_t partition_shmem, int rank, t8_procidx_t &begin_procid,
-//                                     t8_procidx_t &end_procid, t8_procidx_t &num_sends, bool skip_self);
-
-// void
-// t8_forest_pfc_determine_recv_range (t8_shmem_array_t partition_shmem, int rank, t8_procidx_t &begin_procid,
-//                                     t8_procidx_t &end_procid, t8_procidx_t &num_recvs, bool skip_self);
-
-/** Determine the sibling with the biggest difference in IDs
- * 
- * \param[in] newscheme                 the refinement scheme
+/** Determine the sibling with the biggest difference in IDs (in the given direction).
+ *
+ * \param[in] scheme                    the refinement scheme
  * \param[in] tree                      the considered tree
- * \param[in] start_element_id_in_tree  the tree-internal ID of the considered element.
- * \param[in] min_instead_max           boolean determining whether to search in direction of in- or decreasing IDs 
- * 
- * \return The extreme sibling ID within tree, i.e., the tree-internal ID of the sibling with the biggest difference to start_element_id_in_tree.
+ * \param[in] start_element_id_in_tree  the tree-internal ID of the considered element
+ * \param[in] min_instead_max           boolean determining whether to search in direction
+ *                                      of in- or decreasing IDs
+ *
+ * \return The extreme sibling ID within tree, i.e., the tree-internal ID of the sibling
+ *         with the biggest difference to start_element_id_in_tree.
 */
 t8_locidx_t
-t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, t8_tree_t tree, t8_locidx_t start_element_id_in_tree,
+t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, t8_tree_t tree, t8_locidx_t start_element_id_in_tree,
                                      bool min_instead_max);
 
 /** Helper function for PFC that computes multiple indices for a given global element ID.
- * 
+ *
  * \param[in]   forest        the forest
  * \param[in]   gelement_id   the global element ID
  * \param[out]  gtree_id      the global ID of the tree holding the element

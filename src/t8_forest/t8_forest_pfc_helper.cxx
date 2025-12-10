@@ -1,3 +1,29 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2015 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+/**
+ * \file This file defines some helper functions used for the partition-for-coarsening feature.
+*/
+
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_types.h>
@@ -5,34 +31,30 @@
 #include <t8_schemes/t8_scheme.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_element.h>
-// #include <t8_element.hxx>
 #include <algorithm>
 
-/** Determine if we need to communicate information to a proc, so that they can determine if they need to adjust their lower bound in the elements_offset (partition)
- * Skip empty procs */
-
 t8_locidx_t
-t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, const t8_tree_t tree,
+t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, const t8_tree_t tree,
                                      const t8_locidx_t start_element_id_in_tree, const bool min_instead_max)
 {
-  // Initialization and memory allocation
+  // Initialization and memory allocation.
   t8_eclass_t tree_class = tree->eclass;
   t8_element_t *parent_possible_sibling, *parent_start;
-  t8_element_new (newscheme, tree_class, 1, &parent_possible_sibling);
-  t8_element_new (newscheme, tree_class, 1, &parent_start);
+  t8_element_new (scheme, tree_class, 1, &parent_possible_sibling);
+  t8_element_new (scheme, tree_class, 1, &parent_start);
 
   // Determine start element from tree and start ID within tree.
   const t8_element_t *start_element = t8_forest_get_tree_leaf_element (tree, start_element_id_in_tree);
 
-  // If the start element is of level zero, return TODO
-  if (newscheme->element_get_level (tree_class, start_element) == 0)
+  // If the start element is of level zero, i.e., the root, it does not have any siblings.
+  if (scheme->element_get_level (tree_class, start_element) == 0)
     return start_element_id_in_tree;
 
-  // Get parent of start element
-  newscheme->element_get_parent (tree_class, start_element, parent_start);
+  // Get parent of start element.
+  scheme->element_get_parent (tree_class, start_element, parent_start);
 
   // Determine the parent's number of children.
-  int num_children = newscheme->element_get_num_children (tree_class, parent_start);
+  int num_children = scheme->element_get_num_children (tree_class, parent_start);
 
   // Determine increment and bound to be used within element loop:
   // (a) increment = -1 and lower bound, or
@@ -59,29 +81,21 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *newscheme, const t8_tree
     // Get element from iteration index.
     const t8_element_t *possible_sibling = t8_forest_get_tree_leaf_element (tree, ielem);
 
-    // Only proceed if possible_sibling is not the root element...
-    if (newscheme->element_get_level (tree_class, possible_sibling) > 0) {
-
-      // Determine parent and check whether it matches parent_start:
-      // - if it does, the current element is a sibling of start_element. Thus, extreme_sibling_id_in_tree is updated.
-      // - else, the iteration has left the family and we can exit.
-      newscheme->element_get_parent (tree_class, possible_sibling, parent_possible_sibling);
-      if (newscheme->element_is_equal (tree_class, parent_start, parent_possible_sibling)) {
-        extreme_sibling_id_in_tree = ielem;
-      }
-      else {
-        break;
-      }
+    // Determine parent and check whether it matches parent_start:
+    // - if it does, the current element is a sibling of start_element. Thus, extreme_sibling_id_in_tree is updated.
+    scheme->element_get_parent (tree_class, possible_sibling, parent_possible_sibling);
+    if (scheme->element_is_equal (tree_class, parent_start, parent_possible_sibling)) {
+      extreme_sibling_id_in_tree = ielem;
     }
-    // ... otherwise leave iteration.
+    // - else, the iteration has left the family and we can exit.
     else {
       break;
     }
   }
 
   // Deallocation
-  t8_element_destroy (newscheme, tree_class, 1, &parent_possible_sibling);
-  t8_element_destroy (newscheme, tree_class, 1, &parent_start);
+  t8_element_destroy (scheme, tree_class, 1, &parent_possible_sibling);
+  t8_element_destroy (scheme, tree_class, 1, &parent_start);
 
   // Return extreme sibling ID.
   return extreme_sibling_id_in_tree;
