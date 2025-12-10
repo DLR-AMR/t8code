@@ -319,6 +319,7 @@ t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t 
 }
 
 #endif
+
 void
 t8_default_scheme_vertex::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
