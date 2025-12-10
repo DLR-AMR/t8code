@@ -30,6 +30,7 @@
 #include <t8.h>
 #include <t8_eclass.h>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /** Type definition for the geometric shape of an element.
@@ -96,6 +97,7 @@ t8_element_shape_to_string (int element_shape);
 int
 t8_element_shape_compare (t8_element_shape_t element_shape1, t8_element_shape_t element_shape2);
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_SHAPE_H */
