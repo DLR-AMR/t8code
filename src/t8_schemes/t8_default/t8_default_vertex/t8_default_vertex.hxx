@@ -619,8 +619,8 @@ class t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTEX
    */
   static int
   element_is_valid (const t8_element_t *element);
-  #endif
-  
+#endif
+
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the

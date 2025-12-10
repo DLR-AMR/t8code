@@ -576,7 +576,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<T8_ECLASS_PYRAM
   int
   element_is_valid (const t8_element_t *element) const;
 
-  #endif
+#endif
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the

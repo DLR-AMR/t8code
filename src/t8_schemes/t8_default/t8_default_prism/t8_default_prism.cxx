@@ -442,7 +442,6 @@ t8_default_scheme_prism::element_is_valid (const t8_element_t *element) const
   return t8_dprism_is_valid ((const t8_dprism_t *) element);
 }
 
-
 #endif /* T8_ENABLE_DEBUG */
 void
 t8_default_scheme_prism::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
