@@ -657,6 +657,21 @@ void
 t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
                                         const t8_element_t *element, const int vertex, double coords[]);
 
+/** Convert points in the reference space of an element to points in the
+ *  reference space of the tree.
+ * \param [in] scheme       The scheme of the forest.
+ * \param [in] tree_class   The eclass of the current tree.
+ * \param [in] element      The element.
+ * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+ *                          in the reference space of the element.
+ * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
+ * \param [out] out_coords  The coordinates of the points in the
+ *                          reference space of the tree.
+ */
+void
+t8_element_get_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
+                                 const double *ref_coords, const size_t num_coords, double out_coords[]);
+
 /** Count how many leaf descendants of a given uniform level an element would produce.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
@@ -773,6 +788,19 @@ t8_element_new (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const i
 */
 void
 t8_element_init (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int length, t8_element_t *elem);
+
+/** Deinitialize an array of allocated elements.
+ * \param [in] scheme      The scheme to use.
+ * \param [in] tree_class  The eclass of the current tree.
+ * \param [in] length      The number of elements to be deinitialized.
+ * \param [in,out] elems   On input an array of \a length many allocated
+ *                         and initialized elements, on output an array of
+ *                         \a length many allocated, but not initialized elements.
+ * \note Call this function if you called \ref t8_element_init on the element pointers.
+ * \see t8_element_init
+ */
+void
+t8_element_deinit (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const int length, t8_element_t *elems);
 
 /** Deallocate an array of elements.
  * \param [in] scheme        The scheme of the forest.

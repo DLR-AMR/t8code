@@ -46,11 +46,11 @@
 #include <Geom_Surface.hxx>
 #include <Geom_Curve.hxx>
 
-/* The lookup table contains the coordinate of each edge of a tetrahedron,
+/** The lookup table contains the coordinate of each edge of a tetrahedron,
  * which is used for the interpolation.
  * For example: On edges 0, 1, and 2 the x coordinates is used to interpolate */
 const int t8_interpolation_coefficient_tet_edge[6] = { 0, 0, 0, 2, 2, 1 };
-/* The lookup table contains the coordinates of each face of a tetrahedron.
+/** The lookup table contains the coordinates of each face of a tetrahedron.
  * For example: face 0 is described by coordinates z and y. */
 const int t8_face_ref_coords_tet[4][2] = { { 2, 1 }, { 0, 1 }, { 0, 1 }, { 0, 2 } };
 

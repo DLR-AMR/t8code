@@ -216,8 +216,8 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
 
   /**
    * Evaluate a point on a CAD curve.
-   * \param [in] edge_index The index of the curve in the CAD shape.
-   * \param [in] param      The parameter on the curve to evaluate.
+   * \param [in] curve_index The index of the curve in the CAD shape.
+   * \param [in] param       The parameter on the curve to evaluate.
    * \return The point on the curve.
    */
   gp_Pnt
@@ -226,7 +226,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   /**
    * Evaluate a point on a CAD surface.
    * \param [in] surface_index The index of the surface in the CAD shape.
-   * \param [in] param      The parameter on the surface to evaluate.
+   * \param [in] params        The parameter on the surface to evaluate.
    * \return The point on the surface.
    */
   gp_Pnt

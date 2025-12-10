@@ -148,6 +148,9 @@ t8_debugf (__attribute__ ((unused)) const char *fmt, ...)
 
 void
 t8_errorf (const char *fmt, ...)
+#ifndef T8_DOXYGEN
+  __attribute__ ((format (printf, 1, 2)))
+#endif
 {
   va_list ap;
 

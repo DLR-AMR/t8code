@@ -55,23 +55,26 @@ const t8_eclass_t t8_cmesh_vtk_type_to_t8_type[82]
  * Enumerator for all types of files readable by t8code. 
  */
 typedef enum vtk_file_type {
-  VTK_FILE_ERROR = -1, /* For Testing purpose. */
+  VTK_FILE_ERROR = -1,  ///< For Testing purpose.
 
-  VTK_SERIAL_FILE = 8,
-  VTK_UNSTRUCTURED_FILE = VTK_SERIAL_FILE,
-  VTK_POLYDATA_FILE,
+  VTK_SERIAL_FILE = 8,                      ///< VTK file type of serial files.
+  VTK_UNSTRUCTURED_FILE = VTK_SERIAL_FILE,  ///< Unstructured file type is the sme as serial.
+  VTK_POLYDATA_FILE,                        ///< VTK polydata file type.
 
-  VTK_PARALLEL_FILE = 16,
-  VTK_PARALLEL_UNSTRUCTURED_FILE = VTK_PARALLEL_FILE, /* For parallel unstructured files. */
-  VTK_PARALLEL_POLYDATA_FILE,
+  VTK_PARALLEL_FILE = 16,                              ///< VTK file type of parallel files.
+  VTK_PARALLEL_UNSTRUCTURED_FILE = VTK_PARALLEL_FILE,  ///< For parallel unstructured files.
+  VTK_PARALLEL_POLYDATA_FILE,                          ///< VTK polydata parallel file type.
 
-  VTK_NUM_TYPES = 5
+  VTK_NUM_TYPES = 5  ///< Number of different vtk file types supported.
 } vtk_file_type_t;
 
 /**
  * Enumerator for the success of reading a vtk file.
  * This is used to indicate whether the reading was successful or not.
  */
-typedef enum vtk_read_success { read_failure = 0, read_success = 1 } vtk_read_success_t;
+typedef enum vtk_read_success {
+  read_failure = 0,  ///< Indicates that file reading was not successful.
+  read_success = 1   ///< Indicates that file reading was successful.
+} vtk_read_success_t;
 
 #endif /* T8_VTK_TYPES */

@@ -27,14 +27,16 @@
 
 #include <t8.h>
 #include <netcdf.h>
-/* Standard netcdf error function */
+/** Standard netcdf error code */
 #define ERRCODE 2
+/** Standard netcdf error function */
 #define ERR(e) \
   { \
     t8_global_productionf ("Error: %s\n", nc_strerror (e)); \
     exit (ERRCODE); \
   }
 #ifndef NC_CONTIGUOUS
+/** Storage mode for netcdf variables. */
 #define NC_CONTIGUOUS 1
 #endif
 #if T8_ENABLE_NETCDF_PAR

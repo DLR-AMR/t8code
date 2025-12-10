@@ -1,3 +1,10 @@
+##DO NOT MERGE
+.vscode/
+.cache/
+tutorials/general_with_adaptions/
+compile_commands.json
+
+
 sc/
 p4est/
 build/

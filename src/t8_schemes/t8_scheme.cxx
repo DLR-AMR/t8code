@@ -143,7 +143,7 @@ t8_element_get_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_c
 }
 
 int
-t8_get_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_class)
+t8_get_max_num_children (const t8_scheme_c *scheme, const t8_eclass_t tree_class)
 {
   return scheme->get_max_num_children (tree_class);
 }
@@ -328,8 +328,8 @@ t8_element_get_last_descendant (const t8_scheme_c *scheme, const t8_eclass_t tre
 }
 
 void
-t8_element_construct_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
-                                t8_element_t *elem2)
+t8_element_get_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
+                          t8_element_t *elem2)
 {
   return scheme->element_construct_successor (tree_class, elem1, elem2);
 }
@@ -342,10 +342,10 @@ t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_ecla
 }
 
 void
-t8_element_get_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *t,
-                                 const double *ref_coords, const size_t num_coords, double coords[])
+t8_element_get_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
+                                 const double *ref_coords, const size_t num_coords, double out_coords[])
 {
-  return scheme->element_get_reference_coords (tree_class, t, ref_coords, num_coords, coords);
+  return scheme->element_get_reference_coords (tree_class, element, ref_coords, num_coords, out_coords);
 }
 
 t8_gloidx_t
@@ -401,6 +401,7 @@ t8_element_deinit (const t8_scheme_c *scheme, const t8_eclass_t tree_class, cons
 {
   return scheme->element_deinit (tree_class, length, elems);
 }
+
 void
 t8_element_destroy (const t8_scheme_c *scheme, const t8_eclass_t tree_class, int length, t8_element_t **elems)
 {

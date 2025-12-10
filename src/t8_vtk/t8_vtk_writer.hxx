@@ -347,6 +347,7 @@ class vtk_writer {
  *
  * \param[in] grid A forest or a cmesh.
  * \param[in, out] unstructuredGrid An unstructuredGrid that we want to fill with the data of \a grid.
+ * \param[in] merge_points Use mergePoints for the vtk writing process.
  */
   void
   t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,

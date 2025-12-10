@@ -42,7 +42,7 @@
 template <std::size_t TDim>
 struct t8_vec_tag
 {
-  static constexpr std::size_t dim = TDim;
+  static constexpr std::size_t dim = TDim;  ///< Dimension of the vector.
 };
 
 /**
@@ -151,7 +151,7 @@ concept T8VecContainerType = std::ranges::range<std::remove_cvref_t<TType>>
 template <std::size_t TDim>
 struct t8_point_tag
 {
-  static constexpr std::size_t dim = TDim;
+  static constexpr std::size_t dim = TDim;  ///< Dimension of the point.
 };
 
 /**
