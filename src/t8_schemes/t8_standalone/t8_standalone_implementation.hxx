@@ -1531,8 +1531,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     * ToDo-Type */
   }
 
-  
-  #endif
+#endif
   /**
  * Fill a string with readable information about the element
  * \param[in] elem The element to translate into human-readable information

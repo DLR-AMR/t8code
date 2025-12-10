@@ -991,7 +991,7 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
-  #endif
+#endif
   /**
  * Fill a string with readable information about the element
  * \param [in] tree_class    The eclass of the current tree.
