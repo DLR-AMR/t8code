@@ -28,7 +28,7 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>

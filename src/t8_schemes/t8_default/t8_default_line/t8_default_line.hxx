@@ -371,7 +371,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<T8_ECLASS_LINE, t8
    *                        \see t8_cmesh_set_join
    *  \param [in] sign      Depending on the topological orientation of the two tree faces,
    *                        either 0 (both faces have opposite orientation)
-   *                        or 1 (both faces have the same top. orientattion).
+   *                        or 1 (both faces have the same top. orientation).
    *                        \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
    *                        the smaller face. A face f of tree T is smaller than
@@ -550,7 +550,7 @@ class t8_default_scheme_line: public t8_default_scheme_common<T8_ECLASS_LINE, t8
    *  reference space of the tree.
    *
    * \param [in] elem         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -590,9 +590,9 @@ class t8_default_scheme_line: public t8_default_scheme_common<T8_ECLASS_LINE, t8
   * and the level of the triangle. This function is only available in the
   * debugging configuration.
   *
-  * \param [in]        elem  The element to print
-  * \param [in]        debug_string  String printed to debug
-  * \param [in]        string_size  String size of \a debug_string.
+  * \param [in] elem          The element to print
+  * \param [in] debug_string  String printed to debug
+  * \param [in] string_size   String size of \a debug_string.
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
@@ -604,32 +604,32 @@ class t8_default_scheme_line: public t8_default_scheme_common<T8_ECLASS_LINE, t8
   set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-   * \param [in] elements Array of elements that are to be packed
-   * \param [in] count Number of elements to pack
-   * \param [in,out] send_buffer Buffer in which to pack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-   * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] comm MPI Communicator
+   * \param [in] elements         Array of elements that are to be packed
+   * \param [in] count            Number of elements to pack
+   * \param [in,out] send_buffer  Buffer in which to pack the elements
+   * \param [in] buffer_size      size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position    the position of the first byte that is not already packed
+   * \param [in] comm             MPI Communicator
   */
   void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                     int *position, sc_MPI_Comm comm) const;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
-   * \param [in] count Number of elements to pack
-   * \param [in] comm MPI Communicator
+   * \param [in] count      Number of elements to pack
+   * \param [in] comm       MPI Communicator
    * \param [out] pack_size upper bound on the message size
   */
   void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-   * \param [in] recvbuf Buffer from which to unpack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-   * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] elements Array of initialised elements that is to be filled from the message
-   * \param [in] count Number of elements to unpack
-   * \param [in] comm MPI Communicator
+   * \param [in] recvbuf        Buffer from which to unpack the elements
+   * \param [in] buffer_size    size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position  the position of the first byte that is not already packed
+   * \param [in] elements       Array of initialised elements that is to be filled from the message
+   * \param [in] count          Number of elements to unpack
+   * \param [in] comm           MPI Communicator
   */
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,

@@ -2,13 +2,12 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
-#include <t8_cmesh.h>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_cmesh_readmshfile.h>
-#include <t8_data/t8_cad.hxx>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
+#include <t8_cad/t8_cad.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <vector>
 #include <array>

@@ -28,9 +28,8 @@
 #include <unordered_map>
 #include <array>
 
-#include <t8_cmesh.h>
-#include <t8_cmesh.hxx>
-#include <t8_data/t8_cad.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
+#include <t8_cad/t8_cad.hxx>
 #include <t8_types/t8_vec.hxx>
 
 /** Struct for mesh deformation. */

@@ -44,7 +44,7 @@
 
 #include <sc_containers.h>                                /* sc library. */
 #include <t8.h>                                           /* General t8code header, always include this. */
-#include <t8_cmesh.h>                                     /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                            /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>                   /* A collection of exemplary cmeshes. */
 #include <t8_forest/t8_forest_general.h>                  /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_geometrical.h>              /* geometrical information of a forest. */
@@ -218,7 +218,7 @@ t8_step5_output_data_to_vtu (t8_forest_t forest, struct t8_step5_data_per_elemen
   }
   {
     /* To write user defined data, we need to extended output function t8_forest_vtk_write_file
-     * from t8_forest_vtk.h. Despite writin user data, it also offers more control over which 
+     * from t8_forest_vtk.h. Despite writing user data, it also offers more control over which 
      * properties of the forest to write. */
     int write_treeid = 1;
     int write_mpirank = 1;
