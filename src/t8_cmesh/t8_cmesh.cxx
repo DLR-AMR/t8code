@@ -2509,13 +2509,3 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   return true;
 }
 
-template <typename geometry_type, typename... _args>
-geometry_type *
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
-{
-  if (cmesh->geometry_handler == NULL) {
-    /* The handler was not constructed, do it now. */
-    cmesh->geometry_handler = new t8_geometry_handler ();
-  }
-  return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
-}

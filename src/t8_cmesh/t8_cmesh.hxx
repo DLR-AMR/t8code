@@ -30,7 +30,7 @@
 #include <vector>
 #include <unordered_map>
 #include <t8_cmesh/t8_cmesh.h>
-//#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 
@@ -104,7 +104,15 @@ t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mp
 
 template <typename geometry_type, typename... _args>
 geometry_type *
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args);
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
+{
+  if (cmesh->geometry_handler == NULL) {
+    /* The handler was not constructed, do it now. */
+    cmesh->geometry_handler = new t8_geometry_handler ();
+  }
+  return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
+}
+
 
 /** Get the list of global trees and local vertex ids a global vertex is connected to.
  * Cmesh Interface function.
