@@ -328,5 +328,5 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
 }
 
 // Instantiate parameterized test to be run for all schemes.
-INSTANTIATE_TEST_SUITE_P (t8_gtest_partititon_for_coarsening, t8_test_partition_for_coarsening_test,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_partition_for_coarsening, t8_test_partition_for_coarsening_test,
                           testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
