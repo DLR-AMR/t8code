@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -153,19 +153,46 @@ TEST_P (t8_test_set_partition_offset_test, test_set_partition_offset)
     EXPECT_EQ (t8_forest_get_num_local_trees (forest_gathered), 0);
   }
 
-  // -------------------------------------------------
-  // ----- (3.) Test another manual partitioning -----
-  // -------------------------------------------------
+  // ----------------------------------------------
+  // ----- (3.) Gather forest on another rank -----
+  // ----------------------------------------------
+
+  // Get number of processes
+  int mpisize;
+  sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+
+  // Choose some nonzero rank to gather on.
+  int other_gather_rank = mpisize / 2;
+
+  t8_global_productionf ("Gather forest on rank .\n");
+
+  // Gather forest on rank 0.
+  t8_forest_ref (base_forest);
+  t8_forest_t forest_gathered_other = t8_forest_new_gather (base_forest, other_gather_rank);
+
+  // Sanity checks: forest_gathered vs. base_forest
+  EXPECT_EQ (forest_gathered_other->global_num_leaf_elements, base_forest->global_num_leaf_elements);
+  EXPECT_EQ (forest_gathered_other->global_num_trees, base_forest->global_num_trees);
+
+  // Check that all elements and trees have been gathered on rank other_gather_rank.
+  if (mpirank == other_gather_rank) {
+    EXPECT_EQ (forest_gathered_other->local_num_leaf_elements, forest_gathered_other->global_num_leaf_elements);
+    EXPECT_EQ (t8_forest_get_num_local_trees (forest_gathered_other), forest_gathered_other->global_num_trees);
+  }
+  else {
+    EXPECT_EQ (forest_gathered_other->local_num_leaf_elements, 0);
+    EXPECT_EQ (t8_forest_get_num_local_trees (forest_gathered_other), 0);
+  }
+
+  // ----------------------------------------------
+  // ----- (4.) Test some manual partitioning -----
+  // ----------------------------------------------
 
   t8_debugf ("Create forest with manual partitioning.\n");
 
   // Initialization
   t8_forest_t forest_manual_partition;
   t8_forest_init (&forest_manual_partition);
-
-  // Get number of processes
-  int mpisize;
-  sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
 
   // Set custom element offsets for partitioning
   // We set the first element to N * p*p / (P*P),
@@ -191,7 +218,7 @@ TEST_P (t8_test_set_partition_offset_test, test_set_partition_offset)
   EXPECT_EQ (forest_manual_partition->local_num_leaf_elements, next_element_offset - my_element_offset);
 
   // -----------------------------------------------
-  // ----- (4.) Sanity check: Repartition back -----
+  // ----- (5.) Sanity check: Repartition back -----
   // -----------------------------------------------
 
   // Repartition the manually partitioned forest
@@ -209,6 +236,7 @@ TEST_P (t8_test_set_partition_offset_test, test_set_partition_offset)
   t8_forest_unref (&forest_manual_partition);
   t8_forest_unref (&forest_repartitioned);
   t8_forest_unref (&forest_gathered);
+  t8_forest_unref (&forest_gathered_other);
 }
 
 // Instantiate parameterized test to be run for all schemes and example cmeshes.
