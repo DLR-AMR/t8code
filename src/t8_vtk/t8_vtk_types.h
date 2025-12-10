@@ -58,7 +58,7 @@ typedef enum vtk_file_type {
   VTK_FILE_ERROR = -1,  ///< For Testing purpose.
 
   VTK_SERIAL_FILE = 8,                      ///< VTK file type of serial files.
-  VTK_UNSTRUCTURED_FILE = VTK_SERIAL_FILE,  ///< Unstructured file type is the sme as serial.
+  VTK_UNSTRUCTURED_FILE = VTK_SERIAL_FILE,  ///< Unstructured file type is the same as serial.
   VTK_POLYDATA_FILE,                        ///< VTK polydata file type.
 
   VTK_PARALLEL_FILE = 16,                              ///< VTK file type of parallel files.
