@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_scheme.cxx
+ * Implements functions declared in \ref t8_scheme.h.
+ */
+
 #include <t8_element.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme.h>

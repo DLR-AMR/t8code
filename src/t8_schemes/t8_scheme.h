@@ -171,7 +171,7 @@ t8_element_get_num_siblings (const t8_scheme_c *scheme, const t8_eclass_t tree_c
  *  \b element are overwritten by the ones of its i-th sibling.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
- * \param [in] element   The element whose sibling will be computed.
+ * \param [in] elem   The element whose sibling will be computed.
  * \param [in] sibid  The id of the sibling computed.
  * \param [in,out] sibling This element's entries will be overwritten by those
  *                    of \b element's sibid-th sibling.
@@ -179,7 +179,7 @@ t8_element_get_num_siblings (const t8_scheme_c *scheme, const t8_eclass_t tree_c
  *                    and match the element class of the sibling.
  */
 void
-t8_element_get_sibling (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
+t8_element_get_sibling (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,
                         const int sibid, t8_element_t *sibling);
 
 /** Compute the number of corners of an element.

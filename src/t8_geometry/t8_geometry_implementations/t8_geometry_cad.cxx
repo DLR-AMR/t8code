@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_geometry_cad.cxx
+ * Implements functions declared in \ref t8_geometry_cad.hxx 
+ *  or the C interface \ref t8_geometry_cad.h.
+ */
+
 #include <t8.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>

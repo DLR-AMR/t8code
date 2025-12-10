@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_ghost.cxx
+ * Implements functions declared in \ref t8_forest_ghost.h.
+ */
+
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>

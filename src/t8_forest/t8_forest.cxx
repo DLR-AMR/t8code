@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest.cxx
+ * TODO
+ */
+
 #include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_types/t8_vec.h>
@@ -3644,6 +3648,7 @@ t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
     return -1;
   }
 }
+
 t8_locidx_t
 t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
 {

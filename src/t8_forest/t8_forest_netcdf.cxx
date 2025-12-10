@@ -20,10 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/*
-Description:
-These functions write a file in the NetCDF-format which represents the given 2D- or 3D-forest
-*/
+/** \file t8_forest_netcdf.cxx
+ * Implements functions declared in \ref t8_forest_netcdf.h.
+ * These functions write a file in the NetCDF-format which represents the given 2D- or 3D-forest
+ */
 
 #include <t8.h>
 #include <netcdf.h>

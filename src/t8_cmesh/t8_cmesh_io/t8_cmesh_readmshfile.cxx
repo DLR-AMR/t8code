@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_readmshfile.cxx
+ * Implements functions declared in \ref t8_cmesh_readmshfile.h.
+ */
+
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh.hxx>

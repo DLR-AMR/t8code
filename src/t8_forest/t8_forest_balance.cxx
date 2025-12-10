@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_balance.cxx
+ * Implements functions declared in \ref t8_forest_balance.h.
+ */
+
+#include <t8.h>
 #include <sc_statistics.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
