@@ -92,5 +92,5 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: doxygen-log
-        path: build/doc/doxygen.log
+        path: build/doc/doxygen.err
 
