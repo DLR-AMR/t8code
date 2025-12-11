@@ -56,7 +56,7 @@
 /** The T8_VERSION_POINT macro as a string */
 #define T8_VERSION_POINT_STRING T8_STRINGIFY_MIDDLE (T8_VERSION_POINT)
 
-/* call this after including all headers */
+/** Call this after including all headers */
 T8_EXTERN_C_BEGIN ();
 
 /** Return the package string of t8code.
@@ -96,7 +96,7 @@ t8_get_version_minor ();
 int
 t8_get_version_patch ();
 
-/* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
+/** Call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();
 
 #endif /* !T8_VERSION_H */
