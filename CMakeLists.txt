@@ -54,7 +54,6 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
-option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -138,14 +137,6 @@ if( T8CODE_ENABLE_OCC )
         message("Found OpenCASCADE")
     endif (OpenCASCADE_FOUND)
 endif( T8CODE_ENABLE_OCC )
-
-if( T8CODE_ENABLE_NETCDF )
-    find_package( NetCDF REQUIRED )
-    if(NetCDF_FOUND)
-        message("Found NetCDF")
-        include(cmake/CheckNetCDFPar.cmake)
-    endif (NetCDF_FOUND)
-endif( T8CODE_ENABLE_NETCDF )
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
