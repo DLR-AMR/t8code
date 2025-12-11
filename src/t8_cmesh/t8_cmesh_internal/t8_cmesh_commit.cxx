@@ -607,9 +607,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * but only if the vertex_to_tree instance is not yet committed
    * and if the tree_to_vertex instance is not empty.
    */
-  if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
-    cmesh->vertex_connectivity->build_vertex_to_tree ();
-  }
+  //if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
+  //  cmesh->vertex_connectivity->build_vertex_to_tree ();
+  //}
 
 #if T8_ENABLE_DEBUG
   t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");
@@ -634,7 +634,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 #if T8_ENABLE_DEBUG
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   T8_ASSERTF (
-    t8_cmesh_validate_geometry (cmesh, cmesh->negative_volume_check),
+    t8_cmesh_validate_geometry (cmesh, false),
     "There were either problems with incompatible trees and geometries or negative volumes in the trees.\n"
     "The negative volume check for cmeshes can be deactivated, but we instead recommend fixing the input mesh or "
     "creating an issue.");

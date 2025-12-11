@@ -58,7 +58,7 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   t8_3D_point vertex[n_vertices];
 
   for (int i = 0; i < n_vertices; ++i) {
-    t8_forest_element_coordinate (forest, which_tree, elements[0], i, &vertex[i].data()[0]);
+    t8_forest_element_coordinate (forest_from, which_tree, elements[0], i, &vertex[i].data()[0]);
   }
 
 
@@ -76,7 +76,7 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   if (std::any_of (adapt_data->midpoints.begin (), adapt_data->midpoints.end (), within_radius)) {
     return 1;
   }
-  if (level > 0) {
+  if (level > 0 && is_family) {
     return -1;
   }
   return 0;
@@ -95,12 +95,25 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
  * the thickness of the refined surface of the spheres.
  */
 static void
-t8_construct_spheres (t8_cmesh_t cmesh, const int initial_level, const double radius_inner, const double radius_outer,
-                      const t8_eclass_t eclass, const char **vtuname, const int step, 
-                      const int num_steps)
+t8_construct_spheres (const int initial_level, const double radius_inner, const double radius_outer,
+                      const t8_eclass_t eclass, const char **vtuname)
 {
-  t8_forest_t forest;
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+
+  const int package_id = sc_package_register (NULL, SC_LP_DEFAULT, "t8_vtk", "t8_vtk_package.");
+
+  t8_cmesh_t cmesh = t8_vtk_reader_cmesh("/group/HPC/Gruppen/AMR/data/ICONCFD/OurOwn/cleaned/iconcfd_cleaned_cmesh_in.pvtu", 
+                              0, 0, sc_MPI_COMM_WORLD, VTK_PARALLEL_UNSTRUCTURED_FILE, package_id, 0);
+  
+  t8_cmesh_t cmesh_partition;
+  t8_debugf ("Partitioning coarse mesh...\n");
+  t8_cmesh_init (&cmesh_partition);
+  t8_cmesh_set_derive (cmesh_partition, cmesh);
+  t8_cmesh_set_partition_uniform (cmesh_partition, initial_level, t8_scheme_new_default ());
+  t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
+  t8_debugf ("Coarse mesh partitioned.\n");
+
+  const int num_steps = 10;
 
 
   /* On each face of a cube, a sphere rises halfway in. 
@@ -111,22 +124,47 @@ t8_construct_spheres (t8_cmesh_t cmesh, const int initial_level, const double ra
     = { t8_3D_point ({ -5.0, 0.0, 3 }), t8_3D_point ({ -4.0, 0.0, 4 }), t8_3D_point ({ -3.0, 0.0, 3 }),
         t8_3D_point ({ -4.0, 0.0, 2}) };
   struct t8_adapt_data adapt_data = { num_spheres, radius_inner, radius_outer, midpoints };
-  
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, comm);
 
-  const t8_3D_point dir({ step * 8.0 / num_steps, 0.0, 0.0 });
-  for (auto &midpoint : adapt_data.midpoints) {
-    t8_axpy(dir, midpoint, 1.0);
+  t8_forest_t forest, forest_adapt, forest_partition;
+  t8_debugf ("Creating initial forest...\n");
+  t8_forest_init (&forest);
+  t8_forest_set_cmesh (forest, cmesh_partition, comm);
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_level (forest, initial_level);
+  t8_forest_commit (forest);
+  t8_debugf ("Initial forest created.\n");
+  
+  for (int step = 0; step < num_steps; ++step) {
+    t8_global_productionf ("Adaptation step %i/%i\n", step+1, num_steps);  
+    t8_forest_init (&forest_adapt);
+    t8_debugf ("Forest initialized for adaptation.\n");
+    t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback_refine, 1);
+    t8_debugf ("Adaptation function set.\n");
+    t8_forest_set_user_data (forest_adapt, &adapt_data);
+    t8_debugf ("User data set for adaptation.\n");
+    t8_forest_commit (forest_adapt);
+    t8_debugf ("Forest adapted.\n");
+    t8_forest_ref (forest_adapt);
+    t8_global_productionf ("Partitioning forest...\n");
+    t8_forest_init (&forest_partition);
+    t8_forest_set_partition (forest_partition, forest_adapt, 0);
+    t8_forest_commit (forest_partition);
+    forest = forest_partition;
+
+    const t8_3D_point dir({ 8.0 / num_steps, 0.0, 0.0 });
+    for (auto &midpoint : adapt_data.midpoints) {
+      t8_axpy(dir, midpoint, 1.0);
+    }
+    char step_vtuname[BUFSIZ];
+    snprintf (step_vtuname, BUFSIZ, "%s_step%i", *vtuname, step);
+    t8_global_productionf ("Output to %s\n", step_vtuname);    
+    t8_forest_write_vtk (forest_partition, step_vtuname);
+    t8_forest_unref (&forest_adapt);
   }
 
-  forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 1, 0, &adapt_data);
+  //forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 1, 0, &adapt_data);
 
-  char step_vtuname[BUFSIZ];
-  snprintf (step_vtuname, BUFSIZ, "%s_step%i", *vtuname, step);
-  t8_forest_write_vtk (forest, step_vtuname);
-  t8_global_productionf ("Output to %s\n", step_vtuname);    
-
-  t8_forest_unref (&forest);
+  t8_forest_unref (&forest_partition);
 }
 
 int
@@ -170,7 +208,7 @@ main (int argc, char **argv)
   /* initialize command line argument parser */
   sc_options_t *opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
-  sc_options_add_int (opt, 'l', "initial level", &initial_level, 4, "Initial uniform refinement level. Default is 4.");
+  sc_options_add_int (opt, 'l', "initial level", &initial_level, 1, "Initial uniform refinement level. Default is 4.");
   sc_options_add_double (opt, 'i', "inner radius", &radius_inner, 0.45,
                          "Inner radius of sphere shells. Default is 0.45.");
   sc_options_add_double (opt, 'o', "outer radius", &radius_outer, 0.55,
@@ -194,28 +232,9 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 <= initial_level && radius_inner <= radius_outer && radius_inner >= 0
            && (eclass_int > 1 || eclass_int < 8 || eclass_int == 0)) {
-    const int num_steps = 10;
-    const int package_id = sc_package_register (NULL, SC_LP_DEFAULT, "t8_vtk", "t8_vtk_package.");
-
-    t8_cmesh_t cmesh = t8_vtk_reader_cmesh("/group/HPC/Gruppen/AMR/data/ICONCFD/OurOwn/cleaned/iconcfd_cleaned_cmesh_in.pvtu", 
-                                0, 0, sc_MPI_COMM_WORLD, VTK_PARALLEL_UNSTRUCTURED_FILE, package_id, 0);
-
-    t8_cmesh_t cmesh_partition;
-    t8_cmesh_init (&cmesh_partition);
-    t8_cmesh_set_partition_uniform (cmesh_partition, initial_level, t8_scheme_new_default ());
-    t8_cmesh_set_derive (cmesh_partition, cmesh);
-    t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
-    t8_cmesh_unref (&cmesh);
-    cmesh = cmesh_partition;
-
-    for (int step = 0; step <= num_steps; ++step) {
-
-      t8_cmesh_ref (cmesh);
-      t8_construct_spheres (cmesh, initial_level, radius_inner, radius_outer, (t8_eclass_t) eclass_int, vtuname, step, num_steps);
+    t8_construct_spheres (initial_level, radius_inner, radius_outer, (t8_eclass_t) eclass_int, vtuname);
     }
-    t8_cmesh_unref (&cmesh);
-  }
-  else {
+    else {
     /* wrong usage */
     t8_global_productionf ("\n\t ERROR: Wrong usage.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);

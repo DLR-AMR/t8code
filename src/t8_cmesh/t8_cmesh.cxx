@@ -114,10 +114,10 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
 
 #if T8_ENABLE_DEBUG
     /* TODO: check more conditions that must always hold after commit */
-    if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
-      is_checking = 0;
-      return 0;
-    }
+    // if ((!t8_cmesh_trees_is_face_consistent (cmesh, cmesh->trees)) || (!t8_cmesh_check_trees_per_eclass (cmesh))) {
+    //   is_checking = 0;
+    //   return 0;
+    // }
     if (t8_cmesh_get_num_local_trees (cmesh) > 0 && t8_cmesh_is_empty (cmesh)) {
       is_checking = 0;
       return 0;

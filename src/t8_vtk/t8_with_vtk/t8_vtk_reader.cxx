@@ -333,10 +333,12 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
   if (!partition || mpirank == main_proc || distributed_grid) {
     t8_vtk_iterate_cells (vtkGrid, cmesh, first_tree, comm, package_id, starting_key);
   }
-
+  t8_debugf ("Commit cmesh\n");
   if (cmesh != NULL) {
     t8_cmesh_commit (cmesh, comm);
   }
+  t8_debugf ("Cmesh committed\n");
+
   return cmesh;
 }
 
