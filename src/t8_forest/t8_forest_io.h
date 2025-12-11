@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest_general.h
- * We define the forest of trees in this file.
+/** \file t8_forest_io.h
+ * TODO
  */
 
 /* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
