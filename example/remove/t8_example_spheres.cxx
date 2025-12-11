@@ -26,6 +26,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_options.h>
+#include <t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -47,39 +48,41 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  t8_3D_point centroid;
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
+  /* dont refine further than level 2 */
+  const int level = scheme->element_get_level (tree_class, elements[0]);
+  if (level >= 7){
+    return 0;
+  }
+
+  const int n_vertices = scheme->element_get_num_corners(tree_class, elements[0]);
+  t8_3D_point vertex[n_vertices];
+
+  for (int i = 0; i < n_vertices; ++i) {
+    t8_forest_element_coordinate (forest, which_tree, elements[0], i, &vertex[i].data()[0]);
+  }
+
 
   auto within_radius
-    = [&] (const t8_3D_point &midpoint) { return t8_dist (midpoint, centroid) < adapt_data->spheres_radius_outer; };
+    = [&] (const t8_3D_point &midpoint) {
+      for (const auto i_vertex : vertex) {
+        const double dist = t8_dist (midpoint, i_vertex);
+        if (dist <= adapt_data->spheres_radius_outer){
+          return level <= (dist*7);
+        }
+      }
+      return false;
+    };
 
   if (std::any_of (adapt_data->midpoints.begin (), adapt_data->midpoints.end (), within_radius)) {
     return 1;
   }
-  return 0;
-}
-
-/* Remove, element if it is within a given radius. */
-static int
-t8_adapt_callback_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                          [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                          [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                          [[maybe_unused]] const int num_elements, t8_element_t *elements[])
-{
-  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
-  T8_ASSERT (adapt_data != NULL);
-
-  t8_3D_point centroid;
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
-
-  auto within_radius
-    = [&] (const t8_3D_point &midpoint) { return t8_dist (midpoint, centroid) < adapt_data->spheres_radius_inner; };
-
-  if (std::any_of (adapt_data->midpoints.begin (), adapt_data->midpoints.end (), within_radius)) {
-    return 1;
+  if (level > 0) {
+    return -1;
   }
   return 0;
 }
+
+
 
 /** Create a cube in which 6 half-spheres are removed, each on one side, 
  * using geometric criteria. The surface of the spheres get refined.
@@ -92,35 +95,36 @@ t8_adapt_callback_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
  * the thickness of the refined surface of the spheres.
  */
 static void
-t8_construct_spheres (const int initial_level, const double radius_inner, const double radius_outer,
-                      const t8_eclass_t eclass, const char **vtuname)
+t8_construct_spheres (t8_cmesh_t cmesh, const int initial_level, const double radius_inner, const double radius_outer,
+                      const t8_eclass_t eclass, const char **vtuname, const int step, 
+                      const int num_steps)
 {
-  t8_cmesh_t cmesh;
   t8_forest_t forest;
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
-  if (eclass != 0) {
-    T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_HEX
-               || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-  }
-  else {
-    cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  }
 
   /* On each face of a cube, a sphere rises halfway in. 
    * Its center is therefore the center of the corresponding surface. */
-  const int num_spheres = 6;
+  const int num_spheres = 4;
+  /* left, up, right, down */
   std::vector<t8_3D_point> midpoints
-    = { t8_3D_point ({ 1.0, 0.5, 0.5 }), t8_3D_point ({ 0.5, 1.0, 0.5 }), t8_3D_point ({ 0.5, 0.5, 1.0 }),
-        t8_3D_point ({ 0.0, 0.5, 0.5 }), t8_3D_point ({ 0.5, 0.0, 0.5 }), t8_3D_point ({ 0.5, 0.5, 0.0 }) };
+    = { t8_3D_point ({ -5.0, 0.0, 3 }), t8_3D_point ({ -4.0, 0.0, 4 }), t8_3D_point ({ -3.0, 0.0, 3 }),
+        t8_3D_point ({ -4.0, 0.0, 2}) };
   struct t8_adapt_data adapt_data = { num_spheres, radius_inner, radius_outer, midpoints };
+  
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, comm);
 
-  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), initial_level, 0, sc_MPI_COMM_WORLD);
-  forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 0, 0, &adapt_data);
-  forest = t8_forest_new_adapt (forest, t8_adapt_callback_remove, 0, 0, &adapt_data);
+  const t8_3D_point dir({ step * 8.0 / num_steps, 0.0, 0.0 });
+  for (auto &midpoint : adapt_data.midpoints) {
+    t8_axpy(dir, midpoint, 1.0);
+  }
 
-  t8_forest_write_vtk (forest, *vtuname);
-  t8_debugf ("Output to %s\n", *vtuname);
+  forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 1, 0, &adapt_data);
+
+  char step_vtuname[BUFSIZ];
+  snprintf (step_vtuname, BUFSIZ, "%s_step%i", *vtuname, step);
+  t8_forest_write_vtk (forest, step_vtuname);
+  t8_global_productionf ("Output to %s\n", step_vtuname);    
 
   t8_forest_unref (&forest);
 }
@@ -169,7 +173,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'l', "initial level", &initial_level, 4, "Initial uniform refinement level. Default is 4.");
   sc_options_add_double (opt, 'i', "inner radius", &radius_inner, 0.45,
                          "Inner radius of sphere shells. Default is 0.45.");
-  sc_options_add_double (opt, 'o', "outer radius", &radius_outer, 0.5,
+  sc_options_add_double (opt, 'o', "outer radius", &radius_outer, 0.55,
                          "Outer radius of sphere shells. Default is 0.5.");
   sc_options_add_int (opt, 'e', "elements", &eclass_int, 0,
                       "Specify the type of elements to use.\n"
@@ -190,7 +194,26 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && 0 <= initial_level && radius_inner <= radius_outer && radius_inner >= 0
            && (eclass_int > 1 || eclass_int < 8 || eclass_int == 0)) {
-    t8_construct_spheres (initial_level, radius_inner, radius_outer, (t8_eclass_t) eclass_int, vtuname);
+    const int num_steps = 10;
+    const int package_id = sc_package_register (NULL, SC_LP_DEFAULT, "t8_vtk", "t8_vtk_package.");
+
+    t8_cmesh_t cmesh = t8_vtk_reader_cmesh("/group/HPC/Gruppen/AMR/data/ICONCFD/OurOwn/cleaned/iconcfd_cleaned_cmesh_in.pvtu", 
+                                0, 0, sc_MPI_COMM_WORLD, VTK_PARALLEL_UNSTRUCTURED_FILE, package_id, 0);
+
+    t8_cmesh_t cmesh_partition;
+    t8_cmesh_init (&cmesh_partition);
+    t8_cmesh_set_partition_uniform (cmesh_partition, initial_level, t8_scheme_new_default ());
+    t8_cmesh_set_derive (cmesh_partition, cmesh);
+    t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
+    t8_cmesh_unref (&cmesh);
+    cmesh = cmesh_partition;
+
+    for (int step = 0; step <= num_steps; ++step) {
+
+      t8_cmesh_ref (cmesh);
+      t8_construct_spheres (cmesh, initial_level, radius_inner, radius_outer, (t8_eclass_t) eclass_int, vtuname, step, num_steps);
+    }
+    t8_cmesh_unref (&cmesh);
   }
   else {
     /* wrong usage */
