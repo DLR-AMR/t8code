@@ -29,6 +29,13 @@ mkdir build
 # Navigate into the build directory
 cd build
 
+DOXYFILE_PATH="../doc/Doxyfile.in"
+
+if [ "$READTHEDOCS" = "True" ]; then
+    echo "Configuring Doxygen for ReadTheDocs: excluding source files"
+    echo "" >> "$DOXYFILE_PATH"
+    echo "EXCLUDE_PATTERNS += *.c *.cc *.cpp *.cxx" >> "$DOXYFILE_PATH"
+fi
 
 cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF
 

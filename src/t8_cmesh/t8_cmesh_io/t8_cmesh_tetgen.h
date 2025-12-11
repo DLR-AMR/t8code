@@ -68,7 +68,7 @@ t8_cmesh_from_tetgen_file (char *fileprefix, int partition, sc_MPI_Comm comm, in
  * \param [in] do_dup     Whether \a comm should be duplicated by cmesh.
  * \param [in,out] fi     The flopinfo struct to use for flop counting.
  * \param [out] snapshot  On output is a copy of fi.
- * \param [in,out] stats      The statinfo array to use for statistics.
+ * \param [in,out] stats  The statinfo array to use for statistics.
  * \param [in] statentry  The index in \a stats to use for statistics.
  * \return                A committed, replicated cmesh constructed from the info
  *                        in the TETGEN files.
