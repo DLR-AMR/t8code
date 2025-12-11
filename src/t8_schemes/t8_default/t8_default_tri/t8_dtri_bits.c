@@ -32,6 +32,7 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #endif
 
+/** Define type for the cube id of triangles. */
 typedef int8_t t8_dtri_cube_id_t;
 
 /* Compute the cube-id of t's ancestor of level "level" in constant time.
@@ -289,7 +290,7 @@ t8_dtri_ancestor (const t8_dtri_t *element, int level, t8_dtri_t *ancestor)
   ancestor->level = level;
 }
 
-/* Compute the coordinates of a given vertex of a triangle/tet */
+/** Compute the coordinates of a given vertex of a triangle/tet. */
 void
 t8_dtri_compute_integer_coords (const t8_dtri_t *element, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
@@ -358,6 +359,12 @@ t8_dtri_compute_integer_coords (const t8_dtri_t *element, const int vertex, t8_d
 #endif
 }
 
+/** Compute the reference coordinates of a vertex of a triangle when the 
+ * tree (level 0 triangle) is embedded in \f$ [0,1]^2 \f$.
+ * \param [in] element      Input triangle.
+ * \param [in] vertex       The number of the vertex.
+ * \param [out] coordinates An array of 2 double that will be filled with the reference coordinates of the vertex.
+ */
 void
 t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *element, const int vertex, double coordinates[T8_DTRI_DIM])
 {
@@ -454,7 +461,7 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *element, const double *ref_co
   }
 }
 
-/* Compute the coordinates of each vertex of a triangle/tet */
+/** Compute the coordinates of each vertex of a triangle/tet. */
 void
 t8_dtri_compute_all_coords (const t8_dtri_t *element, t8_dtri_coord_t coordinates[T8_DTRI_FACES][T8_DTRI_DIM])
 {
@@ -798,6 +805,15 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *element1, const t8_dtri_t *ele
   t8_dtri_ancestor (element1, r_level, nca);
 }
 
+/** Given a triangle and a face of the triangle, compute all children of the triangle that touch the face.
+ * \param [in] element      The triangle.
+ * \param [in] face         A face of \a element.
+ * \param [in,out] children Allocated triangles, in which the children of \a element that share a face with \a face are 
+ *                          stored. They will be stored in order of their child_id.
+ * \param [in] num_children The number of triangles in \a children. Must match the number of children that touch 
+ *                          \a face.
+ * \param [in,out] child_indices The indices of the children in \a children. Only filled if this is null previously.
+ */
 void
 t8_dtri_children_at_face (const t8_dtri_t *element, int face, t8_dtri_t *children[],
                           __attribute__ ((unused)) int num_children, int *child_indices)
@@ -835,6 +851,14 @@ t8_dtri_children_at_face (const t8_dtri_t *element, int face, t8_dtri_t *childre
   }
 }
 
+/** Given a triangle and a face of this triangle. If the face lies on the tree boundary, return the face number of the 
+ * tree face. If not the return value is arbitrary.
+ * \param [in] element        The triangle.
+ * \param [in] face     The index of a face of \a element.
+ * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary. Any arbitrary 
+ *         integer if \a element is not at a tree boundary.
+ * \note For boundary triangles, this function is the inverse of \ref t8_dtri_root_face_to_face
+ */
 int
 t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *element, int face)
 {
@@ -874,6 +898,14 @@ t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *element, int face)
 #endif
 }
 
+/** Given a triangle and a face of the root triangle. If the triangle lies on the tree boundary, return the 
+ * corresponding face number of the triangle. If not the return value is arbitrary.
+ * \param [in] element        The triangle.
+ * \param [in] root_face     The index of a face of the root element.
+ * \return The index of the face of \a element that is a subface of \a root_face, if \a element is on the tree boundary.
+ *         Any arbitrary integer if \a element is not at a tree boundary.
+ * \note For boundary triangles, this function is the inverse of \ref t8_dtri_tree_face
+ */
 int
 t8_dtri_root_face_to_face (__attribute__ ((unused)) t8_dtri_t *element, int root_face)
 {
@@ -915,6 +947,13 @@ t8_dtri_root_face_to_face (__attribute__ ((unused)) t8_dtri_t *element, int root
 #endif
 }
 
+/** Given a face of a triangle and a child number of a child of that face, return the face number of the child of the 
+ * triangle that matches the child face.
+ * \param [in]  triangle The triangle.
+ * \param [in]  face    Then number of the face.
+ * \param [in]  face_child  The child number of a child of the face triangle.
+ * \return              The face number of the face of a child of \a triangle that coincides with \a face_child.
+ */
 int
 t8_dtri_face_child_face (__attribute__ ((unused)) const t8_dtri_t *triangle, int face,
                          __attribute__ ((unused)) int face_child)
