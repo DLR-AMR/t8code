@@ -40,6 +40,49 @@ struct t8_adapt_data
 
 /* Refine, if element is within a given radius. */
 static int
+t8_adapt_callback_refine_no_coarsen (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                          [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                          [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                          [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+{
+  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
+  T8_ASSERT (adapt_data != NULL);
+
+  /* dont refine further than level 2 */
+  const int level = scheme->element_get_level (tree_class, elements[0]);
+  if (level >= 7){
+    return 0;
+  }
+
+  const int n_vertices = scheme->element_get_num_corners(tree_class, elements[0]);
+  t8_3D_point vertex[n_vertices];
+
+  for (int i = 0; i < n_vertices; ++i) {
+    t8_forest_element_coordinate (forest_from, which_tree, elements[0], i, &vertex[i].data()[0]);
+  }
+
+
+  auto within_radius
+    = [&] (const t8_3D_point &midpoint) {
+      for (const auto i_vertex : vertex) {
+        const double dist = t8_dist (midpoint, i_vertex);
+        if (dist <= adapt_data->spheres_radius_outer){
+          return level <= (dist*10);
+        }
+      }
+      return false;
+    };
+
+  if (std::any_of (adapt_data->midpoints.begin (), adapt_data->midpoints.end (), within_radius)) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+/* Refine, if element is within a given radius. */
+static int
 t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                           [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
                           [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
@@ -67,7 +110,7 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
       for (const auto i_vertex : vertex) {
         const double dist = t8_dist (midpoint, i_vertex);
         if (dist <= adapt_data->spheres_radius_outer){
-          return level <= (dist*7);
+          return level <= (dist*10);
         }
       }
       return false;
@@ -76,11 +119,24 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   if (std::any_of (adapt_data->midpoints.begin (), adapt_data->midpoints.end (), within_radius)) {
     return 1;
   }
-  if (level > 0 && is_family) {
+  else if (is_family) {
     return -1;
   }
-  return 0;
+  else {
+    return 0;
+  }
 }
+
+/* Refine, if element is within a given radius. */
+static int
+t8_adapt_callback_coarsen (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                          [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                          [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                          [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+{
+  return is_family ? -1 : 0;
+}
+
 
 
 
@@ -113,7 +169,7 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
   t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
   t8_debugf ("Coarse mesh partitioned.\n");
 
-  const int num_steps = 10;
+  const int num_steps = 20;
 
 
   /* On each face of a cube, a sphere rises halfway in. 
@@ -133,6 +189,12 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
   t8_forest_set_level (forest, initial_level);
   t8_forest_commit (forest);
   t8_debugf ("Initial forest created.\n");
+
+  t8_forest_init (&forest_adapt);
+  t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback_coarsen, 1);
+  t8_forest_commit (forest_adapt);
+  forest = forest_adapt;
+
   
   for (int step = 0; step < num_steps; ++step) {
     t8_global_productionf ("Adaptation step %i/%i\n", step+1, num_steps);  
@@ -141,15 +203,19 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
     t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback_refine, 1);
     t8_debugf ("Adaptation function set.\n");
     t8_forest_set_user_data (forest_adapt, &adapt_data);
+    t8_forest_set_partition (forest_adapt, forest, 0);
     t8_debugf ("User data set for adaptation.\n");
     t8_forest_commit (forest_adapt);
     t8_debugf ("Forest adapted.\n");
-    t8_forest_ref (forest_adapt);
-    t8_global_productionf ("Partitioning forest...\n");
-    t8_forest_init (&forest_partition);
-    t8_forest_set_partition (forest_partition, forest_adapt, 0);
-    t8_forest_commit (forest_partition);
-    forest = forest_partition;
+    forest = forest_adapt;
+
+    t8_forest_init (&forest_adapt);
+    t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback_refine_no_coarsen, 1);
+    t8_forest_set_user_data (forest_adapt, &adapt_data);
+    t8_forest_set_partition (forest_adapt, forest, 0);
+    t8_forest_set_balance (forest_adapt, NULL, 0);
+    t8_forest_commit (forest_adapt);
+    forest = forest_adapt;
 
     const t8_3D_point dir({ 8.0 / num_steps, 0.0, 0.0 });
     for (auto &midpoint : adapt_data.midpoints) {
@@ -158,13 +224,12 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
     char step_vtuname[BUFSIZ];
     snprintf (step_vtuname, BUFSIZ, "%s_step%i", *vtuname, step);
     t8_global_productionf ("Output to %s\n", step_vtuname);    
-    t8_forest_write_vtk (forest_partition, step_vtuname);
-    t8_forest_unref (&forest_adapt);
+    t8_forest_write_vtk (forest, step_vtuname);
   }
 
   //forest = t8_forest_new_adapt (forest, t8_adapt_callback_refine, 1, 0, &adapt_data);
 
-  t8_forest_unref (&forest_partition);
+  t8_forest_unref (&forest);
 }
 
 int
