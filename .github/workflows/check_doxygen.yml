@@ -87,7 +87,6 @@ jobs:
       run: |
         cd build && cd doc 
         doxygen Doxyfile >> doxygen.out 2> doxygen.err
-        echo "Doxygen ran without errors or warnings."
     - name: Upload doxygen log
       if: failure()
       uses: actions/upload-artifact@v5
