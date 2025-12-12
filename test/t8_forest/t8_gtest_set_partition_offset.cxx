@@ -53,6 +53,7 @@
 #include <test/t8_gtest_schemes.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
 
 // t8code
 #include <t8.h>
@@ -229,7 +230,7 @@ TEST_P (t8_test_set_partition_offset_test, test_set_partition_offset)
   t8_forest_commit (forest_repartitioned);
 
   // It has to be the same as the base forest
-  EXPECT_TRUE (t8_forest_is_equal (base_forest, forest_repartitioned));
+  EXPECT_FOREST_EQ (base_forest, forest_repartitioned);
 
   // Destroy the forests.
   t8_forest_unref (&base_forest);
