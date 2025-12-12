@@ -1064,6 +1064,8 @@ EXCLUDE_PATTERNS       =
 
 EXCLUDE_SYMBOLS        = T8_EXTERN_C_BEGIN \
                          T8_EXTERN_C_END
+EXCLUDE_SYMBOLS += T8_EXTERN_C_BEGIN()
+EXCLUDE_SYMBOLS += T8_EXTERN_C_END()
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
@@ -2395,7 +2397,7 @@ MACRO_EXPANSION        = YES
 # The default value is: NO.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_ONLY_PREDEF     = NO
+EXPAND_ONLY_PREDEF     = YES
 
 # If the SEARCH_INCLUDES tag is set to YES, the include files in the
 # INCLUDE_PATH will be searched if a #include is found.
@@ -2434,6 +2436,8 @@ PREDEFINED             = @PACKAGE_PREFIX@_DOXYGEN \
                          T8_ENABLE_OCC \
                          T8_ENABLE_NETCDF \
                          T8_ENABLE_NETCDF_PAR
+PREDEFINED += T8_EXTERN_C_BEGIN()=
+PREDEFINED += T8_EXTERN_C_END()=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
