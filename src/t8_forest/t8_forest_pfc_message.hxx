@@ -223,13 +223,13 @@ class t8_forest_pfc_message {
       // Distinguish send "direction"
       if (iproc > rank) {
         // Sending will be towards higher-rank process, so count siblings in decreasing index direction.
-        const t8_locidx_t min_id = t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, true);
+        const t8_locidx_t min_id = t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, -1);
         num_siblings = index_in_tree - min_id + 1;
       }
       else {
         T8_ASSERT (iproc != rank);
         // Sending will be towards lower-rank process, so count siblings in increasing index direction.
-        const t8_locidx_t max_id = t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, false);
+        const t8_locidx_t max_id = t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, +1);
         num_siblings = max_id - index_in_tree + 1;
       }
     }

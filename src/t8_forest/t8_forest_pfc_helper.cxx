@@ -35,8 +35,10 @@
 
 t8_locidx_t
 t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, const t8_tree_t tree,
-                                     const t8_locidx_t start_element_id_in_tree, const bool min_instead_max)
+                                     const t8_locidx_t start_element_id_in_tree, const int signed_increment)
 {
+  T8_ASSERT (signed_increment == 1 || signed_increment == -1);
+
   // Initialization and memory allocation.
   const t8_eclass_t tree_class = tree->eclass;
   t8_element_t *parent_possible_sibling, *parent_start;
@@ -60,9 +62,8 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, const t8_tree_t 
   // Determine increment and bound to be used within element loop:
   // (a) increment = -1 and lower bound, or
   // (b) increment = +1 and upper bound.
-  const int increment = min_instead_max ? -1 : 1;
   t8_locidx_t extreme_check_id_in_tree;
-  if (min_instead_max) {
+  if (signed_increment < 0) {
     extreme_check_id_in_tree = SC_MAX (0, start_element_id_in_tree - num_children);
   }
   else {
@@ -74,8 +75,8 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, const t8_tree_t 
   t8_locidx_t extreme_sibling_id_in_tree = start_element_id_in_tree;
 
   // Loop over local IDs of all elements that may form a family
-  for (t8_locidx_t ielem = start_element_id_in_tree; (ielem - extreme_check_id_in_tree) * increment <= 0;
-       ielem += increment) {
+  for (t8_locidx_t ielem = start_element_id_in_tree; (ielem - extreme_check_id_in_tree) * signed_increment <= 0;
+       ielem += signed_increment) {
 
     // Get element from iteration index.
     const t8_element_t *possible_sibling = t8_forest_get_tree_leaf_element (tree, ielem);

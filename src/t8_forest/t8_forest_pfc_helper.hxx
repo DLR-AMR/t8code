@@ -35,15 +35,15 @@
  * \param[in] scheme                    the refinement scheme
  * \param[in] tree                      the considered tree
  * \param[in] start_element_id_in_tree  the tree-internal ID of the considered element
- * \param[in] min_instead_max           boolean determining whether to search in direction
- *                                      of in- or decreasing IDs
+ * \param[in] signed_increment          increment determining the search direction. Has to be
+ *                                      either -1 (decreasing IDs) or +1 (increasing IDs).
  *
  * \return The extreme sibling ID within tree, i.e., the tree-internal ID of the sibling
  *         with the biggest difference to start_element_id_in_tree.
 */
 t8_locidx_t
 t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, t8_tree_t tree,
-                                     const t8_locidx_t start_element_id_in_tree, const bool min_instead_max);
+                                     const t8_locidx_t start_element_id_in_tree, const int signed_increment);
 
 /** Helper function for PFC that computes multiple indices for a given global element ID.
  *

@@ -273,8 +273,8 @@ t8_forest_pfc_family_range_around_border (const t8_forest_t forest_from, const t
   // Determine range of global IDs forming the family of first_tree_element, by calling the helper function
   // t8_forest_pfc_extreme_local_sibling twice, i.e., searching in the direction of in- and decreasing indices.
   // Note: The end iterator is one behind the last family member.
-  family_begin = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, true);
-  family_end = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, false) + 1;
+  family_begin = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, -1);
+  family_end = first_tree_element + t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, +1) + 1;
 
   // Check if other processes have the same parent as the current family, so we need to adjust our range.
   for (t8_procidx_t imessage = 0; imessage < (t8_procidx_t) messages.size (); imessage++) {
