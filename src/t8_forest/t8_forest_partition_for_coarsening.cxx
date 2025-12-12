@@ -135,7 +135,7 @@ t8_forest_pfc_send_loop_range (const t8_forest_t forest_from, std::vector<sc_MPI
     if (partition_old[iproc] >= partition_old[iproc + 1] || iproc == forest_from->mpirank)
       continue;
 
-    // Construct and fill message of type MessageType (see t8_forest_pfc_message_c).
+    // Construct and fill message of type MessageType (see t8_forest_pfc_message).
     MessageType message (forest_from->scheme, iproc, forest_from->mpicomm);
     message.fill (forest_from);
 
@@ -235,8 +235,8 @@ t8_forest_pfc_recv_loop_range (const t8_forest_t forest_from, std::vector<Messag
 */
 static int
 t8_forest_pfc_family_range_around_border (const t8_forest_t forest_from, const t8_gloidx_t border_element_id,
-                                          const std::vector<t8_forest_pfc_message_c> &messages,
-                                          t8_gloidx_t &family_begin, t8_gloidx_t &family_end)
+                                          const std::vector<t8_forest_pfc_message> &messages, t8_gloidx_t &family_begin,
+                                          t8_gloidx_t &family_end)
 {
   // From the element with global ID border_element_id, determine
   // - the global tree ID
@@ -316,7 +316,7 @@ t8_forest_pfc_family_range_around_border (const t8_forest_t forest_from, const t
 */
 static void
 t8_forest_pfc_correct_local_offsets (const t8_forest_t forest_from, const t8_shmem_array_t partition_new_shmem,
-                                     const std::vector<t8_forest_pfc_message_c> &messages,
+                                     const std::vector<t8_forest_pfc_message> &messages,
                                      std::vector<t8_gloidx_t> &corrected_local_offsets)
 {
   T8_ASSERT (t8_forest_is_committed (forest_from));
@@ -378,11 +378,11 @@ t8_forest_pfc_correction_offsets (t8_forest_t forest)
 
     // Send requests to other processes.
     std::vector<sc_MPI_Request> requests;
-    t8_forest_pfc_send_loop_range<t8_forest_pfc_message_c> (forest_old, requests);
+    t8_forest_pfc_send_loop_range<t8_forest_pfc_message> (forest_old, requests);
 
     // Receive messages from other processes.
-    std::vector<t8_forest_pfc_message_c> messages;
-    t8_forest_pfc_recv_loop_range<t8_forest_pfc_message_c> (forest_old, messages);
+    std::vector<t8_forest_pfc_message> messages;
+    t8_forest_pfc_recv_loop_range<t8_forest_pfc_message> (forest_old, messages);
 
     // Wait for Isend requests.
     const int mpiret = sc_MPI_Waitall (requests.size (), requests.data (), sc_MPI_STATUSES_IGNORE);

@@ -43,7 +43,7 @@
  * between the processes that will be required to decide on whether and where
  * families are split at process boundaries.
 */
-class t8_forest_pfc_message_c {
+class t8_forest_pfc_message {
  public:
   /**
    * Pack the data to prepare sending.
@@ -189,7 +189,7 @@ class t8_forest_pfc_message_c {
   }
 
   /**
-   * Fill this instance of class t8_forest_pfc_message_c, i.e., setting the member viarables based on the given forest.
+   * Fill this instance of class t8_forest_pfc_message, i.e., setting the member viarables based on the given forest.
    *
    * \param[in] forest the forest
   */
@@ -253,7 +253,7 @@ class t8_forest_pfc_message_c {
   }
 
   /**
-   * Constructor of class t8_forest_pfc_message_c.
+   * Constructor of class t8_forest_pfc_message.
    *
    * The arguments are directly copied into the corresponding member variables;
    * the remaining member variables are set to default values.
@@ -263,19 +263,19 @@ class t8_forest_pfc_message_c {
    * \param[in] comm      the MPI communicator
    *
   */
-  t8_forest_pfc_message_c (const t8_scheme_c *scheme, t8_procidx_t iproc, sc_MPI_Comm comm)
+  t8_forest_pfc_message (const t8_scheme_c *scheme, t8_procidx_t iproc, sc_MPI_Comm comm)
     : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), myscheme (scheme), comm (comm), iproc (iproc),
       message_tag (T8_PFC_MESSAGE), parent (NULL), allocated_parent (0)
   {
   }
 
   /// No (implicit) copy constructor.
-  t8_forest_pfc_message_c (const t8_forest_pfc_message_c &other) = delete;
+  t8_forest_pfc_message (const t8_forest_pfc_message &other) = delete;
 
   /**
    * Move constructor.
   */
-  t8_forest_pfc_message_c (t8_forest_pfc_message_c &&other)
+  t8_forest_pfc_message (t8_forest_pfc_message &&other)
     : itree { other.itree }, eclass (other.eclass), num_siblings (other.num_siblings), myscheme (other.myscheme),
       comm (other.comm), iproc (other.iproc), parent (other.parent), allocated_parent (other.allocated_parent)
   {
@@ -288,7 +288,7 @@ class t8_forest_pfc_message_c {
   /**
    * Default destructor
   */
-  ~t8_forest_pfc_message_c ()
+  ~t8_forest_pfc_message ()
   {
     if (allocated_parent) {
       myscheme->element_destroy (eclass, 1, &parent);
