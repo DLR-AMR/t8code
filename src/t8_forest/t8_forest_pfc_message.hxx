@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2024 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -151,7 +151,7 @@ class t8_forest_pfc_message_c {
    * \param[out]  request the MPI send request
   */
   void
-  mpi_Isend (t8_forest_t forest, sc_MPI_Request &request)
+  mpi_Isend (const t8_forest_t forest, sc_MPI_Request &request)
   {
     /* Allocate buffer */
     int buffer_size = pack_size ();
@@ -162,15 +162,16 @@ class t8_forest_pfc_message_c {
     pack (send_buffer, buffer_size, &position);
 
     /* Send buffer */
-    int mpiret = sc_MPI_Isend (send_buffer, position, sc_MPI_PACKED, iproc, message_tag, forest->mpicomm, &request);
+    const int mpiret
+      = sc_MPI_Isend (send_buffer, position, sc_MPI_PACKED, iproc, message_tag, forest->mpicomm, &request);
     SC_CHECK_MPI (mpiret);
     T8_FREE (send_buffer);
   }
 
   /**
-   * Receive data from another process.
+   * Receive data from another process. Probes for the size of the message before receiving
    *
-   * \param[out]  recv_buf  the receive buffer
+   * \param[in, out]  recv_buf  the receive buffer. The function allocates the right size of memory to receive the message. 
    * \param[out]  buf_size  the size of the buffer
   */
   void
@@ -183,7 +184,7 @@ class t8_forest_pfc_message_c {
     recv_buf = T8_ALLOC (char, buf_size);
 
     /* Actually receive buffer. */
-    int mpiret = sc_MPI_Recv (recv_buf, buf_size, sc_MPI_PACKED, iproc, message_tag, comm, sc_MPI_STATUS_IGNORE);
+    const int mpiret = sc_MPI_Recv (recv_buf, buf_size, sc_MPI_PACKED, iproc, message_tag, comm, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -196,12 +197,12 @@ class t8_forest_pfc_message_c {
   fill (t8_forest_t forest)
   {
     // Set mpi rank and partition element offsets.
-    t8_procidx_t rank = forest->mpirank;
+    const t8_procidx_t rank = forest->mpirank;
     const t8_gloidx_t *partition = t8_shmem_array_get_gloidx_array (forest->element_offsets);
 
     // Determine the global element ID of the current process ("rank") that is closest to the elements of process iproc:
     // If iproc < rank, the first element is closest to iproc; otherwise, the last one is.
-    t8_gloidx_t closest_to_rank_gid = (iproc <= rank) ? partition[rank] : partition[rank + 1] - 1;
+    const t8_gloidx_t closest_to_rank_gid = (iproc <= rank) ? partition[rank] : partition[rank + 1] - 1;
 
     // Use helper function to get various element and tree indices.
     t8_tree_t tree;
@@ -227,13 +228,13 @@ class t8_forest_pfc_message_c {
       // Distinguish send "direction"
       if (iproc > rank) {
         // Sending will be towards higher-rank process, so count siblings in decreasing index direction.
-        t8_locidx_t min_id = t8_forest_pfc_extreme_local_sibling (myscheme, tree, index_in_tree, true);
+        const t8_locidx_t min_id = t8_forest_pfc_extreme_local_sibling (myscheme, tree, index_in_tree, true);
         num_siblings = index_in_tree - min_id + 1;
       }
       else {
         T8_ASSERT (iproc != rank);
         // Sending will be towards lower-rank process, so count siblings in increasing index direction.
-        t8_locidx_t max_id = t8_forest_pfc_extreme_local_sibling (myscheme, tree, index_in_tree, false);
+        const t8_locidx_t max_id = t8_forest_pfc_extreme_local_sibling (myscheme, tree, index_in_tree, false);
         num_siblings = max_id - index_in_tree + 1;
       }
     }

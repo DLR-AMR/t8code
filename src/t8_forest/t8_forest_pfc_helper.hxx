@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -42,8 +42,8 @@
  *         with the biggest difference to start_element_id_in_tree.
 */
 t8_locidx_t
-t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, t8_tree_t tree, t8_locidx_t start_element_id_in_tree,
-                                     bool min_instead_max);
+t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, t8_tree_t tree,
+                                     const t8_locidx_t start_element_id_in_tree, const bool min_instead_max);
 
 /** Helper function for PFC that computes multiple indices for a given global element ID.
  *
@@ -55,6 +55,7 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, t8_tree_t tree, 
  * \param[out]  element       pointer to the considered element
 */
 void
-t8_forest_pfc_helper_index_in_tree_from_globalid (t8_forest_t forest, t8_gloidx_t gelement_id, t8_gloidx_t &gtree_id,
-                                                  t8_tree_t &tree, t8_locidx_t &index_in_tree, t8_element_t *&element);
+t8_forest_pfc_helper_index_in_tree_from_globalid (const t8_forest_t forest, const t8_gloidx_t gelement_id,
+                                                  t8_gloidx_t &gtree_id, t8_tree_t &tree, t8_locidx_t &index_in_tree,
+                                                  t8_element_t *&element);
 #endif
