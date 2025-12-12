@@ -95,7 +95,7 @@ refine_some_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
                       [[maybe_unused]] t8_element_t *elements[])
 {
   // Refine some elements.
-  return (lelement_id % (forest_from->mpirank + 1) ? 1 : 0;
+  if (lelement_id % (forest_from->mpirank + 1) == 1) {
     return 1;
   }
   return 0;

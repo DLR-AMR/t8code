@@ -95,7 +95,6 @@ class t8_forest_pfc_message {
 
     /* unpack: parent */
     t8_element_new (scheme, eclass, 1, &parent);
-    allocated_parent = true;
     t8_element_MPI_Unpack (scheme, eclass, buf, buf_size, position, &parent, 1, comm);
 
     /* unpack: num_siblings */
@@ -129,7 +128,7 @@ class t8_forest_pfc_message {
     message_size += datasize;
 
     /* add size: parent */
-    if (parent != NULL) {
+    if (parent != nullptr) {
       t8_element_MPI_Pack_size (scheme, eclass, 1, comm, &datasize);
       message_size += datasize;
     }
@@ -219,7 +218,6 @@ class t8_forest_pfc_message {
     else {
       // Compute parent.
       t8_element_new (scheme, eclass, 1, &parent);
-      allocated_parent = true;
       scheme->element_get_parent (eclass, element_closest_to_receiver, parent);
 
       // Distinguish send "direction"
@@ -261,8 +259,8 @@ class t8_forest_pfc_message {
    *
   */
   t8_forest_pfc_message (const t8_scheme_c *scheme, t8_procidx_t iproc, sc_MPI_Comm comm)
-    : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), scheme (scheme), comm (comm), iproc (iproc), parent (NULL),
-      allocated_parent (0)
+    : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), scheme (scheme), comm (comm), iproc (iproc),
+      parent (nullptr)
   {
   }
 
@@ -274,11 +272,10 @@ class t8_forest_pfc_message {
   */
   t8_forest_pfc_message (t8_forest_pfc_message &&other)
     : itree { other.itree }, eclass (other.eclass), num_siblings (other.num_siblings), scheme (other.scheme),
-      comm (other.comm), iproc (other.iproc), parent (other.parent), allocated_parent (other.allocated_parent)
+      comm (other.comm), iproc (other.iproc), parent (other.parent)
   {
-    if (allocated_parent) {
-      other.parent = NULL;
-      other.allocated_parent = false;
+    if (parent != nullptr) {
+      other.parent = nullptr;
     }
   }
 
@@ -287,9 +284,9 @@ class t8_forest_pfc_message {
   */
   ~t8_forest_pfc_message ()
   {
-    if (allocated_parent) {
+    if (parent != nullptr) {
       scheme->element_destroy (eclass, 1, &parent);
-      parent = NULL; /*TODO: necessary?*/
+      parent = nullptr; /*TODO: necessary?*/
     }
   }
 
@@ -304,8 +301,7 @@ class t8_forest_pfc_message {
   t8_procidx_t iproc;        /**< the process to send data to */
 
  private:
-  t8_element_t *parent;  /**< The parent element to be sent. */
-  bool allocated_parent; /**< Are we responsible for memory management of parent? */
+  t8_element_t *parent; /**< The parent element to be sent. */
 };
 
 #endif
