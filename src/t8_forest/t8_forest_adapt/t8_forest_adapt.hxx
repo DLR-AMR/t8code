@@ -39,7 +39,7 @@ namespace t8_forest_adapt{
    * KEEP: The element should remain as is.
    * REFINE: The element should be refined.
   */
-  enum int8_t AdaptAction {
+  enum adapt_action {
     COARSEN = -1,
     KEEP = 0,
     REFINE = 1
@@ -48,9 +48,76 @@ namespace t8_forest_adapt{
   /**
    * Callback function type for element adaptation.
    */
-  using element_callback = std::function<AdaptAction(const t8_forest_t forest, const t8_locidx_t ltreeid,
-                                                     const t8_element_t *element, const t8_scheme *scheme)>;
+  using element_callback = std::function<adapt_action(const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                                     const t8_element_t *element, const t8_scheme *scheme, const t8_eclass_t tree_class)>;
 
+  /**  * Function to manipulate elements based on the specified adaptation action.
+   * \tparam action The adaptation action to be performed.
+   * \param [in, out] elements         The element array to be modified.
+   * \param [in]     elements_from    The source element array.
+   * \param [in]     scheme           The element scheme.
+   * \param [in]     tree_class       The eclass of the tree used by the scheme
+   * \param [in]     elements_index   The index in the target element array.
+   * \param [in]     elements_from_index The index in the source element array.
+   * \return                        The number of elements created in the target array.
+   */
+  template <adapt_action action>
+  int manipulate_elements (t8_element_array_t *elements,
+                           const t8_element_array_t *elements_from,
+                           const t8_scheme *scheme,
+                           const t8_eclass_t tree_class
+                           const t8_locidx_t elements_index,
+                           const t8_locidx_t elements_from_index);
+
+  template <>
+  int manipulate_elements<adapt_action::KEEP> (t8_element_array_t *elements,
+                           const t8_element_array_t *elements_from,
+                           const t8_scheme *scheme,
+                           const t8_eclass_t tree_class
+                           const t8_locidx_t elements_index,
+                           const t8_locidx_t elements_from_index)
+  {
+    t8_element_t *element = t8_element_array_push (elements);
+    scheme->element_copy (tree_class, elements_from[elements_from_index], element);
+    return 1;
+  };
+
+  template <>
+  int manipulate_elements<adapt_acation::COARSEN> (t8_element_array_t *elements,
+                           const t8_element_array_t *elements_from,
+                           const t8_scheme *scheme,
+                           const t8_eclass_t tree_class,
+                           const t8_locidx_t elements_index,
+                           const t8_locidx_t elements_from_index)
+  {
+    t8_element_t *element = t8_element_array_push (elements);
+    T8_ASSERT (scheme->element_get_level (tree_class, elements_from[elements_from_index]) > 0);
+    scheme->element_get_parent (tree_class, elements_from[elements_from_index], element);
+
+    /* Hier eventuell noch was mit num_children = num_siblings*/
+    return 1;
+  };
+
+  template <>
+  int manipulate_elements<adapt_action::REFINE> (t8_element_array_t *elements,
+                           const t8_element_array_t *elements_from,
+                           const t8_scheme *scheme,
+                           const t8_eclass_t tree_class,
+                           const t8_locidx_t elements_index,
+                           const t8_locidx_t elements_from_index)
+  {
+    const int num_children = scheme->element_get_num_children (tree_class, elements_from[elements_from_index]);
+    /* CONTINUE WORK HERE */
+    (void) t8_element_array_push_count (elements, num_children);
+    for (int ichildren = 0; ichildren < num_children; ichildren++) {
+      elements[ichildren + elements_index] = t8_element_array_index_locidx_mutable (elements, *el_inserted + ichildren);
+    }
+    return num_children;
+  };
+
+
+  /**  * Class implementing a basic adaptation strategy for a forest of trees.
+   */
 class basic_adaptation {
   public:
     /** Constructor for basic_adaptation class.
@@ -122,24 +189,21 @@ class basic_adaptation {
     };
 
     inline bool
-    family_check(const t8_element_array_t *telements_from, const t8_locidx_t offset, const t8_scheme *scheme, const t8_eclass_t tree_class){
+    family_check(const t8_element_array_t *tree_elements_from, std::vector<t8_element_t *> &elements_from, const t8_locidx_t offset, const t8_scheme *scheme, const t8_eclass_t tree_class){
       const int num_siblings = scheme->element_get_num_siblings (tree_class, t8_element_array_index_locidx (telements_from, offset));
-      t8_element_t **elements_from = T8_ALLOC (t8_element_t *, num_siblings);
       for (int isibling = 0; isibling < num_siblings; isibling++) {
         elements_from[isibling] = (t8_element_t *) t8_element_array_index_locidx_mutable (telements_from, offset + (t8_locidx_t )isibling);
         if (scheme->element_get_child_id (tree_class, elements_from[isibling]) != isibling) {
-          T8_FREE (elements_from);
           return false;
         }
       }
       const bool is_family = scheme->elements_are_family (tree_class, elements_from);
-      T8_FREE (elements_from);
       return is_family;
     }
 
     t8_forest_t forest;                       /**< The target forest */ 
     t8_forest_t forest_from;                  /**< The source forest to adapt from. */
-    std::vector<AdaptAction> adapt_actions;   /**< The adaptation actions for each element in the source forest. */
+    std::vector<adapt_action> adapt_actions;  /**< The adaptation actions for each element in the source forest. */
     bool profiling = false;                   /**< Flag to indicate if profiling is enabled. */
 }
 
