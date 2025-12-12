@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ refine_some_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
                       [[maybe_unused]] t8_element_t *elements[])
 {
   // Refine some elements.
-  if (lelement_id % (forest_from->mpirank + 1) == 1) {
+  return (lelement_id % (forest_from->mpirank + 1) ? 1 : 0;
     return 1;
   }
   return 0;
