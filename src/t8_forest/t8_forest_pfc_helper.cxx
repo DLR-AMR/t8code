@@ -37,7 +37,8 @@ t8_locidx_t
 t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, const t8_tree_t tree,
                                      const t8_locidx_t start_element_id_in_tree, const int signed_increment)
 {
-  T8_ASSERT (signed_increment == 1 || signed_increment == -1);
+  // The increment may either be +1 or -1.
+  T8_ASSERT (abs (signed_increment) == 1);
 
   // Initialization and memory allocation.
   const t8_eclass_t tree_class = tree->eclass;
@@ -59,10 +60,10 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, const t8_tree_t 
   // Determine the parent's number of children.
   const int num_children = scheme->element_get_num_children (tree_class, parent_start);
 
-  // Determine bound to be used within element loop (making sure to stay within element range);
+  // Determine bound to be used within element loop (and make sure to stay within tree element range);
   t8_locidx_t extreme_check_id_in_tree = start_element_id_in_tree + signed_increment * num_children;
-  extreme_check_id_in_tree = SC_MAX (0, SC_MIN (start_element_id_in_tree + signed_increment * num_children,
-                                                t8_forest_get_tree_leaf_element_count (tree)));
+  extreme_check_id_in_tree
+    = SC_MAX (0, SC_MIN (extreme_check_id_in_tree, t8_forest_get_tree_leaf_element_count (tree) - 1));
 
   // Initialize extreme_sibling_id_in_tree.
   t8_locidx_t extreme_sibling_id_in_tree = start_element_id_in_tree;
