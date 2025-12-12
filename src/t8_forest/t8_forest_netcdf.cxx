@@ -20,21 +20,23 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/*
-Description:
-These functions write a file in the NetCDF-format which represents the given 2D- or 3D-forest
-*/
+/** \file t8_forest_netcdf.cxx
+ * Implements functions declared in \ref t8_forest_netcdf.h.
+ * These functions write a file in the NetCDF-format which represents the given 2D- or 3D-forest
+ */
 
 #include <t8.h>
 #include <netcdf.h>
-/* Standard netcdf error function */
+/** Standard netcdf error code */
 #define ERRCODE 2
+/** Standard netcdf error function */
 #define ERR(e) \
   { \
     t8_global_productionf ("Error: %s\n", nc_strerror (e)); \
     exit (ERRCODE); \
   }
 #ifndef NC_CONTIGUOUS
+/** Storage mode for netcdf variables. */
 #define NC_CONTIGUOUS 1
 #endif
 #if T8_ENABLE_NETCDF_PAR
@@ -54,6 +56,7 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <t8_element_shape.h>
 #include <t8_schemes/t8_scheme.hxx>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /**
@@ -1060,4 +1063,5 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix, const char 
                               netcdf_var_storage_mode, netcdf_mpi_access);
 }
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
