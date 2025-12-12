@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_standalone_implementation.hxx
+ *  A templated implementation of the scheme interface based on cutting planes.
+ */
+
 #ifndef T8_STANDALONE_IMPLEMENTATION_HXX
 #define T8_STANDALONE_IMPLEMENTATION_HXX
 

@@ -36,10 +36,12 @@
 
 #include <t8.h>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /** This enumeration contains all possible element classes. */
 typedef enum t8_eclass {
+  /** Zero-dimensional element class. */
   T8_ECLASS_ZERO = 0,
   /** The vertex is the only zero-dimensional element class. */
   T8_ECLASS_VERTEX = T8_ECLASS_ZERO,
@@ -72,21 +74,25 @@ typedef enum t8_eclass {
 #define T8_ECLASS_MAX_EDGES 12
 /** The maximum number of boundary edges a 2D element class can have. */
 #define T8_ECLASS_MAX_EDGES_2D 4
-/** The maximum number of cornes a 2-dimensional element class can have. */
+/** The maximum number of corners a 2-dimensional element class can have. */
 #define T8_ECLASS_MAX_CORNERS_2D 4
-/** The maximum number of cornes an element class can have. */
+/** The maximum number of corners an element class can have. */
 #define T8_ECLASS_MAX_CORNERS 8
 /** The maximal possible dimension for an eclass */
 #define T8_ECLASS_MAX_DIM 3
 
 /* clang-format off */
 
-/* Define eclass values at a single point to use them for c and cpp. */
-
+/** Define eclass values at a single point to use them for c and cpp. */
+/** Dimension of each eclass. */
 #define T8_ECLASS_TO_DIMENSION_VALUES      { 0, 1, 2, 2, 3, 3, 3, 3 }
+/** Number of faces of each eclass. */
 #define T8_ECLASS_NUM_FACES_VALUES         { 0, 2, 4, 3, 6, 4, 5, 5 }
+/** Maximum number of faces of each eclass. */
 #define T8_ECLASS_MAX_NUM_FACES_VALUES     { 0, 2, 4, 6 }
+/** Maximum number of children of each eclass. */
 #define T8_ECLASS_MAX_NUM_CHILDREN_VALUES  { 1, 2, 4, 4, 8, 8, 8, 10 }
+/** Mapping of face vertex to tree vertex for each eclass. */
 #define T8_FACE_VERTEX_TO_TREE_VERTEX_VALUES {\
   { { -1 } },                                                                                         /* vertex */    \
   { { 0 }, { 1 } },                                                                                   /* line */      \
@@ -97,7 +103,7 @@ typedef enum t8_eclass {
   { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 0, 1, 2 }, { 3, 4, 5 } },                       /* prism */     \
   { { 0, 2, 4 }, { 1, 3, 4 }, { 0, 1, 4 }, { 2, 3, 4 }, { 0, 1, 2, 3 } }                              /* pyramid */   \
 }
-
+/** Mapping of face edge to tree edge for each eclass. */
 #define T8_FACE_EDGE_TO_TREE_EDGE_VALUES {\
   { { -1 } },                                                                                             /* vertex */      \
   { { 0 } },                                                                                              /* line */        \
@@ -108,7 +114,7 @@ typedef enum t8_eclass {
   { { 0, 7, 3, 6 }, { 1, 8, 4, 7 }, { 2, 6, 5, 8 }, { 0, 1, 2 }, { 3, 4, 5 } },                           /* prism */       \
   { { -1 } },                                                                                             /* pyramid */     \
 }
-
+/** Mapping of face to edge neighbor for each eclass. */
 #define T8_FACE_TO_EDGE_NEIGHBOR_VALUES {\
   { { -1 } },                                                                                             /* vertex */    \
   { { -1 } },                                                                                             /* line */      \
@@ -119,7 +125,7 @@ typedef enum t8_eclass {
   { { 1, 2, 4, 5 }, { 0, 2, 3, 5 }, { 0, 1, 3, 4 }, { 6, 7, 8 }, { 6, 7, 8 } },                           /* prism */     \
   { { -1 } },                                                                                             /* pyramid */   \
 }
-
+/** Mapping of edge vertex to tree vertex for each eclass. */
 #define T8_EDGE_VERTEX_TO_TREE_VERTEX_VALUES {\
   { { -1 } },                                                                                                                 /* vertex */    \
   { { 0 }, { 1 } },                                                                                                           /* line */      \
@@ -130,7 +136,7 @@ typedef enum t8_eclass {
   { { 1, 2 }, { 0, 2 }, { 0, 1 }, { 4, 5 }, { 3, 5 }, { 3, 4 }, { 1, 4 }, { 2, 5 }, { 0, 3 } },                               /* prism */     \
   { { -1 } },                                                                                                                 /* pyramid */   \
 }
-
+/** Mapping of edge to face for each eclass. */
 #define T8_EDGE_TO_FACE_VALUES {\
   { { -1 } },                                                                                                                   /* vertex */    \
   { { 0 } },                                                                                                                    /* line */      \
@@ -141,7 +147,7 @@ typedef enum t8_eclass {
   { { 0, 3 }, { 1, 3 }, { 2, 3 }, { 0, 4 }, { 1, 4 }, { 2, 4 }, { 0, 2 }, { 0, 1 }, { 1, 2 } },                                 /* prism */     \
   { { -1 } },                                                                                                                   /* pyramid */   \
 }
-
+/** Face orientation values for each eclass. */
 #define T8_ECLASS_FACE_ORIENTATION_VALUES {\
   { 0, -1, -1, -1, -1, -1 }, /* vertex */   \
   { 0, 0, -1, -1, -1, -1 },  /* line */     \
@@ -152,13 +158,16 @@ typedef enum t8_eclass {
   { 1, 0, 1, 0, 1, -1 },     /* prism */    \
   { 0, 1, 1, 0, 0, -1 }      /* pyramid */  \
 }
-
+/** The reference faces of normal tets. */
 #define T8_REFERENCE_FACE_NORMAL_TET_VALUES { { -1, 0, 0 }, { 1, 0, -1 }, { 0, -1, 1 }, { 0, 1, 0 } }
 
+/** Number of vertices for each eclass. */
 #define T8_ECLASS_NUM_VERTICES_VALUES { 1, 2, 4, 3, 8, 4, 6, 5 }
+/** Number of edges for each eclass. */
 #define T8_ECLASS_NUM_EDGES_VALUES { 0, 1, 4, 3, 12, 6, 9, 8 }
+/** VTK type for each eclass. */
 #define T8_ECLASS_VTK_TYPE_VALUES { 1, 3, 9, 5, 12, 10, 13, 14 }
-
+/** Mapping of vtk to t8code corner numbers for each eclass. */
 #define T8_ECLASS_VTK_TO_T8_CORNER_NUMBER_VALUES {\
   { 0, -1, -1, -1, -1, -1, -1, -1 }, /* vertex */   \
   { 0, 1, -1, -1, -1, -1, -1, -1 },  /* line */     \
@@ -169,7 +178,7 @@ typedef enum t8_eclass {
   { 0, 2, 1, 3, 5, 4, -1, -1 },      /* prism */    \
   { 0, 1, 3, 2, 4, -1, -1, -1 }      /* pyramid */  \
 }
-
+/** Mapping of t8code to vtk corner numbers for each eclass. */
 #define T8_ECLASS_T8_TO_VTK_CORNER_NUMBER_VALUES {\
   { 0, -1, -1, -1, -1, -1, -1, -1 }, /* vertex */   \
   { 0, 1, -1, -1, -1, -1, -1, -1 },  /* line */     \
@@ -180,7 +189,7 @@ typedef enum t8_eclass {
   { 0, 2, 1, 3, 5, 4, -1, -1 },      /* prism */    \
   { 0, 1, 3, 2, 4, -1, -1, -1 }      /* pyramid */  \
 }
-
+/** The face type for each eclass. */
 #define T8_ECLASS_FACE_TYPES_VALUES {\
   { -1, -1, -1, -1, -1, -1 }, /* vertex */    \
   { 0, 0, -1, -1, -1, -1 },   /* line */      \
@@ -191,7 +200,7 @@ typedef enum t8_eclass {
   { 2, 2, 2, 3, 3, -1 },      /* prism */     \
   { 3, 3, 3, 3, 2, -1 }       /* pyramid */   \
 }
-
+/** Number of boundaries for each eclass. */
 #define T8_ECLASS_BOUNDARY_COUNT_VALUES {\
   { 0, 0, 0, 0, 0, 0, 0, 0 },  /* vertex */   \
   { 2, 0, 0, 0, 0, 0, 0, 0 },  /* line */     \
@@ -202,7 +211,7 @@ typedef enum t8_eclass {
   { 6, 9, 3, 2, 0, 0, 0, 0 },  /* prism */    \
   { 5, 8, 1, 4, 0, 0, 0, 0 }   /* pyramid */  \
 }
-
+/** String for each eclass. */
 #define T8_ECLASS_TO_STRING_VALUES { "Vertex", "Line", "Quad", "Triangle", "Hex", "Tet", "Prism", "Pyramid", "Invalid" }
 
 /* clang-format on */
@@ -440,6 +449,8 @@ t8_eclass_compare (t8_eclass_t eclass1, t8_eclass_t eclass2);
  */
 int
 t8_eclass_is_valid (t8_eclass_t eclass);
+
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

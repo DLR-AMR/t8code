@@ -224,6 +224,10 @@ jobs:
       BUILD_TYPE: Debug
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
+  t8code_doxygen_check:
+    uses: ./.github/workflows/check_doxygen.yml
+    needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
+
   t8code_tarball:
     if: github.event.pull_request.draft == false
     uses: ./.github/workflows/build_cmake_tarball.yml
