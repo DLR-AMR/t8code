@@ -36,8 +36,6 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <sc_mpi.h>
 
-#define T8_PFC_MESSAGE 54323
-
 /**
  * This class collects all functionality to handle the data to be sent/received
  * between the processes that will be required to decide on whether and where
@@ -161,7 +159,7 @@ class t8_forest_pfc_message {
 
     /* Send buffer */
     const int mpiret
-      = sc_MPI_Isend (send_buffer, position, sc_MPI_PACKED, iproc, message_tag, forest->mpicomm, &request);
+      = sc_MPI_Isend (send_buffer, position, sc_MPI_PACKED, iproc, T8_MPI_PFC_TAG, forest->mpicomm, &request);
     SC_CHECK_MPI (mpiret);
     T8_FREE (send_buffer);
   }
@@ -177,12 +175,13 @@ class t8_forest_pfc_message {
   {
     /** Get needed size of message via MPI probe and allocate buffer. */
     sc_MPI_Status status;
-    sc_MPI_Probe (iproc, message_tag, comm, &status);
+    sc_MPI_Probe (iproc, T8_MPI_PFC_TAG, comm, &status);
     sc_MPI_Get_count (&status, sc_MPI_PACKED, &buf_size);
     recv_buf = T8_ALLOC (char, buf_size);
 
     /* Actually receive buffer. */
-    const int mpiret = sc_MPI_Recv (recv_buf, buf_size, sc_MPI_PACKED, iproc, message_tag, comm, sc_MPI_STATUS_IGNORE);
+    const int mpiret
+      = sc_MPI_Recv (recv_buf, buf_size, sc_MPI_PACKED, iproc, T8_MPI_PFC_TAG, comm, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -262,8 +261,8 @@ class t8_forest_pfc_message {
    *
   */
   t8_forest_pfc_message (const t8_scheme_c *scheme, t8_procidx_t iproc, sc_MPI_Comm comm)
-    : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), scheme (scheme), comm (comm), iproc (iproc),
-      message_tag (T8_PFC_MESSAGE), parent (NULL), allocated_parent (0)
+    : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), scheme (scheme), comm (comm), iproc (iproc), parent (NULL),
+      allocated_parent (0)
   {
   }
 
@@ -303,7 +302,6 @@ class t8_forest_pfc_message {
   const t8_scheme_c *scheme; /**< the scheme class */
   sc_MPI_Comm comm;          /**< the MPI communicator */
   t8_procidx_t iproc;        /**< the process to send data to */
-  int message_tag;           /**< the TAG identifying the message */
 
  private:
   t8_element_t *parent;  /**< The parent element to be sent. */

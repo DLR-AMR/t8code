@@ -187,7 +187,7 @@ t8_forest_pfc_recv_loop_range (const t8_forest_t forest_from, std::vector<Messag
 
     // Receive message.
     MessageType message (forest_from->scheme, iproc, forest_from->mpicomm);
-    t8_debugf ("receive message from %li\n", message.iproc);
+    t8_debugf ("receive message from %i\n", message.iproc);
     int buf_size;
     char *recv_buf;
     message.mpi_Recv (recv_buf, buf_size);
@@ -278,7 +278,7 @@ t8_forest_pfc_family_range_around_border (const t8_forest_t forest_from, const t
 
   // Check if other processes have the same parent as the current family, so we need to adjust our range.
   for (t8_procidx_t imessage = 0; imessage < (t8_procidx_t) messages.size (); imessage++) {
-    t8_debugf ("process message from %li\n", messages[imessage].iproc);
+    t8_debugf ("process message from %i\n", messages[imessage].iproc);
 
     // On the same tree we can use our scheme to compare, because we know that the eclasses are equal.
     if (messages[imessage].itree == gtree_id
