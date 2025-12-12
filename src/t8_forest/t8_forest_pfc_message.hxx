@@ -67,7 +67,7 @@ class t8_forest_pfc_message {
     sc_MPI_Pack (&eclass_int, 1, sc_MPI_INT, buf, buf_size, position, comm);
 
     /* pack: parent */
-    t8_element_MPI_Pack (myscheme, eclass, &parent, 1, buf, buf_size, position, comm);
+    t8_element_MPI_Pack (scheme, eclass, &parent, 1, buf, buf_size, position, comm);
 
     /* pack: num_siblings */
     sc_MPI_Pack (&num_siblings, 1, sc_MPI_INT, buf, buf_size, position, comm);
@@ -96,9 +96,9 @@ class t8_forest_pfc_message {
     eclass = (t8_eclass_t) eclass_int;
 
     /* unpack: parent */
-    t8_element_new (myscheme, eclass, 1, &parent);
+    t8_element_new (scheme, eclass, 1, &parent);
     allocated_parent = true;
-    t8_element_MPI_Unpack (myscheme, eclass, buf, buf_size, position, &parent, 1, comm);
+    t8_element_MPI_Unpack (scheme, eclass, buf, buf_size, position, &parent, 1, comm);
 
     /* unpack: num_siblings */
     sc_MPI_Unpack (buf, buf_size, position, &num_siblings, 1, sc_MPI_INT, comm);
@@ -132,9 +132,7 @@ class t8_forest_pfc_message {
 
     /* add size: parent */
     if (parent != NULL) {
-      // t8_eclass_scheme_c *scheme = schemes->eclass_schemes[eclass];
-      // scheme->t8_element_MPI_Pack_size (1, comm, &datasize);
-      t8_element_MPI_Pack_size (myscheme, eclass, 1, comm, &datasize);
+      t8_element_MPI_Pack_size (scheme, eclass, 1, comm, &datasize);
       message_size += datasize;
     }
 
@@ -211,30 +209,30 @@ class t8_forest_pfc_message {
     t8_forest_pfc_helper_index_in_tree_from_globalid (forest, closest_to_rank_gid, itree, tree, index_in_tree,
                                                       element_closest_to_receiver);
     // Set scheme and eclass.
-    myscheme = t8_forest_get_scheme (forest);
+    scheme = t8_forest_get_scheme (forest);
     eclass = t8_forest_get_eclass (forest, t8_forest_get_local_id (forest, itree));
 
     // If we are already the root element, we cannot be part of a split family, so we send any(the root) element and no num_siblings.
-    if (myscheme->element_get_level (eclass, element_closest_to_receiver) == 0) {
+    if (scheme->element_get_level (eclass, element_closest_to_receiver) == 0) {
       parent = element_closest_to_receiver;
       num_siblings = 0;
     }
     else {
       // Compute parent.
-      t8_element_new (myscheme, eclass, 1, &parent);
+      t8_element_new (scheme, eclass, 1, &parent);
       allocated_parent = true;
-      myscheme->element_get_parent (eclass, element_closest_to_receiver, parent);
+      scheme->element_get_parent (eclass, element_closest_to_receiver, parent);
 
       // Distinguish send "direction"
       if (iproc > rank) {
         // Sending will be towards higher-rank process, so count siblings in decreasing index direction.
-        const t8_locidx_t min_id = t8_forest_pfc_extreme_local_sibling (myscheme, tree, index_in_tree, true);
+        const t8_locidx_t min_id = t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, true);
         num_siblings = index_in_tree - min_id + 1;
       }
       else {
         T8_ASSERT (iproc != rank);
         // Sending will be towards lower-rank process, so count siblings in increasing index direction.
-        const t8_locidx_t max_id = t8_forest_pfc_extreme_local_sibling (myscheme, tree, index_in_tree, false);
+        const t8_locidx_t max_id = t8_forest_pfc_extreme_local_sibling (scheme, tree, index_in_tree, false);
         num_siblings = max_id - index_in_tree + 1;
       }
     }
@@ -264,7 +262,7 @@ class t8_forest_pfc_message {
    *
   */
   t8_forest_pfc_message (const t8_scheme_c *scheme, t8_procidx_t iproc, sc_MPI_Comm comm)
-    : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), myscheme (scheme), comm (comm), iproc (iproc),
+    : itree (0), eclass (T8_ECLASS_ZERO), num_siblings (0), scheme (scheme), comm (comm), iproc (iproc),
       message_tag (T8_PFC_MESSAGE), parent (NULL), allocated_parent (0)
   {
   }
@@ -276,7 +274,7 @@ class t8_forest_pfc_message {
    * Move constructor.
   */
   t8_forest_pfc_message (t8_forest_pfc_message &&other)
-    : itree { other.itree }, eclass (other.eclass), num_siblings (other.num_siblings), myscheme (other.myscheme),
+    : itree { other.itree }, eclass (other.eclass), num_siblings (other.num_siblings), scheme (other.scheme),
       comm (other.comm), iproc (other.iproc), parent (other.parent), allocated_parent (other.allocated_parent)
   {
     if (allocated_parent) {
@@ -291,7 +289,7 @@ class t8_forest_pfc_message {
   ~t8_forest_pfc_message ()
   {
     if (allocated_parent) {
-      myscheme->element_destroy (eclass, 1, &parent);
+      scheme->element_destroy (eclass, 1, &parent);
       parent = NULL; /*TODO: necessary?*/
     }
   }
@@ -302,10 +300,10 @@ class t8_forest_pfc_message {
   int num_siblings;   /**< the process-local number of siblings */
 
   // Auxiliary data:
-  const t8_scheme_c *myscheme; /**< the scheme class */
-  sc_MPI_Comm comm;            /**< the MPI communicator */
-  t8_procidx_t iproc;          /**< the process to send data to */
-  int message_tag;             /**< the TAG identifying the message */
+  const t8_scheme_c *scheme; /**< the scheme class */
+  sc_MPI_Comm comm;          /**< the MPI communicator */
+  t8_procidx_t iproc;        /**< the process to send data to */
+  int message_tag;           /**< the TAG identifying the message */
 
  private:
   t8_element_t *parent;  /**< The parent element to be sent. */
