@@ -736,7 +736,6 @@ t8_element_is_valid (const t8_scheme_c *scheme, const t8_eclass_t tree_class, co
 void
 t8_element_debug_print (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element);
 
-#endif
 /**
  * \brief Fill a string with readable information about the element
  * 
@@ -749,6 +748,7 @@ t8_element_debug_print (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
 void
 t8_element_to_string (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
                       char *debug_string, const int string_size);
+#endif
 
 /** Allocate memory for an array of elements of a given class and initialize them.
  * \param [in] scheme        The scheme of the forest.
