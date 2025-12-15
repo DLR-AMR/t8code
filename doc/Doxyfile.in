@@ -2437,6 +2437,7 @@ PREDEFINED             = T8_DOXYGEN \
                          T8_ENABLE_NETCDF_PAR
 PREDEFINED += T8_EXTERN_C_BEGIN()=
 PREDEFINED += T8_EXTERN_C_END()=
+PREDEFINED += __attribute__((unused))=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
