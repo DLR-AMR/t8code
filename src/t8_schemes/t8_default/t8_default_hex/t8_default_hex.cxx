@@ -639,7 +639,6 @@ t8_default_scheme_hex::element_is_valid (const t8_element_t *element) const
          && T8_QUAD_GET_TDIM ((const p8est_quadrant_t *) element) == 3;
 }
 
-
 void
 t8_default_scheme_hex::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
