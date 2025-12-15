@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8.c
+ * Implements functions declared in \ref t8.h.
+ */
+
 #include <t8.h>
 #include <t8_version.h>
 
@@ -48,6 +52,10 @@ t8_logv (int category, int priority, const char *fmt, va_list ap)
   sc_log ("unknown", -1, t8_package_id, category, priority, buffer);
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 3, 4)))
+#endif
 void
 t8_logf (int category, int priority, const char *fmt, ...)
 {
@@ -70,6 +78,10 @@ t8_log_indent_pop (void)
   sc_log_indent_pop_count (t8_get_package_id (), 1);
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 1, 2)))
+#endif
 void
 t8_global_errorf (const char *fmt, ...)
 {
@@ -80,6 +92,10 @@ t8_global_errorf (const char *fmt, ...)
   va_end (ap);
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 1, 2)))
+#endif
 void
 t8_global_essentialf (const char *fmt, ...)
 {
@@ -90,6 +106,10 @@ t8_global_essentialf (const char *fmt, ...)
   va_end (ap);
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 1, 2)))
+#endif
 void
 t8_global_productionf (const char *fmt, ...)
 {
@@ -100,6 +120,10 @@ t8_global_productionf (const char *fmt, ...)
   va_end (ap);
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 1, 2)))
+#endif
 void
 t8_global_infof (const char *fmt, ...)
 {
@@ -110,6 +134,10 @@ t8_global_infof (const char *fmt, ...)
   va_end (ap);
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 1, 2)))
+#endif
 void
 t8_infof (const char *fmt, ...)
 {
@@ -120,6 +148,10 @@ t8_infof (const char *fmt, ...)
   va_end (ap);
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 1, 2)))
+#endif
 void
 t8_productionf (const char *fmt, ...)
 {
@@ -130,6 +162,10 @@ t8_productionf (const char *fmt, ...)
   va_end (ap);
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 1, 2)))
+#endif
 void
 t8_debugf (__attribute__ ((unused)) const char *fmt, ...)
 {
@@ -142,6 +178,10 @@ t8_debugf (__attribute__ ((unused)) const char *fmt, ...)
 #endif
 }
 
+#ifndef T8_DOXYGEN
+/** Attribute to check printf-style format strings.*/
+__attribute__ ((format (printf, 1, 2)))
+#endif
 void
 t8_errorf (const char *fmt, ...)
 {

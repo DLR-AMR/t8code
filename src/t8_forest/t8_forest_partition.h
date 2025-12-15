@@ -33,6 +33,7 @@
 #include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
+
 /**
  * Populate a forest with the partitioned elements of forest->set_from.
  * Currently the elements are distributed evenly (each element has the same weight).
