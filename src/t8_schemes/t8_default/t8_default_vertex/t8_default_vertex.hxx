@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_default_vertex.hxx
+ * The default implementation for vertices.
+ */
+
 #ifndef T8_DEFAULT_VERTEX_HXX
 #define T8_DEFAULT_VERTEX_HXX
 
