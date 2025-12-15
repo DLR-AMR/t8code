@@ -51,7 +51,7 @@ jobs:
 # Setup
 #
     - name: Download artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact

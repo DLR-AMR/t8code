@@ -98,7 +98,7 @@ jobs:
     timeout-minutes: 90
     steps:
     - name: Download tarball
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
           name: tarballs
           path: tarballs
