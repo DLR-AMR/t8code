@@ -20,26 +20,27 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_cad.hxx
- * This file implements the t8_cad class. It manages OpenCASCADE shapes and implements
+/** \file t8_cad_handle.hxx
+ * This file implements the t8_cad_handle class. It manages OpenCASCADE shapes and implements
  * helper functions for working with the shapes.
  */
 
-#ifndef T8_CAD_HXX
-#define T8_CAD_HXX
+#ifndef T8_CAD_HANDLE_HXX
+#define T8_CAD_HANDLE_HXX
 
 #include <gp_Pnt.hxx>
 #include <TopExp.hxx>
 #include <Geom_Surface.hxx>
 #include <Geom_Curve.hxx>
 
+#include <t8_cmesh/t8_cmesh.h>
 /**
  * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
 */
-class t8_cad {
+class t8_cad_handle {
  public:
   /**
-    * Constructor of the cad shape.
+    * Constructor of the cad shape handler.
     * The shape is initialized based on a .brep file with the given prefix.
     * The internal structure extracts and stores geometric information such as
     * vertices, edges, and faces from this file. The number and type of vertices
@@ -48,8 +49,7 @@ class t8_cad {
     *
     * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
     */
-  t8_cad (std::string fileprefix);
-
+  t8_cad_handle (std::string fileprefix);
   /**
     * Constructor of the cad shape.
     * The shape is initialized directly from an existing TopoDS_Shape.
@@ -59,12 +59,46 @@ class t8_cad {
     *
     * \param [in] cad_shape  cad shape geometry object.
     */
-  t8_cad (const TopoDS_Shape cad_shape);
+  t8_cad_handle (const TopoDS_Shape cad_shape);
 
   /**
    * Constructor of the cad shape for testing purposes. Sets an invalid cad_shape.
    */
-  t8_cad ();
+  t8_cad_handle ();
+
+  /**
+ * Destructor of the cad shape handler.
+ */
+  ~t8_cad_handle ();
+
+  /**
+   * Loads a cad shape from a .brep file with the given prefix.
+   * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
+   * \return                The loaded cad shape.
+   */
+  static TopoDS_Shape
+  load_cad_shape (const std::string fileprefix);
+
+  /**
+   * Map the cad shape to extract vertices, edges, faces, and their relationships.
+   * \param [in] cad_shape_in  The input cad shape to be mapped.
+   */
+  void
+  map_cad_shape (const TopoDS_Shape &cad_shape_in);
+
+  /**
+   * Updates the cad shape from a .brep file with the given prefix.
+   * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
+   */
+  void
+  update_cad_shape (const std::string fileprefix);
+
+  /**
+   * Updates the cad shape directly from an existing TopoDS_Shape.
+   * \param [in] new_cad_shape  cad shape geometry object.
+   */
+  void
+  update_cad_shape (const TopoDS_Shape &new_cad_shape);
 
   /** Check if a cad_curve is a line.
    * \param [in] curve_index      The index of the cad_curve.
@@ -226,6 +260,28 @@ class t8_cad {
   int
   t8_geom_is_surface_closed (int geometry_index, int parameter) const;
 
+  /**
+   * Increase the reference count of the cad handler.
+   */
+  inline void
+  ref ()
+  {
+    t8_refcount_ref (&rc);
+  }
+
+  /**
+   * Decrease the reference count of the cad handler.
+   * If the reference count reaches zero, the cad handler is deleted.
+   */
+  inline void
+  unref ()
+  {
+    if (t8_refcount_unref (&rc)) {
+      t8_debugf ("Deleting the cad_handler.\n");
+      delete this;
+    }
+  }
+
  private:
   TopoDS_Shape cad_shape;                          /**< cad geometry */
   TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
@@ -235,6 +291,8 @@ class t8_cad {
     cad_shape_vertex2edge_map; /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
   TopTools_IndexedDataMapOfShapeListOfShape
     cad_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
+  /** The reference count of the cad handler. TODO: Replace by shared_ptr when cmesh becomes a class. */
+  t8_refcount_t rc;
 };
 
-#endif /* !T8_CAD_HXX */
+#endif /* !T8_CAD_HANDLE_HXX */
