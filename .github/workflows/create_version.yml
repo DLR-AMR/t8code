@@ -37,6 +37,30 @@ jobs:
                   fetch-depth: 0
                   ref: main
                   persist-credentials: false
+            # Get the current version from the latest tag
+            - name: Get latest tag
+              id: get_latest_tag
+              run: |
+                  LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+                  echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+                  echo "LATEST_TAG=$LATEST_TAG"
+            # Get Major, Minor, Patch version numbers
+            - name: Parse version numbers
+              id: parse_version
+              run: |
+                  VERSION_REGEX="v([0-9]+)\\.([0-9]+)\\.([0-9]+)"
+                  if [[ "${{ env.LATEST_TAG }}" =~ $VERSION_REGEX ]]; then
+                      MAJOR="${BASH_REMATCH[1]}"
+                      MINOR="${BASH_REMATCH[2]}"
+                      PATCH="${BASH_REMATCH[3]}"
+                      echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+                      echo "MINOR=$MINOR" >> $GITHUB_ENV
+                      echo "PATCH=$PATCH" >> $GITHUB_ENV
+                      echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
+                  else
+                      echo "No valid tag found, aborting."
+                      exit 1
+                  fi
             # Create version name accessible in the following steps
             - name: Set version name
               run: echo "VERSION_NAME=v4.0.0-$(date +'%Y.%m.%d')" >> $GITHUB_ENV
