@@ -66,7 +66,7 @@ jobs:
             - name: Set version name
               run: |
                 echo "VERSION_NAME=v${MAJOR}.${MINOR}.${PATCH}-$(date +'%Y.%m.%d')" >> $GITHUB_ENV
-                echo "VERSION_NAME=${VERSION_NAME}"
+                echo "VERSION_NAME=$VERSION_NAME"
             # Create a new version tag
             - name: Create version tag
               run: |
