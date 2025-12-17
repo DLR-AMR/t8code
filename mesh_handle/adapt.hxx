@@ -28,10 +28,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include "abstract_element.hxx"
-#include "mesh_element.hxx"
-#include "ghost_element.hxx"
-#include "competence_pack.hxx"
+#include "mesh.hxx"
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
 #include <type_traits>
@@ -72,11 +69,11 @@ class CallbackRegistry {
   }
 };
 
-template <typename mesh_class, typename mesh_element>
-using coarsen_mesh_element_family = bool (*) (mesh_class mesh, std::vector<mesh_element>& family);
+template <typename mesh_class>
+using coarsen_mesh_element_family = bool (*) (mesh_class mesh, std::vector<mesh_class::mesh_element_class>& family);
 
-template <typename mesh_class, typename mesh_element>
-using refine_mesh_element = bool (*) (mesh_class mesh, mesh_element& element);
+template <typename mesh_class>
+using refine_mesh_element = bool (*) (mesh_class mesh, mesh_class::mesh_element_class& element);
 
 template <typename mesh_class, typename coarsen_mesh_element_family, typename refine_mesh_element>
 int
