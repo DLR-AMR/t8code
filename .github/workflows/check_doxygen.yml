@@ -37,7 +37,7 @@ jobs:
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v5    
+    - uses: actions/checkout@v6    
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
@@ -79,7 +79,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: cmake_doc_build.log
         path: build/config.log
@@ -89,7 +89,7 @@ jobs:
         doxygen Doxyfile >> doxygen.out 2> doxygen.err
     - name: Upload doxygen log
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: doxygen-log
         path: build/doc/doxygen.err

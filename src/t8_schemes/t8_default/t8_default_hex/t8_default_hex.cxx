@@ -639,6 +639,7 @@ t8_default_scheme_hex::element_is_valid (const t8_element_t *element) const
          && T8_QUAD_GET_TDIM ((const p8est_quadrant_t *) element) == 3;
 }
 
+#endif
 void
 t8_default_scheme_hex::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
@@ -647,7 +648,6 @@ t8_default_scheme_hex::element_to_string (const t8_element_t *elem, char *debug_
   p8est_quadrant_t *hex = (p8est_quadrant_t *) elem;
   snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, level: %i", hex->x, hex->y, hex->z, hex->level);
 }
-#endif
 
 void
 t8_default_scheme_hex::set_to_root (t8_element_t *elem) const

@@ -405,6 +405,7 @@ t8_default_scheme_line::element_is_valid (const t8_element_t *element) const
 {
   return t8_dline_is_valid ((const t8_dline_t *) element);
 }
+#endif
 
 void
 t8_default_scheme_line::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
@@ -414,7 +415,6 @@ t8_default_scheme_line::element_to_string (const t8_element_t *elem, char *debug
   t8_dline_t *line = (t8_dline_t *) elem;
   snprintf (debug_string, string_size, "x: %i, level: %i", line->x, line->level);
 }
-#endif
 
 void
 t8_default_scheme_line::element_new (int length, t8_element_t **elem) const

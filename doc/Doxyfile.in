@@ -982,8 +982,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = @top_srcdir@/src \
-                         @top_srcdir@/mesh_handle \
-                         @top_srcdir@/doc/mainpage.dox
+                         @top_srcdir@/mesh_handle
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
@@ -2430,7 +2429,7 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = @PACKAGE_PREFIX@_DOXYGEN \
+PREDEFINED             = T8_DOXYGEN \
                          T8_ENABLE_DEBUG \
                          T8_ENABLE_VTK \
                          T8_ENABLE_OCC \
@@ -2438,6 +2437,7 @@ PREDEFINED             = @PACKAGE_PREFIX@_DOXYGEN \
                          T8_ENABLE_NETCDF_PAR
 PREDEFINED += T8_EXTERN_C_BEGIN()=
 PREDEFINED += T8_EXTERN_C_END()=
+PREDEFINED += __attribute__((unused))=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
