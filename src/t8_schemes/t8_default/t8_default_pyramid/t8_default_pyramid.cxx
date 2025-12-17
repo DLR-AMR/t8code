@@ -433,6 +433,7 @@ t8_default_scheme_pyramid::element_is_valid (const t8_element_t *element) const
   return t8_dpyramid_is_valid ((const t8_dpyramid_t *) element);
 }
 
+#endif
 void
 t8_default_scheme_pyramid::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
@@ -443,7 +444,6 @@ t8_default_scheme_pyramid::element_to_string (const t8_element_t *elem, char *de
             pyra->pyramid.x, pyra->pyramid.y, pyra->pyramid.x, pyra->pyramid.type, pyra->pyramid.level,
             pyra->switch_shape_at_level);
 }
-#endif
 
 void
 t8_default_scheme_pyramid::set_to_root (t8_element_t *elem) const
