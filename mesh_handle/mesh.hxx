@@ -53,6 +53,8 @@ template <typename TCompetencePack = competence_pack<>, typename TUserData = voi
 class mesh {
  public:
   using SelfType = mesh<TCompetencePack, TUserData, TElementData>;
+  using UserDataType = TUserData;
+  using ElementDataType = TUserData;
   /** Type definitions of the element classes with given competences. */
   using abstract_element_class = TCompetencePack::template apply<
     SelfType, abstract_element>; /**< The abstract element class of the mesh (could be a mesh element of ghost). */
@@ -204,7 +206,7 @@ class mesh {
     if constexpr (!std::is_void<TUserData>::value) {
       t8_global_infof (
         "The elements of the mesh handle have been updated. Please note that the element_data are not interpolated "
-        "automatically. Use the function set_element_data() to provide new adapted element data.");
+        "automatically. Use the function set_element_data() to provide new adapted element data.\n");
     }
   }
 

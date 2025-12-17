@@ -20,11 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file TODO
+/** \file adapt.hxx
  */
 
-#ifndef T8_MESH_HXX
-#define T8_MESH_HXX
+#ifndef T8_ADAPT_HXX
+#define T8_ADAPT_HXX
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
@@ -37,84 +37,137 @@
 namespace t8_mesh_handle
 {
 
-template <typename mesh_class>
-/** Singleton for callback. Problem is the mesh class template!*/
-class CallbackRegistry {
- public:
-  using CoarsenCallBackType = std::function<bool (mesh_class mesh, std::vector<mesh_element>& family)>;
+struct MeshAdaptContextBase
+{
+  virtual ~MeshAdaptContextBase () = default;
 
-  static void
-  register_coarsen_callback (CoarsenCallBackType Coarsencallback)
+  virtual int
+  adapt_callback (t8_locidx_t lelement_id, int is_family, int num_elements, t8_element_t* elements[])
+    = 0;
+};
+
+template <typename TMeshClass>
+using coarsen_mesh_element_family
+  = std::function<bool (TMeshClass, std::vector<typename TMeshClass::mesh_element_class>&)>;
+
+template <typename TMeshClass>
+using refine_mesh_element = std::function<bool (TMeshClass, typename TMeshClass::mesh_element_class&)>;
+
+template <typename TMesh>
+struct MeshAdaptContext final: MeshAdaptContextBase
+{
+  using Element = typename TMesh::mesh_element_class;
+
+  MeshAdaptContext (TMesh& m, refine_mesh_element<TMesh> r, coarsen_mesh_element_family<TMesh> c)
+    : mesh (m), refine (std::move (r)), coarsen (std::move (c))
   {
-    get_map ()[name] = std::move (cb);
   }
 
-  static CallbackType
-  get_coarsen_callback ()
+  int
+  adapt_callback (t8_locidx_t lelement_id, int is_family, int num_elements, t8_element_t* elements[]) override
   {
-    auto& map = get_map ();
-    auto it = map.find (name);
-    if (it != map.end ()) {
-      return it->second;
+    // refine
+    if (refine) {
+      Element elem = mesh.get_mesh_element (lelement_id);
+      if (refine (mesh, elem)) {
+        return 1;
+      }
     }
-    return nullptr;
+
+    // coarsen
+    if (is_family && coarsen) {
+      std::vector<Element> element_family;
+      for (int i = 0; i < num_elements; i++) {
+        element_family.push_back (mesh.get_mesh_element (lelement_id + i));
+      }
+      if (coarsen (mesh, element_family)) {
+        return -1;
+      }
+    }
+
+    return 0;
   }
 
  private:
-  static std::unordered_map<std::string, CallbackType>&
+  TMesh& mesh;
+  refine_mesh_element<TMesh> refine;
+  coarsen_mesh_element_family<TMesh> coarsen;
+};
+
+/** Singleton for callback. Problem is the mesh class template!*/
+class AdaptRegistry {
+ public:
+  static void
+  register_context (t8_forest_t forest, MeshAdaptContextBase* context)
+  {
+    get_map ()[forest] = context;
+  }
+
+  static void
+  unregister_context (t8_forest_t forest)
+  {
+    get_map ().erase (forest);
+  }
+
+  static MeshAdaptContextBase*
+  get (t8_forest_t forest)
+  {
+    auto& map = get_map ();
+    auto it = map.find (forest);
+    return it != map.end () ? it->second : nullptr;
+  }
+
+ private:
+  // Use getter instead of private member variable to ensure single initialization
+  static std::unordered_map<t8_forest_t, MeshAdaptContextBase*>&
   get_map ()
   {
-    static std::unordered_map<std::string, CallbackType> map;
+    static std::unordered_map<t8_forest_t, MeshAdaptContextBase*> map;
     return map;
   }
 };
 
-template <typename mesh_class>
-using coarsen_mesh_element_family = bool (*) (mesh_class mesh, std::vector<mesh_class::mesh_element_class>& family);
-
-template <typename mesh_class>
-using refine_mesh_element = bool (*) (mesh_class mesh, mesh_class::mesh_element_class& element);
-
-template <typename mesh_class, typename coarsen_mesh_element_family, typename refine_mesh_element>
 int
-mesh_adapt_callback (mesh_class mesh, t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                     [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                     [[maybe_unused]] const t8_scheme* scheme, const int is_family,
-                     [[maybe_unused]] const int num_elements, t8_element_t* elements[])
+mesh_adapt_callback ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                     [[maybe_unused]] t8_eclass_t tree_class, t8_locidx_t lelement_id,
+                     [[maybe_unused]] const t8_scheme* scheme, const int is_family, const int num_elements,
+                     t8_element_t* elements[])
 {
-
-  if (refine_mesh_element (mesh, mesh.get_mesh_element (lelement_id))) {
-    /* Refine this element. */
-    return 1;
+  auto* context = AdaptRegistry::get (forest_from);
+  if (!context) {
+    t8_global_infof (
+      "Something went wrong while registering the adaption callbacks. Please check your implementation.");
+    return 0;  // No adaption as default.
   }
-  else if (is_family && coarsen_mesh_element_family (mesh, )) {
-    /* Coarsen this family. Note that we check for is_family before, since returning < 0
-     * if we do not have a family as input is illegal. */
-    return -1;
-  }
-  /* Do not change this element. */
-  return 0;
+  t8_locidx_t local_flat_index = t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
+  // TODO: adapt names in other callbacks to not get confused between flat and this element_in_tree_index.
+  return context->adapt_callback (local_flat_index, is_family, num_elements, elements);
 }
 
-template <typename mesh_class>
+template <typename TMesh>
 void
-adapt_mesh (mesh_class& mesh_handle,
-            refine_mesh_element<mesh_class, typename mesh_class::mesh_element_class> refinement_callback,
-            coarsen_mesh_element_family<mesh_class, typename mesh_class::mesh_element_class> coarsen_callback,
-            bool recursive)
+adapt_mesh (TMesh& mesh_handle, refine_mesh_element<TMesh> refine_callback,
+            coarsen_mesh_element_family<TMesh> coarsen_callback, bool recursive)
 {
   auto forest_from = mesh_handle.get_forest ();
 
   t8_forest_t forest;
   t8_forest_init (&forest);
-  t8_forest_set_adapt (forest, forest_from, mesh_adapt_callback<mesh_class, coarsen_callback, refinement_callback>,
-                       recursive);
+
+  auto* context = new MeshAdaptContext<TMesh> (mesh_handle, std::move (refine_callback), std::move (coarsen_callback));
+
+  AdaptRegistry::register_context (forest_from, context);
+
+  t8_forest_set_adapt (forest, forest_from, mesh_adapt_callback, recursive);
   t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
-  t8_forest_set_user_data (forest, mesh_handle.get_user_data ());
+  t8_forest_set_user_data (forest, t8_forest_get_user_data (forest_from));
 
   t8_forest_commit (forest);
   mesh_handle.set_forest (forest);
+
+  AdaptRegistry::unregister_context (forest_from);
+  delete context;
 }
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_MESH_HXX */
+#endif /* !T8_ADAPT_HXX */

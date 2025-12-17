@@ -1,0 +1,135 @@
+/*
+This file is part of t8code.
+t8code is a C library to manage a collection (a forest) of multiple
+connected adaptive space-trees of general element classes in parallel.
+
+Copyright (C) 2025 the developers
+
+t8code is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+t8code is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with t8code; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+/**
+ * \file t8_gtest_adapt.cxx
+ * TODO
+ */
+
+#include <gtest/gtest.h>
+#include <t8.h>
+
+#include <mesh_handle/mesh.hxx>
+#include <mesh_handle/competence_pack.hxx>
+#include <mesh_handle/adapt.hxx>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_types/t8_vec.hxx>
+#include <vector>
+
+// Dummy user data taken from a tutorial for test purposes.
+struct dummy_user_data
+{
+  t8_3D_point midpoint;             /**< The midpoint of our sphere. */
+  double refine_if_inside_radius;   /**< if an element's center is smaller than this value, we refine the element. */
+  double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
+};
+
+template <typename TMeshClass>
+bool
+refine_mesh_element_test (TMeshClass mesh, typename TMeshClass::mesh_element_class &element)
+{
+  typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
+  auto element_centroid = element.get_centroid ();
+
+  /* Compute the distance to our sphere midpoint. */
+  double dist = t8_dist<t8_3D_point, t8_3D_point> (element_centroid, user_data.midpoint);
+  return (dist < user_data.refine_if_inside_radius);
+}
+
+template <typename TMeshClass>
+bool
+coarsen_mesh_element_family_test (TMeshClass mesh, std::vector<typename TMeshClass::mesh_element_class> &elements)
+{
+  typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
+  auto element_centroid = elements[0].get_centroid ();
+
+  /* Compute the distance to our sphere midpoint. */
+  double dist = t8_dist<t8_3D_point, t8_3D_point> (element_centroid, user_data.midpoint);
+  return (dist > user_data.coarsen_if_outside_radius);
+}
+
+int
+t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                         [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                         [[maybe_unused]] const t8_scheme *scheme, const int is_family,
+                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+{
+  const struct dummy_user_data *adapt_data = (const struct dummy_user_data *) t8_forest_get_user_data (forest);
+
+  /* Compute the element's centroid coordinates. */
+  t8_3D_point centroid;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
+
+  /* Compute the distance to our sphere midpoint. */
+  double dist = t8_dist<t8_3D_point, t8_3D_point> (centroid, adapt_data->midpoint);
+  if (dist < adapt_data->refine_if_inside_radius) {
+    /* Refine this element. */
+    return 1;
+  }
+  else if (is_family && dist > adapt_data->coarsen_if_outside_radius) {
+    /* Coarsen this family. Note that we check for is_family before, since returning < 0
+     * if we do not have a family as input is illegal. */
+    return -1;
+  }
+  /* Do not change this element. */
+  return 0;
+}
+
+/** TODO
+ */
+TEST (t8_gtest_handle_adapt, define_adapt)
+{
+  // Define forest and mesh handle.
+  const int level = 3;
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  const t8_scheme *init_scheme = t8_scheme_new_default ();
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
+  mesh_class mesh_handle = mesh_class (forest);
+
+  struct dummy_user_data user_data = {
+    t8_3D_point ({ 0.5, 0.5, 1 }), /* Midpoints of the sphere. */
+    0.2,                           /* Refine if inside this radius. */
+    0.4                            /* Coarsen if outside this radius. */
+  };
+  mesh_handle.set_user_data (&user_data);
+
+  t8_mesh_handle::adapt_mesh<mesh_class> (mesh_handle, refine_mesh_element_test<mesh_class>,
+                                          coarsen_mesh_element_family_test<mesh_class>, false);
+
+  t8_cmesh_t cmesh_compare = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  const t8_scheme *init_scheme_compare = init_scheme;
+  init_scheme->ref ();
+  t8_forest_t forest_compare = t8_forest_new_uniform (cmesh_compare, init_scheme_compare, level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest_adapt;
+  forest_adapt = t8_forest_new_adapt (forest_compare, t8_step3_adapt_callback, 0, 1, &user_data);
+
+  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_adapt));
+
+  // Unref the forests.
+  t8_forest_unref (&forest_adapt);
+  forest = mesh_handle.get_forest ();
+  t8_forest_unref (&forest);
+}

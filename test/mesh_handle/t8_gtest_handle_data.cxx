@@ -41,9 +41,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 // Dummy user data taken from a tutorial for test purposes.
 struct dummy_user_data
 {
-  t8_3D_point midpoint;             /* The midpoint of our sphere. */
-  double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
+  t8_3D_point midpoint;             /**< The midpoint of our sphere. */
+  double refine_if_inside_radius;   /**< if an element's center is smaller than this value, we refine the element. */
+  double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
 };
 
 /** Check that user data can be set and accesses for the handle.
