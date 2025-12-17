@@ -64,9 +64,10 @@ class mesh;
 template <template <typename> class... TCompetence>
 class abstract_element: public TCompetence<abstract_element<TCompetence...>>... {
  protected:
-  using SelfType = abstract_element<TCompetence...>;
-  using mesh_class = mesh<TCompetence...>;
-  friend mesh_class;
+  using SelfType
+    = abstract_element<TCompetence...>;    /**< Type of the current class with all template parameters specified. */
+  using mesh_class = mesh<TCompetence...>; /**< Type of the mesh class the used. */
+  friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
 
   /**
    * Protected constructor for an element of a mesh. 
@@ -91,7 +92,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   {
     return requires (T<SelfType>& competence) { competence.vertex_cache_filled (); };
   }
-  /* This variable is true if any of the given competences \ref TCompetence implements 
+  /** This variable is true if any of the given competences \a TCompetence implements 
   a function vertex_cache_filled. */
   static constexpr bool vertex_cache_exists = (false || ... || vertex_cache_defined<TCompetence> ());
 
@@ -105,7 +106,7 @@ class abstract_element: public TCompetence<abstract_element<TCompetence...>>... 
   {
     return requires (T<SelfType>& competence) { competence.centroid_cache_filled (); };
   }
-  /* This variable is true if any of the given competences \ref TCompetence implements 
+  /** This variable is true if any of the given competences \a TCompetence implements 
   a function centroid_cache_filled. */
   static constexpr bool centroid_cache_exists = (false || ... || centroid_cache_defined<TCompetence> ());
 

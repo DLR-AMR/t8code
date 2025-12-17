@@ -107,7 +107,7 @@ class mesh_element: public abstract_element<TCompetence...> {
    * \param [in]  face          The index of the face across which the face neighbors are searched.
    * \param [out] num_neighbors On output the number of neighbor elements.
    * \param [out] dual_faces    On output the face id's of the neighboring elements' faces.
-   * \return Vector of length \ref num_neighbors with the element indices of the face neighbors.
+   * \return Vector of length \a num_neighbors with the element indices of the face neighbors.
    *         0, 1, ... num_local_el - 1 for local mesh elements and 
    *         num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
    */

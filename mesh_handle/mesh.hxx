@@ -52,9 +52,9 @@ class mesh {
   using mesh_element_class = mesh_element<TCompetence...>;   /**< The mesh element class of the mesh. */
   using ghost_element_class = ghost_element<TCompetence...>; /**< The ghost element class of the mesh. */
   // Declare all element classes as friend such that private members (e.g. the forest) can be accessed.
-  friend abstract_element_class;
-  friend mesh_element_class;
-  friend ghost_element_class;
+  friend abstract_element_class; /**< Abstract element class as friend. */
+  friend mesh_element_class;     /**< Mesh element class as friend. */
+  friend ghost_element_class;    /**< Ghost element class as friend. */
 
   using mesh_const_iterator =
     typename std::vector<mesh_element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
