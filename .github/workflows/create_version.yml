@@ -64,7 +64,7 @@ jobs:
             # Create version name accessible in the following steps
             - name: Set version name
               run: echo "VERSION_NAME=v4.0.0-$(date +'%Y.%m.%d')" >> $GITHUB_ENV
-            #create a new branch for the version tag
+            # Create a new version tag
             - name: Create version tag
               run: |
                   git config user.email "t8ddy.bot@gmail.com"
