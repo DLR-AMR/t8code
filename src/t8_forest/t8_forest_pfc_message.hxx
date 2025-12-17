@@ -21,7 +21,8 @@
 */
 
 /**
- * \file This file collects all functionality required to send elements from
+ * \file t8_forest_pfc_message.hxx
+ * This file collects all functionality required to send elements from
  * one process to another within the partition-for-coarsening offset correction.
 */
 

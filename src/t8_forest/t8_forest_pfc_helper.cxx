@@ -21,7 +21,8 @@
 */
 
 /**
- * \file This file defines some helper functions used for the partition-for-coarsening feature.
+ * \file t8_forest_pfc_helper.cxx
+ * This file defines some helper functions used for the partition-for-coarsening feature.
 */
 
 #include <t8_forest/t8_forest_general.h>

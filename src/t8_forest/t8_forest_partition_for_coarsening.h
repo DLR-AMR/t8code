@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
  *  This function corrects the partitioning such that no families are split across process boundaries.
  *  The price to be paid is a slight deviation from the optimal balance of elements among processors.
  *
- * \param [in,out] forrest  the forest. On input, it has been partitioned into equally-sized element partitions.
+ * \param [in,out] forest   the forest. On input, it has been partitioned into equally-sized element partitions.
  *                                      On output, the partitioning has been adjusted such that no element families
  *                                      are split across the process boundaries.
 */

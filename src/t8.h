@@ -148,7 +148,7 @@ typedef enum {
   T8_MPI_CMESH_UNIFORM_BOUNDS_END,      /**< Used for cmesh uniform bounds computation. */
   T8_MPI_TEST_ELEMENT_PACK_TAG,         /**< Used for testing mpi pack and unpack functionality */
   T8_MPI_PFC_TAG,                       /**< Used for data exchange during partition for coarsening. */
-  T8_MPI_TAG_LAST
+  T8_MPI_TAG_LAST                       /**< Dummy last MPI tag. */
 } t8_MPI_tag_t;
 
 /** Query the package identity as registered in libsc.

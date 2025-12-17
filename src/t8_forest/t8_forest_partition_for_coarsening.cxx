@@ -21,7 +21,8 @@
 */
 
 /**
- * \file This file contains the main implementations of t8code's partition-for-coarsening feature.
+ * \file t8_forest_partition_for_coarsening.cxx
+ * This file contains the main implementations of t8code's partition-for-coarsening feature.
 */
 
 #include <t8_forest/t8_forest.h>
@@ -66,7 +67,7 @@ proc_owner (const t8_gloidx_t *partition, const t8_procidx_t mpisize, const t8_g
  * With that, the corrdesponding processes are simple to find.
  *
  * \param[in]   partition_old     partition of the source forest (as C-style array)
- * \param[in]   mpirank           MPI rank of the current process
+ * \param[in]   rank              MPI rank of the current process
  * \param[in]   mpisize           MPI size of the current communicator
  * \param[out]  proc_range_begin  Id of the process holding the first relevant element.
  * \param[out]  proc_range_end    Id of the process after the last one holding a relevant element.
@@ -105,7 +106,7 @@ get_relevant_process_range (const t8_gloidx_t *partition_old, const t8_procidx_t
  * those of \a forest_from.
  * This in particular means that it does not suffice to only receive from one direction, e.g.,
  * from all processes of lower rank and then only check the lower process borders, see comment
- * in description of \ref t8_forest_pfc_family_range_around_border.
+ * in description of \ref t8_forest_pfc_family_range_around_border_anchor.
  *
  * \param[in]   forest_from    the old forest (forest->set_from of the new partitioned forest)
  * \param[out]  requests  the MPI requests as std::vector
@@ -157,10 +158,12 @@ t8_forest_pfc_send_loop_range (const t8_forest_t forest_from, std::vector<sc_MPI
  * those of \a forest_from.
  * This in particular means that it does not suffice to only receive from one direction, e.g.,
  * from all processes of lower rank and then only check the lower process borders, see comment
- * in description of \ref t8_forest_pfc_family_range_around_border.
+ * in description of \ref t8_forest_pfc_family_range_around_border_anchor.
+ *
+ * \tparam MessageType  The type of the message. So far, always \ref t8_forest_pfc_message.
  *
  * \param[in]   forest_from   the old forest (forest->set_from of the new partitioned forest)
- * \param[out]  requests      the MPI messages
+ * \param[out]  messages      the MPI messages
 */
 template <typename MessageType>
 static void
@@ -232,6 +235,8 @@ t8_forest_pfc_recv_loop_range (const t8_forest_t forest_from, std::vector<Messag
  * \param[out]  family_end          the global element ID of the family's last member
  *
  * \return True (i.e., nonzero) if and only if a full family is found across the process borders.
+ *
+ * \anchor t8_forest_pfc_family_range_around_border_anchor.
 */
 static int
 t8_forest_pfc_family_range_around_border (const t8_forest_t forest_from, const t8_gloidx_t border_element_id,
