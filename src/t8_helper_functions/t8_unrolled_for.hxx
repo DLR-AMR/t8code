@@ -42,6 +42,7 @@ namespace t8_hidden_functions
 template <std::size_t TIndex>
 struct unrolled_index
 {
+  /** Value of the index in the for loop. */
   static constexpr std::size_t value = TIndex;
 
   /**

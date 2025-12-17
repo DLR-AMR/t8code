@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_refcount.c
+ * Implements reference counting functions declared in \ref t8_refcount.h.
+ */
+
 #include <t8_refcount.h>
 
 void

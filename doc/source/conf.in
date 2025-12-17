@@ -28,10 +28,11 @@
 
 import subprocess, os
 
-project = 't8code'
+project = '@PACKAGE_NAME@'
 copyright = '2024, Johannes Holke, David Knapp, Sandro Elsweijer, Ioannis Lilikakis, Lukas Dreyer, Jakob Fußbroich, Carsten Burstedde, Chiara Hergl, Johannes Markert, Niklas Boeing, Florian Becker, Prasanna Ponnusamy'
 author = 'Johannes Holke, David Knapp, Sandro Elsweijer, Ioannis Lilikakis, Lukas Dreyer, Jakob Fußbroich, Carsten Burstedde, Chiara Hergl, Johannes Markert, Niklas Boeing, Florian Becker, Prasanna Ponnusamy'
 version = '@VERSION@'
+doxyfile_out = '@DOXYFILE_OUT@'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -49,29 +50,9 @@ exclude_patterns = []
 breathe_projects = {}
 
 # configure the Doxyfile and create outputfiles. Only needed for a run on the readthedocs servers.
-def configureDoxyfile(input_dir, output_dir):
-    with open('../Doxyfile.in', 'r') as file :
-        filedata = file.read()
-
-    filedata = filedata.replace('@top_srcdir@', input_dir)
-    filedata = filedata.replace('@top_builddir@', output_dir)
-
-    with open('../Doxyfile', 'w') as file:
-        file.write(filedata)
-
-    # go to the doc directory
-    doc_dir = input_dir + '/doc'
-    os.chdir(doc_dir)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    if not os.path.exists(output_dir + '/xml'):
-        os.makedirs(output_dir + '/xml')
-    if not os.path.exists(output_dir + '/html'):
-        os.makedirs(output_dir + '/html')
-    if not os.path.exists(output_dir + '/latex'):
-        os.makedirs(output_dir + '/latex')
+def configureDoxyfile():
     # Run doxygen
-    subprocess.call('doxygen Doxyfile', shell=True)
+    subprocess.call(f'doxygen {doxyfile_out}', shell=True)
 
 # Check if we're running on Read the Docs' servers
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
@@ -81,12 +62,9 @@ print("Running on Read the Docs:", read_the_docs_build)
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-breathe_projects = {}
-
 if read_the_docs_build:
-    input_dir = '../../'
-    output_dir = 'build'
-    configureDoxyfile(input_dir, output_dir)
+    output_dir = '@DOXYGEN_OUTPUT_DIR@'
+    configureDoxyfile()
     breathe_projects["t8code"] = output_dir + '/xml'
 
 html_theme = 'sphinx_rtd_theme'
@@ -95,7 +73,7 @@ html_theme_options = {
 }
 html_static_path = ['_static']
 html_logo = '../../t8code_logo.png'
-html_extra_path = ['../../build/html']
+html_extra_path = [output_dir + '/html']
 
 breathe_default_project = "t8code"
 breathe_implementation_filename_extensions = ['.c', '.cpp']
@@ -112,8 +90,7 @@ exhale_args = {
     "createTreeView":        True,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
-    "exhaleExecutesDoxygen": True,
-    "exhaleDoxygenStdin":    "INPUT = ../../src"
+    "exhaleExecutesDoxygen": False
 }
 
 # Tell sphinx what the primary language being documented is.

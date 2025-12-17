@@ -677,6 +677,18 @@ t8_locidx_t
 t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face, int *dual_face,
                             int *orientation);
 
+/**
+ * Given a local tree id (of a local tree or ghost tree) and a face compute the eclass of the 
+ * tree's face neighbor.
+ * 
+ * \param [in]      cmesh   The cmesh to be considered.
+ * \param [in]      ltreeid The local id of a tree or a ghost.
+ * \param [in]      face    A face number of the tree/ghost.
+ * \return          The eclass of a neighbor tree of \a ltreeid across \a face. T8_ECLASS_INVALID if no neighbor exists.
+ */
+t8_eclass_t
+t8_cmesh_get_tree_face_neighbor_eclass (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face);
+
 /** Print the collected statistics from a cmesh profile.
  * \param [in]    cmesh         The cmesh.
  *
