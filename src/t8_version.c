@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_version.c
+ * Implements functions declared in \ref t8_version.h.
+ */
+
 #include <t8_version.h>
 
 const char *

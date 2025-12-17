@@ -77,7 +77,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: config.log
         path: build/config.log
@@ -86,7 +86,7 @@ jobs:
       run: cd build && ninja GenerateVersionFile && ninja package_source && mkdir tarballs && mv package/*Source.tar.gz tarballs
 # Upload the tarball
     - name: upload tarball
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: tarballs
         path: build/tarballs
@@ -98,7 +98,7 @@ jobs:
     timeout-minutes: 90
     steps:
     - name: Download tarball
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
           name: tarballs
           path: tarballs
@@ -121,7 +121,7 @@ jobs:
       run: mkdir build_tar && cd build_tar && cmake $TAR_DIR $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: build_tar.log
         path: build_tar/config.log
@@ -135,7 +135,7 @@ jobs:
       run: cd build_tar && ctest -R _parallel
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: build_tar.log
         path: build_tar/test-suite.log

@@ -30,6 +30,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_netcdf.h>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /** Creates a netCDF-4 file containing the (geometrical) information about the given forest mesh and additional elementwise data variables
@@ -63,6 +64,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const c
                             int num_extern_netcdf_vars, t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm,
                             int netcdf_var_storage_mode, int netcdf_mpi_access);
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_NETCDF_H */
