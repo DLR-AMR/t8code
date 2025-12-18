@@ -53,7 +53,7 @@ jobs:
   t8code_cmake_tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    container: ubuntu:latest
+    container: ubuntu:22.04
     steps:
 #
 # Setup
