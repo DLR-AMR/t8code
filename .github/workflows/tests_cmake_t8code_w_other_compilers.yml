@@ -64,7 +64,7 @@ jobs:
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
     - name: Install CLANG
-      run: sudo apt install clang
+      run: sudo apt-get install clang -y
       # MYTODO: Somehow make github use CLANG here :-)
     - name: Check clang version
       run: clang --version
