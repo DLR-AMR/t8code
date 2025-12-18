@@ -51,8 +51,8 @@ concurrency:
 # - run on draft PRs, if the latest commit message contains '[run ci]'
 # - run on scheduled runs for the DLR-AMR/t8code repository
 # - run on all other pull request events
-# These conditions are checked in the fine_grained_trigger job. If it completes successfully, it triggers the preparation job, 
-# which triggers the actual tests. 
+# These conditions are checked in the fine_grained_trigger job. If it completes successfully, it triggers the preparation job,
+# which triggers the actual tests.
 # The job to build the tarball is only triggered on merge_group events for the DLR-AMR/t8code repository.
 
 jobs:
@@ -115,14 +115,14 @@ jobs:
       fail-fast: false
       matrix:
         MPI: [OFF, ON]
-        include: 
+        include:
           - MAKEFLAGS: -j4
     with:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
       IGNORE_CACHE: false # Use this to force a new installation of sc and p4est for this specific workflow run
       CACHE_COUNTER: 0 # Increase this number to force a new installation of sc and p4est and to update the cache once
       MPI: ${{ matrix.MPI }}
-  
+
   # # Run parallel tests for sc and p4est with and without MPI
   # sc_p4est_tests:
   #   needs: preparation
@@ -131,7 +131,7 @@ jobs:
   #     fail-fast: false
   #     matrix:
   #       MPI: [OFF, ON]
-  #       include: 
+  #       include:
   #         - MAKEFLAGS: -j4
   #   with:
   #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
@@ -146,14 +146,14 @@ jobs:
   #     matrix:
   #       MPI: [OFF, ON]
   #       BUILD_TYPE: [Debug, Release]
-  #       include: 
+  #       include:
   #         - MAKEFLAGS: -j4
   #   with:
   #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
   #     MPI: ${{ matrix.MPI }}
   #     BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
   #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
-      
+
   # # Run t8code linkage tests with and without MPI and in serial and debug mode
   # t8code_linkage_tests:
   #   needs: preparation
@@ -163,7 +163,7 @@ jobs:
   #     matrix:
   #       MPI: [OFF, ON]
   #       BUILD_TYPE: [Debug, Release]
-  #       include: 
+  #       include:
   #         - MAKEFLAGS: -j4
   #   with:
   #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
@@ -180,7 +180,7 @@ jobs:
   #     matrix:
   #       MPI: [ON] # For now the fortran API only supports building with MPI
   #       BUILD_TYPE: [Debug, Release]
-  #       include: 
+  #       include:
   #         - MAKEFLAGS: -j4
   #   with:
   #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
@@ -211,7 +211,7 @@ jobs:
   #     TEST_LEVEL: T8_TEST_LEVEL_BASIC
   #   secrets:
   #     CODE_COV: ${{ secrets.CODE_COV }}
-  
+
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_other_compilers_tests:
     needs: fine_grained_trigger
@@ -223,7 +223,7 @@ jobs:
       # matrix:
       #   MPI: [OFF, ON]
       #   BUILD_TYPE: [Debug, Release]
-      #   include: 
+      #   include:
       #     - MAKEFLAGS: -j4
     with:
       MAKEFLAGS: -j4
