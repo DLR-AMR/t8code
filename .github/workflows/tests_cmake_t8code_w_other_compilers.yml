@@ -91,17 +91,19 @@ jobs:
         echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
     - name: Show MPI version
       run: |
-        echo $PATH
-        export CC=clang
-        export CXX=clang++
+        # echo $PATH
+        # export CC=clang
+        # export CXX=clang++
         mpicc --version
+    - name: Show folder content
+      run: ls
       # This seems to be necessary because of the docker container
-#     - name: disable ownership checks
-#       run: git config --global --add safe.directory '*'
-#     - name: init submodules
-#       run: git submodule init
-#     - name: update submodules
-#       run: git submodule update
+    - name: disable ownership checks
+      run: git config --global --add safe.directory '*'
+    - name: init submodules
+      run: git submodule init
+    - name: update submodules
+      run: git submodule update
 #     - name: Get input vars
 #       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
 #         && export MPI="${{ inputs.MPI }}"
