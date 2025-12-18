@@ -65,11 +65,10 @@ jobs:
       run: sudo apt-get update && sudo apt-get upgrade -y
     - name: Install CLANG
       run: sudo apt-get install clang -y
-      # MYTODO: Somehow make github use CLANG here :-)
     - name: Check clang version
       run: clang --version
     - name: Show MPI version
-      run: which mpi
+      run: which mpicc
       # This seems to be necessary because of the docker container
 #     - name: disable ownership checks
 #       run: git config --global --add safe.directory '*'
