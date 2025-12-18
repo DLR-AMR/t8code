@@ -87,7 +87,7 @@ class abstract_element: public TCompetence<abstract_element<mesh_class, TCompete
   {
     return requires (T<SelfType>& competence) { competence.volume_cache_filled (); };
   }
-  /* This variable is true if any of the given competences \ref TCompetence implements 
+  /** This variable is true if any of the given competences \a TCompetence implements 
   a function volume_cache_filled. */
   static constexpr bool volume_cache_exists = (false || ... || volume_cache_defined<TCompetence> ());
 

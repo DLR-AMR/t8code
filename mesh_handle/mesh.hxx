@@ -52,7 +52,8 @@ namespace t8_mesh_handle
 template <typename TCompetencePack = competence_pack<>, typename TUserData = void, typename TElementData = void>
 class mesh {
  public:
-  using SelfType = mesh<TCompetencePack, TUserData, TElementData>;
+  using SelfType = mesh<TCompetencePack, TUserData,
+                        TElementData>; /**< Type of the current class with all template parameters specified. */
   /** Type definitions of the element classes with given competences. */
   using abstract_element_class = TCompetencePack::template apply<
     SelfType, abstract_element>; /**< The abstract element class of the mesh (could be a mesh element of ghost). */
