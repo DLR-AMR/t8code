@@ -87,7 +87,9 @@ jobs:
         make -j$(nproc)
         make install
         cd ..
+        echo "OMPI_INSTALL_PATH= ${OMPI_INSTALL_PATH}"
         export PATH=$OMPI_INSTALL_PATH/bin:$PATH >> $GITHUB_ENV
+        echo "PATH= ${PATH}"
     - name: Show MPI version
       run: |
         echo $PATH
