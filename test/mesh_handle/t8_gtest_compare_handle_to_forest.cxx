@@ -32,6 +32,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /** Tests that the functionality of the handle gives the same results as if worked with the forest directly.
@@ -61,6 +62,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Compare basics. ---
       EXPECT_EQ (mesh_iterator->get_level (), scheme->element_get_level (tree_class, elem));
       EXPECT_EQ (mesh_iterator->get_shape (), scheme->element_get_shape (tree_class, elem));
+      EXPECT_EQ (mesh_iterator->get_volume (), t8_forest_element_volume (forest, itree, elem));
       // --- Compare centroid. ---
       t8_3D_point centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());

@@ -37,11 +37,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
-/* Forward declaration of the \ref mesh class of the handle.
- */
-template <template <typename> class... TCompetence>
-class mesh;
-
 /** 
  * Class for the mesh elements of the mesh handle. 
  * This class is a child class of the abstract element class and implements the functionality specific to mesh elements 
@@ -49,11 +44,10 @@ class mesh;
  *
  * \tparam TCompetence The competences you want to add to the default functionality of the element.
  */
-template <template <typename> class... TCompetence>
-class mesh_element: public abstract_element<TCompetence...> {
-  using Base = abstract_element<TCompetence...>;
-  using SelfType = mesh_element<TCompetence...>;
-  using mesh_class = Base::mesh_class;
+template <typename mesh_class, template <typename> class... TCompetence>
+class mesh_element: public abstract_element<mesh_class, TCompetence...> {
+  using Base = abstract_element<mesh_class, TCompetence...>;
+  using SelfType = mesh_element<mesh_class, TCompetence...>;
   friend mesh_class;
 
   // --- Variables to check which functionality is defined in TCompetence. ---
