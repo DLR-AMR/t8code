@@ -39,6 +39,12 @@ on:
   schedule:
       - cron:  '10 1 * * *'
 
+concurrency:
+  # Base the group on workflow name and ref to allow concurrent runs for different branches, but not multiple runs for the same branch.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Always complete runs on the merge queue.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+
 # The CI pipeline should:
 # - fully run in the merge queue with the full test suite
 # - not run on draft PRs
@@ -217,6 +223,10 @@ jobs:
       MPI: ON
       BUILD_TYPE: Debug
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+
+  t8code_doxygen_check:
+    uses: ./.github/workflows/check_doxygen.yml
+    needs: [preparation, sc_p4est_tests, t8code_tests, t8code_linkage_tests, t8code_api_tests, t8code_w_shipped_submodules_tests]
 
   t8code_tarball:
     if: github.event.pull_request.draft == false

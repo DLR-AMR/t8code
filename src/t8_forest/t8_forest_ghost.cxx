@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_ghost.cxx
+ * Implements functions declared in \ref t8_forest_ghost.h.
+ */
+
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
@@ -1300,7 +1304,7 @@ typedef struct t8_recv_list_entry_struct
   int pos_in_remote_processes; /**< The position of this process in the remote_processes array */
 } t8_recv_list_entry_t;
 
-/* We hash these entries by their rank */
+/** We hash these entries by their rank. */
 unsigned
 t8_recv_list_entry_hash (const void *v1, [[maybe_unused]] const void *u)
 {
@@ -1309,7 +1313,7 @@ t8_recv_list_entry_hash (const void *v1, [[maybe_unused]] const void *u)
   return e1->rank;
 }
 
-/* two entries are considered equal if they have the same rank. */
+/** Two entries are considered equal if they have the same rank. */
 int
 t8_recv_list_entry_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
