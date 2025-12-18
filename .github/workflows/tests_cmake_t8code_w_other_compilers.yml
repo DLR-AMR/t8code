@@ -62,17 +62,11 @@ jobs:
       with:
         fetch-depth: 0
     - name: Update packages
-      run: apt-get update && apt-get upgrade -y
+      run: sudo apt-get update && sudo apt-get upgrade -y
     - name: Install CLANG
-      run: apt-get install -y clang  libopenmpi-dev openmpi-bin
+      run: sudo apt-get install clang -y
     - name: Check clang version
       run: clang --version
-    # - name: Check whether gcc is there
-    #   run: gcc --version
-    # - name: Set clang as compiler
-    # - name: Install another MPI version
-    #   run: |
-    #     apt install -y libopenmpi-dev openmpi-bin
     - name: Show MPI version
       run: |
         export CC=clang
