@@ -67,11 +67,11 @@ jobs:
       run: |
         apt-get install -y wget tar lld make \
           libc6-dev libc++-dev libc++abi-dev \
-          pkg-config \
-          zlib1g-dev \
-          libssl-dev \
-          bzip2-dev \
-          sqlite3-dev \
+          pkg-config
+          # zlib1g-dev \
+          # libssl-dev \
+          # bzip2-dev \
+          # sqlite3-dev \
     - name: Install CLANG
       run: apt-get install clang -y
     - name: Check clang version
