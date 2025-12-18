@@ -64,7 +64,14 @@ jobs:
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
     - name: Install some basic packages
-      run: apt-get install -y wget tar lld make libc6-dev libc++-dev libc++abi-dev
+      run: |
+        apt-get install -y wget tar lld make \
+          libc6-dev libc++-dev libc++abi-dev \
+          pkg-config \
+          zlib1g-dev \
+          libssl-dev \
+          bzip2-dev \
+          sqlite3-dev \
     - name: Install CLANG
       run: apt-get install clang -y
     - name: Check clang version
@@ -80,9 +87,10 @@ jobs:
         make -j$(nproc)
         make install
         cd ..
-        export PATH=$OMPI_INSTALL_PATH/bin:$PATH
+        export PATH=$OMPI_INSTALL_PATH/bin:$PATH >> $GITHUB_ENV
     - name: Show MPI version
       run: |
+        echo $PATH
         export CC=clang
         export CXX=clang++
         mpicc --version
