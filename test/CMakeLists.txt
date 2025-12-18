@@ -205,12 +205,14 @@ add_t8_cpp_test( NAME t8_gtest_elements_are_family_serial   SOURCES t8_schemes/t
 if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_parallel    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )
 endif()
-
+ 
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_functions/t8_gtest_vector_split.cxx )
 
 if( T8CODE_BUILD_MESH_HANDLE )
-  add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel        SOURCES mesh_handle/t8_gtest_mesh_handle.cxx )
-  add_t8_cpp_test( NAME t8_gtest_custom_competence_serial    SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel             SOURCES mesh_handle/t8_gtest_mesh_handle.cxx )
+  add_t8_cpp_test( NAME t8_gtest_compare_handle_to_forest_serial  SOURCES mesh_handle/t8_gtest_compare_handle_to_forest.cxx )
+  add_t8_cpp_test( NAME t8_gtest_custom_competence_serial         SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_cache_competence_serial          SOURCES mesh_handle/t8_gtest_cache_competence.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
