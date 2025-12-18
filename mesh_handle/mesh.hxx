@@ -52,8 +52,9 @@ namespace t8_mesh_handle
 template <typename TCompetencePack = competence_pack<>, typename TUserData = void, typename TElementData = void>
 class mesh {
  public:
-  using SelfType = mesh<TCompetencePack, TUserData, TElementData>; /**< Type of the current class with all template parameters specified. */
-  using UserDataType = TUserData; /**< Make Type of the user data accessible. */
+  using SelfType = mesh<TCompetencePack, TUserData,
+                        TElementData>;  /**< Type of the current class with all template parameters specified. */
+  using UserDataType = TUserData;       /**< Make Type of the user data accessible. */
   using ElementDataType = TElementData; /**< Make Type of the element data accessible. */
 
   /** Type definitions of the element classes with given competences. */
