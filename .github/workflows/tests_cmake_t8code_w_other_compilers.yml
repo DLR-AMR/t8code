@@ -67,11 +67,15 @@ jobs:
       run: sudo apt-get install clang -y
     - name: Check clang version
       run: clang --version
+    # - name: Set clang as compiler
     - name: Install another MPI version
       run: |
         sudo apt install -y libopenmpi-dev openmpi-bin
     - name: Show MPI version
-      run: mpicc --version
+      run: |
+        export CC=clang
+        export CXX=clang++
+        mpicc --version
       # This seems to be necessary because of the docker container
 #     - name: disable ownership checks
 #       run: git config --global --add safe.directory '*'
