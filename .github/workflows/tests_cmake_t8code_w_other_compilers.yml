@@ -86,10 +86,9 @@ jobs:
         CC=clang CXX=clang++ ./configure --prefix=$OMPI_INSTALL_PATH
         make -j$(nproc)
         make install
-        cd ..
         echo "OMPI_INSTALL_PATH= ${OMPI_INSTALL_PATH}"
-        export PATH=$OMPI_INSTALL_PATH/bin:$PATH >> $GITHUB_ENV
-        echo "PATH= ${PATH}"
+        ls $OMPI_INSTALL_PATH
+        echo "${OMPI_INSTALL_PATH}"" >> $GITHUB_PATH
     - name: Show MPI version
       run: |
         echo $PATH
