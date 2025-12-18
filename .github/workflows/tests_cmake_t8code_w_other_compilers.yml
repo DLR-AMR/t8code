@@ -64,7 +64,7 @@ jobs:
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
     - name: Install some basic packages
-      run: apt-get install -y wget tar
+      run: apt-get install -y wget tar lld make libc6-dev libc++-dev libc++abi-dev
     - name: Install CLANG
       run: apt-get install clang -y
     - name: Check clang version
