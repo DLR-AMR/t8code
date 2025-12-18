@@ -41,7 +41,7 @@ jobs:
           done
       - name: Archive script output
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: t8code check macros report
           path: check_macros.txt
