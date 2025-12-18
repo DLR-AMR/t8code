@@ -62,7 +62,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Update packages
-      run: apt-get update && sudo apt-get upgrade -y
+      run: apt-get update && apt-get upgrade -y
     - name: Install CLANG
       run: apt-get install clang -y
     - name: Check clang version
