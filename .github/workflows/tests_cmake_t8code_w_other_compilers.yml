@@ -133,34 +133,32 @@ jobs:
     # cmake and test
     - name: Printing MPI compiler info
       run: mpicc --version && mpirun --version
-    - name: Printing GCC compiler info
-      run: gcc --version && g++ --version
     - name: echo cmake line
       run: echo cmake ../ $CONFIG_OPTIONS
     - name: cmake
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
-    # - name: OnFailUploadLog
-    #   if: failure()
-    #   uses: actions/upload-artifact@v5
-    #   with:
-    #     name: cmake_w_submodules_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-    #     path: build/CMakeFiles/CMakeOutput.log
-#     - name: ninja
-#       run: cd build && ninja $MAKEFLAGS
-#     - name: ninja install
-#       run: cd build && ninja install $MAKEFLAGS
-#     - name: serial tests (if MPI is enabled)
-#       run: cd build && ctest $MAKEFLAGS -R _serial
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v5
+      with:
+        name: cmake_w_other_compilers_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        path: build/CMakeFiles/CMakeOutput.log
+    - name: ninja
+      run: cd build && ninja $MAKEFLAGS
+    - name: ninja install
+      run: cd build && ninja install $MAKEFLAGS
+    - name: serial tests (if MPI is enabled)
+      run: cd build && ctest $MAKEFLAGS -R _serial
 #       if: ${{ inputs.MPI == 'ON' }}
-#     - name: parallel tests (if MPI is enabled)
-#       run: cd build && ctest -R _parallel
-#       if: ${{ inputs.MPI == 'ON' }}
-#     - name: tests (if MPI is disabled)
-#       run: cd build && ctest $MAKEFLAGS
-#       if: ${{ inputs.MPI == 'OFF' }}
-#     - name: OnFailUploadLog
-#       if: failure()
-#       uses: actions/upload-artifact@v5
-#       with:
-#         name: test-suite_w_submodules_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-#         path: build/Testing/Temporary/LastTest.log
+    - name: parallel tests (if MPI is enabled)
+      run: cd build && ctest -R _parallel
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
+      run: cd build && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-suite_w_other_compilers_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        path: build/Testing/Temporary/LastTest.log
