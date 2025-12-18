@@ -1,4 +1,4 @@
-name: CMake tests t8code with shipped submodules
+name: CMake tests t8code with other compilers
 
 
 #  This file is part of t8code.
@@ -53,7 +53,7 @@ jobs:
   t8code_cmake_tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: ubuntu:20.04
     steps:
 #
 # Setup
