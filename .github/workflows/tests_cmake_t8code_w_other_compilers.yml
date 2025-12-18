@@ -64,15 +64,15 @@ jobs:
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
     - name: Install CLANG
-      run: apt-get install clang -y
+      run: apt-get install -y clang  libopenmpi-dev openmpi-bin
     - name: Check clang version
       run: clang --version
-    - name: Check whether gcc is there
-      run: gcc --version      
+    # - name: Check whether gcc is there
+    #   run: gcc --version
     # - name: Set clang as compiler
-    - name: Install another MPI version
-      run: |
-        apt install -y libopenmpi-dev openmpi-bin
+    # - name: Install another MPI version
+    #   run: |
+    #     apt install -y libopenmpi-dev openmpi-bin
     - name: Show MPI version
       run: |
         export CC=clang
