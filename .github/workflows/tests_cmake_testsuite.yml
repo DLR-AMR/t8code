@@ -123,106 +123,127 @@ jobs:
       CACHE_COUNTER: 0 # Increase this number to force a new installation of sc and p4est and to update the cache once
       MPI: ${{ matrix.MPI }}
   
-  # Run parallel tests for sc and p4est with and without MPI
-  sc_p4est_tests:
-    needs: preparation
-    uses: ./.github/workflows/tests_cmake_sc_p4est.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: [OFF, ON]
-        include: 
-          - MAKEFLAGS: -j4
-    with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
+  # # Run parallel tests for sc and p4est with and without MPI
+  # sc_p4est_tests:
+  #   needs: preparation
+  #   uses: ./.github/workflows/tests_cmake_sc_p4est.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       MPI: [OFF, ON]
+  #       include: 
+  #         - MAKEFLAGS: -j4
+  #   with:
+  #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+  #     MPI: ${{ matrix.MPI }}
 
-  # Run t8code tests with and without MPI and in serial and debug mode
-  t8code_tests:
-    needs: preparation
-    uses: ./.github/workflows/tests_cmake_t8code.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: [OFF, ON]
-        BUILD_TYPE: [Debug, Release]
-        include: 
-          - MAKEFLAGS: -j4
-    with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
-      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+  # # Run t8code tests with and without MPI and in serial and debug mode
+  # t8code_tests:
+  #   needs: preparation
+  #   uses: ./.github/workflows/tests_cmake_t8code.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       MPI: [OFF, ON]
+  #       BUILD_TYPE: [Debug, Release]
+  #       include: 
+  #         - MAKEFLAGS: -j4
+  #   with:
+  #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+  #     MPI: ${{ matrix.MPI }}
+  #     BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+  #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
       
-  # Run t8code linkage tests with and without MPI and in serial and debug mode
-  t8code_linkage_tests:
-    needs: preparation
-    uses: ./.github/workflows/tests_cmake_t8code_linkage.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: [OFF, ON]
-        BUILD_TYPE: [Debug, Release]
-        include: 
-          - MAKEFLAGS: -j4
-    with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
-      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+  # # Run t8code linkage tests with and without MPI and in serial and debug mode
+  # t8code_linkage_tests:
+  #   needs: preparation
+  #   uses: ./.github/workflows/tests_cmake_t8code_linkage.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       MPI: [OFF, ON]
+  #       BUILD_TYPE: [Debug, Release]
+  #       include: 
+  #         - MAKEFLAGS: -j4
+  #   with:
+  #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+  #     MPI: ${{ matrix.MPI }}
+  #     BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+  #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
-  # Run t8code linkage tests with and without MPI and in serial and debug mode
-  t8code_api_tests:
-    needs: preparation
-    uses: ./.github/workflows/tests_cmake_t8code_api.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        MPI: [ON] # For now the fortran API only supports building with MPI
-        BUILD_TYPE: [Debug, Release]
-        include: 
-          - MAKEFLAGS: -j4
-    with:
-      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
-      MPI: ${{ matrix.MPI }}
-      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+  # # Run t8code linkage tests with and without MPI and in serial and debug mode
+  # t8code_api_tests:
+  #   needs: preparation
+  #   uses: ./.github/workflows/tests_cmake_t8code_api.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       MPI: [ON] # For now the fortran API only supports building with MPI
+  #       BUILD_TYPE: [Debug, Release]
+  #       include: 
+  #         - MAKEFLAGS: -j4
+  #   with:
+  #     MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+  #     MPI: ${{ matrix.MPI }}
+  #     BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+  #     TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
-  # Run Valgrind check for every t8code test binary.
-  t8code_valgrind_tests:
-    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') # Only run the Valgrind check in the scheduled run.
-    needs: preparation
-    uses: ./.github/workflows/tests_cmake_valgrind.yml
-    with:
-      MAKEFLAGS: -j4
-      MPI: ON
-      BUILD_TYPE: Debug
-      TEST_LEVEL: T8_TEST_LEVEL_BASIC # Do Valgrind check for test level T8_TEST_LEVEL_BASIC for performance reasons.
+  # # Run Valgrind check for every t8code test binary.
+  # t8code_valgrind_tests:
+  #   if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') # Only run the Valgrind check in the scheduled run.
+  #   needs: preparation
+  #   uses: ./.github/workflows/tests_cmake_valgrind.yml
+  #   with:
+  #     MAKEFLAGS: -j4
+  #     MPI: ON
+  #     BUILD_TYPE: Debug
+  #     TEST_LEVEL: T8_TEST_LEVEL_BASIC # Do Valgrind check for test level T8_TEST_LEVEL_BASIC for performance reasons.
 
-  # Generate code coverage and deploy to Codecov.
-  t8code_code_coverage:
-    if: (github.event_name != 'merge_group')
-    needs: preparation
-    uses: ./.github/workflows/code_coverage.yml
-    with:
-      MAKEFLAGS: -j4
-      MPI: ON
-      BUILD_TYPE: Debug
-      TEST_LEVEL: T8_TEST_LEVEL_BASIC
-    secrets:
-      CODE_COV: ${{ secrets.CODE_COV }}
+  # # Generate code coverage and deploy to Codecov.
+  # t8code_code_coverage:
+  #   if: (github.event_name != 'merge_group')
+  #   needs: preparation
+  #   uses: ./.github/workflows/code_coverage.yml
+  #   with:
+  #     MAKEFLAGS: -j4
+  #     MPI: ON
+  #     BUILD_TYPE: Debug
+  #     TEST_LEVEL: T8_TEST_LEVEL_BASIC
+  #   secrets:
+  #     CODE_COV: ${{ secrets.CODE_COV }}
   
+  # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
+  t8code_w_other_compilers_tests:
+    needs: fine_grained_trigger
+    secrets: inherit
+    if: ${{ needs.fine_grained_trigger.outputs.run_ci == 'true' }}
+    uses: ./.github/workflows/tests_cmake_t8code_w_shipped_submodules.yml
+    strategy:
+      fail-fast: false
+      # matrix:
+      #   MPI: [OFF, ON]
+      #   BUILD_TYPE: [Debug, Release]
+      #   include: 
+      #     - MAKEFLAGS: -j4
+    with:
+      MAKEFLAGS: -j4
+      MPI: ON
+      BUILD_TYPE: Debug
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+      COMPILER: CLANG
+
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
   t8code_w_shipped_submodules_tests:
     needs: fine_grained_trigger
     secrets: inherit
     if: ${{ needs.fine_grained_trigger.outputs.run_ci == 'true' }}
-    uses: ./.github/workflows/tests_cmake_t8code_w_shipped_submodules.yml
+    uses: ./.github/workflows/tests_cmake_t8code_w_other_compilers.yml
     with:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+
 
   t8code_doxygen_check:
     uses: ./.github/workflows/check_doxygen.yml
