@@ -214,16 +214,28 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                               double *out_coords) const;
 
+  /**
+   * Evaluate a point on a CAD curve.
+   * \param [in] curve_index The index of the curve in the CAD shape.
+   * \param [in] param       The parameter on the curve to evaluate.
+   * \return The point on the curve.
+   */
+  gp_Pnt
+  process_curve (const int curve_index, const double param) const;
+
+  /**
+   * Evaluate a point on a CAD surface.
+   * \param [in] surface_index The index of the surface in the CAD shape.
+   * \param [in] params        The parameter on the surface to evaluate.
+   * \return The point on the surface.
+   */
+  gp_Pnt
+  process_surface (const int surface_index, const double *params) const;
+
   const int *edges; /**< The linked edges of the currently active tree. */
   const int *faces; /**< The linked faces of the currently active tree. */
 
   std::shared_ptr<t8_cad> cad_manager; /**< The CAD manager of the geometry. */
-
-  gp_Pnt
-  process_curve (const int edge_index, const double interpolated_curve_param) const;
-
-  gp_Pnt
-  process_surface (const int face_index, const double *interpolated_surface_params, const int offset) const;
 };
 
 #endif /* !T8_GEOMETRY_CAD_HXX */

@@ -14,7 +14,7 @@ As a reviewer please read through all the code lines and make sure that the code
 - [ ] The reviewer executed the new code features at least once and checked the results manually.
 - [ ] The code follows the [t8code coding guidelines](https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline).
 - [ ] New source/header files are properly added to the CMake files.
-- [ ] The code is well documented. In particular, all function declarations, structs/classes and their members have a proper doxygen documentation.
+- [ ] The code is well documented. In particular, all function declarations, structs/classes and their members have a proper doxygen documentation. Make sure to add a file documentation for each file!
 - [ ] All new algorithms and data structures are sufficiently optimal in terms of memory and runtime (If this should be merged, but there is still potential for optimization, create a new issue).
 #### Tests
 - [ ] The code is covered in an existing or new test case using Google Test.
