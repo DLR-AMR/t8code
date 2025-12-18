@@ -52,9 +52,10 @@ namespace t8_mesh_handle
 template <typename TCompetencePack = competence_pack<>, typename TUserData = void, typename TElementData = void>
 class mesh {
  public:
-  using SelfType = mesh<TCompetencePack, TUserData, TElementData>;
-  using UserDataType = TUserData;
-  using ElementDataType = TUserData;
+  using SelfType = mesh<TCompetencePack, TUserData, TElementData>; /**< Type of the current class with all template parameters specified. */
+  using UserDataType = TUserData; /**< Make Type of the user data accessible. */
+  using ElementDataType = TElementData; /**< Make Type of the element data accessible. */
+
   /** Type definitions of the element classes with given competences. */
   using abstract_element_class = TCompetencePack::template apply<
     SelfType, abstract_element>; /**< The abstract element class of the mesh (could be a mesh element of ghost). */
@@ -64,9 +65,9 @@ class mesh {
     = TCompetencePack::template apply<SelfType, ghost_element>; /**< The ghost element class of the mesh. */
 
   // Declare all element classes as friend such that private members (e.g. the forest) can be accessed.
-  friend abstract_element_class;
-  friend mesh_element_class;
-  friend ghost_element_class;
+  friend abstract_element_class; /**< Abstract element class as friend. */
+  friend mesh_element_class;     /**< Mesh element class as friend. */
+  friend ghost_element_class;    /**< Ghost element class as friend. */
 
   using mesh_const_iterator =
     typename std::vector<mesh_element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
