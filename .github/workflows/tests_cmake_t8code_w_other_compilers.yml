@@ -67,7 +67,8 @@ jobs:
       run: |
         apt-get install -y wget tar lld make \
           libc6-dev libc++-dev libc++abi-dev \
-          pkg-config
+          pkg-config \
+          git
           # zlib1g-dev \
           # libssl-dev \
           # bzip2-dev \
