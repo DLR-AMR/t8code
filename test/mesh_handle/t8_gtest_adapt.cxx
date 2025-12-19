@@ -48,7 +48,7 @@ struct dummy_user_data
 
 template <typename TMeshClass>
 bool
-refine_mesh_element_test (TMeshClass mesh, typename TMeshClass::mesh_element_class &element)
+refine_mesh_element_test (const TMeshClass &mesh, const typename TMeshClass::mesh_element_class &element)
 {
   typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
   auto element_centroid = element.get_centroid ();
@@ -60,7 +60,8 @@ refine_mesh_element_test (TMeshClass mesh, typename TMeshClass::mesh_element_cla
 
 template <typename TMeshClass>
 bool
-coarsen_mesh_element_family_test (TMeshClass mesh, std::vector<typename TMeshClass::mesh_element_class> &elements)
+coarsen_mesh_element_family_test (const TMeshClass &mesh,
+                                  const std::vector<typename TMeshClass::mesh_element_class> &elements)
 {
   typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
   auto element_centroid = elements[0].get_centroid ();
@@ -116,20 +117,12 @@ TEST (t8_gtest_handle_adapt, define_adapt)
   };
   mesh_handle.set_user_data (&user_data);
 
+  t8_forest_ref (forest);
   t8_mesh_handle::adapt_mesh<mesh_class> (mesh_handle, refine_mesh_element_test<mesh_class>,
                                           coarsen_mesh_element_family_test<mesh_class>, false);
 
-  t8_cmesh_t cmesh_compare = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  const t8_scheme *init_scheme_compare = init_scheme;
-  init_scheme->ref ();
-  t8_forest_t forest_compare = t8_forest_new_uniform (cmesh_compare, init_scheme_compare, level, 0, sc_MPI_COMM_WORLD);
-  t8_forest_t forest_adapt;
-  forest_adapt = t8_forest_new_adapt (forest_compare, t8_step3_adapt_callback, 0, 1, &user_data);
+  forest = t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 1, &user_data);
 
-  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_adapt));
-
-  // Unref the forests.
-  t8_forest_unref (&forest_adapt);
-  forest = mesh_handle.get_forest ();
+  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
   t8_forest_unref (&forest);
 }

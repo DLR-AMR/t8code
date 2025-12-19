@@ -40,10 +40,10 @@ namespace t8_mesh_handle
 /** TODO*/
 template <typename TMeshClass>
 using coarsen_mesh_element_family
-  = std::function<bool (TMeshClass, std::vector<typename TMeshClass::mesh_element_class>&)>;
+  = std::function<bool (const TMeshClass&, const std::vector<typename TMeshClass::mesh_element_class>&)>;
 
 template <typename TMeshClass>
-using refine_mesh_element = std::function<bool (TMeshClass, typename TMeshClass::mesh_element_class&)>;
+using refine_mesh_element = std::function<bool (const TMeshClass&, const typename TMeshClass::mesh_element_class&)>;
 
 namespace detail
 {
