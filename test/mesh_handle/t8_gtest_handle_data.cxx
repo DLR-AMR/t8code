@@ -38,7 +38,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 
 // --- Test for user data. ---
-// Dummy user data taken from a tutorial for test purposes.
+/** Dummy user data taken from a tutorial for test purposes. */
 struct dummy_user_data
 {
   t8_3D_point midpoint;             /**< The midpoint of our sphere. */

@@ -22,7 +22,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_adapt.cxx
- * TODO
+ * Tests for the adapt routines of mesh handles. 
+ * This tests uses the callbacks and user data of tutorial step 3 as example.
+ * The adaptation criterion is to look at the midpoint coordinates of the current element and if
+ * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
  */
 
 #include <gtest/gtest.h>
@@ -38,7 +41,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
-// Dummy user data taken from a tutorial for test purposes.
+/** Dummy user data taken from tutorial for test purposes. */
 struct dummy_user_data
 {
   t8_3D_point midpoint;             /**< The midpoint of our sphere. */
@@ -46,18 +49,28 @@ struct dummy_user_data
   double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
 };
 
+/** Callback function implementation to decide for the refinement of an element of a mesh handle.
+ * \param [in] mesh The mesh that should be adapted.
+ * \param [in] element The element to consider for refinement.
+ * \tparam TMeshClass The mesh handle class.
+ * \return true if the element should be refined, false otherwise.
+ */
 template <typename TMeshClass>
 bool
 refine_mesh_element_test (const TMeshClass &mesh, const typename TMeshClass::mesh_element_class &element)
 {
   typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
   auto element_centroid = element.get_centroid ();
-
-  /* Compute the distance to our sphere midpoint. */
   double dist = t8_dist<t8_3D_point, t8_3D_point> (element_centroid, user_data.midpoint);
   return (dist < user_data.refine_if_inside_radius);
 }
 
+/** Callback function implementation to decide for coarsening.
+ * \param [in] mesh The mesh that should be adapted.
+ * \param [in] elements The element family considered to be coarsened.
+ * \tparam TMeshClass The mesh handle class.
+ * \return true if the family should be coarsened, false otherwise. 
+ */
 template <typename TMeshClass>
 bool
 coarsen_mesh_element_family_test (const TMeshClass &mesh,
@@ -65,51 +78,49 @@ coarsen_mesh_element_family_test (const TMeshClass &mesh,
 {
   typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
   auto element_centroid = elements[0].get_centroid ();
-
-  /* Compute the distance to our sphere midpoint. */
   double dist = t8_dist<t8_3D_point, t8_3D_point> (element_centroid, user_data.midpoint);
   return (dist > user_data.coarsen_if_outside_radius);
 }
 
+/** Adapt callback implementation for a forest.
+ * This callback defines the same adaptation rules as \ref coarsen_mesh_element_family_test
+ * together with \ref refine_mesh_element_test. Callback is not used for the mesh handle 
+ * but for the forest compared to the adapted mesh handle.
+ */
 int
-t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                         [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                         [[maybe_unused]] const t8_scheme *scheme, const int is_family,
-                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                               [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
+                               [[maybe_unused]] const t8_scheme *scheme, const int is_family,
+                               [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   const struct dummy_user_data *adapt_data = (const struct dummy_user_data *) t8_forest_get_user_data (forest);
-
-  /* Compute the element's centroid coordinates. */
   t8_3D_point centroid;
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
-
-  /* Compute the distance to our sphere midpoint. */
   double dist = t8_dist<t8_3D_point, t8_3D_point> (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     /* Refine this element. */
     return 1;
   }
   else if (is_family && dist > adapt_data->coarsen_if_outside_radius) {
-    /* Coarsen this family. Note that we check for is_family before, since returning < 0
-     * if we do not have a family as input is illegal. */
+    /* Coarsen this family. */
     return -1;
   }
   /* Do not change this element. */
   return 0;
 }
 
-/** TODO
+/** Test the adapt routine of a mesh handle. 
+ * We compare the result to a classically adapted forest with similar callback.
  */
-TEST (t8_gtest_handle_adapt, define_adapt)
+TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
 {
-  // Define forest and mesh handle.
+  // Define forest, a mesh handle and user data.
   const int level = 3;
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
   mesh_class mesh_handle = mesh_class (forest);
-
   struct dummy_user_data user_data = {
     t8_3D_point ({ 0.5, 0.5, 1 }), /* Midpoints of the sphere. */
     0.2,                           /* Refine if inside this radius. */
@@ -117,12 +128,16 @@ TEST (t8_gtest_handle_adapt, define_adapt)
   };
   mesh_handle.set_user_data (&user_data);
 
+  // Ref the forest as we want to keep using it after the adapt call to compare results.
   t8_forest_ref (forest);
+
+  // Adapt mesh handle and the forest with similar callbacks.
   t8_mesh_handle::adapt_mesh<mesh_class> (mesh_handle, refine_mesh_element_test<mesh_class>,
                                           coarsen_mesh_element_family_test<mesh_class>, false);
+  forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 1, &user_data);
 
-  forest = t8_forest_new_adapt (forest, t8_step3_adapt_callback, 0, 1, &user_data);
-
+  // Compare results.
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
+  // Clean up.
   t8_forest_unref (&forest);
 }
