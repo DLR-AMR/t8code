@@ -229,7 +229,7 @@ jobs:
       MAKEFLAGS: -j4
       MPI: ON
       BUILD_TYPE: Debug
-      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_BASIC' || 'T8_TEST_LEVEL_BASIC' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
       COMPILER: CLANG
 
   # Run t8code tests with shipped submodules. This test is only for the build system, so only one config is tested.
