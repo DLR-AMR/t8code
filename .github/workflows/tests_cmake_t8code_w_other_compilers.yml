@@ -152,6 +152,9 @@ jobs:
 #       if: ${{ inputs.MPI == 'ON' }}
     - name: parallel tests (if MPI is enabled)
       run: cd build && ctest -R _parallel
+      env:
+        OMPI_ALLOW_RUN_AS_ROOT: 1
+        OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
       if: ${{ inputs.MPI == 'ON' }}
     - name: tests (if MPI is disabled)
       run: cd build && ctest $MAKEFLAGS
