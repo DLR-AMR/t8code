@@ -155,6 +155,7 @@ jobs:
       env:
         OMPI_ALLOW_RUN_AS_ROOT: 1
         OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+        OMPI_MCA_rmaps_base_oversubscribe: 1
       if: ${{ inputs.MPI == 'ON' }}
     - name: tests (if MPI is disabled)
       run: cd build && ctest $MAKEFLAGS
