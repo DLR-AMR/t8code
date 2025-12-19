@@ -37,6 +37,17 @@
 namespace t8_mesh_handle
 {
 
+/** TODO*/
+template <typename TMeshClass>
+using coarsen_mesh_element_family
+  = std::function<bool (TMeshClass, std::vector<typename TMeshClass::mesh_element_class>&)>;
+
+template <typename TMeshClass>
+using refine_mesh_element = std::function<bool (TMeshClass, typename TMeshClass::mesh_element_class&)>;
+
+namespace detail
+{
+
 struct MeshAdaptContextBase
 {
   virtual ~MeshAdaptContextBase () = default;
@@ -45,13 +56,6 @@ struct MeshAdaptContextBase
   adapt_callback (t8_locidx_t lelement_id, int is_family, int num_elements, t8_element_t* elements[])
     = 0;
 };
-
-template <typename TMeshClass>
-using coarsen_mesh_element_family
-  = std::function<bool (TMeshClass, std::vector<typename TMeshClass::mesh_element_class>&)>;
-
-template <typename TMeshClass>
-using refine_mesh_element = std::function<bool (TMeshClass, typename TMeshClass::mesh_element_class&)>;
 
 template <typename TMesh>
 struct MeshAdaptContext final: MeshAdaptContextBase
@@ -143,7 +147,25 @@ mesh_adapt_callback ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_fro
   // TODO: adapt names in other callbacks to not get confused between flat and this element_in_tree_index.
   return context->adapt_callback (local_flat_index, is_family, num_elements, elements);
 }
+}  // namespace detail
 
+/** TODO Adapt a mesh handle according to the provided callbacks.
+ * By default, the forest takes ownership of the source \b set_from such that it
+ * will be destroyed on calling \ref t8_forest_commit. To keep ownership of \b
+ * set_from, call \ref t8_forest_ref before passing it into this function.
+ * This means that it is ILLEGAL to continue using \b set_from or dereferencing it
+ * UNLESS it is referenced directly before passing it into this function.
+ * \param [in,out] forest   The forest
+ * \param [in] set_from     The source forest from which \b forest will be adapted.
+ *                          We take ownership. This can be prevented by
+ *                          referencing \b set_from.
+ *                          If NULL, a previously (or later) set forest will
+ *                          be taken (\ref t8_forest_set_partition, \ref t8_forest_set_balance).
+ * \param [in] adapt_fn     The adapt function used on committing.
+ * \param [in] recursive    A flag specifying whether adaptation is to be done recursively
+ *                          or not. If the value is zero, adaptation is not recursive
+ *                          and it is recursive otherwise.
+ */
 template <typename TMesh>
 void
 adapt_mesh (TMesh& mesh_handle, refine_mesh_element<TMesh> refine_callback,
@@ -154,18 +176,19 @@ adapt_mesh (TMesh& mesh_handle, refine_mesh_element<TMesh> refine_callback,
   t8_forest_t forest;
   t8_forest_init (&forest);
 
-  auto* context = new MeshAdaptContext<TMesh> (mesh_handle, std::move (refine_callback), std::move (coarsen_callback));
+  auto* context
+    = new detail::MeshAdaptContext<TMesh> (mesh_handle, std::move (refine_callback), std::move (coarsen_callback));
 
-  AdaptRegistry::register_context (forest_from, context);
+  detail::AdaptRegistry::register_context (forest_from, context);
 
-  t8_forest_set_adapt (forest, forest_from, mesh_adapt_callback, recursive);
+  t8_forest_set_adapt (forest, forest_from, detail::mesh_adapt_callback, recursive);
   t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
   t8_forest_set_user_data (forest, t8_forest_get_user_data (forest_from));
 
   t8_forest_commit (forest);
   mesh_handle.set_forest (forest);
 
-  AdaptRegistry::unregister_context (forest_from);
+  detail::AdaptRegistry::unregister_context (forest_from);
   delete context;
 }
 
