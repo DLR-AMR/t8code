@@ -71,9 +71,6 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
   EXPECT_EQ (mesh_user_data.midpoint, user_data.midpoint);
   EXPECT_EQ (mesh_user_data.refine_if_inside_radius, user_data.refine_if_inside_radius);
   EXPECT_EQ (mesh_user_data.coarsen_if_outside_radius, user_data.coarsen_if_outside_radius);
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }
 
 // --- Test for element data. ---
@@ -113,7 +110,4 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
     EXPECT_EQ (mesh_element_data[ielem].volume, mesh[ielem].get_volume ()) << "ielem = " << ielem;
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }

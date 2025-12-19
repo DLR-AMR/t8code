@@ -84,6 +84,16 @@ class mesh {
     update_elements ();
   }
 
+  /** 
+   * Destructor for a mesh of the handle. 
+   * The forest in use will be unreferenced. 
+   * Call \ref t8_forest_ref before if you want to keep it alive.
+   */
+  ~mesh ()
+  {
+    t8_forest_unref (&m_forest);
+  }
+
   /**
   * Getter for the number of local elements in the mesh.
   * \return Number of local elements in the mesh.
@@ -310,7 +320,7 @@ class mesh {
     }
   }
 
-  t8_forest_t m_forest;                       /**< The forest the mesh should be defined for. */
+  t8_forest_t m_forest = nullptr;             /**< The forest the mesh should be defined for. */
   std::vector<mesh_element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<ghost_element_class> m_ghosts;  /**< Vector storing the (local) ghost elements. */
   std::conditional_t<!std::is_void_v<TElementData>, std::vector<TElementData>, std::nullptr_t>
