@@ -29,10 +29,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/element.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /** Tests that the functionality of the handle gives the same results as if worked with the forest directly.
@@ -40,16 +40,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
 {
-  // Define forest and mesh handle mesh.
+  // Define forest and mesh handle.
   const int level = 2;
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
 
-  t8_mesh_handle::mesh<t8_mesh_handle::element<>> mesh = t8_mesh_handle::mesh<t8_mesh_handle::element<>> (forest);
+  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
 
-  //Iterate over the elements of the forest and of the mesh handle simultaneously and compare results of different functions.
+  // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results of different functions.
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   // Use iterator for the mesh handle and two nested for-loops for the forest.
   auto mesh_iterator = mesh.begin ();
@@ -63,6 +62,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Compare basics. ---
       EXPECT_EQ (mesh_iterator->get_level (), scheme->element_get_level (tree_class, elem));
       EXPECT_EQ (mesh_iterator->get_shape (), scheme->element_get_shape (tree_class, elem));
+      EXPECT_EQ (mesh_iterator->get_volume (), t8_forest_element_volume (forest, itree, elem));
       // --- Compare centroid. ---
       t8_3D_point centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());
@@ -78,7 +78,4 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       mesh_iterator++;
     }
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }

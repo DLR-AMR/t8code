@@ -213,8 +213,11 @@ add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_fu
 if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel             SOURCES mesh_handle/t8_gtest_mesh_handle.cxx )
   add_t8_cpp_test( NAME t8_gtest_compare_handle_to_forest_serial  SOURCES mesh_handle/t8_gtest_compare_handle_to_forest.cxx )
+  add_t8_cpp_test( NAME t8_gtest_handle_ghost_parallel            SOURCES mesh_handle/t8_gtest_ghost.cxx )
   add_t8_cpp_test( NAME t8_gtest_custom_competence_serial         SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial          SOURCES mesh_handle/t8_gtest_cache_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_handle_data_parallel             SOURCES mesh_handle/t8_gtest_handle_data.cxx )
+  add_t8_cpp_test( NAME t8_gtest_handle_adapt_serial             SOURCES mesh_handle/t8_gtest_adapt.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
