@@ -98,6 +98,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
     EXPECT_EQ (level, it->get_level_dummy ());
   }
 
+  t8_forest_ref (forest);
   // Test with two custom competences and a predefined competence.
   using competences = t8_mesh_handle::competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
   using mesh_class = t8_mesh_handle::mesh<competences>;
@@ -114,7 +115,4 @@ TEST (t8_gtest_custom_competence, custom_competence)
     }
     EXPECT_TRUE (it->centroid_cache_filled ());
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }

@@ -38,12 +38,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 
 // --- Test for user data. ---
-// Dummy user data taken from a tutorial for test purposes.
+/** Dummy user data taken from a tutorial for test purposes. */
 struct dummy_user_data
 {
-  t8_3D_point midpoint;             /* The midpoint of our sphere. */
-  double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
+  t8_3D_point midpoint;             /**< The midpoint of our sphere. */
+  double refine_if_inside_radius;   /**< if an element's center is smaller than this value, we refine the element. */
+  double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
 };
 
 /** Check that user data can be set and accesses for the handle.
@@ -71,9 +71,6 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
   EXPECT_EQ (mesh_user_data.midpoint, user_data.midpoint);
   EXPECT_EQ (mesh_user_data.refine_if_inside_radius, user_data.refine_if_inside_radius);
   EXPECT_EQ (mesh_user_data.coarsen_if_outside_radius, user_data.coarsen_if_outside_radius);
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }
 
 // --- Test for element data. ---
@@ -113,7 +110,4 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
     EXPECT_EQ (mesh_element_data[ielem].volume, mesh[ielem].get_volume ()) << "ielem = " << ielem;
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }
