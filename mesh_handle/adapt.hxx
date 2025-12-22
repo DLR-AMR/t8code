@@ -209,13 +209,15 @@ class AdaptRegistry {
 
 /** Wrapper around the mesh handle adapt functionality to be able to pass the callbacks to the classic adapt routine of a forest. 
  * The function header fits the definition of \ref t8_forest_adapt_t.
+ * \param [in] forest       Unused; forest to which the new elements belong.
  * \param [in] forest_from  Forest that is adapted.
  * \param [in] which_tree   Local tree containing \a elements.
+ * \param [in] tree_class   Unused; eclass of \a which_tree.
  * \param [in] lelement_id  The local element id in the tree of the first element in elements.
+ * \param [in] scheme       Unused; scheme of the forest.
  * \param [in] is_family    If 1, the entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements.
  * \param [in] elements     Pointers to a family or, if \a is_family is zero, pointer to one element.
- * \see t8_forest_set_adapt for the definition of unused parameters. 
  * \return 1 if the first entry in \a elements should be refined,
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
