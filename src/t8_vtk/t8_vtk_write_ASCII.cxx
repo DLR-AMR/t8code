@@ -74,7 +74,9 @@ using T8_VTK_KERNEL_MODUS = enum { T8_VTK_KERNEL_INIT, T8_VTK_KERNEL_EXECUTE, T8
  * \param [in]     modus   The modus in which the callback is called. See above.
  * \return                 True if successful, false if not (i.e. file i/o error).
  */
-using t8_forest_vtk_cell_data_kernel = int (*)(t8_forest_t, const t8_locidx_t, const t8_tree_t, const t8_locidx_t, const t8_element_t *, const t8_eclass_t, const int, FILE *, int *, void **, T8_VTK_KERNEL_MODUS);
+using t8_forest_vtk_cell_data_kernel
+  = int (*) (t8_forest_t, const t8_locidx_t, const t8_tree_t, const t8_locidx_t, const t8_element_t *,
+             const t8_eclass_t, const int, FILE *, int *, void **, T8_VTK_KERNEL_MODUS);
 
 static t8_locidx_t
 t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
@@ -533,7 +535,8 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile, const char *da
         if (!kernel (forest, ighost + num_local_trees, nullptr, element_index, element, ghost_eclass, 1, vtufile,
                      &countcols, &data, T8_VTK_KERNEL_EXECUTE)) {
           /* call the kernel in clean-up modus */
-          kernel (nullptr, 0, nullptr, 0, nullptr, T8_ECLASS_INVALID, 1, nullptr, nullptr, &data, T8_VTK_KERNEL_CLEANUP);
+          kernel (nullptr, 0, nullptr, 0, nullptr, T8_ECLASS_INVALID, 1, nullptr, nullptr, &data,
+                  T8_VTK_KERNEL_CLEANUP);
           return 0;
         }
         /* After max_columns we break the line */
@@ -541,7 +544,8 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile, const char *da
           freturn = fprintf (vtufile, "\n         ");
           if (freturn <= 0) {
             /* call the kernel in clean-up modus */
-            kernel (nullptr, 0, nullptr, 0, nullptr, T8_ECLASS_INVALID, 1, nullptr, nullptr, &data, T8_VTK_KERNEL_CLEANUP);
+            kernel (nullptr, 0, nullptr, 0, nullptr, T8_ECLASS_INVALID, 1, nullptr, nullptr, &data,
+                    T8_VTK_KERNEL_CLEANUP);
             return 0;
           }
         }

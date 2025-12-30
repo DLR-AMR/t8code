@@ -421,7 +421,8 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int 
     T8_ASSERT (key < T8_CMESH_NEXT_POSSIBLE_KEY && key >= 0);
   }
 #endif
-  SC_CHECK_ABORT (cmesh->set_from == nullptr, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
+  SC_CHECK_ABORT (cmesh->set_from == nullptr,
+                  "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
 }
@@ -463,8 +464,9 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id) || t8_cmesh_treeid_is_ghost (cmesh, ltree_id));
   const int is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltree_id);
 
-  return t8_cmesh_trees_get_attribute (
-    cmesh->trees, is_ghost ? t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id) : ltree_id, package_id, key, nullptr, is_ghost);
+  return t8_cmesh_trees_get_attribute (cmesh->trees,
+                                       is_ghost ? t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id) : ltree_id, package_id,
+                                       key, nullptr, is_ghost);
 }
 
 t8_gloidx_t *
@@ -2271,7 +2273,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       = t8_shmem_array_binary_search (offset_array, last_element - 1, cmesh->mpisize - 1, find_bounds_in_offset);
 
     T8_ASSERT (0 <= recv_from && recv_from < cmesh->mpisize);
-    recv_message (false, last_local_tree, child_in_tree_end, nullptr, nullptr, global_num_elements, cmesh, recv_from, comm);
+    recv_message (false, last_local_tree, child_in_tree_end, nullptr, nullptr, global_num_elements, cmesh, recv_from,
+                  comm);
 #if T8_ENABLE_DEBUG
     num_received_end_messages++;
     num_message_recv++;

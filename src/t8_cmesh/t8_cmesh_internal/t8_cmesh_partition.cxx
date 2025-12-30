@@ -577,7 +577,7 @@ t8_cmesh_send_ghost (const t8_cmesh_t cmesh, const struct t8_cmesh *cmesh_from, 
   for (iface = 0; iface < t8_eclass_num_faces[eclass]; iface++) {
     /* Get the global id of the considered neighbor */
     neighbor = ctree != nullptr ? t8_cmesh_get_global_id ((t8_cmesh_t) cmesh_from, tree_neighbors[iface])
-                             : ghost_neighbors[iface];
+                                : ghost_neighbors[iface];
     if (neighbor == tree_id) {
       /* There is no neighbor at this face */
       continue;
