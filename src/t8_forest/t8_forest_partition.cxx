@@ -97,7 +97,7 @@ t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank)
   t8_forest_init (&forest_gather);
 
   // Set partition (includes also sanity checks)
-  t8_forest_set_partition (forest_gather, forest_from, 0);
+  t8_forest_set_partition (forest_gather, forest_from, 0, nullptr);
 
   // Determine global ID of the element that will be the first local one:
   // To gather all elements on gather_rank, the first local element is set to
@@ -589,7 +589,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
         // Compute element offsets
         for (i = 0; i < mpisize; i++) {
           /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
-          new_first_element_id
+          t8_gloidx_t new_first_element_id
             = (((double) i * (long double) forest_from->global_num_leaf_elements) / (double) mpisize);
           T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
           element_offsets[i] = new_first_element_id;

@@ -251,7 +251,7 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
 
   // Set partitioning mode and source.
   // Note: The third argument being nonzero activates the PFC correction.
-  t8_forest_set_partition (pfc_forest, adapted_base_forest, 1);
+  t8_forest_set_partition (pfc_forest, adapted_base_forest, 1, nullptr);
 
   // Increase reference counter of base forest to avoid destruction.
   t8_forest_ref (adapted_base_forest);
@@ -291,7 +291,7 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   t8_forest_init (&repartitioned_coarse_pfc_forest);
 
   // Set partition mode and source.
-  t8_forest_set_partition (repartitioned_coarse_pfc_forest, coarsened_pfc_forest, 0);
+  t8_forest_set_partition (repartitioned_coarse_pfc_forest, coarsened_pfc_forest, 0, nullptr);
 
   // Commit the forest.
   t8_forest_commit (repartitioned_coarse_pfc_forest);
@@ -313,7 +313,7 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // Partition without PFC option.
   t8_forest_t repartitioned_coarse_gathered_forest;
   t8_forest_init (&repartitioned_coarse_gathered_forest);
-  t8_forest_set_partition (repartitioned_coarse_gathered_forest, coarse_gathered_forest, 0);
+  t8_forest_set_partition (repartitioned_coarse_gathered_forest, coarse_gathered_forest, 0, nullptr);
   t8_forest_commit (repartitioned_coarse_gathered_forest);
 
   // (5c.) Verify that the two forests are equal:
