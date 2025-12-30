@@ -1471,7 +1471,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     }
     else {
       /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      t8_gloidx_t const num_local_trees = num_trees;
+      t8_gloidx_t num_local_trees = num_trees;
 
       /* First process-local tree-id */
       const t8_gloidx_t first_tree = offset;
