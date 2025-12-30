@@ -513,8 +513,8 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
     t8_shmem_array_end_writing (forest->element_offsets);
     return;
   }
-// Weighted load balancing:
-// ------------------------
+  // Weighted load balancing:
+  // ------------------------
   double const partition_weight = [&] () {  // sum of the weights on the local partition
     double local_sum = 0.;
     for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
@@ -525,12 +525,13 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
     return local_sum;
   }();
 
-  double const partition_weight_offset = [&] () {  // partial sum of the partition weights of all lower-rank processes (excluding the local rank)
-    double local_offset = 0.;
-    double local_partition_weight = partition_weight;  // because MPI does not like const variables
-    sc_MPI_Exscan (&local_partition_weight, &local_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
-    return mpirank > 0 ? local_offset : 0;  // because the result of MPI_Exscan is undefined on rank 0
-  }();
+  double const partition_weight_offset
+    = [&] () {  // partial sum of the partition weights of all lower-rank processes (excluding the local rank)
+        double local_offset = 0.;
+        double local_partition_weight = partition_weight;  // because MPI does not like const variables
+        sc_MPI_Exscan (&local_partition_weight, &local_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+        return mpirank > 0 ? local_offset : 0;  // because the result of MPI_Exscan is undefined on rank 0
+      }();
 
   double const forest_weight = [&] () {  // complete sum of the partition weights
     double total_weight = partition_weight_offset + partition_weight;
