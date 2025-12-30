@@ -1733,7 +1733,6 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
   T8_ASSERT (num_trees == 0);
   t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                    child_in_tree_end, first_tree_shared);
-  return;
 }
 
 /**
@@ -2308,7 +2307,6 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   T8_ASSERT (total_num_sent == total_num_recv);
 #endif
   t8_debugf ("Done with t8_cmesh_uniform_bounds_from_partition.\n");
-  return;
 }
 
 /* TODO: Shared trees, binary search in offset-array to avoid recv_any,

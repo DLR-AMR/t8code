@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_linear_axis_aligned.cxx
- * Implements functions declared in \ref t8_geometry_linear_axis_aligned.hxx 
+ * Implements functions declared in \ref t8_geometry_linear_axis_aligned.hxx
  *  or the C interface \ref t8_geometry_linear_axis_aligned.h.
  */
 
@@ -33,7 +33,7 @@
 /**
  * Check that the two points of the geometry are ordered correctly, that is
  * p1_x <= p2_x, p1_y <= p2_y and p1_z <= p2_z
- * 
+ *
  * \param[in] tree_vertices The vertices of a tree
  * \return true if the points are ordered correctly
  * \return false ow
@@ -108,7 +108,6 @@ t8_geometry_linear_axis_aligned::t8_geom_point_batch_inside_element (t8_forest_t
         && v_min[1] - tolerance <= points[ipoint * 3 + 1] && points[ipoint * 3 + 1] <= v_max[1] + tolerance
         && v_min[2] - tolerance <= points[ipoint * 3 + 2] && points[ipoint * 3 + 2] <= v_max[2] + tolerance;
   }
-  return;
 }
 
 bool

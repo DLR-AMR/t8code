@@ -980,8 +980,6 @@ t8_cmesh_trees_print ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] 
     }
     t8_debugf ("%s\n", buf);
   }
-#else
-  return;
 #endif
 }
 
