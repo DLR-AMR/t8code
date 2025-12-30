@@ -21,13 +21,14 @@
 */
 
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.hxx>
+#include <utility>
 
 t8_geometry_analytic::t8_geometry_analytic (std::string name, t8_geom_analytic_fn analytical,
                                             t8_geom_analytic_jacobian_fn jacobian_in,
                                             t8_geom_load_tree_data_fn load_tree_data_in,
                                             t8_geom_tree_negative_volume_fn tree_negative_volume_in,
                                             t8_geom_tree_compatible_fn tree_compatible_in, const void *user_data_in)
-  : t8_geometry (name)
+  : t8_geometry (std::move(name))
 {
   analytical_function = analytical;
   jacobian = jacobian_in;
@@ -37,7 +38,7 @@ t8_geometry_analytic::t8_geometry_analytic (std::string name, t8_geom_analytic_f
   user_data = user_data_in;
 }
 
-t8_geometry_analytic::t8_geometry_analytic (std::string name): t8_geometry (name)
+t8_geometry_analytic::t8_geometry_analytic (std::string name): t8_geometry (std::move(name))
 {
   analytical_function = nullptr;
   jacobian = nullptr;

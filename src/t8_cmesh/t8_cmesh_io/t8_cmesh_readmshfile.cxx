@@ -638,7 +638,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
  * \return
  */
 static std::optional<t8_msh_tree_vertex_indices>
-t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table vertices, const int dim)
+t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table& vertices, const int dim)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
@@ -1426,7 +1426,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
  * We cannot access this geometry over the cmesh interface since the cmesh
  * is not committed yet. */
 static std::optional<t8_msh_tree_vertex_indices>
-t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table vertices, const int dim,
+t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table& vertices, const int dim,
                                const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
                                [[maybe_unused]] const t8_geometry_c *cad_geometry_base, const bool store_node_data)
 {
@@ -1779,7 +1779,7 @@ t8_msh_file_face_orientation (const t8_msh_file_face_t *Face_a, const t8_msh_fil
 /* This routine does only find neighbors between local trees.
  * Use with care if cmesh is partitioned. */
 static void
-t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_indices vertex_indices)
+t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_indices& vertex_indices)
 {
   sc_hash_t *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
