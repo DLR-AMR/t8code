@@ -129,16 +129,14 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
   t8_forest_commit (forest_balance);
 #endif
 
-  /* partition the forest with a unit weight function */
+  /* partition the forest */
   t8_forest_t forest_partition;
   t8_forest_init (&forest_partition);
-  auto weight_fcn = [] (t8_forest_t, t8_locidx_t, t8_locidx_t) -> double { return 1; };
 #if T8_TEST_LEVEL_INT < 2
   t8_forest_set_partition (forest_partition, forest_balance, 0);
 #else
   t8_forest_set_partition (forest_partition, forest_adapt, 0);
 #endif
-  t8_forest_set_partition_weights (forest_partition, weight_fcn);
   t8_forest_commit (forest_partition);
 
   return forest_partition;
