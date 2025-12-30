@@ -254,7 +254,7 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_forest_t partitioned_forest;
   t8_forest_init (&partitioned_forest);
   const int partition_for_coarsening = 0;
-  t8_forest_set_partition (partitioned_forest, initial_forest, partition_for_coarsening, nullptr);
+  t8_forest_set_partition (partitioned_forest, initial_forest, partition_for_coarsening);
   t8_forest_commit (partitioned_forest);
 
   /* Test the exemplary partition_data with some arithmetic data types as well as with a custom struct. */

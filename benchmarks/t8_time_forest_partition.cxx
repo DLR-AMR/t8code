@@ -179,7 +179,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
     /* partition the adapted forest */
     t8_forest_init (&forest_partition);
     /* partition the adapted forest */
-    t8_forest_set_partition (forest_partition, forest_adapt, 0, nullptr);
+    t8_forest_set_partition (forest_partition, forest_adapt, 0);
 
     /* If desired, create ghost elements and balance */
     t8_forest_set_profiling (forest_partition, 1);

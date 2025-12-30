@@ -97,7 +97,7 @@ t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank)
   t8_forest_init (&forest_gather);
 
   // Set partition (includes also sanity checks)
-  t8_forest_set_partition (forest_gather, forest_from, 0, nullptr);
+  t8_forest_set_partition (forest_gather, forest_from, 0);
 
   // Determine global ID of the element that will be the first local one:
   // To gather all elements on gather_rank, the first local element is set to
@@ -474,7 +474,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 
 // Compute forest->element_offsets according to the weight function, if provided
 static void
-t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *weight_fcn)
+t8_forest_partition_compute_new_offset (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (forest->set_from != NULL);
@@ -485,6 +485,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest, t8_weight_fcn_t *wei
   int const mpirank = forest_from->mpirank;
   int const mpisize = forest_from->mpisize;
   t8_gloidx_t const global_num_leaf_elements = forest_from->global_num_leaf_elements;
+  auto const weight_fcn = forest->weight_function;
 
   /* Initialize the shmem array */
   t8_shmem_init (comm);
@@ -1339,7 +1340,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_arr
  * Currently the elements are distributed evenly (each element has the same weight).
  */
 void
-t8_forest_partition (t8_forest_t forest, t8_weight_fcn_t *weight_callback)
+t8_forest_partition (t8_forest_t forest)
 {
   t8_forest_t forest_from;
   int create_offset_from = 0;
@@ -1369,7 +1370,7 @@ t8_forest_partition (t8_forest_t forest, t8_weight_fcn_t *weight_callback)
   /* TODO: if offsets already exist on forest_from, check it for consistency */
 
   /* We now calculate the new element offsets */
-  t8_forest_partition_compute_new_offset (forest, weight_callback);
+  t8_forest_partition_compute_new_offset (forest);
   t8_forest_partition_given (forest, 0, NULL, NULL);
 
   T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest_from) == forest_from->trees->elem_count);

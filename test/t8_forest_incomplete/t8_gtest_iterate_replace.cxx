@@ -210,11 +210,11 @@ t8_adapt_forest (t8_forest_t forest_from, t8_forest_adapt_t adapt_fn, int do_ada
   if (do_adapt) {
     t8_forest_set_adapt (forest_new, forest_from, adapt_fn, 0);
     if (do_partition) {
-      t8_forest_set_partition (forest_new, NULL, 0, nullptr);
+      t8_forest_set_partition (forest_new, NULL, 0);
     }
   }
   else if (do_partition) {
-    t8_forest_set_partition (forest_new, forest_from, 0, nullptr);
+    t8_forest_set_partition (forest_new, forest_from, 0);
   }
   if (user_data != NULL) {
     t8_forest_set_user_data (forest_new, user_data);

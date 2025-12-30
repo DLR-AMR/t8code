@@ -305,7 +305,7 @@ t8_naca_plane_refinement (t8_forest_t forest, const std::string &fileprefix, int
     t8_forest_init (&forest_new);
     t8_forest_set_adapt (forest_new, forest, t8_naca_plane_adapt_callback, 1);
     t8_forest_set_user_data (forest_new, &adapt_data);
-    t8_forest_set_partition (forest_new, forest, 0, nullptr);
+    t8_forest_set_partition (forest_new, forest, 0);
     t8_forest_set_balance (forest_new, forest, 0);
     t8_forest_commit (forest_new);
 

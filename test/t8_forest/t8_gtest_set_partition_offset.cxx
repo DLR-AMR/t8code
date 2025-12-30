@@ -207,7 +207,7 @@ TEST_P (t8_test_set_partition_offset_test, test_set_partition_offset)
   t8_forest_set_partition_offset (forest_manual_partition, my_element_offset);
 
   // Create forest with custom partitioning.
-  t8_forest_set_partition (forest_manual_partition, base_forest, 0, nullptr);
+  t8_forest_set_partition (forest_manual_partition, base_forest, 0);
   t8_forest_ref (base_forest);
   t8_forest_commit (forest_manual_partition);
 
@@ -225,7 +225,7 @@ TEST_P (t8_test_set_partition_offset_test, test_set_partition_offset)
   // Repartition the manually partitioned forest
   t8_forest_t forest_repartitioned;
   t8_forest_init (&forest_repartitioned);
-  t8_forest_set_partition (forest_repartitioned, forest_manual_partition, 0, nullptr);
+  t8_forest_set_partition (forest_repartitioned, forest_manual_partition, 0);
   t8_forest_ref (forest_manual_partition);
   t8_forest_commit (forest_repartitioned);
 

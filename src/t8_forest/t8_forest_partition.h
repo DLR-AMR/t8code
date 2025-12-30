@@ -36,24 +36,20 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * Populate a forest with the partitioned elements of forest->set_from.
- * Currently the elements are distributed evenly (each element has the same weight).
  *
  * \param [in,out]  forest  The forest.
- * \param [in]      weight_callback A callback function defining element weights for the partitioning
- * \pre \a weight_callback must be free of side-effects, the behavior is undefined otherwise
- * \note If \a weight_callback is null, then all the elements are assumed to have the same weight
 */
 void
-t8_forest_partition (t8_forest_t forest, t8_weight_fcn_t *weight_callback);
+t8_forest_partition (t8_forest_t forest);
 
 /**
  * Create a new forest that gathers a given forest on one process.
- * 
+ *
  * This functionality is mostly required for comparison purposes and sanity checks within the testing framework.
- * 
+ *
  * \param[in] forest_from   the forest that should be gathered on one rank
  * \param[in] gather_rank   the rank of the process the forest will be gathered on
- * 
+ *
  * \return The gathered forest: The same as \a forest_from, but all elements are on rank \a gather_rank.
 */
 t8_forest_t
@@ -61,9 +57,9 @@ t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank);
 
 /**
  * Manually set the partition offset of the current process.
- * 
+ *
  * If set, the next partitioning of the forest will use the manually defined element offsets.
- * 
+ *
  * \param[in,out] forest                the considered forest
  * \param[in]     first_global_element  the global ID that will become the first local element
 */

@@ -2808,8 +2808,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
 }
 
 void
-t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening,
-                         t8_weight_fcn_t *weight_callback)
+t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -2819,7 +2818,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
   T8_ASSERT (forest->scheme == NULL);
 
   forest->set_for_coarsening = set_for_coarsening;
-  forest->weight_function = weight_callback;
+  forest->weight_function = nullptr;
 
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
@@ -2833,6 +2832,12 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
   else {
     forest->from_method |= T8_FOREST_FROM_PARTITION;
   }
+}
+
+void
+t8_forest_set_partition_weights (t8_forest_t forest, t8_weight_fcn_t *weight_callback)
+{
+  forest->weight_function = weight_callback;
 }
 
 void
@@ -3160,8 +3165,8 @@ t8_forest_commit (t8_forest_t forest)
           /* forest_partition should not change ownership of forest->set_from */
           t8_forest_ref (forest->set_from);
         }
-        t8_forest_set_partition (forest_partition, forest->set_from, forest->set_for_coarsening,
-                                 forest->weight_function);
+        t8_forest_set_partition (forest_partition, forest->set_from, forest->set_for_coarsening);
+        t8_forest_set_partition_weights (forest_partition, forest->weight_function);
         /* activate profiling, if this forest has profiling */
         t8_forest_set_profiling (forest_partition, forest->profile != NULL);
         /* Commit the partitioned forest */
@@ -3182,7 +3187,7 @@ t8_forest_commit (t8_forest_t forest)
         /* Initialize the trees array of the forest */
         forest->trees = sc_array_new (sizeof (t8_tree_struct_t));
         /* partition the forest */
-        t8_forest_partition (forest, forest->weight_function);
+        t8_forest_partition (forest);
       }
     }
     if (forest->from_method & T8_FOREST_FROM_BALANCE) {

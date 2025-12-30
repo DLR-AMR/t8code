@@ -138,7 +138,7 @@ t8_test_fiterate_refine_and_partition (t8_cmesh_t cmesh, int level, sc_MPI_Comm 
 
   /* partition the adapted forest */
   t8_forest_init (&forest_partition);
-  t8_forest_set_partition (forest_partition, forest_adapt, 0, nullptr);
+  t8_forest_set_partition (forest_partition, forest_adapt, 0);
   t8_forest_commit (forest_partition);
   t8_debugf ("Created ghost structure with %li ghost elements.\n", (long) t8_forest_get_num_ghosts (forest_partition));
   if (!no_vtk) {

@@ -250,7 +250,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       t8_forest_init (&forest_partition);
       /* Update the maximum occurring level */
       forest_partition->maxlevel_existing = forest_temp->maxlevel_existing;
-      t8_forest_set_partition (forest_partition, forest_temp, 0, nullptr);
+      t8_forest_set_partition (forest_partition, forest_temp, 0);
       t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
       /* If profiling is enabled, measure partition runtimes */
       if (forest->profile != NULL) {

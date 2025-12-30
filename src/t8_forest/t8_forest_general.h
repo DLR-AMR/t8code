@@ -320,7 +320,6 @@ t8_forest_get_user_function (const t8_forest_t forest);
  * \param [in]      set_for_coarsening CURRENTLY DISABLED. If true, then the partitions
  *                          are choose such that coarsening an element once is a process local
  *                          operation.
- * \param [in]      weight_callback A callback function defining element weights for the partitioning. If null, all the elements are assumed to have the same weight. Must be free of side-effects.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
  * 1) Adapt 2) Partition 3) Balance.
@@ -330,8 +329,16 @@ t8_forest_get_user_function (const t8_forest_t forest);
  * this setting.
  */
 void
-t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening,
-                         t8_weight_fcn_t *weight_callback);
+t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening);
+
+/** Set a user-defined weight function to guide the partitioning.
+ * \param [in, out] forest  The forest.
+ * \param [in]      weight_callback A callback function defining element weights for the partitioning.
+ * \pre \a weight_callback must be free of side-effects, the behavior is undefined otherwise
+ * \note If \a weight_callback is null, then all the elements are assumed to have the same weight
+ */
+void
+t8_forest_set_partition_weights (t8_forest_t forest, t8_weight_fcn_t *weight_callback);
 
 /** Set a source forest to be balanced during commit.
  * A forest is said to be balanced if each element has face neighbors of level
@@ -476,8 +483,8 @@ t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
  * \param [in]      forest The forest.
  * \param [in]      gtreeid The global id of a tree.
  * \return                 The tree's local id in \a forest, if it is a local tree.
- *                         A negative number if not. Ghosts trees are not considered 
- *                         as local. 
+ *                         A negative number if not. Ghosts trees are not considered
+ *                         as local.
  * \see t8_forest_get_local_or_ghost_id for ghost trees.
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */

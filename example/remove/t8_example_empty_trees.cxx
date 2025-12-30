@@ -66,7 +66,7 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
   t8_forest_t forest_adapt;
   t8_forest_init (&forest_adapt);
   t8_forest_set_adapt (forest_adapt, forest, t8_adapt_remove, 0);
-  t8_forest_set_partition (forest_adapt, NULL, 0, nullptr);
+  t8_forest_set_partition (forest_adapt, NULL, 0);
   t8_forest_set_user_data (forest_adapt, &empty_tree);
   t8_forest_commit (forest_adapt);
 

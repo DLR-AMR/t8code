@@ -141,7 +141,7 @@ t8_step4_partition_ghost (t8_forest_t forest)
    * across multiple processes and thus one level coarsening is always possible (see also the
    * comments on coarsening in t8_step3).
    */
-  t8_forest_set_partition (new_forest, forest, 0, nullptr);
+  t8_forest_set_partition (new_forest, forest, 0);
   /* Tell the new_forest to create a ghost layer.
    * This will gather those face neighbor elements of process local element that reside
    * on a different process.

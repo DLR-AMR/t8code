@@ -128,7 +128,7 @@ t8_time_refine (int start_level, int end_level, [[maybe_unused]] int create_fore
     }
     forest_partition = forest_adapt;
     /* partition the adapted forest */
-    t8_forest_set_partition (forest_partition, NULL, 0, nullptr);
+    t8_forest_set_partition (forest_partition, NULL, 0);
     /* enable profiling for the partitioned forest */
     t8_forest_set_profiling (forest_partition, 1);
     /* if desired do balance */

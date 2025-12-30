@@ -189,7 +189,7 @@ t8_test_ghost_refine_and_partition (t8_cmesh_t cmesh, const int level, sc_MPI_Co
   }
 
   /* Set the forest for partitioning */
-  t8_forest_set_partition (forest_ghost, forest, 0, nullptr);
+  t8_forest_set_partition (forest_ghost, forest, 0);
   /* Activate ghost creation */
   t8_forest_set_ghost_ext (forest_ghost, 1, T8_GHOST_FACES, ghost_version);
   /* Activate timers */
