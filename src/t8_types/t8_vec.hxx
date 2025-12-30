@@ -35,10 +35,14 @@
 #include <numeric>
 #include <span>
 
+/**
+  * Tag for a vector in N-dimensional space.
+  * \tparam TDim Dimension of the vector.
+  */
 template <std::size_t TDim>
 struct t8_vec_tag
 {
-  static constexpr std::size_t dim = TDim;
+  static constexpr std::size_t dim = TDim;  ///< Dimension of the vector.
 };
 
 /**
@@ -140,10 +144,14 @@ concept T8VecContainerType = std::ranges::range<std::remove_cvref_t<TType>>
 
 /* -----------------------End concepts for t8_vec----------------------- */
 
+/**
+  * Tag for a point in N-dimensional space.
+  * \tparam TDim Dimension of the point.
+  */
 template <std::size_t TDim>
 struct t8_point_tag
 {
-  static constexpr std::size_t dim = TDim;
+  static constexpr std::size_t dim = TDim;  ///< Dimension of the point.
 };
 
 /**
