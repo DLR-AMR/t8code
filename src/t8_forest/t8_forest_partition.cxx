@@ -132,7 +132,7 @@ t8_forest_set_partition_offset (t8_forest_t forest, const t8_gloidx_t first_glob
 void
 t8_forest_partition_create_offsets (t8_forest_t forest)
 {
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->forest_offsets_runtime = -sc_MPI_Wtime ();
   }
@@ -160,7 +160,7 @@ t8_forest_partition_create_offsets (t8_forest_t forest)
     t8_shmem_array_set_gloidx (forest->element_offsets, forest->mpisize, forest->global_num_leaf_elements);
   }
   t8_shmem_array_end_writing (forest->element_offsets);
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->forest_offsets_runtime += sc_MPI_Wtime ();
   }
@@ -306,13 +306,13 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
 void
 t8_forest_partition_create_first_desc (t8_forest_t forest)
 {
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->first_descendant_runtime = -sc_MPI_Wtime ();
   }
   sc_MPI_Comm comm;
   t8_linearidx_t local_first_desc;
-  t8_element_t *first_desc = NULL;
+  t8_element_t *first_desc = nullptr;
 
   T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -320,7 +320,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   t8_debugf ("Building global first descendants for forest %p\n", (void *) forest);
   comm = forest->mpicomm;
 
-  if (forest->global_first_desc == NULL) {
+  if (forest->global_first_desc == nullptr) {
     /* Set the shmem array type of comm */
     t8_shmem_init (comm);
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
@@ -337,7 +337,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
     local_first_desc = 0;
   }
   else {
-    const t8_element_t *first_element = NULL;
+    const t8_element_t *first_element = nullptr;
     /* Get a pointer to the first local element. */
     if (forest->incomplete_trees) {
       for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); itree++) {
@@ -351,7 +351,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
       first_element = t8_forest_get_leaf_element_in_tree (forest, 0, 0);
     }
     /* This process is not empty, the element was found, so we compute its first descendant. */
-    if (first_element != NULL) {
+    if (first_element != nullptr) {
       /* Get the eclass_scheme of the element. */
       const t8_scheme *scheme = t8_forest_get_scheme (forest);
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
@@ -388,7 +388,7 @@ t8_forest_partition_create_first_desc (t8_forest_t forest)
   }
   t8_forest_partition_test_desc (forest);
 #endif
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->first_descendant_runtime += sc_MPI_Wtime ();
   }
@@ -398,7 +398,7 @@ void
 t8_forest_partition_create_tree_offsets (t8_forest_t forest)
 {
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->cmesh_offsets_runtime = -sc_MPI_Wtime ();
   }
@@ -423,7 +423,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
     is_empty = 0;
   }
 
-  if (forest->tree_offsets == NULL) {
+  if (forest->tree_offsets == nullptr) {
     /* Set the shmem array type of comm */
     t8_shmem_init (comm);
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
@@ -466,7 +466,7 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
     /* Communicate the new tree offsets */
     t8_shmem_array_allgather (&tree_offset, 1, T8_MPI_GLOIDX, forest->tree_offsets, 1, T8_MPI_GLOIDX);
   }
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->cmesh_offsets_runtime += sc_MPI_Wtime ();
   }
@@ -907,7 +907,7 @@ t8_forest_partition_sendloop (t8_forest_t forest, const int send_first, const in
         *byte_to_self = buffer_alloc;
         *(*requests + iproc - send_first) = sc_MPI_REQUEST_NULL;
       }
-      if (!send_data && forest->profile != NULL) {
+      if (!send_data && forest->profile != nullptr) {
         if (iproc != forest->mpirank) {
           /* If profiling is enabled we count the number of elements sent to other processes */
           forest->profile->partition_elements_shipped += num_elements_send;
@@ -1130,7 +1130,7 @@ t8_forest_partition_recv_message (t8_forest_t forest, sc_MPI_Comm comm, int proc
   if (proc != forest->mpirank) {
     T8_FREE (recv_buffer);
   }
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     if (proc != forest->mpirank) {
       /* If profiling is enabled we count the number of elements received from other processes */
       forest->profile->partition_elements_recv += num_elements_recv;
@@ -1202,7 +1202,7 @@ static void
 t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_array_t *data_in, sc_array_t *data_out)
 {
   int send_first, send_last, recv_first, recv_last;
-  sc_MPI_Request *requests = NULL;
+  sc_MPI_Request *requests = nullptr;
   int num_request_alloc; /* The count of elements in the request array */
   char **send_buffer, *sent_to_self;
   int mpiret, i, to_self;
@@ -1227,7 +1227,7 @@ t8_forest_partition_given (t8_forest_t forest, const int send_data, const sc_arr
     sent_to_self = *(send_buffer + forest->mpirank - send_first);
   }
   else {
-    sent_to_self = NULL;
+    sent_to_self = nullptr;
   }
 
   /* Compute the number of new elements on this forest */
@@ -1280,7 +1280,7 @@ t8_forest_partition (t8_forest_t forest)
   forest_from = forest->set_from;
   T8_ASSERT (t8_forest_is_committed (forest_from));
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->partition_runtime = sc_MPI_Wtime ();
 
@@ -1291,7 +1291,7 @@ t8_forest_partition (t8_forest_t forest)
     t8_global_productionf ("Start partition %f %f\n", sc_MPI_Wtime (), forest->profile->partition_runtime);
   }
 
-  if (forest_from->element_offsets == NULL) {
+  if (forest_from->element_offsets == nullptr) {
     /* We create the partition table of forest_from */
     create_offset_from = 1;
     t8_forest_partition_create_offsets (forest_from);
@@ -1300,7 +1300,7 @@ t8_forest_partition (t8_forest_t forest)
 
   /* We now calculate the new element offsets */
   t8_forest_partition_compute_new_offset (forest);
-  t8_forest_partition_given (forest, 0, NULL, NULL);
+  t8_forest_partition_given (forest, 0, nullptr, nullptr);
 
   T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest_from) == forest_from->trees->elem_count);
   T8_ASSERT ((size_t) t8_forest_get_num_local_trees (forest) == forest->trees->elem_count);
@@ -1310,7 +1310,7 @@ t8_forest_partition (t8_forest_t forest)
     t8_shmem_array_destroy (&forest_from->element_offsets);
   }
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of partition */
     forest->profile->partition_runtime = sc_MPI_Wtime () - forest->profile->partition_runtime;
 
@@ -1346,12 +1346,12 @@ t8_forest_partition_data (t8_forest_t forest_from, t8_forest_t forest_to, const 
   T8_ASSERT (data_out->elem_count == (size_t) forest_to->local_num_leaf_elements);
 
   /* Create partition tables if not existent yet */
-  if (forest_from->element_offsets == NULL) {
+  if (forest_from->element_offsets == nullptr) {
     /* We create the partition table of forest_from */
     t8_forest_partition_create_offsets (forest_from);
   }
 
-  if (forest_to->element_offsets == NULL) {
+  if (forest_to->element_offsets == nullptr) {
     /* We create the partition table of forest_to */
     t8_forest_partition_create_offsets (forest_to);
   }

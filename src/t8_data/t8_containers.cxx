@@ -298,7 +298,7 @@ t8_element_array_get_data (const t8_element_array_t *element_array)
     return (t8_element_t *) t8_element_array_index_locidx (element_array, 0);
   }
   else {
-    return NULL;
+    return nullptr;
   }
 }
 

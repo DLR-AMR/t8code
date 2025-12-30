@@ -1792,7 +1792,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_ind
   t8_stash_class_struct_t *class_entry;
 
   face_mempool = sc_mempool_new (sizeof (t8_msh_file_face_t));
-  faces = sc_hash_new (t8_msh_file_face_hash, t8_msh_file_face_equal, cmesh, NULL);
+  faces = sc_hash_new (t8_msh_file_face_hash, t8_msh_file_face_equal, cmesh, nullptr);
 
   /* TODO: Does currently not work with partitioned cmesh */
   T8_ASSERT (!cmesh->set_partition);
@@ -1851,7 +1851,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_ind
         T8_FREE (Face->vertices);
         sc_mempool_free (face_mempool, Face);
         /* We can free the neighbor here as well */
-        sc_hash_remove (faces, Neighbor, NULL);
+        sc_hash_remove (faces, Neighbor, nullptr);
         T8_FREE (Neighbor->vertices);
         sc_mempool_free (face_mempool, Neighbor);
       }
@@ -1888,7 +1888,7 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
 #if T8_ENABLE_OCC
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
 #else /* !T8_ENABLE_OCC */
-    *cad_geometry = NULL;
+    *cad_geometry = nullptr;
     return 0;
 #endif
   }
@@ -1906,8 +1906,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
   t8_gloidx_t num_trees, first_tree, last_tree = -1;
   int main_proc_read_successful = 0;
   int msh_version;
-  const t8_geometry_c *cad_geometry = NULL;
-  const t8_geometry_c *linear_geometry = NULL;
+  const t8_geometry_c *cad_geometry = nullptr;
+  const t8_geometry_c *linear_geometry = nullptr;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1933,7 +1933,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     /* Registering failed */
     t8_errorf ("OCC is not linked. Cannot use cad geometry.\n");
     t8_cmesh_destroy (&cmesh);
-    return NULL;
+    return nullptr;
   }
 
   if (!partition || mpirank == main_proc) {
@@ -1941,7 +1941,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     /* Open the file */
     t8_debugf ("Opening file %s\n", current_file);
     file = fopen (current_file, "r");
-    if (file == NULL) {
+    if (file == nullptr) {
       t8_global_errorf ("Could not open file %s\n", current_file);
       t8_cmesh_destroy (&cmesh);
 
@@ -1950,7 +1950,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      return nullptr;
     }
     /* Check if msh-file version is compatible. */
     msh_version = t8_cmesh_check_version_of_msh_file (file);
@@ -1965,7 +1965,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      return nullptr;
     }
     /* read nodes from the file */
     std::optional<t8_msh_tree_vertex_indices> indices;
@@ -1980,7 +1980,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
           main_proc_read_successful = 0;
           sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
         }
-        return NULL;
+        return nullptr;
       }
       auto vertices_opt = t8_msh_file_2_read_nodes (file);
       if (!vertices_opt) {
@@ -1991,7 +1991,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
           main_proc_read_successful = 0;
           sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
         }
-        return NULL;
+        return nullptr;
       }
       indices = t8_cmesh_msh_file_2_read_eles (cmesh, file, *vertices_opt, dim);
       break;
@@ -2007,7 +2007,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
           main_proc_read_successful = 0;
           sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
         }
-        return NULL;
+        return nullptr;
       }
       indices = t8_cmesh_msh_file_4_read_eles (cmesh, file, *vertices_opt, dim, linear_geometry, use_cad_geometry,
                                                cad_geometry, true);
@@ -2026,7 +2026,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      return nullptr;
     }
     else
       t8_cmesh_msh_file_find_neighbors (cmesh, *indices);
@@ -2042,7 +2042,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     if (!main_proc_read_successful) {
       t8_debugf ("Main process could not read cmesh successfully.\n");
       t8_cmesh_destroy (&cmesh);
-      return NULL;
+      return nullptr;
     }
     /* The cmesh is not yet committed, since we set the partitioning before */
     if (mpirank == main_proc) {
@@ -2071,7 +2071,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
 
   /* Commit the cmesh */
   T8_ASSERT (cmesh != NULL);
-  if (cmesh != NULL) {
+  if (cmesh != nullptr) {
     t8_cmesh_commit (cmesh, comm);
   }
   return cmesh;

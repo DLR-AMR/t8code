@@ -80,12 +80,12 @@ t8_cmesh_trees_init (t8_cmesh_trees_t *ptrees, const int num_procs, const t8_loc
   trees = *ptrees = T8_ALLOC (t8_cmesh_trees_struct_t, 1);
   trees->from_proc = sc_array_new_size (sizeof (t8_part_tree_struct_t), num_procs);
   trees->tree_to_proc = T8_ALLOC_ZERO (int, num_trees);
-  trees->ghost_to_proc = num_ghosts > 0 ? T8_ALLOC_ZERO (int, num_ghosts) : NULL;
+  trees->ghost_to_proc = num_ghosts > 0 ? T8_ALLOC_ZERO (int, num_ghosts) : nullptr;
   /* Initialize the global_id mempool */
   trees->global_local_mempool = sc_mempool_new (sizeof (t8_trees_glo_lo_hash_t));
   /* Initialize the global_id hash table */
   trees->ghost_globalid_to_local_id
-    = sc_hash_new (t8_cmesh_trees_glo_lo_hash_func, t8_cmesh_trees_glo_lo_hash_equal, NULL, NULL);
+    = sc_hash_new (t8_cmesh_trees_glo_lo_hash_func, t8_cmesh_trees_glo_lo_hash_equal, nullptr, nullptr);
 }
 
 void
@@ -147,7 +147,7 @@ t8_cmesh_trees_add_ghost (const t8_cmesh_trees_t trees, const t8_locidx_t lghost
 #if T8_ENABLE_DEBUG
   ret =
 #endif
-    sc_hash_insert_unique (trees->ghost_globalid_to_local_id, hash_entry, NULL);
+    sc_hash_insert_unique (trees->ghost_globalid_to_local_id, hash_entry, nullptr);
   /* It mus not have existed before, thus true was returned */
   T8_ASSERT (ret);
 }
@@ -207,7 +207,7 @@ t8_cmesh_trees_start_part (const t8_cmesh_trees_t trees, const int proc, const t
       = T8_ALLOC_ZERO (char, num_trees * sizeof (t8_ctree_struct_t) + num_ghosts * sizeof (t8_cghost_struct_t));
   }
   else {
-    part->first_tree = NULL;
+    part->first_tree = nullptr;
   }
   part->first_tree_id = lfirst_tree;
   part->first_ghost_id = lfirst_ghost;
@@ -562,10 +562,10 @@ t8_cmesh_trees_get_tree_ext (const t8_cmesh_trees_t trees, const t8_locidx_t ltr
                              int8_t **ttf)
 {
   const t8_ctree_t tree = t8_cmesh_trees_get_tree (trees, ltree_id);
-  if (face_neigh != NULL) {
+  if (face_neigh != nullptr) {
     *face_neigh = (t8_locidx_t *) T8_TREE_FACE (tree);
   }
-  if (ttf != NULL) {
+  if (ttf != nullptr) {
     *ttf = (int8_t *) T8_TREE_TTF (tree);
   }
   return tree;
@@ -579,7 +579,7 @@ t8_cmesh_trees_get_face_neighbor_ext (const t8_ctree_t tree, const int face, int
   T8_ASSERT (tree != NULL);
   T8_ASSERT (0 <= face && face < t8_eclass_num_faces[tree->eclass]);
 
-  if (ttf != NULL) {
+  if (ttf != nullptr) {
     /* Get the ttf value */
     *ttf = ((int8_t *) T8_TREE_TTF (tree))[face];
   }
@@ -593,7 +593,7 @@ t8_locidx_t
 t8_cmesh_trees_get_face_neighbor (const t8_ctree_t tree, const int face)
 {
   /* We just pass this through to get_face_neighbor_ext without the ttf argument */
-  return t8_cmesh_trees_get_face_neighbor_ext (tree, face, NULL);
+  return t8_cmesh_trees_get_face_neighbor_ext (tree, face, nullptr);
 }
 
 t8_gloidx_t
@@ -604,7 +604,7 @@ t8_cmesh_trees_get_ghost_face_neighbor_ext (const t8_cghost_t ghost, const int f
   T8_ASSERT (ghost != NULL);
   T8_ASSERT (0 <= face && face < t8_eclass_num_faces[ghost->eclass]);
 
-  if (ttf != NULL) {
+  if (ttf != nullptr) {
     /* Get the ttf value */
     *ttf = ((int8_t *) T8_GHOST_TTF (ghost))[face];
   }
@@ -633,10 +633,10 @@ t8_cmesh_trees_get_ghost_ext (const t8_cmesh_trees_t trees, const t8_locidx_t lg
   t8_cghost_t ghost;
 
   ghost = t8_cmesh_trees_get_ghost (trees, lghost_id);
-  if (face_neigh != NULL) {
+  if (face_neigh != nullptr) {
     *face_neigh = (t8_gloidx_t *) T8_GHOST_FACE (ghost);
   }
-  if (ttf != NULL) {
+  if (ttf != nullptr) {
     *ttf = (int8_t *) T8_GHOST_TTF (ghost);
   }
   return ghost;
@@ -669,7 +669,7 @@ t8_cmesh_trees_size (const t8_cmesh_trees_t trees)
   int ipart;
 
   T8_ASSERT (trees != NULL);
-  if (trees->from_proc == NULL) {
+  if (trees->from_proc == nullptr) {
     /* This tree struct is empty */
     return 0;
   }
@@ -849,7 +849,7 @@ t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t lt
   if (!is_ghost) {
     /* Get a pointer to the tree */
     tree = t8_part_tree_get_tree (t8_cmesh_trees_get_part (trees, proc), ltree_id);
-    ghost = NULL;
+    ghost = nullptr;
     /* number of attributes and pointer to first att_info struct */
     num_attributes = tree->num_attributes;
     first_att_info = T8_TREE_FIRST_ATT_INFO (tree);
@@ -857,7 +857,7 @@ t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t lt
   else {
     /* Get a pointer to the ghost */
     ghost = t8_part_tree_get_ghost (t8_cmesh_trees_get_part (trees, proc), ltree_id);
-    tree = NULL;
+    tree = nullptr;
     /* number of attributes and pointer to first att_info struct */
     num_attributes = ghost->num_attributes;
     first_att_info = T8_GHOST_FIRST_ATT_INFO (ghost);
@@ -867,21 +867,21 @@ t8_cmesh_trees_get_attribute (const t8_cmesh_trees_t trees, const t8_locidx_t lt
   key_id.package_id = package_id;
 
   if (num_attributes <= 0) {
-    return NULL;
+    return nullptr;
   }
 
   sc_array_init_data (&attr_array, first_att_info, sizeof (t8_attribute_info_struct_t), num_attributes);
   index = sc_array_bsearch (&attr_array, &key_id, t8_cmesh_trees_compare_keyattr);
 
   if (index < 0) {
-    return NULL;
+    return nullptr;
   }
   attr_info = (t8_attribute_info_struct_t *) sc_array_index (&attr_array, index);
-  if (size != NULL) {
+  if (size != nullptr) {
     *size = attr_info->attribute_size;
   }
   /* Get a pointer to the actual attribute */
-  if (tree == NULL) {
+  if (tree == nullptr) {
     attribute = T8_GHOST_ATTR (ghost, attr_info);
   }
   else {
@@ -1016,7 +1016,7 @@ t8_cmesh_trees_bcast (const t8_cmesh_t cmesh_in, const int root, const sc_MPI_Co
 {
   int num_parts, ipart;
   int mpirank, mpiret, mpisize;
-  t8_cmesh_trees_t trees = NULL;
+  t8_cmesh_trees_t trees = nullptr;
   t8_part_tree_t part;
 
   struct
@@ -1196,7 +1196,7 @@ t8_cmesh_trees_is_equal (const t8_cmesh_t cmesh, const t8_cmesh_trees_t trees_a,
     /* also returns true if both are NULL */
     return 1;
   }
-  if (trees_a == NULL || trees_b == NULL) {
+  if (trees_a == nullptr || trees_b == nullptr) {
     return 0;
   }
   num_trees = cmesh->num_local_trees;
@@ -1295,5 +1295,5 @@ t8_cmesh_trees_destroy (t8_cmesh_trees_t *ptrees)
   sc_mempool_destroy (trees->global_local_mempool);
 
   T8_FREE (trees);
-  ptrees = NULL;
+  ptrees = nullptr;
 }

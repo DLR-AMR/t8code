@@ -121,7 +121,7 @@ t8_default_scheme_line::element_get_children_at_face (const t8_element_t *elem, 
 
   /* We have exactly one child at a face and this is child 0 if face = 0
    * and child 1 if face = 1 */
-  if (child_indices != NULL) {
+  if (child_indices != nullptr) {
     *child_indices = face;
   }
   t8_dline_child ((const t8_dline_t *) elem, face, (t8_dline_t *) children[0]);

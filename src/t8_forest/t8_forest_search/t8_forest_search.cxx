@@ -196,7 +196,7 @@ t8_forest_search_destroy (t8_forest_search_c_wrapper search)
 {
   T8_ASSERT (search != NULL);
   delete search->cpp_search;
-  search->cpp_search = NULL;
+  search->cpp_search = nullptr;
 }
 
 /**
@@ -267,7 +267,7 @@ t8_forest_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper s
 {
   T8_ASSERT (search != NULL);
   delete search->cpp_search;
-  search->cpp_search = NULL;
+  search->cpp_search = nullptr;
 }
 
 /**
@@ -367,7 +367,7 @@ t8_forest_search_with_batched_queries_destroy (t8_forest_search_with_batched_que
 {
   T8_ASSERT (search != NULL);
   delete search->cpp_search;
-  search->cpp_search = NULL;
+  search->cpp_search = nullptr;
 }
 
 void

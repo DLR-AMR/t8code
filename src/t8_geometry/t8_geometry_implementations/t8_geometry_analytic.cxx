@@ -39,12 +39,12 @@ t8_geometry_analytic::t8_geometry_analytic (std::string name, t8_geom_analytic_f
 
 t8_geometry_analytic::t8_geometry_analytic (std::string name): t8_geometry (name)
 {
-  analytical_function = NULL;
-  jacobian = NULL;
-  load_tree_data = NULL;
-  tree_negative_volume = NULL;
-  tree_compatible = NULL;
-  user_data = NULL;
+  analytical_function = nullptr;
+  jacobian = nullptr;
+  load_tree_data = nullptr;
+  tree_negative_volume = nullptr;
+  tree_compatible = nullptr;
+  user_data = nullptr;
 }
 
 void
@@ -66,20 +66,20 @@ t8_geometry_analytic::t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t g
 void
 t8_geometry_analytic::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
-  if (load_tree_data != NULL) {
+  if (load_tree_data != nullptr) {
     /* Load tree data if a loading function was provided. */
     load_tree_data (cmesh, gtreeid, &tree_data);
   }
   else {
     /* Otherwise it is NULL. */
-    tree_data = NULL;
+    tree_data = nullptr;
   }
 }
 
 bool
 t8_geometry_analytic::t8_geom_tree_negative_volume () const
 {
-  if (tree_negative_volume != NULL) {
+  if (tree_negative_volume != nullptr) {
     /* Tree negative volume if a loading function was provided. */
     return tree_negative_volume ();
   }
@@ -91,7 +91,7 @@ t8_geometry_analytic::t8_geom_tree_negative_volume () const
 bool
 t8_geometry_analytic::t8_geom_check_tree_compatibility () const
 {
-  if (tree_compatible != NULL) {
+  if (tree_compatible != nullptr) {
     /* tree_compatible if a loading function was provided. */
     return tree_compatible ();
   }
@@ -108,7 +108,7 @@ t8_geometry_analytic_destroy (t8_geometry_c **geom)
   T8_ASSERT (geom != NULL);
 
   delete *geom;
-  *geom = NULL;
+  *geom = nullptr;
 }
 
 t8_geometry_c *

@@ -136,7 +136,7 @@ t8_geometry_linear_axis_aligned_destroy (t8_geometry_c **geom)
   T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED);
 
   delete *geom;
-  *geom = NULL;
+  *geom = nullptr;
 }
 
 T8_EXTERN_C_END ();

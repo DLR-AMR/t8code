@@ -377,7 +377,7 @@ t8_default_scheme_quad::element_get_children_at_face (const t8_element_t *elem, 
    */
   this->element_get_child (elem, second_child, children[1]);
   this->element_get_child (elem, first_child, children[0]);
-  if (child_indices != NULL) {
+  if (child_indices != nullptr) {
     child_indices[0] = first_child;
     child_indices[1] = second_child;
   }
