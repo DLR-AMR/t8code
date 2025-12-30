@@ -161,7 +161,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
       SC_CHECK_MPI (mpiret);
 
       /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      t8_gloidx_t const num_local_trees = _T8_CMESH_P48_CONN (num_trees);
+      t8_gloidx_t num_local_trees = _T8_CMESH_P48_CONN (num_trees);
 
       /* First process-local tree-id */
       const t8_gloidx_t first_tree = offset;
