@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_lagrange.cxx
- * Implements functions declared in \ref t8_geometry_lagrange.hxx 
+ * Implements functions declared in \ref t8_geometry_lagrange.hxx
  *  or the C interface \ref t8_geometry_lagrange.h.
  */
 
@@ -322,8 +322,6 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, s
   t8_cmesh_set_tree_vertices (cmesh, 0, nodes.data (), (int) (nodes.size () / 3.0));
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 }
-
-const uint32_t t8_lagrange_element::lagrange_nodes[T8_ECLASS_COUNT][2];
 
 t8_eclass_t
 t8_lagrange_element::get_type () const
