@@ -2282,7 +2282,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   } /* End receiving end message */
 
   /* Check that all messages have been sent.  */
-  int const mpiret = sc_MPI_Waitall (send_requests.size (), send_requests.data (), sc_MPI_STATUSES_IGNORE);
+  int mpiret = sc_MPI_Waitall (send_requests.size (), send_requests.data (), sc_MPI_STATUSES_IGNORE);
   SC_CHECK_MPI (mpiret);
   /* Check that (counting messages to self) one start and one end message has been received.  */
   T8_ASSERT (num_received_start_messages == 1);
