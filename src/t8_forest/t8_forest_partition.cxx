@@ -531,7 +531,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
     return;
   }
 
-  // If the partition-for-coarsening flag is set, register the partitioning correction to be exectuted on
+  // If the partition-for-coarsening flag is set, register the partitioning correction to be executed on
   // before returning. This correction prevents families of elements being split across process boundaries.
   auto pfc = DeferToScopeExit { [&] () {
     if (forest->set_for_coarsening) {
