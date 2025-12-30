@@ -26,7 +26,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-typedef t8_dline_t t8_default_line_t;
+using t8_default_line_t = t8_dline_t;
 
 T8_EXTERN_C_BEGIN ();
 

@@ -312,10 +312,10 @@ struct t8_msh_node_equal
 };
 
 /** Hashtable to store msh file nodes. */
-typedef std::unordered_set<t8_msh_file_node, t8_msh_node_hasher, t8_msh_node_equal> t8_msh_node_table;
+using t8_msh_node_table = std::unordered_set<t8_msh_file_node, t8_msh_node_hasher, t8_msh_node_equal>;
 
 /** Vector which stores the vertex indices of each tree in the t8code order. */
-typedef std::vector<std::vector<t8_gloidx_t>> t8_msh_tree_vertex_indices;
+using t8_msh_tree_vertex_indices = std::vector<std::vector<t8_gloidx_t>>;
 
 /* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
 static int
@@ -1633,13 +1633,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 /** This struct stores all information associated to a tree's face.
  * We need it to find neighbor trees.
  */
-typedef struct
+using t8_msh_file_face_t = struct
 {
   t8_locidx_t ltree_id; /**< The local id of the tree this face belongs to */
   int8_t face_number;   /**< The number of that face within the tree */
   int num_vertices;     /**< The number of vertices of this face. */
   long *vertices;       /**< The indices of these vertices. */
-} t8_msh_file_face_t;
+};
 
 /* Hash a face. The hash value is the sum of its vertex indices */
 static unsigned

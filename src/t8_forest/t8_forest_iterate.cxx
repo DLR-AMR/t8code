@@ -35,13 +35,13 @@ T8_EXTERN_C_BEGIN ();
 /**
  * This struct stores query data about the elements within the forest.
  */
-typedef struct
+using t8_forest_child_type_query_t = struct
 {
   const t8_scheme *scheme; /**< The scheme. */
   t8_eclass_t tree_class;  /**< The tree class. */
   int level;               /**< The refinement level. */
   int num_children;        /**< The number of children. */
-} t8_forest_child_type_query_t;
+};
 
 /** 
  * This is the function that we call in sc_split_array to determine for an

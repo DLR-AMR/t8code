@@ -26,7 +26,7 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-typedef t8_dprism_t t8_default_prism_t;
+using t8_default_prism_t = t8_dprism_t;
 
 T8_EXTERN_C_BEGIN ();
 
