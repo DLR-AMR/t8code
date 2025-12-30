@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_netcdf.h
+/** \file t8_netcdf.h
  * This Header-File holds two typedef integer datatypes for the data of NetCDF integer variables, as well as a struct and functions to create extern elementwise data-variables which should be written additionally to a Forest or Cmesh NetCDF-File.
  */
 
@@ -31,10 +31,10 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* Datatype for 64 bit NetCDF Data */
+/** Datatype for 64 bit NetCDF Data */
 typedef int64_t t8_nc_int64_t;
 
-/* Datatype for 32 bit NetCDF Data */
+/** Datatype for 32 bit NetCDF Data */
 typedef int32_t t8_nc_int32_t;
 
 /** This enumeration contains all possible netCDF variable datatypes (int, int64, double). */

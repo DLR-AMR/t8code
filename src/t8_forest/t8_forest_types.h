@@ -69,8 +69,12 @@ typedef struct t8_forest
 {
   t8_refcount_t rc; /**< Reference counter. */
 
-  int set_level;                    /**< Level to use in new construction. */
-  int set_for_coarsening;           /**< Change partition to allow
+  int set_partition_offset; /**< Flag indicating whether the partition range was set manually.*/
+  t8_gloidx_t
+    set_first_global_element; /**< If set_partition_offset is true, the global ID of the first local element after partitioning.*/
+
+  int set_level;          /**< Level to use in new construction. */
+  int set_for_coarsening; /**< Change partition to allow
                                                      for one round of coarsening */
   t8_weight_fcn_t *weight_function; /**< Pointer to user defined element weight function. Can be null. */
 
@@ -79,7 +83,7 @@ typedef struct t8_forest
   //t8_scheme_c        *scheme;        /**< Scheme for element types. */
   const t8_scheme_c *scheme; /**< Scheme for element types. */
   int maxlevel;              /**< The maximum allowed refinement level for elements in this forest. */
-  int maxlevel_existing;     /**< If >= 0, the maximum occurring refinemnent level of a forest element. */
+  int maxlevel_existing;     /**< If >= 0, the maximum occurring refinement level of a forest element. */
   int do_dup;                /**< Communicator shall be duped. */
   int dimension;             /**< Dimension inferred from \b cmesh. */
   int incomplete_trees;      /**< Flag to check whether the forest has (potential) incomplete trees.

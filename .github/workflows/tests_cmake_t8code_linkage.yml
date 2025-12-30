@@ -55,7 +55,7 @@ jobs:
 # Setup
 #
     - name: Download artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
@@ -96,7 +96,7 @@ jobs:
       run: mkdir build_netcdf && cd build_netcdf && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NETCDF=ON
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
         path: build_netcdf/CMakeFiles/CMakeOutput.log
@@ -115,7 +115,7 @@ jobs:
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
         path: build_netcdf/Testing/Temporary/LastTest.log
@@ -128,7 +128,7 @@ jobs:
       run: mkdir build_occ && cd build_occ && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
         path: build_occ/CMakeFiles/CMakeOutput.log
@@ -147,7 +147,7 @@ jobs:
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
         path: build_occ/Testing/Temporary/LastTest.log
@@ -160,7 +160,7 @@ jobs:
       run: mkdir build_vtk && cd build_vtk && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
         path: build_vtk/CMakeFiles/CMakeOutput.log
@@ -179,7 +179,7 @@ jobs:
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
         path: build_vtk/Testing/Temporary/LastTest.log

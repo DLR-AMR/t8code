@@ -92,7 +92,7 @@ jobs:
       run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cmake_cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ${{ env.SC_DEBUG }}
@@ -140,7 +140,7 @@ jobs:
       run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cmake_cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ${{ env.P4EST_DEBUG }}
@@ -189,7 +189,7 @@ jobs:
 
     ## upload artifacts
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
         path: ./artifact.tar

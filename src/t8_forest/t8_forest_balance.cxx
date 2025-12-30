@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_balance.cxx
+ * Implements functions declared in \ref t8_forest_balance.h.
+ */
+
+#include <t8.h>
 #include <sc_statistics.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
@@ -125,7 +130,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   int local_max_level = 0;
 
-  /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
+  /* Iterate over all local trees and all local elements and compute the maximum occurring level */
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
     elem_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);

@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest.cxx
+ * TODO
+ */
+
 #include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_types/t8_vec.h>
@@ -1149,6 +1153,9 @@ t8_forest_populate (t8_forest_t forest, const int irregular)
   int is_empty;
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
+  SC_CHECK_ABORT (forest->set_partition_offset == 0,
+                  "t8_forest_populate does not support manually chosen partition range.\n");
+
   if (irregular) {
     t8_cmesh_uniform_bounds_for_irregular_refinement (
       forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree, &child_in_tree_begin,
@@ -1236,7 +1243,8 @@ t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->first_local_tree > -1);
   T8_ASSERT (forest->first_local_tree <= forest->global_num_trees);
-  T8_ASSERT (forest->last_local_tree < forest->global_num_trees);
+  T8_ASSERT (forest->first_local_tree <= forest->last_local_tree + 1);
+  T8_ASSERT (forest->last_local_tree <= forest->global_num_trees);
 #if T8_ENABLE_DEBUG
   if (forest->first_local_tree == 0 && forest->last_local_tree == -1) {
     T8_ASSERT (forest->last_local_tree < 0);
@@ -2694,6 +2702,8 @@ t8_forest_init (t8_forest_t *pforest)
   forest->maxlevel_existing = -1;
   forest->stats_computed = 0;
   forest->incomplete_trees = -1;
+  forest->set_partition_offset = 0;
+  forest->set_first_global_element = -1;
 }
 
 int
@@ -3647,6 +3657,7 @@ t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
     return -1;
   }
 }
+
 t8_locidx_t
 t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
 {
@@ -3917,17 +3928,7 @@ t8_forest_profile_get_ghostexchange_waittime (t8_forest_t forest)
 }
 
 double
-t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
-{
-  T8_ASSERT (t8_forest_is_committed (forest));
-  if (forest->profile != NULL) {
-    *balance_rounds = forest->profile->balance_rounds;
-    return forest->profile->balance_runtime;
-  }
-  return 0;
-}
-double
-t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
+t8_forest_profile_get_cmesh_offsets_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -3937,7 +3938,7 @@ t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
 }
 
 double
-t8_forest_profile_get_forest_offset_runtime (t8_forest_t forest)
+t8_forest_profile_get_forest_offsets_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
