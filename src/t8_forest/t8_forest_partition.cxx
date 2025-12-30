@@ -32,6 +32,21 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_schemes/t8_scheme.hxx>
 
+namespace { // to prevent this implementation detail from leaking outside of this TU
+  template< typename Callable >
+  class [[maybe_unused]] DeferToScopeExit {
+   private:
+    Callable f_;
+   public:
+    DeferToScopeExit( Callable&& f ): f_{ f } {}
+    DeferToScopeExit( DeferToScopeExit const& ) = delete;
+    DeferToScopeExit( DeferToScopeExit&& ) noexcept = delete;
+    DeferToScopeExit& operator=( DeferToScopeExit const& ) = delete;
+    DeferToScopeExit& operator=( DeferToScopeExit&& ) noexcept = delete;
+    ~DeferToScopeExit(){ f_(); }
+  };
+}
+
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
@@ -492,10 +507,39 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
 
+  // Get rid upfront of the empty forest corner case
   if (global_num_leaf_elements == 0) {
     if (t8_shmem_array_start_writing (forest->element_offsets)) {
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
       std::fill_n (element_offsets, mpisize + 1, t8_gloidx_t { 0 });
+    }
+    t8_shmem_array_end_writing (forest->element_offsets);
+    return;
+  }
+
+  // If the partition-for-coarsening flag is set, register the partitioning correction to be exectuted on
+  // before returning. This correction prevents families of elements being split across process boundaries.
+  auto pfc = DeferToScopeExit{
+    [&](){
+      if (forest->set_for_coarsening) {
+        t8_forest_pfc_correction_offsets (forest);
+      }
+    }
+  };
+
+  // If a custom partitioning is set, all-gather the manually set element offsets.
+  if (forest->set_partition_offset != 0) {
+    std::vector<t8_gloidx_t> custom_element_offsets(forest->mpisize, 0);
+    const int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX,
+                                         custom_element_offsets.data (), 1, T8_MPI_GLOIDX, comm);
+    SC_CHECK_MPI (retval);
+
+    if (t8_shmem_array_start_writing (forest->element_offsets)) {
+      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+      // Apply manually set element offsets.
+      std::copy_n (custom_element_offsets.data (), static_cast<size_t> (mpisize), element_offsets);
+      // The last entry is the same in both cases.
+      element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
     }
     t8_shmem_array_end_writing (forest->element_offsets);
     return;
@@ -566,59 +610,12 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   t8_shmem_array_allgatherv (local_offsets.data (), local_offsets.size (), T8_MPI_GLOIDX, forest->element_offsets,
                              T8_MPI_GLOIDX, comm);
 
-  // Define vector of manually set element offsets.
-  std::vector<t8_gloidx_t> custom_element_offsets;
-
-  // If a custom partitioning is set, all-gather the manually set element offsets.
-  if (forest->set_partition_offset != 0) {
-    custom_element_offsets.resize (forest->mpisize);
-    const int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX,
-                                         custom_element_offsets.data (), 1, T8_MPI_GLOIDX, comm);
-    SC_CHECK_MPI (retval);
-  }
-
   if (t8_shmem_array_start_writing (forest->element_offsets)) {
-    // t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-    // element_offsets[0] = 0;
-    // element_offsets[mpisize] = global_num_leaf_elements;
-    if (forest_from->global_num_leaf_elements > 0) {
-
-      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-
-      // Distinguish whether custom element offsets were set:
-      if (forest->set_partition_offset == 0) {
-
-        // Compute element offsets
-        for (i = 0; i < mpisize; i++) {
-          /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
-          t8_gloidx_t new_first_element_id
-            = (((double) i * (long double) forest_from->global_num_leaf_elements) / (double) mpisize);
-          T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
-          element_offsets[i] = new_first_element_id;
-        }
-      }
-      else {
-
-        // Apply manually set element offsets.
-        std::copy_n (custom_element_offsets.data (), static_cast<size_t> (mpisize), element_offsets);
-      }
-      // The last entry is the same in both cases.
-      element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
-    }
-    else {
-      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-      for (i = 0; i <= mpisize; i++) {
-        element_offsets[i] = 0;
-      }
-    }
+    t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+    element_offsets[0] = 0;
+    element_offsets[mpisize] = global_num_leaf_elements;
   }
   t8_shmem_array_end_writing (forest->element_offsets);
-
-  // In case the partition-for-coarsening flag is set, correct the partitioning if a family of elements is
-  // split across process boundaries
-  if (forest->set_for_coarsening != 0) {
-    t8_forest_pfc_correction_offsets (forest);
-  }
 }
 
 /* Find the owner of a given element.
