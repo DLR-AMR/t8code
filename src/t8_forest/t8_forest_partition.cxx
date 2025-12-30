@@ -32,20 +32,34 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-namespace { // to prevent this implementation detail from leaking outside of this TU
-  template< typename Callable >
-  class [[maybe_unused]] DeferToScopeExit {
-   private:
-    Callable f_;
-   public:
-    DeferToScopeExit( Callable&& f ): f_{ f } {}
-    DeferToScopeExit( DeferToScopeExit const& ) = delete;
-    DeferToScopeExit( DeferToScopeExit&& ) noexcept = delete;
-    DeferToScopeExit& operator=( DeferToScopeExit const& ) = delete;
-    DeferToScopeExit& operator=( DeferToScopeExit&& ) noexcept = delete;
-    ~DeferToScopeExit(){ f_(); }
-  };
-}
+namespace
+{  // to prevent this implementation detail from leaking outside of this TU
+template <typename Callable>
+class [[maybe_unused]] DeferToScopeExit {
+ private:
+  Callable f_;
+
+ public:
+  DeferToScopeExit (Callable &&f): f_ { f }
+  {
+  }
+
+  DeferToScopeExit (DeferToScopeExit const &) = delete;
+  DeferToScopeExit (DeferToScopeExit &&) noexcept = delete;
+
+  DeferToScopeExit &
+  operator= (DeferToScopeExit const &)
+    = delete;
+  DeferToScopeExit &
+  operator= (DeferToScopeExit &&) noexcept
+    = delete;
+
+  ~DeferToScopeExit ()
+  {
+    f_ ();
+  }
+};
+}  // namespace
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -519,17 +533,15 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
 
   // If the partition-for-coarsening flag is set, register the partitioning correction to be exectuted on
   // before returning. This correction prevents families of elements being split across process boundaries.
-  auto pfc = DeferToScopeExit{
-    [&](){
-      if (forest->set_for_coarsening) {
-        t8_forest_pfc_correction_offsets (forest);
-      }
+  auto pfc = DeferToScopeExit { [&] () {
+    if (forest->set_for_coarsening) {
+      t8_forest_pfc_correction_offsets (forest);
     }
-  };
+  } };
 
   // If a custom partitioning is set, all-gather the manually set element offsets.
   if (forest->set_partition_offset != 0) {
-    std::vector<t8_gloidx_t> custom_element_offsets(forest->mpisize, 0);
+    std::vector<t8_gloidx_t> custom_element_offsets (forest->mpisize, 0);
     const int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX,
                                          custom_element_offsets.data (), 1, T8_MPI_GLOIDX, comm);
     SC_CHECK_MPI (retval);
