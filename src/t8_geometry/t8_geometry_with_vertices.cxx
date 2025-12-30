@@ -92,7 +92,7 @@ t8_geometry_with_vertices::t8_geom_tree_negative_volume () const
   /* compute cross = v_1 x v_2 */
   t8_cross_3D (v_1, v_2, cross);
   /* Compute sc_prod = <v_j, cross> */
-  double sc_prod = t8_dot (v_j, cross);
+  double const sc_prod = t8_dot (v_j, cross);
 
   T8_ASSERT (sc_prod != 0);
   return active_tree_class == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;

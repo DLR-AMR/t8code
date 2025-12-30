@@ -1628,8 +1628,8 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   if (scheme->element_is_root_boundary (tree_class, leaf, face)) {
     t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-    t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-    int iface_in_tree = scheme->element_get_tree_face (tree_class, leaf, face);
+    t8_locidx_t const ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+    int const iface_in_tree = scheme->element_get_tree_face (tree_class, leaf, face);
     t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, iface_in_tree, nullptr, &orientation);
   }
 
@@ -2075,9 +2075,9 @@ static int
 t8_forest_element_find_owner_compare (const void *find_owner_data, const void *process)
 {
   const struct find_owner_data_t *data = (const struct find_owner_data_t *) find_owner_data;
-  t8_linearidx_t linear_id = data->linear_id;
+  t8_linearidx_t const linear_id = data->linear_id;
   t8_forest_t forest = data->forest;
-  int proc = *(int *) process;
+  int const proc = *(int *) process;
   t8_linearidx_t proc_first_desc_id;
   t8_linearidx_t next_proc_first_desc_id;
 
@@ -3463,7 +3463,7 @@ t8_forest_get_cmesh (const t8_forest_t forest)
 static int
 t8_forest_compare_elem_tree (const void *lelement_id, const void *ltree)
 {
-  t8_locidx_t leid = *(const t8_locidx_t *) lelement_id;
+  t8_locidx_t const leid = *(const t8_locidx_t *) lelement_id;
   const t8_tree_t tree = (t8_tree_t) ltree;
 
   if (tree->elements_offset > leid) {
@@ -3585,7 +3585,7 @@ t8_forest_get_tree_num_leaf_elements (t8_forest_t forest, t8_locidx_t ltreeid)
 t8_eclass_t
 t8_forest_get_tree_class (const t8_forest_t forest, const t8_locidx_t ltreeid)
 {
-  t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+  t8_locidx_t const num_local_trees = t8_forest_get_num_local_trees (forest);
   T8_ASSERT (0 <= ltreeid && ltreeid < num_local_trees + t8_forest_get_num_ghost_trees (forest));
   if (ltreeid < num_local_trees) {
     /* The id belongs to a local tree */
@@ -3672,7 +3672,7 @@ t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtr
     return ltreeid;
   }
   else {
-    t8_locidx_t ghost_id = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
+    t8_locidx_t const ghost_id = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
     if (ghost_id >= 0)
       return t8_forest_get_num_local_trees (forest) + ghost_id;
     return -1;

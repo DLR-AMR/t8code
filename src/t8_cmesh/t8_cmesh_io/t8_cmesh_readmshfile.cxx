@@ -438,7 +438,7 @@ t8_msh_file_2_read_nodes (FILE *fp)
   }
 
   /* Create the hash table */
-  t8_msh_node_hasher hasher (lnum_nodes);
+  t8_msh_node_hasher const hasher (lnum_nodes);
   t8_msh_node_table node_table (lnum_nodes, hasher);
 
   /* read each node and add it to the hash table */
@@ -522,7 +522,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
   }
 
   /* Create the hash table */
-  t8_msh_node_hasher hasher (lnum_nodes);
+  t8_msh_node_hasher const hasher (lnum_nodes);
   t8_msh_node_table node_table (lnum_nodes, hasher);
 
   /* read each node and add it to the hash table */

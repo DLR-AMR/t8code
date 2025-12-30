@@ -664,7 +664,7 @@ t8_cmesh_partition_copy_data (char *send_buffer, t8_cmesh_t cmesh, const t8_cmes
   //ssize_t             last_attribute_diff;
   t8_attribute_info_struct_t *attr_info;
   void *first_attribute;
-  t8_locidx_t num_ghost_send = send_as_ghost->elem_count;
+  t8_locidx_t const num_ghost_send = send_as_ghost->elem_count;
   t8_locidx_t ghosts_left;
   t8_locidx_t *face_neighbor, ghost_id, itree;
   t8_gloidx_t *face_neighbor_g, *face_neighbor_gnew, new_neighbor;

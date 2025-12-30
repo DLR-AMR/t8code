@@ -433,7 +433,7 @@ t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, con
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   /* The size is the string's length + the terminating '\0' */
-  size_t size = strlen (string) + 1;
+  size_t const size = strlen (string) + 1;
   /* Add the string as an attribute. */
   t8_cmesh_set_attribute (cmesh, gtree_id, package_id, key, (void *) string, size, 0);
 }
@@ -1633,7 +1633,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
      * all trees to find the trees in which these are contained.
      * We cast to long double and double to prevent overflow. */
   /* Since the full cmesh is available on each process, the computation of local_num_children equals the global number of children*/
-  uint64_t global_num_children = (uint64_t) local_num_children;
+  uint64_t const global_num_children = (uint64_t) local_num_children;
   const t8_gloidx_t first_child
     = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, global_num_children);
   const t8_gloidx_t last_child = t8_cmesh_get_first_element_of_process (
@@ -2280,7 +2280,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   } /* End receiving end message */
 
   /* Check that all messages have been sent.  */
-  int mpiret = sc_MPI_Waitall (send_requests.size (), send_requests.data (), sc_MPI_STATUSES_IGNORE);
+  int const mpiret = sc_MPI_Waitall (send_requests.size (), send_requests.data (), sc_MPI_STATUSES_IGNORE);
   SC_CHECK_MPI (mpiret);
   /* Check that (counting messages to self) one start and one end message has been received.  */
   T8_ASSERT (num_received_start_messages == 1);

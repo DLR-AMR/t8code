@@ -353,7 +353,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
   /* Find the neighboring faces */
   for (t8_locidx_t tit = 0; tit < num_elems; tit++) {
     for (t8_locidx_t tneigh = 0; tneigh < num_faces; tneigh++) {
-      t8_locidx_t neighbor = tneighbors[num_faces * tit + tneigh] - element_offset;
+      t8_locidx_t const neighbor = tneighbors[num_faces * tit + tneigh] - element_offset;
       if (neighbor != -1 - element_offset && tit < neighbor) {
         /* Error tolerance for vertex coordinate equality.
          * We consider vertices to be equal if all their coordinates
@@ -408,14 +408,14 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
 
         int orientation = -1;
         int found_orientation = 0;
-        int firstvertex = face1 == 0 ? 1 : 0;
+        int const firstvertex = face1 == 0 ? 1 : 0;
 
         for (int ivertex = 1; ivertex <= dim && !found_orientation; ivertex++) {
           /* The face with number k consists of the vertices with numbers
            * k+1, k+2, k+3 (mod 4) or k+1, k+2 (mod 3) in case of triangles.
            * In el_vertices are the coordinates of these vertices in order
            * v_0x v_0y v_0z v_1x v_1y ... */
-          int el_vertex = (face2 + ivertex) % num_faces;
+          int const el_vertex = (face2 + ivertex) % num_faces;
           if (fabs (el_vertices1[3 * firstvertex] - el_vertices2[3 * el_vertex]) < tolerance
               && fabs (el_vertices1[3 * firstvertex + 1] - el_vertices2[3 * el_vertex + 1]) < tolerance
               && fabs (el_vertices1[3 * firstvertex + 2] - el_vertices2[3 * el_vertex + 2]) < tolerance) {

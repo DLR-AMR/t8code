@@ -161,7 +161,7 @@ t8_cmesh_new_from_p4est_ext (void *conn, int dim, sc_MPI_Comm comm, int set_part
       SC_CHECK_MPI (mpiret);
 
       /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      t8_gloidx_t num_local_trees = _T8_CMESH_P48_CONN (num_trees);
+      t8_gloidx_t const num_local_trees = _T8_CMESH_P48_CONN (num_trees);
 
       /* First process-local tree-id */
       const t8_gloidx_t first_tree = offset;
@@ -660,7 +660,7 @@ t8_cmesh_t
 t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic)
 {
   t8_cmesh_t cmesh;
-  int num_trees_for_hypercube[T8_ECLASS_COUNT] = { 1, 1, 1, 2, 1, 6, 2, 3 };
+  int const num_trees_for_hypercube[T8_ECLASS_COUNT] = { 1, 1, 1, 2, 1, 6, 2, 3 };
   int i;
   t8_locidx_t vertices[8];
   double attr_vertices[24];
@@ -1471,7 +1471,7 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
     }
     else {
       /* First_tree and last_tree are the first and last trees of conn plus the offset */
-      t8_gloidx_t num_local_trees = num_trees;
+      t8_gloidx_t const num_local_trees = num_trees;
 
       /* First process-local tree-id */
       const t8_gloidx_t first_tree = offset;
@@ -1890,7 +1890,7 @@ t8_cmesh_new_prism_cake (sc_MPI_Comm comm, int num_of_prisms)
      6 * 3 doubles? */
   double *vertices = T8_ALLOC (double, num_of_prisms * 6 * 3);
   t8_cmesh_t cmesh;
-  double degrees = 360. / num_of_prisms;
+  double const degrees = 360. / num_of_prisms;
 
   T8_ASSERT (num_of_prisms > 2);
 
@@ -2942,8 +2942,8 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (const double radius, sc_
     all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
-  double vertices_top[3][3] = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } };
-  double vertices_bot[3][3] = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, -1.0 } };
+  double const vertices_top[3][3] = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } };
+  double const vertices_bot[3][3] = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, -1.0 } };
 
   for (int turn = 0, itree = -1; turn < ntrees / 2; turn++) {
     double rot_mat[3][3];
@@ -3356,7 +3356,7 @@ t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree_local);
 
     /* Element class scheme of the current tree. */
-    t8_eclass_t eclass_2d = t8_forest_get_eclass (forest, itree_local);
+    t8_eclass_t const eclass_2d = t8_forest_get_eclass (forest, itree_local);
 
     /* Loop over all local elements in the tree. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {

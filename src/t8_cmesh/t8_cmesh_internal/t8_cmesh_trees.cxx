@@ -370,7 +370,7 @@ t8_cmesh_trees_finish_part (const t8_cmesh_trees_t trees, const int proc)
   size_t num_ghost_attributes = 0; /* total number of ghost attributes */
   /* To get the offset of the first ghost attribute info, we have to add the bytes
    * of all tree attributes. */
-  size_t first_ghost_offset = next_tree_offset + tree_attr_data_bytes;
+  size_t const first_ghost_offset = next_tree_offset + tree_attr_data_bytes;
   for (it = 0; it < part->num_ghosts; it++) {
     ghost = t8_part_tree_get_ghost (part, it + part->first_ghost_id);
     ghost_attr_data_bytes += ghost->att_offset; /* att_offset temporarily stored the total size of the attributes */

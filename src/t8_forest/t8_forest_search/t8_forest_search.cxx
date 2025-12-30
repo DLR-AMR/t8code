@@ -296,7 +296,7 @@ struct t8_forest_search_with_batched_queries
                             const bool is_leaf, const t8_element_array_t *leaf_elements,
                             const t8_locidx_t tree_leaf_index, const std::vector<void *> &queries,
                             const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches,
-                            void *user_data)
+                            void *user_data) const
   {
     std::vector<int> query_matches_int (query_matches.size ());
     queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, queries.data (),

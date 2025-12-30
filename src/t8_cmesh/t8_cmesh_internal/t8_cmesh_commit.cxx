@@ -76,8 +76,8 @@ t8_ghost_facejoin_equal (const void *v1, const void *v2, [[maybe_unused]] const 
 static unsigned
 t8_ghost_hash (const void *v, const void *u)
 {
-  t8_gloidx_t ghost_id = ((t8_ghost_facejoin_t *) v)->ghost_id;
-  t8_locidx_t num_hashes = *((t8_locidx_t *) u);
+  t8_gloidx_t const ghost_id = ((t8_ghost_facejoin_t *) v)->ghost_id;
+  t8_locidx_t const num_hashes = *((t8_locidx_t *) u);
 
   return ghost_id % num_hashes;
 }

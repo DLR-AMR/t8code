@@ -56,7 +56,7 @@ t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
     /* Iterate over all entries of the vertex list,
      * thus, each entry is a local tree id and vertex index. */
     for (auto &[tree_index, vertex_index] : vertex_list) {
-      global_local_index_pair new_pair (global_vertex, vertex_index);
+      global_local_index_pair const new_pair (global_vertex, vertex_index);
       global_ids_per_tree[tree_index].push_back (new_pair);
     }
   }

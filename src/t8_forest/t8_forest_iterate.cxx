@@ -263,7 +263,7 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
 
     for (size_t iactive = 0; iactive < num_active; iactive++) {
       if (!is_leaf && active_queries_matches[iactive]) {
-        size_t query_index = *(size_t *) sc_array_index (active_queries, iactive);
+        size_t const query_index = *(size_t *) sc_array_index (active_queries, iactive);
         *(size_t *) sc_array_push (new_active_queries) = query_index;
       }
     }
@@ -396,7 +396,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
     const t8_locidx_t elems_per_tree_new = t8_forest_get_tree_num_leaf_elements (forest_new, itree);
     const t8_locidx_t elems_per_tree_old = t8_forest_get_tree_num_leaf_elements (forest_old, itree);
     /* Get the eclass of the tree */
-    t8_eclass_t tree_class = t8_forest_get_tree_class (forest_new, itree);
+    t8_eclass_t const tree_class = t8_forest_get_tree_class (forest_new, itree);
     T8_ASSERT (tree_class == t8_forest_get_tree_class (forest_old, itree));
     t8_locidx_t ielem_new = 0;
     t8_locidx_t ielem_old = 0;
