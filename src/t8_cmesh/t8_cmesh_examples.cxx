@@ -3304,7 +3304,7 @@ t8_cmesh_new_quadrangulated_spherical_surface (const double radius, sc_MPI_Comm 
   return cmesh;
 }
 
-using t8_inner_sphere_creator_t = t8_cmesh_t (const double, MPI_Comm);
+using t8_inner_sphere_creator_t = t8_cmesh_t (const double, sc_MPI_Comm);
 
 static t8_cmesh_t
 t8_cmesh_new_spherical_shell (t8_eclass_t eclass, t8_geometry_c *geometry,
