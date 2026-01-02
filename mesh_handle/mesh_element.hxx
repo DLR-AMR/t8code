@@ -51,7 +51,7 @@ class mesh_element: public abstract_element<mesh_class, TCompetence...> {
   friend mesh_class;
 
   // --- Variables to check which functionality is defined in TCompetence. ---
-  /** Helper function to check if class T implements the function neighbor_cache_filled.
+  /** Helper function to check if class T implements the function neighbor_cache_filled_any.
    * \tparam T The competence to be checked.
    * \return true if T implements the function, false if not.
    */
@@ -59,10 +59,10 @@ class mesh_element: public abstract_element<mesh_class, TCompetence...> {
   static constexpr bool
   neighbor_cache_defined ()
   {
-    return requires (T<SelfType>& competence) { competence.neighbor_cache_filled (0); };
+    return requires (T<SelfType>& competence) { competence.neighbor_cache_filled_any (); };
   }
   /* This variable is true if any of the given competences \ref TCompetence implements 
-  a function neighbor_cache_filled. */
+  a function neighbor_cache_filled_any. */
   static constexpr bool neighbor_cache_exists = (false || ... || neighbor_cache_defined<TCompetence> ());
 
   /**
@@ -116,10 +116,10 @@ class mesh_element: public abstract_element<mesh_class, TCompetence...> {
       }
     }
     std::vector<std::reference_wrapper<SelfType>> neighbor_elements;
-    t8_element_t** neighbors; /*< Neighboring elements. */
+    t8_element_t** neighbors; /**< Neighboring elements. */
     int* dual_faces_internal; /**< The face indices of the neighbor elements. */
-    t8_locidx_t* neighids;    /*< Neighboring elements ids. */
-    t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
+    t8_locidx_t* neighids;    /**< Neighboring elements ids. */
+    t8_eclass_t neigh_class;  /**< Neighboring elements tree class. */
 
     t8_forest_leaf_face_neighbors (this->m_mesh->m_forest, this->m_tree_id, get_element (), &neighbors, face,
                                    &dual_faces_internal, num_neighbors, &neighids, &neigh_class,
