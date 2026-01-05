@@ -1,4 +1,4 @@
-name: CMake Tarball
+name: test tarball
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
@@ -39,7 +39,7 @@ on:
         default: 'T8_TEST_LEVEL_FULL'
 
 jobs:
-  build:
+  build_tarball:
 
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
@@ -91,7 +91,7 @@ jobs:
         name: tarballs
         path: build/tarballs
 
-  test-tarball:
+  test_tarball:
     needs: build
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
