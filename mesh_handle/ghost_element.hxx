@@ -56,6 +56,19 @@ class ghost_element: public abstract_element<mesh_class, TCompetence...> {
   ghost_element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t lghost_tree_id, t8_locidx_t element_id)
     : Base (mesh, tree_id, element_id), m_lghost_tree_id (lghost_tree_id)
   {
+    // Resize caches for clean access.
+    if constexpr (this->face_area_cache_exists) {
+      const int num_faces = this->get_num_faces ();
+      this->m_face_area.resize (num_faces);
+    }
+    if constexpr (this->face_centroid_cache_exists) {
+      const int num_faces = this->get_num_faces ();
+      this->m_face_centroid.resize (num_faces);
+    }
+    if constexpr (this->face_normal_cache_exists) {
+      const int num_faces = this->get_num_faces ();
+      this->m_face_normal.resize (num_faces);
+    }
   }
 
  public:

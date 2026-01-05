@@ -423,7 +423,7 @@ class abstract_element: public TCompetence<abstract_element<mesh_class, TCompete
         // Fill cache.
         this->m_face_area[face] = t8_forest_element_face_area (m_mesh->m_forest, m_tree_id, get_element (), face);
       }
-      return this->m_face_area[face];
+      return this->m_face_area[face].value ();
     }
     return t8_forest_element_face_area (m_mesh->m_forest, m_tree_id, get_element (), face);
   }
@@ -476,10 +476,10 @@ class abstract_element: public TCompetence<abstract_element<mesh_class, TCompete
   }
 
   /**
-   * Getter for the element's shape.
+   * Getter for the element's face shape.
    * For this easily accessible variable, it makes no sense to provide a cached version.
    * \param [in] face Index of a face of the element.
-   * \return The shape of the element.
+   * \return The shape of the face of the element.
    */
   t8_element_shape_t
   get_face_shape (int face) const

@@ -81,6 +81,19 @@ class mesh_element: public abstract_element<mesh_class, TCompetence...> {
       this->m_dual_faces.resize (num_faces);
       this->m_neighbor_indices.resize (num_faces);
     }
+    // Resize caches for clean access.
+    if constexpr (this->face_area_cache_exists) {
+      const int num_faces = this->get_num_faces ();
+      this->m_face_area.resize (num_faces);
+    }
+    if constexpr (this->face_centroid_cache_exists) {
+      const int num_faces = this->get_num_faces ();
+      this->m_face_centroid.resize (num_faces);
+    }
+    if constexpr (this->face_normal_cache_exists) {
+      const int num_faces = this->get_num_faces ();
+      this->m_face_normal.resize (num_faces);
+    }
   }
 
  public:

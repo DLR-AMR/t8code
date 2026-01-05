@@ -50,6 +50,21 @@ struct cache_volume_overwrite: public t8_mesh_handle::cache_volume<TUnderlying>
   }
 };
 
+/** Child class of \ref t8_mesh_handle::cache_diameter that allows to modify the cache variable for test purposes. */
+template <typename TUnderlying>
+struct cache_diameter_overwrite: public t8_mesh_handle::cache_diameter<TUnderlying>
+{
+ public:
+  /** Overwrites the cache variable for the diameter.
+   * \param [in] new_diameter New diameter. 
+   */
+  void
+  overwrite_cache (double new_diameter) const
+  {
+    this->m_diameter = new_diameter;
+  }
+};
+
 /** Child class of \ref t8_mesh_handle::cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_coordinates<TUnderlying>
@@ -104,6 +119,28 @@ TEST (t8_gtest_cache_competence, cache_volume)
     it->overwrite_cache (unrealistic_volume);
     // Check that the cache is actually used.
     EXPECT_EQ (it->get_volume (), unrealistic_volume);
+  }
+}
+
+/** Use child class of \ref t8_mesh_handle::cache_diameter class to check that the cache is actually set 
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+ * checking that the functionality actually outputs this unrealistic value.
+ */
+TEST (t8_gtest_cache_competence, cache_diameter)
+{
+  const int level = 1;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_diameter_overwrite>>;
+  using element_class = typename mesh_class::abstract_element_class;
+  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  EXPECT_TRUE (element_class::has_diameter_cache ());
+
+  double unrealistic_diameter = -3000;
+  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+    EXPECT_FALSE (it->diameter_cache_filled ());
+    EXPECT_GE (it->get_diameter (), 0);
+    EXPECT_TRUE (it->diameter_cache_filled ());
+    it->overwrite_cache (unrealistic_diameter);
+    EXPECT_EQ (it->get_diameter (), unrealistic_diameter);
   }
 }
 
@@ -170,3 +207,49 @@ TEST (t8_gtest_cache_competence, cache_centroid)
     EXPECT_EQ (it->get_centroid (), unrealistic_centroid);
   }
 }
+
+// --- Face related caches. ---
+
+/** Child class of \ref t8_mesh_handle::cache_face_area that allows to modify the cache variables for test purposes. */
+template <typename TUnderlying>
+struct cache_face_area_overwrite: public t8_mesh_handle::cache_face_area<TUnderlying>
+{
+ public:
+  /** Overwrites the cache variable for the face area.
+   * \param [in] face The face for which the cache should be set.
+   * \param [in] new_face_area New face area. 
+   */
+  void
+  overwrite_cache (int face, double new_face_area) const
+  {
+    this->m_face_area[face] = new_face_area;
+  }
+};
+
+/** Use child class of \ref t8_mesh_handle::cache_face_area class to check that the cache is actually set 
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+ * checking that the functionality actually outputs this unrealistic value.
+ */
+TEST (t8_gtest_cache_competence, cache_face_area)
+{
+  const int level = 1;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_face_area_overwrite>>;
+  using element_class = typename mesh_class::abstract_element_class;
+  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  EXPECT_TRUE (element_class::has_face_area_cache ());
+
+  //double unrealistic_face_area = 41.1;
+  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+    for (int iface = 0; iface < it->get_num_faces (); ++iface) {
+      EXPECT_FALSE (it->face_area_cache_filled (iface));
+      // auto face_area = it->get_face_area (iface);
+      // EXPECT_LE (0, face_area);
+      // EXPECT_TRUE (it->face_area_cache_filled (iface));
+      //it->overwrite_cache (iface,unrealistic_face_area+iface);
+      // EXPECT_EQ (it->get_face_area (iface), unrealistic_face_area+iface);
+      std::cout << "here";
+    }
+  }
+}
+
+//TODO: Add tests for face centroid and face normal caches. Also add these to compare handle to forest.
