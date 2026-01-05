@@ -1,11 +1,11 @@
-name: CMake tests t8code with other compilers
+name: CMake tests t8code with Clang compiler
 
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element types in parallel.
 #
-#  Copyright (C) 2024 the developers
+#  Copyright (C) 2025 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -44,10 +44,6 @@ on:
         type: string
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
-      COMPILER:
-        required: true
-        type: string
-        description: 'Compiler (CLANG)'
 
 jobs:
   t8code_cmake_tests:
@@ -63,36 +59,8 @@ jobs:
         fetch-depth: 0
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
-    - name: Install missing packages (to be added to image)
-      run: |
-        apt-get install -y cmake ninja-build
-    # - name: Install some basic packages
-    #   run: |
-    #     apt-get install -y wget tar lld make \
-    #       libc6-dev libc++-dev libc++abi-dev \
-    #       pkg-config \
-    #       git
-    #       # zlib1g-dev \
-    #       # libssl-dev \
-    #       # bzip2-dev \
-    #       # sqlite3-dev \
-    # - name: Install CLANG
-    #   run: apt-get install clang -y
     - name: Check clang version
       run: clang --version
-    # - name: Install openmpi with CLANG
-    #   run: |
-    #     mkdir install_ompi_clang
-    #     export OMPI_INSTALL_PATH=$(pwd)/install_ompi_clang
-    #     wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.gz
-    #     tar xf openmpi-4.1.6.tar.gz
-    #     cd openmpi-4.1.6
-    #     CC=clang CXX=clang++ ./configure --prefix=$OMPI_INSTALL_PATH
-    #     make -j$(nproc)
-    #     make install
-    #     echo OMPI_INSTALL_PATH="${OMPI_INSTALL_PATH}" >> $GITHUB_ENV
-    #     ls $OMPI_INSTALL_PATH/bin
-    #     echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
     - name: Export CLANG compiler flags
       run: |
         export CC=clang
@@ -106,10 +74,6 @@ jobs:
         echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
     - name: Show MPI version
       run: mpicc --version
-    - name: Show folder content
-      run: |
-        ls
-        ls .git
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -145,7 +109,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v5
       with:
-        name: cmake_w_other_compilers_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        name: cmake_w_clang_compiler_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
     - name: ninja
       run: cd build && ninja $MAKEFLAGS
@@ -170,5 +134,5 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v5
       with:
-        name: test-suite_w_other_compilers_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        name: test-suite_w_clang_compiler_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/Testing/Temporary/LastTest.log
