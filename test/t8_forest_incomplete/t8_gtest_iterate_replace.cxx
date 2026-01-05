@@ -71,7 +71,7 @@ struct t8_return_data
   int *callbacks;
 };
 
-/** Inside the callback of iterate_replace we compare \a refine 
+/** Inside the callback of iterate_replace we compare \a refine
  * with the according return value of the callback of forest_adapt.
  * If true, we check the parameter \a num_outgoing, \a first_outgoing
  * \a num_incoming and \a first_incoming for correctness. */
@@ -86,9 +86,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
 
   /* Local element index of the old and new forest. */
   t8_locidx_t elidx_old = first_outgoing;
-  t8_locidx_t elidx_new = first_incoming;
   for (t8_locidx_t tidx = 0; tidx < which_tree; tidx++) {
-    elidx_new += t8_forest_get_tree_num_leaf_elements (forest_new, tidx);
     elidx_old += t8_forest_get_tree_num_leaf_elements (forest_old, tidx);
   }
 
