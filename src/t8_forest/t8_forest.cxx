@@ -2704,6 +2704,8 @@ t8_forest_init (t8_forest_t *pforest)
   forest->incomplete_trees = -1;
   forest->set_partition_offset = 0;
   forest->set_first_global_element = -1;
+  forest->set_weighted_partitioning = 0;
+  forest->weight_function = nullptr;
 }
 
 int
@@ -2818,7 +2820,6 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
   T8_ASSERT (forest->scheme == NULL);
 
   forest->set_for_coarsening = set_for_coarsening;
-  forest->weight_function = nullptr;
 
   if (set_from != NULL) {
     /* If set_from = NULL, we assume a previous forest_from was set */
@@ -2832,12 +2833,6 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
   else {
     forest->from_method |= T8_FOREST_FROM_PARTITION;
   }
-}
-
-void
-t8_forest_set_partition_weights (t8_forest_t forest, t8_weight_fcn_t *weight_callback)
-{
-  forest->weight_function = weight_callback;
 }
 
 void
@@ -3166,7 +3161,6 @@ t8_forest_commit (t8_forest_t forest)
           t8_forest_ref (forest->set_from);
         }
         t8_forest_set_partition (forest_partition, forest->set_from, forest->set_for_coarsening);
-        t8_forest_set_partition_weights (forest_partition, forest->weight_function);
         /* activate profiling, if this forest has profiling */
         t8_forest_set_profiling (forest_partition, forest->profile != NULL);
         /* Commit the partitioned forest */

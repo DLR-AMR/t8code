@@ -327,8 +327,6 @@ t8_forest_get_user_function (const t8_forest_t forest);
  * false, it is not necessary to call \ref t8_forest_set_partition additionally.
  * \note This setting may not be combined with \ref t8_forest_set_copy and overwrites
  * this setting.
- * \note Calling this function sets the forest for unweighted partitioning. If weighted
- * partitioning is desired, \ref t8_forest_set_partition_weights must be called after.
  */
 void
 t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening);
@@ -340,7 +338,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
  * \note If \a weight_callback is null, then all the elements are assumed to have the same weight
  */
 void
-t8_forest_set_partition_weights (t8_forest_t forest, t8_weight_fcn_t *weight_callback);
+t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *weight_callback);
 
 /** Set a source forest to be balanced during commit.
  * A forest is said to be balanced if each element has face neighbors of level
