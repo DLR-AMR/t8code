@@ -98,7 +98,8 @@ typedef int32_t t8_locidx_t;
 #define T8_LOCIDX_MAX INT32_MAX
 /** Comparison function for t8_locidx_t */
 #define t8_compare_locidx(v, w) sc_int32_compare (v, w)
-
+/** A type for holding process ids. */
+typedef int t8_procidx_t;
 /** A type for global indexing that holds really big numbers. */
 typedef int64_t t8_gloidx_t;
 /** The MPI Datatype of t8_gloidx_t */
@@ -146,7 +147,8 @@ typedef enum {
   T8_MPI_CMESH_UNIFORM_BOUNDS_START,    /**< Used for cmesh uniform bounds computation. */
   T8_MPI_CMESH_UNIFORM_BOUNDS_END,      /**< Used for cmesh uniform bounds computation. */
   T8_MPI_TEST_ELEMENT_PACK_TAG,         /**< Used for testing mpi pack and unpack functionality */
-  T8_MPI_TAG_LAST                       /**< Dummy last MPT tag. */
+  T8_MPI_PFC_TAG,                       /**< Used for data exchange during partition for coarsening. */
+  T8_MPI_TAG_LAST                       /**< Dummy last MPI tag. */
 } t8_MPI_tag_t;
 
 /** Query the package identity as registered in libsc.
