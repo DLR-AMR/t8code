@@ -122,7 +122,7 @@ jobs:
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
 #
 #  T8CODE
-#
+# -------
     # build config vars
     - name: Set test level
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
