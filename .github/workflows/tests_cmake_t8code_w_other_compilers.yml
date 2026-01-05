@@ -65,7 +65,7 @@ jobs:
       run: apt-get update && apt-get upgrade -y
     - name: Install missing packages (to be added to image)
       run: |
-        apt-get install -y cmake
+        apt-get install -y cmake ninja-build
     # - name: Install some basic packages
     #   run: |
     #     apt-get install -y wget tar lld make \
