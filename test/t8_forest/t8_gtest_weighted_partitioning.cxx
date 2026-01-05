@@ -130,11 +130,11 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
   t8_forest_init (&forest_uniform_weights);
 
   // Define uniform weight fcn.
-  t8_weight_fcn_t* uniform_weight_fcn = [] (t8_forest_t, t8_locidx_t, t8_locidx_t) -> double { return 1; };
+  t8_weight_fcn_t *uniform_weight_fcn = [] (t8_forest_t, t8_locidx_t, t8_locidx_t) -> double { return 1; };
 
   // Prepare partitioning.
-  t8_forest_set_partition(forest_uniform_weights, base_forest, 0);
-  t8_forest_set_partition_weight_function(forest_uniform_weights, uniform_weight_fcn);
+  t8_forest_set_partition (forest_uniform_weights, base_forest, 0);
+  t8_forest_set_partition_weight_function (forest_uniform_weights, uniform_weight_fcn);
 
   // Commit forest (without destroying base_forest).
   t8_forest_ref (base_forest);
@@ -143,7 +143,7 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
   // Create partitioned forest without weights for comparison.
   t8_forest_t forest_no_weights;
   t8_forest_init (&forest_no_weights);
-  t8_forest_set_partition(forest_no_weights, base_forest, 0);
+  t8_forest_set_partition (forest_no_weights, base_forest, 0);
   t8_forest_ref (base_forest);
   t8_forest_commit (forest_no_weights);
 
@@ -159,15 +159,17 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
   // ----------------------------------
 
   // Define non-uniform weight fcn: For this test, we pick the element number as element weight.
-  t8_weight_fcn_t* weight_fcn = [] (t8_forest_t forest, t8_locidx_t ltree_id, t8_locidx_t ele_in_tree) -> double {
-    const t8_gloidx_t gelem_id = t8_forest_get_first_local_leaf_element_id(forest) + t8_forest_get_tree_element_offset(forest, ltree_id) + ele_in_tree;
-    return gelem_id; };
+  t8_weight_fcn_t *weight_fcn = [] (t8_forest_t forest, t8_locidx_t ltree_id, t8_locidx_t ele_in_tree) -> double {
+    const t8_gloidx_t gelem_id = t8_forest_get_first_local_leaf_element_id (forest)
+                                 + t8_forest_get_tree_element_offset (forest, ltree_id) + ele_in_tree;
+    return gelem_id;
+  };
 
   // Prepare forest.
   t8_forest_t forest_weighted;
   t8_forest_init (&forest_weighted);
-  t8_forest_set_partition(forest_weighted, base_forest, 0);
-  t8_forest_set_partition_weight_function(forest_weighted, weight_fcn);
+  t8_forest_set_partition (forest_weighted, base_forest, 0);
+  t8_forest_set_partition_weight_function (forest_weighted, weight_fcn);
 
   // Commit forest (without destroying base_forest).
   t8_forest_ref (base_forest);
@@ -176,43 +178,43 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
   // (3b.) Determine expected partitioning:
   // --------------------------------------
 
-  // Preparation: MPI variablies and global number of leaf elements.
+  // Preparation: MPI variables and global number of leaf elements.
   const int mpirank = base_forest->mpirank;
   const int mpisize = base_forest->mpisize;
-  const t8_gloidx_t num_global_leaves = t8_forest_get_global_num_leaf_elements(base_forest);
+  const t8_gloidx_t num_global_leaves = t8_forest_get_global_num_leaf_elements (base_forest);
 
   // Total sum of the weights for this case (Gauss sum formula for num_global_leaves - 1)
   const double total_weight_sum = num_global_leaves * (num_global_leaves - 1) / 2;
 
   // "Manually" compute the element offsets expected for this distribution.
-  // Note: For simplicty, every process computes all offsets here, so no MPI communication is required.
-  std::vector<t8_gloidx_t> element_offsets(mpisize+1);
+  // Note: For simplicity, every process computes all offsets here, so no MPI communication is required.
+  std::vector<t8_gloidx_t> element_offsets (mpisize + 1);
   double sum = 0.0;
   int on_rank = 0;
   element_offsets[0] = 0;
-  for(t8_gloidx_t ielem = 0; ielem < num_global_leaves; ielem++) {
+  for (t8_gloidx_t ielem = 0; ielem < num_global_leaves; ielem++) {
 
     // Add weight (which matches element number here)
     sum += ielem;
 
     // If we are above ideal bound for current process, add offset to vector and go to next rank.
-    if(sum > total_weight_sum * (on_rank+1) / mpisize) {
-      on_rank ++;
-      std::fill(element_offsets.begin()+on_rank, element_offsets.end(), ielem);
-      t8_global_productionf("Computed offset for rank %i: %li \n", on_rank, element_offsets[on_rank]);
+    if (sum > total_weight_sum * (on_rank + 1) / mpisize) {
+      on_rank++;
+      std::fill (element_offsets.begin () + on_rank, element_offsets.end (), ielem);
+      t8_global_productionf ("Computed offset for rank %i: %li \n", on_rank, element_offsets[on_rank]);
     }
   }
   // The last entry is always the global number of elements.
   element_offsets[mpisize] = num_global_leaves;
 
   // Determine number of local elements.
-  t8_locidx_t num_local_leaves = element_offsets[mpirank+1] - element_offsets[mpirank];
+  t8_locidx_t num_local_leaves = element_offsets[mpirank + 1] - element_offsets[mpirank];
 
   // (3c.) Comparison:
   // -----------------
 
   // Make sure the number of local leaves match.
-  EXPECT_EQ( t8_forest_get_local_num_leaf_elements(forest_weighted), num_local_leaves);
+  EXPECT_EQ (t8_forest_get_local_num_leaf_elements (forest_weighted), num_local_leaves);
 
   // ---------------------------
   // ----- Memory clean-up -----
@@ -223,7 +225,6 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
   t8_forest_unref (&forest_uniform_weights);
   t8_forest_unref (&forest_no_weights);
   t8_forest_unref (&forest_weighted);
-
 }
 
 // Instantiate parameterized test to be run for all schemes and example cmeshes.

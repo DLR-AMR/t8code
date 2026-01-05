@@ -472,7 +472,9 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   }
 }
 
-void t8_forest_set_partition_weight_function(t8_forest_t forest, t8_weight_fcn_t* weight_fcn) {
+void
+t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *weight_fcn)
+{
   forest->set_weighted_partitioning = 1;
   forest->weight_function = weight_fcn;
 }
@@ -500,7 +502,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
 
-  // If the global numer of elements is zero, all element offsets are too and we can leave this function.
+  // If the global number of elements is zero, all element offsets are too and we can leave this function.
   if (global_num_leaf_elements == 0) {
     if (t8_shmem_array_start_writing (forest->element_offsets)) {
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
@@ -577,7 +579,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
     int const rank_end = std::ceil (mpisize * (partition_weight_offset + partition_weight) / forest_weight);
     std::vector<t8_gloidx_t> local_offsets (rank_end - rank_begin, 0);
 
-    // Prepare compuation of local element offsets.
+    // Prepare computation of local element offsets.
     double accumulated_weight = partition_weight_offset;
     t8_gloidx_t global_elm_idx = t8_forest_get_first_local_leaf_element_id (forest_from);
     int iproc = rank_begin;
@@ -590,7 +592,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
         T8_ASSERT (0 <= global_elm_idx && global_elm_idx < global_num_leaf_elements);
         accumulated_weight += weight_fcn (forest_from, ltreeid, ielm);
         while (accumulated_weight
-              > forest_weight * iproc / mpisize) {  // there may be empty partitions, hence while and not if
+               > forest_weight * iproc / mpisize) {  // there may be empty partitions, hence while and not if
           T8_ASSERT (rank_begin <= iproc && iproc < rank_end);
           local_offsets[iproc - rank_begin] = global_elm_idx;
           ++iproc;
@@ -602,7 +604,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
 
     // Allgather local offsets into the global element offset array.
     t8_shmem_array_allgatherv (local_offsets.data (), local_offsets.size (), T8_MPI_GLOIDX, forest->element_offsets,
-                              T8_MPI_GLOIDX, comm);
+                               T8_MPI_GLOIDX, comm);
 
     // Add first and last entry to element offsets.
     if (t8_shmem_array_start_writing (forest->element_offsets)) {
