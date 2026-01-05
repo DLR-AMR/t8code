@@ -53,7 +53,7 @@ jobs:
   t8code_cmake_tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: dlramr/t8code-ubuntu:t8-clang-dependencies
     steps:
 #
 # Setup
@@ -63,33 +63,33 @@ jobs:
         fetch-depth: 0
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
-    - name: Install some basic packages
-      run: |
-        apt-get install -y wget tar lld make \
-          libc6-dev libc++-dev libc++abi-dev \
-          pkg-config \
-          git
-          # zlib1g-dev \
-          # libssl-dev \
-          # bzip2-dev \
-          # sqlite3-dev \
-    - name: Install CLANG
-      run: apt-get install clang -y
+    # - name: Install some basic packages
+    #   run: |
+    #     apt-get install -y wget tar lld make \
+    #       libc6-dev libc++-dev libc++abi-dev \
+    #       pkg-config \
+    #       git
+    #       # zlib1g-dev \
+    #       # libssl-dev \
+    #       # bzip2-dev \
+    #       # sqlite3-dev \
+    # - name: Install CLANG
+    #   run: apt-get install clang -y
     - name: Check clang version
       run: clang --version
-    - name: Install openmpi with CLANG
-      run: |
-        mkdir install_ompi_clang
-        export OMPI_INSTALL_PATH=$(pwd)/install_ompi_clang
-        wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.gz
-        tar xf openmpi-4.1.6.tar.gz
-        cd openmpi-4.1.6
-        CC=clang CXX=clang++ ./configure --prefix=$OMPI_INSTALL_PATH
-        make -j$(nproc)
-        make install
-        echo OMPI_INSTALL_PATH="${OMPI_INSTALL_PATH}" >> $GITHUB_ENV
-        ls $OMPI_INSTALL_PATH/bin
-        echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
+    # - name: Install openmpi with CLANG
+    #   run: |
+    #     mkdir install_ompi_clang
+    #     export OMPI_INSTALL_PATH=$(pwd)/install_ompi_clang
+    #     wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.gz
+    #     tar xf openmpi-4.1.6.tar.gz
+    #     cd openmpi-4.1.6
+    #     CC=clang CXX=clang++ ./configure --prefix=$OMPI_INSTALL_PATH
+    #     make -j$(nproc)
+    #     make install
+    #     echo OMPI_INSTALL_PATH="${OMPI_INSTALL_PATH}" >> $GITHUB_ENV
+    #     ls $OMPI_INSTALL_PATH/bin
+    #     echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
     - name: Show MPI version
       run: mpicc --version
     - name: Export CLANG compiler flags
