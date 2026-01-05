@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_ghost.cxx
- * Tests if the ghost elements and the \ref t8_mesh_handle::mesh_element::get_face_neighbor implementation work as intended.
+ * Tests if the ghost elements and the \ref t8_mesh_handle::element::get_face_neighbor implementation work as intended.
  */
 
 #include <gtest/gtest.h>
@@ -107,7 +107,7 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   }
 }
 
-/** Check that the function \ref t8_mesh_handle::mesh_element::get_face_neighbors of the handle works as intended (equal results to forest).*/
+/** Check that the function \ref t8_mesh_handle::element::get_face_neighbors of the handle works as intended (equal results to forest).*/
 TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
@@ -193,7 +193,7 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
   using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
-  using element_class = mesh_class::mesh_element_class;
+  using element_class = mesh_class::element_class;
   mesh_class mesh = mesh_class (forest);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 

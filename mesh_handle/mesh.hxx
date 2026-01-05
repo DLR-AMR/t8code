@@ -29,9 +29,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include "abstract_element.hxx"
-#include "mesh_element.hxx"
-#include "ghost_element.hxx"
+#include "element.hxx"
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
 
@@ -41,23 +39,19 @@ namespace t8_mesh_handle
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
  * \tparam TCompetence The competences you want to add to the default functionality of the mesh.
- *         \see abstract_element for more details on the choice of the template parameter.   
+ *         \see element for more details on the choice of the template parameter.   
  */
 template <template <typename> class... TCompetence>
 class mesh {
  public:
   /** Type definitions of the element classes with given competences. */
-  using abstract_element_class = abstract_element<
-    TCompetence...>; /**< The abstract element class of the mesh (could be a mesh element of ghost). */
-  using mesh_element_class = mesh_element<TCompetence...>;   /**< The mesh element class of the mesh. */
-  using ghost_element_class = ghost_element<TCompetence...>; /**< The ghost element class of the mesh. */
-  // Declare all element classes as friend such that private members (e.g. the forest) can be accessed.
-  friend abstract_element_class; /**< Abstract element class as friend. */
-  friend mesh_element_class;     /**< Mesh element class as friend. */
-  friend ghost_element_class;    /**< Ghost element class as friend. */
+  using element_class
+    = element<TCompetence...>; /**< The abstract element class of the mesh (could be a mesh element of ghost). */
+  // Declare element class as friend such that private members (e.g. the forest) can be accessed.
+  friend element_class; /**< Abstract element class as friend. */
 
   using mesh_const_iterator =
-    typename std::vector<mesh_element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
+    typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
 
   /** 
    * Constructor for a mesh of the handle. 
@@ -117,7 +111,7 @@ class mesh {
    * \param [in] local_index The local index of the element to access.
    * \return Reference to the element.
    */
-  const abstract_element_class&
+  const element_class&
   operator[] (t8_locidx_t local_index) const
   {
     T8_ASSERT (0 <= local_index && local_index < get_num_local_elements () + get_num_local_ghosts ());
@@ -127,37 +121,6 @@ class mesh {
     else {
       return m_ghosts[local_index - get_num_local_elements ()];
     }
-  }
-
-  /**
-   * Getter for a mesh element given its local index. 
-   * This function could be used instead of the operator[] if a mesh element is 
-   * specifically required to access their functionality.
-   * \param [in] local_index The local index of the element to access.
-   * \return Reference to the mesh element.
-   */
-  const mesh_element_class&
-  get_mesh_element (t8_locidx_t local_index) const
-  {
-    T8_ASSERT (0 <= local_index && local_index < get_num_local_elements ());
-    return m_elements[local_index];
-  }
-
-  /**
-   * Getter for a ghost element given its local flat index. 
-   * This function could be used instead of the operator[] if a ghost element is 
-   * specifically required to access ghost functionality.
-   * \param [in] flat_index The local flat index of the element to access.
-   *             Therefore, flat_index should lie in between num_local_el and
-   *              num_local_el + num_ghosts - 1.
-   * \return Reference to the ghost element.
-   */
-  const ghost_element_class&
-  get_ghost_element (t8_locidx_t flat_index) const
-  {
-    T8_ASSERT (get_num_local_elements () <= flat_index
-               && flat_index < get_num_local_elements () + get_num_local_ghosts ());
-    return m_ghosts[flat_index - get_num_local_elements ()];
   }
 
   /**
@@ -196,7 +159,7 @@ class mesh {
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_elements.push_back (mesh_element_class (this, itree, ielem));
+        m_elements.push_back (element_class (this, itree, ielem));
       }
     }
     update_ghost_elements ();
@@ -216,14 +179,14 @@ class mesh {
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_ghost_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_ghosts.push_back (ghost_element_class (this, num_loc_trees + itree, itree, ielem));
+        m_ghosts.push_back (element_class (this, num_loc_trees + itree, ielem, true));
       }
     }
   }
 
-  t8_forest_t m_forest;                       /**< The forest the mesh should be defined for. */
-  std::vector<mesh_element_class> m_elements; /**< Vector storing the (local) mesh elements. */
-  std::vector<ghost_element_class> m_ghosts;  /**< Vector storing the (local) ghost elements. */
+  t8_forest_t m_forest;                  /**< The forest the mesh should be defined for. */
+  std::vector<element_class> m_elements; /**< Vector storing the (local) mesh elements. */
+  std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
 };
 
 }  // namespace t8_mesh_handle
