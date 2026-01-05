@@ -156,6 +156,8 @@ jobs:
         OMPI_ALLOW_RUN_AS_ROOT: 1
         OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
         OMPI_MCA_rmaps_base_oversubscribe: 1
+        OMPI_MCA_btl: self,tcp
+        OMPI_MCA_pml: ob1
       if: ${{ inputs.MPI == 'ON' }}
     - name: tests (if MPI is disabled)
       run: cd build && ctest $MAKEFLAGS
