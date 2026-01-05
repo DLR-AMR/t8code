@@ -238,15 +238,15 @@ TEST (t8_gtest_cache_competence, cache_face_area)
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_area_cache ());
 
-  //double unrealistic_face_area = 41.1;
+  double unrealistic_face_area = 41.1;
   for (auto it = mesh->begin (); it != mesh->end (); ++it) {
     for (int iface = 0; iface < it->get_num_faces (); ++iface) {
       EXPECT_FALSE (it->face_area_cache_filled (iface));
-      // auto face_area = it->get_face_area (iface);
-      // EXPECT_LE (0, face_area);
-      // EXPECT_TRUE (it->face_area_cache_filled (iface));
-      //it->overwrite_cache (iface,unrealistic_face_area+iface);
-      // EXPECT_EQ (it->get_face_area (iface), unrealistic_face_area+iface);
+      auto face_area = it->get_face_area (iface);
+      EXPECT_LE (0, face_area);
+      EXPECT_TRUE (it->face_area_cache_filled (iface));
+      it->overwrite_cache (iface, unrealistic_face_area + iface);
+      EXPECT_EQ (it->get_face_area (iface), unrealistic_face_area + iface);
       std::cout << "here";
     }
   }
