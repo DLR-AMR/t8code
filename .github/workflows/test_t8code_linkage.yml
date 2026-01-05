@@ -1,4 +1,4 @@
-name: CMake tests t8code linkage
+name: test t8code linkage
 
 
 #  This file is part of t8code.
@@ -45,7 +45,7 @@ on:
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
 
-jobs:  
+jobs:
   t8code_cmake_tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
