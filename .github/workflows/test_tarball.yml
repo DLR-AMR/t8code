@@ -92,7 +92,7 @@ jobs:
         path: build/tarballs
 
   test_tarball:
-    needs: build
+    needs: build_tarball
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 90
