@@ -256,42 +256,42 @@ class element: public TCompetence<element<TCompetence...>>... {
    * For ghost elements, the functionality to calculate face neighbors is currently not provided.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in]  face          The index of the face across which the face neighbors are searched.
-   * \param [out] num_neighbors On output the number of neighbor elements.
    * \param [out] dual_faces    On output the face id's of the neighboring elements' faces.
-   * \return Vector of length \a num_neighbors with the element indices of the face neighbors.
+   * \return Vector of length num_neighbors with the element indices of the face neighbors.
    *         0, 1, ... num_local_el - 1 for local mesh elements and 
    *         num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
    */
   std::vector<t8_locidx_t>
-  get_face_neighbors (int face, int* num_neighbors, std::vector<int>* dual_faces) const
+  get_face_neighbors (int face, std::vector<int>* dual_faces) const
   {
     SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
     if constexpr (neighbor_cache_exists) {
       if (this->neighbor_cache_filled (face)) {
-        *num_neighbors = this->m_num_neighbors[face].value ();
         *dual_faces = this->m_dual_faces[face];
         return this->m_neighbor_indices[face];
       }
     }
     std::vector<std::reference_wrapper<SelfType>> neighbor_elements;
-    t8_element_t** neighbors; /*< Neighboring elements. */
+    t8_element_t** neighbors; /**< Neighboring elements. */
     int* dual_faces_internal; /**< The face indices of the neighbor elements. */
-    t8_locidx_t* neighids;    /*< Neighboring elements ids. */
-    t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
+    int num_neighbors;        /**< Number of neighboring elements. */
+    t8_locidx_t* neighids;    /**< Neighboring elements ids. */
+    t8_eclass_t neigh_class;  /**< Neighboring elements tree class. */
 
     t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, get_element (), &neighbors, face, &dual_faces_internal,
-                                   num_neighbors, &neighids, &neigh_class, t8_forest_is_balanced (m_mesh->m_forest));
-    dual_faces->assign (dual_faces_internal, dual_faces_internal + *num_neighbors);
-    std::vector<t8_locidx_t> neighbor_ids_vector (neighids, neighids + *num_neighbors);
-    if (*num_neighbors > 0) {
+                                   &num_neighbors, &neighids, &neigh_class, t8_forest_is_balanced (m_mesh->m_forest));
+    dual_faces->assign (dual_faces_internal, dual_faces_internal + num_neighbors);
+    std::vector<t8_locidx_t> neighbor_ids_vector (neighids, neighids + num_neighbors);
+    if (num_neighbors > 0) {
       /* Free allocated memory. */
-      t8_forest_get_scheme (m_mesh->m_forest)->element_destroy (get_tree_class (), *num_neighbors, neighbors);
+      t8_forest_get_scheme (m_mesh->m_forest)->element_destroy (get_tree_class (), num_neighbors, neighbors);
       T8_FREE (neighbors);
       T8_FREE (dual_faces_internal);
       T8_FREE (neighids);
     }
     if constexpr (neighbor_cache_exists) {
-      this->m_num_neighbors[face] = *num_neighbors;
+      // Also store num_neighbors in cache to indicate that the cache is filled if a face does not have any neighbor.
+      this->m_num_neighbors[face] = num_neighbors;
       this->m_dual_faces[face] = *dual_faces;
       this->m_neighbor_indices[face] = std::move (neighbor_ids_vector);
       return this->m_neighbor_indices[face];
@@ -306,10 +306,9 @@ class element: public TCompetence<element<TCompetence...>>... {
   fill_face_neighbor_cache () const
     requires (neighbor_cache_exists)
   {
-    for (int iface = 0; iface < this->get_num_faces (); iface++) {
-      int num_neighbors;
+    for (int iface = 0; iface < get_num_faces (); iface++) {
       std::vector<int> dual_faces;
-      get_face_neighbors (iface, &num_neighbors, &dual_faces);
+      get_face_neighbors (iface, &dual_faces);
     }
   }
 
@@ -366,7 +365,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   {
     if (m_is_ghost_element) {
       return t8_forest_ghost_get_leaf_element (
-        m_mesh->m_forest, m_tree_id - t8_forest_get_num_local_trees (this->m_mesh->m_forest), m_element_id);
+        m_mesh->m_forest, m_tree_id - t8_forest_get_num_local_trees (m_mesh->m_forest), m_element_id);
     }
     else {
       return t8_forest_get_leaf_element_in_tree (m_mesh->m_forest, m_tree_id, m_element_id);

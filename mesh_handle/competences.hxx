@@ -132,7 +132,7 @@ struct cache_neighbors: t8_crtp_operator<TUnderlying, cache_centroid>
   mutable std::vector<std::vector<t8_locidx_t>>
     m_neighbor_indices; /**< Element indices of the neighbors at each face. The length of the vectors is stored in \ref m_num_neighbors. */
   mutable std::vector<std::optional<int>>
-    m_num_neighbors; /**< Vector with the numbers of neighbor elements at each face. */
+    m_num_neighbors; /**< Vector with the numbers of neighbor elements at each face. num_neighbors is stored to indicate that the cache is filled if a face does not have any neighbor. */
   mutable std::vector<std::vector<int>>
     m_dual_faces; /**< Face id's of the neighboring elements' faces for each face. */
 };
