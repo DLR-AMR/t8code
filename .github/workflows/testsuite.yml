@@ -229,6 +229,6 @@ jobs:
 
   t8code_tarball:
     if: github.event.pull_request.draft == false
-    uses: ./.github/workflows/build_cmake_tarball.yml
+    uses: ./.github/workflows/test_tarball.yml
     with:
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
