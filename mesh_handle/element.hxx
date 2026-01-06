@@ -87,7 +87,7 @@ class element: public TCompetence<element<TCompetence...>>... {
     else {
       m_element = t8_forest_get_leaf_element_in_tree (m_mesh->m_forest, m_tree_id, m_element_id);
     }
-    
+
     if constexpr (neighbor_cache_exists) {
       // Resize neighbor caches for clean access to the caches.
       const int num_faces = this->get_num_faces ();
@@ -271,12 +271,14 @@ class element: public TCompetence<element<TCompetence...>>... {
    *         num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
    */
   std::vector<t8_locidx_t>
-  get_face_neighbors (int face, std::vector<int>* dual_faces) const
+  get_face_neighbors (int face, std::vector<int>* dual_faces = nullptr) const
   {
     SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
     if constexpr (neighbor_cache_exists) {
       if (this->neighbor_cache_filled (face)) {
-        *dual_faces = this->m_dual_faces[face];
+        if (dual_faces) {
+          *dual_faces = this->m_dual_faces[face];
+        }
         return this->m_neighbor_indices[face];
       }
     }
@@ -289,8 +291,16 @@ class element: public TCompetence<element<TCompetence...>>... {
 
     t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, get_element (), &neighbors, face, &dual_faces_internal,
                                    &num_neighbors, &neighids, &neigh_class, t8_forest_is_balanced (m_mesh->m_forest));
-    dual_faces->assign (dual_faces_internal, dual_faces_internal + num_neighbors);
+    if (dual_faces) {
+      dual_faces->assign (dual_faces_internal, dual_faces_internal + num_neighbors);
+    }
     std::vector<t8_locidx_t> neighbor_ids_vector (neighids, neighids + num_neighbors);
+    if constexpr (neighbor_cache_exists) {
+      // Also store num_neighbors in cache to indicate that the cache is filled if a face does not have any neighbor.
+      this->m_num_neighbors[face] = num_neighbors;
+      this->m_dual_faces[face].assign (dual_faces_internal, dual_faces_internal + num_neighbors);
+      this->m_neighbor_indices[face] = std::move (neighbor_ids_vector);
+    }
     if (num_neighbors > 0) {
       // Free allocated memory.
       t8_forest_get_scheme (m_mesh->m_forest)->element_destroy (get_tree_class (), num_neighbors, neighbors);
@@ -299,10 +309,6 @@ class element: public TCompetence<element<TCompetence...>>... {
       T8_FREE (neighids);
     }
     if constexpr (neighbor_cache_exists) {
-      // Also store num_neighbors in cache to indicate that the cache is filled if a face does not have any neighbor.
-      this->m_num_neighbors[face] = num_neighbors;
-      this->m_dual_faces[face] = *dual_faces;
-      this->m_neighbor_indices[face] = std::move (neighbor_ids_vector);
       return this->m_neighbor_indices[face];
     }
     return neighbor_ids_vector;
@@ -316,8 +322,7 @@ class element: public TCompetence<element<TCompetence...>>... {
     requires (neighbor_cache_exists)
   {
     for (int iface = 0; iface < get_num_faces (); iface++) {
-      std::vector<int> dual_faces;
-      get_face_neighbors (iface, &dual_faces);
+      get_face_neighbors (iface);
     }
   }
 
