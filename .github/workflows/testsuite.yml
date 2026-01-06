@@ -190,7 +190,7 @@ jobs:
 
   # Run Valgrind check for every t8code test binary.
   t8code_valgrind_tests:
-    #if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') # Only run the Valgrind check in the scheduled run.
+    if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') # Only run the Valgrind check in the scheduled run.
     needs: preparation
     uses: ./.github/workflows/test_valgrind.yml
     with:
