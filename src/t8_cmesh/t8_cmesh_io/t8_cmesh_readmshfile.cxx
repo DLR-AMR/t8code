@@ -312,10 +312,10 @@ struct t8_msh_node_equal
 };
 
 /** Hashtable to store msh file nodes. */
-typedef std::unordered_set<t8_msh_file_node, t8_msh_node_hasher, t8_msh_node_equal> t8_msh_node_table;
+using t8_msh_node_table = std::unordered_set<t8_msh_file_node, t8_msh_node_hasher, t8_msh_node_equal>;
 
 /** Vector which stores the vertex indices of each tree in the t8code order. */
-typedef std::vector<std::vector<t8_gloidx_t>> t8_msh_tree_vertex_indices;
+using t8_msh_tree_vertex_indices = std::vector<std::vector<t8_gloidx_t>>;
 
 /* Reads an open msh-file and checks whether the MeshFormat-Version is supported by t8code or not. */
 static int
@@ -438,7 +438,7 @@ t8_msh_file_2_read_nodes (FILE *fp)
   }
 
   /* Create the hash table */
-  t8_msh_node_hasher hasher (lnum_nodes);
+  t8_msh_node_hasher const hasher (lnum_nodes);
   t8_msh_node_table node_table (lnum_nodes, hasher);
 
   /* read each node and add it to the hash table */
@@ -522,7 +522,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
   }
 
   /* Create the hash table */
-  t8_msh_node_hasher hasher (lnum_nodes);
+  t8_msh_node_hasher const hasher (lnum_nodes);
   t8_msh_node_table node_table (lnum_nodes, hasher);
 
   /* read each node and add it to the hash table */
@@ -638,7 +638,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
  * \return
  */
 static std::optional<t8_msh_tree_vertex_indices>
-t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table vertices, const int dim)
+t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table &vertices, const int dim)
 {
   char *line = (char *) malloc (1024), *line_modify;
   char first_word[2048] = "\0";
@@ -1426,7 +1426,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
  * We cannot access this geometry over the cmesh interface since the cmesh
  * is not committed yet. */
 static std::optional<t8_msh_tree_vertex_indices>
-t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table vertices, const int dim,
+t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_table &vertices, const int dim,
                                const t8_geometry_c *linear_geometry_base, const int use_cad_geometry,
                                [[maybe_unused]] const t8_geometry_c *cad_geometry_base, const bool store_node_data)
 {
@@ -1633,13 +1633,13 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 /** This struct stores all information associated to a tree's face.
  * We need it to find neighbor trees.
  */
-typedef struct
+using t8_msh_file_face_t = struct
 {
   t8_locidx_t ltree_id; /**< The local id of the tree this face belongs to */
   int8_t face_number;   /**< The number of that face within the tree */
   int num_vertices;     /**< The number of vertices of this face. */
   long *vertices;       /**< The indices of these vertices. */
-} t8_msh_file_face_t;
+};
 
 /* Hash a face. The hash value is the sum of its vertex indices */
 static unsigned
@@ -1779,7 +1779,7 @@ t8_msh_file_face_orientation (const t8_msh_file_face_t *Face_a, const t8_msh_fil
 /* This routine does only find neighbors between local trees.
  * Use with care if cmesh is partitioned. */
 static void
-t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_indices vertex_indices)
+t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_indices &vertex_indices)
 {
   sc_hash_t *faces;
   t8_msh_file_face_t *Face, **pNeighbor, *Neighbor;
@@ -1792,7 +1792,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_ind
   t8_stash_class_struct_t *class_entry;
 
   face_mempool = sc_mempool_new (sizeof (t8_msh_file_face_t));
-  faces = sc_hash_new (t8_msh_file_face_hash, t8_msh_file_face_equal, cmesh, NULL);
+  faces = sc_hash_new (t8_msh_file_face_hash, t8_msh_file_face_equal, cmesh, nullptr);
 
   /* TODO: Does currently not work with partitioned cmesh */
   T8_ASSERT (!cmesh->set_partition);
@@ -1851,7 +1851,7 @@ t8_cmesh_msh_file_find_neighbors (t8_cmesh_t cmesh, const t8_msh_tree_vertex_ind
         T8_FREE (Face->vertices);
         sc_mempool_free (face_mempool, Face);
         /* We can free the neighbor here as well */
-        sc_hash_remove (faces, Neighbor, NULL);
+        sc_hash_remove (faces, Neighbor, nullptr);
         T8_FREE (Neighbor->vertices);
         sc_mempool_free (face_mempool, Neighbor);
       }
@@ -1888,7 +1888,7 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
 #if T8_ENABLE_OCC
     *cad_geometry = t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, std::string (fileprefix));
 #else /* !T8_ENABLE_OCC */
-    *cad_geometry = NULL;
+    *cad_geometry = nullptr;
     return 0;
 #endif
   }
@@ -1906,8 +1906,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
   t8_gloidx_t num_trees, first_tree, last_tree = -1;
   int main_proc_read_successful = 0;
   int msh_version;
-  const t8_geometry_c *cad_geometry = NULL;
-  const t8_geometry_c *linear_geometry = NULL;
+  const t8_geometry_c *cad_geometry = nullptr;
+  const t8_geometry_c *linear_geometry = nullptr;
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -1933,7 +1933,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     /* Registering failed */
     t8_errorf ("OCC is not linked. Cannot use cad geometry.\n");
     t8_cmesh_destroy (&cmesh);
-    return NULL;
+    return nullptr;
   }
 
   if (!partition || mpirank == main_proc) {
@@ -1941,7 +1941,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     /* Open the file */
     t8_debugf ("Opening file %s\n", current_file);
     file = fopen (current_file, "r");
-    if (file == NULL) {
+    if (file == nullptr) {
       t8_global_errorf ("Could not open file %s\n", current_file);
       t8_cmesh_destroy (&cmesh);
 
@@ -1950,7 +1950,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      return nullptr;
     }
     /* Check if msh-file version is compatible. */
     msh_version = t8_cmesh_check_version_of_msh_file (file);
@@ -1965,7 +1965,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      return nullptr;
     }
     /* read nodes from the file */
     std::optional<t8_msh_tree_vertex_indices> indices;
@@ -1980,7 +1980,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
           main_proc_read_successful = 0;
           sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
         }
-        return NULL;
+        return nullptr;
       }
       auto vertices_opt = t8_msh_file_2_read_nodes (file);
       if (!vertices_opt) {
@@ -1991,7 +1991,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
           main_proc_read_successful = 0;
           sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
         }
-        return NULL;
+        return nullptr;
       }
       indices = t8_cmesh_msh_file_2_read_eles (cmesh, file, *vertices_opt, dim);
       break;
@@ -2007,7 +2007,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
           main_proc_read_successful = 0;
           sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
         }
-        return NULL;
+        return nullptr;
       }
       indices = t8_cmesh_msh_file_4_read_eles (cmesh, file, *vertices_opt, dim, linear_geometry, use_cad_geometry,
                                                cad_geometry, true);
@@ -2026,7 +2026,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return NULL;
+      return nullptr;
     }
     else
       t8_cmesh_msh_file_find_neighbors (cmesh, *indices);
@@ -2042,7 +2042,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     if (!main_proc_read_successful) {
       t8_debugf ("Main process could not read cmesh successfully.\n");
       t8_cmesh_destroy (&cmesh);
-      return NULL;
+      return nullptr;
     }
     /* The cmesh is not yet committed, since we set the partitioning before */
     if (mpirank == main_proc) {
@@ -2071,7 +2071,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
 
   /* Commit the cmesh */
   T8_ASSERT (cmesh != NULL);
-  if (cmesh != NULL) {
+  if (cmesh != nullptr) {
     t8_cmesh_commit (cmesh, comm);
   }
   return cmesh;
