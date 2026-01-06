@@ -73,19 +73,36 @@ jobs:
       run: apt-get update && apt-get upgrade -y
     - name: Check Clang version
       run: clang --version
-    - name: Export Clang compiler flags (not all strictly required, but safety first)
+    - name: Verify gcc is absent
+      run: ! command -v gcc
+    # - name: Export Clang compiler flags (not all strictly required, but safety first)
+    #   run: |
+    #     export CC=clang
+    #     export CXX=clang++
+    #     export MPICC=${OMPI_INSTALL_PATH}/bin/mpicc
+    #     export MPICXX=${OMPI_INSTALL_PATH}/bin/mpicxx
+    #     echo CC="$CC" >> $GITHUB_ENV
+    #     echo CXX="$CXX" >> $GITHUB_ENV
+    #     echo MPICC="$MPICC" >> $GITHUB_ENV
+    #     echo MPICXX="$MPICXX" >> $GITHUB_ENV
+    #     echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
+    - name: Make sure MPI was built with CLANG
+      # Note: If "clang" is not found, the workflow is exited (due to fail-early mode)
       run: |
-        export CC=clang
-        export CXX=clang++
-        export MPICC={OMPI_INSTALL_PATH}/bin/mpicc
-        export MPICXX={OMPI_INSTALL_PATH}/bin/mpicxx
-        echo CC="$CC" >> $GITHUB_ENV
-        echo CXX="$CXX" >> $GITHUB_ENV
-        echo MPICC="$MPICC" >> $GITHUB_ENV
-        echo MPICXX="$MPICXX" >> $GITHUB_ENV
-        echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
-    - name: Show MPI version
-      run: mpicc --version
+        mpicc --version > mpi_version_output
+        cat mpi_version_output
+        grep -i "clang" mpi_version_output
+        rm mpi_version_output
+    - name: Assert correct MPI paths
+      run: |
+        mpicc --showme:compile | grep -q "${OMPI_INSTALL_PATH}"
+        mpicc --showme:link    | grep -q "${OMPI_INSTALL_PATH}"
+    # - name: Make sure the right MPI path is used
+    #   run: |
+    #     which mpicc > which_mpi_output
+    #     cat which_mpi_output
+    #     grep -i "${OMPI_INSTALL_PATH}" which_mpi_output
+    #     rm which_mpi_output
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
