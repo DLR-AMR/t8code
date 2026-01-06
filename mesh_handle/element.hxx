@@ -93,7 +93,7 @@ class element: public TCompetence<element<TCompetence...>>... {
       const int num_faces = this->get_num_faces ();
       this->m_num_neighbors.resize (num_faces);
       this->m_dual_faces.resize (num_faces);
-      this->m_neighbor_indices.resize (num_faces);
+      this->m_neighbors.resize (num_faces);
     }
   }
 
@@ -136,7 +136,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   {
     return requires (T<SelfType>& competence) { competence.neighbor_cache_filled (0); };
   }
-  /** This variable is true if any of the given competences \ref TCompetence implements 
+  /** This variable is true if any of the given competences \a TCompetence implements 
   a function neighbor_cache_filled. */
   static constexpr bool neighbor_cache_exists = (false || ... || neighbor_cache_defined<TCompetence> ());
 
@@ -266,11 +266,9 @@ class element: public TCompetence<element<TCompetence...>>... {
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in]  face          The index of the face across which the face neighbors are searched.
    * \param [out] dual_faces    On output the face id's of the neighboring elements' faces.
-   * \return Vector of length num_neighbors with the element indices of the face neighbors.
-   *         0, 1, ... num_local_el - 1 for local mesh elements and 
-   *         num_local_el , ... , num_local_el + num_ghosts - 1 for ghosts.
+   * \return Vector of length num_neighbors with pointers to the elements neighboring at the given face.
    */
-  std::vector<t8_locidx_t>
+  std::vector<const SelfType*>
   get_face_neighbors (int face, std::vector<int>* dual_faces = nullptr) const
   {
     SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
@@ -279,7 +277,7 @@ class element: public TCompetence<element<TCompetence...>>... {
         if (dual_faces) {
           *dual_faces = this->m_dual_faces[face];
         }
-        return this->m_neighbor_indices[face];
+        return this->m_neighbors[face];
       }
     }
     std::vector<std::reference_wrapper<SelfType>> neighbor_elements;
@@ -294,12 +292,15 @@ class element: public TCompetence<element<TCompetence...>>... {
     if (dual_faces) {
       dual_faces->assign (dual_faces_internal, dual_faces_internal + num_neighbors);
     }
-    std::vector<t8_locidx_t> neighbor_ids_vector (neighids, neighids + num_neighbors);
+    std::vector<const SelfType*> neighbors_handle;
+    for (int ineighs = 0; ineighs < num_neighbors; ineighs++) {
+      neighbors_handle.push_back (&((*m_mesh)[neighids[ineighs]]));
+    }
     if constexpr (neighbor_cache_exists) {
       // Also store num_neighbors in cache to indicate that the cache is filled if a face does not have any neighbor.
       this->m_num_neighbors[face] = num_neighbors;
       this->m_dual_faces[face].assign (dual_faces_internal, dual_faces_internal + num_neighbors);
-      this->m_neighbor_indices[face] = std::move (neighbor_ids_vector);
+      this->m_neighbors[face] = std::move (neighbors_handle);
     }
     if (num_neighbors > 0) {
       // Free allocated memory.
@@ -309,9 +310,9 @@ class element: public TCompetence<element<TCompetence...>>... {
       T8_FREE (neighids);
     }
     if constexpr (neighbor_cache_exists) {
-      return this->m_neighbor_indices[face];
+      return this->m_neighbors[face];
     }
-    return neighbor_ids_vector;
+    return neighbors_handle;
   }
 
   /**
@@ -338,8 +339,8 @@ class element: public TCompetence<element<TCompetence...>>... {
   }
 
   /**
-   * Getter for the local element id of the element.
-   * \return The local element id of the element.
+   * Getter for the local element id in the tree of the element.
+   * \return The local element id in the tree of the element.
    */
   t8_locidx_t
   get_local_element_id () const
@@ -348,7 +349,23 @@ class element: public TCompetence<element<TCompetence...>>... {
   }
 
   /**
-   * Getter for the mesh to which the element is belonging.
+   * Getter for the flat local element id. This is the index of the element in the mesh to which the element belongs.
+   * \return The flat local element id of the element.
+   */
+  t8_locidx_t
+  get_flat_element_id () const
+  {
+    if (m_is_ghost_element) {
+      return m_mesh->get_num_local_elements ()
+             + t8_forest_ghost_get_tree_element_offset (m_mesh->m_forest,
+                                                        m_tree_id - t8_forest_get_num_local_trees (m_mesh->m_forest))
+             + m_element_id;
+    }
+    return t8_forest_get_tree_element_offset (m_mesh->m_forest, m_tree_id) + m_element_id;
+  }
+
+  /**
+   * Getter for the mesh to which the element belongs.
    * \return Reference to the mesh.
    */
   const mesh_class*
