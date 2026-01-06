@@ -83,7 +83,7 @@ done
 echo "Valgrind check of ${FILE} using ${num_procs} processes..."
 
 # Write valgrind output to variable OUTPUT_FILE.
-OUTPUT_FILE="valgrind-output.log"
+OUTPUT_FILE="valgrind-output-$(basename "$FILE").log"
 # Set valgrind flags.
 VALGRIND_FLAGS="${VALGRIND_FLAGS} --leak-check=full --track-origins=yes \
     --trace-children=yes --show-leak-kinds=definite,indirect,possible \

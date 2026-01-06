@@ -51,7 +51,7 @@ The paths are relative paths assuming an execution from the test/ folder in the 
 #### check_all_test_binaries_valgrind.sh
 
 This script performs a valgrind check on each test binary found by [find_all_test_binary_paths.sh](find_all_test_binary_paths.sh).
-The valgrind check is done by [check_valgrind.sh](check_valgrind.sh). It is assumed that the build folder ../build/test/ with the correct test binaries exists. With `--ntasks=[NUMBER]`, you can provide the number of processes to use with mpi (default is 1).
+The valgrind check is done by [check_valgrind.sh](check_valgrind.sh). It is assumed that the build folder ../build/test/ with the correct test binaries exists. With `--ntasks=[NUMBER]`, you can provide the number of processes to use with mpi for parallel tests (default is 1).
 
 ## Others
 
