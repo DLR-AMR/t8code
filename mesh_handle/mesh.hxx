@@ -79,6 +79,16 @@ class mesh {
     return t8_forest_get_num_ghosts (m_forest);
   }
 
+  /** 
+   * Getter for the dimension the mesh handle lives in.
+   * \return The dimension.
+   */
+  int
+  get_dimension () const
+  {
+    return t8_forest_get_dimension (m_forest);
+  }
+
   /**
    * Returns a constant iterator to the first (local) mesh element.
    * \return Constant iterator to the first (local) mesh element.
