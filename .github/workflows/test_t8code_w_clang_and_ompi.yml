@@ -148,6 +148,19 @@ jobs:
   #
   # Part 3: Run t8code tests
   # ------------------------
+    - name: Install gcc to make GoogleTests work.
+      run: apt-get update && apt-get install -y gcc g++
+    - name: Make sure MPI was built with CLANG
+      # Note: If "clang" is not found, the workflow is exited (due to fail-early mode)
+      run: |
+        mpicc --version > mpi_version_output
+        cat mpi_version_output
+        grep -i "clang" mpi_version_output
+        rm mpi_version_output
+    - name: Assert correct MPI paths
+      run: |
+        mpicc --showme:compile | grep "${OMPI_INSTALL_PATH}"
+        mpicc --showme:link    | grep "${OMPI_INSTALL_PATH}"
     # Run serial and parallel tests.
     - name: serial tests (if MPI is enabled)
       run: cd build && ctest $MAKEFLAGS -R _serial
