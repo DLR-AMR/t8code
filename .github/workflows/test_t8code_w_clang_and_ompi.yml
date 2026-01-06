@@ -71,7 +71,7 @@ jobs:
         fetch-depth: 0
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
-    - name: Check Clang version
+    - name: Show Clang version
       run: clang --version
     - name: Make sure MPI was built with CLANG
       # Note: If "clang" is not found (or "gcc" is), the workflow is exited due to fail-early mode
@@ -81,10 +81,14 @@ jobs:
         grep -i "clang" mpi_version_output
         ! grep -i "gcc" mpi_version_output
         rm mpi_version_output
+        echo "CHECKED: MPI was built with Clang."
     - name: Assert correct MPI paths
       run: |
-        mpicc --showme:compile | grep "${OMPI_INSTALL_PATH}"
-        mpicc --showme:link    | grep "${OMPI_INSTALL_PATH}"
+        mpicc --showme:compile  | grep "${OMPI_INSTALL_PATH}"
+        mpicc --showme:link     | grep "${OMPI_INSTALL_PATH}"
+        mpicxx --showme:compile | grep "${OMPI_INSTALL_PATH}"
+        mpicxx --showme:link    | grep "${OMPI_INSTALL_PATH}"
+        echo "CHECKED: mpicc and mpicxx point to correct path"
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
