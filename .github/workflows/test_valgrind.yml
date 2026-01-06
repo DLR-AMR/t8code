@@ -1,4 +1,4 @@
-name: Valgrind check
+name: valgrind check
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
@@ -41,7 +41,7 @@ on:
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
 
-jobs:  
+jobs:
   valgrind_check:
     timeout-minutes: 95
     runs-on: ubuntu-latest
@@ -103,8 +103,7 @@ jobs:
       run: cd build && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
-    # Execute script that runs a Valgrind check for all test binaries. 
+    # Execute script that runs a Valgrind check for all test binaries.
     # We use 3 parallel processes to run the binaries in parallel with MPI.
     - name: Valgrind check
       run: cd scripts && bash ./check_all_test_binaries_valgrind.sh --ntasks=3
-    
