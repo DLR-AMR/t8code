@@ -75,18 +75,18 @@ jobs:
       run: clang --version
     - name: Verify gcc is absent
       run: |
-        which gcc
-    - name: Export Clang compiler flags (not all strictly required, but safety first)
-      run: |
-        echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
-      #     export CC=clang
-      #     export CXX=clang++
-      #     export MPICC=${OMPI_INSTALL_PATH}/bin/mpicc
-      #     export MPICXX=${OMPI_INSTALL_PATH}/bin/mpicxx
-      #     echo CC="$CC" >> $GITHUB_ENV
-      #     echo CXX="$CXX" >> $GITHUB_ENV
-      #     echo MPICC="$MPICC" >> $GITHUB_ENV
-      #     echo MPICXX="$MPICXX" >> $GITHUB_ENV
+        ! command -v gcc
+    # - name: Export Clang compiler flags (not all strictly required, but safety first)
+    #   run: |
+    #     echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
+    #   #     export CC=clang
+    #   #     export CXX=clang++
+    #   #     export MPICC=${OMPI_INSTALL_PATH}/bin/mpicc
+    #   #     export MPICXX=${OMPI_INSTALL_PATH}/bin/mpicxx
+    #   #     echo CC="$CC" >> $GITHUB_ENV
+    #   #     echo CXX="$CXX" >> $GITHUB_ENV
+    #   #     echo MPICC="$MPICC" >> $GITHUB_ENV
+    #   #     echo MPICXX="$MPICXX" >> $GITHUB_ENV
     - name: Make sure MPI was built with CLANG
       # Note: If "clang" is not found, the workflow is exited (due to fail-early mode)
       run: |
