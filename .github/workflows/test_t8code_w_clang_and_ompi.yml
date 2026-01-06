@@ -74,7 +74,8 @@ jobs:
     - name: Check Clang version
       run: clang --version
     - name: Verify gcc is absent
-      run: ! command -v gcc
+      run: |
+        which gcc
     - name: Export Clang compiler flags (not all strictly required, but safety first)
       run: |
         echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
@@ -95,8 +96,8 @@ jobs:
         rm mpi_version_output
     - name: Assert correct MPI paths
       run: |
-        mpicc --showme:compile | grep -q "${OMPI_INSTALL_PATH}"
-        mpicc --showme:link    | grep -q "${OMPI_INSTALL_PATH}"
+        mpicc --showme:compile | grep "${OMPI_INSTALL_PATH}"
+        mpicc --showme:link    | grep "${OMPI_INSTALL_PATH}"
     # - name: Make sure the right MPI path is used
     #   run: |
     #     which mpicc > which_mpi_output
@@ -125,7 +126,7 @@ jobs:
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=${OMPI_INSTALL_PATH}/bin/mpicc -DCMAKE_CXX_COMPILER=${OMPI_INSTALL_PATH}/bin/mpicxx ${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+      run: export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx ${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # Run cmake
     - name: echo cmake line
