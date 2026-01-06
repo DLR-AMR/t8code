@@ -36,8 +36,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * Populate a forest with the partitioned elements of forest->set_from.
- * Currently the elements are distributed evenly (each element has the same weight).
- * 
+ *
  * \param [in,out]  forest  The forest.
 */
 void
@@ -45,12 +44,12 @@ t8_forest_partition (t8_forest_t forest);
 
 /**
  * Create a new forest that gathers a given forest on one process.
- * 
+ *
  * This functionality is mostly required for comparison purposes and sanity checks within the testing framework.
- * 
+ *
  * \param[in] forest_from   the forest that should be gathered on one rank
  * \param[in] gather_rank   the rank of the process the forest will be gathered on
- * 
+ *
  * \return The gathered forest: The same as \a forest_from, but all elements are on rank \a gather_rank.
 */
 t8_forest_t
@@ -58,9 +57,9 @@ t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank);
 
 /**
  * Manually set the partition offset of the current process.
- * 
+ *
  * If set, the next partitioning of the forest will use the manually defined element offsets.
- * 
+ *
  * \param[in,out] forest                the considered forest
  * \param[in]     first_global_element  the global ID that will become the first local element
 */
@@ -101,13 +100,13 @@ t8_forest_partition_create_first_desc (t8_forest_t forest);
 void
 t8_forest_partition_create_tree_offsets (t8_forest_t forest);
 
-/** \brief Re-Partition an array accordingly to a partitioned forest. 
- * 
+/** \brief Re-Partition an array accordingly to a partitioned forest.
+ *
  * \param[in] forest_from The forest before the partitioning step.
  * \param[in] forest_to The partitioned forest of \a forest_from.
  * \param[in] data_in A pointer to an sc_array_t holding data (one value per element) accordingly to \a forest_from.
  * \param[in,out] data_out A pointer to an already allocated sc_array_t capable of holding data accordingly to \a forest_to.
- * 
+ *
  * \note \a data_in has to be of size equal to the number of local elements of \a forest_from
  * \a data_out has to be already allocated and has to be of size equal to the number of local elements of \a forest_to.
 */
