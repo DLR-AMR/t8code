@@ -44,12 +44,8 @@ namespace t8_mesh_handle
 template <template <typename> class... TCompetence>
 class mesh {
  public:
-  /** Type definitions of the element classes with given competences. */
-  using element_class
-    = element<TCompetence...>; /**< The abstract element class of the mesh (could be a mesh element of ghost). */
-  // Declare element class as friend such that private members (e.g. the forest) can be accessed.
-  friend element_class; /**< Abstract element class as friend. */
-
+  using element_class = element<TCompetence...>; /**< The element class of the mesh with given competences. */
+  friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
 
