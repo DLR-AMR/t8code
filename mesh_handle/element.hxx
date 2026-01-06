@@ -79,6 +79,15 @@ class element: public TCompetence<element<TCompetence...>>... {
   element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
     : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id), m_is_ghost_element (is_ghost_element)
   {
+    if (m_is_ghost_element) {
+      // The local ghost tree id is per definition the local tree id - number of local (non-ghost) trees.
+      m_element = t8_forest_ghost_get_leaf_element (
+        m_mesh->m_forest, m_tree_id - t8_forest_get_num_local_trees (m_mesh->m_forest), m_element_id);
+    }
+    else {
+      m_element = t8_forest_get_leaf_element_in_tree (m_mesh->m_forest, m_tree_id, m_element_id);
+    }
+    
     if constexpr (neighbor_cache_exists) {
       // Resize neighbor caches for clean access to the caches.
       const int num_faces = this->get_num_faces ();
@@ -357,20 +366,12 @@ class element: public TCompetence<element<TCompetence...>>... {
   //--- Private getter for internal use. ---
   /**
    * Getter for the leaf element of the element.
-   * Has to be implemented differently for mesh elements and ghost elements.
    * \return The leaf element.
    */
   const t8_element_t*
   get_element () const
   {
-    if (m_is_ghost_element) {
-      // The local ghost tree id is per definition the local tree id - number of local (non-ghost) trees.
-      return t8_forest_ghost_get_leaf_element (
-        m_mesh->m_forest, m_tree_id - t8_forest_get_num_local_trees (m_mesh->m_forest), m_element_id);
-    }
-    else {
-      return t8_forest_get_leaf_element_in_tree (m_mesh->m_forest, m_tree_id, m_element_id);
-    }
+    return m_element;
   }
 
   /**
@@ -387,6 +388,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   const t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
   const t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
   const bool m_is_ghost_element;  /**< Flag to indicate if the element is a ghost element. */
+  const t8_element_t* m_element;  /**< Cache the pointer to element in the forest as this is often needed. */
 };
 
 }  // namespace t8_mesh_handle
