@@ -64,8 +64,8 @@ jobs:
     container: dlramr/t8code-ubuntu:t8-clang-dependencies
     steps:
   #
-  # Part 1: Preparation
-  # -------------------
+  # Part 1: Preparation and sanity checks
+  # -------------------------------------
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
@@ -73,37 +73,18 @@ jobs:
       run: apt-get update && apt-get upgrade -y
     - name: Check Clang version
       run: clang --version
-    - name: Verify gcc is absent
-      run: |
-        ! command -v gcc
-    - name: Export Clang compiler flags (not all strictly required, but safety first)
-      run: |
-        export CC=clang
-        export CXX=clang++
-        export MPICC=${OMPI_INSTALL_PATH}/bin/mpicc
-        export MPICXX=${OMPI_INSTALL_PATH}/bin/mpicxx
-        echo CC="$CC" >> $GITHUB_ENV
-        echo CXX="$CXX" >> $GITHUB_ENV
-        echo MPICC="$MPICC" >> $GITHUB_ENV
-        echo MPICXX="$MPICXX" >> $GITHUB_ENV
-        # echo "${OMPI_INSTALL_PATH}/bin" >> $GITHUB_PATH
     - name: Make sure MPI was built with CLANG
-      # Note: If "clang" is not found, the workflow is exited (due to fail-early mode)
+      # Note: If "clang" is not found (or "gcc" is), the workflow is exited due to fail-early mode
       run: |
         mpicc --version > mpi_version_output
         cat mpi_version_output
         grep -i "clang" mpi_version_output
+        ! grep -i "gcc" mpi_version_output
         rm mpi_version_output
     - name: Assert correct MPI paths
       run: |
         mpicc --showme:compile | grep "${OMPI_INSTALL_PATH}"
         mpicc --showme:link    | grep "${OMPI_INSTALL_PATH}"
-    # - name: Make sure the right MPI path is used
-    #   run: |
-    #     which mpicc > which_mpi_output
-    #     cat which_mpi_output
-    #     grep -i "${OMPI_INSTALL_PATH}" which_mpi_output
-    #     rm which_mpi_output
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -148,20 +129,6 @@ jobs:
   #
   # Part 3: Run t8code tests
   # ------------------------
-    - name: Install gcc to make GoogleTests work.
-      run: apt-get update && apt-get install -y gcc g++
-    - name: Make sure MPI was built with CLANG
-      # Note: If "clang" is not found, the workflow is exited (due to fail-early mode)
-      run: |
-        mpicc --version > mpi_version_output
-        cat mpi_version_output
-        grep -i "clang" mpi_version_output
-        rm mpi_version_output
-    - name: Assert correct MPI paths
-      run: |
-        mpicc --showme:compile | grep "${OMPI_INSTALL_PATH}"
-        mpicc --showme:link    | grep "${OMPI_INSTALL_PATH}"
-    # Run serial and parallel tests.
     - name: serial tests (if MPI is enabled)
       run: cd build && ctest $MAKEFLAGS -R _serial
       if: ${{ inputs.MPI == 'ON' }}
