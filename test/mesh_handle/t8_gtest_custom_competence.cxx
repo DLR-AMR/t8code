@@ -91,9 +91,9 @@ TEST (t8_gtest_custom_competence, custom_competence)
 
   // Check mesh with custom defined competence.
   using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<dummy_get_level>>;
-  mesh_class_custom mesh = mesh_class_custom (forest);
+  const mesh_class_custom mesh = mesh_class_custom (forest);
 
-  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (level, it->get_level_dummy ());
   }
@@ -103,7 +103,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
   using mesh_class = t8_mesh_handle::mesh<competences>;
   mesh_class mesh_more_competences = mesh_class (forest);
 
-  for (auto it = mesh_more_competences.begin (); it != mesh_more_competences.end (); ++it) {
+  for (auto it = mesh_more_competences.cbegin (); it != mesh_more_competences.cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());

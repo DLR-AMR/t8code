@@ -299,11 +299,11 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
   }
 
   /** Getter for the face neighbors of the mesh element at given face.
-   * For ghost elements, the functionality to calculate face neighbors is currently not provided.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in]  face          The index of the face across which the face neighbors are searched.
    * \param [out] dual_faces    On output the face id's of the neighboring elements' faces.
    * \return Vector of length num_neighbors with pointers to the elements neighboring at the given face.
+   * \note For ghost elements, the functionality to calculate face neighbors is currently not provided.
    */
   std::vector<const SelfType*>
   get_face_neighbors (int face, std::vector<int>* dual_faces = nullptr) const
@@ -386,7 +386,7 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
   }
 
   /**
-   * Getter for the flat local element id. This is the index of the element in the mesh to which the element belongs.
+   * Getter for the flat local element id. This is the local index of the element in the mesh to which the element belongs.
    * \return The flat local element id of the element.
    */
   t8_locidx_t
@@ -421,6 +421,34 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
     return m_is_ghost_element;
   }
 
+  // --- Getter and setter for element data. ---
+  /** Getter for the element data.
+   * For ghost elements ensure that \ref mesh::exchange_ghost_data is called on each process first.
+   * Element data for non-ghost elements can be accessed (if set) directly.
+   * \return Element data with data of Type mesh_class::ElementDataType.
+   */
+  template <typename E = typename mesh_class::ElementDataType, typename = std::enable_if_t<!std::is_void<E>::value>>
+  const E&
+  get_element_data () const
+  {
+    return m_mesh->m_element_data[get_flat_element_id ()];
+  }
+
+  /** 
+   * Set the element data for the element. 
+   * \note You can only set element data for non-ghost elements.
+   * \param [in] element_data The element data to be set.
+   */
+  template <typename E = typename mesh_class::ElementDataType, typename = std::enable_if_t<!std::is_void<E>::value>>
+  void
+  set_element_data (E element_data)
+  {
+    SC_CHECK_ABORT (!m_is_ghost_element, "Element data cannot be set for ghost elements.\n");
+    // Resize for the case that no data vector has been set previously.
+    m_mesh->m_element_data.resize (m_mesh->get_num_local_elements () + m_mesh->get_num_local_ghosts ());
+    m_mesh->m_element_data[get_flat_element_id ()] = element_data;
+  }
+
  protected:
   //--- Private getter for internal use. ---
   /**
@@ -443,7 +471,7 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
     return t8_forest_get_tree_class (m_mesh->m_forest, m_tree_id);
   }
 
-  const mesh_class* m_mesh;       /**< Pointer to the mesh the element is defined for. */
+  mesh_class* m_mesh;             /**< Pointer to the mesh the element is defined for. */
   const t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
   const t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
   const bool m_is_ghost_element;  /**< Flag to indicate if the element is a ghost element. */
