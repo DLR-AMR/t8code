@@ -261,7 +261,7 @@ class element: public TCompetence<element<TCompetence...>>... {
     return coordinates;
   }
 
-  /** Getter for the face neighbors of the mesh element at given face.
+  /** Getter for the face neighbors of the mesh element at a given face.
    * For ghost elements, the functionality to calculate face neighbors is currently not provided.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in]  face          The index of the face across which the face neighbors are searched.

@@ -80,7 +80,7 @@ class mesh {
   }
 
   /** 
-   * Getter for the dimension the mesh handle lives in.
+   * Getter for the dimension of the mesh.
    * \return The dimension.
    */
   int
@@ -146,8 +146,8 @@ class mesh {
   void
   set_forest (t8_forest_t input_forest)
   {
+    T8_ASSERT (t8_forest_is_committed (input_forest));
     m_forest = input_forest;
-    T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
   }
 
