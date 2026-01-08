@@ -57,7 +57,7 @@ struct dummy_user_data
  */
 template <typename TMeshClass>
 bool
-refine_mesh_element_test (const TMeshClass &mesh, const typename TMeshClass::mesh_element_class &element)
+refine_element_test (const TMeshClass &mesh, const typename TMeshClass::element_class &element)
 {
   typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
   auto element_centroid = element.get_centroid ();
@@ -73,8 +73,7 @@ refine_mesh_element_test (const TMeshClass &mesh, const typename TMeshClass::mes
  */
 template <typename TMeshClass>
 bool
-coarsen_mesh_element_family_test (const TMeshClass &mesh,
-                                  const std::vector<typename TMeshClass::mesh_element_class> &elements)
+coarsen_element_family_test (const TMeshClass &mesh, const std::vector<typename TMeshClass::element_class> &elements)
 {
   typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
   auto element_centroid = elements[0].get_centroid ();
@@ -83,8 +82,8 @@ coarsen_mesh_element_family_test (const TMeshClass &mesh,
 }
 
 /** Adapt callback implementation for a forest.
- * This callback defines the same adaptation rules as \ref coarsen_mesh_element_family_test
- * together with \ref refine_mesh_element_test. Callback is not used for the mesh handle 
+ * This callback defines the same adaptation rules as \ref coarsen_element_family_test
+ * together with \ref refine_element_test. Callback is not used for the mesh handle 
  * but for the forest compared to the adapted mesh handle.
  */
 int
@@ -132,8 +131,8 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   t8_forest_ref (forest);
 
   // Adapt mesh handle and the forest with similar callbacks.
-  t8_mesh_handle::adapt_mesh<mesh_class> (mesh_handle, refine_mesh_element_test<mesh_class>,
-                                          coarsen_mesh_element_family_test<mesh_class>, false);
+  t8_mesh_handle::adapt_mesh<mesh_class> (mesh_handle, refine_element_test<mesh_class>,
+                                          coarsen_element_family_test<mesh_class>, false);
   forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 1, &user_data);
 
   // Compare results.

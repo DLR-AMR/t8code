@@ -143,7 +143,4 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
       EXPECT_EQ (mesh[ighost].get_element_data ().volume, mesh[ighost].get_volume ());
     }
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }
