@@ -55,7 +55,9 @@ class t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, 
   void
   TearDown () override
   {
-    t8_forest_unref (&forest);
+    if (forest->rc.refcount > 0) {
+      t8_forest_unref (&forest);
+    }
   }
   t8_forest_t forest;
   int level;
