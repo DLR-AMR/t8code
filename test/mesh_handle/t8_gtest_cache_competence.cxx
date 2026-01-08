@@ -30,12 +30,28 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
+#include <mesh_handle/competence_pack.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
+
+/** Child class of \ref t8_mesh_handle::cache_volume that allows to modify the cache variable for test purposes. */
+template <typename TUnderlying>
+struct cache_volume_overwrite: public t8_mesh_handle::cache_volume<TUnderlying>
+{
+ public:
+  /** Overwrites the cache variable for the volume.
+   * \param [in] new_volume New volume. 
+   */
+  void
+  overwrite_cache (double new_volume) const
+  {
+    this->m_volume = new_volume;
+  }
+};
 
 /** Child class of \ref t8_mesh_handle::cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
@@ -89,20 +105,45 @@ class t8_gtest_cache_competence: public testing::Test {
   int level;
 };
 
+/** Use child class of \ref t8_mesh_handle::cache_volume class to check that the cache is actually set 
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+ * checking that the functionality actually outputs this unrealistic value.
+ */
+TEST_F (t8_gtest_cache_competence, cache_volume)
+{
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_volume_overwrite>>;
+  using element_class = typename mesh_class::element_class;
+  const mesh_class mesh = mesh_class (forest);
+  EXPECT_TRUE (element_class::has_volume_cache ());
+
+  double unrealistic_volume = -3000;
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
+    // Check that cache is empty at the beginning.
+    EXPECT_FALSE (it->volume_cache_filled ());
+    // Fill cache and check that volume is valid.
+    EXPECT_GE (it->get_volume (), 0);
+    // Check that cache is set.
+    EXPECT_TRUE (it->volume_cache_filled ());
+    // Overwrite the cache with unrealistic values.
+    it->overwrite_cache (unrealistic_volume);
+    // Check that the cache is actually used.
+    EXPECT_EQ (it->get_volume (), unrealistic_volume);
+  }
+}
+
 /** Use child class of \ref t8_mesh_handle::cache_vertex_coordinates class to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
-  using mesh_class = t8_mesh_handle::mesh<cache_vertex_coordinates_overwrite>;
-  using element_class = mesh_class::element_class;
-  mesh_class mesh = mesh_class (forest);
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_vertex_coordinates_overwrite>>;
+  using element_class = typename mesh_class::element_class;
+  const mesh_class mesh = mesh_class (forest);
   EXPECT_TRUE (element_class::has_vertex_cache ());
-  EXPECT_FALSE (element_class::has_centroid_cache ());
 
   std::vector<t8_3D_point> unrealistic_vertex = { t8_3D_point ({ 41, 42, 43 }), t8_3D_point ({ 99, 100, 101 }) };
-  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->vertex_cache_filled ());
     // Check that values are valid.
@@ -128,14 +169,13 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
  */
 TEST_F (t8_gtest_cache_competence, cache_centroid)
 {
-  using mesh_class = t8_mesh_handle::mesh<cache_centroid_overwrite>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_centroid_overwrite>>;
   using element_class = mesh_class::element_class;
-  mesh_class mesh = mesh_class (forest);
-  EXPECT_FALSE (element_class::has_vertex_cache ());
+  const mesh_class mesh = mesh_class (forest);
   EXPECT_TRUE (element_class::has_centroid_cache ());
 
   t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
-  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->centroid_cache_filled ());
     // Check that values are valid.
