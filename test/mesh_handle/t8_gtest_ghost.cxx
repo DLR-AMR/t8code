@@ -135,7 +135,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
         EXPECT_EQ (num_neighbors, (int) neighbors_handle.size ());
         EXPECT_EQ (dual_faces_handle, std::vector<int> (dual_faces, dual_faces + num_neighbors));
         for (int ineighs = 0; ineighs < num_neighbors; ineighs++) {
-          EXPECT_EQ (neighbors_handle[ineighs]->get_flat_element_id (), neigh_ids[ineighs]);
+          EXPECT_EQ (neighbors_handle[ineighs]->get_element_handle_id (), neigh_ids[ineighs]);
         }
         for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
           EXPECT_EQ (scheme->element_get_shape (neigh_eclass, neighbors[ineigh]),
