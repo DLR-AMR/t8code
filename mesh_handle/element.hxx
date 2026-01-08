@@ -327,33 +327,13 @@ class element: public TCompetence<element<TCompetence...>>... {
     }
   }
 
-  //--- Getter for the member variables. ---
+  // --- Function to access mesh specific id. ---
   /**
-   * Getter for the tree id of the element.
-   * \return The element's local tree id.
+   * Getter for the index of the element in the mesh to which the element belongs.
+   * \return The local element id of the element in the mesh.
    */
   t8_locidx_t
-  get_local_tree_id () const
-  {
-    return m_tree_id;
-  }
-
-  /**
-   * Getter for the local element id in the tree of the element.
-   * \return The local element id in the tree of the element.
-   */
-  t8_locidx_t
-  get_local_element_id () const
-  {
-    return m_element_id;
-  }
-
-  /**
-   * Getter for the flat local element id. This is the index of the element in the mesh to which the element belongs.
-   * \return The flat local element id of the element.
-   */
-  t8_locidx_t
-  get_flat_element_id () const
+  get_element_handle_id () const
   {
     if (m_is_ghost_element) {
       return m_mesh->get_num_local_elements ()
@@ -362,6 +342,32 @@ class element: public TCompetence<element<TCompetence...>>... {
              + m_element_id;
     }
     return t8_forest_get_tree_element_offset (m_mesh->m_forest, m_tree_id) + m_element_id;
+  }
+
+  //--- Getter for the member variables. ---
+  /**
+   * Getter for the tree id of the element in the forest related to the mesh.
+   * \warning This is related to t8code's tree structure and should not be confused with \ref mesh specific ids.
+   * This function is mainly relevant for writing custom competences that need to access t8code functionality.
+   * \return The element's local tree id in the forest.
+   */
+  t8_locidx_t
+  get_local_tree_id () const
+  {
+    return m_tree_id;
+  }
+
+  /**
+   * Getter for the local element id in the tree of the element in the forest related to the mesh.
+   * \warning This is related to t8code's tree structure and should not be confused with \ref mesh specific ids.
+   * For mesh specific id use \ref get_element_handle_id. 
+   * This function is mainly relevant for writing custom competences that need to access t8code functionality.
+   * \return The local element id in the tree of the element in the forest.
+   */
+  t8_locidx_t
+  get_local_element_id () const
+  {
+    return m_element_id;
   }
 
   /**
