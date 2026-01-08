@@ -60,9 +60,9 @@ class mesh {
   }
 
   /**
-  * Getter for the number of local elements in the mesh.
-  * \return Number of local elements in the mesh.
-  */
+   * Getter for the number of local elements in the mesh.
+   * \return Number of local elements in the mesh.
+   */
   t8_locidx_t
   get_num_local_elements () const
   {
@@ -70,11 +70,11 @@ class mesh {
   }
 
   /**
-   * Getter for the number of local ghost elements.
-   * \return Number of local ghost elements in the mesh.
+   * Getter for the number of ghost elements.
+   * \return Number of ghost elements in the mesh.
    */
   t8_locidx_t
-  get_num_local_ghosts () const
+  get_num_ghosts () const
   {
     return t8_forest_get_num_ghosts (m_forest);
   }
@@ -120,7 +120,7 @@ class mesh {
   const element_class&
   operator[] (t8_locidx_t local_index) const
   {
-    T8_ASSERT (0 <= local_index && local_index < get_num_local_elements () + get_num_local_ghosts ());
+    T8_ASSERT (0 <= local_index && local_index < get_num_local_elements () + get_num_ghosts ());
     if (local_index < get_num_local_elements ()) {
       return m_elements[local_index];
     }
@@ -179,7 +179,7 @@ class mesh {
   {
     // Clear the ghost vector if already created.
     m_ghosts.clear ();
-    m_ghosts.reserve (get_num_local_ghosts ());
+    m_ghosts.reserve (get_num_ghosts ());
     t8_locidx_t num_loc_trees = t8_forest_get_num_local_trees (m_forest);
 
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (m_forest); ++itree) {
