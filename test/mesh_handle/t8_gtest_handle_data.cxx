@@ -99,7 +99,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   mesh_class mesh = mesh_class (forest);
   if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
-    EXPECT_GT (mesh.get_num_local_ghosts (), 0);
+    EXPECT_GT (mesh.get_num_ghosts (), 0);
   }
   // Create element data for all local mesh elements.
   std::vector<data_per_element> element_data;
@@ -109,7 +109,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   mesh.set_element_data (element_data);
   // Get element data and check that the data for all elements (including ghosts) is correct.
   auto mesh_element_data = mesh.exchange_ghost_data ();
-  for (t8_locidx_t ielem = 0; ielem < mesh.get_num_local_elements () + mesh.get_num_local_ghosts (); ielem++) {
+  for (t8_locidx_t ielem = 0; ielem < mesh.get_num_local_elements () + mesh.get_num_ghosts (); ielem++) {
     EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
     EXPECT_EQ (mesh_element_data[ielem].volume, mesh[ielem].get_volume ()) << "ielem = " << ielem;
   }
@@ -134,7 +134,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   }
 
   for (t8_locidx_t ighost = mesh.get_num_local_elements ();
-       ighost < mesh.get_num_local_elements () + mesh.get_num_local_ghosts (); ighost++) {
+       ighost < mesh.get_num_local_elements () + mesh.get_num_ghosts (); ighost++) {
     if (t8_forest_ghost_get_global_treeid (forest,
                                            mesh[ighost].get_local_tree_id () - t8_forest_get_num_local_trees (forest))
         < barrier) {

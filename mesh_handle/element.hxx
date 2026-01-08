@@ -35,6 +35,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
+#include <optional>
 
 namespace t8_mesh_handle
 {
@@ -64,7 +65,7 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
   friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
 
   /**
-   * Protected constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
+   * Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
    * This constructor should only be called by the mesh_class (and invisible for the user).
    * \param [in] mesh             Pointer to the mesh the element should belong to.
    * \param [in] tree_id          The tree id of the element in the forest defining the mesh.
@@ -298,7 +299,7 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
     return coordinates;
   }
 
-  /** Getter for the face neighbors of the mesh element at given face.
+  /** Getter for the face neighbors of the mesh element at a given face.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in]  face          The index of the face across which the face neighbors are searched.
    * \param [out] dual_faces    On output the face id's of the neighboring elements' faces.
@@ -306,13 +307,13 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
    * \note For ghost elements, the functionality to calculate face neighbors is currently not provided.
    */
   std::vector<const SelfType*>
-  get_face_neighbors (int face, std::vector<int>* dual_faces = nullptr) const
+  get_face_neighbors (int face, std::optional<std::reference_wrapper<std::vector<int>>> dual_faces = std::nullopt) const
   {
     SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
     if constexpr (neighbor_cache_exists) {
       if (this->neighbor_cache_filled (face)) {
         if (dual_faces) {
-          *dual_faces = this->m_dual_faces[face];
+          dual_faces->get () = this->m_dual_faces[face];
         }
         return this->m_neighbors[face];
       }
@@ -327,7 +328,7 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
     t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, get_element (), &neighbors, face, &dual_faces_internal,
                                    &num_neighbors, &neighids, &neigh_class, t8_forest_is_balanced (m_mesh->m_forest));
     if (dual_faces) {
-      dual_faces->assign (dual_faces_internal, dual_faces_internal + num_neighbors);
+      dual_faces->get ().assign (dual_faces_internal, dual_faces_internal + num_neighbors);
     }
     std::vector<const SelfType*> neighbors_handle;
     for (int ineighs = 0; ineighs < num_neighbors; ineighs++) {
@@ -445,11 +446,11 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
   {
     SC_CHECK_ABORT (!m_is_ghost_element, "Element data cannot be set for ghost elements.\n");
     // Resize for the case that no data vector has been set previously.
-    m_mesh->m_element_data.resize (m_mesh->get_num_local_elements () + m_mesh->get_num_local_ghosts ());
+    m_mesh->m_element_data.resize (m_mesh->get_num_local_elements () + m_mesh->get_num_ghosts ());
     m_mesh->m_element_data[get_flat_element_id ()] = element_data;
   }
 
- protected:
+ private:
   //--- Private getter for internal use. ---
   /**
    * Getter for the leaf element of the element.

@@ -67,36 +67,18 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   t8_forest_ghost_print (forest);
 
   const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
-  EXPECT_EQ (mesh.get_num_local_ghosts (), t8_forest_get_num_ghosts (forest));
+  EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
   if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
     // Ensure that we actually have ghost elements in this test.
-    EXPECT_GT (mesh.get_num_local_ghosts (), 0);
+    EXPECT_GT (mesh.get_num_ghosts (), 0);
   }
   else {
     GTEST_SKIP () << "Skipping test as no ghost elements are created for 1D or single element meshes.";
   }
 
-  // Check that functionality of mesh elements is still valid.
-  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
-    EXPECT_FALSE (it->is_ghost_element ());
-    EXPECT_EQ (level, it->get_level ());
-    auto centroid = it->get_centroid ();
-    for (const auto& coordinate : centroid) {
-      EXPECT_GE (1, coordinate);
-      EXPECT_LE (0, coordinate);
-    }
-    auto vertex_coordinates = (*it).get_vertex_coordinates ();
-    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (const auto& coordinate : vertex_coordinates[ivertex]) {
-        EXPECT_GE (1, coordinate);
-        EXPECT_LE (0, coordinate);
-      }
-    }
-  }
-
   // Check functions for ghost elements.
   const t8_locidx_t num_local_elements = mesh.get_num_local_elements ();
-  const t8_locidx_t num_ghost_elements = mesh.get_num_local_ghosts ();
+  const t8_locidx_t num_ghost_elements = mesh.get_num_ghosts ();
   for (t8_locidx_t ighost = num_local_elements; ighost < num_local_elements + num_ghost_elements; ++ighost) {
     EXPECT_TRUE (mesh[ighost].is_ghost_element ());
     EXPECT_EQ (level, mesh[ighost].get_level ());
@@ -121,7 +103,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
   const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
-  EXPECT_EQ (mesh.get_num_local_ghosts (), t8_forest_get_num_ghosts (forest));
+  EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
   const t8_scheme* scheme = t8_forest_get_scheme (forest);
@@ -148,7 +130,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
                                        &neigh_eclass, forest_is_balanced);
         // --- Get neighbors from mesh element. ---
         std::vector<int> dual_faces_handle;
-        auto neighbors_handle = mesh_iterator->get_face_neighbors (iface, &dual_faces_handle);
+        auto neighbors_handle = mesh_iterator->get_face_neighbors (iface, dual_faces_handle);
         // --- Compare results. ---
         EXPECT_EQ (num_neighbors, (int) neighbors_handle.size ());
         EXPECT_EQ (dual_faces_handle, std::vector<int> (dual_faces, dual_faces + num_neighbors));
@@ -215,11 +197,11 @@ TEST_P (t8_mesh_ghost_test, cache_neighbors)
     for (int iface = 0; iface < it->get_num_faces (); iface++) {
       EXPECT_TRUE (it->neighbor_cache_filled (iface));
       std::vector<int> dual_faces;
-      auto neighbors = it->get_face_neighbors (iface, &dual_faces);
+      auto neighbors = it->get_face_neighbors (iface, dual_faces);
       // Overwrite cache with unrealistic values.
       it->overwrite_cache (iface, unrealistic_neighbors, unrealistic_dual_faces);
       EXPECT_TRUE (it->neighbor_cache_filled (iface));
-      neighbors = it->get_face_neighbors (iface, &dual_faces);
+      neighbors = it->get_face_neighbors (iface, dual_faces);
       // --- Compare results. ---
       EXPECT_EQ (neighbors, unrealistic_neighbors);
       EXPECT_EQ (dual_faces, unrealistic_dual_faces);

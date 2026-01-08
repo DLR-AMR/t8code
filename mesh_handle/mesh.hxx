@@ -74,9 +74,9 @@ class mesh {
   }
 
   /**
-  * Getter for the number of local elements in the mesh.
-  * \return Number of local elements in the mesh.
-  */
+   * Getter for the number of local elements in the mesh.
+   * \return Number of local elements in the mesh.
+   */
   t8_locidx_t
   get_num_local_elements () const
   {
@@ -84,27 +84,17 @@ class mesh {
   }
 
   /**
-  * Getter for the number of global elements in the mesh.
-  * \return Number of global elements in the mesh.
-  */
-  t8_gloidx_t
-  get_num_global_elements () const
-  {
-    return t8_forest_get_global_num_leaf_elements (m_forest);
-  }
-
-  /**
-   * Getter for the number of local ghost elements.
-   * \return Number of local ghost elements in the mesh.
+   * Getter for the number of ghost elements.
+   * \return Number of ghost elements in the mesh.
    */
   t8_locidx_t
-  get_num_local_ghosts () const
+  get_num_ghosts () const
   {
     return t8_forest_get_num_ghosts (m_forest);
   }
 
   /** 
-   * Getter for the dimension the mesh handle lives in.
+   * Getter for the dimension of the mesh.
    * \return The dimension.
    */
   int
@@ -164,7 +154,7 @@ class mesh {
   const element_class&
   operator[] (t8_locidx_t local_index) const
   {
-    T8_ASSERT (0 <= local_index && local_index < get_num_local_elements () + get_num_local_ghosts ());
+    T8_ASSERT (0 <= local_index && local_index < get_num_local_elements () + get_num_ghosts ());
     if (local_index < get_num_local_elements ()) {
       return m_elements[local_index];
     }
@@ -201,8 +191,8 @@ class mesh {
   void
   set_forest (t8_forest_t input_forest)
   {
+    T8_ASSERT (t8_forest_is_committed (input_forest));
     m_forest = input_forest;
-    T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
     if constexpr (!std::is_void<TElementData>::value) {
       t8_global_infof (
@@ -244,7 +234,7 @@ class mesh {
   {
     T8_ASSERT (element_data.size () == get_num_local_elements ());
     m_element_data.clear ();
-    m_element_data.resize (get_num_local_elements () + get_num_local_ghosts ());
+    m_element_data.resize (get_num_local_elements () + get_num_ghosts ());
     std::copy (element_data.begin (), element_data.end (), m_element_data.begin ());
   }
 
@@ -272,9 +262,9 @@ class mesh {
   {
     // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
     sc_array* sc_array_wrapper;
-    T8_ASSERT (m_element_data.size () == get_num_local_elements () + get_num_local_ghosts ());
+    T8_ASSERT (m_element_data.size () == get_num_local_elements () + get_num_ghosts ());
     sc_array_wrapper = sc_array_new_data (m_element_data.data (), sizeof (TElementData),
-                                          get_num_local_elements () + get_num_local_ghosts ());
+                                          get_num_local_elements () + get_num_ghosts ());
 
     // Data exchange: entries with indices > num_local_elements will get overwritten.
     t8_forest_ghost_exchange_data (m_forest, sc_array_wrapper);
@@ -309,7 +299,7 @@ class mesh {
   update_ghost_elements ()
   {
     m_ghosts.clear ();
-    m_ghosts.reserve (get_num_local_ghosts ());
+    m_ghosts.reserve (get_num_ghosts ());
     t8_locidx_t num_loc_trees = t8_forest_get_num_local_trees (m_forest);
 
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (m_forest); ++itree) {
