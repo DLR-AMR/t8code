@@ -50,7 +50,7 @@ namespace t8_mesh_handle
 
 /**
  * Competence to cache the volume of an element at the first function call.
- * \tparam TUnderlying Use the \ref abstract_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct cache_volume: public t8_crtp_operator<TUnderlying, cache_volume>
