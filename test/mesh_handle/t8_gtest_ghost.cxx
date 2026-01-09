@@ -84,6 +84,10 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   for (t8_locidx_t ighost = num_local_elements; ighost < num_local_elements + num_ghost_elements; ++ighost) {
     EXPECT_TRUE (mesh[ighost].is_ghost_element ());
     EXPECT_EQ (level, mesh[ighost].get_level ());
+    EXPECT_LE (0, mesh[ighost].get_num_faces ());
+    EXPECT_LE (0, mesh[ighost].get_num_vertices ());
+    EXPECT_LE (0, mesh[ighost].get_volume ());
+    EXPECT_LE (0, mesh[ighost].get_diameter ());
     auto centroid = mesh[ighost].get_centroid ();
     for (const auto& coordinate : centroid) {
       EXPECT_GE (1, coordinate);
@@ -95,6 +99,17 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
         EXPECT_GE (1, coordinate);
         EXPECT_LE (0, coordinate);
       }
+    }
+    EXPECT_LE (0, mesh[ighost].get_face_area (0));
+    auto centroid_face = mesh[ighost].get_face_centroid (0);
+    for (const auto& coordinate : centroid_face) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (0, coordinate);
+    }
+    auto normal_face = mesh[ighost].get_face_normal (0);
+    for (const auto& coordinate : normal_face) {
+      EXPECT_GE (1, coordinate);
+      EXPECT_LE (-1, coordinate);
     }
   }
 }
@@ -175,8 +190,8 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
   }
 };
 
-/** Use child class of \ref t8_mesh_handle::cache_neighbors class to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache variables to a unrealistic values and 
+/** Use child class of \ref t8_mesh_handle::cache_neighbors class to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache variables to a unrealistic values and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
