@@ -88,7 +88,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
   using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<dummy_get_level>>;
   const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class_custom> (level, sc_MPI_COMM_WORLD);
 
-  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (level, it->get_level_dummy ());
   }
@@ -98,7 +98,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
   using mesh_class = t8_mesh_handle::mesh<competences>;
   auto mesh_more_competences = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
-  for (auto it = mesh_more_competences.cbegin (); it != mesh_more_competences.cend (); ++it) {
+  for (auto it = mesh_more_competences->cbegin (); it != mesh_more_competences->cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());
