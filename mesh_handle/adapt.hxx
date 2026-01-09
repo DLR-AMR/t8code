@@ -45,8 +45,8 @@ namespace t8_mesh_handle
  * \return true if the family should be coarsened, false otherwise. 
  */
 template <typename TMeshClass>
-using coarsen_mesh_element_family
-  = std::function<bool (const TMeshClass& mesh, const std::vector<typename TMeshClass::mesh_element_class>& elements)>;
+using coarsen_element_family
+  = std::function<bool (const TMeshClass& mesh, const std::vector<typename TMeshClass::element_class>& elements)>;
 
 /** Callback function prototype to decide for the refinement of an element of a mesh handle.
  * \param [in] mesh The mesh that should be adapted.
@@ -55,8 +55,7 @@ using coarsen_mesh_element_family
  * \return true if the element should be refined, false otherwise.
  */
 template <typename TMeshClass>
-using refine_mesh_element
-  = std::function<bool (const TMeshClass& mesh, const typename TMeshClass::mesh_element_class& element)>;
+using refine_element = std::function<bool (const TMeshClass& mesh, const typename TMeshClass::element_class& element)>;
 
 /** Namespace detail to hide implementation details from the user. */
 namespace detail
@@ -74,16 +73,16 @@ struct MeshAdaptContextBase
   virtual ~MeshAdaptContextBase () = default;
 
   /** Pure virtual callback for mesh adaptation.
-   * \param[in] lflat_element_id Local flat element ID in the mesh handle.
-   * \param [in] is_family       If 1, the entries in \a elements form a family. If 0, they do not.
-   * \param [in] num_elements    The number of entries in \a elements.
-   * \param [in] elements        Pointers to a family or, if \a is_family is zero, pointer to one element.
+   * \param[in] lelement_handle_id Local element ID in the mesh handle.
+   * \param [in] is_family         If 1, the entries in \a elements form a family. If 0, they do not.
+   * \param [in] num_elements      The number of entries in \a elements.
+   * \param [in] elements          Pointers to a family or, if \a is_family is zero, pointer to one element.
    *  \return 1 if the first entry in \a elements should be refined,
    *         -1 if the family \a elements shall be coarsened,
    *          0 else.
    */
   virtual int
-  adapt_callback (const t8_locidx_t lflat_element_id, const int is_family, const int num_elements,
+  adapt_callback (const t8_locidx_t lelement_handle_id, const int is_family, const int num_elements,
                   t8_element_t* elements[])
     = 0;
 };
@@ -95,36 +94,36 @@ struct MeshAdaptContextBase
 template <typename TMesh>
 struct MeshAdaptContext final: MeshAdaptContextBase
 {
-  using Element = typename TMesh::mesh_element_class; /**< Type alias for the mesh element class. */
+  using Element = typename TMesh::element_class; /**< Type alias for the element class. */
 
   /** Constructor of the context with the mesh handle and the user defined callbacks.
-   * \param [in] mesh_handle     The mesh handle to adapt.
-   * \param [in] refine_callback The refinement callback.
+   * \param [in] mesh_handle      The mesh handle to adapt.
+   * \param [in] refine_callback  The refinement callback.
    * \param [in] coarsen_callback The coarsening callback.
    */
-  MeshAdaptContext (TMesh& mesh_handle, refine_mesh_element<TMesh> refine_callback,
-                    coarsen_mesh_element_family<TMesh> coarsen_callback)
+  MeshAdaptContext (TMesh& mesh_handle, refine_element<TMesh> refine_callback,
+                    coarsen_element_family<TMesh> coarsen_callback)
     : m_mesh_handle (mesh_handle), m_refine_callback (std::move (refine_callback)),
       m_coarsen_callback (std::move (coarsen_callback))
   {
   }
 
   /** Callback for mesh adaptation using user defined callbacks.
-   * \param [in] lflat_element_id Local flat element ID in the mesh handle.
-   * \param [in] is_family        If 1, the entries in \a elements form a family. If 0, they do not.
-   * \param [in] num_elements     The number of entries in \a elements.
-   * \param [in] elements         Pointers to a family or, if \a is_family is zero, pointer to one element.
+   * \param [in] lelement_handle_id Local flat element ID in the mesh handle.
+   * \param [in] is_family          If 1, the entries in \a elements form a family. If 0, they do not.
+   * \param [in] num_elements       The number of entries in \a elements.
+   * \param [in] elements           Pointers to a family or, if \a is_family is zero, pointer to one element.
    * \return 1 if the first entry in \a elements should be refined,
    *        -1 if the family \a elements shall be coarsened,
    *         0 else.
    */
   int
-  adapt_callback (const t8_locidx_t lflat_element_id, const int is_family, const int num_elements,
+  adapt_callback (const t8_locidx_t lelement_handle_id, const int is_family, const int num_elements,
                   t8_element_t* elements[]) override
   {
     // Check if refine callback is set and call it using the correct mesh handle function arguments.
     if (m_refine_callback) {
-      Element elem = m_mesh_handle.get_mesh_element (lflat_element_id);
+      Element elem = m_mesh_handle[lelement_handle_id];
       if (m_refine_callback (m_mesh_handle, elem)) {
         return 1;
       }
@@ -134,7 +133,7 @@ struct MeshAdaptContext final: MeshAdaptContextBase
     if (is_family && m_coarsen_callback) {
       std::vector<Element> element_family;
       for (int i = 0; i < num_elements; i++) {
-        element_family.push_back (m_mesh_handle.get_mesh_element (lflat_element_id + i));
+        element_family.push_back (m_mesh_handle[lelement_handle_id + i]);
       }
       if (m_coarsen_callback (m_mesh_handle, element_family)) {
         return -1;
@@ -145,9 +144,9 @@ struct MeshAdaptContext final: MeshAdaptContextBase
   }
 
  private:
-  TMesh& m_mesh_handle;                                  /**< The mesh handle to adapt. */
-  refine_mesh_element<TMesh> m_refine_callback;          /**< The refinement callback. */
-  coarsen_mesh_element_family<TMesh> m_coarsen_callback; /**< The coarsening callback. */
+  TMesh& m_mesh_handle;                             /**< The mesh handle to adapt. */
+  refine_element<TMesh> m_refine_callback;          /**< The refinement callback. */
+  coarsen_element_family<TMesh> m_coarsen_callback; /**< The coarsening callback. */
 };
 
 /** Registry pattern is used to register contexts, which provides access to the callbacks and the mesh handle.
@@ -236,10 +235,10 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
       "Something went wrong while registering the adaption callbacks. Please check your implementation.");
     return 0;  // No adaption as default.
   }
-  // Flat index is used in mesh handle to access elements.
-  t8_locidx_t local_flat_index = t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
+  // Convert to index used in the mesh handle.
+  t8_locidx_t mesh_index = t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
   // Call the actual adapt callback stored in the context.
-  return context->adapt_callback (local_flat_index, is_family, num_elements, elements);
+  return context->adapt_callback (mesh_index, is_family, num_elements, elements);
 }
 
 }  // namespace detail
@@ -255,8 +254,8 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
  */
 template <typename TMesh>
 void
-adapt_mesh (TMesh& mesh_handle, refine_mesh_element<TMesh> refine_callback,
-            coarsen_mesh_element_family<TMesh> coarsen_callback, bool recursive)
+adapt_mesh (TMesh& mesh_handle, refine_element<TMesh> refine_callback, coarsen_element_family<TMesh> coarsen_callback,
+            bool recursive)
 {
   auto forest_from = mesh_handle.get_forest ();
   // Initialize forest for the adapted mesh.

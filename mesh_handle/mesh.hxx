@@ -29,9 +29,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include "abstract_element.hxx"
-#include "mesh_element.hxx"
-#include "ghost_element.hxx"
+#include "element.hxx"
 #include "competence_pack.hxx"
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
@@ -42,8 +40,8 @@ namespace t8_mesh_handle
 
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
- * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
- *         \see abstract_element for more details on the choice of the template parameter.   
+ * \tparam TCompetence The competences you want to add to the default functionality of the mesh.
+ *         \see element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref competence_pack class.
  * \tparam TUserData The user data type you want to associate with the mesh. Use void (this is also the default) if you do not want to set user data.
  * \tparam TElementData The element data type you want to use for each element of the mesh. 
@@ -56,22 +54,13 @@ class mesh {
                         TElementData>;  /**< Type of the current class with all template parameters specified. */
   using UserDataType = TUserData;       /**< Make Type of the user data accessible. */
   using ElementDataType = TElementData; /**< Make Type of the element data accessible. */
-
-  /** Type definitions of the element classes with given competences. */
-  using abstract_element_class = TCompetencePack::template apply<
-    SelfType, abstract_element>; /**< The abstract element class of the mesh (could be a mesh element of ghost). */
-  using mesh_element_class
-    = TCompetencePack::template apply<SelfType, mesh_element>; /**< The mesh element class of the mesh. */
-  using ghost_element_class
-    = TCompetencePack::template apply<SelfType, ghost_element>; /**< The ghost element class of the mesh. */
-
-  // Declare all element classes as friend such that private members (e.g. the forest) can be accessed.
-  friend abstract_element_class; /**< Abstract element class as friend. */
-  friend mesh_element_class;     /**< Mesh element class as friend. */
-  friend ghost_element_class;    /**< Ghost element class as friend. */
-
+  using element_class
+    = TCompetencePack::template apply<SelfType, element>; /**< The element class of the mesh with given competences. */
+  friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =
-    typename std::vector<mesh_element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
+    typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
+  using mesh_iterator =
+    typename std::vector<element_class>::iterator; /**< Non-const iterator type for the mesh elements. */
 
   /** 
    * Constructor for a mesh of the handle. 
@@ -95,9 +84,9 @@ class mesh {
   }
 
   /**
-  * Getter for the number of local elements in the mesh.
-  * \return Number of local elements in the mesh.
-  */
+   * Getter for the number of local elements in the mesh.
+   * \return Number of local elements in the mesh.
+   */
   t8_locidx_t
   get_num_local_elements () const
   {
@@ -105,17 +94,17 @@ class mesh {
   }
 
   /**
-   * Getter for the number of local ghost elements.
-   * \return Number of local ghost elements in the mesh.
+   * Getter for the number of ghost elements.
+   * \return Number of ghost elements in the mesh.
    */
   t8_locidx_t
-  get_num_local_ghosts () const
+  get_num_ghosts () const
   {
     return t8_forest_get_num_ghosts (m_forest);
   }
 
   /** 
-   * Getter for the dimension the mesh handle lives in.
+   * Getter for the dimension of the mesh.
    * \return The dimension.
    */
   int
@@ -129,7 +118,7 @@ class mesh {
    * \return Constant iterator to the first (local) mesh element.
    */
   mesh_const_iterator
-  begin () const
+  cbegin () const
   {
     return m_elements.cbegin ();
   }
@@ -139,9 +128,29 @@ class mesh {
    * \return Constant iterator to the mesh element following the last (local) element of the mesh.
    */
   mesh_const_iterator
-  end () const
+  cend () const
   {
     return m_elements.cend ();
+  }
+
+  /**
+   * Non-const version of \ref cbegin.
+   * \return Iterator to the first (local) mesh element.
+   */
+  mesh_iterator
+  begin ()
+  {
+    return m_elements.begin ();
+  }
+
+  /**
+   * Non-const version of \ref end.
+   * \return Iterator to the mesh element following the last (local) element of the mesh.
+   */
+  mesh_iterator
+  end ()
+  {
+    return m_elements.end ();
   }
 
   /**
@@ -150,12 +159,12 @@ class mesh {
    * The indices 0, 1, ... num_local_el - 1 refer to local mesh elements and 
    *    num_local_el , ... , num_local_el + num_ghosts - 1 refer to ghost elements.
    * \param [in] local_index The local index of the element to access.
-   * \return Reference to the element.
+   * \return Constant reference to the element.
    */
-  const abstract_element_class&
+  const element_class&
   operator[] (t8_locidx_t local_index) const
   {
-    T8_ASSERT (0 <= local_index && local_index < get_num_local_elements () + get_num_local_ghosts ());
+    T8_ASSERT (0 <= local_index && local_index < get_num_local_elements () + get_num_ghosts ());
     if (local_index < get_num_local_elements ()) {
       return m_elements[local_index];
     }
@@ -165,34 +174,14 @@ class mesh {
   }
 
   /**
-   * Getter for a mesh element given its local index. 
-   * This function could be used instead of the operator[] if a mesh element is 
-   * specifically required to access their functionality.
+   * Non const version of operator above.
    * \param [in] local_index The local index of the element to access.
-   * \return Reference to the mesh element.
+   * \return Reference to the element.
    */
-  const mesh_element_class&
-  get_mesh_element (t8_locidx_t local_index) const
+  element_class&
+  operator[] (t8_locidx_t local_index)
   {
-    T8_ASSERT (0 <= local_index && local_index < get_num_local_elements ());
-    return m_elements[local_index];
-  }
-
-  /**
-   * Getter for a ghost element given its local flat index. 
-   * This function could be used instead of the operator[] if a ghost element is 
-   * specifically required to access ghost functionality.
-   * \param [in] flat_index The local flat index of the element to access.
-   *             Therefore, flat_index should lie in between num_local_el and
-   *              num_local_el + num_ghosts - 1.
-   * \return Reference to the ghost element.
-   */
-  const ghost_element_class&
-  get_ghost_element (t8_locidx_t flat_index) const
-  {
-    T8_ASSERT (get_num_local_elements () <= flat_index
-               && flat_index < get_num_local_elements () + get_num_local_ghosts ());
-    return m_ghosts[flat_index - get_num_local_elements ()];
+    return const_cast<element_class&> (static_cast<const mesh*> (this)->operator[] (local_index));
   }
 
   /**
@@ -212,12 +201,12 @@ class mesh {
   void
   set_forest (t8_forest_t input_forest)
   {
+    T8_ASSERT (t8_forest_is_committed (input_forest));
     m_forest = input_forest;
-    T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
-    if constexpr (!std::is_void<TUserData>::value) {
+    if constexpr (!std::is_void<TElementData>::value) {
       t8_global_infof (
-        "The elements of the mesh handle have been updated. Please note that the element_data are not interpolated "
+        "The elements of the mesh handle have been updated. Please note that the element data is not interpolated "
         "automatically. Use the function set_element_data() to provide new adapted element data.\n");
     }
   }
@@ -255,26 +244,37 @@ class mesh {
   {
     T8_ASSERT (element_data.size () == get_num_local_elements ());
     m_element_data.clear ();
-    m_element_data.resize (get_num_local_elements () + get_num_local_ghosts ());
+    m_element_data.resize (get_num_local_elements () + get_num_ghosts ());
     std::copy (element_data.begin (), element_data.end (), m_element_data.begin ());
   }
 
   /** 
-   * Get the element data vector including ghost entries.
-   * The element data of the local mesh elements is the one set using \ref set_element_data.
-   * In this function, additionally the ghost entries are filled exchanging the correct entries of the
-   *   element vector between processes.
-   * \return Element data vector of size num_local_elements + num_local_ghosts with data of Type TElementData.
+   * Get the element data vector.
+   * The element data of the local mesh elements can be set using \ref set_element_data.
+   * If ghost entries should be filled, one should call \ref exchange_ghost_data on each process first.
+   * \return Element data vector with data of Type TElementData.
    */
   template <typename E = TElementData, typename = std::enable_if_t<!std::is_void<E>::value>>
   const std::vector<E>&
-  get_element_data ()
+  get_element_data () const
+  {
+    return m_element_data;
+  }
+
+  /** 
+  * Exchange the element data for ghost elements between processes.
+  * This routine has to be called on each process after setting the element data for all local elements.
+  * \return The element data vector of size num_local_elements + num_local_ghosts with data of Type TElementData.
+  */
+  template <typename E = TElementData, typename = std::enable_if_t<!std::is_void<E>::value>>
+  const std::vector<E>&
+  exchange_ghost_data ()
   {
     // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
     sc_array* sc_array_wrapper;
-    T8_ASSERT (m_element_data.size () == get_num_local_elements () + get_num_local_ghosts ());
+    T8_ASSERT (m_element_data.size () == get_num_local_elements () + get_num_ghosts ());
     sc_array_wrapper = sc_array_new_data (m_element_data.data (), sizeof (TElementData),
-                                          get_num_local_elements () + get_num_local_ghosts ());
+                                          get_num_local_elements () + get_num_ghosts ());
 
     // Data exchange: entries with indices > num_local_elements will get overwritten.
     t8_forest_ghost_exchange_data (m_forest, sc_array_wrapper);
@@ -296,7 +296,7 @@ class mesh {
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_elements.push_back (mesh_element_class (this, itree, ielem));
+        m_elements.push_back (element_class (this, itree, ielem));
       }
     }
     update_ghost_elements ();
@@ -309,20 +309,20 @@ class mesh {
   update_ghost_elements ()
   {
     m_ghosts.clear ();
-    m_ghosts.reserve (get_num_local_ghosts ());
+    m_ghosts.reserve (get_num_ghosts ());
     t8_locidx_t num_loc_trees = t8_forest_get_num_local_trees (m_forest);
 
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_ghost_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_ghosts.push_back (ghost_element_class (this, num_loc_trees + itree, itree, ielem));
+        m_ghosts.push_back (element_class (this, num_loc_trees + itree, ielem, true));
       }
     }
   }
 
-  t8_forest_t m_forest = nullptr;             /**< The forest the mesh should be defined for. */
-  std::vector<mesh_element_class> m_elements; /**< Vector storing the (local) mesh elements. */
-  std::vector<ghost_element_class> m_ghosts;  /**< Vector storing the (local) ghost elements. */
+  t8_forest_t m_forest;                  /**< The forest the mesh should be defined for. */
+  std::vector<element_class> m_elements; /**< Vector storing the (local) mesh elements. */
+  std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
   std::conditional_t<!std::is_void_v<TElementData>, std::vector<TElementData>, std::nullptr_t>
     m_element_data; /**< Vector storing the (local) element data. */
 };

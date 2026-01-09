@@ -103,12 +103,12 @@ TEST (t8_gtest_cache_competence, cache_volume)
 {
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_volume_overwrite>>;
-  using element_class = typename mesh_class::abstract_element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  using element_class = typename mesh_class::element_class;
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_volume_cache ());
 
   double unrealistic_volume = -3000;
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->volume_cache_filled ());
     // Fill cache and check that volume is valid.
@@ -152,12 +152,12 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_vertex_coordinates_overwrite>>;
-  using element_class = typename mesh_class::abstract_element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  using element_class = typename mesh_class::element_class;
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_vertex_cache ());
 
   std::vector<t8_3D_point> unrealistic_vertex = { t8_3D_point ({ 41, 42, 43 }), t8_3D_point ({ 99, 100, 101 }) };
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->vertex_cache_filled ());
     // Check that values are valid.
@@ -185,12 +185,12 @@ TEST (t8_gtest_cache_competence, cache_centroid)
 {
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_centroid_overwrite>>;
-  using element_class = mesh_class::abstract_element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  using element_class = mesh_class::element_class;
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_centroid_cache ());
 
   t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->centroid_cache_filled ());
     // Check that values are valid.

@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_ghost.cxx
- * Tests if the ghost elements and the \ref t8_mesh_handle::mesh_element::get_face_neighbor implementation work as intended.
+ * Tests if the ghost elements and the \ref t8_mesh_handle::element::get_face_neighbor implementation work as intended.
  */
 
 #include <gtest/gtest.h>
@@ -68,34 +68,19 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
   t8_forest_ghost_print (forest);
 
-  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
-  EXPECT_EQ (mesh.get_num_local_ghosts (), t8_forest_get_num_ghosts (forest));
+  const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
+  EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
   if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
     // Ensure that we actually have ghost elements in this test.
-    EXPECT_GT (mesh.get_num_local_ghosts (), 0);
+    EXPECT_GT (mesh.get_num_ghosts (), 0);
   }
-
-  // Check that functionality of mesh elements is still valid.
-  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
-    EXPECT_FALSE (it->is_ghost_element ());
-    EXPECT_EQ (level, it->get_level ());
-    auto centroid = it->get_centroid ();
-    for (const auto& coordinate : centroid) {
-      EXPECT_GE (1, coordinate);
-      EXPECT_LE (0, coordinate);
-    }
-    auto vertex_coordinates = (*it).get_vertex_coordinates ();
-    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (const auto& coordinate : vertex_coordinates[ivertex]) {
-        EXPECT_GE (1, coordinate);
-        EXPECT_LE (0, coordinate);
-      }
-    }
+  else {
+    GTEST_SKIP () << "Skipping test as no ghost elements are created for 1D or single element meshes.";
   }
 
   // Check functions for ghost elements.
   const t8_locidx_t num_local_elements = mesh.get_num_local_elements ();
-  const t8_locidx_t num_ghost_elements = mesh.get_num_local_ghosts ();
+  const t8_locidx_t num_ghost_elements = mesh.get_num_ghosts ();
   for (t8_locidx_t ighost = num_local_elements; ighost < num_local_elements + num_ghost_elements; ++ighost) {
     EXPECT_TRUE (mesh[ighost].is_ghost_element ());
     EXPECT_EQ (level, mesh[ighost].get_level ());
@@ -129,17 +114,17 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   }
 }
 
-/** Check that the function \ref t8_mesh_handle::mesh_element::get_face_neighbors of the handle works as intended (equal results to forest).*/
+/** Check that the function \ref t8_mesh_handle::element::get_face_neighbors of the handle works as intended (equal results to forest).*/
 TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
-  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
-  EXPECT_EQ (mesh.get_num_local_ghosts (), t8_forest_get_num_ghosts (forest));
+  const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
+  EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
   const t8_scheme* scheme = t8_forest_get_scheme (forest);
-  auto mesh_iterator = mesh.begin ();
+  auto mesh_iterator = mesh.cbegin ();
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {
@@ -161,17 +146,17 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
         t8_forest_leaf_face_neighbors (forest, itree, elem, &neighbors, iface, &dual_faces, &num_neighbors, &neigh_ids,
                                        &neigh_eclass, forest_is_balanced);
         // --- Get neighbors from mesh element. ---
-        int num_neighbors_handle;
         std::vector<int> dual_faces_handle;
-        auto neighbor_ids_handle = mesh_iterator->get_face_neighbors (iface, &num_neighbors_handle, &dual_faces_handle);
+        auto neighbors_handle = mesh_iterator->get_face_neighbors (iface, dual_faces_handle);
         // --- Compare results. ---
-        EXPECT_EQ ((int) neighbor_ids_handle.size (), num_neighbors_handle);
-        EXPECT_EQ (num_neighbors, num_neighbors_handle);
+        EXPECT_EQ (num_neighbors, (int) neighbors_handle.size ());
         EXPECT_EQ (dual_faces_handle, std::vector<int> (dual_faces, dual_faces + num_neighbors));
-        EXPECT_EQ (neighbor_ids_handle, std::vector<t8_locidx_t> (neigh_ids, neigh_ids + num_neighbors));
+        for (int ineighs = 0; ineighs < num_neighbors; ineighs++) {
+          EXPECT_EQ (neighbors_handle[ineighs]->get_element_handle_id (), neigh_ids[ineighs]);
+        }
         for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
           EXPECT_EQ (scheme->element_get_shape (neigh_eclass, neighbors[ineigh]),
-                     mesh[neighbor_ids_handle[ineigh]].get_shape ());
+                     neighbors_handle[ineigh]->get_shape ());
         }
         // Free memory.
         if (num_neighbors > 0) {
@@ -194,16 +179,13 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
  public:
   /** Overwrites the cache variables for the a \ref face.
    * \param [in] face              Face for which the cache should be overwritten.
-   * \param [in] neighbor_indices  New cache vector for the neighbor indices.
-   * \param [in] num_neighbors     New cache value for the number of neighbors.
+   * \param [in] neighbors         New cache vector for the neighbors.
    * \param [in] dual_faces        New cache vector for the dual faces.
    */
   void
-  overwrite_cache (int face, std::vector<t8_locidx_t> neighbor_indices, int num_neighbors,
-                   std::vector<int> dual_faces) const
+  overwrite_cache (int face, std::vector<const TUnderlying*> neighbors, std::vector<int> dual_faces) const
   {
-    this->m_neighbor_indices[face] = neighbor_indices;
-    this->m_num_neighbors[face] = num_neighbors;
+    this->m_neighbors[face] = neighbors;
     this->m_dual_faces[face] = dual_faces;
   }
 };
@@ -215,30 +197,30 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
-  using element_class = typename mesh_class::mesh_element_class;
-  mesh_class mesh = mesh_class (forest);
+  using element_class = typename mesh_class::element_class;
+  const mesh_class mesh = mesh_class (forest);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
-  const std::vector<t8_locidx_t> unrealistic_neighbor_indices = { 9999, 99989997 };
-  const int unrealistic_num_neighbors = 2;
+  if (mesh.get_num_local_elements () == 0) {
+    GTEST_SKIP () << "No local elements in the mesh to test the cache functionality.";
+  }
+  const std::vector<const element_class*> unrealistic_neighbors
+    = { &mesh[0], &mesh[mesh.get_num_local_elements () - 1] };
   const std::vector<int> unrealistic_dual_faces = { 100, 1012000 };
-  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+  for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->neighbor_cache_filled_any ());
     it->fill_face_neighbor_cache ();
     for (int iface = 0; iface < it->get_num_faces (); iface++) {
       EXPECT_TRUE (it->neighbor_cache_filled (iface));
-      int num_neighbors = -1;
       std::vector<int> dual_faces;
-      auto neighbor_ids = it->get_face_neighbors (iface, &num_neighbors, &dual_faces);
-      EXPECT_EQ ((int) neighbor_ids.size (), num_neighbors);
+      auto neighbors = it->get_face_neighbors (iface, dual_faces);
       // Overwrite cache with unrealistic values.
-      it->overwrite_cache (iface, unrealistic_neighbor_indices, unrealistic_num_neighbors, unrealistic_dual_faces);
+      it->overwrite_cache (iface, unrealistic_neighbors, unrealistic_dual_faces);
       EXPECT_TRUE (it->neighbor_cache_filled (iface));
-      neighbor_ids = it->get_face_neighbors (iface, &num_neighbors, &dual_faces);
+      neighbors = it->get_face_neighbors (iface, dual_faces);
       // --- Compare results. ---
-      EXPECT_EQ (neighbor_ids, unrealistic_neighbor_indices);
-      EXPECT_EQ (num_neighbors, unrealistic_num_neighbors);
+      EXPECT_EQ (neighbors, unrealistic_neighbors);
       EXPECT_EQ (dual_faces, unrealistic_dual_faces);
     }
   }

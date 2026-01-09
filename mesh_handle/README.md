@@ -8,7 +8,5 @@ If you want to use the handle, note that is has its own library. Turn the option
 
 The folder's most important files are: 
 The [mesh.hxx](mesh.hxx) defines the mesh class of the handle. This is the central file of the mesh handle. 
-The [abstract_element.hxx](abstract_element.hxx) defines the common interface of the mesh elements and the ghost elements of the mesh handle.
-The [mesh_element.hxx](mesh_element.hxx) implements a class for the mesh elements of the mesh handle (so non-ghost elements).
-The [ghost_element.hxx](ghost_element.hxx) implements the class for the ghost elements of the mesh handle.
+The [element.hxx](element.hxx) defines the elements (mesh or ghost elements) of the mesh handle.
 The [competences.hxx](competences.hxx) defines additional competences/functionality of an element to access additional data.

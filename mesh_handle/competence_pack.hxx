@@ -35,7 +35,7 @@ namespace t8_mesh_handle
 template <template <typename> class... TCompetence>
 struct competence_pack
 {
-  /** Apply the competence pack to a template class, e.g. the \ref abstract_element class.
+  /** Apply the competence pack to a template class, e.g. the \ref element class.
    * \tparam Target The target template class to apply the \a TCompetence pack to.
    */
   template <typename mesh_class, template <typename, template <typename> class...> class Target>
