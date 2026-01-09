@@ -99,7 +99,7 @@ struct cache_centroid: public t8_crtp_operator<TUnderlying, cache_centroid>
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct cache_neighbors: t8_crtp_operator<TUnderlying, cache_centroid>
+struct cache_neighbors: t8_crtp_operator<TUnderlying, cache_neighbors>
 {
  public:
   /**
