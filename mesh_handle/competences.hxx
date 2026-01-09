@@ -26,7 +26,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * is called are provided.
  *
  * All competences have the same inheritance pattern: 
- * We use the CRTP pattern as we may need to access members of the derived class \ref t8_mesh_handle::element. 
+ * We use the CRTP pattern as we may need to access members of the derived classes like 
+ * \ref t8_mesh_handle::element. 
  * The t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
  * we need functionality of TUnderlying).
  * Especially for the competences to cache functionality, the access of members is not necessary, 
@@ -41,8 +42,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include <t8_types/t8_operators.hxx>
 #include <t8_types/t8_vec.hxx>
-#include <t8_eclass.h>
-#include <array>
 #include <vector>
 #include <optional>
 
@@ -93,6 +92,50 @@ struct cache_centroid: public t8_crtp_operator<TUnderlying, cache_centroid>
  protected:
   mutable std::optional<t8_3D_point>
     m_centroid; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
+};
+
+/**
+ * Competence to cache the neighbors of an element at a specific face at the first function call.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_neighbors: t8_crtp_operator<TUnderlying, cache_neighbors>
+{
+ public:
+  /**
+   * Function that checks if the neighbor cache for a face has been filled.
+   * \param [in] face The face for which the cache should be checked.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  neighbor_cache_filled (int face) const
+  {
+    return m_num_neighbors[face].has_value ();
+  }
+
+  /**
+   * Function that checks if the neighbor cache for any face has been filled.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  neighbor_cache_filled_any () const
+  {
+    for (int iface = 0; iface < this->underlying ().get_num_faces (); ++iface) {
+      if (neighbor_cache_filled (iface)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+ protected:
+  mutable std::vector<std::vector<const TUnderlying *>>
+    m_neighbors; /**< Neighboring elements at each face. The length of the vectors is stored in \ref m_num_neighbors. */
+  mutable std::vector<std::optional<int>>
+    m_num_neighbors; /**< Vector with the numbers of neighbor elements at each face. 
+                        num_neighbors is stored to indicate that the cache is filled if a face does not have any neighbor. */
+  mutable std::vector<std::vector<int>>
+    m_dual_faces; /**< Face id's of the neighboring elements' faces for each face. */
 };
 
 }  // namespace t8_mesh_handle
