@@ -21,7 +21,7 @@
 */
 
 /** \file constructor_wrapper.hxx
- * Wrapper for the mesh constructor from a cmesh and some default cmeshes.
+ * Construct a mesh handle instance from a cmesh and some default mesh handles.
  */
 
 #ifndef T8_CONSTRUCTOR_WRAPPER_HXX
@@ -55,7 +55,7 @@ handle_new_uniform_default (const t8_cmesh_t cmesh, const int level, const sc_MP
   return std::make_unique<TMesh> (forest);
 }
 
-/** Hybercube with 6 Tets, 6 Prism, 4 Hex. Refined uniformly to given level.
+/** Hybercube with 6 Tets, 6 Prism, 4 Hex. Refined uniformly to given level using the default scheme.
  * \param [in] level         An initial uniform refinement level.
  * \param [in] comm          MPI communicator to use.
  * \param [in] do_partition  If non-zero create a partitioned cmesh.
@@ -67,10 +67,31 @@ handle_new_uniform_default (const t8_cmesh_t cmesh, const int level, const sc_MP
 */
 template <typename TMesh>
 std::unique_ptr<TMesh>
-handle_hypercube_uniform_default (const int level, const sc_MPI_Comm comm, const bool do_partition = false,
-                                  const bool do_face_ghost = false, const bool periodic = false)
+handle_hybrid_hypercube_uniform_default (const int level, const sc_MPI_Comm comm, const bool do_partition = false,
+                                         const bool do_face_ghost = false, const bool periodic = false)
 {
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (comm, do_partition, periodic);
+  return handle_new_uniform_default<TMesh> (cmesh, level, comm, do_face_ghost);
+}
+
+/** Construct hybercube from one primitive tree class. Refined uniformly to given level using the default scheme.
+ * \param [in] eclass        This element class determines the dimension and the number of trees needed to construct a cube.
+ * \param [in] level         An initial uniform refinement level.
+ * \param [in] comm          MPI communicator to use.
+ * \param [in] do_partition  If non-zero create a partitioned cmesh.
+ * \param [in] do_face_ghost If true, a layer of ghost elements is created.
+ * \param [in] periodic      If non-zero create a periodic cmesh in each direction. Not possible with \a eclass pyramid.
+ * \tparam TMesh             The mesh handle class.
+ * \return Unique pointer to a uniformly refined mesh handle hypercube.
+*/
+template <typename TMesh>
+std::unique_ptr<TMesh>
+handle_hypercube_uniform_default (t8_eclass_t eclass, const int level, const sc_MPI_Comm comm,
+                                  const bool do_partition = false, const bool do_face_ghost = false,
+                                  const bool periodic = false)
+{
+  // Broadcast option is hidden from the user.
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, do_partition, periodic);
   return handle_new_uniform_default<TMesh> (cmesh, level, comm, do_face_ghost);
 }
 

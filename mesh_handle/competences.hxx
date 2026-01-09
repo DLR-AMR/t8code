@@ -73,7 +73,7 @@ struct cache_volume: public t8_crtp_operator<TUnderlying, cache_volume>
 
 /**
  * Competence to cache the diameter of an element at the first function call.
- * \tparam TUnderlying Use the \ref abstract_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct cache_diameter: public t8_crtp_operator<TUnderlying, cache_diameter>
@@ -142,7 +142,7 @@ struct cache_centroid: public t8_crtp_operator<TUnderlying, cache_centroid>
 
 /**
  * Competence to cache the area of a specific face at the first function call.
- * \tparam TUnderlying Use the \ref abstract_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct cache_face_area: t8_crtp_operator<TUnderlying, cache_face_area>
@@ -165,7 +165,7 @@ struct cache_face_area: t8_crtp_operator<TUnderlying, cache_face_area>
 
 /**
  * Competence to cache the centroid of a specific face at the first function call.
- * \tparam TUnderlying Use the \ref abstract_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct cache_face_centroid: t8_crtp_operator<TUnderlying, cache_face_centroid>
@@ -188,7 +188,7 @@ struct cache_face_centroid: t8_crtp_operator<TUnderlying, cache_face_centroid>
 
 /**
  * Competence to cache the normal of a specific face at the first function call.
- * \tparam TUnderlying Use the \ref abstract_element with specified competences as template parameter.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
 struct cache_face_normal: t8_crtp_operator<TUnderlying, cache_face_normal>

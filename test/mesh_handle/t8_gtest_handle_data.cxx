@@ -50,7 +50,7 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
   // Define mesh handle.
   const int level = 2;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
   struct dummy_user_data user_data = {
     t8_3D_point ({ 41, 42, 43 }), /* Midpoints of the sphere. */
@@ -83,7 +83,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   const int level = 2;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, void, data_per_element>;
   auto mesh
-    = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
+    = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
   if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
     EXPECT_GT (mesh->get_num_ghosts (), 0);
@@ -122,7 +122,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
       EXPECT_EQ (elem.get_element_data ().volume, elem.get_volume ());
     }
   }
-  // Check fpor ghost elements with updated data.
+  // Check for ghost elements with updated data.
   for (t8_locidx_t ighost = mesh->get_num_local_elements ();
        ighost < mesh->get_num_local_elements () + mesh->get_num_ghosts (); ighost++) {
     if (t8_forest_ghost_get_global_treeid (
