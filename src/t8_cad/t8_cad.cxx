@@ -35,6 +35,10 @@
 #include <ShapeAnalysis_Edge.hxx>
 #include <TopExp_Explorer.hxx>
 
+#if T8_ENABLE_DEBUG
+#include <Precision.hxx>
+#endif
+
 t8_cad::t8_cad (std::string fileprefix)
 {
   BRep_Builder builder;
@@ -272,6 +276,14 @@ t8_cad::t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const i
     bool first_point = true;
     for (TopExp_Explorer dora (edge, TopAbs_VERTEX); dora.More (); dora.Next ()) {
       const TopoDS_Vertex current_vertex = TopoDS::Vertex (dora.Current ());
+
+#if T8_ENABLE_DEBUG
+      /* Check of point is really the same. */
+      const gp_Pnt debug_reference_point = BRep_Tool::Pnt (vertex);
+      const gp_Pnt debug_current_point = BRep_Tool::Pnt (current_vertex);
+      T8_ASSERT (debug_reference_point.Distance (debug_current_point) <= Precision::Confusion ());
+#endif
+
       if (first_point) {
         *edge_param = BRep_Tool::Parameter (current_vertex, edge);
         first_point = false;
