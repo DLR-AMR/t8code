@@ -271,8 +271,17 @@ t8_cad::t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const i
   TopoDS_Vertex vertex = TopoDS::Vertex (cad_shape_vertex_map.FindKey (vertex_index));
   TopoDS_Edge edge = TopoDS::Edge (cad_shape_edge_map.FindKey (edge_index));
 
+  /* If the edge is not closed or the user did not provide any reference coords we just query
+  the parameter of the vertex on the edge. But if the edge is closed and the user provided
+  said reference parameters it gets more sophisticated:*/
+
   const bool edge_is_closed = t8_cad::t8_geom_edge_is_closed (edge_index);
   if (reference_edge_param && edge_is_closed) {
+    /* Edge is closed and the user provided reference parameters. We iterate over all vertices of the edge.
+    Since the edge is closed, the start and end vertex should be in the same physical location.
+    We choose the point where the parameters are closer to the reference parameters. For debugging reasons
+    we also check, if the points are really in the same physical location. */
+
     bool first_point = true;
     for (TopExp_Explorer dora (edge, TopAbs_VERTEX); dora.More (); dora.Next ()) {
       const TopoDS_Vertex current_vertex = TopoDS::Vertex (dora.Current ());
