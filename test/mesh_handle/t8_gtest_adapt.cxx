@@ -118,7 +118,7 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences, dummy_user_data>;
   mesh_class mesh_handle = mesh_class (forest);
   struct dummy_user_data user_data = {
     t8_3D_point ({ 0.5, 0.5, 1 }), /* Midpoints of the sphere. */

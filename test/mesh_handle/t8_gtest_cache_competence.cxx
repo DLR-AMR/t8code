@@ -39,7 +39,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 template <typename TUnderlying>
 struct cache_volume_overwrite: public t8_mesh_handle::cache_volume<TUnderlying>
 {
- public:
   /** Overwrites the cache variable for the volume.
    * \param [in] new_volume New volume. 
    */
@@ -54,7 +53,6 @@ struct cache_volume_overwrite: public t8_mesh_handle::cache_volume<TUnderlying>
 template <typename TUnderlying>
 struct cache_diameter_overwrite: public t8_mesh_handle::cache_diameter<TUnderlying>
 {
- public:
   /** Overwrites the cache variable for the diameter.
    * \param [in] new_diameter New diameter. 
    */
@@ -69,7 +67,6 @@ struct cache_diameter_overwrite: public t8_mesh_handle::cache_diameter<TUnderlyi
 template <typename TUnderlying>
 struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_coordinates<TUnderlying>
 {
- public:
   /** Overwrites the cache variable for the vertex coordinates.
    * \param [in] new_vec New cache vector. 
    */
@@ -84,7 +81,6 @@ struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_c
 template <typename TUnderlying>
 struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlying>
 {
- public:
   /** Overwrites the cache variable for the centroid.
    * \param [in] new_vec New point for the cache. 
    */
@@ -92,6 +88,52 @@ struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlyi
   overwrite_cache (t8_3D_point new_vec) const
   {
     this->m_centroid = new_vec;
+  }
+};
+
+// --- Face related caches. ---
+/** Child class of \ref t8_mesh_handle::cache_face_area that allows to modify the cache variables for test purposes. */
+template <typename TUnderlying>
+struct cache_face_area_overwrite: public t8_mesh_handle::cache_face_area<TUnderlying>
+{
+  /** Overwrites the cache variable for the face area.
+   * \param [in] face The face for which the cache should be set.
+   * \param [in] new_face_area New face area. 
+   */
+  void
+  overwrite_cache (int face, double new_face_area) const
+  {
+    this->m_face_area[face] = new_face_area;
+  }
+};
+
+/** Child class of \ref t8_mesh_handle::cache_face_centroid that allows to modify the cache variables for test purposes. */
+template <typename TUnderlying>
+struct cache_face_centroid_overwrite: public t8_mesh_handle::cache_face_centroid<TUnderlying>
+{
+  /** Overwrites the cache variable for the face centroid.
+   * \param [in] face The face for which the cache should be set.
+   * \param [in] new_face_centroid New face centroid. 
+   */
+  void
+  overwrite_cache (int face, t8_3D_point new_face_centroid) const
+  {
+    this->m_face_centroid[face] = new_face_centroid;
+  }
+};
+
+/** Child class of \ref t8_mesh_handle::cache_face_normal that allows to modify the cache variables for test purposes. */
+template <typename TUnderlying>
+struct cache_face_normal_overwrite: public t8_mesh_handle::cache_face_normal<TUnderlying>
+{
+  /** Overwrites the cache variable for the face normal.
+   * \param [in] face The face for which the cache should be set.
+   * \param [in] new_face_normal New face normal. 
+   */
+  void
+  overwrite_cache (int face, t8_3D_vec new_face_normal) const
+  {
+    this->m_face_normal[face] = new_face_normal;
   }
 };
 
@@ -158,21 +200,14 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
 
   std::vector<t8_3D_point> unrealistic_vertex = { t8_3D_point ({ 41, 42, 43 }), t8_3D_point ({ 99, 100, 101 }) };
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->vertex_cache_filled ());
-    // Fill and check that values are valid.
-    auto vertex_coordinates = it->get_vertex_coordinates ();
-    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (const auto &coordinate : vertex_coordinates[ivertex]) {
-        EXPECT_GE (1, coordinate);
-        EXPECT_LE (0, coordinate);
+    for (int ivertex = 0; ivertex < it->get_num_vertices (); ++ivertex) {
+      for (const auto &coordinate : it->get_vertex_coordinates (ivertex)) {
+        EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
       }
     }
-    // Check that cache is set.
     EXPECT_TRUE (it->vertex_cache_filled ());
-    // Overwrite the cache with unrealistic values.
     it->overwrite_cache (unrealistic_vertex);
-    // Check that the cache is actually used.
     EXPECT_EQ (it->get_vertex_coordinates (), unrealistic_vertex);
   }
 }
@@ -191,41 +226,17 @@ TEST (t8_gtest_cache_competence, cache_centroid)
 
   t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->centroid_cache_filled ());
-    // Check that values are valid.
-    auto centroid = it->get_centroid ();
-    for (const auto &coordinate : centroid) {
-      EXPECT_GE (1, coordinate);
-      EXPECT_LE (0, coordinate);
+    for (const auto &coordinate : it->get_centroid ()) {
+      EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
     }
-    // Check that cache is set.
     EXPECT_TRUE (it->centroid_cache_filled ());
-    // Overwrite the cache with unrealistic values.
     it->overwrite_cache (unrealistic_centroid);
-    // Check that the cache is actually used.
     EXPECT_EQ (it->get_centroid (), unrealistic_centroid);
   }
 }
 
 // --- Face related caches. ---
-
-/** Child class of \ref t8_mesh_handle::cache_face_area that allows to modify the cache variables for test purposes. */
-template <typename TUnderlying>
-struct cache_face_area_overwrite: public t8_mesh_handle::cache_face_area<TUnderlying>
-{
- public:
-  /** Overwrites the cache variable for the face area.
-   * \param [in] face The face for which the cache should be set.
-   * \param [in] new_face_area New face area. 
-   */
-  void
-  overwrite_cache (int face, double new_face_area) const
-  {
-    this->m_face_area[face] = new_face_area;
-  }
-};
-
 /** Use child class of \ref t8_mesh_handle::cache_face_area class to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
@@ -247,9 +258,58 @@ TEST (t8_gtest_cache_competence, cache_face_area)
       EXPECT_TRUE (it->face_area_cache_filled (iface));
       it->overwrite_cache (iface, unrealistic_face_area + iface);
       EXPECT_EQ (it->get_face_area (iface), unrealistic_face_area + iface);
-      std::cout << "here";
     }
   }
 }
 
-//TODO: Add tests for face centroid and face normal caches. Also add these to compare handle to forest.
+/** Use child class of \ref t8_mesh_handle::cache_face_centroid class to check that the cache is actually set 
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+ * checking that the functionality actually outputs this unrealistic value.
+ */
+TEST (t8_gtest_cache_competence, cache_face_centroid)
+{
+  const int level = 1;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_face_centroid_overwrite>>;
+  using element_class = typename mesh_class::element_class;
+  auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  EXPECT_TRUE (element_class::has_face_centroid_cache ());
+
+  t8_3D_point unrealistic_face_centroid ({ 999, 1000, 998 });
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
+    for (int iface = 0; iface < it->get_num_faces (); ++iface) {
+      EXPECT_FALSE (it->face_centroid_cache_filled (iface));
+      for (const auto &coordinate : it->get_face_centroid (iface)) {
+        EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+      }
+      EXPECT_TRUE (it->face_centroid_cache_filled (iface));
+      it->overwrite_cache (iface, unrealistic_face_centroid);
+      EXPECT_EQ (it->get_face_centroid (iface), unrealistic_face_centroid);
+    }
+  }
+}
+
+/** Use child class of \ref t8_mesh_handle::cache_face_normal class to check that the cache is actually set 
+ * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
+ * checking that the functionality actually outputs this unrealistic value.
+ */
+TEST (t8_gtest_cache_competence, cache_face_normal)
+{
+  const int level = 1;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_face_normal_overwrite>>;
+  using element_class = typename mesh_class::element_class;
+  auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  EXPECT_TRUE (element_class::has_face_normal_cache ());
+
+  t8_3D_vec unrealistic_face_normal ({ 41, 42, 43 });
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
+    for (int iface = 0; iface < it->get_num_faces (); ++iface) {
+      EXPECT_FALSE (it->face_normal_cache_filled (iface));
+      for (const auto &coordinate : it->get_face_normal (iface)) {
+        EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
+      }
+      EXPECT_TRUE (it->face_normal_cache_filled (iface));
+      it->overwrite_cache (iface, unrealistic_face_normal);
+      EXPECT_EQ (it->get_face_normal (iface), unrealistic_face_normal);
+    }
+  }
+}

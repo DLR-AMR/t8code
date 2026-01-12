@@ -420,7 +420,7 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
     T8_ASSERT (face < get_num_faces ());
     if constexpr (has_face_centroid_cache ()) {
       if (this->face_centroid_cache_filled (face)) {
-        return this->m_face_centroid[face];
+        return this->m_face_centroid[face].value ();
       }
     }
     t8_3D_point coordinates;
@@ -442,7 +442,7 @@ class element: public TCompetence<element<mesh_class, TCompetence...>>... {
     T8_ASSERT (face < get_num_faces ());
     if constexpr (has_face_normal_cache ()) {
       if (this->face_normal_cache_filled (face)) {
-        return this->m_face_normal[face];
+        return this->m_face_normal[face].value ();
       }
     }
     t8_3D_vec normal;

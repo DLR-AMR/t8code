@@ -54,8 +54,8 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
 
   struct dummy_user_data user_data = {
     t8_3D_point ({ 41, 42, 43 }), /* Midpoints of the sphere. */
-    0.2,                          /* Refine if inside this radius. */
-    0.4                           /* Coarsen if outside this radius. */
+    100,                          /* Refine if inside this radius. */
+    3                             /* Coarsen if outside this radius. */
   };
 
   // Set user data for the mesh handle and check that the getter returns the same data.
@@ -74,9 +74,7 @@ struct data_per_element
   double volume;
 };
 
-/** Check that element data can be set for the handle and 
- * that the getter has exchanged data for the ghosts.
- */
+/** Check that element data can be set for the handle and that the getter has exchanged data for the ghosts. */
 TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
   // Define mesh handle.
@@ -88,7 +86,6 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     // Ensure that we actually test with ghost elements.
     EXPECT_GT (mesh->get_num_ghosts (), 0);
   }
-  auto forest = mesh->get_forest ();
 
   // Create element data for all local mesh elements.
   std::vector<data_per_element> element_data;
@@ -102,17 +99,20 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
     EXPECT_EQ (mesh_element_data[ielem].volume, (*mesh)[ielem].get_volume ()) << "ielem = " << ielem;
   }
-  t8_gloidx_t barrier = t8_forest_get_num_global_trees (forest) / 2.0;
+
+  // Modify element data for elements that are in the first half of the global trees.
+  auto forest = mesh->get_forest ();
+  const t8_gloidx_t barrier = t8_forest_get_num_global_trees (forest) / 2.0;
   const int newlevel = 42;
   const double newvolume = 42.42;
-  for (auto &elem : *mesh) {
-    if (t8_forest_global_tree_id (forest, elem.get_local_tree_id ()) < barrier) {
-      elem.set_element_data ({ newlevel, newvolume });
+  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+    if (t8_forest_global_tree_id (forest, it->get_local_tree_id ()) < barrier) {
+      it->set_element_data ({ newlevel, newvolume });
     }
   }
   mesh->exchange_ghost_data ();
   // Check for mesh elements with updated data.
-  for (auto &elem : *mesh) {
+  for (const auto &elem : *mesh) {
     if (t8_forest_global_tree_id (forest, elem.get_local_tree_id ()) < barrier) {
       EXPECT_EQ (elem.get_element_data ().level, newlevel);
       EXPECT_EQ (elem.get_element_data ().volume, newvolume);

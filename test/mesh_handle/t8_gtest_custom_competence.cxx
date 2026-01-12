@@ -44,9 +44,9 @@ struct dummy_get_level: public t8_crtp_operator<TUnderlying, dummy_get_level>
 {
  public:
   /** Getter for the level of the element. This function needs to access several members 
-  *     of the element such that we need the crtp structure here. 
-  * \return Level of the element.
-  */
+   *     of the element such that we need the crtp structure here. 
+   * \return Level of the element.
+   */
   t8_element_level
   get_level_dummy () const
   {
@@ -104,10 +104,8 @@ TEST (t8_gtest_custom_competence, custom_competence)
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());
-    auto centroid = it->get_centroid ();
-    for (const auto &coordinate : centroid) {
-      EXPECT_GE (1, coordinate);
-      EXPECT_LE (0, coordinate);
+    for (const auto &coordinate : it->get_centroid ()) {
+      EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
     }
     EXPECT_TRUE (it->centroid_cache_filled ());
   }

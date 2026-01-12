@@ -45,8 +45,8 @@ struct competence_pack
 };
 
 /** Predefined competence pack combining all caching competences. */
-using cache_competences = competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid,
-                                          cache_face_area, cache_face_centroid, cache_face_normal, cache_neighbors>;
+using all_cache_competences = competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid,
+                                              cache_face_area, cache_face_centroid, cache_face_normal, cache_neighbors>;
 
 /** Predefined competence pack combining all competences related to faces. */
 using cache_face_competences
