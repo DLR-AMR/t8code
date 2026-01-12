@@ -119,30 +119,30 @@ t8_cad_handle::update_cad_shape (const TopoDS_Shape &new_cad_shape)
 }
 
 int
-t8_cad_handle::t8_geom_is_line (const int curve_index) const
+t8_cad_handle::is_line (const int curve_index) const
 {
-  const Handle_Geom_Curve curve = t8_geom_get_cad_curve (curve_index);
+  const Handle_Geom_Curve curve = get_cad_curve (curve_index);
   const GeomAdaptor_Curve curve_adaptor (curve);
   return curve_adaptor.GetType () == GeomAbs_Line;
 }
 
 int
-t8_cad_handle::t8_geom_is_plane (const int surface_index) const
+t8_cad_handle::is_plane (const int surface_index) const
 {
-  const Handle_Geom_Surface surface = t8_geom_get_cad_surface (surface_index);
+  const Handle_Geom_Surface surface = get_cad_surface (surface_index);
   const GeomAdaptor_Surface surface_adaptor (surface);
   return surface_adaptor.GetType () == GeomAbs_Plane;
 }
 
 const gp_Pnt
-t8_cad_handle::t8_geom_get_cad_point (const int index) const
+t8_cad_handle::get_cad_point (const int index) const
 {
   T8_ASSERT (index <= cad_shape_vertex_map.Size ());
   return BRep_Tool::Pnt (TopoDS::Vertex (cad_shape_vertex_map.FindKey (index)));
 }
 
 const Handle_Geom_Curve
-t8_cad_handle::t8_geom_get_cad_curve (const int index) const
+t8_cad_handle::get_cad_curve (const int index) const
 {
   T8_ASSERT (index <= cad_shape_edge_map.Size ());
   Standard_Real first, last;
@@ -150,32 +150,32 @@ t8_cad_handle::t8_geom_get_cad_curve (const int index) const
 }
 
 const Handle_Geom_Surface
-t8_cad_handle::t8_geom_get_cad_surface (const int index) const
+t8_cad_handle::get_cad_surface (const int index) const
 {
   T8_ASSERT (index <= cad_shape_face_map.Size ());
   return BRep_Tool::Surface (TopoDS::Face (cad_shape_face_map.FindKey (index)));
 }
 
 const TopTools_IndexedMapOfShape
-t8_cad_handle::t8_geom_get_cad_shape_vertex_map () const
+t8_cad_handle::get_cad_shape_vertex_map () const
 {
   return cad_shape_vertex_map;
 }
 
 const TopTools_IndexedMapOfShape
-t8_cad_handle::t8_geom_get_cad_shape_edge_map () const
+t8_cad_handle::get_cad_shape_edge_map () const
 {
   return cad_shape_edge_map;
 }
 
 const TopTools_IndexedMapOfShape
-t8_cad_handle::t8_geom_get_cad_shape_face_map () const
+t8_cad_handle::get_cad_shape_face_map () const
 {
   return cad_shape_face_map;
 }
 
 int
-t8_cad_handle::t8_geom_get_common_edge (const int vertex1_index, const int vertex2_index) const
+t8_cad_handle::get_common_edge (const int vertex1_index, const int vertex2_index) const
 {
   const TopTools_ListOfShape collection1 = cad_shape_vertex2edge_map.FindFromIndex (vertex1_index);
   const TopTools_ListOfShape collection2 = cad_shape_vertex2edge_map.FindFromIndex (vertex2_index);
@@ -191,7 +191,7 @@ t8_cad_handle::t8_geom_get_common_edge (const int vertex1_index, const int verte
 }
 
 int
-t8_cad_handle::t8_geom_get_common_face (const int edge1_index, const int edge2_index) const
+t8_cad_handle::get_common_face (const int edge1_index, const int edge2_index) const
 {
   const TopTools_ListOfShape collection1 = cad_shape_edge2face_map.FindFromIndex (edge1_index);
   const TopTools_ListOfShape collection2 = cad_shape_edge2face_map.FindFromIndex (edge2_index);
@@ -207,21 +207,21 @@ t8_cad_handle::t8_geom_get_common_face (const int edge1_index, const int edge2_i
 }
 
 int
-t8_cad_handle::t8_geom_is_vertex_on_edge (const int vertex_index, const int edge_index) const
+t8_cad_handle::is_vertex_on_edge (const int vertex_index, const int edge_index) const
 {
   const TopTools_ListOfShape collection = cad_shape_vertex2edge_map.FindFromIndex (vertex_index);
   return collection.Contains (cad_shape_edge_map.FindKey (edge_index));
 }
 
 int
-t8_cad_handle::t8_geom_is_edge_on_face (const int edge_index, const int face_index) const
+t8_cad_handle::is_edge_on_face (const int edge_index, const int face_index) const
 {
   const TopTools_ListOfShape collection = cad_shape_edge2face_map.FindFromIndex (edge_index);
   return collection.Contains (cad_shape_face_map.FindKey (face_index));
 }
 
 int
-t8_cad_handle::t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const
+t8_cad_handle::is_vertex_on_face (const int vertex_index, const int face_index) const
 {
   const TopTools_ListOfShape edge_collection = cad_shape_vertex2edge_map.FindFromIndex (vertex_index);
   for (auto edge = edge_collection.begin (); edge != edge_collection.end (); ++edge) {
@@ -234,20 +234,19 @@ t8_cad_handle::t8_geom_is_vertex_on_face (const int vertex_index, const int face
 }
 
 void
-t8_cad_handle::t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const int edge_index,
-                                                        double *edge_param) const
+t8_cad_handle::get_parameter_of_vertex_on_edge (const int vertex_index, const int edge_index, double *edge_param) const
 {
-  T8_ASSERT (t8_cad_handle::t8_geom_is_vertex_on_edge (vertex_index, edge_index));
+  T8_ASSERT (t8_cad_handle::is_vertex_on_edge (vertex_index, edge_index));
   TopoDS_Vertex vertex = TopoDS::Vertex (cad_shape_vertex_map.FindKey (vertex_index));
   TopoDS_Edge edge = TopoDS::Edge (cad_shape_edge_map.FindKey (edge_index));
   *edge_param = BRep_Tool::Parameter (vertex, edge);
 }
 
 void
-t8_cad_handle::t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const int face_index,
-                                                         double *face_params) const
+t8_cad_handle::get_parameters_of_vertex_on_face (const int vertex_index, const int face_index,
+                                                 double *face_params) const
 {
-  T8_ASSERT (t8_cad_handle::t8_geom_is_vertex_on_face (vertex_index, face_index));
+  T8_ASSERT (t8_cad_handle::is_vertex_on_face (vertex_index, face_index));
   gp_Pnt2d uv;
   TopoDS_Vertex vertex = TopoDS::Vertex (cad_shape_vertex_map.FindKey (vertex_index));
   TopoDS_Face face = TopoDS::Face (cad_shape_face_map.FindKey (face_index));
@@ -257,11 +256,11 @@ t8_cad_handle::t8_geom_get_parameters_of_vertex_on_face (const int vertex_index,
 }
 
 void
-t8_cad_handle::t8_geom_edge_parameter_to_face_parameters (const int edge_index, const int face_index,
-                                                          const int num_face_nodes, const double edge_param,
-                                                          const double *surface_params, double *face_params) const
+t8_cad_handle::edge_parameter_to_face_parameters (const int edge_index, const int face_index, const int num_face_nodes,
+                                                  const double edge_param, const double *surface_params,
+                                                  double *face_params) const
 {
-  T8_ASSERT (t8_cad_handle::t8_geom_is_edge_on_face (edge_index, face_index));
+  T8_ASSERT (t8_cad_handle::is_edge_on_face (edge_index, face_index));
   Standard_Real first, last;
   gp_Pnt2d uv;
   TopoDS_Edge edge = TopoDS::Edge (cad_shape_edge_map.FindKey (edge_index));
@@ -310,31 +309,31 @@ t8_cad_handle::t8_geom_edge_parameter_to_face_parameters (const int edge_index, 
 }
 
 void
-t8_cad_handle::t8_geom_get_face_parametric_bounds (const int surface_index, double *bounds) const
+t8_cad_handle::get_face_parametric_bounds (const int surface_index, double *bounds) const
 {
-  const Handle_Geom_Surface cad_surface = t8_geom_get_cad_surface (surface_index);
+  const Handle_Geom_Surface cad_surface = get_cad_surface (surface_index);
   cad_surface->Bounds (bounds[0], bounds[1], bounds[2], bounds[3]);
 }
 
 void
-t8_cad_handle::t8_geom_get_edge_parametric_bounds (const int edge_index, double *bounds) const
+t8_cad_handle::get_edge_parametric_bounds (const int edge_index, double *bounds) const
 {
-  const Handle_Geom_Curve cad_edge = t8_geom_get_cad_curve (edge_index);
+  const Handle_Geom_Curve cad_edge = get_cad_curve (edge_index);
   bounds[0] = cad_edge->FirstParameter ();
   bounds[1] = cad_edge->LastParameter ();
 }
 
 int
-t8_cad_handle::t8_geom_is_edge_closed (int edge_index) const
+t8_cad_handle::is_edge_closed (int edge_index) const
 {
-  const Handle_Geom_Curve cad_edge = t8_geom_get_cad_curve (edge_index);
+  const Handle_Geom_Curve cad_edge = get_cad_curve (edge_index);
   return cad_edge->IsClosed ();
 }
 
 int
-t8_cad_handle::t8_geom_is_surface_closed (int geometry_index, int parameter) const
+t8_cad_handle::is_surface_closed (int geometry_index, int parameter) const
 {
-  const Handle_Geom_Surface cad_surface = t8_geom_get_cad_surface (geometry_index);
+  const Handle_Geom_Surface cad_surface = get_cad_surface (geometry_index);
   switch (parameter) {
   case 0:
     return cad_surface->IsUClosed ();
