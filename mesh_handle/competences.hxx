@@ -49,6 +49,52 @@ namespace t8_mesh_handle
 {
 
 /**
+ * Competence to cache the volume of an element at the first function call.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_volume: public t8_crtp_operator<TUnderlying, cache_volume>
+{
+ public:
+  /**
+   * Function that checks if the cache for the volume has been filled.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  volume_cache_filled () const
+  {
+    return m_volume.has_value ();
+  }
+
+ protected:
+  mutable std::optional<double>
+    m_volume; /**< Cache for the volume. Use optional to allow no value if cache is not filled. */
+};
+
+/**
+ * Competence to cache the diameter of an element at the first function call.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_diameter: public t8_crtp_operator<TUnderlying, cache_diameter>
+{
+ public:
+  /**
+   * Function that checks if the cache for the diameter has been filled.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  diameter_cache_filled () const
+  {
+    return m_diameter.has_value ();
+  }
+
+ protected:
+  mutable std::optional<double>
+    m_diameter; /**< Cache for the diameter. Use optional to allow no value if cache is not filled. */
+};
+
+/**
  * Competence to cache the vertex coordinates of an element at the first function call.
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
@@ -92,6 +138,75 @@ struct cache_centroid: public t8_crtp_operator<TUnderlying, cache_centroid>
  protected:
   mutable std::optional<t8_3D_point>
     m_centroid; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
+};
+
+/**
+ * Competence to cache the area of a specific face at the first function call.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_face_area: t8_crtp_operator<TUnderlying, cache_face_area>
+{
+ public:
+  /**
+   * Function that checks if the cache for a face has been filled.
+   * \param [in] face The face for which the cache should be checked.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  face_area_cache_filled (int face) const
+  {
+    return m_face_area[face].has_value ();
+  }
+
+ protected:
+  mutable std::vector<std::optional<double>> m_face_area; /**< Vector with the face area each face. */
+};
+
+/**
+ * Competence to cache the centroid of a specific face at the first function call.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_face_centroid: t8_crtp_operator<TUnderlying, cache_face_centroid>
+{
+ public:
+  /**
+   * Function that checks if the cache for a face has been filled.
+   * \param [in] face The face for which the cache should be checked.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  face_centroid_cache_filled (int face) const
+  {
+    return m_face_centroid[face].has_value ();
+  }
+
+ protected:
+  mutable std::vector<std::optional<t8_3D_point>> m_face_centroid; /**< Vector with the face centroid each face. */
+};
+
+/**
+ * Competence to cache the normal of a specific face at the first function call.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_face_normal: t8_crtp_operator<TUnderlying, cache_face_normal>
+{
+ public:
+  /**
+   * Function that checks if the cache for a face has been filled.
+   * \param [in] face The face for which the cache should be checked.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  face_normal_cache_filled (int face) const
+  {
+    return m_face_normal[face].has_value ();
+  }
+
+ protected:
+  mutable std::vector<std::optional<t8_3D_vec>> m_face_normal; /**< Vector with the face normal each face. */
 };
 
 /**
