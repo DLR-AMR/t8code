@@ -110,7 +110,7 @@ const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
  *                          the new number of bytes is stored in n.
  * \param [in]     fp       The file stream to read from.
  * \return                  The number of read arguments of the last line read.
- *                          negative on failure 
+ *                          negative on failure
  */
 static int
 t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
@@ -844,11 +844,7 @@ t8_store_element_node_data (t8_cmesh_t cmesh, t8_gloidx_t tree_count,
  * \param [in] cad_geometry_base A pointer to the CAD-based geometry object.
  * \param [in] linear_geometry_base A pointer to the linear geometry object.
  * \param [in] tree_nodes An array of nodes representing the vertices of the tree.
- * \param [in] face_nodes An array of nodes representing the faces of the tree.
- * \param [in] edge_nodes An array of nodes representing the edges of the tree.
- *
  * \return True if the tree geometry was successfully processed; false otherwise.
- *
  */
 static bool
 t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass, const int dim,
