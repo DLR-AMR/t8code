@@ -80,10 +80,12 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
  */
 TEST (t8_gtest_custom_competence, custom_competence)
 {
-  // Check mesh with custom defined competence.
-  using mesh_class = t8_mesh_handle::mesh<dummy_get_level>;
   const int level = 1;
-  const auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+
+  // Check mesh with custom defined competence.
+  using mesh_class_custom = t8_mesh_handle::mesh<dummy_get_level>;
+  const auto mesh
+    = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class_custom> (level, sc_MPI_COMM_WORLD);
 
   for (auto it = mesh->begin (); it != mesh->end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
@@ -91,19 +93,16 @@ TEST (t8_gtest_custom_competence, custom_competence)
   }
 
   // Test with two custom competences and a predefined competence.
-  using mesh_class_more_cmpetences
-    = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  using mesh_class = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
   auto mesh_more_competences
-    = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class_more_cmpetences> (level, sc_MPI_COMM_WORLD);
+    = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
   for (auto it = mesh_more_competences->begin (); it != mesh_more_competences->end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());
-    auto centroid = it->get_centroid ();
-    for (const auto &coordinate : centroid) {
-      EXPECT_GE (1, coordinate);
-      EXPECT_LE (0, coordinate);
+    for (const auto &coordinate : it->get_centroid ()) {
+      EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
     }
     EXPECT_TRUE (it->centroid_cache_filled ());
   }
