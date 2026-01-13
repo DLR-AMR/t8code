@@ -40,7 +40,7 @@ namespace t8_mesh_handle
 
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
- * \tparam TCompetence The competences you want to add to the default functionality of the mesh.
+ * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
  *         \see element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref competence_pack class.
  * \tparam TUserData The user data type you want to associate with the mesh. Use void (this is also the default) if you do not want to set user data.
@@ -71,6 +71,16 @@ class mesh {
     T8_ASSERT ((std::is_same<typename TCompetencePack::is_competence_pack, void>::value));
     T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
+  }
+
+  /** 
+   * Destructor for a mesh of the handle. 
+   * The forest in use will be unreferenced. 
+   * Call \ref t8_forest_ref before if you want to keep it alive.
+   */
+  ~mesh ()
+  {
+    t8_forest_unref (&m_forest);
   }
 
   /**

@@ -78,7 +78,4 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       mesh_iterator++;
     }
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }
