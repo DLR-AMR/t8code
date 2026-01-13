@@ -227,10 +227,10 @@ class t8_cad {
    * it is random which side of the closed edge the parameter is from. The parameter
    * is correct, but for curved elements it has to be checked if the parameter has to be
    * converted onto the other bound.
-   * \param [in]  vertex_index   The index of the cad vertex.
-   * \param [in]  edge_index     The index of the cad edge.
-   * \param [out] edge_param     The parameter of the vertex on the edge.
-   * \param [in]  reference_face_params     Reference parameters on the surface.
+   * \param [in]  vertex_index            The index of the cad vertex.
+   * \param [in]  edge_index              The index of the cad edge.
+   * \param [out] edge_param              The parameter of the vertex on the edge.
+   * \param [in]  reference_edge_param    Reference parameters on the edge.
    */
   void
   t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const int edge_index, double *edge_param,
