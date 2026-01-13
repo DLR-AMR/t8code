@@ -44,7 +44,7 @@ jobs:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
-    timeout-minutes: 90
+    timeout-minutes: 10
     steps:
 #
 # Setup
@@ -95,7 +95,7 @@ jobs:
     needs: build_tarball
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
-    timeout-minutes: 90
+    timeout-minutes: 10
     steps:
     - name: Download tarball
       uses: actions/download-artifact@v7
