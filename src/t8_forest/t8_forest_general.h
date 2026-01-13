@@ -334,7 +334,8 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
 /** Set a user-defined weight function to guide the partitioning.
  * \param [in, out] forest  The forest.
  * \param [in]      weight_callback A callback function defining element weights for the partitioning.
- * \pre \a weight_callback must be free of side-effects, the behavior is undefined otherwise
+ * \pre \a weight_callback must be free of side effects (like changing the forest, some global state, etc.),
+ * the behavior is undefined otherwise.
  * \note If \a weight_callback is null, then all the elements are assumed to have the same weight
  */
 void
