@@ -45,7 +45,7 @@ on:
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
 
-jobs:  
+jobs:
   t8code_cmake_tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
@@ -62,6 +62,9 @@ jobs:
       run: tar -xf artifact.tar && rm artifact.tar
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
+    - name: enable caching of build artifacts
+      run: export MPICH_CC='ccache gcc'
+           export MPICH_CXX='ccache g++'
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
