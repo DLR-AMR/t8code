@@ -76,7 +76,8 @@ typedef struct t8_forest
   int set_level;                    /**< Level to use in new construction. */
   int set_for_coarsening;           /**< Change partition to allow
                                                      for one round of coarsening */
-  t8_weight_fcn_t *weight_function; /**< Pointer to user defined element weight function. Nullptr for standard, element-based partitioning. */
+  t8_weight_fcn_t *weight_function; /**< Pointer to user defined element weight function.
+                                         Nullptr for standard, element-based partitioning. */
 
   sc_MPI_Comm mpicomm; /**< MPI communicator to use. */
   t8_cmesh_t cmesh;    /**< Coarse mesh to use. */
