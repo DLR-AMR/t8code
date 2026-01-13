@@ -82,7 +82,9 @@ class t8_gtest_cache_competence: public testing::Test {
   void
   TearDown () override
   {
-    t8_forest_unref (&forest);
+    if (forest->rc.refcount > 0) {
+      t8_forest_unref (&forest);
+    }
   }
 
   t8_forest_t forest;

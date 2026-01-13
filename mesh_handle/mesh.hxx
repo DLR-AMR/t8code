@@ -59,6 +59,16 @@ class mesh {
     update_elements ();
   }
 
+  /** 
+   * Destructor for a mesh of the handle. 
+   * The forest in use will be unreferenced. 
+   * Call \ref t8_forest_ref before if you want to keep it alive.
+   */
+  ~mesh ()
+  {
+    t8_forest_unref (&m_forest);
+  }
+
   /**
    * Getter for the number of local elements in the mesh.
    * \return Number of local elements in the mesh.
