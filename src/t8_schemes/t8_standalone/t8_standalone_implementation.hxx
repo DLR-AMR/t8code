@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_standalone_implementation.hxx
+ *  A templated implementation of the scheme interface based on cutting planes.
+ */
+
 #ifndef T8_STANDALONE_IMPLEMENTATION_HXX
 #define T8_STANDALONE_IMPLEMENTATION_HXX
 
@@ -29,6 +33,7 @@
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
+#include <algorithm>
 
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
@@ -1530,6 +1535,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     * ToDo-Type */
   }
 
+#endif
   /**
  * Fill a string with readable information about the element
  * \param[in] elem The element to translate into human-readable information
@@ -1546,8 +1552,6 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       offset += snprintf (debug_string + offset, string_size - offset, "x_%i: %i \n", idim, el->coords[idim]);
     }
   }
-
-#endif
 
   // ################################################____MPI____################################################
 

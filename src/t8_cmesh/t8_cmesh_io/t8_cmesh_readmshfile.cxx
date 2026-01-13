@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_readmshfile.cxx
+ * Implements functions declared in \ref t8_cmesh_readmshfile.h.
+ */
+
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh.hxx>
@@ -40,11 +44,11 @@
 #include "t8_windows.h"
 #endif
 
-/* The supported number of gmesh tree classes.
+/** The supported number of gmsh tree classes.
  * Currently, we only support first order trees.
  */
 #define T8_NUM_GMSH_ELEM_CLASSES 15
-/* look-up table to translate the gmsh tree class to a t8code tree class.
+/** Look-up table to translate the gmsh tree class to a t8code tree class.
  */
 /* clang-format off */
 const t8_eclass_t t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
@@ -63,7 +67,7 @@ const t8_eclass_t t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
 };
 /* clang-format on */
 
-/* translate the msh file vertex number to the t8code vertex number.
+/** Translate the msh file vertex number to the t8code vertex number.
  * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
 const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0 },                      /* VERTEX */
@@ -76,9 +80,9 @@ const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0, 1, 3, 2, 4 }           /* PYRAMID */
 };
 
-/* translate the t8code vertex number to the .msh file vertex number.
+/** Translate the t8code vertex number to the .msh file vertex number.
  * See also http://gmsh.info/doc/texinfo/gmsh.html#Node-ordering */
-const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
+[[maybe_unused]] const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0 },                      /* VERTEX */
   { 0, 1 },                   /* LINE */
   { 0, 1, 3, 2 },             /* QUAD */
@@ -97,7 +101,7 @@ const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
  *       creating .neigh files with tetgen/triangle is not common and even seems
  *       to not work sometimes */
 
-/* Read a the next line from a file stream that does not start with '#' or
+/** Read a the next line from a file stream that does not start with '#' or
  * contains only whitespaces (tabs etc.)
  *
  * \param [in,out] line     An allocated string to store the line.
@@ -106,7 +110,8 @@ const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
  *                          the new number of bytes is stored in n.
  * \param [in]     fp       The file stream to read from.
  * \return                  The number of read arguments of the last line read.
- *                          negative on failure */
+ *                          negative on failure 
+ */
 static int
 t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
 {
@@ -452,7 +457,7 @@ t8_msh_file_2_read_nodes (FILE *fp)
       return std::nullopt;
     }
     /* Fill the node with the entries in the file */
-    retval = sscanf (line, "%li %lf %lf %lf", &index, &coords[0], &coords[1], &coords[2]);
+    retval = sscanf (line, "%" T8_GLOIDX_FORMAT " %lf %lf %lf", &index, &coords[0], &coords[1], &coords[2]);
     if (retval != 4) {
       t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
       free (line);
@@ -463,7 +468,7 @@ t8_msh_file_2_read_nodes (FILE *fp)
     /* If second value is false then the node was already in the hash table.
      * This case should not occur. */
     if (emplaced.second == false) {
-      t8_global_errorf ("Node %li defined more than once.\n", index);
+      t8_global_errorf ("Node %" T8_GLOIDX_FORMAT " defined more than once.\n", index);
       free (line);
       return std::nullopt;
     }
@@ -743,7 +748,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
       for (int i_node = 0; i_node < num_nodes; i_node++) {
         const int t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i_node];
         T8_ASSERT (strcmp (line_modify, "\0"));
-        retval = sscanf (line_modify, "%li", &node_indices[t8_vertex_num]);
+        retval = sscanf (line_modify, "%" T8_GLOIDX_FORMAT, &node_indices[t8_vertex_num]);
         if (retval != 1) {
           t8_global_errorf ("Premature end of line while reading tree.\n");
           t8_debugf ("The line is %s", line);
@@ -756,7 +761,7 @@ t8_cmesh_msh_file_2_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         node.index = node_indices[t8_vertex_num];
         const auto found_node = vertices.find (node);
         if (found_node == vertices.end ()) {
-          t8_global_errorf ("Could not find Node %li.\n", node_indices[t8_vertex_num]);
+          t8_global_errorf ("Could not find Node %" T8_GLOIDX_FORMAT ".\n", node_indices[t8_vertex_num]);
           free (line);
           t8_cmesh_destroy (&cmesh);
           return std::nullopt;
@@ -1538,7 +1543,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         for (int i_node = 0; i_node < num_nodes; i_node++) {
           const int t8_vertex_num = t8_msh_tree_vertex_to_t8_vertex_num[eclass][i_node];
           T8_ASSERT (strcmp (line_modify, "\0"));
-          retval = sscanf (line_modify, "%li", &node_indices[t8_vertex_num]);
+          retval = sscanf (line_modify, "%" T8_GLOIDX_FORMAT, &node_indices[t8_vertex_num]);
           if (retval != 1) {
             t8_global_errorf ("Premature end of line while reading tree.\n");
             t8_debugf ("The line is %s", line);

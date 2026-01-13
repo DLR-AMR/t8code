@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_standalone.cxx
+ *  Implements functions declared in \ref t8_standalone.hxx.
+ */
+
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_scheme_builder.hxx>
 

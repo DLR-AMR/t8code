@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_eclass.c
+ * Definition of C const integers using the value macros from \ref t8_eclass.h.
+ */
+
 #define KEEP_ECLASS_VALUE_DEFINITIONS
 #include <t8_eclass.h>
 #undef KEEP_ECLASS_VALUE_DEFINITIONS
