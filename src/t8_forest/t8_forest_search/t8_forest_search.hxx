@@ -37,6 +37,7 @@
 #include <numeric>
 #include <ranges>
 #include <algorithm>
+#include <vector>
 
 /**
  *  t8_search_element_callback
