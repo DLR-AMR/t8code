@@ -38,13 +38,13 @@ namespace t8_mesh_handle
 
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
- * \tparam TCompetence The competences you want to add to the default functionality of the mesh.
+ * \tparam TCompetences The competences you want to add to the default functionality of the mesh.
  *         \see element for more details on the choice of the template parameter.   
  */
-template <template <typename> class... TCompetence>
+template <template <typename> class... TCompetences>
 class mesh {
  public:
-  using element_class = element<TCompetence...>; /**< The element class of the mesh with given competences. */
+  using element_class = element<TCompetences...>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
