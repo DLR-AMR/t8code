@@ -1,4 +1,4 @@
-name: CMake tests sc and p4est
+name: test sc and p4est
 
 
 #  This file is part of t8code.
@@ -70,7 +70,7 @@ jobs:
 #
 # SC tests
 #
-    ## save variables  
+    ## save variables
     - name: Save variables
       run: export SC_DEBUG=$PWD/sc/build/Debug
         && export SC_RELEASE=$PWD/sc/build/Release

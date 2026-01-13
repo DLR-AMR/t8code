@@ -31,7 +31,7 @@
 /* At the time of this writing (November 15 2023) t8_cmesh_offset_concentrate
  * has a comment stating it does not work with non-derived cmeshes.
  * We write the tests in this file to check this.
- * 
+ *
  * Theses tests will create an offset array, build a new cmesh
  * with trees of the same eclass, set the offset array and commit the cmesh.
  * We will iterate through all eclasses and all tree counts up to a given maximum.
@@ -68,7 +68,7 @@ class cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<t8_glo
   const int main_process = 0;
 };
 
-/* The tests that do commit the cmesh iterate over eclasses and the number of 
+/* The tests that do commit the cmesh iterate over eclasses and the number of
  * tress, hence they have a TestWithParam with eclass and int. */
 class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tuple<t8_eclass, t8_gloidx_t>> {
  protected:
@@ -105,14 +105,14 @@ class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tup
   const int main_process = 0;
 };
 
-/* call t8_cmesh_offset_concentrate for non-derived cmesh 
+/* call t8_cmesh_offset_concentrate for non-derived cmesh
  * and destroy it before commit. */
 TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
 {
 
-  t8_debugf ("Testing t8_cmesh_set_partition_offset (no commit) with %li trees.\n", static_cast<long> (inum_trees));
+  t8_debugf ("Testing t8_cmesh_set_partition_offset (no commit) with %" T8_GLOIDX_FORMAT " trees.\n", inum_trees);
 
-  /* Build a valid offset array. For this test it is only necessary that 
+  /* Build a valid offset array. For this test it is only necessary that
    * the array corresponds to any valid partition.
    * We use the offset_concentrate function to build an offset array for a partition
    * that concentrates all trees at one process. */
@@ -123,15 +123,15 @@ TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
   t8_cmesh_set_partition_offsets (cmesh, shmem_array);
 }
 
-/* call t8_cmesh_offset_concentrate for non-derived cmesh 
+/* call t8_cmesh_offset_concentrate for non-derived cmesh
  * and commit it. */
 TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
 {
 
-  t8_debugf ("Testing t8_cmesh_set_partition_offset (with commit) with %li trees of class %s.\n",
-             static_cast<long> (inum_trees), t8_eclass_to_string[ieclass]);
+  t8_debugf ("Testing t8_cmesh_set_partition_offset (with commit) with %" T8_GLOIDX_FORMAT " trees of class %s.\n",
+             inum_trees, t8_eclass_to_string[ieclass]);
 
-  /* Build a valid offset array. For this test it is only necessary that 
+  /* Build a valid offset array. For this test it is only necessary that
    * the array corresponds to any valid partition.
    * We use the offset_concentrate function to build an offset array for a partition
    * that concentrates all trees at one process. */

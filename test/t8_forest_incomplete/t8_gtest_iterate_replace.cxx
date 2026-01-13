@@ -86,9 +86,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
 
   /* Local element index of the old and new forest. */
   t8_locidx_t elidx_old = first_outgoing;
-  t8_locidx_t elidx_new = first_incoming;
   for (t8_locidx_t tidx = 0; tidx < which_tree; tidx++) {
-    elidx_new += t8_forest_get_tree_num_leaf_elements (forest_new, tidx);
     elidx_old += t8_forest_get_tree_num_leaf_elements (forest_old, tidx);
   }
 
