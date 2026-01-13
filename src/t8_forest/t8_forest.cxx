@@ -2704,7 +2704,6 @@ t8_forest_init (t8_forest_t *pforest)
   forest->incomplete_trees = -1;
   forest->set_partition_offset = 0;
   forest->set_first_global_element = -1;
-  forest->set_weighted_partitioning = 0;
   forest->weight_function = nullptr;
 }
 
