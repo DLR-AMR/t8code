@@ -21,11 +21,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file element.hxx
- * Definition of the element class of the \ref t8_mesh_handle::mesh handle (can be ghost or mesh elements).
+ * Definition of an element of the \ref t8_mesh_handle::mesh handle (can be ghost or mesh elements).
  */
 
-#ifndef T8_ELEMENT_HXX
-#define T8_ELEMENT_HXX
+#pragma once
 
 #include <t8.h>
 #include <t8_element.h>
@@ -39,10 +38,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
-/** Forward declaration of the \ref mesh class of the handle.
+/** Forward declaration of the \ref mesh the elements will belong to.
  */
 template <template <typename> class... TCompetence>
-class mesh;
+struct mesh;
 
 /** 
  * Definition of the mesh element class of the \ref mesh handle.
@@ -51,33 +50,34 @@ class mesh;
  * the function is called. 
  * Use the competences defined in \ref competences.hxx as template parameter to cache the functionality instead of 
  * recalculation in every function call.
- * To add functionality to the element, you can also simply write your own competence class and give it as a template parameter.
+ * To add functionality to the element, you can also simply write your own competence and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 
  * Please note that the competence should be valid for both, mesh elements and ghost elements.
  *
- * The inheritance pattern is inspired by the \ref T8Type class (which also uses the CRTP).
+ * The inheritance pattern is inspired by \ref T8Type (which also uses the CRTP).
  * We decided to use this structure 1.) to be able to add new functionality easily and 
- *    2.) for the cached options to keep the number of class member variables of the default to a minimum to save memory.
+ *    2.) for the cached options to keep the number of member variables of the default element to a minimum to save memory.
  * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
  *
  * \tparam TCompetence The competences you want to add to the default functionality of the element.
  */
 template <template <typename> class... TCompetence>
-class element: public TCompetence<element<TCompetence...>>... {
+struct element: public TCompetence<element<TCompetence...>>...
+{
  private:
-  using SelfType = element<TCompetence...>; /**< Type of the current class with all template parameters specified. */
-  using mesh_class = mesh<TCompetence...>;  /**< Type of the mesh class used. */
-  friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
+  using SelfType = element<TCompetence...>; /**< Type of the element with all template parameters specified. */
+  using mesh_type = mesh<TCompetence...>;   /**< Type of the mesh used. */
+  friend mesh_type; /**< Define mesh_type as friend to be able to access e.g. the constructor. */
 
   /**
    * Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
-   * This constructor should only be called by the mesh_class (and invisible for the user).
+   * This constructor should only be called by the mesh_type (and invisible for the user).
    * \param [in] mesh             Pointer to the mesh the element should belong to.
    * \param [in] tree_id          The tree id of the element in the forest defining the mesh.
    * \param [in] element_id       The element id of the element in the forest defining the mesh.
    * \param [in] is_ghost_element Flag to indicate that this element is a ghost element. Default is false.
    */
-  element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
+  element (mesh_type* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
     : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id), m_is_ghost_element (is_ghost_element)
   {
     if (m_is_ghost_element) {
@@ -99,7 +99,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   }
 
   // --- Variables to check which functionality is defined in TCompetence. ---
-  /** Helper function to check if class T implements the function vertex_cache_filled.
+  /** Helper function to check if \a T implements the function vertex_cache_filled.
    * \tparam T The competence to be checked.
    * \return true if T implements the function, false if not.
    */
@@ -113,7 +113,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   a function vertex_cache_filled. */
   static constexpr bool vertex_cache_exists = (false || ... || vertex_cache_defined<TCompetence> ());
 
-  /** Helper function to check if class T implements the function centroid_cache_filled.
+  /** Helper function to check if \a T implements the function centroid_cache_filled.
    * \tparam T The competence to be checked.
    * \return true if T implements the function, false if not.
    */
@@ -127,7 +127,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   a function centroid_cache_filled. */
   static constexpr bool centroid_cache_exists = (false || ... || centroid_cache_defined<TCompetence> ());
 
-  /** Helper function to check if class T implements the function neighbor_cache_filled.
+  /** Helper function to check if \a T implements the function neighbor_cache_filled.
    * \tparam T The competence to be checked.
    * \return true if T implements the function, false if not.
    */
@@ -374,7 +374,7 @@ class element: public TCompetence<element<TCompetence...>>... {
    * Getter for the mesh to which the element belongs.
    * \return Reference to the mesh.
    */
-  const mesh_class*
+  const mesh_type*
   get_mesh () const
   {
     return m_mesh;
@@ -412,7 +412,7 @@ class element: public TCompetence<element<TCompetence...>>... {
     return t8_forest_get_tree_class (m_mesh->m_forest, m_tree_id);
   }
 
-  const mesh_class* m_mesh;       /**< Pointer to the mesh the element is defined for. */
+  const mesh_type* m_mesh;        /**< Pointer to the mesh the element is defined for. */
   const t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
   const t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
   const bool m_is_ghost_element;  /**< Flag to indicate if the element is a ghost element. */
@@ -420,4 +420,3 @@ class element: public TCompetence<element<TCompetence...>>... {
 };
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_ELEMENT_HXX */

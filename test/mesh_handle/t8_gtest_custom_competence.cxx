@@ -76,7 +76,7 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
   }
 };
 
-/** This tests checks that custom defined competences can be used for the mesh class 
+/** This tests checks that custom defined competences can be used for \ref t8_mesh_handle::mesh 
  *  and that we can use the functionality defined in the competence. 
  * Also checks that we can use more than one custom competence and that predefined competences can be additionally used.
  */
@@ -97,8 +97,8 @@ TEST (t8_gtest_custom_competence, custom_competence)
   }
 
   // Test with two custom competences and a predefined competence.
-  using mesh_class = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
-  mesh_class mesh_more_competences = mesh_class (forest);
+  using mesh_type = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  mesh_type mesh_more_competences = mesh_type (forest);
 
   for (auto it = mesh_more_competences.begin (); it != mesh_more_competences.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());

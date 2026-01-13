@@ -40,7 +40,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 
 /** Parametrized test fixture for the ghost tests. */
-class t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override
@@ -154,7 +155,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
   }
 }
 
-/** Child class of \ref t8_mesh_handle::cache_neighbors that allows to modify the cache variables for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_neighbors that allows to modify the cache variables for test purposes. */
 template <typename TUnderlying>
 struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderlying>
 {
@@ -172,21 +173,21 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
   }
 };
 
-/** Use child class of \ref t8_mesh_handle::cache_neighbors class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_neighbors to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache variables to a unrealistic values and 
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
-  using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
-  using element_class = mesh_class::element_class;
-  mesh_class mesh = mesh_class (forest);
-  EXPECT_TRUE (element_class::has_face_neighbor_cache ());
+  using mesh_type = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
+  using element_type = mesh_type::element_type;
+  mesh_type mesh = mesh_type (forest);
+  EXPECT_TRUE (element_type::has_face_neighbor_cache ());
 
   if (mesh.get_num_local_elements () == 0) {
     GTEST_SKIP () << "No local elements in the mesh to test the cache functionality.";
   }
-  const std::vector<const element_class*> unrealistic_neighbors
+  const std::vector<const element_type*> unrealistic_neighbors
     = { &mesh[0], &mesh[mesh.get_num_local_elements () - 1] };
   const std::vector<int> unrealistic_dual_faces = { 100, 1012000 };
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {

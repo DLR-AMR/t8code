@@ -37,7 +37,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
-/** Child class of \ref t8_mesh_handle::cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_coordinates<TUnderlying>
 {
@@ -52,7 +52,7 @@ struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_c
   }
 };
 
-/** Child class of \ref t8_mesh_handle::cache_centroid that allows to modify the cache variable for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_centroid that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlying>
 {
@@ -68,7 +68,8 @@ struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlyi
 };
 
 /** Test fixture for cache competence tests. */
-class t8_gtest_cache_competence: public testing::Test {
+struct t8_gtest_cache_competence: public testing::Test
+{
  protected:
   void
   SetUp () override
@@ -89,17 +90,17 @@ class t8_gtest_cache_competence: public testing::Test {
   int level;
 };
 
-/** Use child class of \ref t8_mesh_handle::cache_vertex_coordinates class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_vertex_coordinates to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
-  using mesh_class = t8_mesh_handle::mesh<cache_vertex_coordinates_overwrite>;
-  using element_class = mesh_class::element_class;
-  mesh_class mesh = mesh_class (forest);
-  EXPECT_TRUE (element_class::has_vertex_cache ());
-  EXPECT_FALSE (element_class::has_centroid_cache ());
+  using mesh_type = t8_mesh_handle::mesh<cache_vertex_coordinates_overwrite>;
+  using element_type = mesh_type::element_type;
+  mesh_type mesh = mesh_type (forest);
+  EXPECT_TRUE (element_type::has_vertex_cache ());
+  EXPECT_FALSE (element_type::has_centroid_cache ());
 
   std::vector<t8_3D_point> unrealistic_vertex = { t8_3D_point ({ 41, 42, 43 }), t8_3D_point ({ 99, 100, 101 }) };
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
@@ -122,17 +123,17 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
   }
 }
 
-/** Use child class of \ref t8_mesh_handle::cache_centroid class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_centroid to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST_F (t8_gtest_cache_competence, cache_centroid)
 {
-  using mesh_class = t8_mesh_handle::mesh<cache_centroid_overwrite>;
-  using element_class = mesh_class::element_class;
-  mesh_class mesh = mesh_class (forest);
-  EXPECT_FALSE (element_class::has_vertex_cache ());
-  EXPECT_TRUE (element_class::has_centroid_cache ());
+  using mesh_type = t8_mesh_handle::mesh<cache_centroid_overwrite>;
+  using element_type = mesh_type::element_type;
+  mesh_type mesh = mesh_type (forest);
+  EXPECT_FALSE (element_type::has_vertex_cache ());
+  EXPECT_TRUE (element_type::has_centroid_cache ());
 
   t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
