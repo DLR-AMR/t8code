@@ -1,4 +1,4 @@
-name: CMake tests t8code
+name: test t8code linkage
 
 
 #  This file is part of t8code.
@@ -44,8 +44,8 @@ on:
         type: string
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
-        
-jobs:  
+
+jobs:
   t8code_cmake_tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
@@ -62,6 +62,9 @@ jobs:
       run: tar -xf artifact.tar && rm artifact.tar
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
+    - name: enable caching of build artifacts
+      run: export MPICH_CC='ccache gcc'
+           export MPICH_CXX='ccache g++'
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -79,44 +82,107 @@ jobs:
 #
 #  T8CODE
 #
+#
     # build config vars
     - name: Set test level
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
       run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake"
-        && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-    # cmake and test
-    - name: Printing MPI compiler info
-      run: mpicc --version && mpirun --version
-    - name: Printing GCC compiler info
-      run: gcc --version && g++ --version
+           && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+    # cmake and test with netcdf
+    - name: check NetCDF
+      run: echo "Checking NetCDF"
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS
-    - name: cmake
-      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NETCDF=ON
+    - name: cmake MPI NetCDF debug
+      run: mkdir build_netcdf && cd build_netcdf && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_NETCDF=ON
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v6
       with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-        path: build/CMakeFiles/CMakeOutput.log
-    - name: ninja
-      run: cd build && ninja $MAKEFLAGS
+        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
+        path: build_netcdf/CMakeFiles/CMakeOutput.log
+    - name: make
+      run: cd build_netcdf && ninja $MAKEFLAGS
     - name: ninja install
-      run: cd build && ninja install $MAKEFLAGS
+      run: cd build_netcdf && ninja install $MAKEFLAGS
     - name: serial tests (if MPI is enabled)
-      run: cd build && ctest $MAKEFLAGS -R _serial
+      run: cd build_netcdf && ctest $MAKEFLAGS -R _serial
       if: ${{ inputs.MPI == 'ON' }}
     - name: parallel tests (if MPI is enabled)
-      run: cd build && ctest -R _parallel
+      run: cd build_netcdf && ctest -R _parallel
       if: ${{ inputs.MPI == 'ON' }}
     - name: tests (if MPI is disabled)
-      run: cd build && ctest $MAKEFLAGS
+      run: cd build_netcdf && ctest $MAKEFLAGS
       if: ${{ inputs.MPI == 'OFF' }}
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v6
       with:
-        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-        path: build/Testing/Temporary/LastTest.log
+        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_NetCDF.log
+        path: build_netcdf/Testing/Temporary/LastTest.log
+# cmake and test with OpenCASCADE
+    - name: check OpenCASCADE
+      run: echo "Checking OpenCASCADE"
+    - name: echo cmake line
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
+    - name: cmake OpenCASCADE
+      run: mkdir build_occ && cd build_occ && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
+        path: build_occ/CMakeFiles/CMakeOutput.log
+    - name: make
+      run: cd build_occ && ninja $MAKEFLAGS
+    - name: ninja install
+      run: cd build_occ && ninja install $MAKEFLAGS
+    - name: serial tests (if MPI is enabled)
+      run: cd build_occ && ctest $MAKEFLAGS -R _serial
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: parallel tests (if MPI is enabled)
+      run: cd build_occ && ctest -R _parallel
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
+      run: cd build_occ && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_OCC.log
+        path: build_occ/Testing/Temporary/LastTest.log
+# cmake and test with VTK
+    - name: check VTK
+      run: echo "Checking VTK"
+    - name: echo cmake line
+      run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
+    - name: cmake MPI VTK debug
+      run: mkdir build_vtk && cd build_vtk && cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
+        path: build_vtk/CMakeFiles/CMakeOutput.log
+    - name: make
+      run: cd build_vtk && ninja $MAKEFLAGS
+    - name: ninja install
+      run: cd build_vtk && ninja install $MAKEFLAGS
+    - name: serial tests (if MPI is enabled)
+      run: cd build_vtk && ctest $MAKEFLAGS -R _serial
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: parallel tests (if MPI is enabled)
+      run: cd build_vtk && ctest -R _parallel
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
+      run: cd build_vtk && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_VTK.log
+        path: build_vtk/Testing/Temporary/LastTest.log

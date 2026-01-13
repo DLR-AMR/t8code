@@ -1,10 +1,11 @@
-name: Valgrind check
+name: test t8code with shipped submodules
+
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element types in parallel.
 #
-#  Copyright (C) 2025 the developers
+#  Copyright (C) 2024 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -19,6 +20,9 @@ name: Valgrind check
 #  You should have received a copy of the GNU General Public License
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+env:
+  DEBUG_CONFIG: "-O1"
 
 on:
   workflow_call:
@@ -41,54 +45,49 @@ on:
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
 
-jobs:  
-  valgrind_check:
-    timeout-minutes: 95
+jobs:
+  t8code_cmake_tests:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     steps:
 #
 # Setup
 #
-    - name: Download artifacts
-      uses: actions/download-artifact@v7
+    - uses: actions/checkout@v6
       with:
-        name: SC_P4EST_MPI_${{ inputs.MPI }}
-    - name: untar artifact
-      run: tar -xf artifact.tar && rm artifact.tar
+        fetch-depth: 0
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
-      # This seems to be necessary because of the docker container.
+      # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
+    - name: init submodules
+      run: git submodule init
+    - name: update submodules
+      run: git submodule update
     - name: Get input vars
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
         && export MPI="${{ inputs.MPI }}"
         && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
-        && export SC_PATH=$PWD/sc/build/$BUILD_TYPE
-        && export P4EST_PATH=$PWD/p4est/build/$BUILD_TYPE
         && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
         && echo MPI="$MPI" >> $GITHUB_ENV
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
-        && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
-        && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
-    ## Install Valgrind.
-    - name: Install Valgrind
-      run: sudo apt-get install -y valgrind
-    - name: Print Valgrind version
-      run: valgrind --version
-
 #
 #  T8CODE
 #
-    # Build config vars
+    # build config vars
     - name: Set test level
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON"
+      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-    # cmake
+    # cmake and test
+    - name: Printing MPI compiler info
+      run: mpicc --version && mpirun --version
+    - name: Printing GCC compiler info
+      run: gcc --version && g++ --version
     - name: echo cmake line
       run: echo cmake ../ $CONFIG_OPTIONS
     - name: cmake
@@ -97,14 +96,24 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v6
       with:
-        name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        name: cmake_w_submodules_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
     - name: ninja
       run: cd build && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
-    # Execute script that runs a Valgrind check for all test binaries. 
-    # We use 3 parallel processes to run the binaries in parallel with MPI.
-    - name: Valgrind check
-      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh --ntasks=3
-    
+    - name: serial tests (if MPI is enabled)
+      run: cd build && ctest $MAKEFLAGS -R _serial
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: parallel tests (if MPI is enabled)
+      run: cd build && ctest -R _parallel
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
+      run: cd build && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: test-suite_w_submodules_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        path: build/Testing/Temporary/LastTest.log

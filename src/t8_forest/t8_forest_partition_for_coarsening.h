@@ -26,7 +26,7 @@
  */
 
 #ifndef T8_FOREST_PFC_H
-#define T8_FOREST_ITERATE_H
+#define T8_FOREST_PFC_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
@@ -48,4 +48,4 @@ void
 t8_forest_pfc_correction_offsets (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
-#endif /* T8_FOREST_ITERATE_H */
+#endif /* T8_FOREST_PFC_H */
