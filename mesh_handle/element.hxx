@@ -21,7 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file element.hxx
- * Definition of the element class of the \ref t8_mesh_handle::mesh handle (can be ghost or mesh elements).
+ *  Definition of the element class of the \ref t8_mesh_handle::mesh handle (can be ghost or mesh elements).
  */
 
 #ifndef T8_ELEMENT_HXX
@@ -69,9 +69,8 @@ class element: public TCompetence<element<TCompetence...>>... {
   using mesh_class = mesh<TCompetence...>;  /**< Type of the mesh class used. */
   friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
 
-  /**
-   * Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
-   * This constructor should only be called by the mesh_class (and invisible for the user).
+  /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
+   *  This constructor should only be called by the mesh_class (and invisible for the user).
    * \param [in] mesh             Pointer to the mesh the element should belong to.
    * \param [in] tree_id          The tree id of the element in the forest defining the mesh.
    * \param [in] element_id       The element id of the element in the forest defining the mesh.
@@ -80,6 +79,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
     : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id), m_is_ghost_element (is_ghost_element)
   {
+    // Cache the t8_element_t from the forest as it is often used.
     if (m_is_ghost_element) {
       // The local ghost tree id is per definition the local tree id - number of local (non-ghost) trees.
       m_element = t8_forest_ghost_get_leaf_element (
@@ -89,158 +89,225 @@ class element: public TCompetence<element<TCompetence...>>... {
       m_element = t8_forest_get_leaf_element_in_tree (m_mesh->m_forest, m_tree_id, m_element_id);
     }
 
-    if constexpr (neighbor_cache_exists) {
-      // Resize neighbor caches for clean access to the caches.
-      const int num_faces = this->get_num_faces ();
+    // Resize caches for clean access where the cache vector may not be filled completely at once.
+    if constexpr (has_face_neighbor_cache ()) {
+      const int num_faces = get_num_faces ();
       this->m_num_neighbors.resize (num_faces);
       this->m_dual_faces.resize (num_faces);
       this->m_neighbors.resize (num_faces);
     }
+    if constexpr (has_face_area_cache ()) {
+      const int num_faces = get_num_faces ();
+      this->m_face_area.resize (num_faces);
+    }
+    if constexpr (has_face_centroid_cache ()) {
+      const int num_faces = get_num_faces ();
+      this->m_face_centroid.resize (num_faces);
+    }
+    if constexpr (has_face_normal_cache ()) {
+      const int num_faces = get_num_faces ();
+      this->m_face_normal.resize (num_faces);
+    }
   }
-
-  // --- Variables to check which functionality is defined in TCompetence. ---
-  /** Helper function to check if class T implements the function vertex_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  vertex_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.vertex_cache_filled (); };
-  }
-  /** This variable is true if any of the given competences \a TCompetence implements 
-  a function vertex_cache_filled. */
-  static constexpr bool vertex_cache_exists = (false || ... || vertex_cache_defined<TCompetence> ());
-
-  /** Helper function to check if class T implements the function centroid_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  centroid_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.centroid_cache_filled (); };
-  }
-  /** This variable is true if any of the given competences \a TCompetence implements 
-  a function centroid_cache_filled. */
-  static constexpr bool centroid_cache_exists = (false || ... || centroid_cache_defined<TCompetence> ());
-
-  /** Helper function to check if class T implements the function neighbor_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  neighbor_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.neighbor_cache_filled (0); };
-  }
-  /** This variable is true if any of the given competences \a TCompetence implements 
-  a function neighbor_cache_filled. */
-  static constexpr bool neighbor_cache_exists = (false || ... || neighbor_cache_defined<TCompetence> ());
 
  public:
   // --- Public functions to check if caches exist. ---
-  /**
-   * Function that checks if a cache for the vertex coordinates exists.
+  /** Function that checks if a cache for the element's volume exists.
+   * \return true if a cache exists, false otherwise.
+   */
+  static constexpr bool
+  has_volume_cache ()
+  {
+    return (false || ... || volume_cache_defined<TCompetence> ());
+  }
+  /** Function that checks if a cache for the element's diameter exists.
+   * \return true if a cache exists, false otherwise.
+   */
+  static constexpr bool
+  has_diameter_cache ()
+  {
+    return (false || ... || diameter_cache_defined<TCompetence> ());
+  }
+  /** Function that checks if a cache for the vertex coordinates exists.
    * \return true if a cache for the vertex coordinates exists, false otherwise.
    */
   static constexpr bool
   has_vertex_cache ()
   {
-    return vertex_cache_exists;
+    return (false || ... || vertex_cache_defined<TCompetence> ());
   }
 
-  /**
-   * Function that checks if a cache for the centroid exists.
+  /** Function that checks if a cache for the centroid exists.
    * \return true if a cache for the centroid exists, false otherwise.
    */
   static constexpr bool
   has_centroid_cache ()
   {
-    return centroid_cache_exists;
+    return (false || ... || centroid_cache_defined<TCompetence> ());
   }
 
-  /**
-   * Function that checks if a cache for the face neighbors exists.
+  /** Function that checks if a cache for the face neighbors exists.
    * \return true if a cache exists, false otherwise.
    */
   static constexpr bool
   has_face_neighbor_cache ()
   {
-    return neighbor_cache_exists;
+    return (false || ... || neighbor_cache_defined<TCompetence> ());
+  }
+  /** Function that checks if a cache for the element's face area exists.
+   * \return true if a cache exists, false otherwise.
+   */
+  static constexpr bool
+  has_face_area_cache ()
+  {
+    return (false || ... || face_area_cache_defined<TCompetence> ());
+  }
+
+  /** Function that checks if a cache for the element's face centroid exists.
+   * \return true if a cache exists, false otherwise.
+   */
+  static constexpr bool
+  has_face_centroid_cache ()
+  {
+    return (false || ... || face_centroid_cache_defined<TCompetence> ());
+  }
+
+  /** Function that checks if a cache for the element's face normal exists.
+   * \return true if a cache exists, false otherwise.
+   */
+  static constexpr bool
+  has_face_normal_cache ()
+  {
+    return (false || ... || face_normal_cache_defined<TCompetence> ());
   }
 
   // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
-  /**
-   * Getter for the refinement level of the element.
-   * For this easily accessible variable, it makes no sense to provide a cached version.
+  /** Getter for the refinement level of the element.
+   *  For this easily accessible variable, it makes no sense to provide a cached version.
    * \return Refinement level of the element.
    */
   t8_element_level
   get_level () const
   {
-    const t8_eclass_t eclass = get_tree_class ();
-    const t8_element_t* element = get_element ();
-    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_level (eclass, element);
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_level (get_tree_class (), m_element);
   }
 
-  /**
-   * Getter for the number of faces of the element.
-   * For this easily accessible variable, it makes no sense to provide a cached version.
+  /** Getter for the number of faces of the element.
+   *  For this easily accessible variable, it makes no sense to provide a cached version.
    * \return Number of faces of the element.
    */
   int
   get_num_faces () const
   {
-    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_faces (get_tree_class (), get_element ());
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_faces (get_tree_class (), m_element);
   }
 
-  /**
-   * Getter for the element's shape.
-   * For this easily accessible variable, it makes no sense to provide a cached version.
+  /** Getter for the number of vertices of the element.
+   *  For this easily accessible variable, it makes no sense to provide a cached version.
+   * \return Number of vertices of the element.
+   */
+  int
+  get_num_vertices () const
+  {
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_corners (get_tree_class (), m_element);
+  }
+
+  /** Getter for the element's shape.
+   *  For this easily accessible variable, it makes no sense to provide a cached version.
    * \return The shape of the element.
    */
   t8_element_shape_t
   get_shape () const
   {
-    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_shape (get_tree_class (), get_element ());
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_shape (get_tree_class (), m_element);
   }
 
-  /**
-   * Getter for the vertex coordinates of the element.
-   * This function uses or sets the cached version defined in TCompetence if available and calculates if not.
+  /** Getter for the element's volume.
+   *  This is only an approximation.
+   *  This function uses or sets the cached version defined in TCompetence if available and calculates if not.
+   * \return The volume of the element.
+   */
+  double
+  get_volume () const
+  {
+    if constexpr (has_volume_cache ()) {
+      if (!this->volume_cache_filled ()) {
+        // Fill cache.
+        this->m_volume = t8_forest_element_volume (m_mesh->m_forest, m_tree_id, m_element);
+      }
+      return this->m_volume.value ();
+    }
+    return t8_forest_element_volume (m_mesh->m_forest, m_tree_id, m_element);
+  }
+
+  /** Getter for the element's diameter.
+   *  This is only an approximation.
+   *  This function uses or sets the cached version defined in TCompetence if available and calculates if not.
+   * \return The diameter of the element.
+   */
+  double
+  get_diameter () const
+  {
+    if constexpr (has_diameter_cache ()) {
+      if (!this->diameter_cache_filled ()) {
+        // Fill cache.
+        this->m_diameter = t8_forest_element_diam (m_mesh->m_forest, m_tree_id, m_element);
+      }
+      return this->m_diameter.value ();
+    }
+    return t8_forest_element_diam (m_mesh->m_forest, m_tree_id, m_element);
+  }
+
+  /** Getter for the vertex coordinates of the element.
+   *  This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
   std::vector<t8_3D_point>
   get_vertex_coordinates () const
   {
-    // Check if we have a cached version and if the cache has already been filled.
-    if constexpr (vertex_cache_exists) {
+    if constexpr (has_vertex_cache ()) {
       if (this->vertex_cache_filled ()) {
         return this->m_vertex_coordinates;
       }
     }
     // Calculate the vertex coordinates.
-    const t8_element_t* element = get_element ();
-    const int num_corners
-      = t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_corners (get_tree_class (), element);
+    const int num_corners = get_num_vertices ();
     std::vector<t8_3D_point> vertex_coordinates (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
-      t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, element, icorner, vertex_coordinates[icorner].data ());
+      t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, m_element, icorner,
+                                    vertex_coordinates[icorner].data ());
     }
     // Fill the cache in the cached version.
-    if constexpr (vertex_cache_exists) {
+    if constexpr (has_vertex_cache ()) {
       this->m_vertex_coordinates = std::move (vertex_coordinates);
       return this->m_vertex_coordinates;
     }
     return vertex_coordinates;
   }
 
-  /**
-   * Getter for the center of mass of the element.
+  /** Getter for the coordinates of one specific vertex of the element.
+   *  This function uses or sets the cached version defined in TCompetence if available and calculates if not.
+   *  The cache is filled for all vertices simultaneously.
+   * \param [in] vertex Index of the vertex.
+   * \return Coordinates of the vertex.
+   */
+  t8_3D_point
+  get_vertex_coordinates (int vertex) const
+  {
+    T8_ASSERT (vertex < get_num_vertices ());
+    // Check if we have a cached version and if the cache has already been filled.
+    if constexpr (has_vertex_cache ()) {
+      if (!this->vertex_cache_filled ()) {
+        get_vertex_coordinates ();
+      }
+      return this->m_vertex_coordinates[vertex];
+    }
+    t8_3D_point coordinates;
+    t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, m_element, vertex, coordinates.data ());
+    return coordinates;
+  }
+
+  /** Getter for the center of mass of the element.
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
@@ -248,15 +315,15 @@ class element: public TCompetence<element<TCompetence...>>... {
   get_centroid () const
   {
     // Check if we have a cached version and if the cache has already been filled.
-    if constexpr (centroid_cache_exists) {
+    if constexpr (has_centroid_cache ()) {
       if (this->centroid_cache_filled ()) {
         return this->m_centroid.value ();
       }
     }
     t8_3D_point coordinates;
-    t8_forest_element_centroid (m_mesh->m_forest, m_tree_id, get_element (), coordinates.data ());
+    t8_forest_element_centroid (m_mesh->m_forest, m_tree_id, m_element, coordinates.data ());
     // Fill the cache in the cached version.
-    if constexpr (centroid_cache_exists) {
+    if constexpr (has_centroid_cache ()) {
       this->m_centroid = coordinates;
     }
     return coordinates;
@@ -271,8 +338,9 @@ class element: public TCompetence<element<TCompetence...>>... {
   std::vector<const SelfType*>
   get_face_neighbors (int face, std::optional<std::reference_wrapper<std::vector<int>>> dual_faces = std::nullopt) const
   {
+    T8_ASSERT (face < get_num_faces ());
     SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
-    if constexpr (neighbor_cache_exists) {
+    if constexpr (has_face_neighbor_cache ()) {
       if (this->neighbor_cache_filled (face)) {
         if (dual_faces) {
           dual_faces->get () = this->m_dual_faces[face];
@@ -280,14 +348,14 @@ class element: public TCompetence<element<TCompetence...>>... {
         return this->m_neighbors[face];
       }
     }
-    std::vector<std::reference_wrapper<SelfType>> neighbor_elements;
+
     t8_element_t** neighbors; /**< Neighboring elements. */
     int* dual_faces_internal; /**< Face indices of the neighbor elements. */
     int num_neighbors;        /**< Number of neighboring elements. */
     t8_locidx_t* neighids;    /**< Neighboring elements ids. */
     t8_eclass_t neigh_class;  /**< Neighboring elements tree class. */
 
-    t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, get_element (), &neighbors, face, &dual_faces_internal,
+    t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, m_element, &neighbors, face, &dual_faces_internal,
                                    &num_neighbors, &neighids, &neigh_class, t8_forest_is_balanced (m_mesh->m_forest));
     if (dual_faces) {
       dual_faces->get ().assign (dual_faces_internal, dual_faces_internal + num_neighbors);
@@ -296,7 +364,7 @@ class element: public TCompetence<element<TCompetence...>>... {
     for (int ineighs = 0; ineighs < num_neighbors; ineighs++) {
       neighbors_handle.push_back (&((*m_mesh)[neighids[ineighs]]));
     }
-    if constexpr (neighbor_cache_exists) {
+    if constexpr (has_face_neighbor_cache ()) {
       // Also store num_neighbors in cache to indicate that the cache is filled if a face does not have any neighbor.
       this->m_num_neighbors[face] = num_neighbors;
       this->m_dual_faces[face].assign (dual_faces_internal, dual_faces_internal + num_neighbors);
@@ -309,27 +377,114 @@ class element: public TCompetence<element<TCompetence...>>... {
       T8_FREE (dual_faces_internal);
       T8_FREE (neighids);
     }
-    if constexpr (neighbor_cache_exists) {
+    if constexpr (has_face_neighbor_cache ()) {
       return this->m_neighbors[face];
     }
     return neighbors_handle;
   }
 
-  /**
-   * Function to fill the face neighbor cache for all faces of the mesh element.
+  /** Function to fill the face neighbor cache for all faces of the mesh element.
    */
   void
   fill_face_neighbor_cache () const
-    requires (neighbor_cache_exists)
+    requires (has_face_neighbor_cache ())
   {
     for (int iface = 0; iface < get_num_faces (); iface++) {
       get_face_neighbors (iface);
     }
   }
 
+  // --- Getter for face properties. ---
+  /** The area of a face of the element.
+   *  This is only an approximation.
+   *  This function uses the cached version defined in TCompetence if available and calculates if not.
+   * \param [in] face Index of a face of the element.
+   * \return The area of \a face.
+   */
+  double
+  get_face_area (int face) const
+  {
+    T8_ASSERT (face < get_num_faces ());
+    if constexpr (has_face_area_cache ()) {
+      if (!this->face_area_cache_filled (face)) {
+        this->m_face_area[face] = t8_forest_element_face_area (m_mesh->m_forest, m_tree_id, m_element, face);
+      }
+      return this->m_face_area[face].value ();
+    }
+    return t8_forest_element_face_area (m_mesh->m_forest, m_tree_id, m_element, face);
+  }
+
+  /** The centroid of a face of the element.
+   *  This function uses the cached version defined in TCompetence if available and calculates if not.
+   * \param [in] face Index of a face of the element.
+   * \return The centroid of \a face.
+   */
+  t8_3D_point
+  get_face_centroid (int face) const
+  {
+    T8_ASSERT (face < get_num_faces ());
+    if constexpr (has_face_centroid_cache ()) {
+      if (this->face_centroid_cache_filled (face)) {
+        return this->m_face_centroid[face].value ();
+      }
+    }
+    t8_3D_point coordinates;
+    t8_forest_element_face_centroid (m_mesh->m_forest, m_tree_id, m_element, face, coordinates.data ());
+    if constexpr (has_face_centroid_cache ()) {
+      this->m_face_centroid[face] = coordinates;
+    }
+    return coordinates;
+  }
+
+  /** The normal vector of a face of the element.
+   *  This function uses the cached version defined in TCompetence if available and calculates if not.
+   * \param [in] face Index of a face of the element.
+   * \return The normal vector of \a face.
+   */
+  t8_3D_vec
+  get_face_normal (int face) const
+  {
+    T8_ASSERT (face < get_num_faces ());
+    if constexpr (has_face_normal_cache ()) {
+      if (this->face_normal_cache_filled (face)) {
+        return this->m_face_normal[face].value ();
+      }
+    }
+    t8_3D_vec normal;
+    t8_forest_element_face_normal (m_mesh->m_forest, m_tree_id, m_element, face, normal.data ());
+    if constexpr (has_face_normal_cache ()) {
+      this->m_face_normal[face] = normal;
+    }
+    return normal;
+  }
+
+  /** Getter for the element's face shape.
+   *  For this easily accessible variable, it makes no sense to provide a cached version.
+   * \param [in] face Index of a face of the element.
+   * \return The shape of the face of the element.
+   */
+  t8_element_shape_t
+  get_face_shape (int face) const
+  {
+    T8_ASSERT (face < get_num_faces ());
+    return t8_forest_get_scheme (m_mesh->m_forest)->element_get_face_shape (get_tree_class (), m_element, face);
+  }
+
+  // --- Print for the element for debugging purpose. ---
+#if T8_ENABLE_DEBUG
+  /** Print the element. 
+   *  For example, print the coordinates and level of a triangle.  
+   *  This function is only available in the debugging configuration.
+   */
+  void
+  print_element_debug () const
+  {
+    t8_forest_get_scheme (m_mesh->m_forest)->element_debug_print (get_tree_class (), m_element);
+  }
+#endif
+
   // --- Function to access mesh specific id. ---
-  /**
-   * Getter for the index of the element in the mesh to which the element belongs.
+  /** Getter for the index of the element in the mesh to which the element belongs.
    * \return The local element id of the element in the mesh.
    */
   t8_locidx_t
@@ -345,10 +500,9 @@ class element: public TCompetence<element<TCompetence...>>... {
   }
 
   //--- Getter for the member variables. ---
-  /**
-   * Getter for the tree id of the element in the forest related to the mesh.
-   * \warning This is related to t8code's tree structure and should not be confused with \ref mesh specific ids.
-   * This function is mainly relevant for writing custom competences that need to access t8code functionality.
+  /** Getter for the tree id of the element in the forest related to the mesh.
+   *  \warning This is related to t8code's tree structure and should not be confused with \ref mesh specific ids.
+   *  This function is mainly relevant for writing custom competences that need to access t8code functionality.
    * \return The element's local tree id in the forest.
    */
   t8_locidx_t
@@ -357,11 +511,10 @@ class element: public TCompetence<element<TCompetence...>>... {
     return m_tree_id;
   }
 
-  /**
-   * Getter for the local element id in the tree of the element in the forest related to the mesh.
-   * \warning This is related to t8code's tree structure and should not be confused with \ref mesh specific ids.
-   * For mesh specific id use \ref get_element_handle_id. 
-   * This function is mainly relevant for writing custom competences that need to access t8code functionality.
+  /** Getter for the local element id in the tree of the element in the forest related to the mesh.
+   *  \warning This is related to t8code's tree structure and should not be confused with \ref mesh specific ids.
+   *  For mesh specific id use \ref get_element_handle_id. 
+   *  This function is mainly relevant for writing custom competences that need to access t8code functionality.
    * \return The local element id in the tree of the element in the forest.
    */
   t8_locidx_t
@@ -370,8 +523,7 @@ class element: public TCompetence<element<TCompetence...>>... {
     return m_element_id;
   }
 
-  /**
-   * Getter for the mesh to which the element belongs.
+  /** Getter for the mesh to which the element belongs.
    * \return Reference to the mesh.
    */
   const mesh_class*
@@ -380,8 +532,7 @@ class element: public TCompetence<element<TCompetence...>>... {
     return m_mesh;
   }
 
-  /**
-   * Function to check if the element is a ghost element.
+  /** Function to check if the element is a ghost element.
    * \return true if the element is a ghost element, false otherwise.
    */
   bool
@@ -391,19 +542,15 @@ class element: public TCompetence<element<TCompetence...>>... {
   }
 
  private:
-  //--- Private getter for internal use. ---
-  /**
-   * Getter for the leaf element of the element.
-   * \return The leaf element.
-   */
-  const t8_element_t*
-  get_element () const
-  {
-    return m_element;
-  }
+  // --- Private member variables. ---
+  mesh_class* m_mesh;             /**< Pointer to the mesh the element is defined for. */
+  const t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
+  const t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
+  const bool m_is_ghost_element;  /**< Flag to indicate if the element is a ghost element. */
+  const t8_element_t* m_element;  /**< Cache the pointer to element in the forest as this is often needed. */
 
-  /**
-   * Getter for the eclass of the tree of the element.
+  // --- Private helper function. ---
+  /** Getter for the eclass of the tree of the element.
    * \return The eclass of the element's tree.
    */
   t8_eclass_t
@@ -412,11 +559,87 @@ class element: public TCompetence<element<TCompetence...>>... {
     return t8_forest_get_tree_class (m_mesh->m_forest, m_tree_id);
   }
 
-  const mesh_class* m_mesh;       /**< Pointer to the mesh the element is defined for. */
-  const t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
-  const t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
-  const bool m_is_ghost_element;  /**< Flag to indicate if the element is a ghost element. */
-  const t8_element_t* m_element;  /**< Cache the pointer to element in the forest as this is often needed. */
+  // --- Private variables to check which functionality is defined in TCompetence. ---
+  /** Helper function to check if class T implements the function volume_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  volume_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.volume_cache_filled (); };
+  }
+  /** Helper function to check if class T implements the function diameter_cache_defined.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  diameter_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.diameter_cache_filled (); };
+  }
+  /** Helper function to check if class T implements the function vertex_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  vertex_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.vertex_cache_filled (); };
+  }
+  /** Helper function to check if class T implements the function centroid_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  centroid_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.centroid_cache_filled (); };
+  }
+  /** Helper function to check if class T implements the function neighbor_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  neighbor_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.neighbor_cache_filled (0); };
+  }
+  /** Helper function to check if class T implements the function face_area_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  face_area_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.face_area_cache_filled (0); };
+  }
+  /** Helper function to check if class T implements the function face_centroid_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  face_centroid_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.face_centroid_cache_filled (0); };
+  }
+  /** Helper function to check if class T implements the function face_normal_cache_filled.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  face_normal_cache_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.face_normal_cache_filled (0); };
+  }
 };
 
 }  // namespace t8_mesh_handle
