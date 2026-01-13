@@ -478,9 +478,9 @@ t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *we
   forest->weight_function = weight_fcn;
 }
 
-// Compute forest->element_offsets according to the weight function, if provided
-/* Calculate the new element_offset for forest from
- * the element in forest->set_from assuming a partition without element weights */
+/** Calculate the new element_offset for forest from the elements in forest->set_from.
+ *  Unless a weight function has been set via \ref t8_forest_set_partition_weight_function,
+ *  a partition without element weights is assumed. */
 static void
 t8_forest_partition_compute_new_offset (t8_forest_t forest)
 {
@@ -523,7 +523,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   }
 
   // If no weight function is provided, compute the offsets solely based on the number of elements.
-  if (forest->weight_function == nullptr) {
+  if (weight_fcn == nullptr) {
     if (t8_shmem_array_start_writing (forest->element_offsets)) {
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
 

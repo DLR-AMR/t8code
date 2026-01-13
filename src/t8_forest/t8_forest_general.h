@@ -55,7 +55,7 @@ typedef enum {
 typedef void (*t8_generic_function_pointer) (void);
 
 /**
- * The prototype a weight function for the partition algorithm.
+ * The prototype of a weight function for the partition algorithm.
  * The function should be pure, and return a positive weight given a forest, a local tree index and an element index within the local tree
  */
 typedef double (t8_weight_fcn_t) (t8_forest_t, t8_locidx_t, t8_locidx_t);

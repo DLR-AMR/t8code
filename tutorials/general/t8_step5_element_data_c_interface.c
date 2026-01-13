@@ -81,7 +81,7 @@ t8_step5_build_forest (sc_MPI_Comm comm, int level)
   t8_forest_init (&forest_apbg);
   t8_forest_set_user_data (forest_apbg, &adapt_data);
   t8_forest_set_adapt (forest_apbg, forest, t8_step3_adapt_callback, 0);
-  t8_forest_set_partition (forest_apbg, NULL, 0, nullptr);
+  t8_forest_set_partition (forest_apbg, NULL, 0);
   t8_forest_set_balance (forest_apbg, NULL, 0);
   t8_forest_set_ghost (forest_apbg, 1, T8_GHOST_FACES);
   t8_forest_commit (forest_apbg);
