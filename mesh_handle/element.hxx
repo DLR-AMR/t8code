@@ -441,7 +441,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
     SC_CHECK_ABORT (!m_is_ghost_element, "Element data cannot be set for ghost elements.\n");
     // Resize for the case that no data vector has been set previously.
     m_mesh->m_element_data.resize (m_mesh->get_num_local_elements () + m_mesh->get_num_ghosts ());
-    m_mesh->m_element_data[get_element_handle_id ()] = element_data;
+    m_mesh->m_element_data[get_element_handle_id ()] = std::move(element_data);
   }
 
  private:

@@ -68,7 +68,7 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
   t8_forest_ghost_print (forest);
 
-  const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
+  const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
   if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
     // Ensure that we actually have ghost elements in this test.
@@ -104,7 +104,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 {
   ASSERT_TRUE (t8_forest_is_committed (forest));
 
-  const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
+  const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
@@ -183,7 +183,7 @@ TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  const mesh_class mesh = mesh_class (forest);
+  const mesh_class mesh (forest);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   if (mesh.get_num_local_elements () == 0) {

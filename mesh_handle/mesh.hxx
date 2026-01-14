@@ -206,8 +206,7 @@ class mesh {
     update_elements ();
     if constexpr (!std::is_void<TElementData>::value) {
       t8_global_infof (
-        "The elements of the mesh handle have been updated. Please note that the element data is not interpolated "
-        "automatically. Use the function set_element_data() to provide new adapted element data.\n");
+        "The forest of the mesh handle has been updated. Please note that the element data in the mesh has to be updated accordingly. Use the function set_element_data() to provide element data fitting to the new forest.\n");
     }
   }
 

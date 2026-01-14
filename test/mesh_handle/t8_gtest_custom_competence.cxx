@@ -91,7 +91,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
 
   // Check mesh with custom defined competence.
   using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<dummy_get_level>>;
-  const mesh_class_custom mesh = mesh_class_custom (forest);
+  const mesh_class_custom mesh (forest);
 
   for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());

@@ -57,7 +57,7 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
 
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
-  mesh_class mesh = mesh_class (forest);
+  mesh_class mesh (forest);
 
   struct dummy_user_data user_data = {
     t8_3D_point ({ 41, 42, 43 }), /* Midpoints of the sphere. */
@@ -93,7 +93,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 1, sc_MPI_COMM_WORLD);
 
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, void, data_per_element>;
-  mesh_class mesh = mesh_class (forest);
+  mesh_class mesh (forest);
   if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
     EXPECT_GT (mesh.get_num_ghosts (), 0);
