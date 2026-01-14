@@ -29,6 +29,8 @@ on:
 jobs:
     monthly_release:
         runs-on: ubuntu-latest
+        outputs:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
         steps:
             #checkout main branch
             - name: Checkout code
@@ -85,14 +87,17 @@ jobs:
         with:
             TEST_LEVEL: 'T8_TEST_LEVEL_BASIC'
         needs: monthly_release
-        secrets: inherit
-
     upload_tarball:
-        uses: actions/upload-release-asset@v1
-        env:
-            GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
-        with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./build/tarballs/T8CODE-${{ env.VERSION_NAME }}.tar.gz
-            asset_name: T8CODE-${{ env.VERSION_NAME }}.tar.gz
-            asset_content_type: application/gzip
+        runs-on: ubuntu-latest
+        needs: t8code_tarball
+        steps:
+            - name: Upload release asset
+              uses: actions/upload-release-asset@v1
+              with:
+                  upload_url: ${{ needs.monthly_release.outputs.upload_url }}
+                  asset_path: ./build/tarballs/T8CODE-${{ env.VERSION_NAME }}.tar.gz
+                  asset_name: T8CODE-${{ env.VERSION_NAME }}.tar.gz
+                  asset_content_type: application/gzip
+              env:
+                  GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
+
