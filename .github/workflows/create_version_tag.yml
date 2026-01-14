@@ -81,12 +81,13 @@ jobs:
                 release_name: ${{ env.VERSION_NAME }}
               env:
                 GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
-    
+
     t8code_tarball:
-        uses: ./.github/workflows/t8code_tarball.yml
+        uses: ./.github/workflows/test_tarball.yml
         with:
             TEST_LEVEL: 'T8_TEST_LEVEL_BASIC'
         needs: monthly_release
+
     upload_tarball:
         runs-on: ubuntu-latest
         needs: t8code_tarball
