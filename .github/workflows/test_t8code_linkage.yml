@@ -64,6 +64,8 @@ jobs:
       run: sudo apt-get update && sudo apt-get upgrade -y
     - name: enable caching of build artifacts
       run: PATH=/usr/lib/ccache:$PATH
+           which gcc
+           mpicxx --show
            ccache -s
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
