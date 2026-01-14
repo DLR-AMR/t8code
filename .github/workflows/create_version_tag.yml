@@ -97,7 +97,7 @@ jobs:
 
     upload_tarball:
         runs-on: ubuntu-latest
-        needs: t8code_tarball
+        needs: [t8code_tarball, monthly_release]
         steps:
             - name: Upload release asset
               uses: actions/upload-release-asset@v1
