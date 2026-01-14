@@ -257,7 +257,6 @@ class mesh {
   /** 
   * Exchange the element data for ghost elements between processes.
   * This routine has to be called on each process after setting the element data for all local elements.
-  * \return The element data vector of size num_local_elements + num_local_ghosts with data of Type TElementDataType.
   */
   template <typename ElementDataType = TElementDataType,
             typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
