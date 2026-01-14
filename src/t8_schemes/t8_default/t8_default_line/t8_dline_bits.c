@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_dline_bits.c
+ * Implements functions declared in \ref t8_dline_bits.h.
+ */
+
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 
 int
