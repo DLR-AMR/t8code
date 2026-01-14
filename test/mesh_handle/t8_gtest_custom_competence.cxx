@@ -83,7 +83,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
   // Check mesh with custom defined competence.
   using mesh_class = t8_mesh_handle::mesh<dummy_get_level>;
   const int level = 1;
-  const auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
   for (auto it = mesh->begin (); it != mesh->end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
@@ -91,10 +91,10 @@ TEST (t8_gtest_custom_competence, custom_competence)
   }
 
   // Test with two custom competences and a predefined competence.
-  using mesh_class_more_cmpetences
+  using mesh_class_more_competences
     = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
   auto mesh_more_competences
-    = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class_more_cmpetences> (level, sc_MPI_COMM_WORLD);
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class_more_competences> (level, sc_MPI_COMM_WORLD);
 
   for (auto it = mesh_more_competences->begin (); it != mesh_more_competences->end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());

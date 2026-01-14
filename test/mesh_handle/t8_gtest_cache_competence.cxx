@@ -73,7 +73,7 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_vertex_coordinates_overwrite>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_vertex_cache ());
 
   std::vector<t8_3D_point> unrealistic_vertex = { t8_3D_point ({ 41, 42, 43 }), t8_3D_point ({ 99, 100, 101 }) };
@@ -106,7 +106,7 @@ TEST (t8_gtest_cache_competence, cache_centroid)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_centroid_overwrite>;
   using element_class = mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_centroid_cache ());
 
   t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
