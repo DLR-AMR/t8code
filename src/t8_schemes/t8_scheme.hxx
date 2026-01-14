@@ -640,7 +640,7 @@ class t8_scheme {
    *                      the face number of this face. Otherwise -1.
    * \note For the root element this function always returns \a face.
    */
-  constexpr int
+  int
   element_face_get_ancestor_face (const t8_eclass_t tree_class, const t8_element_t *element, const int ancestor_level,
                                   const int face) const
   {
