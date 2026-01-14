@@ -79,6 +79,9 @@ jobs:
                 draft: false
                 prerelease: false
                 release_name: ${{ env.VERSION_NAME }}
+                tag_name: ${{ env.VERSION_NAME }}
+                body: |
+                  Release notes for ${{ env.VERSION_NAME }}
               env:
                 GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
 
