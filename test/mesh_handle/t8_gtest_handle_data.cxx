@@ -103,7 +103,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   for (const auto &elem : mesh) {
     element_data.push_back ({ elem.get_level (), elem.get_volume () });
   }
-  mesh.set_element_data (element_data);
+  mesh.set_element_data (std::move (element_data));
   // Get element data and check that the data for all elements (including ghosts) is correct.
   auto mesh_element_data = mesh.exchange_ghost_data ();
   for (t8_locidx_t ielem = 0; ielem < mesh.get_num_local_elements () + mesh.get_num_ghosts (); ielem++) {

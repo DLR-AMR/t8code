@@ -422,10 +422,13 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * Element data for non-ghost elements can be accessed (if set) directly.
    * \return Element data with data of Type mesh_class::ElementDataType.
    */
-  template <typename E = typename mesh_class::ElementDataType, typename = std::enable_if_t<!std::is_void<E>::value>>
-  const E&
+  template <typename TElementDataType = typename mesh_class::ElementDataType,
+            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
+  const TElementDataType&
   get_element_data () const
   {
+    const t8_locidx_t handle_id = get_element_handle_id ();
+    T8_ASSERTF (handle_id < m_mesh->m_element_data.size (), "Element data not set.\n");
     return m_mesh->m_element_data[get_element_handle_id ()];
   }
 
@@ -434,14 +437,15 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * \note You can only set element data for non-ghost elements.
    * \param [in] element_data The element data to be set.
    */
-  template <typename E = typename mesh_class::ElementDataType, typename = std::enable_if_t<!std::is_void<E>::value>>
+  template <typename TElementDataType = typename mesh_class::ElementDataType,
+            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
   void
-  set_element_data (E element_data)
+  set_element_data (TElementDataType element_data)
   {
     SC_CHECK_ABORT (!m_is_ghost_element, "Element data cannot be set for ghost elements.\n");
     // Resize for the case that no data vector has been set previously.
     m_mesh->m_element_data.resize (m_mesh->get_num_local_elements () + m_mesh->get_num_ghosts ());
-    m_mesh->m_element_data[get_element_handle_id ()] = std::move(element_data);
+    m_mesh->m_element_data[get_element_handle_id ()] = std::move (element_data);
   }
 
  private:

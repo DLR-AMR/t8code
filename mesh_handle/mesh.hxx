@@ -38,22 +38,30 @@
 namespace t8_mesh_handle
 {
 
+/** Concept to ensure that a type is MPI safe.
+ */
+template <typename TType>
+concept T8MPISafeType
+  = std::is_void_v<TType> || (std::is_trivially_copyable_v<TType> && std::is_standard_layout_v<TType>);
+
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
  * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
  *         \see element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref competence_pack class.
- * \tparam TUserData The user data type you want to associate with the mesh. Use void (this is also the default) if you do not want to set user data.
- * \tparam TElementData The element data type you want to use for each element of the mesh. 
+ * \tparam TUserDataType The user data type you want to associate with the mesh. Use void (this is also the default) if you do not want to set user data.
+ * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
+ *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
  *         Use void (this is also the default) if you do not want to set element data.
  */
-template <typename TCompetencePack = competence_pack<>, typename TUserData = void, typename TElementData = void>
+template <typename TCompetencePack = competence_pack<>, typename TUserDataType = void,
+          T8MPISafeType TElementDataType = void>
 class mesh {
  public:
-  using SelfType = mesh<TCompetencePack, TUserData,
-                        TElementData>;  /**< Type of the current class with all template parameters specified. */
-  using UserDataType = TUserData;       /**< Make Type of the user data accessible. */
-  using ElementDataType = TElementData; /**< Make Type of the element data accessible. */
+  using SelfType = mesh<TCompetencePack, TUserDataType,
+                        TElementDataType>;  /**< Type of the current class with all template parameters specified. */
+  using UserDataType = TUserDataType;       /**< Make Type of the user data accessible. */
+  using ElementDataType = TElementDataType; /**< Make Type of the element data accessible. */
   using element_class
     = TCompetencePack::template apply<SelfType, element>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
@@ -134,7 +142,7 @@ class mesh {
   }
 
   /**
-   * Non-const version of \ref cbegin.
+   * Returns an iterator to the first (local) mesh element.
    * \return Iterator to the first (local) mesh element.
    */
   mesh_iterator
@@ -144,7 +152,7 @@ class mesh {
   }
 
   /**
-   * Non-const version of \ref end.
+   * Returns an iterator to a mesh element following the last (local) element of the mesh.
    * \return Iterator to the mesh element following the last (local) element of the mesh.
    */
   mesh_iterator
@@ -204,19 +212,20 @@ class mesh {
     T8_ASSERT (t8_forest_is_committed (input_forest));
     m_forest = input_forest;
     update_elements ();
-    if constexpr (!std::is_void<TElementData>::value) {
-      t8_global_infof (
-        "The forest of the mesh handle has been updated. Please note that the element data in the mesh has to be updated accordingly. Use the function set_element_data() to provide element data fitting to the new forest.\n");
+    if constexpr (!std::is_void<TElementDataType>::value) {
+      t8_global_infof ("The forest of the mesh handle has been updated. Please note that the element data in the mesh "
+                       "has to be updated accordingly. Use the function set_element_data() to provide element data "
+                       "fitting to the new forest.\n");
     }
   }
 
   /** 
    * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
-   * \param [in] data The user data of class TUserData. Data will never be touched by mesh handling routines.
+   * \param [in] data The user data of class TUserDataType. Data will never be touched by mesh handling routines.
    */
-  template <typename U = TUserData, typename = std::enable_if_t<!std::is_void<U>::value>>
+  template <typename UserDataType = TUserDataType, typename = std::enable_if_t<!std::is_void<UserDataType>::value>>
   void
-  set_user_data (const U& data)
+  set_user_data (const UserDataType& data)
   {
     t8_forest_set_user_data (m_forest, data);
   }
@@ -225,36 +234,37 @@ class mesh {
    * Get the user data of the mesh. 
    * \return The user data previously set using \ref set_user_data.   
    */
-  template <typename U = TUserData, typename = std::enable_if_t<!std::is_void<U>::value>>
-  const U&
+  template <typename UserDataType = TUserDataType, typename = std::enable_if_t<!std::is_void<UserDataType>::value>>
+  const UserDataType&
   get_user_data () const
   {
-    return *static_cast<const U*> (t8_forest_get_user_data (m_forest));
+    return *static_cast<const UserDataType*> (t8_forest_get_user_data (m_forest));
   }
 
   /** 
    * Set the element data vector. The vector should have the length of num_local_elements.
-   * \param [in] element_data The element data vector to set with one entry of class TElementData 
+   * \param [in] element_data The element data vector to set with one entry of class TElementDataType 
    *            for each local mesh element (excluding ghosts).
    */
-  template <typename E = TElementData, typename = std::enable_if_t<!std::is_void<E>::value>>
+  template <typename ElementDataType = TElementDataType,
+            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
   void
-  set_element_data (const std::vector<E>& element_data)
+  set_element_data (std::vector<ElementDataType> element_data)
   {
     T8_ASSERT (element_data.size () == get_num_local_elements ());
-    m_element_data.clear ();
+    m_element_data = std::move (element_data);
     m_element_data.resize (get_num_local_elements () + get_num_ghosts ());
-    std::copy (element_data.begin (), element_data.end (), m_element_data.begin ());
   }
 
   /** 
    * Get the element data vector.
    * The element data of the local mesh elements can be set using \ref set_element_data.
    * If ghost entries should be filled, one should call \ref exchange_ghost_data on each process first.
-   * \return Element data vector with data of Type TElementData.
+   * \return Element data vector with data of Type TElementDataType.
    */
-  template <typename E = TElementData, typename = std::enable_if_t<!std::is_void<E>::value>>
-  const std::vector<E>&
+  template <typename ElementDataType = TElementDataType,
+            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
+  const std::vector<ElementDataType>&
   get_element_data () const
   {
     return m_element_data;
@@ -263,16 +273,17 @@ class mesh {
   /** 
   * Exchange the element data for ghost elements between processes.
   * This routine has to be called on each process after setting the element data for all local elements.
-  * \return The element data vector of size num_local_elements + num_local_ghosts with data of Type TElementData.
+  * \return The element data vector of size num_local_elements + num_local_ghosts with data of Type TElementDataType.
   */
-  template <typename E = TElementData, typename = std::enable_if_t<!std::is_void<E>::value>>
-  const std::vector<E>&
+  template <typename ElementDataType = TElementDataType,
+            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
+  const std::vector<ElementDataType>&
   exchange_ghost_data ()
   {
     // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
     sc_array* sc_array_wrapper;
     T8_ASSERT (m_element_data.size () == get_num_local_elements () + get_num_ghosts ());
-    sc_array_wrapper = sc_array_new_data (m_element_data.data (), sizeof (TElementData),
+    sc_array_wrapper = sc_array_new_data (m_element_data.data (), sizeof (ElementDataType),
                                           get_num_local_elements () + get_num_ghosts ());
 
     // Data exchange: entries with indices > num_local_elements will get overwritten.
@@ -322,7 +333,7 @@ class mesh {
   t8_forest_t m_forest;                  /**< The forest the mesh should be defined for. */
   std::vector<element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
-  std::conditional_t<!std::is_void_v<TElementData>, std::vector<TElementData>, std::nullptr_t>
+  std::conditional_t<!std::is_void_v<TElementDataType>, std::vector<TElementDataType>, std::nullptr_t>
     m_element_data; /**< Vector storing the (local) element data. */
 };
 

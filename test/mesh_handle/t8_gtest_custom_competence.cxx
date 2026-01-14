@@ -102,7 +102,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
   // Test with two custom competences and a predefined competence.
   using competences = t8_mesh_handle::competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
   using mesh_class = t8_mesh_handle::mesh<competences>;
-  mesh_class mesh_more_competences = mesh_class (forest);
+  mesh_class mesh_more_competences (forest);
 
   for (auto it = mesh_more_competences.cbegin (); it != mesh_more_competences.cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());

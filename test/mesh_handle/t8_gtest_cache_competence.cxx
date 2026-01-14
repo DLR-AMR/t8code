@@ -115,7 +115,7 @@ TEST_F (t8_gtest_cache_competence, cache_volume)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_volume_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  const mesh_class mesh = mesh_class (forest);
+  const mesh_class mesh (forest);
   EXPECT_TRUE (element_class::has_volume_cache ());
 
   double unrealistic_volume = -3000;
