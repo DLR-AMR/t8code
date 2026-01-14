@@ -76,7 +76,7 @@ class t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme> {
    *                      the face number of this face. Otherwise -1.
    * \note For the root element this function always returns \a face.
    */
-  inline int
+  inline constexpr int
   element_face_get_ancestor_face (const t8_element_t *element, const int ancestor_level, const int face) const
   {
     auto underlying_impl = this->underlying ();  // Reference to the underlying scheme implementation
