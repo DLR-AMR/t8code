@@ -79,14 +79,6 @@ class t8_gtest_cache_competence: public testing::Test {
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }
 
-  void
-  TearDown () override
-  {
-    if (forest->rc.refcount > 0) {
-      t8_forest_unref (&forest);
-    }
-  }
-
   t8_forest_t forest;
   int level;
 };
