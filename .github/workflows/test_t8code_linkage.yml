@@ -63,8 +63,8 @@ jobs:
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
     - name: enable caching of build artifacts
-      run: export MPICH_CC='ccache gcc'
-           export MPICH_CXX='ccache g++'
+      run: PATH=/usr/lib/ccache:$PATH
+           ccache -s
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -107,6 +107,8 @@ jobs:
       run: cd build_netcdf && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build_netcdf && ninja install $MAKEFLAGS
+    - name: verify ccache
+      run: ccache -s
     - name: serial tests (if MPI is enabled)
       run: cd build_netcdf && ctest $MAKEFLAGS -R _serial
       if: ${{ inputs.MPI == 'ON' }}
