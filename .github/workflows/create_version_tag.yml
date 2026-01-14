@@ -64,14 +64,35 @@ jobs:
             # Create version name accessible in the following steps
             - name: Set version name
               run: |
-                echo "VERSION_NAME=v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+                # Use format vMAJOR.MINOR.PATCH-YY.MM e.g., v1.2.3-24.06 for June 2024
+
+                VERSION_NAME="v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-$(date +'%Y.%m')"
+                echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
                 echo "VERSION_NAME=$VERSION_NAME"
-            # Create a new version tag
-            - name: Create version tag
-              run: |
-                  git config user.email "t8ddy.bot@gmail.com"
-                  git config user.name "t8ddy"
-                  # configure remote to use the secret token for pushing
-                  git remote set-url origin https://x-access-token:${{ secrets.T8DDY_TOKEN }}@github.com/${{ github.repository }}
-                  git tag "${{ env.VERSION_NAME }}"
-                  git push origin --tags
+            # Create a new version release
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              with: 
+                draft: false
+                prerelease: false
+                release_name: ${{ env.VERSION_NAME }}
+                env:
+                    GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
+    
+    t8code_tarball:
+        uses: ./.github/workflows/t8code_tarball.yml
+        with:
+            TEST_LEVEL: 'T8_TEST_LEVEL_BASIC'
+        needs: monthly_release
+        secrets: inherit
+
+    upload_tarball:
+        uses: actions/upload-release-asset@v1
+        env:
+            GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
+        with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            asset_path: ./build/tarballs/T8CODE-${{ env.VERSION_NAME }}.tar.gz
+            asset_name: T8CODE-${{ env.VERSION_NAME }}.tar.gz
+            asset_content_type: application/gzip
