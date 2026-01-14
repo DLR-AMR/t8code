@@ -26,11 +26,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_schemes.hxx>
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/element.hxx>
 #include <mesh_handle/competences.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -81,12 +79,6 @@ class t8_gtest_cache_competence: public testing::Test {
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }
 
-  void
-  TearDown () override
-  {
-    t8_forest_unref (&forest);
-  }
-
   t8_forest_t forest;
   int level;
 };
@@ -97,12 +89,11 @@ class t8_gtest_cache_competence: public testing::Test {
  */
 TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
-
-  using mesh_element = t8_mesh_handle::element<cache_vertex_coordinates_overwrite>;
-  t8_mesh_handle::mesh<mesh_element> mesh = t8_mesh_handle::mesh<mesh_element> (forest);
-  EXPECT_TRUE (mesh_element::has_vertex_cache ());
-  EXPECT_FALSE (mesh_element::has_centroid_cache ());
+  using mesh_class = t8_mesh_handle::mesh<cache_vertex_coordinates_overwrite>;
+  using element_class = mesh_class::element_class;
+  mesh_class mesh = mesh_class (forest);
+  EXPECT_TRUE (element_class::has_vertex_cache ());
+  EXPECT_FALSE (element_class::has_centroid_cache ());
 
   std::vector<t8_3D_point> unrealistic_vertex = { t8_3D_point ({ 41, 42, 43 }), t8_3D_point ({ 99, 100, 101 }) };
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
@@ -131,12 +122,11 @@ TEST_F (t8_gtest_cache_competence, cache_vertex_coordinates)
  */
 TEST_F (t8_gtest_cache_competence, cache_centroid)
 {
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
-
-  using mesh_element = t8_mesh_handle::element<cache_centroid_overwrite>;
-  t8_mesh_handle::mesh<mesh_element> mesh = t8_mesh_handle::mesh<mesh_element> (forest);
-  EXPECT_FALSE (mesh_element::has_vertex_cache ());
-  EXPECT_TRUE (mesh_element::has_centroid_cache ());
+  using mesh_class = t8_mesh_handle::mesh<cache_centroid_overwrite>;
+  using element_class = mesh_class::element_class;
+  mesh_class mesh = mesh_class (forest);
+  EXPECT_FALSE (element_class::has_vertex_cache ());
+  EXPECT_TRUE (element_class::has_centroid_cache ());
 
   t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
