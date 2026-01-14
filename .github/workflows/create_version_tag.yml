@@ -66,6 +66,7 @@ jobs:
                   fi
             # Create version name accessible in the following steps
             - name: Set version name
+              id: set_version_name
               run: |
                 # Use format vMAJOR.MINOR.PATCH-YY.MM e.g., v1.2.3-24.06 for June 2024
 
