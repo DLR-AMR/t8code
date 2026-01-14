@@ -30,6 +30,7 @@
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
+#include <t8_forest/t8_forest_general.h>
 
 /**
  * \brief Test two elements for equality and print the elements if they aren't equal
@@ -105,5 +106,28 @@ dimensional_equality (const char *Dimensional_1_expr, const char *Dimensional_2_
 
 #define EXPECT_VEC_EQ(Dimensional_1, Dimensional_2, precision) \
   EXPECT_PRED_FORMAT3 (dimensional_equality, (Dimensional_1), (Dimensional_2), (precision))
+
+/**
+ * \brief Test two forests for equality.
+ *
+ * \param[in] forest_A_expr The name of the forest \a forest_A
+ * \param[in] forest_B_expr The name of the forest \a forest_B
+ * \param[in] forest_A      The forest to ompare with \a forest_B
+ * \param[in] forest_B      The forest to ompare with \a forest_A
+ * \return testing::AssertionResult
+ */
+testing::AssertionResult
+forest_equality (const char *forest_A_expr, const char *forest_B_expr, const t8_forest_t forest_A,
+                 const t8_forest_t forest_B)
+{
+  if (t8_forest_is_equal (forest_A, forest_B)) {
+    return testing::AssertionSuccess ();
+  }
+  else {
+    return testing::AssertionFailure () << forest_A_expr << " is not equal to " << forest_B_expr;
+  }
+}
+
+#define EXPECT_FOREST_EQ(forest_A, forest_B) EXPECT_PRED_FORMAT2 (forest_equality, (forest_A), (forest_B))
 
 #endif /* T8_GTEST_CUSTOM_ASSERTION_HXX */

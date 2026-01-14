@@ -26,7 +26,7 @@
 /** Print a vertex (unused static helper function for debugging)
  * \param [in] v  vertex to be considered.
  */
-inline static void
+[[maybe_unused]] inline static void
 t8_dvertex_debug_print (const t8_dvertex_t *v)
 {
   t8_debugf ("level: %i\n", v->level);

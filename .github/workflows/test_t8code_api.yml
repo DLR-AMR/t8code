@@ -1,4 +1,4 @@
-name: CMake tests t8code api
+name: test t8code api
 
 
 #  This file is part of t8code.
@@ -45,7 +45,7 @@ on:
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
 
-jobs:  
+jobs:
   t8code_cmake_tests:
     timeout-minutes: 60
     runs-on: ubuntu-latest
@@ -89,7 +89,7 @@ jobs:
            && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake and test with api options
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS 
+      run: echo cmake ../ $CONFIG_OPTIONS
     - name: cmake
       run: mkdir build_api && cd build_api && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
