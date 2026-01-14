@@ -203,23 +203,6 @@ class mesh {
   }
 
   /** 
-   * Setter for the forest. 
-   * \param [in] input_forest The forest from which the mesh should be a wrapper. 
-   */
-  void
-  set_forest (t8_forest_t input_forest)
-  {
-    T8_ASSERT (t8_forest_is_committed (input_forest));
-    m_forest = input_forest;
-    update_elements ();
-    if constexpr (!std::is_void<TElementDataType>::value) {
-      t8_global_infof ("The forest of the mesh handle has been updated. Please note that the element data in the mesh "
-                       "has to be updated accordingly. Use the function set_element_data() to provide element data "
-                       "fitting to the new forest.\n");
-    }
-  }
-
-  /** 
    * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
    * \param [in] data The user data of class TUserDataType. Data will never be touched by mesh handling routines.
    */
@@ -253,7 +236,8 @@ class mesh {
   {
     T8_ASSERT (element_data.size () == get_num_local_elements ());
     m_element_data = std::move (element_data);
-    m_element_data.resize (get_num_local_elements () + get_num_ghosts ());
+    m_element_data.reserve (get_num_local_elements () + get_num_ghosts ());
+    m_element_data.resize (get_num_local_elements ());
   }
 
   /** 
@@ -277,12 +261,12 @@ class mesh {
   */
   template <typename ElementDataType = TElementDataType,
             typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
-  const std::vector<ElementDataType>&
+  void
   exchange_ghost_data ()
   {
     // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
     sc_array* sc_array_wrapper;
-    T8_ASSERT (m_element_data.size () == get_num_local_elements () + get_num_ghosts ());
+    m_element_data.resize (get_num_local_elements () + get_num_ghosts ());
     sc_array_wrapper = sc_array_new_data (m_element_data.data (), sizeof (ElementDataType),
                                           get_num_local_elements () + get_num_ghosts ());
 
@@ -290,10 +274,26 @@ class mesh {
     t8_forest_ghost_exchange_data (m_forest, sc_array_wrapper);
 
     sc_array_destroy (sc_array_wrapper);
-    return m_element_data;
   }
 
  private:
+  /** 
+   * Setter for the forest. 
+   * \param [in] input_forest The forest from which the mesh should be a wrapper. 
+   */
+  void
+  set_forest (t8_forest_t input_forest)
+  {
+    T8_ASSERT (t8_forest_is_committed (input_forest));
+    m_forest = input_forest;
+    update_elements ();
+    if constexpr (!std::is_void<TElementDataType>::value) {
+      t8_global_infof ("The forest of the mesh handle has been updated. Please note that the element data in the mesh "
+                       "has to be updated accordingly. Use the function set_element_data() to provide element data "
+                       "fitting to the new forest.\n");
+    }
+  }
+
   /** 
    * Update the storage of the mesh elements according to the current forest. 
    */
