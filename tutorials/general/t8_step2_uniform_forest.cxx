@@ -25,7 +25,7 @@
  * After we learned how to create a cmesh in step1, we will
  * now build our first partitioned forest, get its local and global
  * element count, and output it into .vtu files.
- * 
+ *
  * When we create a forest from a coarse mesh, the forest will always be
  * uniform (every element has the same refinement level) and can then be adapted
  * later (see the following steps).
@@ -34,7 +34,7 @@
  * are etc.
  * The default scheme in t8_schemes/t8_default/t8_default.hxx provides an implementation for
  * all element shapes that t8code supports (with pyramids currently under construction).
- * 
+ *
  * How you can experiment here:
  *  - Use Paraview to visualize the output files.
  *  - Execute this program with different numbers of processes.
@@ -45,14 +45,14 @@
  */
 
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and general interface. */
 #include <t8_forest/t8_forest_io.h>             /* forest io interface. */
 #include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
 #include <string>
 
-/** Builds cmesh of 2 prisms that build up a unit cube. 
+/** Builds cmesh of 2 prisms that build up a unit cube.
  * See step1 for a detailed description.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
@@ -69,7 +69,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
   return cmesh;
 }
 
-/** Build a uniform forest on a cmesh 
+/** Build a uniform forest on a cmesh
  * using the default refinement scheme.
  * \param [in] comm   MPI Communicator to use.
  * \param [in] cmesh  The coarse mesh to use.
@@ -92,7 +92,7 @@ t8_step2_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 /** Write vtk (or more accurately vtu) files of the forest.
  * \param [in] forest   A forest.
  * \param [in] prefix   A string that is used as a prefix of the output files.
- * 
+ *
  * This will create the file prefix.pvtu
  * and additionally one file prefix_MPIRANK.vtu per MPI rank.
  */
@@ -161,7 +161,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [step2] Created uniform forest.\n");
   t8_global_productionf (" [step2] Refinement level:\t\t\t%i\n", level);
   t8_global_productionf (" [step2] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [step2] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
+  t8_global_productionf (" [step2] Global number of elements:\t%" T8_GLOIDX_FORMAT "\n", global_num_elements);
 
   /* Write forest to vtu files. */
   t8_step2_write_forest_vtk (forest, prefix);

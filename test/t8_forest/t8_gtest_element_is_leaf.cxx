@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
@@ -37,7 +37,7 @@
 
 /* Maximum uniform level for forest. */
 
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
 #define T8_IS_LEAF_MAX_LVL 3
 #else
 #define T8_IS_LEAF_MAX_LVL 4

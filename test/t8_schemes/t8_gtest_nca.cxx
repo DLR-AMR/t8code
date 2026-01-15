@@ -66,7 +66,7 @@ class nca: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
 
 /**
  * Test the nca for the children of the root-element
- * 
+ *
  */
 TEST_P (nca, nca_check_shallow)
 {
@@ -106,7 +106,7 @@ TEST_P (nca, nca_check_deep)
     num_children = scheme->element_get_num_children (tree_class, tmp);
     for (child_id = 0; child_id < num_children; child_id++) {
       scheme->element_get_child (tree_class, tmp, child_id, correct_nca);
-      /* Compute first and last descendant at every level up to elem_max_lvl. 
+      /* Compute first and last descendant at every level up to elem_max_lvl.
        * They have the correct_nca as the nca */
       for (check_lvl_a = lvl + 1; check_lvl_a < elem_max_level; check_lvl_a++) {
         scheme->element_get_first_descendant (tree_class, correct_nca, desc_a, check_lvl_a);
@@ -142,8 +142,8 @@ TEST_P (nca, nca_check_deep)
 
 /**
  * Recursively check the computation of the nca of all possible combination of descendants of the
- * \a correct_nca that have \a correct_nca as the nca. 
- * 
+ * \a correct_nca that have \a correct_nca as the nca.
+ *
  * \param[in] correct_nca       The correct nearest common ancestor
  * \param[in] desc_a            Storage for the computation of a descendant of \correct_nca
  * \param[in] desc_b            Storage for the computation of a descendant of \correct_nca
@@ -189,23 +189,23 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
          * This makes debugging a lot easier, as one can reconstruct the descendants
          * via t8_element_set_linear_id and can directly test them instead of waiting
          * until the recursion reaches the faulty computation. */
-        t8_debugf ("id of desc_a: %li, level: %i\n",
-                   static_cast<long> (scheme->element_get_linear_id (tree_class, desc_a, level_a)), level_a);
-        t8_debugf ("id of desc_b: %li, level: %i\n",
-                   static_cast<long> (scheme->element_get_linear_id (tree_class, desc_b, level_b)), level_b);
+        t8_debugf ("id of desc_a: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                   scheme->element_get_linear_id (tree_class, desc_a, level_a), level_a);
+        t8_debugf ("id of desc_b: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                   scheme->element_get_linear_id (tree_class, desc_b, level_b), level_b);
 
         for (int k = SC_MAX (level_a, level_b); k >= 0; k--) {
-          t8_debugf ("id of desc_a: %li, level: %i\n",
-                     static_cast<long> (scheme->element_get_linear_id (tree_class, desc_a, k)), k);
-          t8_debugf ("id of desc_b: %li, level: %i\n",
-                     static_cast<long> (scheme->element_get_linear_id (tree_class, desc_b, k)), k);
+          t8_debugf ("id of desc_a: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                     scheme->element_get_linear_id (tree_class, desc_a, k), k);
+          t8_debugf ("id of desc_b: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                     scheme->element_get_linear_id (tree_class, desc_b, k), k);
         }
 
-        t8_debugf ("id of the correct nca: %li, level: %i\n",
-                   static_cast<long> (scheme->element_get_linear_id (tree_class, check_nca, level_c)), level_c);
+        t8_debugf ("id of the correct nca: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                   scheme->element_get_linear_id (tree_class, check_nca, level_c), level_c);
 
-        t8_debugf ("id of the computed nca: %li, level: %i\n",
-                   static_cast<long> (scheme->element_get_linear_id (tree_class, check, level_nca)), level_nca);
+        t8_debugf ("id of the computed nca: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                   scheme->element_get_linear_id (tree_class, check, level_nca), level_nca);
 
         SC_ABORT ("Computed nca is not the correct nca!\n");
       }
@@ -220,11 +220,11 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
 }
 
 /* Recursively check the computation of the nca. recursion_depth defines up to which
- * level we compute descendants of correct_nca that should have correct_nca as the 
+ * level we compute descendants of correct_nca that should have correct_nca as the
  * output of element_get_nca.*/
 TEST_P (nca, recursive_check)
 {
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
   const int recursion_depth = 2;
 #else
   const int recursion_depth = 3;
@@ -255,17 +255,17 @@ TEST_P (nca, recursive_check)
 }
 
 /* Test the nca recursively for elements in the middle of the uniform refinement tree
- * up to the maximal level. 
+ * up to the maximal level.
  * Be careful when increasing the max_lvl, as it increases the number of test-cases exponentially. */
 TEST_P (nca, recursive_check_higher_level)
 {
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
   const int start_level = 2;
 #else
   const int start_level = 3;
 #endif
 
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int max_lvl = scheme->get_maxlevel (tree_class) / 2;
 #else
   const int max_lvl = scheme->get_maxlevel (tree_class);
@@ -292,7 +292,7 @@ TEST_P (nca, recursive_check_higher_level)
     /* Initialization for recursive_nca_check */
     num_children = scheme->element_get_num_children (tree_class, correct_nca_high_level);
     if (num_children > 1) {
-      /* Compute children on two different branches in the tree an test them. 
+      /* Compute children on two different branches in the tree an test them.
        * This ensures, that the nca of all their descendants has to be correct_nca_high_level*/
       for (k = 0; k < num_children; k++) {
         scheme->element_get_child (tree_class, correct_nca_high_level, k, parent_a);

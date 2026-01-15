@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
@@ -129,7 +129,7 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   /* start with an empty level */
   min_level = SC_MAX (0, min_level - 1);
   t8_debugf ("Testing ghost exchange with start level %i\n", min_level);
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
   const int max_level = min_level + 2;
 #else
   const int max_level = min_level + 3;

@@ -21,7 +21,7 @@
 */
 
 /**
- * \file This files gives a template for strong types in t8code.
+ * \file t8_type.hxx This files gives a template for strong types in t8code.
  */
 
 #ifndef T8_TYPE_HXX
@@ -31,12 +31,12 @@
 #include <functional>
 
 /**
- * \brief An implementation of strong type with additional competences.
+ *  An implementation of strong type with additional competences.
  *
  * This class template allows the creation of a type that can be extended with
  * multiple competences. Each competence is a template class that takes the
  * main type as a template parameter.
- * 
+ *
  * This is heavily inspired by (and taken from) https://www.fluentcpp.com/2016/12/08/strong-types-for-strong-interfaces/
  *
  * \tparam T The type of the value to be stored.
@@ -46,29 +46,33 @@
 template <typename T, typename Parameter, template <typename> class... competence>
 class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
+  /** The type of the value stored in this strong type. */
   using value_type = T;
+  /** The tag of the value stored in this strong type. */
+  using tag = Parameter;
 
+  /** Default constructor */
   explicit constexpr T8Type () = default;
 
+  /** Constructor with value */
   explicit constexpr T8Type (const T& value): value_ (value)
   {
   }
 
   /**
-   * \brief Construct a new T8Type object
-   * 
-   * \tparam T_ref 
-   * \param value 
-   * 
-   * \note This constructor is only enabled if T is not a reference.
+   *  Construct a new T8Type object
+   *
+   * \param value
+   *
+   * \note This constructor is only enabled if T is not a reference value.
    */
-  template <typename T_ref = T>
-  explicit constexpr T8Type (T&& value,
-                             typename std::enable_if<!std::is_reference<T_ref> {}, std::nullptr_t>::type = nullptr)
-    : value_ (std::move (value))
+  explicit constexpr T8Type (T&& value)
+    requires (!std::is_reference_v<T>)
+    : value_ (std::forward<T> (value))
   {
   }
 
+  /** Copy constructor */
   constexpr T8Type&
   operator= (const T& value)
   {
@@ -76,22 +80,32 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
     return *this;
   }
 
+  /**
+   *  Get a reference to the stored value.
+   *
+   * \return A reference to the stored value.
+   */
   constexpr T&
   get () noexcept
   {
     return value_;
   }
 
+  /**
+   *  Get a const reference to the stored value.
+   *
+   * \return A const reference to the stored value.
+   */
   constexpr T const&
   get () const noexcept
   {
-    return std::move (value_);
+    return value_;
   }
 
   /** Implicit conversion to value type
    * to cast a variable instance of this class into its
    * value_type for example for printing.
-   * 
+   *
    * \note to future devs: If this causes trouble in the future when we create a
    *  type that is not easily (or should not be) convertible to its base type,
    *  we can wrap this inside an enable_if condition and only allow the conversion
@@ -109,7 +123,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
 namespace std
 {
 /**
- * \brief Functor for hashing T8Type objects.
+ *  Functor for hashing T8Type objects.
  *
  * This struct defines a functor that computes the hash value of a T8Type object.
  * It uses the std::hash function to generate the hash value based on the underlying
@@ -125,9 +139,17 @@ namespace std
 template <typename T, typename Parameter, template <typename> class... competence>
 struct hash<T8Type<T, Parameter, competence...>>
 {
+  /** The implementation of the T8Type with the given competences. */
   using T8TypeImpl = T8Type<T, Parameter, competence...>;
+  /** Check if the T8TypeImpl is hashable. */
   using checkIfHashable = typename std::enable_if<T8TypeImpl::is_hashable, void>::type;
 
+  /**
+   * Compute the hash value of a T8Type object.
+   *
+   * \param x The T8Type object to hash.
+   * \return The computed hash value.
+   */
   size_t
   operator() (T8Type<T, Parameter, competence...> const& x) const
   {

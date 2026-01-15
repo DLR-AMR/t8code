@@ -3,4 +3,4 @@ eles = "eles"
 packageid = "packageid"
 
 [files]
-extend-exclude = ["scripts/t8indent.sh", "thirdparty/", "t8code_logo.png", "cmake/FindOpenCASCADE.cmake", "src/t8_with_macro_error.h"]
+extend-exclude = ["scripts/t8indent.sh", "thirdparty/", "t8code_logo.png", "cmake/FindOpenCASCADE.cmake", "src/t8_with_macro_error.h", "doc/Doxyfile.in"]

@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_netcdf.h
+/** \file t8_netcdf.h
  * This Header-File holds two typedef integer datatypes for the data of NetCDF integer variables, as well as a struct and functions to create extern elementwise data-variables which should be written additionally to a Forest or Cmesh NetCDF-File.
  */
 
@@ -31,10 +31,10 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/* Datatype for 64 bit NetCDF Data */
+/** Datatype for 64 bit NetCDF Data */
 typedef int64_t t8_nc_int64_t;
 
-/* Datatype for 32 bit NetCDF Data */
+/** Datatype for 32 bit NetCDF Data */
 typedef int32_t t8_nc_int32_t;
 
 /** This enumeration contains all possible netCDF variable datatypes (int, int64, double). */
@@ -47,14 +47,20 @@ typedef enum t8_netcdf_variable_type {
   T8_NETCDF_DOUBLE = 2
 } t8_netcdf_variable_type_t;
 
-/* Struct for elementwise data variable for a NetCDF file */
+/** Struct for elementwise data variable for a NetCDF file */
 typedef struct
 {
+  /** short name of the variable*/
   const char *variable_name;
+  /** long name of the variable*/
   const char *variable_long_name;
+  /** unit of the variable*/
   const char *variable_units;
+  /** datatype of the variable*/
   t8_netcdf_variable_type_t datatype;
+  /** The unique identifier netCDF assigns to this variable once it is defined in the file*/
   int var_user_dimid;
+  /** user data for the variable*/
   sc_array_t *var_user_data;
 } t8_netcdf_variable_t;
 
@@ -64,7 +70,6 @@ typedef struct
  * \param [in]  var_long_name    A string describing the variable a bit more and what it is about.
  * \param [in]  var_unit    The units in which the data is provided.
  * \param [in]  var_data    A sc_array_t holding the elementwise data of the variable.
- * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
 t8_netcdf_create_var (t8_netcdf_variable_type_t var_type, const char *var_name, const char *var_long_name,
@@ -75,7 +80,6 @@ t8_netcdf_create_var (t8_netcdf_variable_type_t var_type, const char *var_name, 
  * \param [in]  var_long_name    A string describing the variable a bit more and what it is about.
  * \param [in]  var_unit    The units in which the data is provided.
  * \param [in]  var_data    A sc_array_t holding the elementwise data of the variable.
- * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
 t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name, const char *var_unit,
@@ -86,7 +90,6 @@ t8_netcdf_create_integer_var (const char *var_name, const char *var_long_name, c
  * \param [in]  var_long_name    A string describing the variable a bit more and what it is about.
  * \param [in]  var_unit    The units in which the data is provided.
  * \param [in]  var_data    A sc_array_t holding the elementwise data of the variable.
- * \param [in]  num_extern_netcdf_vars    The number of extern user-defined variables which hold elementwise data (if none, set it to 0).
  */
 t8_netcdf_variable_t *
 t8_netcdf_create_double_var (const char *var_name, const char *var_long_name, const char *var_unit,

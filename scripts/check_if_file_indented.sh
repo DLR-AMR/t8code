@@ -4,7 +4,7 @@
 # t8code is a C library to manage a collection (a forest) of multiple
 # connected adaptive space-trees of general element classes in parallel.
 #
-# Copyright (C) 2023 the developers
+# Copyright (C) 2025 the developers
 #
 # t8code is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,11 +20,15 @@
 # along with t8code; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+#
+# This script checks if a given file is correctly indented according to the t8indent.sh script.
+# 
+
 GIT_REPO_PATH=$(git rev-parse --show-toplevel)
 
 INDENT_SCRIPT=${GIT_REPO_PATH}/scripts/t8indent.sh
 
-usage="$0 [FILE_TO_INDENT]"
+usage="USAGE:$0 [FILE_TO_CHECK]\n\nWill check if [FILE_TO_CHECK] is correctly indentend according to the script t8indent.sh."
 
 # Check if first argument given
 if [ ${1-x} = x ]

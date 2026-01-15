@@ -21,8 +21,9 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <test/t8_gtest_macros.hxx>
 
 /* Test the t8_cmesh_set_attribute_gloidx_array and t8_cmesh_get_attribute_gloidx_array functions.
  * We create a cmesh with two trees and add an array with N entries to each tree.
@@ -51,7 +52,7 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_TRIANGLE);
 
     /* Allocate space for entries. */
-    entries = T8_ALLOC (t8_gloidx_t, num_entries);
+    entries = T8_TESTSUITE_ALLOC (t8_gloidx_t, num_entries);
 
     /* Fill with 0, 1, 2, 3, 4 ... */
     for (t8_locidx_t ientry = 0; ientry < num_entries; ++ientry) {
@@ -63,19 +64,19 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
     /* Attribute at tree 0, data_persist = 0 */
     t8_gloidx_t tree_with_attribute = 0;
     int data_persists = 0;
-    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
-                                         entries, num_entries, data_persists);
+    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_testsuite_get_package_id (), 0, entries,
+                                         num_entries, data_persists);
 
     /* Attribute at tree 1, data_persist = 1 */
     tree_with_attribute = 1;
     data_persists = 1;
-    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
-                                         entries, num_entries, data_persists);
+    t8_cmesh_set_attribute_gloidx_array (cmesh, tree_with_attribute, t8_testsuite_get_package_id (), 0, entries,
+                                         num_entries, data_persists);
 
     /* Commit the cmesh */
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
     /* It is save to free the entries after commit, since the value got copied. */
-    T8_FREE (entries);
+    T8_TESTSUITE_FREE (entries);
   }
 
   void
@@ -94,8 +95,8 @@ class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int
 /** Check attribute values of the trees against reference values. */
 TEST_P (cmesh_attribute_gloidx_array, check_values_data)
 {
-  get_entries = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_get_package_id (), T8_CMESH_NEXT_POSSIBLE_KEY,
-                                                     check_tree_id, num_entries);
+  get_entries
+    = t8_cmesh_get_attribute_gloidx_array (cmesh, t8_testsuite_get_package_id (), 0, check_tree_id, num_entries);
 
   /* If we did not store any values, we except to get the NULL pointer back. */
   if (entries == NULL) {

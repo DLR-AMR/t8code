@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_data/t8_shmem.h>
+#include <test/t8_gtest_memory_macros.hxx>
 
 /* This Test test the shared memory for mpi. It includes tests for initialization and finalizing, the type, the communicator,
  * the element size and count of the shared memory  */
@@ -182,7 +183,7 @@ TEST_P (shmem, test_shmem_array_allgatherv)
    * in the arrays increase, such that in the shmem we have a contiguous increase. */
   const int base_size = 10;
   const t8_gloidx_t array_length = (mpirank + 1) * base_size;
-  t8_gloidx_t *sendbuf = T8_ALLOC_ZERO (t8_gloidx_t, array_length);
+  t8_gloidx_t *sendbuf = T8_TESTSUITE_ALLOC_ZERO (t8_gloidx_t, array_length);
   const t8_gloidx_t first_array_value = base_size * mpirank * (mpirank + 1) / 2;
   const int total_size = base_size * mpisize * (mpisize + 1) / 2;
 
@@ -227,7 +228,7 @@ TEST_P (shmem, test_shmem_array_allgatherv)
 
   t8_shmem_array_destroy (&shmem_array);
   t8_shmem_finalize (comm);
-  T8_FREE (sendbuf);
+  T8_TESTSUITE_FREE (sendbuf);
 }
 
 TEST_P (shmem, test_shmem_array_prefix)

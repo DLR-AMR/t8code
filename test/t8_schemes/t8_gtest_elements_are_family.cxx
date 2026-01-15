@@ -35,7 +35,7 @@ class are_family: public TestDFS {
       GTEST_SKIP ();
     }
     const int num_children = scheme->element_get_num_children (eclass, element);
-    t8_element_t **element_array = T8_ALLOC (t8_element_t *, num_children);
+    t8_element_t **element_array = T8_TESTSUITE_ALLOC (t8_element_t *, num_children);
     scheme->element_new (eclass, num_children, element_array);
     scheme->element_get_children (eclass, element, num_children, element_array);
     EXPECT_TRUE (scheme->elements_are_family (eclass, element_array));
@@ -43,7 +43,7 @@ class are_family: public TestDFS {
     EXPECT_FALSE (scheme->elements_are_family (eclass, element_array));
 
     scheme->element_destroy (eclass, num_children, element_array);
-    T8_FREE (element_array);
+    T8_TESTSUITE_FREE (element_array);
   }
 
  protected:
@@ -63,7 +63,7 @@ class are_family: public TestDFS {
 
 TEST_P (are_family, test_are_family)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

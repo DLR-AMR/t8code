@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_dtri_bits.c
+ *  Implements functions declared in \ref t8_dtri_bits.h.
+ */
+
 #ifndef T8_DTRI_TO_DTET
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
@@ -28,12 +32,13 @@
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #endif
 
+/** Define type for the cube id of triangles. */
 typedef int8_t t8_dtri_cube_id_t;
 
 /* Compute the cube-id of t's ancestor of level "level" in constant time.
  * If "level" is greater then t->level then the cube-id 0 is returned. */
 static t8_dtri_cube_id_t
-compute_cubeid (const t8_dtri_t *t, int level)
+compute_cubeid (const t8_dtri_t *element, int level)
 {
   t8_dtri_cube_id_t id = 0;
   t8_dtri_coord_t h;
@@ -47,10 +52,10 @@ compute_cubeid (const t8_dtri_t *t, int level)
     return 0;
   }
 
-  id |= ((t->x & h) ? 0x01 : 0);
-  id |= ((t->y & h) ? 0x02 : 0);
+  id |= ((element->x & h) ? 0x01 : 0);
+  id |= ((element->y & h) ? 0x02 : 0);
 #ifdef T8_DTRI_TO_DTET
-  id |= ((t->z & h) ? 0x04 : 0);
+  id |= ((element->z & h) ? 0x04 : 0);
 #endif
 
   return id;
@@ -61,14 +66,14 @@ compute_cubeid (const t8_dtri_t *t, int level)
  * greater than t->level. This method runs in O(t->level - level).
  */
 static t8_dtri_type_t
-compute_type_ext (const t8_dtri_t *t, int level, t8_dtri_type_t known_type, int known_level)
+compute_type_ext (const t8_dtri_t *element, int level, t8_dtri_type_t known_type, int known_level)
 {
   int8_t type = known_type;
   t8_dtri_cube_id_t cid;
   int i;
 
   T8_ASSERT (0 <= level && level <= known_level);
-  T8_ASSERT (known_level <= t->level);
+  T8_ASSERT (known_level <= element->level);
   if (level == known_level) {
     return known_type;
   }
@@ -78,7 +83,7 @@ compute_type_ext (const t8_dtri_t *t, int level, t8_dtri_type_t known_type, int 
     return 0;
   }
   for (i = known_level; i > level; i--) {
-    cid = compute_cubeid (t, i);
+    cid = compute_cubeid (element, i);
     /* compute type as the type of T^{i+1}, that is T's ancestor of level i+1 */
     type = t8_dtri_cid_type_to_parenttype[cid][type];
   }
@@ -90,76 +95,77 @@ compute_type_ext (const t8_dtri_t *t, int level, t8_dtri_type_t known_type, int 
  * O(t->level - level).
  */
 static t8_dtri_type_t
-compute_type (const t8_dtri_t *t, int level)
+compute_type (const t8_dtri_t *element, int level)
 {
-  return compute_type_ext (t, level, t->type, t->level);
+  return compute_type_ext (element, level, element->type, element->level);
 }
 
 void
-t8_dtri_copy (const t8_dtri_t *t, t8_dtri_t *dest)
+t8_dtri_copy (const t8_dtri_t *element, t8_dtri_t *dest)
 {
-  if (t == dest) {
+  if (element == dest) {
     /* Do nothing if they are already the same. */
     return;
   }
-  memcpy (dest, t, sizeof (t8_dtri_t));
+  memcpy (dest, element, sizeof (t8_dtri_t));
 }
 
 int
-t8_dtri_equal (const t8_dtri_t *elem1, const t8_dtri_t *elem2)
+t8_dtri_equal (const t8_dtri_t *element1, const t8_dtri_t *element2)
 {
-  return (elem1->level == elem2->level && elem1->type == elem2->type && elem1->x == elem2->x && elem1->y == elem2->y
+  return (element1->level == element2->level && element1->type == element2->type && element1->x == element2->x
+          && element1->y == element2->y
 #ifdef T8_DTRI_TO_DTET
-          && elem1->z == elem2->z
+          && element1->z == element2->z
 #endif
   );
 }
 
 int
-t8_dtri_compare (const t8_dtri_t *t1, const t8_dtri_t *t2)
+t8_dtri_compare (const t8_dtri_t *element1, const t8_dtri_t *element2)
 {
   int maxlvl;
   t8_linearidx_t id1, id2;
 
   /* Compute the bigger level of the two */
-  maxlvl = SC_MAX (t1->level, t2->level);
+  maxlvl = SC_MAX (element1->level, element2->level);
   /* Compute the linear ids of the elements */
-  id1 = t8_dtri_linear_id (t1, maxlvl);
-  id2 = t8_dtri_linear_id (t2, maxlvl);
+  id1 = t8_dtri_linear_id (element1, maxlvl);
+  id2 = t8_dtri_linear_id (element2, maxlvl);
   if (id1 == id2) {
     /* The linear ids are the same, the triangle with the smaller level is considered smaller */
-    T8_ASSERT (t1->level != t2->level || t8_dtri_is_equal (t1, t2));
-    return t1->level - t2->level;
+    T8_ASSERT (element1->level != element2->level || t8_dtri_is_equal (element1, element2));
+    return element1->level - element2->level;
   }
   /* return negative if id1 < id2, zero if id1 = id2, positive if id1 > id2 */
   return id1 < id2 ? -1 : id1 != id2;
 }
 
 void
-t8_dtri_parent (const t8_dtri_t *t, t8_dtri_t *parent)
+t8_dtri_parent (const t8_dtri_t *element, t8_dtri_t *parent)
 {
   t8_dtri_cube_id_t cid;
   t8_dtri_coord_t h;
 
-  T8_ASSERT (t->level > 0);
+  T8_ASSERT (element->level > 0);
 
-  h = T8_DTRI_LEN (t->level);
+  h = T8_DTRI_LEN (element->level);
   /* Compute type of parent */
-  cid = compute_cubeid (t, t->level);
-  parent->type = t8_dtri_cid_type_to_parenttype[cid][t->type];
+  cid = compute_cubeid (element, element->level);
+  parent->type = t8_dtri_cid_type_to_parenttype[cid][element->type];
   /* Set coordinates of parent */
-  parent->x = t->x & ~h;
-  parent->y = t->y & ~h;
+  parent->x = element->x & ~h;
+  parent->y = element->y & ~h;
 #ifdef T8_DTRI_TO_DTET
-  parent->z = t->z & ~h;
+  parent->z = element->z & ~h;
 #endif
-  parent->level = t->level - 1;
+  parent->level = element->level - 1;
 }
 
 void
-t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
+t8_dtri_ancestor (const t8_dtri_t *element, int level, t8_dtri_t *ancestor)
 {
-  /* TODO: find out, at which level difference it is faster to use    *
+  /* TODO: find out, at which level difference it is faster to use
    * the arithmetic computation of ancestor type
    * opposed to iteratively computing the parent type.
    */
@@ -173,22 +179,22 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
 #endif
 #endif /* T8_DTRI_TO_DTET */
 
-  /* delta_{x,y} = t->{x,y} - ancestor->{x,y}
+  /* delta_{x,y} = element->{x,y} - ancestor->{x,y}
    * the difference of the coordinates.
    * Needed to compute the type of the ancestor. */
-  delta_x = t->x & (T8_DTRI_LEN (level) - 1);
-  delta_y = t->y & (T8_DTRI_LEN (level) - 1);
+  delta_x = element->x & (T8_DTRI_LEN (level) - 1);
+  delta_y = element->y & (T8_DTRI_LEN (level) - 1);
 #ifdef T8_DTRI_TO_DTET
-  delta_z = t->z & (T8_DTRI_LEN (level) - 1);
+  delta_z = element->z & (T8_DTRI_LEN (level) - 1);
 #endif
 
   /* The coordinates of the ancestor. It is necessary
    * to compute the delta first, since ancestor and t
    * could point to the same triangle. */
-  ancestor->x = t->x & ~(T8_DTRI_LEN (level) - 1);
-  ancestor->y = t->y & ~(T8_DTRI_LEN (level) - 1);
+  ancestor->x = element->x & ~(T8_DTRI_LEN (level) - 1);
+  ancestor->y = element->y & ~(T8_DTRI_LEN (level) - 1);
 #ifdef T8_DTRI_TO_DTET
-  ancestor->z = t->z & ~(T8_DTRI_LEN (level) - 1);
+  ancestor->z = element->z & ~(T8_DTRI_LEN (level) - 1);
 #endif
 
 #ifndef T8_DTRI_TO_DTET
@@ -202,7 +208,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
   }
   else {
     T8_ASSERT (diff_xy == 0);
-    ancestor->type = t->type;
+    ancestor->type = element->type;
   }
 
 #else
@@ -224,7 +230,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
   }
   else {
     T8_ASSERT (diff_xy == 0);
-    if (t->type == 0 || t->type == 1 || t->type == 5) {
+    if (element->type == 0 || element->type == 1 || element->type == 5) {
       possible_types[2] = possible_types[3] = possible_types[4] = 0;
     }
     else {
@@ -241,7 +247,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
   }
   else {
     T8_ASSERT (diff_xz == 0);
-    if (t->type == 0 || t->type == 1 || t->type == 2) {
+    if (element->type == 0 || element->type == 1 || element->type == 2) {
       possible_types[3] = possible_types[4] = possible_types[5] = 0;
     }
     else {
@@ -258,7 +264,7 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
   }
   else {
     T8_ASSERT (diff_yz == 0);
-    if (t->type == 1 || t->type == 2 || t->type == 3) {
+    if (element->type == 1 || element->type == 2 || element->type == 3) {
       possible_types[0] = possible_types[4] = possible_types[5] = 0;
     }
     else {
@@ -284,9 +290,9 @@ t8_dtri_ancestor (const t8_dtri_t *t, int level, t8_dtri_t *ancestor)
   ancestor->level = level;
 }
 
-/* Compute the coordinates of a given vertex of a triangle/tet */
+/** Compute the coordinates of a given vertex of a triangle/tet. */
 void
-t8_dtri_compute_integer_coords (const t8_dtri_t *elem, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
+t8_dtri_compute_integer_coords (const t8_dtri_t *element, const int vertex, t8_dtri_coord_t coordinates[T8_DTRI_DIM])
 {
   /* Calculate the vertex coordinates of a triangle/tetrahedron in relation to its orientation. Orientations are 
    * described here: https://doi.org/10.1137/15M1040049
@@ -317,8 +323,8 @@ t8_dtri_compute_integer_coords (const t8_dtri_t *elem, const int vertex, t8_dtri
   t8_dtri_coord_t h;
   T8_ASSERT (0 <= vertex && vertex < T8_DTRI_FACES);
 
-  type = elem->type;
-  h = T8_DTRI_LEN (elem->level);
+  type = element->type;
+  h = T8_DTRI_LEN (element->level);
 #ifndef T8_DTRI_TO_DTET
   ei = type;
 #else
@@ -326,10 +332,10 @@ t8_dtri_compute_integer_coords (const t8_dtri_t *elem, const int vertex, t8_dtri
   ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
 #endif
 
-  coordinates[0] = elem->x;
-  coordinates[1] = elem->y;
+  coordinates[0] = element->x;
+  coordinates[1] = element->y;
 #ifdef T8_DTRI_TO_DTET
-  coordinates[2] = elem->z;
+  coordinates[2] = element->z;
 #endif
   if (vertex == 0) {
     return;
@@ -353,13 +359,19 @@ t8_dtri_compute_integer_coords (const t8_dtri_t *elem, const int vertex, t8_dtri
 #endif
 }
 
+/** Compute the reference coordinates of a vertex of a triangle when the 
+ * tree (level 0 triangle) is embedded in \f$ [0,1]^2 \f$.
+ * \param [in] element      Input triangle.
+ * \param [in] vertex       The number of the vertex.
+ * \param [out] coordinates An array of 2 double that will be filled with the reference coordinates of the vertex.
+ */
 void
-t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, double coordinates[T8_DTRI_DIM])
+t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *element, const int vertex, double coordinates[T8_DTRI_DIM])
 {
   int coords_int[T8_DTRI_DIM];
   T8_ASSERT (0 <= vertex && vertex < T8_DTRI_CORNERS);
 
-  t8_dtri_compute_integer_coords (elem, vertex, coords_int);
+  t8_dtri_compute_integer_coords (element, vertex, coords_int);
   /* Since the integer coordinates are coordinates w.r.t to
    * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
    * to divide them by the root length. */
@@ -371,7 +383,7 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *elem, const int vertex, doub
 }
 
 void
-t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coords, const size_t num_coords,
+t8_dtri_compute_reference_coords (const t8_dtri_t *element, const double *ref_coords, const size_t num_coords,
 #ifndef T8_DTRI_TO_DTET
                                   const size_t skip_coords,
 #endif
@@ -404,8 +416,8 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
   t8_dtri_type_t type;
   t8_dtri_coord_t h;
 
-  type = elem->type;
-  h = T8_DTRI_LEN (elem->level);
+  type = element->type;
+  h = T8_DTRI_LEN (element->level);
 #ifndef T8_DTRI_TO_DTET
   const int tri_orientation = type;
 #else
@@ -423,10 +435,10 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
 #else
     const size_t offset = 3 * coord;
 #endif
-    out_coords[offset + 0] = elem->x;
-    out_coords[offset + 1] = elem->y;
+    out_coords[offset + 0] = element->x;
+    out_coords[offset + 1] = element->y;
 #ifdef T8_DTRI_TO_DTET
-    out_coords[offset + 2] = elem->z;
+    out_coords[offset + 2] = element->z;
 #endif
 #ifndef T8_DTRI_TO_DTET
     out_coords[offset + tri_orientation] += h * ref_coords[offset_3d + 0];
@@ -449,9 +461,9 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *elem, const double *ref_coord
   }
 }
 
-/* Compute the coordinates of each vertex of a triangle/tet */
+/** Compute the coordinates of each vertex of a triangle/tet. */
 void
-t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T8_DTRI_FACES][T8_DTRI_DIM])
+t8_dtri_compute_all_coords (const t8_dtri_t *element, t8_dtri_coord_t coordinates[T8_DTRI_FACES][T8_DTRI_DIM])
 {
   /* Calculate the vertex coordinates of a triangle/tetrahedron in
    * relation to its orientation. Orientations are described here:
@@ -483,8 +495,8 @@ t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T
   int i;
   t8_dtri_coord_t h;
 
-  type = elem->type;
-  h = T8_DTRI_LEN (elem->level);
+  type = element->type;
+  h = T8_DTRI_LEN (element->level);
 #ifndef T8_DTRI_TO_DTET
   ei = type;
 #else
@@ -492,10 +504,10 @@ t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T
   ej = (ei + ((type % 2 == 0) ? 2 : 1)) % 3;
 #endif
 
-  coordinates[0][0] = elem->x;
-  coordinates[0][1] = elem->y;
+  coordinates[0][0] = element->x;
+  coordinates[0][1] = element->y;
 #ifdef T8_DTRI_TO_DTET
-  coordinates[0][2] = elem->z;
+  coordinates[0][2] = element->z;
 #endif
   for (i = 0; i < T8_DTRI_DIM; i++) {
     coordinates[1][i] = coordinates[0][i];
@@ -519,7 +531,7 @@ t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T
     int ivertex;
     t8_dtri_coord_t coords[T8_DTRI_DIM];
     for (ivertex = 0; ivertex < T8_DTRI_FACES; ivertex++) {
-      t8_dtri_compute_integer_coords (elem, ivertex, coords);
+      t8_dtri_compute_integer_coords (element, ivertex, coords);
       T8_ASSERT (coords[0] == coordinates[ivertex][0]);
       T8_ASSERT (coords[1] == coordinates[ivertex][1]);
 #ifdef T8_DTRI_TO_DTET
@@ -535,96 +547,96 @@ t8_dtri_compute_all_coords (const t8_dtri_t *elem, t8_dtri_coord_t coordinates[T
  * It is possible that the function is called with
  * elem = child */
 void
-t8_dtri_child (const t8_dtri_t *t, int childid, t8_dtri_t *child)
+t8_dtri_child (const t8_dtri_t *element, int childid, t8_dtri_t *child)
 {
   t8_dtri_t *c = (t8_dtri_t *) child;
   t8_dtri_coord_t t_coordinates[T8_DTRI_DIM];
   int vertex;
   int Bey_cid;
 
-  T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
+  T8_ASSERT (element->level < T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= childid && childid < T8_DTRI_CHILDREN);
 
-  Bey_cid = t8_dtri_index_to_bey_number[t->type][childid];
+  Bey_cid = t8_dtri_index_to_bey_number[element->type][childid];
 
   /* Compute anchor coordinates of child */
   if (Bey_cid == 0) {
     /* TODO: would it be better do drop this if and
      *       capture it with (t->x+t->x)>>1 below? */
-    c->x = t->x;
-    c->y = t->y;
+    c->x = element->x;
+    c->y = element->y;
 #ifdef T8_DTRI_TO_DTET
-    c->z = t->z;
+    c->z = element->z;
 #endif
   }
   else {
     vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    t8_dtri_compute_integer_coords (t, vertex, t_coordinates);
-    c->x = (t->x + t_coordinates[0]) >> 1;
-    c->y = (t->y + t_coordinates[1]) >> 1;
+    t8_dtri_compute_integer_coords (element, vertex, t_coordinates);
+    c->x = (element->x + t_coordinates[0]) >> 1;
+    c->y = (element->y + t_coordinates[1]) >> 1;
 #ifdef T8_DTRI_TO_DTET
-    c->z = (t->z + t_coordinates[2]) >> 1;
+    c->z = (element->z + t_coordinates[2]) >> 1;
 #endif
   }
 
   /* Compute type of child */
-  c->type = t8_dtri_type_of_child[t->type][Bey_cid];
+  c->type = t8_dtri_type_of_child[element->type][Bey_cid];
 
-  c->level = t->level + 1;
+  c->level = element->level + 1;
 }
 
 void
-t8_dtri_childrenpv (const t8_dtri_t *t, t8_dtri_t *c[T8_DTRI_CHILDREN])
+t8_dtri_childrenpv (const t8_dtri_t *element, t8_dtri_t *children[T8_DTRI_CHILDREN])
 {
   t8_dtri_coord_t t_coordinates[T8_DTRI_FACES][T8_DTRI_DIM];
-  const int8_t level = t->level + 1;
+  const int8_t level = element->level + 1;
   int i;
   int Bey_cid;
   int vertex;
-  t8_dtri_type_t t_type = t->type;
+  t8_dtri_type_t t_type = element->type;
 
-  T8_ASSERT (t->level < T8_DTRI_MAXLEVEL);
-  t8_dtri_compute_all_coords (t, t_coordinates);
+  T8_ASSERT (element->level < T8_DTRI_MAXLEVEL);
+  t8_dtri_compute_all_coords (element, t_coordinates);
   /* We use t_coordinates[0] for t->x,y,z to ensure that the function is valid
-   * if called with t = c[0]. If we would use t->x later it would be the newly
-   * computed value c[0]->x. */
-  c[0]->x = t_coordinates[0][0]; /* t->x */
-  c[0]->y = t_coordinates[0][1]; /* t->y */
+   * if called with t = children[0]. If we would use t->x later it would be the newly
+   * computed value children[0]->x. */
+  children[0]->x = t_coordinates[0][0]; /* t->x */
+  children[0]->y = t_coordinates[0][1]; /* t->y */
 #ifdef T8_DTRI_TO_DTET
-  c[0]->z = t_coordinates[0][2]; /* t->z */
+  children[0]->z = t_coordinates[0][2]; /* t->z */
 #endif
-  c[0]->type = t_type;
-  c[0]->level = level;
+  children[0]->type = t_type;
+  children[0]->level = level;
   for (i = 1; i < T8_DTRI_CHILDREN; i++) {
     Bey_cid = t8_dtri_index_to_bey_number[t_type][i];
     vertex = t8_dtri_beyid_to_vertex[Bey_cid];
     /* i-th anchor coordinate of child is (X_(0,i)+X_(vertex,i))/2
      * where X_(i,j) is the j-th coordinate of t's ith node */
-    c[i]->x = (t_coordinates[0][0] + t_coordinates[vertex][0]) >> 1;
-    c[i]->y = (t_coordinates[0][1] + t_coordinates[vertex][1]) >> 1;
+    children[i]->x = (t_coordinates[0][0] + t_coordinates[vertex][0]) >> 1;
+    children[i]->y = (t_coordinates[0][1] + t_coordinates[vertex][1]) >> 1;
 #ifdef T8_DTRI_TO_DTET
-    c[i]->z = (t_coordinates[0][2] + t_coordinates[vertex][2]) >> 1;
+    children[i]->z = (t_coordinates[0][2] + t_coordinates[vertex][2]) >> 1;
 #endif
-    c[i]->type = t8_dtri_type_of_child[t_type][Bey_cid];
-    c[i]->level = level;
+    children[i]->type = t8_dtri_type_of_child[t_type][Bey_cid];
+    children[i]->level = level;
 #if T8_ENABLE_DEBUG
     {
       /* We check whether the child computed here equals to the child
        * computed in the t8_dtri_child function. */
       t8_dtri_t check_child;
-      /* We use c[0] here instead of t, since we explicitly allow t=c[0] as input
+      /* We use children[0] here instead of t, since we explicitly allow t=children[0] as input
        * and thus the values of t may be already overwritten. However the only
-       * difference from c[0] to t is in the level. */
-      c[0]->level--;
-      t8_dtri_child (c[0], i, &check_child);
-      T8_ASSERT (check_child.x == c[i]->x && check_child.y == c[i]->y);
-      T8_ASSERT (check_child.type == c[i]->type && check_child.level == c[i]->level);
+       * difference from children[0] to t is in the level. */
+      children[0]->level--;
+      t8_dtri_child (children[0], i, &check_child);
+      T8_ASSERT (check_child.x == children[i]->x && check_child.y == children[i]->y);
+      T8_ASSERT (check_child.type == children[i]->type && check_child.level == children[i]->level);
 #ifdef T8_DTRI_TO_DTET
-      T8_ASSERT (check_child.z == c[i]->z);
+      T8_ASSERT (check_child.z == children[i]->z);
 #endif
-      c[0]->level++;
+      children[0]->level++;
     }
 #endif
   }
@@ -666,18 +678,18 @@ t8_dtri_is_familypv (const t8_dtri_t *f[])
  * parent and child
  * TODO: CB agrees, make this as non-redundant as possible */
 void
-t8_dtri_sibling (const t8_dtri_t *elem, int sibid, t8_dtri_t *sibling)
+t8_dtri_sibling (const t8_dtri_t *element, int sibid, t8_dtri_t *sibling)
 {
   T8_ASSERT (0 <= sibid && sibid < T8_DTRI_CHILDREN);
-  T8_ASSERT (((const t8_dtri_t *) elem)->level > 0);
-  t8_dtri_parent (elem, sibling);
+  T8_ASSERT (((const t8_dtri_t *) element)->level > 0);
+  t8_dtri_parent (element, sibling);
   t8_dtri_child (sibling, sibid, sibling);
 }
 
 /* Saves the neighbour of T along face "face" in N
- * returns the facenumber of N along which T is its neighbour */
+ * returns the face number of N along which T is its neighbour */
 int
-t8_dtri_face_neighbour (const t8_dtri_t *t, int face, t8_dtri_t *n)
+t8_dtri_face_neighbour (const t8_dtri_t *element, int face, t8_dtri_t *neigh)
 {
   /* TODO: document what happens if outside of root tet */
   int type_new, type_old;
@@ -690,13 +702,13 @@ t8_dtri_face_neighbour (const t8_dtri_t *t, int face, t8_dtri_t *n)
 
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
 
-  level = t->level;
-  type_old = t->type;
+  level = element->level;
+  type_old = element->type;
   type_new = type_old;
-  coords[0] = t->x;
-  coords[1] = t->y;
+  coords[0] = element->x;
+  coords[1] = element->y;
 #ifdef T8_DTRI_TO_DTET
-  coords[2] = t->z;
+  coords[2] = element->z;
 #endif
 
 #ifndef T8_DTRI_TO_DTET
@@ -741,18 +753,18 @@ t8_dtri_face_neighbour (const t8_dtri_t *t, int face, t8_dtri_t *n)
   }
   /* 3D end */
 #endif
-  n->x = coords[0];
-  n->y = coords[1];
+  neigh->x = coords[0];
+  neigh->y = coords[1];
 #ifdef T8_DTRI_TO_DTET
-  n->z = coords[2];
+  neigh->z = coords[2];
 #endif
-  n->level = level;
-  n->type = type_new;
+  neigh->level = level;
+  neigh->type = type_new;
   return ret;
 }
 
 void
-t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1, const t8_dtri_t *t2, t8_dtri_t *r)
+t8_dtri_nearest_common_ancestor (const t8_dtri_t *element1, const t8_dtri_t *element2, t8_dtri_t *nca)
 {
   int maxlevel, c_level, r_level;
   t8_dtri_type_t t1_type_at_l, t2_type_at_l;
@@ -763,10 +775,10 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1, const t8_dtri_t *t2, t8_dt
   uint32_t maxclor;
 
   /* Find the level of the nca */
-  exclorx = t1->x ^ t2->x;
-  exclory = t1->y ^ t2->y;
+  exclorx = element1->x ^ element2->x;
+  exclory = element1->y ^ element2->y;
 #ifdef T8_DTRI_TO_DTET
-  exclorz = t1->z ^ t2->z;
+  exclorz = element1->z ^ element2->z;
 
   maxclor = exclorx | exclory | exclorz;
 #else
@@ -776,25 +788,34 @@ t8_dtri_nearest_common_ancestor (const t8_dtri_t *t1, const t8_dtri_t *t2, t8_dt
 
   T8_ASSERT (maxlevel <= T8_DTRI_MAXLEVEL);
 
-  c_level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel, (int) SC_MIN (t1->level, t2->level));
+  c_level = (int8_t) SC_MIN (T8_DTRI_MAXLEVEL - maxlevel, (int) SC_MIN (element1->level, element2->level));
   r_level = c_level;
   /* c_level is the level of the nca cube surrounding t1 and t2.
    * If t1 and t2 have different types at this level, then we have to shrink this
    * level further. */
-  t1_type_at_l = compute_type (t1, c_level);
-  t2_type_at_l = compute_type (t2, c_level);
+  t1_type_at_l = compute_type (element1, c_level);
+  t2_type_at_l = compute_type (element2, c_level);
   while (t1_type_at_l != t2_type_at_l) {
     r_level--;
-    t1_type_at_l = compute_type_ext (t1, r_level, t1_type_at_l, r_level + 1);
-    t2_type_at_l = compute_type_ext (t2, r_level, t2_type_at_l, r_level + 1);
+    t1_type_at_l = compute_type_ext (element1, r_level, t1_type_at_l, r_level + 1);
+    t2_type_at_l = compute_type_ext (element2, r_level, t2_type_at_l, r_level + 1);
   }
   T8_ASSERT (r_level >= 0);
   /* Construct the ancestor of the first triangle at this level */
-  t8_dtri_ancestor (t1, r_level, r);
+  t8_dtri_ancestor (element1, r_level, nca);
 }
 
+/** Given a triangle and a face of the triangle, compute all children of the triangle that touch the face.
+ * \param [in] element      The triangle.
+ * \param [in] face         A face of \a element.
+ * \param [in,out] children Allocated triangles, in which the children of \a element that share a face with \a face are 
+ *                          stored. They will be stored in order of their child_id.
+ * \param [in] num_children The number of triangles in \a children. Must match the number of children that touch 
+ *                          \a face.
+ * \param [in,out] child_indices The indices of the children in \a children. Only filled if this is null previously.
+ */
 void
-t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[],
+t8_dtri_children_at_face (const t8_dtri_t *element, int face, t8_dtri_t *children[],
                           __attribute__ ((unused)) int num_children, int *child_indices)
 {
   int child_ids_local[T8_DTRI_FACE_CHILDREN], i, *child_ids;
@@ -811,27 +832,35 @@ t8_dtri_children_at_face (const t8_dtri_t *tri, int face, t8_dtri_t *children[],
 #ifndef T8_DTRI_TO_DTET
   /* Triangle version */
   /* The first child is '0' for faces 1 and 2 and '1+type' for face 0 */
-  child_ids[0] = face == 0 ? 1 + tri->type : 0;
+  child_ids[0] = face == 0 ? 1 + element->type : 0;
   /* The second child is '1 + type' for face 2 and '3' for faces 0 and 1 */
-  child_ids[1] = face == 2 ? 1 + tri->type : 3;
+  child_ids[1] = face == 2 ? 1 + element->type : 3;
 #else
   /* Tetrahedron version */
   for (i = 0; i < T8_DTET_FACE_CHILDREN; i++) {
-    child_ids[i] = t8_dtet_face_child_id_by_type[tri->type][face][i];
+    child_ids[i] = t8_dtet_face_child_id_by_type[element->type][face][i];
   }
 #endif
 
   /* Compute the children at the face.
    * We revert the order to compute children[0] last, since the usage
-   * allows for tri == children[0].
+   * allows for element == children[0].
    */
   for (i = T8_DTRI_FACE_CHILDREN - 1; i >= 0; i--) {
-    t8_dtri_child (tri, child_ids[i], children[i]);
+    t8_dtri_child (element, child_ids[i], children[i]);
   }
 }
 
+/** Given a triangle and a face of this triangle. If the face lies on the tree boundary, return the face number of the 
+ * tree face. If not the return value is arbitrary.
+ * \param [in] element        The triangle.
+ * \param [in] face     The index of a face of \a element.
+ * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary. Any arbitrary 
+ *         integer if \a element is not at a tree boundary.
+ * \note For boundary triangles, this function is the inverse of \ref t8_dtri_root_face_to_face
+ */
 int
-t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *t, int face)
+t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *element, int face)
 {
   T8_ASSERT (0 <= face && face < T8_DTRI_FACES);
   /* TODO: Assert if boundary */
@@ -844,7 +873,7 @@ t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *t, int face)
   /* For tets only tets of type not 3 can have tree boundary faces.
    * All these tets of type not 0 (types 1, 2, 4, and 5) can only have one of
    * their faces as boundary face. */
-  switch (t->type) {
+  switch (element->type) {
   case 0:
     return face;
     break;
@@ -869,12 +898,20 @@ t8_dtri_tree_face (__attribute__ ((unused)) t8_dtri_t *t, int face)
 #endif
 }
 
+/** Given a triangle and a face of the root triangle. If the triangle lies on the tree boundary, return the 
+ * corresponding face number of the triangle. If not the return value is arbitrary.
+ * \param [in] element        The triangle.
+ * \param [in] root_face     The index of a face of the root element.
+ * \return The index of the face of \a element that is a subface of \a root_face, if \a element is on the tree boundary.
+ *         Any arbitrary integer if \a element is not at a tree boundary.
+ * \note For boundary triangles, this function is the inverse of \ref t8_dtri_tree_face
+ */
 int
-t8_dtri_root_face_to_face (__attribute__ ((unused)) t8_dtri_t *t, int root_face)
+t8_dtri_root_face_to_face (__attribute__ ((unused)) t8_dtri_t *element, int root_face)
 {
   T8_ASSERT (0 <= root_face && root_face < T8_DTRI_FACES);
 #ifndef T8_DTRI_TO_DTET
-  T8_ASSERT (t->type == 0);
+  T8_ASSERT (element->type == 0);
   /* For triangles of type 0 the face number coincides with the number of the
    * root tree face. Triangles of type 1 cannot lie on the boundary of the
    * tree and thus the return value can be arbitrary. */
@@ -883,8 +920,8 @@ t8_dtri_root_face_to_face (__attribute__ ((unused)) t8_dtri_t *t, int root_face)
   /* For tets only tets of type not 3 can have tree boundary faces.
    * All these tets of type not 0 (types 1, 2, 4, and 5) can only have one of
    * their faces as boundary face. */
-  T8_ASSERT (t->type != 3);
-  switch (t->type) {
+  T8_ASSERT (element->type != 3);
+  switch (element->type) {
   case 0:
     return root_face;
     break;
@@ -910,6 +947,13 @@ t8_dtri_root_face_to_face (__attribute__ ((unused)) t8_dtri_t *t, int root_face)
 #endif
 }
 
+/** Given a face of a triangle and a child number of a child of that face, return the face number of the child of the 
+ * triangle that matches the child face.
+ * \param [in]  triangle The triangle.
+ * \param [in]  face    Then number of the face.
+ * \param [in]  face_child  The child number of a child of the face triangle.
+ * \return              The face number of the face of a child of \a triangle that coincides with \a face_child.
+ */
 int
 t8_dtri_face_child_face (__attribute__ ((unused)) const t8_dtri_t *triangle, int face,
                          __attribute__ ((unused)) int face_child)
@@ -1100,31 +1144,31 @@ t8_dtri_transform_face (const t8_dtri_t *trianglein, t8_dtri_t *triangle2, int o
 #endif
 
 int
-t8_dtri_is_inside_root (t8_dtri_t *t)
+t8_dtri_is_inside_root (t8_dtri_t *element)
 {
   int is_inside;
 
-  if (t->level == 0) {
+  if (element->level == 0) {
     /* A level 0 simplex is only inside the root simplex if it
      * is the root simplex. */
-    return t->type == 0 && t->x == 0 && t->y == 0
+    return element->type == 0 && element->x == 0 && element->y == 0
 #ifdef T8_DTRI_TO_DTET
-           && t->z == 0
+           && element->z == 0
 #endif
       ;
   }
-  is_inside = (t->x >= 0 && t->x < T8_DTRI_ROOT_LEN) && (t->y >= 0) &&
+  is_inside = (element->x >= 0 && element->x < T8_DTRI_ROOT_LEN) && (element->y >= 0) &&
 #ifdef T8_DTRI_TO_DTET
-              (t->z >= 0) &&
+              (element->z >= 0) &&
 #endif
 #ifndef T8_DTRI_TO_DTET
-              (t->y - t->x <= 0) && (t->y == t->x ? t->type == 0 : 1) &&
+              (element->y - element->x <= 0) && (element->y == element->x ? element->type == 0 : 1) &&
 #else
-              (t->z - t->x <= 0) && (t->y - t->z <= 0) && (t->z == t->x ? (0 <= t->type && t->type < 3) : 1)
-              &&                                                     /* types 0, 1, 2 */
-              (t->y == t->z ? (0 == t->type || 4 <= t->type) : 1) && /* types 0, 4, 5 */
+              (element->z - element->x <= 0) && (element->y - element->z <= 0)
+              && (element->z == element->x ? (0 <= element->type && element->type < 3) : 1) && /* types 0, 1, 2 */
+              (element->y == element->z ? (0 == element->type || 4 <= element->type) : 1) &&   /* types 0, 4, 5 */
               /* If the anchor is on the x-y-z diagonal, only type 0 tets are inside root. */
-              ((t->x == t->y && t->y == t->z) ? t->type == 0 : 1) &&
+              ((element->x == element->y && element->y == element->z) ? element->type == 0 : 1) &&
 #endif
               1;
 #if T8_ENABLE_DEBUG
@@ -1132,27 +1176,27 @@ t8_dtri_is_inside_root (t8_dtri_t *t)
   {
     t8_dtri_t root;
     t8_dtri_init_root (&root);
-    T8_ASSERT (is_inside == t8_dtri_is_ancestor (&root, t));
+    T8_ASSERT (is_inside == t8_dtri_is_ancestor (&root, element));
   }
 #endif
   return is_inside;
 }
 
 int
-t8_dtri_is_root_boundary (const t8_dtri_t *t, int face)
+t8_dtri_is_root_boundary (const t8_dtri_t *element, int face)
 {
   /* Dependent on the type and the face we have to check
    * different conditions */
 #ifndef T8_DTRI_TO_DTET
-  switch (t->type) {
+  switch (element->type) {
   case 0:
     switch (face) {
     case 0:
-      return t->x == T8_DTRI_ROOT_LEN - T8_DTRI_LEN (t->level);
+      return element->x == T8_DTRI_ROOT_LEN - T8_DTRI_LEN (element->level);
     case 1:
-      return t->x == t->y;
+      return element->x == element->y;
     case 2:
-      return t->y == 0;
+      return element->y == 0;
     default:
       SC_ABORT_NOT_REACHED ();
     }
@@ -1162,35 +1206,35 @@ t8_dtri_is_root_boundary (const t8_dtri_t *t, int face)
     SC_ABORT_NOT_REACHED ();
   }
 #else
-  switch (t->type) {
+  switch (element->type) {
   case 0:
     switch (face) {
     case 0:
-      return t->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+      return element->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (element->level);
     case 1:
-      return t->x == t->z;
+      return element->x == element->z;
     case 2:
-      return t->y == t->z;
+      return element->y == element->z;
     case 3:
-      return t->y == 0;
+      return element->y == 0;
     default:
       SC_ABORT_NOT_REACHED ();
     }
   case 1:
     /* type 1 tets are only boundary at face 0 */
-    return face == 0 && t->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (t->level);
+    return face == 0 && element->x == T8_DTET_ROOT_LEN - T8_DTET_LEN (element->level);
   case 2:
     /* type 1 tets are only boundary at face 2 */
-    return face == 2 && t->x == t->z;
+    return face == 2 && element->x == element->z;
   case 3:
     /* type 3 tets are never at the root boundary */
     return 0;
   case 4:
     /* type 4 tets are only boundary at face 1 */
-    return face == 1 && t->y == t->z;
+    return face == 1 && element->y == element->z;
   case 5:
     /* type 5 tets are only boundary at face 3 */
-    return face == 3 && t->y == 0;
+    return face == 3 && element->y == 0;
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -1200,11 +1244,12 @@ t8_dtri_is_root_boundary (const t8_dtri_t *t, int face)
 }
 
 int
-t8_dtri_is_equal (const t8_dtri_t *t1, const t8_dtri_t *t2)
+t8_dtri_is_equal (const t8_dtri_t *element1, const t8_dtri_t *element2)
 {
-  return (t1->level == t2->level && t1->type == t2->type && t1->x == t2->x && t1->y == t2->y
+  return (element1->level == element2->level && element1->type == element2->type && element1->x == element2->x
+          && element1->y == element2->y
 #ifdef T8_DTRI_TO_DTET
-          && t1->z == t2->z
+          && element1->z == element2->z
 #endif
   );
 }
@@ -1212,7 +1257,7 @@ t8_dtri_is_equal (const t8_dtri_t *t1, const t8_dtri_t *t2)
 /* we check if t1 and t2 lie in the same subcube and have
  * the same level and parent type */
 int
-t8_dtri_is_sibling (const t8_dtri_t *t1, const t8_dtri_t *t2)
+t8_dtri_is_sibling (const t8_dtri_t *element1, const t8_dtri_t *element2)
 {
   t8_dtri_coord_t exclorx, exclory;
 #ifdef T8_DTRI_TO_DTET
@@ -1221,46 +1266,46 @@ t8_dtri_is_sibling (const t8_dtri_t *t1, const t8_dtri_t *t2)
 
   t8_dtri_cube_id_t cid1, cid2;
 
-  if (t1->level == 0) {
-    return t2->level == 0 && t1->x == t2->x && t1->y == t2->y &&
+  if (element1->level == 0) {
+    return element2->level == 0 && element1->x == element2->x && element1->y == element2->y &&
 #ifdef T8_DTRI_TO_DTET
-           t1->z == t2->z &&
+           element1->z == element2->z &&
 #endif
            1;
   }
 
-  exclorx = t1->x ^ t2->x;
-  exclory = t1->y ^ t2->y;
+  exclorx = element1->x ^ element2->x;
+  exclory = element1->y ^ element2->y;
 #ifdef T8_DTRI_TO_DTET
-  exclorz = t1->z ^ t2->z;
+  exclorz = element1->z ^ element2->z;
 #endif
-  cid1 = compute_cubeid (t1, t1->level);
-  cid2 = compute_cubeid (t2, t2->level);
+  cid1 = compute_cubeid (element1, element1->level);
+  cid2 = compute_cubeid (element2, element2->level);
 
-  return (t1->level == t2->level) && ((exclorx & ~T8_DTRI_LEN (t1->level)) == 0)
-         && ((exclory & ~T8_DTRI_LEN (t1->level)) == 0) &&
+  return (element1->level == element2->level) && ((exclorx & ~T8_DTRI_LEN (element1->level)) == 0)
+         && ((exclory & ~T8_DTRI_LEN (element1->level)) == 0) &&
 #ifdef T8_DTRI_TO_DTET
-         ((exclorz & ~T8_DTRI_LEN (t1->level)) == 0) &&
+         ((exclorz & ~T8_DTRI_LEN (element1->level)) == 0) &&
 #endif
-         t8_dtri_cid_type_to_parenttype[cid1][t1->type] == t8_dtri_cid_type_to_parenttype[cid2][t2->type];
+         t8_dtri_cid_type_to_parenttype[cid1][element1->type] == t8_dtri_cid_type_to_parenttype[cid2][element2->type];
 }
 
 int
-t8_dtri_is_parent (const t8_dtri_t *t, const t8_dtri_t *c)
+t8_dtri_is_parent (const t8_dtri_t *element, const t8_dtri_t *child)
 {
   t8_dtri_cube_id_t cid;
 
-  cid = compute_cubeid (c, c->level);
-  return (t->level + 1 == c->level) && (t->x == (c->x & ~T8_DTRI_LEN (c->level)))
-         && (t->y == (c->y & ~T8_DTRI_LEN (c->level))) &&
+  cid = compute_cubeid (child, child->level);
+  return (element->level + 1 == child->level) && (element->x == (child->x & ~T8_DTRI_LEN (child->level)))
+         && (element->y == (child->y & ~T8_DTRI_LEN (child->level))) &&
 #ifdef T8_DTRI_TO_DTET
-         (t->z == (c->z & ~T8_DTRI_LEN (c->level))) &&
+         (element->z == (child->z & ~T8_DTRI_LEN (child->level))) &&
 #endif
-         t->type == t8_dtri_cid_type_to_parenttype[cid][c->type] && 1;
+         element->type == t8_dtri_cid_type_to_parenttype[cid][child->type] && 1;
 }
 
 int
-t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c)
+t8_dtri_is_ancestor (const t8_dtri_t *element, const t8_dtri_t *child)
 {
   t8_dtri_coord_t n1, n2;
   t8_dtri_coord_t exclorx;
@@ -1272,17 +1317,17 @@ t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c)
 #endif
   int8_t type_t;
 
-  if (t->level > c->level) {
+  if (element->level > child->level) {
     return 0;
   }
-  if (t->level == c->level) {
-    return t8_dtri_is_equal (t, c);
+  if (element->level == child->level) {
+    return t8_dtri_is_equal (element, child);
   }
 
-  exclorx = (t->x ^ c->x) >> (T8_DTRI_MAXLEVEL - t->level);
-  exclory = (t->y ^ c->y) >> (T8_DTRI_MAXLEVEL - t->level);
+  exclorx = (element->x ^ child->x) >> (T8_DTRI_MAXLEVEL - element->level);
+  exclory = (element->y ^ child->y) >> (T8_DTRI_MAXLEVEL - element->level);
 #ifdef T8_DTRI_TO_DTET
-  exclorz = (t->z ^ c->z) >> (T8_DTRI_MAXLEVEL - t->level);
+  exclorz = (element->z ^ child->z) >> (T8_DTRI_MAXLEVEL - element->level);
 #endif
 
   if (exclorx == 0 && exclory == 0
@@ -1290,15 +1335,15 @@ t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c)
       && exclorz == 0
 #endif
   ) {
-    /* t and c have the same cube as ancestor.
+    /* element and child have the same cube as ancestor.
      * Now check if t has the correct type to be c's ancestor. */
-    type_t = t->type;
+    type_t = element->type;
 #ifndef T8_DTRI_TO_DTET
     /* 2D */
-    n1 = (type_t == 0) ? c->x - t->x : c->y - t->y;
-    n2 = (type_t == 0) ? c->y - t->y : c->x - t->x;
+    n1 = (type_t == 0) ? child->x - element->x : child->y - element->y;
+    n2 = (type_t == 0) ? child->y - element->y : child->x - element->x;
 
-    return !(n1 >= T8_DTRI_LEN (t->level) || n2 < 0 || n2 - n1 > 0 || (n2 == n1 && c->type == 1 - type_t));
+    return !(n1 >= T8_DTRI_LEN (element->level) || n2 < 0 || n2 - n1 > 0 || (n2 == n1 && child->type == 1 - type_t));
 #else
     /* 3D */
     /* Compute the coordinate directions according to this table:
@@ -1308,28 +1353,28 @@ t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c)
      * dir3       z  y  x  z  y  x
      */
     /* clang-format off */
-    n1 = type_t / 2 == 0 ? c->x - t->x :                      /* type(t) is 0 or 1 */
-           type_t / 2 == 2 ? c->z - t->z : c->y - t->y;       /* type(t) is (4 or 5) or (2 or 3) */
-    n2 = (type_t + 1) / 2 == 2 ? c->x - t->x :                /* type(t) is 3 or 4 */
-           (type_t + 1) / 2 == 1 ? c->z - t->z : c->y - t->y; /* type(t) is (1 or 2) or (0 or 5) */
-    dir3 = type_t % 3 == 2 ? c->x - t->x :                    /* type(t) is 2 or 5 */
-             type_t % 3 == 0 ? c->z - t->z : c->y - t->y;     /* type(t) is (0 or 3) or (1 or 4) */
+    n1 = type_t / 2 == 0 ? child->x - element->x :                      /* type(t) is 0 or 1 */
+           type_t / 2 == 2 ? child->z - element->z : child->y - element->y;       /* type(t) is (4 or 5) or (2 or 3) */
+    n2 = (type_t + 1) / 2 == 2 ? child->x - element->x :                /* type(t) is 3 or 4 */
+           (type_t + 1) / 2 == 1 ? child->z - element->z : child->y - element->y; /* type(t) is (1 or 2) or (0 or 5) */
+    dir3 = type_t % 3 == 2 ? child->x - element->x :                    /* type(t) is 2 or 5 */
+             type_t % 3 == 0 ? child->z - element->z : child->y - element->y;     /* type(t) is (0 or 3) or (1 or 4) */
     sign = (type_t % 2 == 0) ? 1 : -1;
     /* clang-format on */
 
     type_t += 6; /* We need to compute modulo six and want
                                    to avoid negative numbers when subtracting from type_t. */
 
-    return !(n1 >= T8_DTRI_LEN (t->level) || n2 < 0 || dir3 - n1 > 0 || n2 - dir3 > 0
+    return !(n1 >= T8_DTRI_LEN (element->level) || n2 < 0 || dir3 - n1 > 0 || n2 - dir3 > 0
              || (dir3 == n2
-                 && (c->type == (type_t + sign * 1) % 6 || c->type == (type_t + sign * 2) % 6
-                     || c->type == (type_t + sign * 3) % 6))
+                 && (child->type == (type_t + sign * 1) % 6 || child->type == (type_t + sign * 2) % 6
+                     || child->type == (type_t + sign * 3) % 6))
              || (dir3 == n1
-                 && (c->type == (type_t - sign * 1) % 6 || c->type == (type_t - sign * 2) % 6
-                     || c->type == (type_t - sign * 3) % 6))
+                 && (child->type == (type_t - sign * 1) % 6 || child->type == (type_t - sign * 2) % 6
+                     || child->type == (type_t - sign * 3) % 6))
              /* On the x-y-z diagonal only tets of the same type can be
               * ancestor of each other. */
-             || (dir3 == n2 && n2 == n1 && type_t - 6 != c->type));
+             || (dir3 == n2 && n2 == n1 && type_t - 6 != child->type));
 #endif
   }
   else {
@@ -1339,27 +1384,27 @@ t8_dtri_is_ancestor (const t8_dtri_t *t, const t8_dtri_t *c)
 
 /* Compute the linear id of the first descendant of a triangle/tet */
 static t8_linearidx_t
-t8_dtri_linear_id_first_desc (const t8_dtri_t *t, int level)
+t8_dtri_linear_id_first_desc (const t8_dtri_t *element, int level)
 {
   /* The id of the first descendant is the id of t in a uniform level
    * refinement */
-  return t8_dtri_linear_id (t, level);
+  return t8_dtri_linear_id (element, level);
 }
 
 /* Compute the linear id of the last descendant of a triangle/tet */
 static t8_linearidx_t
-t8_dtri_linear_id_last_desc (const t8_dtri_t *t, int level)
+t8_dtri_linear_id_last_desc (const t8_dtri_t *element, int level)
 {
   t8_linearidx_t id = 0, t_id;
   int exponent;
 
-  T8_ASSERT (level >= t->level);
+  T8_ASSERT (level >= element->level);
   /* The id of the last descendant at level consists of the id of t in
    * the first digits and then the local ids of all last children
    * (3 in 2d, 7 in 3d)
    */
-  t_id = t8_dtri_linear_id (t, t->level);
-  exponent = level - t->level;
+  t_id = t8_dtri_linear_id (element, element->level);
+  exponent = level - element->level;
   /* Set the last bits to the local ids of always choosing the last child
    * of t */
   id = (((t8_linearidx_t) 1) << T8_DTRI_DIM * exponent) - 1;
@@ -1370,53 +1415,53 @@ t8_dtri_linear_id_last_desc (const t8_dtri_t *t, int level)
 
 /* Construct the linear id of a descendant in a corner of t */
 static t8_linearidx_t
-t8_dtri_linear_id_corner_desc (const t8_dtri_t *t, int corner, int level)
+t8_dtri_linear_id_corner_desc (const t8_dtri_t *element, int corner, int level)
 {
   t8_linearidx_t id = 0, t_id, child_id;
   int it;
 
   T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
-  T8_ASSERT (t->level <= level && level <= T8_DTRI_MAXLEVEL);
+  T8_ASSERT (element->level <= level && level <= T8_DTRI_MAXLEVEL);
 
   switch (corner) {
   case 0:
-    return t8_dtri_linear_id_first_desc (t, level);
+    return t8_dtri_linear_id_first_desc (element, level);
     break;
   case 1: /* Falls down to case 2 in 3D */
 #ifndef T8_DTRI_TO_DTET
     /* For type 0 triangles, the first corner descendant arises from always
      * taking the first child. For type 1 triangles it is always the second child. */
-    child_id = t8_dtri_parenttype_beyid_to_Iloc[t->type][1];
+    child_id = t8_dtri_parenttype_beyid_to_Iloc[element->type][1];
     break;
 #else
   case 2:
-    /* For tets, the first corner descnendant arises from always taking the n-th
+    /* For tets, the first corner descendant arises from always taking the n-th
      * child, where n is the local child id corresponding to Bey-id corner. */
-    child_id = t8_dtet_parenttype_beyid_to_Iloc[t->type][corner];
+    child_id = t8_dtet_parenttype_beyid_to_Iloc[element->type][corner];
     break;
 #endif
   case T8_DTRI_DIM:
     /* In 2D the 2nd corner and in 3D the 3rd corner correspond to the last
-     * descendant of t */
-    return t8_dtri_linear_id_last_desc (t, level);
+     * descendant of element. */
+    return t8_dtri_linear_id_last_desc (element, level);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
   }
   /* This part is executed for corner 1 (2D) or corner 1 and 2 (3D) */
-  t_id = t8_dtri_linear_id (t, t->level);
-  for (it = 0; it < level - t->level; it++) {
+  t_id = t8_dtri_linear_id (element, element->level);
+  for (it = 0; it < level - element->level; it++) {
     /* Store child_id at every position of the new id after t's level and
      * up to level */
     id |= child_id << (T8_DTRI_DIM * it);
   }
   /* At the beginning add the linear id of t */
-  id |= t_id << (T8_DTRI_DIM * (level - t->level));
+  id |= t_id << (T8_DTRI_DIM * (level - element->level));
   return id;
 }
 
 t8_linearidx_t
-t8_dtri_linear_id (const t8_dtri_t *t, int level)
+t8_dtri_linear_id (const t8_dtri_t *element, int level)
 {
   t8_linearidx_t id = 0;
   int8_t type_temp = 0;
@@ -1426,21 +1471,21 @@ t8_dtri_linear_id (const t8_dtri_t *t, int level)
   int my_level;
 
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
-  my_level = t->level;
+  my_level = element->level;
   exponent = 0;
   /* If the given level is bigger than t's level
    * we first fill up with the ids of t's descendants at t's
    * origin with the same type as t */
   if (level > my_level) {
     exponent = (level - my_level) * T8_DTRI_DIM;
-    type_temp = t->type;
+    type_temp = element->type;
     level = my_level;
   }
   else {
-    type_temp = compute_type (t, level);
+    type_temp = compute_type (element, level);
   }
   for (i = level; i > 0; i--) {
-    cid = compute_cubeid (t, i);
+    cid = compute_cubeid (element, i);
     id |= ((t8_linearidx_t) t8_dtri_type_cid_to_Iloc[type_temp][cid]) << exponent;
     exponent += T8_DTRI_DIM; /* multiply with 4 (2d) resp. 8  (3d) */
     type_temp = t8_dtri_cid_type_to_parenttype[cid][type_temp];
@@ -1449,7 +1494,7 @@ t8_dtri_linear_id (const t8_dtri_t *t, int level)
 }
 
 void
-t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id, const int start_level, const int end_level,
+t8_dtri_init_linear_id_with_level (t8_dtri_t *element, t8_linearidx_t id, const int start_level, const int end_level,
                                    t8_dtri_type_t parenttype)
 {
   int i;
@@ -1460,10 +1505,10 @@ t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id, const int st
   t8_dtri_type_t type;
   T8_ASSERT (id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * end_level));
   /*Ensure, that the function is called with a valid element */
-  T8_ASSERT (t->level == start_level);
-  T8_ASSERT (t8_dtri_is_valid (t));
+  T8_ASSERT (element->level == start_level);
+  T8_ASSERT (t8_dtri_is_valid (element));
 
-  t->level = end_level;
+  element->level = end_level;
 
   type = parenttype; /* This is the type of the parent triangle */
   for (i = start_level; i <= end_level; i++) {
@@ -1474,17 +1519,17 @@ t8_dtri_init_linear_id_with_level (t8_dtri_t *t, t8_linearidx_t id, const int st
     /* Get the type and cube-id of T's ancestor on level i */
     cid = t8_dtri_parenttype_Iloc_to_cid[type][local_index];
     type = t8_dtri_parenttype_Iloc_to_type[type][local_index];
-    t->x |= (cid & 1) ? 1 << offset_coords : 0;
-    t->y |= (cid & 2) ? 1 << offset_coords : 0;
+    element->x |= (cid & 1) ? 1 << offset_coords : 0;
+    element->y |= (cid & 2) ? 1 << offset_coords : 0;
 #ifdef T8_DTRI_TO_DTET
-    t->z |= (cid & 4) ? 1 << offset_coords : 0;
+    element->z |= (cid & 4) ? 1 << offset_coords : 0;
 #endif
   }
-  t->type = type;
+  element->type = type;
 }
 
 void
-t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level)
+t8_dtri_init_linear_id (t8_dtri_t *element, t8_linearidx_t id, int level)
 {
   int i;
   int offset_coords, offset_index;
@@ -1494,11 +1539,11 @@ t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level)
   t8_dtri_type_t type;
   T8_ASSERT (id <= ((t8_linearidx_t) 1) << (T8_DTRI_DIM * level));
 
-  t->level = level;
-  t->x = 0;
-  t->y = 0;
+  element->level = level;
+  element->x = 0;
+  element->y = 0;
 #ifdef T8_DTRI_TO_DTET
-  t->z = 0;
+  element->z = 0;
 #endif
   type = 0; /* This is the type of the root triangle */
   for (i = 1; i <= level; i++) {
@@ -1509,24 +1554,24 @@ t8_dtri_init_linear_id (t8_dtri_t *t, t8_linearidx_t id, int level)
     /* Get the type and cube-id of T's ancestor on level i */
     cid = t8_dtri_parenttype_Iloc_to_cid[type][local_index];
     type = t8_dtri_parenttype_Iloc_to_type[type][local_index];
-    t->x |= (cid & 1) ? 1 << offset_coords : 0;
-    t->y |= (cid & 2) ? 1 << offset_coords : 0;
+    element->x |= (cid & 1) ? 1 << offset_coords : 0;
+    element->y |= (cid & 2) ? 1 << offset_coords : 0;
 #ifdef T8_DTRI_TO_DTET
-    t->z |= (cid & 4) ? 1 << offset_coords : 0;
+    element->z |= (cid & 4) ? 1 << offset_coords : 0;
 #endif
   }
-  t->type = type;
+  element->type = type;
 }
 
 void
-t8_dtri_init_root (t8_dtri_t *t)
+t8_dtri_init_root (t8_dtri_t *element)
 {
-  t->level = 0;
-  t->type = 0;
-  t->x = 0;
-  t->y = 0;
+  element->level = 0;
+  element->type = 0;
+  element->x = 0;
+  element->y = 0;
 #ifdef T8_DTRI_TO_DTET
-  t->z = 0;
+  element->z = 0;
 #endif
 }
 
@@ -1535,7 +1580,7 @@ t8_dtri_init_root (t8_dtri_t *t)
  * 'increment' must be greater than -4 (-8) and smaller than +4 (+8).
  * Before calling this function s should store the same entries as t. */
 static void
-t8_dtri_succ_pred_recursion (const t8_dtri_t *t, t8_dtri_t *s, int level, int increment)
+t8_dtri_succ_pred_recursion (const t8_dtri_t *element, t8_dtri_t *s, int level, int increment)
 {
   t8_dtri_type_t type_level, type_level_p1;
   t8_dtri_cube_id_t cid;
@@ -1544,20 +1589,20 @@ t8_dtri_succ_pred_recursion (const t8_dtri_t *t, t8_dtri_t *s, int level, int in
 
   /* We exclude the case level = 0, because the root triangle does
    * not have a successor. */
-  T8_ASSERT (1 <= level && level <= t->level);
+  T8_ASSERT (1 <= level && level <= element->level);
   T8_ASSERT (-T8_DTRI_CHILDREN < increment && increment < T8_DTRI_CHILDREN);
 
   if (increment == 0) {
-    t8_dtri_copy (t, s);
+    t8_dtri_copy (element, s);
     return;
   }
-  cid = compute_cubeid (t, level);
-  type_level = compute_type (t, level);
+  cid = compute_cubeid (element, level);
+  type_level = compute_type (element, level);
   local_index = t8_dtri_type_cid_to_Iloc[type_level][cid];
   local_index = (local_index + T8_DTRI_CHILDREN + increment) % T8_DTRI_CHILDREN;
   if (local_index == 0) {
     sign = increment < 0 ? -1 : increment > 0;
-    t8_dtri_succ_pred_recursion (t, s, level - 1, sign);
+    t8_dtri_succ_pred_recursion (element, s, level - 1, sign);
     type_level_p1 = s->type; /* We stored the type of s at level-1 in s->type */
   }
   else {
@@ -1577,47 +1622,47 @@ t8_dtri_succ_pred_recursion (const t8_dtri_t *t, t8_dtri_t *s, int level, int in
 }
 
 void
-t8_dtri_successor (const t8_dtri_t *t, t8_dtri_t *s, int level)
+t8_dtri_successor (const t8_dtri_t *element, t8_dtri_t *s, int level)
 {
-  t8_dtri_copy (t, s);
-  t8_dtri_succ_pred_recursion (t, s, level, 1);
+  t8_dtri_copy (element, s);
+  t8_dtri_succ_pred_recursion (element, s, level, 1);
 }
 
 void
-t8_dtri_first_descendant (const t8_dtri_t *t, t8_dtri_t *s, int level)
+t8_dtri_first_descendant (const t8_dtri_t *element, t8_dtri_t *s, int level)
 {
   t8_linearidx_t id;
 
-  T8_ASSERT (level >= t->level);
+  T8_ASSERT (level >= element->level);
   /* Compute the linear id of the first descendant */
-  id = t8_dtri_linear_id_first_desc (t, level);
+  id = t8_dtri_linear_id_first_desc (element, level);
   /* The first descendant has exactly this id */
   t8_dtri_init_linear_id (s, id, level);
 }
 
 void
-t8_dtri_last_descendant (const t8_dtri_t *t, t8_dtri_t *s, int level)
+t8_dtri_last_descendant (const t8_dtri_t *element, t8_dtri_t *s, int level)
 {
   t8_linearidx_t id;
 
-  T8_ASSERT (level >= t->level);
+  T8_ASSERT (level >= element->level);
   /* Compute the linear id of t's last descendant */
-  id = t8_dtri_linear_id_last_desc (t, level);
+  id = t8_dtri_linear_id_last_desc (element, level);
   /* Set s to math this linear id */
   t8_dtri_init_linear_id (s, id, level);
 }
 
 void
-t8_dtri_corner_descendant (const t8_dtri_t *t, t8_dtri_t *s, int corner, int level)
+t8_dtri_corner_descendant (const t8_dtri_t *element, t8_dtri_t *s, int corner, int level)
 {
   t8_linearidx_t id;
-  T8_ASSERT (t->level <= level && level <= T8_DTRI_MAXLEVEL);
+  T8_ASSERT (element->level <= level && level <= T8_DTRI_MAXLEVEL);
   T8_ASSERT (0 <= corner && corner < T8_DTRI_CORNERS);
 
   switch (corner) {
   case 0:
     /* The 0-the corner descendant is just the first descendant */
-    t8_dtri_first_descendant (t, s, level);
+    t8_dtri_first_descendant (element, s, level);
     break;
   case 1:
 #ifdef T8_DTRI_TO_DTET /* In 3D corner 1 and 2 are handled the same */
@@ -1625,12 +1670,12 @@ t8_dtri_corner_descendant (const t8_dtri_t *t, t8_dtri_t *s, int corner, int lev
 #endif
     /* Compute the linear id of the descendant and construct a triangle with
      * this id */
-    id = t8_dtri_linear_id_corner_desc (t, corner, level);
+    id = t8_dtri_linear_id_corner_desc (element, corner, level);
     t8_dtri_init_linear_id (s, id, level);
     break;
   case T8_DTRI_DIM:
     /* The 2nd corner (2D) or 3rd corner (3D) descendant is just the last descendant */
-    t8_dtri_last_descendant (t, s, level);
+    t8_dtri_last_descendant (element, s, level);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -1638,40 +1683,40 @@ t8_dtri_corner_descendant (const t8_dtri_t *t, t8_dtri_t *s, int corner, int lev
 }
 
 void
-t8_dtri_predecessor (const t8_dtri_t *t, t8_dtri_t *s, int level)
+t8_dtri_predecessor (const t8_dtri_t *element, t8_dtri_t *s, int level)
 {
-  t8_dtri_copy (t, s);
-  t8_dtri_succ_pred_recursion (t, s, level, -1);
+  t8_dtri_copy (element, s);
+  t8_dtri_succ_pred_recursion (element, s, level, -1);
 }
 
 int
-t8_dtri_ancestor_id (const t8_dtri_t *t, int level)
+t8_dtri_ancestor_id (const t8_dtri_t *element, int level)
 {
   t8_dtri_cube_id_t cid;
   t8_dtri_type_t type;
 
   T8_ASSERT (0 <= level && level <= T8_DTRI_MAXLEVEL);
-  T8_ASSERT (level <= t->level);
+  T8_ASSERT (level <= element->level);
 
-  cid = compute_cubeid (t, level);
-  type = compute_type (t, level);
+  cid = compute_cubeid (element, level);
+  type = compute_type (element, level);
   return t8_dtri_type_cid_to_Iloc[type][cid];
 }
 
 int
-t8_dtri_child_id (const t8_dtri_t *t)
+t8_dtri_child_id (const t8_dtri_t *element)
 {
-  return t8_dtri_type_cid_to_Iloc[t->type][compute_cubeid (t, t->level)];
+  return t8_dtri_type_cid_to_Iloc[element->type][compute_cubeid (element, element->level)];
 }
 
 int
-t8_dtri_get_level (const t8_dtri_t *t)
+t8_dtri_get_level (const t8_dtri_t *element)
 {
-  return t->level;
+  return element->level;
 }
 
 int
-t8_dtri_is_valid (const t8_dtri_t *t)
+t8_dtri_is_valid (const t8_dtri_t *element)
 {
   int is_valid;
   t8_dtri_coord_t max_coord;
@@ -1681,26 +1726,26 @@ t8_dtri_is_valid (const t8_dtri_t *t)
 
   /* A triangle/tet is valid if: */
   /* The level is in the valid range */
-  is_valid = 0 <= t->level && t->level <= T8_DTRI_MAXLEVEL;
+  is_valid = 0 <= element->level && element->level <= T8_DTRI_MAXLEVEL;
   /* The coordinates are in valid ranges, we allow the x,y,z coordinates
    * to lie in the 3x3 neighborhood of the root cube. */
   max_coord = ((int64_t) 2 * T8_DTRI_ROOT_LEN) - 1;
-  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->x && t->x <= max_coord;
-  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->y && t->y <= max_coord;
+  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= element->x && element->x <= max_coord;
+  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= element->y && element->y <= max_coord;
 #ifdef T8_DTRI_TO_DTET
-  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= t->z && t->z <= max_coord;
+  is_valid = is_valid && -T8_DTRI_ROOT_LEN <= element->z && element->z <= max_coord;
 #endif
   /* Its type is in the valid range */
-  is_valid = is_valid && 0 <= t->type && t->type < T8_DTRI_NUM_TYPES;
+  is_valid = is_valid && 0 <= element->type && element->type < T8_DTRI_NUM_TYPES;
 
   return is_valid;
 }
 
 void
-t8_dtri_init (t8_dtri_t *t)
+t8_dtri_init (t8_dtri_t *element)
 {
   /* Set all values to zero */
-  memset (t, 0, sizeof (*t));
+  memset (element, 0, sizeof (*element));
 }
 
 /* triangles (tets) are packed as x,y (,z) coordinates, type and level */

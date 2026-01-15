@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_search/t8_forest_search.hxx>
@@ -160,7 +160,7 @@ TEST_P (forest_search, test_search_one_query_matches_all)
 
   t8_forest_unref (&forest);
 }
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
 const int maxlvl = 5;
 #else
 const int maxlvl = 6;

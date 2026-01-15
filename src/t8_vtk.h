@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** file t8_vtk.h
+/** \file t8_vtk.h
  * This header file collects macros that are needed for
  * the forest and cmesh vtk routines.
  * \see t8_forest_vtk.h \see t8_cmesh_vtk_writer.h \see t8_cmesh_vtk_reader.hxx
@@ -31,35 +31,38 @@
 
 #include <t8.h>
 
-/* typedef and macros */
-
+/** typedef and macros */
 #define T8_VTK_LOCIDX "Int32"
-/* TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
+/** TODO: Paraview has troubles with Int64, so we switch to Int32 and be careful.
  *       Investigate this further. See also vtk macro VTK_USE_64BIT_IDS */
 #define T8_VTK_GLOIDX "Int32"
 
-/* TODO: these macros need to be set by configure */
+/** TODO: these macros need to be set by configure. */
 #ifndef T8_VTK_DOUBLES
-#define T8_VTK_FLOAT_NAME "Float32"
-#define T8_VTK_FLOAT_TYPE float
+#define T8_VTK_FLOAT_NAME "Float32" /**< Name of the floats used for vtk */
+#define T8_VTK_FLOAT_TYPE float     /**< Float type for vtk */
 #else
 #define T8_VTK_FLOAT_NAME "Float64"
 #define T8_VTK_FLOAT_TYPE double
 #endif
 
-#define T8_VTK_FORMAT_STRING "ascii"
+#define T8_VTK_FORMAT_STRING "ascii" /**< Format string for vtk */
 
 #if T8_ENABLE_VTK
-#define t8_vtk_locidx_array_type_t vtkTypeInt32Array
-#define t8_vtk_gloidx_array_type_t vtkTypeInt64Array
+#define t8_vtk_locidx_array_type_t vtkTypeInt32Array /**< VTK array type for local indices */
+#define t8_vtk_gloidx_array_type_t vtkTypeInt64Array /**< VTK array type for global indices */
 #endif
 
-/* TODO: Add support for integer data type. */
+/** TODO: Add support for integer data type. */
 typedef enum {
-  T8_VTK_SCALAR, /* One double value per element */
-  T8_VTK_VECTOR  /* 3 double values per element */
+  T8_VTK_SCALAR, /**< One double value per element */
+  T8_VTK_VECTOR  /**< 3 double values per element */
 } t8_vtk_data_type_t;
 
+/** A data field for VTK output.
+ * This struct is used to store data that is written to the VTK files.
+ * It contains the type of the data, a description, and the actual data array.
+ */
 typedef struct
 {
   t8_vtk_data_type_t type;  /**< Describes of which type the data array is */
@@ -72,7 +75,7 @@ typedef struct
 T8_EXTERN_C_BEGIN ();
 
 /* function declarations */
-/* Writes the pvtu header file that links to the processor local files.
+/** Writes the pvtu header file that links to the processor local files.
  * It is used by the cmesh and forest vtk routines.
  * This function should only be called by one process.
  * Return 0 on success. */

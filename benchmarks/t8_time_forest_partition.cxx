@@ -26,13 +26,13 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 #include <p4est_connectivity.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vtk/t8_vtk_writer.h>
 
-#include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_cad.hxx>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -53,33 +53,6 @@ typedef struct
   int base_level;      /* A given level that is not coarsend further, see -l argument */
   int max_level;       /* A max level that is not refined further, see -L argument */
 } adapt_data_t;
-
-#if 0
-/* TODO: deprecated. was replaced by t8_common_midpoint. */
-static void
-t8_anchor_element (t8_forest_t forest, t8_locidx_t which_tree,
-                   const t8_scheme *scheme, t8_element_t *element,
-                   double elem_anchor_f[3])
-{
-  double             *tree_vertices;
-
-  tree_vertices = t8_cmesh_get_tree_vertices (t8_forest_get_cmesh (forest),
-                                              t8_forest_ltreeid_to_cmesh_ltreeid
-                                              (forest, which_tree));
-
-  t8_forest_element_coordinate (forest, which_tree, element, tree_vertices,
-                                0, elem_anchor_f);
-#if 0
-  /* get the element anchor node */
-  scheme->t8_element_anchor (element, elem_anchor);
-  maxlevel = scheme->t8_element_maxlevel ();
-  for (i = 0; i < 3; i++) {
-    /* Calculate the anchor coordinate in [0,1]^3 */
-    elem_anchor_f[i] = elem_anchor[i] / (1 << maxlevel);
-  }
-#endif
-}
-#endif
 
 /* refine the forest in a band, given by a plane E and two constants
  * c_min, c_max. We refine the cells in the band c_min*E, c_max*E */

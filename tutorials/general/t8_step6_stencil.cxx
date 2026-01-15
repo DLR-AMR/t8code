@@ -23,10 +23,10 @@
 /* See also: https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils
  *
  * This is step6 of the t8code tutorials using the C++ interface of t8code.
- * In the following we will store data in the individual elements of our forest. 
- * To do this, we will create a uniform forest in 2D, which will get adapted, 
+ * In the following we will store data in the individual elements of our forest.
+ * To do this, we will create a uniform forest in 2D, which will get adapted,
  * partitioned, balanced and create ghost elements all in one go.
- * After adapting the forest we build a data array and gather data for 
+ * After adapting the forest we build a data array and gather data for
  * the local elements. Next, we exchange the data values of the ghost elements and compute
  * various stencils resp. finite differences. Finally, vtu files are stored with three
  * custom data fields.
@@ -41,7 +41,7 @@
 #include <cmath>
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <t8_types/t8_vec.hxx>                  /* Basic operations on 3D vectors. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
@@ -147,7 +147,7 @@ t8_step6_create_element_data (t8_forest_t forest)
       t8_forest_element_centroid (forest, itree, element, edat->midpoint);
 
       /* Compute vertex coordinates. */
-      double verts[4][3] = { 0 };
+      double verts[4][3] {};
       scheme->element_get_vertex_reference_coords (tree_class, element, 0, verts[0]);
       scheme->element_get_vertex_reference_coords (tree_class, element, 1, verts[1]);
       scheme->element_get_vertex_reference_coords (tree_class, element, 2, verts[2]);
@@ -182,7 +182,7 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
   /* Get the scheme of the forest */
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
-  double stencil[3][3] = { 0 };
+  double stencil[3][3] {};
   double dx[3] = { 0 };
   double dy[3] = { 0 };
 
@@ -299,7 +299,7 @@ t8_step6_exchange_ghost_data (t8_forest_t forest, struct data_per_element *data)
 }
 
 /* Write the forest as vtu and also write the element's volumes in the file.
- * 
+ *
  * t8code supports writing element based data to vtu as long as its stored
  * as doubles. Each of the data fields to write has to be provided in its own
  * array of length num_local_elements.
@@ -417,6 +417,13 @@ t8_step6_main (int argc, char **argv)
 
   /* Compute stencil. */
   t8_step6_compute_stencil (forest, data);
+
+  /* Exchange the neighboring data at MPI process boundaries again.
+   * This ensures that also the computed schlieren and curvature
+   * data are properly written to the ghost elements.
+   * For the sake of this example this step is only necessary in order
+   * to visualize the values on the ghost cells in the vtu output later. */
+  t8_step6_exchange_ghost_data (forest, data);
 
   /* Output the data to vtu files. */
   t8_step6_output_data_to_vtu (forest, data, prefix_forest_with_data);
