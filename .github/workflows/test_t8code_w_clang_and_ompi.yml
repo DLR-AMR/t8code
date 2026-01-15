@@ -144,9 +144,13 @@ jobs:
         path: build/CMakeFiles/CMakeOutput.log
     # Build with ninja
     - name: ninja
-      run: cd build && ninja $MAKEFLAGS
+      run: |
+        export CASROOT=${OCCT_INSTALL_PATH}
+        cd build && ninja $MAKEFLAGS
     - name: ninja install
-      run: cd build && ninja install $MAKEFLAGS
+      run: |
+        export CASROOT=${OCCT_INSTALL_PATH}
+        cd build && ninja install $MAKEFLAGS
   #
   # Part 3: Run t8code tests
   # ------------------------
