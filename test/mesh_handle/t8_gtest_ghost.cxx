@@ -115,14 +115,13 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
       EXPECT_EQ (mesh_iterator->get_num_faces (), num_faces);
       for (int iface = 0; iface < num_faces; iface++) {
         // --- Get neighbors from forest. ---
-        t8_element_t** neighbors;
+        const t8_element_t** neighbors;
         int num_neighbors;
-        const int forest_is_balanced = t8_forest_is_balanced (forest);
         t8_eclass_t neigh_eclass;
         int* dual_faces;
         t8_locidx_t* neigh_ids;
         t8_forest_leaf_face_neighbors (forest, itree, elem, &neighbors, iface, &dual_faces, &num_neighbors, &neigh_ids,
-                                       &neigh_eclass, forest_is_balanced);
+                                       &neigh_eclass);
         // --- Get neighbors from mesh element. ---
         std::vector<int> dual_faces_handle;
         auto neighbors_handle = mesh_iterator->get_face_neighbors (iface, dual_faces_handle);
@@ -138,7 +137,6 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
         }
         // Free memory.
         if (num_neighbors > 0) {
-          scheme->element_destroy (neigh_eclass, num_neighbors, neighbors);
           T8_FREE (neigh_ids);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
