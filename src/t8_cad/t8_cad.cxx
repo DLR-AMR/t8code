@@ -332,10 +332,10 @@ void
 t8_cad::t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const int face_index, double face_params[2],
                                                   std::optional<std::span<const double, 2>> reference_face_params) const
 {
-  /* DISCLAIMER: This function is overly complicated and I do not understand why the simpler versions to not work.
+  /* DISCLAIMER: This function is overly complicated and I do not understand why the simpler versions do not work.
   The overly complicated part is only the edge case where the vertex lies on a seam and reference parameters are provided.
   The (simpler) plan was as follows: We have the vertex and face. But in the topology of the face, the vertex exists two times,
-  on the one side of the face and on the other. Bot sides are on the same physical location, because it is a seam. Thats
+  on the one side of the face and on the other. Both sides are on the same physical location, because it is a seam. Thats
   why both vertices have the same coordinates. But they do not have the same parameters on the surface. The simple plan
   is to use a TopExp_Explorer to iterate over all vertices of the face and to look at all vertices with the right coords.
   From all those vertices we choose the one, which has the closest parameters to our reference parameters.
