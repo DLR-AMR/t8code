@@ -62,6 +62,8 @@ jobs:
       run: tar -xf artifact.tar && rm artifact.tar
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
+    - name: install ccache
+      run: sudo apt install ccache -y
     - name: enable caching of build artifacts
       run: PATH=/usr/lib/ccache:$PATH;
            which gcc;
