@@ -59,7 +59,6 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<std::tu
 
     forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
-    //const int maxlevel = t8_forest_get_maxlevel (forest);
     int maxlevel = 7;
     const int recursive_adapt = 1;
     forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 0, &maxlevel);
