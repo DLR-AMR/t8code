@@ -156,6 +156,8 @@ t8_cad::t8_geom_get_cad_shape_face_map () const
 int
 t8_cad::t8_geom_get_common_edge_of_vertices (const int vertex1_index, const int vertex2_index) const
 {
+  T8_ASSERT (vertex1_index <= cad_shape_vertex2edge_map.Size ());
+  T8_ASSERT (vertex2_index <= cad_shape_vertex2edge_map.Size ());
   const TopTools_ListOfShape collection1 = cad_shape_vertex2edge_map.FindFromIndex (vertex1_index);
   const TopTools_ListOfShape collection2 = cad_shape_vertex2edge_map.FindFromIndex (vertex2_index);
 
@@ -172,6 +174,8 @@ t8_cad::t8_geom_get_common_edge_of_vertices (const int vertex1_index, const int 
 int
 t8_cad::t8_geom_get_common_face_of_edges (const int edge1_index, const int edge2_index) const
 {
+  T8_ASSERT (edge1_index <= cad_shape_edge2face_map.Size ());
+  T8_ASSERT (edge2_index <= cad_shape_edge2face_map.Size ());
   const TopTools_ListOfShape collection1 = cad_shape_edge2face_map.FindFromIndex (edge1_index);
   const TopTools_ListOfShape collection2 = cad_shape_edge2face_map.FindFromIndex (edge2_index);
 
@@ -188,6 +192,8 @@ t8_cad::t8_geom_get_common_face_of_edges (const int edge1_index, const int edge2
 int
 t8_cad::t8_geom_get_common_face_of_vertex_and_edge (const int vertex_index, const int edge_index) const
 {
+  T8_ASSERT (vertex_index <= cad_shape_vertex_map.Size ());
+  T8_ASSERT (edge_index <= cad_shape_edge2face_map.Size ());
   const TopTools_ListOfShape edge_collection = cad_shape_edge2face_map.FindFromIndex (edge_index);
   for (auto face = edge_collection.begin (); face != edge_collection.end (); ++face) {
     const size_t face_index = cad_shape_face_map.FindIndex (*face);
@@ -201,6 +207,8 @@ t8_cad::t8_geom_get_common_face_of_vertex_and_edge (const int vertex_index, cons
 int
 t8_cad::t8_geom_get_common_face_of_vertices (const int vertex1_index, const int vertex2_index) const
 {
+  T8_ASSERT (vertex1_index <= cad_shape_vertex2face_map.Size ());
+  T8_ASSERT (vertex2_index <= cad_shape_vertex2face_map.Size ());
   const TopTools_ListOfShape collection1 = cad_shape_vertex2face_map.FindFromIndex (vertex1_index);
   const TopTools_ListOfShape collection2 = cad_shape_vertex2face_map.FindFromIndex (vertex2_index);
 
@@ -217,6 +225,8 @@ t8_cad::t8_geom_get_common_face_of_vertices (const int vertex1_index, const int 
 int
 t8_cad::t8_geom_is_vertex_on_edge (const int vertex_index, const int edge_index) const
 {
+  T8_ASSERT (vertex_index <= cad_shape_vertex2edge_map.Size ());
+  T8_ASSERT (edge_index <= cad_shape_edge_map.Size ());
   const TopTools_ListOfShape collection = cad_shape_vertex2edge_map.FindFromIndex (vertex_index);
   return collection.Contains (cad_shape_edge_map.FindKey (edge_index));
 }
@@ -224,6 +234,8 @@ t8_cad::t8_geom_is_vertex_on_edge (const int vertex_index, const int edge_index)
 int
 t8_cad::t8_geom_is_edge_on_face (const int edge_index, const int face_index) const
 {
+  T8_ASSERT (edge_index <= cad_shape_edge2face_map.Size ());
+  T8_ASSERT (face_index <= cad_shape_face_map.Size ());
   const TopTools_ListOfShape collection = cad_shape_edge2face_map.FindFromIndex (edge_index);
   return collection.Contains (cad_shape_face_map.FindKey (face_index));
 }
@@ -231,6 +243,8 @@ t8_cad::t8_geom_is_edge_on_face (const int edge_index, const int face_index) con
 int
 t8_cad::t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const
 {
+  T8_ASSERT (vertex_index <= cad_shape_vertex2edge_map.Size ());
+  T8_ASSERT (face_index <= cad_shape_face_map.Size ());
   const TopTools_ListOfShape edge_collection = cad_shape_vertex2edge_map.FindFromIndex (vertex_index);
   for (auto edge = edge_collection.begin (); edge != edge_collection.end (); ++edge) {
     const TopTools_ListOfShape face_collection = cad_shape_edge2face_map.FindFromKey (*edge);
@@ -244,6 +258,8 @@ t8_cad::t8_geom_is_vertex_on_face (const int vertex_index, const int face_index)
 bool
 t8_cad::t8_geom_vertex_is_on_seam (const int vertex_index, const int face_index) const
 {
+  T8_ASSERT (vertex_index <= cad_shape_vertex2edge_map.Size ());
+  T8_ASSERT (face_index <= cad_shape_face_map.Size ());
   const auto face = t8_cad::t8_geom_get_cad_face (face_index);
   const TopTools_ListOfShape edge_collection = cad_shape_vertex2edge_map.FindFromIndex (vertex_index);
   const ShapeAnalysis_Edge edge_analyzer;
@@ -257,6 +273,8 @@ t8_cad::t8_geom_vertex_is_on_seam (const int vertex_index, const int face_index)
 bool
 t8_cad::t8_geom_edge_is_seam (const int edge_index, const int face_index) const
 {
+  T8_ASSERT (edge_index <= cad_shape_edge_map.Size ());
+  T8_ASSERT (face_index <= cad_shape_face_map.Size ());
   const auto face = t8_cad::t8_geom_get_cad_face (face_index);
   const auto edge = t8_cad::t8_geom_get_cad_edge (edge_index);
   const ShapeAnalysis_Edge edge_analyzer;
