@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_partition_for_coarsening.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -540,6 +541,12 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
     }
   }
   t8_shmem_array_end_writing (forest->element_offsets);
+
+  // In case the partition-for-coarsening flag is set, correct the partitioning if a family of elements is
+  // split across process boundaries
+  if (forest->set_for_coarsening != 0) {
+    t8_forest_pfc_correction_offsets (forest);
+  }
 }
 
 /* Find the owner of a given element.

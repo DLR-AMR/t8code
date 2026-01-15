@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <numeric>
 #include <span>
+#include <ranges>
 
 /**
   * Tag for a vector in N-dimensional space.

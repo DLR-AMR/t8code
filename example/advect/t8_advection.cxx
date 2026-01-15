@@ -1248,8 +1248,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   modulus = SC_MAX (1, time_steps / 10);
   for (problem->num_time_steps = 0; !done; problem->num_time_steps++, problem->t += problem->delta_t) {
     if (problem->num_time_steps % modulus == modulus - 1) {
-      t8_global_essentialf ("[advect] Step %i  %li elems\n", problem->num_time_steps + 1,
-                            static_cast<long> (t8_forest_get_global_num_leaf_elements (problem->forest)));
+      t8_global_essentialf ("[advect] Step %i  %" T8_GLOIDX_FORMAT " elems\n", problem->num_time_steps + 1,
+                            t8_forest_get_global_num_leaf_elements (problem->forest));
     }
     /* Time loop */
 

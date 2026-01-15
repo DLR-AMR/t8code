@@ -68,7 +68,6 @@ class t8_scheme_helpers: public t8_crtp_basic<TUnderlyingEclassScheme> {
    * the element's level, return the face number
    * of the ancestor of the element that matches the element's face. Or return -1 if
    * no face of the ancestor matches the face.
-   * \param [in] tree_class    The eclass of the current tree.
    * \param [in]  element    The element.
    * \param [in]  ancestor_level A refinement level smaller than (or equal to) \a element's level.
    * \param [in]  face    Then number of a face of \a element.
