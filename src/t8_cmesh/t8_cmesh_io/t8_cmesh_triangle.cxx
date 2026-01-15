@@ -95,7 +95,7 @@ t8_cmesh_triangle_read_nodes ([[maybe_unused]] t8_cmesh_t cmesh, char *filename,
   T8_ASSERT (filename != NULL);
   T8_ASSERT (dim == 2 || dim == 3);
   fp = fopen (filename, "r");
-  if (fp == NULL) {
+  if (fp == nullptr) {
     t8_global_errorf ("Failed to open %s.\n", filename);
     goto die_node;
   }
@@ -156,7 +156,7 @@ t8_cmesh_triangle_read_nodes ([[maybe_unused]] t8_cmesh_t cmesh, char *filename,
 die_node:
   /* Clean up on error. */
   /* Close open file */
-  if (fp != NULL) {
+  if (fp != nullptr) {
     fclose (fp);
   }
   free (line);
@@ -196,7 +196,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename
   T8_ASSERT (filename != NULL);
   T8_ASSERT (dim == 2 || dim == 3);
   fp = fopen (filename, "r");
-  if (fp == NULL) {
+  if (fp == nullptr) {
     t8_global_errorf ("Failed to open %s.\n", filename);
     goto die_ele;
   }
@@ -267,7 +267,7 @@ t8_cmesh_triangle_read_eles (t8_cmesh_t cmesh, int corner_offset, char *filename
 die_ele:
   /* Clean up on error. */
   /* Close open file */
-  if (fp != NULL) {
+  if (fp != nullptr) {
     fclose (fp);
   }
   T8_FREE (vertices);
@@ -286,7 +286,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
   size_t linen = 1024;
   t8_locidx_t element;
   t8_locidx_t num_elems;
-  t8_locidx_t *tneighbors = NULL;
+  t8_locidx_t *tneighbors = nullptr;
   int retval;
   int temp;
   int num_read;
@@ -296,7 +296,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
   T8_ASSERT (filename != NULL);
   T8_ASSERT (dim == 2 || dim == 3);
   fp = fopen (filename, "r");
-  if (fp == NULL) {
+  if (fp == nullptr) {
     t8_global_errorf ("Failed to open %s.\n", filename);
     goto die_neigh;
   }
@@ -343,7 +343,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
   }
   /* We are done reading the file. */
   fclose (fp);
-  fp = NULL;
+  fp = nullptr;
 
   /* To compute the face neighbor orientations it is necessary to look up the
    * vertices of a given tree_id. This is only possible if the attribute array
@@ -353,7 +353,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
   /* Find the neighboring faces */
   for (t8_locidx_t tit = 0; tit < num_elems; tit++) {
     for (t8_locidx_t tneigh = 0; tneigh < num_faces; tneigh++) {
-      t8_locidx_t neighbor = tneighbors[num_faces * tit + tneigh] - element_offset;
+      t8_locidx_t const neighbor = tneighbors[num_faces * tit + tneigh] - element_offset;
       if (neighbor != -1 - element_offset && tit < neighbor) {
         /* Error tolerance for vertex coordinate equality.
          * We consider vertices to be equal if all their coordinates
@@ -408,14 +408,14 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
 
         int orientation = -1;
         int found_orientation = 0;
-        int firstvertex = face1 == 0 ? 1 : 0;
+        int const firstvertex = face1 == 0 ? 1 : 0;
 
         for (int ivertex = 1; ivertex <= dim && !found_orientation; ivertex++) {
           /* The face with number k consists of the vertices with numbers
            * k+1, k+2, k+3 (mod 4) or k+1, k+2 (mod 3) in case of triangles.
            * In el_vertices are the coordinates of these vertices in order
            * v_0x v_0y v_0z v_1x v_1y ... */
-          int el_vertex = (face2 + ivertex) % num_faces;
+          int const el_vertex = (face2 + ivertex) % num_faces;
           if (fabs (el_vertices1[3 * firstvertex] - el_vertices2[3 * el_vertex]) < tolerance
               && fabs (el_vertices1[3 * firstvertex + 1] - el_vertices2[3 * el_vertex + 1]) < tolerance
               && fabs (el_vertices1[3 * firstvertex + 2] - el_vertices2[3 * el_vertex + 2]) < tolerance) {
@@ -488,7 +488,7 @@ die_neigh:
   /* Clean up on error. */
   T8_FREE (tneighbors);
   /* Close open file */
-  if (fp != NULL) {
+  if (fp != nullptr) {
     fclose (fp);
   }
   free (line);
@@ -511,7 +511,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  cmesh = NULL;
+  cmesh = nullptr;
   {
     int retval, corner_offset = 0;
     char current_file[BUFSIZ];
@@ -525,7 +525,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
-      return NULL;
+      return nullptr;
     }
     else {
       /* read .ele file */
@@ -540,7 +540,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
-        return NULL;
+        return nullptr;
       }
       else {
         /* read .neigh file */
@@ -549,7 +549,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
         if (retval != 0) {
           t8_global_errorf ("Error while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
-          return NULL;
+          return nullptr;
         }
       }
     }
@@ -559,7 +559,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
    *       other processes if something went wrong. */
   /* This broadcasts the NULL pointer if anything went wrong */
 
-  if (cmesh != NULL) {
+  if (cmesh != nullptr) {
     if (partition) {
       first_tree = (mpirank * cmesh->num_trees) / mpisize;
       last_tree = ((mpirank + 1) * cmesh->num_trees) / mpisize - 1;
@@ -593,7 +593,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  cmesh = NULL;
+  cmesh = nullptr;
   if (mpirank == 0 || partition) {
     int retval, corner_offset;
     char current_file[BUFSIZ];
@@ -605,7 +605,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
     if (retval != 0 && retval != 1) {
       t8_global_errorf ("Error while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
-      return NULL;
+      return nullptr;
     }
     else {
       /* read .ele file */
@@ -620,7 +620,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
       if (retval != 0 && retval != 1) {
         t8_global_errorf ("Error while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
-        return NULL;
+        return nullptr;
       }
       else {
         /* read .neigh file */
@@ -642,7 +642,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
     cmesh = t8_cmesh_bcast (cmesh, 0, comm);
   }
 
-  if (cmesh != NULL) {
+  if (cmesh != nullptr) {
     /* Use linear geometry.
      * We need to set the geometry after the broadcast. */
     t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);

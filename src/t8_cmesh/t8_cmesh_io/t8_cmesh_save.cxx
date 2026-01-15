@@ -172,7 +172,7 @@ t8_cmesh_load_ghosts (const t8_cmesh_t cmesh, FILE *fp)
 static int
 t8_cmesh_load_tree_attributes (const t8_cmesh_t cmesh, FILE *fp)
 {
-  double *vertices = NULL;
+  double *vertices = nullptr;
   t8_locidx_t itree;
   long treeid, neighbor;
   t8_ctree_t tree;
@@ -272,7 +272,7 @@ t8_cmesh_save_tree_attribute (const t8_cmesh_t cmesh, FILE *fp)
     num_vertices = t8_eclass_num_vertices[tree->eclass];
     /* Write the attributes that are vertices */
     vertices = (double *) t8_cmesh_trees_get_attribute (cmesh->trees, itree, t8_get_package_id (), 0, &att_size, 0);
-    if (vertices != NULL) {
+    if (vertices != nullptr) {
       /* We have an attribute that is stored with key 0, we treat it as tree vertices */
       num_vertices = t8_eclass_num_vertices[tree->eclass];
       /* additional check that the attribute has as many bytes as the
@@ -545,7 +545,7 @@ t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
 
   /* Open the file in write mode */
   fp = fopen (filename, "w");
-  if (fp == NULL) {
+  if (fp == nullptr) {
     /* Could not open file */
     t8_errorf ("Error when opening file %s.\n", filename);
     return 0;
@@ -595,44 +595,44 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
 
   /* Open the file in read mode */
   fp = fopen (filename, "r");
-  if (fp == NULL) {
+  if (fp == nullptr) {
     /* Could not open file */
     t8_errorf ("Error when opening file %s.\n", filename);
-    return NULL;
+    return nullptr;
   }
   t8_cmesh_init (&cmesh);
   /* Read all metadata of the cmesh */
   if (!t8_cmesh_load_header (cmesh, fp)) {
     t8_errorf ("Error when opening file %s.\n", filename);
     t8_cmesh_destroy (&cmesh);
-    return NULL;
+    return nullptr;
   }
   /* Read all metadata of the trees */
   if (!t8_cmesh_load_trees (cmesh, fp)) {
     t8_errorf ("Error when opening file %s.\n", filename);
     t8_cmesh_destroy (&cmesh);
-    return NULL;
+    return nullptr;
   }
   if (cmesh->set_partition) {
     /* Write all ghost metadata */
     if (!t8_cmesh_load_ghosts (cmesh, fp)) {
       t8_errorf ("Error when opening file %s.\n", filename);
       t8_cmesh_destroy (&cmesh);
-      return NULL;
+      return nullptr;
     }
   }
   t8_cmesh_trees_finish_part (cmesh->trees, 0);
   if (!t8_cmesh_load_tree_attributes (cmesh, fp)) {
     t8_errorf ("Error when opening file %s.\n", filename);
     t8_cmesh_destroy (&cmesh);
-    return NULL;
+    return nullptr;
   }
   if (cmesh->set_partition) {
     /* Write all ghost metadata */
     if (!t8_cmesh_load_ghost_attributes (cmesh, fp)) {
       t8_errorf ("Error when opening file %s.\n", filename);
       t8_cmesh_destroy (&cmesh);
-      return NULL;
+      return nullptr;
     }
   }
   /* Close the file */
@@ -839,7 +839,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, const int num_files, sc_MP
 
   /* Use cmesh_bcast, if only one process loads the cmesh: */
   if (num_files == 1) {
-    cmesh = NULL;
+    cmesh = nullptr;
     if (mpirank == 0) {
       snprintf (buffer, BUFSIZ, "%s_%04d.cmesh", fileprefix, 0);
       cmesh = t8_cmesh_load (buffer, comm);

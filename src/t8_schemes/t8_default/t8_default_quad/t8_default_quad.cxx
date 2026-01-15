@@ -377,7 +377,7 @@ t8_default_scheme_quad::element_get_children_at_face (const t8_element_t *elem, 
    */
   this->element_get_child (elem, second_child, children[1]);
   this->element_get_child (elem, first_child, children[0]);
-  if (child_indices != NULL) {
+  if (child_indices != nullptr) {
     child_indices[0] = first_child;
     child_indices[1] = second_child;
   }
@@ -417,7 +417,7 @@ t8_default_scheme_quad::element_transform_face (const t8_element_t *elem1, t8_el
   const p4est_quadrant_t *qin = (const p4est_quadrant_t *) elem1;
   const p4est_quadrant_t *q;
   p4est_quadrant_t *p = (p4est_quadrant_t *) elem2;
-  p4est_qcoord_t h = P4EST_QUADRANT_LEN (qin->level);
+  p4est_qcoord_t const h = P4EST_QUADRANT_LEN (qin->level);
   p4est_qcoord_t x = qin->x; /* temp storage for x coordinate in case elem1 = elem 2 */
 
   T8_ASSERT (element_is_valid (elem1));

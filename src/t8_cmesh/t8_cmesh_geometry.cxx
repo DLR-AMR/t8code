@@ -35,7 +35,7 @@
 void
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c *geometry)
 {
-  if (cmesh->geometry_handler == NULL) {
+  if (cmesh->geometry_handler == nullptr) {
     /* The handler was not constructed, do it now. */
     cmesh->geometry_handler = new t8_geometry_handler ();
   }
@@ -108,7 +108,7 @@ t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
     return geom->t8_geom_get_hash ();
   }
 
-  t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
+  t8_locidx_t const ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   /* Look up the hash of the geometry in the attributes. */
   const t8_geometry_hash *geometry_hash = (const t8_geometry_hash *) t8_cmesh_get_attribute (
     cmesh, t8_get_package_id (), T8_CMESH_GEOMETRY_ATTRIBUTE_KEY, ltreeid);

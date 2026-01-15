@@ -35,13 +35,13 @@ T8_EXTERN_C_BEGIN ();
 /**
  * This struct stores query data about the elements within the forest.
  */
-typedef struct
+using t8_forest_child_type_query_t = struct
 {
   const t8_scheme *scheme; /**< The scheme. */
   t8_eclass_t tree_class;  /**< The tree class. */
   int level;               /**< The refinement level. */
   int num_children;        /**< The number of children. */
-} t8_forest_child_type_query_t;
+};
 
 /** 
  * This is the function that we call in sc_split_array to determine for an
@@ -219,8 +219,8 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
     /* There are no leaves left, so we have nothing to do */
     return;
   }
-  const size_t num_active = queries == NULL ? 0 : active_queries->elem_count;
-  if (queries != NULL && num_active == 0) {
+  const size_t num_active = queries == nullptr ? 0 : active_queries->elem_count;
+  if (queries != nullptr && num_active == 0) {
     /* There are no queries left. We stop the recursion */
     return;
   }
@@ -250,7 +250,7 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
   /* Check the queries.
    * If the current element is not a leaf, we store the queries that
    * return true in order to pass them on to the children of the element. */
-  sc_array_t *new_active_queries = NULL;
+  sc_array_t *new_active_queries = nullptr;
   if (num_active > 0) {
     if (!is_leaf) {
       /* Initialize the new active query array */
@@ -263,7 +263,7 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
 
     for (size_t iactive = 0; iactive < num_active; iactive++) {
       if (!is_leaf && active_queries_matches[iactive]) {
-        size_t query_index = *(size_t *) sc_array_index (active_queries, iactive);
+        size_t const query_index = *(size_t *) sc_array_index (active_queries, iactive);
         *(size_t *) sc_array_push (new_active_queries) = query_index;
       }
     }
@@ -357,8 +357,8 @@ t8_forest_search (t8_forest_t forest, t8_forest_search_fn search_fn, t8_forest_q
 {
   /* If we have queries build a list of all active queries,
    * thus all queries in the array */
-  sc_array_t *active_queries = NULL;
-  if (queries != NULL) {
+  sc_array_t *active_queries = nullptr;
+  if (queries != nullptr) {
     const size_t num_queries = queries->elem_count;
     /* build an array and write 0, 1, 2, 3,... into it */
     active_queries = sc_array_new_count (sizeof (size_t), num_queries);
@@ -372,7 +372,7 @@ t8_forest_search (t8_forest_t forest, t8_forest_search_fn search_fn, t8_forest_q
     t8_forest_search_tree (forest, itree, search_fn, query_fn, queries, active_queries);
   }
 
-  if (active_queries != NULL) {
+  if (active_queries != nullptr) {
     sc_array_destroy (active_queries);
   }
 }
@@ -396,7 +396,7 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
     const t8_locidx_t elems_per_tree_new = t8_forest_get_tree_num_leaf_elements (forest_new, itree);
     const t8_locidx_t elems_per_tree_old = t8_forest_get_tree_num_leaf_elements (forest_old, itree);
     /* Get the eclass of the tree */
-    t8_eclass_t tree_class = t8_forest_get_tree_class (forest_new, itree);
+    t8_eclass_t const tree_class = t8_forest_get_tree_class (forest_new, itree);
     T8_ASSERT (tree_class == t8_forest_get_tree_class (forest_old, itree));
     t8_locidx_t ielem_new = 0;
     t8_locidx_t ielem_old = 0;
