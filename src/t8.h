@@ -305,24 +305,4 @@ t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t index);
 /** Call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();
 
-#ifdef __cplusplus
-
-/**
- * Check two floating point values for equality.
- * \tparam TFloating1 Type of the first floating point value.
- * \tparam TFloating2 Type of the second floating point value.
- * \param [in] floating1 First floating point value to check for equality.
- * \param [in] floating2 Second floating point value to check for equality.
- * \param [in] tolerance The tolerance.
- * \return True if floating values are equal, false otherwise.
- */
-template <typename TFloating1, typename TFloating2>
-inline bool
-t8_floating_is_equal (TFloating1 floating1, TFloating2 floating2, double tolerance = T8_PRECISION_EPS) noexcept
-{
-  return std::abs (floating1 - floating2) <= tolerance;
-}
-
-#endif /* !__cplusplus */
-
 #endif /* !T8_H */
