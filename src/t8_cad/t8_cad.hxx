@@ -28,11 +28,11 @@
 #ifndef T8_CAD_HXX
 #define T8_CAD_HXX
 
+#include <Standard_Handle.hxx>
 #include <gp_Pnt.hxx>
 #include <TopExp.hxx>
 #include <Geom_Surface.hxx>
 #include <Geom_Curve.hxx>
-#include <Standard_Handle.hxx>
 
 /**
  * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
