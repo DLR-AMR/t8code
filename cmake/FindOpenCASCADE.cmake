@@ -34,7 +34,7 @@ IF( NOT OpenCASCADE_FOUND )
     ENDIF( CMAKE_SIZEOF_VOID_P EQUAL 4 )
 
   IF(UNIX)
-    set( _incsearchpath /usr/include/opencascade;/usr/include/;/opt/occ/inc;${CASROOT}/inc;${CASROOT}/include/ )
+    set( _incsearchpath /usr/include/opencascade;/usr/include/;/opt/occ/inc;${CASROOT}/inc;${CASROOT}/include/;${CASROOT}/inc/opencascade/;${CASROOT}/include/opencascade/ )
     set( _libsearchpath /usr/lib64;/usr/lib;/opt/occ/lib;${CASROOT}/lib64;${CASROOT}/lib )
   ELSE(UNIX)
     IF (WIN32)
