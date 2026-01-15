@@ -24,7 +24,7 @@
  * Wrapper to construct a mesh handle instance from a cmesh. 
  * Additionally, a very small fraction of example coarse meshes is wrapped directly for easy access and 
  * for the use in tests.
- * See \ref t8_cmesh_examples.hxx for more exemplary cmeshes to be put into the wrapper constructors.
+ * See \ref t8_cmesh_examples.h for more exemplary cmeshes to be put into the wrapper constructors.
  */
 
 #pragma once
