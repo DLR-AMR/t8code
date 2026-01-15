@@ -111,7 +111,9 @@ jobs:
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: Try to make OCC findable
-      run: sudo ln -s $OCCT_INSTALL_PATH/inc /opt/occ/inc 
+      run: |
+        sudo mkdir -p /opt/occ
+        sudo ln -s $OCCT_INSTALL_PATH/inc /opt/occ/inc 
     - name: build config variables
       run: export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx ${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_ENABLE_OCC=ON"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
