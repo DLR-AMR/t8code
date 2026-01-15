@@ -603,7 +603,7 @@ t8_forest_leaf_face_neighbors (const t8_forest_t forest, const t8_locidx_t ltree
 /** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation. 
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id (could also be a ghost tree). 0 <= \a ltreeid < num_local trees+num_ghost_trees
- * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
+ * \param [in]    leaf_or_ghost A leaf or ghost leaf element in tree \a ltreeid of \a forest.
  * \param [out]   pneighbor_leaves Unallocated on input. On output the neighbor
  *                        leaves are stored here.
  * \param [in]    face    The index of the face across which the face neighbors

@@ -40,8 +40,10 @@
  * \param[in] ltreeid         Local index of the tree containing the \a element.
  * \param[in] element         The considered element.
  * \param[in] face            The integer index of the considered face of \a element.
+ * \param[in] is_leaf         True if and only if the currently considered element is a leaf element.
+ * \param[in] leaf_elements   The array of leaf elements that are descendants of \a element. Sorted by linear index.
+ * \param[in] tree_leaf_index Tree-local index of the first leaf.
  * \param[in] user_data       Some user-defined data, as void pointer.
- * \param[in] tree_leaf_index Tree-local index the first leaf.
  * 
  * \return Nonzero if the element may touch the face and the top-down search shall be continued, zero otherwise.
  */
@@ -171,13 +173,11 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
  * \param[in] element                   The considered element.
  * \param[in] face                      The integer index of the considered face of \a element.
  * \param[in] leaf_elements             The array of leaf elements that are descendants of \a element. Sorted by linear index.
- * \param[in] user_data                 The user data passed to the \a callback function.
- * \param[in] tree_lindex_of_first_leaf Tree-local index of the first leaf.
- * \param[in] callback                  The callback function.
  * \param[in] tree_lindex_of_first_leaf Index of the first leaf of \a element in the tree's leaves.
  *                                       The corresponding leaf does not necessarily lie on the face of \a element.
  *                                      \note \a tree_lindex_of_first_leaf is not an index in \a leaf_elements. \a leaf_elements may only be a part of the tree's leaves.
  * \param[in] callback                  The callback function.
+ * \param[in] user_data                 The user data passed to the \a callback function.
  */
 void
 t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
