@@ -32,6 +32,7 @@
 #include <TopExp.hxx>
 #include <Geom_Surface.hxx>
 #include <Geom_Curve.hxx>
+#include <Standard_Handle.hxx>
 
 /**
  * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
