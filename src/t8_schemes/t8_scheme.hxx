@@ -511,13 +511,12 @@ class t8_scheme {
   /** Query whether element A is an ancestor of the element B.
    * An element A is ancestor of an element B if A == B or if B can 
    * be obtained from A via successive refinement.
-   * \param [in] scheme A scheme.
-   * \param [in] eclass An eclass.
+   * \param [in] tree_class The eclass of the current tree.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.
    * \param [in] element_B An element of class \a eclass in scheme \a scheme.
    * \return     True if and only if \a element_A is an ancestor of \a element_B.
   */
-  inline bool
+  bool
   element_is_ancestor (const t8_eclass_t tree_class, const t8_element_t *element_A, const t8_element_t *element_B) const
   {
     return std::visit ([&] (auto &&scheme) { return scheme.element_is_ancestor (element_A, element_B); },
