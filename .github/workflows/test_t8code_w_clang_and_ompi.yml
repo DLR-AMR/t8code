@@ -54,6 +54,21 @@ on:
         default: 'T8_TEST_LEVEL_FULL'
 
 jobs:
+  save-image:
+    runs-on: ubuntu-latest   # runs on a VM with Docker
+    steps:
+      - name: Pull image
+        run: docker pull dlramr/t8code-ubuntu:t8-clang-dependencies
+
+      - name: Save image as tarball
+        run: docker save dlramr/t8code-ubuntu:t8-clang-dependencies -o t8code-clang.tar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: t8code-image
+          path: t8code-clang.tar
+
   t8code_cmake_tests:
   #
   # Container setup: To avoid unwanted side effects of gcc or mpich, an own Clang version of the
@@ -69,14 +84,6 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
-  #
-    - name: Save docker image
-      run: docker save dlramr/t8code-ubuntu:t8-clang-dependencies -o t8code-clang.tar
-    - name: Upload artifact
-      uses: actions/upload-artifact@v5
-      with:
-        name: t8code-image
-        path: t8code-clang.tar
     - name: Update packages
       run: apt-get update && apt-get upgrade -y
     - name: Show Clang version
