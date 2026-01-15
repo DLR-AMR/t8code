@@ -27,7 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * The adaptation criterion is to look at the midpoint coordinates of the current element and if
  * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
  */
-
+// TODO: if userdata is not deleted, check that it is updated in the new forest.
 #include <gtest/gtest.h>
 #include <t8.h>
 

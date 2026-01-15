@@ -62,6 +62,17 @@ class mesh {
   using mesh_iterator =
     typename std::vector<element_class>::iterator; /**< Non-const iterator type for the mesh elements. */
 
+  /** Callback function prototype to decide for coarsening of a family of elements in a mesh handle.
+ * This callback works with a family of elements, i.e., multiple elements that can be coarsened 
+ * into one parent element.
+ * \param [in] mesh The mesh that should be adapted.
+ * \param [in] elements The element family considered to be coarsened.
+ Callback function prototype to decide for the refinement of an element of a mesh handle.
+ * \param [in] element The element to consider for refinement.
+ * \return true if the element should be refined, false otherwise.
+ */
+  using adapt_callback_type = std::function<int (const SelfType& mesh, const std::vector<element_class>& elements)>;
+
   /** 
    * Constructor for a mesh of the handle. 
    * \param [in] forest The forest from which the mesh should be created. 
@@ -194,23 +205,49 @@ class mesh {
     return m_forest;
   }
 
-  /** 
-   * Setter for the forest. 
-   * \param [in] input_forest The forest from which the mesh should be a wrapper. 
-   */
+  /** Set an adapt function to be used to adapt the mesh on committing.
+ * \param [in] refine_callback   The adapt callback used on committing.
+ * \param [in] recursive         Specifying whether adaptation is to be done recursively or not. 
+ * \note This setting can be combined with \ref set_partition and \ref set_balance. The order in which
+ * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+ */
   void
-  set_forest (t8_forest_t input_forest)
+  set_adapt (adapt_callback<SelfType> adapt_callback, bool recursive)
   {
-    T8_ASSERT (t8_forest_is_committed (input_forest));
-    m_forest = input_forest;
-    update_elements ();
-    if constexpr (!std::is_void<TElementData>::value) {
-      t8_global_infof (
-        "The elements of the mesh handle have been updated. Please note that the element data is not interpolated "
-        "automatically. Use the function set_element_data() to provide new adapted element data.\n");
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
     }
+    // Create and register adaptation context holding the mesh handle and the user defined callbacks.
+    auto context = detail::MeshAdaptContext<SelfType> (this, std::move (adapt_callback));
+    detail::AdaptRegistry::register_context (m_forest, context);
+
+    // Set up the forest for adaptation using the wrapper callback.
+    t8_forest_set_adapt (forest, forest_from, detail::mesh_adapt_callback_wrapper, recursive);
   }
 
+  /** After allocating and adding properties to the mesh, commit the changes.
+ * This call updates the internal state of the forest.
+ * The forest used to define the mesh handle is replaced in this function.
+ * Specialize the update with calls like /ref set_adapt calls first.
+ */
+  void
+  commit ()
+  {
+    if (!std::is_void<TUserData>::value) {
+      t8_forest_set_user_data (m_uncommitted_forest, t8_forest_get_user_data (m_forest));
+    }
+
+    t8_forest_commit (m_uncommitted_forest);
+    detail::AdaptRegistry::unregister_context (forest_from);
+    if (!std::is_void<TElementData>::value) {
+      t8_global_infof ("Please note that the element data is not interpolated automatically during adaptation. Use the "
+                       "function set_element_data() to provide new adapted element data.\n");
+    }
+    m_forest = m_uncommitted_forest;
+    update_elements ();
+  }
   /** 
    * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
    * \param [in] data The user data of class TUserData. Data will never be touched by mesh handling routines.
@@ -325,6 +362,8 @@ class mesh {
   std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
   std::conditional_t<!std::is_void_v<TElementData>, std::vector<TElementData>, std::nullptr_t>
     m_element_data; /**< Vector storing the (local) element data. */
+  std::optional<t8_forest_t>
+    m_uncommitted_forest; /**< Forest in which the set flags are set for a new forest before committing. */
 };
 
 }  // namespace t8_mesh_handle

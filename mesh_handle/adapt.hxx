@@ -36,26 +36,6 @@
 
 namespace t8_mesh_handle
 {
-/** Callback function prototype to decide for coarsening of a family of elements in a mesh handle.
- * This callback works with a family of elements, i.e., multiple elements that can be coarsened 
- * into one parent element.
- * \param [in] mesh The mesh that should be adapted.
- * \param [in] elements The element family considered to be coarsened.
- * \tparam TMeshClass The mesh handle class.
- * \return true if the family should be coarsened, false otherwise. 
- */
-template <typename TMeshClass>
-using coarsen_element_family
-  = std::function<bool (const TMeshClass& mesh, const std::vector<typename TMeshClass::element_class>& elements)>;
-
-/** Callback function prototype to decide for the refinement of an element of a mesh handle.
- * \param [in] mesh The mesh that should be adapted.
- * \param [in] element The element to consider for refinement.
- * \tparam TMeshClass The mesh handle class.
- * \return true if the element should be refined, false otherwise.
- */
-template <typename TMeshClass>
-using refine_element = std::function<bool (const TMeshClass& mesh, const typename TMeshClass::element_class& element)>;
 
 /** Namespace detail to hide implementation details from the user. */
 namespace detail
@@ -252,32 +232,32 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
  * \param [in] recursive         Specifying whether adaptation is to be done recursively or not. 
  * \tparam TMesh                 The mesh handle class.
  */
-template <typename TMesh>
-void
-adapt_mesh (TMesh& mesh_handle, refine_element<TMesh> refine_callback, coarsen_element_family<TMesh> coarsen_callback,
-            bool recursive)
-{
-  auto forest_from = mesh_handle.get_forest ();
-  // Initialize forest for the adapted mesh.
-  t8_forest_t forest;
-  t8_forest_init (&forest);
+// template <typename TMesh>
+// void
+// adapt_mesh (TMesh& mesh_handle, refine_element<TMesh> refine_callback, coarsen_element_family<TMesh> coarsen_callback,
+//             bool recursive)
+// {
+//   auto forest_from = mesh_handle.get_forest ();
+//   // Initialize forest for the adapted mesh.
+//   t8_forest_t forest;
+//   t8_forest_init (&forest);
 
-  // Create and register adaptation context holding the mesh handle and the user defined callbacks.
-  auto context
-    = detail::MeshAdaptContext<TMesh> (mesh_handle, std::move (refine_callback), std::move (coarsen_callback));
-  detail::AdaptRegistry::register_context (forest_from, context);
+//   // Create and register adaptation context holding the mesh handle and the user defined callbacks.
+//   auto context
+//     = detail::MeshAdaptContext<TMesh> (mesh_handle, std::move (refine_callback), std::move (coarsen_callback));
+//   detail::AdaptRegistry::register_context (forest_from, context);
 
-  // Set up the forest for adaptation using the wrapper callback.
-  t8_forest_set_adapt (forest, forest_from, detail::mesh_adapt_callback_wrapper, recursive);
-  t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
-  t8_forest_set_user_data (forest, t8_forest_get_user_data (forest_from));
-  t8_forest_commit (forest);
+//   // Set up the forest for adaptation using the wrapper callback.
+//   t8_forest_set_adapt (forest, forest_from, detail::mesh_adapt_callback_wrapper, recursive);
+//   t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
+//   t8_forest_set_user_data (forest, t8_forest_get_user_data (forest_from));
+//   t8_forest_commit (forest);
 
-  // Replace the forest in the mesh handle with the adapted forest.
-  mesh_handle.set_forest (forest);
-  // Clean up.
-  detail::AdaptRegistry::unregister_context (forest_from);
-}
+//   // Replace the forest in the mesh handle with the adapted forest.
+//   mesh_handle.set_forest (forest);
+//   // Clean up.
+//   detail::AdaptRegistry::unregister_context (forest_from);
+// }
 
 }  // namespace t8_mesh_handle
 #endif /* !T8_ADAPT_HXX */
