@@ -104,7 +104,6 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
           scheme->element_new (neigh_class, num_face_neighs, half_neighbors);
           t8_forest_element_half_face_neighbors (forest, itree, element, half_neighbors, neigh_class, face,
                                                  num_face_neighs, NULL);
-
           /* We now check whether the face children of neighbor are the half neighbors. */
           T8_ASSERT (num_face_neighs == scheme->element_get_num_face_children (neigh_class, neighbor, dual_face));
           EXPECT_NE (neigh_class, T8_ECLASS_INVALID);
@@ -119,9 +118,10 @@ TEST_P (forest_half_neighbors, test_half_neighbors)
               << "ineigh = " << ineigh << " face = " << face;
           }
           scheme->element_destroy (neigh_class, num_face_neighs, neighbor_face_children);
-          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
-          T8_TESTSUITE_FREE (child_ids);
           T8_TESTSUITE_FREE (neighbor_face_children);
+          T8_TESTSUITE_FREE (child_ids);
+          scheme->element_destroy (neigh_class, 1, &neighbor);
+          scheme->element_destroy (neigh_class, num_face_neighs, half_neighbors);
           T8_TESTSUITE_FREE (half_neighbors);
         }
       }
