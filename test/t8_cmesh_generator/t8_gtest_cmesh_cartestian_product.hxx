@@ -38,7 +38,8 @@
  * The
  * 
  */
-class cmesh_example_base {
+struct cmesh_example_base
+{
  public:
   /**
    * Construct a new base example. An example must have at least have a name. 
@@ -74,7 +75,8 @@ class cmesh_example_base {
  * @tparam Args 
  */
 template <class... Args>
-class cmesh_example_with_parameter: cmesh_example_base {
+struct cmesh_example_with_parameter: cmesh_example_base
+{
  public:
   cmesh_example_with_parameter (std::function<t8_cmesh_t (Args...)> function, std::tuple<Args...> parameter,
                                 std::function<std::string (const Args&...)> parameter_to_string, std::string name)
@@ -102,7 +104,8 @@ class cmesh_example_with_parameter: cmesh_example_base {
  * A base class to hold sets of examples that can be created in various ways. 
  * 
  */
-class example_set {
+struct example_set
+{
  public:
   /**
    * Generate a cmesh according to a function
@@ -212,7 +215,8 @@ cartesian_product (OutputIterator out, std::function<bool (typename Iter::value_
  * @tparam Iter 
  */
 template <class... Iter>
-class cmesh_cartesian_product_params: example_set {
+struct cmesh_cartesian_product_params: example_set
+{
  public:
   cmesh_cartesian_product_params () {};
 
@@ -261,7 +265,8 @@ class cmesh_cartesian_product_params: example_set {
  * @tparam Iter 
  */
 template <class... Iter>
-class cmesh_cartesian_product_with_rules: example_set {
+struct cmesh_cartesian_product_with_rules: example_set
+{
  public:
   cmesh_cartesian_product_with_rules () {};
 

@@ -56,7 +56,8 @@
 
 /** This test covers the functionality described in Issue: https://github.com/DLR-AMR/t8code/issues/1137
  * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
-class DISABLED_local_tree: public testing::TestWithParam<t8_eclass_t> {
+struct DISABLED_local_tree: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override

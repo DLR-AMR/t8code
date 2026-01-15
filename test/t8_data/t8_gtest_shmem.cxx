@@ -29,7 +29,8 @@
 
 #define T8_TEST_SHMEM_NUM_COMMS 2
 
-class shmem: public testing::TestWithParam<std::tuple<int, sc_MPI_Comm, int>> {
+struct shmem: public testing::TestWithParam<std::tuple<int, sc_MPI_Comm, int>>
+{
  protected:
   void
   SetUp () override

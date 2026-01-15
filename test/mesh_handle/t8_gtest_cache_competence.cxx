@@ -68,7 +68,8 @@ struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlyi
 };
 
 /** Test fixture for cache competence tests. */
-class t8_gtest_cache_competence: public testing::Test {
+struct t8_gtest_cache_competence: public testing::Test
+{
  protected:
   void
   SetUp () override

@@ -133,7 +133,8 @@ coarsen_all_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
 /**
  * Class to test the partition-for-coarsening functionality.
 */
-class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
 
  protected:
   /** During SetUp, set the scheme and the eclass based on the current testing parameters.*/

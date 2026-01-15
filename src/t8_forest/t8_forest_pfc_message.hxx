@@ -42,7 +42,8 @@
  * between the processes that will be required to decide on whether and where
  * families are split at process boundaries.
 */
-class t8_forest_pfc_message {
+struct t8_forest_pfc_message
+{
  public:
   /**
    * Pack the data to prepare sending.

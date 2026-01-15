@@ -40,7 +40,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 
 /** Parametrized test fixture for the ghost tests. */
-class t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override

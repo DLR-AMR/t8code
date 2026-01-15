@@ -41,7 +41,8 @@
 #include <vector>
 #include <algorithm>
 
-class gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>> {
+struct gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>>
+{
  public:
   static const int kNumTrees = 4;
 
