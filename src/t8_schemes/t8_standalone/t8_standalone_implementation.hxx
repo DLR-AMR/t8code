@@ -619,7 +619,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
    * \param [in] element_B An element of class \a eclass in scheme \a scheme.
    * \return     True if and only if \a element_A is an ancestor of \a element_B.
   */
-  constexpr bool
+  bool
   element_is_ancestor (const t8_element_t *element_A, const t8_element_t *element_B) const noexcept
   {
     /* We compute whether A is an ancestor of B by
