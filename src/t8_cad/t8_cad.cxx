@@ -294,7 +294,7 @@ t8_cad::t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const i
   said reference parameters it gets more sophisticated:*/
 
   const bool edge_is_closed = t8_cad::t8_geom_edge_is_closed (edge_index);
-  if (reference_edge_param && edge_is_closed) {
+  if (reference_edge_param.has_value () && edge_is_closed) {
     /* Edge is closed and the user provided reference parameters. We iterate over all vertices of the edge.
     Since the edge is closed, the start and end vertex should be in the same physical location.
     We choose the point where the parameters are closer to the reference parameters. For debugging reasons
@@ -349,7 +349,7 @@ t8_cad::t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const 
   TopoDS_Face face = TopoDS::Face (cad_shape_face_map.FindKey (face_index));
 
   /* If the surface is not closed or the user did not provide any reference params we just query the parameters. */
-  if (!t8_cad::t8_geom_surface_is_closed (face_index) || !reference_face_params) {
+  if (!t8_cad::t8_geom_surface_is_closed (face_index) || !reference_face_params.has_value ()) {
     uv.emplace (BRep_Tool::Parameters (vertex, face));
   }
 
@@ -437,7 +437,7 @@ t8_cad::t8_geom_edge_parameter_to_face_parameters (
   TopoDS_Edge edge = TopoDS::Edge (cad_shape_edge_map.FindKey (edge_index));
 
   const bool is_seam = t8_cad::t8_geom_edge_is_seam (edge_index, face_index);
-  if (is_seam && reference_face_params) {
+  if (is_seam && reference_face_params.has_value ()) {
     /* Convert reference parameters to OCCT point */
     gp_Pnt2d reference_point (reference_face_params.value ()[0], reference_face_params.value ()[1]);
 
