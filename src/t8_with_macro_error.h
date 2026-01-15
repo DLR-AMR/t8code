@@ -33,6 +33,11 @@
  * This macro is defined for each "T8_ENABLE_*" option.
  */
 
+/** \file t8_with_macro_error.h
+ * Declare macros T8_WITH_* that produce an error when used.
+ * Usage of T8_WITH is deprecated and users should use T8_ENABLE_ instead.
+ * In order to prevent misusage, we deliberately produce an error when an old T8_WITH macro is used.
+ */
 
 #ifndef T8_WITH_MACRO_ERROR_H
 #define T8_WITH_MACRO_ERROR_H
@@ -58,17 +63,17 @@
 
 // We now define all T8_ENABLE_* macros that existed at 28 March 2025 to throw an error
 // when called in a T8_WITH_* version.
-#define T8_WITH_DEBUG T8_THROW_ERROR_WITH
-#define T8_WITH_VTK T8_THROW_ERROR_WITH
-#define T8_WITH_NETCDF T8_THROW_ERROR_WITH
-#define T8_WITH_NETCDF_PAR T8_THROW_ERROR_WITH
-#define T8_WITH_OCC T8_THROW_ERROR_WITH
-#define T8_WITH_METIS T8_THROW_ERROR_WITH
-#define T8_WITH_MPI T8_THROW_ERROR_WITH
-#define T8_WITH_MPIIO T8_THROW_ERROR_WITH
-#define T8_WITH_FORTRAN T8_THROW_ERROR_WITH
-#define T8_WITH_CPPSTD T8_THROW_ERROR_WITH
-#define T8_WITH_MODDIR T8_THROW_ERROR_WITH
-#define T8_WITH_CUSTOM_TEST_COMMAND T8_THROW_ERROR_WITH
+#define T8_WITH_DEBUG T8_THROW_ERROR_WITH /**< Deprecated debug macro, will produce an error when used with #if. */
+#define T8_WITH_VTK T8_THROW_ERROR_WITH /**< Deprecated vtk macro, will produce an error when used with #if. */
+#define T8_WITH_NETCDF T8_THROW_ERROR_WITH /**< Deprecated netcdf macro, will produce an error when used with #if. */
+#define T8_WITH_NETCDF_PAR T8_THROW_ERROR_WITH /**< Deprecated netcdf_par macro, will produce an error when used with #if. */
+#define T8_WITH_OCC T8_THROW_ERROR_WITH /**< Deprecated occ macro, will produce an error when used with #if. */
+#define T8_WITH_METIS T8_THROW_ERROR_WITH /**< Deprecated metis macro, will produce an error when used with #if. */
+#define T8_WITH_MPI T8_THROW_ERROR_WITH /**< Deprecated MPI macro, will produce an error when used with #if. */
+#define T8_WITH_MPIIO T8_THROW_ERROR_WITH /**< Deprecated MPIIO macro, will produce an error when used with #if. */
+#define T8_WITH_FORTRAN T8_THROW_ERROR_WITH /**< Deprecated FORTRAN macro, will produce an error when used with #if. */
+#define T8_WITH_CPPSTD T8_THROW_ERROR_WITH /**< Deprecated cppstd macro, will produce an error when used with #if. */
+#define T8_WITH_MODDIR T8_THROW_ERROR_WITH /**< Deprecated moddir macro, will produce an error when used with #if. */
+#define T8_WITH_CUSTOM_TEST_COMMAND T8_THROW_ERROR_WITH /**< Deprecated custom_test_command   macro, will produce an error when used with #if. */
 
 #endif // T8_WITH_MACRO_ERROR_H
