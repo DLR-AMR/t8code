@@ -64,7 +64,7 @@ jobs:
         run: docker save dlramr/t8code-ubuntu:t8-clang-dependencies -o t8code-clang.tar
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: t8code-image
           path: t8code-clang.tar
