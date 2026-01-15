@@ -110,6 +110,10 @@ jobs:
     - name: Set test level
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
+    - name: Peek into OCCT folder
+      run: |
+        cd $OCCT_INSTALL_PATH
+        ls * */* */*/*
     - name: Try to make OCC findable
       run: |
         sudo mkdir -p /opt/occ
