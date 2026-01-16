@@ -23,7 +23,7 @@
 /** \file mesh.cxx
  * This file is only necessary for cmake to build the library as static or shared library. 
  * (At least one source file is needed.)
- * The implementation of the mesh class is in the header file \ref mesh.hxx as it is a
+ * The implementation of the mesh is in the header file \ref mesh.hxx as it is a
  * templated class.
  */
 
