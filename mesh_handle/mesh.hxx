@@ -28,12 +28,14 @@
 #define T8_MESH_HXX
 
 #include <t8.h>
-#include <t8_forest/t8_forest_general.h>
 #include "element.hxx"
 #include "competence_pack.hxx"
+#include "adapt.hxx"
+#include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
 #include <type_traits>
+#include <memory>
 
 namespace t8_mesh_handle
 {
@@ -62,15 +64,18 @@ class mesh {
   using mesh_iterator =
     typename std::vector<element_class>::iterator; /**< Non-const iterator type for the mesh elements. */
 
-  /** Callback function prototype to decide for coarsening of a family of elements in a mesh handle.
- * This callback works with a family of elements, i.e., multiple elements that can be coarsened 
- * into one parent element.
- * \param [in] mesh The mesh that should be adapted.
- * \param [in] elements The element family considered to be coarsened.
- Callback function prototype to decide for the refinement of an element of a mesh handle.
- * \param [in] element The element to consider for refinement.
- * \return true if the element should be refined, false otherwise.
- */
+  /** Callback function prototype to decide for refining and coarsening of a family of elements
+   * or one element in a mesh handle.
+   * If \a elements contains more than one element, they must form a family and we decide whether this family should be coarsened
+   * or only the first element should be refined.
+   * Family means multiple elements that can be coarsened into one parent element.
+   * \see set_adapt for more the usage of this callback.
+   * \param [in] mesh The mesh that should be adapted.
+   * \param [in] elements One element or a family of elements to consider for adaption.
+   * \return 1 if the first entry in \a elements should be refined,
+   *        -1 if the family \a elements shall be coarsened,
+   *         0 else.
+   */
   using adapt_callback_type = std::function<int (const SelfType& mesh, const std::vector<element_class>& elements)>;
 
   /** 
@@ -94,6 +99,7 @@ class mesh {
     t8_forest_unref (&m_forest);
   }
 
+  // --- Getter for mesh related information. ---
   /**
    * Getter for the number of local elements in the mesh.
    * \return Number of local elements in the mesh.
@@ -124,6 +130,17 @@ class mesh {
     return t8_forest_get_dimension (m_forest);
   }
 
+  /**
+   * Getter for the forest the mesh is defined for.
+   * \return The forest the mesh is defined for.
+   */
+  t8_forest_t
+  get_forest () const
+  {
+    return m_forest;
+  }
+
+  // --- Methods to access elements. ---
   /**
    * Returns a constant iterator to the first (local) mesh element.
    * \return Constant iterator to the first (local) mesh element.
@@ -195,59 +212,72 @@ class mesh {
     return const_cast<element_class&> (static_cast<const mesh*> (this)->operator[] (local_index));
   }
 
-  /**
-   * Getter for the forest the mesh is defined for.
-   * \return The forest the mesh is defined for.
-   */
-  t8_forest_t
-  get_forest () const
-  {
-    return m_forest;
-  }
-
+  // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
   /** Set an adapt function to be used to adapt the mesh on committing.
- * \param [in] refine_callback   The adapt callback used on committing.
- * \param [in] recursive         Specifying whether adaptation is to be done recursively or not. 
- * \note This setting can be combined with \ref set_partition and \ref set_balance. The order in which
- * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
- */
+   * \param [in] adapt_callback    The adapt callback used on committing.
+   * \param [in] recursive         Specifying whether adaptation is to be done recursively or not. 
+   * \note The adaptation is carried out only when \ref commit is called.
+   * \note This setting can be combined with \ref set_partition and \ref set_balance. The order in which
+   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   */
   void
-  set_adapt (adapt_callback<SelfType> adapt_callback, bool recursive)
+  set_adapt (adapt_callback_type adapt_callback, bool recursive)
   {
     if (!m_uncommitted_forest.has_value ()) {
       t8_forest_t new_forest;
       t8_forest_init (&new_forest);
       m_uncommitted_forest = new_forest;
     }
-    // Create and register adaptation context holding the mesh handle and the user defined callbacks.
-    auto context = detail::MeshAdaptContext<SelfType> (this, std::move (adapt_callback));
-    detail::AdaptRegistry::register_context (m_forest, context);
+    // Create and register adaptation context holding the mesh handle and the user defined callback.
+    detail::AdaptRegistry::register_context (
+      m_uncommitted_forest.value (),
+      std::make_unique<detail::MeshAdaptContext<SelfType>> (*this, std::move (adapt_callback)));
 
     // Set up the forest for adaptation using the wrapper callback.
-    t8_forest_set_adapt (forest, forest_from, detail::mesh_adapt_callback_wrapper, recursive);
+    t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, recursive);
+  }
+
+  /** Enable or disable the creation of a layer of ghost elements.
+  * On default no ghosts are created.
+  * \param [in]      do_ghost  If true a ghost layer will be created.
+  * \param [in]      ghost_type Controls which neighbors count as ghost elements,
+  *                             currently only T8_GHOST_FACES is supported. This value
+  *                             is ignored if \a do_ghost = false.
+  */
+  void
+  set_ghost (bool do_ghost = true, t8_ghost_type_t ghost_type = T8_GHOST_FACES)
+  {
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
+    }
+    t8_forest_set_ghost (m_uncommitted_forest.value (), do_ghost, ghost_type);
   }
 
   /** After allocating and adding properties to the mesh, commit the changes.
- * This call updates the internal state of the forest.
- * The forest used to define the mesh handle is replaced in this function.
- * Specialize the update with calls like /ref set_adapt calls first.
- */
+   * This call updates the internal state of the mesh.
+   * The forest used to define the mesh handle is replaced in this function.
+   * Specialize the update with calls like \ref set_adapt calls first.
+   */
   void
   commit ()
   {
     if (!std::is_void<TUserData>::value) {
-      t8_forest_set_user_data (m_uncommitted_forest, t8_forest_get_user_data (m_forest));
+      t8_forest_set_user_data (m_uncommitted_forest.value (), t8_forest_get_user_data (m_forest));
     }
-
-    t8_forest_commit (m_uncommitted_forest);
-    detail::AdaptRegistry::unregister_context (forest_from);
+    t8_forest_commit (m_uncommitted_forest.value ());
+    detail::AdaptRegistry::unregister_context (m_uncommitted_forest.value ());
     if (!std::is_void<TElementData>::value) {
       t8_global_infof ("Please note that the element data is not interpolated automatically during adaptation. Use the "
                        "function set_element_data() to provide new adapted element data.\n");
     }
-    m_forest = m_uncommitted_forest;
+    m_forest = m_uncommitted_forest.value ();
+    m_uncommitted_forest = std::nullopt;
     update_elements ();
   }
+
+  // --- Methods to set and get user and element data and exchange data between processes. ---
   /** 
    * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
    * \param [in] data The user data of class TUserData. Data will never be touched by mesh handling routines.
@@ -345,6 +375,10 @@ class mesh {
   void
   update_ghost_elements ()
   {
+    if (get_num_ghosts () == 0) {
+      m_ghosts.clear ();
+      return;
+    }
     m_ghosts.clear ();
     m_ghosts.reserve (get_num_ghosts ());
     t8_locidx_t num_loc_trees = t8_forest_get_num_local_trees (m_forest);

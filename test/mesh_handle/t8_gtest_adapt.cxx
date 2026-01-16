@@ -49,36 +49,30 @@ struct dummy_user_data
   double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
 };
 
-/** Callback function implementation to decide for the refinement of an element of a mesh handle.
- * \param [in] mesh The mesh that should be adapted.
- * \param [in] element The element to consider for refinement.
+/** Callback function prototype to decide for refining and coarsening of a family of elements
+ * or one element in a mesh handle.
  * \tparam TMeshClass The mesh handle class.
- * \return true if the element should be refined, false otherwise.
+ * \param [in] mesh The mesh that should be adapted.
+ * \param [in] elements One element or a family of elements to consider for adaption.
+ * \return 1 if the first entry in \a elements should be refined,
+ *        -1 if the family \a elements shall be coarsened,
+ *         0 else.
  */
 template <typename TMeshClass>
-bool
-refine_element_test (const TMeshClass &mesh, const typename TMeshClass::element_class &element)
-{
-  typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
-  auto element_centroid = element.get_centroid ();
-  double dist = t8_dist<t8_3D_point, t8_3D_point> (element_centroid, user_data.midpoint);
-  return (dist < user_data.refine_if_inside_radius);
-}
-
-/** Callback function implementation to decide for coarsening.
- * \param [in] mesh The mesh that should be adapted.
- * \param [in] elements The element family considered to be coarsened.
- * \tparam TMeshClass The mesh handle class.
- * \return true if the family should be coarsened, false otherwise. 
- */
-template <typename TMeshClass>
-bool
-coarsen_element_family_test (const TMeshClass &mesh, const std::vector<typename TMeshClass::element_class> &elements)
+int
+adapt_callback_test (const TMeshClass &mesh, const std::vector<typename TMeshClass::element_class> &elements)
 {
   typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
   auto element_centroid = elements[0].get_centroid ();
   double dist = t8_dist<t8_3D_point, t8_3D_point> (element_centroid, user_data.midpoint);
-  return (dist > user_data.coarsen_if_outside_radius);
+  if (dist < user_data.refine_if_inside_radius) {
+    return 1;
+  }
+  // Check if we got a family and if yes, if we should coarsen.
+  if ((elements.size () > 1) && (dist > user_data.coarsen_if_outside_radius)) {
+    return -1;
+  }
+  return 0;
 }
 
 /** Adapt callback implementation for a forest.
@@ -130,13 +124,15 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   // Ref the forest as we want to keep using it after the adapt call to compare results.
   t8_forest_ref (forest);
 
-  // Adapt mesh handle and the forest with similar callbacks.
-  t8_mesh_handle::adapt_mesh<mesh_class> (mesh_handle, refine_element_test<mesh_class>,
-                                          coarsen_element_family_test<mesh_class>, false);
+  // Adapt mesh handle.
+  mesh_handle.set_adapt (adapt_callback_test<mesh_class>, false);
+  mesh_handle.commit ();
+  // Adapt forest classically.
   forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 1, &user_data);
 
   // Compare results.
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
+
   // Clean up.
   t8_forest_unref (&forest);
 }
