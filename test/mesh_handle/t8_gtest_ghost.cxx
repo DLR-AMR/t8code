@@ -52,11 +52,7 @@ struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
   }
-  void
-  TearDown () override
-  {
-    t8_forest_unref (&forest);
-  }
+
   t8_forest_t forest;
   int level;
 };
@@ -179,15 +175,15 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
-  using mesh_type = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
-  using element_type = mesh_type::element_type;
-  mesh_type mesh = mesh_type (forest);
-  EXPECT_TRUE (element_type::has_face_neighbor_cache ());
+  using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
+  using element_class = mesh_class::element_class;
+  mesh_class mesh = mesh_class (forest);
+  EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   if (mesh.get_num_local_elements () == 0) {
     GTEST_SKIP () << "No local elements in the mesh to test the cache functionality.";
   }
-  const std::vector<const element_type*> unrealistic_neighbors
+  const std::vector<const element_class*> unrealistic_neighbors
     = { &mesh[0], &mesh[mesh.get_num_local_elements () - 1] };
   const std::vector<int> unrealistic_dual_faces = { 100, 1012000 };
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {

@@ -49,11 +49,6 @@ struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }
-  void
-  TearDown () override
-  {
-    t8_forest_unref (&forest);
-  }
 
   t8_forest_t forest;
   int level;
@@ -63,11 +58,11 @@ struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t
 TEST_P (t8_mesh_handle_test, test_iterator)
 {
   // --- Check default functionality. ---
-  using mesh_type = t8_mesh_handle::mesh<>;
-  using element_type = mesh_type::element_type;
-  mesh_type mesh = mesh_type (forest);
-  EXPECT_FALSE (element_type::has_vertex_cache ());
-  EXPECT_FALSE (element_type::has_centroid_cache ());
+  using mesh_class = t8_mesh_handle::mesh<>;
+  using element_class = mesh_class::element_class;
+  mesh_class mesh = mesh_class (forest);
+  EXPECT_FALSE (element_class::has_vertex_cache ());
+  EXPECT_FALSE (element_class::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements and check some functionality.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
@@ -98,11 +93,11 @@ TEST_P (t8_mesh_handle_test, test_iterator)
 TEST_P (t8_mesh_handle_test, test_competences)
 {
   // --- Version with cached vertex coordinates. ---
-  using mesh_type_vertex = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates>;
-  using element_type_vertex = mesh_type_vertex::element_type;
-  mesh_type_vertex mesh_vertex = mesh_type_vertex (forest);
-  EXPECT_TRUE (element_type_vertex::has_vertex_cache ());
-  EXPECT_FALSE (element_type_vertex::has_centroid_cache ());
+  using mesh_class_vertex = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates>;
+  using element_class_vertex = mesh_class_vertex::element_class;
+  mesh_class_vertex mesh_vertex = mesh_class_vertex (forest);
+  EXPECT_TRUE (element_class_vertex::has_vertex_cache ());
+  EXPECT_FALSE (element_class_vertex::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements and check functionality.
   for (auto it = mesh_vertex.begin (); it != mesh_vertex.end (); ++it) {
@@ -134,11 +129,12 @@ TEST_P (t8_mesh_handle_test, test_competences)
   }
 
   // --- Version with cached centroid variable. ---
-  using mesh_type_centroid = t8_mesh_handle::mesh<t8_mesh_handle::cache_centroid>;
-  using element_type_centroid = mesh_type_centroid::element_type;
-  mesh_type_centroid mesh_centroid = mesh_type_centroid (forest);
-  EXPECT_FALSE (element_type_centroid::has_vertex_cache ());
-  EXPECT_TRUE (element_type_centroid::has_centroid_cache ());
+  t8_forest_ref (forest);
+  using mesh_class_centroid = t8_mesh_handle::mesh<t8_mesh_handle::cache_centroid>;
+  using element_class_centroid = mesh_class_centroid::element_class;
+  mesh_class_centroid mesh_centroid = mesh_class_centroid (forest);
+  EXPECT_FALSE (element_class_centroid::has_vertex_cache ());
+  EXPECT_TRUE (element_class_centroid::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements.
   for (auto it = mesh_centroid.begin (); it != mesh_centroid.end (); ++it) {
@@ -161,11 +157,11 @@ TEST_P (t8_mesh_handle_test, test_competences)
 TEST_P (t8_mesh_handle_test, test_2_competences)
 {
   // --- Use competences to cache level and centroid. ---
-  using mesh_type = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates, t8_mesh_handle::cache_centroid>;
-  using element_type = mesh_type::element_type;
-  mesh_type mesh = mesh_type (forest);
-  EXPECT_TRUE (element_type::has_vertex_cache ());
-  EXPECT_TRUE (element_type::has_centroid_cache ());
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates, t8_mesh_handle::cache_centroid>;
+  using element_class = mesh_class::element_class;
+  mesh_class mesh = mesh_class (forest);
+  EXPECT_TRUE (element_class::has_vertex_cache ());
+  EXPECT_TRUE (element_class::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {

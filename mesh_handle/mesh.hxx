@@ -21,7 +21,7 @@
 */
 
 /** \file mesh.hxx
- * Definition of the mesh type of the handle.
+ * Definition of the mesh class of the handle.
  */
 
 #pragma once
@@ -37,17 +37,17 @@ namespace t8_mesh_handle
 
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
- * \tparam TCompetence The competences you want to add to the default functionality of the mesh.
+ * \tparam TCompetences The competences you want to add to the default functionality of the mesh.
  *         \see element for more details on the choice of the template parameter.   
  */
-template <template <typename> class... TCompetence>
+template <template <typename> class... TCompetences>
 struct mesh
 {
  public:
-  using element_type = element<TCompetence...>; /**< The element type of the mesh with given competences. */
-  friend element_type; /**< Declare the element as friend such that private members (e.g. the forest) can be accessed. */
+  using element_class = element<TCompetences...>; /**< The element of the mesh with given competences. */
+  friend element_class; /**< Declare element_class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =
-    typename std::vector<element_type>::const_iterator; /**< Constant iterator type for the mesh elements. */
+    typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
 
   /** 
    * Constructor for a mesh of the handle. 
@@ -57,6 +57,16 @@ struct mesh
   {
     T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
+  }
+
+  /** 
+   * Destructor for a mesh of the handle. 
+   * The forest in use will be unreferenced. 
+   * Call \ref t8_forest_ref before if you want to keep it alive.
+   */
+  ~mesh ()
+  {
+    t8_forest_unref (&m_forest);
   }
 
   /**
@@ -117,7 +127,7 @@ struct mesh
    * \param [in] local_index The local index of the element to access.
    * \return Reference to the element.
    */
-  const element_type&
+  const element_class&
   operator[] (t8_locidx_t local_index) const
   {
     T8_ASSERT (0 <= local_index && local_index < get_num_local_elements () + get_num_ghosts ());
@@ -165,7 +175,7 @@ struct mesh
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_get_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_elements.push_back (element_type (this, itree, ielem));
+        m_elements.push_back (element_class (this, itree, ielem));
       }
     }
     update_ghost_elements ();
@@ -185,14 +195,14 @@ struct mesh
     for (t8_locidx_t itree = 0; itree < t8_forest_get_num_ghost_trees (m_forest); ++itree) {
       const t8_locidx_t num_elems = t8_forest_ghost_tree_num_leaf_elements (m_forest, itree);
       for (t8_locidx_t ielem = 0; ielem < num_elems; ++ielem) {
-        m_ghosts.push_back (element_type (this, num_loc_trees + itree, ielem, true));
+        m_ghosts.push_back (element_class (this, num_loc_trees + itree, ielem, true));
       }
     }
   }
 
-  t8_forest_t m_forest;                 /**< The forest the mesh should be defined for. */
-  std::vector<element_type> m_elements; /**< Vector storing the (local) mesh elements. */
-  std::vector<element_type> m_ghosts;   /**< Vector storing the (local) ghost elements. */
+  t8_forest_t m_forest;                  /**< The forest the mesh should be defined for. */
+  std::vector<element_class> m_elements; /**< Vector storing the (local) mesh elements. */
+  std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
 };
 
 }  // namespace t8_mesh_handle
