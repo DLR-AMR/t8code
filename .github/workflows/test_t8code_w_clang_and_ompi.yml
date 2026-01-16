@@ -33,7 +33,7 @@ env:
 on:
   workflow_call:
     # Note: To simplify adding more configurations of this workflow later, the MPI mode and the BUILD_TYPE
-    #       are passed as input.
+    #       are passed as input, although currently only MPI on and Debug mode are tested.
     inputs:
       MAKEFLAGS:
         required: true
