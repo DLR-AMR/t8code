@@ -155,7 +155,7 @@ add_t8_cpp_test( NAME t8_gtest_element_is_leaf_serial             SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_partition_data_parallel            SOURCES t8_forest/t8_gtest_partition_data.cxx )
 add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_forest/t8_gtest_set_partition_offset.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
-
+add_t8_cpp_test( NAME t8_gtest_weighted_partitioning_parallel     SOURCES t8_forest/t8_gtest_weighted_partitioning.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_cpp_test( NAME t8_gtest_recursive_serial             SOURCES t8_forest_incomplete/t8_gtest_recursive.cxx )
@@ -213,6 +213,7 @@ add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_fu
 if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_mesh_handle_parallel             SOURCES mesh_handle/t8_gtest_mesh_handle.cxx )
   add_t8_cpp_test( NAME t8_gtest_compare_handle_to_forest_serial  SOURCES mesh_handle/t8_gtest_compare_handle_to_forest.cxx )
+  add_t8_cpp_test( NAME t8_gtest_handle_ghost_parallel            SOURCES mesh_handle/t8_gtest_ghost.cxx )
   add_t8_cpp_test( NAME t8_gtest_custom_competence_serial         SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial          SOURCES mesh_handle/t8_gtest_cache_competence.cxx )
 endif()
