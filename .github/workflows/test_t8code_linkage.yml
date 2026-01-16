@@ -122,8 +122,6 @@ jobs:
 # cmake and test with OpenCASCADE
     - name: check OpenCASCADE
       run: echo "Checking OpenCASCADE"
-    - name: Show OpenCASCADE version
-      run: dpkg -l | grep opencascade
     - name: echo cmake line
       run: echo cmake ../ $CONFIG_OPTIONS -DT8CODE_ENABLE_OCC=ON
     - name: cmake OpenCASCADE
