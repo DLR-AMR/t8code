@@ -54,20 +54,20 @@ on:
         default: 'T8_TEST_LEVEL_FULL'
 
 jobs:
-  save-image:
-    runs-on: ubuntu-latest   # runs on a VM with Docker
-    steps:
-      - name: Pull image
-        run: docker pull dlramr/t8code-ubuntu:t8-clang-dependencies
+  # save-image:
+  #   runs-on: ubuntu-latest   # runs on a VM with Docker
+  #   steps:
+  #     - name: Pull image
+  #       run: docker pull dlramr/t8code-ubuntu:t8-clang-dependencies
 
-      - name: Save image as tarball
-        run: docker save dlramr/t8code-ubuntu:t8-clang-dependencies -o t8code-clang.tar
+  #     - name: Save image as tarball
+  #       run: docker save dlramr/t8code-ubuntu:t8-clang-dependencies -o t8code-clang.tar
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: t8code-image
-          path: t8code-clang.tar
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v5
+  #       with:
+  #         name: t8code-image
+  #         path: t8code-clang.tar
 
   t8code_cmake_tests:
   #
@@ -129,17 +129,17 @@ jobs:
     #   run: |
     #     cd $OCCT_INSTALL_PATH
     #     ls * */* */*/*
-    # - name: Try to make OCC findable
-    #   run: |
-    #     ln -s $OCCT_INSTALL_PATH/include $OCCT_INSTALL_PATH/inc
-    #     sudo mkdir -p  /opt/occ
-    #     sudo ln -sf $OCCT_INSTALL_PATH/inc /opt/occ/inc
-    #     echo "/opt/occ/inc contains"
-    #     ls /opt/occ/inc
-    #     echo "$OCCT_INSTALL_PATH/inc contains"
-    #     ls $OCCT_INSTALL_PATH/inc
+    - name: Try to make OCC findable
+      run: |
+        ln -s $OCCT_INSTALL_PATH/include $OCCT_INSTALL_PATH/inc
+        sudo mkdir -p  /opt/occ
+        sudo ln -sf $OCCT_INSTALL_PATH/inc /opt/occ/inc
+        echo "/opt/occ/inc contains"
+        ls /opt/occ/inc
+        echo "$OCCT_INSTALL_PATH/inc contains"
+        ls $OCCT_INSTALL_PATH/inc
     - name: build config variables
-      run: export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx ${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_ENABLE_OCC=OFF"
+      run: export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx ${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_ENABLE_OCC=ON"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     #run: export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx ${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=${VTK_INSTALL_PATH}/lib/cmake/vtk-9.1 -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_NETCDF=OFF"
     # Run cmake
