@@ -28,11 +28,11 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-/** In this test, we are given a forest with 3 global trees. 
- * We adapt the forest so that all 6 compositions of empty 
- * global trees are the result of it. 
+/** In this test, we are given a forest with 3 global trees.
+ * We adapt the forest so that all 6 compositions of empty
+ * global trees are the result of it.
  * Therefore, \a testcase runs from 0 to 5.
- * We do this twice. Once we partition the forest in the same call. 
+ * We do this twice. Once we partition the forest in the same call.
  * The second time, we do the adapting and partitioning separately.
  * The two resulting forests must be equal.
  * */
