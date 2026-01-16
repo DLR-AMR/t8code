@@ -7,6 +7,6 @@ Some application codes are designed for unstructured or uniform meshes and canno
 If you want to use the handle, note that is has its own library. Turn the option `T8CODE_BUILD_MESH_HANDLE` to `ON` and link against the target `T8_MESH_HANDLE` in addition to the usual t8code target please.
 
 The folder's most important files are: 
-The [mesh.hxx](mesh.hxx) defines the mesh class of the handle. This is the central file of the mesh handle. 
+The [mesh.hxx](mesh.hxx) defines the mesh of the handle. This is the central file of the mesh handle. 
 The [element.hxx](element.hxx) defines the elements (mesh or ghost elements) of the mesh handle.
 The [competences.hxx](competences.hxx) defines additional competences/functionality of an element to access additional data.
