@@ -223,7 +223,7 @@ jobs:
 
   # Check t8code building and testing with the Clang compiler and openmpi.
   # Note: This workflow is meant to detect Clang- or openmpi-specific issues missed by the remaining (gcc- and mpich-based) workflows.
-  #       To reduce its runtime, it currently only used Debug mode with MPI on and does not link to external libraries like VTK or OpenCASCADE.
+  #       To reduce its runtime, it currently only uses one run in Debug mode with MPI activated and all external libraries like VTK or OpenCASCADE.
   t8code_w_clang_and_ompi_tests:
     needs: fine_grained_trigger
     secrets: inherit

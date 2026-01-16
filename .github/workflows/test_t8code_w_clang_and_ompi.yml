@@ -24,8 +24,8 @@ name: CMake tests t8code with Clang compiler and OpenMPI
 #  This workflow checks whether building and testing works with the Clang compiler
 #  and openmpi. It was added because all of t8code's remaining CI workflows rely
 #  on gcc and mpich, hence missing Clang- or openmpi-specific issues.
-#  To reduce runtime, (for now) only Debug mode with MPI is tested; also, no external
-#  libraries like VTK, OpenCASCADE etc. are covered.
+#  To reduce runtime, (for now) only one configuration is run, that is, Debug mode
+#  with MPI and all external libraries (VTK, OpenCASCADE, NetCDF).
 
 env:
   DEBUG_CONFIG: "-O1"
