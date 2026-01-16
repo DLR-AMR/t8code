@@ -42,7 +42,8 @@ namespace t8_mesh_handle
  *         \see element for more details on the choice of the template parameter.   
  */
 template <template <typename> class... TCompetences>
-class mesh {
+struct mesh
+{
  public:
   using element_class = element<TCompetences...>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */

@@ -42,7 +42,7 @@ namespace t8_mesh_handle
 /** Forward declaration of the \ref mesh class of the handle.
  */
 template <template <typename> class... TCompetences>
-class mesh;
+struct mesh;
 
 /** 
  * Definition of the mesh element class of the \ref mesh handle.
@@ -63,7 +63,8 @@ class mesh;
  * \tparam TCompetences The competences you want to add to the default functionality of the element.
  */
 template <template <typename> class... TCompetences>
-class element: public TCompetences<element<TCompetences...>>... {
+struct element: public TCompetences<element<TCompetences...>>...
+{
  private:
   using SelfType = element<TCompetences...>; /**< Type of the current class with all template parameters specified. */
   using mesh_class = mesh<TCompetences...>;  /**< Type of the mesh class used. */
