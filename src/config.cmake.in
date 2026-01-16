@@ -17,6 +17,7 @@ set( T8CODE_ENABLE_VTK @T8CODE_ENABLE_VTK@ )
 set( T8CODE_USE_SYSTEM_SC @T8CODE_USE_SYSTEM_SC@ )
 set( T8CODE_USE_SYSTEM_P4EST @T8CODE_USE_SYSTEM_P4EST@ )
 
+# Ensure that external libraries using for example find_package ( t8code REQUIRED) link automatically against VTK
 if(T8CODE_ENABLE_VTK)
     find_dependency(VTK)
 endif()
