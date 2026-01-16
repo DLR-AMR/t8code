@@ -20,10 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_partition.cxx
+ * Implements functions declared in \ref t8_forest_partition.h.
+ */
+
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_partition_for_coarsening.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_schemes/t8_scheme.hxx>
 
@@ -32,7 +37,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * For each tree that we send elements from to other processes,
- * we send the information stored in this struct to the other process 
+ * we send the information stored in this struct to the other process
  */
 typedef struct
 {
@@ -82,6 +87,43 @@ t8_forest_compute_first_local_element_id (t8_forest_t forest)
   first_element -= local_num_elements;
 
   return first_element;
+}
+
+t8_forest_t
+t8_forest_new_gather (const t8_forest_t forest_from, const int gather_rank)
+{
+  // Declare and initialize forest to be returned.
+  t8_forest_t forest_gather;
+  t8_forest_init (&forest_gather);
+
+  // Set partition (includes also sanity checks)
+  t8_forest_set_partition (forest_gather, forest_from, 0);
+
+  // Determine global ID of the element that will be the first local one:
+  // To gather all elements on gather_rank, the first local element is set to
+  // zero for all processes up to gather_rank and to number of elements for the
+  // remaining ones.
+  const t8_gloidx_t first_local_element
+    = (forest_from->mpirank <= gather_rank) ? 0 : forest_from->global_num_leaf_elements;
+
+  // Set the partition offset accordingly.
+  t8_forest_set_partition_offset (forest_gather, first_local_element);
+
+  // Commit the forest.
+  t8_forest_commit (forest_gather);
+
+  // Return gathered forest.
+  return forest_gather;
+}
+
+void
+t8_forest_set_partition_offset (t8_forest_t forest, const t8_gloidx_t first_global_element)
+{
+  // Set flag indicating a manual partition.
+  forest->set_partition_offset = 1;
+
+  // Set global ID of first local element.
+  forest->set_first_global_element = first_global_element;
 }
 
 /* For a committed forest create the array of element_offsets
@@ -211,7 +253,7 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
     return;
   }
   if (forest->mpirank == forest->mpisize - 1) {
-    /* The last process can only share a tree with process rank-1. 
+    /* The last process can only share a tree with process rank-1.
      * However, this is already tested by process rank-1. */
     return;
   }
@@ -220,7 +262,7 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
     /* The first tree on process rank+1 is not shared with current rank, nothing to do */
     return;
   }
-  /* The first tree on process rank+1 may be shared but empty. 
+  /* The first tree on process rank+1 may be shared but empty.
    * Thus, the first descendant id of rank+1 is not of the first local tree. */
   if (local_tree_num_elements == 0) {
     /* check if first not shared tree of process rank+1 contains elements */
@@ -430,50 +472,153 @@ t8_forest_partition_create_tree_offsets (t8_forest_t forest)
   }
 }
 
-/* Calculate the new element_offset for forest from
- * the element in forest->set_from assuming a partition without element weights */
+void
+t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *weight_fcn)
+{
+  forest->weight_function = weight_fcn;
+}
+
+/** Calculate the new element_offset for forest from the elements in forest->set_from.
+ *  Unless a weight function has been set via \ref t8_forest_set_partition_weight_function,
+ *  a partition without element weights is assumed. */
 static void
 t8_forest_partition_compute_new_offset (t8_forest_t forest)
 {
-  t8_forest_t forest_from;
-  sc_MPI_Comm comm;
-  t8_gloidx_t new_first_element_id;
-  int i, mpiret, mpisize;
-
   T8_ASSERT (t8_forest_is_initialized (forest));
   T8_ASSERT (forest->set_from != NULL);
-
-  forest_from = forest->set_from;
-  comm = forest->mpicomm;
-
   T8_ASSERT (forest->element_offsets == NULL);
-  /* Set the shmem array type to comm */
+
+  // Preparation: Define frequently used forest properties as own local variables.
+  t8_forest_t forest_from = forest->set_from;
+  sc_MPI_Comm comm = forest_from->mpicomm;
+  const int mpirank = forest_from->mpirank;
+  const int mpisize = forest_from->mpisize;
+  const t8_gloidx_t global_num_leaf_elements = forest_from->global_num_leaf_elements;
+  const t8_weight_fcn_t *weight_fcn = forest->weight_function;
+
+  // Initialize the shmem array.
   t8_shmem_init (comm);
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
-  /* Initialize the shmem array */
-  t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), forest->mpisize + 1, comm);
-  mpiret = sc_MPI_Comm_size (comm, &mpisize);
-  SC_CHECK_MPI (mpiret);
+  t8_shmem_array_init (&forest->element_offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
 
-  if (t8_shmem_array_start_writing (forest->element_offsets)) {
-    if (forest_from->global_num_leaf_elements > 0) {
+  // If the global number of elements is zero, all element offsets are too and we can leave this function.
+  if (global_num_leaf_elements == 0) {
+    if (t8_shmem_array_start_writing (forest->element_offsets)) {
       t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-      for (i = 0; i < mpisize; i++) {
-        /* Calculate the first element index for each process. We convert to doubles to prevent overflow */
-        new_first_element_id = (((double) i * (long double) forest_from->global_num_leaf_elements) / (double) mpisize);
-        T8_ASSERT (0 <= new_first_element_id && new_first_element_id < forest_from->global_num_leaf_elements);
-        element_offsets[i] = new_first_element_id;
-      }
-      element_offsets[forest->mpisize] = forest->global_num_leaf_elements;
+      std::fill_n (element_offsets, mpisize + 1, t8_gloidx_t { 0 });
     }
-    else {
-      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
-      for (i = 0; i <= mpisize; i++) {
-        element_offsets[i] = 0;
-      }
-    }
+    t8_shmem_array_end_writing (forest->element_offsets);
+    return;
   }
-  t8_shmem_array_end_writing (forest->element_offsets);
+
+  // Define vector of manually set element offsets.
+  std::vector<t8_gloidx_t> custom_element_offsets;
+
+  // If a custom partitioning is set, all-gather the manually set element offsets.
+  if (forest->set_partition_offset != 0) {
+    custom_element_offsets.resize (forest->mpisize);
+    const int retval = sc_MPI_Allgather (&forest->set_first_global_element, 1, T8_MPI_GLOIDX,
+                                         custom_element_offsets.data (), 1, T8_MPI_GLOIDX, comm);
+    SC_CHECK_MPI (retval);
+  }
+
+  // If no weight function is provided, compute the offsets solely based on the number of elements.
+  if (weight_fcn == nullptr) {
+    if (t8_shmem_array_start_writing (forest->element_offsets)) {
+      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+
+      // Distinguish whether custom element offsets were set:
+      if (forest->set_partition_offset == 0) {
+        for (int i = 0; i < mpisize; ++i) {
+          element_offsets[i] = std::floor (static_cast<double> (global_num_leaf_elements) * i / mpisize);
+        }
+      }
+      else {
+
+        // Apply manually set element offsets.
+        std::copy_n (custom_element_offsets.data (), static_cast<size_t> (mpisize), element_offsets);
+      }
+      // The last entry is the same in both cases.
+      element_offsets[mpisize] = global_num_leaf_elements;
+    }
+    t8_shmem_array_end_writing (forest->element_offsets);
+  }
+  else {
+    // Else: Weighted load balancing:
+    // ------------------------------
+
+    // Function definition: Sum of the weights on the local partition.
+    double const partition_weight = [&] () {
+      double local_sum = 0.;
+      for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
+        for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest_from, ltreeid); ++ielm) {
+          local_sum += weight_fcn (forest_from, ltreeid, ielm);
+        }
+      }
+      return local_sum;
+    }();
+
+    // Function definition: Partial sum of the partition weights of all lower-rank processes (excluding the local rank).
+    double const partition_weight_offset = [&] () {
+      double local_offset = 0.;
+      double local_partition_weight = partition_weight;  // because MPI does not like const variables
+      sc_MPI_Exscan (&local_partition_weight, &local_offset, 1, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+      return mpirank > 0 ? local_offset : 0;  // because the result of MPI_Exscan is undefined on rank 0
+    }();
+
+    // Function definition: Complete sum of the partition weights.
+    double const forest_weight = [&] () {
+      double total_weight = partition_weight_offset + partition_weight;
+      sc_MPI_Bcast (&total_weight, 1, sc_MPI_DOUBLE, mpisize - 1, comm);
+      return total_weight;
+    }();
+
+    // The [rank_begin, rank_end) slice of the new offsets will land in the local partition.
+    int const rank_begin = std::ceil (mpisize * partition_weight_offset / forest_weight);
+    int const rank_end = std::ceil (mpisize * (partition_weight_offset + partition_weight) / forest_weight);
+    std::vector<t8_gloidx_t> local_offsets (rank_end - rank_begin, 0);
+
+    // Prepare computation of local element offsets.
+    double accumulated_weight = partition_weight_offset;
+    t8_gloidx_t global_elm_idx = t8_forest_get_first_local_leaf_element_id (forest_from);
+    int iproc = rank_begin;
+
+    // Loop over local trees and their elements:
+    // - Add element weight to accumulated sum.
+    // - If accumulated weight is above ideal bound for proc iproc, set local offset and go to next process.
+    for (t8_locidx_t ltreeid = 0; ltreeid < t8_forest_get_num_local_trees (forest_from); ++ltreeid) {
+      for (t8_locidx_t ielm = 0; ielm < t8_forest_get_tree_num_leaf_elements (forest_from, ltreeid); ++ielm) {
+        T8_ASSERT (0 <= global_elm_idx && global_elm_idx < global_num_leaf_elements);
+        accumulated_weight += weight_fcn (forest_from, ltreeid, ielm);
+        while (accumulated_weight
+               > forest_weight * iproc / mpisize) {  // there may be empty partitions, hence while and not if
+          T8_ASSERT (rank_begin <= iproc && iproc < rank_end);
+          local_offsets[iproc - rank_begin] = global_elm_idx;
+          ++iproc;
+        }
+        ++global_elm_idx;
+      }
+    }
+    T8_ASSERT (iproc == rank_end);  // i.e. local_offsets has been filled properly
+
+    // Allgather local offsets into the global element offset array.
+    t8_shmem_array_allgatherv (local_offsets.data (), local_offsets.size (), T8_MPI_GLOIDX, forest->element_offsets,
+                               T8_MPI_GLOIDX, comm);
+
+    // Add first and last entry to element offsets.
+    if (t8_shmem_array_start_writing (forest->element_offsets)) {
+      t8_gloidx_t *element_offsets = t8_shmem_array_get_gloidx_array_for_writing (forest->element_offsets);
+      element_offsets[0] = 0;
+      element_offsets[mpisize] = global_num_leaf_elements;
+    }
+    t8_shmem_array_end_writing (forest->element_offsets);
+  }
+
+  // In case the partition-for-coarsening flag is set, correct the partitioning if a family of elements is
+  // split across process boundaries.
+  if (forest->set_for_coarsening != 0) {
+    t8_forest_pfc_correction_offsets (forest);
+  }
 }
 
 /* Find the owner of a given element.

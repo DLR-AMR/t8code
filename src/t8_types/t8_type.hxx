@@ -48,6 +48,7 @@ class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
  public:
   /** The type of the value stored in this strong type. */
   using value_type = T;
+  /** The tag of the value stored in this strong type. */
   using tag = Parameter;
 
   /** Default constructor */

@@ -21,6 +21,18 @@ No! If your code is only a couple of lines long AND has very little impact on th
 
 # User Updates for the upcoming t8code v4.0.0
 
+Among many minor changes, we have several major updates in t8code v4.0.0.
+Please see the subsections to understand the changes in the code and what you need to adapt when linking against t8code.
+
+- [Changes in the element schemes](#changes-in-the-element-schemes)
+- [Renaming of forest functions and variables](#renaming-of-forest-functions-and-variables-to-explicitly-say-leaf-elements)
+- [Renaming of macros T8_WITH_* to T8_ENABLE_*](#renaming-of-macros-t8_with_-to-t8_enable_)
+- [MPI minimum required version 3.0](#update-to-mpi-30)
+- [Changed cmesh folder structure](#changes-in-cmesh-folder-structure)
+- [Documentation on readthedocs](#documentation-on-readthedocs)
+
+# Changes in the element schemes
+
 We have just merged another branch into our main branch that introduces a lot of changes. Here, we want to explain what is new, why we decided on this feature, what we intend with the feature in the (near) future and most importantly what do you as a user have to [change](#what-do-you-have-to-change) to be on par with the upcoming t8code v4.0.0
 
 ## What is new?
@@ -131,7 +143,40 @@ A list of all renamings (without considering the deletion of the prefix) is here
 - `t8_element_refines_irregular` -> `refines_irregular`
 - `t8_element_root` -> `t8_element_set_to_root`
 
-### Renaming of forest functions and variables to explicitly say leaf elements
+
+### Usage of the default scheme
+If you just want to use the default scheme you now use
+```cpp
+t8_scheme *scheme = t8_scheme_new_default ();
+```
+
+instead of
+```cpp
+t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
+```
+We only got rid of the cxx postfix. It creates the default scheme as you know it and the element specific implementations are still the same.
+
+
+## What does the default scheme actually look like?
+Ok, we admit it, the default scheme has some small tiny changes (but don't worry, the element specific implementation is still the same, we promise).
+"Under the hood" the `t8_scheme_new_default` function now uses the builder to create the eclass schemes. But it uses the same order of element-schemes as before, therefore it behaves as the default scheme as you know it:
+```cpp
+t8_scheme *
+t8_scheme_new_default (void){
+  t8_scheme_builder builder;
+  builder.add_eclass_scheme<t8_default_scheme_vertex> ();
+  builder.add_eclass_scheme<t8_default_scheme_line> ();
+  builder.add_eclass_scheme<t8_default_scheme_quad> ();
+  builder.add_eclass_scheme<t8_default_scheme_tri> ();
+  builder.add_eclass_scheme<t8_default_scheme_hex> ();
+  builder.add_eclass_scheme<t8_default_scheme_tet> ();
+  builder.add_eclass_scheme<t8_default_scheme_prism> ();
+  builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
+  return builder.build_scheme ();
+}
+```
+
+# Renaming of forest functions and variables to explicitly say leaf elements
 
 To ease code readability and to avoid misunderstandings, the names of all forest functions referring exclusively to the leaf elements now explicitly say so.
 Specifically, the following functions were renamed:
@@ -161,37 +206,41 @@ Similarly, the following member variables have been renamed:
 - In `t8_tree:`
   - `elements` -> `leaf_elements`
 
-### Usage of the default scheme
-If you just want to use the default scheme you now use
-```cpp
-t8_scheme *scheme = t8_scheme_new_default ();
-```
 
-instead of
-```cpp
-t8_scheme_cxx_t *ts = t8_scheme_new_default_cxx ();
-```
-We only got rid of the cxx postfix. It creates the default scheme as you know it and the element specific implementations are still the same.
-
-## What does the default scheme actually look like?
-Ok, we admit it, the default scheme has some small tiny changes (but don't worry, the element specific implementation is still the same, we promise).
-"Under the hood" the `t8_scheme_new_default` function now uses the builder to create the eclass schemes. But it uses the same order of element-schemes as before, therefore it behaves as the default scheme as you know it:
-```cpp
-t8_scheme *
-t8_scheme_new_default (void){
-  t8_scheme_builder builder;
-  builder.add_eclass_scheme<t8_default_scheme_vertex> ();
-  builder.add_eclass_scheme<t8_default_scheme_line> ();
-  builder.add_eclass_scheme<t8_default_scheme_quad> ();
-  builder.add_eclass_scheme<t8_default_scheme_tri> ();
-  builder.add_eclass_scheme<t8_default_scheme_hex> ();
-  builder.add_eclass_scheme<t8_default_scheme_tet> ();
-  builder.add_eclass_scheme<t8_default_scheme_prism> ();
-  builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
-  return builder.build_scheme ();
-}
-```
-
-## Renaming of macros T8_WITH_ to T8_ENABLE_
+# Renaming of macros T8_WITH_ to T8_ENABLE_
 We renamed the macros T8_WITH_... to T8_ENABLE_... for consistency reasons with the related cmake options (T8CODE_ENABLE...) and other macros. We are currently working on an automatized way to check for wrong usages.
 Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script. 
+
+
+# Update to MPI 3.0
+
+We now require MPI minimum version 3.0 if you use t8code with MPI.
+From version 3.0 MPI implements MPI_COMM_TYPE_SHARED, which is necessary for using shared memory.
+
+Ensure that you are linking against MPI version 3.0 or later.
+You can call `mpirun --version` to check your current MPI version.
+
+# Changes in cmesh folder structure
+
+To organize our files better, we restructured the cmesh folder.
+This change affects all include paths of cmesh files.
+
+- Moved all cmesh related headers into `src/t8_cmesh`. This requires you to change for example
+```diff
+! #include <t8_cmesh.h>
++ #include <t8_cmesh/t8_cmesh.h>
+```
+- Introduced new subfolders:
+  - `src/t8_cmesh_internal` for t8code internal files.
+  - `src/t8_cmesh_io` for io related cmesh files (like reading from Gmsh or writing VTK files).
+This requires you to update all include paths of I/O related files. For example
+```diff
+! #include <t8_cmesh_readmshfile.h>
++ #include <t8_cmesh_io/t8_cmesh_readmshfile.h>
+```
+
+For more details, see the pull request https://github.com/DLR-AMR/t8code/pull/1986
+
+# Documentation on readthedocs
+
+To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster. 

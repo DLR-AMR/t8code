@@ -19,6 +19,12 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
+
+/** \file t8_geometry_lagrange.cxx
+ * Implements functions declared in \ref t8_geometry_lagrange.hxx 
+ *  or the C interface \ref t8_geometry_lagrange.h.
+ */
+
 #include <array>
 #include <sstream>
 

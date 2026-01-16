@@ -34,6 +34,7 @@
 #include <functional>
 #include <numeric>
 #include <iterator>
+#include <ranges>
 #include <t8.h>
 
 /**

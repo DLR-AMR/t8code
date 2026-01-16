@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest.cxx
+ * TODO
+ */
+
 #include <sc_statistics.h>
 #include <t8_refcount.h>
 #include <t8_types/t8_vec.h>
@@ -79,7 +83,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   scheme->element_new (tree_class, 1, &element_parent_current);
   scheme->element_new (tree_class, 1, &element_compare);
 
-  /* We first assume that we have an (in)complete family with the size of array elements. 
+  /* We first assume that we have an (in)complete family with the size of array elements.
    * In the following we try to disprove this. */
   int family_size = elements_size;
 
@@ -88,9 +92,9 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   const int child_id_current = scheme->element_get_child_id (tree_class, elements[0]);
   scheme->element_get_parent (tree_class, elements[0], element_parent_current);
 
-  /* Elements of the current family could already be passed, so that 
+  /* Elements of the current family could already be passed, so that
    * the element/family currently under consideration can no longer be coarsened.
-   * Also, there may be successors of a hypothetical previous family member 
+   * Also, there may be successors of a hypothetical previous family member
    * that would be overlapped after coarsening.
    * */
   if (child_id_current > 0 && el_considered > 0) {
@@ -132,12 +136,12 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   T8_ASSERT (family_size > 0);
   T8_ASSERT (family_size >= 0 && family_size <= elements_size);
 
-  /* There may be successors of a hypothetical later family member (with index 
+  /* There may be successors of a hypothetical later family member (with index
    * family_size in this family) that would be overlapped after coarsening. */
   if (family_size < elements_size) {
     /* Get level of element after last element of current possible family */
     const int level = scheme->element_get_level (tree_class, elements[family_size]);
-    /* Only elements with higher level then level of current element, can get 
+    /* Only elements with higher level then level of current element, can get
      * potentially be overlapped. */
     if (level > level_current) {
       /* Compare ancestors */
@@ -160,7 +164,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   const int num_siblings = scheme->element_get_num_siblings (tree_class, elements[0]);
   T8_ASSERT (family_size <= num_siblings);
   /* If the first/last element at a process boundary is not the first/last
-   * element of a possible family, we are not guaranteed to consider all 
+   * element of a possible family, we are not guaranteed to consider all
    * family members.*/
   if (el_considered == 0 && child_id_current > 0 && ltree_id == 0 && forest->mpirank > 0) {
     return 0;
@@ -296,9 +300,9 @@ t8_forest_no_overlap ([[maybe_unused]] t8_forest_t forest)
        * More detailed:
        * Let e_a and e_b be two elements.
        * If the level of e_a is equal to the level of the nca of e_a and e_b,
-       * then e_b is a descendant of e_a. 
+       * then e_b is a descendant of e_a.
        * If the level of e_b is equal to the level of the nca of e_a and e_b,
-       * then e_a is a descendant of e_b. 
+       * then e_a is a descendant of e_b.
        * Thus e_a and e_b overlap in both cases.
        * Note: If e_a equals e_b, e_a is the descendant of e_b and vice versa.
        * */
@@ -1149,6 +1153,9 @@ t8_forest_populate (t8_forest_t forest, const int irregular)
   int is_empty;
 
   SC_CHECK_ABORT (forest->set_level <= forest->maxlevel, "Given refinement level exceeds the maximum.\n");
+  SC_CHECK_ABORT (forest->set_partition_offset == 0,
+                  "t8_forest_populate does not support manually chosen partition range.\n");
+
   if (irregular) {
     t8_cmesh_uniform_bounds_for_irregular_refinement (
       forest->cmesh, forest->set_level, forest->scheme, &forest->first_local_tree, &child_in_tree_begin,
@@ -1236,7 +1243,8 @@ t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->first_local_tree > -1);
   T8_ASSERT (forest->first_local_tree <= forest->global_num_trees);
-  T8_ASSERT (forest->last_local_tree < forest->global_num_trees);
+  T8_ASSERT (forest->first_local_tree <= forest->last_local_tree + 1);
+  T8_ASSERT (forest->last_local_tree <= forest->global_num_trees);
 #if T8_ENABLE_DEBUG
   if (forest->first_local_tree == 0 && forest->last_local_tree == -1) {
     T8_ASSERT (forest->last_local_tree < 0);
@@ -1297,9 +1305,9 @@ t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int
     else {
       SC_ABORT ("For incomplete trees the method t8_forest_last_tree_shared aka "
                 "t8_forest_tree_shared(forest, 1) is not implemented.\n");
-      /* TODO: If last_local_tree is 0 of the current process and it gets 0 as the 
-       * first_local_tree of the bigger process, then it cannot be said whether 
-       * the tree with id 0 is shared or not, since the bigger process could also 
+      /* TODO: If last_local_tree is 0 of the current process and it gets 0 as the
+       * first_local_tree of the bigger process, then it cannot be said whether
+       * the tree with id 0 is shared or not, since the bigger process could also
        * carry an empty forest. */
     }
     /* If global_neighbour_tree_idx == forest->first_local_tree tree is shared */
@@ -1952,7 +1960,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
 
-  /* We get the array of the tree's elements and then search in the array of elements for our 
+  /* We get the array of the tree's elements and then search in the array of elements for our
    * element candidate. */
   /* Get the array */
   const t8_element_array_t *elements = t8_forest_get_tree_leaf_element_array (forest, local_tree);
@@ -1974,7 +1982,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
     /* The element was not found. */
     return 0;
   }
-  /* An element was found but it may not be the candidate element. 
+  /* An element was found but it may not be the candidate element.
    * To identify whether the element was found, we compare these two. */
   const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
@@ -2315,7 +2323,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
     return proc;
   }
   else {
-    /* Get the next owning process. Its first descendant is in fact an element of the tree. 
+    /* Get the next owning process. Its first descendant is in fact an element of the tree.
      * If it is bigger than the descendant we look for, then proc is the owning process of element. */
     proc_next = *(int *) sc_array_index (owners_of_tree, 1);
     if (*(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc_next)
@@ -2694,6 +2702,9 @@ t8_forest_init (t8_forest_t *pforest)
   forest->maxlevel_existing = -1;
   forest->stats_computed = 0;
   forest->incomplete_trees = -1;
+  forest->set_partition_offset = 0;
+  forest->set_first_global_element = -1;
+  forest->weight_function = nullptr;
 }
 
 int
@@ -2956,9 +2967,9 @@ t8_forest_comm_global_num_leaf_elements (t8_forest_t forest)
  * Check if any tree in a forest refines irregularly.
  * An irregular refining tree is a tree with an element that does not
  * refine into 2^dim children. For example the default implementation
- * of pyramids. 
+ * of pyramids.
  * \note This function is MPI collective
- * 
+ *
  * \param[in] forest    The forest to check
  * \return          Non-zero if any tree refines irregular
  */
@@ -3644,6 +3655,7 @@ t8_forest_get_local_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
     return -1;
   }
 }
+
 t8_locidx_t
 t8_forest_get_local_or_ghost_id (const t8_forest_t forest, const t8_gloidx_t gtreeid)
 {
@@ -3914,17 +3926,7 @@ t8_forest_profile_get_ghostexchange_waittime (t8_forest_t forest)
 }
 
 double
-t8_forest_profile_get_balance (t8_forest_t forest, int *balance_rounds)
-{
-  T8_ASSERT (t8_forest_is_committed (forest));
-  if (forest->profile != NULL) {
-    *balance_rounds = forest->profile->balance_rounds;
-    return forest->profile->balance_runtime;
-  }
-  return 0;
-}
-double
-t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
+t8_forest_profile_get_cmesh_offsets_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
@@ -3934,7 +3936,7 @@ t8_forest_profile_get_cmesh_offset_runtime (t8_forest_t forest)
 }
 
 double
-t8_forest_profile_get_forest_offset_runtime (t8_forest_t forest)
+t8_forest_profile_get_forest_offsets_runtime (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   if (forest->profile != NULL) {
