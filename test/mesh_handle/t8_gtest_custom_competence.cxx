@@ -77,7 +77,7 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
   }
 };
 
-/** This tests checks that custom defined competences can be used for the mesh class 
+/** This tests checks that custom defined competences can be used for \ref t8_mesh_handle::mesh 
  *  and that we can use the functionality defined in the competence. 
  * Also checks that we can use more than one custom competence and that predefined competences can be additionally used.
  */
@@ -91,7 +91,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
 
   // Check mesh with custom defined competence.
   using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<dummy_get_level>>;
-  const mesh_class_custom mesh = mesh_class_custom (forest);
+  const mesh_class_custom mesh (forest);
 
   for (auto it = mesh.cbegin (); it != mesh.cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
@@ -102,7 +102,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
   // Test with two custom competences and a predefined competence.
   using competences = t8_mesh_handle::competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
   using mesh_class = t8_mesh_handle::mesh<competences>;
-  mesh_class mesh_more_competences = mesh_class (forest);
+  mesh_class mesh_more_competences (forest);
 
   for (auto it = mesh_more_competences.cbegin (); it != mesh_more_competences.cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());

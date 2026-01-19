@@ -57,7 +57,7 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
 
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
-  mesh_class mesh = mesh_class (forest);
+  mesh_class mesh (forest);
 
   struct dummy_user_data user_data = {
     t8_3D_point ({ 41, 42, 43 }), /* Midpoints of the sphere. */
@@ -93,7 +93,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 1, sc_MPI_COMM_WORLD);
 
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, void, data_per_element>;
-  mesh_class mesh = mesh_class (forest);
+  mesh_class mesh (forest);
   if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
     EXPECT_GT (mesh.get_num_ghosts (), 0);
@@ -103,9 +103,10 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   for (const auto &elem : mesh) {
     element_data.push_back ({ elem.get_level (), elem.get_volume () });
   }
-  mesh.set_element_data (element_data);
+  mesh.set_element_data (std::move (element_data));
   // Get element data and check that the data for all elements (including ghosts) is correct.
-  auto mesh_element_data = mesh.exchange_ghost_data ();
+  mesh.exchange_ghost_data ();
+  auto mesh_element_data = mesh.get_element_data ();
   for (t8_locidx_t ielem = 0; ielem < mesh.get_num_local_elements () + mesh.get_num_ghosts (); ielem++) {
     EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
     EXPECT_EQ (mesh_element_data[ielem].volume, mesh[ielem].get_volume ()) << "ielem = " << ielem;
