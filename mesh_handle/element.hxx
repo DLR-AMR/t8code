@@ -21,11 +21,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file element.hxx
- * Definition of the element class of the \ref t8_mesh_handle::mesh handle (can be ghost or mesh elements).
+ * Definition of an element of the \ref t8_mesh_handle::mesh handle (can be ghost or mesh elements).
  */
 
-#ifndef T8_ELEMENT_HXX
-#define T8_ELEMENT_HXX
+#pragma once
 
 #include <t8.h>
 #include <t8_element.h>
@@ -39,10 +38,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
-/** Forward declaration of the \ref mesh class of the handle.
+/** Forward declaration of the \ref mesh the elements will belong to.
  */
-template <template <typename> class... TCompetences>
-class mesh;
+template <template <typename> class... TCompetence>
+struct mesh;
 
 /** 
  * Definition of the mesh element class of the \ref mesh handle.
@@ -51,22 +50,23 @@ class mesh;
  * the function is called. 
  * Use the competences defined in \ref competences.hxx as template parameter to cache the functionality instead of 
  * recalculation in every function call.
- * To add functionality to the element, you can also simply write your own competence class and give it as a template parameter.
+ * To add functionality to the element, you can also simply write your own competence and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 
  * Please note that the competence should be valid for both, mesh elements and ghost elements.
  *
- * The inheritance pattern is inspired by the \ref T8Type class (which also uses the CRTP).
+ * The inheritance pattern is inspired by \ref T8Type (which also uses the CRTP).
  * We decided to use this structure 1.) to be able to add new functionality easily and 
- *    2.) for the cached options to keep the number of class member variables of the default to a minimum to save memory.
+ *    2.) for the cached options to keep the number of member variables of the default element to a minimum to save memory.
  * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
  *
  * \tparam TCompetences The competences you want to add to the default functionality of the element.
  */
 template <template <typename> class... TCompetences>
-class element: public TCompetences<element<TCompetences...>>... {
+struct element: public TCompetences<element<TCompetences...>>...
+{
  private:
-  using SelfType = element<TCompetences...>; /**< Type of the current class with all template parameters specified. */
-  using mesh_class = mesh<TCompetences...>;  /**< Type of the mesh class used. */
+  using SelfType = element<TCompetences...>; /**< Type of the element with all template parameters specified. */
+  using mesh_class = mesh<TCompetences...>;  /**< Type of the mesh used. */
   friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
 
   /**
@@ -100,8 +100,8 @@ class element: public TCompetences<element<TCompetences...>>... {
 
   // --- Variables to check which functionality is defined in TCompetences. ---
   /** Helper function to check if \a TCompetence implements the function vertex_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
+   * \tparam TCompetence The competence to be checked.
+   * \return true if \a TCompetence implements the function, false if not.
    */
   template <template <typename> class TCompetence>
   static constexpr bool
@@ -114,8 +114,8 @@ class element: public TCompetences<element<TCompetences...>>... {
   static constexpr bool vertex_cache_exists = (false || ... || vertex_cache_defined<TCompetences> ());
 
   /** Helper function to check if \a TCompetence implements the function centroid_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
+   * \tparam TCompetence The competence to be checked.
+   * \return true if \a TCompetence implements the function, false if not.
    */
   template <template <typename> class TCompetence>
   static constexpr bool
@@ -128,8 +128,8 @@ class element: public TCompetences<element<TCompetences...>>... {
   static constexpr bool centroid_cache_exists = (false || ... || centroid_cache_defined<TCompetences> ());
 
   /** Helper function to check if \a TCompetence implements the function neighbor_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
+   * \tparam TCompetence The competence to be checked.
+   * \return true if \a TCompetence implements the function, false if not.
    */
   template <template <typename> class TCompetence>
   static constexpr bool
@@ -420,4 +420,3 @@ class element: public TCompetences<element<TCompetences...>>... {
 };
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_ELEMENT_HXX */

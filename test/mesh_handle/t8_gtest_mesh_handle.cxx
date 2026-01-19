@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_mesh_handle.cxx
- * Tests if the mesh class of the handle works as intended for different types of predefined template parameter classes. 
+ * Tests if \ref t8_mesh_handle::mesh works as intended for different types of predefined template parameters. 
  */
 
 #include <gtest/gtest.h>
@@ -34,7 +34,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/constructor_wrappers.hxx>
 
 /** Parametrized test fixture for the mesh handle tests. */
-class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override
@@ -47,7 +48,7 @@ class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
   int level;          /**< Refinement level used for testing.*/
 };
 
-/** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh class. */
+/** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh. */
 TEST_P (t8_mesh_handle_test, test_iterator)
 {
   using mesh_class = t8_mesh_handle::mesh<>;
@@ -148,7 +149,7 @@ TEST_P (t8_mesh_handle_test, test_competences)
   }
 }
 
-/** Test mesh (element) class with more than one competence. */
+/** Test \ref t8_mesh_handle::mesh with more than one competence. */
 TEST_P (t8_mesh_handle_test, test_2_competences)
 {
   // --- Use competences to cache level and centroid. ---
