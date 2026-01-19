@@ -53,6 +53,7 @@ struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
   }
+
   t8_forest_t forest;
   int level;
 };

@@ -224,7 +224,7 @@ class mesh {
    * \param [in] adapt_callback    The adapt callback used on committing.
    * \param [in] recursive         Specifying whether adaptation is to be done recursively or not. 
    * \note The adaptation is carried out only when \ref commit is called.
-   * \note This setting can be combined with \ref set_partition and \ref set_balance. The order in which
+   * \note This setting can be combined with set_partition and set_balance. The order in which
    * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
    */
   void
