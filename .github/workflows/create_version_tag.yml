@@ -74,19 +74,7 @@ jobs:
                 echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
                 echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
                 echo "VERSION_NAME=$VERSION_NAME"
-            # Create a new version release
-            - name: Create Release
-              id: create_release
-              uses: actions/create-release@v1
-              with: 
-                draft: false
-                prerelease: false
-                release_name: ${{ env.VERSION_NAME }}
-                tag_name: ${{ env.VERSION_NAME }}
-                body: |
-                  Release notes for ${{ env.VERSION_NAME }}
-              env:
-                GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
+
             - name: export upload url
               run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_OUTPUT
 
@@ -94,19 +82,7 @@ jobs:
         uses: ./.github/workflows/test_tarball.yml
         with:
             TEST_LEVEL: 'T8_TEST_LEVEL_BASIC'
+            UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
+            UPLOAD_TO_RELEASE: true
         needs: monthly_release
-
-    upload_tarball:
-        runs-on: ubuntu-latest
-        needs: [t8code_tarball, monthly_release]
-        steps:
-            - name: Upload release asset
-              uses: actions/upload-release-asset@v1
-              with:
-                  upload_url: ${{ needs.monthly_release.outputs.upload_url }}
-                  asset_path: ./build/tarballs/T8CODE-${{ needs.monthly_release.outputs.version_name }}.tar.gz
-                  asset_name: T8CODE-${{ needs.monthly_release.outputs.version_name }}.tar.gz
-                  asset_content_type: application/gzip
-              env:
-                  GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
 
