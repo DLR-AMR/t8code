@@ -20,6 +20,9 @@ set( T8CODE_USE_SYSTEM_P4EST @T8CODE_USE_SYSTEM_P4EST@ )
 # Ensure that external libraries using for example find_package ( t8code REQUIRED) link automatically against VTK
 if(T8CODE_ENABLE_VTK)
     find_dependency(VTK)
+    # Expose the variable T8CODE_VTK_VERSION_USED to external CMake scripts linking against t8code
+    # for example with find_package ( T8CODE REQUIRED )
+    set (T8CODE_VTK_VERSION_USED "@T8CODE_VTK_VERSION_USED@")
 endif()
 
 include( "${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake" )
