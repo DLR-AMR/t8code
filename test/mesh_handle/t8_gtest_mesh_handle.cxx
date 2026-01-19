@@ -22,16 +22,14 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_mesh_handle.cxx
- * Tests if the mesh class of the handle works as intended for different types of predefined template parameter classes. 
+ * Tests if \ref t8_mesh_handle::mesh works as intended for different types of predefined template parameters. 
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/element.hxx>
 #include <mesh_handle/competences.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -39,7 +37,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /** Parametrized test fixture for the mesh handle tests. */
-class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override
@@ -50,25 +49,20 @@ class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }
-  void
-  TearDown () override
-  {
-    t8_forest_unref (&forest);
-  }
 
   t8_forest_t forest;
   int level;
 };
 
-/** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh class. */
+/** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh. */
 TEST_P (t8_mesh_handle_test, test_iterator)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
-
   // --- Check default functionality. ---
-  t8_mesh_handle::mesh<t8_mesh_handle::element<>> mesh = t8_mesh_handle::mesh<t8_mesh_handle::element<>> (forest);
-  EXPECT_FALSE (t8_mesh_handle::element<>::has_vertex_cache ());
-  EXPECT_FALSE (t8_mesh_handle::element<>::has_centroid_cache ());
+  using mesh_class = t8_mesh_handle::mesh<>;
+  using element_class = mesh_class::element_class;
+  mesh_class mesh = mesh_class (forest);
+  EXPECT_FALSE (element_class::has_vertex_cache ());
+  EXPECT_FALSE (element_class::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements and check some functionality.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
@@ -98,17 +92,15 @@ TEST_P (t8_mesh_handle_test, test_iterator)
 /** Test competences. */
 TEST_P (t8_mesh_handle_test, test_competences)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
-
   // --- Version with cached vertex coordinates. ---
-  using mesh_element_vertex = t8_mesh_handle::element<t8_mesh_handle::cache_vertex_coordinates>;
-  t8_mesh_handle::mesh<mesh_element_vertex> mesh_vertex_coordinates
-    = t8_mesh_handle::mesh<mesh_element_vertex> (forest);
-  EXPECT_TRUE (mesh_element_vertex::has_vertex_cache ());
-  EXPECT_FALSE (mesh_element_vertex::has_centroid_cache ());
+  using mesh_class_vertex = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates>;
+  using element_class_vertex = mesh_class_vertex::element_class;
+  mesh_class_vertex mesh_vertex = mesh_class_vertex (forest);
+  EXPECT_TRUE (element_class_vertex::has_vertex_cache ());
+  EXPECT_FALSE (element_class_vertex::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements and check functionality.
-  for (auto it = mesh_vertex_coordinates.begin (); it != mesh_vertex_coordinates.end (); ++it) {
+  for (auto it = mesh_vertex.begin (); it != mesh_vertex.end (); ++it) {
     EXPECT_FALSE (it->vertex_cache_filled ());
     EXPECT_EQ (level, it->get_level ());
     auto centroid = it->get_centroid ();
@@ -125,7 +117,7 @@ TEST_P (t8_mesh_handle_test, test_competences)
     }
   }
   // Check cached value.
-  for (auto it = mesh_vertex_coordinates.begin (); it != mesh_vertex_coordinates.end (); ++it) {
+  for (auto it = mesh_vertex.begin (); it != mesh_vertex.end (); ++it) {
     EXPECT_TRUE (it->vertex_cache_filled ());
     auto vertex_coordinates = it->get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
@@ -137,10 +129,12 @@ TEST_P (t8_mesh_handle_test, test_competences)
   }
 
   // --- Version with cached centroid variable. ---
-  using mesh_element_centroid = t8_mesh_handle::element<t8_mesh_handle::cache_centroid>;
-  t8_mesh_handle::mesh<mesh_element_centroid> mesh_centroid = t8_mesh_handle::mesh<mesh_element_centroid> (forest);
-  EXPECT_FALSE (mesh_element_centroid::has_vertex_cache ());
-  EXPECT_TRUE (mesh_element_centroid::has_centroid_cache ());
+  t8_forest_ref (forest);
+  using mesh_class_centroid = t8_mesh_handle::mesh<t8_mesh_handle::cache_centroid>;
+  using element_class_centroid = mesh_class_centroid::element_class;
+  mesh_class_centroid mesh_centroid = mesh_class_centroid (forest);
+  EXPECT_FALSE (element_class_centroid::has_vertex_cache ());
+  EXPECT_TRUE (element_class_centroid::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements.
   for (auto it = mesh_centroid.begin (); it != mesh_centroid.end (); ++it) {
@@ -159,17 +153,15 @@ TEST_P (t8_mesh_handle_test, test_competences)
   }
 }
 
-/** Test mesh (element) class with more than one competence. */
+/** Test \ref t8_mesh_handle::mesh with more than one competence. */
 TEST_P (t8_mesh_handle_test, test_2_competences)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
-
   // --- Use competences to cache level and centroid. ---
-  using mesh_element
-    = t8_mesh_handle::element<t8_mesh_handle::cache_vertex_coordinates, t8_mesh_handle::cache_centroid>;
-  t8_mesh_handle::mesh<mesh_element> mesh = t8_mesh_handle::mesh<mesh_element> (forest);
-  EXPECT_TRUE (mesh_element::has_vertex_cache ());
-  EXPECT_TRUE (mesh_element::has_centroid_cache ());
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_vertex_coordinates, t8_mesh_handle::cache_centroid>;
+  using element_class = mesh_class::element_class;
+  mesh_class mesh = mesh_class (forest);
+  EXPECT_TRUE (element_class::has_vertex_cache ());
+  EXPECT_TRUE (element_class::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements.
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {

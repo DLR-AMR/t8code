@@ -26,11 +26,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_schemes.hxx>
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/element.hxx>
 #include <mesh_handle/competences.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -78,7 +76,7 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
   }
 };
 
-/** This tests checks that custom defined competences can be used for the mesh class 
+/** This tests checks that custom defined competences can be used for \ref t8_mesh_handle::mesh 
  *  and that we can use the functionality defined in the competence. 
  * Also checks that we can use more than one custom competence and that predefined competences can be additionally used.
  */
@@ -89,24 +87,21 @@ TEST (t8_gtest_custom_competence, custom_competence)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
 
   // Check mesh with custom defined competence.
-  t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level>> mesh
-    = t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level>> (forest);
+  t8_mesh_handle::mesh<dummy_get_level> mesh = t8_mesh_handle::mesh<dummy_get_level> (forest);
 
   for (auto it = mesh.begin (); it != mesh.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (level, it->get_level_dummy ());
   }
 
+  t8_forest_ref (forest);
   // Test with two custom competences and a predefined competence.
-  t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>>
-    mesh_2competences
-    = t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>> (
-      forest);
+  using mesh_class = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  mesh_class mesh_more_competences = mesh_class (forest);
 
-  for (auto it = mesh_2competences.begin (); it != mesh_2competences.end (); ++it) {
+  for (auto it = mesh_more_competences.begin (); it != mesh_more_competences.end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());
@@ -117,7 +112,4 @@ TEST (t8_gtest_custom_competence, custom_competence)
     }
     EXPECT_TRUE (it->centroid_cache_filled ());
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }
