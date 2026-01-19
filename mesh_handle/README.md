@@ -10,4 +10,4 @@ The folder's most important files are:
 - The [mesh.hxx](mesh.hxx) defines the mesh class of the handle. This is the central file of the mesh handle. 
 - The [element.hxx](element.hxx) defines the elements (mesh or ghost elements) of the mesh handle.
 - The [competences.hxx](competences.hxx) defines additional competences/functionality of an element to access additional data.
-- The [constructor_wrapper.hxx](constructor_wrapper.hxx) allows to define a mesh handle using a cmesh instead of a forest and provides a very small number of examples where the user needs no cmesh.
+- The [constructor_wrappers.hxx](constructor_wrappers.hxx) allows to define a mesh handle using a cmesh instead of a forest and provides a very small number of examples where the user needs no cmesh.

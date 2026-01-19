@@ -31,7 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
-#include <mesh_handle/constructor_wrapper.hxx>
+#include <mesh_handle/constructor_wrappers.hxx>
 
 /** Parametrized test fixture for the mesh handle tests. */
 class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {

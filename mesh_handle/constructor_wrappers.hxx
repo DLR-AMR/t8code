@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file constructor_wrapper.hxx
+/** \file constructor_wrappers.hxx
  * Wrapper to construct a mesh handle instance from a cmesh. 
  * Additionally, a very small fraction of example coarse meshes is wrapped directly for easy access and 
  * for the use in tests.
