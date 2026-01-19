@@ -21,6 +21,7 @@
 cmake_minimum_required( VERSION 3.16 )
 
 include( cmake/GitProjectVersion.cmake )
+include( FetchContent )
 
 project(
     T8CODE
@@ -32,6 +33,15 @@ project(
 include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
+
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY "https://github.com/DLR-SC/googletest_mpi.git"
+    GIT_TAG 98bfff426b057400268a00f97677d749a9e25096 #v1.17.0_mpi
+    )
+
+set(gtest_forece_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable( googletest )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
 option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )

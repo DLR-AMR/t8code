@@ -18,9 +18,6 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-add_library( gtest ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi/gtest/gtest-all.cc )
-target_include_directories( gtest SYSTEM PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi ${CMAKE_CURRENT_LIST_DIR}/.. )
-
 # Function to add a test executable and register it with CTest.
 # The test executable is built from the provided source files.
 function( add_t8_test )
@@ -36,11 +33,15 @@ function( add_t8_test )
     file(RELATIVE_PATH TEST_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${TEST_SOURCE_DIR}")
     set(TEST_BUILD_DIR "${CMAKE_BINARY_DIR}/${TEST_RELATIVE_DIR}")
 
+    enable_testing()
+
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
 
     # Link base libraries.
-    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
-    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
+    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src )
+    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE GTest::gtest_main T8 pthread )
+    include(GoogleTest)
+    gtest_discover_tests( ${ADD_T8_TEST_NAME} )
 
     # Check if test is a Fortran or mesh handle file.
     string( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file )
