@@ -43,8 +43,8 @@ class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
     level = std::get<1> (GetParam ());
   }
 
-  t8_eclass_t eclass;
-  int level;
+  t8_eclass_t eclass; /**< Element class used for testing.*/
+  int level;          /**< Refinement level used for testing.*/
 };
 
 /** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh class. */
