@@ -133,20 +133,20 @@ jobs:
       with:
         name: build_tar.log
         path: build_tar/config.log
-    #- name: build
-    #  run: cd build_tar && ninja
-    #- name: install
-    #  run: cd build_tar && ninja install
-    #- name: check serial
-    #  run: cd build_tar && ctest -R _serial
-    #- name: check parallel
-    #  run: cd build_tar && ctest -R _parallel
-    #- name: OnFailUploadLog
-    #  if: failure()
-    #  uses: actions/upload-artifact@v6
-    #  with:
-    #    name: build_tar.log
-    #    path: build_tar/test-suite.log
+    - name: build
+      run: cd build_tar && ninja
+    - name: install
+      run: cd build_tar && ninja install
+    - name: check serial
+      run: cd build_tar && ctest -R _serial
+    - name: check parallel
+      run: cd build_tar && ctest -R _parallel
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: build_tar.log
+        path: build_tar/test-suite.log
     - name: retrieve name of tarball
       run: |
         TAR_NAME=$(basename tarballs/*.tar.gz)
