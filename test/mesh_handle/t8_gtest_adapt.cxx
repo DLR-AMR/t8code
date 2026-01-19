@@ -3,7 +3,7 @@ This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2025 the developers
+Copyright (C) 2026 the developers
 
 t8code is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /**
  * \file t8_gtest_adapt.cxx
  * Tests for the adapt routines of mesh handles. 
- * This tests uses the callbacks and user data of tutorial step 3 as example.
+ * This tests uses the callback and user data of tutorial step 3 as example.
  * The adaptation criterion is to look at the midpoint coordinates of the current element and if
  * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
  */
@@ -45,15 +45,15 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 struct dummy_user_data
 {
   t8_3D_point midpoint;             /**< The midpoint of our sphere. */
-  double refine_if_inside_radius;   /**< if an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
+  double refine_if_inside_radius;   /**< If an element's center is smaller than this value, we refine the element. */
+  double coarsen_if_outside_radius; /**< If an element's center is larger this value, we coarsen its family. */
 };
 
-/** Callback function prototype to decide for refining and coarsening of a family of elements
- * or one element in a mesh handle.
+/** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
+ * The function header fits the definition of \ref TMesh::adapt_callback_type.
  * \tparam TMeshClass The mesh handle class.
  * \param [in] mesh The mesh that should be adapted.
- * \param [in] elements One element or a family of elements to consider for adaption.
+ * \param [in] elements One element or a family of elements to consider for adaptation.
  * \return 1 if the first entry in \a elements should be refined,
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
@@ -76,9 +76,8 @@ adapt_callback_test (const TMeshClass &mesh, const std::vector<typename TMeshCla
 }
 
 /** Adapt callback implementation for a forest.
- * This callback defines the same adaptation rules as \ref coarsen_element_family_test
- * together with \ref refine_element_test. Callback is not used for the mesh handle 
- * but for the forest compared to the adapted mesh handle.
+ * This callback defines the same adaptation rules as \ref adapt_callback_test,
+ * but it is used for the forest instead of the mesh handle.
  */
 int
 forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
@@ -91,14 +90,11 @@ forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_l
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
   double dist = t8_dist<t8_3D_point, t8_3D_point> (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
-    /* Refine this element. */
     return 1;
   }
   else if (is_family && dist > adapt_data->coarsen_if_outside_radius) {
-    /* Coarsen this family. */
     return -1;
   }
-  /* Do not change this element. */
   return 0;
 }
 

@@ -34,6 +34,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
 #include <type_traits>
+#include <functional>
 #include <memory>
 
 namespace t8_mesh_handle
@@ -78,7 +79,7 @@ class mesh {
    * Family means multiple elements that can be coarsened into one parent element.
    * \see set_adapt for more the usage of this callback.
    * \param [in] mesh The mesh that should be adapted.
-   * \param [in] elements One element or a family of elements to consider for adaption.
+   * \param [in] elements One element or a family of elements to consider for adaptation.
    * \return 1 if the first entry in \a elements should be refined,
    *        -1 if the family \a elements shall be coarsened,
    *         0 else.
@@ -245,7 +246,6 @@ class mesh {
   }
 
   /** Enable or disable the creation of a layer of ghost elements.
-  * On default no ghosts are created.
   * \param [in]      do_ghost  If true a ghost layer will be created.
   * \param [in]      ghost_type Controls which neighbors count as ghost elements,
   *                             currently only T8_GHOST_FACES is supported. This value
@@ -265,7 +265,8 @@ class mesh {
   /** After allocating and adding properties to the mesh, commit the changes.
    * This call updates the internal state of the mesh.
    * The forest used to define the mesh handle is replaced in this function.
-   * Specialize the update with calls like \ref set_adapt calls first.
+   * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
+   * Specialize the update with calls like \ref set_adapt first.
    */
   void
   commit ()
