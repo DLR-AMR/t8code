@@ -156,6 +156,8 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         name: ${{ inputs.RELEASE_VERSION }}
+        commit: main
+        tag: ${{ inputs.RELEASE_VERSION }}
       env:
         GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
 
