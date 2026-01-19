@@ -68,8 +68,7 @@ jobs:
               id: set_version_name
               run: |
                 # Use format vMAJOR.MINOR.PATCH-YY.MM e.g., v1.2.3-24.06 for June 2024
-
-                VERSION_NAME="v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-$(date +'%Y.%m')"
+                VERSION_NAME="v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-$(date +'%y.%m')"
                 echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
                 echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
                 echo "VERSION_NAME=$VERSION_NAME"
