@@ -41,8 +41,8 @@
 #define T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
 
 #include <algorithm>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <span>
 
@@ -112,7 +112,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
 
     /* We copy the data directly, hence set data_persiss to 0 */
     const int data_persists = 0;
-    t8_debugf ("Setting %i global vertices for global tree %li.\n", num_vertices, global_tree);
+    t8_debugf ("Setting %i global vertices for global tree %" T8_GLOIDX_FORMAT ".\n", num_vertices, global_tree);
     t8_cmesh_set_attribute_gloidx_array (cmesh, global_tree, t8_get_package_id (),
                                          T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, global_tree_vertices, num_vertices,
                                          data_persists);

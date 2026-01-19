@@ -1,6 +1,6 @@
-# This file is inspired by the project cmake-modules (https://github.com/bilke/cmake-modules) 
+# This file is inspired by the project cmake-modules (https://github.com/bilke/cmake-modules)
 # of Lars Bilke but heavily adapted and rewritten!
-# The project is licensed with the BSD license. 
+# The project is licensed with the BSD license.
 # Copyright (c) 2012 - 2017, Lars Bilke
 # All rights reserved.
 # See also the license information in CodeCoverage.license.
@@ -11,10 +11,13 @@
 
 #
 # Adds compiler flags necessary to be able to collect coverage information.
-# 
+# Also disable some optimizations as elision and inlining to get more deterministic coverage information.
+#
 function(append_coverage_compiler_flags)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --coverage -O0" PARENT_SCOPE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g --coverage -O0" PARENT_SCOPE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --coverage -O0 -fno-elide-constructors -fno-inline \
+    -fno-reorder-blocks -fno-reorder-functions -fno-var-tracking-assignments -frandom-seed=1" PARENT_SCOPE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g --coverage -O0 -fno-inline \
+  -fno-reorder-blocks -fno-reorder-functions -fno-var-tracking-assignments -frandom-seed=1" PARENT_SCOPE)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage" PARENT_SCOPE)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage" PARENT_SCOPE)
 endfunction() # append_coverage_compiler_flags
@@ -25,8 +28,8 @@ endfunction() # append_coverage_compiler_flags
 #
 # \param NAME: New target name.
 # \param EXCLUDE: "src/dir1/*" "src/dir2/*": Folders or files to exclude from coverage report.
-# \param LCOV_ARGS: lcov arguments. 
-# 
+# \param LCOV_ARGS: lcov arguments.
+#
 function(setup_target_for_coverage)
   set(options "")
   set(oneValueArgs NAME)
@@ -37,7 +40,7 @@ function(setup_target_for_coverage)
   find_program( LCOV_PATH  NAMES lcov lcov.bat lcov.exe lcov.perl)
   find_program( GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat )
   mark_as_advanced(
-    LCOV_PATH 
+    LCOV_PATH
     GENHTML_PATH
   )
   if(NOT LCOV_PATH)
@@ -67,9 +70,11 @@ function(setup_target_for_coverage)
     # Create baseline to make sure untouched files show up in the report.
     COMMAND ${LCOV_PATH} ${Coverage_LCOV_ARGS} --directory . --base-directory ${PROJECT_DIR} --capture --initial -output-file ${Coverage_NAME}.base
 
-    # Run tests and collect coverage information.
-    COMMAND ctest -T Test -T Coverage -j ${N}
-    
+    # Run serial tests and collect coverage information.
+    COMMAND ctest -T Test -T Coverage -j ${N} -R _serial
+    # Run parallel tests and collect coverage information without -j because the tests themselves are parallel in nature.
+    COMMAND ctest -T Test -T Coverage -R _parallel
+
     # Generate report using lcov.
     COMMAND ${LCOV_PATH} ${Coverage_LCOV_ARGS} --directory . --base-directory ${PROJECT_DIR} --capture --output-file ${Coverage_NAME}.capture
     # Add baseline counters created above.

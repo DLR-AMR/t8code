@@ -45,8 +45,9 @@
  * 
  * \return Nonzero if the element may touch the face and the top-down search shall be continued, zero otherwise.
  */
-typedef int (*t8_forest_iterate_face_fn) (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                          int face, void *user_data, t8_locidx_t tree_leaf_index);
+typedef int (*t8_forest_iterate_face_fn) (const t8_forest_t forest, const t8_locidx_t ltreeid,
+                                          const t8_element_t *element, const int face, void *user_data,
+                                          const t8_locidx_t tree_leaf_index);
 
 /**
  * A call-back function used by \ref t8_forest_search describing a search-criterion. Is called on an element and the 
@@ -170,9 +171,9 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
  * \param[in] callback                  The callback function.
  */
 void
-t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                         const t8_element_array_t *leaf_elements, void *user_data,
-                         t8_locidx_t tree_lindex_of_first_leaf, t8_forest_iterate_face_fn callback);
+t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                         const int face, const t8_element_array_t *leaf_elements, void *user_data,
+                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback);
 
 /** 
  * Perform a top-down search of the forest, executing a callback on each

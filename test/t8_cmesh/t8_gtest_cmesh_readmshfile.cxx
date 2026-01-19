@@ -24,9 +24,9 @@
 #include <unistd.h> /* Needed to check for file access */
 #include <t8.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh_readmshfile.h>
-#include "t8_cmesh/t8_cmesh_trees.h"
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 
 /* In this file we test the msh file (gmsh) reader of the cmesh.
  * Currently, we support version 2 and 4 ascii.
@@ -83,6 +83,11 @@ t8_supported_msh_file (t8_cmesh_t cmesh)
       ltree_id = t8_cmesh_get_face_neighbor (cmesh, ltree_it, i, NULL, NULL);
       ASSERT_EQ (ltree_id, face_neigh_elem[ltree_it][i])
         << "The face neighbor element in the example test file was not read correctly.";
+      const t8_eclass_t neighbor_eclass = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, ltree_it, i);
+      // If a face neighbor exists, the return value must match the element type, otherwise it must
+      // be T8_ECLASS_INVALID
+      const t8_eclass_t reference_value = face_neigh_elem[ltree_it][i] == -1 ? T8_ECLASS_INVALID : elem_type;
+      EXPECT_EQ (neighbor_eclass, reference_value) << "mismatch in face neighbor eclass.";
     }
   }
 }

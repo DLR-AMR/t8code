@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_refcount.h>
@@ -455,7 +455,7 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && level_initial >= 0 && level_initial < level_end && (iterative == 0 || iterative == 1)
            && (remove == 0 || remove == 1) && (output == 0 || output == 1) && coarse >= 0 && trees > 0
-           && (eclass_int > 1 || eclass_int < 8) && runs > 0) {
+           && (eclass_int > 1 && eclass_int < 8) && runs > 0) {
     t8_construct_fractal (level_initial, level_end, iterative, remove, trees, (t8_eclass_t) eclass_int, output, coarse,
                           runs);
   }

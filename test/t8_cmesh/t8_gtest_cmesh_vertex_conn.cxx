@@ -22,9 +22,9 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 
 /** \file In this file we test the global cmesh vertex numbers.
  *
@@ -254,7 +254,8 @@ class t8_test_cmesh_vertex_conn_partitioned: public testing::Test {
       const int face_of_join_tree = 0;
       const int orientation = 0;
       // Join this tree with the next tree
-      t8_debugf ("Adding join %li %li [%i %i]\n", itree, join_with_tree, face_of_this_tree, face_of_join_tree);
+      t8_debugf ("Adding join %" T8_GLOIDX_FORMAT " %" T8_GLOIDX_FORMAT " [%i %i]\n", itree, join_with_tree,
+                 face_of_this_tree, face_of_join_tree);
       t8_cmesh_set_join (cmesh, itree, join_with_tree, face_of_this_tree, face_of_join_tree, orientation);
       // Set all vertices of this tree to the same single global index.
       t8_cmesh_set_global_vertices_of_tree (cmesh, itree, global_vertices_of_tree, testcase_num_vertices_per_tree);

@@ -1,5 +1,5 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7034838.svg)](https://doi.org/10.5281/zenodo.7034838)
-[![t8code CI](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml)
+[![t8code CI](https://github.com/DLR-AMR/t8code/actions/workflows/testsuite.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/testsuite.yml)
 [![codecov](https://codecov.io/gh/dlr-amr/t8code/branch/main/graph/badge.svg)](https://codecov.io/gh/dlr-amr/t8code)
 [![docs](https://app.readthedocs.org/projects/t8code/badge/?version=latest)](https://t8code.readthedocs.io/en/latest/)
 
@@ -75,7 +75,7 @@ We provide a short guide to install t8code in our Wiki [Installation guide](http
 ### Documentation
 
 t8code uses [Doxygen](https://doxygen.nl/) to generate the code documentation. 
-You can find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
+You can find the documentation on [readthedocs](https://t8code.readthedocs.io/en/latest/).
 Follow the steps described in our Wiki [Documentation](https://github.com/DLR-AMR/t8code/wiki/Documentation) to create the documentation locally.
 
 

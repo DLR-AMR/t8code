@@ -19,12 +19,18 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
+
+/** \file t8_geometry_lagrange.cxx
+ * Implements functions declared in \ref t8_geometry_lagrange.hxx 
+ *  or the C interface \ref t8_geometry_lagrange.h.
+ */
+
 #include <array>
 #include <sstream>
 
 #include <t8_geometry/t8_geometry_base.hxx>
-#include <t8_cmesh.hxx>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.h>
 #include <t8_eclass.h>

@@ -23,28 +23,28 @@
 /* See also: https://github.com/DLR-AMR/t8code/wiki/Step-5---Store-element-data
  *
  * This is step5 of the t8code tutorials using the C interface of t8code.
- * In the following we will store data in the individual elements of our forest. 
- * To do this, we will again create a uniform forest, which will get adapted as in step4, 
+ * In the following we will store data in the individual elements of our forest.
+ * To do this, we will again create a uniform forest, which will get adapted as in step4,
  * with the difference that we partition, balance and create ghost elements all in the same step.
- * After adapting the forest we will learn how to build a data array and gather data for 
+ * After adapting the forest we will learn how to build a data array and gather data for
  * the local elements. Furthermore, we exchange the data values of the ghost elements and
  * output the volume data to vtu.
  *
  * How you can experiment here:
  *   - Look at the paraview output files of the adapted forest.
- *     You can apply a clip filter to look into the cube. Also you can apply (in addition) 
+ *     You can apply a clip filter to look into the cube. Also you can apply (in addition)
  *     the threshold filter to display only elements with certain properties.
  *     But at first you may just want to enter the tooltip selection mode 'Hover Cells On'
  *     to display cell information when hover over them.
  *   - Change the adaptation criterion as you wish to adapt elements or families as desired.
  *   - Store even more data per element, for instance the coordinates of its midpoint.
- *     You can again apply the threshold filter to your new data. Don't forget to write the 
+ *     You can again apply the threshold filter to your new data. Don't forget to write the
  *     data into the output file.
  *  */
 
 #include <sc_containers.h>                                /* sc library. */
 #include <t8.h>                                           /* General t8code header, always include this. */
-#include <t8_cmesh.h>                                     /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                            /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>                   /* A collection of exemplary cmeshes. */
 #include <t8_forest/t8_forest_general.h>                  /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_geometrical.h>              /* geometrical information of a forest. */
@@ -106,7 +106,7 @@ t8_step5_create_element_data (t8_forest_t forest)
 
   /* Now we need to build an array of our data that is as long as the number
    * of elements plus the number of ghosts. You can use any allocator such as
-   * new, malloc or the t8code provide allocation macro T8_ALLOC. 
+   * new, malloc or the t8code provide allocation macro T8_ALLOC.
    * Note that in the latter case you need
    * to use T8_FREE in order to free the memory.
    */
@@ -188,7 +188,7 @@ t8_step5_exchange_ghost_data (t8_forest_t forest, struct t8_step5_data_per_eleme
 }
 
 /* Write the forest as vtu and also write the element's volumes in the file.
- * 
+ *
  * t8code supports writing element based data to vtu as long as its stored
  * as doubles. Each of the data fields to write has to be provided in its own
  * array of length num_local_elements.
@@ -218,7 +218,7 @@ t8_step5_output_data_to_vtu (t8_forest_t forest, struct t8_step5_data_per_elemen
   }
   {
     /* To write user defined data, we need to extended output function t8_forest_vtk_write_file
-     * from t8_forest_vtk.h. Despite writin user data, it also offers more control over which 
+     * from t8_forest_vtk.h. Despite writing user data, it also offers more control over which
      * properties of the forest to write. */
     int write_treeid = 1;
     int write_mpirank = 1;
