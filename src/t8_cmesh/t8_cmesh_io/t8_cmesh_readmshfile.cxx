@@ -37,6 +37,7 @@
 #include <unordered_set>
 #include <optional>
 #include <vector>
+#include <array>
 
 #ifdef _WIN32
 #include "t8_windows.h"

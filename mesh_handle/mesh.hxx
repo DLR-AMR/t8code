@@ -24,8 +24,7 @@
  * Definition of the mesh class of the handle.
  */
 
-#ifndef T8_MESH_HXX
-#define T8_MESH_HXX
+#pragma once
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
@@ -337,4 +336,3 @@ class mesh {
 };
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_MESH_HXX */

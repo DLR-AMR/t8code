@@ -77,7 +77,7 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
   }
 };
 
-/** This tests checks that custom defined competences can be used for the mesh class 
+/** This tests checks that custom defined competences can be used for \ref t8_mesh_handle::mesh 
  *  and that we can use the functionality defined in the competence. 
  * Also checks that we can use more than one custom competence and that predefined competences can be additionally used.
  */
