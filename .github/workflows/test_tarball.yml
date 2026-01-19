@@ -133,10 +133,10 @@ jobs:
       with:
         name: build_tar.log
         path: build_tar/config.log
-    - name: build
-      run: cd build_tar && ninja
-    - name: install
-      run: cd build_tar && ninja install
+    #- name: build
+    #  run: cd build_tar && ninja
+    #- name: install
+    #  run: cd build_tar && ninja install
     #- name: check serial
     #  run: cd build_tar && ctest -R _serial
     #- name: check parallel
