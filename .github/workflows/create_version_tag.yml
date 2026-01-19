@@ -74,15 +74,28 @@ jobs:
                 echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
                 echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
                 echo "VERSION_NAME=$VERSION_NAME"
-
+            # Create a new version release
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              with: 
+                draft: false
+                prerelease: false
+                release_name: ${{ env.VERSION_NAME }}
+                tag_name: ${{ env.VERSION_NAME }}
+                body: |
+                  Release notes for ${{ env.VERSION_NAME }}
+              env:
+                GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
             - name: export upload url
               run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_OUTPUT
 
     t8code_tarball:
         uses: ./.github/workflows/test_tarball.yml
+        needs: monthly_release
+        secrets: inherit
         with:
             TEST_LEVEL: 'T8_TEST_LEVEL_BASIC'
-            UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
+            UPLOAD_URL: ${{ needs.monthly_release.outputs.upload_url }}
             UPLOAD_TO_RELEASE: true
-        needs: monthly_release
 
