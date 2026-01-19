@@ -30,7 +30,17 @@
  */
 TEST (t8_gtest_nullptr_check, NULL_is_nullptr)
 {
+
+// The Clang compiler throws a warning here about the comparison of NULL and nullptr.
+// These pragmas allow to locally ignore the associated warning to allow compilation
+// with -WError
+#pragma clang diagnostic ignored "-Wnull-arithmetic"
+#pragma clang diagnostic push
+
   /* Check both ways to catch possible one-way conversion error. */
   ASSERT_TRUE (nullptr == NULL);
   ASSERT_TRUE (NULL == nullptr);
+
+// End of ignore -Wnull-arithmetic section.
+#pragma clang diagnostic pop
 }
