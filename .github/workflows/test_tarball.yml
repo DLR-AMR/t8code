@@ -160,6 +160,7 @@ jobs:
         tag: ${{ inputs.RELEASE_VERSION }}
         artifacts: "tarballs/*.tar.gz"
         body: "Automated release of t8code version ${{ inputs.RELEASE_VERSION }} created from tarball tested in CI."
+        generate_release_notes: true
         token: ${{ secrets.T8DDY_TOKEN }}
 
 
