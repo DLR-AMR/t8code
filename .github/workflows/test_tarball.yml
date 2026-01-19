@@ -37,10 +37,10 @@ on:
         type: string
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
-      UPLOAD_URL:
+      RELEASE_VERSION:
         required: false
         type: string
-        description: 'Upload URL for release asset upload'
+        description: 'Create a release with this version (e.g., v1.2.3-24.06) and upload the tarball to it'
       UPLOAD_TO_RELEASE:
         required: false
         type: boolean
@@ -153,12 +153,9 @@ jobs:
         echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
     - name: upload as release asset
       if: ${{ inputs.UPLOAD_TO_RELEASE == true }}
-      uses: actions/upload-artifact@v6
+      uses: ncipollo/release-action@v1
       with:
-        upload_url: ${{ inputs.UPLOAD_URL }}
-        asset_path: tarballs/${{ env.TAR_NAME }}.tar.gz
-        asset_name: ${{ env.TAR_NAME }}.tar.gz
-        asset_content_type: application/gzip
+        name: ${{ inputs.RELEASE_VERSION }}
       env:
         GITHUB_TOKEN: ${{ secrets.T8DDY_TOKEN }}
 
