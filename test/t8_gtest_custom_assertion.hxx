@@ -60,14 +60,14 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
     const t8_eclass_t tree_class = scheme->get_eclass_scheme_eclass (eclass);
     scheme->element_to_string (eclass, elem_1, elem_1_string, BUFSIZ);
     scheme->element_to_string (eclass, elem_2, elem_2_string, BUFSIZ);
-    return testing::AssertionFailure (false) << elem_1_expr << " " << elem_1_string << " is not equal to \n"
-                                        << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr
-                                        << " and tree class " << tree_class_expr << " "
-                                        << t8_eclass_to_string[tree_class];
+    return testing::AssertionFailure (false)
+           << elem_1_expr << " " << elem_1_string << " is not equal to \n"
+           << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr << " and tree class "
+           << tree_class_expr << " " << t8_eclass_to_string[tree_class];
 #else
-    return testing::AssertionFailure (false) << elem_1_expr << " is not equal to \n"
-                                        << elem_2_expr << " given scheme " << ts_expr << " and tree class "
-                                        << tree_class_expr;
+    return testing::AssertionFailure (false)
+           << elem_1_expr << " is not equal to \n"
+           << elem_2_expr << " given scheme " << ts_expr << " and tree class " << tree_class_expr;
 #endif
   }
 }
