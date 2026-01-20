@@ -38,6 +38,7 @@ FetchContent_Declare(
     googletest
     GIT_REPOSITORY "https://github.com/DLR-SC/googletest_mpi.git"
     GIT_TAG 98bfff426b057400268a00f97677d749a9e25096 #v1.17.0_mpi
+    GIT_PROGRESS TRUE
     )
 
 set(gtest_fore_shared_crt ON CACHE BOOL "" FORCE)
