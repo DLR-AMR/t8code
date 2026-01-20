@@ -49,7 +49,7 @@ std::function<t8_cmesh_t (const t8_eclass_t, sc_MPI_Comm, const double *, t8_loc
   hyper_pad = t8_cmesh_new_hypercube_pad_ext_wrapper;
 
 std::string
-make_param_string (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
+make_param_string (const t8_eclass_t eclass, sc_MPI_Comm comm, [[maybe_unused]]const double *boundary, t8_locidx_t polygons_x,
                    t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int is_periodic_x, const int is_periodic_y,
                    const int is_periodic_z, const int use_axis_aligned)
 {
@@ -71,7 +71,7 @@ std::function<std::string (const t8_eclass_t, sc_MPI_Comm, const double *, t8_lo
   make_param_string_wrapper = make_param_string;
 
 inline bool
-rule (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
+rule (const t8_eclass_t eclass, [[maybe_unused]]sc_MPI_Comm comm, [[maybe_unused]] const double *boundary, t8_locidx_t polygons_x,
       t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int periodic_x, const int periodic_y, const int periodic_z,
       const int use_axis_aligned)
 {

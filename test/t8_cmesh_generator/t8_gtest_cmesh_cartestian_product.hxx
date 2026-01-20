@@ -138,7 +138,7 @@ vector_to_iter_pair (const std::vector<Args>& vec)
  */
 template <typename Args, typename B>
 bool
-increment (const B& begins, std::pair<Args, Args>& r)
+increment ([[maybe_unused]] const B& begins, std::pair<Args, Args>& r)
 {
   ++r.first;
   if (r.first == r.second) {
@@ -174,7 +174,7 @@ increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
 
 template <typename... Args>
 inline bool
-no_rule (Args... params)
+no_rule ([[maybe_unused]]Args... params)
 {
   return true;
 }
