@@ -73,7 +73,8 @@ jobs:
         which doxygen
         doxygen --version
     - name: build config variables
-      run: export CONFIG_OPTIONS="-DT8CODE_BUILD_DOCUMENTATION=ON -DCMAKE_BUILD_TYPE=Debug -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1 -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_NETCDF=ON"
+      run: if [ "$MPI" = "ON" ]; then GTEST_DISABLE_MPI=OFF; else GTEST_DISABLE_MPI=ON; fi
+        && export CONFIG_OPTIONS="-DT8CODE_BUILD_DOCUMENTATION=ON -DCMAKE_BUILD_TYPE=Debug -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=/usr/local/lib/cmake/vtk-9.1 -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_NETCDF=ON"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     - name: Configure for documentation only
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
