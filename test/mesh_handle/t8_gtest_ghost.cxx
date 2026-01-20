@@ -31,7 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
-#include <mesh_handle/constructor_wrapper.hxx>
+#include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -41,7 +41,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 
 /** Parametrized test fixture for the ghost tests. */
-class t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override
@@ -149,7 +150,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
   }
 }
 
-/** Child class of \ref t8_mesh_handle::cache_neighbors that allows to modify the cache variables for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_neighbors that allows to modify the cache variables for test purposes. */
 template <typename TUnderlying>
 struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderlying>
 {
@@ -167,7 +168,7 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
   }
 };
 
-/** Use child class of \ref t8_mesh_handle::cache_neighbors class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_neighbors to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache variables to a unrealistic values and 
  * checking that the functionality actually outputs this unrealistic value.
  */

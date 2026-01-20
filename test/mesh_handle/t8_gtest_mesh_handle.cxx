@@ -31,10 +31,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
-#include <mesh_handle/constructor_wrapper.hxx>
+#include <mesh_handle/constructor_wrappers.hxx>
 
 /** Parametrized test fixture for the mesh handle tests. */
-class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override
@@ -43,8 +44,8 @@ class t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
     level = std::get<1> (GetParam ());
   }
 
-  t8_eclass_t eclass;
-  int level;
+  t8_eclass_t eclass; /**< Element class used for testing.*/
+  int level;          /**< Refinement level used for testing.*/
 };
 
 /** Test default \ref t8_mesh_handle::mesh handle class, the iterator and some exemplary functionality. */

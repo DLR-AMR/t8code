@@ -30,11 +30,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
-#include <mesh_handle/constructor_wrapper.hxx>
+#include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
-/** Child class of \ref t8_mesh_handle::cache_volume that allows to modify the cache variable for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_volume that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_volume_overwrite: public t8_mesh_handle::cache_volume<TUnderlying>
 {
@@ -48,7 +48,7 @@ struct cache_volume_overwrite: public t8_mesh_handle::cache_volume<TUnderlying>
   }
 };
 
-/** Child class of \ref t8_mesh_handle::cache_diameter that allows to modify the cache variable for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_diameter that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_diameter_overwrite: public t8_mesh_handle::cache_diameter<TUnderlying>
 {
@@ -62,7 +62,7 @@ struct cache_diameter_overwrite: public t8_mesh_handle::cache_diameter<TUnderlyi
   }
 };
 
-/** Child class of \ref t8_mesh_handle::cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_vertex_coordinates that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_coordinates<TUnderlying>
 {
@@ -76,7 +76,7 @@ struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_c
   }
 };
 
-/** Child class of \ref t8_mesh_handle::cache_centroid that allows to modify the cache variable for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_centroid that allows to modify the cache variable for test purposes. */
 template <typename TUnderlying>
 struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlying>
 {
@@ -91,7 +91,7 @@ struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlyi
 };
 
 // --- Face related caches. ---
-/** Child class of \ref t8_mesh_handle::cache_face_area that allows to modify the cache variables for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_face_area that allows to modify the cache variables for test purposes. */
 template <typename TUnderlying>
 struct cache_face_area_overwrite: public t8_mesh_handle::cache_face_area<TUnderlying>
 {
@@ -106,7 +106,7 @@ struct cache_face_area_overwrite: public t8_mesh_handle::cache_face_area<TUnderl
   }
 };
 
-/** Child class of \ref t8_mesh_handle::cache_face_centroid that allows to modify the cache variables for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_face_centroid that allows to modify the cache variables for test purposes. */
 template <typename TUnderlying>
 struct cache_face_centroid_overwrite: public t8_mesh_handle::cache_face_centroid<TUnderlying>
 {
@@ -121,7 +121,7 @@ struct cache_face_centroid_overwrite: public t8_mesh_handle::cache_face_centroid
   }
 };
 
-/** Child class of \ref t8_mesh_handle::cache_face_normal that allows to modify the cache variables for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_face_normal that allows to modify the cache variables for test purposes. */
 template <typename TUnderlying>
 struct cache_face_normal_overwrite: public t8_mesh_handle::cache_face_normal<TUnderlying>
 {
@@ -136,7 +136,8 @@ struct cache_face_normal_overwrite: public t8_mesh_handle::cache_face_normal<TUn
   }
 };
 
-/** Use child class of \ref t8_mesh_handle::cache_volume class to check that the cache is actually set 
+// --- Element related cache tests. ---
+/** Use child of \ref t8_mesh_handle::cache_volume to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -145,7 +146,7 @@ TEST (t8_gtest_cache_competence, cache_volume)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_volume_overwrite>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_volume_cache ());
 
   double unrealistic_volume = -3000;
@@ -163,7 +164,7 @@ TEST (t8_gtest_cache_competence, cache_volume)
   }
 }
 
-/** Use child class of \ref t8_mesh_handle::cache_diameter class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_diameter to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -172,7 +173,7 @@ TEST (t8_gtest_cache_competence, cache_diameter)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_diameter_overwrite>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_diameter_cache ());
 
   double unrealistic_diameter = -3000;
@@ -185,7 +186,7 @@ TEST (t8_gtest_cache_competence, cache_diameter)
   }
 }
 
-/** Use child class of \ref t8_mesh_handle::cache_vertex_coordinates class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_vertex_coordinates to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -194,7 +195,7 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_vertex_coordinates_overwrite>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_vertex_cache ());
 
   std::vector<t8_3D_point> unrealistic_vertex = { t8_3D_point ({ 41, 42, 43 }), t8_3D_point ({ 99, 100, 101 }) };
@@ -211,7 +212,7 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
   }
 }
 
-/** Use child class of \ref t8_mesh_handle::cache_centroid class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_centroid to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -220,7 +221,7 @@ TEST (t8_gtest_cache_competence, cache_centroid)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_centroid_overwrite>;
   using element_class = mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_centroid_cache ());
 
   t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
@@ -235,8 +236,8 @@ TEST (t8_gtest_cache_competence, cache_centroid)
   }
 }
 
-// --- Face related caches. ---
-/** Use child class of \ref t8_mesh_handle::cache_face_area class to check that the cache is actually set 
+// --- Face related cache tests. ---
+/** Use child of \ref t8_mesh_handle::cache_face_area to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -245,7 +246,7 @@ TEST (t8_gtest_cache_competence, cache_face_area)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_face_area_overwrite>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_area_cache ());
 
   double unrealistic_face_area = 41.1;
@@ -261,7 +262,7 @@ TEST (t8_gtest_cache_competence, cache_face_area)
   }
 }
 
-/** Use child class of \ref t8_mesh_handle::cache_face_centroid class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_face_centroid to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -270,7 +271,7 @@ TEST (t8_gtest_cache_competence, cache_face_centroid)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_face_centroid_overwrite>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_centroid_cache ());
 
   t8_3D_point unrealistic_face_centroid ({ 999, 1000, 998 });
@@ -287,7 +288,7 @@ TEST (t8_gtest_cache_competence, cache_face_centroid)
   }
 }
 
-/** Use child class of \ref t8_mesh_handle::cache_face_normal class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_face_normal to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
  */
@@ -296,7 +297,7 @@ TEST (t8_gtest_cache_competence, cache_face_normal)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<cache_face_normal_overwrite>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_normal_cache ());
 
   t8_3D_vec unrealistic_face_normal ({ 41, 42, 43 });

@@ -21,11 +21,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file element.hxx
- *  Definition of the element class of the \ref t8_mesh_handle::mesh handle (can be ghost or mesh elements).
+ * Definition of an element of the \ref t8_mesh_handle::mesh handle (can be ghost or mesh elements).
  */
 
-#ifndef T8_ELEMENT_HXX
-#define T8_ELEMENT_HXX
+#pragma once
 
 #include <t8.h>
 #include <t8_element.h>
@@ -39,10 +38,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
-/** Forward declaration of the \ref mesh class of the handle.
+/** Forward declaration of the \ref mesh the elements will belong to.
  */
-template <template <typename> class... TCompetence>
-class mesh;
+template <template <typename> class... TCompetences>
+struct mesh;
 
 /** 
  * Definition of the mesh element class of the \ref mesh handle.
@@ -51,22 +50,23 @@ class mesh;
  * the function is called. 
  * Use the competences defined in \ref competences.hxx as template parameter to cache the functionality instead of 
  * recalculation in every function call.
- * To add functionality to the element, you can also simply write your own competence class and give it as a template parameter.
+ * To add functionality to the element, you can also simply write your own competence and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 
  * Please note that the competence should be valid for both, mesh elements and ghost elements.
  *
- * The inheritance pattern is inspired by the \ref T8Type class (which also uses the CRTP).
+ * The inheritance pattern is inspired by \ref T8Type (which also uses the CRTP).
  * We decided to use this structure 1.) to be able to add new functionality easily and 
- *    2.) for the cached options to keep the number of class member variables of the default to a minimum to save memory.
+ *    2.) for the cached options to keep the number of member variables of the default element to a minimum to save memory.
  * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
  *
- * \tparam TCompetence The competences you want to add to the default functionality of the element.
+ * \tparam TCompetences The competences you want to add to the default functionality of the element.
  */
-template <template <typename> class... TCompetence>
-class element: public TCompetence<element<TCompetence...>>... {
+template <template <typename> class... TCompetences>
+struct element: public TCompetences<element<TCompetences...>>...
+{
  private:
-  using SelfType = element<TCompetence...>; /**< Type of the current class with all template parameters specified. */
-  using mesh_class = mesh<TCompetence...>;  /**< Type of the mesh class used. */
+  using SelfType = element<TCompetences...>; /**< Type of the element with all template parameters specified. */
+  using mesh_class = mesh<TCompetences...>;  /**< Type of the mesh used. */
   friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
@@ -118,7 +118,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   static constexpr bool
   has_volume_cache ()
   {
-    return (false || ... || volume_cache_defined<TCompetence> ());
+    return (false || ... || volume_cache_defined<TCompetences> ());
   }
   /** Function that checks if a cache for the element's diameter exists.
    * \return true if a cache exists, false otherwise.
@@ -126,7 +126,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   static constexpr bool
   has_diameter_cache ()
   {
-    return (false || ... || diameter_cache_defined<TCompetence> ());
+    return (false || ... || diameter_cache_defined<TCompetences> ());
   }
   /** Function that checks if a cache for the vertex coordinates exists.
    * \return true if a cache for the vertex coordinates exists, false otherwise.
@@ -134,7 +134,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   static constexpr bool
   has_vertex_cache ()
   {
-    return (false || ... || vertex_cache_defined<TCompetence> ());
+    return (false || ... || vertex_cache_defined<TCompetences> ());
   }
 
   /** Function that checks if a cache for the centroid exists.
@@ -143,7 +143,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   static constexpr bool
   has_centroid_cache ()
   {
-    return (false || ... || centroid_cache_defined<TCompetence> ());
+    return (false || ... || centroid_cache_defined<TCompetences> ());
   }
 
   /** Function that checks if a cache for the face neighbors exists.
@@ -152,7 +152,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   static constexpr bool
   has_face_neighbor_cache ()
   {
-    return (false || ... || neighbor_cache_defined<TCompetence> ());
+    return (false || ... || neighbor_cache_defined<TCompetences> ());
   }
   /** Function that checks if a cache for the element's face area exists.
    * \return true if a cache exists, false otherwise.
@@ -160,7 +160,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   static constexpr bool
   has_face_area_cache ()
   {
-    return (false || ... || face_area_cache_defined<TCompetence> ());
+    return (false || ... || face_area_cache_defined<TCompetences> ());
   }
 
   /** Function that checks if a cache for the element's face centroid exists.
@@ -169,7 +169,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   static constexpr bool
   has_face_centroid_cache ()
   {
-    return (false || ... || face_centroid_cache_defined<TCompetence> ());
+    return (false || ... || face_centroid_cache_defined<TCompetences> ());
   }
 
   /** Function that checks if a cache for the element's face normal exists.
@@ -178,7 +178,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   static constexpr bool
   has_face_normal_cache ()
   {
-    return (false || ... || face_normal_cache_defined<TCompetence> ());
+    return (false || ... || face_normal_cache_defined<TCompetences> ());
   }
 
   // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
@@ -330,7 +330,7 @@ class element: public TCompetence<element<TCompetence...>>... {
   }
 
   /** Getter for the face neighbors of the mesh element at a given face.
-   * This function uses the cached version defined in TCompetence if available and calculates if not.
+   * This function uses the cached version defined in TCompetences if available and calculates if not.
    * \param [in]  face          The index of the face across which the face neighbors are searched.
    * \param [out] dual_faces    On output the face id's of the neighboring elements' faces.
    * \return Vector of length num_neighbors with pointers to the elements neighboring at the given face.
@@ -643,4 +643,3 @@ class element: public TCompetence<element<TCompetence...>>... {
 };
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_ELEMENT_HXX */

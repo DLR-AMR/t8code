@@ -30,7 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
-#include <mesh_handle/constructor_wrapper.hxx>
+#include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_operators.hxx>
 
@@ -74,7 +74,7 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
   }
 };
 
-/** This tests checks that custom defined competences can be used for the mesh class 
+/** This tests checks that custom defined competences can be used for \ref t8_mesh_handle::mesh 
  *  and that we can use the functionality defined in the competence. 
  * Also checks that we can use more than one custom competence and that predefined competences can be additionally used.
  */
@@ -83,9 +83,8 @@ TEST (t8_gtest_custom_competence, custom_competence)
   const int level = 1;
 
   // Check mesh with custom defined competence.
-  using mesh_class_custom = t8_mesh_handle::mesh<dummy_get_level>;
-  const auto mesh
-    = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class_custom> (level, sc_MPI_COMM_WORLD);
+  using mesh_class = t8_mesh_handle::mesh<dummy_get_level>;
+  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
   for (auto it = mesh->begin (); it != mesh->end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
@@ -93,9 +92,10 @@ TEST (t8_gtest_custom_competence, custom_competence)
   }
 
   // Test with two custom competences and a predefined competence.
-  using mesh_class = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  using mesh_class_more_competences
+    = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
   auto mesh_more_competences
-    = t8_mesh_handle::handle_hybrid_hypercube_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class_more_competences> (level, sc_MPI_COMM_WORLD);
 
   for (auto it = mesh_more_competences->begin (); it != mesh_more_competences->end (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
