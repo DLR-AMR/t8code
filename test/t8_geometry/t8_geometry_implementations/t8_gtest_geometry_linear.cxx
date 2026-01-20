@@ -24,8 +24,8 @@
  * This file contains tests for the linear geometry of t8code.
  */
 
-#include <test/t8_gtest_macros.hxx>
-#include <test/t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_macros.hxx>
+#include <t8_gtest_custom_assertion.hxx>
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.hxx>

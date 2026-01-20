@@ -22,9 +22,9 @@
 
 #include <gtest/gtest.h>
 
-#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_bigmesh_param.hxx"
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include "t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_bigmesh_param.hxx"
+#include "t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
 
 class t8_cmesh_iter: public testing::TestWithParam<cmesh_example_base *> {
  protected:

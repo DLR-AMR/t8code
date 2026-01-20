@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_data/t8_shmem.h>
-#include <test/t8_gtest_memory_macros.hxx>
+#include <t8_gtest_memory_macros.hxx>
 
 /* This Test test the shared memory for mpi. It includes tests for initialization and finalizing, the type, the communicator,
  * the element size and count of the shared memory  */

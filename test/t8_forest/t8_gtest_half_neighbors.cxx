@@ -21,8 +21,8 @@
 */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_custom_assertion.hxx>
-#include <test/t8_gtest_memory_macros.hxx>
+#include <t8_gtest_custom_assertion.hxx>
+#include <t8_gtest_memory_macros.hxx>
 
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
-#include <test/t8_gtest_schemes.hxx>
+#include <t8_gtest_schemes.hxx>
 
 class forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
  protected:

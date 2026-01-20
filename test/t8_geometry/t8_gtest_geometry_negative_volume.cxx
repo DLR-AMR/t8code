@@ -29,8 +29,8 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
-#include <test/t8_gtest_memory_macros.hxx>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_memory_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 class check_negative_volume: public testing::TestWithParam<t8_eclass_t> {
  protected:

@@ -25,7 +25,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_types/t8_vec.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 class gtest_eclass: public testing::TestWithParam<t8_eclass_t> {
  protected:

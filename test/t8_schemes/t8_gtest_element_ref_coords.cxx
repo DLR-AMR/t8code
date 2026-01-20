@@ -31,7 +31,7 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 #if T8_TEST_LEVEL_INT >= 1
 #define MAX_LEVEL_REF_COORD_TEST 3

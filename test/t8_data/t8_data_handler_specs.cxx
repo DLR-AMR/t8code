@@ -27,7 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * 
  */
 
-#include <test/t8_data/t8_data_handler_specs.hxx>
+#include <t8_data/t8_data_handler_specs.hxx>
 #include <t8.h>
 
 /**

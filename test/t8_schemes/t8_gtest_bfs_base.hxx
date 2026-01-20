@@ -30,7 +30,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <test/t8_gtest_schemes.hxx>
+#include <t8_gtest_schemes.hxx>
 #include <queue>
 
 class TestBFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {

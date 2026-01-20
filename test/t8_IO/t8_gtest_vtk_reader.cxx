@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 #include <src/t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
 
 #define T8_VTK_TEST_NUM_PROCS 2

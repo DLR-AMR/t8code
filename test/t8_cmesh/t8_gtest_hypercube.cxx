@@ -27,7 +27,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <test/t8_gtest_macros.hxx>
+#include <t8_gtest_macros.hxx>
 
 /* Create class for parameterized Test with multiple test parameters */
 class cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass, int, int>> {
