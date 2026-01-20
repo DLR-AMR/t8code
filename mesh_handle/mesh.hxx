@@ -24,8 +24,7 @@
  * Definition of the mesh class of the handle.
  */
 
-#ifndef T8_MESH_HXX
-#define T8_MESH_HXX
+#pragma once
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
@@ -45,8 +44,8 @@ template <template <typename> class... TCompetences>
 struct mesh
 {
  public:
-  using element_class = element<TCompetences...>; /**< The element class of the mesh with given competences. */
-  friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
+  using element_class = element<TCompetences...>; /**< The element of the mesh with given competences. */
+  friend element_class; /**< Declare element_class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
 
@@ -207,4 +206,3 @@ struct mesh
 };
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_MESH_HXX */

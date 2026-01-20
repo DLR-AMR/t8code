@@ -53,8 +53,11 @@ T8_EXTERN_C_BEGIN ();
  * \note This function needs to be called to enable shared memory usage for a communicator.
  * \note Calling this function multiple times with the same communicator is safe and does
  *  not change the behaviour.
+ * \return                    If the intranode communicator cannot be
+ *                            obtained, return 0.
+ *                            Otherwise return size of intranode communicator.
  */
-void
+int
 t8_shmem_init (sc_MPI_Comm comm);
 
 #if T8_ENABLE_DEBUG
