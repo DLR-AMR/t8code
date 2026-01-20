@@ -51,19 +51,16 @@ concept T8MPISafeType
  * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
  *         \see element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref competence_pack class.
- * \tparam TUserDataType The user data type you want to associate with the mesh. Use void (this is also the default) if you do not want to set user data.
  * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
  *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
  *         Use void (this is also the default) if you do not want to set element data.
  */
-template <typename TCompetencePack = competence_pack<>, typename TUserDataType = void,
-          T8MPISafeType TElementDataType = void>
+template <typename TCompetencePack = competence_pack<>, T8MPISafeType TElementDataType = void>
 class mesh {
  public:
-  using SelfType = mesh<TCompetencePack, TUserDataType,
-                        TElementDataType>;  /**< Type of the current class with all template parameters specified. */
-  using UserDataType = TUserDataType;       /**< Make Type of the user data accessible. */
-  using ElementDataType = TElementDataType; /**< Make Type of the element data accessible. */
+  using SelfType
+    = mesh<TCompetencePack, TElementDataType>; /**< Type of the current class with all template parameters specified. */
+  using ElementDataType = TElementDataType;    /**< Make Type of the element data accessible. */
   using element_class
     = TCompetencePack::template apply<SelfType, element>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
@@ -77,14 +74,31 @@ class mesh {
    * If \a elements contains more than one element, they must form a family and we decide whether this family should be coarsened
    * or only the first element should be refined.
    * Family means multiple elements that can be coarsened into one parent element.
-   * \see set_adapt for more the usage of this callback.
-   * \param [in] mesh The mesh that should be adapted.
+   * \see set_adapt for the usage of this callback.
+   * \param [in] mesh     The mesh that should be adapted.
    * \param [in] elements One element or a family of elements to consider for adaptation.
    * \return 1 if the first entry in \a elements should be refined,
    *        -1 if the family \a elements shall be coarsened,
    *         0 else.
    */
   using adapt_callback_type = std::function<int (const SelfType& mesh, const std::vector<element_class>& elements)>;
+
+  /** Templated callback function prototype to decide for refining and coarsening of a family of elements
+   * or one element in a mesh handle including user data.
+   * See the version without user_data \ref adapt_callback_type for more details.
+   * Use \ref mesh_adapt_callback_wrapper to convert this type into \ref adapt_callback_type 
+   * to be able to pass the callback to \ref set_adapt.
+   * \tparam TUserDataType The type of the user data to be passed to the callback.
+   * \param [in] mesh       The mesh that should be adapted.
+   * \param [in] elements   One element or a family of elements to consider for adaptation.
+    * \param [in] user_data The user data to be used during the adaptation process.
+   * \return 1 if the first entry in \a elements should be refined,
+   *        -1 if the family \a elements shall be coarsened,
+   *         0 else.
+   */
+  template <typename TUserDataType>
+  using adapt_callback_type_with_userdata
+    = std::function<int (const SelfType& mesh, const std::vector<element_class>& elements, TUserDataType user_data)>;
 
   /** 
    * Constructor for a mesh of the handle. 
@@ -221,6 +235,24 @@ class mesh {
   }
 
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
+  /** Wrapper to convert an adapt callback with user data of type \ref adapt_callback_type_with_userdata
+   * into a callback without user data of type \ref adapt_callback_type using the defined user data \a user_data.
+   * This is required to pass an adapt callback with user data to \ref set_adapt.
+   * \tparam TUserDataType The type of the user data to be passed to the callback.
+   * \param [in] adapt_callback_with_userdata The adapt callback including user data.
+   * \param [in] user_data The user data to be used during the adaptation process.
+   * \return An adapt callback without user data parameter that can be passed to \ref set_adapt.
+  */
+  template <typename TUserDataType>
+  static adapt_callback_type
+  mesh_adapt_callback_wrapper (adapt_callback_type_with_userdata<TUserDataType> adapt_callback_with_userdata,
+                               const TUserDataType& user_data)
+  {
+    return [=] (const SelfType& mesh, const std::vector<element_class>& elements) {
+      return adapt_callback_with_userdata (mesh, elements, user_data);
+    };
+  }
+
   /** Set an adapt function to be used to adapt the mesh on committing.
    * \param [in] adapt_callback    The adapt callback used on committing.
    * \param [in] recursive         Specifying whether adaptation is to be done recursively or not. 
@@ -271,8 +303,10 @@ class mesh {
   void
   commit ()
   {
-    if (!std::is_void<TUserDataType>::value) {
-      t8_forest_set_user_data (m_uncommitted_forest.value (), t8_forest_get_user_data (m_forest));
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
     }
     t8_forest_commit (m_uncommitted_forest.value ());
     detail::AdaptRegistry::unregister_context (m_uncommitted_forest.value ());
@@ -286,28 +320,6 @@ class mesh {
   }
 
   // --- Methods to set and get user and element data and exchange data between processes. ---
-  /** 
-   * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
-   * \param [in] data The user data of class TUserDataType. Data will never be touched by mesh handling routines.
-   */
-  template <typename UserDataType = TUserDataType, typename = std::enable_if_t<!std::is_void<UserDataType>::value>>
-  void
-  set_user_data (const UserDataType& data)
-  {
-    t8_forest_set_user_data (m_forest, data);
-  }
-
-  /** 
-   * Get the user data of the mesh. 
-   * \return The user data previously set using \ref set_user_data.   
-   */
-  template <typename UserDataType = TUserDataType, typename = std::enable_if_t<!std::is_void<UserDataType>::value>>
-  const UserDataType&
-  get_user_data () const
-  {
-    return *static_cast<const UserDataType*> (t8_forest_get_user_data (m_forest));
-  }
-
   /** 
    * Set the element data vector. The vector should have the length of num_local_elements.
    * \param [in] element_data The element data vector to set with one entry of class TElementDataType 

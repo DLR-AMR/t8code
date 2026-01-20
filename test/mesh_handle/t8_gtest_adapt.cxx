@@ -27,7 +27,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * The adaptation criterion is to look at the midpoint coordinates of the current element and if
  * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
  */
-// TODO: if userdata is not deleted, check that it is updated in the new forest.
 #include <gtest/gtest.h>
 #include <t8.h>
 
@@ -50,19 +49,20 @@ struct dummy_user_data
 };
 
 /** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
- * The function header fits the definition of \ref TMesh::adapt_callback_type.
- * \tparam TMeshClass The mesh handle class.
- * \param [in] mesh The mesh that should be adapted.
- * \param [in] elements One element or a family of elements to consider for adaptation.
+ * The function header fits the definition of \ref TMesh::adapt_callback_type_with_userdata.
+ * \tparam TMeshClass    The mesh handle class.
+ * \param [in] mesh      The mesh that should be adapted.
+ * \param [in] elements  One element or a family of elements to consider for adaptation.
+ * \param [in] user_data The user data to be used during the adaptation process.
  * \return 1 if the first entry in \a elements should be refined,
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
  */
 template <typename TMeshClass>
 int
-adapt_callback_test (const TMeshClass &mesh, const std::vector<typename TMeshClass::element_class> &elements)
+adapt_callback_test ([[maybe_unused]] const TMeshClass &mesh,
+                     const std::vector<typename TMeshClass::element_class> &elements, const dummy_user_data &user_data)
 {
-  typename TMeshClass::UserDataType user_data = mesh.get_user_data ();
   auto element_centroid = elements[0].get_centroid ();
   double dist = t8_dist<t8_3D_point, t8_3D_point> (element_centroid, user_data.midpoint);
   if (dist < user_data.refine_if_inside_radius) {
@@ -111,17 +111,17 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
   mesh_class mesh_handle = mesh_class (forest);
   struct dummy_user_data user_data = {
-    t8_3D_point ({ 0.5, 0.5, 1 }), /* Midpoints of the sphere. */
-    0.2,                           /* Refine if inside this radius. */
-    0.4                            /* Coarsen if outside this radius. */
+    t8_3D_point ({ 0.5, 0.5, 1 }), /**< Midpoints of the sphere. */
+    0.2,                           /**< Refine if inside this radius. */
+    0.4                            /**< Coarsen if outside this radius. */
   };
-  mesh_handle.set_user_data (&user_data);
 
   // Ref the forest as we want to keep using it after the adapt call to compare results.
   t8_forest_ref (forest);
 
   // Adapt mesh handle.
-  mesh_handle.set_adapt (adapt_callback_test<mesh_class>, false);
+  mesh_handle.set_adapt (
+    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
   mesh_handle.commit ();
   // Adapt forest classically.
   forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 1, &user_data);

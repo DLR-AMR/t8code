@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_handle_data.cxx
- * Tests to check that \ref t8_mesh_handle::mesh user data and element data functionality works as intended.
+ * Tests to check that the element data functionality of the \ref t8_mesh_handle::mesh works as intended.
  */
 
 #include <gtest/gtest.h>
@@ -37,43 +37,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
-// --- Test for user data. ---
-/** Dummy user data taken from a tutorial for test purposes. */
-struct dummy_user_data
-{
-  t8_3D_point midpoint;             /**< The midpoint of our sphere. */
-  double refine_if_inside_radius;   /**< if an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /**< if an element's center is larger this value, we coarsen its family. */
-};
-
-/** Check that user data can be set and accesses for the handle.
- */
-TEST (t8_gtest_handle_data, set_and_get_user_data)
-{
-  // Define forest and mesh handle.
-  const int level = 2;
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  const t8_scheme *init_scheme = t8_scheme_new_default ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
-
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
-  mesh_class mesh (forest);
-
-  struct dummy_user_data user_data = {
-    t8_3D_point ({ 41, 42, 43 }), /* Midpoints of the sphere. */
-    0.2,                          /* Refine if inside this radius. */
-    0.4                           /* Coarsen if outside this radius. */
-  };
-
-  // Set user data for the mesh handle and check that the getter returns the same data.
-  mesh.set_user_data (&user_data);
-  auto mesh_user_data = mesh.get_user_data ();
-  EXPECT_EQ (mesh_user_data.midpoint, user_data.midpoint);
-  EXPECT_EQ (mesh_user_data.refine_if_inside_radius, user_data.refine_if_inside_radius);
-  EXPECT_EQ (mesh_user_data.coarsen_if_outside_radius, user_data.coarsen_if_outside_radius);
-}
-
-// --- Test for element data. ---
 /** Dummy element data taken from a tutorial for test purposes. */
 struct data_per_element
 {
@@ -92,7 +55,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 1, sc_MPI_COMM_WORLD);
 
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, void, data_per_element>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, data_per_element>;
   mesh_class mesh (forest);
   if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
