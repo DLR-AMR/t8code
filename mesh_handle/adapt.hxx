@@ -143,7 +143,7 @@ class AdaptRegistry {
   unregister_context (t8_forest_t forest)
   {
     auto& map = get_map ();
-    const auto erased = map.erase (forest);
+    [[maybe_unused]] const auto erased = map.erase (forest);
     T8_ASSERT (erased == 1);
   }
 
