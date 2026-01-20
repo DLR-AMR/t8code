@@ -40,7 +40,7 @@ FetchContent_Declare(
     GIT_TAG 98bfff426b057400268a00f97677d749a9e25096 #v1.17.0_mpi
     )
 
-set(gtest_forece_shared_crt ON CACHE BOOL "" FORCE)
+set(gtest_fore_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable( googletest )
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
