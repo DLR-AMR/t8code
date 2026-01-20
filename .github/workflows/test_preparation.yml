@@ -88,8 +88,6 @@ jobs:
       run: echo SC_BUILD=$PWD/sc/build >> $GITHUB_ENV
         && echo SC_DEBUG=$PWD/sc/build/Debug >> $GITHUB_ENV
         && echo SC_RELEASE=$PWD/sc/build/Release >> $GITHUB_ENV
-    - name: Get sc commit hash
-      run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cmake_cache
       uses: actions/cache@v5
@@ -136,8 +134,6 @@ jobs:
       run: echo P4EST_BUILD=$PWD/p4est/build >> $GITHUB_ENV
         && echo P4EST_DEBUG=$PWD/p4est/build/Debug >> $GITHUB_ENV
         && echo P4EST_RELEASE=$PWD/p4est/build/Release >> $GITHUB_ENV
-    - name: Get p4est commit hash
-      run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cmake_cache
       uses: actions/cache@v5
