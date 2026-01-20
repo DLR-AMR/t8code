@@ -29,7 +29,7 @@
 #include <gtest/gtest.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /**
  * \brief Test fixture for testing the bounding box of a t8_cmesh. Computes a cmesh inside

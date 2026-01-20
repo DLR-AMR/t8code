@@ -25,7 +25,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_gtest_schemes.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 class TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  public:

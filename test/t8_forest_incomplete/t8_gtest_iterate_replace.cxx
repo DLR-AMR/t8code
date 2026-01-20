@@ -23,11 +23,11 @@
 #include <gtest/gtest.h>
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include "t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* In this test, we first adapt a forest and store every callback return value.
  * In the next step, we call t8_forest_iterate_replace. Instead of interpolating

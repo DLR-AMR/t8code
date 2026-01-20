@@ -24,7 +24,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_types/t8_vec.hxx>
-#include <t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
 
 /* test the t8_types operator bracket */
 TEST (RandomAccessibleTest, OperatorBracket)

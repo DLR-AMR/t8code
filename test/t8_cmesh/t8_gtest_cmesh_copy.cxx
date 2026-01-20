@@ -25,9 +25,9 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_macros.hxx>
 
-#include "t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 
 /* We create and commit a cmesh, then derive a new cmesh
  * from it without any changes.

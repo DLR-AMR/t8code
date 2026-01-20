@@ -30,7 +30,7 @@
 #ifndef T8_ENLARGED_STDTYPES_HXX
 #define T8_ENLARGED_STDTYPES_HXX
 
-#include <t8_data/t8_data_handler_specs.hxx>
+#include <test/t8_data/t8_data_handler_specs.hxx>
 #include <t8_data/t8_data_handler.hxx>
 
 /**

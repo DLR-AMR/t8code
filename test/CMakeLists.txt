@@ -39,8 +39,7 @@ function( add_t8_test )
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
 
     # Link base libraries.
-    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src )
-    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/test )
+    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR} )
 
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE GTest::gtest_main T8 pthread )   
 

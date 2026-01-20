@@ -26,10 +26,10 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
 #include <t8_eclass.h>
-#include <t8_gtest_schemes.hxx>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class nca: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
  protected:

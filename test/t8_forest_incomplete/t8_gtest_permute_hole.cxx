@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <bitset>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 #define MAX_NUM_ELEMENTS 32 /* number of digits for binary representation */
 

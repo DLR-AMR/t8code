@@ -29,7 +29,7 @@
 #include <gtest/gtest.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 class cmesh_hypercube: public testing::TestWithParam<t8_eclass> {
  protected:

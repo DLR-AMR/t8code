@@ -22,9 +22,9 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_gtest_custom_assertion.hxx>
-#include <t8_gtest_macros.hxx>
-#include <t8_gtest_schemes.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
+#include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
 /** Use DFS to check for all elements, if packing them, sending them to ourself and unpacking them results in the same element

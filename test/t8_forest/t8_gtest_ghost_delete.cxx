@@ -28,7 +28,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_gtest_schemes.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /* This test is executed on a subcommunicator of exactly 2 procs, because it demonstrates a configuration that is currently not working. See https://github.com/DLR-AMR/t8code/issues/825.
  * A partitioned square of uniform refinement level 1 is adapted once, where only the lower half is refined.

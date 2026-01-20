@@ -25,9 +25,9 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
-#include <t8_gtest_macros.hxx>
-#include <t8_cmesh_generator/t8_cmesh_example_sets.hxx>
-#include <t8_gtest_schemes.hxx>
+#include <test/t8_gtest_macros.hxx>
+#include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /* We create a cmesh, partition it and repartition it several times.
  * At the end we result in the same partition as at the beginning and we

@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_macros.hxx>
 #include <bitset>
 
 #define MAX_NUM_RANKS 8

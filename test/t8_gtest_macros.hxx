@@ -32,7 +32,7 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <iostream>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_gtest_memory_macros.hxx>
+#include <test/t8_gtest_memory_macros.hxx>
 
 /**
  * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base

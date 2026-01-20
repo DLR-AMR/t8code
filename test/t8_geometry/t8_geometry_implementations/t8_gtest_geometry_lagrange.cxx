@@ -31,7 +31,7 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_macros.hxx>
 #include <t8_eclass.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh.hxx>

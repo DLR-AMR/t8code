@@ -29,7 +29,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_gtest_schemes.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /* Test t8_forest_set/get_user_data.
  * We build a forest and set user data for it.

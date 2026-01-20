@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
-#include "t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
 #include "t8_cmesh/t8_cmesh_examples.h"
 
 #ifndef T8_CMESH_NEW_DISJOINT_BRICKS_PARAM_HXX

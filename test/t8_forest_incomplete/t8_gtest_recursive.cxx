@@ -24,8 +24,8 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_gtest_schemes.hxx>
-#include <t8_gtest_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
+#include <test/t8_gtest_macros.hxx>
 
 /* In this test, we recursively constructs a mesh containing only the first 
  * and last elements of a family. Furthermore, for every two elements 
