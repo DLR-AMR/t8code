@@ -30,10 +30,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
-#include <t8_cmesh/t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_examples.h>
+#include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
@@ -49,62 +47,60 @@ struct data_per_element
  */
 TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
-  // Define forest and mesh handle.
   const int level = 2;
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  const t8_scheme *init_scheme = t8_scheme_new_default ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 1, sc_MPI_COMM_WORLD);
-
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, data_per_element>;
-  mesh_class mesh (forest);
-  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, false,
+                                                                                   true, false);
+  auto forest = mesh->get_forest ();
+
+  if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
-    EXPECT_GT (mesh.get_num_ghosts (), 0);
+    EXPECT_GT (mesh->get_num_ghosts (), 0);
   }
   // Create element data for all local mesh elements.
   std::vector<data_per_element> element_data;
-  for (const auto &elem : mesh) {
+  for (const auto &elem : *mesh) {
     element_data.push_back ({ elem.get_level (), elem.get_volume () });
   }
-  mesh.set_element_data (std::move (element_data));
+  mesh->set_element_data (std::move (element_data));
   // Get element data and check that the data for all elements (including ghosts) is correct.
-  mesh.exchange_ghost_data ();
-  auto mesh_element_data = mesh.get_element_data ();
-  for (t8_locidx_t ielem = 0; ielem < mesh.get_num_local_elements () + mesh.get_num_ghosts (); ielem++) {
+  mesh->exchange_ghost_data ();
+  auto mesh_element_data = mesh->get_element_data ();
+  for (t8_locidx_t ielem = 0; ielem < mesh->get_num_local_elements () + mesh->get_num_ghosts (); ielem++) {
     EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
-    EXPECT_EQ (mesh_element_data[ielem].volume, mesh[ielem].get_volume ()) << "ielem = " << ielem;
+    EXPECT_EQ (mesh_element_data[ielem].volume, (*mesh)[ielem].get_volume ()) << "ielem = " << ielem;
   }
   t8_gloidx_t barrier = t8_forest_get_num_global_trees (forest) / 2.0;
   const int newlevel = 42;
   const double newvolume = 42.42;
-  for (auto &elem : mesh) {
+  for (auto &elem : *mesh) {
     if (t8_forest_global_tree_id (forest, elem.get_local_tree_id ()) < barrier) {
       elem.set_element_data ({ newlevel, newvolume });
     }
   }
-  mesh.exchange_ghost_data ();
-  for (t8_locidx_t ielem = 0; ielem < mesh.get_num_local_elements (); ielem++) {
-    if (t8_forest_global_tree_id (forest, mesh[ielem].get_local_tree_id ()) < barrier) {
-      EXPECT_EQ (mesh[ielem].get_element_data ().level, newlevel) << "ielem = " << ielem;
-      EXPECT_EQ (mesh[ielem].get_element_data ().volume, newvolume) << "ielem = " << ielem;
+  mesh->exchange_ghost_data ();
+  for (auto &elem : *mesh) {
+    if (t8_forest_global_tree_id (forest, elem.get_local_tree_id ()) < barrier) {
+      EXPECT_EQ (elem.get_element_data ().level, newlevel);
+      EXPECT_EQ (elem.get_element_data ().volume, newvolume);
     }
     else {
-      EXPECT_EQ (mesh[ielem].get_element_data ().level, level) << "ielem = " << ielem;
-      EXPECT_EQ (mesh[ielem].get_element_data ().volume, mesh[ielem].get_volume ()) << "ielem = " << ielem;
+      EXPECT_EQ (elem.get_element_data ().level, level);
+      EXPECT_EQ (elem.get_element_data ().volume, elem.get_volume ());
     }
   }
 
-  for (t8_locidx_t ighost = mesh.get_num_local_elements ();
-       ighost < mesh.get_num_local_elements () + mesh.get_num_ghosts (); ighost++) {
-    if (t8_forest_ghost_get_global_treeid (forest,
-                                           mesh[ighost].get_local_tree_id () - t8_forest_get_num_local_trees (forest))
+  for (t8_locidx_t ighost = mesh->get_num_local_elements ();
+       ighost < mesh->get_num_local_elements () + mesh->get_num_ghosts (); ighost++) {
+    if (t8_forest_ghost_get_global_treeid (
+          forest, (*mesh)[ighost].get_local_tree_id () - t8_forest_get_num_local_trees (forest))
         < barrier) {
-      EXPECT_EQ (mesh[ighost].get_element_data ().level, newlevel);
-      EXPECT_EQ (mesh[ighost].get_element_data ().volume, newvolume);
+      EXPECT_EQ ((*mesh)[ighost].get_element_data ().level, newlevel);
+      EXPECT_EQ ((*mesh)[ighost].get_element_data ().volume, newvolume);
     }
     else {
-      EXPECT_EQ (mesh[ighost].get_element_data ().level, level);
-      EXPECT_EQ (mesh[ighost].get_element_data ().volume, mesh[ighost].get_volume ());
+      EXPECT_EQ ((*mesh)[ighost].get_element_data ().level, level);
+      EXPECT_EQ ((*mesh)[ighost].get_element_data ().volume, (*mesh)[ighost].get_volume ());
     }
   }
 }
