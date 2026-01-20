@@ -32,10 +32,11 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
 /** Default implementation of the scheme for the vertex element class. */
-class t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTEX, t8_default_scheme_vertex> {
+struct t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTEX, t8_default_scheme_vertex>
+{
  public:
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_vertex () noexcept: t8_default_scheme_common (sizeof (t8_dvertex_t)) {};

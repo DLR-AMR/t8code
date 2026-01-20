@@ -36,7 +36,8 @@ const vtk_file_type_t gtest_vtk_filetypes[VTK_NUM_TYPES]
   = { VTK_FILE_ERROR, VTK_UNSTRUCTURED_FILE, VTK_POLYDATA_FILE, VTK_PARALLEL_UNSTRUCTURED_FILE,
       VTK_PARALLEL_POLYDATA_FILE };
 
-class vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>> {
+struct vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>>
+{
  protected:
   void
   SetUp () override

@@ -35,7 +35,8 @@
  * passed.
  */
 
-class t8_cmesh_partition_class: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct t8_cmesh_partition_class: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override

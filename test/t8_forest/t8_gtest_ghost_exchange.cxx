@@ -42,7 +42,8 @@
  * in a second test, we store the element's linear id in the data array.
  */
 
-class forest_ghost_exchange: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct forest_ghost_exchange: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override

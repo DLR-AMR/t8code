@@ -62,7 +62,8 @@
  * \tparam grid_t can be a forest or a cmesh.
  */
 template <typename grid_t>
-class vtk_writer {
+struct vtk_writer
+{
  public:
   /**
    * Construct a new vtk writer object. All parameters are set to false by default. By default no data is used and
