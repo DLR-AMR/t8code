@@ -36,8 +36,8 @@
  * parse through all ghost elements and test whether the owner of an
  * element is in face the owner that is stored in the ghost layer.
   */
-
-class forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override
