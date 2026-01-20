@@ -26,9 +26,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_operators.hxx>
 #include <typeinfo>
 #include <numeric>
+#include <algorithm>
 #include <iostream>
 
-/* Tags to differencce between strong types */
+/* Tags to difference between strong types */
 struct dummy_int
 {
 };

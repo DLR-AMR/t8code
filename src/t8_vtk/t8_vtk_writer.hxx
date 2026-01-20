@@ -20,10 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_writer.hxx
+ * This file contains the function to write a forest in ASCII VTK format.
+ */
+
 #ifndef T8_VTK_WRITER_HXX
 #define T8_VTK_WRITER_HXX
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
@@ -52,48 +57,55 @@
 #endif /* T8_ENABLE_VTK */
 
 /**
- * A class that controls the writing of vtk files for cmeshes or forests. 
- * 
- * \tparam grid_t can be a forest or a cmesh. 
+ * A class that controls the writing of vtk files for cmeshes or forests.
+ *
+ * \tparam grid_t can be a forest or a cmesh.
  */
 template <typename grid_t>
 class vtk_writer {
  public:
   /**
    * Construct a new vtk writer object. All parameters are set to false by default. By default no data is used and
-   * \a num_data is set to zero. A default \a fileprefix is NOT given. 
-   * 
-   * \param write_treeid True, if we want to write the tree id of every element.
-   * \param write_mpirank True, if we want to write the mpirankof every element.
-   * \param write_level True, if we want to write the level of every element. Uses level 0 if used for a cmesh.
-   * \param write_element_id True, if we want to write the element id of every element. Ignored if used for a cmesh.
-   * \param write_ghosts True, if we want to write the ghost elements, too. 
-   * \param curved_flag True, if we want to use quadratic vtk cells. Uses the geometry of the grid to evaluate points between corners. 
-   * \param fileprefix The prefix of the output-file.
-   * \param num_data The number of data-fields to print.
-   * \param data The data to use.
-   * \param comm The communicator for parallel output.
+   * \a num_data is set to zero. A default \a fileprefix is NOT given.
+   *
+   * \param [in] write_treeid True, if we want to write the tree id of every element.
+   * \param [in] write_mpirank True, if we want to write the mpirankof every element.
+   * \param [in] write_level True, if we want to write the level of every element. Uses level 0 if used for a cmesh.
+   * \param [in] write_element_id True, if we want to write the element id of every element. Ignored if used for a cmesh.
+   * \param [in] write_ghosts True, if we want to write the ghost elements, too.
+   * \param [in] curved_flag True, if we want to use quadratic vtk cells. Uses the geometry of the grid to evaluate points between corners.
+   * \param [in] fileprefix The prefix of the output-file.
+   * \param [in] num_data The number of data-fields to print.
+   * \param [in] data The data to use.
+   * \param [in] comm The communicator for parallel output.
+   * \param [in] merge_points Use the VTK mergePoints feature to merge points shared across elements.
    */
   vtk_writer (const bool write_treeid, const bool write_mpirank, const bool write_level, const bool write_element_id,
               const bool write_ghosts, const bool curved_flag, std::string fileprefix, const int num_data,
-              t8_vtk_data_field_t *data, sc_MPI_Comm comm)
+              t8_vtk_data_field_t *data, sc_MPI_Comm comm, const bool merge_points = true)
     : write_treeid (write_treeid), write_mpirank (write_mpirank), write_level (write_level),
       write_element_id (write_element_id), write_ghosts (write_ghosts), curved_flag (curved_flag),
-      fileprefix (fileprefix), num_data (num_data), data (data), comm (comm)
+      fileprefix (fileprefix), num_data (num_data), data (data), comm (comm), merge_points (merge_points)
   {
   }
 
   /**
    * Construct a new vtk writer object. All parameters are set to false.
-   * 
-   * \param[in] fileprefix 
-   * \param[in] comm 
+   *
+   * \param[in] fileprefix
+   * \param[in] comm
    */
   vtk_writer (std::string fileprefix, sc_MPI_Comm comm): fileprefix (fileprefix), comm (comm)
   {
   }
 
 #if T8_ENABLE_VTK
+  /**
+   * Convert a grid to a vtkUnstructuredGrid.
+   *
+   * \param[in] grid The forest or cmesh that is translated.
+   * \param[out] unstructuredGrid The vtkUnstructuredGrid to fill with the data of \a grid.
+   */
   void
   grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid)
   {
@@ -103,10 +115,10 @@ class vtk_writer {
 
   /**
    * A vtk-writer function that uses the vtk API.
-   * 
+   *
    * \param[in] grid The forest or cmesh that is translated.
-   * \return true, if writing was successful. 
-   * \return false if writing was not successful. 
+   * \return true, if writing was successful.
+   * \return false if writing was not successful.
    */
   bool
   write_with_API (const grid_t grid)
@@ -116,17 +128,17 @@ class vtk_writer {
 
   /**
    * A vtk-writer function that uses the vtk API
-   * 
+   *
    * \param[in] grid The forest or cmesh that is translated
-   * \return true 
-   * \return false 
+   * \return true
+   * \return false
    */
   bool
   write_ASCII (const grid_t grid);
 
   /**
    * Set the write treeid flag. Set to true, if you want to write the tree id of every element.
-   * 
+   *
    * \param[in] write_treeid true or false
    */
   inline void
@@ -137,7 +149,7 @@ class vtk_writer {
 
   /**
    * Set the write mpirank flag. Set to true, if you want to write the mpirank of every element.
-   * 
+   *
    * \param[in] write_mpirank true or false
    */
   inline void
@@ -148,7 +160,7 @@ class vtk_writer {
 
   /**
    * Set the write level flag. Set to true, if you want to write the level of every element.
-   * 
+   *
    * \param[in] write_level true or false
    */
   inline void
@@ -159,7 +171,7 @@ class vtk_writer {
 
   /**
    * Set the write element id flag. Set to true, if you want to write the element id of every element.
-   * 
+   *
    * \param[in] write_element_id true or false
    */
   inline void
@@ -170,7 +182,7 @@ class vtk_writer {
 
   /**
    * Set the write ghosts flag. Set to true, if you want to write the ghost elements, too.
-   * 
+   *
    * \param[in] write_ghosts true or false
    */
   inline void
@@ -180,9 +192,9 @@ class vtk_writer {
   }
 
   /**
-   * Set the curved flag. Set to true, if you want to use quadratic vtk cells. 
+   * Set the curved flag. Set to true, if you want to use quadratic vtk cells.
    * Uses the geometry of the grid to evaluate points between corners.
-   * 
+   *
    * \param[in] curved_flag true or false
    */
   inline void
@@ -193,7 +205,7 @@ class vtk_writer {
 
   /**
    * Set the fileprefix for the output files.
-   * \param[in] fileprefix 
+   * \param[in] fileprefix
    */
   inline void
   set_fileprefix (std::string fileprefix)
@@ -206,14 +218,14 @@ class vtk_writer {
   /**
  * Translate a single element from the forest into a vtkCell and fill the vtkArrays with
  * the data related to the element (not element_data).
- * 
- * \tparam grid_t 
+ *
+ * \tparam grid_t
  * \param[in] grid A forest or a cmesh.
- * \param element A pointer to an element. Only necessary if a forest is used. Will be ignored if \a grid is a cmesh. 
+ * \param element A pointer to an element. Only necessary if a forest is used. Will be ignored if \a grid is a cmesh.
  * \param[in] itree The local id of the current tree.
  * \param[in] offset offset the ids by the number of elements/trees of the previous processes.
  * \param[in] is_ghost Flag to decide whether we write a ghost element or not.
- * \param elem_id The id for the element to use by vtk. 
+ * \param elem_id The id for the element to use by vtk.
  * \param point_id The next id to use to identify vtkpoints.
  * \param[in, out] cellTypes An int array to fill with the type of each element/tree of \a grid
  * \param[in, out] points A vtkMergePoints structure to fill with points representing the points in the grid (avoid duplicates)
@@ -222,18 +234,18 @@ class vtk_writer {
  * \param[in, out] vtk_mpirank A vtk array to fill with the mpirank of each element/tree of \a grid.
  * \param[in, out] vtk_level A vtk array to fill with the level of each element/tree of \a grid.
  * \param[in, out] vtk_element_id A vtk array to fill with the id of each element/tree of \a grid.
- * \param[in]      mergePoints A bool flag if points in the output should be merged (default = true).
- * 
+ * \param[in]      merge_points A bool flag if points in the output should be merged (default = true).
+ *
  */
   void
   t8_grid_element_to_vtk_cell (const grid_t grid, const t8_element_t *element, const t8_locidx_t itree,
-                               const t8_gloidx_t offset, const int is_ghost, const int elem_id, long int *point_id,
+                               const t8_gloidx_t offset, const bool is_ghost, const int elem_id, long int *point_id,
                                int *cellTypes, vtkSmartPointer<vtkMergePoints> points,
                                vtkSmartPointer<vtkCellArray> cellArray,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
                                vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level,
-                               vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id, bool mergePoints = true)
+                               vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id, bool merge_points = true)
   {
     /* Get the shape of the current element and the respective shape of the vtk_cell. */
     const t8_element_shape_t element_shape = grid_element_shape (grid, itree, element);
@@ -253,7 +265,7 @@ class vtk_writer {
 
       /* Insert the point in the points array. */
       double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
-      if (mergePoints) {
+      if (merge_points) {
         points->InsertUniquePoint (vtkCoords, ptId);
       }
       else {
@@ -300,8 +312,8 @@ class vtk_writer {
 
   /**
  * Iterate over all trees (and if desired ghost trees to) and call the function that translate the tree into.
- * 
- * \tparam grid_t 
+ *
+ * \tparam grid_t
  * \param[in] grid A forest or a cmesh.
  * \param[in, out] unstructuredGrid The unstructuredGrid to fill.
  * \param[in, out] vtk_treeid A vtk array to fill with the tree ids of \a grid.
@@ -317,6 +329,7 @@ class vtk_writer {
  * \param[in] offset Offset the ids by the number of elements/trees of the previous processes.
  * \param[in] ghosts Flag to decide whether we write a ghost element or not.
  * \param[in] itree The local id of the current tree.
+ * \param[in] merge_points Use mergePoints for the vtk writing process.
  */
   void
   t8_grid_tree_to_vtk_cells (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
@@ -326,16 +339,19 @@ class vtk_writer {
                              vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
                              vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points,
                              int *cellTypes, const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id,
-                             long int *point_id, const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree);
+                             long int *point_id, const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree,
+                             const bool merge_points = true);
 
   /**
- * Construct an unstructuredGrid from either a forest or cmesh. The flags can be used to define what parameters we want to write. 
- * 
+ * Construct an unstructuredGrid from either a forest or cmesh. The flags can be used to define what parameters we want to write.
+ *
  * \param[in] grid A forest or a cmesh.
  * \param[in, out] unstructuredGrid An unstructuredGrid that we want to fill with the data of \a grid.
+ * \param[in] merge_points Use mergePoints for the vtk writing process.
  */
   void
-  t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid)
+  t8_grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
+                                  bool merge_points = true)
   {
     T8_ASSERT (grid != NULL);
 
@@ -362,17 +378,26 @@ class vtk_writer {
     t8_gloidx_t elem_id = offset;
 
     /* Check if we have to write ghosts on this process. */
-    bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
+    const bool do_ghosts = grid_do_ghosts (grid, write_ghosts);
 
     /* Compute the number of cells on this process. */
-    t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
+    const t8_locidx_t num_cells = num_cells_to_write (grid, do_ghosts);
 
     int *cellTypes = T8_ALLOC (int, num_cells);
     T8_ASSERT (cellTypes != NULL);
 
     /* Get the local bounds of the forest or cmesh */
-    double bounds[6];
-    grid_get_local_bounds (grid, bounds);
+    double bounds[6] = { 0 };
+    if (num_cells > 0 && merge_points) {
+      // This function expects a non-empty partition, so we only call it
+      // if we have cells. If the local bounds cannot be computed,
+      // merge points will be disabled.
+      merge_points = grid_get_local_bounds (grid, bounds);
+      if (!merge_points) {
+        t8_errorf (
+          "Computation of bounding box failed. VTK merge points will be disabled. VTK output is still valid. \n");
+      }
+    }
 
     /* Allocate VTK Memory for the arrays */
     const int grid_dim = grid_get_dim (grid);
@@ -384,7 +409,7 @@ class vtk_writer {
     vtk_level->Allocate (num_cells);
     vtk_element_id->Allocate (num_cells);
 
-    /* Initialie vtkMergePoints for insertion. It needs the bounds to create the internal acceleration structure */
+    /* Initialize vtkMergePoints for insertion. It needs the bounds to create the internal acceleration structure */
     points->InitPointInsertion (points_store, bounds);
 
     /* Iterate over all trees and translate them. */
@@ -424,17 +449,16 @@ class vtk_writer {
       unstructuredGrid->GetCellData ()->AddArray (vtk_element_id);
     }
 
-    /* Write the user defined data fields. For that we iterate over the idata, set the name, the array and then give 
+    /* Write the user defined data fields. For that we iterate over the idata, set the name, the array and then give
      * this data to the unstructured Grid Object.We differentiate between scalar and vector data.
      */
-    const t8_locidx_t num_elements = grid_local_num_elements (grid);
     for (int idata = 0; idata < num_data; idata++) {
       dataArrays[idata] = vtkDoubleArray::New ();
       const int num_components = this->data[idata].type == T8_VTK_SCALAR ? 1 : 3;
       dataArrays[idata]->SetName (this->data[idata].description); /* Set the name of the array. */
-      dataArrays[idata]->SetNumberOfTuples (num_elements);        /* We want number of tuples=number of elements. */
+      dataArrays[idata]->SetNumberOfTuples (num_cells);           /* We want number of tuples=number of cells. */
       dataArrays[idata]->SetNumberOfComponents (num_components);  /* Each tuples has 3 values. */
-      dataArrays[idata]->SetVoidArray (this->data[idata].data, num_elements * num_components, 1);
+      dataArrays[idata]->SetVoidArray (this->data[idata].data, num_cells * num_components, 1);
       unstructuredGrid->GetCellData ()->AddArray (dataArrays[idata]);
     }
 
@@ -454,7 +478,7 @@ class vtk_writer {
 
   /**
    * Write a vtk file given a forest or a cmesh.
-   * 
+   *
    * \param[in] grid a forest or a cmesh that will be translated into a vtk-file.
    * \return true if writing was successful.
    * \return false if writing was not successful.
@@ -465,9 +489,9 @@ class vtk_writer {
 #if T8_ENABLE_VTK
     T8_ASSERT (!fileprefix.empty ());
 
-    /* 
-   * Write file: First we construct the unstructured Grid that will store the points and elements. It requires 
-   * information about the points(coordinates, stored in the points object) and the cells(cellTypes and which points 
+    /*
+   * Write file: First we construct the unstructured Grid that will store the points and elements. It requires
+   * information about the points(coordinates, stored in the points object) and the cells(cellTypes and which points
    * belong to this cell).
    */
     vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid = vtkSmartPointer<vtkUnstructuredGrid>::New ();
@@ -477,10 +501,10 @@ class vtk_writer {
     vtkSmartPointer<vtkXMLPUnstructuredGridWriter> pwriterObj = vtkSmartPointer<vtkXMLPUnstructuredGridWriter>::New ();
     t8_grid_to_vtkUnstructuredGrid (grid, unstructuredGrid);
     /*
-    * Get/Set whether the appended data section is base64 encoded. 
-    * If encoded, reading and writing will be slower, but the file 
-    * will be fully valid XML and text-only. 
-    * If not encoded, the XML specification will be violated, 
+    * Get/Set whether the appended data section is base64 encoded.
+    * If encoded, reading and writing will be slower, but the file
+    * will be fully valid XML and text-only.
+    * If not encoded, the XML specification will be violated,
     * but reading and writing will be fast. The default is to do the encoding.
     * Documentation: https://vtk.org/doc/release/5.0/html/a02260.html#z3560_2
     */
@@ -492,10 +516,10 @@ class vtk_writer {
     pwriterObj->SetFileName (mpifilename.c_str ());
 
 /*
-   * Since we want to write multiple files, the processes 
+   * Since we want to write multiple files, the processes
    * have to communicate. Therefore, we define the communicator
-   * vtk_comm and set it as the communicator. 
-   * We have to set a controller for the pwriterObj, 
+   * vtk_comm and set it as the communicator.
+   * We have to set a controller for the pwriterObj,
    * therefore we define the controller vtk_mpi_ctrl.
    */
 #if T8_ENABLE_MPI
@@ -515,7 +539,7 @@ class vtk_writer {
     * process. Then we can set the inputData for the writer:
     * We want to write the unstructured Grid, update the writer
     * and then write.
-    * 
+    *
     * Note: We could write more than one file per process here, if desired.
     */
     int mpisize;
@@ -559,6 +583,7 @@ class vtk_writer {
   int num_data = 0;
   t8_vtk_data_field_t *data = NULL;
   sc_MPI_Comm comm;
+  bool merge_points = true;
 };
 
 #endif /* T8_VTK_WRITER_HXX */

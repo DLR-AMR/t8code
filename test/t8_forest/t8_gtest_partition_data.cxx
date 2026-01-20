@@ -29,7 +29,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_partition.h>
@@ -39,6 +39,7 @@
 #include <numeric>
 #include <type_traits>
 #include <string>
+#include <concepts>
 
 /**
  * \brief A data carrier class which is used as testable object for the partition_data functionality.
@@ -66,21 +67,23 @@ class t8_test_partition_data_t {
     return old;
   };
 
-  t8_test_partition_data_t&
-  operator= (const t8_test_partition_data_t&)
-    = default;
-  t8_test_partition_data_t&
-  operator= (const t8_gloidx_t& value)
-  {
-    this->data = value;
-    return *this;
-  };
-
   explicit
   operator t8_gloidx_t ()
   {
     return data;
   };
+
+  t8_locidx_t
+  GetA () const
+  {
+    return a;
+  }
+
+  char
+  GetB () const
+  {
+    return b;
+  }
 
   t8_gloidx_t
   GetData () const
@@ -89,17 +92,17 @@ class t8_test_partition_data_t {
   };
 
  private:
-  t8_locidx_t a;
-  char b;
+  t8_locidx_t a { 42 };
+  char b { 'b' };
   t8_gloidx_t data { 0 };
 };
 
 /**
  * \brief Comparison function for floating point data.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_floating_point_v<T>, bool>
+template <std::floating_point T>
+bool
+gTestCompareEQ (const T& value1, const T& value2)
 {
   /* Use the internal floating comparison function from googletest. */
   const testing::internal::FloatingPoint<T> val1 { value1 };
@@ -111,9 +114,9 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_fl
 /**
  * \brief Comparison function for integer data.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_integral_v<T>, bool>
+template <std::integral T>
+bool
+gTestCompareEQ (const T& value1, const T& value2)
 {
   return (value1 == value2);
 }
@@ -121,11 +124,11 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_in
 /**
  * \brief Comparison function for the custom data type 't8_test_partition_data_t'.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_same_v<T, t8_test_partition_data_t>, bool>
+bool
+gTestCompareEQ (const t8_test_partition_data_t& value1, const t8_test_partition_data_t& value2)
 {
-  return (gTestCompareEQ (value1.GetData (), value2.GetData ()));
+  return gTestCompareEQ (value1.GetA (), value2.GetA ()) && gTestCompareEQ (value1.GetB (), value2.GetB ())
+         && gTestCompareEQ (value1.GetData (), value2.GetData ());
 }
 
 /**
@@ -196,7 +199,7 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
 }
 
 /**
- * \brief An examplary adaptation function which refines only the the first global tree in the forest
+ * \brief An exemplary adaptation function which refines only the the first global tree in the forest
  * to a pre-set refinement level.
  */
 static int
@@ -244,7 +247,7 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
   t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
 
-  /* Adapt the forest examplary. */
+  /* Adapt the forest exemplary. */
   t8_forest_t initial_forest = t8_forest_new_adapt (base_forest, t8_test_partition_data_adapt, 1, 0, NULL);
 
   /* Reference the forest in order to keep it after the partition step. */
@@ -257,7 +260,7 @@ TEST_P (t8_test_partition_data_test, test_partition_data)
   t8_forest_set_partition (partitioned_forest, initial_forest, partition_for_coarsening);
   t8_forest_commit (partitioned_forest);
 
-  /* Test the examplary partition_data with some arithmetic data types as well as with a custom struct. */
+  /* Test the exemplary partition_data with some arithmetic data types as well as with a custom struct. */
   TestPartitionData<int32_t> (initial_forest, partitioned_forest);
   TestPartitionData<float> (initial_forest, partitioned_forest);
   TestPartitionData<double> (initial_forest, partitioned_forest);

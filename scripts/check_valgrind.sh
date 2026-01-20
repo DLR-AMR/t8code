@@ -23,12 +23,18 @@
 #
 # This script runs Valgrind on an input binary paths with specified memory leak detection flags. 
 # The Valgrind output is parsed. If any errors are found, they are printed and the script exits with a status of 1.
-# As a second argument, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors.
+# If errors are found, the Valgrind output is kept in the file valgrind-output.log for further inspection.
+# Using "--supp=[FILE]", you can provide a path to a suppression file that is used by Valgrind to suppress certain errors.
+# With "--ntasks=[NUMBER]", you can provide the number of processes to use with MPI (default is 1).
 #
+USAGE="\nUSAGE: This script executes valgrind in parallel on a given input file. Use \n
+$0 [FILE] --supp=[SUPPRESSION_FILE] --ntasks=[NUM_TASKS]\n
+to run valgrind on FILE. Optionally you can provide a suppression file and the number of parallel processes to use with MPI.\n"
 
 # Check that an argument is given and that the argument is a file.
 if [ ${1-x} = x ]; then
-  echo ERROR: Need to provide a file as first argument.
+  echo "ERROR: Need to provide a file as first argument."
+  echo -e "$USAGE"
   exit 1
 fi
 if [ -f "$1" ]; then
@@ -39,14 +45,47 @@ else
     FILE="../$1"
   else
     echo "ERROR: Non existing file: $1"
+    echo -e "$USAGE"
     exit 1
   fi
 fi
 
+# Check if a suppression file is provided. If yes, add the flag to incorporate the Valgrind suppression file.
+VALGRIND_FLAGS=""
+for arg in "$@"; do
+  if [[ "$arg" == --supp=* ]]; then
+    supp_file="${arg#--supp=}"
+    if [ -f "$supp_file" ]; then
+      VALGRIND_FLAGS="${VALGRIND_FLAGS} --suppressions=${supp_file}"
+    else
+      echo "ERROR: Suppression file '$supp_file' does not exist."
+      echo -e "$USAGE"
+      exit 1
+    fi
+  fi
+done
+
+# Check if a number of processes is provided. If not, set to 1.
+num_procs=1
+for arg in "$@"; do
+  if [[ "$arg" == --ntasks=* ]]; then
+    ntasks_val="${arg#--ntasks=}"
+    if [[ "$ntasks_val" =~ ^[0-9]+$ ]]; then
+      num_procs="$ntasks_val"
+    else
+      echo "ERROR: --ntasks value '$ntasks_val' is not a valid number."
+      echo -e "$USAGE"
+      exit 1
+    fi
+  fi
+done
+
+echo "Valgrind check of ${FILE} using ${num_procs} processes..."
+
 # Write valgrind output to variable OUTPUT_FILE.
-OUTPUT_FILE="valgrind-output.log"
+OUTPUT_FILE="valgrind-output-$(basename "$FILE").log"
 # Set valgrind flags.
-VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
+VALGRIND_FLAGS="${VALGRIND_FLAGS} --leak-check=full --track-origins=yes \
     --trace-children=yes --show-leak-kinds=definite,indirect,possible \
     --errors-for-leak-kinds=definite,indirect,possible"
 # There are some more flags that can be reasonable to use, e.g., for debugging reasons if you found an error.
@@ -55,18 +94,8 @@ VALGRIND_FLAGS="--leak-check=full --track-origins=yes \
 # For more detailed outputs: -read-var-info=yes --read-inline-info=yes --gen-suppressions=all
 # Warning: --show-leak-kinds=all will find a lot of still reachable leaks. This is not necessarily a problem.
 
-# Check if a second argument is provided. If yes, add the flag to incorporate the Valgrind suppression file.
-if ! [ ${2-x} = x ]; then
-  if [ -f "$2" ]; then
-    VALGRIND_FLAGS="${VALGRIND_FLAGS} --suppressions=${2}"
-  else
-    echo "ERROR: If a second argument is provided, this must be a valid valgrind suppression file."
-    exit 1
-  fi
-fi
-
 # Run valgrind on given file with flags and write output to OUTPUT_FILE.
-valgrind $VALGRIND_FLAGS "${FILE}" > /dev/null 2>"${OUTPUT_FILE}"
+mpirun -n $num_procs valgrind $VALGRIND_FLAGS "${FILE}" > /dev/null 2>"${OUTPUT_FILE}"
 
 # Parse valgrind output.
 declare -a VALGRIND_RULES=(
@@ -82,6 +111,7 @@ declare -a VALGRIND_RULES=(
         "^==.*== Argument .* of function .* has a fishy (possibly negative) value: .*$"
         "^==.*== .*alloc() with size 0$"
         "^==.*== Invalid alignment value: .* (should be power of 2)$"
+        "^==.*== Conditional jump or move depends on uninitialised value(s)"
     )
 report_id=1
 status=0
@@ -122,5 +152,8 @@ while IFS= read -r line; do
   fi
 done < "${OUTPUT_FILE}"
 
-rm -f "${OUTPUT_FILE}"
+# Remove the output file only if the checks were error free.
+if [ "$status" -eq 0 ]; then
+  rm -f "${OUTPUT_FILE}"
+fi
 exit "${status}"

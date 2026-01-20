@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_parallel.hxx
+ * This file contains all helper functions to translate parallel vtk files. 
+ */
+
 #ifndef T8_VTK_PARALLEL_HXX
 #define T8_VTK_PARALLEL_HXX
 
@@ -35,7 +40,8 @@
  * 
  * \param[in] filename  The name of a parallel vtk file to a distributed vtkUnstructuredGrid
  * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
- *                 by the pieces read on this proc. 
+ *                 by the pieces read on this proc.
+ * \param[in] comm The MPI communicator to use for reading the file.
  * \returns        non-zero on success, zero if the reading failed. 
  */
 vtk_read_success_t
@@ -47,8 +53,9 @@ t8_read_parallel_unstructured (const char *filename, vtkSmartPointer<vtkDataSet>
  * 
  * \param[in] filename  The name of a parallel vtk file to a distributed vtkPolyData
  * \param[in] grid On input a vtkSmartPointer, that will hold the grid described
- *                 by the pieces read on this proc. 
- * \returns        non-zero on success, zero if the reading failed. 
+ *                 by the pieces read on this proc.
+ * \param[in] comm The MPI communicator to use for reading the file.
+ * \returns        read_success on success, read_failure if the reading failed.
  */
 vtk_read_success_t
 t8_read_parallel_polyData (const char *filename, vtkSmartPointer<vtkDataSet> grid, sc_MPI_Comm comm);

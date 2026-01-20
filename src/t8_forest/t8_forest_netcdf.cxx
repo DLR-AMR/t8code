@@ -20,21 +20,23 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/*
-Description:
-These functions write a file in the NetCDF-format which represents the given 2D- or 3D-forest
-*/
+/** \file t8_forest_netcdf.cxx
+ * Implements functions declared in \ref t8_forest_netcdf.h.
+ * These functions write a file in the NetCDF-format which represents the given 2D- or 3D-forest
+ */
 
 #include <t8.h>
 #include <netcdf.h>
-/* Standard netcdf error function */
+/** Standard netcdf error code */
 #define ERRCODE 2
+/** Standard netcdf error function */
 #define ERR(e) \
   { \
     t8_global_productionf ("Error: %s\n", nc_strerror (e)); \
     exit (ERRCODE); \
   }
 #ifndef NC_CONTIGUOUS
+/** Storage mode for netcdf variables. */
 #define NC_CONTIGUOUS 1
 #endif
 #if T8_ENABLE_NETCDF_PAR
@@ -54,64 +56,71 @@ These functions write a file in the NetCDF-format which represents the given 2D-
 #include <t8_element_shape.h>
 #include <t8_schemes/t8_scheme.hxx>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
-/* Contains all Variables used in order to work with the NetCDF-File */
+/**
+ * This struct contains all Variables used in order to work with the NetCDF-File 
+ */
 typedef struct
 {
-  const char *filename;
-  const char *filetitle;
-  int dim;
-  t8_gloidx_t nMesh_elem;
-  t8_gloidx_t nMesh_node;
-  t8_gloidx_t nMesh_local_node;
-  int nMaxMesh_elem_nodes;
+  const char *filename;         /**< The file name.*/
+  const char *filetitle;        /**< The file title.*/
+  int dim;                      /**< The number of spatial dimensions. */
+  t8_gloidx_t nMesh_elem;       /**< The number of mesh elements. */
+  t8_gloidx_t nMesh_node;       /**< The number of mesh nodes. */
+  t8_gloidx_t nMesh_local_node; /**< The number of local nodes in the cmesh */
+  int nMaxMesh_elem_nodes;      /**< The maximum number of nodes per element */
   /* Declaring NetCDF-dimension ids */
-  int nMesh_elem_dimid;
-  int nMaxMesh_elem_nodes_dimid;
-  int nMesh_node_dimid;
+  int nMesh_elem_dimid;          /**< The NetCDF-dimension id for the number of elements */
+  int nMaxMesh_elem_nodes_dimid; /**< The NetCDF-dimension id for the maximum number of nodes per element */
+  int nMesh_node_dimid;          /**< The NetCDF-dimension id for the number of nodes */
   /* Declaring NetCDF-variables ids */
-  int ncid;
-  int var_elem_tree_id;
-  int var_elem_types_id;
-  int var_elem_nodes_id;
-  int var_mesh_id;
-  int var_node_x_id;
-  int var_node_y_id;
-  int var_node_z_id;
-  int dimids[2]; /* contains two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables */
+  int ncid;              /**< The NetCDF-file id */
+  int var_elem_tree_id;  /**< The NetCDF-variable id for the element tree id */
+  int var_elem_types_id; /**< The NetCDF-variable id for the element types */
+  int var_elem_nodes_id; /**< The NetCDF-variable id for the element nodes */
+  int var_mesh_id;       /**< The NetCDF-variable id for the mesh */
+  int var_node_x_id;     /**< The NetCDF-variable id for the x-coordinates of the nodes */
+  int var_node_y_id;     /**< The NetCDF-variable id for the y-coordinates of the nodes */
+  int var_node_z_id;     /**< The NetCDF-variable id for the z-coordinates of the nodes */
+  int dimids[2];         /**< contains two NetCDF-dimensions in order to declare two-dimensional NetCDF-variables */
   /* Variables used for default NetCDF purposes */
-  t8_nc_int32_t fillvalue32;
-  t8_nc_int64_t fillvalue64;
-  t8_nc_int32_t start_index;
-  const char *convention;
-  int netcdf_var_storage_mode;
-  int netcdf_mpi_access;
+  t8_nc_int32_t fillvalue32;   /**< The fill value for 32-bit integer variables */
+  t8_nc_int64_t fillvalue64;   /**< The fill value for 64-bit integer variables */
+  t8_nc_int32_t start_index;   /**< The start index for NetCDF-variables */
+  const char *convention;      /**< The NetCDF-convention used (e.g., "UGRID") */
+  int netcdf_var_storage_mode; /**< The storage mode for NetCDF-variables (e.g., "chunked") */
+  int netcdf_mpi_access;       /**< The MPI-access mode for NetCDF (e.g., "MPI-IO") */
   /* Stores the old NetCDF-FillMode if it gets changed */
-  int old_fill_mode;
+  int old_fill_mode; /**< The old NetCDF-FillMode if it gets changed */
 
 } t8_forest_netcdf_context_t;
 
-/* Contains the Definitions for the NetCDF-dimensions/-variables/-attributes (vary whether a 2D or 3D Mesh will be outputted) */
+/** 
+ * This struct contains the Definitions for the NetCDF-dimensions/-variables/-attributes 
+ * (vary whether a 2D or 3D Mesh will be outputted) 
+ * */
 typedef struct
 {
-  const char *mesh;
-  const char *dim_nMesh_node;
-  const char *dim_nMesh_elem;
-  const char *dim_nMaxMesh_elem_nodes;
-  const char *var_Mesh_node_x;
-  const char *var_Mesh_node_y;
-  const char *var_Mesh_node_z;
-  const char *var_Mesh_elem_types;
-  const char *var_Mesh_elem_tree_id;
-  const char *var_Mesh_elem_node;
-  const char *att_elem_shape_type;
-  const char *att_elem_node_connectivity;
-  const char *att_elem_tree_id;
-  const char *att_elem_node;
+  const char *mesh;           /**< The name of the mesh */
+  const char *dim_nMesh_node; /**< The name of the dimension for the number of nodes in the mesh*/
+  const char *dim_nMesh_elem; /**< The name of the dimension for the number of elements in the mesh */
+  const char
+    *dim_nMaxMesh_elem_nodes;  /**< The name of the dimension for the maximum number of nodes per element in the mesh */
+  const char *var_Mesh_node_x; /**< The name of the variable for the x-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_node_y; /**< The name of the variable for the y-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_node_z; /**< The name of the variable for the z-coordinates of the nodes in the mesh*/
+  const char *var_Mesh_elem_types;        /**< The name of the variable for the element types in the mesh */
+  const char *var_Mesh_elem_tree_id;      /**< The name of the variable for the element tree id in the mesh */
+  const char *var_Mesh_elem_node;         /**< The name of the variable for the element nodes in the mesh */
+  const char *att_elem_shape_type;        /**< The name of the attribute for the element shape type */
+  const char *att_elem_node_connectivity; /**< The name of the attribute for the element node connectivity */
+  const char *att_elem_tree_id;           /**< The name of the attribute for the element tree id */
+  const char *att_elem_node;              /**< The name of the attribute for the element nodes */
 } t8_forest_netcdf_ugrid_namespace_t;
 
-/* The UGRID conventions are applied for dimension and variable descriptions */
+/** The UGRID conventions are applied for dimension and variable descriptions */
 static void
 t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t *namespace_conv, int dim)
 {
@@ -151,7 +160,7 @@ t8_forest_init_ugrid_namespace_context (t8_forest_netcdf_ugrid_namespace_t *name
   }
 }
 
-/* Define NetCDF-dimensions */
+/** Define NetCDF-dimensions */
 static void
 t8_forest_write_netcdf_dimensions ([[maybe_unused]] t8_forest_netcdf_context_t *context,
                                    [[maybe_unused]] t8_forest_netcdf_ugrid_namespace_t *namespace_context)
@@ -179,7 +188,7 @@ t8_forest_write_netcdf_dimensions ([[maybe_unused]] t8_forest_netcdf_context_t *
   t8_debugf ("First NetCDF-dimensions were defined.\n");
 }
 
-/* Define NetCDF-variables */
+/** Define NetCDF-variables */
 static void
 t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *context,
                                   [[maybe_unused]] t8_forest_netcdf_ugrid_namespace_t *namespace_context)
@@ -357,6 +366,13 @@ t8_forest_write_netcdf_variables ([[maybe_unused]] t8_forest_netcdf_context_t *c
   }
 }
 
+/**
+ *  Fill the already defined NetCDF-variables and calculate the 'nMesh_node' (global number of nodes) -dimension
+ * 
+ * \param[in]     forest    The forest.
+ * \param[in,out] context   Data required to work with the NetCDF file.
+ * \param[in]     comm      The MPI communicator.
+*/
 static void
 t8_forest_write_netcdf_data ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_netcdf_context_t *context,
                              [[maybe_unused]] sc_MPI_Comm comm)
@@ -457,7 +473,7 @@ t8_forest_write_netcdf_coordinate_dimension ([[maybe_unused]] t8_forest_netcdf_c
   }
 }
 
-/* Define NetCDF-coordinate-variables */
+/** Define NetCDF-coordinate-variables */
 static void
 t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_context_t *context,
                                              [[maybe_unused]] t8_forest_netcdf_ugrid_namespace_t *namespace_context)
@@ -570,7 +586,7 @@ t8_forest_write_netcdf_coordinate_variables ([[maybe_unused]] t8_forest_netcdf_c
   }
 }
 
-/* Declare the user-defined elementwise NetCDF-variables which were passed to function. */
+/** Declare the user-defined elementwise NetCDF-variables which were passed to function. */
 static void
 t8_forest_write_user_netcdf_vars ([[maybe_unused]] t8_forest_netcdf_context_t *context,
                                   [[maybe_unused]] t8_forest_netcdf_ugrid_namespace_t *namespace_context,
@@ -643,7 +659,7 @@ t8_forest_write_user_netcdf_vars ([[maybe_unused]] t8_forest_netcdf_context_t *c
   }
 }
 
-/* Write the netCDF coordinate data to he file */
+/** Write the netCDF coordinate data to he file */
 static void
 t8_forest_write_netcdf_coordinate_data ([[maybe_unused]] t8_forest_t forest,
                                         [[maybe_unused]] t8_forest_netcdf_context_t *context,
@@ -784,8 +800,10 @@ t8_forest_write_netcdf_coordinate_data ([[maybe_unused]] t8_forest_t forest,
   T8_FREE (Mesh_elem_nodes);
 }
 
-/* Function that writes user-defined data to user-defined variables, if some were passed */
-/* It is only possible to write exactly one value per element per variable */
+/**
+ * Function that writes user-defined data to user-defined variables, if some were passed */
+/* It is only possible to write exactly one value per element per variable 
+*/
 static void
 t8_forest_write_user_netcdf_data ([[maybe_unused]] t8_forest_t forest,
                                   [[maybe_unused]] t8_forest_netcdf_context_t *context,
@@ -837,7 +855,7 @@ t8_forest_write_user_netcdf_data ([[maybe_unused]] t8_forest_t forest,
   }
 }
 
-/* Function that creates the NetCDF-File and fills it  */
+/** Function that creates the NetCDF-File and fills it  */
 static void
 t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *context,
                              t8_forest_netcdf_ugrid_namespace_t *namespace_context, int num_extern_netcdf_vars,
@@ -938,7 +956,7 @@ t8_forest_write_netcdf_file (t8_forest_t forest, t8_forest_netcdf_context_t *con
   t8_debugf ("The NetCDF-File has been written and closed.\n");
 }
 
-/* Function that gets called if a forest should be written in NetCDF-Format. This function is somehow an extended version which allows the user to decide if contiguous or chunked storage should used and whether the MPI ranks write independently or collectively. */
+/** Function that gets called if a forest should be written in NetCDF-Format. This function is somehow an extended version which allows the user to decide if contiguous or chunked storage should used and whether the MPI ranks write independently or collectively. */
 void
 t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const char *file_title, int dim,
                             int num_extern_netcdf_vars, t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm,
@@ -1030,7 +1048,7 @@ t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const c
   }
 }
 
-/* Function which writes out the forest in the netCDF format, this function calls the extended method with given default values (e.g. NC_CONTIGUOUS and NC_INDEPENDENT) for storage and MPI access for variables */
+/** Function which writes out the forest in the netCDF format, this function calls the extended method with given default values (e.g. NC_CONTIGUOUS and NC_INDEPENDENT) for storage and MPI access for variables */
 void
 t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix, const char *file_title, int dim,
                         int num_extern_netcdf_vars, t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm)
@@ -1045,4 +1063,5 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix, const char 
                               netcdf_var_storage_mode, netcdf_mpi_access);
 }
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();

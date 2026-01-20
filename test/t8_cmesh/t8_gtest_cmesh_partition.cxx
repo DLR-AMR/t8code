@@ -21,10 +21,10 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include "t8_cmesh/t8_cmesh_trees.h"
-#include "t8_cmesh/t8_cmesh_partition.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 #include <test/t8_gtest_schemes.hxx>
@@ -82,6 +82,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
+  t8_debugf ("############### compute uniform partition ###############\n");
   /* Set up the partitioned cmesh */
   for (int i = 0; i < 2; i++) {
     t8_cmesh_init (&cmesh_partition);
@@ -107,6 +108,7 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 
   /* We repartition the cmesh to be concentrated on each rank once */
   for (int irank = 0; irank < mpisize; irank++) {
+    t8_debugf ("############### compute concentrate partition %i ###############\n", irank);
     t8_cmesh_init (&cmesh_partition_new2);
     t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
     /* Create an offset array where each tree resides on irank */
@@ -117,24 +119,29 @@ TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
     /* Commit the cmesh and test if successful */
     t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
     test_cmesh_committed (cmesh_partition_new2);
-
-    /* Switch the rolls of the cmeshes */
+    /* We partition the resulting cmesh according to a uniform level refinement.
+    * This cmesh should now be equal to the initial cmesh. 
+    */
     cmesh_partition_new1 = cmesh_partition_new2;
     cmesh_partition_new2 = NULL;
+
+    /** We execute this block twice such that the cmesh itself and
+     * the cmesh from which it derived from are the same again.
+     */
+    for (int i = 0; i < 2; i++) {
+      t8_cmesh_init (&cmesh_partition_new2);
+      t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
+      scheme->ref ();
+      t8_cmesh_set_partition_uniform (cmesh_partition_new2, level, scheme);
+      t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
+      cmesh_partition_new1 = cmesh_partition_new2;
+      /* Switch the roles of the cmeshes */
+      cmesh_partition_new1 = cmesh_partition_new2;
+      cmesh_partition_new2 = NULL;
+    }
+    ASSERT_TRUE (t8_cmesh_is_equal (cmesh_partition_new1, cmesh_partition)) << "Cmesh equality check failed.";
   }
-  /* We partition the resulting cmesh according to a uniform level refinement.
-   * This cmesh should now be equal to the initial cmesh. 
-   */
-  for (int i = 0; i < 2; i++) {
-    t8_cmesh_init (&cmesh_partition_new2);
-    t8_cmesh_set_derive (cmesh_partition_new2, cmesh_partition_new1);
-    scheme->ref ();
-    t8_cmesh_set_partition_uniform (cmesh_partition_new2, level, scheme);
-    t8_cmesh_commit (cmesh_partition_new2, sc_MPI_COMM_WORLD);
-    cmesh_partition_new1 = cmesh_partition_new2;
-  }
-  ASSERT_TRUE (t8_cmesh_is_equal (cmesh_partition_new2, cmesh_partition)) << "Cmesh equality check failed.";
-  t8_cmesh_destroy (&cmesh_partition_new2);
+  t8_cmesh_destroy (&cmesh_partition_new1);
   t8_cmesh_destroy (&cmesh_partition);
 }
 

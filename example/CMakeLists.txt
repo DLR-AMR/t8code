@@ -19,7 +19,7 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 # Conditionally adding new sources to the main T8 target as in the original BS looked wrong...
-if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
+if ( T8CODE_BUILD_AS_SHARED_LIBRARY )
     add_library( t8example SHARED )
 else()
     add_library( t8example STATIC )

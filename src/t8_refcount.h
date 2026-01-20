@@ -33,6 +33,7 @@
 #include <t8.h>
 #include <sc_refcount.h>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /** We can reuse the reference counter type from libsc. */
@@ -82,6 +83,7 @@ t8_refcount_destroy (t8_refcount_t *rc);
 /** Query whether a reference counter has value one. */
 #define t8_refcount_is_last(rc) sc_refcount_is_last (rc)
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
 
 #endif /* !T8_REFCOUNT_H */

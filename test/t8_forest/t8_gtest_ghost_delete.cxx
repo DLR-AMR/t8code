@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_ghost.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_schemes.hxx>
 
@@ -39,7 +39,7 @@
  */
 
 /* refine elements, whose lower left y coordinate is 0, so that the lowest row is refined
- * delete elements, whose lower left y coordniate is 0.25, so that the second row is deleted
+ * delete elements, whose lower left y coordinate is 0.25, so that the second row is deleted
  */
 static int
 test_adapt_holes ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,

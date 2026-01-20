@@ -33,15 +33,15 @@
  * The array uses sc_shmem shared memory.*/
 typedef struct t8_shmem_array
 {
-  void *array;          /*< Pointer to the actual memory. */
-  size_t elem_size;     /*< Size of one entry in byte. */
-  size_t elem_count;    /*< Total count of entries. */
-  sc_MPI_Comm comm;     /*< MPI communicator. */
-  int writing_possible; /*< True if we can currently write into this array. False if not. */
+  void *array;          /**< Pointer to the actual memory. */
+  size_t elem_size;     /**< Size of one entry in byte. */
+  size_t elem_count;    /**< Total count of entries. */
+  sc_MPI_Comm comm;     /**< MPI communicator. */
+  int writing_possible; /**< True if we can currently write into this array. False if not. */
   int
-    write_start_called; /*< True if t8_shmem_array_start_writing was called and no call to t8_shmem_array_end_writing happened yet. */
+    write_start_called; /**< True if t8_shmem_array_start_writing was called and no call to t8_shmem_array_end_writing happened yet. */
 #if T8_ENABLE_DEBUG
-  sc_shmem_type_t shmem_type; /*< Shared memory type of the communicator (at time of initializing the array). */
+  sc_shmem_type_t shmem_type; /**< Shared memory type of the communicator (at time of initializing the array). */
 #endif
 } t8_shmem_array_struct_t;
 
@@ -60,9 +60,18 @@ t8_shmem_array_is_initialized (const t8_shmem_array_t array)
 }
 #endif
 
-void
+int
 t8_shmem_init (sc_MPI_Comm comm)
 {
+#ifndef T8_ENABLE_MPI
+  // If we do not use MPI, there is nothing to do.
+  // We only have a single process.
+  return 1;
+#endif
+#ifndef SC_ENABLE_MPICOMMSHARED
+  SC_ABORT ("Trying to use shared memory but SC_ENABLE_MPICOMMSHARED is not set. This should not happen if you use MPI "
+            "v.3.0 or higher. Maybe related to https://github.com/DLR-AMR/t8code/pull/1996.");
+#endif
   /* Check whether intranode and internode comms are set
    * for the current communicator. */
   sc_MPI_Comm intranode;
@@ -73,8 +82,12 @@ t8_shmem_init (sc_MPI_Comm comm)
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
     /* The inter/intra comms are not set. We need to set them to 
      * initialize shared memory usage. */
-    sc_mpi_comm_get_and_attach (comm);
+    return sc_mpi_comm_get_and_attach (comm);
   }
+  int intranode_size;
+  const int mpiret = sc_MPI_Comm_size (intranode, &intranode_size);
+  SC_CHECK_MPI (mpiret);
+  return intranode_size;
 }
 
 void
@@ -220,6 +233,7 @@ t8_shmem_array_prefix (const void *sendbuf, t8_shmem_array_t recvarray, const in
  * \param[in] sendcount The number of items this proc sends
  * \param[in, out] recvcounts On input a zero-initialized array that is going to be filled with the number of elements send by rank i
  * \param[in, out] displs On input a zero-initialized array that is going to be filled with the displacements
+ * \param[in] comm The MPI communicator to use
  * \returns   The total number of items 
  */
 static int
@@ -480,7 +494,6 @@ t8_shmem_array_index_for_writing (t8_shmem_array_t array, size_t index)
   return ((char *) array->array) + index * array->elem_size;
 }
 
-/* TODO: implement */
 int
 t8_shmem_array_is_equal (t8_shmem_array_t array_a, t8_shmem_array_t array_b)
 {
@@ -525,4 +538,30 @@ t8_shmem_array_destroy (t8_shmem_array_t *parray)
   sc_shmem_free (t8_get_package_id (), array->array, array->comm);
   T8_FREE (array);
   *parray = NULL;
+}
+
+int
+t8_shmem_array_binary_search (t8_shmem_array_t array, const t8_gloidx_t value, const int size,
+                              int (*compare) (t8_shmem_array_t, const int, const t8_gloidx_t))
+{
+  int low = 0;
+  int high = size;
+
+  while (low <= high) {
+    int mid = low + (high - low) / 2;
+    const int eval = compare (array, mid, value);
+    if (eval == 0) {
+      /* mid points to a value that equals \a value */
+      return mid;
+    }
+    else if (eval < 0) {
+      /* mid points to a value that is less than \a value */
+      high = mid - 1;
+    }
+    else {
+      /* mid points to a value that is greater than \a value */
+      low = mid + 1;
+    }
+  }
+  return -1;  // Not found
 }

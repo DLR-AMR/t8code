@@ -21,7 +21,7 @@
 */
 
 #include <cmath>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
@@ -2635,7 +2635,9 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
 t8_cmesh_t
 t8_cmesh_new_pyramid_cake (sc_MPI_Comm comm, int num_of_pyra)
 {
-
+  /*num_of_pyra pyras a 5 vertices a 3 coords */
+  /* TODO: This seems to be a lot of memory, can we also get by with only
+     5 * 3 doubles? */
   int current_pyra, pyra_vertices;
   double *vertices = T8_ALLOC (double, num_of_pyra * 5 * 3);
   t8_cmesh_t cmesh;
@@ -2735,6 +2737,7 @@ t8_cmesh_new_long_brick_pyramid (sc_MPI_Comm comm, int num_cubes)
     vertices[1] = 3;
     vertices[2] = 0;
     vertices[3] = 2;
+
     vertices[4] = current_cube % 2 == 0 ? 7 : 5;
     t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords, attr_vertices, 5);
     t8_cmesh_set_tree_vertices (cmesh, current_cube * 3, attr_vertices, 5);
