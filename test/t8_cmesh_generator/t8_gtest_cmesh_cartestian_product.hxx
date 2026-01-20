@@ -174,7 +174,7 @@ increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
 
 template <typename... Args>
 inline bool
-no_rule ([[maybe_unused]]Args... params)
+no_rule ([[maybe_unused]] Args... params)
 {
   return true;
 }
