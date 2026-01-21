@@ -129,6 +129,16 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   // Compare results.
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
 
+  // Adapt the mesh handle again and check that it is unbalanced afterwards.
+  mesh_handle.set_adapt (
+    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
+  mesh_handle.commit ();
+  EXPECT_FALSE (mesh_handle.is_balanced ());
+  mesh_handle.set_balance ();
+  mesh_handle.set_partition ();
+  mesh_handle.commit ();
+  // TODO have a look at t8_gtest_forest_commit for a better structure
+  EXPECT_TRUE (mesh_handle.is_balanced ());
   // Clean up.
   t8_forest_unref (&forest);
 }

@@ -30,6 +30,8 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "adapt.hxx"
+#include "t8_forest/t8_forest_balance.h"
+#include "t8_forest/t8_forest_types.h"
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
@@ -160,6 +162,17 @@ class mesh {
   get_forest () const
   {
     return m_forest;
+  }
+
+  /** Check if the local elements of the mesh are balanced. 
+  * The mesh is said to be balanced if each element has face neighbors of level
+  * at most +1 or -1 of the element's level.
+  * \return true if the local elements are balanced, false otherwise.
+  */
+  bool
+  is_balanced ()
+  {
+    return t8_forest_is_balanced (m_forest);
   }
 
   // --- Methods to access elements. ---
@@ -315,7 +328,7 @@ class mesh {
       m_uncommitted_forest = new_forest;
     }
     // Disable repartitioning and let the user call set_partition if desired.
-    t8_forest_set_balance (tm_uncommitted_forest.value (), m_forest, true);
+    t8_forest_set_balance (m_uncommitted_forest.value (), m_forest, true);
   }
 
   /** Enable or disable the creation of a layer of ghost elements.
