@@ -277,12 +277,53 @@ class mesh {
     t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, recursive);
   }
 
+  /** If this function is called, the mesh will be partitioned on committing.
+   * The partitioning is done according to the SFC and each rank is assigned
+   * the same (maybe +1) number of elements.
+   * \note The partition is carried out only when \ref commit is called.
+   * \note This setting can be combined with \ref set_adapt and \ref set_balance. The order in which
+   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * \param [in] set_for_coarsening If true, the partitions are choose such that coarsening 
+   *        an element once is a process local operation. Default is false.
+   */
+  void
+  set_partition (bool set_for_coarsening = false)
+  {
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
+    }
+    t8_forest_set_partition (m_uncommitted_forest.value (), m_forest, set_for_coarsening);
+  }
+
+  /** If this function is called, the mesh will be balanced on committing.
+   * The mesh is said to be balanced if each element has face neighbors of level
+   * at most +1 or -1 of the element's level.
+   * \note The balance is carried out only when \ref commit is called.
+   * \note This setting can be combined with \ref set_adapt and \ref set_partition. The order in which
+   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * \note The balanced mesh is not repartitioned per default to maintain a balanced load.
+   * Call \ref set_partition if you want to repartition the balanced mesh.
+   */
+  void
+  set_balance ()
+  {
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
+    }
+    // Disable repartitioning and let the user call set_partition if desired.
+    t8_forest_set_balance (tm_uncommitted_forest.value (), m_forest, true);
+  }
+
   /** Enable or disable the creation of a layer of ghost elements.
-  * \param [in]      do_ghost  If true a ghost layer will be created.
-  * \param [in]      ghost_type Controls which neighbors count as ghost elements,
-  *                             currently only T8_GHOST_FACES is supported. This value
-  *                             is ignored if \a do_ghost = false.
-  */
+   * \param [in]      do_ghost  If true a ghost layer will be created.
+   * \param [in]      ghost_type Controls which neighbors count as ghost elements,
+   *                             currently only T8_GHOST_FACES is supported. This value
+   *                             is ignored if \a do_ghost = false.
+   */
   void
   set_ghost (bool do_ghost = true, t8_ghost_type_t ghost_type = T8_GHOST_FACES)
   {
