@@ -34,7 +34,8 @@
 
 /* Tests whether the leaf count for one additional level matches the number of children */
 
-class class_element_leaves: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct class_element_leaves: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override

@@ -57,7 +57,8 @@ t8_compute_global_vertex_hash (t8_locidx_t itree, t8_locidx_t ivertex, t8_locidx
   return (itree * ivertex) % (num_local_trees + 1);
 }
 
-class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example_base *> {
+struct t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override

@@ -28,7 +28,9 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_test_boundary_extrude: public TestDFS {
+struct class_test_boundary_extrude: public TestDFS
+{
+ private:
   /* For elements that are on the face of the root element, check that creating the boundary element
    * and extruding it results in the original element
     */

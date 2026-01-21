@@ -27,7 +27,9 @@
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_child_parent_face: public TestDFS {
+struct class_child_parent_face: public TestDFS
+{
+ private:
   void
   check_element () override
   {

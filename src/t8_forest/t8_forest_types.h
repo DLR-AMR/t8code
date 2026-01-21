@@ -46,7 +46,7 @@ typedef struct t8_forest_ghost *t8_forest_ghost_t; /**< Defined below */
  * The latter 3 can be combined, in which case the order is
  * 1. Adapt, 2. Partition, 3. Balance.
  * We store the methods in an int8_t and use these defines to
- * distinguish between them. 
+ * distinguish between them.
  */
 typedef int8_t t8_forest_from_t;
 
@@ -73,9 +73,11 @@ typedef struct t8_forest
   t8_gloidx_t
     set_first_global_element; /**< If set_partition_offset is true, the global ID of the first local element after partitioning.*/
 
-  int set_level;          /**< Level to use in new construction. */
-  int set_for_coarsening; /**< Change partition to allow
+  int set_level;                    /**< Level to use in new construction. */
+  int set_for_coarsening;           /**< Change partition to allow
                                                      for one round of coarsening */
+  t8_weight_fcn_t *weight_function; /**< Pointer to user defined element weight function.
+                                         Nullptr for standard, element-based partitioning. */
 
   sc_MPI_Comm mpicomm; /**< MPI communicator to use. */
   t8_cmesh_t cmesh;    /**< Coarse mesh to use. */
@@ -87,7 +89,7 @@ typedef struct t8_forest
   int dimension;             /**< Dimension inferred from \b cmesh. */
   int incomplete_trees;      /**< Flag to check whether the forest has (potential) incomplete trees.
                                              A tree is incomplete if an element has been removed from it.
-                                             Once an element got removed, the flag sets to 1 (true) and stays. 
+                                             Once an element got removed, the flag sets to 1 (true) and stays.
                                              For a committed forest this flag is either true on all ranks or
                                              false on all ranks. */
 
@@ -112,8 +114,8 @@ typedef struct t8_forest
   int mpisize;                    /**< Number of MPI processes. */
   int mpirank;                    /**< Number of this MPI process. */
 
-  t8_gloidx_t first_local_tree;       /**< The global index of the first local tree on this process. 
-                                             If first_local_tree is larger than last_local_tree then 
+  t8_gloidx_t first_local_tree;       /**< The global index of the first local tree on this process.
+                                             If first_local_tree is larger than last_local_tree then
                                              this processor/forest is empty.
                                              See https://github.com/DLR-AMR/t8code/wiki/Tree-indexing */
   t8_gloidx_t last_local_tree;        /**< The global index of the last local tree on this process.
@@ -194,9 +196,9 @@ typedef struct t8_profile
 
 } t8_profile_struct_t;
 
-/** 
+/**
  * This struct stores various information about a forest's ghost elements and ghost trees.
- * 
+ *
  */
 typedef struct t8_forest_ghost
 {
