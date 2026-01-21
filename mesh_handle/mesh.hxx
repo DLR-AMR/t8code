@@ -308,12 +308,22 @@ class mesh {
       t8_forest_init (&new_forest);
       m_uncommitted_forest = new_forest;
     }
-    t8_forest_commit (m_uncommitted_forest.value ());
-    detail::AdaptRegistry::unregister_context (m_uncommitted_forest.value ());
-    if (!std::is_void<TElementDataType>::value) {
-      t8_global_infof ("Please note that the element data is not interpolated automatically during adaptation. Use the "
-                       "function set_element_data() to provide new adapted element data.\n");
+    /* It can happen that the user only calls set_ghost before commit. 
+    This does not set the set_from member of the forest and we copy the current forest in this case. */
+    if (m_uncommitted_forest.value ()->set_from == NULL) {
+      t8_forest_set_copy (m_uncommitted_forest.value (), m_forest);
     }
+    t8_forest_commit (m_uncommitted_forest.value ());
+    // Check if we adapted and unregister the adapt context if so.
+    if (detail::AdaptRegistry::get (m_uncommitted_forest.value ()) != nullptr) {
+      detail::AdaptRegistry::unregister_context (m_uncommitted_forest.value ());
+      if (!std::is_void<TElementDataType>::value) {
+        t8_global_infof (
+          "Please note that the element data is not interpolated automatically during adaptation. Use the "
+          "function set_element_data() to provide new adapted element data.\n");
+      }
+    }
+    // Update underlying forest of the mesh.
     m_forest = m_uncommitted_forest.value ();
     m_uncommitted_forest = std::nullopt;
     update_elements ();
