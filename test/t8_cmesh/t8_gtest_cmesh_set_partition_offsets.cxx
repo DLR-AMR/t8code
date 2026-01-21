@@ -45,7 +45,8 @@
 
 /* The tests that do not commit the cmesh iterate over the number of trees,
  * hence we have a TestWithParam with one int. */
-class cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<t8_gloidx_t> {
+struct cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<t8_gloidx_t>
+{
  protected:
   void
   SetUp () override
@@ -70,7 +71,8 @@ class cmesh_set_partition_offsets_nocommit: public testing::TestWithParam<t8_glo
 
 /* The tests that do commit the cmesh iterate over eclasses and the number of
  * tress, hence they have a TestWithParam with eclass and int. */
-class cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tuple<t8_eclass, t8_gloidx_t>> {
+struct cmesh_set_partition_offsets_commit: public testing::TestWithParam<std::tuple<t8_eclass, t8_gloidx_t>>
+{
  protected:
   void
   SetUp () override
@@ -116,7 +118,8 @@ TEST_P (cmesh_set_partition_offsets_nocommit, test_set_offsets)
    * the array corresponds to any valid partition.
    * We use the offset_concentrate function to build an offset array for a partition
    * that concentrates all trees at one process. */
-  t8_shmem_init (sc_MPI_COMM_WORLD);
+  const int intranode_size = t8_shmem_init (sc_MPI_COMM_WORLD);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_array_t shmem_array = t8_cmesh_offset_concentrate (main_process, sc_MPI_COMM_WORLD, inum_trees);
 
   /* Set the partition offsets */
@@ -135,7 +138,9 @@ TEST_P (cmesh_set_partition_offsets_commit, test_set_offsets)
    * the array corresponds to any valid partition.
    * We use the offset_concentrate function to build an offset array for a partition
    * that concentrates all trees at one process. */
-  t8_shmem_init (comm);
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
+
   t8_shmem_array_t shmem_array = t8_cmesh_offset_concentrate (main_process, comm, inum_trees);
 
   /* Set the partition offsets */

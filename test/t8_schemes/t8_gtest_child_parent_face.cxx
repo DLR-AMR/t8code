@@ -31,7 +31,9 @@
  *        go multiple levels below and check against ancestor face.
  *       See https://github.com/DLR-AMR/t8code/issues/2011 */
 
-class class_child_parent_face: public TestDFS {
+struct class_child_parent_face: public TestDFS
+{
+ private:
   void
   check_element () override
   {
