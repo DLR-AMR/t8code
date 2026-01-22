@@ -370,6 +370,9 @@ TEST_P (shmem, test_shmem_array)
 inline int
 compare (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
 {
+  if (guess >= t8_shmem_array_get_elem_count (array) || guess < 0) {
+    return -1;
+  }
   const t8_gloidx_t guess_value = t8_shmem_array_get_gloidx (array, guess);
   return (value == guess_value) ? 0 : (value < guess_value) ? -1 : 1;
 }
