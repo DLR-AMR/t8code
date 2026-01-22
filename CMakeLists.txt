@@ -41,8 +41,9 @@ FetchContent_Declare(
     GIT_PROGRESS TRUE
     )
 
-set(gtest_fore_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable( googletest )
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+mark_as_advanced( FORCE gtest_force_shared_crt)
+
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
 option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
@@ -123,12 +124,18 @@ if( T8CODE_ENABLE_MPI )
     else()
       find_package( MPI 3.0 COMPONENTS C REQUIRED )
     endif()
+    set (gtest_disable_mpi OFF CACHE BOOL "disable gtest mpi support" FORCE)
 
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
     set( SC_ENABLE_MPI ON )
+else()
+    set( gtest_disable_mpi ON CACHE BOOL "disable gtest mpi support" FORCE)
 endif()
+
+mark_as_advanced( FORCE gtest_disable_mpi)
+
 
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED COMPONENTS
@@ -271,6 +278,8 @@ else()
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_p4est_vars} )
 endif()
+
+FetchContent_MakeAvailable( googletest )
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
