@@ -367,6 +367,80 @@ TEST_P (shmem, test_shmem_array)
   t8_shmem_finalize (comm);
 }
 
+inline int
+compare(t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
+{
+  const t8_gloidx_t guess_value = t8_shmem_array_get_gloidx (array, guess);
+  return (value == guess_value) ? 0 : (value < guess_value) ? -1 : 1;
+}
+
+TEST_P(shmem, test_shmem_binary_search)
+{
+  const int array_length = 100;
+  const int element_size = sizeof (t8_gloidx_t);
+  int mpirank, mpisize;
+  int mpiret;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+
+  /* Checking shared memory type */
+  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
+
+  /* setup shared memory usage */
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
+  t8_shmem_set_type (comm, shmem_type);
+
+#if T8_ENABLE_MPI
+  const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+  ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#endif
+
+  /* Allocate one integer */
+  t8_shmem_array_t shmem_array;
+  t8_shmem_array_init (&shmem_array, element_size, array_length, comm);
+
+  sc_MPI_Comm check_comm = t8_shmem_array_get_comm (shmem_array);
+  /* Check communicator of shared memory array. */
+  ASSERT_EQ (comm, check_comm) << "Shared memory array has wrong communicator.";
+
+  /* Check element count of shared memory array. */
+  const int check_count = t8_shmem_array_get_elem_count (shmem_array);
+  ASSERT_EQ (check_count, array_length) << "shared memory array has wrong element count.";
+
+  /* Check element size of shared memory array. */
+  const int check_size = t8_shmem_array_get_elem_size (shmem_array);
+  ASSERT_EQ (check_size, element_size) << "shared memory has wrong element size.";
+
+  if (t8_shmem_array_start_writing (shmem_array)) {
+    t8_gloidx_t *array = t8_shmem_array_get_gloidx_array_for_writing (shmem_array);
+    for (int i = 0; i < array_length; ++i) {
+      t8_shmem_array_set_gloidx (shmem_array, i, i);
+    }
+  }
+  t8_shmem_array_end_writing (shmem_array);
+
+  /* Binary search for each value. The index found should be equal to the value. */
+  for (int i = 0; i < array_length; ++i) {
+    const t8_gloidx_t found_index = (t8_gloidx_t)t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
+    ASSERT_EQ (found_index, i) << "Binary search did not find correct index for value " << i << " (got "
+                              << found_index << ")";
+  }
+
+  for (int i = array_length; i < array_length + 10; ++i) {
+    const t8_gloidx_t found_index = (t8_gloidx_t)t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
+    ASSERT_EQ (found_index, -1) << "Binary search found an index for a value not in the array " << i << " (got "
+                              << found_index << ")";
+  }
+
+  t8_shmem_array_destroy (&shmem_array);
+  t8_shmem_finalize (comm);
+}
+
 INSTANTIATE_TEST_SUITE_P (t8_gtest_shmem, shmem,
                           testing::Combine (testing::Range (0, T8_TEST_SHMEM_NUM_COMMS),
                                             testing::Values (sc_MPI_COMM_WORLD, sc_MPI_COMM_SELF),
