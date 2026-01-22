@@ -258,12 +258,12 @@ struct vtk_writer
     /* Compute the coordinates of the element/tree. */
     double *coordinates = T8_ALLOC (double, 3 * num_node);
 
-    grid_element_to_coords (grid, itree, element, curved_flag, coordinates, num_node, element_shape);
+    T8_ASSERT (coordinates != NULL);
 
+    grid_element_to_coords (grid, itree, element, curved_flag, coordinates, element_shape);
     vtkIdType ptId = -1;
     for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
       const size_t offset_3d = 3 * ivertex;
-
       /* Insert the point in the points array. */
       double vtkCoords[3] = { coordinates[offset_3d], coordinates[offset_3d + 1], coordinates[offset_3d + 2] };
       if (merge_points) {
