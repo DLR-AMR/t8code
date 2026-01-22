@@ -545,13 +545,10 @@ t8_shmem_array_binary_search (t8_shmem_array_t array, const t8_gloidx_t value, c
                               int (*compare) (t8_shmem_array_t, const int, const t8_gloidx_t))
 {
   int low = 0;
-  int high = size;
+  int high = size-1;
 
   while (low <= high) {
     int mid = low + (high - low) / 2;
-    if (mid >= size || mid < 0) {
-      break;
-    }
     const int eval = compare (array, mid, value);
     if (eval == 0) {
       /* mid points to a value that equals \a value */
