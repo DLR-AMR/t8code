@@ -378,7 +378,7 @@ TEST_P (shmem, test_shmem_array)
 inline int
 compare (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
 {
-  if (guess >= t8_shmem_array_get_elem_count (array) || guess < 0) {
+  if (guess >= (int) t8_shmem_array_get_elem_count (array) || guess < 0) {
     return -1;
   }
   const t8_gloidx_t guess_value = t8_shmem_array_get_gloidx (array, guess);
@@ -427,7 +427,6 @@ TEST_P (shmem, test_shmem_binary_search)
   ASSERT_EQ (check_size, element_size) << "shared memory has wrong element size.";
 
   if (t8_shmem_array_start_writing (shmem_array)) {
-    t8_gloidx_t *array = t8_shmem_array_get_gloidx_array_for_writing (shmem_array);
     for (int i = 0; i < array_length; ++i) {
       t8_shmem_array_set_gloidx (shmem_array, i, i);
     }
