@@ -21,7 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file t8_gtest_adapt.cxx
+ * \file t8_gtest_adapt_balance_partition.cxx
  * Tests for the adapt routines of mesh handles. 
  * This tests uses the callback and user data of tutorial step 3 as example.
  * The adaptation criterion is to look at the midpoint coordinates of the current element and if
@@ -100,6 +100,8 @@ forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_l
 
 /** Test the adapt routine of a mesh handle. 
  * We compare the result to a classically adapted forest with similar callback.
+ * Therefore we ensure that the functionality for the mesh handle works based on the assumption that the forest functionality is correct.
+ * Forest functionality is tested elsewhere.
  */
 TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
 {
@@ -137,8 +139,18 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   mesh_handle.set_balance ();
   mesh_handle.set_partition ();
   mesh_handle.commit ();
-  // TODO have a look at t8_gtest_forest_commit for a better structure
   EXPECT_TRUE (mesh_handle.is_balanced ());
+
+  // Compare the results again to an appropriate forest.
+  t8_forest_t forest_compare;
+  t8_forest_init (&forest_compare);
+  t8_forest_set_user_data (forest_compare, &user_data);
+  t8_forest_set_adapt (forest_compare, forest, forest_adapt_callback_example, false);
+  t8_forest_set_partition (forest_compare, NULL, 0);
+  t8_forest_set_balance (forest_compare, NULL, 0);
+  t8_forest_commit (forest_compare);
+  // Compare results.
+  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_compare));
   // Clean up.
-  t8_forest_unref (&forest);
+  t8_forest_unref (&forest_compare);
 }
