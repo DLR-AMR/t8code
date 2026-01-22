@@ -367,6 +367,14 @@ TEST_P (shmem, test_shmem_array)
   t8_shmem_finalize (comm);
 }
 
+/**
+ * Comparison function for binary search.
+ * 
+ * \param[in] array The shared memory array to search in.
+ * \param[in] guess The current guess index.
+ * \param[in] value The value to search for.
+ * \return -1 if the guess is out of bounds, 0 if the value is found, 1 if the value is greater than the guess.
+ */
 inline int
 compare (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
 {
