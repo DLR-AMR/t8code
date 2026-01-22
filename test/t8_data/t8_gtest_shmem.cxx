@@ -368,13 +368,13 @@ TEST_P (shmem, test_shmem_array)
 }
 
 inline int
-compare(t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
+compare (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
 {
   const t8_gloidx_t guess_value = t8_shmem_array_get_gloidx (array, guess);
   return (value == guess_value) ? 0 : (value < guess_value) ? -1 : 1;
 }
 
-TEST_P(shmem, test_shmem_binary_search)
+TEST_P (shmem, test_shmem_binary_search)
 {
   const int array_length = 100;
   const int element_size = sizeof (t8_gloidx_t);
@@ -385,7 +385,6 @@ TEST_P(shmem, test_shmem_binary_search)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
-
 
   /* Checking shared memory type */
   const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
@@ -426,15 +425,15 @@ TEST_P(shmem, test_shmem_binary_search)
 
   /* Binary search for each value. The index found should be equal to the value. */
   for (int i = 0; i < array_length; ++i) {
-    const t8_gloidx_t found_index = (t8_gloidx_t)t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
-    ASSERT_EQ (found_index, i) << "Binary search did not find correct index for value " << i << " (got "
-                              << found_index << ")";
+    const t8_gloidx_t found_index = (t8_gloidx_t) t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
+    ASSERT_EQ (found_index, i) << "Binary search did not find correct index for value " << i << " (got " << found_index
+                               << ")";
   }
 
   for (int i = array_length; i < array_length + 10; ++i) {
-    const t8_gloidx_t found_index = (t8_gloidx_t)t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
+    const t8_gloidx_t found_index = (t8_gloidx_t) t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
     ASSERT_EQ (found_index, -1) << "Binary search found an index for a value not in the array " << i << " (got "
-                              << found_index << ")";
+                                << found_index << ")";
   }
 
   t8_shmem_array_destroy (&shmem_array);
