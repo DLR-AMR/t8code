@@ -427,8 +427,8 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   get_element_data () const
   {
     const t8_locidx_t handle_id = get_element_handle_id ();
-    T8_ASSERTF (handle_id < m_mesh->m_element_data.size (), "Element data not set.\n");
-    return m_mesh->m_element_data[get_element_handle_id ()];
+    T8_ASSERTF (static_cast<size_t> (handle_id) < m_mesh->m_element_data.size (), "Element data not set.\n");
+    return m_mesh->m_element_data[handle_id];
   }
 
   /** 

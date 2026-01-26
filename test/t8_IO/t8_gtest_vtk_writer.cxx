@@ -140,7 +140,8 @@ vtk_writer_test_fill_data (const t8_locidx_t cells_to_write_count, std::vector<d
  * @tparam grid_t 
  */
 template <typename grid_t>
-class vtk_writer_test: public testing::Test {
+struct vtk_writer_test: public testing::Test
+{
  protected:
   void
   SetUp () override
