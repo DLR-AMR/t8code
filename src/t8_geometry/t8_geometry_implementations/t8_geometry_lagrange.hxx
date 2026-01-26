@@ -338,7 +338,8 @@ flatten (const std::vector<std::vector<T>> &vec)
  * some specific to the Lagrange geometry, some valid for all the
  * geometries in t8code.
  */
-class t8_lagrange_element {
+struct t8_lagrange_element
+{
  public:
   /**
    * Construct a new t8_lagrange_element object.

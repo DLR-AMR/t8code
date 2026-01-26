@@ -38,7 +38,8 @@
 /* Construct a forest of a hypercube with volume 1. If the element are refined uniformly
  * all elements have volume 1/global_num_elements. */
 
-class t8_forest_volume: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+struct t8_forest_volume: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>>
+{
  protected:
   void
   SetUp () override

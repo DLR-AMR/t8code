@@ -31,7 +31,8 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class root: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct root: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override

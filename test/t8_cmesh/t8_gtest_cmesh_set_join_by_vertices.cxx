@@ -295,7 +295,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 }
 
-class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *> {
+struct t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override

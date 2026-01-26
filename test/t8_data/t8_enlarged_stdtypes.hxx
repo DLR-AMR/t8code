@@ -47,7 +47,8 @@ enum pseudo_types { T8_ENLARGED_INT = 0, T8_ENLARGED_DOUBLE = 1 };
  * 
  */
 template <>
-class t8_data_handler<enlarged_data<int>> {
+struct t8_data_handler<enlarged_data<int>>
+{
  public:
   /**
    * Returns the size of an enlarged_int.
@@ -126,7 +127,8 @@ class t8_data_handler<enlarged_data<int>> {
  * 
  */
 template <>
-class t8_data_handler<enlarged_data<double>> {
+struct t8_data_handler<enlarged_data<double>>
+{
  public:
   /**
    * Returns the size of an enlarged_double.

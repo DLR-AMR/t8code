@@ -69,7 +69,8 @@ t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t fore
   return 0;
 }
 
-class element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+struct element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>>
+{
  protected:
   void
   SetUp () override
@@ -105,7 +106,8 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, 
   const t8_scheme *scheme;
 };
 
-class element_is_leaf_hybrid: public testing::TestWithParam<int> {
+struct element_is_leaf_hybrid: public testing::TestWithParam<int>
+{
  protected:
   void
   SetUp () override
