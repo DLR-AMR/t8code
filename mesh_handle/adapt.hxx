@@ -52,17 +52,16 @@ struct MeshAdaptContextBase
   virtual ~MeshAdaptContextBase () = default;
 
   /** Pure virtual callback for mesh adaptation.
-   * \param[in] lelement_handle_id Local element ID in the mesh handle.
-   * \param [in] is_family         If 1, the entries in \a elements form a family. If 0, they do not.
-   * \param [in] num_elements      The number of entries in \a elements.
-   * \param [in] elements          Pointers to members of a family or, if \a is_family is zero, pointer to one element.
-   *  \return 1 if the first entry in \a elements should be refined,
-   *         -1 if the family \a elements shall be coarsened,
-   *          0 else.
+   * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element.
+   * \param [in] is_family          If 1, the entries with indices \a lelement_handle_id,..., \a lelement_handle_id+ \a num_elements-1
+   *                                form a family. If 0, they do not.
+   * \param [in] num_elements       The number of elements that form a family or 1 if \a is_family is 0.
+   * \return 1 if the element with index \a lelement_handle_id should be refined,
+   *        -1 if the family shall be coarsened,
+   *         0 else.
    */
   virtual int
-  adapt_mesh (const t8_locidx_t lelement_handle_id, const int is_family, const int num_elements,
-              t8_element_t* elements[])
+  adapt_mesh (const t8_locidx_t lelement_handle_id, const int is_family, const int num_elements)
     = 0;
 };
 
@@ -83,17 +82,16 @@ struct MeshAdaptContext final: MeshAdaptContextBase
   }
 
   /** Callback for mesh adaptation using the user defined adapt callback.
-   * \param [in] lelement_handle_id Local flat element ID in the mesh handle.
-   * \param [in] is_family          If 1, the entries in \a elements form a family. If 0, they do not.
-   * \param [in] num_elements       The number of entries in \a elements.
-   * \param [in] elements           Pointers to members of a family or, if \a is_family is zero, pointer to one element.
-   * \return 1 if the first entry in \a elements should be refined,
-   *        -1 if the family \a elements shall be coarsened,
+   * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element.
+   * \param [in] is_family          If 1, the entries with indices \a lelement_handle_id,..., \a lelement_handle_id+ \a num_elements-1
+   *                                form a family. If 0, they do not.
+   * \param [in] num_elements       The number of elements that form a family or 1 if \a is_family is 0.
+   * \return 1 if the element with index \a lelement_handle_id should be refined,
+   *        -1 if the family shall be coarsened,
    *         0 else.
    */
   int
-  adapt_mesh (const t8_locidx_t lelement_handle_id, const int is_family, const int num_elements,
-              t8_element_t* elements[]) override
+  adapt_mesh (const t8_locidx_t lelement_handle_id, const int is_family, const int num_elements) override
   {
     // Check if adapt callback is set and call it using the correct mesh handle function arguments.
     T8_ASSERTF (m_adapt_callback, "No adapt callback set.");
@@ -191,7 +189,7 @@ int
 mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                              [[maybe_unused]] t8_eclass_t tree_class, t8_locidx_t lelement_id,
                              [[maybe_unused]] const t8_scheme* scheme, const int is_family, const int num_elements,
-                             t8_element_t* elements[])
+                             [[maybe_unused]] t8_element_t* elements[])
 {
   // Get static adapt context from the registry.
   // Via this, we can access the mesh handle and the user defined adapt callback that uses mesh handle functionality.
@@ -204,7 +202,7 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
   // Convert to index used in the mesh handle.
   const t8_locidx_t mesh_index = t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
   // Call the actual adapt callback stored in the context.
-  return context->adapt_mesh (mesh_index, is_family, num_elements, elements);
+  return context->adapt_mesh (mesh_index, is_family, num_elements);
 }
 
 }  // namespace detail
