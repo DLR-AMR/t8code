@@ -18,10 +18,9 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-cmake_minimum_required( VERSION 3.16 )
+cmake_minimum_required( VERSION 3.19 )
 
 include( cmake/GitProjectVersion.cmake )
-include( FetchContent )
 
 project(
     T8CODE
