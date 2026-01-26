@@ -57,7 +57,8 @@
  * Note that the test itself then has to be set to parallel in the CMake file.
  */
 
-class t8_test_cmesh_vertex_conn: public testing::Test {
+struct t8_test_cmesh_vertex_conn: public testing::Test
+{
  protected:
   void
   SetUp () override
@@ -213,7 +214,8 @@ TEST_F (t8_test_cmesh_vertex_conn, check_global_vertex_number)
 
 /* Parallel test suite (to be extended) is currently disabled since
 * the cmesh vertex connecticity does not support partitioned cmeshes. */
-class t8_test_cmesh_vertex_conn_partitioned: public testing::Test {
+struct t8_test_cmesh_vertex_conn_partitioned: public testing::Test
+{
  protected:
   void
   SetUp () override

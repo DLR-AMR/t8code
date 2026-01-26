@@ -42,7 +42,8 @@ t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, const t8_scheme *scheme, sc_MPI_Comm
   return cmesh_partition;
 }
 
-class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, int>> {
+struct cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, int>>
+{
  protected:
   void
   SetUp () override

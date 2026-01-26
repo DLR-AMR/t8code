@@ -27,7 +27,8 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.h>
 
 /* Test for one tree */
-class cmesh_face_boundary_one_tree: public testing::TestWithParam<t8_eclass> {
+struct cmesh_face_boundary_one_tree: public testing::TestWithParam<t8_eclass>
+{
  protected:
   void
   SetUp () override
@@ -112,7 +113,8 @@ t8_test_compute_parallel_bounds (sc_MPI_Comm comm, t8_gloidx_t *first_tree, t8_g
  * Creates coarse meshes with two trees for each eclass,
  * one for each face of the first tree as the connecting face.
  * This, only the remaining trees should register as boundary trees. */
-class cmesh_face_boundary_two_trees: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+struct cmesh_face_boundary_two_trees: public testing::TestWithParam<std::tuple<t8_eclass, int>>
+{
  protected:
   void
   SetUp () override
