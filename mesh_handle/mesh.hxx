@@ -394,7 +394,7 @@ class mesh {
   void
   set_element_data (std::vector<ElementDataType> element_data)
   {
-    T8_ASSERT (element_data.size () == get_num_local_elements ());
+    T8_ASSERT (element_data.size () == static_cast<size_t> (get_num_local_elements ()));
     m_element_data = std::move (element_data);
     m_element_data.reserve (get_num_local_elements () + get_num_ghosts ());
     m_element_data.resize (get_num_local_elements ());
