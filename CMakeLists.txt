@@ -33,16 +33,9 @@ include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
 
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY "https://github.com/DLR-SC/googletest_mpi.git"
-    GIT_TAG 98bfff426b057400268a00f97677d749a9e25096 #v1.17.0_mpi
-    GIT_PROGRESS TRUE
-    )
 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-mark_as_advanced( FORCE gtest_force_shared_crt)
-
+include(FetchContent)
+set(FETCHCONTENT_QUIET FALSE)
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
 option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
@@ -93,6 +86,67 @@ endif()
 
 # Set a default build type if none was specified
 set(default_build_type "Release")
+
+# 1. Read and parse the JSON
+file(READ "dependencies.json" DEPS_JSON)
+# 2. Get the number of elements in the "dependencies" array
+string(JSON DEPS_COUNT LENGTH "${DEPS_JSON}" "dependencies")
+# 3. Loop through the array (subtract 1 because it's 0-indexed)
+math(EXPR DEPS_RANGE "${DEPS_COUNT} - 1")
+
+foreach(INDEX RANGE ${DEPS_RANGE})
+    # Check for an optional "depends_on_cmake_option" field
+    # Try to read the optional field without producing warnings; capture any error message.
+    string(JSON DEP_CMAKE_OPTION ERROR_VARIABLE JSON_ERR_MSG
+        GET "${DEPS_JSON}" "dependencies" ${INDEX} "depends_on_cmake_option")
+    if(JSON_ERR_MSG)
+        # Field missing or invalid: mark as error and clear the option value.
+        set(JSON_ERR 1)
+        set(DEP_CMAKE_OPTION "")
+    else()
+        set(JSON_ERR 0)
+    endif()
+
+    # Extract common fields
+    string(JSON DEP_NAME GET "${DEPS_JSON}" "dependencies" ${INDEX} "name")
+    string(JSON DEP_TYPE GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "type")
+    string(JSON DEP_URL  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "url")
+    string(JSON DEP_REF  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "ref")
+
+    # If no error occurred and the field is non-empty, check the CMake option.
+    if(JSON_ERR EQUAL 0 AND NOT DEP_CMAKE_OPTION STREQUAL "")
+        # If the named option variable does not exist in the CMake cache, warn and proceed.
+        if(NOT DEFINED ${DEP_CMAKE_OPTION})
+            message(FATAL_ERROR "Loading dependency ${DEP_NAME} at index ${INDEX} references unknown CMake option '${DEP_CMAKE_OPTION}'. Aborting.")
+        else()
+            # If the named option is defined but set to ON, skip this dependency.
+            if(${${DEP_CMAKE_OPTION}})
+                message(STATUS "Skipping FetchContent-step for dependency ${DEP_NAME} because CMake option '${DEP_CMAKE_OPTION}' is ON")
+                continue()
+            endif()
+        endif()
+    endif()
+
+    message(STATUS "Configuring dependency: ${DEP_NAME} (Type: ${DEP_TYPE})")
+
+    # 2. Branch logic based on "type"
+    if(DEP_TYPE STREQUAL "git")
+        FetchContent_Declare(
+            ${DEP_NAME}
+            GIT_REPOSITORY ${DEP_URL}
+            GIT_TAG        ${DEP_REF}
+            GIT_PROGRESS   TRUE
+        )
+    else()
+        message(WARNING "Unknown dependency type '${DEP_TYPE}' for ${DEP_NAME}")
+    endif()
+
+    # 3. Populate the dependency
+    FetchContent_MakeAvailable(${DEP_NAME})
+endforeach()
+
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+mark_as_advanced( FORCE gtest_force_shared_crt)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -164,9 +218,6 @@ if( T8CODE_ENABLE_NETCDF )
     endif (NetCDF_FOUND)
 endif( T8CODE_ENABLE_NETCDF )
 
-# Include and setup FetchContent
-include(FetchContent)
-set(FETCHCONTENT_QUIET FALSE)
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
@@ -187,12 +238,6 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED )
 else()
-    FetchContent_Declare(
-        sc
-        GIT_REPOSITORY https://github.com/cburstedde/libsc.git
-        GIT_TAG f8c5099bd5ad553c1bf6e34dc7b6c290f3cc3cca      # libsc version 2.8.7
-        GIT_PROGRESS TRUE
-    )
     set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
 
@@ -265,12 +310,6 @@ endif()
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED )
 else()
-    FetchContent_Declare(
-        p4est
-        GIT_REPOSITORY https://github.com/cburstedde/p4est.git
-        GIT_TAG 2296a990d8b6b54731a63be0ba5bc17b08cd1f3d    # p4est version 2.8.7
-        GIT_PROGRESS TRUE
-    )
     set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
     set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
 
