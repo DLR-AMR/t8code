@@ -38,8 +38,8 @@ make_param_string (const t8_eclass_t eclass, const sc_MPI_Comm comm, const int d
   std::string bcast = do_bcast ? std::string ("bcast") : std::string ("noBcast");
   std::string partition = do_partition ? std::string ("partition") : std::string ("noPartition");
   std::string periodic_string = periodic ? std::string ("periodic") : std::string ("noPeriodic");
-  std::string params
-    = delimiter + t8_eclass_to_string[eclass] + delimiter + bcast + delimiter + partition + delimiter + periodic_string;
+  std::string params = delimiter + t8_eclass_to_string[eclass] + delimiter + cmesh_params::comm_to_string (comm)
+                       + delimiter + bcast + delimiter + partition + delimiter + periodic_string;
 
   return params;
 }
