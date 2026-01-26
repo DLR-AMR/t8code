@@ -27,7 +27,8 @@
 #include <t8_types/t8_vec.h>
 #include <test/t8_gtest_macros.hxx>
 
-class gtest_eclass: public testing::TestWithParam<t8_eclass_t> {
+struct gtest_eclass: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override

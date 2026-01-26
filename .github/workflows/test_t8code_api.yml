@@ -76,6 +76,7 @@ jobs:
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
+
 #
 #  T8CODE
 #
