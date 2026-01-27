@@ -45,7 +45,8 @@
 #define T8_IS_LEAF_MAX_LVL 4
 #endif
 
-struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>>
+{
  protected:
   void
   SetUp () override
@@ -80,7 +81,8 @@ struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<std::t
   const t8_scheme *scheme;
 };
 
-struct element_is_leaf_or_ghost_hybrid: public testing::TestWithParam<int> {
+struct element_is_leaf_or_ghost_hybrid: public testing::TestWithParam<int>
+{
  protected:
   void
   SetUp () override
