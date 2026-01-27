@@ -120,8 +120,8 @@ class AdaptRegistry {
  public:
   /** Static function to register \a context using \a forest as identifier. 
    * This makes the context publicly available using the Registry.
-   * \param [in] forest  The forest identifier. In our case, this is the forest to be adapted 
-   *                     and not the forest from which we adapt.
+   * \param [in] forest  The forest identifier. In our case, this is the forest from which we adapt the mesh because 
+   *                we do not change this forest during adaptation such that it is valid unique identifier.
    * \param [in] context The context to register. Use unique pointer to ensure proper memory management and ownership.
    */
   static void
@@ -135,7 +135,7 @@ class AdaptRegistry {
   }
 
   /** Static function to unregister a context using \a forest as identifier. 
-   * \param [in] forest The forest identifier. In our case, this is the forest to be adapted.
+   * \param [in] forest The forest identifier. In our case, this is the forest from which we adapt.
    */
   static void
   unregister_context (t8_forest_t forest)
@@ -146,7 +146,7 @@ class AdaptRegistry {
   }
 
   /** Getter for a context using \a forest as identifier. 
-   * \param [in] forest The forest identifier. In our case, this is the forest to be adapted.
+   * \param [in] forest The forest identifier. In our case, this is the forest from which we adapt.
    * \return Pointer to the context registered with the id \a forest if found, nullptr otherwise.
    */
   static MeshAdaptContextBase*
@@ -193,7 +193,7 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
 {
   // Get static adapt context from the registry.
   // Via this, we can access the mesh handle and the user defined adapt callback that uses mesh handle functionality.
-  auto* context = AdaptRegistry::get (forest);
+  auto* context = AdaptRegistry::get (forest_from);
   if (!context) {
     t8_global_infof (
       "Something went wrong while registering the adaptation callbacks. Please check your implementation.");

@@ -270,19 +270,18 @@ class mesh {
     }
     // Create and register adaptation context holding the mesh handle and the user defined callback.
     detail::AdaptRegistry::register_context (
-      m_uncommitted_forest.value (),
-      std::make_unique<detail::MeshAdaptContext<SelfType>> (*this, std::move (adapt_callback)));
+      m_forest, std::make_unique<detail::MeshAdaptContext<SelfType>> (*this, std::move (adapt_callback)));
 
     // Set up the forest for adaptation using the wrapper callback.
     t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, recursive);
   }
 
   /** Enable or disable the creation of a layer of ghost elements.
-  * \param [in]      do_ghost  If true a ghost layer will be created.
-  * \param [in]      ghost_type Controls which neighbors count as ghost elements,
-  *                             currently only T8_GHOST_FACES is supported. This value
-  *                             is ignored if \a do_ghost = false.
-  */
+   * \param [in]      do_ghost  If true a ghost layer will be created.
+   * \param [in]      ghost_type Controls which neighbors count as ghost elements,
+   *                             currently only T8_GHOST_FACES is supported. This value
+   *                             is ignored if \a do_ghost = false.
+   */
   void
   set_ghost (bool do_ghost = true, t8_ghost_type_t ghost_type = T8_GHOST_FACES)
   {
@@ -313,16 +312,18 @@ class mesh {
     if (m_uncommitted_forest.value ()->set_from == NULL) {
       t8_forest_set_copy (m_uncommitted_forest.value (), m_forest);
     }
+    t8_forest_ref (m_forest);
     t8_forest_commit (m_uncommitted_forest.value ());
     // Check if we adapted and unregister the adapt context if so.
     if (detail::AdaptRegistry::get (m_uncommitted_forest.value ()) != nullptr) {
-      detail::AdaptRegistry::unregister_context (m_uncommitted_forest.value ());
+      detail::AdaptRegistry::unregister_context (m_forest);
       if (!std::is_void<TElementDataType>::value) {
         t8_global_infof (
           "Please note that the element data is not interpolated automatically during adaptation. Use the "
           "function set_element_data() to provide new adapted element data.\n");
       }
     }
+    t8_forest_unref (&m_forest);
     // Update underlying forest of the mesh.
     m_forest = m_uncommitted_forest.value ();
     m_uncommitted_forest = std::nullopt;
