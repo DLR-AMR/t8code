@@ -18,9 +18,6 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-add_library( gtest ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi/gtest/gtest-all.cc )
-target_include_directories( gtest SYSTEM PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi ${CMAKE_CURRENT_LIST_DIR}/.. )
-
 # Function to add a test executable and register it with CTest.
 # The test executable is built from the provided source files.
 function( add_t8_test )
@@ -32,6 +29,7 @@ function( add_t8_test )
     # Get the path of the first file listed in the SOURCES list and use it to determine the build directory.
     list (LENGTH ADD_T8_TEST_SOURCES TEST_SOURCES_LENGTH)
     list(GET ADD_T8_TEST_SOURCES 0 TEST_SOURCE)
+    
     get_filename_component(TEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${TEST_SOURCE}" DIRECTORY)
     file(RELATIVE_PATH TEST_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${TEST_SOURCE_DIR}")
     set(TEST_BUILD_DIR "${CMAKE_BINARY_DIR}/${TEST_RELATIVE_DIR}")
@@ -39,8 +37,9 @@ function( add_t8_test )
     add_executable( ${ADD_T8_TEST_NAME} ${ADD_T8_TEST_SOURCES} )
 
     # Link base libraries.
-    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src )
-    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE T8 gtest pthread )
+    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR} )
+
+    target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE GTest::gtest_main T8 pthread )
 
     # Check if test is a Fortran or mesh handle file.
     string( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file )
@@ -77,7 +76,6 @@ function( add_t8_test )
     else( T8CODE_ENABLE_MPI )
         separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_SERIAL_TEST_COMMAND})
     endif ( T8CODE_ENABLE_MPI )
-
     add_test( NAME ${ADD_T8_TEST_NAME} COMMAND ${T8CODE_TEST_COMMAND_LIST} ${TEST_BUILD_DIR}/${ADD_T8_TEST_NAME} )
     if ( T8CODE_CODE_COVERAGE )
         # Extent time that a single test is allowed to run to collect coverage information (as this naturally takes more time).
@@ -217,6 +215,7 @@ if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_handle_ghost_parallel            SOURCES mesh_handle/t8_gtest_ghost.cxx )
   add_t8_cpp_test( NAME t8_gtest_custom_competence_serial         SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial          SOURCES mesh_handle/t8_gtest_cache_competence.cxx )
+  add_t8_cpp_test( NAME t8_gtest_handle_data_parallel             SOURCES mesh_handle/t8_gtest_handle_data.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
