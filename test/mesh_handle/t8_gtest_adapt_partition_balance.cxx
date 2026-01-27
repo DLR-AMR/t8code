@@ -133,10 +133,10 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
 
   // Adapt the mesh handle again and apply partition and balance.
-  mesh_handle.set_adapt (
-    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
   mesh_handle.set_balance ();
   mesh_handle.set_partition ();
+  mesh_handle.set_adapt (
+    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
   mesh_handle.commit ();
   EXPECT_TRUE (mesh_handle.is_balanced ());
 
