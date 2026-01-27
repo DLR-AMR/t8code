@@ -53,7 +53,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results of different functions.
   // Use iterator for the mesh handle and two nested for-loops for the forest.
-  auto mesh_iterator = mesh.begin ();
+  auto mesh_iterator = mesh.cbegin ();
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {

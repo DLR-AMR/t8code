@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
+#include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 
 /** Parametrized test fixture for the mesh handle tests. */
@@ -59,7 +60,7 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
   EXPECT_FALSE (element_class::has_centroid_cache ());
 
   // Iterate with the iterator over all mesh elements and check some functionality.
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_FALSE (it->has_vertex_cache ());
     EXPECT_FALSE (it->has_centroid_cache ());
     auto centroid = it->get_centroid ();
@@ -85,10 +86,7 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 {
   // --- Use predefined competences to use all available caching competences. ---
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_volume, t8_mesh_handle::cache_diameter,
-                                          t8_mesh_handle::cache_vertex_coordinates, t8_mesh_handle::cache_centroid,
-                                          t8_mesh_handle::cache_face_area, t8_mesh_handle::cache_face_centroid,
-                                          t8_mesh_handle::cache_face_normal, t8_mesh_handle::cache_neighbors>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);
@@ -102,7 +100,7 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   // Iterate over all mesh elements and access some exemplary functionality which sets the caches.
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_FALSE (it->volume_cache_filled ());
     EXPECT_FALSE (it->centroid_cache_filled ());
     EXPECT_FALSE (it->vertex_cache_filled ());
@@ -136,8 +134,7 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 TEST_P (t8_mesh_handle_test, test_cache_face_competences)
 {
   // --- Use all predefined competences. ---
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_area, t8_mesh_handle::cache_face_centroid,
-                                          t8_mesh_handle::cache_face_normal, t8_mesh_handle::cache_neighbors>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_competences>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);

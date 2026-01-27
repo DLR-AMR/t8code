@@ -38,11 +38,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
-/** Forward declaration of the \ref mesh the elements will belong to.
- */
-template <template <typename> class... TCompetences>
-struct mesh;
-
 /** 
  * Definition of the mesh element class of the \ref mesh handle.
  * An element without specified template parameters provides default implementations for basic functionality 
@@ -61,12 +56,12 @@ struct mesh;
  *
  * \tparam TCompetences The competences you want to add to the default functionality of the element.
  */
-template <template <typename> class... TCompetences>
-struct element: public TCompetences<element<TCompetences...>>...
-{
+
+template <typename mesh_class, template <typename> class... TCompetences>
+class element: public TCompetences<element<mesh_class, TCompetences...>>... {
  private:
-  using SelfType = element<TCompetences...>; /**< Type of the element with all template parameters specified. */
-  using mesh_class = mesh<TCompetences...>;  /**< Type of the mesh used. */
+  using SelfType
+    = element<mesh_class, TCompetences...>; /**< Type of the current class with all template parameters specified. */
   friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
@@ -120,6 +115,7 @@ struct element: public TCompetences<element<TCompetences...>>...
   {
     return (false || ... || volume_cache_defined<TCompetences> ());
   }
+
   /** Function that checks if a cache for the element's diameter exists.
    * \return true if a cache exists, false otherwise.
    */
@@ -128,6 +124,7 @@ struct element: public TCompetences<element<TCompetences...>>...
   {
     return (false || ... || diameter_cache_defined<TCompetences> ());
   }
+
   /** Function that checks if a cache for the vertex coordinates exists.
    * \return true if a cache for the vertex coordinates exists, false otherwise.
    */
@@ -539,6 +536,39 @@ struct element: public TCompetences<element<TCompetences...>>...
   is_ghost_element () const
   {
     return m_is_ghost_element;
+  }
+
+  // --- Getter and setter for element data. ---
+  /** Getter for the element data.
+   * For ghost elements ensure that \ref mesh::exchange_ghost_data is called on each process first.
+   * Element data for non-ghost elements can be accessed (if set) directly.
+   * \return Element data with data of Type mesh_class::ElementDataType.
+   */
+  template <typename TElementDataType = typename mesh_class::ElementDataType,
+            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
+  const TElementDataType&
+  get_element_data () const
+  {
+    const t8_locidx_t handle_id = get_element_handle_id ();
+    T8_ASSERTF (static_cast<size_t> (handle_id) < m_mesh->m_element_data.size (), "Element data not set.\n");
+    return m_mesh->m_element_data[handle_id];
+  }
+
+  /** 
+   * Set the element data for the element. 
+   * \note You can only set element data for non-ghost elements.
+   * \param [in] element_data The element data to be set.
+   */
+  template <typename TElementDataType = typename mesh_class::ElementDataType,
+            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
+  void
+  set_element_data (TElementDataType element_data)
+  {
+    SC_CHECK_ABORT (!m_is_ghost_element, "Element data cannot be set for ghost elements.\n");
+    // Resize for the case that no data vector has been set previously.
+    m_mesh->m_element_data.reserve (m_mesh->get_num_local_elements () + m_mesh->get_num_ghosts ());
+    m_mesh->m_element_data.resize (m_mesh->get_num_local_elements ());
+    m_mesh->m_element_data[get_element_handle_id ()] = std::move (element_data);
   }
 
  private:

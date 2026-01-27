@@ -43,7 +43,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *
  */
 template <typename TType>
-class enlarged_data {
+struct enlarged_data
+{
  public:
   /**
    * Default constructor.
@@ -73,7 +74,8 @@ class enlarged_data {
  * \tparam TType The type of the data to be stored.
  */
 template <typename TType>
-class data_creator {
+struct data_creator
+{
  public:
   data_creator ()
   {
