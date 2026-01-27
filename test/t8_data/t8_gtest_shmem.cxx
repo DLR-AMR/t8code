@@ -38,7 +38,7 @@ struct shmem: public testing::TestWithParam<std::tuple<int, sc_MPI_Comm, int>>
     icomm = std::get<0> (GetParam ());
     comm = std::get<1> (GetParam ());
     shmem_type_int = std::get<2> (GetParam ());
-    shmem_type = (sc_shmem_type_t) shmem_type;
+    shmem_type = (sc_shmem_type_t) shmem_type_int;
   }
   int icomm;
   sc_MPI_Comm comm;
@@ -109,20 +109,21 @@ TEST_P (shmem, test_sc_shmem_alloc)
   /* Seed random number generator. */
   srand (0);
 
-  /* Checking shared memory type */
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
-  int intrasize, intrarank;
-  t8_debugf ("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type]);
-
   /* setup shared memory usage */
   const int intranode_size = t8_shmem_init (comm);
   ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
 
   t8_shmem_set_type (comm, shmem_type);
 
-#if T8_ENABLE_MPI
+  /* Checking shared memory type */
+  int intrasize, intrarank;
+  t8_debugf ("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type]);
+
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
@@ -194,19 +195,18 @@ TEST_P (shmem, test_shmem_array_allgatherv)
   for (t8_gloidx_t i = 0; i < array_length; i++) {
     sendbuf[i] = first_array_value + i;
   }
-
-  t8_debugf ("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type_int]);
-
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
-
   /* setup shared memory usage */
   const int intranode_size = t8_shmem_init (comm);
   ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
-#if T8_ENABLE_MPI
+  t8_debugf ("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type_int]);
+
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   t8_shmem_array_t shmem_array;
@@ -247,17 +247,17 @@ TEST_P (shmem, test_shmem_array_prefix)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  /* Checking shared memory type */
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
-
   /* setup shared memory usage */
   const int intranode_size = t8_shmem_init (comm);
   ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
-#if T8_ENABLE_MPI
+  /* Checking shared memory type */
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   /* Allocate one integer */
@@ -293,17 +293,17 @@ TEST_P (shmem, test_shmem_array)
   /* Seed random number generator. */
   srand (0);
 
-  /* Checking shared memory type */
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
-
   /* setup shared memory usage */
   const int intranode_size = t8_shmem_init (comm);
   ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
-#if T8_ENABLE_MPI
+  /* Checking shared memory type */
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   /* Allocate one integer */
@@ -429,8 +429,8 @@ TEST_P (shmem, test_shmem_binary_search)
   /* Check element size of shared memory array. */
   const int check_size = t8_shmem_array_get_elem_size (shmem_array);
   ASSERT_EQ (check_size, element_size) << "shared memory array has wrong element size.";
-  Fill the array with the number i at position i.if (t8_shmem_array_start_writing (shmem_array))
-  {
+  /* Fill the array with the number i at position i. */
+  if (t8_shmem_array_start_writing (shmem_array)) {
     for (int i = 0; i < array_length; ++i) {
       t8_shmem_array_set_gloidx (shmem_array, i, i);
     }
