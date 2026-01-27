@@ -414,7 +414,7 @@ TEST_P (shmem, test_shmem_binary_search)
   ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
-  /* Allocate one integer */
+  /* Allocate array_length many integers */
   t8_shmem_array_t shmem_array;
   t8_shmem_array_init (&shmem_array, element_size, array_length, comm);
 
