@@ -385,6 +385,11 @@ compare (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
   return (value == guess_value) ? 0 : (value < guess_value) ? -1 : 1;
 }
 
+/**
+ * Test the binary search function of the shared memory array. 
+ * Creates an array with values 0 to array_length - 1 and searches for each value.
+ * Also searches for values not in the array and checks that -1 is returned.
+ */
 TEST_P (shmem, test_shmem_binary_search)
 {
   const int array_length = 100;
@@ -425,8 +430,8 @@ TEST_P (shmem, test_shmem_binary_search)
   /* Check element size of shared memory array. */
   const int check_size = t8_shmem_array_get_elem_size (shmem_array);
   ASSERT_EQ (check_size, element_size) << "shared memory array has wrong element size.";
-Fill the array with the number i at position i.
-  if (t8_shmem_array_start_writing (shmem_array)) {
+  Fill the array with the number i at position i.if (t8_shmem_array_start_writing (shmem_array))
+  {
     for (int i = 0; i < array_length; ++i) {
       t8_shmem_array_set_gloidx (shmem_array, i, i);
     }
