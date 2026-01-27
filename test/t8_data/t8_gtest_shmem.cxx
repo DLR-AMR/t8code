@@ -375,7 +375,7 @@ TEST_P (shmem, test_shmem_array)
  * \param[in] value The value to search for.
  * \return -1 if the guess is out of bounds, 0 if the value is found, 1 if the value is greater than the guess.
  */
-inline int
+static inline int
 compare (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
 {
   if (guess >= (int) t8_shmem_array_get_elem_count (array) || guess < 0) {
@@ -424,8 +424,8 @@ TEST_P (shmem, test_shmem_binary_search)
 
   /* Check element size of shared memory array. */
   const int check_size = t8_shmem_array_get_elem_size (shmem_array);
-  ASSERT_EQ (check_size, element_size) << "shared memory has wrong element size.";
-
+  ASSERT_EQ (check_size, element_size) << "shared memory array has wrong element size.";
+Fill the array with the number i at position i.
   if (t8_shmem_array_start_writing (shmem_array)) {
     for (int i = 0; i < array_length; ++i) {
       t8_shmem_array_set_gloidx (shmem_array, i, i);
@@ -436,13 +436,13 @@ TEST_P (shmem, test_shmem_binary_search)
   /* Binary search for each value. The index found should be equal to the value. */
   for (int i = 0; i < array_length; ++i) {
     const t8_gloidx_t found_index = (t8_gloidx_t) t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
-    ASSERT_EQ (found_index, i) << "Binary search did not find correct index for value " << i << " (got " << found_index
+    EXPECT_EQ (found_index, i) << "Binary search did not find correct index for value " << i << " (got " << found_index
                                << ")";
   }
 
   for (int i = array_length; i < array_length + 10; ++i) {
     const t8_gloidx_t found_index = (t8_gloidx_t) t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
-    ASSERT_EQ (found_index, -1) << "Binary search found an index for a value not in the array " << i << " (got "
+    EXPECT_EQ (found_index, -1) << "Binary search found an index for a value not in the array " << i << " (got "
                                 << found_index << ")";
   }
 
