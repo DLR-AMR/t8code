@@ -402,17 +402,16 @@ TEST_P (shmem, test_shmem_binary_search)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  /* Checking shared memory type */
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
-
   /* setup shared memory usage */
   const int intranode_size = t8_shmem_init (comm);
   ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
-#if T8_ENABLE_MPI
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   /* Allocate one integer */
