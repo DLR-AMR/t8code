@@ -554,8 +554,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
     return m_mesh->m_element_data[handle_id];
   }
 
-  /** 
-   * Set the element data for the element. 
+  /** Set the element data for the element. 
    * \note You can only set element data for non-ghost elements.
    * \param [in] element_data The element data to be set.
    */

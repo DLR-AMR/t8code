@@ -49,7 +49,7 @@ struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t
   int level;          /**< Refinement level used for testing.*/
 };
 
-/** Test default \ref t8_mesh_handle::mesh handle class, the iterator and some exemplary functionality. */
+/** Test default \ref t8_mesh_handle::mesh handle, the iterator and some exemplary functionality. */
 TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 {
   using mesh_class = t8_mesh_handle::mesh<>;
@@ -59,7 +59,7 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
   EXPECT_FALSE (element_class::has_vertex_cache ());
   EXPECT_FALSE (element_class::has_centroid_cache ());
 
-  // Iterate with the iterator over all mesh elements and check some functionality.
+  // Iterate with the constant iterator over all mesh elements and check some functionality.
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_FALSE (it->has_vertex_cache ());
     EXPECT_FALSE (it->has_centroid_cache ());
@@ -116,7 +116,7 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
     }
   }
   // Check if caches are set. If caches are accessed correctly is checked in another test.
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_TRUE (it->volume_cache_filled ());
     EXPECT_TRUE (it->centroid_cache_filled ());
     EXPECT_TRUE (it->vertex_cache_filled ());
@@ -148,7 +148,7 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   // Iterate over all mesh elements and access some exemplary functionality which sets the caches.
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     if (it->get_num_faces () == 0) {
       GTEST_SKIP () << "Skipping test as there are no faces to be tested.";
     }
@@ -162,7 +162,7 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
     }
   }
   // Check if caches are set. If caches are accessed correctly is checked in another test.
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     for (int iface = 0; iface < it->get_num_faces (); ++iface) {
       EXPECT_TRUE (it->face_area_cache_filled (iface));
       EXPECT_FALSE (it->face_centroid_cache_filled (iface));
