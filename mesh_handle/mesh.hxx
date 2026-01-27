@@ -283,8 +283,7 @@ class mesh {
     }
     // Create and register adaptation context holding the mesh handle and the user defined callback.
     detail::AdaptRegistry::register_context (
-      m_uncommitted_forest.value (),
-      std::make_unique<detail::MeshAdaptContext<SelfType>> (*this, std::move (adapt_callback)));
+      m_forest, std::make_unique<detail::MeshAdaptContext<SelfType>> (*this, std::move (adapt_callback)));
 
     // Set up the forest for adaptation using the wrapper callback.
     t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, recursive);
@@ -314,13 +313,16 @@ class mesh {
    * The mesh is said to be balanced if each element has face neighbors of level
    * at most +1 or -1 of the element's level.
    * \note The balance is carried out only when \ref commit is called.
+   * \param [in] no_repartition Balance constructs several intermediate steps that
+   *       are refined from each other. In order to maintain a balanced load, a repartitioning is performed in each 
+   *       round and the resulting mesh is load-balanced per default. 
+   *       Set \a no_repartition to true if this behaviour is not desired.
+   *       If \a no_repartition is false (default), an additional call of \ref set_partition is not necessary.
    * \note This setting can be combined with \ref set_adapt and \ref set_partition. The order in which
    * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
-   * \note The balanced mesh is not repartitioned per default to maintain a balanced load.
-   * Call \ref set_partition if you want to repartition the balanced mesh.
    */
   void
-  set_balance ()
+  set_balance (bool no_repartition = false)
   {
     if (!m_uncommitted_forest.has_value ()) {
       t8_forest_t new_forest;
@@ -328,7 +330,7 @@ class mesh {
       m_uncommitted_forest = new_forest;
     }
     // Disable repartitioning and let the user call set_partition if desired.
-    t8_forest_set_balance (m_uncommitted_forest.value (), m_forest, true);
+    t8_forest_set_balance (m_uncommitted_forest.value (), m_forest, no_repartition);
   }
 
   /** Enable or disable the creation of a layer of ghost elements.
@@ -367,16 +369,18 @@ class mesh {
     if (m_uncommitted_forest.value ()->set_from == NULL) {
       t8_forest_set_copy (m_uncommitted_forest.value (), m_forest);
     }
+    t8_forest_ref (m_forest);
     t8_forest_commit (m_uncommitted_forest.value ());
     // Check if we adapted and unregister the adapt context if so.
     if (detail::AdaptRegistry::get (m_uncommitted_forest.value ()) != nullptr) {
-      detail::AdaptRegistry::unregister_context (m_uncommitted_forest.value ());
+      detail::AdaptRegistry::unregister_context (m_forest);
       if (!std::is_void<TElementDataType>::value) {
         t8_global_infof (
           "Please note that the element data is not interpolated automatically during adaptation. Use the "
           "function set_element_data() to provide new adapted element data.\n");
       }
     }
+    t8_forest_unref (&m_forest);
     // Update underlying forest of the mesh.
     m_forest = m_uncommitted_forest.value ();
     m_uncommitted_forest = std::nullopt;

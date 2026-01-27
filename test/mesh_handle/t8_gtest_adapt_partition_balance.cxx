@@ -127,17 +127,14 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
     mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
   mesh_handle.commit ();
   // Adapt forest classically.
-  forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 1, &user_data);
+  forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 0, &user_data);
 
   // Compare results.
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
 
-  // Adapt the mesh handle again and check that it is unbalanced afterwards.
+  // Adapt the mesh handle again and apply partition and balance.
   mesh_handle.set_adapt (
     mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
-  mesh_handle.commit ();
-  EXPECT_FALSE (mesh_handle.is_balanced ());
-  // Now apply partition and balance.
   mesh_handle.set_balance ();
   mesh_handle.set_partition ();
   mesh_handle.commit ();
@@ -148,10 +145,11 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   t8_forest_init (&forest_compare);
   t8_forest_set_user_data (forest_compare, &user_data);
   t8_forest_set_adapt (forest_compare, forest, forest_adapt_callback_example, false);
-  t8_forest_set_partition (forest_compare, NULL, 0);
-  t8_forest_set_balance (forest_compare, NULL, 0);
+  t8_forest_set_partition (forest_compare, NULL, false);
+  t8_forest_set_balance (forest_compare, NULL, false);
   t8_forest_commit (forest_compare);
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_compare));
+
   // Clean up.
   t8_forest_unref (&forest_compare);
 }
