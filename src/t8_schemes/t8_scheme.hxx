@@ -64,8 +64,9 @@ t8_debug_print_type ()
 
 /** This class holds one or more element schemes.
  * It also relays the function calls to the specific schemes. */
-class t8_scheme {
-  friend class t8_scheme_builder;
+struct t8_scheme
+{
+  friend struct t8_scheme_builder;
 
  public:
   t8_scheme ()

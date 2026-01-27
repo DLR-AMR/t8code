@@ -47,12 +47,13 @@
 #include <span>
 
 /** forward declaration of the class needed since the two class headers include each other. */
-class t8_cmesh_vertex_conn_vertex_to_tree;
+struct t8_cmesh_vertex_conn_vertex_to_tree;
 
 /**
  * A class to hold the tree to vertex connectivity of a cmesh.
  */
-class t8_cmesh_vertex_conn_tree_to_vertex {
+struct t8_cmesh_vertex_conn_tree_to_vertex
+{
  public:
   /** Standard constructor. Does nothing. */
   t8_cmesh_vertex_conn_tree_to_vertex (): current_state (state::EMPTY)
@@ -169,7 +170,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   friend struct t8_cmesh_vertex_connectivity;
 
  private:
-  enum class state {
+  enum struct state {
     EMPTY, /*< Is initialized but empty. */
     FILLED /*< Is filled with at least one entry. */
   };

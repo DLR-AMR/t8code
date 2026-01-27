@@ -26,7 +26,8 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class class_successor: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct class_successor: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override

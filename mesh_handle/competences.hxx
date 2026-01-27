@@ -21,7 +21,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file competences.hxx
- * Definition of the additional competences/functionalities that can be used for the mesh class.
+ * Definition of the additional competences/functionalities that can be used for \ref t8_mesh_handle::mesh.
  * Especially, competences to cache functionalities of elements instead of calculating them each time a function
  * is called are provided.
  *
@@ -33,11 +33,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Especially for the competences to cache functionality, the access of members is not necessary, 
  * such that it is not obvious why we use the crtp. For competences that extend the functionality of the element, 
  * this is required. 
- * We use it for all competences for consistency and compatibility with the \ref t8_mesh_handle::element class.
+ * We use it for all competences for consistency and compatibility with \ref t8_mesh_handle::element.
  */
 
-#ifndef T8_COMPETENCES_HXX
-#define T8_COMPETENCES_HXX
+#pragma once
 
 #include <t8.h>
 #include <t8_types/t8_operators.hxx>
@@ -47,6 +46,29 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
+
+/**
+ * Competence to cache the volume of an element at the first function call.
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct cache_volume: public t8_crtp_operator<TUnderlying, cache_volume>
+{
+ public:
+  /**
+   * Function that checks if the cache for the volume has been filled.
+   * \return true if the cache has been filled, false otherwise.
+   */
+  bool
+  volume_cache_filled () const
+  {
+    return m_volume.has_value ();
+  }
+
+ protected:
+  mutable std::optional<double>
+    m_volume; /**< Cache for the volume. Use optional to allow no value if cache is not filled. */
+};
 
 /**
  * Competence to cache the vertex coordinates of an element at the first function call.
@@ -139,4 +161,3 @@ struct cache_neighbors: t8_crtp_operator<TUnderlying, cache_neighbors>
 };
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_COMPETENCES_HXX */

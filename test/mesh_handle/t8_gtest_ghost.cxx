@@ -31,6 +31,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
+#include <mesh_handle/competence_pack.hxx>
+#include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -40,49 +42,48 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 
 /** Parametrized test fixture for the ghost tests. */
-class t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override
   {
-    const t8_scheme* scheme = t8_scheme_new_default ();
-    t8_eclass_t eclass = std::get<0> (GetParam ());
+    eclass = std::get<0> (GetParam ());
     level = std::get<1> (GetParam ());
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
-    forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
   }
 
-  t8_forest_t forest;
+  t8_eclass_t eclass;
   int level;
 };
 
 /** Check the implementation of ghosts and all functions accessible by ghosts. */
 TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
-  t8_forest_ghost_print (forest);
+  using mesh_class = t8_mesh_handle::mesh<>;
+  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
+                                                                            true, false);
 
-  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
-  EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
-  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
+  EXPECT_EQ (mesh->get_num_ghosts (), t8_forest_get_num_ghosts (mesh->get_forest ()));
+  if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
     // Ensure that we actually have ghost elements in this test.
-    EXPECT_GT (mesh.get_num_ghosts (), 0);
+    EXPECT_GT (mesh->get_num_ghosts (), 0);
   }
   else {
     GTEST_SKIP () << "Skipping test as no ghost elements are created for 1D or single element meshes.";
   }
 
   // Check functions for ghost elements.
-  const t8_locidx_t num_local_elements = mesh.get_num_local_elements ();
-  const t8_locidx_t num_ghost_elements = mesh.get_num_ghosts ();
+  const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
+  const t8_locidx_t num_ghost_elements = mesh->get_num_ghosts ();
   for (t8_locidx_t ighost = num_local_elements; ighost < num_local_elements + num_ghost_elements; ++ighost) {
-    EXPECT_TRUE (mesh[ighost].is_ghost_element ());
-    EXPECT_EQ (level, mesh[ighost].get_level ());
-    auto centroid = mesh[ighost].get_centroid ();
+    EXPECT_TRUE ((*mesh)[ighost].is_ghost_element ());
+    EXPECT_EQ (level, (*mesh)[ighost].get_level ());
+    auto centroid = (*mesh)[ighost].get_centroid ();
     for (const auto& coordinate : centroid) {
       EXPECT_GE (1, coordinate);
       EXPECT_LE (0, coordinate);
     }
-    auto vertex_coordinates = mesh[ighost].get_vertex_coordinates ();
+    auto vertex_coordinates = (*mesh)[ighost].get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
       for (const auto& coordinate : vertex_coordinates[ivertex]) {
         EXPECT_GE (1, coordinate);
@@ -95,23 +96,23 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
 /** Check that the function \ref t8_mesh_handle::element::get_face_neighbors of the handle works as intended (equal results to forest).*/
 TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 {
-  ASSERT_TRUE (t8_forest_is_committed (forest));
+  const t8_scheme* scheme = t8_scheme_new_default ();
+  t8_forest_t forest = t8_forest_new_uniform (t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0), scheme,
+                                              level, 1, sc_MPI_COMM_WORLD);
 
-  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
+  const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
-  const t8_scheme* scheme = t8_forest_get_scheme (forest);
-  auto mesh_iterator = mesh.begin ();
+  auto mesh_iterator = mesh.cbegin ();
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
-    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {
       // --- Compare elements. ---
       EXPECT_EQ (mesh_iterator->get_local_tree_id (), itree);
       EXPECT_EQ (mesh_iterator->get_local_element_id (), ielem);
       // --- Compare neighbors. ---
       const t8_element_t* elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
-      const int num_faces = scheme->element_get_num_faces (tree_class, elem);
+      const int num_faces = scheme->element_get_num_faces (t8_forest_get_tree_class (forest, itree), elem);
       EXPECT_EQ (mesh_iterator->get_num_faces (), num_faces);
       for (int iface = 0; iface < num_faces; iface++) {
         // --- Get neighbors from forest. ---
@@ -148,7 +149,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
   }
 }
 
-/** Child class of \ref t8_mesh_handle::cache_neighbors that allows to modify the cache variables for test purposes. */
+/** Child of \ref t8_mesh_handle::cache_neighbors that allows to modify the cache variables for test purposes. */
 template <typename TUnderlying>
 struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderlying>
 {
@@ -166,24 +167,25 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
   }
 };
 
-/** Use child class of \ref t8_mesh_handle::cache_neighbors class to check that the cache is actually set 
+/** Use child of \ref t8_mesh_handle::cache_neighbors to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache variables to a unrealistic values and 
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
-  using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
-  using element_class = mesh_class::element_class;
-  mesh_class mesh = mesh_class (forest);
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
+  using element_class = typename mesh_class::element_class;
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD,
+                                                                                  true, true, false);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
-  if (mesh.get_num_local_elements () == 0) {
+  if (mesh->get_num_local_elements () == 0) {
     GTEST_SKIP () << "No local elements in the mesh to test the cache functionality.";
   }
   const std::vector<const element_class*> unrealistic_neighbors
-    = { &mesh[0], &mesh[mesh.get_num_local_elements () - 1] };
+    = { &((*mesh)[0]), &((*mesh)[mesh->get_num_local_elements () - 1]) };
   const std::vector<int> unrealistic_dual_faces = { 100, 1012000 };
-  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->neighbor_cache_filled_any ());
     it->fill_face_neighbor_cache ();
