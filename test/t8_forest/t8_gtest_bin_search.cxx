@@ -25,8 +25,10 @@
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_private.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <test/t8_gtest_adapt_callbacks.cxx>
 #include <test/t8_gtest_macros.hxx>
 
 /* In these tests we check the t8_forest_bin_search_lower, t8_forest_bin_search_upper
@@ -43,34 +45,9 @@
 #else
 #define T8_IS_LEAF_MAX_LVL 4
 #endif
-/* Adapt a forest such that always the first child of a
- * family is refined and no other elements. This results in a highly
- * imbalanced forest. */
-static int
-t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                           [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t tree_class,
-                           [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
-                           [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                           t8_element_t *elements[])
-{
-  T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (tree_class, elements[0])));
 
-  const int level = scheme->element_get_level (tree_class, elements[0]);
-
-  /* we set a maximum refinement level as forest user data */
-  int maxlevel = *(int *) t8_forest_get_user_data (forest);
-  if (level >= maxlevel) {
-    /* Do not refine after the maxlevel */
-    return 0;
-  }
-  const int child_id = scheme->element_get_child_id (tree_class, elements[0]);
-  if (child_id == 1) {
-    return 1;
-  }
-  return 0;
-}
-
-class element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+// TODO: ADd this class to common headers since it is reused
+class t8_bin_search_tester: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
  protected:
   void
   SetUp () override
@@ -82,44 +59,12 @@ class element_is_leaf: public testing::TestWithParam<std::tuple<std::tuple<int, 
     const int level = std::get<1> (GetParam ());
     t8_cmesh_t cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
 
-    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-    t8_forest_ref (forest);
-    //const int maxlevel = t8_forest_get_maxlevel (forest);
-    int maxlevel = 7;
-    const int recursive_adapt = 1;
-    forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 0, &maxlevel);
-  }
-
-  void
-  TearDown () override
-  {
-    if (forest != NULL) {
-      t8_forest_unref (&forest);
-    }
-    if (forest_adapt != NULL) {
-      t8_forest_unref (&forest_adapt);
-    }
-  }
-
-  t8_forest_t forest { NULL };
-  t8_forest_t forest_adapt { NULL };
-  const t8_scheme *scheme;
-};
-
-class element_is_leaf_hybrid: public testing::TestWithParam<int> {
- protected:
-  void
-  SetUp () override
-  {
-    /* Construct a cmesh */
-    const int scheme_id = GetParam ();
-    scheme = create_from_scheme_id (scheme_id);
-    t8_cmesh_t cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
-    const int level = 0;
+    // Construct a uniform forest
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
     int maxlevel = 7;
     const int recursive_adapt = 1;
+    // Construct an adaptive forest
     forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 0, &maxlevel);
   }
 
@@ -140,7 +85,7 @@ class element_is_leaf_hybrid: public testing::TestWithParam<int> {
 };
 
 static void
-t8_test_element_is_leaf_for_forest (t8_forest_t forest)
+t8_test_forest_bin_search_lower (t8_forest_t forest)
 {
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 
@@ -148,50 +93,59 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    /* Allocate memory to build a non-leaf element. */
-    t8_element_t *not_leaf;
-    scheme->element_new (tree_class, 1, &not_leaf);
+    const t8_element_array_t *leafs = t8_forest_tree_get_leaf_elements (forest, itree);
+
     /* Iterate over all the tree's leaf elements, check whether the leaf
      * is correctly identified by t8_forest_element_is_leaf,
      * build its parent and its first child (if they exist), and verify
      * that t8_forest_element_is_leaf returns false. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
       const t8_element_t *leaf_element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
-      EXPECT_TRUE (t8_forest_element_is_leaf (forest, leaf_element, itree));
-      /* Compute parent and first child of element and check that they are not in the tree */
       const int element_level = scheme->element_get_level (tree_class, leaf_element);
-      if (element_level > 0) {
-        scheme->element_get_parent (tree_class, leaf_element, not_leaf);
-        EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
+      const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, leaf_element, element_level);
+
+      /* Search for a linear element id in a sorted array of
+      * elements. If the element does not exist, return the largest index i
+      * such that the element at position i has a smaller id than the given one.
+      * If no such i exists, return -1. */
+      const t8_locidx_t search_index = t8_forest_bin_search_lower (leafs, element_id, element_level);
+      // We expect the leaf element to be found at position ielement
+      EXPECT_EQ (search_index, ielement) << "Found wrong position of leaf element. Expected: " << ielement
+                                         << " got: " << search_index;
+      // If we increase the level, we expect the element to not be found, but the search
+      // should return the index of the original element.
+      if (
+        element_level < scheme->get_maxlevel (
+          tree_class)) {  // TODO: This eventually should be element dependent. I know that an element dependent maxlevel function was developed in a different branch (by Sandro?)
+        const t8_locidx_t search_index = t8_forest_bin_search_lower (leafs, element_id, element_level + 1);
+        // We expect the leaf element to be found at position ielement
+        EXPECT_EQ (search_index, ielement)
+          << "Found wrong position of leaf element. Expected: " << ielement << " got: " << search_index;
       }
-      if (element_level < scheme->get_maxlevel (tree_class)) {
-        scheme->element_get_child (tree_class, leaf_element, 0, not_leaf);
-        EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
+
+      // Construct an element that is definitely not in the array and
+      // does not have an element of smaller id in the array. We expect -1 as return.
+      // We take the first element of the forest and subtract 1 from its id.
+      if (ielement == 0 && element_id > 0) {
+        const t8_linearidx_t element_not_found_id = element_id - 1;
+        const t8_locidx_t search_index = t8_forest_bin_search_lower (leafs, element_not_found_id, element_level);
+        EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expectec -1.";
       }
     }
-    scheme->element_destroy (tree_class, 1, &not_leaf);
   }
 }
 
-TEST_P (element_is_leaf, element_is_leaf)
+TEST_P (t8_bin_search_tester, bin_search_lower)
 {
-  t8_test_element_is_leaf_for_forest (forest);
+  t8_test_forest_bin_search_lower (forest);
 }
 
-TEST_P (element_is_leaf, element_is_leaf_adapt)
+TEST_P (t8_bin_search_tester, bin_search_lower_adapt)
 {
-  t8_test_element_is_leaf_for_forest (forest_adapt);
+  t8_test_forest_bin_search_lower (forest_adapt);
 }
 
-TEST_P (element_is_leaf_hybrid, element_is_leaf)
-{
-  t8_test_element_is_leaf_for_forest (forest);
-}
-
-TEST_P (element_is_leaf_hybrid, element_is_leaf_adapt)
-{
-  t8_test_element_is_leaf_for_forest (forest_adapt);
-}
+// TODO: Add these lambda to common headers since it is reused
 
 /* Define a lambda to beatify gtest output for tuples <level, cmesh>.
  * This will set the correct level and cmesh name as part of the test case name. */
@@ -203,8 +157,6 @@ auto pretty_print_eclass_scheme_and_level
       return scheme + "_" + eclass + level;
     };
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
+INSTANTIATE_TEST_SUITE_P (t8_gtest_bin_search, t8_bin_search_tester,
                           testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL)),
                           pretty_print_eclass_scheme_and_level);
-
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_hybrid, element_is_leaf_hybrid, AllSchemeCollections, print_scheme);
