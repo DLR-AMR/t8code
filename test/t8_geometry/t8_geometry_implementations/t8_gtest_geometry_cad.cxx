@@ -544,7 +544,8 @@ TEST (t8_gtest_geometry_cad, jacobian)
 
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on an edge which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
-class class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+struct class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_eclass, int>>
+{
  protected:
   void
   SetUp () override
@@ -688,7 +689,8 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_cad_curve, class_2d_element_
 
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on a surface which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
-class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_eclass_t> {
+struct class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override
@@ -786,7 +788,8 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d
                           AllEclasses2D, print_eclass);
 
 /* The test checks if the mapping algorithms for curved 2d elements shift values on a curved surface correctly. */
-class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_eclass_t> {
+struct class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override

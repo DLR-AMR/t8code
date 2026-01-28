@@ -39,7 +39,8 @@
  * After these two forests are created, we check for equality.
  */
 
-class forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override

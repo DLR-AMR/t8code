@@ -89,7 +89,8 @@ count_leaves_from_level (const int element_level, const int refinement_level, co
  * \tparam TUnderlyingEclassScheme The default scheme class of the element shape.
  */
 template <t8_eclass_t TEclass, class TUnderlyingEclassScheme>
-class t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEclassScheme> {
+struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEclassScheme>
+{
  private:
   friend TUnderlyingEclassScheme;
   /** Private constructor which can only be used by derived schemes.

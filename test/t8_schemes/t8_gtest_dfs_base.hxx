@@ -27,7 +27,8 @@
 #include <t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 
-class TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  public:
   /** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel
 */
