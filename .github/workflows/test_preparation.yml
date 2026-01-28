@@ -66,6 +66,8 @@ jobs:
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
       # This seems to be necessary because of the docker container
+    - name: Install jq
+      run: sudo apt-get install -y jq
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: Get input vars
