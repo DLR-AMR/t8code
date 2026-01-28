@@ -44,14 +44,16 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * - `topo_data`: A vector of integers representing topological data.
  * - `tree_data`: A vector of pointers to t8_abstract_data_handler objects, representing tree data.
  */
-class pseudo_tree {
+struct pseudo_tree
+{
  public:
   std::vector<int> topo_data;
   std::vector<std::shared_ptr<t8_abstract_vector_handler>> tree_data;
 };
 
 template <>
-class t8_data_handler<pseudo_tree> {
+struct t8_data_handler<pseudo_tree>
+{
  public:
   /**
    * Returns the size of a pseudo_tree.

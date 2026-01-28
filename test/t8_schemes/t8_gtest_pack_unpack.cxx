@@ -30,7 +30,9 @@
 /** Use DFS to check for all elements, if packing them, sending them to ourself and unpacking them results in the same element
  * Here, each element is sent individually.
  */
-class class_test_pack: public TestDFS {
+struct class_test_pack: public TestDFS
+{
+ private:
   /* pack the element and its children, send to ourself, unpack and check if it is the same element */
   void
   check_element () override

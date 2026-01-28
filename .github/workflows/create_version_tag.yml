@@ -29,6 +29,8 @@ on:
 jobs:
     monthly_release:
         runs-on: ubuntu-latest
+        outputs:
+            version_name: ${{ steps.set_version_name.outputs.version_name }}
         steps:
             #checkout main branch
             - name: Checkout code
@@ -63,15 +65,20 @@ jobs:
                   fi
             # Create version name accessible in the following steps
             - name: Set version name
+              id: set_version_name
               run: |
-                echo "VERSION_NAME=v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+                # Use format vMAJOR.MINOR.PATCH-YY.MM e.g., v1.2.3-24.06 for June 2024
+                VERSION_NAME="v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-$(date +'%y.%m')"
+                echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+                echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
                 echo "VERSION_NAME=$VERSION_NAME"
-            # Create a new version tag
-            - name: Create version tag
-              run: |
-                  git config user.email "t8ddy.bot@gmail.com"
-                  git config user.name "t8ddy"
-                  # configure remote to use the secret token for pushing
-                  git remote set-url origin https://x-access-token:${{ secrets.T8DDY_TOKEN }}@github.com/${{ github.repository }}
-                  git tag "${{ env.VERSION_NAME }}"
-                  git push origin --tags
+
+    t8code_tarball:
+        uses: ./.github/workflows/test_tarball.yml
+        needs: monthly_release
+        secrets: inherit
+        with:
+            TEST_LEVEL: 'T8_TEST_LEVEL_BASIC'
+            RELEASE_VERSION: ${{ needs.monthly_release.outputs.version_name }}
+            UPLOAD_TO_RELEASE: true
+

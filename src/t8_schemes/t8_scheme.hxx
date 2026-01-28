@@ -64,8 +64,9 @@ t8_debug_print_type ()
 
 /** This class holds one or more element schemes.
  * It also relays the function calls to the specific schemes. */
-class t8_scheme {
-  friend class t8_scheme_builder;
+struct t8_scheme
+{
+  friend struct t8_scheme_builder;
 
  public:
   t8_scheme ()
@@ -643,6 +644,27 @@ class t8_scheme {
     return std::visit ([&] (auto &&scheme) { return scheme.element_face_get_parent_face (element, face); },
                        eclass_schemes[tree_class]);
   };
+
+  /** Given a face of an element and a level coarser than (or equal to)
+   * the element's level, return the face number
+   * of the ancestor of the element that matches the element's face. Or return -1 if
+   * no face of the ancestor matches the face.
+   * \param [in]  tree_class   The eclass of the current tree.
+   * \param [in]  element    The element.
+   * \param [in]  ancestor_level A refinement level smaller than (or equal to) \a element's level.
+   * \param [in]  face    Then number of a face of \a element.
+   * \return              If \a face of \a element is a subface of a face of \a element's ancestor at level \a ancestor_level,
+   *                      the face number of this face. Otherwise -1.
+   * \note For the root element this function always returns \a face.
+   */
+  int
+  element_face_get_ancestor_face (const t8_eclass_t tree_class, const t8_element_t *element, const int ancestor_level,
+                                  const int face) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_face_get_ancestor_face (element, ancestor_level, face); },
+      eclass_schemes[tree_class]);
+  }
 
   /** Given an element and a face of this element. If the face lies on the
    * tree boundary, return the face number of the tree face.

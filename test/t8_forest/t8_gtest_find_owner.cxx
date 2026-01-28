@@ -34,7 +34,8 @@
 #include <t8_forest/t8_forest_private.h>
 #include <test/t8_gtest_macros.hxx>
 
-class forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
+struct forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass>>
+{
  protected:
   void
   SetUp () override

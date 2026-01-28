@@ -199,7 +199,7 @@ create_sample_element (t8_eclass_t eclass, int degree)
  * Common resources for all the tests.
  *
  */
-class LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
   void
   SetUp () override

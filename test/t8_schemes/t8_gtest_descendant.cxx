@@ -28,7 +28,8 @@
 
 /* This program tests the descendant function of an element. */
 
-class class_schemes_descendant: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct class_schemes_descendant: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override

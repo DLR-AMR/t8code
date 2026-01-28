@@ -44,7 +44,8 @@
  * and let the dereference operator return it as a value_type. Therefore, read-only operations on the
  * \a t8_element_array_t are possible.
  */
-class t8_element_array_iterator {
+struct t8_element_array_iterator
+{
 
  private:
   const t8_scheme* scheme;         /**< The scheme of the elements residing within the array. */
