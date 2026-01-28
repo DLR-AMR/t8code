@@ -221,6 +221,28 @@ jobs:
       BUILD_TYPE: Debug
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
+  # Check t8code building and testing with the Clang compiler and openmpi.
+  # Note: This workflow is meant to detect Clang- or openmpi-specific issues missed by the remaining (gcc- and mpich-based) workflows.
+  #       To reduce its runtime, it currently only uses one run in Debug mode with MPI activated and all external libraries like VTK or OpenCASCADE.
+  t8code_w_clang_and_ompi_tests:
+    needs: fine_grained_trigger
+    secrets: inherit
+    if: ${{ needs.fine_grained_trigger.outputs.run_ci == 'true' }}
+    uses: ./.github/workflows/test_t8code_w_clang_and_ompi.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        MPI: [ON]
+        BUILD_TYPE: [Debug]
+        include:
+          - MAKEFLAGS: -j4
+    with:
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      MPI: ${{ matrix.MPI }}
+      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+
+  # Build doxygen documentation and check for errors / warnings.
   t8code_doxygen_check:
     uses: ./.github/workflows/check_doxygen.yml
 
