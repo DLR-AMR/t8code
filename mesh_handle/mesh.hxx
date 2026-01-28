@@ -62,7 +62,7 @@ class mesh {
   using UserDataType = TUserDataType;       /**< Make Type of the user data accessible. */
   using ElementDataType = TElementDataType; /**< Make Type of the element data accessible. */
   using element_class
-    = TCompetencePack::template apply<SelfType, element>; /**< The element class of the mesh with given competences. */
+    = typename TCompetencePack::template apply<SelfType, element>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
