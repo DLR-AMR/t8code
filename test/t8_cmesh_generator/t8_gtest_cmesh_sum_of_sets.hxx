@@ -31,7 +31,8 @@ T8_EXTERN_C_BEGIN ();
  * A class that holds multiple ways to create a cmesh.
  * 
  */
-class cmesh_sum_of_sets {
+struct cmesh_sum_of_sets
+{
  public:
   cmesh_sum_of_sets () {};
   /**

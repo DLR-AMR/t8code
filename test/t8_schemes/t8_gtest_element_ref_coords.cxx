@@ -223,7 +223,8 @@ t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_e
     << t8_generate_additional_info_centroid (shape, centroid_by_vertices, centroid_by_element_ref_coords);
 }
 
-class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override

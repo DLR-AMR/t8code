@@ -36,7 +36,8 @@
 /**
  * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
 */
-class t8_cad {
+struct t8_cad
+{
  public:
   /**
     * Constructor of the cad shape.

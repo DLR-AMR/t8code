@@ -26,8 +26,9 @@
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
-class are_family: public TestDFS {
-
+struct are_family: public TestDFS
+{
+ private:
   void
   check_element () override
   {

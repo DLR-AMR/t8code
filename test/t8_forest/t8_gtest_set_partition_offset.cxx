@@ -65,7 +65,8 @@
 /**
  * Test class for validating \ref t8_forest_set_partition_offset and \ref t8_forest_new_gather.
 */
-class t8_test_set_partition_offset_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct t8_test_set_partition_offset_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
 
  protected:
   /**

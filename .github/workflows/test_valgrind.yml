@@ -21,22 +21,40 @@ name: valgrind check
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 on:
+  # Allows you to run this workflow manually.
+  workflow_dispatch:
+    inputs:
+      MAKEFLAGS:
+        type: string
+        description: 'Make flags to use for compilation (like -j4)'
+        default: '-j4'
+      MPI:
+        type: string
+        description: 'Use MPI for compilation (ON/OFF)'
+        default: 'ON'
+      BUILD_TYPE:
+        type: string
+        description: 'Build type (Release/Debug)'
+        default: 'Debug'
+      TEST_LEVEL:
+        type: string
+        description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
+        default: 'T8_TEST_LEVEL_BASIC'
   workflow_call:
     inputs:
       MAKEFLAGS:
-        required: true
         type: string
         description: 'Make flags to use for compilation (like -j4)'
+        default: '-j4'
       MPI:
-        required: true
         type: string
         description: 'Use MPI for compilation (ON/OFF)'
+        default: 'ON'
       BUILD_TYPE:
-        required: true
         type: string
         description: 'Build type (Release/Debug)'
+        default: 'Debug'
       TEST_LEVEL:
-        required: true
         type: string
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
@@ -101,9 +119,7 @@ jobs:
         path: build/CMakeFiles/CMakeOutput.log
     - name: ninja
       run: cd build && ninja $MAKEFLAGS
-    - name: ninja install
-      run: cd build && ninja install $MAKEFLAGS
     # Execute script that runs a Valgrind check for all test binaries.
-    # We use 3 parallel processes to run the binaries in parallel with MPI.
+    # We use 4 parallel processes to run the binaries in parallel with MPI.
     - name: Valgrind check
-      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh --ntasks=3
+      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh --ntasks=4

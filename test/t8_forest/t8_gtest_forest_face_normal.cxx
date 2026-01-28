@@ -34,7 +34,8 @@
  * This file tests the face normal computation of elements.
  */
 
-class class_forest_face_normal: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+struct class_forest_face_normal: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>>
+{
  protected:
   void
   SetUp () override
