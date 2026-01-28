@@ -86,10 +86,12 @@ jobs:
       run: echo SC_BUILD=$PWD/sc/build >> $GITHUB_ENV
         && echo SC_DEBUG=$PWD/sc/build/Debug >> $GITHUB_ENV
         && echo SC_RELEASE=$PWD/sc/build/Release >> $GITHUB_ENV
-    - name: Get sc commit hash from dependencies.json
+    - name: Get sc commit hash  and url from dependencies.json
       run: |
         hash=$(jq -r '.dependencies[] | select(.name=="sc") .source.ref' dependencies.json)
         echo sc_commit=$hash >> $GITHUB_ENV
+        url=$(jq -r '.dependencies[] | select(.name=="sc") .source.url' dependencies.json)
+        echo sc_url=$url >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cmake_cache
       uses: actions/cache@v5
@@ -116,8 +118,18 @@ jobs:
       run: echo "Install sc"
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc debug
+    - name: get sc source
+      run: |
+        cd $SC_BUILD
+        if [ ! -d sc ]; then
+          git clone ${{ env.sc_url }} sc
+        fi
+        cd sc
+        git fetch
+        git checkout ${{ env.sc_commit }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: sc cmake debug
-      run: cd $SC_DEBUG && cmake ../../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$SC_DEBUG/install -Dmpi=$MPI -GNinja
+      run: cd $SC_DEBUG && cmake $SC_BUILD/sc -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$SC_DEBUG/install -Dmpi=$MPI -GNinja
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: sc build debug
       run: cd $SC_DEBUG && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
