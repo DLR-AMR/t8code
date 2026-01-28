@@ -33,12 +33,12 @@
 #include <t8_cmesh/t8_cmesh.h>
 
 /** The supported .msh file versions.
- * Currently, we support gmsh's file version 2 and 4 in ASCII format.
+ * Currently, we only support gmsh's file version 4 in ASCII format.
  */
-#define T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS 2
+#define T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS 1
 
-/** The gmsh file versions that are supported. Currently version 2 and 4 in ASCII format */
-const int t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] = { 2, 4 };
+/** The gmsh file versions that are supported. Currently version 4 in ASCII format */
+const int t8_cmesh_supported_msh_file_versions[T8_CMESH_N_SUPPORTED_MSH_FILE_VERSIONS] = { 4 };
 
 T8_EXTERN_C_BEGIN ();
 

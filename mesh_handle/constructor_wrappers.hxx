@@ -53,7 +53,7 @@ std::unique_ptr<TMesh>
 handle_new_uniform (const t8_cmesh_t cmesh, const t8_scheme *scheme, const int level, const sc_MPI_Comm comm,
                     const bool do_face_ghost = false)
 {
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, comm);
   return std::make_unique<TMesh> (forest);
 }
 

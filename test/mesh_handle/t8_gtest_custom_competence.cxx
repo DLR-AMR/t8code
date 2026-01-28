@@ -30,6 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
+#include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_operators.hxx>
@@ -80,23 +81,24 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
  */
 TEST (t8_gtest_custom_competence, custom_competence)
 {
-  // Check mesh with custom defined competence.
-  using mesh_class = t8_mesh_handle::mesh<dummy_get_level>;
   const int level = 1;
-  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  // Check mesh with custom defined competence.
+  using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<dummy_get_level>>;
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class_custom> (level, sc_MPI_COMM_WORLD);
 
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (level, it->get_level_dummy ());
   }
 
   // Test with two custom competences and a predefined competence.
-  using mesh_class_more_competences
-    = t8_mesh_handle::mesh<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  using competences = t8_mesh_handle::competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  using mesh_class = t8_mesh_handle::mesh<competences>;
   auto mesh_more_competences
-    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class_more_competences> (level, sc_MPI_COMM_WORLD);
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
-  for (auto it = mesh_more_competences->begin (); it != mesh_more_competences->end (); ++it) {
+  for (auto it = mesh_more_competences->cbegin (); it != mesh_more_competences->cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());
