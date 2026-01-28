@@ -136,7 +136,7 @@ jobs:
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc release
     - name: sc cmake release
-      run: cd $SC_RELEASE && cmake ../../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SC_RELEASE/install -Dmpi=$MPI -GNinja
+      run: cd $SC_RELEASE && cmake $SC_BUILD/sc -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$SC_RELEASE/install -Dmpi=$MPI -GNinja
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: sc build release
       run: cd $SC_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
@@ -148,10 +148,12 @@ jobs:
       run: echo P4EST_BUILD=$PWD/p4est/build >> $GITHUB_ENV
         && echo P4EST_DEBUG=$PWD/p4est/build/Debug >> $GITHUB_ENV
         && echo P4EST_RELEASE=$PWD/p4est/build/Release >> $GITHUB_ENV
-    - name: Get p4est commit hash from dependencies.json
+    - name: Get p4est commit hash and url from dependencies.json
       run: |
         hash=$(jq -r '.dependencies[] | select(.name=="p4est") .source.ref' dependencies.json)
         echo p4est_commit=$hash >> $GITHUB_ENV
+        url=$(jq -r '.dependencies[] | select(.name=="p4est") .source.url' dependencies.json)
+        echo p4est_url=$url >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cmake_cache
       uses: actions/cache@v5
@@ -170,6 +172,15 @@ jobs:
     - name: install p4est
       run: echo "Install p4est"
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
+    - name: get p4est source
+      run: |
+        cd $P4EST_BUILD
+        if [ ! -d p4est ]; then
+          git clone ${{ env.p4est_url }} p4est
+        fi
+        cd p4est
+        git fetch
+        git checkout ${{ env.p4est_commit }}
     - name: if ignore cache, delete folders
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
@@ -179,14 +190,14 @@ jobs:
       run: mkdir -p $P4EST_DEBUG $P4EST_RELEASE
     ## p4est debug
     - name: p4est cmake debug
-      run: cd $P4EST_DEBUG && cmake ../../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
+      run: cd $P4EST_DEBUG && cmake $P4EST_BUILD/p4est -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: p4est build debug
       run: cd $P4EST_DEBUG && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     ## p4est release
     - name: p4est cmake release
-      run: cd $P4EST_RELEASE && cmake ../../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
+      run: cd $P4EST_RELEASE && cmake $P4EST_BUILD/p4est -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
