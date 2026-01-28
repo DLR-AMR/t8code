@@ -62,10 +62,6 @@ jobs:
       # This seems to be necessary because of the docker container
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
-    - name: init submodules
-      run: git submodule init
-    - name: update submodules
-      run: git submodule update
     - name: Get input vars
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
         && export MPI="${{ inputs.MPI }}"
