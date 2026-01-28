@@ -46,7 +46,7 @@ jobs:
   sc_p4est_cmake_tests:
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
 #
 # Setup

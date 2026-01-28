@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
+#include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -99,11 +100,11 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
   t8_forest_t forest = t8_forest_new_uniform (t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0), scheme,
                                               level, 1, sc_MPI_COMM_WORLD);
 
-  t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
+  const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
-  auto mesh_iterator = mesh.begin ();
+  auto mesh_iterator = mesh.cbegin ();
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {
       // --- Compare elements. ---
@@ -174,10 +175,10 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
-  using mesh_class = t8_mesh_handle::mesh<cache_neighbors_overwrite>;
-  using element_class = mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
-                                                                            true, false);
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
+  using element_class = typename mesh_class::element_class;
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD,
+                                                                                  true, true, false);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   if (mesh->get_num_local_elements () == 0) {
@@ -186,7 +187,7 @@ TEST_P (t8_mesh_ghost_test, cache_neighbors)
   const std::vector<const element_class*> unrealistic_neighbors
     = { &((*mesh)[0]), &((*mesh)[mesh->get_num_local_elements () - 1]) };
   const std::vector<int> unrealistic_dual_faces = { 100, 1012000 };
-  for (auto it = mesh->begin (); it != mesh->end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->neighbor_cache_filled_any ());
     it->fill_face_neighbor_cache ();

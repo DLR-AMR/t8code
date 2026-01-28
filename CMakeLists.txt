@@ -332,7 +332,23 @@ else()
     mark_as_advanced( FORCE ${_new_p4est_vars})
 endif()
 
+# Workaround: Suppress warnings for googletests, so it does not compromise the usage of -WError for t8code.
+# -----------
+# 1. Save original flags
+set(ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(ORIGINAL_C_FLAGS   "${CMAKE_C_FLAGS}")
+
+# 2. Suppress warnings for GoogleTest build
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
+
 FetchContent_MakeAvailable( googletest )
+
+# 3. Restore original flags
+set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS   "${ORIGINAL_C_FLAGS}"   CACHE STRING "" FORCE)
+
+# End of workaround
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
