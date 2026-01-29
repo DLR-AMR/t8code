@@ -335,7 +335,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   std::vector<const SelfType*>
   get_face_neighbors (int face, std::optional<std::reference_wrapper<std::vector<int>>> dual_faces = std::nullopt) const
   {
-    T8_ASSERT (face < get_num_faces ());
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
     SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
     if constexpr (has_face_neighbor_cache ()) {
       if (this->neighbor_cache_filled (face)) {
@@ -401,7 +401,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   double
   get_face_area (int face) const
   {
-    T8_ASSERT (face < get_num_faces ());
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
     if constexpr (has_face_areas_cache ()) {
       if (!this->face_area_cache_filled (face)) {
         this->m_face_areas[face] = t8_forest_element_face_area (m_mesh->m_forest, m_tree_id, m_element, face);
@@ -419,7 +419,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   t8_3D_point
   get_face_centroid (int face) const
   {
-    T8_ASSERT (face < get_num_faces ());
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
     if constexpr (has_face_centroids_cache ()) {
       if (this->face_centroid_cache_filled (face)) {
         return this->m_face_centroids[face].value ();
@@ -441,7 +441,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   t8_3D_vec
   get_face_normal (int face) const
   {
-    T8_ASSERT (face < get_num_faces ());
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
     if constexpr (has_face_normals_cache ()) {
       if (this->face_normal_cache_filled (face)) {
         return this->m_face_normals[face].value ();
@@ -463,7 +463,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   t8_element_shape_t
   get_face_shape (int face) const
   {
-    T8_ASSERT (face < get_num_faces ());
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
     return t8_forest_get_scheme (m_mesh->m_forest)->element_get_face_shape (get_tree_class (), m_element, face);
   }
 

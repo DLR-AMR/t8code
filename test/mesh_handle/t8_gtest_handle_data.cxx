@@ -53,9 +53,9 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
   struct dummy_user_data user_data = {
-    t8_3D_point ({ 41, 42, 43 }), /* Midpoints of the sphere. */
-    100,                          /* Refine if inside this radius. */
-    3                             /* Coarsen if outside this radius. */
+    t8_3D_point ({ 41.0, 42., 43.0 }), /* Midpoints of the sphere. */
+    100.0,                             /* Refine if inside this radius. */
+    3.0                                /* Coarsen if outside this radius. */
   };
 
   // Set user data for the mesh handle and check that the getter returns the same data.

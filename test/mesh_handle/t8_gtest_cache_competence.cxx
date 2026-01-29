@@ -204,7 +204,7 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
     EXPECT_FALSE (it->vertex_cache_filled ());
     for (int ivertex = 0; ivertex < it->get_num_vertices (); ++ivertex) {
       for (const auto &coordinate : it->get_vertex_coordinates (ivertex)) {
-        EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+        EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
     }
     EXPECT_TRUE (it->vertex_cache_filled ());
@@ -229,7 +229,7 @@ TEST (t8_gtest_cache_competence, cache_centroid)
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_FALSE (it->centroid_cache_filled ());
     for (const auto &coordinate : it->get_centroid ()) {
-      EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     EXPECT_TRUE (it->centroid_cache_filled ());
     it->overwrite_cache (unrealistic_centroid);
@@ -280,7 +280,7 @@ TEST (t8_gtest_cache_competence, cache_face_centroids)
     for (int iface = 0; iface < it->get_num_faces (); ++iface) {
       EXPECT_FALSE (it->face_centroid_cache_filled (iface));
       for (const auto &coordinate : it->get_face_centroid (iface)) {
-        EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+        EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
       EXPECT_TRUE (it->face_centroid_cache_filled (iface));
       it->overwrite_cache (iface, unrealistic_face_centroid);

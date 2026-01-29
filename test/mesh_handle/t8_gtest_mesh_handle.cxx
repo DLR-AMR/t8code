@@ -65,12 +65,12 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
     EXPECT_FALSE (it->has_centroid_cache ());
     auto centroid = it->get_centroid ();
     for (const auto& coordinate : centroid) {
-      EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     auto vertex_coordinates = (*it).get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
       for (const auto& coordinate : vertex_coordinates[ivertex]) {
-        EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+        EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
     }
   }
@@ -107,11 +107,11 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
     EXPECT_EQ (level, it->get_level ());
     EXPECT_GE (it->get_volume (), 0);
     for (const auto& coordinate : it->get_centroid ()) {
-      EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     for (int ivertex = 0; ivertex < it->get_num_vertices (); ++ivertex) {
       for (const auto& coordinate : it->get_vertex_coordinates (ivertex)) {
-        EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+        EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
     }
   }

@@ -84,17 +84,17 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
     EXPECT_LE (0, (*mesh)[ighost].get_diameter ());
     for (const auto& coordinate : (*mesh)[ighost].get_centroid ()) {
-      EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     for (int ivertex = 0; ivertex < (*mesh)[ighost].get_num_vertices (); ++ivertex) {
       for (const auto& coordinate : (*mesh)[ighost].get_vertex_coordinates (ivertex)) {
-        EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+        EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
     }
     // Check face related functions exemplary for first face.
     EXPECT_LE (0, (*mesh)[ighost].get_face_area (0));
     for (const auto& coordinate : (*mesh)[ighost].get_face_centroid (0)) {
-      EXPECT_TRUE (coordinate >= 0 && coordinate <= 1);
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     for (const auto& coordinate : (*mesh)[ighost].get_face_normal (0)) {
       EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
