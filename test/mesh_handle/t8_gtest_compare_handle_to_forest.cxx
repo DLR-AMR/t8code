@@ -79,7 +79,8 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       t8_3D_point centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());
       EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
-      // Face neighbor functionality is tested in t8_gtest_ghost.cxx.
+      // --- Face properties. ---
+      // Note: Face-neighbor functionality is tested in t8_gtest_ghost.cxx.
       for (int iface = 0; iface < mesh_iterator->get_num_faces (); ++iface) {
         EXPECT_EQ (mesh_iterator->get_face_area (iface), t8_forest_element_face_area (forest, itree, elem, iface));
         t8_3D_point coordinates;

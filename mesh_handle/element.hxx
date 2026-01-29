@@ -84,7 +84,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
       m_element = t8_forest_get_leaf_element_in_tree (m_mesh->m_forest, m_tree_id, m_element_id);
     }
 
-    // Resize caches for clean access where the cache vector may not be filled completely at once.
+    // Resize cache vectors for face properties to ensure clean access in case they may be only partially filled later.
     if constexpr (has_face_neighbor_cache ()) {
       const int num_faces = get_num_faces ();
       this->m_num_neighbors.resize (num_faces);
@@ -160,7 +160,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
     return (false || ... || face_area_cache_defined<TCompetences> ());
   }
 
-  /** Function that checks if a cache for the element's face centroid exists.
+  /** Function that checks if a cache for the element's face centroids exists.
    * \return true if a cache exists, false otherwise.
    */
   static constexpr bool
@@ -169,7 +169,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
     return (false || ... || face_centroid_cache_defined<TCompetences> ());
   }
 
-  /** Function that checks if a cache for the element's face normal exists.
+  /** Function that checks if a cache for the element's face normals exists.
    * \return true if a cache exists, false otherwise.
    */
   static constexpr bool
@@ -396,7 +396,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    *  This is only an approximation.
    *  This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in] face Index of a face of the element.
-   * \return The area of \a face.
+   * \return The area of the face with id \a face.
    */
   double
   get_face_area (int face) const
@@ -414,7 +414,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   /** The centroid of a face of the element.
    *  This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in] face Index of a face of the element.
-   * \return The centroid of \a face.
+   * \return The centroid of the face with id \a face.
    */
   t8_3D_point
   get_face_centroid (int face) const
@@ -436,7 +436,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   /** The normal vector of a face of the element.
    *  This function uses the cached version defined in TCompetence if available and calculates if not.
    * \param [in] face Index of a face of the element.
-   * \return The normal vector of \a face.
+   * \return The normal vector of the face with id \a face.
    */
   t8_3D_vec
   get_face_normal (int face) const
@@ -458,7 +458,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   /** Getter for the element's face shape.
    *  For this easily accessible variable, it makes no sense to provide a cached version.
    * \param [in] face Index of a face of the element.
-   * \return The shape of the face of the element.
+   * \return The shape of the face with id \a face
    */
   t8_element_shape_t
   get_face_shape (int face) const

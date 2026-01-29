@@ -137,7 +137,7 @@ struct cache_face_normal_overwrite: public t8_mesh_handle::cache_face_normal<TUn
   }
 };
 
-// --- Element related cache tests. ---
+// --- Element-related cache tests. ---
 /** Use child of \ref t8_mesh_handle::cache_volume to check that the cache is actually set 
  * and accessed correctly. This is done by modifying the cache to an unrealistic value and 
  * checking that the functionality actually outputs this unrealistic value.
@@ -177,7 +177,7 @@ TEST (t8_gtest_cache_competence, cache_diameter)
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_diameter_cache ());
 
-  double unrealistic_diameter = -3000;
+  double unrealistic_diameter = -3000.0;
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_FALSE (it->diameter_cache_filled ());
     EXPECT_GE (it->get_diameter (), 0);
@@ -225,7 +225,7 @@ TEST (t8_gtest_cache_competence, cache_centroid)
   const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_centroid_cache ());
 
-  t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
+  t8_3D_point unrealistic_centroid ({ 999.0, 1000.0, 998.0 });
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_FALSE (it->centroid_cache_filled ());
     for (const auto &coordinate : it->get_centroid ()) {
@@ -275,7 +275,7 @@ TEST (t8_gtest_cache_competence, cache_face_centroid)
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_centroid_cache ());
 
-  t8_3D_point unrealistic_face_centroid ({ 999, 1000, 998 });
+  t8_3D_point unrealistic_face_centroid ({ 999.0, 1000.0, 998.0 });
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     for (int iface = 0; iface < it->get_num_faces (); ++iface) {
       EXPECT_FALSE (it->face_centroid_cache_filled (iface));
@@ -301,7 +301,7 @@ TEST (t8_gtest_cache_competence, cache_face_normal)
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_normal_cache ());
 
-  t8_3D_vec unrealistic_face_normal ({ 41, 42, 43 });
+  t8_3D_vec unrealistic_face_normal ({ 41.0, 42.0, 43.0 });
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     for (int iface = 0; iface < it->get_num_faces (); ++iface) {
       EXPECT_FALSE (it->face_normal_cache_filled (iface));
