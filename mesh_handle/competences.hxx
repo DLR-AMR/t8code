@@ -139,12 +139,13 @@ struct cache_centroid: public t8_crtp_operator<TUnderlying, cache_centroid>
     m_centroid; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 
+// --- Face related caches. ---
 /**
  * Competence to cache the area of a specific face at the first function call.
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct cache_face_area: t8_crtp_operator<TUnderlying, cache_face_area>
+struct cache_face_areas: t8_crtp_operator<TUnderlying, cache_face_areas>
 {
  public:
   /**
@@ -155,11 +156,11 @@ struct cache_face_area: t8_crtp_operator<TUnderlying, cache_face_area>
   bool
   face_area_cache_filled (int face) const
   {
-    return m_face_area[face].has_value ();
+    return m_face_areas[face].has_value ();
   }
 
  protected:
-  mutable std::vector<std::optional<double>> m_face_area; /**< Vector with the face area each face. */
+  mutable std::vector<std::optional<double>> m_face_areas; /**< Vector with the face area for each face. */
 };
 
 /**
@@ -167,7 +168,7 @@ struct cache_face_area: t8_crtp_operator<TUnderlying, cache_face_area>
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct cache_face_centroid: t8_crtp_operator<TUnderlying, cache_face_centroid>
+struct cache_face_centroids: t8_crtp_operator<TUnderlying, cache_face_centroids>
 {
  public:
   /**
@@ -178,11 +179,11 @@ struct cache_face_centroid: t8_crtp_operator<TUnderlying, cache_face_centroid>
   bool
   face_centroid_cache_filled (int face) const
   {
-    return m_face_centroid[face].has_value ();
+    return m_face_centroids[face].has_value ();
   }
 
  protected:
-  mutable std::vector<std::optional<t8_3D_point>> m_face_centroid; /**< Vector with the face centroid each face. */
+  mutable std::vector<std::optional<t8_3D_point>> m_face_centroids; /**< Vector with the face centroid for each face. */
 };
 
 /**
@@ -190,7 +191,7 @@ struct cache_face_centroid: t8_crtp_operator<TUnderlying, cache_face_centroid>
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct cache_face_normal: t8_crtp_operator<TUnderlying, cache_face_normal>
+struct cache_face_normals: t8_crtp_operator<TUnderlying, cache_face_normals>
 {
  public:
   /**
@@ -201,11 +202,11 @@ struct cache_face_normal: t8_crtp_operator<TUnderlying, cache_face_normal>
   bool
   face_normal_cache_filled (int face) const
   {
-    return m_face_normal[face].has_value ();
+    return m_face_normals[face].has_value ();
   }
 
  protected:
-  mutable std::vector<std::optional<t8_3D_vec>> m_face_normal; /**< Vector with the face normal each face. */
+  mutable std::vector<std::optional<t8_3D_vec>> m_face_normals; /**< Vector with the face normal for each face. */
 };
 
 /**

@@ -91,17 +91,17 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
       this->m_dual_faces.resize (num_faces);
       this->m_neighbors.resize (num_faces);
     }
-    if constexpr (has_face_area_cache ()) {
+    if constexpr (has_face_areas_cache ()) {
       const int num_faces = get_num_faces ();
-      this->m_face_area.resize (num_faces);
+      this->m_face_areas.resize (num_faces);
     }
-    if constexpr (has_face_centroid_cache ()) {
+    if constexpr (has_face_centroids_cache ()) {
       const int num_faces = get_num_faces ();
-      this->m_face_centroid.resize (num_faces);
+      this->m_face_centroids.resize (num_faces);
     }
-    if constexpr (has_face_normal_cache ()) {
+    if constexpr (has_face_normals_cache ()) {
       const int num_faces = get_num_faces ();
-      this->m_face_normal.resize (num_faces);
+      this->m_face_normals.resize (num_faces);
     }
   }
 
@@ -151,11 +151,11 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   {
     return (false || ... || neighbor_cache_defined<TCompetences> ());
   }
-  /** Function that checks if a cache for the element's face area exists.
+  /** Function that checks if a cache for the element's face areas exists.
    * \return true if a cache exists, false otherwise.
    */
   static constexpr bool
-  has_face_area_cache ()
+  has_face_areas_cache ()
   {
     return (false || ... || face_area_cache_defined<TCompetences> ());
   }
@@ -164,7 +164,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * \return true if a cache exists, false otherwise.
    */
   static constexpr bool
-  has_face_centroid_cache ()
+  has_face_centroids_cache ()
   {
     return (false || ... || face_centroid_cache_defined<TCompetences> ());
   }
@@ -173,7 +173,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * \return true if a cache exists, false otherwise.
    */
   static constexpr bool
-  has_face_normal_cache ()
+  has_face_normals_cache ()
   {
     return (false || ... || face_normal_cache_defined<TCompetences> ());
   }
@@ -402,11 +402,11 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   get_face_area (int face) const
   {
     T8_ASSERT (face < get_num_faces ());
-    if constexpr (has_face_area_cache ()) {
+    if constexpr (has_face_areas_cache ()) {
       if (!this->face_area_cache_filled (face)) {
-        this->m_face_area[face] = t8_forest_element_face_area (m_mesh->m_forest, m_tree_id, m_element, face);
+        this->m_face_areas[face] = t8_forest_element_face_area (m_mesh->m_forest, m_tree_id, m_element, face);
       }
-      return this->m_face_area[face].value ();
+      return this->m_face_areas[face].value ();
     }
     return t8_forest_element_face_area (m_mesh->m_forest, m_tree_id, m_element, face);
   }
@@ -420,15 +420,15 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   get_face_centroid (int face) const
   {
     T8_ASSERT (face < get_num_faces ());
-    if constexpr (has_face_centroid_cache ()) {
+    if constexpr (has_face_centroids_cache ()) {
       if (this->face_centroid_cache_filled (face)) {
-        return this->m_face_centroid[face].value ();
+        return this->m_face_centroids[face].value ();
       }
     }
     t8_3D_point coordinates;
     t8_forest_element_face_centroid (m_mesh->m_forest, m_tree_id, m_element, face, coordinates.data ());
-    if constexpr (has_face_centroid_cache ()) {
-      this->m_face_centroid[face] = coordinates;
+    if constexpr (has_face_centroids_cache ()) {
+      this->m_face_centroids[face] = coordinates;
     }
     return coordinates;
   }
@@ -442,15 +442,15 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   get_face_normal (int face) const
   {
     T8_ASSERT (face < get_num_faces ());
-    if constexpr (has_face_normal_cache ()) {
+    if constexpr (has_face_normals_cache ()) {
       if (this->face_normal_cache_filled (face)) {
-        return this->m_face_normal[face].value ();
+        return this->m_face_normals[face].value ();
       }
     }
     t8_3D_vec normal;
     t8_forest_element_face_normal (m_mesh->m_forest, m_tree_id, m_element, face, normal.data ());
-    if constexpr (has_face_normal_cache ()) {
-      this->m_face_normal[face] = normal;
+    if constexpr (has_face_normals_cache ()) {
+      this->m_face_normals[face] = normal;
     }
     return normal;
   }
@@ -458,7 +458,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   /** Getter for the element's face shape.
    *  For this easily accessible variable, it makes no sense to provide a cached version.
    * \param [in] face Index of a face of the element.
-   * \return The shape of the face with id \a face
+   * \return The shape of the face with id \a face.
    */
   t8_element_shape_t
   get_face_shape (int face) const

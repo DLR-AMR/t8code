@@ -94,9 +94,9 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
   EXPECT_TRUE (element_class::has_diameter_cache ());
   EXPECT_TRUE (element_class::has_vertex_cache ());
   EXPECT_TRUE (element_class::has_centroid_cache ());
-  EXPECT_TRUE (element_class::has_face_area_cache ());
-  EXPECT_TRUE (element_class::has_face_centroid_cache ());
-  EXPECT_TRUE (element_class::has_face_normal_cache ());
+  EXPECT_TRUE (element_class::has_face_areas_cache ());
+  EXPECT_TRUE (element_class::has_face_centroids_cache ());
+  EXPECT_TRUE (element_class::has_face_normals_cache ());
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   // Iterate over all mesh elements and access some exemplary functionality which sets the caches.
@@ -142,9 +142,9 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
   EXPECT_FALSE (element_class::has_diameter_cache ());
   EXPECT_FALSE (element_class::has_vertex_cache ());
   EXPECT_FALSE (element_class::has_centroid_cache ());
-  EXPECT_TRUE (element_class::has_face_area_cache ());
-  EXPECT_TRUE (element_class::has_face_centroid_cache ());
-  EXPECT_TRUE (element_class::has_face_normal_cache ());
+  EXPECT_TRUE (element_class::has_face_areas_cache ());
+  EXPECT_TRUE (element_class::has_face_centroids_cache ());
+  EXPECT_TRUE (element_class::has_face_normals_cache ());
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   // Iterate over all mesh elements and access some exemplary functionality which sets the caches.
