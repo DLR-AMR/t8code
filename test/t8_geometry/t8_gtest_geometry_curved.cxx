@@ -48,7 +48,61 @@
  * \return             Vector containing vertex coordinates.
  */
 std::vector<double>
-create_curved_element_vertices (t8_eclass_t eclass, int degree);
+create_curved_element_vertices (t8_eclass_t eclass, int degree)
+{
+  std::vector<double> vertices;
+
+  switch (eclass) {
+  case T8_ECLASS_QUAD:
+    if (degree == 1) {
+      /* Linear quad with slight perturbation */
+      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0 };
+    }
+    else if (degree == 2) {
+      /* Quadratic quad with curved edges */
+      vertices = { 0.0, 0.0,  0.0, 1.0, 0.0,  0.0,  0.0,  1.0,  0.0, 1.0, 1.0, 0.0,
+                   0.5, -0.1, 0.0, 1.1, 0.5,  0.0,  0.5,  1.1,  0.0, -0.1, 0.5, 0.0,
+                   0.5, 0.5,  0.0 };
+    }
+    break;
+  case T8_ECLASS_TRIANGLE:
+    if (degree == 1) {
+      /* Linear triangle */
+      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0 };
+    }
+    else if (degree == 2) {
+      /* Quadratic triangle with curved edges */
+      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                   0.5, -0.05, 0.0, 0.6, 0.6, 0.0, -0.05, 0.5, 0.0 };
+    }
+    break;
+  case T8_ECLASS_HEX:
+    if (degree == 1) {
+      /* Linear hex */
+      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+    }
+    else if (degree == 2) {
+      /* Quadratic hex with curved edges - simplified version */
+      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                   /* Edge midpoints with perturbations */
+                   0.5, 0.0, 0.05, 0.0, 0.5, 0.0, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0,
+                   0.5, 0.0, 1.0, 0.0, 0.5, 1.0, 1.0, 0.5, 1.0, 0.5, 1.0, 1.0,
+                   0.0, 0.0, 0.5, 1.0, 0.0, 0.5, 0.0, 1.0, 0.5, 1.0, 1.0, 0.5,
+                   /* Face centers */
+                   0.5, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0, 0.5, 0.5,
+                   0.5, 1.0, 0.5, 0.5, 0.5, 1.0,
+                   /* Volume center */
+                   0.5, 0.5, 0.5 };
+    }
+    break;
+  default:
+    SC_ABORTF ("Element type %s not supported for curved geometry test.\n", t8_eclass_to_string[eclass]);
+  }
+
+  return vertices;
+}
 
 /**
  * Test fixture for curved geometry component tests.
@@ -94,70 +148,6 @@ class CurvedGeometry: public testing::TestWithParam<std::tuple<t8_eclass_t, int>
   t8_eclass_t eclass;
   int degree;
 };
-
-/**
- * Create a sample curved element with perturbed vertices for testing.
- *
- * \param eclass  Element class of the element.
- * \param degree  Polynomial degree for Lagrange interpolation.
- * \return        Vector containing vertex coordinates.
- */
-std::vector<double>
-create_curved_element_vertices (t8_eclass_t eclass, int degree)
-{
-  std::vector<double> vertices;
-
-  switch (eclass) {
-  case T8_ECLASS_QUAD:
-    if (degree == 1) {
-      /* Linear quad with slight perturbation */
-      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0 };
-    }
-    else if (degree == 2) {
-      /* Quadratic quad with curved edges */
-      vertices = { 0.0, 0.0,  0.0, 1.0, 0.0,  0.0,  0.0,  1.0,  0.0, 1.0, 1.0, 0.0, 
-                   0.5, -0.1, 0.0, 1.1, 0.5,  0.0,  0.5,  1.1,  0.0, -0.1, 0.5, 0.0, 
-                   0.5, 0.5,  0.0 };
-    }
-    break;
-  case T8_ECLASS_TRIANGLE:
-    if (degree == 1) {
-      /* Linear triangle */
-      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0 };
-    }
-    else if (degree == 2) {
-      /* Quadratic triangle with curved edges */
-      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 
-                   0.5, -0.05, 0.0, 0.6, 0.6, 0.0, -0.05, 0.5, 0.0 };
-    }
-    break;
-  case T8_ECLASS_HEX:
-    if (degree == 1) {
-      /* Linear hex */
-      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 
-                   0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
-    }
-    else if (degree == 2) {
-      /* Quadratic hex with curved edges - simplified version */
-      vertices = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 
-                   0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                   /* Edge midpoints with perturbations */
-                   0.5, 0.0, 0.05, 0.0, 0.5, 0.0, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0,
-                   0.5, 0.0, 1.0, 0.0, 0.5, 1.0, 1.0, 0.5, 1.0, 0.5, 1.0, 1.0,
-                   0.0, 0.0, 0.5, 1.0, 0.0, 0.5, 0.0, 1.0, 0.5, 1.0, 1.0, 0.5,
-                   /* Face centers */
-                   0.5, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.5, 1.0, 0.5, 0.5,
-                   0.5, 1.0, 0.5, 0.5, 0.5, 1.0,
-                   /* Volume center */
-                   0.5, 0.5, 0.5 };
-    }
-    break;
-  default:
-    SC_ABORTF ("Element type %s not supported for curved geometry test.\n", t8_eclass_to_string[eclass]);
-  }
-
-  return vertices;
-}
 
 /**
  * Test that a cmesh with curved geometry can be created and committed.
