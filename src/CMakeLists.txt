@@ -250,7 +250,8 @@ install( FILES
     t8_types/t8_vec.hxx
     t8_types/t8_vec.h
     t8_version.h
-    t8_vtk.h
+    t8_vtk.h 
+    t8_with_macro_error.h
     TYPE INCLUDE
 )
 
