@@ -103,12 +103,11 @@ t8_get_number_of_vtk_nodes (const t8_element_shape_t eclass, const int curved_fl
  * \param[in] forest The forest of \a element.
  * \param[in] ltreeid The local id to the tree of \a element.
  * \param[in] element The element to process.
- * \param[in] vertex The id of the vertex to evaluate.
- * \param[in] curved_flag Flag to tell if we use curved or linear cells.
+ * \param[in] curved_flag Flag to tell if we use curved or linear cells. 
  * \param[in, out] out_coords An array to fill with the coordinates of the vertex.
  */
 void
-t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, const int vertex,
+t8_forest_vtk_get_element_nodes (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                  const int curved_flag, double *out_coords);
 
 /**
@@ -227,13 +226,12 @@ grid_element_shape (const grid_t grid, const t8_locidx_t itree, const t8_element
  * \param[in] element An element in the tree with local id \a itree. If \a grid is cmesh the input is ignored.
  * \param[in] curved_flag If true, we use quadratic elements to write.
  * \param[in, out] coordinates An array with enough space to hold 3*num_node doubles. On output filled with the coordinate of the corners of the element/tree
- * \param[in] num_node The number of nodes to use to describe the element/tree.
  * \param[in] shape The shape of the element/tree.
  */
 template <typename grid_t>
 void
 grid_element_to_coords (const grid_t grid, const t8_locidx_t itree, const t8_element_t *element, const int curved_flag,
-                        double *coordinates, const int num_node, const t8_element_shape_t shape);
+                        double *coordinates, const t8_element_shape_t shape);
 
 /**
  * Get the level of an element/tree. If \a grid is a cmesh we always return 0.

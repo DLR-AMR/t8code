@@ -36,10 +36,11 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
 /** Default implementation of the scheme for the triangular element class. */
-class t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE, t8_default_scheme_tri> {
+struct t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE, t8_default_scheme_tri>
+{
  public:
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_tri () noexcept: t8_default_scheme_common (sizeof (t8_dtri_t)) {};
@@ -518,6 +519,7 @@ class t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE,
   int
   element_is_valid (const t8_element_t *element) const;
 
+#endif
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
@@ -529,7 +531,6 @@ class t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE,
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
-#endif
 
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.

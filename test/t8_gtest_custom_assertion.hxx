@@ -30,6 +30,7 @@
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
+#include <t8_forest/t8_forest_general.h>
 
 /**
  * \brief Test two elements for equality and print the elements if they aren't equal
@@ -50,7 +51,7 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
                   const t8_element_t *elem_2)
 {
   if (scheme->element_is_equal (eclass, elem_1, elem_2)) {
-    return testing::AssertionSuccess ();
+    return testing::AssertionSuccess (false);
   }
   else {
 #if T8_ENABLE_DEBUG
@@ -59,14 +60,14 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
     const t8_eclass_t tree_class = scheme->get_eclass_scheme_eclass (eclass);
     scheme->element_to_string (eclass, elem_1, elem_1_string, BUFSIZ);
     scheme->element_to_string (eclass, elem_2, elem_2_string, BUFSIZ);
-    return testing::AssertionFailure () << elem_1_expr << " " << elem_1_string << " is not equal to \n"
-                                        << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr
-                                        << " and tree class " << tree_class_expr << " "
-                                        << t8_eclass_to_string[tree_class];
+    return testing::AssertionFailure (false)
+           << elem_1_expr << " " << elem_1_string << " is not equal to \n"
+           << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr << " and tree class "
+           << tree_class_expr << " " << t8_eclass_to_string[tree_class];
 #else
-    return testing::AssertionFailure () << elem_1_expr << " is not equal to \n"
-                                        << elem_2_expr << " given scheme " << ts_expr << " and tree class "
-                                        << tree_class_expr;
+    return testing::AssertionFailure (false)
+           << elem_1_expr << " is not equal to \n"
+           << elem_2_expr << " given scheme " << ts_expr << " and tree class " << tree_class_expr;
 #endif
   }
 }
@@ -105,5 +106,28 @@ dimensional_equality (const char *Dimensional_1_expr, const char *Dimensional_2_
 
 #define EXPECT_VEC_EQ(Dimensional_1, Dimensional_2, precision) \
   EXPECT_PRED_FORMAT3 (dimensional_equality, (Dimensional_1), (Dimensional_2), (precision))
+
+/**
+ * \brief Test two forests for equality.
+ *
+ * \param[in] forest_A_expr The name of the forest \a forest_A
+ * \param[in] forest_B_expr The name of the forest \a forest_B
+ * \param[in] forest_A      The forest to ompare with \a forest_B
+ * \param[in] forest_B      The forest to ompare with \a forest_A
+ * \return testing::AssertionResult
+ */
+testing::AssertionResult
+forest_equality (const char *forest_A_expr, const char *forest_B_expr, const t8_forest_t forest_A,
+                 const t8_forest_t forest_B)
+{
+  if (t8_forest_is_equal (forest_A, forest_B)) {
+    return testing::AssertionSuccess ();
+  }
+  else {
+    return testing::AssertionFailure () << forest_A_expr << " is not equal to " << forest_B_expr;
+  }
+}
+
+#define EXPECT_FOREST_EQ(forest_A, forest_B) EXPECT_PRED_FORMAT2 (forest_equality, (forest_A), (forest_B))
 
 #endif /* T8_GTEST_CUSTOM_ASSERTION_HXX */

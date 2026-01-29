@@ -327,13 +327,13 @@ t8_forest_vtk_cells_elementid_kernel (t8_forest_t forest, [[maybe_unused]] const
   return 1;
 }
 
-/** Given a tree id and an element in the tree compute the 
+/** Given a tree id and an element in the tree compute the
  * data index, that is the index 0 <= I < num_local_elements + num_local_ghosts
  * corresponding to the element.
  * \param [in] forest A committed forest
  * \param [in] ltree_or_ghost_id The Id of a local tree or ghost. 0 <= \a ltree_or_ghost_id < num_local_trees + num_ghost_trees
  * \param [in] element_in_tree_index An index of an element of the tree. 0 <= \a element_in_tree_index < num_elements_of_tree(\a ltree_or_ghost_id)
- * \return The index I, 0 <= \a I < num_local_elements + num_local_ghosts corresponding to the 
+ * \return The index I, 0 <= \a I < num_local_elements + num_local_ghosts corresponding to the
  * data entry of the element as used in array for i.e. \ref t8_forest_ghost_exchange_data or
  * \ref t8_forest_partition_data.
 */
@@ -1145,7 +1145,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
       /* TODO: We switched to 32 Bit because Paraview could not handle 64 well enough.
        */
       T8_ASSERT (tree->treeid + cmesh->first_tree == (t8_gloidx_t) ((long) tree->treeid + cmesh->first_tree));
-      fprintf (vtufile, " %ld", static_cast<long> (tree->treeid + cmesh->first_tree));
+      fprintf (vtufile, " %" T8_GLOIDX_FORMAT, tree->treeid + cmesh->first_tree);
       if (!(sk % 8))
         fprintf (vtufile, "\n         ");
     }

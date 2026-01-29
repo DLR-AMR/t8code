@@ -32,6 +32,7 @@
 #include <t8_eclass.h>
 #include <t8_element_shape.h>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /** Opaque structure for a generic element, only used as pointer.
@@ -52,6 +53,7 @@ extern const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_
  */
 extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

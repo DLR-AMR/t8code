@@ -40,7 +40,8 @@
 /**
  * A base class for vector handlers.
  */
-class t8_abstract_vector_handler {
+struct t8_abstract_vector_handler
+{
  public:
   /**
    * Pure virtual function to determine the buffer size.
@@ -140,7 +141,8 @@ class t8_abstract_vector_handler {
  * \tparam TType The type of data to be handled.
  */
 template <typename TType>
-class t8_vector_handler: public t8_abstract_vector_handler {
+struct t8_vector_handler: public t8_abstract_vector_handler
+{
  public:
   /**
    * Construct a t8_vector_handler.

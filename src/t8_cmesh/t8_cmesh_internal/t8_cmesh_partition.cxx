@@ -195,7 +195,7 @@ t8_cmesh_gather_treecount_ext (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const i
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 : cmesh->first_tree;
   if (cmesh->tree_offsets == NULL) {
-    t8_shmem_init (comm);
+    SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup.");
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
     /* Only allocate the shmem array, if it is not already allocated */
     cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);
@@ -391,8 +391,8 @@ t8_cmesh_partition_sendrange (const t8_cmesh_t cmesh, const t8_cmesh_t cmesh_fro
     ret--;
   }
 
-  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %li\n", "send", *send_first, "send", *send_last,
-             static_cast<long> (ret));
+  t8_debugf ("%s_first = %i, %s_last = %i, last_tree = %" T8_GLOIDX_FORMAT "\n", "send", *send_first, "send",
+             *send_last, ret);
 
   T8_ASSERT (*send_first >= 0);
   //TODO:reactivate  T8_ASSERT (*send_last >= 0);
@@ -1613,7 +1613,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /*        Done with local num and tree_offset      */
   /***************************************************/
   t8_cmesh_partition_given (cmesh, cmesh->set_from, tree_offsets, comm);
-  /* Deactivate the active tree. Tree related data (such as vertices) might have been moved by the new partition and 
+  /* Deactivate the active tree. Tree related data (such as vertices) might have been moved by the new partition and
    * has to be loaded again if needed. */
   if (cmesh->geometry_handler != NULL) {
     cmesh->geometry_handler->deactivate_tree ();

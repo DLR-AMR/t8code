@@ -93,13 +93,13 @@ count_leaves_from_level (const int element_level, const int refinement_level, co
  * \tparam TUnderlyingEclassScheme The default scheme class of the element shape.
  */
 template <t8_eclass_t TEclass, class TUnderlyingEclassScheme>
-class t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEclassScheme> {
+struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEclassScheme>
+{
  private:
   friend TUnderlyingEclassScheme;
   /** Private constructor which can only be used by derived schemes.
-   * \param [in] tree_class The tree class of this element scheme.
    * \param [in] elem_size  The size of the elements this scheme holds.
-  */
+   */
   t8_default_scheme_common (const size_t elem_size) noexcept
     : element_size (elem_size), scheme_context (sc_mempool_new (elem_size)) {};
 

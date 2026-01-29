@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include <test/t8_gtest_custom_assertion.hxx>
 
 // t8code
 #include <t8.h>
@@ -95,10 +96,7 @@ refine_some_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
                       [[maybe_unused]] t8_element_t *elements[])
 {
   // Refine some elements.
-  if (lelement_id % (forest_from->mpirank + 1) == 1) {
-    return 1;
-  }
-  return 0;
+  return (lelement_id % (forest_from->mpirank + 1) ? 1 : 0);
 }
 
 /**
@@ -128,16 +126,15 @@ coarsen_all_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
                       const int is_family, [[maybe_unused]] const int num_elements,
                       [[maybe_unused]] t8_element_t *elements[])
 {
-  if (is_family) {
-    return -1;  // coarsen every family
-  }
-  return 0;
+  // Coarsen revery family.
+  return (is_family ? -1 : 0);
 }
 
 /**
  * Class to test the partition-for-coarsening functionality.
 */
-class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
 
  protected:
   /** During SetUp, set the scheme and the eclass based on the current testing parameters.*/
@@ -170,6 +167,7 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
     scheme->unref ();
   }
 
+#if T8_ENABLE_DEBUG
   /**
    * Helper function to create vtk output for debugging purposes.
    * Only writes output if the option is manually activated by changing
@@ -198,6 +196,7 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
       t8_forest_write_vtk (forest, fileName.c_str ());
     }
   }
+#endif
 
   // Member variables: The currently tested scheme and eclass.
   const t8_scheme *scheme; /**< The currently tested scheme. */
@@ -208,11 +207,6 @@ class t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::
 // The test's main function.
 TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
 {
-
-  t8_global_productionf ("##############################################################################\n");
-  t8_global_productionf ("######## Testing mesh: %s\n", cmesh_name.c_str ());
-  t8_global_productionf ("##############################################################################\n");
-  sc_MPI_Barrier (sc_MPI_COMM_WORLD);
 
   // -------------------------------------------
   // ----- (1.) Create uniform base forest -----
@@ -229,8 +223,10 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // Create initial, uniform base forest.
   t8_forest_t uniform_forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-  // If the associated flag is set, write forest to vtk.
+#if T8_ENABLE_DEBUG
+  // If debug mode and an additional manual flag are set, write forest to vtk.
   write_forest_to_vtk_if_flag_set (uniform_forest, "uniform_forest");
+#endif
 
   // -----------------------------------------------------------
   // ----- (2.) Create adapted forest with some refinement -----
@@ -240,8 +236,10 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // Create adapted base forest.
   t8_forest_t adapted_base_forest = t8_forest_new_adapt (uniform_forest, refine_some_callback, 0, 0, nullptr);
 
-  // If the associated flag is set, write forest to vtk.
+#if T8_ENABLE_DEBUG
+  // If debug mode and an additional manual flag are set, write forest to vtk.
   write_forest_to_vtk_if_flag_set (adapted_base_forest, "adapted_base_forest");
+#endif
 
   // ---------------------------------------
   // ----- (3.) Apply PFC partitioning -----
@@ -262,8 +260,10 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // Commit PFC-partitioned forest.
   t8_forest_commit (pfc_forest);
 
-  // If the associated flag is set, write forest to vtk.
+#if T8_ENABLE_DEBUG
+  // If debug mode and an additional manual flag are set, write forest to vtk.
   write_forest_to_vtk_if_flag_set (pfc_forest, "pfc_forest");
+#endif
 
   // -----------------------------------------------------
   // ----- (4.) Coarsen all families on same process -----
@@ -273,8 +273,10 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // Create coarsened PFC forest.
   t8_forest_t coarsened_pfc_forest = t8_forest_new_adapt (pfc_forest, coarsen_all_callback, 0, 0, nullptr);
 
-  // If the associated flag is set, write forest to vtk.
+#if T8_ENABLE_DEBUG
+  // If debug mode and an additional manual flag are set, write forest to vtk.
   write_forest_to_vtk_if_flag_set (coarsened_pfc_forest, "coarsened_pfc_forest");
+#endif
 
   // ---------------------------------------
   // ----- (5.) Checks for correctness -----
@@ -318,7 +320,7 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // (5c.) Verify that the two forests are equal:
   // --------------------------------------------
   t8_global_productionf ("Verify that the two coarsened and repartitioned forests match!\n");
-  EXPECT_TRUE (t8_forest_is_equal (repartitioned_coarse_pfc_forest, repartitioned_coarse_gathered_forest));
+  EXPECT_FOREST_EQ (repartitioned_coarse_pfc_forest, repartitioned_coarse_gathered_forest);
 
   // --------------------------------
   // ----- (6.) Clean up memory -----

@@ -47,7 +47,8 @@ enum pseudo_types { T8_ENLARGED_INT = 0, T8_ENLARGED_DOUBLE = 1 };
  * 
  */
 template <>
-class t8_data_handler<enlarged_data<int>> {
+struct t8_data_handler<enlarged_data<int>>
+{
  public:
   /**
    * Returns the size of an enlarged_int.
@@ -57,7 +58,7 @@ class t8_data_handler<enlarged_data<int>> {
    * \return An integer representing the size of the data.
    */
   inline int
-  size (const enlarged_data<int> &item, sc_MPI_Comm comm)
+  size ([[maybe_unused]] const enlarged_data<int> &item, sc_MPI_Comm comm)
   {
     int size;
     const int mpiret = sc_MPI_Pack_size (2, sc_MPI_INT, comm, &size);
@@ -126,7 +127,8 @@ class t8_data_handler<enlarged_data<int>> {
  * 
  */
 template <>
-class t8_data_handler<enlarged_data<double>> {
+struct t8_data_handler<enlarged_data<double>>
+{
  public:
   /**
    * Returns the size of an enlarged_double.
@@ -136,7 +138,7 @@ class t8_data_handler<enlarged_data<double>> {
    * \return An integer representing the size of the data.
    */
   inline int
-  size (const enlarged_data<double> &item, sc_MPI_Comm comm)
+  size ([[maybe_unused]] const enlarged_data<double> &item, sc_MPI_Comm comm)
   {
     int int_size;
     int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &int_size);

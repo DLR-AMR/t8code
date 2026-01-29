@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  */
 
 #ifndef T8_FOREST_PFC_H
-#define T8_FOREST_ITERATE_H
+#define T8_FOREST_PFC_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
@@ -40,7 +40,7 @@ T8_EXTERN_C_BEGIN ();
  *  This function corrects the partitioning such that no families are split across process boundaries.
  *  The price to be paid is a slight deviation from the optimal balance of elements among processors.
  *
- * \param [in,out] forrest  the forest. On input, it has been partitioned into equally-sized element partitions.
+ * \param [in,out] forest   the forest. On input, it has been partitioned into equally-sized element partitions.
  *                                      On output, the partitioning has been adjusted such that no element families
  *                                      are split across the process boundaries.
 */
@@ -48,4 +48,4 @@ void
 t8_forest_pfc_correction_offsets (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
-#endif /* T8_FOREST_ITERATE_H */
+#endif /* T8_FOREST_PFC_H */
