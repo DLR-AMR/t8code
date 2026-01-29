@@ -235,16 +235,17 @@ TEST_P (CurvedGeometry, forest_refinement_with_curved_geometry)
   t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  /* Create initial forest */
+  /* Create initial forest at level 0 */
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, 0);
   t8_forest_commit (forest);
 
-  /* Create a refined forest */
+  /* Create a refined forest at level 2 */
   t8_forest_init (&forest_refined);
-  t8_forest_set_adapt (forest_refined, forest, NULL, 0);
+  t8_forest_set_cmesh (forest_refined, t8_forest_get_cmesh (forest), sc_MPI_COMM_WORLD);
+  t8_forest_set_scheme (forest_refined, t8_scheme_new_default ());
   t8_forest_set_level (forest_refined, 2);
 
   /* Commit the refined forest - this should work with curved geometry */
@@ -258,6 +259,7 @@ TEST_P (CurvedGeometry, forest_refinement_with_curved_geometry)
 
   /* Clean up */
   t8_forest_unref (&forest_refined);
+  t8_forest_unref (&forest);
 }
 
 /**
