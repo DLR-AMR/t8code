@@ -268,7 +268,6 @@ TEST_P (CurvedGeometry, forest_refinement_with_curved_geometry)
 TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
 {
   t8_cmesh_t cmesh;
-  t8_forest_t forest;
 
   /* Create a single-tree cmesh with Lagrange geometry */
   t8_cmesh_init (&cmesh);
@@ -284,24 +283,17 @@ TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
   t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  /* Create forest */
-  t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_level (forest, 1);
-  t8_forest_commit (forest);
-
-  /* Get the geometry from the cmesh via the forest */
-  t8_cmesh_t cmesh_from_forest = t8_forest_get_cmesh (forest);
-  const t8_geometry *geom = t8_cmesh_get_tree_geometry (cmesh_from_forest, 0);
+  /* Get the geometry from the cmesh */
+  const t8_geometry *geom = t8_cmesh_get_tree_geometry (cmesh, 0);
   ASSERT_NE (geom, nullptr) << "Failed to get geometry from cmesh.";
 
   /* Test geometry evaluation at a reference point */
   double ref_coords[3] = { 0.5, 0.5, 0.5 };
   double out_coords[3];
 
-  /* The geometry should be able to evaluate without throwing errors */
-  ASSERT_NO_THROW (geom->t8_geom_evaluate (cmesh_from_forest, 0, ref_coords, 1, out_coords));
+  /* The geometry should be able to evaluate without throwing errors.
+   * Use global tree id 0 since we only have one tree. */
+  ASSERT_NO_THROW (geom->t8_geom_evaluate (cmesh, 0, ref_coords, 1, out_coords));
 
   /* Verify output coordinates are reasonable (not NaN or infinity) */
   for (int i = 0; i < 3; ++i) {
@@ -310,7 +302,7 @@ TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
   }
 
   /* Clean up */
-  t8_forest_unref (&forest);
+  t8_cmesh_destroy (&cmesh);
 }
 
 /* Instantiate tests for different element types and polynomial degrees */
