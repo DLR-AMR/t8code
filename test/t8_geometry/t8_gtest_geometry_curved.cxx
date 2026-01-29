@@ -39,6 +39,16 @@
 #include <test/t8_gtest_macros.hxx>
 
 /**
+ * Create a sample curved element with perturbed vertices for testing.
+ *
+ * \param eclass  Element class of the element.
+ * \param degree  Polynomial degree for Lagrange interpolation.
+ * \return        Vector containing vertex coordinates.
+ */
+std::vector<double>
+create_curved_element_vertices (t8_eclass_t eclass, int degree);
+
+/**
  * Test fixture for curved geometry component tests.
  */
 class CurvedGeometry: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
@@ -51,17 +61,32 @@ class CurvedGeometry: public testing::TestWithParam<std::tuple<t8_eclass_t, int>
     std::tuple<t8_eclass, int> params = GetParam ();
     eclass = std::get<0> (params);
     degree = std::get<1> (params);
-    
+
     /* Only test element types that are supported by Lagrange geometry */
     if (eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_HEX && eclass != T8_ECLASS_TRIANGLE) {
       GTEST_SKIP () << "Element type " << t8_eclass_to_string[eclass] << " not yet supported for curved geometries.\n";
     }
   }
 
+  /**
+   * Helper function to create and setup a cmesh with curved geometry.
+   * \param[out] cmesh  The cmesh to create and setup.
+   */
   void
-  TearDown () override
+  create_curved_cmesh (t8_cmesh_t *cmesh)
   {
-    /* Clean up any allocated cmesh or forest */
+    t8_cmesh_init (cmesh);
+    t8_cmesh_set_tree_class (*cmesh, 0, eclass);
+
+    std::vector<double> vertices = create_curved_element_vertices (eclass, degree);
+    const int num_vertices = vertices.size () / 3;
+
+    t8_cmesh_set_tree_vertices (*cmesh, 0, vertices.data (), num_vertices);
+    t8_cmesh_set_attribute (*cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree,
+                            sizeof (degree), 0);
+    auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (*cmesh);
+    t8_cmesh_set_tree_geometry (*cmesh, 0, lagrange_geom);
+    t8_cmesh_commit (*cmesh, sc_MPI_COMM_WORLD);
   }
 
   t8_eclass_t eclass;
@@ -79,7 +104,6 @@ std::vector<double>
 create_curved_element_vertices (t8_eclass_t eclass, int degree)
 {
   std::vector<double> vertices;
-  const double perturbation = 0.1;
 
   switch (eclass) {
   case T8_ECLASS_QUAD:
@@ -141,28 +165,7 @@ TEST_P (CurvedGeometry, cmesh_creation_with_curved_geometry)
   t8_cmesh_t cmesh;
 
   /* Create a single-tree cmesh with Lagrange geometry */
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, eclass);
-
-  /* Get vertices for the curved element */
-  std::vector<double> vertices = create_curved_element_vertices (eclass, degree);
-  const int num_vertices = vertices.size () / 3;
-
-  /* Set tree vertices */
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
-
-  /* Set the polynomial degree as an attribute */
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
-                          0);
-
-  /* Register Lagrange geometry */
-  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
-
-  /* Set the geometry for the tree */
-  t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
-
-  /* Commit the cmesh - this should not fail */
-  ASSERT_NO_THROW (t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD));
+  create_curved_cmesh (&cmesh);
 
   /* Verify the geometry is retrievable */
   const t8_geometry *retrieved_geom = t8_cmesh_get_tree_geometry (cmesh, 0);
@@ -183,18 +186,7 @@ TEST_P (CurvedGeometry, forest_creation_with_curved_geometry)
   t8_forest_t forest;
 
   /* Create a single-tree cmesh with Lagrange geometry */
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, eclass);
-
-  std::vector<double> vertices = create_curved_element_vertices (eclass, degree);
-  const int num_vertices = vertices.size () / 3;
-
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
-                          0);
-  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
-  t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  create_curved_cmesh (&cmesh);
 
   /* Create a forest from the curved cmesh */
   t8_forest_init (&forest);
@@ -222,18 +214,7 @@ TEST_P (CurvedGeometry, forest_refinement_with_curved_geometry)
   t8_forest_t forest, forest_refined;
 
   /* Create a single-tree cmesh with Lagrange geometry */
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, eclass);
-
-  std::vector<double> vertices = create_curved_element_vertices (eclass, degree);
-  const int num_vertices = vertices.size () / 3;
-
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
-                          0);
-  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
-  t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  create_curved_cmesh (&cmesh);
 
   /* Create initial forest at level 0 */
   t8_forest_init (&forest);
@@ -253,7 +234,7 @@ TEST_P (CurvedGeometry, forest_refinement_with_curved_geometry)
 
   /* Verify refinement worked */
   ASSERT_NE (forest_refined, nullptr) << "Forest refinement failed with curved geometry.";
-  ASSERT_GT (t8_forest_get_local_num_leaf_elements (forest_refined), 
+  ASSERT_GT (t8_forest_get_local_num_leaf_elements (forest_refined),
              t8_forest_get_local_num_leaf_elements (forest))
     << "Refined forest should have more elements than original.";
 
@@ -270,18 +251,7 @@ TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
   t8_cmesh_t cmesh;
 
   /* Create a single-tree cmesh with Lagrange geometry */
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_tree_class (cmesh, 0, eclass);
-
-  std::vector<double> vertices = create_curved_element_vertices (eclass, degree);
-  const int num_vertices = vertices.size () / 3;
-
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
-                          0);
-  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
-  t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+  create_curved_cmesh (&cmesh);
 
   /* Get the geometry from the cmesh */
   const t8_geometry *geom = t8_cmesh_get_tree_geometry (cmesh, 0);
@@ -312,7 +282,7 @@ TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
 /* Instantiate tests for different element types and polynomial degrees */
 INSTANTIATE_TEST_SUITE_P (
   t8_gtest_geometry_curved, CurvedGeometry,
-  testing::Combine (testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE, T8_ECLASS_HEX), 
+  testing::Combine (testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE, T8_ECLASS_HEX),
                     testing::Values (1, 2)),
   [] (const testing::TestParamInfo<CurvedGeometry::ParamType> &info) {
     std::ostringstream test_name;
