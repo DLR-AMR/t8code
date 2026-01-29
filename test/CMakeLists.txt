@@ -173,6 +173,7 @@ add_t8_cpp_test( NAME t8_gtest_geometry_lagrange_serial                 SOURCES 
 add_t8_cpp_test( NAME t8_gtest_geometry_triangular_interpolation_serial SOURCES t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx )
 add_t8_cpp_test( NAME t8_gtest_geometry_handling_serial                 SOURCES t8_geometry/t8_gtest_geometry_handling.cxx )
 add_t8_cpp_test( NAME t8_gtest_point_inside_serial                      SOURCES t8_geometry/t8_gtest_point_inside.cxx )
+add_t8_cpp_test( NAME t8_gtest_geometry_curved_serial                   SOURCES t8_geometry/t8_gtest_geometry_curved.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_vtk_writer_parallel          SOURCES t8_IO/t8_gtest_vtk_writer.cxx )
 if( T8_WITH_VTK )
