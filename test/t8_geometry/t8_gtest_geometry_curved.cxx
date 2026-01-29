@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -150,8 +151,12 @@ TEST_P (CurvedGeometry, cmesh_creation_with_curved_geometry)
   /* Set tree vertices */
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
 
-  /* Register Lagrange geometry with the appropriate degree */
-  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, degree);
+  /* Set the polynomial degree as an attribute */
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
+                          0);
+
+  /* Register Lagrange geometry */
+  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
 
   /* Set the geometry for the tree */
   t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
@@ -185,7 +190,9 @@ TEST_P (CurvedGeometry, forest_creation_with_curved_geometry)
   const int num_vertices = vertices.size () / 3;
 
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
-  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, degree);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
+                          0);
+  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -222,7 +229,9 @@ TEST_P (CurvedGeometry, forest_refinement_with_curved_geometry)
   const int num_vertices = vertices.size () / 3;
 
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
-  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, degree);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
+                          0);
+  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
@@ -267,7 +276,9 @@ TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
   const int num_vertices = vertices.size () / 3;
 
   t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
-  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh, degree);
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
+                          0);
+  auto lagrange_geom = t8_cmesh_register_geometry<t8_geometry_lagrange> (cmesh);
   t8_cmesh_set_tree_geometry (cmesh, 0, lagrange_geom);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
