@@ -252,8 +252,8 @@ TEST_P (CurvedGeometry, forest_refinement_with_curved_geometry)
 
   /* Verify refinement worked */
   ASSERT_NE (forest_refined, nullptr) << "Forest refinement failed with curved geometry.";
-  ASSERT_GT (t8_forest_get_local_num_elements (forest_refined), 
-             t8_forest_get_local_num_elements (forest))
+  ASSERT_GT (t8_forest_get_local_num_leaf_elements (forest_refined), 
+             t8_forest_get_local_num_leaf_elements (forest))
     << "Refined forest should have more elements than original.";
 
   /* Clean up */
@@ -289,16 +289,17 @@ TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
   t8_forest_set_level (forest, 1);
   t8_forest_commit (forest);
 
-  /* Get the geometry from the forest */
-  const t8_geometry *geom = t8_forest_get_tree_geometry (forest, 0);
-  ASSERT_NE (geom, nullptr) << "Failed to get geometry from forest.";
+  /* Get the geometry from the cmesh via the forest */
+  t8_cmesh_t cmesh_from_forest = t8_forest_get_cmesh (forest);
+  const t8_geometry *geom = t8_cmesh_get_tree_geometry (cmesh_from_forest, 0);
+  ASSERT_NE (geom, nullptr) << "Failed to get geometry from cmesh.";
 
   /* Test geometry evaluation at a reference point */
   double ref_coords[3] = { 0.5, 0.5, 0.5 };
   double out_coords[3];
 
   /* The geometry should be able to evaluate without throwing errors */
-  ASSERT_NO_THROW (geom->t8_geom_evaluate (0, ref_coords, 1, out_coords));
+  ASSERT_NO_THROW (geom->t8_geom_evaluate (cmesh_from_forest, 0, ref_coords, 1, out_coords));
 
   /* Verify output coordinates are reasonable (not NaN or infinity) */
   for (int i = 0; i < 3; ++i) {
