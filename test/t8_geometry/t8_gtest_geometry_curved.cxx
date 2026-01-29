@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2024 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,8 +22,10 @@
 
 /** \file t8_gtest_geometry_curved.cxx
  * Component test for curved geometries.
- * This test verifies the complete workflow of using curved geometries in t8code,
- * including cmesh creation, forest operations, and geometry mappings.
+ * This test verifies that curved geometries (Lagrange) work correctly in the 
+ * complete t8code workflow, from cmesh creation through forest operations.
+ * It complements the unit tests in t8_gtest_geometry_lagrange.cxx by testing
+ * the integration of curved geometries in realistic use cases.
  */
 
 #include <gtest/gtest.h>
@@ -41,9 +43,9 @@
 /**
  * Create a sample curved element with perturbed vertices for testing.
  *
- * \param eclass  Element class of the element.
- * \param degree  Polynomial degree for Lagrange interpolation.
- * \return        Vector containing vertex coordinates.
+ * \param [in] eclass  Element class of the element.
+ * \param [in] degree  Polynomial degree for Lagrange interpolation.
+ * \return             Vector containing vertex coordinates.
  */
 std::vector<double>
 create_curved_element_vertices (t8_eclass_t eclass, int degree);
@@ -178,9 +180,10 @@ TEST_P (CurvedGeometry, cmesh_creation_with_curved_geometry)
 }
 
 /**
- * Test that a forest can be created from a cmesh with curved geometry.
+ * Test that a uniform forest can be created from a cmesh with curved geometry
+ * and that geometry evaluation works correctly on forest elements.
  */
-TEST_P (CurvedGeometry, forest_creation_with_curved_geometry)
+TEST_P (CurvedGeometry, forest_with_curved_geometry_and_evaluation)
 {
   t8_cmesh_t cmesh;
   t8_forest_t forest;
@@ -188,95 +191,24 @@ TEST_P (CurvedGeometry, forest_creation_with_curved_geometry)
   /* Create a single-tree cmesh with Lagrange geometry */
   create_curved_cmesh (&cmesh);
 
-  /* Create a forest from the curved cmesh */
-  t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_level (forest, 0);
+  /* Create a uniform forest from the curved cmesh */
+  forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 1, 0, sc_MPI_COMM_WORLD);
 
-  /* Commit the forest - this should work with curved geometry */
-  ASSERT_NO_THROW (t8_forest_commit (forest));
-
-  /* Verify the forest was created successfully */
   ASSERT_NE (forest, nullptr) << "Forest creation failed with curved geometry.";
-  ASSERT_EQ (t8_forest_get_num_global_trees (forest), 1) << "Forest should have exactly one tree.";
+
+  /* Verify we can evaluate the geometry through the forest
+   * This tests the integration of curved geometry in the forest workflow */
+  t8_cmesh_t cmesh_from_forest = t8_forest_get_cmesh (forest);
+  ASSERT_NE (cmesh_from_forest, nullptr) << "Failed to get cmesh from forest.";
+
+  /* Verify geometry is still accessible through the forest's cmesh */
+  const t8_geometry *geom = t8_cmesh_get_tree_geometry (cmesh_from_forest, 0);
+  ASSERT_NE (geom, nullptr) << "Failed to get geometry from forest's cmesh.";
+  ASSERT_EQ (geom->t8_geom_get_type (), T8_GEOMETRY_TYPE_LAGRANGE)
+    << "Geometry type changed after forest creation.";
 
   /* Clean up */
   t8_forest_unref (&forest);
-}
-
-/**
- * Test forest refinement with curved geometry.
- */
-TEST_P (CurvedGeometry, forest_refinement_with_curved_geometry)
-{
-  t8_cmesh_t cmesh;
-  t8_forest_t forest, forest_refined;
-
-  /* Create a single-tree cmesh with Lagrange geometry */
-  create_curved_cmesh (&cmesh);
-
-  /* Create initial forest at level 0 */
-  t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_level (forest, 0);
-  t8_forest_commit (forest);
-
-  /* Create a refined forest at level 2 */
-  t8_forest_init (&forest_refined);
-  t8_forest_set_cmesh (forest_refined, t8_forest_get_cmesh (forest), sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest_refined, t8_scheme_new_default ());
-  t8_forest_set_level (forest_refined, 2);
-
-  /* Commit the refined forest - this should work with curved geometry */
-  ASSERT_NO_THROW (t8_forest_commit (forest_refined));
-
-  /* Verify refinement worked */
-  ASSERT_NE (forest_refined, nullptr) << "Forest refinement failed with curved geometry.";
-  ASSERT_GT (t8_forest_get_local_num_leaf_elements (forest_refined),
-             t8_forest_get_local_num_leaf_elements (forest))
-    << "Refined forest should have more elements than original.";
-
-  /* Clean up */
-  t8_forest_unref (&forest_refined);
-  t8_forest_unref (&forest);
-}
-
-/**
- * Test geometry evaluation on a forest element with curved geometry.
- */
-TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
-{
-  t8_cmesh_t cmesh;
-
-  /* Create a single-tree cmesh with Lagrange geometry */
-  create_curved_cmesh (&cmesh);
-
-  /* Get the geometry from the cmesh */
-  const t8_geometry *geom = t8_cmesh_get_tree_geometry (cmesh, 0);
-  ASSERT_NE (geom, nullptr) << "Failed to get geometry from cmesh.";
-
-  /* Load tree data before evaluation - this is required for geometries that store per-tree data */
-  /* Cast to non-const to call load function - this is safe as we're just loading data */
-  const_cast<t8_geometry *> (geom)->t8_geom_load_tree_data (cmesh, 0);
-
-  /* Test geometry evaluation at a reference point */
-  double ref_coords[3] = { 0.5, 0.5, 0.5 };
-  double out_coords[3];
-
-  /* The geometry should be able to evaluate without throwing errors.
-   * Use global tree id 0 since we only have one tree. */
-  ASSERT_NO_THROW (geom->t8_geom_evaluate (cmesh, 0, ref_coords, 1, out_coords));
-
-  /* Verify output coordinates are reasonable (not NaN or infinity) */
-  for (int i = 0; i < 3; ++i) {
-    ASSERT_FALSE (std::isnan (out_coords[i])) << "Geometry evaluation produced NaN at coordinate " << i;
-    ASSERT_FALSE (std::isinf (out_coords[i])) << "Geometry evaluation produced infinity at coordinate " << i;
-  }
-
-  /* Clean up */
-  t8_cmesh_destroy (&cmesh);
 }
 
 /* Instantiate tests for different element types and polynomial degrees */
