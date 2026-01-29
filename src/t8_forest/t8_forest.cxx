@@ -411,6 +411,14 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
   const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltree_id);
   /* Get the cmesh */
   const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+#if T8_ENABLE_DEBUG
+  if (tree_class == T8_ECLASS_TET) {
+    T8_ASSERT (vertex_coords[1] >= 0.0);
+    T8_ASSERT (vertex_coords[2] >= vertex_coords[1]);
+    T8_ASSERT (vertex_coords[0] >= vertex_coords[2]);
+    T8_ASSERT (vertex_coords[0] <= 1.0);
+  }
+#endif
   /* Evaluate the geometry */
   t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, 1, coordinates);
 }
