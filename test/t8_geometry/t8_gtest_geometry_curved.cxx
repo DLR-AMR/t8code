@@ -287,6 +287,10 @@ TEST_P (CurvedGeometry, geometry_evaluation_on_forest_element)
   const t8_geometry *geom = t8_cmesh_get_tree_geometry (cmesh, 0);
   ASSERT_NE (geom, nullptr) << "Failed to get geometry from cmesh.";
 
+  /* Load tree data before evaluation - this is required for geometries that store per-tree data */
+  /* Cast to non-const to call load function - this is safe as we're just loading data */
+  const_cast<t8_geometry *> (geom)->t8_geom_load_tree_data (cmesh, 0);
+
   /* Test geometry evaluation at a reference point */
   double ref_coords[3] = { 0.5, 0.5, 0.5 };
   double out_coords[3];
