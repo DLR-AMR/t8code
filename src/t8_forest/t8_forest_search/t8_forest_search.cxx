@@ -192,7 +192,7 @@ t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *
    * processes we choose the next non-zero global_first_descendat to obtain a
    * monotonously increasing array to sort. */
   t8_forest_child_type_query_t *query_data = (t8_forest_child_type_query_t *) data;
-  t8_linearidx_t linearid = t8_forest_get_monotonous_gfd (global_first_desc, index, query_data);
+  const t8_linearidx_t linearid = t8_forest_get_monotonous_gfd (global_first_desc, index, query_data);
 
   /* Create an element from the linear_id and compute its child_id. */
   t8_element_t *element;
