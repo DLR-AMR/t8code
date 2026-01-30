@@ -31,7 +31,8 @@
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
 
-class forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
+struct forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>>
+{
  protected:
   void
   SetUp () override

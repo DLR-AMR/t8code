@@ -31,8 +31,9 @@
  * The first test gets the corners of all faces of an element and checks if the reverse function can get the correct face of the corner.
  * The second test does the same but in reverse order.
  */
-class class_face_corner_test: public TestDFS {
-
+struct class_face_corner_test: public TestDFS
+{
+ private:
   void
   check_element () override
   {

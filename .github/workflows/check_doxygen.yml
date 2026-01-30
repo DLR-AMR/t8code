@@ -1,4 +1,4 @@
-name: "Check Doxygen Documentation"
+name: Check Doxygen Documentation
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
@@ -32,12 +32,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  update_dev_doc:
+  check_documentation:
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v5    
+    - uses: actions/checkout@v6
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
@@ -59,17 +59,17 @@ jobs:
           texlive-font-utils \
           ghostscript
     - name: Which epstopdf
-      run: which epstopdf 
+      run: which epstopdf
     - name: Download precompiled doxygen version 1.13.2 from official website
       run: wget https://www.doxygen.nl/files/doxygen-1.13.2.linux.bin.tar.gz
     - name: Unpack doxygen tar file
       run: |
-        tar xf doxygen-1.13.2.linux.bin.tar.gz 
+        tar xf doxygen-1.13.2.linux.bin.tar.gz
         mv doxygen-1.13.2/bin/doxygen ./doxygen
         chmod +x ./doxygen
         echo "$PWD" >> $GITHUB_PATH
     - name: Echo doxygen executable and version
-      run: | 
+      run: |
         which doxygen
         doxygen --version
     - name: build config variables
@@ -79,17 +79,17 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: cmake_doc_build.log
         path: build/config.log
     - name: check doxygen for errors / warnings
       run: |
-        cd build && cd doc 
+        cd build && cd doc
         doxygen Doxyfile >> doxygen.out 2> doxygen.err
     - name: Upload doxygen log
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: doxygen-log
         path: build/doc/doxygen.err

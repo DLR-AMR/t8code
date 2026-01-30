@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_geometry_cad.hxx
+/** \file t8_cad.hxx
  * This file implements the t8_cad class. It manages OpenCASCADE shapes and implements
  * helper functions for working with the shapes.
  */
@@ -36,7 +36,8 @@
 /**
  * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
 */
-class t8_cad {
+struct t8_cad
+{
  public:
   /**
     * Constructor of the cad shape.

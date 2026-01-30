@@ -1,4 +1,4 @@
-name: CMake tests preparation
+name: test preparation
 
 
 #  This file is part of t8code.
@@ -61,7 +61,7 @@ jobs:
 # Setup
 #
     - uses: actions/checkout@v6
-      with: 
+      with:
         fetch-depth: 0
     - name: Update packages
       run: sudo apt-get update && sudo apt-get upgrade -y
@@ -92,7 +92,7 @@ jobs:
       run: hash=`git rev-parse HEAD:sc` && echo sc_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cmake_cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ${{ env.SC_DEBUG }}
@@ -140,7 +140,7 @@ jobs:
       run: hash=`git rev-parse HEAD:p4est` && echo p4est_commit=$hash >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cmake_cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ${{ env.P4EST_DEBUG }}
@@ -158,7 +158,7 @@ jobs:
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: if ignore cache, delete folders
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-      # The true at the end is to ignore errors that i.e. occur when the folders do not exist      
+      # The true at the end is to ignore errors that i.e. occur when the folders do not exist
       run: rm -r $P4EST_BUILD || true
     - name: make folders
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
@@ -177,19 +177,19 @@ jobs:
     - name: p4est build release
       run: cd $P4EST_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    
+
     ## output cache info
     - name: output cache info
       id: used_cache
       run: echo "USED_CACHE=$USED_CACHE" >> $GITHUB_OUTPUT
-    
+
     ## tar artifact to keep permissions: https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
     - name: Tar files
       run: tar -cvf artifact.tar .
 
     ## upload artifacts
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
         path: ./artifact.tar
