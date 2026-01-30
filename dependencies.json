@@ -9,7 +9,7 @@
             }
         },
         {
-            "name": "sc",
+            "name": "SC",
             "depends_on_cmake_option": "T8CODE_USE_SYSTEM_SC",
             "source": {
                 "type": "git",
@@ -18,7 +18,7 @@
             }
         },
         {
-            "name": "p4est",
+            "name": "P4EST",
             "depends_on_cmake_option": "T8CODE_USE_SYSTEM_P4EST",
             "source": {
                 "type": "git",

@@ -75,7 +75,7 @@ target_include_directories( T8 PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
 )
 
-target_link_libraries( T8 PUBLIC p4est sc )
+target_link_libraries( T8 PUBLIC P4EST::P4EST SC::SC )
 
 if ( T8CODE_ENABLE_MPI )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_MPI=1 )
