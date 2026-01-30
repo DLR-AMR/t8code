@@ -607,7 +607,7 @@ class t8_partition_search_base {
    * \param[in] plast The last processor that owns part of \a element. Guaranteed to be non-empty.
    */
   void
-  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts, int pfirst, int plast);
+  search_recursion (const t8_locidx_t ltreeid, const t8_element_t *element, const t8_scheme *ts, int pfirst, int plast);
 
   /** \brief Checks if the search should stop due to empty queries.
    *

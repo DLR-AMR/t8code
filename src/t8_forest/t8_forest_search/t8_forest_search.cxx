@@ -205,7 +205,7 @@ t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *
 }
 
 void
-t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
+t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, const t8_element_t *element, const t8_scheme *ts,
                                             int pfirst, int plast)
 {
   /* Assertions to check for necessary requirements */
