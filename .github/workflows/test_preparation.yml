@@ -88,9 +88,9 @@ jobs:
         && echo SC_RELEASE=$PWD/sc/build/Release >> $GITHUB_ENV
     - name: Get sc commit hash  and url from dependencies.json
       run: |
-        hash=$(jq -r '.dependencies[] | select(.name=="sc") .source.ref' dependencies.json)
+        hash=$(jq -r '.dependencies[] | select(.name=="SC") .source.ref' dependencies.json)
         echo sc_commit=$hash >> $GITHUB_ENV
-        url=$(jq -r '.dependencies[] | select(.name=="sc") .source.url' dependencies.json)
+        url=$(jq -r '.dependencies[] | select(.name=="SC") .source.url' dependencies.json)
         echo sc_url=$url >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cmake_cache
@@ -150,9 +150,9 @@ jobs:
         && echo P4EST_RELEASE=$PWD/p4est/build/Release >> $GITHUB_ENV
     - name: Get p4est commit hash and url from dependencies.json
       run: |
-        hash=$(jq -r '.dependencies[] | select(.name=="p4est") .source.ref' dependencies.json)
+        hash=$(jq -r '.dependencies[] | select(.name=="P4EST") .source.ref' dependencies.json)
         echo p4est_commit=$hash >> $GITHUB_ENV
-        url=$(jq -r '.dependencies[] | select(.name=="p4est") .source.url' dependencies.json)
+        url=$(jq -r '.dependencies[] | select(.name=="P4EST") .source.url' dependencies.json)
         echo p4est_url=$url >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cmake_cache
