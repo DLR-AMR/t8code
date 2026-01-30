@@ -197,7 +197,7 @@ jobs:
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     ## p4est release
     - name: p4est cmake release
-      run: cd $P4EST_RELEASE && cmake $P4EST_BUILD/p4est -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
+      run: cd $P4EST_RELEASE && cmake $P4EST_BUILD/p4est -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$P4EST_RELEASE/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_RELEASE/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: p4est build release
       run: cd $P4EST_RELEASE && ninja $MAKEFLAGS && ninja $MAKEFLAGS install
