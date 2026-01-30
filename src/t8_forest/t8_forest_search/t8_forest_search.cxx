@@ -278,9 +278,9 @@ t8_partition_search_base::search_recursion (const t8_locidx_t ltreeid, const t8_
     /* now check multiple cases for the beginning processor */
     if (cpfirst < cpnext) {
       /* at least one processor starts in this child */
-      t8_linearidx_t global_first_descendant
+      const t8_linearidx_t global_first_descendant
         = t8_forest_get_monotonous_gfd (global_first_desc, cpfirst - pfirst - 1, &query_data);
-      t8_linearidx_t element_id = ts->element_get_linear_id (eclass, children[ichild], forest->maxlevel);
+      const t8_linearidx_t element_id = ts->element_get_linear_id (eclass, children[ichild], forest->maxlevel);
 
       if (global_first_descendant == element_id) {
         /* cpfirst starts at the tree's first descendant but may be empty */
