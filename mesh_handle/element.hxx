@@ -306,14 +306,14 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
       }
     }
     std::vector<std::reference_wrapper<SelfType>> neighbor_elements;
-    t8_element_t** neighbors; /**< Neighboring elements. */
-    int* dual_faces_internal; /**< Face indices of the neighbor elements. */
-    int num_neighbors;        /**< Number of neighboring elements. */
-    t8_locidx_t* neighids;    /**< Neighboring elements ids. */
-    t8_eclass_t neigh_class;  /**< Neighboring elements tree class. */
+    const t8_element_t** neighbors; /**< Neighboring elements. */
+    int* dual_faces_internal;       /**< Face indices of the neighbor elements. */
+    int num_neighbors;              /**< Number of neighboring elements. */
+    t8_locidx_t* neighids;          /**< Neighboring elements ids. */
+    t8_eclass_t neigh_class;        /**< Neighboring elements tree class. */
 
     t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, get_element (), &neighbors, face, &dual_faces_internal,
-                                   &num_neighbors, &neighids, &neigh_class, t8_forest_is_balanced (m_mesh->m_forest));
+                                   &num_neighbors, &neighids, &neigh_class);
     if (dual_faces) {
       dual_faces->get ().assign (dual_faces_internal, dual_faces_internal + num_neighbors);
     }
@@ -329,7 +329,6 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
     }
     if (num_neighbors > 0) {
       // Free allocated memory.
-      t8_forest_get_scheme (m_mesh->m_forest)->element_destroy (get_tree_class (), num_neighbors, neighbors);
       T8_FREE (neighbors);
       T8_FREE (dual_faces_internal);
       T8_FREE (neighids);

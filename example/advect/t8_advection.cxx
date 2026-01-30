@@ -984,7 +984,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 {
   t8_locidx_t itree, ielement, idata;
   t8_locidx_t num_trees, num_elems_in_tree;
-  t8_element_t **neighbors;
+  const t8_element_t **neighbors;
   int iface, ineigh;
   t8_advect_element_data_t *elem_data;
   const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
@@ -1035,13 +1035,12 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 
         t8_forest_leaf_face_neighbors (problem->forest, itree, element, &neighbors, iface,
                                        &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
-                                       &elem_data->neighs[iface], &neigh_eclass, 1);
+                                       &elem_data->neighs[iface], &neigh_eclass);
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
           elem_data->neigh_level[iface] = scheme->element_get_level (neigh_eclass, neighbors[ineigh]);
         }
 
         if (elem_data->num_neighbors[iface] > 0) {
-          scheme->element_destroy (neigh_eclass, elem_data->num_neighbors[iface], neighbors);
           T8_FREE (neighbors);
           //t8_global_essentialf("alloc face %i of elem %i\n", iface, ielement);
           elem_data->fluxes[iface] = T8_ALLOC (double, elem_data->num_neighbors[iface]);
@@ -1197,7 +1196,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   int done = 0;
   int adapted_or_partitioned = 0;
   int dual_face;
-  t8_element_t **neighs;
+  const t8_element_t **neighs;
   t8_eclass_t neigh_eclass;
   double total_time, solve_time = 0;
   double ghost_exchange_time, ghost_waittime, neighbor_time, flux_time;
@@ -1291,15 +1290,13 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
               neighbor_time = -sc_MPI_Wtime ();
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem, &neighs, iface,
                                              &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
-                                             &elem_data->neighs[iface], &neigh_eclass, 1);
+                                             &elem_data->neighs[iface], &neigh_eclass);
               for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
                 elem_data->neigh_level[iface] = scheme->element_get_level (neigh_eclass, neighs[ineigh]);
               }
 
               T8_ASSERT (neighs != NULL || elem_data->num_neighbors[iface] == 0);
               if (neighs != NULL) {
-                scheme->element_destroy (neigh_eclass, elem_data->num_neighbors[iface], neighs);
-
                 T8_FREE (neighs);
               }
 
