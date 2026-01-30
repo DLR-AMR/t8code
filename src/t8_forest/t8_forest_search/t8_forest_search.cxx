@@ -198,10 +198,10 @@ t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *
   t8_element_t *element;
   query_data->ts->element_new (query_data->eclass, 1, &element);
   query_data->ts->element_set_linear_id (query_data->eclass, element, query_data->maxlevel, linearid);
-  size_t child_id = query_data->ts->element_get_ancestor_id (query_data->eclass, element, query_data->level);
+  const t8_locidx_t child_id = query_data->ts->element_get_ancestor_id (query_data->eclass, element, query_data->level);
   query_data->ts->element_destroy (query_data->eclass, 1, &element);
 
-  return child_id;
+  return (size_t) child_id;
 }
 
 void
