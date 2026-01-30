@@ -145,6 +145,17 @@ foreach(INDEX RANGE ${DEPS_RANGE})
     FetchContent_MakeAvailable(${DEP_NAME})
 endforeach()
 
+# Set SC_ENABLE_MPI and SC_ENABLE_MPIIO according to T8CODE_ENABLE_MPI
+if( T8CODE_ENABLE_MPI AND NOT T8CODE_USE_SYSTEM_SC )
+    set( SC_ENABLE_MPI ON CACHE BOOL "enable mpi support in libsc" FORCE)
+    set( SC_ENABLE_MPIIO ON CACHE BOOL "enable mpi-io support in libsc" FORCE)
+elseif( NOT T8CODE_ENABLE_MPI AND NOT T8CODE_USE_SYSTEM_SC )
+    set( SC_ENABLE_MPI OFF CACHE BOOL "disable mpi support in libsc" FORCE)
+    set( SC_ENABLE_MPIIO OFF CACHE BOOL "disable mpi-io support in libsc" FORCE)
+endif()
+mark_as_advanced( FORCE SC_ENABLE_MPI)
+mark_as_advanced( FORCE SC_ENABLE_MPIIO)
+
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 mark_as_advanced( FORCE gtest_force_shared_crt)
 
