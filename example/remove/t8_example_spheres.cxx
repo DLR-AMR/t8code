@@ -125,6 +125,8 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
   t8_forest_unref (&forest);
 }
 
+T8_EXTERN_C_END ();
+
 int
 main (int argc, char **argv)
 {
@@ -206,5 +208,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-T8_EXTERN_C_END ();

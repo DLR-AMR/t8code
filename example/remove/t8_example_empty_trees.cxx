@@ -95,6 +95,8 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
   t8_forest_unref (&forest);
 }
 
+T8_EXTERN_C_END ();
+
 int
 main (int argc, char **argv)
 {
@@ -162,5 +164,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-T8_EXTERN_C_END ();
