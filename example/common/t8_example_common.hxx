@@ -51,7 +51,7 @@ typedef struct
 /** Function pointer for real valued functions from d+1 space dimensions
  * functions f: R^d x R -> R */
 typedef double (*t8_scalar_function_1d_fn) (double x, double t);
-typedef double (*t8_scalar_function_2d_fn) (const t8_point<2> &x, const double t);
+typedef double (*t8_scalar_function_2d_fn) (const t8_2D_point &x, const double t);
 typedef double (*t8_scalar_function_3d_fn) (const t8_3D_point &x, const double t);
 /** Function pointer for a vector valued function f: R^3 x R -> R */
 typedef void (*t8_flow_function_3d_fn) (const t8_3D_point &x_in, const double t, t8_3D_vec &x_out);

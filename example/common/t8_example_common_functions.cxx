@@ -252,7 +252,7 @@ t8_flow_incomp_cube_flow (const t8_3D_point &x, const double t, t8_3D_vec &x_out
  * On output: polar[0] = r, polar[1] = phi
  */
 static void
-t8_flow_2d_polar_coords (const t8_vec<2> &x, t8_vec<2> &polar)
+t8_flow_2d_polar_coords (const t8_2D_vec &x, t8_2D_vec &polar)
 {
   polar[0] = sqrt (SC_SQR (x[0]) + SC_SQR (x[1]));
   polar[1] = atan2 (x[1], x[0]);
@@ -267,7 +267,7 @@ t8_flow_2d_polar_coords (const t8_vec<2> &x, t8_vec<2> &polar)
  *
  */
 static void
-t8_flow_2d_cart_coords (const t8_vec<2> &polar_values, const t8_vec<2> &polar_coords, t8_vec<2> &cart)
+t8_flow_2d_cart_coords (const t8_2D_vec &polar_values, const t8_2D_vec &polar_coords, t8_2D_vec &cart)
 {
   cart[0] = cos (polar_coords[1]) * polar_values[0] - sin (polar_coords[1]) * polar_values[1];
   cart[1] = sin (polar_coords[1]) * polar_values[0] + cos (polar_coords[1]) * polar_values[1];
@@ -278,10 +278,10 @@ t8_flow_2d_cart_coords (const t8_vec<2> &polar_values, const t8_vec<2> &polar_co
 void
 t8_flow_around_circle (const t8_3D_point &x, [[maybe_unused]] const double t, t8_3D_vec &x_out)
 {
-  t8_vec<2> polar;
-  t8_vec<2> polar_speed;
-  const t8_vec<2> x_2D = t8_vec<2> ({ x[0], x[1] });
-  t8_vec<2> x_out_2D ({ x_out[0], x_out[1] });
+  t8_2D_vec polar;
+  t8_2D_vec polar_speed;
+  const t8_2D_vec x_2D = t8_2D_vec ({ x[0], x[1] });
+  t8_2D_vec x_out_2D ({ x_out[0], x_out[1] });
   const double R = 0.15;
 
   t8_axb (x_2D, x_out_2D, 1, -0.5);

@@ -27,59 +27,40 @@
 #ifndef T8_VEC_HXX
 #define T8_VEC_HXX
 
-#include <t8_types/t8_type.hxx>
-#include <t8_types/t8_operators.hxx>
-#include <t8.h>
-
 #include <algorithm>
 #include <numeric>
 #include <span>
-#include <ranges>
+#include <array>
+#include <type_traits>
+#include <iterator>
+#include <concepts>
+#include <cmath>
+#include <functional>
 
-/**
-  * Tag for a vector in N-dimensional space.
-  * \tparam TDim Dimension of the vector.
-  */
-template <std::size_t TDim>
-struct t8_vec_tag
-{
-  static constexpr std::size_t dim = TDim;  ///< Dimension of the vector.
-};
-
-/**
-  * Type alias for a vector in N-dimensional space.
-  * \tparam TDim Dimension of the vector.
-  */
-template <std::size_t TDim>
-using t8_vec = T8Type<std::array<double, TDim>, t8_vec_tag<TDim>, EqualityComparable, Swapable, RandomAccessible>;
-
-/**
-  * Type alias for a non-owning vector view in N-dimensional space.
-  * \tparam TDim     Dimension of the vector.
-  * \tparam TType    The type (const and so on)
-  */
 template <std::size_t TDim, typename TType = double>
-using t8_vec_view = T8Type<std::span<TType, TDim>, t8_vec_tag<TDim>, EqualityComparable, Swapable, RandomAccessible>;
+using t8_vec = std::array<TType, TDim>;
+
+/** Type alias for a 2D point.
+ */
+typedef std::array<double, 2> t8_2D_point;
+
+/** Type alias for a 3D point.
+ */
+typedef std::array<double, 3> t8_3D_point;
 
 /** Type alias for a 2D vector.
  */
-using t8_2D_vec = t8_vec<2>;
-
-/** Type alias for a non-owning 2D vec view.
- * \tparam TType The type (const and so on)
- */
-template <typename TType = double>
-using t8_2D_vec_view = t8_vec_view<2, TType>;
+typedef t8_vec<2> t8_2D_vec;
 
 /** Type alias for a 3D vector.
  */
-using t8_3D_vec = t8_vec<3>;
+typedef t8_vec<3> t8_3D_vec;
 
 /** Type alias for a non-owning 3D vec view.
  * \tparam TType The type (const and so on)
  */
-template <typename TType = double>
-using t8_3D_vec_view = t8_vec_view<3, TType>;
+template <std::size_t TDim, typename TType = double>
+using t8_vec_view = std::span<TType, TDim>;
 
 /** Convenience function to create a vector view from a raw array.
  *
@@ -93,7 +74,7 @@ constexpr auto
 make_t8_vec_view (TType *ptr) noexcept
 {
   using view_type = t8_vec_view<TDim, TType>;
-  return view_type (std::span<TType, TDim> (ptr, TDim));
+  return view_type (ptr, TDim);
 }
 
 /** Convenience function to create a 2D vector view from a raw array.
@@ -122,160 +103,56 @@ make_t8_3D_vec_view (TType *ptr) noexcept
   return make_t8_vec_view<3> (ptr);
 }
 
-/* -----------------------Concepts for t8_vec----------------------- */
-
-/** Concept that checks whether a type is a strong type of type t8_vec<N>. N can be either fixed or left open.
-  * \tparam TType          The type to check.
-  * \tparam TExpectedDim   Optional dimensional restriction (default = wildcard).
-  */
-template <typename T, std::size_t Expected = static_cast<std::size_t> (-1)>
-concept T8VecType = requires { typename std::remove_cvref_t<T>::tag; } && requires {
+/** Concept for container types with value type that is convertible into double.
+*/
+template <typename T>
+concept T8ContainerdoubleType = requires (T t) {
   {
-    std::remove_cvref_t<T>::tag::dim
-  } -> std::convertible_to<std::size_t>;
-} && (Expected == static_cast<std::size_t> (-1) || std::remove_cvref_t<T>::tag::dim == Expected);
+    std::begin (t)
+  } -> std::input_iterator;
+  {
+    std::end (t)
+  } -> std::input_iterator;
+  typename T::value_type;
+} && std::is_convertible_v<typename T::value_type, double>;
 
-/** Concept that checks whether a type is a container of elements of type t8_vec<N>. N can be either fixed or left open.
-  * \tparam TType     The type to check.
-  * \tparam TDim   Optional dimensional restriction (default = wildcard).
-  */
-template <typename TType, std::size_t TExpectedDim = static_cast<std::size_t> (-1)>
-concept T8VecContainerType = std::ranges::range<std::remove_cvref_t<TType>>
-                             && T8VecType<std::ranges::range_value_t<std::remove_cvref_t<TType>>, TExpectedDim>;
-
-/* -----------------------End concepts for t8_vec----------------------- */
-
-/**
-  * Tag for a point in N-dimensional space.
-  * \tparam TDim Dimension of the point.
-  */
-template <std::size_t TDim>
-struct t8_point_tag
-{
-  static constexpr std::size_t dim = TDim;  ///< Dimension of the point.
+/** Concept for container types with any value type.
+*/
+template <typename T>
+concept T8ContainerType = requires (T t) {
+  {
+    std::begin (t)
+  } -> std::input_iterator;
+  {
+    std::end (t)
+  } -> std::input_iterator;
 };
 
-/**
-  * Type alias for a point in N-dimensional space.
-  * \tparam TDim Dimension of the point.
-  */
-template <std::size_t TDim>
-using t8_point = T8Type<std::array<double, TDim>, t8_point_tag<TDim>, EqualityComparable, Swapable, RandomAccessible>;
-
-/**
-  * Type alias for a non-owning point view in N-dimensional space.
-  * \tparam TDim     Dimension of the point.
-  * \tparam TType    The type (const and so on)
-  */
-template <std::size_t TDim, typename TType = double>
-using t8_point_view
-  = T8Type<std::span<TType, TDim>, t8_point_tag<TDim>, EqualityComparable, Swapable, RandomAccessible>;
-
-/** Type alias for a 2D point.
- */
-using t8_2D_point = t8_point<2>;
-
-/** Type alias for a non-owning 2D point view.
- * \tparam TType The type (const and so on)
- */
-template <typename TType = double>
-using t8_2D_point_view = t8_point_view<2, TType>;
-
-/** Type alias for a 3D point.
- */
-using t8_3D_point = t8_point<3>;
-
-/** Type alias for a non-owning 3D point view.
- * \tparam TType The type (const and so on)
- */
-template <typename TType = double>
-using t8_3D_point_view = t8_point_view<3, TType>;
-
-/** Convenience function to create a point view from a raw array.
- *
- * \tparam TDim            The dimension of the array.
- * \tparam TType           The type (const and so on)
- * \param [in] ptr         The pointer to the array.
- * \return                 The view.
- */
-template <std::size_t TDim, typename TType = double>
-constexpr auto
-make_t8_point_view (TType *ptr) noexcept
-{
-  using view_type = t8_point_view<TDim, TType>;
-  return view_type (std::span<TType, TDim> (ptr, TDim));
-}
-
-/** Convenience function to create a 2D point view from a raw array.
- *
- * \param [in] ptr         The pointer to the array.
- * \tparam TType           The type (const and so on)
- * \return                 The view.
- */
-template <typename TType>
-inline auto
-make_t8_2D_point_view (TType *ptr) noexcept
-{
-  return make_t8_point_view<2> (ptr);
-}
-
-/** Convenience function to create a 3D point view from a raw array.
- *
- * \param [in] ptr         The pointer to the array.
- * \tparam TType           The type (const and so on)
- * \return                 The view.
- */
-template <typename TType>
-inline auto
-make_t8_3D_point_view (TType *ptr) noexcept
-{
-  return make_t8_point_view<3> (ptr);
-}
-
-/* -----------------------Concepts for t8_point----------------------- */
-/** Concept that checks whether a type is a strong type of type t8_point<N>.
-  * N can be either fixed or left open.
-  * \tparam TType          The type to check.
-  * \tparam TExpectedDim   Optional dimensional restriction (default = wildcard).
-  */
-template <typename T, std::size_t Expected = static_cast<std::size_t> (-1)>
-concept T8PointType = requires { typename std::remove_cvref_t<T>::tag; } && requires {
+/** Concept for container types of size 2 with value type that is convertible into double.
+*/
+template <typename T>
+concept T8ContainerdoubleType2D = T8ContainerdoubleType<T> && requires (T t) {
   {
-    std::remove_cvref_t<T>::tag::dim
+    std::size (t)
   } -> std::convertible_to<std::size_t>;
-} && (Expected == static_cast<std::size_t> (-1) || std::remove_cvref_t<T>::tag::dim == Expected);
+  requires std::size (t) == 2;
+};
 
-/** Concept that checks whether a type is a container of elements of type t8_point<N>.
-   * N can be either fixed or left open.
-   * \tparam TType          The type to check.
-   * \tparam TExpectedDim   Optional dimensional restriction (default = wildcard).
-   */
-template <typename TType, std::size_t TExpectedDim = static_cast<std::size_t> (-1)>
-concept T8PointContainerType = std::ranges::range<std::remove_cvref_t<TType>>
-                               && T8PointType<std::ranges::range_value_t<std::remove_cvref_t<TType>>, TExpectedDim>;
-
-/* -----------------------End concepts for t8_point----------------------- */
-
-/** Concept that checks if a type is either a point or vec
-  * \tparam TType     The type to check.
-  * \tparam TDim   Optional dimensional restriction (default = wildcard).
-  */
-template <typename TType, std::size_t TDim = static_cast<std::size_t> (-1)>
-concept T8DimensionalType = T8PointType<TType, TDim> || T8VecType<TType, TDim>;
-
-/**
-  * Dimension of a dimensional type.
-  * \tparam TDimensional     The dimensional type.
-  * \return                  The dimension.
-  */
-template <T8DimensionalType TDimensional>
-constexpr std::size_t dim_v = std::remove_cvref_t<TDimensional>::tag_type::dim;
+/** Concept for container types of size 3 with value type that is convertible into double.
+*/
+template <typename T>
+concept T8ContainerdoubleType3D = T8ContainerdoubleType<T> && requires (T t) {
+  {
+    std::size (t)
+  } -> std::convertible_to<std::size_t>;
+  requires std::size (t) == 3;
+};
 
 /** Vector norm.
   * \param [in] vec  An N-dimensional vector.
   * \return          The norm of \a vec.
   */
-template <T8VecType TVec>
+template <T8ContainerdoubleType TVec>
 static inline double
 t8_norm (const TVec &vec)
 {
@@ -285,7 +162,7 @@ t8_norm (const TVec &vec)
 /** Normalize a vector.
   * \param [in,out] vec  An N-dimensional vector.
   */
-template <T8VecType TVec>
+template <T8ContainerdoubleType TVec>
 constexpr void
 t8_normalize (TVec &vec)
 {
@@ -293,14 +170,13 @@ t8_normalize (TVec &vec)
   std::transform (vec.begin (), vec.end (), vec.begin (), [norm] (double v) { return v / norm; });
 }
 
-/**
-  * Copy a dimensional object.
+/** Copy a dimensional object.
   * \param [in]  src  The source.
   * \param [out] dest The destination.
   */
-template <T8DimensionalType TDimensional1, T8DimensionalType TDimensional2>
+template <T8ContainerType TVec1, T8ContainerType TVec2>
 constexpr void
-t8_copy (const TDimensional1 &src, TDimensional2 &dest)
+t8_copy (const TVec1 &src, TVec2 &dest)
 {
   std::copy (src.begin (), src.end (), dest.begin ());
 }
@@ -311,7 +187,7 @@ t8_copy (const TDimensional1 &src, TDimensional2 &dest)
   * \return             The euclidean distance.
   *                     Equivalent to norm (X-Y).
   */
-template <T8PointType TPointX, T8PointType TPointY>
+template <T8ContainerdoubleType TPointX, T8ContainerdoubleType TPointY>
 constexpr double
 t8_dist (const TPointX &point_x, const TPointY &point_y)
 {
@@ -324,7 +200,7 @@ t8_dist (const TPointX &point_x, const TPointY &point_y)
   * \param [in,out] vec_x  An N-dimensional vector. On output set to \a alpha * \a vec_x.
   * \param [in]     alpha  A factor.
   */
-template <T8VecType TVec>
+template <T8ContainerdoubleType TVec>
 constexpr void
 t8_ax (TVec &vec_x, const double alpha)
 {
@@ -336,7 +212,7 @@ t8_ax (TVec &vec_x, const double alpha)
   * \param [out] vec_y  On output set to \a alpha * \a vec_x.
   * \param [in]  alpha  A factor.
   */
-template <T8VecType TVecX, T8VecType TVecY>
+template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
 constexpr void
 t8_axy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
 {
@@ -351,7 +227,7 @@ t8_axy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
   * \param [in]  b      An offset.
   * \note It is possible that vec_x = vec_y on input to overwrite x
   */
-template <T8VecType TVecX, T8VecType TVecY>
+template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
 constexpr void
 t8_axb (const TVecX &vec_x, TVecY &vec_y, const double alpha, const double b)
 {
@@ -364,7 +240,7 @@ t8_axb (const TVecX &vec_x, TVecY &vec_y, const double alpha, const double b)
   *                      On output set \a to vec_y + \a alpha * \a vec_x
   * \param [in]  alpha  A factor.
   */
-template <T8VecType TVecX, T8VecType TVecY>
+template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
 constexpr void
 t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
 {
@@ -378,7 +254,7 @@ t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
   * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
   * \param [in]  alpha  A factor for the multiplication of \a vec_x.
   */
-template <T8VecType TVecX, T8VecType TVecY, T8VecType TVecZ>
+template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY, T8ContainerdoubleType TVecZ>
 constexpr void
 t8_axpyz (const TVecX &vec_x, const TVecY &vec_y, TVecZ &vec_z, const double alpha)
 {
@@ -391,18 +267,19 @@ t8_axpyz (const TVecX &vec_x, const TVecY &vec_y, TVecZ &vec_z, const double alp
   * \param [in]  vec_y  An N-dimensional vector.
   * \return             The dot product \a vec_x * \a vec_y
   */
-template <T8VecType TVecX, T8VecType TVecY>
+template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
 constexpr double
 t8_dot (const TVecX &vec_x, const TVecY &vec_y)
 {
   return std::inner_product (vec_x.begin (), vec_x.end (), vec_y.begin (), 0.0);
 }
+
 /** Cross product of X and Y
   * \param [in]  vec_x  A 2D vector.
   * \param [in]  vec_y  A 2D vector.
   * \return             The cross product of \a vec_x and \a vec_y.
   */
-template <T8VecType<2> TVecX, T8VecType<2> TVecY>
+template <T8ContainerdoubleType2D TVecX, T8ContainerdoubleType2D TVecY>
 static inline double
 t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
 {
@@ -414,7 +291,7 @@ t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
   * \param [in]  vec_y  A 3D vector.
   * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
   */
-template <T8VecType<3> TVecX, T8VecType<3> TVecY, T8VecType<3> TVecCross>
+template <T8ContainerdoubleType3D TVecX, T8ContainerdoubleType3D TVecY, T8ContainerdoubleType3D TVecCross>
 static inline void
 t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
 {
@@ -428,8 +305,7 @@ t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
   * \param [in]  vec_y  An N-dimensional vector.
   * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
   */
-
-template <T8VecType<3> TVecX, T8VecType<3> TVecY, T8VecType<3> TVecDiff>
+template <T8ContainerdoubleType3D TVecX, T8ContainerdoubleType3D TVecY, T8ContainerdoubleType3D TVecDiff>
 constexpr void
 t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
 {
@@ -437,13 +313,13 @@ t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
 }
 
 /**
-  * Check the equality of two dimensional objects
-  * \param[in] x
-  * \param[in] y
-  * \param[in] tol
-  * \return true, if the objects are equal up to \a tol
+  * Check the equality of two dimensional objects.
+  * \param[in] x Container 1 to compare.
+  * \param[in] y Container 2 that should be compared to \a x for equality given tolerance \a tol.
+  * \param[in] tol Tolerance.
+  * \return true, if the objects are equal up to \a tol.
   */
-template <T8DimensionalType TDimensionalX, T8DimensionalType TDimensionalY>
+template <T8ContainerdoubleType TDimensionalX, T8ContainerdoubleType TDimensionalY>
 constexpr bool
 t8_eq (const TDimensionalX &x, const TDimensionalY &y, const double tol)
 {
@@ -455,7 +331,7 @@ t8_eq (const TDimensionalX &x, const TDimensionalY &y, const double tol)
   * \param [in,out] vec  An N-dimensional vector.
   * \param [in]  new_length  New length of the vector.
   */
-template <T8VecType TVec>
+template <T8ContainerdoubleType TVec>
 static inline void
 t8_rescale (TVec &vec, const double new_length)
 {
@@ -469,8 +345,8 @@ t8_rescale (TVec &vec, const double new_length)
   * \param [in]  p3  A 3D vector.
   * \param [out] normal vector of the triangle. (Not necessarily of length 1!)d
   */
-
-template <T8VecType<3> TVecP1, T8VecType<3> TVecP2, T8VecType<3> TVecP3, T8VecType<3> TVecNormal>
+template <T8ContainerdoubleType3D TVecP1, T8ContainerdoubleType3D TVecP2, T8ContainerdoubleType3D TVecP3,
+          T8ContainerdoubleType3D TVecNormal>
 static inline void
 t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNormal &normal)
 {
@@ -486,7 +362,7 @@ t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNorm
   * \param [out]  v2 3D vector.
   * \param [out]  v3 3D vector.
   */
-template <T8VecType<3> TVecV1, T8VecType<3> TVecV2, T8VecType<3> TVecV3>
+template <T8ContainerdoubleType3D TVecV1, T8ContainerdoubleType3D TVecV2, T8ContainerdoubleType3D TVecV3>
 static inline void
 t8_orthogonal_tripod (const TVecV1 &v1, TVecV2 &v2, TVecV3 &v3)
 {

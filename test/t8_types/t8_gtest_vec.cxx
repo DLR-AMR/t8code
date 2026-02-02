@@ -252,11 +252,11 @@ TEST (t8_gtest_vec, cross_3D)
 
 TEST (t8_gtest_vec, cross_2D)
 {
-  const t8_vec<2> zero ({ 0, 0 });
-  const t8_vec<2> e1 ({ 1, 0 });   // Unit vector along x-axis
-  const t8_vec<2> e2 ({ 0, 1 });   // Unit vector along y-axis
-  const t8_vec<2> v1 ({ 3, 4 });   // Arbitrary vector
-  const t8_vec<2> v2 ({ -4, 3 });  // Perpendicular to v1
+  const t8_2D_vec zero ({ 0, 0 });
+  const t8_2D_vec e1 ({ 1, 0 });   // Unit vector along x-axis
+  const t8_2D_vec e2 ({ 0, 1 });   // Unit vector along y-axis
+  const t8_2D_vec v1 ({ 3, 4 });   // Arbitrary vector
+  const t8_2D_vec v2 ({ -4, 3 });  // Perpendicular to v1
 
   double cross;
 
