@@ -59,6 +59,11 @@ function( add_t8_example )
     install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION RUNTIME)
 endfunction()
 
+#copy example files to the exact same location in the builddir as they are in the source dir
+function( copy_example_file EXAMPLE_FILE_NAME_SUBPATH )
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/${EXAMPLE_FILE_NAME_SUBPATH} ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE_FILE_NAME_SUBPATH} COPYONLY)
+endfunction()
+
 add_t8_example( NAME t8_advection                       SOURCES advect/t8_advection.cxx )
 
 add_t8_example( NAME t8_cmesh_partition                 SOURCES cmesh/t8_cmesh_partition.cxx )
@@ -80,6 +85,9 @@ add_t8_example( NAME t8_read_tetgen                     SOURCES IO/cmesh/tetgen/
 add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/t8_time_tetgen_file.cxx )
 add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
 add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )
+
+configure_file(IO/cmesh/gmsh/circlesquare_hybrid_hole.msh)
+
 
 if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
