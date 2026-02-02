@@ -67,7 +67,11 @@ if ( T8CODE_ENABLE_MPI )
 endif()
 
 if( T8CODE_ENABLE_VTK )
-    target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" )
+    set (T8CODE_VTK_VERSION_USED "${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
+    # Define T8_VTK_VERSION_USED for internal and external use in source files.
+    # Note, external libraries linking against t8code (i.e. using find_package ( T8CODE REQUIRED )) can
+    # use T8_VTK_VERSION_USED in source code and T8CODE_VTK_VERSION_USED (defined in config.cmake.in) in their CMake scripts.
+    target_compile_definitions( T8 PUBLIC T8_VTK_VERSION_USED="${T8CODE_VTK_VERSION_USED}" )
     target_compile_definitions( T8 PUBLIC T8_ENABLE_VTK=1 )
     target_include_directories( T8 PUBLIC ${VTK_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${VTK_LIBRARIES} )
@@ -155,6 +159,8 @@ target_sources( T8 PRIVATE
     t8_data/t8_containers.cxx 
     t8_forest/t8_forest_adapt.cxx 
     t8_forest/t8_forest_partition.cxx 
+    t8_forest/t8_forest_partition_for_coarsening.cxx
+    t8_forest/t8_forest_pfc_helper.cxx 
     t8_forest/t8_forest.cxx 
     t8_forest/t8_forest_private.cxx
     t8_forest/t8_forest_ghost.cxx
@@ -227,7 +233,8 @@ install( FILES
     t8_types/t8_vec.hxx
     t8_types/t8_vec.h
     t8_version.h
-    t8_vtk.h
+    t8_vtk.h 
+    t8_with_macro_error.h
     TYPE INCLUDE
 )
 

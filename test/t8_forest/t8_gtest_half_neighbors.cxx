@@ -35,7 +35,8 @@
 #include <t8_forest/t8_forest_private.h>
 #include <test/t8_gtest_schemes.hxx>
 
-class forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
+struct forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>>
+{
  protected:
   void
   SetUp () override

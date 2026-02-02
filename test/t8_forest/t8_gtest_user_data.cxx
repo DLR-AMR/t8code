@@ -35,7 +35,8 @@
  * We build a forest and set user data for it.
  * We then retrieve the data and check whether it is the same.
  */
-class forest_user_data: public testing::TestWithParam<int> {
+struct forest_user_data: public testing::TestWithParam<int>
+{
  protected:
   void
   SetUp () override

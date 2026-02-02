@@ -56,7 +56,7 @@ jobs:
     # Do this regardless of the result of the previous step.
     # We especially want to upload the result when the check fails.
       if: always()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: t8code indentation report
         path: scripts/indent_script_output.txt

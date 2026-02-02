@@ -1,4 +1,4 @@
-name: CMake Tarball
+name: test tarball
 
 #  This file is part of t8code.
 #  t8code is a C library to manage a collection (a forest) of multiple
@@ -37,14 +37,22 @@ on:
         type: string
         description: 'Test level used for configuring (T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC)'
         default: 'T8_TEST_LEVEL_FULL'
+      RELEASE_VERSION:
+        required: false
+        type: string
+        description: 'Create a release with this version (e.g., v1.2.3-24.06) and upload the tarball to it'
+      UPLOAD_TO_RELEASE:
+        required: false
+        type: boolean
+        description: 'Whether to upload the tarball to the release'
+        default: false
 
 jobs:
-  build:
-
+  build_tarball:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
-    timeout-minutes: 90
+    timeout-minutes: 5
     steps:
 #
 # Setup
@@ -77,7 +85,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: config.log
         path: build/config.log
@@ -86,19 +94,19 @@ jobs:
       run: cd build && ninja GenerateVersionFile && ninja package_source && mkdir tarballs && mv package/*Source.tar.gz tarballs
 # Upload the tarball
     - name: upload tarball
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: tarballs
         path: build/tarballs
 
-  test-tarball:
-    needs: build
+  test_tarball:
+    needs: build_tarball
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
-    timeout-minutes: 90
+    timeout-minutes: 15
     steps:
     - name: Download tarball
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
           name: tarballs
           path: tarballs
@@ -121,7 +129,7 @@ jobs:
       run: mkdir build_tar && cd build_tar && cmake $TAR_DIR $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: build_tar.log
         path: build_tar/config.log
@@ -135,9 +143,25 @@ jobs:
       run: cd build_tar && ctest -R _parallel
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: build_tar.log
         path: build_tar/test-suite.log
+    - name: retrieve name of tarball
+      run: |
+        TAR_NAME=$(basename tarballs/*.tar.gz)
+        echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
+    - name: upload as release asset
+      if: ${{ inputs.UPLOAD_TO_RELEASE == true }}
+      uses: ncipollo/release-action@v1
+      with:
+        name: ${{ inputs.RELEASE_VERSION }}
+        commit: main
+        tag: ${{ inputs.RELEASE_VERSION }}
+        artifacts: "tarballs/*.tar.gz"
+        body: "Automated release of t8code version ${{ inputs.RELEASE_VERSION }}."
+        generate_release_notes: true
+        token: ${{ secrets.T8DDY_TOKEN }}
+
 
 
