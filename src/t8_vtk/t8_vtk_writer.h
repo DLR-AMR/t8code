@@ -29,7 +29,7 @@
 #define T8_VTK_WRITER_C_INTERFACE_H
 
 #include <t8.h>
-#include <t8_vtk.h>
+#include <t8_vtk/t8_vtk.h>
 #include <t8_forest/t8_forest_types.h>
 
 #if T8_ENABLE_VTK

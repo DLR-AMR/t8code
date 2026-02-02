@@ -26,7 +26,7 @@
 
 #ifndef T8_CMESH_PARAMS_HXX
 #define T8_CMESH_PARAMS_HXX
-#include <t8_eclass.h>
+#include <t8_element/t8_eclass.h>
 #include <vector>
 #include <numeric>
 #include <algorithm>

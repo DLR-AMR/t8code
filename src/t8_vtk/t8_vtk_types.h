@@ -28,7 +28,7 @@
 #ifndef T8_VTK_TYPES
 #define T8_VTK_TYPES
 
-#include <t8_eclass.h>
+#include <t8_element/t8_eclass.h>
 
 /**
  * Translator between vtk-type of elements and t8code-elements. 

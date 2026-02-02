@@ -27,7 +27,7 @@
 #ifndef T8_DEFAULT_COMMON_HXX
 #define T8_DEFAULT_COMMON_HXX
 
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_types/t8_operators.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <sc_functions.h>

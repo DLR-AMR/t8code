@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_element/t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <sc_functions.h>

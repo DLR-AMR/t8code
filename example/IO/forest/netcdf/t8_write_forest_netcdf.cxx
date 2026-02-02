@@ -29,7 +29,7 @@
 #define NC_INDEPENDENT 0
 #define NC_COLLECTIVE 1
 #endif
-#include <t8_eclass.h>
+#include <t8_element/t8_eclass.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -38,7 +38,7 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest_netcdf.h>
-#include <t8_netcdf.h>
+#include <t8_netcdf/t8_netcdf.h>
 
 /* In this example is the use of the netcdf feature exemplary displayed.
 * We show how to write out a forest in the netCDF format and how to create additional (integer/double) netCDF variables which hold element data.

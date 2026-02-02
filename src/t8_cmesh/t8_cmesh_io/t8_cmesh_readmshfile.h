@@ -29,7 +29,7 @@
 #define T8_CMESH_READMSHFILE_H
 
 #include <t8.h>
-#include <t8_eclass.h>
+#include <t8_element/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 
 /** The supported .msh file versions.

@@ -23,7 +23,7 @@
 /* In this file we collect tests for the routines in `t8_mat.h`. */
 
 #include <t8.h>
-#include <t8_mat.h>
+#include <t8_helper_functions/t8_mat.h>
 #include <gtest/gtest.h>
 
 /* Test the `t8_mat_mult_vec` function. Here we also test the rotation matrices

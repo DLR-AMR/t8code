@@ -28,7 +28,7 @@
 #define T8_FOREST_NETCDF_H
 
 #include <t8_forest/t8_forest_general.h>
-#include <t8_netcdf.h>
+#include <t8_netcdf/t8_netcdf.h>
 
 /** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();

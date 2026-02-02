@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_vtk.h>
+#include <t8_vtk/t8_vtk.h>
 
 /* Writes the pvtu header file that links to the processor local files.
  * This function should only be called by one process.

@@ -25,7 +25,7 @@
  */
 
 #include <t8.h>
-#include <t8_eclass.h>
+#include <t8_element/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 
 void

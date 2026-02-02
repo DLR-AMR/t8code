@@ -31,9 +31,9 @@
 #include <t8_forest/t8_forest_pfc_message.hxx>
 #include <t8_forest/t8_forest_pfc_helper.hxx>
 #include <t8_data/t8_shmem.h>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_forest/t8_forest_partition_for_coarsening.h>
-#include <t8_eclass.h>
+#include <t8_element/t8_eclass.h>
 #include <vector>
 #include <algorithm>
 

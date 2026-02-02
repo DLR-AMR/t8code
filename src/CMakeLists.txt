@@ -149,36 +149,33 @@ endif()
 
 target_sources( T8 PRIVATE
     t8.c
-    t8_eclass.c
-    t8_element_shape.c
-    t8_element.cxx
-    t8_refcount.c 
-    t8_version.c 
-    t8_vtk.c 
-    t8_cmesh/t8_cmesh.cxx 
-    t8_cmesh/t8_cmesh_cad.cxx 
-    t8_cmesh/t8_cmesh_geometry.cxx 
+    t8_cmesh/t8_cmesh.cxx
+    t8_cmesh/t8_cmesh_cad.cxx
+    t8_cmesh/t8_cmesh_geometry.cxx
     t8_cmesh/t8_cmesh_examples.cxx
     t8_cmesh/t8_cmesh_helpers.cxx
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_commit.cxx 
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.c 
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c 
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx 
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c 
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.cxx 
-    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx 
-    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx 
-    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx 
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_commit.cxx
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.cxx
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx
+    t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx
     t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_save.cxx 
-    t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.cxx 
-    t8_data/t8_shmem.c 
-    t8_data/t8_containers.cxx 
-    t8_forest/t8_forest_adapt.cxx 
-    t8_forest/t8_forest_partition.cxx 
+    t8_cmesh/t8_cmesh_io/t8_cmesh_save.cxx
+    t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.cxx
+    t8_data/t8_shmem.c
+    t8_data/t8_containers.cxx
+    t8_element/t8_eclass.c
+    t8_element/t8_element_shape.c
+    t8_element/t8_element.cxx
+    t8_forest/t8_forest_adapt.cxx
+    t8_forest/t8_forest_partition.cxx
     t8_forest/t8_forest_partition_for_coarsening.cxx
-    t8_forest/t8_forest_pfc_helper.cxx 
-    t8_forest/t8_forest.cxx 
+    t8_forest/t8_forest_pfc_helper.cxx
+    t8_forest/t8_forest.cxx
     t8_forest/t8_forest_private.cxx
     t8_forest/t8_forest_ghost.cxx
     t8_forest/t8_forest_iterate.cxx
@@ -195,6 +192,8 @@ target_sources( T8 PRIVATE
     t8_geometry/t8_geometry_implementations/t8_geometry_lagrange.cxx
     t8_geometry/t8_geometry_implementations/t8_geometry_zero.cxx
     t8_geometry/t8_geometry_implementations/t8_geometry_examples.cxx
+    t8_helper_functions/t8_refcount.c
+    t8_misc/t8_version.c
     t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
@@ -217,6 +216,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
+    t8_vtk/t8_vtk.c
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
@@ -242,16 +242,6 @@ target_compile_definitions( T8 PUBLIC T8_LIBS="${T8_LIBS}" )
 
 install( FILES
     t8.h
-    t8_eclass.h
-    t8_element.h
-    t8_element_shape.h
-    t8_mat.h
-    t8_refcount.h
-    t8_types/t8_vec.hxx
-    t8_types/t8_vec.h
-    t8_version.h
-    t8_vtk.h 
-    t8_with_macro_error.h
     TYPE INCLUDE
 )
 
@@ -263,13 +253,17 @@ install( FILES
 
 install ( DIRECTORY t8_helper_functions DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
 
-install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h" 
+
+
+install( DIRECTORY t8_cmesh TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h" EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
 
 install( DIRECTORY t8_data TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_element TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
+
 install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
   PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
@@ -277,8 +271,13 @@ install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
   )
 install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.h" EXCLUDE)
+
+install( DIRECTORY t8_misc TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_netcdf TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_types TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
 install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.h" )
+
 
 install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE

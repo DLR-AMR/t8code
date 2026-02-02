@@ -37,7 +37,7 @@ These functions write a file in the netCDF-format which represents the given 2D-
 #if T8_ENABLE_NETCDF_PAR
 #include <netcdf_par.h>
 #endif
-#include <t8_element_shape.h>
+#include <t8_element/t8_element_shape.h>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>

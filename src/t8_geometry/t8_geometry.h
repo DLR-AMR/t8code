@@ -29,7 +29,7 @@
 #define T8_GEOMETRY_H
 
 #include <t8.h>
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 
 /** This enumeration contains all possible geometries. */
 typedef enum t8_geometry_type {
