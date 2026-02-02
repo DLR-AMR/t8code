@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
@@ -36,8 +36,8 @@
  * parse through all ghost elements and test whether the owner of an
  * element is in face the owner that is stored in the ghost layer.
   */
-
-class forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct forest_ghost_owner: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override

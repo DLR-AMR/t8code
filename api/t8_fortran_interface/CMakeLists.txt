@@ -2,8 +2,12 @@
 target_sources( T8 PRIVATE t8_fortran_interface.c )
 target_sources( T8 PRIVATE t8_fortran_interface_mod.f90 )
 
+
 # Add this directory to header search path.
-target_include_directories( T8 PRIVATE ${CMAKE_CURRENT_LIST_DIR} )
+target_include_directories( T8 PUBLIC
+                            $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/src>
+                            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+                            )
 
 # Install header files.
 install(

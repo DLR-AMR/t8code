@@ -23,18 +23,19 @@
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_cmesh/t8_cmesh_offset.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
 #include <test/t8_gtest_macros.hxx>
 
-class forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
+struct forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass>>
+{
  protected:
   void
   SetUp () override

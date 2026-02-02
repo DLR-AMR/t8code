@@ -31,7 +31,7 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_types.h>
@@ -39,7 +39,8 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <test/t8_gtest_schemes.hxx>
 
-class forest_transform: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
+struct forest_transform: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>>
+{
  protected:
   void
   SetUp () override

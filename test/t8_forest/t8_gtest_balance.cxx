@@ -30,7 +30,7 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -41,7 +41,8 @@
 #include <vector>
 #include <algorithm>
 
-class gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>> {
+struct gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>>
+{
  public:
   static const int kNumTrees = 4;
 
@@ -150,7 +151,7 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
 /**
  * \brief This function checks whether each tree only holds elements that are on the refinement level given by \a expected_elem_level_per_tree
  * 
- * \param [in] balanced_forest A forest consinsting of gtest_balance::kNumTrees trees
+ * \param [in] balanced_forest A forest consisting of gtest_balance::kNumTrees trees
  * \param [in] expected_elem_level_per_tree An array holding a refinement level for each tree id
  * \return true If each element with a tree corresponds to the given refinement level supplied by the array \var expected_elem_level_per_tree
  * \return false If not every element complies to the given refinement level per tree

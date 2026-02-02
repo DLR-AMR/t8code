@@ -30,6 +30,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_netcdf.h>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /** Creates a netCDF-4 file containing the (geometrical) information about the given forest mesh and additional elementwise data variables
@@ -55,14 +56,15 @@ t8_forest_write_netcdf (t8_forest_t forest, const char *file_prefix, const char 
  * \param [in]  ext_variables An array of pointers of the herein before mentioned user-defined variables (if none, set it to NULL).
  * \param [in]  comm The sc_MPI_Communicator to use.
  * \param [in]  netcdf_var_storage_mode This defines whether the variables in the netCDF-4 File are stored contiguously (NC_CONTIGUOUS) or in chunks (NC_CHUNKED (in this case netCDF's default chunking scheme is used)).
- * \param [in]  netcdf_var_mpi_access This defines whether the mpi processes are writing the variables' data collectively or independently.
+ * \param [in]  netcdf_mpi_access This defines whether the mpi processes are writing the variables' data collectively or independently.
  * \note Only use this extended version of \ref t8_forest_write_netcdf if you know exactly what you are doing. In all other cases, we recommend using \ref t8_forest_write_netcdf instead.
  */
 void
 t8_forest_write_netcdf_ext (t8_forest_t forest, const char *file_prefix, const char *file_title, int dim,
                             int num_extern_netcdf_vars, t8_netcdf_variable_t *ext_variables[], sc_MPI_Comm comm,
-                            int netcdf_var_storage_mode, int netcdf_var_mpi_access);
+                            int netcdf_var_storage_mode, int netcdf_mpi_access);
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_NETCDF_H */

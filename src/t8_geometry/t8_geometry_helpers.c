@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_geometry_helpers.c
+ * Implements functions declared in \ref t8_geometry_helpers.h.
+ */
+
 #include <t8_types/t8_vec.h>
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>

@@ -52,6 +52,15 @@ program t8_test_mpi_init
     stop 1
   endif
 
+
+  call t8_fortran_mpi_comm_delete_f(ccomm)
+  call MPI_Finalize(ierror)
+
+  if (ierror /= 0) then
+    print *, 'MPI Finalize failed.'
+    stop 1
+  endif
   print *, 'All good!'
   stop 0
+
 end program

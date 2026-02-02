@@ -58,7 +58,11 @@ int
 t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_locidx_t el_considered,
                                 t8_element_t **elements, const int elements_size);
 
-/* For each tree in a forest compute its first and last descendant */
+/**
+ * For each tree in a forest compute its first and last descendant.
+ * \param[in] forest The forest that should be used.  
+ 
+ */
 void
 t8_forest_compute_desc (t8_forest_t forest);
 
@@ -126,7 +130,8 @@ t8_forest_first_tree_shared (t8_forest_t forest);
 int
 t8_forest_last_tree_shared (t8_forest_t forest);
 
-/* Allocate memory for trees and set their values as in from.
+/**
+ * Allocate memory for trees and set their values as in from.
  * For each tree allocate enough element memory to fit the elements of from.
  * If copy_elements is true, copy the elements of from into the element memory.
  * Do not copy the first and last desc for each tree, as this is done outside in commit
@@ -248,6 +253,8 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
  * \param [in]    upper_bound A known upper bound for the owner process.
  * \param [in]    guess   An initial guess for the owner. Must satisfy
  *                        \a lower_bound <= \a guess <= \a upper_bound
+ * \param [in]    element_is_desc   This should be true, if \a element is its own first_descendant at
+ *                                  the maximum level. Must be false otherwise.
  * \return                The mpirank of the process that owns \a element.
  * \note If \a lower_bound = \a upper_bound, the function assumes that \a lower_bound
  *       is the owner process and immediately returns.
@@ -272,7 +279,7 @@ t8_forest_element_find_owner_ext (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
  * \param [in]  eclass      The element class of the tree.
  * \param [in]  rank        An mpi rank.
  * \param [in]  element_is_desc This should be true, if \a element is its own first_descendant at
- *                          the maximum level. Must be false otherwise.
+ *                              the maximum level. Must be false otherwise.
  * \return      True if and only if \a rank is the (first) owner process of \a element.
  */
 int
@@ -380,18 +387,18 @@ void
 t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                                int face, int *lower, int *upper);
 
-/** Construct all face neighbors of half size of a given element.
+/** Construct all face neighbors of half size of a given element in linear id order.
  * \param [in]     forest  The forest.
  * \param [in]     ltreeid The local tree id of the tree in which the element is.
  * \param [in]     elem    The element of which to construct the neighbors.
  * \param [in,out] neighs An array of allocated elements of the correct element class.
  *                        On output the face neighbors of \a elem across \a face of one
- *                        bigger refinement level are stored.
+ *                        bigger refinement level are stored. Ordered by their linear id.
  * \param [in]     neigh_class The eclass of the neighbors.
  * \param [in]     face    The number of the face of \a elem.
  * \param [in]     num_neighs The number of allocated element in \a neighs. Must match the
  *                         number of face neighbors of one bigger refinement level.
- * \param [out]    dual_face If not NULL, on output the face id's of the neighboring elements' faces.
+ * \param [out]    dual_faces If not NULL, on output the face id's of the neighboring elements' faces.
  * \return                 The global id of the tree in which the neighbors are.
  *        -1 if there exists no neighbor across that face.
  */
@@ -412,12 +419,12 @@ t8_forest_print_all_leaf_neighbors (t8_forest_t forest);
 
 /** Compute whether for a given element there exist leaf or ghost leaf elements in
  * the local forest that are a descendant of the element but not the element itself
- * \param [in]  forest    The forest.
- * \param [in]  gtreeid   The global id of the tree the element is in
- * \param [in]  element   The element
- * \param [in]  scheme        The eclass of \a element.
- * \return                True if in the forest there exists a local leaf or ghost
- *                        leaf that is a descendant of \a element but not equal to \a element.
+ * \param [in]  forest      The forest.
+ * \param [in]  gtreeid     The global id of the tree the element is in
+ * \param [in]  element     The element
+ * \param [in]  tree_class  The eclass of \a element.
+ * \return                  True if in the forest there exists a local leaf or ghost
+ *                          leaf that is a descendant of \a element but not equal to \a element.
  * \note If no ghost layer was created for the forest, only local elements are tested.
  * \note \a forest must be committed before calling this function.
  */

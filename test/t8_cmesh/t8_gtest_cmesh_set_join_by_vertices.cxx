@@ -23,8 +23,8 @@
 #include <gtest/gtest.h>
 #include <t8.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
@@ -295,7 +295,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 }
 
-class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *> {
+struct t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override

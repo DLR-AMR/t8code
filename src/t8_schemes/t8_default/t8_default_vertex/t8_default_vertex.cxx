@@ -26,7 +26,7 @@
 /** Print a vertex (unused static helper function for debugging)
  * \param [in] v  vertex to be considered.
  */
-inline static void
+[[maybe_unused]] inline static void
 t8_dvertex_debug_print (const t8_dvertex_t *v)
 {
   t8_debugf ("level: %i\n", v->level);
@@ -310,13 +310,15 @@ t8_default_scheme_vertex::element_get_reference_coords ([[maybe_unused]] const t
 
 #if T8_ENABLE_DEBUG
 int
-t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t *elem)
+t8_default_scheme_vertex::element_is_valid ([[maybe_unused]] const t8_element_t *element)
 
 {
   /* Check maxlevel, nothing else is saved in a vertex. */
-  const t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
+  const t8_dvertex_t *vertex = (t8_dvertex_t *) element;
   return vertex->level <= T8_DVERTEX_MAXLEVEL;
 }
+
+#endif
 
 void
 t8_default_scheme_vertex::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
@@ -326,7 +328,6 @@ t8_default_scheme_vertex::element_to_string (const t8_element_t *elem, char *deb
   t8_dvertex_t *vertex = (t8_dvertex_t *) elem;
   snprintf (debug_string, string_size, "level: %i", vertex->level);
 }
-#endif
 
 int
 t8_default_scheme_vertex::refines_irregular () const

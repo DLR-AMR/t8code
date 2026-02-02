@@ -34,7 +34,7 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
 /** The class holding a hexahedral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -42,10 +42,12 @@ class t8_scheme;
  */
 typedef p8est_quadrant_t t8_phex_t;
 
-class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_hex> {
+/** Default implementation of the scheme for the hex element class. */
+struct t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_default_scheme_hex>
+{
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_hex () noexcept: t8_default_scheme_common (T8_ECLASS_HEX, sizeof (t8_phex_t)) {};
+  t8_default_scheme_hex () noexcept: t8_default_scheme_common (sizeof (t8_phex_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_hex () {};
@@ -56,9 +58,9 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   size_t
   get_element_size (void) const;
 
-  /** Allocate memory for an array of hexaedra and initialize them.
+  /** Allocate memory for an array of hexahedra and initialize them.
    * \param [in] length   The number of hex to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated
+   * \param [in,out] elem On input an array of \b length many unallocated
    *                      element pointers.
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
@@ -76,14 +78,10 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   void
   element_new (const int length, t8_element_t **elem) const;
 
-  /** Initialize an array of allocated hexaedra.
+  /** Initialize an array of allocated hexahedra.
    * \param [in] length   The number of hex to be initialized.
-   * \param [in,out] elems On input an array of \b length many allocated
+   * \param [in,out] elem On input an array of \b length many allocated
    *                       elements.
-   * \param [in] called_new True if the elements in \a elem were created by a call
-   *                       to \ref element_new. False if no element in \a elem
-   *                       was created in this way. The case that only some elements
-   *                       were created by \ref element_new should never occur.
    * \note In debugging mode, an element that was passed to \ref element_init
    * must pass \ref element_is_valid.
    * \note If an element was created by \ref element_new then \ref element_init
@@ -130,7 +128,6 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Check if two elements are equal.
-  * \param [in] scheme     Implementation of a class scheme.
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            1 if the elements are equal, 0 if they are not equal
@@ -363,7 +360,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    *                        \see t8_cmesh_set_join
    *  \param [in] sign      Depending on the topological orientation of the two tree faces,
    *                        either 0 (both faces have opposite orientation)
-   *                        or 1 (both faces have the same top. orientattion).
+   *                        or 1 (both faces have the same top. orientation).
    *                        \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
    *                        the smaller face. A face f of tree T is smaller than
@@ -495,17 +492,16 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] elem      The element whose successor should be constructed.
+   * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
   element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element.
    * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and
+   * L the maximum refinement level.
    * All element vertices have integer coordinates in this cube and the anchor
    * node is the first of all vertices (index 0). It also has the lowest x,y and z
    * coordinates.
@@ -517,8 +513,8 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
 
   /** Compute the integer coordinates of a given element vertex.
    * The default scheme implements the Morton type SFCs. In these SFCs the
-   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and 
-   * L the maximum refinement level. 
+   * elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and
+   * L the maximum refinement level.
    * All element vertices have integer coordinates in this cube.
    *   \param [in] elem   The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
@@ -535,16 +531,16 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   *                      all coords might be used.
    */
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -564,8 +560,8 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
-   * \param [in]      elem  The element to be checked.
-   * \return          True if \a elem is safe to use. False otherwise.
+   * \param [in] element  The element to be checked.
+   * \return          True if \a element is safe to use. False otherwise.
    * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
    * \note            An element for which \ref element_init was called must pass
@@ -577,18 +573,20 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
    *                  in the implementation of each of the functions in this file.
    */
   int
-  element_is_valid (const t8_element_t *t) const;
+  element_is_valid (const t8_element_t *element) const;
 
+#endif
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
-  * debugging configuration. 
-  * 
-  * \param [in]        elem  The element to print
+  * debugging configuration.
+  *
+  * \param [in] elem          The element to print
+  * \param [in] debug_string  String printed to debug
+  * \param [in] string_size   String size of \a debug_string.
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
-#endif
 
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.
@@ -597,12 +595,12 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-   * \param [in] elements Array of elements that are to be packed
-   * \param [in] count Number of elements to pack
-   * \param [in,out] send_buffer Buffer in which to pack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-   * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] comm MPI Communicator
+   * \param [in] elements         Array of elements that are to be packed
+   * \param [in] count            Number of elements to pack
+   * \param [in,out] send_buffer  Buffer in which to pack the elements
+   * \param [in] buffer_size      size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position    the position of the first byte that is not already packed
+   * \param [in] comm             MPI Communicator
   */
   void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
@@ -617,12 +615,12 @@ class t8_default_scheme_hex: public t8_default_scheme_common<t8_default_scheme_h
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-   * \param [in] recvbuf Buffer from which to unpack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in] recvbuf       Buffer from which to unpack the elements
+   * \param [in] buffer_size   size of the buffer (in order to check that we don't access out of range)
    * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] elements Array of initialised elements that is to be filled from the message
-   * \param [in] count Number of elements to unpack
-   * \param [in] comm MPI Communicator
+   * \param [in] elements      Array of initialised elements that is to be filled from the message
+   * \param [in] count         Number of elements to unpack
+   * \param [in] comm          MPI Communicator
   */
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,

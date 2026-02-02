@@ -36,16 +36,17 @@
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
 /** Provide an implementation for the prism element class.
  * It is written as a self-contained library in the t8_dprism_* files.
  */
 
-class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme_prism> {
+struct t8_default_scheme_prism: public t8_default_scheme_common<T8_ECLASS_PRISM, t8_default_scheme_prism>
+{
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_prism () noexcept: t8_default_scheme_common (T8_ECLASS_PRISM, sizeof (t8_dprism_t)) {};
+  t8_default_scheme_prism () noexcept: t8_default_scheme_common (sizeof (t8_dprism_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_prism () {};
@@ -58,7 +59,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
 
   /** Allocate memory for an array of prisms and initialize them.
    * \param [in] length     The number of prism elements to be allocated.
-   * \param [in,out] elems  On input an array of \b length many unallocated
+   * \param [in,out] elem   On input an array of \b length many unallocated
    *                        element pointers.
    *                        On output all these pointers will point to an allocated
    *                        and initialized element.
@@ -78,12 +79,8 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
 
   /** Initialize an array of allocated prism elements.
    * \param [in] length     The number of prism elements to be initialized.
-   * \param [in,out] elems  On input an array of \b length many allocated
+   * \param [in,out] elem   On input an array of \b length many allocated
    *                        elements.
-   * \param [in] called_new True if the elements in \a elem were created by a call
-   *                        to \ref element_new. False if no element in \a elem
-   *                        was created in this way. The case that only some elements
-   *                        were created by \ref element_new should never occur.
    * \note In debugging mode, an element that was passed to \ref element_init
    * must pass \ref element_is_valid.
    * \note If an element was created by \ref element_new then \ref element_init
@@ -129,7 +126,6 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Check if two elements are equal.
-  * \param [in] scheme     Implementation of a class scheme.
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            1 if the elements are equal, 0 if they are not equal
@@ -143,7 +139,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    * \b elem are overwritten by the ones of its parent.
    * \param [in] elem       The element whose parent will be computed.
    * \param [in,out] parent This element's entries will be overwritten by those
-   *                        of \b elem's parent. The storage for this element must exist and match the element class of 
+   *                        of \b elem's parent. The storage for this element must exist and match the element class of
    *                        the parent. For a pyramid, for example, it may be either a tetrahedron or a pyramid depending on \b elem's childid.
    */
   void
@@ -266,7 +262,7 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   int
   elements_are_family (t8_element_t *const *fam) const;
 
-  /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has 
+  /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has
    * both given elements as descendants.
    * \param [in] elem1    The first of the two input elements.
    * \param [in] elem2    The second of the two input elements.
@@ -287,11 +283,11 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   /** Given an element and a face of the element, compute all children of the element that touch the face.
    * \param [in] elem         The element.
    * \param [in] face         A face of \a elem.
-   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face 
+   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face
    *                          are stored. They will be stored in order of their prism id.
    * \param [in] num_children The number of elements in \a children. Must match the number of children that touch \a face.
    *                          \ref element_get_num_face_children
-   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th 
+   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th
    *                               entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
    */
@@ -312,15 +308,15 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
 
    * \param [in]  elem        The element.
    * \param [in]  face        Then number of the face.
-   * \param [in]  face_child  A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that shares 
-   *                          a face with \a face. These children are counted in linear order. This coincides with the 
+   * \param [in]  face_child  A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that shares
+   *                          a face with \a face. These children are counted in linear order. This coincides with the
    *                          order of children from a call to \ref element_get_children_at_face.
    * \return                  The face number of the face of a child of \a elem that coincides with \a face_child.
    */
   int
   element_face_get_child_face (const t8_element_t *elem, int face, int face_child) const;
 
-  /** Given a face of an element return the face number of the parent of the element that matches the element's face. 
+  /** Given a face of an element return the face number of the parent of the element that matches the element's face.
    * Or return -1 if no face of the parent matches the face.
    * \param [in]  elem    The element.
    * \param [in]  face    Then number of the face.
@@ -347,20 +343,20 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    *  and given the orientation of the tree connection, construct the face
    *  element of the respective tree neighbor that logically coincides with e
    *  but lies in the coordinate system of the neighbor tree.
-   *  \param [in] elem1     The face element.
-   *  \param [in,out] elem2 On return the face element \a elem1 with respect
-   *                        to the coordinate system of the other tree.
-   *  \param [in] orientation The orientation of the tree-tree connection.
-   *                        \see t8_cmesh_set_join
-   *  \param [in] sign      Depending on the topological orientation of the two tree faces,
-   *                        either 0 (both faces have opposite orientation)
-   *                        or 1 (both faces have the same top. orientattion).
-   *                        \ref t8_eclass_face_orientation
+   *  \param [in] elem1           The face element.
+   *  \param [in,out] elem2       On return the face element \a elem1 with respect
+   *                              to the coordinate system of the other tree.
+   *  \param [in] orientation     The orientation of the tree-tree connection.
+   *                              \see t8_cmesh_set_join
+   *  \param [in] sign            Depending on the topological orientation of the two tree faces,
+   *                              either 0 (both faces have opposite orientation)
+   *                              or 1 (both faces have the same top. orientation).
+   *                              \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
-   *                        the smaller face. A face f of tree T is smaller than
-   *                        f' of T' if either the eclass of T is smaller or if
-   *                        the classes are equal and f<f'. The orientation is
-   *                        defined in relation to the smaller face.
+   *                              the smaller face. A face f of tree T is smaller than
+   *                              f' of T' if either the eclass of T is smaller or if
+   *                              the classes are equal and f<f'. The orientation is
+   *                              defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
   void
@@ -375,33 +371,33 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   /** Given a boundary face inside a root tree's face construct
    *  the element inside the root tree that has the given face as a
    *  face.
-   * \param [in] face     A face element.
-   * \param [in,out] elem An allocated element. The entries will be filled with
-   *                      the data of the element that has \a face as a face and
-   *                      lies within the root tree.
+   * \param [in] face      A face element.
+   * \param [in,out] elem  An allocated element. The entries will be filled with
+   *                       the data of the element that has \a face as a face and
+   *                       lies within the root tree.
    * \param [in] root_face The index of the face of the root tree in which \a face
-   *                      lies.
-   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
-   * \return              The face number of the face of \a elem that coincides
-   *                      with \a face.
+   *                       lies.
+   * \param [in] scheme    The scheme collection with a scheme for the eclass of the face.
+   * \return               The face number of the face of \a elem that coincides
+   *                       with \a face.
    */
   int
   element_extrude_face (const t8_element_t *face, t8_element_t *elem, int root_face, const t8_scheme *scheme) const;
 
   /** Construct the first descendant of an element at a given level that touches a given face.
-   * \param [in] elem      The input element.
-   * \param [in] face      A face of \a elem.
+   * \param [in] elem            The input element.
+   * \param [in] face            A face of \a elem.
    * \param [in, out] first_desc An allocated element. This element's data will be
-   *                       filled with the data of the first descendant of \a elem
-   *                       that shares a face with \a face.
-   * \param [in] level     The level, at which the first descendant is constructed
+   *                             filled with the data of the first descendant of \a elem
+   *                             that shares a face with \a face.
+   * \param [in] level           The level, at which the first descendant is constructed
    */
   void
   element_get_first_descendant_face (const t8_element_t *elem, int face, t8_element_t *first_desc, int level) const;
 
   /** Construct the last descendant of an element at a given level that touches a given face.
-   * \param [in] elem      The input element.
-   * \param [in] face      A face of \a elem.
+   * \param [in] elem           The input element.
+   * \param [in] face           A face of \a elem.
    * \param [in, out] last_desc An allocated element. This element's data will be
    *                       filled with the data of the last descendant of \a elem
    *                       that shares a face with \a face.
@@ -483,51 +479,50 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] elem      The element whose successor should be constructed.
+   * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
   element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
   /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs.
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum 
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum
    * refinement level.  All element vertices have integer coordinates in this cube and the anchor node is the first of
    * all vertices (index 0). It also has the lowest x,y and z coordinates.
-   * \param [in] elem   The element.
+   * \param [in] elem    The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   void
   element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
+  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs.
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
    * refinement level. All element vertices have integer coordinates in this cube.
-   *   \param [in] t        The element to be considered.
+   *   \param [in] element  The element to be considered.
    *   \param [in] vertex   The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords  An array of at least as many integers as the element's dimension whose entries will be 
+   *   \param [out] coords  An array of at least as many integers as the element's dimension whose entries will be
    *                        filled with the coordinates of \a vertex.
    */
   void
-  element_get_vertex_integer_coords (const t8_element_t *t, int vertex, int coords[]) const;
+  element_get_vertex_integer_coords (const t8_element_t *element, int vertex, int coords[]) const;
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem    The element to be considered.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   *                      all coords might be used.
    */
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -547,8 +542,8 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
-   * \param [in]      elem  The element to be checked.
-   * \return          True if \a elem is safe to use. False otherwise.
+   * \param [in]      element  The element to be checked.
+   * \return          True if \a t is safe to use. False otherwise.
    * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
    * \note            An element for which \ref element_init was called must pass
@@ -560,18 +555,20 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
    *                  in the implementation of each of the functions in this file.
    */
   int
-  element_is_valid (const t8_element_t *t) const;
+  element_is_valid (const t8_element_t *element) const;
 
+#endif
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
-  * debugging configuration. 
-  * 
+  * debugging configuration.
+  *
   * \param [in]        elem  The element to print
+  * \param [in]        debug_string  String printed to debug
+  * \param [in]        string_size  String size of \a debug_string.
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
-#endif
 
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.
@@ -580,32 +577,32 @@ class t8_default_scheme_prism: public t8_default_scheme_common<t8_default_scheme
   set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-   * \param [in] elements Array of elements that are to be packed
-   * \param [in] count Number of elements to pack
+   * \param [in] elements        Array of elements that are to be packed
+   * \param [in] count           Number of elements to pack
    * \param [in,out] send_buffer Buffer in which to pack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-   * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] comm MPI Communicator
+   * \param [in] buffer_size     size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position   the position of the first byte that is not already packed
+   * \param [in] comm            MPI Communicator
   */
   void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                     int *position, sc_MPI_Comm comm) const;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
-   * \param [in] count Number of elements to pack
-   * \param [in] comm MPI Communicator
+   * \param [in] count      Number of elements to pack
+   * \param [in] comm       MPI Communicator
    * \param [out] pack_size upper bound on the message size
   */
   void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-   * \param [in] recvbuf Buffer from which to unpack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in] recvbuf       Buffer from which to unpack the elements
+   * \param [in] buffer_size   size of the buffer (in order to check that we don't access out of range)
    * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] elements Array of initialised elements that is to be filled from the message
-   * \param [in] count Number of elements to unpack
-   * \param [in] comm MPI Communicator
+   * \param [in] elements      Array of initialised elements that is to be filled from the message
+   * \param [in] count         Number of elements to unpack
+   * \param [in] comm          MPI Communicator
   */
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,

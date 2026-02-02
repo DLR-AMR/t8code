@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_standalone_elements.hxx
+ * Definition of the element class of the standalone scheme.
+ */
+
 #ifndef T8_STANDALONE_ELEMENTS_HXX
 #define T8_STANDALONE_ELEMENTS_HXX
 
@@ -27,17 +31,18 @@
 #include <array>
 #include <bitset>
 
+/** Can we delete this? */
 #define t8_standalone_element t8_standalone
 
 /** Dimension of the standalone element types */
 constexpr uint8_t T8_ELEMENT_DIM[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
 
 /** Maximum level of the standalone element types
- * \note The maxlevel is lower than 255 so that we can use \ref t8_element_level (uint8_t)
+ * \note The maxlevel is lower than 255 so that we can use \ref t8_scheme::element_get_level (uint8_t)
  * to iterate to maxlevel:
  * for (t8_element_level level = 0; level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_VERTEX]; ++level)
  * Otherwise, t8_element_level would overflow after 255 and we would have an infinite loop.
-*/
+ */
 constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 254, 30, 30, 29, 21, 21, 21, 18 };
 
 /** Maximum number of faces of the standalone element types */
@@ -55,18 +60,31 @@ constexpr uint8_t T8_ELEMENT_NUM_FACES[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 6, 4, 5,
 /** Number of face children of the standalone element types */
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 4, 4, 4, 4 };
 
+/** Number of equations of the standalone element types */
 constexpr uint8_t T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_COUNT] = { 0, 0, 0, 1, 0, 3, 1, 2 };
 
+/** Type for one entry of the element coordinates. */
 typedef int32_t t8_element_coord;
+/** Type for the element level. */
 typedef uint8_t t8_element_level;
+/** Type for the cube id. */
 typedef uint8_t t8_cube_id;
+/** Type for the child id. */
 typedef uint8_t t8_child_id;
 
+/** Define type for the element type. 
+ * \tparam TEclass The shape of the element as an eclass.
+ */
 template <t8_eclass_t TEclass>
 using t8_element_type = std::bitset<T8_ELEMENT_NUM_EQUATIONS[TEclass]>;
 
+/** Define type for the element coordinates. 
+ * \tparam TEclass The shape of the element as an eclass.
+ */
 template <t8_eclass_t TEclass>
 using t8_element_coords = std::array<t8_element_coord, T8_ELEMENT_DIM[TEclass]>;
+
+/** The data container describing a refined element in a refined tree, where the root element has class \a TEclass */
 template <t8_eclass_t TEclass>
 struct t8_standalone_element
 {

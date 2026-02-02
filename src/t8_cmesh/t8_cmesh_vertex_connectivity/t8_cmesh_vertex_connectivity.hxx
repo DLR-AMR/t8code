@@ -29,8 +29,8 @@
 #define T8_CMESH_VERTEX_CONNECTIVITY
 
 #include <memory>
-#include <t8_cmesh.h>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
@@ -53,7 +53,7 @@ struct t8_cmesh_vertex_connectivity
   ~t8_cmesh_vertex_connectivity () {};
 
   /** The state this connectivity can be in. */
-  enum class state {
+  enum struct state {
     INITIALIZED,          /**< Initialized but not filled */
     TREE_TO_VERTEX_VALID, /**< Ready to use, but only tree_to_vertex functionality. */
     VALID                 /**< Ready to use for full vertex connectivity. Cannot be altered anymore. */

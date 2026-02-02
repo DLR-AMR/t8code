@@ -37,7 +37,11 @@
 #include <memory>
 #include <numeric>
 
-class t8_abstract_vector_handler {
+/**
+ * A base class for vector handlers.
+ */
+struct t8_abstract_vector_handler
+{
  public:
   /**
    * Pure virtual function to determine the buffer size.
@@ -137,7 +141,8 @@ class t8_abstract_vector_handler {
  * \tparam TType The type of data to be handled.
  */
 template <typename TType>
-class t8_vector_handler: public t8_abstract_vector_handler {
+struct t8_vector_handler: public t8_abstract_vector_handler
+{
  public:
   /**
    * Construct a t8_vector_handler.
@@ -171,8 +176,8 @@ class t8_vector_handler: public t8_abstract_vector_handler {
 
   /**
    * Compute the size of the buffer that is needed to pack the data.
-   * 
-   * \param[in] data The data to be set.
+   *
+   * \param[in] comm The MPI communicator used for the operation.
    * \return The size of the buffer.
    */
   int

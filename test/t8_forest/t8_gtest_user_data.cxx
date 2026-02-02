@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <test/t8_gtest_schemes.hxx>
@@ -35,7 +35,8 @@
  * We build a forest and set user data for it.
  * We then retrieve the data and check whether it is the same.
  */
-class forest_user_data: public testing::TestWithParam<int> {
+struct forest_user_data: public testing::TestWithParam<int>
+{
  protected:
   void
   SetUp () override

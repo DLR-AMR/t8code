@@ -26,7 +26,7 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_refcount.h>
@@ -35,7 +35,7 @@
 #include <sc_options.h>
 
 /* Refine a tree with quadrilateral elements.
- * At every second adaptcall (level is even) remove the central elements 
+ * At every second adaptcall (level is even) remove the central elements
  * of the mesh or leave them untouched. Refine the remaining elements.
  *
  *  |x|x|x|x|       |x|x|x|x|
@@ -75,7 +75,7 @@ t8_adapt_menger_quad (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_fr
 }
 
 /* Refine a tree with triangular elements.
- * At every adaptcall remove the central element with child id 2 
+ * At every adaptcall remove the central element with child id 2
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
@@ -102,7 +102,7 @@ t8_adapt_sierpinski_tri (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest
 }
 
 /* Refine a tree with hexahedral elements.
- * At every second adaptcall (level is even) remove the central elements 
+ * At every second adaptcall (level is even) remove the central elements
  * of the mesh or leave them untouched. Refine the remaining elements.
  */
 static int
@@ -153,7 +153,7 @@ t8_adapt_menger_hex (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_fro
 }
 
 /* Refine a tree with tetrahedral elements.
- * At every adaptcall remove the elements with child id 2, 3, 5 and 6 
+ * At every adaptcall remove the elements with child id 2, 3, 5 and 6
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
@@ -180,7 +180,7 @@ t8_adapt_sierpinski_tet (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest
 }
 
 /* Refine a tree with prism elements.
- * At every adaptcall remove the elements with child id 2 and 6 
+ * At every adaptcall remove the elements with child id 2 and 6
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
@@ -207,7 +207,7 @@ t8_adapt_sierpinski_prism (t8_forest_t forest, [[maybe_unused]] t8_forest_t fore
 }
 
 /* Refine a tree with pyramid elements.
- * At every adaptcall remove the elements with child id 1, 3, 5, 6 and 8 
+ * At every adaptcall remove the elements with child id 1, 3, 5, 6 and 8
  * of the mesh or leave it untouched. Refine the remaining elements.
  */
 static int
@@ -252,7 +252,7 @@ t8_adapt_coarse ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest
  * \param [in] level_end     Final level of the fractal.
  * \param [in] iterative     1 if fractal is constructed iterative
  *                           0 if recursive
- * \param [in] remove        1 if elements that will not get refined will be 
+ * \param [in] remove        1 if elements that will not get refined will be
  *                           removed instead.
  * \param [in] trees         Number of trees the forest will contain.
  * \param [in] eclass        Element type for each tree.
@@ -267,12 +267,12 @@ t8_construct_fractal (int level_initial, int level_end, const int iterative, con
   T8_ASSERT (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_HEX
              || eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
 
-  /* Quadrilateral and hexahedron elements must have an even initial level 
+  /* Quadrilateral and hexahedron elements must have an even initial level
    * greater 0, such that the refinement pattern can be applied. */
   T8_ASSERT ((eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX) && level_initial > 1 && 0 == level_initial % 2
              && 0 == level_end % 2);
 
-  /* Set up userdata to adapt forest. 
+  /* Set up userdata to adapt forest.
    * user_data[0] -> level_end
    * user_data[1] -> {0, -2} -> return for adapt callback */
   int user_data[2] = { level_end, (remove == 1) ? -2 : remove };
@@ -385,7 +385,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
@@ -439,7 +439,7 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'c', "coarse", &coarse, 0, "Number of times to coarse hole mesh.");
   sc_options_add_int (opt, 'r', "runs", &runs, 1,
                       "Number of times the fractal gets constructed. The default is 1.\n"
-                      "\t\t\t\t     Note, the runntime summs up.");
+                      "\t\t\t\t     Note, the runtime summs up.");
 
   int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (helpme) {
@@ -455,7 +455,7 @@ main (int argc, char **argv)
   }
   else if (parsed >= 0 && level_initial >= 0 && level_initial < level_end && (iterative == 0 || iterative == 1)
            && (remove == 0 || remove == 1) && (output == 0 || output == 1) && coarse >= 0 && trees > 0
-           && (eclass_int > 1 || eclass_int < 8) && runs > 0) {
+           && (eclass_int > 1 && eclass_int < 8) && runs > 0) {
     t8_construct_fractal (level_initial, level_end, iterative, remove, trees, (t8_eclass_t) eclass_int, output, coarse,
                           runs);
   }

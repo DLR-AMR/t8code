@@ -32,6 +32,7 @@
 #include <t8_eclass.h>
 #include <t8_element_shape.h>
 
+/** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();
 
 /** Opaque structure for a generic element, only used as pointer.
@@ -40,17 +41,18 @@ T8_EXTERN_C_BEGIN ();
 typedef struct t8_element t8_element_t;
 
 /** This array holds the reference coordinates of each vertex of each element.
- *  It can e.g. be used with the \ref t8_element_reference_coords function.
+ *  It can e.g. be used with the \ref t8_scheme::element_get_reference_coords function.
  *  Usage: t8_element_corner_ref_coords[eclass][vertex][dimension]
  */
 extern const double t8_element_corner_ref_coords[T8_ECLASS_COUNT][T8_ECLASS_MAX_CORNERS][3];
 
 /** This array holds the reference coordinates of the centroid of each element.
- *  It can e.g. be used with the \ref t8_element_reference_coords function.
+ *  It can e.g. be used with the \ref t8_scheme::element_get_reference_coords function.
  *  Usage: t8_element_centroid_ref_coords[eclass][dimension]
  */
 extern const double t8_element_centroid_ref_coords[T8_ECLASS_COUNT][3];
 
+/** End of code that is callable from "C".*/
 T8_EXTERN_C_END ();
 
 #endif /* !T8_ELEMENT_H */

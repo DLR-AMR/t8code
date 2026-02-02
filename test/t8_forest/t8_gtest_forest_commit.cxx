@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_partition.h>
@@ -39,7 +39,8 @@
  * After these two forests are created, we check for equality.
  */
 
-class forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct forest_commit: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override
@@ -114,28 +115,24 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
 static t8_forest_t
 t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
 {
-  t8_forest_t forest_adapt;
-  t8_forest_t forest_partition;
-#if T8_TEST_LEVEL_INT < 2
-  t8_forest_t forest_balance;
-  t8_forest_init (&forest_balance);
-#endif
-
-  t8_forest_init (&forest_adapt);
-  t8_forest_init (&forest_partition);
-
   /* adapt the forest */
+  t8_forest_t forest_adapt;
+  t8_forest_init (&forest_adapt);
   t8_forest_set_user_data (forest_adapt, &maxlevel);
   t8_forest_set_adapt (forest_adapt, forest, t8_test_adapt_balance, 1);
   t8_forest_commit (forest_adapt);
 
 #if T8_TEST_LEVEL_INT < 2
   /* balance the forest */
+  t8_forest_t forest_balance;
+  t8_forest_init (&forest_balance);
   t8_forest_set_balance (forest_balance, forest_adapt, 0);
   t8_forest_commit (forest_balance);
 #endif
 
   /* partition the forest */
+  t8_forest_t forest_partition;
+  t8_forest_init (&forest_partition);
 #if T8_TEST_LEVEL_INT < 2
   t8_forest_set_partition (forest_partition, forest_balance, 0);
 #else
@@ -148,7 +145,6 @@ t8_test_forest_commit_abp_3step (t8_forest_t forest, int maxlevel)
 
 TEST_P (forest_commit, test_forest_commit)
 {
-
   t8_forest_t forest;
   t8_forest_t forest_ada_bal_part;
   t8_forest_t forest_abp_3part;

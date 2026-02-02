@@ -34,16 +34,17 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
-/** Provide an implementation for the pyramid element class. It is written as a self-contained library in the 
+/** Provide an implementation for the pyramid element class. It is written as a self-contained library in the
  * t8_dpyramid_* files.
  */
 
-class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_scheme_pyramid> {
+struct t8_default_scheme_pyramid: public t8_default_scheme_common<T8_ECLASS_PYRAMID, t8_default_scheme_pyramid>
+{
  public:
   /** Constructor which calls the specialized constructor for the base. */
-  t8_default_scheme_pyramid () noexcept: t8_default_scheme_common (T8_ECLASS_PYRAMID, sizeof (t8_dpyramid_t)) {};
+  t8_default_scheme_pyramid () noexcept: t8_default_scheme_common (sizeof (t8_dpyramid_t)) {};
 
   /** Destructor */
   ~t8_default_scheme_pyramid () {};
@@ -56,7 +57,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
 
   /** Allocate memory for an array of pyramids and initialize them.
    * \param [in] length   The number of pyramid elements to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated
+   * \param [in,out] elem On input an array of \b length many unallocated
    *                      element pointers.
    *                      On output all these pointers will point to an allocated
    *                      and initialized element.
@@ -76,10 +77,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
 
   /** Initialize an array of allocated elements.
    * \param [in] length   The number of pyramid elements to be allocated.
-   * \param [in,out] elems On input an array of \b length many allocated elements.
-   * \param [in] called_new True if the elements in \a elem were created by a call to \ref element_new. 
-   *                        False if no element in \a elem was created in this way. The case that only some elements 
-   *                        were created by \ref element_new should never occur.
+   * \param [in,out] elem On input an array of \b length many allocated elements.
    * \note In debugging mode, an element that was passed to \ref element_init
    * must pass \ref element_is_valid.
    * \note If an element was created by \ref element_new then \ref element_init
@@ -123,7 +121,6 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const;
 
   /** Check if two elements are equal.
-  * \param [in] scheme     Implementation of a class scheme.
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            1 if the elements are equal, 0 if they are not equal
@@ -136,8 +133,8 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * \b elem and \b parent can point to the same element, then the entries of
    * \b elem are overwritten by the ones of its parent.
    * \param [in] elem       The element whose parent will be computed.
-   * \param [in,out] parent This element's entries will be overwritten by those of \b elem's parent. The storage for 
-   *                        this element must exist and match the element class of the parent. For a pyramid, for 
+   * \param [in,out] parent This element's entries will be overwritten by those of \b elem's parent. The storage for
+   *                        this element must exist and match the element class of the parent. For a pyramid, for
    *                        example, it may be either a tetrahedron or a pyramid depending on \b elem's childid.
    */
   void
@@ -238,7 +235,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    * \param [in] elem       This must be a valid element, bigger than maxlevel.
    * \param [in] childid    The number of the child to construct.
    * \param [in,out] child  The storage for this element must exist and match the element class of the child.
-   *                        On output, a valid element. 
+   *                        On output, a valid element.
    * It is valid to call this function with elem = child.
      */
   void
@@ -247,7 +244,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   /** Construct all children of a given element.
    * \param [in] elem   This must be a valid element, bigger than maxlevel.
    * \param [in] length The length of the output array \a c must match the number of children.
-   * \param [in,out] c  The storage for these \a length elements must exist and match the element class in the 
+   * \param [in,out] c  The storage for these \a length elements must exist and match the element class in the
    *                    children's ordering. On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    * \see element_get_num_children
@@ -280,7 +277,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   int
   elements_are_family (t8_element_t *const *fam) const;
 
-  /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has both 
+  /** Compute the nearest common ancestor of two elements. That is, the element with highest level that still has both
    * given elements as descendants.
    * \param [in] elem1    The first of the two input elements.
    * \param [in] elem2    The second of the two input elements.
@@ -290,7 +287,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   void
   element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca) const;
 
-  /** Return the shape of an allocated element according its type. For example, a child of an element can be an 
+  /** Return the shape of an allocated element according its type. For example, a child of an element can be an
    * element of a different shape and has to be handled differently - according to its shape.
    * \param [in] elem     The element to be considered
    * \return              The shape of the element as an eclass
@@ -299,15 +296,15 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   element_get_shape (const t8_element_t *elem) const;
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
-   * \param [in] t     The element to be checked.
-   * \param [in] level A refinement level.
+   * \param [in] element     The element to be checked.
+   * \param [in] level       A refinement level.
    * \return Suppose \a t is uniformly refined up to level \a level. The return value
    * is the resulting number of elements (of the given level).
    * Each default element (except pyramids) refines into 2^{dim * (level - level(t))}
    * children.
    */
   t8_gloidx_t
-  element_count_leaves (const t8_element_t *t, const int level) const;
+  element_count_leaves (const t8_element_t *element, const int level) const;
 
   /** Compute the shape of the face of an element.
    * \param [in] elem   The element.
@@ -320,11 +317,11 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   /** Given an element and a face of the element, compute all children of the element that touch the face.
    * \param [in] elem         The element.
    * \param [in] face         A face of \a elem.
-   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face are 
+   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with \a face are
    *                          stored. They will be stored in order of their linear id.
-   * \param [in] num_children The number of elements in \a children. Must match the number of children that touch \a 
+   * \param [in] num_children The number of elements in \a children. Must match the number of children that touch \a
    *                          face. \ref element_get_num_face_children
-   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th 
+   * \param [in,out] child_indices If not NULL, an array of num_children integers must be given, on output its i-th
    *                               entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
    */
@@ -345,7 +342,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
 
    * \param [in]  elem        The element.
    * \param [in]  face        Then number of the face.
-   * \param [in]  face_child  A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that 
+   * \param [in]  face_child  A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that
    *                          shares a face with \a face. These children are counted in linear order. This coincides
    *                          with the order of children from a call to \ref element_get_children_at_face.
    * \return                  The face number of the face of a child of \a elem that coincides with \a face_child.
@@ -353,8 +350,8 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   int
   element_face_get_child_face (const t8_element_t *elem, const int face, const int face_child) const;
 
-  /** Given a face of an element return the face number of the parent of the element that matches the element's face. 
-   * Or return -1 if no face of the parent matches the face 
+  /** Given a face of an element return the face number of the parent of the element that matches the element's face.
+   * Or return -1 if no face of the parent matches the face
    * \param [in]  elem    The element.
    * \param [in]  face    Then number of the face.
    * \return              If \a face of \a elem is also a face of \a elem's parent,
@@ -375,17 +372,17 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   int
   element_get_tree_face (const t8_element_t *elem, const int face) const;
 
-  /** Suppose we have two trees that share a common face f. Given an element e that is a subface of f in one of the 
+  /** Suppose we have two trees that share a common face f. Given an element e that is a subface of f in one of the
    * trees and given the orientation of the tree connection, construct the face element of the respective tree neighbor
    * that logically coincides with e but lies in the coordinate system of the neighbor tree.
    *  \param [in] elem1     The face element.
    *  \param [in,out] elem2 On return the face element \a elem1 with respect to the coordinate system of the other tree
    *  \param [in] orientation The orientation of the tree-tree connection. \see t8_cmesh_set_join
-   *  \param [in] sign      Depending on the topological orientation of the two tree faces, either 0 (both faces have 
-   *                        opposite orientation) or 1 (both faces have the same top. orientattion).
+   *  \param [in] sign      Depending on the topological orientation of the two tree faces, either 0 (both faces have
+   *                        opposite orientation) or 1 (both faces have the same top. orientation).
    *                        \ref t8_eclass_face_orientation
    *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to the smaller face. A face f of tree T #
-   *                        is smaller than f' of T' if either the eclass of T is smaller or if the classes are equal 
+   *                        is smaller than f' of T' if either the eclass of T is smaller or if the classes are equal
    *                        and f<f'. The orientation is defined in relation to the smaller face.
    * \note \a elem1 and \a elem2 may point to the same element.
    */
@@ -417,7 +414,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   /** Construct the first descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
-   * \param [in, out] first_desc An allocated element. This element's data will be filled with the data of the first 
+   * \param [in, out] first_desc An allocated element. This element's data will be filled with the data of the first
    *                       descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the first descendant is constructed
    */
@@ -427,7 +424,7 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   /** Construct the last descendant of an element at a given level that touches a given face.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
-   * \param [in, out] last_desc An allocated element. This element's data will be filled with the data of the 
+   * \param [in, out] last_desc An allocated element. This element's data will be filled with the data of the
    *                            last descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the last descendant is constructed
    */
@@ -456,13 +453,13 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
 
   /** Construct the face neighbor of a given element if this face neighbor is inside the root tree. Return 0 otherwise.
    * \param [in] elem The element to be considered.
-   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside the root tree, this element's data 
-   *                       is filled with the data of the face neighbor. Otherwise the data can be modified 
+   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside the root tree, this element's data
+   *                       is filled with the data of the face neighbor. Otherwise the data can be modified
    *                       arbitrarily.
    * \param [in] face      The number of the face along which the neighbor should be constructed.
    * \param [out] neigh_face The number of \a face as viewed from \a neigh. An arbitrary value, if the neighbor is not
    *                         inside the root tree.
-   * \return          True if \a neigh is inside the root tree. False if not. In this case \a neigh's data can be 
+   * \return          True if \a neigh is inside the root tree. False if not. In this case \a neigh's data can be
    *                  arbitrary on output.
    */
   int
@@ -502,51 +499,50 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem1    The element whose successor should be constructed.
-   * \param [in,out] elem2  The element whose entries will be set.
-   * \param [in] level    The level of the uniform refinement to consider.
+   * \param [in] elem      The element whose successor should be constructed.
+   * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
   element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const;
 
-  /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs. 
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum 
+  /** Get the integer coordinates of the anchor node of an element. The default scheme implements the Morton type SFCs.
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and L the maximum
    * refinement level.All element vertices have integer coordinates in this cube and the anchornode is the first of all
    * vertices (index 0). It also has the lowest x,y and z coordinates.
-   * \param [in] elem   The element.
+   * \param [in] elem    The element.
    * \param [out] anchor The integer coordinates of the anchor node in the cube [0,1]^(dL)
    */
   void
   element_get_anchor (const t8_element_t *elem, int anchor[3]) const;
 
-  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs. 
-   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum 
+  /** Compute the integer coordinates of a given element vertex. The default scheme implements the Morton type SFCs.
+   * In these SFCs the elements are positioned in a cube [0,1]^(dL) with dimension d (=0,1,2,3) and  L the maximum
    * refinement level. All element vertices have integer coordinates in this cube.
-   *   \param [in] t      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] element The element to be considered.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many integers as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    */
   void
-  element_get_vertex_integer_coords (const t8_element_t *t, int vertex, int coords[]) const;
+  element_get_vertex_integer_coords (const t8_element_t *element, int vertex, int coords[]) const;
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem   The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
+   *   \param [in] elem    The element to be considered.
+   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
    *                      whose entries will be filled with the coordinates of \a vertex.
    *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   *                      all coords might be used.
    */
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
 
   /** Convert points in the reference space of an element to points in the
    *  reference space of the tree.
-   * 
+   *
    * \param [in] elem         The element.
-   * \param [in] coords_input The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
    *                          in the reference space of the element.
    * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the points in the
@@ -566,8 +562,8 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
 #if T8_ENABLE_DEBUG
   /** Query whether a given element can be considered as 'valid' and it is
    *  safe to perform any of the above algorithms on it.
-   * \param [in]      elem  The element to be checked.
-   * \return          True if \a elem is safe to use. False otherwise.
+   * \param [in]      element  The element to be checked.
+   * \return          True if \a t is safe to use. False otherwise.
    * \note            An element that is constructed with \ref element_new
    *                  must pass this test.
    * \note            An element for which \ref element_init was called must pass
@@ -579,18 +575,20 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
    *                  in the implementation of each of the functions in this file.
    */
   int
-  element_is_valid (const t8_element_t *t) const;
+  element_is_valid (const t8_element_t *element) const;
 
+#endif
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
-  * debugging configuration. 
-  * 
+  * debugging configuration.
+  *
   * \param [in]        elem  The element to print
+  * \param [in]        debug_string  String printed to debug
+  * \param [in]        string_size  String size of \a debug_string.
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
-#endif
 
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.
@@ -599,32 +597,32 @@ class t8_default_scheme_pyramid: public t8_default_scheme_common<t8_default_sche
   set_to_root (t8_element_t *elem) const;
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-   * \param [in] elements Array of elements that are to be packed
-   * \param [in] count Number of elements to pack
+   * \param [in] elements        Array of elements that are to be packed
+   * \param [in] count           Number of elements to pack
    * \param [in,out] send_buffer Buffer in which to pack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-   * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] comm MPI Communicator
+   * \param [in] buffer_size     size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position   the position of the first byte that is not already packed
+   * \param [in] comm            MPI Communicator
   */
   void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, int buffer_size,
                     int *position, sc_MPI_Comm comm) const;
 
   /** Determine an upper bound for the size of the packed message of \b count elements
-   * \param [in] count Number of elements to pack
-   * \param [in] comm MPI Communicator
+   * \param [in] count      Number of elements to pack
+   * \param [in] comm       MPI Communicator
    * \param [out] pack_size upper bound on the message size
   */
   void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const;
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-   * \param [in] recvbuf Buffer from which to unpack the elements
-   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in] recvbuf       Buffer from which to unpack the elements
+   * \param [in] buffer_size   size of the buffer (in order to check that we don't access out of range)
    * \param [in, out] position the position of the first byte that is not already packed
-   * \param [in] elements Array of initialised elements that is to be filled from the message
-   * \param [in] count Number of elements to unpack
-   * \param [in] comm MPI Communicator
+   * \param [in] elements      Array of initialised elements that is to be filled from the message
+   * \param [in] count         Number of elements to unpack
+   * \param [in] comm          MPI Communicator
   */
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
