@@ -108,10 +108,10 @@ t8_element_get_value (const t8_step7_adapt_data *adapt_data, t8_locidx_t ielemen
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                         [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                         [[maybe_unused]] const t8_scheme *scheme, const int is_family,
-                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+t8_step7_adapt_callback (t8_forest_t forest_from, t8_locidx_t which_tree, [[maybe_unused]] const t8_eclass_t tree_class,
+                         [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                         const int is_family, [[maybe_unused]] const int num_elements, t8_element_t *elements[],
+                         [[maybe_unused]] void *user_data, [[maybe_unused]] void *t8code_data)
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
@@ -119,7 +119,7 @@ t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   /* In t8_step3_adapt_forest we pass a t8_step3_adapt_data pointer as user data to the
    * t8_forest_new_adapt function. This pointer is stored as the used data of the new forest
    * and we can now access it with t8_forest_get_user_data (forest). */
-  const struct t8_step7_adapt_data *adapt_data = (const struct t8_step7_adapt_data *) t8_forest_get_user_data (forest);
+  const struct t8_step7_adapt_data *adapt_data = (const struct t8_step7_adapt_data *) user_data;
   double dist; /* Will store the distance of the element's midpoint and the sphere midpoint. */
 
   /* You can use T8_ASSERT for assertions that are active in debug mode (when configured with --enable-debug).
