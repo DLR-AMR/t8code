@@ -103,7 +103,7 @@ if( T8CODE_ENABLE_VTK )
       t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx
       t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx
       t8_vtk/t8_with_vtk/t8_vtk_reader.hxx
-    DESTINATION include)
+      TYPE INCLUDE)
 endif()
 
 if( T8CODE_ENABLE_OCC )
@@ -118,7 +118,7 @@ if( T8CODE_ENABLE_OCC )
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
       t8_cad/t8_cad.hxx
-      DESTINATION include
+      TYPE INCLUDE
     )
 endif()
 
@@ -275,23 +275,23 @@ install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
   PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
   )
-install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.h"
+install( DIRECTORY t8_geometry DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h"
   PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.h" EXCLUDE)
-install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h" )
+install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h" )
 
-install( DIRECTORY t8_cmesh DESTINATION include FILES_MATCHING PATTERN "*.hxx"
+install( DIRECTORY t8_cmesh DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx" EXCLUDE
   PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx" EXCLUDE
 )
 
-install( DIRECTORY t8_data DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_forest DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_geometry DESTINATION include FILES_MATCHING PATTERN "*.hxx"
+install( DIRECTORY t8_data DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_forest DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_geometry DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx" EXCLUDE)
-install( DIRECTORY t8_schemes DESTINATION include FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx"
+install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx"
   PATTERN "t8_vtk/t8_vtk_parallel.hxx"      EXCLUDE
   PATTERN "t8_vtk/t8_vtk_polydata.hxx"      EXCLUDE
   PATTERN "t8_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
@@ -300,8 +300,12 @@ install( DIRECTORY t8_vtk DESTINATION include FILES_MATCHING PATTERN "*.hxx"
   )
 install( DIRECTORY t8_types TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
 
-install( TARGETS T8 LIBRARY )
-install( TARGETS T8 EXPORT ${PROJECT_NAME}-targets )
+install(TARGETS T8
+    EXPORT ${PROJECT_NAME}-targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
 include( CMakePackageConfigHelpers )
 
