@@ -27,6 +27,8 @@
 #ifndef T8_VEC_HXX
 #define T8_VEC_HXX
 
+#include <t8.h>
+
 #include <algorithm>
 #include <numeric>
 #include <span>
@@ -130,26 +132,6 @@ concept T8ContainerType = requires (T t) {
   {
     std::end (t)
   } -> std::input_iterator;
-};
-
-/** Concept for container types of size 2 with value type that is convertible into double.
-*/
-template <typename T>
-concept T8ContainerdoubleType2D = T8ContainerdoubleType<T> && requires (T t) {
-  {
-    std::size (t)
-  } -> std::convertible_to<std::size_t>;
-  requires std::size (t) == 2;
-};
-
-/** Concept for container types of size 3 with value type that is convertible into double.
-*/
-template <typename T>
-concept T8ContainerdoubleType3D = T8ContainerdoubleType<T> && requires (T t) {
-  {
-    std::size (t)
-  } -> std::convertible_to<std::size_t>;
-  requires std::size (t) == 3;
 };
 
 /** Vector norm.
@@ -283,10 +265,11 @@ t8_dot (const TVecX &vec_x, const TVecY &vec_y)
   * \param [in]  vec_y  A 2D vector.
   * \return             The cross product of \a vec_x and \a vec_y.
   */
-template <T8ContainerdoubleType2D TVecX, T8ContainerdoubleType2D TVecY>
+template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
 static inline double
 t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
 {
+  T8_ASSERT ((vec_x.size () == 2) && (vec_y.size () == 2));
   return vec_x[0] * vec_y[1] - vec_x[1] * vec_y[0];
 }
 
@@ -295,10 +278,11 @@ t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
   * \param [in]  vec_y  A 3D vector.
   * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
   */
-template <T8ContainerdoubleType3D TVecX, T8ContainerdoubleType3D TVecY, T8ContainerdoubleType3D TVecCross>
+template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY, T8ContainerdoubleType TVecCross>
 static inline void
 t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
 {
+  T8_ASSERT ((vec_x.size () == 3) && (vec_y.size () == 3));
   cross[0] = vec_x[1] * vec_y[2] - vec_x[2] * vec_y[1];
   cross[1] = vec_x[2] * vec_y[0] - vec_x[0] * vec_y[2];
   cross[2] = vec_x[0] * vec_y[1] - vec_x[1] * vec_y[0];
@@ -309,7 +293,7 @@ t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
   * \param [in]  vec_y  An N-dimensional vector.
   * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
   */
-template <T8ContainerdoubleType3D TVecX, T8ContainerdoubleType3D TVecY, T8ContainerdoubleType3D TVecDiff>
+template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY, T8ContainerdoubleType TVecDiff>
 constexpr void
 t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
 {
@@ -349,11 +333,12 @@ t8_rescale (TVec &vec, const double new_length)
   * \param [in]  p3  A 3D vector.
   * \param [out] normal vector of the triangle. (Not necessarily of length 1!)d
   */
-template <T8ContainerdoubleType3D TVecP1, T8ContainerdoubleType3D TVecP2, T8ContainerdoubleType3D TVecP3,
-          T8ContainerdoubleType3D TVecNormal>
+template <T8ContainerdoubleType TVecP1, T8ContainerdoubleType TVecP2, T8ContainerdoubleType TVecP3,
+          T8ContainerdoubleType TVecNormal>
 static inline void
 t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNormal &normal)
 {
+  T8_ASSERT ((p1.size () == 3) && (p2.size () == 3) && (p3.size () == 3));
   t8_3D_vec a;
   t8_3D_vec b;
   std::transform (p2.begin (), p2.end (), p1.begin (), a.begin (), std::minus<double> ());
@@ -366,10 +351,11 @@ t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNorm
   * \param [out]  v2 3D vector.
   * \param [out]  v3 3D vector.
   */
-template <T8ContainerdoubleType3D TVecV1, T8ContainerdoubleType3D TVecV2, T8ContainerdoubleType3D TVecV3>
+template <T8ContainerdoubleType TVecV1, T8ContainerdoubleType TVecV2, T8ContainerdoubleType TVecV3>
 static inline void
 t8_orthogonal_tripod (const TVecV1 &v1, TVecV2 &v2, TVecV3 &v3)
 {
+  T8_ASSERT (v1.size () == 3);
   v2[0] = v1[1];
   v2[1] = v1[2];
   v2[2] = -v1[0];
