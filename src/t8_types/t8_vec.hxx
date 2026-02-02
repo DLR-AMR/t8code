@@ -37,6 +37,10 @@
 #include <cmath>
 #include <functional>
 
+/** Type alias for a vector in N-dimensional space.
+ * \tparam TDim Dimension of the vector.
+ * \tparam TType Value type of the vector.
+ */
 template <std::size_t TDim, typename TType = double>
 using t8_vec = std::array<TType, TDim>;
 
