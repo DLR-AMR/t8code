@@ -88,7 +88,6 @@ add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangl
 
 configure_file(IO/cmesh/gmsh/circlesquare_hybrid_hole.msh)
 
-
 if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
 endif()
