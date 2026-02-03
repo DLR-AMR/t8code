@@ -219,7 +219,7 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
 
 /** \brief Search for a linear element id (at level element_level) in a sorted array of
  * elements. If the element does not exist, return the smallest index i
- * such that the element at position i has a larger id than the given one.
+ * such that the element at position i has a larger or equal id than the given one.
  * If no such i exists, return -1.
  * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
  *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
