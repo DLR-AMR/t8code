@@ -426,7 +426,7 @@ t8_cad::t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const 
           const Handle_Geom2d_Curve pcurve_on_surface = BRep_Tool::CurveOnSurface (current_edge, face, first, last);
           /* We can now insert the queried parameter on the curve into the pcurve (the curve on the surface).
           If this is the first point we found uv is empty and we fill it. Otherwise, we define another point to
-          store our parameters and we save the parameters in iv which are closer to the reference parameters. */
+          store our parameters and we save the parameters in uv which are closer to the reference parameters. */
           if (!uv) {
             uv.emplace ();
             pcurve_on_surface->D0 (curve_param, *uv);
