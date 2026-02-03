@@ -40,7 +40,7 @@
 #include <array>
 
 #ifdef _WIN32
-#include "t8_windows.h"
+#include <t8_misc/t8_windows.h>
 #endif
 
 /** The supported number of gmsh tree classes.

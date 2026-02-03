@@ -37,7 +37,7 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_forest_netcdf.h>
+#include <t8_netcdf/t8_forest_netcdf.h>
 #include <t8_netcdf/t8_netcdf.h>
 
 /* In this example is the use of the netcdf feature exemplary displayed.
