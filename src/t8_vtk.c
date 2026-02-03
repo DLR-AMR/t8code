@@ -249,7 +249,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
     /* The Filename was truncated */
     /* Note: gcc >= 7.1 prints a warning if we 
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated vtk file name cpy to '%s'\n", filename_copy);
+    t8_debugf ("Warning: Truncated vtk file name copy to '%s'\n", filename_copy);
   }
   for (p = 0; p < num_procs; ++p) {
     fprintf (pvtufile, "    <Piece Source=\"%s_%04d.vtu\"/>\n", basename (filename_copy), p);
