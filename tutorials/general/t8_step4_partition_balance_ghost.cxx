@@ -136,7 +136,7 @@ t8_step4_partition_ghost (t8_forest_t forest)
    * in such a way that afterwards each process has the same number of elements
    * (+- 1 if the number of elements is not divisible by the number of processes).
    *
-   * The third 0 argument is the flag 'partition_for_coarsening'. Setting it non-zero ensures
+   * The third 0 argument is the flag 'set_for_coarsening'. Setting it non-zero ensures
    * that a family of (same-level) siblings will not be split across multiple processes;
    * this way, coarsening by one level is never prevented by the partitioning
    * (see also the comments on coarsening in t8_step3).
