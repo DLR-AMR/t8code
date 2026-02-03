@@ -120,24 +120,12 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
         const t8_linearidx_t element_id_at_next_level
           = scheme->element_get_linear_id (tree_class, leaf_element, element_level + 1);
 
-        // TODO: This search call is running into an
-        /*
-        [libsc 0] Abort: Assertion '0 <= level && level <= T8_DLINE_MAXLEVEL'
-[libsc 0] Abort: /localdata1/holk_jo/coding/source/t8code/feature-ancestor_search/src/t8_schemes/t8_default/t8_default_line/t8_default_line.cxx:323
-[libsc 0] Abort: Obtained 28 stack frames
-[libsc 0] Stack 0: libsc.so.3.0.0(+0x20850) [0x7ffff7f25850]
-[libsc 0] Stack 1: libsc.so.3.0.0(sc_abort+0x1f) [0x7ffff7f257e8]
-[libsc 0] Stack 2: libsc.so.3.0.0(sc_abort_verbosef+0) [0x7ffff7f25b94]
-[libsc 0] Stack 3: libt8.so.4.0.0-26.01-178-g9559150ec-dirty(_ZNK22t8_default_scheme_line21element_get_linear_idEPK10t8_elementi+0xce) [0x7ffff7a9e362]
-
-Due to search calling get_linear_id with a too large level.
-*/
-
-        const t8_locidx_t search_index = t8_forest_bin_search_lower (leafs, element_id + 1, element_id_at_next_level);
+        const t8_locidx_t search_index
+          = t8_forest_bin_search_lower (leafs, element_id_at_next_level, element_level + 1);
         // We expect the leaf element to be found at position ielement
         EXPECT_EQ (search_index, ielement)
-          << "Found wrong position of level " << element_level << " leaf element with id " << element_id
-          << ". Expected: " << ielement << " got: " << search_index;
+          << "Found wrong position of level " << element_level + 1 << " leaf element with id "
+          << element_id_at_next_level << ". Expected: " << ielement << " got: " << search_index;
       }
 
       // Construct an element that is definitely not in the array and
