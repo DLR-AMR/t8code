@@ -1091,7 +1091,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
      * If the edge is locked for edges on surfaces we have to skip this edge */
     else if (edge_geometry_dim == 2 && edge_geometries[i_tree_edges + num_edges] >= 0) {
 
-      /* We also skip this exge if the edge is on a plane. Planes have no curvature and
+      /* We also skip this edge if the edge is on a plane. Planes have no curvature and
        * therefore only result in computational overhead. */
       if (cad_geometry->get_cad_manager ()->t8_geom_is_plane (edge_geometry_tag)) {
         continue;
