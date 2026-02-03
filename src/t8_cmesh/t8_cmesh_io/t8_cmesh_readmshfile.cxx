@@ -1099,7 +1099,6 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
 
   /*----------------------------------------- Start of edge linkage -----------------------------------------*/
   const int num_edges = t8_eclass_num_edges[eclass];
-
   for (int i_tree_edges = 0; i_tree_edges < num_edges; ++i_tree_edges) {
     std::array<t8_msh_file_node, 2> edge_nodes;
     /* Save edge nodes separately. We have to distinct between eclass dimension because
@@ -1257,37 +1256,69 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           }
         }
       }
-      for (int i_edge_node = 0; i_edge_node < 2; ++i_edge_node) {
+
+      /* We now know that bot vertices are on the same edge.
+         Next, we iterate twice over both vertices. In the first iteration we do
+         some sanity checks and try to find a parameter which is not on a seam.
+         Because when one of the nodes is on a vertex which is on the seam of the edge,
+         there are two possible solutions for conversion.
+         In the second iteration, we convert the parameters using the reference param. */
+      std::optional<double> reference_param = std::nullopt;
+      for (const auto &edge_node : edge_nodes) {
         /* Some error checking */
-        if (edge_nodes[i_edge_node].entity_dim == 2) {
+        if (edge_node.entity_dim == 2) {
           t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a vertex or an edge, "
                             "but it lies on a surface.\n",
-                            edge_nodes[i_edge_node].index);
+                            edge_node.index);
           return 0;
         }
-        if (edge_nodes[i_edge_node].entity_dim == 1 && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
+        if (edge_node.entity_dim == 1 && edge_node.entity_tag != edge_geometry_tag) {
           t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a specific edge, "
                             "but it lies on another edge.\n",
-                            edge_nodes[i_edge_node].index);
+                            edge_node.index);
           return 0;
         }
-        if (edge_nodes[i_edge_node].entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_nodes[i_edge_node].entity_tag,
-                                                                            edge_geometry_tag)) {
+        if (edge_node.entity_dim == 0) {
+          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on an edge, "
               "but the vertex does not lie on that edge.\n",
-              edge_nodes[i_edge_node].index);
+              edge_node.index);
             return 0;
           }
         }
 
+        if (!reference_param.has_value ()) {
+          switch (edge_node.entity_dim) {
+          case 1:
+            /* If the node is on the curve, we can directly use its parameter as reference. */
+            reference_param = edge_node.parameters[0];
+            break;
+          case 0:
+            /* If the node is on a vertex we can convert the parameters safely if the vertex os not the seam of the edge. */
+            if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
+              reference_param.emplace ();
+              cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
+                edge_node.entity_tag, edge_geometry_tag, &reference_param.value ());
+            }
+            break;
+          default:
+            SC_ABORT_NOT_REACHED ();
+          }
+        }
+      }
+
+      if (!reference_param.has_value ()) {
+        t8_global_errorf ("Error during mesh-cad recombination: Reference parameter on curve not found.\n");
+        return 0;
+      }
+
+      for (auto &edge_node : edge_nodes) {
         /* If the node lies on a vertex we retrieve its parameter on the curve */
-        if (edge_nodes[i_edge_node].entity_dim == 0) {
+        if (edge_node.entity_dim == 0) {
           cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
-            edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters.data (),
-            edge_nodes[(i_edge_node + 1) % 2].parameters[0]);
-          edge_nodes[i_edge_node].entity_dim = 1;
+            edge_node.entity_tag, edge_geometry_tag, edge_node.parameters.data (), reference_param);
+          edge_node.entity_dim = 1;
         }
       }
 
@@ -1313,48 +1344,86 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         continue;
       }
 
-      /* If the node lies on a geometry with a different dimension we try to retrieve the parameters */
-      for (int i_edge_node = 0; i_edge_node < 2; ++i_edge_node) {
+      /* We now know that bot vertices are on the same edge.
+         Next, we iterate twice over both vertices. In the first iteration we do
+         some sanity checks and try to find a parameter which is not on a seam.
+         Because when one of the nodes is on a vertex which is on the seam of the edge,
+         there are two possible solutions for conversion.
+         In the second iteration, we convert the parameters using the reference param. */
+      std::optional<std::array<double, 2>> reference_params = std::nullopt;
+      for (const auto &edge_node : edge_nodes) {
         /* Some error checking */
-        if (edge_nodes[i_edge_node].entity_dim == 2 && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
+        if (edge_node.entity_dim == 2 && edge_node.entity_tag != edge_geometry_tag) {
           t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a specific face, but it lies "
                             "on another face.\n",
-                            edge_nodes[i_edge_node].index);
+                            edge_node.index);
           return 0;
         }
-        if (edge_nodes[i_edge_node].entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_nodes[i_edge_node].entity_tag,
-                                                                            edge_geometry_tag)) {
+        if (edge_node.entity_dim == 0) {
+          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on a face, "
               "but the vertex does not lie on that face.\n",
-              edge_nodes[i_edge_node].index);
+              edge_node.index);
             return 0;
           }
         }
-        if (edge_nodes[i_edge_node].entity_dim == 1) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_nodes[i_edge_node].entity_tag,
-                                                                          edge_geometry_tag)) {
+        if (edge_node.entity_dim == 1) {
+          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on an edge which lies on a face, "
               "but the edge does not lie on that face.\n",
-              edge_nodes[i_edge_node].index);
+              edge_node.index);
             return 0;
           }
         }
+        if (!reference_params.has_value ()) {
+          switch (edge_node.entity_dim) {
+          case 2:
+            /* If the node is on the surface, we can directly use its parameter as reference. */
+            reference_params = edge_node.parameters;
+            break;
+          case 1:
+            /* If the node is on a curve, we can use the parameters if the curve is not theseam of the surface. */
+            if (!cad_geometry->get_cad_manager ()->t8_geom_edge_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
+              reference_params.emplace ();
+              cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+                edge_node.entity_tag, edge_geometry_tag, edge_node.parameters[0], reference_params.value ().data ());
+            }
+            break;
+          case 0:
+            /* If the node is on a vertex we can convert the parameters safely if the vertex os not the seam of the edge. */
+            if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_on_seam_edge (edge_node.entity_tag,
+                                                                                   edge_geometry_tag)) {
+              reference_params.emplace ();
+              cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+                edge_node.entity_tag, edge_geometry_tag, reference_params.value ().data ());
+            }
+            break;
+          default:
+            SC_ABORT_NOT_REACHED ();
+          }
+        }
+      }
 
+      if (!reference_params.has_value ()) {
+        t8_global_errorf ("Error during mesh-cad recombination: Reference parameter on curve not found.\n");
+        return 0;
+      }
+
+      for (auto &edge_node : edge_nodes) {
         /* If the node lies on a vertex we retrieve its parameters on the surface */
-        if (edge_nodes[i_edge_node].entity_dim == 0) {
+        if (edge_node.entity_dim == 0) {
           cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
-            edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters.data ());
-          edge_nodes[i_edge_node].entity_dim = 2;
+            edge_node.entity_tag, edge_geometry_tag, edge_node.parameters.data (), reference_params);
+          edge_node.entity_dim = 2;
         }
         /* If the node lies on an edge we have to do the same */
-        if (edge_nodes[i_edge_node].entity_dim == 1) {
+        if (edge_node.entity_dim == 1) {
           cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
-            edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters[0],
-            edge_nodes[i_edge_node].parameters.data ());
-          edge_nodes[i_edge_node].entity_dim = 2;
+            edge_node.entity_tag, edge_geometry_tag, edge_node.parameters[0], edge_node.parameters.data (),
+            reference_params);
+          edge_node.entity_dim = 2;
         }
       }
 

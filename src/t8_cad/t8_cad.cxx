@@ -256,7 +256,30 @@ t8_cad::t8_geom_is_vertex_on_face (const int vertex_index, const int face_index)
 }
 
 bool
-t8_cad::t8_geom_vertex_is_on_seam (const int vertex_index, const int face_index) const
+t8_cad::t8_geom_vertex_is_seam (const int vertex_index, const int edge_index) const
+{
+  T8_ASSERT (vertex_index <= cad_shape_vertex_map.Size ());
+  T8_ASSERT (edge_index <= cad_shape_edge_map.Size ());
+  const auto vertex = t8_cad::t8_geom_get_cad_vertex (vertex_index);
+  const auto edge = t8_cad::t8_geom_get_cad_edge (edge_index);
+  double u = BRep_Tool::Parameter (vertex, edge);
+  double first = 0, last = 0;
+  const auto curve = BRep_Tool::Curve (edge, first, last);
+
+  /* If curve is not periodic, there is no seam. */
+  if (!curve->IsPeriodic ())
+    return false;
+
+  // Seam is at the start/end of the trimmed range
+  double tol = Precision::PConfusion (first > last ? first : last);
+  const bool on_first = (std::abs (u - first) <= tol);
+  const bool on_last = (std::abs (u - last) <= tol);
+
+  return on_first || on_last;
+}
+
+bool
+t8_cad::t8_geom_vertex_is_on_seam_edge (const int vertex_index, const int face_index) const
 {
   T8_ASSERT (vertex_index <= cad_shape_vertex2edge_map.Size ());
   T8_ASSERT (face_index <= cad_shape_face_map.Size ());
@@ -301,15 +324,14 @@ t8_cad::t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const i
     we also check, if the points are really in the same physical location. */
 
     bool first_point = true;
+    const gp_Pnt vertex_pnt = BRep_Tool::Pnt (vertex);
     for (TopExp_Explorer dora (edge, TopAbs_VERTEX); dora.More (); dora.Next ()) {
       const TopoDS_Vertex current_vertex = TopoDS::Vertex (dora.Current ());
 
-#if T8_ENABLE_DEBUG
-      /* Check of point is really the same. */
-      const gp_Pnt debug_reference_point = BRep_Tool::Pnt (vertex);
-      const gp_Pnt debug_current_point = BRep_Tool::Pnt (current_vertex);
-      T8_ASSERT (debug_reference_point.Distance (debug_current_point) <= Precision::Confusion ());
-#endif
+      /* The underlying curve can be closed, but since the active part of the curve (the edge) is not checked
+         there can be points which do not match our provided point. */
+      if (!vertex_pnt.IsEqual (BRep_Tool::Pnt (current_vertex), Precision::Confusion ()))
+        continue;
 
       if (first_point) {
         *edge_param = BRep_Tool::Parameter (current_vertex, edge);
@@ -322,6 +344,7 @@ t8_cad::t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const i
           *edge_param = other_param;
       }
     }
+    T8_ASSERT (first_point == false);
   }
   else {
     *edge_param = BRep_Tool::Parameter (vertex, edge);
@@ -355,7 +378,7 @@ t8_cad::t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const 
 
   /* If the vertex is not on the seam we can also just query the parameters. */
   else {
-    const bool is_on_seam = t8_cad::t8_geom_vertex_is_on_seam (vertex_index, face_index);
+    const bool is_on_seam = t8_cad::t8_geom_vertex_is_on_seam_edge (vertex_index, face_index);
     if (!is_on_seam) {
       uv.emplace (BRep_Tool::Parameters (vertex, face));
     }

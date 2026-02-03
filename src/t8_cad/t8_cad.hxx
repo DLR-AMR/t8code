@@ -201,21 +201,31 @@ class t8_cad {
   int
   t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const;
 
+  /** Returns true if \a vertex_index is on a seam of \a edge_index.
+   * A seam is a vertex which connects a curve to itself.
+   *
+   * \param [in] vertex_index   The index of the cad vertex.
+   * \param [in] edge_index     The index of the cad edge.
+   * \return true if the vertex is a seam. false otherwise.
+   */
+  bool
+  t8_geom_vertex_is_seam (const int vertex_index, const int edge_index) const;
+
   /** Returns true if \a vertex_index is on a seam of \a face_index.
    * A seam is an edge which connects a surface to itself.
    *
-   * \param [in] vertex_index
-   * \param [in] face_index
+   * \param [in] vertex_index   The index of the cad vertex.
+   * \param [in] face_index     The index of the cad face.
    * \return true if the edge is a seam. false otherwise.
    */
   bool
-  t8_geom_vertex_is_on_seam (const int vertex_index, const int face_index) const;
+  t8_geom_vertex_is_on_seam_edge (const int vertex_index, const int face_index) const;
 
   /** Returns true if \a edge_index is a seam of \a face_index.
    * A seam is an edge which connects a surface to itself.
    *
-   * \param [in] edge_index
-   * \param [in] face_index
+   * \param [in] edge_index   The index of the cad edge.
+   * \param [in] face_index   The index of the cad face.
    * \return true if the edge is a seam. false otherwise.
    */
   bool
