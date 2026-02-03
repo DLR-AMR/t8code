@@ -251,18 +251,6 @@ TEST_P (t8_bin_search_tester, bin_search_upper_adapt)
   t8_test_forest_bin_search_upper (forest_adapt);
 }
 
-// TODO: Add these lambda to common headers since it is reused
-
-/* Define a lambda to beatify gtest output for tuples <level, cmesh>.
- * This will set the correct level and cmesh name as part of the test case name. */
-auto pretty_print_eclass_scheme_and_level
-  = [] (const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass_t>, int>> &info) {
-      std::string scheme = t8_scheme_to_string[std::get<0> (std::get<0> (info.param))];
-      std::string eclass = t8_eclass_to_string[std::get<1> (std::get<0> (info.param))];
-      std::string level = std::string ("_level_") + std::to_string (std::get<1> (info.param));
-      return scheme + "_" + eclass + level;
-    };
-
 INSTANTIATE_TEST_SUITE_P (t8_gtest_bin_search, t8_bin_search_tester,
                           testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL)),
                           pretty_print_eclass_scheme_and_level);
