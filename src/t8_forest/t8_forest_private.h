@@ -204,7 +204,7 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
 
 /** Search for a linear element id in a sorted array of
  * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
+ * such that the element at position i has a smaller or equal id than the given one.
  * If no such i exists, return -1.
  * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
  *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
@@ -216,6 +216,35 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
 t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id,
                             const int element_level);
+
+/** \brief Search for a linear element id (at level element_level) in a sorted array of
+ * elements. If the element does not exist, return the smallest index i
+ * such that the element at position i has a larger or equal id than the given one.
+ * If no such i exists, return -1.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element_id  The linear id of the element to search for.
+ * \param [in]     element_level The level of the element to search for. Thus, the level at which \a element_id was computed.
+ * \return                     The smallest index \a i of an element with linear_id larger than or equal to \a element_id in \a elements if it exists.
+ *                             -1 if no such element was found in \a elements.
+ */
+t8_locidx_t
+t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level);
+
+/** \brief Search for the first descendant or ancestor of an element in a sorted array of elements.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element     The element to search for.
+ * \param [in]     element_found On return either a descendant or ancestor of \a element in \a elements if it exists. NULL if no
+ *                             such element exists in \a elements.
+ * \return                     The smallest index \a i such that elements[i] (= \a element_found) is an ancestor or a descendant of \a element.
+ *                             -1 if no such element was found in \a elements.
+ * \note \a element is ancestor and descendant of itself, so if \a element is contained in \a elements then it will be found by this function.
+ */
+t8_locidx_t
+t8_forest_bin_search_first_descendant_ancestor (const t8_element_array_t *elements, const t8_element_t *element,
+                                                const t8_element_t **element_found);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
