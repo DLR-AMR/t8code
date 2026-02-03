@@ -455,7 +455,7 @@ t8_cad::t8_geom_edge_parameter_to_face_parameters (
 {
   T8_ASSERT (t8_cad::t8_geom_is_edge_on_face (edge_index, face_index));
   Standard_Real first, last;
-  gp_Pnt2d uv;
+  std::optional<gp_Pnt2d> uv = std::nullopt;
   TopoDS_Face face = TopoDS::Face (cad_shape_face_map.FindKey (face_index));
   TopoDS_Edge edge = TopoDS::Edge (cad_shape_edge_map.FindKey (edge_index));
 
@@ -464,26 +464,25 @@ t8_cad::t8_geom_edge_parameter_to_face_parameters (
     /* Convert reference parameters to OCCT point */
     gp_Pnt2d reference_point (reference_face_params.value ()[0], reference_face_params.value ()[1]);
 
-    /* If the edge is a seam we have to get both points and check which one is closer.
+    /* If the edge is a seam we have to get both points and check which one has closer parameters.
        We iterate over all edges of the face and check if the edges are the same as the
        input edge. Then we check if the converted parameters are closer to the
        already computed parameters. */
-    bool first_point = true;
     for (TopExp_Explorer dora (face, TopAbs_EDGE); dora.More (); dora.Next ()) {
       const TopoDS_Edge current_edge = TopoDS::Edge (dora.Current ());
       /* Check if edge is one of the seams. */
       if (edge.IsSame (current_edge)) {
         Handle_Geom2d_Curve curve_on_surface = BRep_Tool::CurveOnSurface (edge, face, first, last);
         /* If it is the first seam we compute the parameters. */
-        if (first_point) {
-          curve_on_surface->D0 (edge_param, uv);
-          first_point = false;
+        if (!uv.has_value ()) {
+          uv.emplace ();
+          curve_on_surface->D0 (edge_param, uv.value ());
         }
         /* If it is the second one we check which point is close. */
         else {
           gp_Pnt2d other_point;
           curve_on_surface->D0 (edge_param, other_point);
-          if (other_point.Distance (reference_point) < uv.Distance (reference_point))
+          if (other_point.Distance (reference_point) < uv.value ().Distance (reference_point))
             uv = other_point;
         }
       }
@@ -492,11 +491,15 @@ t8_cad::t8_geom_edge_parameter_to_face_parameters (
   else {
     /* If the edge is not a seam or if no reference parameters were provided we just
        use the normal edge. */
+    uv.emplace ();
     Handle_Geom2d_Curve curve_on_surface = BRep_Tool::CurveOnSurface (edge, face, first, last);
-    curve_on_surface->D0 (edge_param, uv);
+    curve_on_surface->D0 (edge_param, uv.value ());
   }
-  face_params_out[0] = uv.X ();
-  face_params_out[1] = uv.Y ();
+  if (!uv.has_value ()) {
+    SC_ABORTF ("Failed to convert edge parameters to Face parameters.");
+  }
+  face_params_out[0] = uv.value ().X ();
+  face_params_out[1] = uv.value ().Y ();
 }
 
 void
