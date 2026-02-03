@@ -167,7 +167,7 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     add_t8_cpp_test( NAME t8_gtest_geometry_negative_volume_serial      SOURCES t8_geometry/t8_gtest_geometry_negative_volume.cxx )
 endif()
 
-if( T8_ENABLE_OCC )
+if( T8CODE_ENABLE_OCC )
     add_t8_cpp_test( NAME t8_gtest_geometry_cad_serial                  SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
     add_t8_cpp_test( NAME t8_gtest_geometry_cad_component_serial        SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad_component.cxx )
 endif()
