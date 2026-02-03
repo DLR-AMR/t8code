@@ -172,4 +172,55 @@ t8_swap (double p1[3], double p2[3])
   std::swap (p1_view, p2_view);
 }
 
+/**
+ * Test whether four given points in 3D are coplanar up to a given tolerance.
+ * \param [in]  p_0         First point to check.
+ * \param [in]  p_1         Second point to check.
+ * \param [in]  p_2         Third point to check.
+ * \param [in]  p_3         Fourth point to check.
+ * \param [in]  tolerance   The tolerance
+ * \return true if points are coplanar.
+ */
+int
+t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double p_2[3], const double p_3[3],
+                         const double tolerance)
+{
+  /* Let p0, p1, p2, p3 be the four points.
+   * The four points are coplanar if the normal vectors to the triangles
+   * p0, p1, p2 and p0, p2, p3 are pointing in the same direction.
+   *
+   * We build the vectors A = p1 - p0, B = p2 - p0 and C = p3 - p0.
+   * The normal vectors to the triangles are n1 = A x B and n2 = A x C.
+   * These are pointing in the same direction if their cross product is 0.
+   * Hence we check if || n1 x n2 || < tolerance. */
+
+  /* A = p1 - p0 */
+  double A[3];
+  t8_axpyz (p_0, p_1, A, -1);
+
+  /* B = p2 - p0 */
+  double B[3];
+  t8_axpyz (p_0, p_2, B, -1);
+
+  /* C = p3 - p0 */
+  double C[3];
+  t8_axpyz (p_0, p_3, C, -1);
+
+  /* n1 = A x B */
+  double A_cross_B[3];
+  t8_cross_3D (A, B, A_cross_B);
+
+  /* n2 = A x C */
+  double A_cross_C[3];
+  t8_cross_3D (A, C, A_cross_C);
+
+  /* n1 x n2 */
+  double n1_cross_n2[3];
+  t8_cross_3D (A_cross_B, A_cross_C, n1_cross_n2);
+
+  /* || n1 x n2 || */
+  const double norm = t8_norm (n1_cross_n2);
+  return norm < tolerance;
+}
+
 T8_EXTERN_C_END ();

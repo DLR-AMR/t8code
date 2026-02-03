@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_cad.cxx
- * Implements functions declared in \ref t8_geometry_cad.hxx 
+ * Implements functions declared in \ref t8_geometry_cad.hxx
  *  or the C interface \ref t8_geometry_cad.h.
  */
 
@@ -31,6 +31,9 @@
 #include <t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
+#include <t8_schemes/t8_scheme.hxx>
+#include <t8_types/t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
@@ -136,6 +139,150 @@ t8_geometry_cad::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
   faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, ltreeid);
   T8_ASSERT (edges != NULL);
   T8_ASSERT (faces != NULL);
+}
+
+void
+t8_geometry_cad::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid,
+                                                     const t8_element_t *element, const double *points,
+                                                     const int num_points, int *is_inside, const double tolerance) const
+{
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_element_shape_t element_shape = scheme->element_get_shape (tree_class, element);
+  switch (element_shape) {
+  case T8_ECLASS_VERTEX: {
+    /* A point is 'inside' a vertex if they have the same coordinates */
+    double vertex_coords[3];
+    /* Get the vertex coordinates */
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, vertex_coords);
+    /* Check whether the point and the vertex are within tolerance distance
+       * to each other */
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = t8_vertex_point_inside (vertex_coords, &points[ipoint * 3], tolerance);
+    }
+    return;
+  }
+  case T8_ECLASS_LINE: {
+    /* A point p is inside a line that is defined by the edge nodes
+     * p_0 and p_1
+     * if and only if the linear system
+     * (p_1 - p_0)x = p - p_0
+     * has a solution x with 0 <= x <= 1
+     */
+    t8_3D_vec p_0, v;
+
+    /* Compute the vertex coordinates of the line */
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
+    /* v = p_1 */
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, v.data ());
+    /* v = p_1 - p_0 */
+    t8_axpy (p_0, v, -1);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = t8_line_point_inside (p_0.data (), v.data (), &points[ipoint * 3], tolerance);
+    }
+    return;
+  }
+  case T8_ECLASS_QUAD: {
+    /* We divide the quad in two triangles and use the triangle check. */
+    t8_3D_vec p_0, p_1, p_2, p_3;
+    /* Compute the vertex coordinates of the quad */
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3.data ());
+
+#if T8_ENABLE_DEBUG
+    /* Issue a warning if the points of the quad do not lie in the same plane */
+    if (!t8_four_points_coplanar (p_0.data (), p_1.data (), p_2.data (), p_3.data (), tolerance)) {
+      t8_debugf ("WARNING: Testing if point is inside a quad that is not coplanar. This test will be inaccurate.\n");
+    }
+#endif
+    t8_3D_vec v;
+    t8_3D_vec w;
+    /* v = v - p_0 = p_1 - p_0 */
+    t8_axpyz (p_0, p_1, v, -1);
+    /* w = w - p_0 = p_2 - p_0 */
+    t8_axpyz (p_0, p_2, w, -1);
+    /* Check whether the point is inside the first triangle. */
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = t8_triangle_point_inside (p_0.data (), v.data (), w.data (), &points[ipoint * 3], tolerance);
+    }
+    /* If not, check whether the point is inside the second triangle. */
+    /* v = v - p_0 = p_1 - p_0 */
+    t8_axpyz (p_1, p_2, v, -1);
+    /* w = w - p_0 = p_2 - p_0 */
+    t8_axpyz (p_1, p_3, w, -1);
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      if (!is_inside[ipoint]) {
+        /* point_inside is true if the point was inside the first or second triangle. Otherwise it is false. */
+        is_inside[ipoint]
+          = t8_triangle_point_inside (p_1.data (), v.data (), w.data (), &points[ipoint * 3], tolerance);
+      }
+    }
+    return;
+  }
+  case T8_ECLASS_TRIANGLE: {
+    t8_3D_vec p_0, p_1, p_2;
+
+    /* Compute the vertex coordinates of the triangle */
+    t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1.data ());
+    t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2.data ());
+    t8_3D_vec v;
+    t8_3D_vec w;
+    /* v = v - p_0 = p_1 - p_0 */
+    t8_axpyz (p_0, p_1, v, -1);
+    /* w = w - p_0 = p_2 - p_0 */
+    t8_axpyz (p_0, p_2, w, -1);
+
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = t8_triangle_point_inside (p_0.data (), v.data (), w.data (), &points[ipoint * 3], tolerance);
+    }
+    return;
+  }
+  case T8_ECLASS_TET:
+  case T8_ECLASS_HEX:
+  case T8_ECLASS_PRISM:
+  case T8_ECLASS_PYRAMID: {
+    /* For bilinearly interpolated volume elements, a point is inside an element
+     * if and only if it lies on the inner side of each face.
+     * The inner side is defined as the side where the outside normal vector does not
+     * point to.
+     * The point is on this inner side if and only if the scalar product of
+     * a point on the plane minus the point with the outer normal of the face
+     * is >= 0.
+     *
+     * In other words, let p be the point to check, n the outer normal and x a point
+     * on the plane, then p is on the inner side if and only if
+     *  <x - p, n> >= 0
+     */
+
+    const int num_faces = scheme->element_get_num_faces (tree_class, element);
+    /* Assume that every point is inside of the element */
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = 1;
+    }
+    for (int iface = 0; iface < num_faces; ++iface) {
+      double face_normal[3];
+      /* Compute the outer normal n of the face */
+      t8_forest_element_face_normal (forest, ltreeid, element, iface, face_normal);
+      /* Compute a point x on the face */
+      const int afacecorner = scheme->element_get_face_corner (tree_class, element, iface, 0);
+      double point_on_face[3];
+      t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
+      for (int ipoint = 0; ipoint < num_points; ipoint++) {
+        const int is_inside_iface = t8_plane_point_inside (point_on_face, face_normal, &points[ipoint * 3]);
+        if (is_inside_iface == 0) {
+          /* Point is on the outside of face iface. Update is_inside */
+          is_inside[ipoint] = 0;
+        }
+      }
+    }
+    return;
+  }
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
 }
 
 void
