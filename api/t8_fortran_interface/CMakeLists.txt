@@ -17,6 +17,6 @@ install(
 
 # Install module files.
 install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/t8_fortran_interface_mod.mod
+    FILES ${CMAKE_BINARY_DIR}/src/t8_fortran_interface_mod.mod
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_fortran_interface
 )

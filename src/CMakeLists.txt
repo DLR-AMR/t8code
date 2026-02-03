@@ -55,17 +55,22 @@ if( T8CODE_ENABLE_NETCDF )
   target_link_libraries( T8 PUBLIC NetCDF::NetCDF )
   target_compile_definitions(T8 PUBLIC
     T8_ENABLE_NETCDF=1
-    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR=1> )
+    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR=1> 
+  )
   target_sources( T8 PRIVATE
-  t8_netcdf.c
-  t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.c
-  t8_forest/t8_forest_netcdf.cxx
+    t8_netcdf.c
+    t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.c
+    t8_forest/t8_forest_netcdf.cxx
   )
   install( FILES
-  t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h
-  t8_forest_netcdf.h
-  t8_netcdf.h
-  TYPE INCLUDE )
+    t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_io
+  )
+  install( FILES
+    t8_forest_netcdf.h
+    t8_netcdf.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+  )
 endif()
 
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
@@ -103,7 +108,8 @@ if( T8CODE_ENABLE_VTK )
       t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx
       t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx
       t8_vtk/t8_with_vtk/t8_vtk_reader.hxx
-      TYPE INCLUDE)
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_vtk/t8_with_vtk
+    )
 endif()
 
 if( T8CODE_ENABLE_OCC )
@@ -117,8 +123,11 @@ if( T8CODE_ENABLE_OCC )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.h
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_geometry/t8_geometry_implementations
+    )
+    install( FILES
       t8_cad/t8_cad.hxx
-      TYPE INCLUDE
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cad
     )
 endif()
 
@@ -247,12 +256,10 @@ install( FILES
     t8_element_shape.h
     t8_mat.h
     t8_refcount.h
-    t8_types/t8_vec.hxx
-    t8_types/t8_vec.h
     t8_version.h
     t8_vtk.h 
     t8_with_macro_error.h
-    TYPE INCLUDE
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
 )
 
 # Note: Some of the created install directories will be empty, for example t8_cmesh/t8_cmesh_internal
@@ -261,58 +268,69 @@ install( FILES
 # It seems like we cannot force CMake to not create the folder.
 # See https://gitlab.kitware.com/cmake/cmake/-/issues/19189
 
-install ( DIRECTORY t8_helper_functions DESTINATION PRIVATE_HEADER FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_helper_functions 
+  DESTINATION PRIVATE_HEADER 
+  FILES_MATCHING 
+    PATTERN "*.hxx" 
+)
 install( DIRECTORY t8_cmesh
-  TYPE INCLUDE 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
   FILES_MATCHING 
     PATTERN "*.h" 
+    PATTERN "*.hxx"
     PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h" EXCLUDE
+    PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
-install( DIRECTORY t8_data TYPE INCLUDE FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_forest TYPE INCLUDE FILES_MATCHING PATTERN "*.h"
-  PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
-  PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
-  PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
+install( DIRECTORY t8_data 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+  FILES_MATCHING 
+    PATTERN "*.h"
+    PATTERN "*.hxx"
+)
+install( DIRECTORY t8_forest
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+  FILES_MATCHING 
+    PATTERN "*.h"
+    PATTERN "*.hxx"
+    PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
+    PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
+    PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
     PATTERN "*.h"
+    PATTERN "*.hxx"
     PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.h" EXCLUDE
-)
-install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h" )
-install( DIRECTORY t8_cmesh 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.hxx"
-    PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
-    PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx" EXCLUDE
-    PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx" EXCLUDE
-)
-install( DIRECTORY t8_data DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_forest DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_geometry 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING
-    PATTERN "*.hxx"
     PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx" EXCLUDE
 )
-install( DIRECTORY t8_schemes DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.hxx" )
-install( DIRECTORY t8_vtk DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+install( DIRECTORY t8_schemes 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
   FILES_MATCHING 
+    PATTERN "*.h"
+    PATTERN "*.hxx" 
+)
+install( DIRECTORY t8_vtk 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING 
+    PATTERN "*.h" 
     PATTERN "*.hxx"
-    PATTERN "t8_vtk/t8_vtk_parallel.hxx"      EXCLUDE
-    PATTERN "t8_vtk/t8_vtk_polydata.hxx"      EXCLUDE
-    PATTERN "t8_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
+    PATTERN "t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx"      EXCLUDE
+    PATTERN "t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx"      EXCLUDE
+    PATTERN "t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
     PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
     PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
 )
-install( DIRECTORY t8_types TYPE INCLUDE FILES_MATCHING PATTERN "*.hxx" )
+install( DIRECTORY t8_types 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+  FILES_MATCHING 
+    PATTERN "*.hxx" 
+    PATTERN "*.h"     
+)
 
-install(TARGETS T8
+install( TARGETS T8
   EXPORT ${PROJECT_NAME}-targets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
