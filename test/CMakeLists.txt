@@ -101,7 +101,7 @@ endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
 function( copy_test_file TEST_FILE_NAME )
-    configure_file(${CMAKE_CURRENT_LIST_DIR}/testfiles/${TEST_FILE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/test/testfiles/${TEST_FILE_NAME} COPYONLY)
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/testfiles/${TEST_FILE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/testfiles/${TEST_FILE_NAME} COPYONLY)
 endfunction()
 
 add_t8_cpp_test( NAME t8_gtest_cmesh_bcast_parallel     SOURCES t8_cmesh/t8_gtest_bcast.cxx )
