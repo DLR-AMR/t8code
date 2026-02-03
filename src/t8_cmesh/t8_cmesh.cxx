@@ -154,6 +154,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
     return true;
   }
   if (cmesh->geometry_handler->get_num_geometries () > 0) {
+    bool detected_inconsistency = false;
     /* Iterate over all trees, get their vertices and check the volume */
     for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
       /* Check if tree and geometry are compatible. */
@@ -161,7 +162,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
         = cmesh->geometry_handler->tree_compatible_with_geom (cmesh, t8_cmesh_get_global_id (cmesh, itree));
       if (!geometry_compatible) {
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
-        return false;
+        detected_inconsistency = true;
       }
       else if (check_for_negative_volume) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
@@ -169,10 +170,12 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
           = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
         if (negative_volume) {
           t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
-          return false;
+          detected_inconsistency = true;
         }
       }
     }
+    if (detected_inconsistency)
+      return false;
   }
   return true;
 }
