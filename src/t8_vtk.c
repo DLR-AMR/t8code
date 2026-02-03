@@ -29,7 +29,7 @@ int
 t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_rank, int write_level, int write_id,
                int num_data, t8_vtk_data_field_t *data)
 {
-  char pvtufilename[BUFSIZ], filename_cpy[BUFSIZ];
+  char pvtufilename[BUFSIZ], filename_copy[BUFSIZ];
   FILE *pvtufile;
   int p, idata, num_scalars = 0;
   int write_cell_data, wrote_cell_data = 0;
@@ -244,15 +244,15 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
     fprintf (pvtufile, "    </PCellData>\n");
   }
 
-  sreturn = snprintf (filename_cpy, BUFSIZ, "%s", filename);
+  sreturn = snprintf (filename_copy, BUFSIZ, "%s", filename);
   if (sreturn >= BUFSIZ) {
     /* The Filename was truncated */
     /* Note: gcc >= 7.1 prints a warning if we 
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated vtk file name cpy to '%s'\n", filename_cpy);
+    t8_debugf ("Warning: Truncated vtk file name cpy to '%s'\n", filename_copy);
   }
   for (p = 0; p < num_procs; ++p) {
-    fprintf (pvtufile, "    <Piece Source=\"%s_%04d.vtu\"/>\n", basename (filename_cpy), p);
+    fprintf (pvtufile, "    <Piece Source=\"%s_%04d.vtu\"/>\n", basename (filename_copy), p);
   }
   fprintf (pvtufile, "  </PUnstructuredGrid>\n");
   fprintf (pvtufile, "</VTKFile>\n");
