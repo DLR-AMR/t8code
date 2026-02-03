@@ -84,6 +84,90 @@ class t8_bin_search_tester: public testing::TestWithParam<std::tuple<std::tuple<
   const t8_scheme *scheme;
 };
 
+/** Test the t8_forest_bin_search_upper function.
+ * We iterate through all elements of a forest.
+ * For each element E of level L, we call t8_forest_bin_search_lower on the forest's element array and expect
+ * the element to be found.
+ * For each element we then build one case where we search for an element that is not contained but will
+ * match a different element in the element array:
+ *  We compute the linear Id of E at level L-1 (if it is >=0 ) and search for the L-1 element with this id.
+ *  We expect E to be found since it fulfills that its id is >= than the id we search for.
+ * We then build one case per tree where we search for an element that is not contained and will not match
+ * any other element:
+ *  We compute the linear Id of the last element in the tree and add 1 to it (if it is not zero).
+ *  We expect the search to not find anything.
+*/
+static void
+t8_test_forest_bin_search_upper (t8_forest_t forest)
+{
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    const t8_element_array_t *leafs = t8_forest_tree_get_leaf_elements (forest, itree);
+
+    /* Iterate over all the tree's leaf elements, check whether the leaf
+     * is correctly identified by t8_forest_element_is_leaf,
+     * build its parent and its first child (if they exist), and verify
+     * that t8_forest_element_is_leaf returns false. */
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
+      const t8_element_t *leaf_element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
+      const int element_level = scheme->element_get_level (tree_class, leaf_element);
+      const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, leaf_element, element_level);
+
+      /* Search for a linear element id in a sorted array of
+      * elements. If the element does not exist, return the largest index i
+      * such that the element at position i has a smaller id than the given one.
+      * If no such i exists, return -1. */
+      const t8_locidx_t search_index = t8_forest_bin_search_upper (leafs, element_id, element_level);
+      // We expect the leaf element to be found at position ielement
+      EXPECT_EQ (search_index, ielement) << "Found wrong position of leaf element. Expected: " << ielement
+                                         << " got: " << search_index;
+
+      // If we increase the level, we expect the element to not be found, but the search
+      // should return the index of the original element.
+      if (element_level > 0) {
+        const t8_linearidx_t element_id_at_previous_level
+          = scheme->element_get_linear_id (tree_class, leaf_element, element_level - 1);
+
+        const t8_locidx_t search_index
+          = t8_forest_bin_search_upper (leafs, element_id_at_previous_level, element_level - 1);
+        // We expect the leaf element to be found at position ielement
+        EXPECT_EQ (search_index, ielement)
+          << "Found wrong position of level " << element_level - 1 << " leaf element with id "
+          << element_id_at_previous_level << ". Expected: " << ielement << " got: " << search_index;
+      }
+
+      // Construct an element that is definitely not in the array and
+      // does not have an element of smaller id in the array. We expect -1 as return.
+      // We take the first element of the forest and subtract 1 from its id.
+      if (ielement == num_elements_in_tree - 1) {
+        const t8_linearidx_t element_not_found_id = element_id + 1;
+        // Double check for possible conversion error, if element_id == MAX_POSSIBLE_VALUE. In that case, the
+        // test logic fails. Should we ever run into this case, we need to rewrite this test accordingly.
+        SC_CHECK_ABORTF (element_not_found_id > 0, "Invalid element id %li\n", element_not_found_id);
+        const t8_locidx_t search_index = t8_forest_bin_search_upper (leafs, element_not_found_id, element_level);
+        EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expectec -1.";
+      }
+    }
+  }
+}
+
+/** Test the t8_forest_bin_search_lower function.
+ * We iterate through all elements of a forest.
+ * For each element E of level L, we call t8_forest_bin_search_lower on the forest's element array and expect
+ * the element to be found.
+ * For each element we then build one case where we search for an element that is not contained but will
+ * match a different element in the element array:
+ *  We compute the linear Id of E at level L+1 (if not exceeding the maxlevel) and search for the L+1 element with this id.
+ *  We expect E to be found since it fulfills that its id is <= than the id we search for.
+ * We then build one case per tree where we search for an element that is not contained and will not match
+ * any other element:
+ *  We compute the linear Id of the first element in the tree and subtract 1 from it (if it is not zero).
+ *  We expect the search to not find anything.
+*/
 static void
 t8_test_forest_bin_search_lower (t8_forest_t forest)
 {
@@ -112,6 +196,7 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
       // We expect the leaf element to be found at position ielement
       EXPECT_EQ (search_index, ielement) << "Found wrong position of leaf element. Expected: " << ielement
                                          << " got: " << search_index;
+
       // If we increase the level, we expect the element to not be found, but the search
       // should return the index of the original element.
       if (element_level < scheme->get_maxlevel (tree_class)) {
@@ -140,7 +225,7 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
   }
 }
 
-TEST_P (t8_bin_search_tester, bin_search_lower)
+TEST_P (t8_bin_search_tester, bin_search_lower_uniform)
 {
   t8_test_forest_bin_search_lower (forest);
 }
@@ -148,6 +233,16 @@ TEST_P (t8_bin_search_tester, bin_search_lower)
 TEST_P (t8_bin_search_tester, bin_search_lower_adapt)
 {
   t8_test_forest_bin_search_lower (forest_adapt);
+}
+
+TEST_P (t8_bin_search_tester, bin_search_upper_uniform)
+{
+  t8_test_forest_bin_search_upper (forest);
+}
+
+TEST_P (t8_bin_search_tester, bin_search_upper_adapt)
+{
+  t8_test_forest_bin_search_upper (forest_adapt);
 }
 
 // TODO: Add these lambda to common headers since it is reused
