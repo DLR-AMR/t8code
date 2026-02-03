@@ -42,7 +42,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * \tparam T the type of data
  */
 template <typename TType>
-class data_handler_test: public testing::Test {
+struct data_handler_test: public testing::Test
+{
  protected:
   void
   SetUp () override

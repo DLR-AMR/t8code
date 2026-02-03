@@ -35,7 +35,8 @@
 #include <t8_forest/t8_forest_private.h>
 #include <test/t8_gtest_schemes.hxx>
 
-class forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
+struct forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>>
+{
  protected:
   void
   SetUp () override
@@ -54,28 +55,6 @@ class forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tuple
   const t8_scheme *scheme;
   t8_element_t *neighbor;
 };
-
-#if 0
-/* Depending on an integer i create a different cmesh.
- * i = 0: cmesh_new_class
- * i = 1: cmesh_new_hypercube
- * i = 2: cmesh_new_bigmesh (100 trees)
- * else:  cmesh_new_class
- */
-TEST_P (forest_halt_neighbors, test_create_cmesh)
-{
-  switch (cmesh_type) {
-  case 0:
-    return t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-  case 1:
-    return t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
-  case 2:
-    return t8_cmesh_new_bigmesh (eclass, 100, sc_MPI_COMM_WORLD);
-  default:
-    return t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
-  }
-}
-#endif
 
 TEST_P (forest_half_neighbors, test_half_neighbors)
 {

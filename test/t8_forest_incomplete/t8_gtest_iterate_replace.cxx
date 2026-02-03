@@ -35,7 +35,8 @@
  * t8_forest_iterate_replace if it is passed the correct values.
  */
 
-class forest_iterate: public testing::TestWithParam<cmesh_example_base *> {
+struct forest_iterate: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override

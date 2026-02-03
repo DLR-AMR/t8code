@@ -35,7 +35,8 @@
  * \brief Test fixture for testing the bounding box of a t8_cmesh. Computes a cmesh inside
  * the unit cube, computes the bounding box and checks that it is correct.
  */
-class t8_cmesh_bounding_box: public testing::TestWithParam<t8_eclass> {
+struct t8_cmesh_bounding_box: public testing::TestWithParam<t8_eclass>
+{
  protected:
   void
   SetUp () override
@@ -77,7 +78,8 @@ TEST_P (t8_cmesh_bounding_box, test_box)
   compute_and_check_bounds (cmesh, eclass);
 }
 
-class t8_cmesh_bounding_box_multi_trees: public testing::TestWithParam<std::tuple<int, bool, t8_eclass>> {
+struct t8_cmesh_bounding_box_multi_trees: public testing::TestWithParam<std::tuple<int, bool, t8_eclass>>
+{
  protected:
   void
   SetUp () override

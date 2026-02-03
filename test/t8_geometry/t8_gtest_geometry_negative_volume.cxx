@@ -32,7 +32,8 @@
 #include <test/t8_gtest_memory_macros.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class check_negative_volume: public testing::TestWithParam<t8_eclass_t> {
+struct check_negative_volume: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override

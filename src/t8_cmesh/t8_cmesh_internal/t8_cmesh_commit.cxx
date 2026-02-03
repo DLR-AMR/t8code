@@ -218,7 +218,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_hash_t *ghost_ids;
   sc_mempool_t *ghost_facejoin_mempool;
   t8_ghost_facejoin_t *ghost_facejoin = NULL, *temp_facejoin, **facejoin_pp;
-  size_t joinfaces_it, iz;
+  size_t joinfaces_it;
   t8_gloidx_t id1, id2;
   t8_locidx_t temp_local_id = 0;
   t8_locidx_t num_hashes;
@@ -241,7 +241,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* TODO: reset cmesh */
     return;
   }
-  t8_shmem_init (comm);
+  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup. Could not build Cmesh.");
   t8_cmesh_set_shmem_type (comm); /* TODO: do we actually need the shared array? */
   t8_stash_attribute_sort (cmesh->stash);
 
@@ -341,9 +341,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* Iterate through classes and add ghosts and trees */
     /* We need a temporary ghost_facejoin to check the hash for existing global ids */
     temp_facejoin->local_id = -10;
-    for (iz = 0; iz < cmesh->stash->classes.elem_count; iz++) {
+    for (size_t iclass = 0; iclass < cmesh->stash->classes.elem_count; iclass++) {
       /* get class and tree id */
-      classentry = (t8_stash_class_struct_t *) sc_array_index (&cmesh->stash->classes, iz);
+      classentry = (t8_stash_class_struct_t *) sc_array_index (&cmesh->stash->classes, iclass);
       temp_facejoin->ghost_id = classentry->id;
       if (cmesh->first_tree <= classentry->id && classentry->id <= last_tree) {
         /* initialize tree */
@@ -390,8 +390,8 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     /* Go through all face_neighbour entries and parse every
      * important entry */
-    for (iz = 0; iz < cmesh->stash->joinfaces.elem_count; iz++) {
-      joinface = (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->joinfaces, iz);
+    for (size_t ijoinface = 0; ijoinface < cmesh->stash->joinfaces.elem_count; ijoinface++) {
+      joinface = (t8_stash_joinface_struct_t *) sc_array_index (&cmesh->stash->joinfaces, ijoinface);
       id1 = joinface->id1;
       id2 = joinface->id2;
       id1_istree = cmesh->first_tree <= id1 && last_tree >= id1;
