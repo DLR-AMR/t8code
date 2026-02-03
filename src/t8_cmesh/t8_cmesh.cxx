@@ -174,10 +174,8 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
         }
       }
     }
-    if (!is_valid)
-      return false;
+    return is_valid;
   }
-  return true;
 }
 #endif /* T8_ENABLE_DEBUG */
 
