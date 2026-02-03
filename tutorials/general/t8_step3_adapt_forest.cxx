@@ -36,7 +36,8 @@
  *   - Look at the paraview output files of the uniform and the adapted forest.
  *     For the adapted forest you can apply a slice filter to look into the cube.
  *   - Run the program with different process numbers. You should see that refining is
- *     independent of the number of processes, but coarsening is not.
+ *     independent of the number of processes, but coarsening is not
+ *     (unless the-partition-for-coarsening flag is activated).
  *     This is due to the face that a family can only be coarsened if it is completely
  *     local to a single process and the distribution among the process may break this property.
  *   - Change the midpoint coordinates and the radii.
