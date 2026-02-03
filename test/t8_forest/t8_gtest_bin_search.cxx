@@ -128,16 +128,18 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
 
       // If we increase the level, we expect the element to not be found, but the search
       // should return the index of the original element.
-      if (element_level > 0) {
-        const t8_linearidx_t element_id_at_previous_level
-          = scheme->element_get_linear_id (tree_class, leaf_element, element_level - 1);
+      if (element_level < scheme->get_maxlevel (tree_class)) {
+        t8_debugf ("Computing element for level %i, Max is %i\n", element_level, T8_DLINE_MAXLEVEL);
+        // TODO: The maxlevel eventually should be element dependent. I know that an element dependent maxlevel function was developed in a different branch (by Sandro?)
+        const t8_linearidx_t element_id_at_next_level
+          = scheme->element_get_linear_id (tree_class, leaf_element, element_level + 1);
 
         const t8_locidx_t search_index
-          = t8_forest_bin_search_upper (leafs, element_id_at_previous_level, element_level - 1);
+          = t8_forest_bin_search_upper (leafs, element_id_at_next_level, element_level + 1);
         // We expect the leaf element to be found at position ielement
         EXPECT_EQ (search_index, ielement)
-          << "Found wrong position of level " << element_level - 1 << " leaf element with id "
-          << element_id_at_previous_level << ". Expected: " << ielement << " got: " << search_index;
+          << "Found wrong position of level " << element_level + 1 << " leaf element with id "
+          << element_id_at_next_level << ". Expected: " << ielement << " got: " << search_index;
       }
 
       // Construct an element that is definitely not in the array and
@@ -225,21 +227,25 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
   }
 }
 
+// bin_search_lower test for uniform forest
 TEST_P (t8_bin_search_tester, bin_search_lower_uniform)
 {
   t8_test_forest_bin_search_lower (forest);
 }
 
+// bin_search_lower test for adaptive forest
 TEST_P (t8_bin_search_tester, bin_search_lower_adapt)
 {
   t8_test_forest_bin_search_lower (forest_adapt);
 }
 
+// bin_search_upper test for uniform forest
 TEST_P (t8_bin_search_tester, bin_search_upper_uniform)
 {
   t8_test_forest_bin_search_upper (forest);
 }
 
+// bin_search_upper test for adaptive forest
 TEST_P (t8_bin_search_tester, bin_search_upper_adapt)
 {
   t8_test_forest_bin_search_upper (forest_adapt);
