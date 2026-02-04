@@ -167,74 +167,74 @@ using batched_element_callback
  *   a.collect_actions(const t8_forest_t, std::vector<action>&, element_callback)
  * returning void.
  *
- * \tparam T
- *   Type under test. The concept is satisfied when an object `a` of type T can be
+ * \tparam TType
+ *   Type under test. The concept is satisfied when an object `object` of type TType can be
  *   used in an expression
- *     a.collect_actions(forest_from, actions, cb)
+ *     object.collect_actions(forest_from, actions, cb)
  *   where:
  *     - forest_from is of type const t8_forest_t,
  *     - actions is of type std::vector<action>&,
  *     - cb is of type element_callback,
  *   and the expression is well-formed and yields void.
  */
-template <typename T>
+template <typename TType>
 concept has_element_callback_collect
-  = requires (T a, const t8_forest_t forest_from, std::vector<action> &actions, element_callback cb) {
+  = requires (TType object, const t8_forest_t forest_from, std::vector<action> &actions, element_callback cb) {
       {
-        a.collect_actions (forest_from, actions, cb)
+        object.collect_actions (forest_from, actions, cb)
       } -> std::same_as<void>;
     };
 
-/** Concept that detects whether a type T provides a member function
+/** Concept that detects whether a type TType provides a member function
  * with the signature compatible with:
- *   a.collect_actions(const t8_forest_t, std::vector<action>&, batched_element_callback)
+ *   object.collect_actions(const t8_forest_t, std::vector<action>&, batched_element_callback)
  * returning void.
- * \tparam T
- *   Type under test. The concept is satisfied when an object `a` of type T can be
+ * \tparam TType
+ *   Type under test. The concept is satisfied when an object `object` of type TType can be
  *   used in an expression
- *     a.collect_actions(forest_from, actions, cb)
+ *     object.collect_actions(forest_from, actions, cb)
  *   where:
  *     - forest_from is of type const t8_forest_t,
  *     - actions is of type std::vector<action>&,
  *     - cb is of type batched_element_callback,
  *   and the expression is well-formed and yields void.
  */
-template <typename T>
+template <typename TType>
 concept has_batched_callback_collect
-  = requires (T a, const t8_forest_t forest_from, std::vector<action> &actions, batched_element_callback cb) {
+  = requires (TType object, const t8_forest_t forest_from, std::vector<action> &actions, batched_element_callback cb) {
       {
-        a.collect_actions (forest_from, actions, cb)
+        object.collect_actions (forest_from, actions, cb)
       } -> std::same_as<void>;
     };
 
-/** Concept that detects whether a type T provides a member function
+/** Concept that detects whether a type TType provides a member function
  * with the signature compatible with either:
- *   a.collect_actions(const t8_forest_t, std::vector<action>&, element_callback)
+ *   object.collect_actions(const t8_forest_t, std::vector<action>&, element_callback)
  * or
- *   a.collect_actions(const t8_forest_t, std::vector<action>&, batched_element_callback)
+ *   object.collect_actions(const t8_forest_t, std::vector<action>&, batched_element_callback)
  * returning void.
- * \tparam T
- *   Type under test. The concept is satisfied when an object `a` of type T can be
+ * \tparam TType
+ *   Type under test. The concept is satisfied when an object `object` of type T can be
  *   used in an expression
- *     a.collect_actions(forest_from, actions, cb)
+ *     object.collect_actions(forest_from, actions, cb)
  *   where:
  *     - forest_from is of type const t8_forest_t,
  *     - actions is of type std::vector<action>&,
  *     - cb is of type element_callback or batched_element_callback,
  *   and the expression is well-formed and yields void.
  */
-template <typename T>
-concept actions_collectable = has_element_callback_collect<T> || has_batched_callback_collect<T>;
+template <typename TType>
+concept actions_collectable = has_element_callback_collect<TType> || has_batched_callback_collect<TType>;
 
-/** Concept that detects whether a type T provides a member function
+/** Concept that detects whether a type TType provides a member function
  * with the signature compatible with:
- *   a.family_check(const t8_element_array_t*, std::vector<const t8_element_t*>&, const t8_locidx_t,
+ *   object.family_check(const t8_element_array_t*, std::vector<const t8_element_t*>&, const t8_locidx_t,
  *                  const t8_scheme*, const t8_eclass_t)
  * returning bool.
- * \tparam T
- *   Type under test. The concept is satisfied when an object `a` of type T can be
+ * \tparam TType
+ *   Type under test. The concept is satisfied when an object `object` of type TType can be
  *   used in an expression
- *     a.family_check(tree_elements_from, elements_from, offset, scheme, tree_class)
+ *     object.family_check(tree_elements_from, elements_from, offset, scheme, tree_class)
  *   where:
  *     - tree_elements_from is of type const t8_element_array_t*,
  *     - elements_from is of type std::vector<const t8_element_t*>&,
@@ -243,25 +243,25 @@ concept actions_collectable = has_element_callback_collect<T> || has_batched_cal
  *     - tree_class is of type const t8_eclass_t,
  *   and the expression is well-formed and yields a type convertible to bool.
  */
-template <typename T>
-concept family_checkable
-  = requires (T a, const t8_element_array_t *tree_elements_from, std::vector<const t8_element_t *> &elements_from,
-              const t8_locidx_t offset, const t8_scheme *scheme, const t8_eclass_t tree_class) {
-      {
-        a.family_check (tree_elements_from, elements_from, offset, scheme, tree_class)
-      } -> std::convertible_to<bool>;
-    };
+template <typename TType>
+concept family_checkable = requires (TType object, const t8_element_array_t *tree_elements_from,
+                                     std::vector<const t8_element_t *> &elements_from, const t8_locidx_t offset,
+                                     const t8_scheme *scheme, const t8_eclass_t tree_class) {
+  {
+    object.family_check (tree_elements_from, elements_from, offset, scheme, tree_class)
+  } -> std::convertible_to<bool>;
+};
 
-/** Concept that detects whether a type T provides a member function
+/** Concept that detects whether a type TType provides a member function
  * with the signature compatible with:
-template <typename T>
+template <typename TType>
 concept element_manipulatable = requires (
-  T a, t8_element_array_t *elements, const t8_element_array_t *const elements_from,
-                       const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t &el_considered, 
+  TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from,
+                       const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t &el_considered,
                        const t8_locidx_t el_offset, t8_locidx_t &el_inserted, const std::vector<action> &actions,
                        action action, const bool is_family, const int num_siblings) {
   {
-    a.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted, actions, action, is_family, num_siblings)
+    object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted, actions, action, is_family, num_siblings)
   } -> std::same_as<void>;
 };
  *     - elements_from is of type const t8_element_array_t*,
@@ -272,14 +272,14 @@ concept element_manipulatable = requires (
  *     - action is of type const action,
  *   and the expression is well-formed and yields void.
  */
-template <typename T>
+template <typename TType>
 concept element_manipulatable = requires (
-  T a, t8_element_array_t *elements, const t8_element_array_t *const elements_from, const t8_scheme *scheme,
+  TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from, const t8_scheme *scheme,
   const t8_eclass_t tree_class, const t8_locidx_t &el_considered, const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
   const std::vector<action> &action, const bool is_family, const int num_siblings) {
   {
-    a.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted, action,
-                           is_family, num_siblings)
+    object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted,
+                                action, is_family, num_siblings)
   } -> std::same_as<void>;
 };
 
