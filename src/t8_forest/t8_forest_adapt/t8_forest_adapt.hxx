@@ -569,6 +569,10 @@ struct manipulator
 template <actions_collectable TCollect, family_checkable TFamily, element_manipulatable TManipulate>
 class adaptor: private TCollect, private TFamily, private TManipulate {
  public:
+  /** The type of callback used for collecting adaptation actions. */
+  using callback_type
+    = std::conditional_t<has_element_callback_collect<TCollect>, element_callback, batched_element_callback>;
+
   /** Constructor for basic_adaptation class.
    * \param [in] forest            The target forest to be adapted.
    * \param [in] forest_from       The source forest to adapt from.
@@ -577,7 +581,7 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
    *
    * \note The constructor increments reference counts for non-null forest handles, and the destructor will release them.
    */
-  adaptor (t8_forest_t forest, t8_forest_t forest_from, element_callback callback_in, bool profiling_in = false)
+  adaptor (t8_forest_t forest, t8_forest_t forest_from, callback_type callback_in, bool profiling_in = false)
     : callback (callback_in), forest (forest), forest_from (forest_from), profiling (profiling_in)
   {
     T8_ASSERT (forest != nullptr);
@@ -655,9 +659,6 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
       profile_adaptation_end ();
     }
   }
-  /** The type of callback used for collecting adaptation actions. */
-  using callback_type
-    = std::conditional_t<has_element_callback_collect<TCollect>, element_callback, batched_element_callback>;
 
   callback_type callback; /**< The callback function to determine adaptation actions. */
  private:
