@@ -29,7 +29,7 @@
 #define T8_GTEST_BFS_BASE_HXX
 
 #include <gtest/gtest.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <queue>
 

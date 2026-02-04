@@ -28,7 +28,7 @@
 #define T8_STANDALONE_IMPLEMENTATION_HXX
 
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <sc_functions.h>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>

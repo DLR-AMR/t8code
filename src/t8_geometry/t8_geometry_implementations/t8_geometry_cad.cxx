@@ -28,7 +28,7 @@
 #include <t8.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 

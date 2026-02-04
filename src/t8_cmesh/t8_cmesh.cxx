@@ -31,7 +31,7 @@
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_types/t8_vec.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_helper_functions/t8_vector_algorithms.hxx>
 #include <t8_cmesh/t8_cmesh.hxx>

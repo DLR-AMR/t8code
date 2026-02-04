@@ -47,7 +47,7 @@ typedef struct t8_cmesh *t8_cmesh_t;
  *       Actually, we need eclass in the type definition in cmesh.c.
  *       So we might as well use tree-related virtual functions there too.
  */
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 
 /* TODO: make it legal to call cmesh_set functions multiple times,
  *       just overwrite the previous setting if no inconsistency can occur.

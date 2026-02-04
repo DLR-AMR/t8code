@@ -29,7 +29,7 @@
 
 #include <t8.h>
 #include <t8_data/t8_shmem.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 
 /** Determine the sibling with the biggest difference in IDs (in the given direction).
  *

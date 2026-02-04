@@ -29,7 +29,7 @@
 
 #include <t8_element/t8_element.h>
 #include <t8_types/t8_crtp.hxx>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 
 /**
   * Class which provides helper functions and default implementations for different schemes.

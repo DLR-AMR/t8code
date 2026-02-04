@@ -27,7 +27,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include "t8_gtest_dfs_base.hxx"

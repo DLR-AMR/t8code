@@ -29,7 +29,7 @@
 #define NC_INDEPENDENT 0
 #define NC_COLLECTIVE 1
 #endif
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>

@@ -28,7 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <t8.h>
 #include <t8_element/t8_element.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_scheme.hxx>

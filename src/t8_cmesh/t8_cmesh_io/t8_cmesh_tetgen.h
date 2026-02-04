@@ -29,7 +29,7 @@
 #define T8_CMESH_TETGEN_H
 
 #include <t8.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <sc_flops.h>
 #include <sc_statistics.h>

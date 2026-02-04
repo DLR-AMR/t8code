@@ -168,7 +168,7 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.cxx
     t8_data/t8_shmem.c
     t8_data/t8_containers.cxx
-    t8_element/t8_eclass.c
+    t8_eclass/t8_eclass.c
     t8_element/t8_element_shape.c
     t8_element/t8_element.cxx
     t8_forest/t8_forest_adapt.cxx

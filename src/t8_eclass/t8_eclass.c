@@ -25,7 +25,7 @@
  */
 
 #define KEEP_ECLASS_VALUE_DEFINITIONS
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #undef KEEP_ECLASS_VALUE_DEFINITIONS
 
 const int t8_eclass_to_dimension[T8_ECLASS_COUNT] = T8_ECLASS_TO_DIMENSION_VALUES;

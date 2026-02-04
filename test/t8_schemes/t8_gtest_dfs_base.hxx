@@ -24,7 +24,7 @@
 #define T8_GTEST_SCHEME_HELPER_H
 
 #include <gtest/gtest.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 
 struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>

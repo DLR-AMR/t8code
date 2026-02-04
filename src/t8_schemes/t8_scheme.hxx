@@ -31,7 +31,7 @@
 #include <variant>
 #include <vector>
 #include <t8_helper_functions/t8_refcount.h>
-#include <t8_element/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
