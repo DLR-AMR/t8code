@@ -35,7 +35,7 @@
 T8_EXTERN_C_BEGIN ();
 
 /* Set to 1 to enable legacy adaptation behavior */
-#define T8_FOREST_ADAPT_LEGACY 1
+#define T8_FOREST_ADAPT_LEGACY 0
 
 #if T8_FOREST_ADAPT_LEGACY
 
@@ -699,12 +699,12 @@ t8_forest_adapt (t8_forest_t forest)
 }
 #else
 
-t8_forest_adapt_namespace::adapt_action
+t8_adapt::adapt_action
 dummy_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
                 [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const t8_scheme *scheme,
                 [[maybe_unused]] const t8_eclass_t tree_class)
 {
-  return t8_forest_adapt_namespace::adapt_action::KEEP;
+  return t8_adapt::adapt_action::KEEP;
 }
 
 void
@@ -714,7 +714,7 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_from != NULL);
   T8_ASSERT (forest->set_adapt_recursive != -1);
   t8_forest_t forest_from = forest->set_from;
-  using namespace t8_forest_adapt_namespace;
+  using namespace t8_adapt;
   /**TODO: currently only using a dummy callback to check compilation.
      * For proper usage we need to change the layout of the adapt function pointer
      * in t8_forest_t.

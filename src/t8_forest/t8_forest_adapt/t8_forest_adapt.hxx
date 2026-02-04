@@ -41,8 +41,7 @@
  * Namespace for adaptation related classes and functions.
  */
 
-/* TODO rename to t8_forest_adapt as soon as it is not used as function name anymore.  */
-namespace t8_forest_adapt_namespace
+namespace t8_adapt
 {
 /** The action to be taken on an element during adaptation. 
    * COARSEN: The element should be coarsened.
@@ -56,42 +55,77 @@ class adapt_action {
   static const int KEEP = 0;
   static const int REFINE = 1;
 
+  /**
+   * Default constructor: KEEP action.
+   * \note implicit conversion from int to adapt_action.
+   */
   adapt_action (): value (KEEP)
   {
   }
+  /** Constructor from int value.
+   * \param [in] v The integer value representing the action.
+   * \note implicit conversion from int to adapt_action.
+   */
   adapt_action (int v): value (v)
   {
   }
 
-  /* implicit conversion to int so comparisons with the static constants work */
+  /** Conversion operator to int.
+   * \return The integer value representing the action.
+   * \note implicit conversion from adapt_action to int.
+   */
   operator int () const
   {
     return value;
   }
 
-  /* equality helpers */
+  /**
+   * Comparison operators with int and adapt_action.
+   * \param [in] other The other value to compare with.
+   * \return True if the values are equal, false otherwise.
+   */
   bool
   operator== (int other) const
   {
     return value == other;
   }
+
+  /** Inequality operator with int.
+   * \param [in] other The other value to compare with.
+   * \return True if the values are not equal, false otherwise.
+   */
   bool
   operator!= (int other) const
   {
     return value != other;
   }
+
+  /** Equality operator with another adapt_action.
+   * \param [in] other The other adapt_action to compare with.
+   * \return True if the values are equal, false otherwise.
+   */
   bool
   operator== (const adapt_action &other) const
   {
     return value == other.value;
   }
+
+  /** Inequality operator with another adapt_action.
+   * \param [in] other The other adapt_action to compare with.
+   * \return True if the values are not equal, false otherwise.
+   */
   bool
   operator!= (const adapt_action &other) const
   {
     return value != other.value;
   }
 
-  /* allow assigning from an int constant */
+  /**
+   * Assignment operator from int.
+   * \param [in] v The integer value representing the action to assign.
+   * \return A reference to this adapt_action after assignment.
+   * \note implicit conversion from int to adapt_action.  
+   */
   adapt_action &
   operator= (int v)
   {
@@ -502,9 +536,12 @@ struct manipulator
    *       this alias so the adaptor can support either single-element or batched callbacks depending on TCollect.
    *
    * Protected / private helpers
-   * - inline void profile_adaptation()
+   * - inline void profile_adaptation_start()
    *     - Starts adaptation timing by writing into forest->profile->adapt_runtime using the MPI wall-time helper.
    *     - Assumes a non-null profiling structure on the forest.
+   * - inline void profile_adaptation_end()
+   *    - Ends adaptation timing by computing the elapsed time since profile_adaptation_start and accumulating it
+   *      into forest->profile->adapt_runtime.
    *
    * Data members
    * - t8_forest_t forest
@@ -528,9 +565,13 @@ template <adapt_actions_collectable TCollect, family_checkable TFamily, element_
 class adaptor: private TCollect, private TFamily, private TManipulate {
  public:
   /** Constructor for basic_adaptation class.
-       * \param [in] forest_in        The forest to be adapted.
-       * \param [in] callback_in      The callback function to determine adaptation actions.
-       */
+   * \param [in] forest            The target forest to be adapted.
+   * \param [in] forest_from       The source forest to adapt from.
+   * \param [in] callback_in       The callback function to determine adaptation actions for elements.
+   * \param [in] profiling_in      Flag to indicate if profiling should be enabled during adaptation.
+   *
+   * \note The constructor increments reference counts for non-null forest handles, and the destructor will release them.
+   */
   adaptor (t8_forest_t forest, t8_forest_t forest_from, element_callback callback_in, bool profiling_in = false)
     : callback (callback_in), forest (forest), forest_from (forest_from), profiling (profiling_in)
   {
@@ -638,5 +679,5 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
   bool profiling = false;                  /**< Flag to indicate if profiling is enabled. */
 };                                         // class adaptor
 
-};     // namespace t8_forest_adapt_namespace
+};     // namespace t8_adapt
 #endif /* T8_FOREST_ADAPT_HXX */
