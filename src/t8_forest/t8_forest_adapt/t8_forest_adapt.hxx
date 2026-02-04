@@ -155,33 +155,33 @@ using element_callback
  * \param [in] element       The array of elements to be adapted.
  * \param [in] scheme        The scheme used for the elements.
  * \param [in] tree_class    The eclass of the tree containing the elements.
- * \param [out] action       The vector to store the adaptation actions for the elements.
+ * \param [out] actions      The vector to store the adaptation actions for the elements.
 */
 using batched_element_callback
   = std::function<void (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_array_t *element,
-                        const t8_scheme *scheme, const t8_eclass_t tree_class, std::vector<action> &action)>;
+                        const t8_scheme *scheme, const t8_eclass_t tree_class, std::vector<action> &actions)>;
 
 /**
- * Concept that detects whether a type T provides a member function
+ * Concept that detects whether a type TType provides a member function
  * with the signature compatible with:
- *   a.collect_actions(const t8_forest_t, std::vector<action>&, element_callback)
+ *   object.collect_actions(const t8_forest_t, std::vector<action>&, element_callback)
  * returning void.
  *
  * \tparam TType
  *   Type under test. The concept is satisfied when an object `object` of type TType can be
  *   used in an expression
- *     object.collect_actions(forest_from, actions, cb)
+ *     object.collect_actions(forest_from, actions, callback)
  *   where:
  *     - forest_from is of type const t8_forest_t,
  *     - actions is of type std::vector<action>&,
- *     - cb is of type element_callback,
+ *     - callback is of type element_callback,
  *   and the expression is well-formed and yields void.
  */
 template <typename TType>
 concept has_element_callback_collect
-  = requires (TType object, const t8_forest_t forest_from, std::vector<action> &actions, element_callback cb) {
+  = requires (TType object, const t8_forest_t forest_from, std::vector<action> &actions, element_callback callback) {
       {
-        object.collect_actions (forest_from, actions, cb)
+        object.collect_actions (forest_from, actions, callback)
       } -> std::same_as<void>;
     };
 
@@ -192,20 +192,20 @@ concept has_element_callback_collect
  * \tparam TType
  *   Type under test. The concept is satisfied when an object `object` of type TType can be
  *   used in an expression
- *     object.collect_actions(forest_from, actions, cb)
+ *     object.collect_actions(forest_from, actions, callback)
  *   where:
  *     - forest_from is of type const t8_forest_t,
  *     - actions is of type std::vector<action>&,
- *     - cb is of type batched_element_callback,
+ *     - callback is of type batched_element_callback,
  *   and the expression is well-formed and yields void.
  */
 template <typename TType>
-concept has_batched_callback_collect
-  = requires (TType object, const t8_forest_t forest_from, std::vector<action> &actions, batched_element_callback cb) {
-      {
-        object.collect_actions (forest_from, actions, cb)
-      } -> std::same_as<void>;
-    };
+concept has_batched_callback_collect = requires (TType object, const t8_forest_t forest_from,
+                                                 std::vector<action> &actions, batched_element_callback callback) {
+  {
+    object.collect_actions (forest_from, actions, callback)
+  } -> std::same_as<void>;
+};
 
 /** Concept that detects whether a type TType provides a member function
  * with the signature compatible with either:
@@ -216,11 +216,11 @@ concept has_batched_callback_collect
  * \tparam TType
  *   Type under test. The concept is satisfied when an object `object` of type T can be
  *   used in an expression
- *     object.collect_actions(forest_from, actions, cb)
+ *     object.collect_actions(forest_from, actions, callback)
  *   where:
  *     - forest_from is of type const t8_forest_t,
  *     - actions is of type std::vector<action>&,
- *     - cb is of type element_callback or batched_element_callback,
+ *     - callback is of type element_callback or batched_element_callback,
  *   and the expression is well-formed and yields void.
  */
 template <typename TType>
@@ -259,9 +259,9 @@ concept element_manipulatable = requires (
   TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from,
                        const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t &el_considered,
                        const t8_locidx_t el_offset, t8_locidx_t &el_inserted, const std::vector<action> &actions,
-                       action action, const bool is_family, const int num_siblings) {
+                       const bool is_family, const int num_siblings) {
   {
-    object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted, actions, action, is_family, num_siblings)
+    object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted, actions, is_family, num_siblings)
   } -> std::same_as<void>;
 };
  *     - elements_from is of type const t8_element_array_t*,
@@ -269,7 +269,9 @@ concept element_manipulatable = requires (
  *     - tree_class is of type const t8_eclass_t,
  *     - el_considered is of type const t8_locidx_t&,
  *     - el_inserted is of type t8_locidx_t&,
- *     - action is of type const action,
+ *     - actions is of type const std::vector<action>&,
+ *     - is_family is of type const bool,
+ *     - num_siblings is of type const int,
  *   and the expression is well-formed and yields void.
  */
 template <typename TType>
@@ -432,13 +434,15 @@ struct manipulator
 {
   /** Manipulate elements based on the given adapt action.
      * \param [in,out] elements          The array of elements to be manipulated.
-     * \param [in] tree_elements_from    The array of elements from the source tree.
+     * \param [in] elements_from         The array of elements from the source tree.
      * \param [in] scheme                The scheme to use for manipulation.
      * \param [in] tree_class            The class of the tree.
      * \param [in] el_considered         The index of the element being considered.
-     * \param [in,out] el_inserted       The index of the next element to be inserted.
-     * \param [in] actions         The global adapt actions vector (source forest linearized).
-     * \param [in] action                The adapt action to be performed (by-value so it can be changed).
+     * \param [in] el_offset             The offset of the element being considered.
+     * \param [in,out] el_inserted       The index of the elements in the target tree.
+     * \param [in] actions               The global adapt actions vector.
+     * \param [in] is_family             Whether the current elements form a family.
+     * \param [in] num_siblings          The number of siblings in the family.
      */
   void
   element_manipulator (t8_element_array_t *elements, const t8_element_array_t *const elements_from,
