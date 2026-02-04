@@ -1368,7 +1368,8 @@ t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unu
   }
 
 #else
-  t8_global_errorf ("Do not call t8_cmesh_debug_print_trees if t8code is not compiled with --enable-debug.\n");
+  t8_global_errorf (
+    "Do not call t8_cmesh_debug_print_trees if t8code is not compiled with -DCMAKE_BUILD_TYPE=Debug.\n");
 #endif /* T8_ENABLE_DEBUG */
 }
 

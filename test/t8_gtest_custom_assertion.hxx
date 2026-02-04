@@ -112,8 +112,8 @@ dimensional_equality (const char *Dimensional_1_expr, const char *Dimensional_2_
  *
  * \param[in] forest_A_expr The name of the forest \a forest_A
  * \param[in] forest_B_expr The name of the forest \a forest_B
- * \param[in] forest_A      The forest to ompare with \a forest_B
- * \param[in] forest_B      The forest to ompare with \a forest_A
+ * \param[in] forest_A      The forest to compare with \a forest_B
+ * \param[in] forest_B      The forest to compare with \a forest_A
  * \return testing::AssertionResult
  */
 testing::AssertionResult
