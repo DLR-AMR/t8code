@@ -49,18 +49,19 @@ struct forest_user_data: public testing::TestWithParam<std::tuple<int, cmesh_exa
     if (t8_cmesh_is_empty (cmesh)) {
       GTEST_SKIP ();
     }
+    // Increase reference counters of cmesh and scheme to avoid reaching zero.
+    t8_cmesh_ref (cmesh);
+    scheme->ref ();
     forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
   {
-    if (t8_cmesh_is_empty (cmesh)) {
-      t8_cmesh_destroy (&cmesh);
-      scheme->unref ();
-    }
-    else {
+    if (!t8_cmesh_is_empty (cmesh)) {
       t8_forest_unref (&forest);
     }
+    t8_cmesh_destroy (&cmesh);
+    scheme->unref ();
   }
   t8_forest_t forest;
   const t8_scheme *scheme;
