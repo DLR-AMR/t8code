@@ -51,28 +51,6 @@ if( T8CODE_EXPORT_COMPILE_COMMANDS )
   set_target_properties( T8 PROPERTIES EXPORT_COMPILE_COMMANDS ON )
 endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
-if( T8CODE_ENABLE_NETCDF )
-  target_link_libraries( T8 PUBLIC NetCDF::NetCDF )
-  target_compile_definitions(T8 PUBLIC
-    T8_ENABLE_NETCDF=1
-    $<$<AND:$<BOOL:${NETCDF_HAVE_NETCDF_PAR}>,$<BOOL:${T8CODE_ENABLE_MPI}>>:T8_ENABLE_NETCDF_PAR=1> 
-  )
-  target_sources( T8 PRIVATE
-    t8_netcdf.c
-    t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.c
-    t8_forest/t8_forest_netcdf.cxx
-  )
-  install( FILES
-    t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_io
-  )
-  install( FILES
-    t8_forest_netcdf.h
-    t8_netcdf.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  )
-endif()
-
 set_target_properties( T8 PROPERTIES OUTPUT_NAME t8 )
 
 target_include_directories( T8 PUBLIC
@@ -279,7 +257,6 @@ install( DIRECTORY t8_cmesh
     PATTERN "*.h" 
     PATTERN "*.hxx"
     PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
-    PATTERN "t8_cmesh/t8_cmesh_io/t8_cmesh_netcdf.h" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
@@ -327,7 +304,7 @@ install( DIRECTORY t8_types
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
   FILES_MATCHING 
     PATTERN "*.hxx" 
-    PATTERN "*.h"     
+    PATTERN "*.h"
 )
 
 install( TARGETS T8
