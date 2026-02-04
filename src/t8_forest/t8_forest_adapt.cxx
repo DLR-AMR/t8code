@@ -699,6 +699,17 @@ t8_forest_adapt (t8_forest_t forest)
 }
 #else
 
+/**
+ * Dummy callback function for element adaptation.
+ * This function always returns the KEEP action.
+ * 
+ * \param [in] forest      The forest
+ * \param [in] ltreeid     The local tree id
+ * \param [in] element     The element to adapt
+ * \param [in] scheme      The scheme for this element
+ * \param [in] tree_class  The eclass of tree the element is part of.
+ * \return                 The KEEP action.
+ */
 t8_adapt::action
 dummy_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
                 [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const t8_scheme *scheme,
