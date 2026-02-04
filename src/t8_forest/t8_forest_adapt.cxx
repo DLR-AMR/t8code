@@ -699,12 +699,12 @@ t8_forest_adapt (t8_forest_t forest)
 }
 #else
 
-t8_adapt::adapt_action
+t8_adapt::action
 dummy_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
                 [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const t8_scheme *scheme,
                 [[maybe_unused]] const t8_eclass_t tree_class)
 {
-  return t8_adapt::adapt_action::KEEP;
+  return t8_adapt::action::KEEP;
 }
 
 void
