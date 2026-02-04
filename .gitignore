@@ -41,7 +41,6 @@ example/IO/cmesh/tetgen/t8_forest_tetgen
 example/IO/cmesh/tetgen/t8_read_tetgen
 example/IO/cmesh/tetgen/t8_time_tetgen
 example/IO/cmesh/triangle/t8_read_triangle
-example/IO/forest/netcdf/t8_netcdf_compilation_status
 example/advect/t8_advection
 example/cmesh/t8_cmesh_create_partitioned
 example/cmesh/t8_cmesh_partition
@@ -82,5 +81,4 @@ test/t8_schemes/t8_test_init_linear_id
 test/t8_schemes/t8_test_pyra_face_descendant
 test/t8_schemes/t8_test_pyra_face_neigh
 test/t8_schemes/t8_test_successor
-test/t8_test_netcdf_linkage
 test/t8_test_vtk_linkage
