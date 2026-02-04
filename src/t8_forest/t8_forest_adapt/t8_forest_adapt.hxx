@@ -87,7 +87,7 @@ using batched_element_callback
  *   a.collect_adapt_actions(const t8_forest_t, std::vector<adapt_action>&, element_callback)
  * returning void.
  *
- * @tparam T
+ * \tparam T
  *   Type under test. The concept is satisfied when an object `a` of type T can be
  *   used in an expression
  *     a.collect_adapt_actions(forest_from, adapt_actions, cb)
@@ -109,7 +109,7 @@ concept has_element_callback_collect
  * with the signature compatible with:
  *   a.collect_adapt_actions(const t8_forest_t, std::vector<adapt_action>&, batched_element_callback)
  * returning void.
- * @tparam T
+ * \tparam T
  *   Type under test. The concept is satisfied when an object `a` of type T can be
  *   used in an expression
  *     a.collect_adapt_actions(forest_from, adapt_actions, cb)
@@ -133,7 +133,7 @@ concept has_batched_callback_collect = requires (
  * or
  *   a.collect_adapt_actions(const t8_forest_t, std::vector<adapt_action>&, batched_element_callback)
  * returning void.
- * @tparam T
+ * \tparam T
  *   Type under test. The concept is satisfied when an object `a` of type T can be
  *   used in an expression
  *     a.collect_adapt_actions(forest_from, adapt_actions, cb)
@@ -151,7 +151,7 @@ concept adapt_actions_collectable = has_element_callback_collect<T> || has_batch
  *   a.family_check(const t8_element_array_t*, std::vector<const t8_element_t*>&, const t8_locidx_t,
  *                  const t8_scheme*, const t8_eclass_t)
  * returning bool.
- * @tparam T
+ * \tparam T
  *   Type under test. The concept is satisfied when an object `a` of type T can be
  *   used in an expression
  *     a.family_check(tree_elements_from, elements_from, offset, scheme, tree_class)
@@ -178,7 +178,7 @@ concept family_checkable
  *                         const t8_scheme*, const t8_eclass_t, const t8_locidx_t&,
  *                         t8_locidx_t&, const adapt_action)
  * returning void.
- * @tparam T
+ * \tparam T
  *   Type under test. The concept is satisfied when an object `a` of type T can be
  *   used in an expression
  *     a.element_manipulator(elements, elements_from, scheme, tree_class, el_considered, el_inserted, action)
@@ -334,9 +334,9 @@ struct manipulator
    *  - TManipulate: provides element_manipulator(...) to perform /coarsening/refinement or general element manipulation logic.
    *
    * Template parameters
-   * @tparam TCollect    A type satisfying adapt_actions_collectable: must expose collect_adapt_actions.
-   * @tparam TFamily     A type satisfying family_checkable: must expose family_check to detect families.
-   * @tparam TManipulate A type satisfying element_manipulatable: must expose element_manipulator.
+   * \tparam TCollect    A type satisfying adapt_actions_collectable: must expose collect_adapt_actions.
+   * \tparam TFamily     A type satisfying family_checkable: must expose family_check to detect families.
+   * \tparam TManipulate A type satisfying element_manipulatable: must expose element_manipulator.
    *
    * Overview
    * The adaptor holds references to a "target" forest and a "source" forest (forest and forest_from). On construction it
@@ -437,7 +437,7 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
   {
     T8_ASSERT (forest != nullptr);
     if (profiling) {
-      profile_adaptation ();
+      profile_adaptation_start ();
     }
     T8_ASSERT (forest_from != nullptr);
 
@@ -498,6 +498,9 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
       tree->elements_offset = el_offset;
       el_offset += num_el_from;
     }
+    if (profiling) {
+      profile_adaptation_end ();
+    }
   }
   /** The type of callback used for collecting adaptation actions. */
   using callback_type
@@ -509,10 +512,17 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
      * Profile the adaptation process.
      */
   inline void
-  profile_adaptation ()
+  profile_adaptation_start ()
   {
     T8_ASSERT (forest->profile != nullptr);
     forest->profile->adapt_runtime = -sc_MPI_Wtime ();
+  }
+
+  inline void
+  profile_adaptation_end ()
+  {
+    T8_ASSERT (forest->profile != nullptr);
+    forest->profile->adapt_runtime += sc_MPI_Wtime ();
   }
 
   t8_forest_t forest;                      /**< The target forest */
