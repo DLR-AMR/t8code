@@ -1145,7 +1145,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
             }
             break;
           case 0:
-            /* If the node is on a vertex we can convert the parameters safely if the vertex os not the seam of the edge. */
+            /* If the node is on a vertex we can convert the parameters safely if the vertex is not the seam of the edge. */
             if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_on_seam_edge (edge_node.entity_tag,
                                                                                    edge_geometry_tag)) {
               reference_params.emplace ();
