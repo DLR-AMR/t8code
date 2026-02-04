@@ -23,7 +23,7 @@
 /* In this test we create a netcdf in memory file and close it.
  * The purpose of this test is to check whether t8code successfully links
  * against netcdf.
- * If t8code was not configured with --enable-netcdf then this test
+ * If t8code was not configured with --DT8CODE_ENABLE_NETCDF=ON then this test
  * does nothing and is always passed.
  */
 
