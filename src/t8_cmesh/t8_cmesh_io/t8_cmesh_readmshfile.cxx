@@ -1010,7 +1010,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         }
       }
 
-      /* We now know that bot vertices are on the same edge.
+      /* We now know that both vertices are on the same edge.
          Next, we iterate twice over both vertices. In the first iteration we do
          some sanity checks and try to find a parameter which is not on a seam.
          Because when one of the nodes is on a vertex which is on the seam of the edge,
