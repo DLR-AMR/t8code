@@ -25,7 +25,7 @@ name: CMake tests t8code with Clang compiler and OpenMPI
 #  and openmpi. It was added because all of t8code's remaining CI workflows rely
 #  on gcc and mpich, hence missing Clang- or openmpi-specific issues.
 #  To reduce runtime, (for now) only one configuration is run, that is, Debug mode
-#  with MPI and all external libraries (VTK, OpenCASCADE, NetCDF).
+#  with MPI and all external libraries (VTK, OpenCASCADE).
 
 env:
   DEBUG_CONFIG: "-O1"
@@ -116,7 +116,7 @@ jobs:
                                -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
                                -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON \
                                -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON \
-                               -DT8CODE_ENABLE_NETCDF=ON -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=$VTK_INSTALL_PATH/lib/cmake/vtk-9.1"
+                               -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=$VTK_INSTALL_PATH/lib/cmake/vtk-9.1"
         echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # Run cmake
     - name: echo cmake line

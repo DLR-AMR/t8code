@@ -92,11 +92,6 @@ if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
 endif()
 
-if(T8CODE_ENABLE_NETCDF)
-    add_t8_example( NAME t8_write_cmesh_netcdf              SOURCES IO/cmesh/netcdf/t8_write_cmesh_netcdf.cxx )
-    add_t8_example( NAME t8_write_forest_netcdf             SOURCES IO/forest/netcdf/t8_write_forest_netcdf.cxx )
-endif()
-
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )
 
 add_t8_example( NAME t8_example_spheres                 SOURCES remove/t8_example_spheres.cxx )

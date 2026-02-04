@@ -59,8 +59,6 @@
 // when called in a T8_WITH_* version.
 #define T8_WITH_DEBUG T8_THROW_ERROR_WITH /**< Deprecated debug macro, will produce an error when used with \#if. */
 #define T8_WITH_VTK T8_THROW_ERROR_WITH /**< Deprecated vtk macro, will produce an error when used with \#if. */
-#define T8_WITH_NETCDF T8_THROW_ERROR_WITH /**< Deprecated netcdf macro, will produce an error when used with \#if. */
-#define T8_WITH_NETCDF_PAR T8_THROW_ERROR_WITH /**< Deprecated netcdf_par macro, will produce an error when used with \#if. */
 #define T8_WITH_OCC T8_THROW_ERROR_WITH /**< Deprecated occ macro, will produce an error when used with \#if. */
 #define T8_WITH_METIS T8_THROW_ERROR_WITH /**< Deprecated metis macro, will produce an error when used with \#if. */
 #define T8_WITH_MPI T8_THROW_ERROR_WITH /**< Deprecated MPI macro, will produce an error when used with \#if. */
