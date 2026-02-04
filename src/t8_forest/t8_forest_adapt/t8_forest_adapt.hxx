@@ -196,7 +196,7 @@ struct adapt_collector
         break;
       }
       }
-    }
+    };
 
     /**  * Class implementing a basic adaptation strategy for a forest of trees.
    */
@@ -234,7 +234,72 @@ struct adapt_collector
 
       /** Perform the adaptation process on the forest. */
       void
-      adapt ();
+      adapt ()
+      {
+        T8_ASSERT (forest != nullptr);
+        if (profiling) {
+          profile_adaptation ();
+        }
+        T8_ASSERT (forest_from != nullptr);
+
+        TCollect::collect_adapt_actions (forest_from, adapt_actions, callback);
+
+        /* Offset per tree in the source forest */
+        t8_locidx_t el_offset = 0;
+        const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest_from);
+        /* Get the scheme used by the forest */
+        const t8_scheme *scheme = t8_forest_get_scheme (forest_from);
+
+        for (t8_locidx_t ltree_id = 0; ltree_id < num_trees; ltree_id++) {
+          /* get the trees from both forests. */
+          t8_tree_t tree = t8_forest_get_tree (forest, ltree_id);
+          const t8_tree_t tree_from = t8_forest_get_tree (forest_from, ltree_id);
+          /* get the leaf arrays from both forests */
+          t8_element_array_t *elements = &tree->leaf_elements;
+          const t8_element_array_t *tree_elements_from = &tree_from->leaf_elements;
+          /* Get the number of elements in the source tree */
+          const t8_locidx_t num_el_from = (t8_locidx_t) t8_element_array_get_count (tree_elements_from);
+          T8_ASSERT (num_el_from == t8_forest_get_tree_num_leaf_elements (forest_from, ltree_id));
+          const t8_eclass_t tree_class = tree_from->eclass;
+          /* Continue only if tree_from is not empty */
+          if (num_el_from < 0) {
+            const t8_element_t *first_element_from = t8_element_array_index_locidx (tree_elements_from, 0);
+            t8_locidx_t curr_size_elements_from = scheme->element_get_num_siblings (tree_class, first_element_from);
+            /* index of the elements in source tree */
+            t8_locidx_t el_considered = 0;
+            /* index of the elements in target tree */
+            t8_locidx_t el_inserted = 0;
+            std::vector<const t8_element_t *> elements_temp;
+
+            while (el_considered < num_el_from) {
+              const t8_locidx_t num_siblings = scheme->element_get_num_siblings (
+                tree_class, t8_element_array_index_locidx (tree_elements_from, el_considered));
+              if (num_siblings > curr_size_elements_from) {
+                elements_temp.resize (num_siblings);
+                curr_size_elements_from = num_siblings;
+              }
+              for (int isibling = 0; isibling < num_siblings && el_considered + isibling < num_el_from; isibling++) {
+                elements_temp[isibling] = (const t8_element_t *) t8_element_array_index_locidx (
+                  tree_elements_from, el_considered + (t8_locidx_t) isibling);
+                if (scheme->element_get_child_id (tree_class, elements_temp[isibling]) != isibling) {
+                  break;
+                }
+              }
+
+              const bool is_family
+                = TFamily::family_check (tree_elements_from, elements_temp, el_considered, scheme, tree_class);
+              const adapt_action action = adapt_actions[el_offset + el_considered];
+
+              /* manipulator step*/
+              TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered,
+                                                el_inserted, action, is_family);
+              el_considered++;
+            }
+          }
+          tree->elements_offset = el_offset;
+          el_offset += num_el_from;
+        }
+      }
 
       /** Type alias for the callback function used in adaptation. 
      * The type depends on whether TCollect uses element_callback or batched_element_callback.
