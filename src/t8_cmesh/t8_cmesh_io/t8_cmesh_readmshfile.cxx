@@ -741,7 +741,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
     }
     /* Now we can check if every node lies on the surface and retrieve its parameters */
     if (surface_index) {
-      int all_nodes_on_surface = 1;
+      bool all_nodes_on_surface = 1;
       /* If the surface is closed in any direction we may need some reference parameters on the surface.
          These reference parameters can be used to find the right parameters if we need to convert
          seam edge parameters to the face parameters. */
