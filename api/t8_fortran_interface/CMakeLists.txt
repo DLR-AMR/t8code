@@ -12,11 +12,11 @@ target_include_directories( T8 PUBLIC
 # Install header files.
 install(
     FILES ${CMAKE_CURRENT_LIST_DIR}/t8_fortran_interface.h
-    DESTINATION include/t8_fortran_interface
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_fortran_interface
 )
 
 # Install module files.
 install(
     FILES ${CMAKE_BINARY_DIR}/src/t8_fortran_interface_mod.mod
-    DESTINATION include/t8_fortran_interface
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_fortran_interface
 )
