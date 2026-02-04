@@ -55,6 +55,52 @@ class adapt_action {
   static const int COARSEN = -1;
   static const int KEEP = 0;
   static const int REFINE = 1;
+
+  adapt_action (): value (KEEP)
+  {
+  }
+  adapt_action (int v): value (v)
+  {
+  }
+
+  /* implicit conversion to int so comparisons with the static constants work */
+  operator int () const
+  {
+    return value;
+  }
+
+  /* equality helpers */
+  bool
+  operator== (int other) const
+  {
+    return value == other;
+  }
+  bool
+  operator!= (int other) const
+  {
+    return value != other;
+  }
+  bool
+  operator== (const adapt_action &other) const
+  {
+    return value == other.value;
+  }
+  bool
+  operator!= (const adapt_action &other) const
+  {
+    return value != other.value;
+  }
+
+  /* allow assigning from an int constant */
+  adapt_action &
+  operator= (int v)
+  {
+    value = v;
+    return *this;
+  }
+
+ private:
+  int value;
 };
 
 /** Callback function type for element adaptation. 
@@ -174,16 +220,16 @@ concept family_checkable
 
 /** Concept that detects whether a type T provides a member function
  * with the signature compatible with:
- *   a.element_manipulator(t8_element_array_t*, const t8_element_array_t*,
- *                         const t8_scheme*, const t8_eclass_t, const t8_locidx_t&,
- *                         t8_locidx_t&, const adapt_action)
- * returning void.
- * \tparam T
- *   Type under test. The concept is satisfied when an object `a` of type T can be
- *   used in an expression
- *     a.element_manipulator(elements, elements_from, scheme, tree_class, el_considered, el_inserted, action)
- *   where:
- *     - elements is of type t8_element_array_t*,
+template <typename T>
+concept element_manipulatable = requires (
+  T a, t8_element_array_t *elements, const t8_element_array_t *const elements_from,
+                       const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t &el_considered, 
+                       const t8_locidx_t el_offset, t8_locidx_t &el_inserted, const std::vector<adapt_action> &adapt_actions,
+                       adapt_action action, const bool is_family, const int num_siblings) {
+  {
+    a.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted, adapt_actions, action, is_family, num_siblings)
+  } -> std::same_as<void>;
+};
  *     - elements_from is of type const t8_element_array_t*,
  *     - scheme is of type const t8_scheme*,
  *     - tree_class is of type const t8_eclass_t,
@@ -194,10 +240,12 @@ concept family_checkable
  */
 template <typename T>
 concept element_manipulatable = requires (
-  T a, t8_element_array_t *elements, const t8_element_array_t *elements_from, const t8_scheme *scheme,
-  const t8_eclass_t tree_class, const t8_locidx_t &el_considered, t8_locidx_t &el_inserted, const adapt_action action) {
+  T a, t8_element_array_t *elements, const t8_element_array_t *const elements_from, const t8_scheme *scheme,
+  const t8_eclass_t tree_class, const t8_locidx_t &el_considered, const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
+  const std::vector<adapt_action> &action, const bool is_family, const int num_siblings) {
   {
-    a.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_inserted, action)
+    a.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted, action,
+                           is_family, num_siblings)
   } -> std::same_as<void>;
 };
 
@@ -267,12 +315,86 @@ struct family_checker
       children_nonconst[i] = const_cast<t8_element_t *> (elements_from[i]);
     const bool is_family = scheme->elements_are_family (tree_class, children_nonconst.data ());
     return is_family;
-  }
+  };
 };
 
-/**
-   * Class implementing a basic element manipulation strategy.
+/** Function to manipulate elements based on the specified adaptation action.
+   * \tparam action The adaptation action to be performed.
+   * \param [in, out] elements         The element array to be modified.
+   * \param [in]     elements_from    The source element array.
+   * \param [in]     scheme           The element scheme.
+   * \param [in]     tree_class       The eclass of the tree used by the scheme
+   * \param [in]     elements_index   The index in the target element array.
+   * \param [in]     elements_from_index The index in the source element array.
+   * \return                        The number of elements created in the target array.
    */
+template <int action>
+t8_locidx_t
+manipulate_elements (t8_element_array_t *elements, [[maybe_unused]] const t8_element_array_t *const elements_from,
+                     const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t elements_index,
+                     const t8_locidx_t elements_from_index);
+
+/** Specialization for the KEEP action. No element modification is performed; 
+   * the element is copied as is.
+   * \see manipulate_elements
+  */
+template <>
+t8_locidx_t
+manipulate_elements<adapt_action::KEEP> (t8_element_array_t *elements,
+                                         [[maybe_unused]] const t8_element_array_t *const elements_from,
+                                         const t8_scheme *scheme, const t8_eclass_t tree_class,
+                                         const t8_locidx_t elements_index,
+                                         [[maybe_unused]] const t8_locidx_t elements_from_index)
+{
+  t8_element_t *element = t8_element_array_push (elements);
+  const t8_element_t *element_from = t8_element_array_index_locidx (elements, elements_index);
+  scheme->element_copy (tree_class, element_from, element);
+  return 1;
+};
+
+/** Specialization for the COARSEN action. The parent element of the source elements is created 
+   * in the target array.
+   * \see manipulate_elements
+  */
+template <>
+t8_locidx_t
+manipulate_elements<adapt_action::COARSEN> (t8_element_array_t *elements,
+                                            [[maybe_unused]] const t8_element_array_t *const elements_from,
+                                            const t8_scheme *scheme, const t8_eclass_t tree_class,
+                                            const t8_locidx_t elements_index,
+                                            [[maybe_unused]] const t8_locidx_t elements_from_index)
+{
+  t8_element_t *element = t8_element_array_push (elements);
+  const t8_element_t *element_from = t8_element_array_index_locidx (elements, elements_index);
+  T8_ASSERT (scheme->element_get_level (tree_class, element_from) > 0);
+  scheme->element_get_parent (tree_class, element_from, element);
+
+  /* Hier eventuell noch was mit num_children = num_siblings*/
+  return 1;
+};
+
+/** Specialization for the REFINE action. The children elements of the source element are created 
+   * in the target array.
+   * \see manipulate_elements
+  */
+template <>
+t8_locidx_t
+manipulate_elements<adapt_action::REFINE> (t8_element_array_t *elements, const t8_element_array_t *const elements_from,
+                                           const t8_scheme *scheme, const t8_eclass_t tree_class,
+                                           const t8_locidx_t elements_index, const t8_locidx_t elements_from_index)
+{
+  const t8_element_t *element_from = t8_element_array_index_locidx (elements_from, elements_from_index);
+  const int num_children = scheme->element_get_num_children (tree_class, element_from);
+  /* CONTINUE WORK HERE */
+  (void) t8_element_array_push_count (elements, num_children);
+  std::vector<t8_element_t *> children (num_children);
+  for (int ichildren = 0; ichildren < num_children; ichildren++) {
+    children[ichildren] = t8_element_array_index_locidx_mutable (elements, elements_index + ichildren);
+  }
+  scheme->element_get_children (tree_class, element_from, num_children, children.data ());
+  return num_children;
+};
+
 struct manipulator
 {
   /** Manipulate elements based on the given adapt action.
@@ -282,13 +404,16 @@ struct manipulator
      * \param [in] tree_class            The class of the tree.
      * \param [in] el_considered         The index of the element being considered.
      * \param [in,out] el_inserted       The index of the next element to be inserted.
-     * \param [in] action                The adapt action to be performed.
+     * \param [in] adapt_actions         The global adapt actions vector (source forest linearized).
+     * \param [in] action                The adapt action to be performed (by-value so it can be changed).
      */
   void
   element_manipulator (t8_element_array_t *elements, const t8_element_array_t *const elements_from,
                        const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t &el_considered,
-                       t8_locidx_t &el_inserted, const adapt_action action)
+                       const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
+                       const std::vector<adapt_action> &adapt_actions, const bool is_family, const int num_siblings)
   {
+    adapt_action action = adapt_actions[el_offset + el_considered];
     if (!is_family && action == adapt_action::COARSEN) {
       action = adapt_action::KEEP;
     }
@@ -301,17 +426,17 @@ struct manipulator
       }
     }
 
-    switch (action) {
+    switch (static_cast<int> (action)) {
     case adapt_action::COARSEN:
-      el_inserted += manipulate_elements<adapt_action::COARSEN> (elements, tree_elements_from, scheme, tree_class,
+      el_inserted += manipulate_elements<adapt_action::COARSEN> (elements, elements_from, scheme, tree_class,
                                                                  el_inserted, el_offset + el_considered);
       break;
     case adapt_action::KEEP:
-      el_inserted += manipulate_elements<adapt_action::KEEP> (elements, tree_elements_from, scheme, tree_class,
-                                                              el_inserted, el_offset + el_considered);
+      el_inserted += manipulate_elements<adapt_action::KEEP> (elements, elements_from, scheme, tree_class, el_inserted,
+                                                              el_offset + el_considered);
       break;
     case adapt_action::REFINE:
-      el_inserted += manipulate_elements<adapt_action::REFINE> (elements, tree_elements_from, scheme, tree_class,
+      el_inserted += manipulate_elements<adapt_action::REFINE> (elements, elements_from, scheme, tree_class,
                                                                 el_inserted, el_offset + el_considered);
       break;
     default: {
@@ -403,11 +528,11 @@ template <adapt_actions_collectable TCollect, family_checkable TFamily, element_
 class adaptor: private TCollect, private TFamily, private TManipulate {
  public:
   /** Constructor for basic_adaptation class.
-     * \param [in] forest_in        The forest to be adapted.
-     * \param [in] callback_in      The callback function to determine adaptation actions.
-     */
-  adaptor (t8_forest_t forest, t8_forest_t forest_from, element_callback callback_in)
-    : forest (forest), forest_from (forest_from), callback (callback_in)
+       * \param [in] forest_in        The forest to be adapted.
+       * \param [in] callback_in      The callback function to determine adaptation actions.
+       */
+  adaptor (t8_forest_t forest, t8_forest_t forest_from, element_callback callback_in, bool profiling_in = false)
+    : callback (callback_in), forest (forest), forest_from (forest_from), profiling (profiling_in)
   {
     T8_ASSERT (forest != nullptr);
     T8_ASSERT (callback);
@@ -469,31 +594,13 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
         /* index of the elements in target tree */
         t8_locidx_t el_inserted = 0;
         std::vector<const t8_element_t *> elements_temp;
+        const bool is_family
+          = TFamily::family_check (tree_elements_from, elements_temp, el_considered, scheme, tree_class);
 
-        while (el_considered < num_el_from) {
-          const t8_locidx_t num_siblings = scheme->element_get_num_siblings (
-            tree_class, t8_element_array_index_locidx (tree_elements_from, el_considered));
-          if (num_siblings > curr_size_elements_from) {
-            elements_temp.resize (num_siblings);
-            curr_size_elements_from = num_siblings;
-          }
-          for (int isibling = 0; isibling < num_siblings && el_considered + isibling < num_el_from; isibling++) {
-            elements_temp[isibling] = (const t8_element_t *) t8_element_array_index_locidx (
-              tree_elements_from, el_considered + (t8_locidx_t) isibling);
-            if (scheme->element_get_child_id (tree_class, elements_temp[isibling]) != isibling) {
-              break;
-            }
-          }
-
-          const bool is_family
-            = TFamily::family_check (tree_elements_from, elements_temp, el_considered, scheme, tree_class);
-          const adapt_action action = adapt_actions[el_offset + el_considered];
-
-          /* manipulator step*/
-          TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered,
-                                            el_inserted, action, is_family);
-          el_considered++;
-        }
+        /* manipulator step*/
+        TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered, el_offset,
+                                          el_inserted, adapt_actions, is_family, curr_size_elements_from);
+        el_considered++;
       }
       tree->elements_offset = el_offset;
       el_offset += num_el_from;
@@ -509,8 +616,8 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
   callback_type callback; /**< The callback function to determine adaptation actions. */
  private:
   /**
-     * Profile the adaptation process.
-     */
+       * Profile the adaptation process.
+       */
   inline void
   profile_adaptation_start ()
   {
@@ -529,8 +636,7 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
   t8_forest_t forest_from;                 /**< The source forest to adapt from. */
   std::vector<adapt_action> adapt_actions; /**< The adaptation actions for each element in the source forest. */
   bool profiling = false;                  /**< Flag to indicate if profiling is enabled. */
-};
-};
-}
-;
+};                                         // class adaptor
+
+};     // namespace t8_forest_adapt_namespace
 #endif /* T8_FOREST_ADAPT_HXX */
