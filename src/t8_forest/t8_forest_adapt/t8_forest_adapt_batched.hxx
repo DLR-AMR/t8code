@@ -26,12 +26,20 @@
 #include <t8_forest/t8_forest_adapt/t8_forest_adapt.hxx>
 
 /**
-     * Collect adaptation actions for all elements in the source forest.
-     */
+ * Collect adaptation actions for all elements in the source forest.
+ */
 struct batched_adapt_collector
 {
+  /**
+   * Collect adaptation actions for all elements in the source forest.
+   * \param [in] forest_from      The source forest from which to collect adaptation actions.
+   * \param [out] adapt_actions   The vector to store the collected adaptation actions.
+   * \param [in] callback         The callback function to determine the adaptation action for each element.
+   * 
+   * \warning Currently only used for testing purposes.
+   */
   void
-  collect_adapt_actions (const t8_forest_t forest_from, std::vector<adapt_action> &adapt_actions,
+  collect_adapt_actions (const t8_forest_t forest_from, std::vector<t8_adapt::action> &adapt_actions,
                          batched_element_callback callback)
   {
     T8_ASSERT (forest_from != nullptr);

@@ -34,7 +34,7 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/* Set to 1 to enable legacy adaptation behavior */
+/** Set to 1 to enable legacy adaptation behavior */
 #define T8_FOREST_ADAPT_LEGACY 0
 
 #if T8_FOREST_ADAPT_LEGACY

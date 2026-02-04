@@ -51,9 +51,9 @@ namespace t8_adapt
   */
 class action {
  public:
-  static const int COARSEN = -1;
-  static const int KEEP = 0;
-  static const int REFINE = 1;
+  static const int COARSEN = -1; /**< Coarsen the element */
+  static const int KEEP = 0;     /**< Keep the element unchanged */
+  static const int REFINE = 1;   /**< Refine the element */
 
   /**
    * Default constructor: KEEP action.
@@ -254,16 +254,17 @@ concept family_checkable = requires (TType object, const t8_element_array_t *tre
 
 /** Concept that detects whether a type TType provides a member function
  * with the signature compatible with:
-template <typename TType>
-concept element_manipulatable = requires (
-  TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from,
-                       const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t &el_considered,
-                       const t8_locidx_t el_offset, t8_locidx_t &el_inserted, const std::vector<action> &actions,
-                       const bool is_family, const int num_siblings) {
-  {
-    object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted, actions, is_family, num_siblings)
-  } -> std::same_as<void>;
-};
+ *  object.element_manipulator(t8_element_array_t*, const t8_element_array_t*, const t8_scheme*,
+ *                           const t8_eclass_t, const t8_locidx_t&, const t8_locidx_t,
+ *                          t8_locidx_t&, const std::vector<action>&, const bool, const int)
+ * returning void.
+ * \tparam TType
+ *   Type under test. The concept is satisfied when an object `object` of type TType can be
+ *   used in an expression
+ *     object.element_manipulator(elements, elements_from, scheme, tree_class, el_considered, el_offset,
+ *                               el_inserted, actions, is_family, num_siblings)
+ *   where:
+ *     - elements is of type t8_element_array_t*,
  *     - elements_from is of type const t8_element_array_t*,
  *     - scheme is of type const t8_scheme*,
  *     - tree_class is of type const t8_eclass_t,
@@ -430,6 +431,7 @@ manipulate_elements<action::REFINE> (t8_element_array_t *elements, const t8_elem
   return num_children;
 };
 
+/** Standard element manipulator class for adapting elements between trees. */
 struct manipulator
 {
   /** Manipulate elements based on the given adapt action.
