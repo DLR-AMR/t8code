@@ -267,8 +267,9 @@ t8_cad::t8_geom_vertex_is_seam (const int vertex_index, const int edge_index) co
   const auto curve = BRep_Tool::Curve (edge, first, last);
 
   /* If curve is not periodic, there is no seam. */
-  if (!curve->IsPeriodic ())
+  if (!curve->IsPeriodic ()) {
     return false;
+  }
 
   // Seam is at the start/end of the trimmed range
   double tol = Precision::PConfusion (first > last ? first : last);
