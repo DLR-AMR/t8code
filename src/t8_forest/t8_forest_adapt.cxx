@@ -29,9 +29,15 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_data/t8_containers.h>
+#include <t8_forest/t8_forest_adapt/t8_forest_adapt.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
+
+/* Set to 1 to enable legacy adaptation behavior */
+#define T8_FOREST_ADAPT_LEGACY 1
+
+#if T8_FOREST_ADAPT_LEGACY
 
 #if T8_ENABLE_DEBUG
 /** Return zero if the first \a num_elements in \a elements are not a (sub)family.
@@ -376,8 +382,11 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_ec
     }
   } /* End while loop */
 }
+#endif
 
 /* TODO: optimize this when we own forest_from */
+
+#if T8_FOREST_ADAPT_LEGACY
 void
 t8_forest_adapt (t8_forest_t forest)
 {
@@ -688,5 +697,32 @@ t8_forest_adapt (t8_forest_t forest)
     t8_global_productionf ("End adapt %f %f\n", sc_MPI_Wtime (), forest->profile->adapt_runtime);
   }
 }
+#else
+
+t8_forest_adapt_namespace::adapt_action
+dummy_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
+                [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const t8_scheme *scheme,
+                [[maybe_unused]] const t8_eclass_t tree_class)
+{
+  return t8_forest_adapt_namespace::adapt_action::KEEP;
+}
+
+void
+t8_forest_adapt (t8_forest_t forest)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->set_from != NULL);
+  T8_ASSERT (forest->set_adapt_recursive != -1);
+  t8_forest_t forest_from = forest->set_from;
+  using namespace t8_forest_adapt_namespace;
+  /**TODO: currently only using a dummy callback to check compilation.
+     * For proper usage we need to change the layout of the adapt function pointer
+     * in t8_forest_t.
+     */
+  adaptor<adapt_collector, family_checker, manipulator> standard_adaptor (forest, forest_from, dummy_callback,
+                                                                          forest->profile != NULL);
+  standard_adaptor.adapt ();
+}
+#endif /* T8_FOREST_ADAPT_LEGACY */
 
 T8_EXTERN_C_END ();
