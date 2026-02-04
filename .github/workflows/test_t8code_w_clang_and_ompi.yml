@@ -126,7 +126,7 @@ jobs:
     # On failure, upload logs
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: cmake_w_clang_and_ompi_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
@@ -158,7 +158,7 @@ jobs:
     # On failure, upload logs
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: test-suite_w_clang_and_ompi_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/Testing/Temporary/LastTest.log
