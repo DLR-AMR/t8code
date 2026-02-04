@@ -105,7 +105,7 @@ struct batched_adapt_collector
 {
   void
   collect_adapt_actions (const t8_forest_t forest_from, std::vector<adapt_action> &adapt_actions,
-                         element_callback callback)
+                         batched_element_callback callback)
   {
     T8_ASSERT (forest_from != nullptr);
 
@@ -121,12 +121,8 @@ struct batched_adapt_collector
       const t8_tree_t tree_from = t8_forest_get_tree (forest_from, ltree_id);
       const t8_eclass_t tree_class = tree_from->eclass;
       const t8_element_array_t *elements_from = &tree_from->leaf_elements;
-      const t8_locidx_t num_el_from = (t8_locidx_t) t8_element_array_get_count (elements_from);
-      for (t8_locidx_t i = 0; i < num_el_from; i++) {
-        const t8_element_t *element = t8_element_array_index_locidx (elements_from, i);
-        adapt_actions[el_offset + i] = callback (forest_from, ltree_id, element, scheme, tree_class);
-      }
-      el_offset += num_el_from;
+      callback (forest_from, ltree_id, elements_from, scheme, tree_class, adapt_actions);
+      el_offset += (t8_locidx_t) t8_element_array_get_count (elements_from);
     }
   }
 };
