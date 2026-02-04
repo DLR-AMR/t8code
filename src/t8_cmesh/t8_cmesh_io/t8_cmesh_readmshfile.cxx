@@ -1137,7 +1137,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
             reference_params = edge_node.parameters;
             break;
           case 1:
-            /* If the node is on a curve, we can use the parameters if the curve is not theseam of the surface. */
+            /* If the node is on a curve, we can use the parameters if the curve is not the seam of the surface. */
             if (!cad_geometry->get_cad_manager ()->t8_geom_edge_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
               reference_params.emplace ();
               cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
