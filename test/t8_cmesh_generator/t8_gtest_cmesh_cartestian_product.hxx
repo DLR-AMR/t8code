@@ -20,6 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_gtest_cmesh_cartestian_product.hxx
+ * Provides classes to construct cmeshes from cartesian products of input parameters.
+ */
 #ifndef T8_GTEST_CMESH_CREATOR_BASE_HXX
 #define T8_GTEST_CMESH_CREATOR_BASE_HXX
 
@@ -183,6 +186,13 @@ increment (const B& begins, std::pair<T, T>& r, std::pair<TT, TT>&... rr)
   return false;
 }
 
+/**
+ * A helper function that always returns true. Used as default rule in cartesian product generation.
+ * Can be passed to \ref cartesian_product to indicate that all parameter combinations are allowed.
+ * \tparam Args Type of parameters.
+ * \param params Parameters.
+ * \return true 
+ */
 template <typename... Args>
 inline bool
 no_rule ([[maybe_unused]] Args... params)

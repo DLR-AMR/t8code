@@ -19,6 +19,9 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
+/** \file t8_gtest_cmesh_sum_of_sets.hxx
+ * Definition of a class that holds multiple ways to create a cmesh.
+ */
 
 #ifndef T8_GTEST_cmesh_sum_of_sets_HXX
 #define T8_GTEST_cmesh_sum_of_sets_HXX

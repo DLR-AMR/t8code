@@ -20,6 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_new_bigmesh_param.hxx 
+ * Example cmesh providing a bis mesh.
+ */
 #ifndef T8_CMESH_NEW_BIGMESH_PARAM_HXX
 #define T8_CMESH_NEW_BIGMESH_PARAM_HXX
 
@@ -30,8 +33,14 @@
 
 namespace new_bigmesh
 {
+/** Wrapper function for t8_cmesh_new_bigmesh. */
 std::function<t8_cmesh_t (t8_eclass_t, int, sc_MPI_Comm)> bigmesh = t8_cmesh_new_bigmesh;
 
+/** Function to convert parameter values to a string.
+ * \param [in] eclass The eclass of the mesh.
+ * \param [in] num_trees The number of trees of the mesh.
+ * \param [in] comm The communicator.
+ */
 std::string
 make_param_string (const t8_eclass_t eclass, const int num_trees, const sc_MPI_Comm comm)
 {
@@ -41,9 +50,11 @@ make_param_string (const t8_eclass_t eclass, const int num_trees, const sc_MPI_C
   return params;
 }
 
+/** Wrapper function for \ref make_param_string. */
 std::function<std::string (const t8_eclass_t, const int, const sc_MPI_Comm)> make_param_string_wrapper
   = make_param_string;
 
+/** Example cmesh set of bigmesh cmeshes. */
 example_set *cmesh_example
   = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::eclasses.begin ()),
                                                        decltype (cmesh_params::large_mesh.begin ()),
