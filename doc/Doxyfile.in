@@ -958,7 +958,7 @@ WARN_FORMAT            = "$file:$line: $text"
 # Example:
 # WARN_LINE_FORMAT = "'vi $file +$line'"
 # See also: WARN_FORMAT
-# The default value is: at line $line of file $file.
+# The default value is: at line $line of file $file.test
 
 WARN_LINE_FORMAT       = "at line $line of file $file"
 
@@ -982,7 +982,8 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = @top_srcdir@/src \
-                         @top_srcdir@/mesh_handle
+                         @top_srcdir@/mesh_handle \
+                         @top_srcdir@/test
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1053,7 +1054,10 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS = */test/*.cxx \
+                   */test/*.c \
+                   */test/*.f90 \
+ 
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
