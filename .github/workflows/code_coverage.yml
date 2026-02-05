@@ -95,13 +95,13 @@ jobs:
                                                      -DT8CODE_BUILD_DOCUMENTATION=OFF -DT8CODE_BUILD_EXAMPLES=OFF -DT8CODE_BUILD_TUTORIALS=OFF -DT8CODE_BUILD_BENCHMARKS=OFF \
                                                      -DT8CODE_USE_SYSTEM_SC=ON -DSC_DIR=$SC_PATH/install/cmake -DT8CODE_USE_SYSTEM_P4EST=ON -DP4EST_DIR=$P4EST_PATH/install/cmake  \
                                                      -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON \
-                                                     -DCMAKE_Fortran_COMPILER=mpifort -DCMAKE_Fortran_FLAGS=\"${CMAKE_Fortran_FLAGS} -fprofile-arcs -ftest-coverage\" "
+                                                     -DCMAKE_Fortran_COMPILER=mpifort"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS
+      run: echo cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage" 
     - name: cmake
-      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
+      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage" 
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v6
