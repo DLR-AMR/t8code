@@ -71,6 +71,7 @@ comm_to_string (const sc_MPI_Comm &comm)
  * \param [in] start The starting value for the sequence.
  * \return A vector of type T containing sequential values starting from \p start. 
  */
+template <typename T>
 std::vector<T>
 filled_vector (const size_t size, T start)
 {
