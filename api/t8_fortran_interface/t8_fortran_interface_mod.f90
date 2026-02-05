@@ -215,18 +215,6 @@ module t8_fortran_interface_mod
       end interface
 
       interface
-            ! TODO: Not covered
-            subroutine t8_forest_iterate_replace_f (forest_new, forest_old, replace_fn) &
-                                    bind (c, name = 't8_forest_iterate_replace')
-                  use, intrinsic :: iso_c_binding, only: c_ptr
-                  implicit none
-                  type (c_ptr), value :: forest_new
-                  type (c_ptr), value :: forest_old
-                  type (c_ptr), value :: replace_fn
-            end subroutine t8_forest_iterate_replace_f
-      end interface
-
-      interface
             integer (c_int) function t8_forest_get_local_num_leaf_elements (forest) &
                                     bind (c, name = 't8_forest_get_local_num_leaf_elements')
                   use, intrinsic :: iso_c_binding, only: c_ptr, c_int
