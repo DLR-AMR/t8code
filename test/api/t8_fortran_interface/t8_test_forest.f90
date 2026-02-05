@@ -53,7 +53,6 @@ program t8_test_forest
 
   cmesh = t8_cmesh_new_periodic_tri_f (ccomm)
   forest = t8_forest_new_uniform_default_f (cmesh, 2, 0, ccomm)
-  !! ierror = t8_forest_write_vtk_f (forest, 'test_forest')
   num_local_elements = t8_forest_get_local_num_leaf_elements (forest)
   num_global_elements = t8_forest_get_global_num_elements (forest)
   num_local_trees = t8_forest_get_num_local_trees (forest)

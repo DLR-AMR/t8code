@@ -28,7 +28,6 @@
 #include <t8_forest/t8_forest_io.h>
 #include <t8_schemes/t8_scheme.h>
 #include <t8_schemes/t8_default/t8_default_c_interface.h>
-#include <t8_vtk/t8_vtk_writer.h>
 
 void
 t8_fortran_init_all_ (sc_MPI_Comm *comm)
@@ -108,18 +107,6 @@ t8_cmesh_t
 t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm)
 {
   return t8_cmesh_new_periodic_tri (*Ccomm);
-}
-
-int
-t8_forest_write_vtk_wrap (t8_forest_t forest, const char *fileprefix)
-{
-  return t8_forest_write_vtk (forest, fileprefix) ? 0 : 1;
-}
-
-int
-t8_cmesh_vtk_write_file_wrap (t8_cmesh_t cmesh, const char *fileprefix)
-{
-  return t8_cmesh_vtk_write_file (cmesh, fileprefix) ? 0 : 1;
 }
 
 t8_forest_t

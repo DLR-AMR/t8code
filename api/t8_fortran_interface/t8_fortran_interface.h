@@ -99,27 +99,6 @@ t8_fortran_MPI_Comm_delete (sc_MPI_Comm *Ccomm);
 t8_cmesh_t
 t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
 
-/**
- *  Wraps t8_forest_write_vtk, passing back an error flag instead of true/false, so non-zero means
- *  fail, zero success.
- * \param [in] forest     The forest
- * \param [in] fileprefix The file name prefix
- * \return 0 if successful, 1 otherwise
- */
-int
-t8_forest_write_vtk_wrap (t8_forest_t forest, const char *fileprefix);
-
-/**
- *  Wraps t8_cmesh_vtk_write_file, passing back an error flag instead of true/false, so non-zero means
- *  fail, zero success.
- *
- * \param[in] cmesh The cmesh
- * \param[in] fileprefix The prefix of the output files
- * \return 0 if successful, 1 otherwise
- */
-int
-t8_cmesh_vtk_write_file_wrap (t8_cmesh_t cmesh, const char *fileprefix);
-
 /** Wraps \ref t8_forest_new_uniform with the default scheme as scheme
  * and passes MPI communicator as pointer instead of by value.
  * Build a uniformly refined forest on a coarse mesh.

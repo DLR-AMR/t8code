@@ -76,16 +76,6 @@ module t8_fortran_interface_mod
       end interface
 
       interface
-            integer (c_int) function t8_cmesh_vtk_write_file_f (cmesh, fileprefix) &
-                                    bind (c, name = 't8_cmesh_vtk_write_file_wrap')
-                  use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_double
-                  implicit none
-                  type (c_ptr), value :: cmesh
-                  character (c_char) :: fileprefix
-            end function t8_cmesh_vtk_write_file_f
-      end interface
-
-      interface
             subroutine t8_cmesh_destroy_f (cmesh) &
                                     bind (c, name = 't8_cmesh_destroy')
                   use, intrinsic :: iso_c_binding, only: c_ptr
@@ -205,16 +195,6 @@ module t8_fortran_interface_mod
       end interface
 
       interface
-            integer (c_int) function t8_forest_write_vtk_f (forest, fileprefix) &
-                                    bind (c, name = 't8_forest_write_vtk_wrap')
-                  use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_double
-                  implicit none
-                  type (c_ptr), value :: forest
-                  character (c_char) :: fileprefix
-            end function t8_forest_write_vtk_f
-      end interface
-
-      interface
             integer (c_int) function t8_forest_get_local_num_leaf_elements (forest) &
                                     bind (c, name = 't8_forest_get_local_num_leaf_elements')
                   use, intrinsic :: iso_c_binding, only: c_ptr, c_int
@@ -321,5 +301,72 @@ module t8_fortran_interface_mod
                   type (c_ptr), value :: element
             end subroutine t8_fortran_element_volume_f
       end interface
+
+contains
+
+      ! This function wraps t8_forest_write_vtk, passing back an error flag instead of true/false, so non-zero means
+      ! fail, zero success.
+      function t8_forest_write_vtk_f(forest, fileprefix) result(ierror)
+            implicit none
+            type (c_ptr), value :: forest
+            character (c_char) :: fileprefix
+            integer (c_int) :: ierror
+            integer (c_int)  :: retValue
+
+            ! Local binding to C function t8_forest_write_vtk.
+            interface
+                  integer (c_int) function t8_forest_write_vtk_c (forest, fileprefix) &
+                                          bind (c, name = 't8_forest_write_vtk')
+                        use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_double
+                        implicit none
+                        type (c_ptr), value :: forest
+                        character (c_char) :: fileprefix
+                  end function t8_forest_write_vtk_c
+            end interface
+
+            ! Call c function.
+            retValue = t8_forest_write_vtk_c(forest, fileprefix)
+
+            ! Convert return value of C function to the error flag returned by the Fortran function.
+            if( retValue.eq.0) then
+                  ierror = 1
+            else
+                  ierror = 0
+            end if
+
+      end function t8_forest_write_vtk_f
+
+      ! This function wraps t8_cmesh_vtk_write_file, passing back an error flag instead of true/false, so non-zero means
+      ! fail, zero success.
+      function t8_cmesh_vtk_write_file_f(cmesh, fileprefix) result(ierror)
+            use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_double
+            implicit none
+            type (c_ptr), value :: cmesh
+            character (c_char) :: fileprefix
+            integer (c_int) :: ierror
+            integer (c_int)  :: retValue
+
+            ! Local binding to C function t8_cmesh_vtk_write_file.
+            interface
+                  integer (c_int) function t8_cmesh_vtk_write_file_c (cmesh, fileprefix) &
+                                          bind (c, name = 't8_cmesh_vtk_write_file')
+                        use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_double
+                        implicit none
+                        type (c_ptr), value :: cmesh
+                        character (c_char) :: fileprefix
+                  end function t8_cmesh_vtk_write_file_c
+            end interface
+
+            ! Call c function.
+            retValue = t8_cmesh_vtk_write_file_c(cmesh, fileprefix)
+
+            ! Convert return value of C function to the error flag returned by the Fortran function.
+            if( retValue.eq.0) then
+                  ierror = 1
+            else
+                  ierror = 0
+            end if
+
+      end function t8_cmesh_vtk_write_file_f
 
 end module t8_fortran_interface_mod
