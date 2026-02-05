@@ -63,7 +63,6 @@
 typedef struct t8_tutorial_search_partition_point
 {
   double xyz[3]; /* 3D coordinates */
-  int is_local;  /* set to 1, if found in local search */
   int rank;      /* rank assigned during partition search */
 } t8_point_t;
 
@@ -240,7 +239,6 @@ t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_glob
     nqh = glob_search_ctx->num_global_queries / 2;
     for (iq = 0; iq < glob_search_ctx->num_global_queries; iq++) {
       p = (t8_point_t *) sc_array_index_int (glob_search_ctx->queries, iq);
-      p->is_local = 0;
       p->rank = -1;
       for (id = 0; id < 3; id++) {
         p->xyz[id] = rand () / (RAND_MAX + 1.);
