@@ -34,10 +34,7 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-/** Set to 1 to enable legacy adaptation behavior */
-#define T8_FOREST_ADAPT_LEGACY 0
-
-#if T8_FOREST_ADAPT_LEGACY
+#if !T8CODE_EXPERIMENTAL_ADAPT
 
 #if T8_ENABLE_DEBUG
 /** Return zero if the first \a num_elements in \a elements are not a (sub)family.
@@ -382,11 +379,9 @@ t8_forest_adapt_refine_recursive (t8_forest_t forest, t8_locidx_t ltreeid, t8_ec
     }
   } /* End while loop */
 }
-#endif
 
 /* TODO: optimize this when we own forest_from */
 
-#if T8_FOREST_ADAPT_LEGACY
 void
 t8_forest_adapt (t8_forest_t forest)
 {
@@ -715,7 +710,7 @@ dummy_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] cons
                 [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const t8_scheme *scheme,
                 [[maybe_unused]] const t8_eclass_t tree_class)
 {
-  return t8_adapt::action::KEEP;
+  return t8_adapt::action::REFINE;
 }
 
 void
@@ -733,6 +728,9 @@ t8_forest_adapt (t8_forest_t forest)
   adaptor<adapt_collector, family_checker, manipulator> standard_adaptor (forest, forest_from, dummy_callback,
                                                                           forest->profile != NULL);
   standard_adaptor.adapt ();
+  /*TODO: Update incomplete trees logic.  */
+  forest->incomplete_trees = 0;
+  t8_debugf ("t8_forest_adapt: Adaptation completed using dummy callback.\n");
 }
 #endif /* T8_FOREST_ADAPT_LEGACY */
 
