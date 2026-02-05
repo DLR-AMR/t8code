@@ -124,21 +124,19 @@ t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t for
                                              [[maybe_unused]] const t8_scheme *scheme, const int is_family,
                                              [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
-  double center[3];
-  double dist, min_dist;
-
   t8_tutorial_search_partition_global_t *glob_search_ctx
     = (t8_tutorial_search_partition_global_t *) t8_forest_get_user_data (forest);
 
   /* Compute the element center's position in the unit cube. */
   t8_locidx_t gtreeid = t8_tutorial_search_partition_cmesh_id (forest, which_tree);
+  double center[3];
   t8_forest_element_centroid (forest, gtreeid, elements[0], center);
 
   /* Compute distance to point a. */
-  dist = (glob_search_ctx->a[0] - center[0]) * (glob_search_ctx->a[0] - center[0])
-         + (glob_search_ctx->a[1] - center[1]) * (glob_search_ctx->a[1] - center[1])
-         + (glob_search_ctx->a[2] - center[2]) * (glob_search_ctx->a[2] - center[2]);
-  min_dist = sqrt (dist);
+  double dist = (glob_search_ctx->a[0] - center[0]) * (glob_search_ctx->a[0] - center[0])
+                + (glob_search_ctx->a[1] - center[1]) * (glob_search_ctx->a[1] - center[1])
+                + (glob_search_ctx->a[2] - center[2]) * (glob_search_ctx->a[2] - center[2]);
+  double min_dist = sqrt (dist);
 
   /* Compute distance to point b. */
   dist = (glob_search_ctx->b[0] - center[0]) * (glob_search_ctx->b[0] - center[0])
@@ -171,19 +169,14 @@ t8_tutorial_search_partition_new_unit_brick (const t8_gloidx_t num_x, const t8_g
 static void
 t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
-  int mpiret;
-  int il;
-  t8_gloidx_t old_gnl;
-  t8_cmesh_t cmesh;
-  t8_forest_t forest_adapt;
-
   /* Get MPI info. */
   glob_search_ctx->mpicomm = sc_MPI_COMM_WORLD;
-  mpiret = sc_MPI_Comm_size (glob_search_ctx->mpicomm, &glob_search_ctx->mpisize);
+  int mpiret = sc_MPI_Comm_size (glob_search_ctx->mpicomm, &glob_search_ctx->mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (glob_search_ctx->mpicomm, &glob_search_ctx->mpirank);
   SC_CHECK_MPI (mpiret);
 
+  t8_cmesh_t cmesh;
   if (glob_search_ctx->example == 0) {
     /* Build a 2x2x2 cube cmesh. */
     cmesh = t8_tutorial_search_partition_new_unit_brick (2, 2, 2, glob_search_ctx->mpicomm);
@@ -198,7 +191,9 @@ t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_
                                                    glob_search_ctx->mpicomm);
 
   /* Refine the forest around two refinement centers. */
-  for (il = glob_search_ctx->uniform_level; il < glob_search_ctx->max_level; il++) {
+  t8_gloidx_t old_gnl;
+  t8_forest_t forest_adapt;
+  for (int il = glob_search_ctx->uniform_level; il < glob_search_ctx->max_level; il++) {
     /* Store global num leaves for future comparison. */
     old_gnl = t8_forest_get_global_num_leaf_elements (glob_search_ctx->forest);
 
@@ -225,27 +220,22 @@ t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_
 static void
 t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
-  t8_locidx_t iq, nqh;
-  int id;
-  t8_point_t *p;
-  double t;
-  int mpiret;
-
   /* generate local queries */
   glob_search_ctx->queries = sc_array_new_count (sizeof (t8_point_t), glob_search_ctx->num_global_queries);
   sc_array_memset (glob_search_ctx->queries, 0);
   if (glob_search_ctx->mpirank == 0) {
     srand (glob_search_ctx->seed);
-    nqh = glob_search_ctx->num_global_queries / 2;
-    for (iq = 0; iq < glob_search_ctx->num_global_queries; iq++) {
+    t8_locidx_t nqh = glob_search_ctx->num_global_queries / 2;
+    t8_point_t *p;
+    for (t8_locidx_t iq = 0; iq < glob_search_ctx->num_global_queries; iq++) {
       p = (t8_point_t *) sc_array_index_int (glob_search_ctx->queries, iq);
       p->rank = -1;
-      for (id = 0; id < 3; id++) {
+      for (int id = 0; id < 3; id++) {
         p->xyz[id] = rand () / (RAND_MAX + 1.);
       }
 
       /* move point closer to g->b or g->c depending on iq and random t */
-      t = pow (rand () / (RAND_MAX + 1.), glob_search_ctx->clustering_exponent);
+      double t = pow (rand () / (RAND_MAX + 1.), glob_search_ctx->clustering_exponent);
       /* move the point to position sp->xyz * t + (1 - t) * {g->b,g->c} */
       if (iq < nqh) {
         p->xyz[0] = t * p->xyz[0] + (1 - t) * glob_search_ctx->b[0];
@@ -261,8 +251,8 @@ t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_glob
   }
 
   /* broadcast queries to all processes */
-  mpiret = sc_MPI_Bcast (glob_search_ctx->queries->array, glob_search_ctx->num_global_queries * sizeof (t8_point_t),
-                         sc_MPI_BYTE, 0, glob_search_ctx->mpicomm);
+  int mpiret = sc_MPI_Bcast (glob_search_ctx->queries->array, glob_search_ctx->num_global_queries * sizeof (t8_point_t),
+                             sc_MPI_BYTE, 0, glob_search_ctx->mpicomm);
   SC_CHECK_MPI (mpiret);
   t8_global_productionf ("[search] Created %lld global queries.\n",
                          (unsigned long long) glob_search_ctx->queries->elem_count);
@@ -295,10 +285,9 @@ t8_tutorial_search_partition_local_query_fn (const t8_forest_t forest, const t8_
                                              const t8_point_t &query,
                                              t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
-  int is_inside;
-
   /* check if the query point lies inside the element */
   t8_locidx_t gtreeid = t8_tutorial_search_partition_cmesh_id (forest, ltreeid);
+  int is_inside;
   t8_forest_element_points_inside (forest, gtreeid, element, query.xyz, 1, &is_inside, 1e-8);
 
   if (is_inside && is_leaf) {
@@ -343,10 +332,6 @@ t8_tutorial_search_partition_local_queries_fn (
 static void
 t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
-  int mpiret;
-  int gnq;
-  size_t il;
-
   /* call local search */
   glob_search_ctx->num_local_queries = 0;
   t8_search_with_queries<t8_point_t, t8_tutorial_search_partition_global_t> local_search (
@@ -367,13 +352,13 @@ t8_tutorial_search_partition_search_local (t8_tutorial_search_partition_global_t
 
   /* allgather local num queries for future comparison with partition search */
   glob_search_ctx->global_nlq = sc_array_new_count (sizeof (int), glob_search_ctx->mpisize);
-  mpiret = sc_MPI_Allgather (&glob_search_ctx->num_local_queries, 1, sc_MPI_INT, glob_search_ctx->global_nlq->array, 1,
-                             sc_MPI_INT, glob_search_ctx->mpicomm);
+  int mpiret = sc_MPI_Allgather (&glob_search_ctx->num_local_queries, 1, sc_MPI_INT, glob_search_ctx->global_nlq->array,
+                                 1, sc_MPI_INT, glob_search_ctx->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   /* compute sum of local number of queries across all processes */
-  gnq = 0;
-  for (il = 0; il < glob_search_ctx->global_nlq->elem_count; il++) {
+  int gnq = 0;
+  for (size_t il = 0; il < glob_search_ctx->global_nlq->elem_count; il++) {
     gnq += *(int *) sc_array_index (glob_search_ctx->global_nlq, il);
   }
   t8_global_productionf ("[search] Queries found globally during local search: %d (expected %d)\n", gnq,
@@ -399,9 +384,8 @@ t8_tutorial_search_partition_partition_query_fn (const t8_forest_t forest, const
                                                  const t8_point_t &query,
                                                  t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
-  int is_inside;
-
   /* check if the query point lies inside the element */
+  int is_inside;
   t8_forest_element_points_inside (forest, ltreeid, element, query.xyz, 1, &is_inside, 1e-8);
 
   if (is_inside && pfirst == plast) {
@@ -446,11 +430,6 @@ t8_tutorial_search_partition_partition_queries_fn (const t8_forest_t forest, con
 static void
 t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
-  size_t iz, lenz, buffer_size;
-  int num_queries_found;
-  int retb;
-  char *buffer;
-
   /* call partition search */
   glob_search_ctx->num_queries_per_rank = sc_array_new_count (sizeof (int), glob_search_ctx->mpisize);
   sc_array_memset (glob_search_ctx->num_queries_per_rank, 0);
@@ -468,15 +447,16 @@ t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_glob
     glob_search_ctx->query_vec, glob_search_ctx->forest, glob_search_ctx);
   partition_batched_search.update_queries (glob_search_ctx->query_vec);
   partition_batched_search.do_search ();
-  for (iz = 0; iz < glob_search_ctx->num_queries_per_rank->elem_count; iz++) {
+  for (size_t iz = 0; iz < glob_search_ctx->num_queries_per_rank->elem_count; iz++) {
     /* check results for consistency */
     T8_ASSERT (*(int *) sc_array_index (glob_search_ctx->num_queries_per_rank, iz)
                == *(int *) sc_array_index (glob_search_ctx->num_batched_queries_per_rank, iz));
   }
 
   /* output query points found per rank */
-  buffer_size = 0;
-  for (iz = 0; iz < glob_search_ctx->num_queries_per_rank->elem_count; iz++) {
+  size_t buffer_size = 0;
+  int retb;
+  for (size_t iz = 0; iz < glob_search_ctx->num_queries_per_rank->elem_count; iz++) {
     if (iz % 10 == 0) {
       buffer_size += 1;
     }
@@ -486,11 +466,11 @@ t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_glob
   }
 
   /* now we know the buffer size and allocate it */
-  buffer = T8_ALLOC (char, buffer_size);
+  char *buffer = T8_ALLOC (char, buffer_size);
 
-  lenz = 0;
-  num_queries_found = 0;
-  for (iz = 0; iz < glob_search_ctx->num_queries_per_rank->elem_count; iz++) {
+  size_t lenz = 0;
+  int num_queries_found = 0;
+  for (size_t iz = 0; iz < glob_search_ctx->num_queries_per_rank->elem_count; iz++) {
     /* add result to buffer */
     if (iz % 10 == 0) {
       T8_ASSERT (buffer_size >= lenz);
@@ -514,7 +494,7 @@ t8_tutorial_search_partition_search_partition (t8_tutorial_search_partition_glob
   T8_FREE (buffer);
 
   /* check results for consistency */
-  for (iz = 0; iz < glob_search_ctx->num_queries_per_rank->elem_count; iz++) {
+  for (size_t iz = 0; iz < glob_search_ctx->num_queries_per_rank->elem_count; iz++) {
     T8_ASSERT (*(int *) sc_array_index (glob_search_ctx->num_queries_per_rank, iz)
                == *(int *) sc_array_index (glob_search_ctx->global_nlq, iz));
   }
@@ -558,18 +538,13 @@ t8_tutorial_search_partition_run (t8_tutorial_search_partition_global_t *glob_se
 int
 main (int argc, char **argv)
 {
-  int mpiret;
-  int first_argc, ue, help;
-  int ngq;
-  sc_options_t *opt;
   t8_tutorial_search_partition_global_t global, *glob_search_ctx = &global;
-
   /*
    * Init
    */
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
-  mpiret = sc_MPI_Init (&argc, &argv);
+  int mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
@@ -577,21 +552,23 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEFAULT);
 
   /* Define command line options of this tutorial. */
-  opt = sc_options_new (argv[0]);
+  sc_options_t *opt = sc_options_new (argv[0]);
+  int help;
   sc_options_add_switch (opt, 'h', "help", &help, "Print help message and exit cleanly");
   sc_options_add_int (opt, 'e', "example", &glob_search_ctx->example, 0, "Index of the example forests");
   sc_options_add_int (opt, 'l', "minlevel", &glob_search_ctx->uniform_level, 3, "Level of uniform refinement");
   sc_options_add_int (opt, 'L', "maxlevel", &glob_search_ctx->max_level, 5, "Level of maximum refinement");
+  int ngq;
   sc_options_add_int (opt, 'q', "num-queries", &ngq, 100, "Number of queries created per process");
   sc_options_add_int (opt, 's', "seed", &glob_search_ctx->seed, 0, "Seed for random queries");
   sc_options_add_double (opt, 'c', "clustering-exponent", &glob_search_ctx->clustering_exponent, 0.5,
                          "Clustering of queries");
 
   /* Proceed in run-once loop for clean abort. */
-  ue = 0;
+  int ue = 0;
   do {
     /* Parse command line options */
-    first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
+    int first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
     if (first_argc < 0) {
       t8_global_errorf ("Invalid option format.\n");
       ue = 1;
