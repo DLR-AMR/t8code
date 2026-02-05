@@ -241,6 +241,7 @@ install( FILES
 install( DIRECTORY t8_helper_functions 
   DESTINATION PRIVATE_HEADER 
   FILES_MATCHING 
+    PATTERN "*.h" 
     PATTERN "*.hxx" 
 )
 install( DIRECTORY t8_cmesh
@@ -253,6 +254,18 @@ install( DIRECTORY t8_cmesh
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
 install( DIRECTORY t8_data 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+  FILES_MATCHING 
+    PATTERN "*.h"
+    PATTERN "*.hxx"
+)
+install( DIRECTORY t8_eclass 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+  FILES_MATCHING 
+    PATTERN "*.h"
+    PATTERN "*.hxx"
+)
+install( DIRECTORY t8_element 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
   FILES_MATCHING 
     PATTERN "*.h"
@@ -275,11 +288,23 @@ install( DIRECTORY t8_geometry
     PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.h" EXCLUDE
     PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx" EXCLUDE
 )
+install( DIRECTORY t8_misc
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+  FILES_MATCHING 
+    PATTERN "*.h"
+    PATTERN "*.hxx"
+)
 install( DIRECTORY t8_schemes 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
   FILES_MATCHING 
     PATTERN "*.h"
     PATTERN "*.hxx" 
+)
+install( DIRECTORY t8_types 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+  FILES_MATCHING 
+    PATTERN "*.hxx" 
+    PATTERN "*.h"
 )
 install( DIRECTORY t8_vtk 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -291,12 +316,6 @@ install( DIRECTORY t8_vtk
     PATTERN "t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
     PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
     PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
-)
-install( DIRECTORY t8_types 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.hxx" 
-    PATTERN "*.h"
 )
 
 install( TARGETS T8
