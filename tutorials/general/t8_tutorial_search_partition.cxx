@@ -286,7 +286,7 @@ t8_tutorial_search_partition_local_query_fn (const t8_forest_t forest, const t8_
                                              t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
   /* check if the query point lies inside the element */
-  t8_locidx_t gtreeid = t8_tutorial_search_partition_cmesh_id (forest, ltreeid);
+  const t8_locidx_t gtreeid = t8_tutorial_search_partition_cmesh_id (forest, ltreeid);
   int is_inside;
   t8_forest_element_points_inside (forest, gtreeid, element, query.xyz, 1, &is_inside, 1e-8);
 
