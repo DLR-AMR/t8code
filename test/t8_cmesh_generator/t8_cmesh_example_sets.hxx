@@ -37,7 +37,7 @@
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_hypercube_param.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_empty.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_periodic.hxx"
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
 #include "test/t8_gtest_schemes.hxx"
 

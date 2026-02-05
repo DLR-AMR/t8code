@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_gtest_cmesh_cartestian_product.hxx
+/** \file t8_gtest_cmesh_cartesian_product.hxx
  * Provides classes to construct cmeshes from cartesian products of input parameters.
  */
 #ifndef T8_GTEST_CMESH_CREATOR_BASE_HXX
