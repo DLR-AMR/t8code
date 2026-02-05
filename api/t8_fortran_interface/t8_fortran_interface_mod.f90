@@ -18,10 +18,9 @@
 !! along with t8code; if not, write to the Free Software Foundation, Inc.,
 !! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+!! This file contains the module with t8code's Fortran interface.
 module t8_fortran_interface_mod
-
       use, intrinsic :: ISO_C_BINDING
-
 
       !!! Interface for t8_fortran_MPI_Comm_new
       !!! Given a fortran MPI Communicator, converts it into C and
@@ -49,7 +48,7 @@ module t8_fortran_interface_mod
               type (c_ptr), value :: Ccomm
           END subroutine t8_fortran_mpi_comm_delete_f
       END INTERFACE
- 
+
       !!! Initialize sc and t8code with a given C MPI Communicator
       Interface
             subroutine t8_fortran_init_all_f (Ccomm)         &
@@ -60,7 +59,7 @@ module t8_fortran_interface_mod
             END subroutine t8_fortran_init_all_f
       end Interface
 
-            !!! Initialize sc and t8code with a given C MPI Communicator
+      !!! Initialize sc and t8code with a given C MPI Communicator
       Interface
             subroutine t8_fortran_init_all_noMPI_f ()         &
                         BIND(C, NAME='t8_fortran_init_all_noMPI')
@@ -77,13 +76,12 @@ module t8_fortran_interface_mod
       end Interface
 
       Interface
-            integer (c_int) function t8_cmesh_vtk_write_file_f (cmesh, fileprefix, scale) &
-                                    bind (c, name = 't8_cmesh_vtk_write_file')
+            integer (c_int) function t8_cmesh_vtk_write_file_f (cmesh, fileprefix) &
+                                    bind (c, name = 't8_cmesh_vtk_write_file_wrap')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int, c_char, c_double
                   IMPLICIT NONE
                   type (c_ptr), value :: cmesh
                   character (c_char) :: fileprefix
-                  real (c_double), value :: scale
             end function t8_cmesh_vtk_write_file_f
       end Interface
 
@@ -160,7 +158,7 @@ module t8_fortran_interface_mod
                   integer (c_int), value :: orientation
             end subroutine t8_fortran_cmesh_set_join_f
       end Interface
-        
+
       Interface
             subroutine t8_fortran_cmesh_set_join_by_vertices_noConn_f (cmesh, ntrees, eclasses, vertices, &
                  connectivity, do_both_directions) bind (c, name = 't8_cmesh_set_join_by_vertices')
@@ -210,7 +208,7 @@ module t8_fortran_interface_mod
 
       Interface
             integer (c_int) function t8_forest_write_vtk_f (forest, fileprefix) &
-                                    bind (c, name = 't8_forest_write_vtk')
+                                    bind (c, name = 't8_forest_write_vtk_wrap')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int, c_char, c_double
                   IMPLICIT NONE
                   type (c_ptr), value :: forest
@@ -219,6 +217,7 @@ module t8_fortran_interface_mod
       end Interface
 
       Interface
+            ! TODO: Not covered
             subroutine t8_forest_iterate_replace_f (forest_new, forest_old, replace_fn) &
                                     bind (c, name = 't8_forest_iterate_replace')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr
@@ -303,19 +302,31 @@ module t8_fortran_interface_mod
             end subroutine t8_fortran_finalize_f
       end Interface
 
-       Interface 
-             type (c_ptr) function t8_fortran_adapt_by_coordinates_f (forest, recursive, callback) &
-                                     bind (c, name = 't8_fortran_adapt_by_coordinates')
-                   use, intrinsic :: ISO_C_BINDING, only : c_ptr, c_int
-                   IMPLICIT NONE
-                   type (c_ptr), value :: forest
-                   integer (c_int), value :: recursive
-                   type (c_ptr), value :: callback
-             end function t8_fortran_adapt_by_coordinates_f
-       end Interface
+      interface
+            function t8_fortran_adapt(forest, fortran_callback, recursive) result(new_forest) &
+                  bind (c, name = 't8_fortran_adapt_c')
+            import :: c_funptr, c_ptr, c_int
+            type(c_ptr), value :: forest
+            type(c_funptr), value :: fortran_callback
+            integer (c_int), value :: recursive
+            type (c_ptr) :: new_forest
+            end function t8_fortran_adapt
+      end interface
 
       Interface
-            subroutine t8_fortran_element_volume_f (forest, ltreeid, element) & 
+            function t8_fortran_adapt_by_coordinates_f (forest, recursive, callback) result(new_forest) &
+                                    bind (c, name = 't8_forest_adapt_by_coordinates')
+                  use, intrinsic :: ISO_C_BINDING, only : c_ptr, c_int, c_funptr
+                  IMPLICIT NONE
+                  type (c_ptr), value :: forest
+                  integer (c_int), value :: recursive
+                  type(c_funptr), value :: callback
+                  type (c_ptr) :: new_forest
+            end function t8_fortran_adapt_by_coordinates_f
+      end Interface
+
+      Interface
+            subroutine t8_fortran_element_volume_f (forest, ltreeid, element) &
                                     bind (c, name = 't8_forest_element_volume')
                   use, intrinsic :: ISO_C_BINDING, only: c_ptr, c_int
                   IMPLICIT NONE

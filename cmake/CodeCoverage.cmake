@@ -103,6 +103,12 @@ endfunction() # setup_target_for_coverage
 append_coverage_compiler_flags()
 setup_target_for_coverage(
   NAME coverage
-  EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*"
-  LCOV_ARGS --no-external --ignore-errors gcov
+  # EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*" "${CMAKE_SOURCE_DIR}/CMakeFortranCompilerId.F"
+  # # EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*" "${CMAKE_SOURCE_DIR}/CMakeFortranCompilerId.F" "${CMAKE_BINARY_DIR}/*"
+  # LCOV_ARGS --no-external --ignore-errors gcov,mismatch,unused,unmapped
+  # EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*" "${CMAKE_SOURCE_DIR}/CMakeFortranCompilerId.F"
+  EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*" "${CMAKE_SOURCE_DIR}/CMakeFortranCompilerId.F" "${CMAKE_BINARY_DIR}/*"
+  LCOV_ARGS --no-external --ignore-errors gcov,mismatch,unused
+  # EXCLUDE "${CMAKE_SOURCE_DIR}/sc*" "${CMAKE_SOURCE_DIR}/p4est*" "${CMAKE_SOURCE_DIR}/test*" "${CMAKE_SOURCE_DIR}/thirdparty*" "${CMAKE_SOURCE_DIR}/tutorials*" "${CMAKE_SOURCE_DIR}/example*" "${CMAKE_SOURCE_DIR}/benchmarks*"
+  # LCOV_ARGS --no-external --ignore-errors gcov,mismatch,unused
 )

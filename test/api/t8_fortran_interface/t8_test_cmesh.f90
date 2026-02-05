@@ -26,7 +26,7 @@
 
 program t8_test_cmesh
   use mpi
-  use iso_c_binding, only: c_ptr, c_int
+  use iso_c_binding, only: c_ptr, c_int, c_char, c_double
   use t8_fortran_interface_mod
 
   implicit none
@@ -35,6 +35,7 @@ program t8_test_cmesh
   type(c_ptr) :: ccomm, cmesh, geometry
   real(c_double), target :: vertices_tri_0(9), vertices_tri_1(9), vertices_total(18)
   integer(c_int), target :: eclasses(2)
+  character(len=256, kind=c_char) :: vtk_prefix
 
   call MPI_Init (ierror)
 
@@ -48,6 +49,15 @@ program t8_test_cmesh
   call t8_fortran_init_all_f (ccomm)
 
   cmesh = t8_cmesh_new_periodic_tri_f (ccomm)
+
+  ! Test vtk output
+  vtk_prefix = "fortran_cmesh_to_vtk" // c_null_char
+  ierror = t8_cmesh_vtk_write_file_f(cmesh, vtk_prefix)
+  if (ierror /= 0) then
+    print *, 'cmesh VTK output failed.'
+    stop 1
+  endif
+
 !!  call t8_cmesh_vtk_write_file_f(cmesh, 'test_mpi_init', 0)
   call t8_cmesh_destroy_f(cmesh)
 
