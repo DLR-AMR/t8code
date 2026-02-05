@@ -51,14 +51,14 @@ program t8_test_cmesh
   cmesh = t8_cmesh_new_periodic_tri_f (ccomm)
 
   ! Test vtk output
+  write(*,*) 'Start cmesh vtk output'
   vtk_prefix = "fortran_cmesh_to_vtk" // c_null_char
   ierror = t8_cmesh_vtk_write_file_f(cmesh, vtk_prefix)
   if (ierror /= 0) then
     print *, 'cmesh VTK output failed.'
     stop 1
   endif
-
-!!  call t8_cmesh_vtk_write_file_f(cmesh, 'test_mpi_init', 0)
+  write(*,*) 'Finished cmesh vtk output'
   call t8_cmesh_destroy_f(cmesh)
 
   vertices_tri_0 = [0.0_c_double, 0.0_c_double, 0.0_c_double, &
