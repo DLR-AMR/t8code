@@ -61,6 +61,7 @@ program t8_test_cmesh
   write(*,*) 'Finished cmesh vtk output'
   call t8_cmesh_destroy_f(cmesh)
 
+  write(*,*) 'Destroyed mesh'
   vertices_tri_0 = [0.0_c_double, 0.0_c_double, 0.0_c_double, &
               1.0_c_double, 0.0_c_double, 0.0_c_double, &
               1.0_c_double, 1.0_c_double, 0.0_c_double]
@@ -72,6 +73,7 @@ program t8_test_cmesh
 
   !! Create a test quad mesh with 2 triangles in a square
   call t8_fortran_cmesh_init_f(cmesh)
+  write(*,*) 'initialized new mesh'
   !! Create and register a geometry for linear triangles
   geometry = t8_fortran_geometry_linear_new_f (2)
   call t8_fortran_cmesh_register_geometry_f(cmesh, geometry)
@@ -85,6 +87,7 @@ program t8_test_cmesh
   call t8_fortran_cmesh_set_join_f(cmesh, int(0, kind=8), int(1, kind=8), 1, 2, 0)
   call t8_fortran_cmesh_commit_f(cmesh, ccomm)
   call t8_cmesh_destroy_f(cmesh)
+  write(*,*) 'destroyed mesh again'
 
   !! Create the same mesh again, but let t8code find the connectivity
   eclasses = [3, 3]
@@ -98,6 +101,7 @@ program t8_test_cmesh
   call t8_fortran_cmesh_set_join_by_vertices_noConn_f(cmesh, 2, c_loc(eclasses), c_loc(vertices_total), C_NULL_PTR, 0)
   call t8_fortran_cmesh_commit_f(cmesh, ccomm)
   call t8_cmesh_destroy_f(cmesh)
+  write(*,*) 'destroyed mesh a third time'
 
   call t8_fortran_finalize_f ()
   call t8_fortran_mpi_comm_delete_f(ccomm)

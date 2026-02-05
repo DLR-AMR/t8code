@@ -34,7 +34,7 @@ module t8_fortran_interface_mod
                         bind(C, NAME='t8_fortran_MPI_Comm_new')
               use, intrinsic :: iso_c_binding, only: c_int, c_ptr
               implicit none
-              INTEGER (C_INT), VALUE :: Fcomm
+              integer (c_int), value :: Fcomm
           end function t8_fortran_mpi_comm_new_f
       end interface
 
