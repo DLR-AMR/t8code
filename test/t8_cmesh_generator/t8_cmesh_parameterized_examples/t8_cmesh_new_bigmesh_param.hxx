@@ -21,7 +21,7 @@
 */
 
 /** \file t8_cmesh_new_bigmesh_param.hxx 
- * Example cmesh providing a bis mesh.
+ * Parameterized example cmeshes providing a big mesh for test purpose.
  */
 #ifndef T8_CMESH_NEW_BIGMESH_PARAM_HXX
 #define T8_CMESH_NEW_BIGMESH_PARAM_HXX
