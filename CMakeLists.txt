@@ -71,6 +71,9 @@ option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 
+option ( T8CODE_ACTIVATE_EXPERIMENTAL_ADAPT "Activate experimental adaptation implementation (may be unstable)" OFF )
+mark_as_advanced( FORCE T8CODE_ACTIVATE_EXPERIMENTAL_ADAPT)
+
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
