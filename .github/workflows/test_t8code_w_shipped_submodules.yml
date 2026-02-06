@@ -21,9 +21,6 @@ name: test t8code with shipped submodules
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-env:
-  DEBUG_CONFIG: "-O0"
-
 on:
   workflow_call:
     inputs:
@@ -81,7 +78,7 @@ jobs:
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -GNinja -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake and test
     - name: Printing MPI compiler info
