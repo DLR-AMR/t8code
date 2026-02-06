@@ -53,36 +53,25 @@ using t8_2D_vec = t8_vec<2>;
  */
 using t8_3D_vec = t8_vec<3>;
 
-/** Concept for container types with value type that is convertible into double.
-*/
-template <typename T>
-concept T8ContainerdoubleType = requires (T t) {
+/** Concept for container types with value type double.
+ * \tparam TType Container type to check.
+ */
+template <typename TType>
+concept T8ContainerType = requires (TType t) {
   {
     std::begin (t)
   } -> std::input_iterator;
   {
     std::end (t)
   } -> std::input_iterator;
-  typename T::value_type;
-} && std::is_convertible_v<typename T::value_type, double>;
-
-/** Concept for container types with any value type.
-*/
-template <typename T>
-concept T8ContainerType = requires (T t) {
-  {
-    std::begin (t)
-  } -> std::input_iterator;
-  {
-    std::end (t)
-  } -> std::input_iterator;
-};
+  typename TType::value_type;
+} && std::is_convertible_v<typename TType::value_type, double>;
 
 /** Vector norm.
   * \param [in] vec  An N-dimensional vector.
   * \return          The norm of \a vec.
   */
-template <T8ContainerdoubleType TVec>
+template <T8ContainerType TVec>
 static inline double
 t8_norm (const TVec &vec)
 {
@@ -92,7 +81,7 @@ t8_norm (const TVec &vec)
 /** Normalize a vector.
   * \param [in,out] vec  An N-dimensional vector.
   */
-template <T8ContainerdoubleType TVec>
+template <T8ContainerType TVec>
 constexpr void
 t8_normalize (TVec &vec)
 {
@@ -117,7 +106,7 @@ t8_copy (const TVec1 &src, TVec2 &dest)
   * \return             The euclidean distance.
   *                     Equivalent to norm (X-Y).
   */
-template <T8ContainerdoubleType TPointX, T8ContainerdoubleType TPointY>
+template <T8ContainerType TPointX, T8ContainerType TPointY>
 constexpr double
 t8_dist (const TPointX &point_x, const TPointY &point_y)
 {
@@ -130,7 +119,7 @@ t8_dist (const TPointX &point_x, const TPointY &point_y)
   * \param [in,out] vec_x  An N-dimensional vector. On output set to \a alpha * \a vec_x.
   * \param [in]     alpha  A factor.
   */
-template <T8ContainerdoubleType TVec>
+template <T8ContainerType TVec>
 constexpr void
 t8_ax (TVec &vec_x, const double alpha)
 {
@@ -142,7 +131,7 @@ t8_ax (TVec &vec_x, const double alpha)
   * \param [out] vec_y  On output set to \a alpha * \a vec_x.
   * \param [in]  alpha  A factor.
   */
-template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
+template <T8ContainerType TVecX, T8ContainerType TVecY>
 constexpr void
 t8_axy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
 {
@@ -157,7 +146,7 @@ t8_axy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
   * \param [in]  b      An offset.
   * \note It is possible that vec_x = vec_y on input to overwrite x
   */
-template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
+template <T8ContainerType TVecX, T8ContainerType TVecY>
 constexpr void
 t8_axb (const TVecX &vec_x, TVecY &vec_y, const double alpha, const double b)
 {
@@ -170,7 +159,7 @@ t8_axb (const TVecX &vec_x, TVecY &vec_y, const double alpha, const double b)
   *                      On output set \a to vec_y + \a alpha * \a vec_x
   * \param [in]  alpha  A factor.
   */
-template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
+template <T8ContainerType TVecX, T8ContainerType TVecY>
 constexpr void
 t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
 {
@@ -184,7 +173,7 @@ t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
   * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
   * \param [in]  alpha  A factor for the multiplication of \a vec_x.
   */
-template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY, T8ContainerdoubleType TVecZ>
+template <T8ContainerType TVecX, T8ContainerType TVecY, T8ContainerType TVecZ>
 constexpr void
 t8_axpyz (const TVecX &vec_x, const TVecY &vec_y, TVecZ &vec_z, const double alpha)
 {
@@ -197,7 +186,7 @@ t8_axpyz (const TVecX &vec_x, const TVecY &vec_y, TVecZ &vec_z, const double alp
   * \param [in]  vec_y  An N-dimensional vector.
   * \return             The dot product \a vec_x * \a vec_y
   */
-template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
+template <T8ContainerType TVecX, T8ContainerType TVecY>
 constexpr double
 t8_dot (const TVecX &vec_x, const TVecY &vec_y)
 {
@@ -209,7 +198,7 @@ t8_dot (const TVecX &vec_x, const TVecY &vec_y)
   * \param [in]  vec_y  A 2D vector.
   * \return             The cross product of \a vec_x and \a vec_y.
   */
-template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY>
+template <T8ContainerType TVecX, T8ContainerType TVecY>
 static inline double
 t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
 {
@@ -222,7 +211,7 @@ t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
   * \param [in]  vec_y  A 3D vector.
   * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
   */
-template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY, T8ContainerdoubleType TVecCross>
+template <T8ContainerType TVecX, T8ContainerType TVecY, T8ContainerType TVecCross>
 static inline void
 t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
 {
@@ -237,7 +226,7 @@ t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
   * \param [in]  vec_y  An N-dimensional vector.
   * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
   */
-template <T8ContainerdoubleType TVecX, T8ContainerdoubleType TVecY, T8ContainerdoubleType TVecDiff>
+template <T8ContainerType TVecX, T8ContainerType TVecY, T8ContainerType TVecDiff>
 constexpr void
 t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
 {
@@ -251,7 +240,7 @@ t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
   * \param[in] tol Tolerance.
   * \return true, if the objects are equal up to \a tol.
   */
-template <T8ContainerdoubleType TDimensionalX, T8ContainerdoubleType TDimensionalY>
+template <T8ContainerType TDimensionalX, T8ContainerType TDimensionalY>
 constexpr bool
 t8_eq (const TDimensionalX &x, const TDimensionalY &y, const double tol)
 {
@@ -263,7 +252,7 @@ t8_eq (const TDimensionalX &x, const TDimensionalY &y, const double tol)
   * \param [in,out] vec  An N-dimensional vector.
   * \param [in]  new_length  New length of the vector.
   */
-template <T8ContainerdoubleType TVec>
+template <T8ContainerType TVec>
 static inline void
 t8_rescale (TVec &vec, const double new_length)
 {
@@ -277,8 +266,7 @@ t8_rescale (TVec &vec, const double new_length)
   * \param [in]  p3  A 3D vector.
   * \param [out] normal vector of the triangle. (Not necessarily of length 1!)d
   */
-template <T8ContainerdoubleType TVecP1, T8ContainerdoubleType TVecP2, T8ContainerdoubleType TVecP3,
-          T8ContainerdoubleType TVecNormal>
+template <T8ContainerType TVecP1, T8ContainerType TVecP2, T8ContainerType TVecP3, T8ContainerType TVecNormal>
 static inline void
 t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNormal &normal)
 {
@@ -295,7 +283,7 @@ t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNorm
   * \param [out]  v2 3D vector.
   * \param [out]  v3 3D vector.
   */
-template <T8ContainerdoubleType TVecV1, T8ContainerdoubleType TVecV2, T8ContainerdoubleType TVecV3>
+template <T8ContainerType TVecV1, T8ContainerType TVecV2, T8ContainerType TVecV3>
 static inline void
 t8_orthogonal_tripod (const TVecV1 &v1, TVecV2 &v2, TVecV3 &v3)
 {

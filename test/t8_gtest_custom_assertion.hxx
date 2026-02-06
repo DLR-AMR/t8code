@@ -91,7 +91,7 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
  * \param[in] precision Test equality up to this precision
  * \return testing::AssertionResult
  */
-template <T8ContainerdoubleType TContainer1, T8ContainerdoubleType TContainer2>
+template <T8ContainerType TContainer1, T8ContainerType TContainer2>
 static inline testing::AssertionResult
 container_equality (const char *container_1_expr, const char *container_2_expr, const char *precision_expr,
                     const TContainer1 &container_1, const TContainer2 &container_2, const double precision)
