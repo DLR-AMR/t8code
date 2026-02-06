@@ -54,7 +54,7 @@ T8_EXTERN_C_BEGIN ();
 */
 struct t8_example_netcdf_adapt_data
 {
-  t8_3D_point midpoint;             /* Midpoint of a sphere */
+  t8_3D_vec midpoint;               /* Midpoint of a sphere */
   double refine_if_inside_radius;   /* refine all elements inside this radius from the sphere's midpoint */
   double coarsen_if_outside_radius; /* coarsen all element families outside of this radius from the sphere's midpoint */
 };
@@ -69,7 +69,7 @@ t8_example_netcdf_adapt_fn (t8_forest_t forest, t8_forest_t forest_from, t8_loci
                             [[maybe_unused]] const t8_scheme *scheme, const int is_family,
                             [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
-  t8_3D_point element_centroid;
+  t8_3D_vec element_centroid;
   double distance;
 
   /* Retrieve the adapt_data which holds the information regarding the adaption process of a forest */
@@ -111,9 +111,9 @@ t8_example_netcdf_adapt (t8_forest_t forest)
 
   /* The adapt data which controls which elements will be refined or coarsened based on the given radii */
   struct t8_example_netcdf_adapt_data adapt_data = {
-    t8_3D_point ({ 0.5, 0.5, 0.5 }), /* Midpoints of the sphere. */
-    0.2,                             /* Refine if inside this radius. */
-    0.4                              /* Coarsen if outside this radius. */
+    t8_3D_vec ({ 0.5, 0.5, 0.5 }), /* Midpoints of the sphere. */
+    0.2,                           /* Refine if inside this radius. */
+    0.4                            /* Coarsen if outside this radius. */
   };
 
   /* Create the adapted forest with the given adapt_function. */

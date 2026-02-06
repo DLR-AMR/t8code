@@ -59,7 +59,7 @@ struct cache_vertex_coordinates_overwrite: public t8_mesh_handle::cache_vertex_c
    * \param [in] new_vec New cache vector. 
    */
   void
-  overwrite_cache (std::vector<t8_3D_point> new_vec) const
+  overwrite_cache (std::vector<t8_3D_vec> new_vec) const
   {
     this->m_vertex_coordinates = new_vec;
   }
@@ -74,7 +74,7 @@ struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlyi
    * \param [in] new_vec New point for the cache. 
    */
   void
-  overwrite_cache (t8_3D_point new_vec) const
+  overwrite_cache (t8_3D_vec new_vec) const
   {
     this->m_centroid = new_vec;
   }
@@ -119,7 +119,7 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
   const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_vertex_cache ());
 
-  std::vector<t8_3D_point> unrealistic_vertex = { t8_3D_point ({ 41, 42, 43 }), t8_3D_point ({ 99, 100, 101 }) };
+  std::vector<t8_3D_vec> unrealistic_vertex = { t8_3D_vec ({ 41, 42, 43 }), t8_3D_vec ({ 99, 100, 101 }) };
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->vertex_cache_filled ());
@@ -152,7 +152,7 @@ TEST (t8_gtest_cache_competence, cache_centroid)
   const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_centroid_cache ());
 
-  t8_3D_point unrealistic_centroid ({ 999, 1000, 998 });
+  t8_3D_vec unrealistic_centroid ({ 999, 1000, 998 });
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     // Check that cache is empty at the beginning.
     EXPECT_FALSE (it->centroid_cache_filled ());

@@ -35,7 +35,7 @@
 #include <t8_types/t8_vec.hxx>
 
 /** A levelset function in 3+1 space dimensions. */
-typedef double (*t8_example_level_set_fn) (const t8_3D_point &, double, void *);
+typedef double (*t8_example_level_set_fn) (const t8_3D_vec &, double, void *);
 
 /** Struct to handle refinement around a level-set function. */
 typedef struct
@@ -51,10 +51,10 @@ typedef struct
 /** Function pointer for real valued functions from d+1 space dimensions
  * functions f: R^d x R -> R */
 typedef double (*t8_scalar_function_1d_fn) (double x, double t);
-typedef double (*t8_scalar_function_2d_fn) (const t8_2D_point &x, const double t);
-typedef double (*t8_scalar_function_3d_fn) (const t8_3D_point &x, const double t);
+typedef double (*t8_scalar_function_2d_fn) (const t8_2D_vec &x, const double t);
+typedef double (*t8_scalar_function_3d_fn) (const t8_3D_vec &x, const double t);
 /** Function pointer for a vector valued function f: R^3 x R -> R */
-typedef void (*t8_flow_function_3d_fn) (const t8_3D_point &x_in, const double t, t8_3D_vec &x_out);
+typedef void (*t8_flow_function_3d_fn) (const t8_3D_vec &x_in, const double t, t8_3D_vec &x_out);
 
 /* function declarations */
 
@@ -103,7 +103,7 @@ t8_common_adapt_level_set (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 
 typedef struct
 {
-  t8_3D_point M;
+  t8_3D_vec M;
   /**< midpoint */
   double radius;
   /**< radius */
@@ -114,7 +114,7 @@ typedef struct
   * \return     dist (x,data->M) - data->radius
   */
 double
-t8_levelset_sphere (const t8_3D_point &x, double t, void *data);
+t8_levelset_sphere (const t8_3D_vec &x, double t, void *data);
 
 /** Returns always 1.
  * \return 1
@@ -200,42 +200,42 @@ t8_scalar3d_sphere_05_0z_midpoint_375_radius (const t8_3D_vec &x, const double t
 /** Returns always 1 in each coordinate.
  */
 void
-t8_flow_constant_one_vec (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_constant_one_vec (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);
 
 /** Sets the first coordinate to 1, all other to 0. */
 void
-t8_flow_constant_one_x_vec (const t8_3D_point &x, const double t, t8_3D_vec &x_ou);
+t8_flow_constant_one_x_vec (const t8_3D_vec &x, const double t, t8_3D_vec &x_ou);
 
 /** Sets the first and second coordinate to 1, the third to 0. */
 void
-t8_flow_constant_one_xy_vec (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_constant_one_xy_vec (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);
 
 /** Sets all coordinates to a nonzero constant. */
 void
-t8_flow_constant_one_xyz_vec (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_constant_one_xyz_vec (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);
 
 /** Transform the unit square to [-0.5,0.5]^2 and computes
  * x = 2pi*y, y = -2pi*x
  */
 void
-t8_flow_rotation_2d (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_rotation_2d (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);
 
 void
-t8_flow_compressible (const t8_3D_point &x_in, const double t, t8_3D_vec &x_out);
+t8_flow_compressible (const t8_3D_vec &x_in, const double t, t8_3D_vec &x_out);
 /** Incompressible flow in unit cube */
 void
-t8_flow_incomp_cube_flow (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_incomp_cube_flow (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);
 
 /** 2d flow around a circle with radius R = 1 and
  * constant inflow with x-speed U = 1. 
  * See https://doi.org/10.13140/RG.2.2.34714.11203 */
 void
-t8_flow_around_circle (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_around_circle (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);
 
 void
-t8_flow_stokes_flow_sphere_shell (const t8_3D_point &x_in, const double t, t8_3D_vec &x_out);
+t8_flow_stokes_flow_sphere_shell (const t8_3D_vec &x_in, const double t, t8_3D_vec &x_out);
 
 void
-t8_flow_around_circle_with_angular_velocity (const t8_3D_point &x, const double t, t8_3D_vec &x_out);
+t8_flow_around_circle_with_angular_velocity (const t8_3D_vec &x, const double t, t8_3D_vec &x_out);
 
 #endif /* !T8_EXAMPLE_COMMON_H */

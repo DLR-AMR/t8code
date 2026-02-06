@@ -49,9 +49,9 @@ TEST (t8_gtest_vec, norm)
 /* test the t8_dist function */
 TEST (t8_gtest_vec, dist)
 {
-  const t8_3D_point zero ({ 0, 0, 0 });
-  const t8_3D_point onetwothree ({ 1, 2, 3 });
-  const t8_3D_point arbitrary ({ -.05, 3.14159, 42 });
+  const t8_3D_vec zero ({ 0, 0, 0 });
+  const t8_3D_vec onetwothree ({ 1, 2, 3 });
+  const t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
   const double distzeroonetwothree = sqrt (1 + 4 + 9);
   const double distarbitraryonetwothree = 39.030830477;
   EXPECT_VEC_EQ (zero, zero, T8_PRECISION_SQRT_EPS);

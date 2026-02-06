@@ -45,14 +45,6 @@
 template <std::size_t TDim, typename TType = double>
 using t8_vec = std::array<TType, TDim>;
 
-/** Type alias for a 2D point.
- */
-typedef std::array<double, 2> t8_2D_point;
-
-/** Type alias for a 3D point.
- */
-typedef std::array<double, 3> t8_3D_point;
-
 /** Type alias for a 2D vector.
  */
 using t8_2D_vec = t8_vec<2>;

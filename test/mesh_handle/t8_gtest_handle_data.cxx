@@ -41,7 +41,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 // Dummy user data taken from a tutorial for test purposes.
 struct dummy_user_data
 {
-  t8_3D_point midpoint;             /* The midpoint of our sphere. */
+  t8_3D_vec midpoint;               /* The midpoint of our sphere. */
   double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
   double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
 };
@@ -60,9 +60,9 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
   mesh_class mesh (forest);
 
   struct dummy_user_data user_data = {
-    t8_3D_point ({ 41, 42, 43 }), /* Midpoints of the sphere. */
-    0.2,                          /* Refine if inside this radius. */
-    0.4                           /* Coarsen if outside this radius. */
+    t8_3D_vec ({ 41, 42, 43 }), /* Midpoints of the sphere. */
+    0.2,                        /* Refine if inside this radius. */
+    0.4                         /* Coarsen if outside this radius. */
   };
 
   // Set user data for the mesh handle and check that the getter returns the same data.
