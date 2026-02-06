@@ -27,6 +27,8 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include "t8_test_data_dir.h"
+#include <string>
 
 /* In this file we test the msh file (gmsh) reader of the cmesh.
  * Currently, we support version 2 and 4 ascii.
@@ -38,15 +40,15 @@
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 {
 
-  const char fileprefix[BUFSIZ - 4] = "testfiles/test_msh_file_vers4_ascii";
+  std::string fileprefix = std::string (T8_TEST_DATA_DIR) + "/test_msh_file_vers4_ascii";
   char filename[BUFSIZ];
 
-  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix.c_str ());
 
   t8_debugf ("Checking msh file version 4 ascii...\n");
 
   ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " << filename;
-  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix.c_str (), 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   ASSERT_TRUE (cmesh != NULL) << "Could not read cmesh from ascii version 4, but should be able to.";
 
   /* The cmesh was read successfully and we need to destroy it. */
@@ -56,15 +58,15 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
 {
 
-  const char fileprefix[BUFSIZ - 4] = "testfiles/test_msh_file_vers4_bin";
+  std::string fileprefix = std::string (T8_TEST_DATA_DIR) + "/test_msh_file_vers4_bin";
   char filename[BUFSIZ];
 
-  snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
+  snprintf (filename, BUFSIZ, "%s.msh", fileprefix.c_str ());
 
   t8_debugf ("Checking msh file version 4 binary...\n");
 
   ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " << filename;
-  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix.c_str (), 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   ASSERT_TRUE (cmesh == NULL) << "Expected fail of reading binary msh file v.4, but did not fail.";
 
   t8_debugf ("Error handling successful.\n");
