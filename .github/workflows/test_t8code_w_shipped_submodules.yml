@@ -22,7 +22,7 @@ name: test t8code with shipped submodules
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 env:
-  DEBUG_CONFIG: "-O1"
+  DEBUG_CONFIG: "-O0"
 
 on:
   workflow_call:

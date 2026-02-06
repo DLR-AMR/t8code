@@ -28,7 +28,7 @@ name: CMake tests t8code with Clang compiler and OpenMPI
 #  with MPI and all external libraries (VTK, OpenCASCADE).
 
 env:
-  DEBUG_CONFIG: "-O1"
+  DEBUG_CONFIG: "-O0"
 
 on:
   workflow_call:

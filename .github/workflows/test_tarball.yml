@@ -26,7 +26,7 @@ name: test tarball
 
 env:
   MAKEFLAGS: "-j2 V=0"
-  DEBUG_CONFIG: "-O1"
+  DEBUG_CONFIG: "-O0"
 
 
 on:
