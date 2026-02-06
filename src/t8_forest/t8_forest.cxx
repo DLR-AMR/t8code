@@ -3569,7 +3569,6 @@ t8_forest_get_tree_leaf_element_count (t8_tree_t tree)
 
   T8_ASSERT (tree != NULL);
   element_count = t8_element_array_get_count (&tree->leaf_elements);
-  t8_debugf ("[D] Tree has %li leaf elements.\n", (long) element_count);
   /* check for type conversion errors */
   T8_ASSERT ((size_t) element_count == t8_element_array_get_count (&tree->leaf_elements));
   return element_count;

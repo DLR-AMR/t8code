@@ -279,10 +279,10 @@ template <typename TType>
 concept element_manipulatable = requires (
   TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from, const t8_scheme *scheme,
   const t8_eclass_t tree_class, const t8_locidx_t &el_considered, const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
-  const std::vector<action> &action, const bool is_family, const int num_siblings) {
+  const std::vector<action> &action, const bool is_family) {
   {
     object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted,
-                                action, is_family, num_siblings)
+                                action, is_family)
   } -> std::same_as<void>;
 };
 
@@ -338,7 +338,6 @@ struct family_checker
                 [[maybe_unused]] std::vector<const t8_element_t *> &elements_from, const t8_locidx_t offset,
                 const t8_scheme *scheme, const t8_eclass_t tree_class)
   {
-    t8_debugf ("[D] family_check at offset %d\n", offset);
     const t8_locidx_t num_elements_from = (t8_locidx_t) t8_element_array_get_count (tree_elements_from);
     const t8_element_t *first_element_from = t8_element_array_index_locidx (tree_elements_from, offset);
     const int num_siblings = scheme->element_get_num_siblings (tree_class, first_element_from);
@@ -426,24 +425,13 @@ manipulate_elements<action::REFINE> (t8_element_array_t *elements, const t8_elem
                                      const t8_locidx_t elements_index, const t8_locidx_t elements_from_index)
 {
   const t8_element_t *element_from = t8_element_array_index_locidx (elements_from, elements_from_index);
-  const int level = scheme->element_get_level (tree_class, element_from);
   const int num_children = scheme->element_get_num_children (tree_class, element_from);
-  /* CONTINUE WORK HERE */
   (void) t8_element_array_push_count (elements, num_children);
-  t8_debugf ("[D] Created %ld children for element %d\n", t8_element_array_get_count (elements), elements_index);
   std::vector<t8_element_t *> children (num_children);
   for (int ichildren = 0; ichildren < num_children; ichildren++) {
     children[ichildren] = t8_element_array_index_locidx_mutable (elements, elements_index + ichildren);
   }
   scheme->element_get_children (tree_class, element_from, num_children, children.data ());
-  for (int ichildren = 0; ichildren < num_children; ichildren++) {
-    t8_debugf ("[D] Created child %d for element %d\n", ichildren, elements_index);
-    t8_element_t *child = t8_element_array_index_locidx_mutable (elements, elements_index + ichildren);
-    scheme->element_debug_print (tree_class, child);
-    const t8_linearidx_t child_linear_idx = scheme->element_get_linear_id (tree_class, child, level + 1);
-    t8_debugf ("[D] Child %d has linear index %ld\n", ichildren, child_linear_idx);
-  }
-  t8_debugf ("[D] created %d children \n", num_children);
   return num_children;
 };
 
@@ -466,16 +454,17 @@ struct manipulator
   element_manipulator (t8_element_array_t *elements, const t8_element_array_t *const elements_from,
                        const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t &el_considered,
                        const t8_locidx_t el_offset, t8_locidx_t &el_inserted, const std::vector<action> &actions,
-                       const bool is_family, const int num_siblings)
+                       const bool is_family)
   {
-    t8_debugf ("[D] Manipulating element");
-    action iaction = actions[el_offset + el_considered];
+    action iaction = actions[el_considered];
     if (!is_family && iaction == action::COARSEN) {
       iaction = action::KEEP;
     }
     /* Check that all siblings want to be coarsened */
     if (is_family && iaction == action::COARSEN) {
-      const auto start = actions.begin () + static_cast<size_t> (el_offset + el_considered);
+      const t8_element_t *current_element = t8_element_array_index_locidx (elements_from, el_considered);
+      const int num_siblings = scheme->element_get_num_siblings (tree_class, current_element);
+      const auto start = actions.begin () + static_cast<size_t> (el_considered);
       const auto end = start + static_cast<size_t> (num_siblings);
       if (!std::all_of (start, end, [] (const action &a) { return a == action::COARSEN; })) {
         iaction = action::KEEP;
@@ -484,16 +473,16 @@ struct manipulator
 
     switch (static_cast<int> (iaction)) {
     case action::COARSEN:
-      el_inserted += manipulate_elements<action::COARSEN> (elements, elements_from, scheme, tree_class, el_inserted,
-                                                           el_offset + el_considered);
+      el_inserted += manipulate_elements<action::COARSEN> (elements, elements_from, scheme, tree_class,
+                                                           el_offset + el_inserted, el_considered);
       break;
     case action::KEEP:
-      el_inserted += manipulate_elements<action::KEEP> (elements, elements_from, scheme, tree_class, el_inserted,
-                                                        el_offset + el_considered);
+      el_inserted += manipulate_elements<action::KEEP> (elements, elements_from, scheme, tree_class,
+                                                        el_offset + el_inserted, el_considered);
       break;
     case action::REFINE:
-      el_inserted += manipulate_elements<action::REFINE> (elements, elements_from, scheme, tree_class, el_inserted,
-                                                          el_offset + el_considered);
+      el_inserted += manipulate_elements<action::REFINE> (elements, elements_from, scheme, tree_class,
+                                                          el_offset + el_inserted, el_considered);
       break;
     default: {
       t8_errorf ("Unknown adapt action.\n");
@@ -635,22 +624,13 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
 
     TCollect::collect_actions (forest_from, actions, callback);
 
-    t8_debugf ("Adaptation: collected %zu actions.\n", actions.size ());
-    /* print adapt actions */
-    for (const auto &action : actions) {
-      t8_debugf (" - Action: %d\n", int (action));
-    }
-
     /* Offset per tree in the source forest */
     t8_locidx_t el_offset = 0;
     const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest_from);
     /* Get the scheme used by the forest */
     const t8_scheme *scheme = t8_forest_get_scheme (forest_from);
 
-    t8_debugf ("Starting adaptation over %d local trees.\n", num_trees);
-
     for (t8_locidx_t ltree_id = 0; ltree_id < num_trees; ltree_id++) {
-      t8_debugf ("Adapting tree %d\n", ltree_id);
       /* get the trees from both forests. */
       t8_tree_t tree = t8_forest_get_tree (forest, ltree_id);
       const t8_tree_t tree_from = t8_forest_get_tree (forest_from, ltree_id);
@@ -663,27 +643,23 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
       const t8_eclass_t tree_class = tree_from->eclass;
       /* Continue only if tree_from is not empty */
       if (num_el_from > 0) {
-        const t8_element_t *first_element_from = t8_element_array_index_locidx (tree_elements_from, 0);
-        t8_locidx_t curr_size_elements_from = scheme->element_get_num_siblings (tree_class, first_element_from);
         /* index of the elements in source tree */
         t8_locidx_t el_considered = 0;
-        /* index of the elements in target tree */
-        t8_locidx_t el_inserted = 0;
         std::vector<const t8_element_t *> elements_temp;
-        const bool is_family
-          = TFamily::family_check (tree_elements_from, elements_temp, el_considered, scheme, tree_class);
+        while (el_considered < num_el_from) {
+          t8_locidx_t el_inserted = 0;
+          const bool is_family
+            = TFamily::family_check (tree_elements_from, elements_temp, el_considered, scheme, tree_class);
 
-        /* manipulator step*/
-        TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered, el_offset,
-                                          el_inserted, actions, is_family, curr_size_elements_from);
-        t8_debugf ("[D] After manipulation: el_inserted = %d\n", el_inserted);
-        el_considered++;
-        el_offset += el_inserted;
-        forest->local_num_leaf_elements += el_inserted;
+          /* manipulator step*/
+          TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered, el_offset,
+                                            el_inserted, actions, is_family);
+          el_considered++;
+          el_offset += el_inserted;
+          forest->local_num_leaf_elements += el_inserted;
+        }
       }
-      t8_debugf ("[D] Finished adapting tree %d: inserted %d elements.\n", ltree_id, el_offset);
       tree->elements_offset = el_offset;
-      t8_debugf ("[D] Updated tree %d element offset to %d.\n", ltree_id, tree->elements_offset);
     }
     if (profiling) {
       profile_adaptation_end ();
