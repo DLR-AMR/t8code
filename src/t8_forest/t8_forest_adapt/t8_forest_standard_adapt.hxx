@@ -81,7 +81,6 @@ struct batched_adapt_collector
   {
     T8_ASSERT (forest_from != nullptr);
 
-    t8_locidx_t el_offset = 0;
     const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest_from);
     const t8_locidx_t local_num_elements = t8_forest_get_local_num_leaf_elements (forest_from);
     adapt_actions.resize (local_num_elements);
@@ -94,7 +93,6 @@ struct batched_adapt_collector
       const t8_eclass_t tree_class = tree_from->eclass;
       const t8_element_array_t *elements_from = &tree_from->leaf_elements;
       callback (forest_from, ltree_id, elements_from, scheme, tree_class, adapt_actions);
-      el_offset += (t8_locidx_t) t8_element_array_get_count (elements_from);
     }
   }
 };
