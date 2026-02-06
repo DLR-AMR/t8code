@@ -252,30 +252,30 @@ concept family_checkable = requires (TType object, const t8_element_array_t *tre
 /** Concept that detects whether a type TType provides a member function
  * with the signature compatible with:
  *  object.element_manipulator(t8_element_array_t*, const t8_element_array_t*, const t8_scheme*,
- *                           const t8_eclass_t, const t8_locidx_t&, const t8_locidx_t,
- *                          t8_locidx_t&, const std::vector<action>&, const bool, const int)
+ *                           const t8_eclass_t, const t8_locidx_t, const t8_locidx_t,
+ *                          t8_locidx_t&, const std::vector<action>&, const bool)
  * returning void.
  * \tparam TType
  *   Type under test. The concept is satisfied when an object `object` of type TType can be
  *   used in an expression
  *     object.element_manipulator(elements, elements_from, scheme, tree_class, el_considered, el_offset,
- *                               el_inserted, actions, is_family, num_siblings)
+ *                               el_inserted, actions, is_family)
  *   where:
  *     - elements is of type t8_element_array_t*,
  *     - elements_from is of type const t8_element_array_t*,
  *     - scheme is of type const t8_scheme*,
  *     - tree_class is of type const t8_eclass_t,
- *     - el_considered is of type const t8_locidx_t&,
+ *     - el_considered is of type const t8_locidx_t,
+ *     - el_offset is of type const t8_locidx_t,
  *     - el_inserted is of type t8_locidx_t&,
  *     - actions is of type const std::vector<action>&,
  *     - is_family is of type const bool,
- *     - num_siblings is of type const int,
  *   and the expression is well-formed and yields void.
  */
 template <typename TType>
 concept element_manipulatable = requires (
   TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from, const t8_scheme *scheme,
-  const t8_eclass_t tree_class, const t8_locidx_t &el_considered, const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
+  const t8_eclass_t tree_class, const t8_locidx_t el_considered, const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
   const std::vector<action> &action, const bool is_family) {
   {
     object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted,
@@ -457,8 +457,8 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
   callback_type callback; /**< The callback function to determine adaptation actions. */
  private:
   /**
-       * Profile the adaptation process.
-       */
+   * Profile the adaptation process.
+   */
   inline void
   profile_adaptation_start ()
   {
@@ -466,6 +466,9 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
     forest->profile->adapt_runtime = -sc_MPI_Wtime ();
   }
 
+  /**
+   * End profiling the adaptation process.
+   */
   inline void
   profile_adaptation_end ()
   {
