@@ -25,8 +25,6 @@
  * of the official t8_forest.h interface but used internally.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_private */
-
 #ifndef T8_FOREST_PRIVATE_H
 #define T8_FOREST_PRIVATE_H
 
