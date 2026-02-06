@@ -31,7 +31,6 @@
 
 #include <algorithm>
 #include <numeric>
-#include <span>
 #include <array>
 #include <type_traits>
 #include <iterator>
@@ -56,58 +55,11 @@ typedef std::array<double, 3> t8_3D_point;
 
 /** Type alias for a 2D vector.
  */
-typedef t8_vec<2> t8_2D_vec;
+using t8_2D_vec = t8_vec<2>;
 
 /** Type alias for a 3D vector.
  */
-typedef t8_vec<3> t8_3D_vec;
-
-/** Type alias for a non-owning 3D vec view.
- * \tparam TType The type (const and so on)
- */
-template <std::size_t TDim, typename TType = double>
-using t8_vec_view = std::span<TType, TDim>;
-
-/** Convenience function to create a vector view from a raw array.
- *
- * \tparam TDim            The dimension of the array.
- * \tparam TType           The type (const and so on)
- * \param [in] ptr         The pointer to the array.
- * \return                 The view.
- */
-template <std::size_t TDim, typename TType = double>
-constexpr auto
-make_t8_vec_view (TType *ptr) noexcept
-{
-  using view_type = t8_vec_view<TDim, TType>;
-  return view_type (ptr, TDim);
-}
-
-/** Convenience function to create a 2D vector view from a raw array.
- *
- * \param [in] ptr         The pointer to the array.
- * \tparam TType           The type (const and so on)
- * \return                 The view.
- */
-template <typename TType>
-inline auto
-make_t8_2D_vec_view (TType *ptr) noexcept
-{
-  return make_t8_vec_view<2> (ptr);
-}
-
-/** Convenience function to create a 3D vector view from a raw array.
- *
- * \param [in] ptr         The pointer to the array.
- * \tparam TType           The type (const and so on)
- * \return                 The view.
- */
-template <typename TType>
-inline auto
-make_t8_3D_vec_view (TType *ptr) noexcept
-{
-  return make_t8_vec_view<3> (ptr);
-}
+using t8_3D_vec = t8_vec<3>;
 
 /** Concept for container types with value type that is convertible into double.
 */
