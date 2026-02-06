@@ -2432,9 +2432,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = T8_DOXYGEN \
                          T8_ENABLE_DEBUG \
                          T8_ENABLE_VTK \
-                         T8_ENABLE_OCC \
-                         T8_ENABLE_NETCDF \
-                         T8_ENABLE_NETCDF_PAR
+                         T8_ENABLE_OCC
 PREDEFINED += T8_EXTERN_C_BEGIN()=
 PREDEFINED += T8_EXTERN_C_END()=
 PREDEFINED += __attribute__((unused))=

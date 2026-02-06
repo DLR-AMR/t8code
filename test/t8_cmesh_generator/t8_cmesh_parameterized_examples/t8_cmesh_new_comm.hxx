@@ -23,7 +23,7 @@
 #ifndef T8_CMESH_NEW_COMM
 #define T8_CMESH_NEW_COMM
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
 #include <t8_cmesh/t8_cmesh_examples.h>
 
