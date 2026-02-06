@@ -29,7 +29,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_data/t8_containers.h>
-#include <t8_forest/t8_forest_adapt/t8_forest_adapt.hxx>
+#include <t8_forest/t8_forest_adapt/t8_forest_standard_adapt.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -720,13 +720,11 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_from != NULL);
   T8_ASSERT (forest->set_adapt_recursive != -1);
   t8_forest_t forest_from = forest->set_from;
-  using namespace t8_adapt;
-  /**TODO: currently only using a dummy callback to check compilation.
-     * For proper usage we need to change the layout of the adapt function pointer
-     * in t8_forest_t.
-     */
-  adaptor<adapt_collector, family_checker, manipulator> standard_adaptor (forest, forest_from, dummy_callback,
-                                                                          forest->profile != NULL);
+
+  using namespace t8_standard_adapt;
+
+  t8_adapt::adaptor<adapt_collector, family_checker, manipulator> standard_adaptor (forest, forest_from, dummy_callback,
+                                                                                    forest->profile != NULL);
   standard_adaptor.adapt ();
   /*TODO: Update incomplete trees logic.  */
   forest->incomplete_trees = 0;
