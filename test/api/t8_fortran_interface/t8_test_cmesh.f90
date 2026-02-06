@@ -72,7 +72,7 @@ program t8_test_cmesh
               0.0_c_double, 1.0_c_double, 0.0_c_double]
 
   ! Note: t8_fortran_cmesh_set_join_by_vertices_noConn_f for each tree expects T8_ECLASS_MAX_DIM=3
-  !       entries for 8_ECLASS_MAX_CORNERS=8 vertices, yielding 3 * 8 = 24 enrties per tree, so an
+  !       entries for 8_ECLASS_MAX_CORNERS=8 vertices, yielding 3 * 8 = 24 entries per tree, so an
   !       an array of length 2 * 24 = 48.
   vertices_total(1:9) = vertices_tri_0(:)
   vertices_total(25:33) = vertices_tri_1(:)
