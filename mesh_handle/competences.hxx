@@ -183,7 +183,7 @@ struct cache_face_centroids: t8_crtp_operator<TUnderlying, cache_face_centroids>
   }
 
  protected:
-  mutable std::vector<std::optional<t8_3D_point>> m_face_centroids; /**< Vector with the face centroid for each face. */
+  mutable std::vector<std::optional<t8_3D_vec>> m_face_centroids; /**< Vector with the face centroid for each face. */
 };
 
 /**

@@ -116,7 +116,7 @@ struct cache_face_centroids_overwrite: public t8_mesh_handle::cache_face_centroi
    * \param [in] new_face_centroid New face centroid. 
    */
   void
-  overwrite_cache (int face, t8_3D_point new_face_centroid) const
+  overwrite_cache (int face, t8_3D_vec new_face_centroid) const
   {
     this->m_face_centroids[face] = new_face_centroid;
   }
@@ -275,7 +275,7 @@ TEST (t8_gtest_cache_competence, cache_face_centroids)
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_centroids_cache ());
 
-  t8_3D_point unrealistic_face_centroid ({ 999.0, 1000.0, 998.0 });
+  t8_3D_vec unrealistic_face_centroid ({ 999.0, 1000.0, 998.0 });
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     for (int iface = 0; iface < it->get_num_faces (); ++iface) {
       EXPECT_FALSE (it->face_centroid_cache_filled (iface));
