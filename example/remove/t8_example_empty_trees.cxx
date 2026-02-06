@@ -29,8 +29,6 @@
 #include <sc_options.h>
 #include <string>
 
-T8_EXTERN_C_BEGIN ();
-
 /** Removes all elements of a local tree if they belong to the corresponding
  *  global trees which is given by the user_data. */
 static int
@@ -94,8 +92,6 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
   t8_forest_unref (&forest_adapt);
   t8_forest_unref (&forest);
 }
-
-T8_EXTERN_C_END ();
 
 int
 main (int argc, char **argv)
