@@ -26,14 +26,15 @@
 
 program t8_test_cmesh
   use mpi
-  use iso_c_binding, only: c_ptr, c_int, c_char, c_double
+  use iso_c_binding, only: c_ptr, c_int, c_char, c_double, C_NULL_PTR
   use t8_fortran_interface_mod
 
   implicit none
 
   integer :: ierror, fcomm
   type(c_ptr) :: ccomm, cmesh, geometry
-  real(c_double), target :: vertices_tri_0(9), vertices_tri_1(9), vertices_total(18)
+  real(c_double), target :: vertices_tri_0(9), vertices_tri_1(9)
+  real(c_double), target :: vertices_total(48) = 0.0_c_double
   integer(c_int), target :: eclasses(2)
   character(len=256, kind=c_char) :: vtk_prefix
 
@@ -69,7 +70,12 @@ program t8_test_cmesh
   vertices_tri_1 = [0.0_c_double, 0.0_c_double, 0.0_c_double, &
               1.0_c_double, 1.0_c_double, 0.0_c_double, &
               0.0_c_double, 1.0_c_double, 0.0_c_double]
-  vertices_total = [vertices_tri_0, vertices_tri_1]
+
+  ! Note: t8_fortran_cmesh_set_join_by_vertices_noConn_f for each tree expects T8_ECLASS_MAX_DIM=3
+  !       entries for 8_ECLASS_MAX_CORNERS=8 vertices, yielding 3 * 8 = 24 enrties per tree, so an
+  !       an array of length 2 * 24 = 48.
+  vertices_total(1:9) = vertices_tri_0(:)
+  vertices_total(25:33) = vertices_tri_1(:)
 
   !! Create a test quad mesh with 2 triangles in a square
   call t8_fortran_cmesh_init_f(cmesh)
@@ -98,7 +104,7 @@ program t8_test_cmesh
   call t8_fortran_cmesh_set_tree_class_f(cmesh, int(1, kind=8), 3)
   call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(0, kind=8), c_loc(vertices_tri_0), 3)
   call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(1, kind=8), c_loc(vertices_tri_1), 3)
-  call t8_fortran_cmesh_set_join_by_vertices_noConn_f(cmesh, 2, c_loc(eclasses), c_loc(vertices_total), C_NULL_PTR, 0)
+  call t8_fortran_cmesh_set_join_by_vertices_noConn_f(cmesh, int(2, kind=8), c_loc(eclasses), c_loc(vertices_total), c_null_ptr, 0)
   call t8_fortran_cmesh_commit_f(cmesh, ccomm)
   call t8_cmesh_destroy_f(cmesh)
   write(*,*) 'destroyed mesh a third time'

@@ -124,12 +124,12 @@ module t8_fortran_interface_mod
       end interface
 
       interface
-            subroutine t8_fortran_cmesh_set_tree_vertices_f (cmesh, ltree_id, vertices, num_vertices) &
+            subroutine t8_fortran_cmesh_set_tree_vertices_f (cmesh, gtree_id, vertices, num_vertices) &
                                     bind (c, name = 't8_cmesh_set_tree_vertices')
                   use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_int64_t
                   implicit none
                   type (c_ptr), value :: cmesh
-                  integer (c_int64_t), value :: ltree_id
+                  integer (c_int64_t), value :: gtree_id
                   type(c_ptr),value :: vertices
                   integer (c_int), value :: num_vertices
             end subroutine t8_fortran_cmesh_set_tree_vertices_f
@@ -152,10 +152,10 @@ module t8_fortran_interface_mod
       interface
             subroutine t8_fortran_cmesh_set_join_by_vertices_noConn_f (cmesh, ntrees, eclasses, vertices, &
                  connectivity, do_both_directions) bind (c, name = 't8_cmesh_set_join_by_vertices')
-                  use, intrinsic :: iso_c_binding, only: c_ptr, c_int
+                  use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_int64_t
                   implicit none
                   type (c_ptr), value :: cmesh
-                  integer (c_int), value :: ntrees
+                  integer (c_int64_t), value :: ntrees
                   type (c_ptr), value :: eclasses
                   type (c_ptr), value :: vertices
                   type (c_ptr), value :: connectivity
