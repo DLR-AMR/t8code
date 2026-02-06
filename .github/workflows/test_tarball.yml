@@ -23,7 +23,6 @@ name: test tarball
 #
 # This github CI script constructs a tarball and checks if it is build correctly.
 #
-
 env:
   MAKEFLAGS: "-j2 V=0"
 
