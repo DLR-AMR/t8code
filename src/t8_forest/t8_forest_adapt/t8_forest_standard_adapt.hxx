@@ -223,7 +223,6 @@ struct manipulator
          * \param [in,out] el_inserted       The index of the elements in the target tree.
          * \param [in] actions               The global adapt actions vector.
          * \param [in] is_family             Whether the current elements form a family.
-         * \param [in] num_siblings          The number of siblings in the family.
          */
   void
   element_manipulator (t8_element_array_t *elements, const t8_element_array_t *const elements_from,
