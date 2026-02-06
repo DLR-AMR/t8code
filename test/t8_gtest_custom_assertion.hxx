@@ -79,7 +79,7 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
   ASSERT_PRED_FORMAT4 (element_equality, (scheme), (tree_class), (elem1), (elem2))
 
 /**
- * \brief Test if two 3D containers are equal with respect to a given precision
+ * \brief Test if two vectors are equal with respect to a given precision.
  *
  * \tparam TContainer1 Type of the first container.
  * \tparam TContainer2 Type of the second container.
