@@ -958,7 +958,7 @@ WARN_FORMAT            = "$file:$line: $text"
 # Example:
 # WARN_LINE_FORMAT = "'vi $file +$line'"
 # See also: WARN_FORMAT
-# The default value is: at line $line of file $file.test
+# The default value is: at line $line of file $file.
 
 WARN_LINE_FORMAT       = "at line $line of file $file"
 
