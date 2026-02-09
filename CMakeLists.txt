@@ -127,9 +127,6 @@ endif()
 
 mark_as_advanced( FORCE gtest_disable_mpi)
 
-message (STATUS "MPI support is ${MPI_FOUND}")
-message (STATUS "SC_ENABLE_MPI is ${SC_ENABLE_MPI}")
-
 # 1. Read and parse the JSON
 file(READ "dependencies.json" DEPS_JSON)
 # 2. Get the number of elements in the "dependencies" array
