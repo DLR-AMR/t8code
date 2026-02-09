@@ -86,6 +86,27 @@ endif()
 # Set a default build type if none was specified
 set(default_build_type "Release")
 
+if( T8CODE_ENABLE_MPI )
+    if( T8CODE_BUILD_FORTRAN_INTERFACE )
+      find_package( MPI 3.0 COMPONENTS C Fortran REQUIRED )
+    else()
+      find_package( MPI 3.0 COMPONENTS C REQUIRED )
+    endif()
+    set (gtest_disable_mpi OFF CACHE BOOL "disable gtest mpi support" FORCE)
+
+    if( NOT MPIEXEC_EXECUTABLE )
+        message( FATAL_ERROR "MPIEXEC was not found" )
+    endif()
+    set( SC_ENABLE_MPI ON CACHE BOOL "enable mpi support in libsc" FORCE)
+else()
+    set( gtest_disable_mpi ON CACHE BOOL "disable gtest mpi support" FORCE)
+endif()
+
+mark_as_advanced( FORCE gtest_disable_mpi)
+
+message (STATUS "MPI support is ${MPI_FOUND}")
+message (STATUS "SC_ENABLE_MPI is ${SC_ENABLE_MPI}")
+
 # 1. Read and parse the JSON
 file(READ "dependencies.json" DEPS_JSON)
 # 2. Get the number of elements in the "dependencies" array
@@ -169,27 +190,6 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 if( T8CODE_BUILD_FORTRAN_INTERFACE )
     enable_language( Fortran )
 endif()
-
-if( T8CODE_ENABLE_MPI )
-    if( T8CODE_BUILD_FORTRAN_INTERFACE )
-      find_package( MPI 3.0 COMPONENTS C Fortran REQUIRED )
-    else()
-      find_package( MPI 3.0 COMPONENTS C REQUIRED )
-    endif()
-    set (gtest_disable_mpi OFF CACHE BOOL "disable gtest mpi support" FORCE)
-
-    if( NOT MPIEXEC_EXECUTABLE )
-        message( FATAL_ERROR "MPIEXEC was not found" )
-    endif()
-    set( SC_ENABLE_MPI ON CACHE BOOL "enable mpi support in libsc" FORCE)
-else()
-    set( gtest_disable_mpi ON CACHE BOOL "disable gtest mpi support" FORCE)
-endif()
-
-mark_as_advanced( FORCE gtest_disable_mpi)
-
-message (STATUS "MPI support is ${MPI_FOUND}")
-message (STATUS "SC_ENABLE_MPI is ${SC_ENABLE_MPI}")
 
 
 if( T8CODE_ENABLE_VTK )
