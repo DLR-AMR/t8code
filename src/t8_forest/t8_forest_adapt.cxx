@@ -694,34 +694,6 @@ t8_forest_adapt (t8_forest_t forest)
 }
 #else
 
-/**
- * Dummy callback function for element adaptation.
- * This function always returns the KEEP action.
- * 
- * \param [in] forest      The forest
- * \param [in] ltreeid     The local tree id
- * \param [in] element     The element to adapt
- * \param [in] scheme      The scheme for this element
- * \param [in] tree_class  The eclass of tree the element is part of.
- * \return                 The KEEP action.
- */
-t8_adapt::action
-dummy_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
-                [[maybe_unused]] const t8_locidx_t lelement_id, [[maybe_unused]] const t8_element_t *element,
-                [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const t8_eclass_t tree_class)
-{
-  return t8_adapt::action::REFINE;
-}
-
-void
-dummy_callback_batched ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
-                        [[maybe_unused]] const t8_element_array_t *elements, [[maybe_unused]] const t8_scheme *scheme,
-                        [[maybe_unused]] const t8_eclass_t tree_class, std::vector<t8_adapt::action> &actions)
-{
-  T8_ASSERT (actions.size () == t8_element_array_get_count (elements));
-  std::fill (actions.begin (), actions.end (), static_cast<int> (t8_adapt::action::REFINE));
-  return;
-}
 
 void
 t8_forest_adapt (t8_forest_t forest)
@@ -733,8 +705,8 @@ t8_forest_adapt (t8_forest_t forest)
 
   using namespace t8_standard_adapt;
 
-  t8_adapt::adaptor<adapt_collector, family_checker, manipulator> standard_adaptor (forest, forest_from, dummy_callback,
-                                                                                    forest->profile != NULL);
+  t8_adapt::adaptor<adapt_collector, family_checker, manipulator> standard_adaptor (
+    forest, forest_from, forest->set_adapt_fn, forest->profile != NULL);
   standard_adaptor.adapt ();
   /*TODO: Update incomplete trees logic.  */
   forest->incomplete_trees = 0;
