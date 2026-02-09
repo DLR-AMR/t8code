@@ -30,6 +30,8 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_schemes.hxx>
 
+#if !T8CODE_EXPERIMENTAL_ADAPT
+
 /* This test is executed on a subcommunicator of exactly 2 procs, because it demonstrates a configuration that is currently not working. See https://github.com/DLR-AMR/t8code/issues/825.
  * A partitioned square of uniform refinement level 1 is adapted once, where only the lower half is refined.
  * Then the mesh is adapted again, where only the upper half of the lower elements is deleted.
@@ -124,3 +126,5 @@ TEST_P (DISABLED_forest_ghost_exchange_holes, errorTest)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_delete, DISABLED_forest_ghost_exchange_holes, AllSchemeCollections);
+
+#endif

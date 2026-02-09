@@ -204,13 +204,12 @@ TestPartitionData (const t8_forest_t initial_forest, const t8_forest_t partition
  * to a pre-set refinement level.
  */
 static int
-t8_test_partition_data_adapt ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                              const t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                              const t8_scheme* scheme, [[maybe_unused]] const int is_family,
-                              [[maybe_unused]] const int num_elements, t8_element_t* elements[])
+t8_test_partition_data_adapt ([[maybe_unused]] const t8_forest_t forest, const t8_locidx_t ltreeid,
+                              [[maybe_unused]] const t8_locidx_t lelement_id, const t8_element_t* element,
+                              const t8_scheme* scheme, const t8_eclass_t tree_class)
 {
-  const int level = scheme->element_get_level (tree_class, elements[0]);
-  const t8_gloidx_t gtree_id = t8_forest_global_tree_id (forest_from, which_tree);
+  const int level = scheme->element_get_level (tree_class, element);
+  const t8_gloidx_t gtree_id = t8_forest_global_tree_id (forest, ltreeid);
   if (level < 3 && gtree_id == 0) {
     return 1;
   }

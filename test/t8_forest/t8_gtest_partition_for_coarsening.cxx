@@ -77,26 +77,20 @@
  *       (The following doxygen documentation is just to make sure it is technically documented.)
  *
  * \param[in] forest        "forest" argument of \ref t8_forest_adapt_t
- * \param[in] forest_from   "forest_from" argument of \ref t8_forest_adapt_t
  * \param[in] which_tree    "which_tree" argument of \ref t8_forest_adapt_t
- * \param[in] tree_class    "tree_class" argument of \ref t8_forest_adapt_t
- * \param[in] lelement_id   "lelement_id" argument of \ref t8_forest_adapt_t
- * \param[in] scheme        "scheme" argument of \ref t8_forest_adapt_t
- * \param[in] is_family     "is_family" argument of \ref t8_forest_adapt_t
- * \param[in] num_elements  "num_elements" argument of \ref t8_forest_adapt_t
  * \param[in] elements      "elements" argument of \ref t8_forest_adapt_t
+ * \param[in] scheme        "scheme" argument of \ref t8_forest_adapt_t
+ * \param[in] tree_class    "tree_class" argument of \ref t8_forest_adapt_t
  *
  * \return 1 if the element will be refined, 0 otherwise.
 */
 int
-refine_some_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                      [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
-                      [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
-                      [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                      [[maybe_unused]] t8_element_t *elements[])
+refine_some_callback (const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
+                      const t8_locidx_t lelement_id, [[maybe_unused]] const t8_element_t *element,
+                      [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const t8_eclass_t tree_class)
 {
   // Refine some elements.
-  return (lelement_id % (forest_from->mpirank + 1) ? 1 : 0);
+  return (lelement_id % (forest->mpirank + 1) ? 1 : 0);
 }
 
 /**
@@ -113,21 +107,17 @@ refine_some_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
  * \param[in] tree_class    "tree_class" argument of \ref t8_forest_adapt_t
  * \param[in] lelement_id   "lelement_id" argument of \ref t8_forest_adapt_t
  * \param[in] scheme        "scheme" argument of \ref t8_forest_adapt_t
- * \param[in] is_family     "is_family" argument of \ref t8_forest_adapt_t
- * \param[in] num_elements  "num_elements" argument of \ref t8_forest_adapt_t
  * \param[in] elements      "elements" argument of \ref t8_forest_adapt_t
  *
  * \return -1 if the elements are a family, 0 otherwise.
  */
 int
-coarsen_all_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                      [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
-                      [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
-                      const int is_family, [[maybe_unused]] const int num_elements,
-                      [[maybe_unused]] t8_element_t *elements[])
+coarsen_all_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
+                      [[maybe_unused]] const t8_locidx_t lelement_id, [[maybe_unused]] const t8_element_t *element,
+                      [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const t8_eclass_t tree_class)
 {
-  // Coarsen revery family.
-  return (is_family ? -1 : 0);
+  // Coarsen every family.
+  return -1;
 }
 
 /**

@@ -155,11 +155,13 @@ add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
 add_t8_cpp_test( NAME t8_gtest_weighted_partitioning_parallel     SOURCES t8_forest/t8_gtest_weighted_partitioning.cxx )
 
+if (!T8CODE_EXPERIMENTAL_ADAPT)
 add_t8_cpp_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_cpp_test( NAME t8_gtest_recursive_serial             SOURCES t8_forest_incomplete/t8_gtest_recursive.cxx )
 add_t8_cpp_test( NAME t8_gtest_iterate_replace_parallel     SOURCES t8_forest_incomplete/t8_gtest_iterate_replace.cxx )
 add_t8_cpp_test( NAME t8_gtest_empty_local_tree_parallel    SOURCES t8_forest_incomplete/t8_gtest_empty_local_tree.cxx )
 add_t8_cpp_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_forest_incomplete/t8_gtest_empty_global_tree.cxx )
+endif( !T8CODE_EXPERIMENTAL_ADAPT )
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     add_t8_cpp_test( NAME t8_gtest_geometry_negative_volume_serial      SOURCES t8_geometry/t8_gtest_geometry_negative_volume.cxx )

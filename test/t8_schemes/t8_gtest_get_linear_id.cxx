@@ -60,13 +60,12 @@ struct get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>
 };
 
 static int
-t8_test_init_linear_id_refine_everything ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                                          [[maybe_unused]] t8_locidx_t which_tree,
-                                          [[maybe_unused]] const t8_eclass_t tree_class,
-                                          [[maybe_unused]] t8_locidx_t lelement_id,
+t8_test_init_linear_id_refine_everything ([[maybe_unused]] const t8_forest_t forest,
+                                          [[maybe_unused]] const t8_locidx_t ltreeid,
+                                          [[maybe_unused]] const t8_locidx_t lelement_id,
+                                          [[maybe_unused]] const t8_element_t *element,
                                           [[maybe_unused]] const t8_scheme *scheme,
-                                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                                          [[maybe_unused]] t8_element_t *elements[])
+                                          [[maybe_unused]] const t8_eclass_t tree_class)
 {
   return 1;
 }
