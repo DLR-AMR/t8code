@@ -55,7 +55,8 @@ struct adapt_collector
 
       for (t8_locidx_t el_considered = 0; el_considered < num_el_from; el_considered++) {
         const t8_element_t *element_from = t8_element_array_index_locidx (tree_elements_from, el_considered);
-        actions[el_offset + el_considered] = callback (forest_from, ltree_id, element_from, scheme, tree_class);
+        actions[el_offset + el_considered]
+          = callback (forest_from, ltree_id, el_considered, element_from, scheme, tree_class);
       }
       el_offset += num_el_from;
     }

@@ -140,14 +140,15 @@ class action {
 /** Callback function type for element adaptation. 
  * \param [in] forest        The forest containing the element.
  * \param [in] ltreeid       The local tree ID of the tree containing the element.
+ * \param [in] lelement_id   The local element ID of the element to be adapted.
  * \param [in] element       The element to be adapted.
  * \param [in] scheme        The scheme used for the element.
  * \param [in] tree_class    The eclass of the tree containing the element.
  * \return                   The adaptation action to be taken on the element.
 */
 using element_callback
-  = std::function<action (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                          const t8_scheme *scheme, const t8_eclass_t tree_class)>;
+  = std::function<action (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_locidx_t lelement_id,
+                          const t8_element_t *element, const t8_scheme *scheme, const t8_eclass_t tree_class)>;
 
 /** Callback function type for batched element adaptation. 
  * \param [in] forest        The forest containing the elements.

@@ -707,8 +707,8 @@ t8_forest_adapt (t8_forest_t forest)
  */
 t8_adapt::action
 dummy_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
-                [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const t8_scheme *scheme,
-                [[maybe_unused]] const t8_eclass_t tree_class)
+                [[maybe_unused]] const t8_locidx_t lelement_id, [[maybe_unused]] const t8_element_t *element,
+                [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const t8_eclass_t tree_class)
 {
   return t8_adapt::action::REFINE;
 }
@@ -733,8 +733,8 @@ t8_forest_adapt (t8_forest_t forest)
 
   using namespace t8_standard_adapt;
 
-  t8_adapt::adaptor<batched_adapt_collector, family_checker, manipulator> standard_adaptor (
-    forest, forest_from, dummy_callback_batched, forest->profile != NULL);
+  t8_adapt::adaptor<adapt_collector, family_checker, manipulator> standard_adaptor (forest, forest_from, dummy_callback,
+                                                                                    forest->profile != NULL);
   standard_adaptor.adapt ();
   /*TODO: Update incomplete trees logic.  */
   forest->incomplete_trees = 0;
