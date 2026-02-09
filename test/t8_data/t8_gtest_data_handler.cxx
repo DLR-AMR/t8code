@@ -299,6 +299,7 @@ TEST (data_handler_test, tree_test)
   sc_MPI_Status status;
   int outcount;
   mpiret = tree_handler.recv (recv_from, 0, comm, &status, outcount);
+  SC_CHECK_MPI (mpiret);
 
   std::vector<pseudo_tree> recv_trees = *(tree_handler.get_data ());
 
