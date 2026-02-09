@@ -125,8 +125,8 @@ struct t8_abstract_vector_handler
    * to a given source and destination with a specific tag within the provided MPI communicator. The function will also
    * update the status and output count of the received message.
    *
-   * \param[in] source The rank of the source process from which the message is received.
    * \param[in] dest The destination rank to which the data will be sent.
+   * \param[in] source The rank of the source process from which the message is received.
    * \param[in] tag The tag associated with the messages to be sent.
    * \param[in] comm The MPI communicator used for the communication.
    * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
@@ -134,7 +134,7 @@ struct t8_abstract_vector_handler
    * \return An integer indicating the status of the send operation.
    */
   virtual int
-  sendrecv (const int source, const int dest, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
+  sendrecv (const int dest, const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
     = 0;
 
   /**
