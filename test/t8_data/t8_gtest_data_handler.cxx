@@ -158,40 +158,33 @@ TEST (data_handler_test, multiple_handler)
   }
   t8_vector_handler<enlarged_data<int>> int_handler (int_data);
   t8_vector_handler<enlarged_data<double>> double_handler (double_data);
-  std::vector<t8_abstract_vector_handler *> handler;
-
-  handler.push_back (&int_handler);
-  handler.push_back (&double_handler);
 
 #if T8_ENABLE_MPI
   /* Compute the rank this rank sends to. We send in a round-robin fashion */
   int send_to = (mpirank + 1) % mpisize;
   /* Compute the rank this rank receives from. */
-  int recv_from = (mpirank == 0) ? (mpisize - 1) : (mpirank - 1);
+  int recv_from = (mpirank - 1 + mpisize) % mpisize;
   if (send_to != mpirank) {
-    for (t8_abstract_vector_handler *ihandler : handler) {
-      mpiret = ihandler->send (send_to, 0, comm);
-      SC_CHECK_MPI (mpiret);
-      /* Receive and unpack the data. */
-      sc_MPI_Status status;
-      int outcount;
-      mpiret = ihandler->recv (recv_from, 0, comm, &status, outcount);
-    }
+    sc_MPI_Status status;
+    int outcount;
+    mpiret = int_handler.sendrecv (send_to, recv_from, 0, comm, &status, outcount);
+    SC_CHECK_MPI (mpiret);
+    mpiret = double_handler.sendrecv (send_to, recv_from, 0, comm, &status, outcount);
+    SC_CHECK_MPI (mpiret);
   }
   else {
-    t8_debugf ("Rank %d not sending data to itself\n", mpirank);
+    t8_debugf ("Rank %i not sending data to itself\n", mpirank);
   }
 
-  std::vector<enlarged_data<int>> recv_ints = *((t8_vector_handler<enlarged_data<int>> *) (handler[0]))->get_data ();
-  std::vector<enlarged_data<double>> recv_doubles
-    = *((t8_vector_handler<enlarged_data<double>> *) (handler[1]))->get_data ();
+  auto recv_ints = int_handler.get_data ();
+  auto recv_doubles = double_handler.get_data ();
 
   SC_CHECK_MPI (mpiret);
   for (int idata = 0; idata < num_data; idata++) {
-    EXPECT_EQ (recv_ints[idata].check, recv_from);
-    EXPECT_EQ (recv_ints[idata].data, idata);
-    EXPECT_EQ (recv_doubles[idata].check, recv_from);
-    EXPECT_NEAR (recv_doubles[idata].data, (double) idata + fraction, T8_PRECISION_EPS);
+    EXPECT_EQ ((*recv_ints)[idata].check, recv_from);
+    EXPECT_EQ ((*recv_ints)[idata].data, idata);
+    EXPECT_EQ ((*recv_doubles)[idata].check, recv_from);
+    EXPECT_NEAR ((*recv_doubles)[idata].data, (double) idata + fraction, T8_PRECISION_EPS);
   }
 #endif
 }
