@@ -32,6 +32,7 @@
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
+#include <t8_forest/t8_forest_adapt/t8_forest_adapt.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -58,16 +59,15 @@ T8_EXTERN_C_BEGIN ();
  *
  * \return 1 if the element(s) has/have to be refined, 0 otherwise.
  */
+
 static int
 t8_forest_balance_adapt (const t8_forest_t forest, const t8_locidx_t ltree_id,
-                         const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
-                         const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                         [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+                         [[maybe_unused]] const t8_locidx_t lelement_id, const t8_element_t *element,
+                         const t8_scheme_c *scheme, const t8_eclass_t tree_class)
 {
   int *pdone, iface, num_faces, num_half_neighbors, ineigh;
   t8_gloidx_t neighbor_tree;
   t8_eclass_t neigh_class;
-  const t8_element_t *element = elements[0];
   t8_element_t **half_neighbors;
 
   /* We only need to check an element, if its level is smaller then the maximum
@@ -77,28 +77,28 @@ t8_forest_balance_adapt (const t8_forest_t forest, const t8_locidx_t ltree_id,
    * If we enter from the check function is_balanced, then it may not be set.
    */
 
-  if (forest_from->maxlevel_existing <= 0
-      || scheme->element_get_level (tree_class, element) <= forest_from->maxlevel_existing - 2) {
+  if (forest->maxlevel_existing <= 0
+      || scheme->element_get_level (tree_class, element) <= forest->maxlevel_existing - 2) {
 
     pdone = (int *) forest->t8code_data;
 
     num_faces = scheme->element_get_num_faces (tree_class, element);
     for (iface = 0; iface < num_faces; iface++) {
       /* Get the element class and scheme of the face neighbor */
-      neigh_class = t8_forest_element_neighbor_eclass (forest_from, ltree_id, element, iface);
+      neigh_class = t8_forest_element_neighbor_eclass (forest, ltree_id, element, iface);
       /* Allocate memory for the number of half face neighbors */
       num_half_neighbors = scheme->element_get_num_face_children (tree_class, element, iface);
       half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
       scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
       /* Compute the half face neighbors of element at this face */
-      neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
-                                                             neigh_class, iface, num_half_neighbors, NULL);
+      neighbor_tree = t8_forest_element_half_face_neighbors (forest, ltree_id, element, half_neighbors, neigh_class,
+                                                             iface, num_half_neighbors, NULL);
       if (neighbor_tree >= 0) {
         /* The face neighbors do exist, check for each one, whether it has
          * local or ghost leaf descendants in the forest.
          * If so, the element will be refined. */
         for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
-          if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
+          if (t8_forest_element_has_leaf_desc (forest, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
             /* This element should be refined */
             *pdone = 0;
             /* clean-up */
@@ -364,8 +364,7 @@ t8_forest_is_balanced (t8_forest_t forest)
       const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
       /* Test if this element would need to be refined in the balance step.
        * If so, the forest is not balanced locally. */
-      if (t8_forest_balance_adapt (forest, forest, itree, tree_class, ielem, scheme, 0, 1,
-                                   (t8_element_t **) (&element))) {
+      if (t8_forest_balance_adapt (forest, itree, ielem, element, scheme, tree_class)) {
         forest->set_from = forest_from;
         forest->t8code_data = data_temp;
         return 0;

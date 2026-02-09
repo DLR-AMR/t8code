@@ -106,15 +106,11 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  * of the element array for refinement.
  * Entries of the element array beyond the first \a num_elements are undefined.
  * \param [in] forest       The forest to which the new elements belong.
- * \param [in] forest_from  The forest that is adapted.
  * \param [in] which_tree   The local tree containing \a elements.
- * \param [in] tree_class   The eclass of \a which_tree.
  * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
  * \param [in] scheme       The scheme of the forest.
- * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
- * \param [in] num_elements The number of entries in \a elements that are defined
- * \param [in] elements     Pointers to a family or, if \a is_family is zero,
- *                          pointer to one element.
+ * \param [in] element      Pointer to one element.
+ * \param [in] tree_class   The eclass of \a which_tree.
  * \return 1 if the first entry in \a elements should be refined,
  *        -1 if the family \a elements shall be coarsened,
  *        -2 if the first entry in \a elements should be removed,
@@ -122,8 +118,8 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  */
 /* TODO: Do we really need the forest argument? Since the forest is not committed yet it
  *       seems dangerous to expose to the user. */
-typedef int (*t8_forest_adapt_t) (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                          const t8_scheme_c *scheme, const t8_eclass_t tree_class);
+typedef int (*t8_forest_adapt_t) (const t8_forest_t forest, const t8_locidx_t which_tree, const t8_locidx_t lelement_id,
+                                  const t8_element_t *element, const t8_scheme_c *scheme, const t8_eclass_t tree_class);
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
