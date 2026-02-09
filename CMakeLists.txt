@@ -188,6 +188,9 @@ endif()
 
 mark_as_advanced( FORCE gtest_disable_mpi)
 
+message (STATUS "MPI support is ${MPI_FOUND}")
+message (STATUS "SC_ENABLE_MPI is ${SC_ENABLE_MPI}")
+
 
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED COMPONENTS
@@ -299,6 +302,8 @@ else()
         message(WARNING "mpi.h not found!")
     endif()
     ########################## End of fix for OpenMPI ############################################
+
+
 
     # Reactivate previous CMAKE_REQUIRED_FLAGS  
     set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
