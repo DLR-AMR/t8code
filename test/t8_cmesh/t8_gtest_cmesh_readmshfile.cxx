@@ -38,7 +38,7 @@
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 {
 
-  const char fileprefix[BUFSIZ - 4] = "test/testfiles/test_msh_file_vers4_ascii";
+  const char fileprefix[BUFSIZ - 4] = "testfiles/test_msh_file_vers4_ascii";
   char filename[BUFSIZ];
 
   snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
@@ -56,7 +56,7 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
 {
 
-  const char fileprefix[BUFSIZ - 4] = "test/testfiles/test_msh_file_vers4_bin";
+  const char fileprefix[BUFSIZ - 4] = "testfiles/test_msh_file_vers4_bin";
   char filename[BUFSIZ];
 
   snprintf (filename, BUFSIZ, "%s.msh", fileprefix);
