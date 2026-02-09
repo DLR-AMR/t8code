@@ -101,7 +101,7 @@ endfunction()
 
 # Copy test files to build folder so that the t8_test programs can find them.
 function( copy_test_file TEST_FILE_NAME )
-    configure_file(${CMAKE_CURRENT_LIST_DIR}/testfiles/${TEST_FILE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/test/testfiles/${TEST_FILE_NAME} COPYONLY)
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/testfiles/${TEST_FILE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/testfiles/${TEST_FILE_NAME} COPYONLY)
 endfunction()
 
 add_t8_cpp_test( NAME t8_gtest_cmesh_bcast_parallel     SOURCES t8_cmesh/t8_gtest_bcast.cxx )
@@ -111,7 +111,6 @@ add_t8_cpp_test( NAME t8_gtest_refcount_serial          SOURCES t8_gtest_refcoun
 add_t8_cpp_test( NAME t8_gtest_occ_linkage_serial       SOURCES t8_gtest_occ_linkage.cxx )
 add_t8_cpp_test( NAME t8_gtest_version_serial           SOURCES t8_gtest_version.cxx )
 add_t8_cpp_test( NAME t8_gtest_basics_serial            SOURCES t8_gtest_basics.cxx )
-add_t8_cpp_test( NAME t8_gtest_netcdf_linkage_serial    SOURCES t8_gtest_netcdf_linkage.cxx )
 add_t8_cpp_test( NAME t8_gtest_vtk_linkage_serial       SOURCES t8_gtest_vtk_linkage.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_type_serial                  SOURCES t8_types/t8_gtest_type.cxx )
@@ -175,7 +174,7 @@ add_t8_cpp_test( NAME t8_gtest_geometry_handling_serial                 SOURCES 
 add_t8_cpp_test( NAME t8_gtest_point_inside_serial                      SOURCES t8_geometry/t8_gtest_point_inside.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_vtk_writer_parallel          SOURCES t8_IO/t8_gtest_vtk_writer.cxx )
-if( T8_WITH_VTK )
+if( T8CODE_ENABLE_VTK )
     add_t8_cpp_test( NAME t8_gtest_vtk_reader_parallel      SOURCES t8_IO/t8_gtest_vtk_reader.cxx )
 endif()
 

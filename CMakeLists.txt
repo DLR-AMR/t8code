@@ -58,7 +58,6 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
-option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -257,7 +256,7 @@ else()
     # If theses warnings are interpreted as errors, the test fails even though we want it to pass.
     # This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
     set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
-    if (WIN32)
+    if (WIN32 AND NOT MINGW)
         set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w" )
     else()
         set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w" )

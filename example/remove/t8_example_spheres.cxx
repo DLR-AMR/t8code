@@ -27,8 +27,6 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_options.h>
 
-T8_EXTERN_C_BEGIN ();
-
 struct t8_adapt_data
 {
   const int num_spheres;
@@ -206,5 +204,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-T8_EXTERN_C_END ();

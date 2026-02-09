@@ -29,8 +29,6 @@
 #include <sc_options.h>
 #include <string>
 
-T8_EXTERN_C_BEGIN ();
-
 /** Removes all elements of a local tree if they belong to the corresponding
  *  global trees which is given by the user_data. */
 static int
@@ -162,5 +160,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-T8_EXTERN_C_END ();
