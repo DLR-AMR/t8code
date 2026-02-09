@@ -330,8 +330,9 @@ struct t8_vector_handler: public t8_abstract_vector_handler
    * \return An integer indicating the status of the send operation.
    */
   int
-  sendrecv (const int dest, const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status,
-            int &outcount) override
+  sendrecv ([[maybe_unused]] const int dest, [[maybe_unused]] const int source, [[maybe_unused]] const int tag,
+            [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] sc_MPI_Status *status,
+            [[maybe_unused]] int &outcount) override
   {
     {
 #if T8_ENABLE_MPI
