@@ -86,6 +86,29 @@ endif()
 # Set a default build type if none was specified
 set(default_build_type "Release")
 
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build. Build types available: Release Debug RelWithDebInfo" FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "RelWithDebInfo")
+endif()
+
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+  # Option to generate code coverage target.
+  option( T8CODE_CODE_COVERAGE "Enable code coverage reporting" OFF)
+  if(T8CODE_CODE_COVERAGE)
+    include(./cmake/CodeCoverage.cmake)
+  endif()
+endif()
+
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+if( T8CODE_BUILD_FORTRAN_INTERFACE )
+    enable_language( Fortran )
+endif()
+
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
       find_package( MPI 3.0 COMPONENTS C Fortran REQUIRED )
@@ -167,29 +190,6 @@ endforeach()
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 mark_as_advanced( FORCE gtest_force_shared_crt)
-
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
-  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
-      STRING "Choose the type of build. Build types available: Release Debug RelWithDebInfo" FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-    "Debug" "Release" "RelWithDebInfo")
-endif()
-
-if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-  # Option to generate code coverage target.
-  option( T8CODE_CODE_COVERAGE "Enable code coverage reporting" OFF)
-  if(T8CODE_CODE_COVERAGE)
-    include(./cmake/CodeCoverage.cmake)
-  endif()
-endif()
-
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-
-if( T8CODE_BUILD_FORTRAN_INTERFACE )
-    enable_language( Fortran )
-endif()
 
 
 if( T8CODE_ENABLE_VTK )
