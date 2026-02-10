@@ -140,9 +140,10 @@ class multiscale: public multiscale_data<TShape> {
   }
 
   /// Projection -> TODO auslagern
+  template <typename Func>
   void
   project (std::vector<double> &dg_coeffs, int tree_idx, const t8_element_t *element, const std::array<int, 3> &order,
-           std::function<std::array<double, U_DIM> (double, double)> &&func)
+           Func &&func)
   {
     double vertices[3][3];
     for (auto i = 0; i < 3; ++i)
@@ -185,7 +186,11 @@ class multiscale: public multiscale_data<TShape> {
         const auto y_deref = deref_quad_points[1 + 2 * j];
 
         const auto ref = DG_basis.ref_point (trafo_mat, perm, { x_deref, y_deref, 1.0 });
-        const auto f_val = func (x_deref, y_deref);
+        std::array<double, U_DIM> f_val;
+        if constexpr (std::is_invocable_v<decltype (func), double, double>)
+          f_val = func (x_deref, y_deref);
+        else
+          func (x_deref, y_deref, f_val.data ());
         const auto basis_val = DG_basis.basis_value (ref);
 
         // DEBUG: Print first few quadrature points for first element

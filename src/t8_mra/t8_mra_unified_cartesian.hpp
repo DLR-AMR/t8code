@@ -165,13 +165,28 @@ class multiscale<TShape, U, P>:
           x_phys[d] = phys_quad_points[Base::DIM * q + d];
 
         // Evaluate function at physical point
+        // Supports two calling conventions:
+        //   func(x, y, z) -> std::array<double, U>  (return value)
+        //   func(x, y, z, double* out)               (output pointer)
         std::array<double, Base::U_DIM> f_val;
-        if constexpr (Base::DIM == 1)
-          f_val = func (x_phys[0]);
-        else if constexpr (Base::DIM == 2)
-          f_val = func (x_phys[0], x_phys[1]);
-        else
-          f_val = func (x_phys[0], x_phys[1], x_phys[2]);
+        if constexpr (Base::DIM == 1) {
+          if constexpr (std::is_invocable_v<decltype (func), double>)
+            f_val = func (x_phys[0]);
+          else
+            func (x_phys[0], f_val.data ());
+        }
+        else if constexpr (Base::DIM == 2) {
+          if constexpr (std::is_invocable_v<decltype (func), double, double>)
+            f_val = func (x_phys[0], x_phys[1]);
+          else
+            func (x_phys[0], x_phys[1], f_val.data ());
+        }
+        else {
+          if constexpr (std::is_invocable_v<decltype (func), double, double, double>)
+            f_val = func (x_phys[0], x_phys[1], x_phys[2]);
+          else
+            func (x_phys[0], x_phys[1], x_phys[2], f_val.data ());
+        }
 
         // Accumulate quadrature sum: integral(f * phi_i)
         // Note: For orthonormal basis, the volume scaling cancels out

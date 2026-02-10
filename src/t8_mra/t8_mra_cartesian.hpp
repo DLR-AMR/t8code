@@ -225,13 +225,22 @@ class multiscale<TShape, U, P>: public multiscale_data<TShape> {
         // Evaluate function at physical quadrature point
         std::array<double, U_DIM> f_val;
         if constexpr (DIM == 1) {
-          f_val = func (x_phys[0]);
+          if constexpr (std::is_invocable_v<decltype (func), double>)
+            f_val = func (x_phys[0]);
+          else
+            func (x_phys[0], f_val.data ());
         }
         else if constexpr (DIM == 2) {
-          f_val = func (x_phys[0], x_phys[1]);
+          if constexpr (std::is_invocable_v<decltype (func), double, double>)
+            f_val = func (x_phys[0], x_phys[1]);
+          else
+            func (x_phys[0], x_phys[1], f_val.data ());
         }
         else if constexpr (DIM == 3) {
-          f_val = func (x_phys[0], x_phys[1], x_phys[2]);
+          if constexpr (std::is_invocable_v<decltype (func), double, double, double>)
+            f_val = func (x_phys[0], x_phys[1], x_phys[2]);
+          else
+            func (x_phys[0], x_phys[1], x_phys[2], f_val.data ());
         }
 
         // Accumulate quadrature sum: integral(f * phi_i)
