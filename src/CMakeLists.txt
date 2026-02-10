@@ -146,7 +146,6 @@ if( T8CODE_ENABLE_MRA )
 
   target_sources( T8 PRIVATE
     t8_mra/t8_unordered_dense.cxx
-    t8_mra/t8_mra.cxx
     t8_mra/vecmat.cxx
     t8_mra/num/basis_functions.cxx
     t8_mra/num/dunavant.cxx
@@ -163,7 +162,6 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/data/levelmultiindex.hpp
     t8_mra/data/triangle_order.hpp
     t8_mra/t8_unordered_dense.hxx
-    t8_mra/t8_mra.hxx
     t8_mra/vecmat.hxx
     t8_mra/num/basis_functions.hxx
     t8_mra/num/dunavant.hxx

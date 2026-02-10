@@ -309,7 +309,7 @@ example_hex_adaptive_with_plotting ()
   constexpr int U = 1;
   constexpr int P = 2;
   const int min_level = 0;
-  const int max_level = 6;  // Lower max level for 3D (8^4 = 4096 elements)
+  const int max_level = 4;  // Lower max level for 3D (8^4 = 4096 elements)
   const double c_thresh = 1.0;
   const int gamma = 1;
   const int num_quad_points_1d = 4;
