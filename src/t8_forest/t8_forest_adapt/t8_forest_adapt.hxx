@@ -417,12 +417,12 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
 
     /* print adapt actions */
     for (const auto &action : actions) {
-      t8_debugf ("Adapt action: %d\n", int(action));
+      t8_debugf ("Adapt action: %d\n", int (action));
     }
     const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest_from);
     /* Get the scheme used by the forest */
     const t8_scheme *scheme = t8_forest_get_scheme (forest_from);
-    
+
     for (t8_locidx_t ltree_id = 0; ltree_id < num_trees; ltree_id++) {
       /* Offset per tree in the source forest */
       t8_locidx_t el_offset = 0;
