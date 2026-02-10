@@ -23,7 +23,7 @@
 #ifndef T8_GTEST_cmesh_sum_of_sets_HXX
 #define T8_GTEST_cmesh_sum_of_sets_HXX
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
 
 T8_EXTERN_C_BEGIN ();
 

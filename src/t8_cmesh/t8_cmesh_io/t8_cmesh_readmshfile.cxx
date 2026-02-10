@@ -109,7 +109,7 @@ const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
  *                          the new number of bytes is stored in n.
  * \param [in]     fp       The file stream to read from.
  * \return                  The number of read arguments of the last line read.
- *                          negative on failure 
+ *                          negative on failure
  */
 static int
 t8_cmesh_msh_read_next_line (char **line, size_t *n, FILE *fp)
@@ -546,110 +546,6 @@ t8_msh_file_4_read_nodes (FILE *fp)
   return std::make_optional<t8_msh_node_table> (node_table);
 }
 
-#if T8_ENABLE_OCC
-/** Corrects the parameters on closed geometries to prevent disorted elements.
- * \param [in]      geometry_dim    The dimension of the geometry.
- *                                  1 for edges, 2 for surfaces.
- * \param [in]      geometry_index  The index of the geometry.
- * \param [in]      num_face_nodes  The number of the nodes of the surface.
- *                                  NULL if the geometry is an edge.
- * \param [in]      geometry_cad    The cad_geometry.
- * \param [in,out]  parameters      The parameters to be corrected.
- */
-static void
-t8_cmesh_correct_parameters_on_closed_geometry (const int geometry_dim, const int geometry_index,
-                                                const int num_face_nodes, const t8_geometry_cad *geometry_cad,
-                                                double *parameters)
-{
-  switch (geometry_dim) {
-    /* Check for closed U parameter in case of an edge. */
-  case 1:
-    /* Only correct the U parameter if the edge is closed. */
-    if (geometry_cad->get_cad_manager ()->t8_geom_is_edge_closed (geometry_index)) {
-      /* Get the parametric bounds of the closed geometry
-       * edge    -> [Umin, Umax]
-       */
-      double parametric_bounds[2];
-      /* Get the parametric edge bounds. */
-      geometry_cad->get_cad_manager ()->t8_geom_get_edge_parametric_bounds (geometry_index, parametric_bounds);
-      /* Check the upper an the lower parametric bound. */
-      for (int bound = 0; bound < 2; ++bound) {
-        /* Iterate over both nodes of the edge. */
-        for (int i_nodes = 0; i_nodes < 2; ++i_nodes) {
-          /* Check if one of the U parameters lies on one of the parametric bounds. */
-          if (std::abs (parameters[i_nodes] - parametric_bounds[bound]) <= T8_PRECISION_EPS) {
-            /* Check the U parameter of the other node ((i_node + 1) % 2) to find out
-             * to which parametric bound the tree is closer.
-             */
-            if (std::abs (parameters[(i_nodes + 1) % 2] - parametric_bounds[bound]) > T8_PRECISION_EPS) {
-              /* Now check if the difference of the parameters of both nodes are bigger than the half parametric range.
-               * In this case, the parameter at i_nodes has to be changed to the other parametric bound ((bound + 1) % 2).
-               */
-              if (std::abs (parameters[(i_nodes + 1) % 2] - parameters[i_nodes])
-                  > ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
-                /* Switch to the other parametric bound. */
-                parameters[i_nodes] = parametric_bounds[(bound + 1) % 2];
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-    break;
-
-    /* Check for closed U parameter and closed V parameter in case of a surface. */
-  case 2:
-    /* Iterate over both parameters. 0 stands for the U parameter an 1 for the V parameter. */
-    for (int param_dim = 0; param_dim < 2; ++param_dim) {
-      /* Only correct the surface parameters if they are closed */
-      if (geometry_cad->get_cad_manager ()->t8_geom_is_surface_closed (geometry_index, param_dim)) {
-        /* Get the parametric bounds of the closed geometry
-         * surface -> [Umin, Umax, Vmin, Vmax]
-         */
-        double parametric_bounds[4];
-        geometry_cad->get_cad_manager ()->t8_geom_get_face_parametric_bounds (geometry_index, parametric_bounds);
-        /* Check the upper an the lower parametric bound. */
-        for (int bound = 0; bound < 2; ++bound) {
-          /* Iterate over every corner node of the tree. */
-          for (int i_nodes = 0; i_nodes < num_face_nodes; ++i_nodes) {
-            /* Check if one of the U parameters lies on one of the parametric bounds. */
-            if (std::abs (parameters[2 * i_nodes + param_dim] - parametric_bounds[bound + 2 * param_dim])
-                <= T8_PRECISION_EPS) {
-              /* Iterate over every corner node of the tree again. */
-              for (int j_nodes = 0; j_nodes < num_face_nodes; ++j_nodes) {
-                /* Search for a U parameter that is non of the parametric bounds. To check
-                 * whether the tree is closer to the lower or the upper parametric bound.
-                 */
-                if (std::abs (parameters[2 * j_nodes + param_dim] - parametric_bounds[bound + 2 * param_dim])
-                      > T8_PRECISION_EPS
-                    && std::abs (parameters[2 * j_nodes + param_dim]
-                                 - parametric_bounds[((bound + 1) % 2) + 2 * param_dim])
-                         > T8_PRECISION_EPS) {
-                  /* Now check if the difference of the parameters of both nodes are bigger than the half parametric range.
-                   * In this case, the parameter at i_nodes has to be changed to the other parametric bound ((bound + 1) % 2).
-                   */
-                  if (std::abs (parameters[2 * j_nodes + param_dim] - parameters[2 * i_nodes + param_dim])
-                      > ((parametric_bounds[1 + 2 * param_dim] - parametric_bounds[0 + 2 * param_dim]) / 2)) {
-                    /* Switch to the other parametric bound. */
-                    parameters[2 * i_nodes + param_dim] = parametric_bounds[((bound + 1) % 2) + 2 * param_dim];
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-    break;
-  }
-}
-#endif /* T8_ENABLE_OCC */
-
 /**
  * This function stores the entity dimensions, tags, and parameters of each node in a given
  * tree in arrays. These arrays are then passed to the tree as attributes in cmesh.
@@ -701,18 +597,13 @@ t8_store_element_node_data (t8_cmesh_t cmesh, t8_gloidx_t tree_count,
  * \param [in] cad_geometry_base A pointer to the CAD-based geometry object.
  * \param [in] linear_geometry_base A pointer to the linear geometry object.
  * \param [in] tree_nodes An array of nodes representing the vertices of the tree.
- * \param [in] face_nodes An array of nodes representing the faces of the tree.
- * \param [in] edge_nodes An array of nodes representing the edges of the tree.
- *
  * \return True if the tree geometry was successfully processed; false otherwise.
- *
  */
 static bool
-t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t8_gloidx_t tree_count,
-                                const t8_geometry_c *cad_geometry_base, const t8_geometry_c *linear_geometry_base,
-                                std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS> tree_nodes,
-                                std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS_2D> face_nodes,
-                                std::array<t8_msh_file_node, 2> edge_nodes)
+t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass, const int dim,
+                                const t8_gloidx_t tree_count, const t8_geometry_c *cad_geometry_base,
+                                const t8_geometry_c *linear_geometry_base,
+                                const std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS> &tree_nodes)
 {
   /* Calculate the parametric geometries of the tree */
   T8_ASSERT (cad_geometry_base->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD);
@@ -747,27 +638,34 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
   default:
     SC_ABORTF ("Invalid dimension of tree. Dimension: %i\n", dim);
   }
+
   for (int i_tree_faces = 0; i_tree_faces < num_faces; ++i_tree_faces) {
     const int face_eclass = dim == 2 ? eclass : t8_eclass_face_types[eclass][i_tree_faces];
     const int num_face_nodes = t8_eclass_num_vertices[face_eclass];
     const int num_face_edges = t8_eclass_num_faces[face_eclass];
+    std::vector<t8_msh_file_node> face_nodes;
+    face_nodes.reserve (T8_ECLASS_MAX_CORNERS_2D);
+
+    /*----------------------------------------- Start of face-surface linkage -----------------------------------------*/
 
     /* Save each node of face separately. Face nodes of 2D elements are also tree nodes.
-             * Face nodes of 3D elements need to be translated to tree nodes. */
+     * Face nodes of 3D elements need to be translated to tree nodes. */
     for (int i_face_node = 0; i_face_node < num_face_nodes; ++i_face_node) {
       if (dim == 2) {
-        face_nodes[i_face_node] = tree_nodes[i_face_node];
+        face_nodes.push_back (tree_nodes[i_face_node]);
+        T8_ASSERT (num_faces == 1);
       }
       else {
-        face_nodes[i_face_node] = tree_nodes[t8_face_vertex_to_tree_vertex[eclass][i_tree_faces][i_face_node]];
+        face_nodes.push_back (tree_nodes[t8_face_vertex_to_tree_vertex[eclass][i_tree_faces][i_face_node]]);
       }
     }
+    T8_ASSERT (face_nodes.size () == (size_t) num_face_nodes);
 
-    /* A face can only be linked to an cad surface if all nodes of the face are parametric or on a vertex
-             * (gmsh labels nodes on vertices as not parametric) */
+    /* A face can only be linked to a cad surface if all nodes of the face are parametric or on a vertex
+     * (gmsh labels nodes on vertices as not parametric) */
     int all_parametric = 1;
-    for (int i_face_nodes = 0; i_face_nodes < num_face_nodes; ++i_face_nodes) {
-      if (!face_nodes[i_face_nodes].parametric && face_nodes[i_face_nodes].entity_dim != 0) {
+    for (auto &face_node : face_nodes) {
+      if (!face_node.parametric && face_node.entity_dim != 0) {
         all_parametric = 0;
         break;
       }
@@ -777,47 +675,50 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
       continue;
     }
     /* Now we can check if the face is connected to a surface */
-    int surface_index = 0;
+    int surface_index = 0; /** Index of the cad surface we link the element face to. */
     /* If one node is already on a surface we can check if the rest lies also on the surface. */
-    for (int i_face_nodes = 0; i_face_nodes < num_face_nodes; ++i_face_nodes) {
-      if (face_nodes[i_face_nodes].entity_dim == 2) {
-        surface_index = face_nodes[i_face_nodes].entity_tag;
+    for (auto &face_node : face_nodes) {
+      if (face_node.entity_dim == 2) {
+        surface_index = face_node.entity_tag;
         break;
       }
     }
     /* If not we can take two curves and look if they share a surface and then use this surface */
     if (!surface_index) {
       /* To do this we can look if there are two curves, otherwise we have to check which vertices
-               * share the same curve. */
+       * share the same curve. */
       int edge1_index = 0;
       int edge2_index = 0;
       /* We search for 2 different curves */
-      for (int i_face_nodes = 0; i_face_nodes < num_face_nodes; ++i_face_nodes) {
-        if (face_nodes[i_face_nodes].entity_dim == 1) {
+      for (auto &face_node : face_nodes) {
+        if (face_node.entity_dim == 1) {
           if (edge1_index == 0) {
-            edge1_index = face_nodes[i_face_nodes].entity_tag;
+            /* Fill the first edge index. */
+            edge1_index = face_node.entity_tag;
           }
-          else if (face_nodes[i_face_nodes].entity_tag != edge1_index) {
-            edge2_index = face_nodes[i_face_nodes].entity_tag;
+          else if (face_node.entity_tag != edge1_index) {
+            /* Fill the second index if the first one is already filled. */
+            edge2_index = face_node.entity_tag;
             break;
           }
         }
       }
-      /* If there are less than 2 curves we can look at the vertices and check,
-               * if two of them are on the same curve */
+      /* We now have either 0 curves, 1 curve or 2 curves. But we need at least 2 curves to continue.
+       * So if we have less than 2 curves we can check if two vertices share the same curve
+       * and use these to fill our two curves. */
       if (edge2_index == 0) {
         /* For each edge of face */
         for (int i_face_edges = 0; i_face_edges < num_face_edges; ++i_face_edges) {
           /* Save nodes separately */
-          const int node1_number = t8_face_vertex_to_tree_vertex[face_eclass][i_tree_faces][0];
+          const int node1_number = t8_face_vertex_to_tree_vertex[face_eclass][i_face_edges][0];
           const t8_msh_file_node node1 = face_nodes[node1_number];
-          const int node2_number = t8_face_vertex_to_tree_vertex[face_eclass][i_tree_faces][1];
+          const int node2_number = t8_face_vertex_to_tree_vertex[face_eclass][i_face_edges][1];
           const t8_msh_file_node node2 = face_nodes[node2_number];
 
           /* If both nodes are on a vertex we look if both vertices share an edge */
           if (node1.entity_dim == 0 && node2.entity_dim == 0) {
-            int common_edge
-              = cad_geometry->get_cad_manager ()->t8_geom_get_common_edge (node1.entity_tag, node2.entity_tag);
+            int common_edge = cad_geometry->get_cad_manager ()->t8_geom_get_common_edge_of_vertices (node1.entity_tag,
+                                                                                                     node2.entity_tag);
             if (common_edge > 0) {
               if (edge1_index == 0) {
                 edge1_index = common_edge;
@@ -830,8 +731,9 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
           }
         }
       }
+      /* If the face is linked to a surface we should now have two curves and we can check if both share a surface. */
       if (edge2_index > 0) {
-        surface_index = cad_geometry->get_cad_manager ()->t8_geom_get_common_face (edge1_index, edge2_index);
+        surface_index = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_edges (edge1_index, edge2_index);
       }
       else {
         continue;
@@ -839,55 +741,92 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
     }
     /* Now we can check if every node lies on the surface and retrieve its parameters */
     if (surface_index) {
-      int all_nodes_on_surface = 1;
-      for (int i_face_nodes = 0; i_face_nodes < num_face_nodes; ++i_face_nodes) {
-        /* We check if the node is on the right surface */
-        if (face_nodes[i_face_nodes].entity_dim == 2) {
-          /* Check if node is on the right surface */
-          if (face_nodes[i_face_nodes].entity_tag != surface_index) {
+      bool all_nodes_on_surface = 1;
+      /* If the surface is closed in any direction we may need some reference parameters on the surface.
+         These reference parameters can be used to find the right parameters if we need to convert
+         seam edge parameters to the face parameters. */
+      std::optional<std::array<double, 2>> reference_parameters_on_surface (std::nullopt);
+      /* We iterate twice over all face nodes. The first time we look, if all nodes are on the right surface and
+         search for the reference parameters. In the second loop we convert all coordinates which are not directly on that surface. */
+      for (auto face_node = face_nodes.begin (); face_node != face_nodes.end () && all_nodes_on_surface; ++face_node) {
+        switch (face_node->entity_dim) {
+        case 2:
+          /* If the node is on the surface, we can use its parameters as reference parameters. */
+          if (face_node->entity_tag == surface_index) {
+            if (!reference_parameters_on_surface)
+              reference_parameters_on_surface = face_node->parameters;
+          }
+          /* If not we can stop the face linkage. */
+          else {
             all_nodes_on_surface = 0;
-            break;
           }
-        }
-        else {
-          /* If it is on another geometry we retrieve its parameters */
-          if (face_nodes[i_face_nodes].entity_dim == 0) {
-            if (cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (face_nodes[i_face_nodes].entity_tag,
-                                                                             surface_index)) {
-              cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
-                face_nodes[i_face_nodes].entity_tag, surface_index, face_nodes[i_face_nodes].parameters.data ());
-              face_nodes[i_face_nodes].entity_dim = 2;
-            }
-            else {
-              all_nodes_on_surface = 0;
-              break;
-            }
-          }
-          if (face_nodes[i_face_nodes].entity_dim == 1) {
-            if (cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (face_nodes[i_face_nodes].entity_tag,
-                                                                           surface_index)) {
+          break;
+        case 1:
+          /* If the edge is on the face we can check if it is a seam and if not we can use its parameters as reference. */
+          if (cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (face_node->entity_tag, surface_index)) {
+            if (!reference_parameters_on_surface
+                && !cad_geometry->get_cad_manager ()->t8_geom_edge_is_seam (face_node->entity_tag, surface_index)) {
+              reference_parameters_on_surface.emplace ();
               cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
-                face_nodes[i_face_nodes].entity_tag, surface_index, num_face_nodes,
-                face_nodes[i_face_nodes].parameters[0], NULL, face_nodes[i_face_nodes].parameters.data ());
-              face_nodes[i_face_nodes].entity_dim = 2;
-            }
-            else {
-              all_nodes_on_surface = 0;
-              break;
+                face_node->entity_tag, surface_index, face_node->parameters[0],
+                reference_parameters_on_surface.value ().data ());
             }
           }
+          /* If the edge is not on the face, we can stop the face linkage. */
+          else {
+            all_nodes_on_surface = 0;
+          }
+          break;
+        case 0:
+          /* If the vertex is not on the face, we can stop the face linkage.
+             We do not have to check for reference parameters since a closed face linked to four vertices makes no sense. */
+          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (face_node->entity_tag, surface_index))
+            all_nodes_on_surface = 0;
+          break;
+        default:
+          SC_ABORT_NOT_REACHED ();
         }
       }
       /* Abort if not all nodes are on the surface or if the surface is a plane */
       if (!all_nodes_on_surface || cad_geometry->get_cad_manager ()->t8_geom_is_plane (surface_index)) {
         continue;
       }
+
+      if (!reference_parameters_on_surface.has_value ()) {
+        t8_global_errorf ("Error during mesh-cad recombination: Reference parameters on surface not found.\n");
+        return 0;
+      }
+
+      /* We iterate again to convert all parameters. */
+      for (auto &face_node : face_nodes) {
+        switch (face_node.entity_dim) {
+        case 2:
+          /* Nothing to do. */
+          break;
+        case 1:
+          cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+            face_node.entity_tag, surface_index, face_node.parameters[0], face_node.parameters.data (),
+            reference_parameters_on_surface);
+          face_node.entity_dim = 2;
+          face_node.entity_tag = surface_index;
+          break;
+        case 0:
+          cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+            face_node.entity_tag, surface_index, face_node.parameters.data (), reference_parameters_on_surface);
+          face_node.entity_dim = 2;
+          face_node.entity_tag = surface_index;
+          break;
+        default:
+          SC_ABORT_NOT_REACHED ();
+        }
+      }
+
       /* If we have found a surface we link it to the face */
       face_geometries[i_tree_faces] = surface_index;
       tree_is_linked = 1;
       for (int i_face_edges = 0; i_face_edges < num_face_edges; ++i_face_edges) {
         /* We lock the edges of the face for surfaces, so that we do not link the same surface again
-                 * to the edges of the face */
+         * to the edges of the face */
         if (dim == 2) /* 2D */
         {
           edge_geometries[i_face_edges + t8_eclass_num_edges[eclass]] = -1;
@@ -903,21 +842,20 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
         parameters[i_face_nodes * 2] = face_nodes[i_face_nodes].parameters[0];
         parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
       }
-      /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
-      for (int param_dim = 0; param_dim < 2; ++param_dim) {
-        if (cad_geometry->get_cad_manager ()->t8_geom_is_surface_closed (surface_index, param_dim)) {
-          t8_cmesh_correct_parameters_on_closed_geometry (2, surface_index, num_face_nodes, cad_geometry, parameters);
-        }
-      }
 
       t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
                               T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_tree_faces, parameters,
                               num_face_nodes * 2 * sizeof (double), 0);
     }
   }
+  /*----------------------------------------- End of face-surface linkage -----------------------------------------*/
+
+  /*----------------------------------------- Start of edge linkage -----------------------------------------*/
   const int num_edges = t8_eclass_num_edges[eclass];
-  /* Then we look for geometries linked to the edges */
   for (int i_tree_edges = 0; i_tree_edges < num_edges; ++i_tree_edges) {
+    std::array<t8_msh_file_node, 2> edge_nodes;
+    /* Save edge nodes separately. We have to distinct between eclass dimension because
+     * the geometrical edge of a 2D element is counted as face for flux computation. */
     if (t8_eclass_to_dimension[eclass] == 3) {
       edge_nodes[0] = tree_nodes[t8_edge_vertex_to_tree_vertex[eclass][i_tree_edges][0]];
       edge_nodes[1] = tree_nodes[t8_edge_vertex_to_tree_vertex[eclass][i_tree_edges][1]];
@@ -932,7 +870,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
       continue;
     }
     /* An edge can be linked to a curve as well as a surface.
-             * Therefore, we have to save the geometry dim and tag */
+     * Therefore, we have to save the geometry dim and tag */
     int edge_geometry_dim = 0;
     int edge_geometry_tag = 0;
     /* We check which is the highest dim a node geometry has and what is its tag */
@@ -954,8 +892,8 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
       continue;
     }
 
-    /* If one vertex lies on a geometry of a higher dim as the other, we have to check,
-             * if the geometry of lower dimension is on that geometry. */
+    /* If one node lies on a geometry of a higher dim as the other, we have to check,
+     * if the geometry of lower dimension is also on that same geometry. */
     {
       int is_on_geom = 1;
       for (int i_edge = 0; i_edge < 2; ++i_edge) {
@@ -981,87 +919,160 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
           }
         }
       }
+      /* It is still possible that one node is on an edge and the other on a vertex and if so,
+       * they could share a surface.
+                                    common
+                                    surface
+                                 |          |
+                                 |          x node on edge
+                                 |         /|
+                                 |  edge /  |
+                                 |     /    |
+                                 |   /      |
+                                 | /        |
+                  node on vertex x----------x vertex
+       */
       if (!is_on_geom) {
-        continue;
+        int common_face = 0;
+        if (edge_nodes[0].entity_dim == 1 && edge_nodes[1].entity_dim == 0)
+          common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertex_and_edge (
+            edge_nodes[1].entity_tag, edge_nodes[0].entity_tag);
+        if (edge_nodes[1].entity_dim == 1 && edge_nodes[0].entity_dim == 0)
+          common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertex_and_edge (
+            edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+        /* If a common face exists we can save it. */
+        if (common_face > 0) {
+          edge_geometry_dim = 2;
+          edge_geometry_tag = common_face;
+        }
+        else
+          /* Otherwise we discard the whole edge */
+          continue;
       }
     }
 
-    /* If both nodes are on a vertex we still got no edge.
-             * But we can look if both vertices share an edge and use this edge.
-             * If not we can skip this edge. */
+    /* If both nodes are on a vertex we still got no edge or face.
+     * But we can look if both vertices share an edge/face and use this edge/face.
+     * If not we can skip this edge. */
     if (edge_geometry_dim == 0 && edge_geometry_tag == 0) {
-      int common_curve = cad_geometry->get_cad_manager ()->t8_geom_get_common_edge (edge_nodes[0].entity_tag,
-                                                                                    edge_nodes[1].entity_tag);
-      if (common_curve > 0) {
-        edge_geometry_tag = common_curve;
+      int common_edge = cad_geometry->get_cad_manager ()->t8_geom_get_common_edge_of_vertices (
+        edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+      if (common_edge > 0) {
+        edge_geometry_tag = common_edge;
         edge_geometry_dim = 1;
       }
       else {
-        continue;
+        int common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertices (
+          edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+        if (common_face > 0) {
+          edge_geometry_tag = common_face;
+          edge_geometry_dim = 2;
+        }
+        else {
+          continue;
+        }
       }
     }
     /* If both nodes are on different edges we have to look if both edges share a surface.
-             * If not we can skip this edge */
+     * If not we can skip this edge */
     if (edge_nodes[0].entity_dim == 1 && edge_nodes[1].entity_dim == 1
         && edge_nodes[0].entity_tag != edge_nodes[1].entity_tag) {
-      int common_surface = cad_geometry->get_cad_manager ()->t8_geom_get_common_face (edge_nodes[0].entity_tag,
-                                                                                      edge_nodes[1].entity_tag);
-      if (common_surface > 0) {
-        edge_geometry_tag = common_surface;
+      int common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_edges (edge_nodes[0].entity_tag,
+                                                                                            edge_nodes[1].entity_tag);
+      if (common_face > 0) {
+        edge_geometry_tag = common_face;
         edge_geometry_dim = 2;
       }
       else {
         continue;
       }
     }
+
+    /*----------------------------------------- Start of edge-curve linkage -----------------------------------------*/
     /* If we have found a curve we can look for the parameters */
     if (edge_geometry_dim == 1) {
+
+      /* Abort if the edge is a line. If the edge is a line, the curved computation would
+       * only result in more computational overhead. */
+      if (cad_geometry->get_cad_manager ()->t8_geom_is_line (edge_geometry_tag)) {
+        continue;
+      }
+
       /* Check if adjacent faces carry a surface and if this edge lies on the surface */
       for (int i_adjacent_face = 0; i_adjacent_face < 2; ++i_adjacent_face) {
         if (face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]] > 0) {
           if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (
                 edge_geometry_tag, face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]])) {
-            t8_global_errorf ("Error: Adjacent edge and face of a tree carry "
+            t8_global_errorf ("Error during mesh-cad recombination: Adjacent edge and face of a tree carry "
                               "incompatible geometries.\n");
             return 0;
           }
         }
       }
-      for (int i_edge_node = 0; i_edge_node < 2; ++i_edge_node) {
+
+      /* We now know that both vertices are on the same edge.
+         Next, we iterate twice over both vertices. In the first iteration we do
+         some sanity checks and try to find a parameter which is not on a seam.
+         Because when one of the nodes is on a vertex which is on the seam of the edge,
+         there are two possible solutions for conversion.
+         In the second iteration, we convert the parameters using the reference param. */
+      std::optional<double> reference_param = std::nullopt;
+      for (const auto &edge_node : edge_nodes) {
         /* Some error checking */
-        if (edge_nodes[i_edge_node].entity_dim == 2) {
-          t8_global_errorf ("Error: Node %li should lie on a vertex or an edge, "
+        if (edge_node.entity_dim == 2) {
+          t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a vertex or an edge, "
                             "but it lies on a surface.\n",
-                            edge_nodes[i_edge_node].index);
+                            edge_node.index);
           return 0;
         }
-        if (edge_nodes[i_edge_node].entity_dim == 1 && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
-          t8_global_errorf ("Error: Node %li should lie on a specific edge, "
+        if (edge_node.entity_dim == 1 && edge_node.entity_tag != edge_geometry_tag) {
+          t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a specific edge, "
                             "but it lies on another edge.\n",
-                            edge_nodes[i_edge_node].index);
+                            edge_node.index);
           return 0;
         }
-        if (edge_nodes[i_edge_node].entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_nodes[i_edge_node].entity_tag,
-                                                                            edge_geometry_tag)) {
-            t8_global_errorf ("Error: Node %li should lie on a vertex which lies on an edge, "
-                              "but the vertex does not lie on that edge.\n",
-                              edge_nodes[i_edge_node].index);
+        if (edge_node.entity_dim == 0) {
+          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag)) {
+            t8_global_errorf (
+              "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on an edge, "
+              "but the vertex does not lie on that edge.\n",
+              edge_node.index);
             return 0;
           }
         }
 
-        /* If the node lies on a vertex we retrieve its parameter on the curve */
-        if (edge_nodes[i_edge_node].entity_dim == 0) {
-          cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
-            edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters.data ());
-          edge_nodes[i_edge_node].entity_dim = 1;
+        if (!reference_param.has_value ()) {
+          switch (edge_node.entity_dim) {
+          case 1:
+            /* If the node is on the curve, we can directly use its parameter as reference. */
+            reference_param = edge_node.parameters[0];
+            break;
+          case 0:
+            /* If the node is on a vertex we can convert the parameters safely if the vertex os not the seam of the edge. */
+            if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
+              reference_param.emplace ();
+              cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
+                edge_node.entity_tag, edge_geometry_tag, &reference_param.value ());
+            }
+            break;
+          default:
+            SC_ABORT_NOT_REACHED ();
+          }
         }
       }
 
-      /* Abort if the edge is a line */
-      if (cad_geometry->get_cad_manager ()->t8_geom_is_line (edge_geometry_tag)) {
-        continue;
+      if (!reference_param.has_value ()) {
+        t8_global_errorf ("Error during mesh-cad recombination: Reference parameter on curve not found.\n");
+        return 0;
+      }
+
+      for (auto &edge_node : edge_nodes) {
+        /* If the node lies on a vertex we retrieve its parameter on the curve */
+        if (edge_node.entity_dim == 0) {
+          cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
+            edge_node.entity_tag, edge_geometry_tag, edge_node.parameters.data (), reference_param);
+          edge_node.entity_dim = 1;
+        }
       }
 
       edge_geometries[i_tree_edges] = edge_geometry_tag;
@@ -1069,64 +1080,104 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
       parameters[0] = edge_nodes[0].parameters[0];
       parameters[1] = edge_nodes[1].parameters[0];
 
-      /* Corrects the parameters on the edge if it is closed to prevent disorted elements. */
-      if (cad_geometry->get_cad_manager ()->t8_geom_is_edge_closed (edge_geometry_tag)) {
-        t8_cmesh_correct_parameters_on_closed_geometry (1, edge_geometry_tag, 2, cad_geometry, parameters);
-      }
-
       t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
                               T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
                               2 * sizeof (double), 0);
     }
+    /*----------------------------------------- End of edge-curve linkage -----------------------------------------*/
+
+    /*----------------------------------------- Start of edge-surface linkage -----------------------------------------*/
     /* If we have found a surface we can look for the parameters.
-             * If the edge is locked for edges on surfaces we have to skip this edge */
+     * If the edge is locked for edges on surfaces we have to skip this edge */
     else if (edge_geometry_dim == 2 && edge_geometries[i_tree_edges + num_edges] >= 0) {
-      /* If the node lies on a geometry with a different dimension we try to retrieve the parameters */
-      for (int i_edge_node = 0; i_edge_node < 2; ++i_edge_node) {
+
+      /* We also skip this edge if the edge is on a plane. Planes have no curvature and
+       * therefore only result in computational overhead. */
+      if (cad_geometry->get_cad_manager ()->t8_geom_is_plane (edge_geometry_tag)) {
+        continue;
+      }
+
+      /* We now know that both vertices are on the same edge.
+         Next, we iterate twice over both vertices. In the first iteration we do
+         some sanity checks and try to find a parameter which is not on a seam.
+         Because when one of the nodes is on a vertex which is on the seam of the edge,
+         there are two possible solutions for conversion.
+         In the second iteration, we convert the parameters using the reference param. */
+      std::optional<std::array<double, 2>> reference_params = std::nullopt;
+      for (const auto &edge_node : edge_nodes) {
         /* Some error checking */
-        if (edge_nodes[i_edge_node].entity_dim == 2 && edge_nodes[i_edge_node].entity_tag != edge_geometry_tag) {
-          t8_global_errorf ("Error: Node %li should lie on a specific face, but it lies on another face.\n",
-                            edge_nodes[i_edge_node].index);
+        if (edge_node.entity_dim == 2 && edge_node.entity_tag != edge_geometry_tag) {
+          t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a specific face, but it lies "
+                            "on another face.\n",
+                            edge_node.index);
           return 0;
         }
-        if (edge_nodes[i_edge_node].entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_nodes[i_edge_node].entity_tag,
-                                                                            edge_geometry_tag)) {
-            t8_global_errorf ("Error: Node %li should lie on a vertex which lies on a face, "
-                              "but the vertex does not lie on that face.\n",
-                              edge_nodes[i_edge_node].index);
+        if (edge_node.entity_dim == 0) {
+          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_node.entity_tag, edge_geometry_tag)) {
+            t8_global_errorf (
+              "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on a face, "
+              "but the vertex does not lie on that face.\n",
+              edge_node.index);
             return 0;
           }
         }
-        if (edge_nodes[i_edge_node].entity_dim == 1) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_nodes[i_edge_node].entity_tag,
-                                                                          edge_geometry_tag)) {
-            t8_global_errorf ("Error: Node %li should lie on an edge which lies on a face, "
-                              "but the edge does not lie on that face.\n",
-                              edge_nodes[i_edge_node].index);
+        if (edge_node.entity_dim == 1) {
+          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_node.entity_tag, edge_geometry_tag)) {
+            t8_global_errorf (
+              "Error during mesh-cad recombination: Node %li should lie on an edge which lies on a face, "
+              "but the edge does not lie on that face.\n",
+              edge_node.index);
             return 0;
           }
         }
-
-        /* If the node lies on a vertex we retrieve its parameters on the surface */
-        if (edge_nodes[i_edge_node].entity_dim == 0) {
-          cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
-            edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, edge_nodes[i_edge_node].parameters.data ());
-          edge_nodes[i_edge_node].entity_dim = 2;
-        }
-        /* If the node lies on an edge we have to do the same */
-        if (edge_nodes[i_edge_node].entity_dim == 1) {
-          const int num_face_nodes = t8_eclass_num_vertices[eclass];
-          cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
-            edge_nodes[i_edge_node].entity_tag, edge_geometry_tag, num_face_nodes,
-            edge_nodes[i_edge_node].parameters[0], parameters, edge_nodes[i_edge_node].parameters.data ());
-          edge_nodes[i_edge_node].entity_dim = 2;
+        if (!reference_params.has_value ()) {
+          switch (edge_node.entity_dim) {
+          case 2:
+            /* If the node is on the surface, we can directly use its parameter as reference. */
+            reference_params = edge_node.parameters;
+            break;
+          case 1:
+            /* If the node is on a curve, we can use the parameters if the curve is not the seam of the surface. */
+            if (!cad_geometry->get_cad_manager ()->t8_geom_edge_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
+              reference_params.emplace ();
+              cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+                edge_node.entity_tag, edge_geometry_tag, edge_node.parameters[0], reference_params.value ().data ());
+            }
+            break;
+          case 0:
+            /* If the node is on a vertex we can convert the parameters safely if the vertex is not the seam of the edge. */
+            if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_on_seam_edge (edge_node.entity_tag,
+                                                                                   edge_geometry_tag)) {
+              reference_params.emplace ();
+              cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+                edge_node.entity_tag, edge_geometry_tag, reference_params.value ().data ());
+            }
+            break;
+          default:
+            SC_ABORT_NOT_REACHED ();
+          }
         }
       }
 
-      /* Abort if the edge is a line */
-      if (cad_geometry->get_cad_manager ()->t8_geom_is_line (edge_geometry_tag)) {
-        continue;
+      if (!reference_params.has_value ()) {
+        t8_global_errorf ("Error during mesh-cad recombination: Reference parameter on curve not found.\n");
+        return 0;
+      }
+
+      for (auto &edge_node : edge_nodes) {
+        /* If the node lies on a vertex we retrieve its parameters on the surface */
+        if (edge_node.entity_dim == 0) {
+          cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+            edge_node.entity_tag, edge_geometry_tag, edge_node.parameters.data (), reference_params);
+          edge_node.entity_dim = 2;
+        }
+        /* If the node lies on an edge we have to do the same */
+        if (edge_node.entity_dim == 1) {
+          cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+            edge_node.entity_tag, edge_geometry_tag, edge_node.parameters[0], edge_node.parameters.data (),
+            reference_params);
+          edge_node.entity_dim = 2;
+        }
       }
 
       edge_geometries[i_tree_edges + t8_eclass_num_edges[eclass]] = edge_geometry_tag;
@@ -1135,13 +1186,6 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
       parameters[1] = edge_nodes[0].parameters[1];
       parameters[2] = edge_nodes[1].parameters[0];
       parameters[3] = edge_nodes[1].parameters[1];
-
-      /* Corrects the parameters on the surface if it is closed to prevent disorted elements. */
-      for (int param_dim = 0; param_dim < 2; ++param_dim) {
-        if (cad_geometry->get_cad_manager ()->t8_geom_is_surface_closed (edge_geometry_tag, param_dim)) {
-          t8_cmesh_correct_parameters_on_closed_geometry (2, edge_geometry_tag, 2, cad_geometry, parameters);
-        }
-      }
 
       t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
                               T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edges, parameters,
@@ -1169,6 +1213,7 @@ t8_cmesh_process_tree_geometry (t8_cmesh_t cmesh, t8_eclass_t eclass, int dim, t
     t8_debugf ("Registering tree %li with geometry %s \n", tree_count,
                linear_geometry_base->t8_geom_get_name ().c_str ());
   }
+
   return 1;
 }
 #endif /* T8_ENABLE_OCC */
@@ -1192,10 +1237,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   t8_gloidx_t tree_count;
   t8_eclass_t eclass;
   t8_msh_file_node Node;
-#if T8_ENABLE_OCC
-  std::array<t8_msh_file_node, T8_ECLASS_MAX_CORNERS_2D> face_nodes;
-  std::array<t8_msh_file_node, 2> edge_nodes;
-#endif /* T8_ENABLE_OCC */
   long lnum_trees, lnum_blocks, entity_tag;
   int retval;
   int ele_type;
@@ -1363,7 +1404,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
         else {
 #if T8_ENABLE_OCC
           if (!t8_cmesh_process_tree_geometry (cmesh, eclass, dim, tree_count, cad_geometry_base, linear_geometry_base,
-                                               tree_nodes, face_nodes, edge_nodes)) {
+                                               tree_nodes)) {
             free (line);
             t8_cmesh_destroy (&cmesh);
             return std::nullopt;
