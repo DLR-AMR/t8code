@@ -443,6 +443,13 @@ class multiscale_adaptation {
     using element_t = typename Derived::element_t;
 
     for (auto l = min_level; l < max_level; ++l) {
+      derived ().c_scaling = derived ().threshold_scaling_factor ();
+      derived ().multiscale_transformation (l, l + 1);
+
+      for (auto l = min_level; l <= max_level; ++l)
+        for (const auto &[lmi, _] : derived ().d_map[l])
+          derived ().td_set.insert (lmi);
+
       // Set current level for callbacks
       derived ().get_user_data ()->current_refinement_level = l;
 

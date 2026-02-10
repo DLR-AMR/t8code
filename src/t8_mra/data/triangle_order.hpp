@@ -79,6 +79,80 @@ struct triangle_order
     return (type == 1) ? lookup_type_1[idx][child_id] : lookup_type_2[idx][child_id];
   }
 
+  // Reverse mapping: given parent order and reference child index k, find beyid
+  // Returns beyid for get_point_order
+  // Since we don't know parent type, we try both types and find the beyid that maps to k
+  // NOTE: This expects the INVERTED parent order (like the old code did)
+  static int
+  get_beyid_from_reference (int reference_k, const std::array<int, 3> &parent_order_inverted)
+  {
+    // Try each possible beyid (0,1,2,3) and check which one gives us reference_k
+    // Try type-1 first
+    for (int beyid = 0; beyid < 4; ++beyid) {
+      if (get_reference_children_order (1, beyid, parent_order_inverted) == reference_k) {
+        return beyid;
+      }
+    }
+
+    // Try type-2
+    for (int beyid = 0; beyid < 4; ++beyid) {
+      if (get_reference_children_order (2, beyid, parent_order_inverted) == reference_k) {
+        return beyid;
+      }
+    }
+
+    // Should never reach here
+    return 0;
+  }
+
+  // Given 4 children in reference order [0,1,2,3], find which reference k has geometric beyid=0
+  // Uses the children's vertex orders to infer this
+  // Returns the reference index k that corresponds to beyid=0
+  static int
+  find_geometric_child0 (const std::array<std::array<int, 3>, 4> &children_orders)
+  {
+    // Try to compute what the parent order should be from each child
+    // The child that gives the most consistent parent order is likely geometric child 0
+
+    // Compute candidate parent orders from each child
+    std::array<std::array<int, 3>, 4> candidate_parents;
+    for (int k = 0; k < 4; ++k) {
+      candidate_parents[k] = children_orders[k];
+      get_parent_order (candidate_parents[k]);
+    }
+
+    // The geometric child 0 has a specific relationship: parent_order should be computable from it
+    // Try each child as if it were geometric child 0 and see which makes sense
+    for (int k = 0; k < 4; ++k) {
+      auto test_parent_order = candidate_parents[k];
+
+      // Try to reconstruct all children from this parent order
+      // Count how many children match
+      int matches = 0;
+      for (int beyid = 0; beyid < 4; ++beyid) {
+        auto reconstructed = test_parent_order;
+        get_point_order (reconstructed, beyid);
+
+        // Check if this matches any of the actual children
+        for (int j = 0; j < 4; ++j) {
+          if (reconstructed == children_orders[j]) {
+            matches++;
+            break;
+          }
+        }
+      }
+
+      // If all 4 children can be reconstructed, we found the right parent order
+      // and the child k we used is likely geometric child 0
+      if (matches == 4) {
+        return k;
+      }
+    }
+
+    // Fallback: return 0
+    return 0;
+  }
+
   static void
   get_point_order_at_level (size_t basecell, const t8_element_t *elem, const t8_scheme *scheme,
                             std::array<int, 3> &order)

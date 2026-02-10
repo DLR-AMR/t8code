@@ -600,8 +600,8 @@ initialize_mask_coefficients<T8_ECLASS_QUAD> (size_t order, size_t dof, std::vec
     break;
   }
 
-  for (auto k = 0u; k < 4; ++k)
-    mask_coeffs[k] *= 0.5;
+  // for (auto k = 0u; k < 4; ++k)
+  //   mask_coeffs[k] *= 0.5;
 }
 
 }  // namespace t8_mra

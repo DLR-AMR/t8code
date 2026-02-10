@@ -274,16 +274,16 @@ example_quad_adaptive_with_plotting ()
   write_vtk_output (mra, "unified/quad_coarsened", 1);
 
   // Perform adaptive refinement
-  // std::cout << "3. Performing adaptive refinement...\n";
-  // mra.refinement_new (min_level, max_level);
-  //
-  // num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  // std::cout << "\n   After refinement:\n";
-  // std::cout << "   Elements: " << num_elements << "\n";
-  // std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
-  //
-  // // Write refined solution
-  // write_vtk_output (mra, "unified/quad_refined", 2);
+  std::cout << "3. Performing adaptive refinement...\n";
+  mra.refinement_new (min_level, max_level);
+
+  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  std::cout << "\n   After refinement:\n";
+  std::cout << "   Elements: " << num_elements << "\n";
+  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
+
+  // Write refined solution
+  write_vtk_output (mra, "unified/quad_refined", 2);
 
   // Cleanup
   mra.cleanup ();
@@ -307,9 +307,9 @@ example_hex_adaptive_with_plotting ()
 
   // MRA parameters
   constexpr int U = 1;
-  constexpr int P = 3;
+  constexpr int P = 2;
   const int min_level = 0;
-  const int max_level = 5;  // Lower max level for 3D (8^4 = 4096 elements)
+  const int max_level = 6;  // Lower max level for 3D (8^4 = 4096 elements)
   const double c_thresh = 1.0;
   const int gamma = 1;
   const int num_quad_points_1d = 4;

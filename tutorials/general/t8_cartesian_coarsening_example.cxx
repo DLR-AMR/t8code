@@ -124,8 +124,8 @@ main (int argc, char **argv)
   std::cout << "Projecting Gaussian function onto uniform level " << initial_level << " grid...\n";
 
   // Initialize with uniform mesh and project function
-  mra.initialize_data (cmesh, scheme, initial_level, gaussian_function);
-  // mra.initialize_data (cmesh, scheme, initial_level, f3);
+  // mra.initialize_data (cmesh, scheme, initial_level, gaussian_function);
+  mra.initialize_data (cmesh, scheme, initial_level, f3);
 
   const auto num_elements_initial = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "  Created forest with " << num_elements_initial << " QUAD elements\n";
@@ -133,7 +133,8 @@ main (int argc, char **argv)
 
   // Write initial uniform mesh
   std::cout << "Writing initial uniform mesh VTK output...\n";
-  t8_mra::write_forest_lagrange_vtk<element_data_type> (mra.get_forest (), "quad_coarsening/initial_uniform", P, true);
+  t8_mra::write_forest_lagrange_vtk<element_data_type> (mra.get_forest (), "quad_coarsening/initial_uniform", P - 1,
+                                                        true);
   std::cout << "  Output written to: quad_coarsening/initial_uniform.vtu\n\n";
 
   // Perform adaptive coarsening
@@ -153,7 +154,7 @@ main (int argc, char **argv)
 
   // Write adapted mesh
   std::cout << "Writing adapted mesh VTK output...\n";
-  t8_mra::write_forest_lagrange_vtk<element_data_type> (mra.get_forest (), "quad_coarsening/adapted_mesh", P + 1, true);
+  t8_mra::write_forest_lagrange_vtk<element_data_type> (mra.get_forest (), "quad_coarsening/adapted_mesh", P - 1, true);
   // t8_mra::write_forest_cell_average_vtk<element_data_type> (mra.get_forest (), "quad_coarsening/adapted_mesh");
   std::cout << "  Output written to: quad_coarsening/adapted_mesh.vtu\n\n";
 
