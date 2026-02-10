@@ -866,7 +866,7 @@ class multiscale<TShape, U, P>: public multiscale_data<TShape> {
       return 0;
 
     // Get the parent LMI from the first child
-    const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
+    const auto offset = t8_forest_get_tree_element_offset (forest_from, which_tree);
     const auto elem_idx = local_ele_idx + offset;
     const auto first_child_lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), elem_idx);
     const auto parent = t8_mra::parent_lmi (first_child_lmi);
@@ -985,6 +985,7 @@ class multiscale<TShape, U, P>: public multiscale_data<TShape> {
                                              is_family, num_elements, elements);
         },
         0, 0, get_user_data ());
+      std::cout << "after new adpat\n";
 
       t8_mra::forest_data<element_t> *new_user_data;
       new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
@@ -994,6 +995,7 @@ class multiscale<TShape, U, P>: public multiscale_data<TShape> {
 
       const auto num_new_local_elements = t8_forest_get_local_num_leaf_elements (new_forest);
       const auto num_new_ghost_elements = t8_forest_get_num_ghosts (new_forest);
+
       new_user_data->lmi_idx
         = sc_array_new_count (sizeof (levelmultiindex), num_new_local_elements + num_new_ghost_elements);
       t8_forest_set_user_data (new_forest, new_user_data);
@@ -1005,6 +1007,7 @@ class multiscale<TShape, U, P>: public multiscale_data<TShape> {
           static_iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme, refine, num_outgoing,
                                            first_outgoing, num_incoming, first_incoming);
         });
+      std::cout << "after iter replace\n";
 
       // Clean up old forest and user data
       auto *old_user_data = get_user_data ();
@@ -1012,6 +1015,7 @@ class multiscale<TShape, U, P>: public multiscale_data<TShape> {
       sc_array_destroy (old_user_data->lmi_idx);
       T8_FREE (old_user_data);
       t8_forest_unref (&forest);
+      std::cout << "after t8code stuff\n";
 
       d_map.erase_all ();
       td_set.erase_all ();

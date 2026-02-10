@@ -72,7 +72,7 @@ class multiscale_adaptation {
       return 0;
 
     // Get LMI for the first child from forest_data (same approach as old version)
-    const auto offset = t8_forest_get_tree_element_offset (forest, which_tree);
+    const auto offset = t8_forest_get_tree_element_offset (forest_from, which_tree);
     const auto elem_idx = local_ele_idx + offset;
 
     const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, elem_idx);
@@ -270,6 +270,9 @@ class multiscale_adaptation {
       std::cout << "  Level " << l << " in map: " << derived ().get_user_data ()->lmi_map->operator[] (l).size ()
                 << "\n";
       std::cout << "  coarsening_set[" << l << "] size: " << derived ().coarsening_set[l].size () << "\n";
+
+      T8_ASSERT (t8_forest_is_committed (derived ().forest));
+      std::cout << "bla\n";
 
       new_forest = t8_forest_new_adapt (
         derived ().forest,
