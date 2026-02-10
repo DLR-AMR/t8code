@@ -83,9 +83,13 @@ main (int argc, char **argv)
   // auto f3 = [] (double x, double y) -> std::array<double, 1> { return { 1.0 }; };
   // auto f3 = [] (double x, double y) -> std::array<double, 1> { return { x * y }; };
   // auto f3 = [] (double x, double y) -> std::array<double, 1> { return { x }; };
-  auto f3 = [] (double x, double y) -> std::array<double, 1> {
+  // auto f3 = [] (double x, double y) -> std::array<double, 1> {
+  //   double r = x * x + y * y;
+  //   return { (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x) };
+  // };
+  auto f3 = [] (double x, double y, double *u) -> void {
     double r = x * x + y * y;
-    return { (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x) };
+    u[0] = (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x);
   };
 
   // MRA parameters
