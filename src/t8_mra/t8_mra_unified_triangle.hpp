@@ -180,7 +180,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
     elem_data = T8_ALLOC (levelmultiindex, 1);
 
-    T8_ASSERT (t8_forest_is_commited (Base::forest));
+    T8_ASSERT (t8_forest_is_committed (Base::forest));
 
     const auto num_local_elements = t8_forest_get_global_num_leaf_elements (Base::forest);
     const auto num_ghost_elements = t8_forest_get_num_ghosts (Base::forest);

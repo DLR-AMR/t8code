@@ -274,7 +274,7 @@ class multiscale<TShape, U, P>: public multiscale_data<TShape> {
     user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
     elem_data = T8_ALLOC (levelmultiindex, 1);
 
-    T8_ASSERT (t8_forest_is_commited (forest));
+    T8_ASSERT (t8_forest_is_committed (forest));
 
     const auto num_local_elements = t8_forest_get_global_num_leaf_elements (forest);
     const auto num_ghost_elements = t8_forest_get_num_ghosts (forest);

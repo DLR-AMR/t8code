@@ -191,8 +191,8 @@ inline levelmultiindex<T8_ECLASS_TRIANGLE>
 levelmultiindex<T8_ECLASS_TRIANGLE>::parent (levelmultiindex<T8_ECLASS_TRIANGLE> lmi)
 {
 #if T8_ENABLE_DEBUG
-  if (parent.level == 0)
-    SC_ABORTF ("levelmultiindices on level 0 do not have a parent %d", lmi.index);
+  if (lmi.level () == 0)
+    SC_ABORTF ("levelmultiindices on level 0 do not have a parent %zu", lmi.index);
 #endif
 
   // Extract basecell and remove basecell from lmi
