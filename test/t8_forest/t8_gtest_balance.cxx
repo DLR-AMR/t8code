@@ -94,12 +94,24 @@ t8_gtest_balance_refine_certain_trees (const t8_forest_t forest, const t8_locidx
 
   const t8_gloidx_t gtree_id = t8_forest_global_tree_id (forest, which_tree);
 
+  /* Print the global tree ID */
+  t8_debugf ("Global tree ID: %ld\n", gtree_id);
+
+  /* Print trees to refine */
+  t8_debugf ("Trees to refine:\n");
+  for (const auto &tree_id : adapt_data->trees_to_refine) {
+    t8_debugf ("tree %ld\n", tree_id);
+  }
+  t8_debugf ("\n");
+
   if (std::find (adapt_data->trees_to_refine.begin (), adapt_data->trees_to_refine.end (), gtree_id)
         != adapt_data->trees_to_refine.end ()
       && scheme->element_get_level (tree_class, element) < adapt_data->max_refinement_level) {
+    t8_debugf ("Refining element in tree %ld at level %d.\n", gtree_id, scheme->element_get_level (tree_class, element));
     return 1;
   }
   else {
+    t8_debugf ("Not refining element in tree %ld at level %d.\n", gtree_id, scheme->element_get_level (tree_class, element));
     return 0;
   }
 }
@@ -144,6 +156,8 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
   adapt_data.trees_to_refine = trees_to_refine;
   adapt_data.max_refinement_level = 2 + additional_refinement;
 
+  t8_forest_set_user_data (forest, &adapt_data);
+
   return t8_forest_new_adapt (forest, t8_gtest_balance_refine_certain_trees, 1, 0, &adapt_data);
 }
 
@@ -174,6 +188,8 @@ t8_gtest_check_custom_balanced_forest (t8_forest_t balanced_forest,
       const int elem_level = scheme->element_get_level (tree_class, element);
 
       if (elem_level != expected_elem_level_per_tree[gtree_id]) {
+        t8_debugf ("Element with level %d in tree %ld does not comply to the expected level %d.\n", elem_level, gtree_id,
+                  expected_elem_level_per_tree[gtree_id]);
         return false;
       }
     }

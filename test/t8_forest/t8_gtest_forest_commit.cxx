@@ -96,6 +96,7 @@ t8_test_forest_commit_abp (t8_forest_t forest, int maxlevel)
   /* Adapt, balance and partition the uniform forest */
   t8_forest_init (&forest_ada_bal_par);
   /* Set user data for adapt */
+  t8_forest_set_user_data (forest, &maxlevel);
   t8_forest_set_user_data (forest_ada_bal_par, &maxlevel);
   t8_forest_set_adapt (forest_ada_bal_par, forest, t8_test_adapt_balance, 1);
 #if T8_TEST_LEVEL_INT < 2
