@@ -733,8 +733,8 @@ t8_forest_adapt (t8_forest_t forest)
 
   using namespace t8_standard_adapt;
 
-  t8_adapt::adaptor<adapt_collector, family_checker, manipulator> standard_adaptor (forest, forest_from, dummy_callback,
-                                                                                    forest->profile != NULL);
+  t8_adapt::adaptor<adapt_collector, family_checker, manipulator, false> standard_adaptor (
+    forest, forest_from, dummy_callback, forest->profile != NULL);
   standard_adaptor.adapt ();
   /*TODO: Update incomplete trees logic.  */
   forest->incomplete_trees = 0;

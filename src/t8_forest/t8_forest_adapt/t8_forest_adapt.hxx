@@ -298,6 +298,7 @@ concept element_manipulatable = requires (
    * \tparam TCollect    A type satisfying actions_collectable: must expose collect_actions.
    * \tparam TFamily     A type satisfying family_checkable: must expose family_check to detect families.
    * \tparam TManipulate A type satisfying element_manipulatable: must expose element_manipulator.
+   * \tparam TRecursive  A boolean flag (default false) that can be used by policies to enable recursive adaptation logic.
    *
    * Overview
    * The adaptor holds references to a "target" forest and a "source" forest (forest and forest_from). On construction it
@@ -344,6 +345,11 @@ concept element_manipulatable = requires (
    * - inline void profile_adaptation_end()
    *    - Ends adaptation timing by computing the elapsed time since profile_adaptation_start and accumulating it
    *      into forest->profile->adapt_runtime.
+   * - void recursive_adapt(...)
+   *    - A helper function that can be used when TRecursive is true to perform recursive adaptation logic. It takes parameters describing the current element being considered,
+   *      the source and target element arrays, the scheme and tree class, the current offset and count of inserted elements, the precomputed actions, and whether the current element is part of a family. 
+   *      It manages the recursive insertion of child elements via a depth-first traversal, applying the TManipulate policy at each level and using the callback to determine actions for child elements. 
+   *      This function is only enabled when TRecursive is true and TCollect uses a non-batched element_callback.
    *
    * Data members
    * - t8_forest_t forest
@@ -363,7 +369,8 @@ concept element_manipulatable = requires (
    *   different collection and manipulation strategies to be plugged in without changing the control flow.
    * - The adaptor relies on the forest and tree data structures exposing stable array indexing via t8_element_array_* APIs.
    */
-template <actions_collectable TCollect, family_checkable TFamily, element_manipulatable TManipulate>
+template <actions_collectable TCollect, family_checkable TFamily, element_manipulatable TManipulate,
+          bool TRecursive = false>
 class adaptor: private TCollect, private TFamily, private TManipulate {
  public:
   /** The type of callback used for collecting adaptation actions. */
@@ -439,10 +446,18 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
         while (el_considered < num_el_from) {
           t8_locidx_t el_inserted = 0;
           const bool is_family = TFamily::family_check (tree_elements_from, el_considered, scheme, tree_class);
-
-          /* manipulator step*/
-          TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered, el_offset,
-                                            el_inserted, actions, is_family);
+          if constexpr (TRecursive) {
+            t8_debugf ("[D] recursive adapt: tree %d, element %d, is_family %d\n", ltree_id, el_considered, is_family);
+            recursive_adapt (elements, tree_elements_from, scheme, tree_class, ltree_id, el_considered, el_offset,
+                             el_inserted, actions, is_family);
+          }
+          else {
+            t8_debugf ("[D] non-recursive adapt: tree %d, element %d, is_family %d\n", ltree_id, el_considered,
+                       is_family);
+            /* manipulator step*/
+            TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered,
+                                              el_offset, el_inserted, actions, is_family);
+          }
           el_considered++;
           el_offset += el_inserted;
           forest->local_num_leaf_elements += el_inserted;
@@ -457,6 +472,54 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
 
   callback_type callback; /**< The callback function to determine adaptation actions. */
  private:
+  /* WARNING: Currently only available with iterative callback*/
+  void
+  recursive_adapt (t8_element_array_t *elements, const t8_element_array_t *elements_from, const t8_scheme *scheme,
+                   const t8_eclass_t tree_class, const t8_locidx_t ltree_id, const t8_locidx_t el_considered,
+                   const t8_locidx_t el_offset, t8_locidx_t &el_inserted, const std::vector<action> &actions,
+                   const bool is_family)
+    requires (TRecursive && has_element_callback_collect<TCollect>)
+  {
+    const size_t element_size = scheme->get_element_size (tree_class);
+    t8_locidx_t recursively_inserted = 0;
+    TManipulate::element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset,
+                                      recursively_inserted, actions, is_family);
+    t8_element_array_t *children = t8_element_array_new (scheme, tree_class);
+    /* add all elements from el_offset to el_offset + recursively_inserted */
+    for (t8_locidx_t i = 0; i < recursively_inserted; ++i) {
+      t8_element_t *child = t8_element_array_push (children);
+      child = t8_element_array_index_locidx_mutable (elements, el_offset + i);
+      memcpy ((void *) child, (void *) t8_element_array_index_locidx (elements_from, el_offset + el_considered),
+              element_size);
+    }
+    std::vector<action> child_actions;
+    while (t8_element_array_get_count (children) > 0) {
+      const int next_child = t8_element_array_get_count (children) - 1;
+      const t8_element_t *child = t8_element_array_pop (children);
+      t8_debugf ("[D] recursive adapt: tree %d, child element %d\n", ltree_id, next_child);
+      /** TODO: next_child is currently the wrong linear id of child */
+      child_actions.push_back (callback (forest_from, ltree_id, next_child, child, scheme, tree_class));
+      const int level = scheme->element_get_level (tree_class, child);
+      if (child_actions[next_child] != action::COARSEN && level < forest->maxlevel) {
+        t8_locidx_t inserted = recursively_inserted;
+        TManipulate::element_manipulator (elements, children, scheme, tree_class, next_child, el_offset,
+                                          recursively_inserted, child_actions, false);
+        inserted = recursively_inserted - inserted;
+        /* push children */
+        t8_element_array_push_count (children, inserted);
+        for (t8_locidx_t i = recursively_inserted - 1; i >= recursively_inserted - inserted; --i) {
+          t8_element_t *new_child = t8_element_array_index_locidx_mutable (children, i);
+          memcpy ((void *) new_child, (void *) t8_element_array_index_locidx (elements, el_offset + i), element_size);
+        }
+      }
+      if (child_actions[next_child] != action::REFINE) {
+        child_actions.pop_back ();
+      }
+    }
+
+    el_inserted += recursively_inserted;
+  }
+
   /**
    * Profile the adaptation process.
    */
