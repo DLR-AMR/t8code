@@ -21,7 +21,8 @@
 */
 
 /** \file t8_gtest_memory_macros.hxx
-* Provide memory macros */
+ * Provide memory macros.
+ */
 
 #ifndef T8_GTEST_MEMORY_MACROS_HXX
 #define T8_GTEST_MEMORY_MACROS_HXX
