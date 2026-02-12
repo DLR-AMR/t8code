@@ -33,6 +33,7 @@
 #include <iostream>
 #include <t8_schemes/t8_scheme.hxx>
 #include <test/t8_gtest_memory_macros.hxx>
+#include <test/t8_gtest_schemes.hxx>
 
 /**
  * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
@@ -40,6 +41,16 @@
  */
 inline auto print_eclass
   = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
+
+/** Define a lambda to beautify gtest output for tuples <level, cmesh>.
+ * This will set the correct level and cmesh name as part of the test case name. */
+auto pretty_print_eclass_scheme_and_level
+  = [] (const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass_t>, int>> &info) {
+      std::string scheme = t8_scheme_to_string[std::get<0> (std::get<0> (info.param))];
+      std::string eclass = t8_eclass_to_string[std::get<1> (std::get<0> (info.param))];
+      std::string level = std::string ("_level_") + std::to_string (std::get<1> (info.param));
+      return scheme + "_" + eclass + level;
+    };
 
 /**
  * Initializes everything needed for the t8code testsuite.
