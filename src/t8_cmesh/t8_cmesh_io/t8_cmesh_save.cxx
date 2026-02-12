@@ -21,10 +21,7 @@
 */
 
 /** \file t8_cmesh_save.cxx
- *
  * We define routines to save and load a cmesh to/from the file system.
- *
- * TODO: document this file
  */
 
 #include <t8_version.h>
