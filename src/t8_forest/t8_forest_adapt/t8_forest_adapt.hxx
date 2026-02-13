@@ -422,13 +422,13 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
 
     TCollect::collect_actions (forest_from, actions, callback);
 
-    /* Offset per tree in the source forest */
-    t8_locidx_t el_offset = 0;
     const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest_from);
     /* Get the scheme used by the forest */
     const t8_scheme *scheme = t8_forest_get_scheme (forest_from);
 
     for (t8_locidx_t ltree_id = 0; ltree_id < num_trees; ltree_id++) {
+      /* Offset per tree in the source forest */
+      t8_locidx_t el_offset = 0;
       /* get the trees from both forests. */
       t8_tree_t tree = t8_forest_get_tree (forest, ltree_id);
       const t8_tree_t tree_from = t8_forest_get_tree (forest_from, ltree_id);
@@ -458,6 +458,7 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
             TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered,
                                               el_offset, el_inserted, actions, is_family);
           }
+          t8_debugf ("[D] adapt: tree %d, element %d, inserted %d\n", ltree_id, el_considered, el_inserted);
           el_considered++;
           el_offset += el_inserted;
           forest->local_num_leaf_elements += el_inserted;
@@ -484,9 +485,12 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
     t8_locidx_t recursively_inserted = 0;
     TManipulate::element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset,
                                       recursively_inserted, actions, is_family);
+    t8_debugf ("[D] recursive adapt: tree %d, element %d, inserted %d\n", ltree_id, el_considered,
+               recursively_inserted);
     t8_element_array_t *children = t8_element_array_new (scheme, tree_class);
     /* add all elements from el_offset to el_offset + recursively_inserted */
     for (t8_locidx_t i = 0; i < recursively_inserted; ++i) {
+      t8_debugf ("[D] push child element %d\n", el_offset + i);
       t8_element_t *child = t8_element_array_push (children);
       child = t8_element_array_index_locidx_mutable (elements, el_offset + i);
       memcpy ((void *) child, (void *) t8_element_array_index_locidx (elements_from, el_offset + el_considered),
@@ -495,29 +499,38 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
     std::vector<action> child_actions;
     while (t8_element_array_get_count (children) > 0) {
       const int next_child = t8_element_array_get_count (children) - 1;
-      const t8_element_t *child = t8_element_array_pop (children);
+      const t8_element_t *child = t8_element_array_index_locidx (children, next_child);
       t8_debugf ("[D] recursive adapt: tree %d, child element %d\n", ltree_id, next_child);
       /** TODO: next_child is currently the wrong linear id of child */
       child_actions.push_back (callback (forest_from, ltree_id, next_child, child, scheme, tree_class));
       const int level = scheme->element_get_level (tree_class, child);
-      if (child_actions[next_child] != action::COARSEN && level < forest->maxlevel) {
+      if (child_actions[next_child + 1] != action::COARSEN && level < forest->maxlevel) {
+        t8_debugf ("[D] adapt action: %d\n", int (child_actions[next_child + 1]));
         t8_locidx_t inserted = recursively_inserted;
         TManipulate::element_manipulator (elements, children, scheme, tree_class, next_child, el_offset,
                                           recursively_inserted, child_actions, false);
         inserted = recursively_inserted - inserted;
+        t8_element_array_pop (children);
+        child_actions.pop_back ();
         /* push children */
-        t8_element_array_push_count (children, inserted);
-        for (t8_locidx_t i = recursively_inserted - 1; i >= recursively_inserted - inserted; --i) {
-          t8_element_t *new_child = t8_element_array_index_locidx_mutable (children, i);
-          memcpy ((void *) new_child, (void *) t8_element_array_index_locidx (elements, el_offset + i), element_size);
+        if (child_actions[next_child + 1] == action::REFINE) {
+          t8_element_array_push_count (children, inserted);
+          const t8_locidx_t children_count = t8_element_array_get_count (children);
+          t8_debugf ("[D] children_count: %d, inserted: %d\n", children_count, inserted);
+          for (t8_locidx_t i = children_count - 1; i >= children_count - inserted; --i) {
+            t8_element_t *new_child = t8_element_array_index_locidx_mutable (children, i);
+            memcpy ((void *) new_child, (void *) t8_element_array_index_locidx (elements, el_offset + i), element_size);
+          }
         }
       }
-      if (child_actions[next_child] != action::REFINE) {
+      else {
+        t8_element_array_pop (children);
         child_actions.pop_back ();
       }
     }
 
     el_inserted += recursively_inserted;
+    t8_debugf ("[D] recursive adapt: tree %d, element %d, total inserted %d\n", ltree_id, el_considered, el_inserted);
   }
 
   /**

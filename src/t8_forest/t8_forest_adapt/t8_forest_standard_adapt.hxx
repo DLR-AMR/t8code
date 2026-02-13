@@ -200,10 +200,14 @@ manipulate_elements<t8_adapt::action::REFINE> (t8_element_array_t *elements,
                                                const t8_eclass_t tree_class, const t8_locidx_t elements_index,
                                                const t8_locidx_t elements_from_index)
 {
+  t8_debugf ("[D] element_from index: %d, count: %ld\n", elements_from_index,
+             t8_element_array_get_count (elements_from));
   const t8_element_t *element_from = t8_element_array_index_locidx (elements_from, elements_from_index);
   const int num_children = scheme->element_get_num_children (tree_class, element_from);
   (void) t8_element_array_push_count (elements, num_children);
+  t8_debugf ("[D] total num elements: %ld\n", t8_element_array_get_count (elements));
   std::array<t8_element_t *, T8_ECLASS_MAX_CHILDREN> children;
+  t8_debugf ("[D] elements_index: %d\n", elements_index);
   for (int ichildren = 0; ichildren < num_children; ichildren++) {
     children[ichildren] = t8_element_array_index_locidx_mutable (elements, elements_index + ichildren);
   }
@@ -256,6 +260,7 @@ struct manipulator
                                                                   el_offset + el_inserted, el_considered);
       break;
     case t8_adapt::action::REFINE:
+      t8_debugf ("[D] el_offset: %d, el_inserted: %d, el_considered: %d\n", el_offset, el_inserted, el_considered);
       el_inserted += manipulate_elements<t8_adapt::action::REFINE> (elements, elements_from, scheme, tree_class,
                                                                     el_offset + el_inserted, el_considered);
       break;
