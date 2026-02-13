@@ -66,7 +66,7 @@ exec 1>&2
 # Stash any unstaged changes, including untracked files, to ensure that the pre-commit checks are performed on the exact state of the files being committed. 
 # The --keep-index option allows staged changes to remain intact, while --include-untracked ensures that untracked files are also stashed. 
 # The --message option provides a description for the stash entry, making it easier to identify later.
-git stash push --keep-index --include-untracked --message "pre-commit-stash"
+#git stash push --keep-index --include-untracked --message "pre-commit-stash"
 
 #nostashed=0
 #if [ -z "$(git stash list | grep "pre-commit-stash")" ]; then
@@ -74,9 +74,7 @@ git stash push --keep-index --include-untracked --message "pre-commit-stash"
 #  nostashed=1
 #else
 #  # If a stash was created, print a message to inform the user that unstaged changes have been stashed and will be popped later.
-#  echo ""
-#  printf '\033[0;31m%s\033[0m\n' "Unstaged changes have been stashed. They will be popped after the pre-commit checks. Add the changes again if you want to include them in the commit."
-#  echo ""
+#  echo "Unstaged changes have been stashed. They will be popped after the pre-commit checks. Add the changes if you want to include them in the commit."
 #fi
 
 nocontinue=0
@@ -129,7 +127,7 @@ do
   fi
 done
 
-#if [ $nostashed -eq 0 ]; then
+#if [ $nostashed -eq 0 ] then
 #  # If a stash was created, pop it to restore the working directory to its original state before the pre-commit checks were performed.
 #  git stash pop
 #fi
