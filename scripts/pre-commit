@@ -68,6 +68,17 @@ exec 1>&2
 # The --message option provides a description for the stash entry, making it easier to identify later.
 git stash push --keep-index --include-untracked --message "pre-commit-stash"
 
+nostashed=0
+if [ -z "$(git stash list | grep "pre-commit-stash")" ]; then
+  # If there was no stash created, set nostashed to 1 to indicate that there are no changes to pop later.
+  nostashed=1
+else
+  # If a stash was created, print a message to inform the user that unstaged changes have been stashed and will be popped later.
+  echo ""
+  printf '\033[0;31m%s\033[0m\n' "Unstaged changes have been stashed. They will be popped after the pre-commit checks. Add the changes again if you want to include them in the commit."
+  echo ""
+fi
+
 nocontinue=0
 for file in `git diff --cached --name-only`
 do
@@ -118,8 +129,11 @@ do
   fi
 done
 
-# Pop the stash to restore the working directory to its original state before the pre-commit checks were performed.
-git stash pop
+if [ $nostashed -eq 0 ]; then
+  # If a stash was created, pop it to restore the working directory to its original state before the pre-commit checks were performed.
+  git stash pop
+fi
+
 
 # exit 1 if there was a nonindented file
 # this will abort the commit
