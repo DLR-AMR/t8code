@@ -63,6 +63,10 @@ fi
 # Redirect output to stderr.
 exec 1>&2
 
+# Stash any unstaged changes, including untracked files, to ensure that the pre-commit checks are performed on the exact state of the files being committed. 
+# The --keep-index option allows staged changes to remain intact, while --include-untracked ensures that untracked files are also stashed. 
+# The --message option provides a description for the stash entry, making it easier to identify later.
+git stash push --keep-index --include-untracked --message "pre-commit-stash"
 
 nocontinue=0
 for file in `git diff --cached --name-only`
@@ -113,6 +117,9 @@ do
     fi
   fi
 done
+
+# Pop the stash to restore the working directory to its original state before the pre-commit checks were performed.
+git stash pop
 
 # exit 1 if there was a nonindented file
 # this will abort the commit
