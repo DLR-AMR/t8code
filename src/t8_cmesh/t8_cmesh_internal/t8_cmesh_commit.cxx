@@ -21,8 +21,7 @@
 */
 
 /** \file t8_cmesh_commit.cxx
- *
- * TODO: document this file
+ * Functionality to commit a cmesh.
  */
 
 #include <t8_data/t8_shmem.h>

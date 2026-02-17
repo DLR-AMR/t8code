@@ -33,14 +33,14 @@
 #include <t8_forest/t8_forest_general.h>
 
 /**
- * \brief Test two elements for equality and print the elements if they aren't equal
+ * Test two elements for equality and print the elements if they aren't equal
  *
- * \param[in] ts_expr The name of the scheme \a ts
+ * \param[in] ts_expr The name of the \a scheme
  * \param[in] tree_class_expr The name of the tree class
  * \param[in] elem_1_expr The name of the first element \a elem_1
  * \param[in] elem_2_expr The name of the second element \a elem_2
  * \param[in] scheme The scheme to use to check the equality
- * \param[in] tree_class The eclass of the tree the elements are part of
+ * \param[in] eclass The eclass of the tree the elements are part of
  * \param[in] elem_1 The element to compare with \a elem_2
  * \param[in] elem_2 the element to compare with \a elem_1
  * \return testing::AssertionResult
@@ -72,14 +72,26 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
   }
 }
 
+/** Macro for a non-fatal failure test to check for equality of two elements.
+ * \param [in] scheme The scheme to use to check the equality.
+ * \param [in] eclass The eclass of the tree.
+ * \param [in] elem1 The first element to compare.
+ * \param [in] elem2 The second element to compare.
+ */
 #define EXPECT_ELEM_EQ(scheme, eclass, elem1, elem2) \
   EXPECT_PRED_FORMAT4 (element_equality, (scheme), (eclass), (elem1), (elem2))
 
-#define ASSERT_ELEM_EQ(scheme, tree_class, elem1, elem2) \
-  ASSERT_PRED_FORMAT4 (element_equality, (scheme), (tree_class), (elem1), (elem2))
+/** Macro for a fatal failure test to check for equality of two elements.
+ * \param [in] scheme The scheme to use to check the equality.
+ * \param [in] eclass The eclass of the tree.
+ * \param [in] elem1 The first element to compare.
+ * \param [in] elem2 The second element to compare.
+ */
+#define ASSERT_ELEM_EQ(scheme, eclass, elem1, elem2) \
+  ASSERT_PRED_FORMAT4 (element_equality, (scheme), (eclass), (elem1), (elem2))
 
 /**
- * \brief Test if two vectors are equal with respect to a given precision.
+ * Test if two vectors are equal with respect to a given precision.
  *
  * \tparam TContainer1 Type of the first container.
  * \tparam TContainer2 Type of the second container.
@@ -105,11 +117,16 @@ container_equality (const char *container_1_expr, const char *container_2_expr, 
   }
 }
 
+/** Macro for a non-fatal failure test to check for equality of two vectors.
+ * \param[in] container_1 First container to compare.
+ * \param[in] container_2 Second container to compare.
+ * \param[in] precision Test equality up to this precision.
+ */
 #define EXPECT_VEC_EQ(container_1, container_2, precision) \
   EXPECT_PRED_FORMAT3 (container_equality, (container_1), (container_2), (precision))
 
 /**
- * \brief Test two forests for equality.
+ * Test two forests for equality.
  *
  * \param[in] forest_A_expr The name of the forest \a forest_A
  * \param[in] forest_B_expr The name of the forest \a forest_B
@@ -129,6 +146,10 @@ forest_equality (const char *forest_A_expr, const char *forest_B_expr, const t8_
   }
 }
 
+/** Macro for a non-fatal failure test to check for equality of two forests.
+ * \param[in] forest_A      The forest to compare with \a forest_B.
+ * \param[in] forest_B      The forest to compare with \a forest_A.
+ */
 #define EXPECT_FOREST_EQ(forest_A, forest_B) EXPECT_PRED_FORMAT2 (forest_equality, (forest_A), (forest_B))
 
 #endif /* T8_GTEST_CUSTOM_ASSERTION_HXX */
