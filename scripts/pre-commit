@@ -69,10 +69,7 @@ pre_stash_size=$(git stash list | wc -l)
 git stash push --quiet --keep-index --include-untracked --message "pre-commit-stash"
 post_stash_size=$(git stash list | wc -l)
 increased_stash_size=$((post_stash_size - pre_stash_size))
-if [ $increased_stash_size -gt 0 ]; then
-  echo "Stashed uncommitted changes to ensure a clean working directory for the pre-commit checks."
-  git stash show -p
-fi
+
 # If the stash size has increased, it means a new stash entry was created.
 
 nocontinue=0
