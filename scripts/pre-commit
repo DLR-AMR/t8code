@@ -69,7 +69,7 @@ stash_size_before=$(git stash list | wc -l)
 # Stash any unstaged changes, to ensure that the pre-commit checks are performed on the exact state of the files being committed.
 # The --keep-index option allows staged changes to remain intact.
 # The --message option provides a description for the stash entry, making it easier to identify later.
-git stash push --keep-index --message "pre-commit-stash"
+git stash push --keep-index --include-untracked --message "pre-commit-stash"
 
 # Get the size of the stash list after stashing changes.
 stash_size_after=$(git stash list | wc -l)
