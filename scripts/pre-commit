@@ -63,28 +63,20 @@ fi
 # Redirect output to stderr.
 exec 1>&2
 
-# Get the size of the stash list before stashing any changes. This is used to determine later if a new stash entry was created for the pre-commit checks.
-stash_size_before=$(git stash list | wc -l)
+diff_size=$(git diff | wc -l)
 
-# Stash any unstaged changes, to ensure that the pre-commit checks are performed on the exact state of the files being committed.
-# The --keep-index option allows staged changes to remain intact.
-# The --message option provides a description for the stash entry, making it easier to identify later.
-git stash push --keep-index --include-untracked --message "pre-commit-stash"
-
-# Get the size of the stash list after stashing changes.
-stash_size_after=$(git stash list | wc -l)
-
-stashed=$(($stash_size_after - $stash_size_before))
+pre_stash_size=$(git stash list | wc -l)
+git stash push --keep-index --include-untracked --message  "pre-commit-stash"
+post_stash_size=$(git stash list | wc -l)
+increased_stash_size=$((post_stash_size - pre_stash_size))
 # If the stash size has increased, it means a new stash entry was created.
-if [ $stashed -gt 0 ]; then
-  echo "A stash entry was created for the pre-commit checks."
-  git stash show --include-untracked -p
-  echo "files: "
-  git stash show --name-only
+if [ $diff_size -gt 0 ]; then
   printf '\033[31m%s\033[0m\n' "Unstaged changes have been stashed. They will be popped after the pre-commit checks. Add the changes if you want to include them in the commit."
 fi
 
+
 nocontinue=0
+
 for file in `git diff --cached --name-only`
 do
   # only indent existing files, this is necessary since if we rename or delete
@@ -134,8 +126,7 @@ do
   fi
 done
 
-if [ $stashed -gt 0 ]; then
-  # If a stash was created, pop it to restore the working directory to its original state before the pre-commit checks were performed.
+if [ $increased_stash_size -gt 0 ]; then
   git stash pop
 fi
 
