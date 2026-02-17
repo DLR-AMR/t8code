@@ -74,8 +74,6 @@ if [ $increased_stash_size -gt 0 ]; then
 fi
 # If the stash size has increased, it means a new stash entry was created.
 
-echo "Hello from pre-commit"
-
 nocontinue=0
 
 for file in `git diff --cached --name-only`
