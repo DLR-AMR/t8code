@@ -36,7 +36,8 @@
 #include <t8_element.h>
 #include <t8_types/t8_vec.hxx>
 
-class geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
+struct geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>>
+{
  public:
   static void
   SetUpTestSuite ()

@@ -29,10 +29,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/element.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /** Tests that the functionality of the handle gives the same results as if worked with the forest directly.
@@ -40,19 +40,20 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
 {
-  // Define forest and mesh handle mesh.
+  // Define forest and mesh handle.
   const int level = 2;
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  const t8_scheme *init_scheme = t8_scheme_new_default ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
+  const t8_scheme *scheme = t8_scheme_new_default ();
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
-  t8_mesh_handle::mesh<t8_mesh_handle::element<>> mesh = t8_mesh_handle::mesh<t8_mesh_handle::element<>> (forest);
+  const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
+  EXPECT_EQ (mesh.get_num_local_elements (), t8_forest_get_local_num_leaf_elements (forest));
+  EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
+  EXPECT_EQ (mesh.get_dimension (), t8_forest_get_dimension (forest));
 
-  //Iterate over the elements of the forest and of the mesh handle simultaneously and compare results of different functions.
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results of different functions.
   // Use iterator for the mesh handle and two nested for-loops for the forest.
-  auto mesh_iterator = mesh.begin ();
+  auto mesh_iterator = mesh.cbegin ();
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {
@@ -60,25 +61,38 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Compare elements. ---
       EXPECT_EQ (mesh_iterator->get_local_tree_id (), itree);
       EXPECT_EQ (mesh_iterator->get_local_element_id (), ielem);
-      // --- Compare basics. ---
+      // --- Compare functionality. ---
       EXPECT_EQ (mesh_iterator->get_level (), scheme->element_get_level (tree_class, elem));
+      EXPECT_EQ (mesh_iterator->get_num_faces (), scheme->element_get_num_faces (tree_class, elem));
+      EXPECT_EQ (mesh_iterator->get_num_vertices (), scheme->element_get_num_corners (tree_class, elem));
       EXPECT_EQ (mesh_iterator->get_shape (), scheme->element_get_shape (tree_class, elem));
-      // --- Compare centroid. ---
-      t8_3D_point centroid;
-      t8_forest_element_centroid (forest, itree, elem, centroid.data ());
-      EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
-      // --- Compare vertex coordinates. ---
+      EXPECT_EQ (mesh_iterator->get_volume (), t8_forest_element_volume (forest, itree, elem));
+      EXPECT_EQ (mesh_iterator->get_diameter (), t8_forest_element_diam (forest, itree, elem));
+      // --- Vertex coordinates. ---
       auto vertex_coordinates = mesh_iterator->get_vertex_coordinates ();
-      for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
+      for (int ivertex = 0; ivertex < mesh_iterator->get_num_vertices (); ++ivertex) {
         t8_3D_point vertex_forest;
         t8_forest_element_coordinate (forest, itree, elem, ivertex, vertex_forest.data ());
         EXPECT_EQ (vertex_forest, vertex_coordinates[ivertex]);
+      }
+      // --- Centroid. ---
+      t8_3D_point centroid;
+      t8_forest_element_centroid (forest, itree, elem, centroid.data ());
+      EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
+      // --- Face properties. ---
+      // Note: Face-neighbor functionality is tested in t8_gtest_ghost.cxx.
+      for (int iface = 0; iface < mesh_iterator->get_num_faces (); ++iface) {
+        EXPECT_EQ (mesh_iterator->get_face_area (iface), t8_forest_element_face_area (forest, itree, elem, iface));
+        t8_3D_point coordinates;
+        t8_forest_element_face_centroid (forest, itree, elem, iface, coordinates.data ());
+        EXPECT_EQ (mesh_iterator->get_face_centroid (iface), coordinates);
+        t8_3D_vec normal;
+        t8_forest_element_face_normal (forest, itree, elem, iface, normal.data ());
+        EXPECT_EQ (mesh_iterator->get_face_normal (iface), normal);
+        EXPECT_EQ (mesh_iterator->get_face_shape (iface), scheme->element_get_face_shape (tree_class, elem, iface));
       }
       // --- Evolve mesh iterator. ---
       mesh_iterator++;
     }
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }

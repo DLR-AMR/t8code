@@ -46,7 +46,8 @@
  * It provides some operator overloads in order to be handled equal to arithmetic data types within the
  * function \see TestPartitionData.
  */
-class t8_test_partition_data_t {
+struct t8_test_partition_data_t
+{
 
  public:
   t8_test_partition_data_t () = default;
@@ -218,7 +219,8 @@ t8_test_partition_data_adapt ([[maybe_unused]] t8_forest_t forest, t8_forest_t f
   }
 }
 
-class t8_test_partition_data_test: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct t8_test_partition_data_test: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
 
  protected:
   void

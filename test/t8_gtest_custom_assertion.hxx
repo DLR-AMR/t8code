@@ -33,14 +33,14 @@
 #include <t8_forest/t8_forest_general.h>
 
 /**
- * \brief Test two elements for equality and print the elements if they aren't equal
+ * Test two elements for equality and print the elements if they aren't equal
  *
- * \param[in] ts_expr The name of the scheme \a ts
+ * \param[in] ts_expr The name of the \a scheme
  * \param[in] tree_class_expr The name of the tree class
  * \param[in] elem_1_expr The name of the first element \a elem_1
  * \param[in] elem_2_expr The name of the second element \a elem_2
  * \param[in] scheme The scheme to use to check the equality
- * \param[in] tree_class The eclass of the tree the elements are part of
+ * \param[in] eclass The eclass of the tree the elements are part of
  * \param[in] elem_1 The element to compare with \a elem_2
  * \param[in] elem_2 the element to compare with \a elem_1
  * \return testing::AssertionResult
@@ -51,7 +51,7 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
                   const t8_element_t *elem_2)
 {
   if (scheme->element_is_equal (eclass, elem_1, elem_2)) {
-    return testing::AssertionSuccess ();
+    return testing::AssertionSuccess (false);
   }
   else {
 #if T8_ENABLE_DEBUG
@@ -60,26 +60,38 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
     const t8_eclass_t tree_class = scheme->get_eclass_scheme_eclass (eclass);
     scheme->element_to_string (eclass, elem_1, elem_1_string, BUFSIZ);
     scheme->element_to_string (eclass, elem_2, elem_2_string, BUFSIZ);
-    return testing::AssertionFailure () << elem_1_expr << " " << elem_1_string << " is not equal to \n"
-                                        << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr
-                                        << " and tree class " << tree_class_expr << " "
-                                        << t8_eclass_to_string[tree_class];
+    return testing::AssertionFailure (false)
+           << elem_1_expr << " " << elem_1_string << " is not equal to \n"
+           << elem_2_expr << " " << elem_2_string << " given scheme " << ts_expr << " and tree class "
+           << tree_class_expr << " " << t8_eclass_to_string[tree_class];
 #else
-    return testing::AssertionFailure () << elem_1_expr << " is not equal to \n"
-                                        << elem_2_expr << " given scheme " << ts_expr << " and tree class "
-                                        << tree_class_expr;
+    return testing::AssertionFailure (false)
+           << elem_1_expr << " is not equal to \n"
+           << elem_2_expr << " given scheme " << ts_expr << " and tree class " << tree_class_expr;
 #endif
   }
 }
 
+/** Macro for a non-fatal failure test to check for equality of two elements.
+ * \param [in] scheme The scheme to use to check the equality.
+ * \param [in] eclass The eclass of the tree.
+ * \param [in] elem1 The first element to compare.
+ * \param [in] elem2 The second element to compare.
+ */
 #define EXPECT_ELEM_EQ(scheme, eclass, elem1, elem2) \
   EXPECT_PRED_FORMAT4 (element_equality, (scheme), (eclass), (elem1), (elem2))
 
-#define ASSERT_ELEM_EQ(scheme, tree_class, elem1, elem2) \
-  ASSERT_PRED_FORMAT4 (element_equality, (scheme), (tree_class), (elem1), (elem2))
+/** Macro for a fatal failure test to check for equality of two elements.
+ * \param [in] scheme The scheme to use to check the equality.
+ * \param [in] eclass The eclass of the tree.
+ * \param [in] elem1 The first element to compare.
+ * \param [in] elem2 The second element to compare.
+ */
+#define ASSERT_ELEM_EQ(scheme, eclass, elem1, elem2) \
+  ASSERT_PRED_FORMAT4 (element_equality, (scheme), (eclass), (elem1), (elem2))
 
 /**
- * \brief Test if two 3D Dimensionaltors are equal with respect to a given precision
+ * Test if two 3D Dimensionaltors are equal with respect to a given precision
  *
  * \tparam TDimensional2 Type of the first Dimensionaltor.
  * \param[in] Dimensional_1_expr Name of the first Dimensionaltor
@@ -104,16 +116,21 @@ dimensional_equality (const char *Dimensional_1_expr, const char *Dimensional_2_
   }
 }
 
+/** Macro for a non-fatal failure test to check for equality of two vectors.
+ * \param[in] Dimensional_1 First Dimensionaltor to compare.
+ * \param[in] Dimensional_2 Second Dimensionaltor to compare.
+ * \param[in] precision Test equality up to this precision.
+ */
 #define EXPECT_VEC_EQ(Dimensional_1, Dimensional_2, precision) \
   EXPECT_PRED_FORMAT3 (dimensional_equality, (Dimensional_1), (Dimensional_2), (precision))
 
 /**
- * \brief Test two forests for equality.
+ * Test two forests for equality.
  *
  * \param[in] forest_A_expr The name of the forest \a forest_A
  * \param[in] forest_B_expr The name of the forest \a forest_B
- * \param[in] forest_A      The forest to ompare with \a forest_B
- * \param[in] forest_B      The forest to ompare with \a forest_A
+ * \param[in] forest_A      The forest to compare with \a forest_B
+ * \param[in] forest_B      The forest to compare with \a forest_A
  * \return testing::AssertionResult
  */
 testing::AssertionResult
@@ -128,6 +145,10 @@ forest_equality (const char *forest_A_expr, const char *forest_B_expr, const t8_
   }
 }
 
+/** Macro for a non-fatal failure test to check for equality of two forests.
+ * \param[in] forest_A      The forest to compare with \a forest_B.
+ * \param[in] forest_B      The forest to compare with \a forest_A.
+ */
 #define EXPECT_FOREST_EQ(forest_A, forest_B) EXPECT_PRED_FORMAT2 (forest_equality, (forest_A), (forest_B))
 
 #endif /* T8_GTEST_CUSTOM_ASSERTION_HXX */

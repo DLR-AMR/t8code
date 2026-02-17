@@ -24,8 +24,6 @@
  * We define the geometrical queries for a forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_GEOMETRICAL_H
 #define T8_FOREST_GEOMETRICAL_H
 
@@ -137,7 +135,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
  * \param [in]      forest     The forest.
  * \param [in]      ltreeid    The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
- * \return                     The diameter of the element.
+ * \return                     The volume of the element.
  * \note                       This function assumes d-linear interpolation for the
  *                             tree vertex coordinates.
  *                             \a forest must be committed when calling this function.

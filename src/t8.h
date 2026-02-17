@@ -29,7 +29,12 @@
 #ifndef T8_H
 #define T8_H
 
+#include <t8_with_macro_error.h>
+#ifdef __cplusplus
+#include <cinttypes>
+#else
 #include <inttypes.h>
+#endif
 
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
@@ -260,7 +265,7 @@ t8_productionf (const char *fmt, ...)
 /** Log a message, no matter what rank, with priority SC_LP_DEBUG.
  * \param [in] fmt          Printf-style format string.
  * \note This function does not print anything unless t8code was compiled
- * in debug mode (--enable-debug, T8_ENABLE_DEBUG was defined).
+ * in debug mode (using -DCMAKE_BUILD_TYPE=Debug, so T8_ENABLE_DEBUG is defined).
  */
 void
 t8_debugf (const char *fmt, ...)

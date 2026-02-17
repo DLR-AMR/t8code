@@ -51,7 +51,8 @@ fi
 # Get indentation script version and split it into major, minor, patch
 CLANG_VERSION_STRING=`$FORMAT --version`
 
-VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
+[[ $CLANG_VERSION_STRING =~ version[[:space:]]+([^[:space:]]+) ]] &&
+VERSION="${BASH_REMATCH[1]}"
 MAJOR=`echo $VERSION | cut -d. -f1`
 MINOR=`echo $VERSION | cut -d. -f2`
 PATCH=`echo $VERSION | cut -d. -f3`
@@ -109,6 +110,7 @@ do
   # Iterate over each ignore filename
   for ignore_file in "${files_to_ignore[@]}"
     do
+      echo Checking "$arg" against "${GIT_REPO_PATH}/$ignore_file"
     if [[ "$arg" -ef "${GIT_REPO_PATH}/$ignore_file" ]]
     then 
       # arg matches and will be ignored
