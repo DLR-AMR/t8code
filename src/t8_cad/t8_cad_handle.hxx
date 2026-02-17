@@ -40,7 +40,7 @@
 class t8_cad_handle {
  public:
   /**
-    * Constructor of the cad shape handler.
+    * Constructor of the cad shape handle.
     * The shape is initialized based on a .brep file with the given prefix.
     * The internal structure extracts and stores geometric information such as
     * vertices, edges, and faces from this file. The number and type of vertices
@@ -67,38 +67,23 @@ class t8_cad_handle {
   t8_cad_handle ();
 
   /**
- * Destructor of the cad shape handler.
+ * Destructor of the cad shape handle.
  */
   ~t8_cad_handle ();
 
   /**
-   * Loads a cad shape from a .brep file with the given prefix.
-   * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
-   * \return                The loaded cad shape.
-   */
-  static TopoDS_Shape
-  load_cad_shape (const std::string fileprefix);
-
-  /**
-   * Map the cad shape to extract vertices, edges, faces, and their relationships.
-   * \param [in] cad_shape_in  The input cad shape to be mapped.
-   */
-  void
-  map_cad_shape (const TopoDS_Shape &cad_shape_in);
-
-  /**
-   * Updates the cad shape from a .brep file with the given prefix.
+   * Loads a cad shape from a .brep file with the given prefix and maps it.
    * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
    */
   void
-  update_cad_shape (const std::string fileprefix);
+  load_cad_from_file (const std::string fileprefix);
 
   /**
-   * Updates the cad shape directly from an existing TopoDS_Shape.
-   * \param [in] new_cad_shape  cad shape geometry object.
+   * Loads a cad shape from an existing TopoDS_Shape and maps it.
+   * \param [in] new_cad_shape  The input cad shape.
    */
   void
-  update_cad_shape (const TopoDS_Shape &new_cad_shape);
+  load_cad_from_shape (const TopoDS_Shape &cad_shape);
 
   /** Check if a cad_curve is a line.
    * \param [in] curve_index      The index of the cad_curve.
@@ -260,7 +245,7 @@ class t8_cad_handle {
   is_surface_closed (int geometry_index, int parameter) const;
 
   /**
-   * Increase the reference count of the cad handler.
+   * Increase the reference count of the cad handle.
    */
   inline void
   ref ()
@@ -269,19 +254,26 @@ class t8_cad_handle {
   }
 
   /**
-   * Decrease the reference count of the cad handler.
-   * If the reference count reaches zero, the cad handler is deleted.
+   * Decrease the reference count of the cad handle.
+   * If the reference count reaches zero, the cad handle is deleted.
    */
   inline void
   unref ()
   {
     if (t8_refcount_unref (&rc)) {
-      t8_debugf ("Deleting the cad_handler.\n");
+      t8_debugf ("Deleting the cad_handle.\n");
       delete this;
     }
   }
 
  private:
+  /**
+   * Map the cad shape to extract vertices, edges, faces, and their relationships.
+   * \param [in] cad_shape_in  The input cad shape to be mapped.
+   */
+  void
+  map_cad_shape (const TopoDS_Shape &cad_shape_in);
+
   TopoDS_Shape cad_shape;                          /**< cad geometry */
   TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
   TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
@@ -290,7 +282,7 @@ class t8_cad_handle {
     cad_shape_vertex2edge_map; /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
   TopTools_IndexedDataMapOfShapeListOfShape
     cad_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
-  /** The reference count of the cad handler. TODO: Replace by shared_ptr when cmesh becomes a class. */
+  /** The reference count of the cad handle. TODO: Replace by shared_ptr when cmesh becomes a class. */
   t8_refcount_t rc;
 };
 

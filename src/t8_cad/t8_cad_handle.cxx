@@ -21,7 +21,7 @@
 */
 
 #include <t8.h>
-#include <t8_cad_handle/t8_cad_handle.hxx>
+#include <t8_cad/t8_cad_handle.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <TopoDS.hxx>
 #include <BRep_Builder.hxx>
@@ -33,8 +33,8 @@
 #include <TopoDS_Face.hxx>
 #include <Standard_Version.hxx>
 
-TopoDS_Shape
-t8_cad_handle::load_cad_shape (const std::string fileprefix)
+void
+t8_cad_handle::load_cad_from_file (const std::string fileprefix)
 {
   TopoDS_Shape cad_shape;
   BRep_Builder builder;
@@ -50,7 +50,16 @@ t8_cad_handle::load_cad_shape (const std::string fileprefix)
                "Linked cad version: %s",
                OCC_VERSION_COMPLETE);
   }
-  return cad_shape;
+  map_cad_shape (cad_shape);
+}
+
+void
+t8_cad_handle::load_cad_from_shape (const TopoDS_Shape &cad_shape)
+{
+  if (cad_shape.IsNull ()) {
+    SC_ABORTF ("Shape is null. \n");
+  }
+  map_cad_shape (cad_shape);
 }
 
 void
@@ -75,19 +84,20 @@ t8_cad_handle::map_cad_shape (const TopoDS_Shape &cad_shape_in)
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
 }
 
-t8_cad_handle::t8_cad_handle (const TopoDS_Shape cad_shape_in)
+t8_cad_handle::t8_cad_handle (std::string fileprefix)
 {
-  if (cad_shape_in.IsNull ()) {
-    SC_ABORTF ("Shape is null. \n");
-  }
   t8_refcount_init (&rc);
-  t8_debugf ("Constructed the cad_handle.\n");
+  t8_debugf ("Constructed the cad_handle from file.\n");
 
-  t8_cad_handle::map_cad_shape (cad_shape_in);
+  t8_cad_handle::load_cad_from_file (fileprefix);
 }
 
-t8_cad_handle::t8_cad_handle (std::string fileprefix): t8_cad_handle (load_cad_shape (fileprefix))
+t8_cad_handle::t8_cad_handle (const TopoDS_Shape cad_shape_in)
 {
+  t8_refcount_init (&rc);
+  t8_debugf ("Constructed the cad_handle from shape.\n");
+
+  t8_cad_handle::load_cad_from_shape (cad_shape_in);
 }
 
 t8_cad_handle::t8_cad_handle ()
@@ -100,22 +110,6 @@ t8_cad_handle::t8_cad_handle ()
 t8_cad_handle::~t8_cad_handle ()
 {
   t8_debugf ("Deleted the cad_handle.\n");
-}
-
-void
-t8_cad_handle::update_cad_shape (const std::string fileprefix)
-{
-  /* Load the new cad shape from the fileprefix. */
-  TopoDS_Shape new_cad_shape = t8_cad_handle::load_cad_shape (fileprefix);
-  /* Map the new cad shape. */
-  t8_cad_handle::map_cad_shape (new_cad_shape);
-}
-
-void
-t8_cad_handle::update_cad_shape (const TopoDS_Shape &new_cad_shape)
-{
-  /* Map the new cad shape. */
-  t8_cad_handle::map_cad_shape (new_cad_shape);
 }
 
 int
