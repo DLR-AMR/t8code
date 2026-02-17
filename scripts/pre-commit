@@ -66,7 +66,7 @@ exec 1>&2
 diff_size=$(git diff | wc -l)
 
 pre_stash_size=$(git stash list | wc -l)
-git stash push --keep-index --include-untracked --message "pre-commit-stash"
+git stash push --quiet --keep-index --include-untracked --message  "pre-commit-stash"
 post_stash_size=$(git stash list | wc -l)
 increased_stash_size=$((post_stash_size - pre_stash_size))
 # If the stash size has increased, it means a new stash entry was created.
@@ -127,7 +127,7 @@ do
 done
 
 if [ $increased_stash_size -gt 0 ]; then
-  git stash pop
+  git stash pop --quiet
 fi
 
 # exit 1 if there was a nonindented file
