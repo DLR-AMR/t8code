@@ -69,10 +69,11 @@ pre_stash_size=$(git stash list | wc -l)
 git stash push --quiet --keep-index --include-untracked --message "pre-commit-stash"
 post_stash_size=$(git stash list | wc -l)
 increased_stash_size=$((post_stash_size - pre_stash_size))
-# If the stash size has increased, it means a new stash entry was created.
-if [ $diff_size -gt 0 ]; then
-  printf '\033[31m%s\033[0m\n' "Unstaged changes have been stashed. They will be popped after the pre-commit checks. Add the changes if you want to include them in the commit."
+if [ $increased_stash_size -gt 0 ]; then
+  echo "Stashed uncommitted changes to ensure a clean working directory for the pre-commit checks."
 fi
+# If the stash size has increased, it means a new stash entry was created.
+
 
 
 nocontinue=0
@@ -128,6 +129,10 @@ done
 
 if [ $increased_stash_size -gt 0 ]; then
   git stash pop --quiet
+fi
+
+if [ $nocontinue -ne 0 ]; then
+  printf '\033[38;5;208m%s\033[0m\n' "Pre-commit found errors. Did you add the latest changes?"
 fi
 
 # exit 1 if there was a nonindented file
