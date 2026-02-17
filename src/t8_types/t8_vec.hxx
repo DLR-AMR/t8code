@@ -199,7 +199,7 @@ template <T8RandomAccessRange TVecX, T8RandomAccessRange TVecY>
 static inline double
 t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
 {
-  T8_ASSERT ((vec_x.size () == 2) && (vec_y.size () == 2));
+  T8_ASSERT ((std::ranges::distance (vec_x) >= 2) && (std::ranges::distance (vec_y) >= 2));
   return vec_x[0] * vec_y[1] - vec_x[1] * vec_y[0];
 }
 
@@ -212,7 +212,8 @@ template <T8RandomAccessRange TVecX, T8RandomAccessRange TVecY, T8RandomAccessRa
 static inline void
 t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
 {
-  T8_ASSERT ((vec_x.size () == 3) && (vec_y.size () == 3));
+  T8_ASSERT ((std::ranges::distance (vec_x) >= 3) && (std::ranges::distance (vec_y) >= 3)
+             && (std::ranges::distance (cross) >= 3));
   cross[0] = vec_x[1] * vec_y[2] - vec_x[2] * vec_y[1];
   cross[1] = vec_x[2] * vec_y[0] - vec_x[0] * vec_y[2];
   cross[2] = vec_x[0] * vec_y[1] - vec_x[1] * vec_y[0];
@@ -227,6 +228,7 @@ template <T8InputRange TVecX, T8InputRange TVecY, T8InputRange TVecDiff>
 constexpr void
 t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
 {
+  T8_ASSERT (std::ranges::distance (vec_x) == std::ranges::distance (vec_y));
   std::ranges::transform (vec_x, vec_y, diff.begin (), std::minus {});
 }
 
@@ -266,7 +268,8 @@ template <T8InputRange TVecP1, T8InputRange TVecP2, T8InputRange TVecP3, T8Input
 static inline void
 t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNormal &normal)
 {
-  T8_ASSERT ((p1.size () == 3) && (p2.size () == 3) && (p3.size () == 3));
+  T8_ASSERT ((std::ranges::distance (p1) >= 3) && (std::ranges::distance (p2) >= 3)
+             && (std::ranges::distance (p3) >= 3));
 
   t8_3D_vec a;
   t8_3D_vec b;
@@ -286,7 +289,8 @@ template <T8RandomAccessRange TVecV1, T8RandomAccessRange TVecV2, T8RandomAccess
 static inline void
 t8_orthogonal_tripod (const TVecV1 &v1, TVecV2 &v2, TVecV3 &v3)
 {
-  T8_ASSERT (v1.size () == 3);
+  T8_ASSERT ((std::ranges::distance (v1) >= 3) && (std::ranges::distance (v2) >= 3)
+             && (std::ranges::distance (v3) >= 3));
   v2[0] = v1[1];
   v2[1] = v1[2];
   v2[2] = -v1[0];
