@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,19 +21,17 @@
 */
 
 /** \file t8_vec.hxx
- * We define routines to handle 3-dimensional vectors.
+ * We define routines to handle vectors.
  */
 
 #ifndef T8_VEC_HXX
 #define T8_VEC_HXX
 
 #include <t8.h>
-
+#include <array>
 #include <algorithm>
 #include <numeric>
-#include <array>
-#include <type_traits>
-#include <iterator>
+#include <ranges>
 #include <concepts>
 #include <cmath>
 #include <functional>
@@ -53,25 +51,26 @@ using t8_2D_vec = t8_vec<2>;
  */
 using t8_3D_vec = t8_vec<3>;
 
-/** Concept for container types with value type double.
+/** Concept for input ranges with elements convertible to double.
  * \tparam TType Container type to check.
  */
 template <typename TType>
-concept T8ContainerType = requires (TType t) {
-  {
-    std::begin (t)
-  } -> std::input_iterator;
-  {
-    std::end (t)
-  } -> std::input_iterator;
-  typename TType::value_type;
-} && std::is_convertible_v<typename TType::value_type, double>;
+concept T8InputRange
+  = std::ranges::input_range<TType> && std::convertible_to<std::ranges::range_value_t<TType>, double>;
+
+/** Concept for random access ranges with elements convertible to double.
+ * \note T8RandomAccessRange also satisfies the condition of T8InputRange but not vice versa.
+ * \tparam TType Container type to check.
+ */
+template <typename TType>
+concept T8RandomAccessRange
+  = std::ranges::random_access_range<TType> && std::convertible_to<std::ranges::range_value_t<TType>, double>;
 
 /** Vector norm.
   * \param [in] vec  An N-dimensional vector.
   * \return          The norm of \a vec.
   */
-template <T8ContainerType TVec>
+template <T8InputRange TVec>
 static inline double
 t8_norm (const TVec &vec)
 {
@@ -81,23 +80,24 @@ t8_norm (const TVec &vec)
 /** Normalize a vector.
   * \param [in,out] vec  An N-dimensional vector.
   */
-template <T8ContainerType TVec>
+template <T8InputRange TVec>
 constexpr void
 t8_normalize (TVec &vec)
 {
   const double norm = t8_norm (vec);
-  std::transform (vec.begin (), vec.end (), vec.begin (), [norm] (double v) { return v / norm; });
+  T8_ASSERT (norm != 0);
+  std::ranges::transform (vec, vec.begin (), [norm] (double v) { return v / norm; });
 }
 
 /** Copy a dimensional object.
   * \param [in]  src  The source.
   * \param [out] dest The destination.
   */
-template <T8ContainerType TVec1, T8ContainerType TVec2>
+template <T8InputRange TVec1, T8InputRange TVec2>
 constexpr void
 t8_copy (const TVec1 &src, TVec2 &dest)
 {
-  std::copy (src.begin (), src.end (), dest.begin ());
+  std::ranges::copy (src, dest.begin ());
 }
 
 /** Euclidean distance of X and Y.
@@ -106,7 +106,7 @@ t8_copy (const TVec1 &src, TVec2 &dest)
   * \return             The euclidean distance.
   *                     Equivalent to norm (X-Y).
   */
-template <T8ContainerType TPointX, T8ContainerType TPointY>
+template <T8InputRange TPointX, T8InputRange TPointY>
 constexpr double
 t8_dist (const TPointX &point_x, const TPointY &point_y)
 {
@@ -119,11 +119,11 @@ t8_dist (const TPointX &point_x, const TPointY &point_y)
   * \param [in,out] vec_x  An N-dimensional vector. On output set to \a alpha * \a vec_x.
   * \param [in]     alpha  A factor.
   */
-template <T8ContainerType TVec>
+template <T8InputRange TVec>
 constexpr void
 t8_ax (TVec &vec_x, const double alpha)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_x.begin (), [alpha] (double v) { return v * alpha; });
+  std::ranges::transform (vec_x, vec_x.begin (), [alpha] (double v) { return v * alpha; });
 }
 
 /** Compute Y = alpha * X
@@ -131,11 +131,11 @@ t8_ax (TVec &vec_x, const double alpha)
   * \param [out] vec_y  On output set to \a alpha * \a vec_x.
   * \param [in]  alpha  A factor.
   */
-template <T8ContainerType TVecX, T8ContainerType TVecY>
+template <T8InputRange TVecX, T8InputRange TVecY>
 constexpr void
 t8_axy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), [alpha] (double v) { return v * alpha; });
+  std::ranges::transform (vec_x, vec_y.begin (), [alpha] (double v) { return v * alpha; });
 }
 
 /** Y = alpha * X + b
@@ -144,13 +144,12 @@ t8_axy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
   *                     On output set to \a alpha * \a vec_x + \a b.
   * \param [in]  alpha  A factor.
   * \param [in]  b      An offset.
-  * \note It is possible that vec_x = vec_y on input to overwrite x
   */
-template <T8ContainerType TVecX, T8ContainerType TVecY>
+template <T8InputRange TVecX, T8InputRange TVecY>
 constexpr void
 t8_axb (const TVecX &vec_x, TVecY &vec_y, const double alpha, const double b)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), [alpha, b] (double v) { return alpha * v + b; });
+  std::ranges::transform (vec_x, vec_y.begin (), [alpha, b] (double v) { return alpha * v + b; });
 }
 
 /** Y = Y + alpha * X
@@ -159,12 +158,11 @@ t8_axb (const TVecX &vec_x, TVecY &vec_y, const double alpha, const double b)
   *                      On output set \a to vec_y + \a alpha * \a vec_x
   * \param [in]  alpha  A factor.
   */
-template <T8ContainerType TVecX, T8ContainerType TVecY>
+template <T8InputRange TVecX, T8InputRange TVecY>
 constexpr void
 t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_y.begin (),
-                  [alpha] (double x, double y) { return y + alpha * x; });
+  std::ranges::transform (vec_x, vec_y, vec_y.begin (), [alpha] (double x, double y) { return y + alpha * x; });
 }
 
 /** Z = Y + alpha * X
@@ -173,12 +171,11 @@ t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
   * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
   * \param [in]  alpha  A factor for the multiplication of \a vec_x.
   */
-template <T8ContainerType TVecX, T8ContainerType TVecY, T8ContainerType TVecZ>
+template <T8InputRange TVecX, T8InputRange TVecY, T8InputRange TVecZ>
 constexpr void
 t8_axpyz (const TVecX &vec_x, const TVecY &vec_y, TVecZ &vec_z, const double alpha)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), vec_z.begin (),
-                  [alpha] (double x, double y) { return y + alpha * x; });
+  std::ranges::transform (vec_x, vec_y, vec_z.begin (), [alpha] (double x, double y) { return y + alpha * x; });
 }
 
 /** Dot product of X and Y.
@@ -186,7 +183,7 @@ t8_axpyz (const TVecX &vec_x, const TVecY &vec_y, TVecZ &vec_z, const double alp
   * \param [in]  vec_y  An N-dimensional vector.
   * \return             The dot product \a vec_x * \a vec_y
   */
-template <T8ContainerType TVecX, T8ContainerType TVecY>
+template <T8InputRange TVecX, T8InputRange TVecY>
 constexpr double
 t8_dot (const TVecX &vec_x, const TVecY &vec_y)
 {
@@ -198,7 +195,7 @@ t8_dot (const TVecX &vec_x, const TVecY &vec_y)
   * \param [in]  vec_y  A 2D vector.
   * \return             The cross product of \a vec_x and \a vec_y.
   */
-template <T8ContainerType TVecX, T8ContainerType TVecY>
+template <T8RandomAccessRange TVecX, T8RandomAccessRange TVecY>
 static inline double
 t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
 {
@@ -211,7 +208,7 @@ t8_cross_2D (const TVecX &vec_x, const TVecY &vec_y)
   * \param [in]  vec_y  A 3D vector.
   * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
   */
-template <T8ContainerType TVecX, T8ContainerType TVecY, T8ContainerType TVecCross>
+template <T8RandomAccessRange TVecX, T8RandomAccessRange TVecY, T8RandomAccessRange TVecCross>
 static inline void
 t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
 {
@@ -226,11 +223,11 @@ t8_cross_3D (const TVecX &vec_x, const TVecY &vec_y, TVecCross &cross)
   * \param [in]  vec_y  An N-dimensional vector.
   * \param [out] diff   On output, the difference of \a vec_x and \a vec_y.
   */
-template <T8ContainerType TVecX, T8ContainerType TVecY, T8ContainerType TVecDiff>
+template <T8InputRange TVecX, T8InputRange TVecY, T8InputRange TVecDiff>
 constexpr void
 t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
 {
-  std::transform (vec_x.begin (), vec_x.end (), vec_y.begin (), diff.begin (), std::minus<double> ());
+  std::ranges::transform (vec_x, vec_y, diff.begin (), std::minus {});
 }
 
 /**
@@ -240,19 +237,18 @@ t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
   * \param[in] tol Tolerance.
   * \return true, if the objects are equal up to \a tol.
   */
-template <T8ContainerType TDimensionalX, T8ContainerType TDimensionalY>
+template <T8InputRange TDimensionalX, T8InputRange TDimensionalY>
 constexpr bool
 t8_eq (const TDimensionalX &x, const TDimensionalY &y, const double tol)
 {
-  return std::equal (x.begin (), x.end (), y.begin (),
-                     [tol] (double x_val, double y_val) { return std::fabs (x_val - y_val) <= tol; });
+  return std::ranges::equal (x, y, [tol] (double x_val, double y_val) { return std::fabs (x_val - y_val) <= tol; });
 }
 
 /** Rescale a vector to a new length.
   * \param [in,out] vec  An N-dimensional vector.
   * \param [in]  new_length  New length of the vector.
   */
-template <T8ContainerType TVec>
+template <T8InputRange TVec>
 static inline void
 t8_rescale (TVec &vec, const double new_length)
 {
@@ -264,17 +260,20 @@ t8_rescale (TVec &vec, const double new_length)
   * \param [in]  p1  A 3D vector.
   * \param [in]  p2  A 3D vector.
   * \param [in]  p3  A 3D vector.
-  * \param [out] normal vector of the triangle. (Not necessarily of length 1!)d
+  * \param [out] normal vector of the triangle. (Not necessarily of length 1!)
   */
-template <T8ContainerType TVecP1, T8ContainerType TVecP2, T8ContainerType TVecP3, T8ContainerType TVecNormal>
+template <T8InputRange TVecP1, T8InputRange TVecP2, T8InputRange TVecP3, T8InputRange TVecNormal>
 static inline void
 t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNormal &normal)
 {
   T8_ASSERT ((p1.size () == 3) && (p2.size () == 3) && (p3.size () == 3));
+
   t8_3D_vec a;
   t8_3D_vec b;
-  std::transform (p2.begin (), p2.end (), p1.begin (), a.begin (), std::minus<double> ());
-  std::transform (p3.begin (), p3.end (), p1.begin (), b.begin (), std::minus<double> ());
+
+  std::ranges::transform (p2, p1, a.begin (), std::minus {});
+  std::ranges::transform (p3, p1, b.begin (), std::minus {});
+
   t8_cross_3D (a, b, normal);
 }
 
@@ -283,7 +282,7 @@ t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNorm
   * \param [out]  v2 3D vector.
   * \param [out]  v3 3D vector.
   */
-template <T8ContainerType TVecV1, T8ContainerType TVecV2, T8ContainerType TVecV3>
+template <T8RandomAccessRange TVecV1, T8RandomAccessRange TVecV2, T8RandomAccessRange TVecV3>
 static inline void
 t8_orthogonal_tripod (const TVecV1 &v1, TVecV2 &v2, TVecV3 &v3)
 {
