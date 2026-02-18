@@ -32,7 +32,7 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
