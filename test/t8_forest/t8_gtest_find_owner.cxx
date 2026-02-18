@@ -34,7 +34,8 @@
 #include <t8_forest/t8_forest_private.h>
 #include <test/t8_gtest_macros.hxx>
 
-class forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass>> {
+struct forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass>>
+{
  protected:
   void
   SetUp () override
@@ -49,91 +50,6 @@ class forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclass
   t8_cmesh_t cmesh;
   const t8_scheme *scheme;
 };
-
-#if 0
-/* Depending on an integer i create a different cmesh.
- * i = 0: cmesh_new_class
- * i = 1: cmesh_new_hypercube
- * i = 2: cmesh_new_bigmesh (100 trees)
- * else:  cmesh_new_class
- */
-static t8_cmesh_t
-t8_test_create_cmesh (int i, t8_eclass_t tree_class, sc_MPI_Comm comm)
-{
-  switch (i) {
-  case 0:
-    return t8_cmesh_new_from_class (tree_class, comm);
-  case 1:
-    return t8_cmesh_new_hypercube (tree_class, comm, 0, 0, 0);
-  case 2:
-    return t8_cmesh_new_bigmesh (tree_class, 100, comm);
-  default:
-    return t8_cmesh_new_from_class (tree_class, comm);
-  }
-}
-
-TEST_P (forest_find_owner, find_owner)
-{
-  t8_element_t       *element;
-  int                 level = 5;
-
-  T8_ASSERT (tree_class != T8_ECLASS_PYRAMID);
-
-  t8_debugf ("Testing find_owner with eclass %s\n",
-             t8_eclass_to_string[tree_class]);
-
-  /* allocate the element */
-  const t8_scheme  scheme = scheme->eclass_schemes[tree_class];
-  scheme->element_new (tree_class, 1, &element);
-  /* Compute the number of elements per tree */
-  scheme->set_to_root (tree_class, element);
-  /* TODO: This computation fails with pyramids */
-  t8_gloidx_t         elements_per_tree =
-    pow (scheme->element_get_num_children (tree_class, element), level);
-
-  for (int itype = 0; itype < 3; itype++) {
-    t8_debugf ("\tTesting cmesh type %i\n", itype);
-    /* build the cmesh */
-    cmesh = t8_test_create_cmesh (itype, tree_class, sc_MPI_COMM_WORLD);
-    /* We reuse the scheme for all forests and thus ref it */
-    t8_scheme_ref (scheme);
-    /* build the forest */
-    t8_forest_t         forest =
-      t8_forest_new_uniform (cmesh, scheme, level, 0,
-                             sc_MPI_COMM_WORLD);
-    for (int itree = 0, t8_gloidx_t global_elem_num = 0;
-         itree < t8_forest_get_num_global_trees (forest); itree++) {
-      /* Iterate over all trees */
-      for (t8_gloidx_t ielement = 0; ielement < elements_per_tree;
-           ielement++, global_elem_num++) {
-        /* Compute the ielement's elements in the tree */
-        scheme->element_set_linear_id (tree_class, element, level, (uint64_t) ielement);
-        /* Find the owner of the element */
-        int                 owner =
-          t8_forest_element_find_owner (forest, itree, element, tree_class);
-        /* Find the owner in a different way via the element offset array.
-         * This is only possible since we have a uniform refinement. */
-        if (forest->element_offsets == NULL) {
-          t8_forest_partition_create_offsets (forest);
-        }
-        int                 owner_alter = -1;
-        t8_offset_first_owner_of_tree (forest->mpisize, global_elem_num,
-                                       t8_shmem_array_get_gloidx_array
-                                       (forest->element_offsets),
-                                       &owner_alter);
-        /* Check if both owners are the same */
-        ASSERT_EQ (owner,
-                   owner_alter) << "Finding owner for element " << (long long)
-          ielement << " in tree " << (long long) itree << " failed.\n";
-      }
-    }
-    t8_forest_unref (&forest);
-  }
-  /* clean-up */
-  scheme->element_destroy (tree_class, 1, &element);
-  t8_scheme_unref (&scheme);
-}
-#endif
 
 TEST_P (forest_find_owner, find_multiple_owners)
 {

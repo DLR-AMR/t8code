@@ -53,7 +53,7 @@ struct t8_cmesh_vertex_connectivity
   ~t8_cmesh_vertex_connectivity () {};
 
   /** The state this connectivity can be in. */
-  enum class state {
+  enum struct state {
     INITIALIZED,          /**< Initialized but not filled */
     TREE_TO_VERTEX_VALID, /**< Ready to use, but only tree_to_vertex functionality. */
     VALID                 /**< Ready to use for full vertex connectivity. Cannot be altered anymore. */

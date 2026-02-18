@@ -34,7 +34,7 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
 /** The class holding a hexahedral element in the default scheme.
  * We make this definition public for interoperability of element classes.
@@ -43,7 +43,8 @@ class t8_scheme;
 typedef p8est_quadrant_t t8_phex_t;
 
 /** Default implementation of the scheme for the hex element class. */
-class t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_default_scheme_hex> {
+struct t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_default_scheme_hex>
+{
  public:
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_hex () noexcept: t8_default_scheme_common (sizeof (t8_phex_t)) {};
@@ -574,6 +575,7 @@ class t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_d
   int
   element_is_valid (const t8_element_t *element) const;
 
+#endif
   /**
   * Print a given element. For a example for a triangle print the coordinates
   * and the level of the triangle. This function is only available in the
@@ -585,7 +587,6 @@ class t8_default_scheme_hex: public t8_default_scheme_common<T8_ECLASS_HEX, t8_d
   */
   void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const;
-#endif
 
   /** Fills an element with the root element.
  * \param [in,out] elem   The element to be filled with root.

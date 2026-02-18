@@ -21,8 +21,7 @@
 */
 
 /** \file t8_cmesh_copy.c
- *
- * TODO: document this file
+ * Functionality to copy a cmesh.
  */
 
 #include <t8_data/t8_shmem.h>
@@ -36,7 +35,7 @@
 void
 t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
 {
-  size_t num_parts, iz;
+  size_t num_parts;
   t8_locidx_t first_tree, num_trees, first_ghost, num_ghosts;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
@@ -83,10 +82,10 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
     num_parts = t8_cmesh_trees_get_numproc (cmesh_from->trees);
     t8_cmesh_trees_init (&cmesh->trees, num_parts, cmesh_from->num_local_trees, cmesh_from->num_ghosts);
     t8_cmesh_trees_copy_toproc (cmesh->trees, cmesh_from->trees, cmesh_from->num_local_trees, cmesh_from->num_ghosts);
-    for (iz = 0; iz < num_parts; iz++) {
-      t8_cmesh_trees_get_part_data (cmesh_from->trees, iz, &first_tree, &num_trees, &first_ghost, &num_ghosts);
-      t8_cmesh_trees_start_part (cmesh->trees, iz, first_tree, num_trees, first_ghost, num_ghosts, 0);
-      t8_cmesh_trees_copy_part (cmesh->trees, iz, cmesh_from->trees, iz);
+    for (size_t ipart = 0; ipart < num_parts; ipart++) {
+      t8_cmesh_trees_get_part_data (cmesh_from->trees, ipart, &first_tree, &num_trees, &first_ghost, &num_ghosts);
+      t8_cmesh_trees_start_part (cmesh->trees, ipart, first_tree, num_trees, first_ghost, num_ghosts, 0);
+      t8_cmesh_trees_copy_part (cmesh->trees, ipart, cmesh_from->trees, ipart);
     }
   }
 }

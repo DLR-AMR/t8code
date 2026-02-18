@@ -24,8 +24,6 @@
  * We define the forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_GENERAL_H
 #define T8_FOREST_GENERAL_H
 
@@ -48,11 +46,18 @@ typedef enum {
   T8_GHOST_VERTICES  /**< Consider all vertex (codimension 3) and edge and face neighbors. */
 } t8_ghost_type_t;
 
-/** This typedef is needed as a helper construct to 
+/** This typedef is needed as a helper construct to
  * properly be able to define a function that returns
  * a pointer to a void fun(void) function. \see t8_forest_get_user_function.
  */
 typedef void (*t8_generic_function_pointer) (void);
+
+/**
+ * The prototype of a weight function for the partition algorithm.
+ * The function should be pure, and return a positive weight given a forest, a local tree index and an element index within the local tree
+ */
+typedef double (t8_weight_fcn_t) (t8_forest_t, t8_locidx_t, t8_locidx_t);
+
 T8_EXTERN_C_BEGIN ();
 
 /** Callback function prototype to replace one set of elements with another.
@@ -77,12 +82,12 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] first_incoming  The tree local index of the first incoming element.
  *                             0 <= first_incom < new_which_tree->num_elements
  *
- * If an element is being refined, \a refine and \a num_outgoing will be 1 and 
+ * If an element is being refined, \a refine and \a num_outgoing will be 1 and
  * \a num_incoming will be the number of children.
- * If a family is being coarsened, \a refine will be -1, \a num_outgoing will be 
- * the number of family members and \a num_incoming will be 1. 
- * If an element is being removed, \a refine and \a num_outgoing will be 1 and 
- * \a num_incoming will be 0. 
+ * If a family is being coarsened, \a refine will be -1, \a num_outgoing will be
+ * the number of family members and \a num_incoming will be 1.
+ * If an element is being removed, \a refine and \a num_outgoing will be 1 and
+ * \a num_incoming will be 0.
  * Else \a refine will be 0 and \a num_outgoing and \a num_incoming will both be 1.
  * \see t8_forest_iterate_replace
  */
@@ -96,13 +101,13 @@ typedef void (*t8_forest_replace_t) (t8_forest_t forest_old, t8_forest_t forest_
  * form a family and we decide whether this family should be coarsened
  * or only the first element should be refined.
  * Otherwise \a is_family must equal zero and we consider the first entry
- * of the element array for refinement. 
+ * of the element array for refinement.
  * Entries of the element array beyond the first \a num_elements are undefined.
  * \param [in] forest       The forest to which the new elements belong.
  * \param [in] forest_from  The forest that is adapted.
  * \param [in] which_tree   The local tree containing \a elements.
  * \param [in] tree_class   The eclass of \a which_tree.
- * \param [in] lelement_id  The local element id in \a forest_old in the tree of the current element.
+ * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
  * \param [in] scheme       The scheme of the forest.
  * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
  * \param [in] num_elements The number of entries in \a elements that are defined
@@ -121,7 +126,7 @@ typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t
 
 /** Create a new forest with reference count one.
  * This forest needs to be specialized with the t8_forest_set_* calls.
- * Currently it is mandatory to either call the functions \see t8_forest_set_mpicomm, 
+ * Currently it is mandatory to either call the functions \see t8_forest_set_mpicomm,
  * \ref t8_forest_set_cmesh, and \ref t8_forest_set_scheme,
  * or to call one of \ref t8_forest_set_copy, \ref t8_forest_set_adapt, or
  * \ref t8_forest_set_partition.  It is illegal to mix these calls, or to
@@ -159,7 +164,7 @@ t8_forest_is_committed (t8_forest_t forest);
  * \param [in] forest   The forest to consider.
  * \return              True if \a forest has no elements which are inside each other.
  * \note This function is collective, but only checks local overlapping on each process.
- * \see t8_forest_partition_test_boundary_element if you also want to test for 
+ * \see t8_forest_partition_test_boundary_element if you also want to test for
  * global overlap across the process boundaries.
  */
 int
@@ -258,7 +263,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from);
  */
 /* TODO: make recursive flag to int specifying the number of recursions? */
 void
-t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, int recursive);
+t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, const int recursive);
 
 /** Set the user data of a forest. This can i.e. be used to pass user defined
  * arguments to the adapt routine.
@@ -310,9 +315,11 @@ t8_forest_get_user_function (const t8_forest_t forest);
  *                          referencing \b set_from.
  *                          If NULL, a previously (or later) set forest will
  *                          be taken (\ref t8_forest_set_adapt, \ref t8_forest_set_balance).
- * \param [in]      set_for_coarsening CURRENTLY DISABLED. If true, then the partitions
- *                          are choose such that coarsening an element once is a process local
- *                          operation.
+ * \param [in]      set_for_coarsening If true, the partition will be such that coarsening a
+ *                          family of elements into their parent once is a process-local operation.
+ *                          This is ensured by a post-processing step that slightly shifts the newly
+ *                          determined process boundaries such that no full family of (same-level)
+ *                          siblings is split between processes.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
  * 1) Adapt 2) Partition 3) Balance.
@@ -323,6 +330,16 @@ t8_forest_get_user_function (const t8_forest_t forest);
  */
 void
 t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening);
+
+/** Set a user-defined weight function to guide the partitioning.
+ * \param [in, out] forest  The forest.
+ * \param [in]      weight_callback A callback function defining element weights for the partitioning.
+ * \pre \a weight_callback must be free of side effects (like changing the forest, some global state, etc.),
+ * the behavior is undefined otherwise.
+ * \note If \a weight_callback is null, then all the elements are assumed to have the same weight
+ */
+void
+t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *weight_callback);
 
 /** Set a source forest to be balanced during commit.
  * A forest is said to be balanced if each element has face neighbors of level
@@ -379,8 +396,8 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
 
 /**
  *  Use assertions and document that the forest_set (..., from) and
- *  set_load are mutually exclusive. 
- * 
+ *  set_load are mutually exclusive.
+ *
  *  TODO: Unused function -> remove?
  */
 void
@@ -452,7 +469,7 @@ t8_forest_get_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid);
 
 /**
  * Check whether a given tree id belongs to a local tree in a forest.
- * 
+ *
  * \param [in]    forest The forest.
  * \param [in]    local_tree A tree id.
  * \return True if and only if the id \a local_tree belongs to a local tree of \a forest.
@@ -467,8 +484,8 @@ t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
  * \param [in]      forest The forest.
  * \param [in]      gtreeid The global id of a tree.
  * \return                 The tree's local id in \a forest, if it is a local tree.
- *                         A negative number if not. Ghosts trees are not considered 
- *                         as local. 
+ *                         A negative number if not. Ghosts trees are not considered
+ *                         as local.
  * \see t8_forest_get_local_or_ghost_id for ghost trees.
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
  */
@@ -522,7 +539,7 @@ t8_forest_get_coarse_tree (t8_forest_t forest, t8_locidx_t ltreeid);
 
 /**
  * Query whether a given element is a leaf in a forest.
- * 
+ *
  * \param [in]  forest    The forest.
  * \param [in]  element   An element of a local tree in \a forest.
  * \param [in]  local_tree A local tree id of \a forest.
@@ -585,7 +602,7 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
                                t8_element_t **pneighbor_leaves[], int face, int *dual_faces[], int *num_neighbors,
                                t8_locidx_t **pelement_indices, t8_eclass_t *pneigh_eclass, int forest_is_balanced);
 
-/** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation. 
+/** Like \ref t8_forest_leaf_face_neighbors but also provides information about the global neighbors and the orientation.
  * \param [in]    forest  The forest. Must have a valid ghost layer.
  * \param [in]    ltreeid A local tree id.
  * \param [in]    leaf    A leaf in tree \a ltreeid of \a forest.
@@ -603,8 +620,8 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
  * \param [in]    forest_is_balanced True if we know that \a forest is balanced, false
  *                        otherwise.
  * \param [out]   gneigh_tree  The global tree IDs of the neighbor trees.
- * \param [out]   orientation  If not NULL on input, the face orientation is computed and stored here. 
- *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored. 
+ * \param [out]   orientation  If not NULL on input, the face orientation is computed and stored here.
+ *                                         Thus, if the face connection is an inter-tree connection the orientation of the tree-to-tree connection is stored.
  *                                         Otherwise, the value 0 is stored.
  * All other parameters and behavior are identical to \ref t8_forest_leaf_face_neighbors.
  * \note If there are no face neighbors, then *neighbor_leaves = NULL, num_neighbors = 0,
@@ -854,7 +871,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
 /**
  * TODO: Can be removed since it is unused.
- * 
+ *
  * \param[in] forest The forest.
  */
 void
@@ -862,16 +879,16 @@ t8_forest_iterate (t8_forest_t forest);
 
 /** Query whether a batch of points lies inside an element. For bilinearly interpolated elements.
  * \note For 2D quadrilateral elements this function is only an approximation. It is correct
- *  if the four vertices lie in the same plane, but it may produce only approximate results if 
+ *  if the four vertices lie in the same plane, but it may produce only approximate results if
  *  the vertices do not lie in the same plane.
  * \param [in]      forest      The forest.
  * \param [in]      ltreeid     The forest local id of the tree in which the element is.
  * \param [in]      element     The element.
  * \param [in]      points      3-dimensional coordinates of the points to check
  * \param [in]      num_points  The number of points to check
- * \param [in, out] is_inside   An array of length \a num_points, filled with 0/1 on output. True (non-zero) if a \a point 
- *                              lies within an \a element, false otherwise. The return value is also true if the point 
- *                              lies on the element boundary. Thus, this function may return true for different leaf 
+ * \param [in, out] is_inside   An array of length \a num_points, filled with 0/1 on output. True (non-zero) if a \a point
+ *                              lies within an \a element, false otherwise. The return value is also true if the point
+ *                              lies on the element boundary. Thus, this function may return true for different leaf
  *                              elements, if they are neighbors and the point lies on the common boundary.
  * \param [in]      tolerance   Tolerance that we allow the point to not exactly match the element.
  *                              If this value is larger we detect more points.

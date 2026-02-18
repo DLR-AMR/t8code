@@ -21,10 +21,7 @@
 */
 
 /** \file t8_cmesh_save.h
- *
  * We define routines to save and load a cmesh to/from the file system.
- *
- * TODO: document this file
  */
 
 #ifndef T8_CMESH_SAVE_H
@@ -41,6 +38,7 @@
  * mode controls, which of the processes open files and distribute the data.
  */
 typedef enum t8_load_mode {
+  /** First mode. */
   T8_LOAD_FIRST = 0,
   /** In simple mode, the first n processes load the file */
   T8_LOAD_SIMPLE = T8_LOAD_FIRST,
@@ -52,6 +50,7 @@ typedef enum t8_load_mode {
    * The parameter n has to be passed as an extra parameter.
    * \see t8_cmesh_load_and_distribute */
   T8_LOAD_STRIDE,
+  /** Number of modes in which we can open a saved cmesh. */
   T8_LOAD_COUNT
 } t8_load_mode_t;
 

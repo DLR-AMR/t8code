@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_ghost.cxx
+ * Implements functions declared in \ref t8_forest_ghost.h.
+ */
+
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
@@ -946,9 +950,6 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
   t8_ghost_mpi_send_info_t *send_info, *current_send_info;
   char *current_buffer;
   size_t bytes_written, element_bytes, element_count, element_size;
-#if T8_ENABLE_DEBUG
-  size_t acc_el_count = 0;
-#endif
   int mpiret;
 
   /* Allocate a send_buffer for each remote rank */
@@ -1012,9 +1013,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
     memcpy (current_buffer + bytes_written, &remote_trees->elem_count, sizeof (size_t));
     bytes_written += sizeof (size_t);
     bytes_written += T8_ADD_PADDING (bytes_written);
-#if T8_ENABLE_DEBUG
-    acc_el_count = 0;
-#endif
+
     for (remote_index = 0; remote_index < remote_trees->elem_count; remote_index++) {
       /* Get a pointer to the tree */
       remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (remote_trees, remote_index);
@@ -1044,9 +1043,6 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
 
       /* Add to the counter of remote elements. */
       ghost->num_remote_elements += element_count;
-#if T8_ENABLE_DEBUG
-      acc_el_count += element_count;
-#endif
     } /* End tree loop */
 
     T8_ASSERT (bytes_written == current_send_info->num_bytes);
@@ -1285,7 +1281,7 @@ typedef struct t8_recv_list_entry_struct
   int pos_in_remote_processes; /**< The position of this process in the remote_processes array */
 } t8_recv_list_entry_t;
 
-/* We hash these entries by their rank */
+/** We hash these entries by their rank. */
 unsigned
 t8_recv_list_entry_hash (const void *v1, [[maybe_unused]] const void *u)
 {
@@ -1294,7 +1290,7 @@ t8_recv_list_entry_hash (const void *v1, [[maybe_unused]] const void *u)
   return e1->rank;
 }
 
-/* two entries are considered equal if they have the same rank. */
+/** Two entries are considered equal if they have the same rank. */
 int
 t8_recv_list_entry_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
