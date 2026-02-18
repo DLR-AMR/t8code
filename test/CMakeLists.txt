@@ -201,7 +201,10 @@ add_t8_cpp_test( NAME t8_gtest_face_corner_serial           SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_set_linear_id_serial         SOURCES t8_schemes/t8_gtest_set_linear_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_elements_are_family_serial   SOURCES t8_schemes/t8_gtest_elements_are_family.cxx )
 if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
+  add_t8_test( NAME t8_test_fortran_mpi_interface_init_serial      SOURCES api/t8_fortran_interface/t8_test_init_no_mpi.f90 )
   add_t8_test( NAME t8_test_fortran_mpi_interface_init_parallel    SOURCES api/t8_fortran_interface/t8_test_mpi_init.f90 )
+  add_t8_test( NAME t8_test_fortran_mpi_interface_cmesh_parallel   SOURCES api/t8_fortran_interface/t8_test_cmesh.f90 )
+  add_t8_test( NAME t8_test_fortran_mpi_interface_forest_parallel  SOURCES api/t8_fortran_interface/t8_test_forest.f90 )
 endif()
  
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_functions/t8_gtest_vector_split.cxx )
