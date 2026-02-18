@@ -56,7 +56,8 @@ test_adapt_holes ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, 
   return 0;
 }
 
-class DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<int> {
+struct DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<int>
+{
  protected:
   void
   SetUp () override

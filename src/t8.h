@@ -29,6 +29,13 @@
 #ifndef T8_H
 #define T8_H
 
+#include <t8_with_macro_error.h>
+#ifdef __cplusplus
+#include <cinttypes>
+#else
+#include <inttypes.h>
+#endif
+
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
 #error "MPI configured differently in t8code and libsc"
@@ -48,7 +55,7 @@
  * It needs to be followed by a semicolon to look like a statement. */
 #define T8_EXTERN_C_END() SC_EXTERN_C_END
 
-/* call this after including all headers */
+/** Call this after including all headers */
 T8_EXTERN_C_BEGIN ();
 
 /** Portable way to use the const keyword determined by configure. */
@@ -90,6 +97,8 @@ T8_EXTERN_C_BEGIN ();
 
 /** A type for processor-local indexing. */
 typedef int32_t t8_locidx_t;
+/** The format specifier for t8_locidx_t */
+#define T8_LOCIDX_FORMAT PRId32
 /** The MPI Datatype of t8_locidx_t */
 #define T8_MPI_LOCIDX sc_MPI_INT
 /** Macro to get the absolute value of a t8_locidx_t */
@@ -98,9 +107,12 @@ typedef int32_t t8_locidx_t;
 #define T8_LOCIDX_MAX INT32_MAX
 /** Comparison function for t8_locidx_t */
 #define t8_compare_locidx(v, w) sc_int32_compare (v, w)
-
+/** A type for holding process ids. */
+typedef int t8_procidx_t;
 /** A type for global indexing that holds really big numbers. */
 typedef int64_t t8_gloidx_t;
+/** The format specifier for t8_gloidx_t */
+#define T8_GLOIDX_FORMAT PRId64
 /** The MPI Datatype of t8_gloidx_t */
 #define T8_MPI_GLOIDX sc_MPI_LONG_LONG_INT
 /** Macro to get the absolute value of a t8_gloidx_t */
@@ -112,6 +124,8 @@ typedef int64_t t8_gloidx_t;
 
 /** A type for storing SFC indices */
 typedef uint64_t t8_linearidx_t;
+/** The format specifier for t8_linearidx_t */
+#define T8_LINEARIDX_FORMAT PRIu64
 /** The MPI datatype of t8_linearidx_t */
 #define T8_MPI_LINEARIDX sc_MPI_UNSIGNED_LONG_LONG
 
@@ -138,7 +152,7 @@ typedef uint64_t t8_linearidx_t;
 
 /** Communication tags used internal to t8code. */
 typedef enum {
-  T8_MPI_TAG_FIRST = SC_TAG_FIRST,
+  T8_MPI_TAG_FIRST = SC_TAG_FIRST,      /**< Dummy first MPT tag. */
   T8_MPI_PARTITION_CMESH = SC_TAG_LAST, /**< Used for coarse mesh partitioning */
   T8_MPI_PARTITION_FOREST,              /**< Used for forest partitioning */
   T8_MPI_GHOST_FOREST,                  /**< Used for for ghost layer creation */
@@ -146,7 +160,8 @@ typedef enum {
   T8_MPI_CMESH_UNIFORM_BOUNDS_START,    /**< Used for cmesh uniform bounds computation. */
   T8_MPI_CMESH_UNIFORM_BOUNDS_END,      /**< Used for cmesh uniform bounds computation. */
   T8_MPI_TEST_ELEMENT_PACK_TAG,         /**< Used for testing mpi pack and unpack functionality */
-  T8_MPI_TAG_LAST
+  T8_MPI_PFC_TAG,                       /**< Used for data exchange during partition for coarsening. */
+  T8_MPI_TAG_LAST                       /**< Dummy last MPI tag. */
 } t8_MPI_tag_t;
 
 /** Query the package identity as registered in libsc.
@@ -250,7 +265,7 @@ t8_productionf (const char *fmt, ...)
 /** Log a message, no matter what rank, with priority SC_LP_DEBUG.
  * \param [in] fmt          Printf-style format string.
  * \note This function does not print anything unless t8code was compiled
- * in debug mode (--enable-debug, T8_ENABLE_DEBUG was defined).
+ * in debug mode (using -DCMAKE_BUILD_TYPE=Debug, so T8_ENABLE_DEBUG is defined).
  */
 void
 t8_debugf (const char *fmt, ...)
@@ -292,7 +307,7 @@ t8_init (int log_threshold);
 void *
 t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t index);
 
-/* call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
+/** Call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();
 
 #endif /* !T8_H */

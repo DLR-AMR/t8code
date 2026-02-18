@@ -154,6 +154,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
     return true;
   }
   if (cmesh->geometry_handler->get_num_geometries () > 0) {
+    bool is_valid = true;
     /* Iterate over all trees, get their vertices and check the volume */
     for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
       /* Check if tree and geometry are compatible. */
@@ -161,7 +162,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
         = cmesh->geometry_handler->tree_compatible_with_geom (cmesh, t8_cmesh_get_global_id (cmesh, itree));
       if (!geometry_compatible) {
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
-        return false;
+        is_valid = false;
       }
       else if (check_for_negative_volume) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
@@ -169,10 +170,11 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
           = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
         if (negative_volume) {
           t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
-          return false;
+          is_valid = false;
         }
       }
     }
+    return is_valid;
   }
   return true;
 }
@@ -1109,6 +1111,36 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
   return face_neigh;
 }
 
+t8_eclass_t
+t8_cmesh_get_tree_face_neighbor_eclass (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+  T8_ASSERT (0 <= face);
+
+  const t8_locidx_t neighbor_id = t8_cmesh_get_face_neighbor (cmesh, ltreeid, face, NULL, NULL);
+  if (neighbor_id < 0) {
+    // No neighbor was found.
+    return T8_ECLASS_INVALID;
+  }
+  const bool neighbor_is_ghost = t8_cmesh_treeid_is_ghost (cmesh, neighbor_id);
+  if (!neighbor_is_ghost) {
+    // Neighbor was found and is a local tree
+    return t8_cmesh_get_tree_class (cmesh, neighbor_id);
+  }
+  else {
+    // Neighbor was found and is a ghost.
+    // Translate ltreeid from range num_local_trees <= ltreeid < num_local_trees + num_ghost_trees
+    // into 0 <= lghost_id < num_ghost_trees
+    const t8_locidx_t lghost_neighbor_id = neighbor_id - t8_cmesh_get_num_local_trees (cmesh);
+
+    t8_debugf ("in: %i out: %i, num t: %i num g: %i\n", neighbor_id, lghost_neighbor_id,
+               t8_cmesh_get_num_local_trees (cmesh), t8_cmesh_get_num_ghosts (cmesh));
+    // Look up ghost tree class
+    return t8_cmesh_get_ghost_class (cmesh, lghost_neighbor_id);
+  }
+}
+
 void
 t8_cmesh_print_profile (const t8_cmesh_t cmesh)
 {
@@ -1338,7 +1370,8 @@ t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unu
   }
 
 #else
-  t8_global_errorf ("Do not call t8_cmesh_debug_print_trees if t8code is not compiled with --enable-debug.\n");
+  t8_global_errorf (
+    "Do not call t8_cmesh_debug_print_trees if t8code is not compiled with -DCMAKE_BUILD_TYPE=Debug.\n");
 #endif /* T8_ENABLE_DEBUG */
 }
 

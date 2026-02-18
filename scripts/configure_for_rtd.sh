@@ -23,12 +23,27 @@
 git submodule init
 git submodule update
 
+# Remove build directory if it exists
+if [ -d build ]; then
+    rm -rf build
+fi
+
 # Create the build directory
 mkdir build
 
 # Navigate into the build directory
 cd build
 
+if [ "$READTHEDOCS" = "True" ]; then
+    DOXYFILE_PATH="../doc/Doxyfile.in"
+    if [ ! -f "$DOXYFILE_PATH" ]; then
+        echo "Error: $DOXYFILE_PATH does not exist or is not a regular file."
+        exit 1
+    fi
+    echo "Configuring Doxygen for ReadTheDocs: Excluding source files."
+    # Exclude source files from documentation
+    echo "EXCLUDE_PATTERNS += *.c *.cc *.cpp *.cxx" >> "$DOXYFILE_PATH"
+fi
 
 cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF
 

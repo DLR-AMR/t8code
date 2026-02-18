@@ -21,10 +21,7 @@
 */
 
 /** \file t8_cmesh_save.cxx
- *
  * We define routines to save and load a cmesh to/from the file system.
- *
- * TODO: document this file
  */
 
 #include <t8_version.h>
@@ -834,7 +831,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, const int num_files, sc_MP
   T8_ASSERT (mpisize >= num_files);
 
   /* Try to set the comm type */
-  t8_shmem_init (comm);
+  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup. Could not load cmesh.");
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 
   /* Use cmesh_bcast, if only one process loads the cmesh: */

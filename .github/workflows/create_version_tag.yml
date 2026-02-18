@@ -1,0 +1,84 @@
+name: Create a new version tag
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+on:
+    workflow_dispatch:
+    schedule:
+        # trigger at 0:00 on the first day of each month
+        - cron: '0 0 1 * *'
+
+jobs:
+    monthly_release:
+        runs-on: ubuntu-latest
+        outputs:
+            version_name: ${{ steps.set_version_name.outputs.version_name }}
+        steps:
+            #checkout main branch
+            - name: Checkout code
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+                  ref: main
+                  persist-credentials: false
+            # Get the current version from the latest tag
+            - name: Get latest tag
+              id: get_latest_tag
+              run: |
+                  LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+                  echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+                  echo "LATEST_TAG=$LATEST_TAG"
+            # Get Major, Minor, Patch version numbers
+            - name: Parse version numbers
+              id: parse_version
+              run: |
+                  VERSION_REGEX="v([0-9]+)\\.([0-9]+)\\.([0-9]+)"
+                  if [[ "${{ env.LATEST_TAG }}" =~ $VERSION_REGEX ]]; then
+                      MAJOR="${BASH_REMATCH[1]}"
+                      MINOR="${BASH_REMATCH[2]}"
+                      PATCH="${BASH_REMATCH[3]}"
+                      echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+                      echo "MINOR=$MINOR" >> $GITHUB_ENV
+                      echo "PATCH=$PATCH" >> $GITHUB_ENV
+                      echo "MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
+                  else
+                      echo "No valid tag found, aborting."
+                      exit 1
+                  fi
+            # Create version name accessible in the following steps
+            - name: Set version name
+              id: set_version_name
+              run: |
+                # Use format vMAJOR.MINOR.PATCH-YY.MM e.g., v1.2.3-24.06 for June 2024
+                VERSION_NAME="v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-$(date +'%y.%m')"
+                echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+                echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+                echo "VERSION_NAME=$VERSION_NAME"
+
+    t8code_tarball:
+        uses: ./.github/workflows/test_tarball.yml
+        needs: monthly_release
+        secrets: inherit
+        with:
+            TEST_LEVEL: 'T8_TEST_LEVEL_BASIC'
+            RELEASE_VERSION: ${{ needs.monthly_release.outputs.version_name }}
+            UPLOAD_TO_RELEASE: true
+

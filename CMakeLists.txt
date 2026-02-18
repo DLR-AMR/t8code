@@ -21,6 +21,7 @@
 cmake_minimum_required( VERSION 3.16 )
 
 include( cmake/GitProjectVersion.cmake )
+include( FetchContent )
 
 project(
     T8CODE
@@ -32,6 +33,17 @@ project(
 include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
+
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY "https://github.com/DLR-SC/googletest_mpi.git"
+    GIT_TAG 98bfff426b057400268a00f97677d749a9e25096 #v1.17.0_mpi
+    GIT_PROGRESS TRUE
+    )
+
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+mark_as_advanced( FORCE gtest_force_shared_crt)
+
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
 option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
@@ -54,7 +66,6 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
-option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -108,16 +119,22 @@ endif()
 
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
-      find_package( MPI COMPONENTS C Fortran REQUIRED )
+      find_package( MPI 3.0 COMPONENTS C Fortran REQUIRED )
     else()
-      find_package( MPI COMPONENTS C REQUIRED )
+      find_package( MPI 3.0 COMPONENTS C REQUIRED )
     endif()
+    set (gtest_disable_mpi OFF CACHE BOOL "disable gtest mpi support" FORCE)
 
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
     set( SC_ENABLE_MPI ON )
+else()
+    set( gtest_disable_mpi ON CACHE BOOL "disable gtest mpi support" FORCE)
 endif()
+
+mark_as_advanced( FORCE gtest_disable_mpi)
+
 
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED COMPONENTS
@@ -138,14 +155,6 @@ if( T8CODE_ENABLE_OCC )
         message("Found OpenCASCADE")
     endif (OpenCASCADE_FOUND)
 endif( T8CODE_ENABLE_OCC )
-
-if( T8CODE_ENABLE_NETCDF )
-    find_package( NetCDF REQUIRED )
-    if(NetCDF_FOUND)
-        message("Found NetCDF")
-        include(cmake/CheckNetCDFPar.cmake)
-    endif (NetCDF_FOUND)
-endif( T8CODE_ENABLE_NETCDF )
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
@@ -174,7 +183,7 @@ else()
     # If theses warnings are interpreted as errors, the test fails even though we want it to pass.
     # This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
     set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
-    if (WIN32)
+    if (WIN32 AND NOT MINGW)
         set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w" )
     else()
         set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w" )
@@ -260,6 +269,24 @@ else()
     # Mark the new variables as advanced
     mark_as_advanced( FORCE ${_new_p4est_vars} )
 endif()
+
+# Workaround: Suppress warnings for googletests, so it does not compromise the usage of -WError for t8code.
+# -----------
+# 1. Save original flags
+set(ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(ORIGINAL_C_FLAGS   "${CMAKE_C_FLAGS}")
+
+# 2. Suppress warnings for GoogleTest build
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
+
+FetchContent_MakeAvailable( googletest )
+
+# 3. Restore original flags
+set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS   "${ORIGINAL_C_FLAGS}"   CACHE STRING "" FORCE)
+
+# End of workaround
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 

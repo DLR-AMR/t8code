@@ -21,11 +21,8 @@
 */
 
 /** \file t8_cmesh_offset.h
- *
- * In this file we collect function that deal with
+ * In this file we collect functions that deal with
  * the cmesh partition offset.
- *
- * TODO: document this file
  */
 
 #ifndef T8_CMESH_OFFSET_H
@@ -278,9 +275,13 @@ t8_offset_sendstree (int proc_send, int proc_to, t8_gloidx_t gtree, const t8_glo
 int
 t8_offset_range_send (int start, int end, int mpirank, const t8_gloidx_t *offset_from, const t8_gloidx_t *offset_to);
 
-/** Print an offset array. Useful for debugging.
- * \param [in] offset    The offset to print
- * \param [in] comm      An mpi communicator matching the offset size.
+/**
+ * Print the offsets of a partition.
+ * 
+ * This function prints the offsets of a partition in a debug message.
+ * 
+ * \param [in] offset  The offsets to print.
+ * \param [in] comm    The MPI communicator to use for printing.
  */
 void
 t8_offset_print (t8_shmem_array_t offset, sc_MPI_Comm comm);

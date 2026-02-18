@@ -27,8 +27,6 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_options.h>
 
-T8_EXTERN_C_BEGIN ();
-
 struct t8_adapt_data
 {
   const int remove_scope;
@@ -153,7 +151,7 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
 
   t8_3D_point midpoint ({ 0.5, 0.5, 0.5 });
 
-  /* On each face of a cube, a sphere rises halfway in. 
+  /* On each face of a cube, a sphere rises halfway in.
    * Its center is therefore the center of the corresponding surface. */
   struct t8_adapt_data adapt_data = { remove_scope, radius_inner, radius_outer, midpoint };
 
@@ -190,7 +188,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
@@ -239,7 +237,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 0 <= initial_level && radius_inner <= radius_outer && radius_inner >= 0
-           && (eclass_int > 3 || eclass_int < 8 || eclass_int == 0) && remove_scope >= 0 && remove_scope < 3) {
+           && ((eclass_int > 3 && eclass_int < 8) || eclass_int == 0) && remove_scope >= 0 && remove_scope < 3) {
     t8_construct_spheres (initial_level, radius_inner, radius_outer, remove_scope, (t8_eclass_t) eclass_int, vtuname);
   }
   else {
@@ -256,5 +254,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-T8_EXTERN_C_END ();

@@ -14,6 +14,11 @@ You can also provide a list of files and all will get indented.
 This script uses the `clang-format` program with t8code specific settings.
 Sometimes `t8indent.sh` does produce undesired results. Therefore, after indenting use `git add -p` or similar to check all changes before committing. You can protect code lines from being changed by the script by enclosing them in `/* clang-format off */` and `/* clang-format on */` comments.
 
+
+#### t8indent_ignore.sh
+
+A list of files that will be ignored by `t8indent.sh`.
+
 #### pre-commit
 
 This script should be copied to your `.git/hooks` folder. `git` then automatically checks the indentation of committed files and prevents you from committing wrongly indented files. See [Git indentation workflow](https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline#git-indentation-workflow).
@@ -46,7 +51,7 @@ The paths are relative paths assuming an execution from the test/ folder in the 
 #### check_all_test_binaries_valgrind.sh
 
 This script performs a valgrind check on each test binary found by [find_all_test_binary_paths.sh](find_all_test_binary_paths.sh).
-The valgrind check is done by [check_valgrind.sh](check_valgrind.sh). It is assumed that the build folder ../build/test/ with the correct test binaries exists. With `--ntasks=[NUMBER]`, you can provide the number of processes to use with mpi (default is 1).
+The valgrind check is done by [check_valgrind.sh](check_valgrind.sh). It is assumed that the build folder ../build/test/ with the correct test binaries exists. With `--ntasks=[NUMBER]`, you can provide the number of processes to use with mpi for parallel tests (default is 1).
 
 ## Others
 

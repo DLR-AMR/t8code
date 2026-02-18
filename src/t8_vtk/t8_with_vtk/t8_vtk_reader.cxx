@@ -259,7 +259,7 @@ t8_vtk_partition (t8_cmesh_t cmesh, const int mpirank, const int mpisize, t8_glo
   t8_gloidx_t first_tree = 0;
   t8_gloidx_t last_tree = 1;
   /* Compute the global id of the first tree on each proc. */
-  t8_shmem_init (comm);
+  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup in vtk output.");
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
   t8_shmem_array_t offsets = NULL;
   t8_shmem_array_init (&offsets, sizeof (t8_gloidx_t), mpisize + 1, comm);
