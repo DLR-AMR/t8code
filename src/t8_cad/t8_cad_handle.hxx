@@ -85,7 +85,7 @@ class t8_cad_handle {
 
   /**
    * Loads a cad shape from an existing TopoDS_Shape and maps it.
-   * \param [in] new_cad_shape  The input cad shape.
+   * \param [in] cad_shape  The input cad shape.
    */
   void
   load_cad_from_shape (const TopoDS_Shape &cad_shape);
