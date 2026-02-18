@@ -44,6 +44,8 @@ inline auto print_eclass
 /**
  * Initializes everything needed for the t8code testsuite.
  * MPI is initialized with MPI_COMM_WORLD and SC with loglevel SC_LP_PRODUCTION.
+ * \param [in] argc Number of command-line arguments.
+ * \param [in] argv Array of command-line argument strings. 
  * \param [in] log_threshold    The log threshold used to initialize t8code.
  */
 void
@@ -74,7 +76,9 @@ t8_testsuite_get_package_id ();
 #define T8_NUM_SAMPLE_POINTS 10000
 #endif
 
+/** Google test range for parametrized covering all eclasses. */
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
+/** Google test range for parametrized covering all 2 dimensional eclasses. */
 #define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
 
 #endif /* T8_GTEST_MACROS_HXX */

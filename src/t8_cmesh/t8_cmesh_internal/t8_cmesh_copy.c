@@ -21,8 +21,7 @@
 */
 
 /** \file t8_cmesh_copy.c
- *
- * TODO: document this file
+ * Functionality to copy a cmesh.
  */
 
 #include <t8_data/t8_shmem.h>

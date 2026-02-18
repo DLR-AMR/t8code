@@ -114,7 +114,7 @@ TEST_P (geometry_test, cmesh_geometry)
 
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
 
-  t8_3D_point point_mapped;
+  t8_3D_vec point_mapped;
   const t8_geometry_c *cmesh_geom;
 
   /* Double check that the geometry is the linear axis aligned geometry. */
@@ -125,7 +125,7 @@ TEST_P (geometry_test, cmesh_geometry)
 
   srand (seed);
   for (int ipoint = 0; ipoint < T8_NUM_SAMPLE_POINTS; ++ipoint) {
-    t8_3D_point point ({ 0.0, 0.0, 0.0 });
+    t8_3D_vec point ({ 0.0, 0.0, 0.0 });
     /* Compute random coordinates in [0,1].
      * These are seen as reference coordinates in the single
      * cmesh tree. Our geometry will map them into the physical

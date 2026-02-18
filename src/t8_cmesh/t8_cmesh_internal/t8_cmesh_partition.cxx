@@ -21,8 +21,7 @@
 */
 
 /** \file t8_cmesh_partition.cxx
- *
- * TODO: document this file
+ * Implementation of functionality related to the partitioning of a cmesh.
  */
 
 #include <cstring>

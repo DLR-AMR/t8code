@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_new_comm.hxx 
+ * Parameterized example cmeshes by MPI communicators.
+ */
+
 #ifndef T8_CMESH_NEW_COMM
 #define T8_CMESH_NEW_COMM
 
@@ -29,6 +33,10 @@
 
 namespace new_cmesh_comm
 {
+
+/** Function to convert parameter values to a string.
+ * \param [in] comm The communicator used.
+ */
 std::string
 make_param_string (const sc_MPI_Comm &comm)
 {
@@ -37,8 +45,10 @@ make_param_string (const sc_MPI_Comm &comm)
   return params;
 }
 
+/** Wrapper function for \ref make_param_string. */
 std::function<std::string (const sc_MPI_Comm)> print_function = make_param_string;
 
+/** Vector with functions to construct a cmesh from a communicator parameter. */
 std::vector<std::function<t8_cmesh_t (sc_MPI_Comm)>> cmesh_functions = { t8_cmesh_new_periodic_tri,
                                                                          t8_cmesh_new_periodic_hybrid,
                                                                          t8_cmesh_new_periodic_line_more_trees,
@@ -51,7 +61,7 @@ std::vector<std::function<t8_cmesh_t (sc_MPI_Comm)>> cmesh_functions = { t8_cmes
                                                                          t8_cmesh_new_hybrid_gate,
                                                                          t8_cmesh_new_hybrid_gate_deformed,
                                                                          t8_cmesh_new_full_hybrid };
-
+/** Names of the example sets of constructed cmeshes.*/
 std::vector<std::string> names = { "t8_cmesh_new_periodic_tri",
                                    "t8_cmesh_new_periodic_hybrid",
                                    "t8_cmesh_new_periodic_line_more_trees",
@@ -65,6 +75,7 @@ std::vector<std::string> names = { "t8_cmesh_new_periodic_tri",
                                    "t8_cmesh_new_hybrid_gate_deformed",
                                    "t8_cmesh_new_full_hybrid" };
 
+/** Example cmesh set with different communicators. */
 example_set *cmesh_example
   = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::my_comms.begin ())> (
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()), cmesh_functions, print_function,
