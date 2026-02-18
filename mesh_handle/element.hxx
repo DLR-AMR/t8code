@@ -259,7 +259,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    *  This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
-  std::vector<t8_3D_point>
+  std::vector<t8_3D_vec>
   get_vertex_coordinates () const
   {
     if constexpr (has_vertex_cache ()) {
@@ -269,7 +269,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
     }
     // Calculate the vertex coordinates.
     const int num_corners = get_num_vertices ();
-    std::vector<t8_3D_point> vertex_coordinates (num_corners);
+    std::vector<t8_3D_vec> vertex_coordinates (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
       t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, m_element, icorner,
                                     vertex_coordinates[icorner].data ());
@@ -288,7 +288,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * \param [in] vertex Index of the vertex.
    * \return Coordinates of the vertex.
    */
-  t8_3D_point
+  t8_3D_vec
   get_vertex_coordinates (int vertex) const
   {
     T8_ASSERT (vertex < get_num_vertices ());
@@ -299,7 +299,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
       }
       return this->m_vertex_coordinates[vertex];
     }
-    t8_3D_point coordinates;
+    t8_3D_vec coordinates;
     t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, m_element, vertex, coordinates.data ());
     return coordinates;
   }
@@ -308,7 +308,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
-  t8_3D_point
+  t8_3D_vec
   get_centroid () const
   {
     // Check if we have a cached version and if the cache has already been filled.
@@ -317,7 +317,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
         return this->m_centroid.value ();
       }
     }
-    t8_3D_point coordinates;
+    t8_3D_vec coordinates;
     t8_forest_element_centroid (m_mesh->m_forest, m_tree_id, m_element, coordinates.data ());
     // Fill the cache in the cached version.
     if constexpr (has_centroid_cache ()) {
@@ -416,7 +416,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * \param [in] face Index of a face of the element.
    * \return The centroid of the face with id \a face.
    */
-  t8_3D_point
+  t8_3D_vec
   get_face_centroid (int face) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
@@ -425,7 +425,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
         return this->m_face_centroids[face].value ();
       }
     }
-    t8_3D_point coordinates;
+    t8_3D_vec coordinates;
     t8_forest_element_face_centroid (m_mesh->m_forest, m_tree_id, m_element, face, coordinates.data ());
     if constexpr (has_face_centroids_cache ()) {
       this->m_face_centroids[face] = coordinates;
