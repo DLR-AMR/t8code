@@ -20,15 +20,19 @@
 
 !! Description:
 !!
-!! This program tests if the cmesh part of the Fortran
-!! interface can be called.
-!! Works only when MPI is enabled.
+!! This test checks for all cmesh-related functions of the Fortran interface
+!! whether they can be called from Fortran code without throwing segmentation
+!! faults or other errors. Note, however, that is does not verify all the
+!! outputs and return values are as expected, but only checks for errors.
+!!
+!! The test repeatedly creates example cmeshes in different ways and tests
+!! their vtk output, setting their connectivity, and destroying them.
+
 
 program t8_test_cmesh
   use mpi
   use iso_c_binding, only: c_ptr, c_int, c_char, c_double, C_NULL_PTR
   use t8_fortran_interface_mod
-
   implicit none
 
   integer :: ierror, fcomm
@@ -38,17 +42,17 @@ program t8_test_cmesh
   integer(c_int), target :: eclasses(2)
   character(len=256, kind=c_char) :: vtk_prefix
 
+  ! Initialize MPI.
   call MPI_Init (ierror)
-
   if (ierror /= 0) then
     print *, 'MPI initialization failed.'
     stop 1
   endif
-
   fcomm = MPI_COMM_WORLD
   ccomm = t8_fortran_mpi_comm_new_f (fcomm)
   call t8_fortran_init_all_f (ccomm)
 
+  ! Create a first cmesh.
   cmesh = t8_cmesh_new_periodic_tri_f (ccomm)
 
   ! Test vtk output
@@ -60,6 +64,8 @@ program t8_test_cmesh
     stop 1
   endif
   write(*,*) 'Finished cmesh vtk output'
+
+  ! Destroy first cmesh.
   call t8_cmesh_destroy_f(cmesh)
 
   write(*,*) 'Destroyed mesh'
@@ -77,21 +83,22 @@ program t8_test_cmesh
   vertices_total(1:9) = vertices_tri_0(:)
   vertices_total(25:33) = vertices_tri_1(:)
 
-  !! Create a test quad mesh with 2 triangles in a square
+  !! Create 2nd cmesh as quad mesh with 2 triangles in a square.
   call t8_fortran_cmesh_init_f(cmesh)
   write(*,*) 'initialized new mesh'
-  !! Create and register a geometry for linear triangles
+  !! Create and register a geometry for linear triangles.
   geometry = t8_fortran_geometry_linear_new_f (2)
   call t8_fortran_cmesh_register_geometry_f(cmesh, geometry)
-  !! Set tree class
+  !! Set tree class.
   call t8_fortran_cmesh_set_tree_class_f(cmesh, int(0, kind=8), 3)
   call t8_fortran_cmesh_set_tree_class_f(cmesh, int(1, kind=8), 3)
-  !! Set tree vertices for the two triangles
+  !! Set tree vertices for the two triangles.
   call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(0, kind=8), c_loc(vertices_tri_0), 3)
   call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(1, kind=8), c_loc(vertices_tri_1), 3)
-  !! Set connections between the two triangles
+  !! Set connections between the two triangles.
   call t8_fortran_cmesh_set_join_f(cmesh, int(0, kind=8), int(1, kind=8), 1, 2, 0)
   call t8_fortran_cmesh_commit_f(cmesh, ccomm)
+  !! Destroy 2nd cmesh again.
   call t8_cmesh_destroy_f(cmesh)
   write(*,*) 'destroyed mesh again'
 
@@ -106,18 +113,22 @@ program t8_test_cmesh
   call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(1, kind=8), c_loc(vertices_tri_1), 3)
   call t8_fortran_cmesh_set_join_by_vertices_noConn_f(cmesh, int(2, kind=8), c_loc(eclasses), c_loc(vertices_total), c_null_ptr, 0)
   call t8_fortran_cmesh_commit_f(cmesh, ccomm)
+  !! Destroy cmesh again.
   call t8_cmesh_destroy_f(cmesh)
   write(*,*) 'destroyed mesh a third time'
 
+  !! Finalize t8code and MPI.
   call t8_fortran_finalize_f ()
   call t8_fortran_mpi_comm_delete_f(ccomm)
   call MPI_Finalize(ierror)
-
   if (ierror /= 0) then
     print *, 'MPI Finalize failed.'
     stop 1
   endif
-  print *, 'All good!'
+
+  !! Everything passed: Return zero.
+  write(*,*) ''
+  print *, 'PASSED: cmesh tests of Fortran interface!'
   stop 0
 
 end program
