@@ -91,7 +91,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \return The type.
    */
   inline t8_geometry_type_t
-  t8_geom_get_type () const
+  t8_geom_get_type () const override
   {
     return T8_GEOMETRY_TYPE_CAD;
   };
@@ -106,7 +106,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    */
   virtual void
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                    double *out_coords) const;
+                    double *out_coords) const override;
 
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
@@ -119,7 +119,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    */
   virtual void
   t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
-                             double *jacobian) const;
+                             double *jacobian) const override;
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
@@ -129,7 +129,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in]  gtreeid    The global tree.
    */
   virtual void
-  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
+  t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid) override;
 
   /**
    * Check for compatibility of the currently loaded tree with the geometry.
@@ -137,14 +137,29 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \return                True if the geometry is compatible with the tree.
    */
   bool
-  t8_geom_check_tree_compatibility () const
+  t8_geom_check_tree_compatibility () const override
   {
     return true;
   }
 
+  /** Checks if points are inside the element. Input a list of points \a points
+   * and it returns a list of flags \a is_inside if the points are contained.
+   * \param[in] forest            The forest of the element.
+   * \param[in] ltreeid           The local tree id of the element's tree
+   * \param[in] element           The element
+   * \param[in] points            points to check
+   * \param[in] num_points        Number of points to check
+   * \param[in, out] is_inside    Array to fill with flags whether the point is inside or not
+   * \param[in] tolerance         Tolerance of the inside-check
+   */
+  virtual void
+  t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                      const double *points, const int num_points, int *is_inside,
+                                      const double tolerance) const override;
+
   /**
    * Getter function for the CAD manager.
-   * 
+   *
    * \return The CAD manager of the geometry.
   */
   std::shared_ptr<t8_cad>
