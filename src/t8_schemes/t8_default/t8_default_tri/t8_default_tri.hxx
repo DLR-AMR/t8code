@@ -633,7 +633,7 @@ struct t8_default_scheme_tri: public t8_default_scheme_common<T8_ECLASS_TRIANGLE
         descendants[*num_neighbors]->level = T8_DTRI_MAXLEVEL;
         descendants[*num_neighbors]->type = t8_tri_lut_cubevertex_adj_to_type[neigh_cube_vertex][i_adj];
         t8_debugf ("neighbor icube %i iadj %i neighb_cube_vertex %i \n", icube, i_adj, neigh_cube_vertex);
-        element_debug_print ((t8_element_t *) descendants[*num_neighbors]);
+        // element_debug_print ((t8_element_t *) descendants[*num_neighbors]);
         if (!t8_dtri_is_inside_root (descendants[*num_neighbors])) {
           t8_debugf ("neighbor not inside\n");
           continue;

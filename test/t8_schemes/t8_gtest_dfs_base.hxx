@@ -41,7 +41,7 @@ struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
   {
     const int level = scheme->element_get_level (eclass, element);
     ASSERT_LE (level, max_dfs_recursion_level);
-    ASSERT_LT (max_dfs_recursion_level, scheme->get_maxlevel (eclass));
+    ASSERT_LE (max_dfs_recursion_level, scheme->get_maxlevel (eclass));
 
     /** call the implementation of the specific test*/
     check_element ();

@@ -37,6 +37,7 @@
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_edge_connectivity/t8_cmesh_edge_connectivity.hxx>
 
 /**
  * A struct to hold the information about a ghost facejoin.
@@ -609,6 +610,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    */
   if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
     cmesh->vertex_connectivity->build_vertex_to_tree ();
+  }
+  if (cmesh->edge_connectivity->get_state () == t8_cmesh_edge_connectivity::state::TREE_TO_EDGE_VALID) {
+    cmesh->edge_connectivity->build_edge_to_tree ();
   }
 
 #if T8_ENABLE_DEBUG

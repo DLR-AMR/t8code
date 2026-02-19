@@ -26,6 +26,7 @@
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_edge_connectivity/t8_cmesh_edge_connectivity.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -221,6 +222,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
    * or when the cmesh gets committed. */
   cmesh->geometry_handler = NULL;
   cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
+  cmesh->edge_connectivity = new t8_cmesh_edge_connectivity ();
 #if T8_ENABLE_DEBUG
   cmesh->negative_volume_check = 1;
 #endif /* T8_ENABLE_DEBUG */
@@ -1226,6 +1228,9 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   if (cmesh->vertex_connectivity != NULL) {
     delete cmesh->vertex_connectivity;
   }
+  if (cmesh->edge_connectivity != NULL) {
+    delete cmesh->edge_connectivity;
+  }
 
   T8_FREE (cmesh);
   *pcmesh = NULL;
@@ -1585,6 +1590,7 @@ std::vector<t8_neigh_info>
 t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int bdy_dim, int bdy_id)
 {
   std::vector<t8_neigh_info> result;
+  return result; //TODO: remove
   if (bdy_dim == 0) {
     //get cmesh connectivity structure
     t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, ltreeid);
@@ -1593,58 +1599,8 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int bdy_dim, int bdy
     for (const auto &tree_connection : tree_list) {
       result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0 });
     }
-
-#if 0 
-  t8_debugf("enter cmesh_get_neighs for gtreeid %li, bdy_dim %i, bdy_id %i for dealii example\n", gtreeid, bdy_dim, bdy_id);
-  if(gtreeid==0){
-    if(bdy_id == 1){
-      result.push_back (t8_neigh_info { 1, 2, 0 });
-      result.push_back (t8_neigh_info { 2, 0, 0 });
-    } else if(bdy_id == 2){
-      result.push_back (t8_neigh_info { 1, 1, 0 });
-    }
-  }else if(gtreeid==1){
-    if(bdy_id == 0){
-      result.push_back (t8_neigh_info { 2, 2, 0 });
-    } else if(bdy_id == 1){
-      result.push_back (t8_neigh_info { 0, 2, 0 });
-    } else if(bdy_id == 2){
-      result.push_back (t8_neigh_info { 0, 1, 0 });
-      result.push_back (t8_neigh_info { 2, 0, 0 });  
-    }
-  } else if(gtreeid==2){
-    if(bdy_id == 0){
-      result.push_back (t8_neigh_info { 0, 1, 0 });
-      result.push_back (t8_neigh_info { 1, 2, 0 });
-    } else if(bdy_id == 2){
-      result.push_back (t8_neigh_info { 1, 0, 0 });
-     
-    }
-
   }
-
-#endif
-
-#if 0
-    if (bdy_id == 0) {
-      t8_neigh_info info { 1 - gtreeid, 0, 0 };
-      result.push_back (info);
-    }
-    else if (gtreeid + bdy_id == 2) {
-      t8_neigh_info info { 1 - gtreeid, 3 - bdy_id, 0 };
-      result.push_back (info);
-    }
-#endif
-
-#if 0
-    //hardcoded dealii subdivided hypercube with simplices orientation
-    if(bdy_id > 0){
-      t8_neigh_info info{1-gtreeid, 3 - bdy_id, 0};
-      result.push_back(info);
-    }
-#endif
-  }
-  else if (bdy_dim == 1) {
+  else if (bdy_dim == cmesh->dimension - 1) {
     int8_t *ttf;
     t8_locidx_t *face_neighbor;
     (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &face_neighbor, &ttf);
@@ -1656,6 +1612,17 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int bdy_dim, int bdy
     t8_neigh_info info { t8_cmesh_get_global_id (cmesh, neigh_ltreeid), tree_neigh_face, orientation };
     if (neigh_ltreeid != ltreeid || bdy_id != tree_neigh_face) {
       result.push_back (info);
+    }
+  }
+  else {
+    T8_ASSERT(cmesh->dimension==3);
+    T8_ASSERT(bdy_dim==1);
+    //get cmesh connectivity structure
+    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, ltreeid);
+    t8_gloidx_t gedgeid = cmesh->edge_connectivity->get_global_edge_of_tree (ltreeid, bdy_id);
+    const auto tree_list = cmesh->edge_connectivity->get_tree_list_of_edge (gedgeid);
+    for (const auto &tree_connection : tree_list) {
+      result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0 });
     }
   }
   return result;

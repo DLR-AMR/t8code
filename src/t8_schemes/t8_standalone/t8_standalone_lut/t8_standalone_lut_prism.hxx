@@ -289,5 +289,117 @@ constexpr t8_eclass_t t8_standalone_lut_rootface_to_eclass<T8_ECLASS_PRISM>[T8_E
   T8_ECLASS_TRIANGLE,
   T8_ECLASS_TRIANGLE
 };
+
+
+template <>
+constexpr int8_t t8_standalone_lut_bdy_dim_id_idim_to_elem_idim<T8_ECLASS_PRISM>[1 << T8_ELEMENT_DIM[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_PRISM]]
+                                                       [T8_ELEMENT_DIM[T8_ECLASS_PRISM]]=
+{
+  {//bdy_dim 0
+  },
+  {
+    {0}, 
+    {0}, 
+    {1},
+    {0}, 
+    {0}, 
+    {1}, 
+    {2}, 
+    {2}, 
+    {2}
+  },
+  {
+    {1,2},
+    {0,2},
+    {0,2},
+    {0,1},
+    {0,1}
+  }  
+};
+
+template <>
+constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_bdy_idim<T8_ECLASS_PRISM>[1 << T8_ELEMENT_DIM[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_PRISM]] [T8_ELEMENT_DIM[T8_ECLASS_PRISM]]=
+{
+  {
+    {-1,-1,-1},
+    {-1,-1,-1},
+    {-1,-1,-1},
+    {-1,-1,-1},
+    {-1,-1,-1},
+    {-1,-1,-1}
+  },
+  {
+    { 0,-1,-1}, 
+    { 0, 0,-1}, 
+    {-1, 0,-1}, 
+    { 0,-1,-1}, 
+    { 0, 0,-1}, 
+    {-1, 0,-1}, 
+    {-1,-1, 0}, 
+    {-1,-1, 0}, 
+    {-1,-1, 0}
+  },
+  {
+    {-1, 0, 1}, 
+    { 0, 0, 1}, 
+    { 0,-1, 1},
+    { 0, 1,-1},
+    { 0, 1,-1}
+  }
+};
+
+
+template <>
+constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy<T8_ECLASS_PRISM>[1 << T8_ELEMENT_DIM[T8_ECLASS_PRISM]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_PRISM]]
+                                                       [T8_ELEMENT_DIM[T8_ECLASS_PRISM]]=
+{
+  {//bdy_dim 0
+    { 0, 0, 0},
+    { 1, 0, 0},
+    { 1, 1, 0},
+    { 0, 0, 1},
+    { 1, 0, 1},
+    { 1, 1, 1}
+  },
+  {
+    {-1, 0, 0}, 
+    {-1,-1, 0}, 
+    { 1,-1, 0}, 
+    {-1, 0, 1}, 
+    {-1,-1, 1}, 
+    { 1,-1, 1}, 
+    { 0, 0,-1}, 
+    { 1, 0,-1}, 
+    { 1, 1,-1} 
+  },
+  {
+    { 1,-1,-1}, 
+    {-1,-1,-1}, 
+    {-1, 0,-1}, 
+    {-1,-1, 0}, 
+    {-1,-1, 1} 
+  }
+};
+
+template <>
+constexpr int t8_standalone_lut_line_boundary_id_type_to_equality<T8_ECLASS_PRISM>[T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_PRISM]][T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PRISM]]=
+{
+  {0},
+  {1},
+  {0},
+  {0},
+  {1},
+  {0},
+  {1},
+  {0},
+  {1}
+};
+
+
+template <>
+constexpr int t8_standalone_lut_num_boundaries<T8_ECLASS_PRISM>[T8_ELEMENT_DIM[T8_ECLASS_PRISM]]=
+{6,9,5};
+
+
 // clang-format on
 #endif /* T8_SELE_LUT_PRISM_HXX */

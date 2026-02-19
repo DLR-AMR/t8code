@@ -26,6 +26,7 @@
 // clang-format off
 
 /** The first type of pyramids in the shape of a pyramid*/
+#include "t8_eclass.h"
 #define T8_DPYRAMID_FIRST_PYRA_TYPE 0
 
 /** The second type of pyramids in the shape of a pyramid*/
@@ -446,5 +447,106 @@ constexpr t8_eclass_t t8_standalone_lut_rootface_to_eclass<T8_ECLASS_PYRAMID>[T8
   T8_ECLASS_TRIANGLE,
   T8_ECLASS_QUAD
 };
+
+template <>
+constexpr int8_t t8_standalone_lut_bdy_dim_id_idim_to_elem_idim<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_PYRAMID]]
+                                                       [T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]=
+{
+  {},
+  {
+    { 0},
+    { 0},
+    { 1},
+    { 1},
+    { 0},
+    { 1},
+    { 0},
+    { 2}
+  },
+  {
+    { 1, 0},
+    { 1, 2},
+    { 0, 1},
+    { 0, 2},
+    { 0, 1}
+  }
+};
+
+template <>
+constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_bdy_idim<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]=
+{
+  {
+    {-1,-1,-1},
+    {-1,-1,-1},
+    {-1,-1,-1},
+    {-1,-1,-1},
+    {-1,-1,-1}
+  },
+  {
+    { 0,-1,-1},
+    { 0,-1,-1},
+    {-1, 0,-1},
+    {-1, 0,-1},
+    { 0, 0, 0},
+    {-1, 0, 0},
+    { 0,-1, 0},
+    {-1,-1, 0}
+  },
+  {
+    { 1, 0, 1},
+    {-1, 0, 1},
+    { 0, 1, 1},
+    { 0,-1, 1},
+    { 0, 1,-1}
+  }
+};
+
+template <>
+constexpr int8_t t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_PYRAMID]]
+                                                       [T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]=
+{
+  {
+    { 0, 0, 0},
+    { 1, 0, 0},
+    { 0, 1, 0},
+    { 1, 1, 0},
+    { 1, 1, 1}
+  },
+  {
+    {-1, 0, 0},
+    {-1, 1, 0},
+    { 0,-1, 0},
+    { 1,-1, 0},
+    {-1,-1,-1},
+    { 1,-1,-1},
+    {-1, 1,-1},
+    { 1, 1,-1}
+  },
+  {
+    {-1,-1,-1},
+    { 1,-1,-1},
+    {-1,-1,-1},
+    {-1, 1,-1},
+    {-1,-1, 0}
+  }
+};
+
+template <>
+constexpr int t8_standalone_lut_line_boundary_id_type_to_equality<T8_ECLASS_PYRAMID>[T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]]=
+{
+  {1,0},
+  {0,0},
+  {0,1},
+  {0,0},
+  {1,1},
+  {1,0},
+  {0,1},
+  {0,0}
+};
+
+template <>
+constexpr int t8_standalone_lut_num_boundaries<T8_ECLASS_PYRAMID>[T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]=
+{5,8,5};
+
 // clang-format on
 #endif /* T8_SELE_LUT_PYRA_HXX */

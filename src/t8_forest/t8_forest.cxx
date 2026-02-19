@@ -2026,7 +2026,7 @@ t8_forest_element_leaf_index_in_tree (const t8_forest_t forest, const t8_element
    * To identify whether the element was found, we compare these two. */
 
   t8_debugf ("elem\n");
-  scheme->element_debug_print (tree_class, element);
+  // scheme->element_debug_print (tree_class, element);
   if (search_result == -1) {
     t8_debugf (" not found\n");
     return -1;
@@ -2035,7 +2035,7 @@ t8_forest_element_leaf_index_in_tree (const t8_forest_t forest, const t8_element
 
   const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
-  scheme->element_debug_print (tree_class, check_element);
+  // scheme->element_debug_print (tree_class, check_element);
 
   return scheme->element_is_equal (tree_class, element, check_element) ? search_result : -1;
 }

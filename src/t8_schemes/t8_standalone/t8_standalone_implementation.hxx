@@ -27,6 +27,7 @@
 #ifndef T8_STANDALONE_IMPLEMENTATION_HXX
 #define T8_STANDALONE_IMPLEMENTATION_HXX
 
+#include <cstdint>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_eclass.h>
 #include <sc_functions.h>
@@ -34,6 +35,11 @@
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
 #include <algorithm>
+#include "sc.h"
+#include "t8.h"
+#include "t8_element.h"
+#include "t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h"
+#include "t8_schemes/t8_standalone/t8_standalone_lut/t8_standalone_lut_pyra.hxx"
 
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
@@ -1460,6 +1466,97 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   static constexpr int
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) noexcept
   {
+    /** alternate implementation: 
+     *  compute type ints
+     *  find first positions, in which the one of the types/coords of elem 1 
+     *  is greater (smaller) than the corresponding value in elem2
+     *  if no such position exists, elems equal
+     *  if positions equal, find out which inequality occurs earlier
+     *  earlier position determines order
+     */
+#if 1
+    t8_standalone<TEclass> *el1 = (t8_standalone<TEclass> *)elem1;
+    t8_standalone<TEclass> *el2 = (t8_standalone<TEclass> *)elem2;
+
+#if T8_ENABLE_DEBUG
+    t8_debugf("---------------\n");
+    t8_debugf("compare elements:\n");
+    element_debug_print(elem1);
+    t8_debugf("and:\n");
+    element_debug_print(elem2);
+#endif
+    t8_element_coord greater = 0;
+    t8_element_coord smaller = 0;
+    for(int idim = 0; idim< T8_ELEMENT_DIM[TEclass]; idim++){
+      greater |= el1->coords[idim] & (~el2->coords[idim]);     
+      smaller |= (~el1->coords[idim]) & el2->coords[idim];
+      t8_debugf("idim: %i, greater: %i, smaller: %i\n", idim, greater, smaller);
+    }
+    std::array<t8_element_coord,T8_ELEMENT_NUM_EQUATIONS[TEclass]> type_ints1;
+    std::array<t8_element_coord,T8_ELEMENT_NUM_EQUATIONS[TEclass]> type_ints2;
+    for(int itype = 0; itype< T8_ELEMENT_NUM_EQUATIONS[TEclass]; itype++){
+      type_ints1[itype] = determine_type_int(el1,itype);      
+      type_ints2[itype] = determine_type_int(el2,itype);      
+      t8_debugf("itype: %i, type_ints1: %i, type_ints2: %i\n", itype, type_ints1, type_ints2);
+      greater |= type_ints1[itype] & (~type_ints2[itype]);     
+      smaller |= (~type_ints1[itype]) & type_ints2[itype];
+      t8_debugf("greater: %i, smaller: %i\n", greater, smaller);
+    }
+    int greater_idx=number_of_leading_zeros(greater);
+    int smaller_idx=number_of_leading_zeros(smaller);
+
+    t8_debugf("greater: %i, smaller: %i, gr_idx: %i, sm_idx: %i\n", greater, smaller, greater_idx, smaller_idx);
+    if (greater_idx > smaller_idx) {
+      t8_debugf("idx_comp: elem1 < elem2\n");
+      return -1;
+    }
+    if (greater_idx < smaller_idx) {
+      t8_debugf("idx_comp: elem1 > elem2\n");
+      return 1;
+    }
+    T8_ASSERT(greater_idx==smaller_idx);
+    if(greater_idx == get_maxlevel()){
+      t8_debugf("level determines order: %i\n",el1->level < el2->level ? -1 : el1->level > el2->level);
+      return el1->level < el2->level ? -1 : el1->level > el2->level;
+    }
+    t8_debugf("find out which ineq occurs first\n");    
+    //find out which inequality occurs first in the position
+    // go backwards!
+    int shift = get_maxlevel() - greater_idx - 1;
+    for(int idim = T8_ELEMENT_DIM[TEclass]-1; idim>=0; idim--){
+      int el1_val = el1->coords[idim] & (1<<shift);
+      int el2_val = el2->coords[idim] & (1<<shift);
+      
+      if (el1_val < el2_val) {
+        t8_debugf("idim %i cmp: elem1 < elem2\n", idim);
+        return -1;
+      }
+      if (el1_val > el2_val) {
+        t8_debugf("idim %i cmp: elem1 > elem2\n", idim);
+        return  1;
+      }
+    }
+
+    for(int itype = T8_ELEMENT_NUM_EQUATIONS[TEclass]-1; itype>=0; itype--){
+      int el1_val = type_ints1[itype] & (1<<shift);
+      int el2_val = type_ints2[itype] & (1<<shift);
+      
+      if (el1_val < el2_val){ 
+        t8_debugf("itype %i cmp: elem1 > elem2\n", itype);
+        return -1;
+      }
+      if (el1_val > el2_val){ 
+        t8_debugf("itype %i cmp: elem1 > elem2\n", itype);
+        return  1;
+      }
+    }
+
+      
+    SC_ABORT("Not reachable, greater_idx and smaller_idx were equal but not maxlevel,"
+              "therefore one type or coord must be unequal");
+
+
+#endif
     T8_ASSERT (element_is_valid (elem1));
     T8_ASSERT (element_is_valid (elem2));
 
@@ -1841,43 +1938,83 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   element_get_point ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] int vertex,
                      t8_scheme_point *point) const
   {
+    const t8_standalone_element<TEclass> *el= (const t8_standalone_element<TEclass> *)element;
     t8_standalone_point<T8_ELEMENT_DIM[TEclass]> *sp = (t8_standalone_point<T8_ELEMENT_DIM[TEclass]> *) point;
-    int cubevertex = vertex;
+    constexpr int dim = T8_ELEMENT_DIM[TEclass];
     int length = element_get_len (element_get_level (element));
+    for(int idim=0; idim<dim;idim++){
+
+      int cubevertexbit;
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]){
+        cubevertexbit = t8_type_vertex_dim_to_binary<TEclass>[el->type][vertex][idim];
+      }else{
+        cubevertexbit = (vertex & (1 << idim))>>idim;     
+      }
+//      t8_debugf("add %i*length to base %i\n", cubevertexbit, el->coords[idim]);
+      (*sp)[idim]=el->coords[idim]+ (cubevertexbit?length:0);
+    }
+
+
     //add length to anchor coords
   }
 
   inline int
   get_max_num_descendants_at_point () const
   {
-    return 1 << T8_ELEMENT_DIM[TEclass];  //correct only for hypercube
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      SC_ABORT("Not yet implemented\n");
+    }else{
+      return 1 << T8_ELEMENT_DIM[TEclass];  //correct only for hypercube
+    }
   }
 
   inline void
   construct_descendants_at_point ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] t8_element_t **descs,
                                   [[maybe_unused]] int *num_neighbors) const
   {
-    //loop over adjacent_cubes
-    for (int icube = 0; icube < (1 << T8_ELEMENT_DIM[TEclass]); icube++) {
-      //construct anchors
-      //check inside
-    }
-  }
+    t8_scheme_point_dim<3> *sp = (t8_scheme_point_dim<3> *) point;
+    t8_standalone<TEclass> **descendants = (t8_standalone<TEclass> **) descs;
+    t8_element_coord len = get_root_len();
+    t8_debugf ("len = %i\n", len);
+    *num_neighbors = 0;
+    constexpr int dim = T8_ELEMENT_DIM[TEclass];
 
-  inline bool
-  point_is_on_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int boundary_dim,
-                        [[maybe_unused]] int boundary_id) const
-  {
-    //Construct checks to find out if point is on boundary
-    // TODO: How to check?
-    return false;
+    t8_debugf ("construct descendants around x= %i, y=%i\n", (*sp)[0], (*sp)[1]);
+
+    for (int icube = 0; icube < (1 << dim); icube++) {
+      const int neigh_cube_vertex = (1 << dim) - 1 - icube;
+
+      for(int idim=0; idim<dim;idim++){
+        t8_element_coord shift = ((icube & (1 << idim))>>idim)-1;
+        descendants[*num_neighbors]->coords[idim] = (*sp)[idim] + shift;
+      }
+      if(T8_ELEMENT_NUM_EQUATIONS[TEclass]){
+        SC_ABORT("not implemented!\n");
+      }
+      descendants[*num_neighbors]->level = get_maxlevel ();
+      t8_debugf ("neighbor icube %i neighb_cube_vertex %i \n", icube, neigh_cube_vertex);
+//              element_debug_print ((t8_element_t *) descendants[*num_neighbors]);
+      if (!element_is_inside_root (descendants[*num_neighbors])) {
+        t8_debugf ("neighbor not inside\n");
+        continue;
+      }
+      t8_debugf ("neighbor inside \n");
+      //        element_debug_print((const t8_element_t *) descendants[*num_neighbors]);
+      ++(*num_neighbors);
+    }
   }
 
   inline int
   get_num_boundaries (int boundary_dim) const
   {
-    // 2^d * (D chose d)
-    return 1;
+    constexpr int dim = T8_ELEMENT_DIM[TEclass];
+    T8_ASSERT(boundary_dim<dim);
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return t8_standalone_lut_num_boundaries<TEclass>[boundary_dim];
+    }else{
+      constexpr int values[4][3]={{},{2},{4,4},{8,12,6}};
+      return values[dim][boundary_dim];
+  }
   }
 
   inline void
@@ -1888,7 +2025,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
       int num_boundaries = get_num_boundaries (idim);
       for (int bdyid = 0; bdyid < num_boundaries; bdyid++) {
-        if (point_is_on_boundary (point, idim, bdyid)) {
+        if (point_on_boundary (point, idim, bdyid)) {
           *boundary_dim = idim;
           *boundary_id = bdyid;
           return;
@@ -1898,9 +2035,181 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   }
   inline bool
   point_on_boundary ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int boundary_dim,
-                     [[maybe_unused]] int boundary_id) const
-  {
-    SC_ABORT ("Not implemented for this eclass\n");
+    [[maybe_unused]] int boundary_id) const
+    {
+      constexpr int dim = T8_ELEMENT_DIM[TEclass];
+      const t8_standalone_point<dim> *p = (const t8_standalone_point<dim> *) point;
+      if (boundary_dim == 0) 
+      {//vertices
+        int8_t cubevertexbit;
+        for (int idim = 0; idim < dim;idim++){
+          if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+            cubevertexbit = t8_type_vertex_dim_to_binary<TEclass>[T8_ELEMENT_ROOTTYPE][boundary_id][idim];
+          }else {
+            cubevertexbit = (boundary_id & (1 << idim))>>idim;          }
+          // check all coordinates
+          // t8_debugf("cubevertexbit %i, root_len %li, point[idim] %i\n",cubevertexbit, get_root_len(), (*(t8_standalone_point<dim> *) point)[idim]);
+          if ((cubevertexbit ? get_root_len () : 0) != (*p)[idim]) {
+            return false;
+          }
+        }
+        return true;
+      }else if (boundary_dim == dim-1)
+      {//faces
+        if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+          if( t8_standalone_lut_face_internal<TEclass>[T8_ELEMENT_ROOTTYPE][boundary_id]){
+            int typebit = t8_standalone_lut_type_face_to_typebit<TEclass>[T8_ELEMENT_ROOTTYPE][boundary_id];
+            int idim0 = t8_type_edge_equations<TEclass>[typebit][0];            
+            int idim1 = t8_type_edge_equations<TEclass>[typebit][1];            
+            // t8_debugf("internal face, dim0: %i, dim1: %i, value: %i\n", idim0, idim1);
+            return (*p)[idim0]==(*p)[idim1];            
+            //internal: find out two neighbouring coordinates, check equality
+          }else{
+            //external: find out normal coordinate and whether 0 or 1 bdy.
+            int normal_coord = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[T8_ELEMENT_ROOTTYPE][boundary_id];
+            int is_1_bdy = t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[T8_ELEMENT_ROOTTYPE][boundary_id];
+            // return value similar to hypercube
+            // t8_debugf("external face, normal_coord: %i, value: %i\n", normal_coord, is_1_bdy);
+            return (*p)[normal_coord] == (is_1_bdy ? get_root_len() : 0);
+          }
+        }else{
+          return (*p)[boundary_id / 2] == ((boundary_id % 2) ? get_root_len() : 0);
+        }
+      }else{
+        //edges in 3D
+        T8_ASSERT(dim==3);
+        T8_ASSERT(boundary_dim==1);
+        constexpr int values[12][3]={
+          {-1,0,0},
+          {-1,1,0},
+          {-1,0,1},
+          {-1,1,1},
+          {0, -1,0},
+          {1, -1,0},
+          {0, -1,1},
+          {1, -1,1},
+          {0,0, -1},
+          {1,0, -1},
+          {0,1, -1},
+          {1,1, -1}
+        };
+
+        if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+          for (int itype =0;itype<T8_ELEMENT_NUM_EQUATIONS[TEclass];itype++) {          
+            int value = t8_standalone_lut_line_boundary_id_type_to_equality<TEclass>[boundary_id][itype];//
+            int coord0 = t8_type_edge_equations<TEclass>[itype][0];
+            int coord1 = t8_type_edge_equations<TEclass>[itype][1];
+            if((value==1 && (*p)[coord0] != (*p)[coord1])||
+               (value==0 && (*p)[coord0] < (*p)[coord1])){
+                // t8_debugf("type %i not fulfilled correctly\n", itype);
+                // t8_debugf("value: %i, p0: %i, p1: %i\n", value, (*p)[coord0], (*p)[coord1]);
+              return false;
+            }
+          }
+          for (int idim =0;idim<dim;idim++) {          
+            if((t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy<TEclass>[boundary_dim][boundary_id][idim] == 0 && (*p)[idim] !=0)||
+               (t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy<TEclass>[boundary_dim][boundary_id][idim] == 1 && (*p)[idim] !=get_root_len())){
+                return false;
+            }
+          }
+          return true;
+        }else{
+          for (int idim =0;idim<dim;idim++) {          
+            if(values[boundary_id][idim]==0 && (*p)[idim] !=0 || 
+               values[boundary_id][idim]==1 && (*p)[idim] !=get_root_len()){
+              return false;
+            }
+          }
+          return true;
+        }
+      }
+  }
+
+  inline int get_elem_coord(const int bdy_dim, const int bdy_id, const int idim)const{
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      int returnvalue= t8_standalone_lut_bdy_dim_id_idim_to_elem_idim<TEclass>[bdy_dim][bdy_id][idim];
+      // t8_debugf("access lut for [%i][%i][%i]=%i\n",bdy_dim, bdy_id, idim, returnvalue);
+      return returnvalue;
+    }else{
+      //hypercube
+      constexpr int dim = T8_ELEMENT_DIM[TEclass];
+      if (bdy_dim==0) {
+        SC_ABORT("vertices have no entries");
+      }else if (bdy_dim == dim-1){
+        //face
+        //split in before and after, after is increased by one
+        int normal_coord = bdy_id/2;
+        return idim<normal_coord ? idim : idim+1;
+      }else{
+        T8_ASSERT(dim==3);
+        T8_ASSERT(bdy_dim==1);
+        if constexpr (TEclass!=T8_ECLASS_VERTEX) {
+          return bdy_id / (1<<(T8_ELEMENT_DIM[TEclass]-1));
+        }else{
+          SC_ABORT("Not reachable");
+        }
+      }
+
+    }
+  }
+  inline int get_bdy_coord(const int bdy_dim, const int bdy_id, const int idim)const{
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      //lut
+      return t8_standalone_lut_bdy_dim_id_elem_idim_to_bdy_idim<TEclass>[bdy_dim][bdy_id][idim];
+    }else{
+      constexpr int dim = T8_ELEMENT_DIM[TEclass];
+      //hypercube
+      if (bdy_dim==0) {
+        return -1;
+      }else if (bdy_dim == dim-1){
+        int normal_coord = bdy_id/2;
+        return idim < normal_coord ? idim : (idim > normal_coord  ? idim - 1 : -1);
+      }else{
+        T8_ASSERT(dim==3);
+        T8_ASSERT(bdy_dim==1);
+        if constexpr (TEclass!=T8_ECLASS_VERTEX) {
+          return (bdy_id / (1<<(T8_ELEMENT_DIM[TEclass]-1)))==idim ? 0 : -1; //TODO: How are edges enumerated?
+        }else{
+          SC_ABORT("Not reachable");
+        }
+      }
+
+    }
+  }
+
+
+  inline bool is_1_bdy_coord(const int bdy_dim, const int bdy_id, const int idim)const{
+    const int dim = T8_ELEMENT_DIM[TEclass];
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      return t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy<TEclass>[bdy_dim][bdy_id][idim];
+    }else{
+      if(bdy_dim==0){
+        //vertex
+        return bdy_id & (1<<idim);
+      }else if(bdy_dim==dim-1){
+        T8_ASSERT(idim==bdy_id/2);
+        //face
+        return bdy_id%2;
+      }else{
+        constexpr int values[12][3]={
+          {-1,0,0},
+          {-1,1,0},
+          {-1,0,1},
+          {-1,1,1},
+          {0, -1,0},
+          {1, -1,0},
+          {0, -1,1},
+          {1, -1,1},
+          {0,0, -1},
+          {1,0, -1},
+          {0,1, -1},
+          {1,1, -1}
+        };
+        T8_ASSERT(dim==3);
+        T8_ASSERT(bdy_dim==1);
+        return values[bdy_id][idim];
+      }
+    }    
   }
 
   inline void
@@ -1908,21 +2217,40 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
                                   [[maybe_unused]] const t8_scheme_point *el_point, [[maybe_unused]] int boundary_dim,
                                   [[maybe_unused]] int boundary_id, [[maybe_unused]] t8_scheme_point *bdy_point) const
   {
-    //mapping
+    //for each boundary coordinate, lookup one of the coordinates it comes from 
+    // (we must have checked before that the point is on the boundary)
+    // t8_debugf("extract point for bdy_dim: %i, bdy_id: %i\n", boundary_dim, boundary_id);
+    for (int idim=0; idim< boundary_dim; idim++){
+      int elem_coord = get_elem_coord(boundary_dim,boundary_id, idim);
+      // t8_debugf("idim: %i, elem_coord: %i, val: %i\n", idim, elem_coord, ((int *)el_point)[elem_coord]);
+      //TODO: getter and setter functions for points!!
+      ((int *)bdy_point)[idim] = ((int *)el_point)[elem_coord];
+    }
   }
 
   inline void
   point_transform ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
                    [[maybe_unused]] t8_scheme_point *neigh_point) const
   {
-    //mapping
+    SC_ABORT("TODO");
+    //Instantiations for vertex, line, quad, tri, similar to transform face
   }
 
   inline void
   boundary_point_extrude ([[maybe_unused]] const t8_scheme_point *bdy_point, [[maybe_unused]] int bdy_dim,
                           [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_scheme_point *point) const
   {
-    //mapping
+    // for each coordinate, lookup if it is 0 or rootlen, or from which var it comes from
+    for (int idim; idim< T8_ELEMENT_DIM[TEclass]; idim++){
+      int bdy_coord = get_bdy_coord(bdy_dim,bdy_id, idim);
+      if(bdy_coord != -1 ){
+        ((int *)point)[idim] = ((int *)bdy_point)[bdy_coord];
+        // t8_debugf("coord %i comes from coord %i, val: %i\n", idim, bdy_coord, ((int *)point)[idim]);
+      }else{
+        ((int *)point)[idim] = is_1_bdy_coord(bdy_dim,bdy_id, idim) ? get_root_len():0;
+        // t8_debugf("coord %i comes from 0 or 1, val: %i\n", idim, ((int *)point)[idim]);
+      }
+    }
   }
 
   inline void
@@ -1937,7 +2265,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     T8_FREE (*ppoint);
     *ppoint = nullptr;
   }
-
+friend class class_test_equal;
  private:
   // ################################################____HELPER____################################################
 
@@ -2036,6 +2364,23 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     T8_ASSERT (num_of_active_bits_used <= T8_ELEMENT_MAXLEVEL[TEclass]);
 
     return T8_ELEMENT_MAXLEVEL[TEclass] - num_of_active_bits_used;
+  }
+  static constexpr int
+  determine_type_int (t8_standalone<TEclass> *el, int itype) noexcept
+  {
+    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]){
+      t8_element_coord x0 = el->coords[t8_type_edge_equations<TEclass>[itype][0]];
+      t8_element_coord x1 = el->coords[t8_type_edge_equations<TEclass>[itype][1]];
+      t8_element_coord type_at_maxlevel = get_typebit(el->type, itype);
+      t8_element_coord different = x0 ^ x1;
+      t8_element_coord equal = (~different);
+      t8_element_coord smaller = 2*(different & x1) + type_at_maxlevel;
+      t8_element_coord overflow_addition = equal + smaller;
+      t8_element_coord types = equal ^ overflow_addition;
+      return types;
+    }else {
+      return 0;
+    }
   }
 
   /**
@@ -2253,8 +2598,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     }
     else {
       /* Get root element or type*/
-      int root_type = 0;  //TODO: Make other root_types possible
-      return t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[root_type][root_face];
+      return t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[T8_ELEMENT_ROOTTYPE][root_face];
     }
   }
 

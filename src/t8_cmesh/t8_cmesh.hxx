@@ -32,6 +32,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
+#include <t8_cmesh/t8_cmesh_edge_connectivity/t8_cmesh_edge_connectivity_types.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 
 /**
@@ -123,6 +124,9 @@ t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
  */
 const tree_vertex_list &
 t8_cmesh_get_vertex_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_vertex);
+
+const tree_edge_list &
+t8_cmesh_get_edge_to_tree_list (const t8_cmesh_t cmesh, const t8_gloidx_t global_edge);
 
 typedef class t8_neigh_info {
  public:

@@ -35,6 +35,7 @@
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
 #include <t8_cmesh/t8_cmesh.hxx>
+#include "t8_eclass.h"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -793,8 +794,28 @@ t8_forest_boundary_class (t8_eclass eclass, int bdy_dim, int bdy_id)
     return T8_ECLASS_VERTEX;
   case 1:
     return T8_ECLASS_LINE;
-  default:
-    SC_ABORT ("3D not implemented");
+  case 2:
+    switch ((int)eclass) {
+      case 4:
+        return T8_ECLASS_QUAD;
+      case 5:
+        return T8_ECLASS_TRIANGLE;
+      case 6:
+        if(bdy_id == 3 || bdy_id == 4){
+          return T8_ECLASS_QUAD;
+        }
+        return T8_ECLASS_TRIANGLE;
+      case 7:
+        if(bdy_id == 4){
+          return T8_ECLASS_QUAD;
+        }
+        return T8_ECLASS_TRIANGLE;
+      default:
+        SC_ABORT("not implemented");
+    }
+
+  default:  
+    SC_ABORT ("4D not implemented");
     break;
   }
 }

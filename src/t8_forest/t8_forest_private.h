@@ -214,6 +214,8 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
 t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id,
                             const int element_level);
+t8_locidx_t
+t8_forest_bin_search_lower_compare (const t8_element_array_t *elements, t8_element_t* element);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.

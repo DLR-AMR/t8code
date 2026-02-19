@@ -93,4 +93,34 @@ t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_lineari
   return elem_iter.get_current_index () - 1;
 }
 
+t8_locidx_t
+t8_forest_bin_search_lower_compare (const t8_element_array_t *elements, t8_element_t* element){
+  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
+  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
+  /* At first, we check whether any element has smaller id than the
+   * given one. */
+  const t8_element_t *first_elem = t8_element_array_index_int (elements, 0);
+
+  if (scheme->element_compare(tree_class, element, first_elem)<0){
+    /* All elements are bigger than the given one. */
+    return -1;
+  }
+
+  /* We search for the first element in the array that is greater than the given element id. */
+  auto elem_iter
+    = std::upper_bound (t8_element_array_begin (elements), t8_element_array_end (elements), element,
+                        [&scheme, &tree_class] (const t8_element_t *element_in,
+                                                                const t8_element_array_iterator::value_type &elem_ptr) {
+                          return (scheme->element_compare (tree_class, element_in, elem_ptr)<0);
+                        });
+
+  /* After we found the element with an id greater than the given one, we are able to jump one index back.
+   * This guarantees us that the element at (index - 1) is smaller or equal to the given element id.
+   * In case we do not find an element that is greater than the given element_id, the binary search returns
+   * the end-iterator of the element array. In that case, we want to return the last index from the element
+   * array. */
+  return elem_iter.get_current_index () - 1;
+}
+
+
 T8_EXTERN_C_END ();
