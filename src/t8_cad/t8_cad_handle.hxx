@@ -62,9 +62,9 @@ class t8_cad_handle {
     * or integration with mesh generators that already provide geometry in memory.
     * It avoids file I/O and allows full control over the CAD input.
     *
-    * \param [in] cad_shape  cad shape geometry object.
+    * \param [in] cad_shape_in  cad shape geometry object.
     */
-  t8_cad_handle (const TopoDS_Shape cad_shape);
+  t8_cad_handle (const TopoDS_Shape cad_shape_in);
 
   /**
    * Constructor of the cad shape for testing purposes. Sets an invalid cad_shape.
@@ -81,14 +81,14 @@ class t8_cad_handle {
    * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
    */
   void
-  load_cad_from_file (const std::string fileprefix);
+  load (const std::string fileprefix);
 
   /**
    * Loads a cad shape from an existing TopoDS_Shape and maps it.
    * \param [in] cad_shape  The input cad shape.
    */
   void
-  load_cad_from_shape (const TopoDS_Shape &cad_shape);
+  load (const TopoDS_Shape &cad_shape);
 
   /** Check if a cad_curve is a line.
    * \param [in] curve_index      The index of the cad_curve.
@@ -368,7 +368,7 @@ class t8_cad_handle {
    * \param [in] cad_shape_in  The input cad shape to be mapped.
    */
   void
-  map_cad_shape (const TopoDS_Shape &cad_shape_in);
+  map (const TopoDS_Shape &cad_shape_in);
 
   TopoDS_Shape cad_shape;                          /**< cad geometry */
   TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex. */
