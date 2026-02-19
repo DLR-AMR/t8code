@@ -42,21 +42,32 @@
 namespace t8_mesh_handle
 {
 
+/** Concept to ensure that a type is an element competence pack.
+ */
+template <typename TType>
+concept ElementCompetencePack = requires { typename TType::is_element_competence_pack; };
+/** Concept to ensure that a type is a mesh competence pack.
+ */
+template <typename TType>
+concept MeshCompetencePack = requires { typename TType::is_mesh_competence_pack; };
+
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
- * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
+ * \tparam TElementCompetencePack The competences you want to add to the default functionality of the elements.
  *         \see element for more details on the choice of the template parameter.   
- *         \note Please pack your competences using the \ref competence_pack class.
- * \tparam TMeshCompetences 
- *         Use void (this is also the default) if you do not want to set element data.
+ *         \note Please pack your competences using the \ref element_competence_pack class.
+ * \tparam TMeshCompetences The competences you want to add to the default functionality of the mesh.  
+ *         \note Please pack your competences using the \ref mesh_competence_pack class.
+ *         One of the most important competences to add is \ref handle_element_data.
  */
-template <typename TCompetencePack, template <typename> class... TMeshCompetences>
-class mesh: public TMeshCompetences<mesh<TCompetencePack, TMeshCompetences...>>... {
+template <ElementCompetencePack TElementCompetencePack = element_competence_pack<>,
+          MeshCompetencePack TMeshCompetencePack = mesh_competence_pack<>>
+class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePack, TMeshCompetencePack>> {
  public:
-  using SelfType = mesh<TCompetencePack,
-                        TMeshCompetences...>; /**< Type of the current class with all template parameters specified. */
+  using SelfType = mesh<TElementCompetencePack, TMeshCompetencePack>; /**< Type of the current class. */
   using element_class
-    = TCompetencePack::template apply<SelfType, element>; /**< The element class of the mesh with given competences. */
+    = TElementCompetencePack::template apply<SelfType,
+                                             element>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
@@ -102,7 +113,6 @@ class mesh: public TMeshCompetences<mesh<TCompetencePack, TMeshCompetences...>>.
    */
   mesh (t8_forest_t forest): m_forest (forest)
   {
-    T8_ASSERT ((std::is_same<typename TCompetencePack::is_competence_pack, void>::value));
     T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
   }
@@ -381,30 +391,17 @@ class mesh: public TMeshCompetences<mesh<TCompetencePack, TMeshCompetences...>>.
     update_elements ();
   }
 
-  // --- Methods to set and get user and element data and exchange data between processes. ---
-  // TODO document
-
+  // --- Methods to check for mesh competences. ---
   /** Function that checks if a competence for element data handling is given.
    * \return true if mesh has a data handler, false otherwise.
    */
   static constexpr bool
   has_element_data_handler_competence ()
   {
-    return (false || ... || element_data_handler_competence_defined<TMeshCompetences> ());
+    return requires (SelfType& mesh) { mesh.get_element_data (); };
   }
 
  private:
-  /** Helper function to check if class T implements the function get_element_data.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  element_data_handler_competence_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.get_element_data (); };
-  }
-
   /** 
    * Update the storage of the mesh elements according to the current forest. 
    */

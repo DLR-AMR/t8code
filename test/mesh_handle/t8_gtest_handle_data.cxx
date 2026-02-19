@@ -43,8 +43,6 @@ struct data_per_element
   int level;
   double volume;
 };
-template <typename TUnderlying>
-using data_handler = t8_mesh_handle::handle_element_data<TUnderlying, data_per_element>;
 
 /** Check that element data can be set for the handle and 
  * that the getter has exchanged data for the ghosts.
@@ -53,8 +51,9 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
   const int level = 2;
 
-  using mesh_class
-    = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<t8_mesh_handle::access_element_data>, data_handler>;
+  using mesh_class = t8_mesh_handle::mesh<
+    t8_mesh_handle::element_competence_pack<t8_mesh_handle::access_element_data>,
+    t8_mesh_handle::mesh_competence_pack<t8_mesh_handle::element_data_competence<data_per_element>::template type>>;
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, false,
                                                                                    true, false);
 

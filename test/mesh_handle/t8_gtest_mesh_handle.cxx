@@ -52,7 +52,7 @@ struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t
 /** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh. */
 TEST_P (t8_mesh_handle_test, test_iterator)
 {
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>>;
+  using mesh_class = t8_mesh_handle::mesh<>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);
@@ -88,7 +88,8 @@ TEST_P (t8_mesh_handle_test, test_iterator)
 TEST_P (t8_mesh_handle_test, test_competences)
 {
   // --- Version with cached vertex coordinates. ---
-  using competence_vertex_coordinates = t8_mesh_handle::competence_pack<t8_mesh_handle::cache_vertex_coordinates>;
+  using competence_vertex_coordinates
+    = t8_mesh_handle::element_competence_pack<t8_mesh_handle::cache_vertex_coordinates>;
   using mesh_class_vertex = t8_mesh_handle::mesh<competence_vertex_coordinates>;
   using element_class_vertex = typename mesh_class_vertex::element_class;
   auto mesh_vertex = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class_vertex> (
@@ -127,7 +128,7 @@ TEST_P (t8_mesh_handle_test, test_competences)
   }
 
   // --- Version with cached centroid variable. ---
-  using competence_centroid = t8_mesh_handle::competence_pack<t8_mesh_handle::cache_centroid>;
+  using competence_centroid = t8_mesh_handle::element_competence_pack<t8_mesh_handle::cache_centroid>;
   using mesh_class_centroid = t8_mesh_handle::mesh<competence_centroid>;
   using element_class_centroid = typename mesh_class_centroid::element_class;
   auto mesh_centroid = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class_centroid> (
@@ -156,7 +157,7 @@ TEST_P (t8_mesh_handle_test, test_competences)
 TEST_P (t8_mesh_handle_test, test_2_competences)
 {
   // --- Use competences to cache level and centroid. ---
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_element_competences>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);

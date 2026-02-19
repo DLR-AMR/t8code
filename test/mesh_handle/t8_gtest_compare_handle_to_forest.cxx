@@ -46,7 +46,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
 
-  const t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>> mesh (forest);
+  const t8_mesh_handle::mesh<> mesh (forest);
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results of different functions.
   const t8_scheme *scheme = t8_forest_get_scheme (forest);

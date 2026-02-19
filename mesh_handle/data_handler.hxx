@@ -104,22 +104,11 @@ class handle_element_data: public t8_crtp_basic<TUnderlying> {
   std::vector<TElementDataType> m_element_data; /**< Vector storing the (local) element data. */
 };
 
-/**
- * Helper alias to create a mesh competence for element data
- * without exposing TUnderlying to the user.
- *
- * Usage:
- *   using mesh_type =
- *     mesh<competence_pack<...>, element_data_competence<MyData>>;
- */
-// template <T8MPISafeType TElementDataType>
-// struct element_data_wrapper
-// {
-//   template <typename TUnderlying>
-//   using type = handle_element_data<TUnderlying, TElementDataType>;
-// };
-
-// template <T8MPISafeType TElementDataType>
-// using element_data_mesh_competence = typename element_data_wrapper<TElementDataType>::template type;
+template <T8MPISafeType TElementDataType>
+struct element_data_competence
+{
+  template <typename TMesh>
+  using type = handle_element_data<TMesh, TElementDataType>;
+};
 
 }  // namespace t8_mesh_handle

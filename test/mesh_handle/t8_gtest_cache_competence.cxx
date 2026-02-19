@@ -87,7 +87,7 @@ struct cache_centroid_overwrite: public t8_mesh_handle::cache_centroid<TUnderlyi
 TEST (t8_gtest_cache_competence, cache_volume)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_volume_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_volume_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_volume_cache ());
@@ -114,7 +114,7 @@ TEST (t8_gtest_cache_competence, cache_volume)
 TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_vertex_coordinates_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_vertex_coordinates_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_vertex_cache ());
@@ -147,7 +147,7 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
 TEST (t8_gtest_cache_competence, cache_centroid)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_centroid_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_centroid_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_centroid_cache ());
