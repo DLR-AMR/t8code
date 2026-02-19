@@ -36,10 +36,11 @@ template <template <typename> class... TCompetence>
 struct competence_pack
 {
   /** Apply the competence pack to a template class, e.g. the \ref element class.
+   * \tparam TMeshClass The mesh class given to the element class.
    * \tparam Target The target template class to apply the \a TCompetence pack to.
    */
-  template <typename mesh_class, template <typename, template <typename> class...> class Target>
-  using apply = Target<mesh_class, TCompetence...>;
+  template <typename TMeshClass, template <typename, template <typename> class...> class Target>
+  using apply = Target<TMeshClass, TCompetence...>;
 
   using is_competence_pack = void; /**< Tag to identify this class. */
 };

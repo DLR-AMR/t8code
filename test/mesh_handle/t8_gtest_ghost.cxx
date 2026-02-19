@@ -59,7 +59,7 @@ struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
 /** Check the implementation of ghosts and all functions accessible by ghosts. */
 TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
-  using mesh_class = t8_mesh_handle::mesh<>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>>;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             false, false);
 
@@ -103,7 +103,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
   t8_forest_t forest = t8_forest_new_uniform (t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0), scheme,
                                               level, 1, sc_MPI_COMM_WORLD);
 
-  const t8_mesh_handle::mesh<> mesh (forest);
+  const t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.

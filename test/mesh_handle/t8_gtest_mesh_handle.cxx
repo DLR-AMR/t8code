@@ -52,7 +52,7 @@ struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t
 /** Test some default functionality and the iterator of \ref t8_mesh_handle::mesh. */
 TEST_P (t8_mesh_handle_test, test_iterator)
 {
-  using mesh_class = t8_mesh_handle::mesh<>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);

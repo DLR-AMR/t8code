@@ -30,7 +30,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
+#include <mesh_handle/competences.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
+#include <mesh_handle/data_handler.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
@@ -41,6 +43,8 @@ struct data_per_element
   int level;
   double volume;
 };
+template <typename TUnderlying>
+using data_handler = t8_mesh_handle::handle_element_data<TUnderlying, data_per_element>;
 
 /** Check that element data can be set for the handle and 
  * that the getter has exchanged data for the ghosts.
@@ -48,10 +52,11 @@ struct data_per_element
 TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
   const int level = 2;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, data_per_element>;
+
+  using mesh_class
+    = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<t8_mesh_handle::access_element_data>, data_handler>;
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, false,
                                                                                    true, false);
-  auto forest = mesh->get_forest ();
 
   if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
@@ -70,12 +75,16 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
     EXPECT_EQ (mesh_element_data[ielem].volume, (*mesh)[ielem].get_volume ()) << "ielem = " << ielem;
   }
+  EXPECT_TRUE (mesh->has_element_data_handler_competence ());
+
+  auto forest = mesh->get_forest ();
   t8_gloidx_t barrier = t8_forest_get_num_global_trees (forest) / 2.0;
   const int newlevel = 42;
   const double newvolume = 42.42;
   for (auto &elem : *mesh) {
     if (t8_forest_global_tree_id (forest, elem.get_local_tree_id ()) < barrier) {
-      elem.set_element_data ({ newlevel, newvolume });
+      data_per_element elem_data ({ newlevel, newvolume });
+      elem.set_element_data (elem_data);
     }
   }
   mesh->exchange_ghost_data ();

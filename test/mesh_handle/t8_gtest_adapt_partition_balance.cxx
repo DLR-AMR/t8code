@@ -35,6 +35,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/adapt.hxx>
+#include <mesh_handle/data_handler.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -49,6 +50,9 @@ struct dummy_user_data
   double refine_if_inside_radius;   /**< If an element's center is smaller than this value, we refine the element. */
   double coarsen_if_outside_radius; /**< If an element's center is larger this value, we coarsen its family. */
 };
+
+template <typename TUnderlying>
+using data_handler = t8_mesh_handle::handle_element_data<TUnderlying, dummy_user_data>;
 
 /** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
  * The function header fits the definition of \ref TMesh::adapt_callback_type_with_userdata.
@@ -111,7 +115,8 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, dummy_user_data>;
+  using mesh_class
+    = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<t8_mesh_handle::access_element_data>, data_handler>;
   mesh_class mesh_handle = mesh_class (forest);
   struct dummy_user_data user_data = {
     t8_3D_point ({ 0.5, 0.5, 1 }), /**< Midpoints of the sphere. */

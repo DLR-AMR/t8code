@@ -30,39 +30,31 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "adapt.hxx"
+#include "competences.hxx"
 #include "t8_forest/t8_forest_balance.h"
 #include "t8_forest/t8_forest_types.h"
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
-#include <type_traits>
 #include <functional>
 #include <memory>
 
 namespace t8_mesh_handle
 {
 
-/** Concept to ensure that a type is MPI safe.
- */
-template <typename TType>
-concept T8MPISafeType
-  = std::is_void_v<TType> || (std::is_trivially_copyable_v<TType> && std::is_standard_layout_v<TType>);
-
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
  * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
  *         \see element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref competence_pack class.
- * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
- *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
+ * \tparam TMeshCompetences 
  *         Use void (this is also the default) if you do not want to set element data.
  */
-template <typename TCompetencePack = competence_pack<>, T8MPISafeType TElementDataType = void>
-class mesh {
+template <typename TCompetencePack, template <typename> class... TMeshCompetences>
+class mesh: public TMeshCompetences<mesh<TCompetencePack, TMeshCompetences...>>... {
  public:
-  using SelfType
-    = mesh<TCompetencePack, TElementDataType>; /**< Type of the current class with all template parameters specified. */
-  using ElementDataType = TElementDataType;    /**< Make Type of the element data accessible. */
+  using SelfType = mesh<TCompetencePack,
+                        TMeshCompetences...>; /**< Type of the current class with all template parameters specified. */
   using element_class
     = TCompetencePack::template apply<SelfType, element>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
@@ -70,6 +62,8 @@ class mesh {
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
   using mesh_iterator =
     typename std::vector<element_class>::iterator; /**< Non-const iterator type for the mesh elements. */
+  template <typename>
+  friend struct access_element_data;
 
   /** Callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle.
@@ -374,7 +368,7 @@ class mesh {
     // Check if we adapted and unregister the adapt context if so.
     if (detail::AdaptRegistry::get (m_uncommitted_forest.value ()) != nullptr) {
       detail::AdaptRegistry::unregister_context (m_forest);
-      if (!std::is_void<TElementDataType>::value) {
+      if (has_element_data_handler_competence ()) {
         t8_global_infof (
           "Please note that the element data is not interpolated automatically during adaptation. Use the "
           "function set_element_data() to provide new adapted element data.\n");
@@ -388,58 +382,29 @@ class mesh {
   }
 
   // --- Methods to set and get user and element data and exchange data between processes. ---
-  /** 
-   * Set the element data vector. The vector should have the length of num_local_elements.
-   * \param [in] element_data The element data vector to set with one entry of class TElementDataType 
-   *            for each local mesh element (excluding ghosts).
+  // TODO document
+
+  /** Function that checks if a competence for element data handling is given.
+   * \return true if mesh has a data handler, false otherwise.
    */
-  template <typename ElementDataType = TElementDataType,
-            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
-  void
-  set_element_data (std::vector<ElementDataType> element_data)
+  static constexpr bool
+  has_element_data_handler_competence ()
   {
-    T8_ASSERT (element_data.size () == static_cast<size_t> (get_num_local_elements ()));
-    m_element_data = std::move (element_data);
-    m_element_data.reserve (get_num_local_elements () + get_num_ghosts ());
-    m_element_data.resize (get_num_local_elements ());
-  }
-
-  /** 
-   * Get the element data vector.
-   * The element data of the local mesh elements can be set using \ref set_element_data.
-   * If ghost entries should be filled, one should call \ref exchange_ghost_data on each process first.
-   * \return Element data vector with data of Type TElementDataType.
-   */
-  template <typename ElementDataType = TElementDataType,
-            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
-  const std::vector<ElementDataType>&
-  get_element_data () const
-  {
-    return m_element_data;
-  }
-
-  /** 
-  * Exchange the element data for ghost elements between processes.
-  * This routine has to be called on each process after setting the element data for all local elements.
-  */
-  template <typename ElementDataType = TElementDataType,
-            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
-  void
-  exchange_ghost_data ()
-  {
-    // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
-    sc_array* sc_array_wrapper;
-    m_element_data.resize (get_num_local_elements () + get_num_ghosts ());
-    sc_array_wrapper = sc_array_new_data (m_element_data.data (), sizeof (ElementDataType),
-                                          get_num_local_elements () + get_num_ghosts ());
-
-    // Data exchange: entries with indices > num_local_elements will get overwritten.
-    t8_forest_ghost_exchange_data (m_forest, sc_array_wrapper);
-
-    sc_array_destroy (sc_array_wrapper);
+    return (false || ... || element_data_handler_competence_defined<TMeshCompetences> ());
   }
 
  private:
+  /** Helper function to check if class T implements the function get_element_data.
+   * \tparam T The competence to be checked.
+   * \return true if T implements the function, false if not.
+   */
+  template <template <typename> class T>
+  static constexpr bool
+  element_data_handler_competence_defined ()
+  {
+    return requires (T<SelfType>& competence) { competence.get_element_data (); };
+  }
+
   /** 
    * Update the storage of the mesh elements according to the current forest. 
    */
@@ -483,8 +448,6 @@ class mesh {
   t8_forest_t m_forest;                  /**< The forest the mesh should be defined for. */
   std::vector<element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
-  std::conditional_t<!std::is_void_v<TElementDataType>, std::vector<TElementDataType>, std::nullptr_t>
-    m_element_data; /**< Vector storing the (local) element data. */
   std::optional<t8_forest_t>
     m_uncommitted_forest; /**< Forest in which the set flags are set for a new forest before committing. */
 };
