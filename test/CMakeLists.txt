@@ -216,6 +216,7 @@ if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_custom_competence_serial         SOURCES mesh_handle/t8_gtest_custom_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial          SOURCES mesh_handle/t8_gtest_cache_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_handle_data_parallel             SOURCES mesh_handle/t8_gtest_handle_data.cxx )
+  add_t8_cpp_test( NAME t8_gtest_handle_adapt_serial             SOURCES mesh_handle/t8_gtest_adapt.cxx )
 endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
