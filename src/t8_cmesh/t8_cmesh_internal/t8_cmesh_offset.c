@@ -21,8 +21,8 @@
 */
 
 /** \file t8_cmesh_offset.c
- *
- * TODO: document this file
+ * Implementation of functions that deal with
+ * the cmesh partition offset.
  */
 
 #include "t8_cmesh_offset.h"
@@ -381,7 +381,6 @@ t8_offset_nosend (const int proc, const int mpisize, const t8_gloidx_t *offset_f
 
     if ((first_not_send && num_trees == 2) || (!first_not_send && num_trees == 1)) {
       int temp_proc;
-      size_t iz;
       t8_gloidx_t last_tree = t8_offset_last (proc, offset_from);
       sc_array_t receivers;
       /* It could be that our last tree is not send either, this is the case
@@ -407,8 +406,8 @@ t8_offset_nosend (const int proc, const int mpisize, const t8_gloidx_t *offset_f
       /* Now we need to find out all process in the new partition that have last_tree
        * and check if any of them did not have it before. */
       t8_offset_all_owners_of_tree (mpisize, last_tree, offset_to, &receivers);
-      for (iz = 0; iz < receivers.elem_count; iz++) {
-        temp_proc = *(int *) sc_array_index (&receivers, iz);
+      for (size_t ireceiver = 0; ireceiver < receivers.elem_count; ireceiver++) {
+        temp_proc = *(int *) sc_array_index (&receivers, ireceiver);
         if (!t8_offset_in_range (last_tree, temp_proc, offset_from)) {
           /* We found at least one process that needs our last tree */
           sc_array_reset (&receivers);

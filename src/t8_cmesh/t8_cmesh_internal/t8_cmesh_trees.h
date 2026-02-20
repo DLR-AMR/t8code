@@ -21,8 +21,7 @@
 */
 
 /** \file t8_cmesh_trees.h
- *
- * TODO: document this file
+ * Interface for the data layout of the coarse trees.
  */
 
 #ifndef T8_CMESH_PART_TREE_H

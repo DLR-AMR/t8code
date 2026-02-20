@@ -35,9 +35,11 @@
 
 /**
  * pseudo_types for testing
- * 
  */
-enum pseudo_types { T8_ENLARGED_INT = 0, T8_ENLARGED_DOUBLE = 1 };
+enum pseudo_types {
+  T8_ENLARGED_INT = 0,   /**< Pseudo data type representing an enlarged int. */
+  T8_ENLARGED_DOUBLE = 1 /**< Pseudo data type representing an enlarged double. */
+};
 
 /**
  * A template specialisation for handling single enlarged ints (int plus an additional int, this 
@@ -53,7 +55,7 @@ struct t8_data_handler<enlarged_data<int>>
   /**
    * Returns the size of an enlarged_int.
    * 
-   * \param[in] data The data to compute the size of. 
+   * \param[in] item The data item to compute the size of. 
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */
@@ -133,7 +135,7 @@ struct t8_data_handler<enlarged_data<double>>
   /**
    * Returns the size of an enlarged_double.
    * 
-   * \param[in] data The data to compute the size of. 
+   * \param[in] item The data item to compute the size of. 
    * \param[in] comm The MPI communicator used for communication.
    * \return An integer representing the size of the data.
    */

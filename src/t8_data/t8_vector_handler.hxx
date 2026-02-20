@@ -22,9 +22,9 @@
 
 /**
  * \file t8_vector_handler.hxx
- * 
+ *
  * This file provides functions to pack and unpack data for communication and to send and receive it using MPI.
- * 
+ *
  */
 
 #ifndef T8_VECTOR_HANDLER_HXX
@@ -119,10 +119,29 @@ struct t8_abstract_vector_handler
     = 0;
 
   /**
+   * Sends and receives messages to and from specified destinations.
+   *
+   * This pure virtual function is responsible for packing, sending, receiving and unpacking a message from and
+   * to a given source and destination with a specific tag within the provided MPI communicator. The function will also
+   * update the status and output count of the received message.
+   *
+   * \param[in] dest The destination rank to which the data will be sent.
+   * \param[in] source The rank of the source process from which the message is received.
+   * \param[in] tag The tag associated with the messages to be sent.
+   * \param[in] comm The MPI communicator used for the communication.
+   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
+   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
+   * \return An integer indicating the status of the send operation.
+   */
+  virtual int
+  sendrecv (const int dest, const int source, const int tag, sc_MPI_Comm comm, sc_MPI_Status *status, int &outcount)
+    = 0;
+
+  /**
    * Pure virtual function to get the type.
-   * 
+   *
    * This function must be overridden in derived classes to return the type.
-   * 
+   *
    * \return An integer representing the type.
    */
   virtual t8_data_handler_type
@@ -165,7 +184,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
 
   /**
    * Get the data.
-   * 
+   *
    * \return The data.
    */
   std::shared_ptr<std::vector<TType>>
@@ -297,8 +316,66 @@ struct t8_vector_handler: public t8_abstract_vector_handler
   }
 
   /**
+   * Sends and receives messages to and from specified destinations.
+   *
+   * This function is responsible for packing, sending and receiving data to and from given destinations
+   * with a specific tag using the provided MPI communicator.
+   *
+   * \param[in] dest The destination rank to which the data will be sent.
+   * \param[in] source The rank of the source process from which the message is received.
+   * \param[in] tag The tag associated with the messages to be sent.
+   * \param[in] comm The MPI communicator used for the communication.
+   * \param[in] status A pointer to an MPI status object that will be updated with the status of the received message.
+   * \param[in] outcount A reference to an integer that will be updated with the count of received elements.
+   * \return An integer indicating the status of the send operation.
+   */
+  int
+  sendrecv ([[maybe_unused]] const int dest, [[maybe_unused]] const int source, [[maybe_unused]] const int tag,
+            [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] sc_MPI_Status *status,
+            [[maybe_unused]] int &outcount) override
+  {
+    {
+#if T8_ENABLE_MPI
+      /* Compute sizes of outgoing and incoming messages */
+      const int send_num_bytes = buffer_size (comm);
+      int recv_num_bytes = 0;
+      int mpiret = MPI_Sendrecv (&send_num_bytes, 1, sc_MPI_INT, dest, tag, &recv_num_bytes, 1, sc_MPI_INT, source, tag,
+                                 comm, status);
+      SC_CHECK_MPI (mpiret);
+
+      /* Prepare send buffer */
+      std::vector<char> send_buffer (send_num_bytes);
+      int send_pos = 0;
+      pack_vector_prefix (send_buffer.data (), send_num_bytes, send_pos, comm);
+
+      /* Prepare receive buffer using size received */
+      std::vector<char> recv_buffer (recv_num_bytes);
+
+      /* Actual sendrecv of data */
+      mpiret = MPI_Sendrecv (
+        /* send payload */
+        send_buffer.data (), send_num_bytes, sc_MPI_PACKED, dest, tag,
+        /* receive payload */
+        recv_buffer.data (), recv_num_bytes, sc_MPI_PACKED, source, tag,
+        /* communicator + status */
+        comm, status);
+      SC_CHECK_MPI (mpiret);
+
+      /* Unpack received data */
+      int recv_pos = 0;
+      unpack_vector_prefix (recv_buffer.data (), recv_num_bytes, recv_pos, outcount, comm);
+
+      return mpiret;
+#else
+      SC_ABORT ("MPI_Sendrecv not available without MPI");
+      return 0;
+#endif
+    }
+  }
+
+  /**
    * Get the type of the data handler.
-   * 
+   *
    * \return The type of the data handler.
    */
   constexpr t8_data_handler_type
@@ -309,7 +386,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
 
  private:
   /**
-  * A shared pointer to a vector of data. 
+  * A shared pointer to a vector of data.
   * This data will be packed, unpacked, and communicated via MPI.
   */
   std::shared_ptr<std::vector<TType>> m_data;
@@ -322,9 +399,9 @@ struct t8_vector_handler: public t8_abstract_vector_handler
 
 /**
  * Create an internal handler for the given data type. Can be used for complex data types that use
- * data structures implemented by t8code. 
- * 
- * \param[in] type The type of the data handler to create. 
+ * data structures implemented by t8code.
+ *
+ * \param[in] type The type of the data handler to create.
  * \return A handler for the given data type.
  */
 inline t8_abstract_vector_handler *

@@ -154,6 +154,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
     return true;
   }
   if (cmesh->geometry_handler->get_num_geometries () > 0) {
+    bool is_valid = true;
     /* Iterate over all trees, get their vertices and check the volume */
     for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
       /* Check if tree and geometry are compatible. */
@@ -161,7 +162,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
         = cmesh->geometry_handler->tree_compatible_with_geom (cmesh, t8_cmesh_get_global_id (cmesh, itree));
       if (!geometry_compatible) {
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
-        return false;
+        is_valid = false;
       }
       else if (check_for_negative_volume) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
@@ -169,10 +170,11 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative
           = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
         if (negative_volume) {
           t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
-          return false;
+          is_valid = false;
         }
       }
     }
+    return is_valid;
   }
   return true;
 }
@@ -1368,7 +1370,8 @@ t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unu
   }
 
 #else
-  t8_global_errorf ("Do not call t8_cmesh_debug_print_trees if t8code is not compiled with --enable-debug.\n");
+  t8_global_errorf (
+    "Do not call t8_cmesh_debug_print_trees if t8code is not compiled with -DCMAKE_BUILD_TYPE=Debug.\n");
 #endif /* T8_ENABLE_DEBUG */
 }
 

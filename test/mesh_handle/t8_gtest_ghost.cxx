@@ -59,7 +59,7 @@ struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
 /** Check the implementation of ghosts and all functions accessible by ghosts. */
 TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
-  using mesh_class = t8_mesh_handle::mesh<>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             false, false);
 
@@ -79,20 +79,32 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
   const t8_locidx_t num_ghost_elements = mesh->get_num_ghosts ();
   for (t8_locidx_t ighost = num_local_elements; ighost < num_local_elements + num_ghost_elements; ++ighost) {
+    EXPECT_EQ (ighost, (*mesh)[ighost].get_element_handle_id ());
     EXPECT_TRUE ((*mesh)[ighost].is_ghost_element ());
     EXPECT_EQ (level, (*mesh)[ighost].get_level ());
-    auto centroid = (*mesh)[ighost].get_centroid ();
-    for (const auto& coordinate : centroid) {
-      EXPECT_GE (1, coordinate);
-      EXPECT_LE (0, coordinate);
+    EXPECT_LE (0, (*mesh)[ighost].get_num_faces ());
+    EXPECT_LE (0, (*mesh)[ighost].get_num_vertices ());
+    EXPECT_LE (0, (*mesh)[ighost].get_volume ());
+    EXPECT_LE (0, (*mesh)[ighost].get_diameter ());
+    for (const auto& coordinate : (*mesh)[ighost].get_centroid ()) {
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
-    auto vertex_coordinates = (*mesh)[ighost].get_vertex_coordinates ();
-    for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (const auto& coordinate : vertex_coordinates[ivertex]) {
-        EXPECT_GE (1, coordinate);
-        EXPECT_LE (0, coordinate);
+    for (int ivertex = 0; ivertex < (*mesh)[ighost].get_num_vertices (); ++ivertex) {
+      for (const auto& coordinate : (*mesh)[ighost].get_vertex_coordinates (ivertex)) {
+        EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
     }
+    // Check face related functions exemplary for first face.
+    EXPECT_LE (0, (*mesh)[ighost].get_face_area (0));
+    for (const auto& coordinate : (*mesh)[ighost].get_face_centroid (0)) {
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
+    }
+    for (const auto& coordinate : (*mesh)[ighost].get_face_normal (0)) {
+      EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
+    }
+    // Check exemplary that caches work for ghost elements.
+    EXPECT_TRUE ((*mesh)[ighost].volume_cache_filled ());
+    EXPECT_LE (0, (*mesh)[ighost].get_volume ());
   }
 }
 
@@ -105,6 +117,10 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 
   const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
+  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
+    // Ensure that we have ghost elements in this test.
+    EXPECT_GT (mesh.get_num_ghosts (), 0);
+  }
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
   auto mesh_iterator = mesh.cbegin ();
