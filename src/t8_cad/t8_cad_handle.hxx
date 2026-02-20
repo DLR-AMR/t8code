@@ -37,7 +37,7 @@
 #include <TopoDS_Vertex.hxx>
 #include <optional>
 #include <span>
-
+#include <string_view>
 #include <t8_cmesh/t8_cmesh.h>
 /**
  * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
@@ -54,7 +54,7 @@ class t8_cad_handle {
     *
     * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
     */
-  t8_cad_handle (std::string fileprefix);
+  t8_cad_handle (const std::string_view fileprefix);
   /**
     * Constructor of the cad shape.
     * The shape is initialized directly from an existing TopoDS_Shape.
@@ -64,7 +64,7 @@ class t8_cad_handle {
     *
     * \param [in] cad_shape_in  cad shape geometry object.
     */
-  t8_cad_handle (const TopoDS_Shape cad_shape_in);
+  t8_cad_handle (TopoDS_Shape cad_shape_in);
 
   /**
    * Constructor of the cad shape for testing purposes. Sets an invalid cad_shape.
@@ -81,14 +81,14 @@ class t8_cad_handle {
    * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
    */
   void
-  load (const std::string fileprefix);
+  load (const std::string_view fileprefix);
 
   /**
    * Loads a cad shape from an existing TopoDS_Shape and maps it.
    * \param [in] cad_shape  The input cad shape.
    */
   void
-  load (const TopoDS_Shape &cad_shape);
+  load (TopoDS_Shape cad_shape);
 
   /** Check if a cad_curve is a line.
    * \param [in] curve_index      The index of the cad_curve.
@@ -368,7 +368,7 @@ class t8_cad_handle {
    * \param [in] cad_shape_in  The input cad shape to be mapped.
    */
   void
-  map (const TopoDS_Shape &cad_shape_in);
+  map (TopoDS_Shape cad_shape_in);
 
   TopoDS_Shape cad_shape;                          /**< cad geometry */
   TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex. */

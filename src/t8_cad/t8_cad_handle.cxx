@@ -34,19 +34,21 @@
 #include <Standard_Version.hxx>
 #include <ShapeAnalysis_Edge.hxx>
 #include <TopExp_Explorer.hxx>
+#include <string_view>
 
 #if T8_ENABLE_DEBUG
 #include <Precision.hxx>
 #endif
 
 void
-t8_cad_handle::load (const std::string fileprefix)
+t8_cad_handle::load (const std::string_view fileprefix)
 {
   TopoDS_Shape cad_shape;
   BRep_Builder bob;
-  std::ifstream is (fileprefix + ".brep");
+  const std::string filename = std::string (fileprefix) + ".brep";
+  std::ifstream is (filename);
   if (is.is_open () == false) {
-    SC_ABORTF ("Cannot find the file %s.brep.\n", fileprefix.c_str ());
+    SC_ABORTF ("Cannot find the file %s.\n", filename.c_str ());
   }
   BRepTools::Read (cad_shape, is, bob);
   is.close ();
@@ -56,20 +58,20 @@ t8_cad_handle::load (const std::string fileprefix)
                "Linked cad version: %s",
                OCC_VERSION_COMPLETE);
   }
-  map (cad_shape);
+  map (std::move (cad_shape));
 }
 
 void
-t8_cad_handle::load (const TopoDS_Shape &cad_shape)
+t8_cad_handle::load (TopoDS_Shape cad_shape)
 {
   if (cad_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
   }
-  map (cad_shape);
+  map (std::move (cad_shape));
 }
 
 void
-t8_cad_handle::map (const TopoDS_Shape &cad_shape_in)
+t8_cad_handle::map (TopoDS_Shape cad_shape_in)
 {
   if (cad_shape_in.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
@@ -81,7 +83,7 @@ t8_cad_handle::map (const TopoDS_Shape &cad_shape_in)
   cad_shape_vertex2edge_map.Clear ();
   cad_shape_edge2face_map.Clear ();
 
-  cad_shape = cad_shape_in;
+  cad_shape = std::move (cad_shape_in);
 
   TopExp::MapShapes (cad_shape, TopAbs_VERTEX, cad_shape_vertex_map);
   TopExp::MapShapes (cad_shape, TopAbs_EDGE, cad_shape_edge_map);
@@ -90,7 +92,7 @@ t8_cad_handle::map (const TopoDS_Shape &cad_shape_in)
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
 }
 
-t8_cad_handle::t8_cad_handle (std::string fileprefix)
+t8_cad_handle::t8_cad_handle (const std::string_view fileprefix)
 {
   t8_refcount_init (&rc);
   t8_debugf ("Constructed the cad_handle from file.\n");
@@ -98,12 +100,12 @@ t8_cad_handle::t8_cad_handle (std::string fileprefix)
   t8_cad_handle::load (fileprefix);
 }
 
-t8_cad_handle::t8_cad_handle (const TopoDS_Shape cad_shape_in)
+t8_cad_handle::t8_cad_handle (TopoDS_Shape cad_shape_in)
 {
   t8_refcount_init (&rc);
   t8_debugf ("Constructed the cad_handle from shape.\n");
 
-  t8_cad_handle::load (cad_shape_in);
+  load (std::move (cad_shape_in));
 }
 
 t8_cad_handle::t8_cad_handle ()
