@@ -25,8 +25,6 @@
  * callback functions on the leaf elements.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_iterate */
-
 #ifndef T8_FOREST_ITERATE_H
 #define T8_FOREST_ITERATE_H
 

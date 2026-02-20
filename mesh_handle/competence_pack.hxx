@@ -24,8 +24,8 @@
  * Define classes to pack different competences into one template parameter for the \ref t8_mesh_handle::mesh class.
  * We have one class for element competences and one for mesh competences. 
  */
-#ifndef T8_COMPETENCE_PACK_HXX
-#define T8_COMPETENCE_PACK_HXX
+
+#pragma once
 
 #include "competences.hxx"
 namespace t8_mesh_handle
@@ -48,8 +48,13 @@ struct element_competence_pack
 };
 
 /** Predefined element competence pack combining all caching competences. */
-using cache_element_competences
-  = element_competence_pack<cache_volume, cache_vertex_coordinates, cache_centroid, cache_neighbors>;
+using all_cache_element_competences
+  = element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid, cache_face_areas,
+                            cache_face_centroids, cache_face_normals, cache_neighbors>;
+
+/** Predefined competence pack combining all competences related to faces. */
+using cache_face_element_competences
+  = element_competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
 
 // --- Mesh competence pack. ---
 /** Class to pack different mesh competences into one template parameter for the \ref mesh class.
@@ -71,4 +76,3 @@ struct mesh_competence_pack
 };
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_COMPETENCE_PACK_HXX */

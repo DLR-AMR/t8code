@@ -49,7 +49,7 @@ on:
 
 jobs:  
   generate-codecov:
-    timeout-minutes: 100
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
     steps:
@@ -91,13 +91,14 @@ jobs:
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -DT8CODE_CODE_COVERAGE=ON -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake -DT8CODE_BUILD_BENCHMARKS=OFF -DT8CODE_BUILD_DOCUMENTATION=OFF -DT8CODE_BUILD_EXAMPLES=OFF -DT8CODE_BUILD_TUTORIALS=OFF"
+      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -DCMAKE_Fortran_COMPILER=mpifort -DT8CODE_CODE_COVERAGE=ON -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake -DT8CODE_BUILD_BENCHMARKS=OFF -DT8CODE_BUILD_DOCUMENTATION=OFF -DT8CODE_BUILD_EXAMPLES=OFF -DT8CODE_BUILD_TUTORIALS=OFF"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS
+      run: echo cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage" 
+    # Note: Adding DCMAKE_Fortran_FLAGS here is a workaround because the blank space between the compiler flags causes trouble otherwise.
     - name: cmake
-      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
+      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage" 
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v6

@@ -27,6 +27,7 @@ on:
 
 jobs:
   typos-check:
+    timeout-minutes: 10
     name: Spell Check with Typos
     runs-on: ubuntu-latest
     steps:

@@ -103,10 +103,8 @@ TEST (t8_gtest_custom_competence, custom_competence)
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());
-    auto centroid = it->get_centroid ();
-    for (const auto &coordinate : centroid) {
-      EXPECT_GE (1, coordinate);
-      EXPECT_LE (0, coordinate);
+    for (const auto &coordinate : it->get_centroid ()) {
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     EXPECT_TRUE (it->centroid_cache_filled ());
   }

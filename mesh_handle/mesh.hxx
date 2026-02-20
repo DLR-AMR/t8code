@@ -72,9 +72,8 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
   using mesh_iterator =
-    typename std::vector<element_class>::iterator; /**< Non-const iterator type for the mesh elements. */
-  template <typename>
-  friend struct access_element_data;
+    typename std::vector<element_class>::iterator;  /**< Non-const iterator type for the mesh elements. */
+  friend struct access_element_data<element_class>; /**< Friend struct to access its element data vector. */
 
   /** Callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle.

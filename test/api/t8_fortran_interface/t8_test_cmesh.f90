@@ -1,0 +1,134 @@
+!! This file is part of t8code.
+!! t8code is a C library to manage a collection (a forest) of multiple
+!! connected adaptive space-trees of general element classes in parallel.
+!!
+!! Copyright (C) 2026 the developers
+!!
+!! t8code is free software; you can redistribute it and/or modify
+!! it under the terms of the GNU General Public License as published by
+!! the Free Software Foundation; either version 2 of the License, or
+!! (at your option) any later version.
+!!
+!! t8code is distributed in the hope that it will be useful,
+!! but WITHOUT ANY WARRANTY; without even the implied warranty of
+!! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!! GNU General Public License for more details.
+!!
+!! You should have received a copy of the GNU General Public License
+!! along with t8code; if not, write to the Free Software Foundation, Inc.,
+!! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+!! Description:
+!!
+!! This test checks for all cmesh-related functions of the Fortran interface
+!! whether they can be called from Fortran code without throwing segmentation
+!! faults or other errors. Note, however, that is does not verify all the
+!! outputs and return values are as expected, but only checks for errors.
+!!
+!! The test repeatedly creates example cmeshes in different ways and tests
+!! their vtk output, setting their connectivity, and destroying them.
+
+
+program t8_test_cmesh
+  use mpi
+  use iso_c_binding, only: c_ptr, c_int, c_char, c_double, C_NULL_PTR
+  use t8_fortran_interface_mod
+  implicit none
+
+  integer :: ierror, fcomm
+  type(c_ptr) :: ccomm, cmesh, geometry
+  real(c_double), target :: vertices_tri_0(9), vertices_tri_1(9)
+  real(c_double), target :: vertices_total(48) = 0.0_c_double
+  integer(c_int), target :: eclasses(2)
+  character(len=256, kind=c_char) :: vtk_prefix
+
+  ! Initialize MPI.
+  call MPI_Init (ierror)
+  if (ierror /= 0) then
+    print *, 'MPI initialization failed.'
+    stop 1
+  endif
+  fcomm = MPI_COMM_WORLD
+  ccomm = t8_fortran_mpi_comm_new_f (fcomm)
+  call t8_fortran_init_all_f (ccomm)
+
+  ! Create a first cmesh.
+  cmesh = t8_cmesh_new_periodic_tri_f (ccomm)
+
+  ! Test vtk output
+  write(*,*) 'Start cmesh vtk output'
+  vtk_prefix = "fortran_cmesh_to_vtk" // c_null_char
+  ierror = t8_cmesh_vtk_write_file_f(cmesh, vtk_prefix)
+  if (ierror /= 0) then
+    print *, 'cmesh VTK output failed.'
+    stop 1
+  endif
+  write(*,*) 'Finished cmesh vtk output'
+
+  ! Destroy first cmesh.
+  call t8_cmesh_destroy_f(cmesh)
+
+  write(*,*) 'Destroyed mesh'
+  vertices_tri_0 = [0.0_c_double, 0.0_c_double, 0.0_c_double, &
+              1.0_c_double, 0.0_c_double, 0.0_c_double, &
+              1.0_c_double, 1.0_c_double, 0.0_c_double]
+
+  vertices_tri_1 = [0.0_c_double, 0.0_c_double, 0.0_c_double, &
+              1.0_c_double, 1.0_c_double, 0.0_c_double, &
+              0.0_c_double, 1.0_c_double, 0.0_c_double]
+
+  ! Note: t8_fortran_cmesh_set_join_by_vertices_noConn_f for each tree expects T8_ECLASS_MAX_DIM=3
+  !       entries for 8_ECLASS_MAX_CORNERS=8 vertices, yielding 3 * 8 = 24 entries per tree, so an
+  !       an array of length 2 * 24 = 48.
+  vertices_total(1:9) = vertices_tri_0(:)
+  vertices_total(25:33) = vertices_tri_1(:)
+
+  !! Create 2nd cmesh as quad mesh with 2 triangles in a square.
+  call t8_fortran_cmesh_init_f(cmesh)
+  write(*,*) 'initialized new mesh'
+  !! Create and register a geometry for linear triangles.
+  geometry = t8_fortran_geometry_linear_new_f (2)
+  call t8_fortran_cmesh_register_geometry_f(cmesh, geometry)
+  !! Set tree class.
+  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(0, kind=8), 3)
+  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(1, kind=8), 3)
+  !! Set tree vertices for the two triangles.
+  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(0, kind=8), c_loc(vertices_tri_0), 3)
+  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(1, kind=8), c_loc(vertices_tri_1), 3)
+  !! Set connections between the two triangles.
+  call t8_fortran_cmesh_set_join_f(cmesh, int(0, kind=8), int(1, kind=8), 1, 2, 0)
+  call t8_fortran_cmesh_commit_f(cmesh, ccomm)
+  !! Destroy 2nd cmesh again.
+  call t8_cmesh_destroy_f(cmesh)
+  write(*,*) 'destroyed mesh again'
+
+  !! Create the same mesh again, but let t8code find the connectivity
+  eclasses = [3, 3]
+  call t8_fortran_cmesh_init_f(cmesh)
+  geometry = t8_fortran_geometry_linear_new_f (2)
+  call t8_fortran_cmesh_register_geometry_f(cmesh, geometry)
+  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(0, kind=8), 3)
+  call t8_fortran_cmesh_set_tree_class_f(cmesh, int(1, kind=8), 3)
+  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(0, kind=8), c_loc(vertices_tri_0), 3)
+  call t8_fortran_cmesh_set_tree_vertices_f(cmesh, int(1, kind=8), c_loc(vertices_tri_1), 3)
+  call t8_fortran_cmesh_set_join_by_vertices_noConn_f(cmesh, int(2, kind=8), c_loc(eclasses), c_loc(vertices_total), c_null_ptr, 0)
+  call t8_fortran_cmesh_commit_f(cmesh, ccomm)
+  !! Destroy cmesh again.
+  call t8_cmesh_destroy_f(cmesh)
+  write(*,*) 'destroyed mesh a third time'
+
+  !! Finalize t8code and MPI.
+  call t8_fortran_finalize_f ()
+  call t8_fortran_mpi_comm_delete_f(ccomm)
+  call MPI_Finalize(ierror)
+  if (ierror /= 0) then
+    print *, 'MPI Finalize failed.'
+    stop 1
+  endif
+
+  !! Everything passed: Return zero.
+  write(*,*) ''
+  print *, 'PASSED: cmesh tests of Fortran interface!'
+  stop 0
+
+end program

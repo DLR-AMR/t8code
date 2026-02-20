@@ -2,7 +2,7 @@
 !! t8code is a C library to manage a collection (a forest) of multiple
 !! connected adaptive space-trees of general element classes in parallel.
 !!
-!! Copyright (C) 2024 the developers
+!! Copyright (C) 2026 the developers
 !!
 !! t8code is free software; you can redistribute it and/or modify
 !! it under the terms of the GNU General Public License as published by
@@ -21,42 +21,26 @@
 !! Description:
 !!
 !! This program tests if t8code can be initialized from Fortran
-!! with given MPI communicator. Works only when MPI is enabled.
-
-program t8_test_mpi_init
+!! without MPI communicator.
+program t8_test_init_no_mpi
   use mpi
   use iso_c_binding, only: c_ptr, c_int
   use t8_fortran_interface_mod
 
   implicit none
 
-  integer :: ierror, fcomm
-  type(c_ptr) :: ccomm
+  ! Init Fortran interface without MPI, i.e., sc_MPI_COMM_NULL communicator.
+  call t8_fortran_init_all_noMPI_f()
 
-  ! Initialize MPI.
-  call MPI_Init (ierror)
-  if (ierror /= 0) then
-    print *, 'MPI initialization failed.'
-    stop 1
-  endif
-  fcomm = MPI_COMM_WORLD
-  ccomm = t8_fortran_mpi_comm_new_f (fcomm)
+  ! Test t8_global_productionf_noargs_f
+  call t8_global_productionf_noargs_f("This string was written by t8_global_productionf_noargs_f()")
 
-  ! Initialize t8code.
-  call t8_fortran_init_all_f (ccomm)
-
-  ! Finalize MPI and t8code.
+  ! Finalize
   call t8_fortran_finalize_f ()
-  call t8_fortran_mpi_comm_delete_f(ccomm)
-  call MPI_Finalize(ierror)
-  if (ierror /= 0) then
-    print *, 'MPI Finalize failed.'
-    stop 1
-  endif
 
   ! Everything passed: Return zero.
   write(*,*) ''
-  print *, 'PASSED: mpi init test of Fortran interface!'
+  print *, 'PASSED: serial init test of Fortran interface!'
   stop 0
 
 end program

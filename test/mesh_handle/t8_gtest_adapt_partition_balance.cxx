@@ -46,7 +46,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /** Dummy user data taken from tutorial for test purposes. */
 struct dummy_user_data
 {
-  t8_3D_point midpoint;             /**< The midpoint of our sphere. */
+  t8_3D_vec midpoint;               /**< The midpoint of our sphere. */
   double refine_if_inside_radius;   /**< If an element's center is smaller than this value, we refine the element. */
   double coarsen_if_outside_radius; /**< If an element's center is larger this value, we coarsen its family. */
 };
@@ -67,7 +67,7 @@ adapt_callback_test ([[maybe_unused]] const TMeshClass &mesh,
                      const std::vector<typename TMeshClass::element_class> &elements, const dummy_user_data &user_data)
 {
   auto element_centroid = elements[0].get_centroid ();
-  double dist = t8_dist<t8_3D_point, t8_3D_point> (element_centroid, user_data.midpoint);
+  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, user_data.midpoint);
   if (dist < user_data.refine_if_inside_radius) {
     return 1;
   }
@@ -89,9 +89,9 @@ forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_l
                                [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   const struct dummy_user_data *adapt_data = (const struct dummy_user_data *) t8_forest_get_user_data (forest);
-  t8_3D_point centroid;
+  t8_3D_vec centroid;
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
-  double dist = t8_dist<t8_3D_point, t8_3D_point> (centroid, adapt_data->midpoint);
+  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     return 1;
   }
@@ -117,9 +117,9 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
     t8_mesh_handle::mesh_competence_pack<t8_mesh_handle::element_data_competence<dummy_user_data>::template type>>;
   mesh_class mesh_handle = mesh_class (forest);
   struct dummy_user_data user_data = {
-    t8_3D_point ({ 0.5, 0.5, 1 }), /**< Midpoints of the sphere. */
-    0.2,                           /**< Refine if inside this radius. */
-    0.4                            /**< Coarsen if outside this radius. */
+    t8_3D_vec ({ 0.5, 0.5, 1 }), /**< Midpoints of the sphere. */
+    0.2,                         /**< Refine if inside this radius. */
+    0.4                          /**< Coarsen if outside this radius. */
   };
 
   // Ref the forest as we want to keep using it after the adapt call to compare results.
