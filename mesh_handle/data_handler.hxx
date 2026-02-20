@@ -137,7 +137,7 @@ struct access_element_data: public t8_crtp_basic<TUnderlying>
  public:
   // --- Getter and setter for element data. ---
   /** Getter for the element data.
-   * For ghost elements ensure that \ref mesh::exchange_ghost_data is called on each process first.
+   * For ghost elements ensure that \ref handle_element_data::exchange_ghost_data is called on each process first.
    * Element data for non-ghost elements can be accessed (if set) directly.
    * \return Element data with data of Type TMeshClass::ElementDataType.
    */

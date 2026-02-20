@@ -30,7 +30,7 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "adapt.hxx"
-#include "competences.hxx"
+#include "data_handler.hxx"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
@@ -57,7 +57,7 @@ concept MeshCompetencePack = requires { typename TType::is_mesh_competence_pack;
  *         \see element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref element_competence_pack class.
  * \tparam TMeshCompetences The competences you want to add to the default functionality of the mesh.  
- *         \note Please pack your competences using the \ref mesh_competence_pack class.
+ *         \note Please pack your competences using the \ref t8_mesh_handle::mesh_competence_pack class.
  *         One of the most important competences to add is \ref handle_element_data.
  */
 template <ElementCompetencePack TElementCompetencePack = element_competence_pack<>,
@@ -66,7 +66,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
  public:
   using SelfType = mesh<TElementCompetencePack, TMeshCompetencePack>; /**< Type of the current class. */
   using element_class
-    = TElementCompetencePack::template apply<SelfType,
+    = typename TElementCompetencePack::template apply<SelfType,
                                              element>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =

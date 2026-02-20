@@ -27,7 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #pragma once
 
 #include <t8.h>
-#include "competences.hxx"
+#include "data_handler.hxx"
 #include <t8_element.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
