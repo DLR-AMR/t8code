@@ -65,9 +65,8 @@ template <ElementCompetencePack TElementCompetencePack = element_competence_pack
 class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePack, TMeshCompetencePack>> {
  public:
   using SelfType = mesh<TElementCompetencePack, TMeshCompetencePack>; /**< Type of the current class. */
-  using element_class
-    = typename TElementCompetencePack::template apply<SelfType,
-                                             element>; /**< The element class of the mesh with given competences. */
+  using element_class = typename TElementCompetencePack::template apply<
+    SelfType, element>; /**< The element class of the mesh with given competences. */
   friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
