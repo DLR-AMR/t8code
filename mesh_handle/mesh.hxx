@@ -31,8 +31,8 @@
 #include "competence_pack.hxx"
 #include "adapt.hxx"
 #include "competences.hxx"
-#include "t8_forest/t8_forest_balance.h"
-#include "t8_forest/t8_forest_types.h"
+#include <t8_forest/t8_forest_balance.h>
+#include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>

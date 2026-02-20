@@ -25,15 +25,20 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Especially, competences to cache functionalities of elements instead of calculating them each time a function
  * is called are provided.
  *
+ * \note for developers or users that want to provide their own competence:
  * All competences have the same inheritance pattern: 
  * We use the CRTP pattern as we may need to access members of the derived classes like 
  * \ref t8_mesh_handle::element. 
- * The t8_crtp_basic is used for convenience/clear code (avoid to type a static cast explicitly each time 
+ * The \ref t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
  * we need functionality of TUnderlying).
  * Especially for the competences to cache functionality, the access of members is not necessary, 
  * such that it is not obvious why we use the crtp. For competences that extend the functionality of the element, 
  * this is required. 
  * We use it for all competences for consistency and compatibility with \ref t8_mesh_handle::element.
+ *
+ * We use \ref t8_crtp_operator instead of \ref t8_crtp_basic to circumvent diamond shaped inheritance pattern in 
+ * the case that multiple competences are used together. 
+ * The distinction of the classes is made by the second template parameter of \ref t8_crtp_operator.
  */
 
 #pragma once
@@ -56,49 +61,7 @@ namespace t8_mesh_handle
  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
  */
 template <typename TUnderlying>
-struct access_element_data: public t8_crtp_basic<TUnderlying>
-{
- public:
-  // --- Getter and setter for element data. ---
-  /** Getter for the element data.
-   * For ghost elements ensure that \ref mesh::exchange_ghost_data is called on each process first.
-   * Element data for non-ghost elements can be accessed (if set) directly.
-   * \return Element data with data of Type TMeshClass::ElementDataType.
-   */
-  const auto &
-  get_element_data () const
-  {
-    T8_ASSERT (this->underlying ().m_mesh->has_element_data_handler_competence ());
-    const t8_locidx_t handle_id = this->underlying ().get_element_handle_id ();
-    T8_ASSERTF (static_cast<size_t> (handle_id) < this->underlying ().m_mesh->m_element_data.size (),
-                "Element data not set.\n");
-    return this->underlying ().m_mesh->m_element_data[handle_id];
-  }
-
-  /** 
-   * Set the element data for the element. 
-   * \note You can only set element data for non-ghost elements.
-   * \param [in] element_data The element data to be set.
-   */
-  void
-  set_element_data (auto element_data)
-  {
-    T8_ASSERT (this->underlying ().m_mesh->has_element_data_handler_competence ());
-    SC_CHECK_ABORT (!this->underlying ().is_ghost_element (), "Element data cannot be set for ghost elements.\n");
-    // Resize for the case that no data vector has been set previously.
-    this->underlying ().m_mesh->m_element_data.reserve (this->underlying ().m_mesh->get_num_local_elements ()
-                                                        + this->underlying ().m_mesh->get_num_ghosts ());
-    this->underlying ().m_mesh->m_element_data.resize (this->underlying ().m_mesh->get_num_local_elements ());
-    this->underlying ().m_mesh->m_element_data[this->underlying ().get_element_handle_id ()] = std::move (element_data);
-  }
-};
-
-/**
- * Competence to cache the volume of an element at the first function call.
- * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
- */
-template <typename TUnderlying>
-struct cache_volume: public t8_crtp_basic<TUnderlying>
+struct cache_volume: public t8_crtp_operator<TUnderlying, cache_volume>
 {
  public:
   /**
