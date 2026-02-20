@@ -86,7 +86,7 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 {
   // --- Use predefined competences to use all available caching competences. ---
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);
@@ -131,10 +131,10 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 }
 
 /** Test mesh class with all predefined face competences using some exemplary functionality. */
-TEST_P (t8_mesh_handle_test, test_cache_face_competences)
+TEST_P (t8_mesh_handle_test, test_cache_face_element_competences)
 {
   // --- Use all predefined competences. ---
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_element_competences>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);

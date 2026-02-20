@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #pragma once
 
 #include <t8.h>
+#include "data_handler.hxx"
 #include <t8_element.h>
 #include <t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
@@ -55,23 +56,26 @@ namespace t8_mesh_handle
  * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
  *
  * \tparam TCompetences The competences you want to add to the default functionality of the element.
+ * \tparam TMeshClass The class of the mesh the element belongs to.
  */
 
-template <typename mesh_class, template <typename> class... TCompetences>
-class element: public TCompetences<element<mesh_class, TCompetences...>>... {
+template <typename TMeshClass, template <typename> class... TCompetences>
+class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
  private:
   using SelfType
-    = element<mesh_class, TCompetences...>; /**< Type of the current class with all template parameters specified. */
-  friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
+    = element<TMeshClass, TCompetences...>; /**< Type of the current class with all template parameters specified. */
+  friend TMeshClass; /**< Define TMeshClass as friend to be able to access e.g. the constructor. */
+  friend struct access_element_data<
+    SelfType>; /**< Define the competence to access element data as friend to be able to access e.g. the mesh. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
-   *  This constructor should only be called by the mesh_class (and invisible for the user).
+   *  This constructor should only be called by the TMeshClass (and invisible for the user).
    * \param [in] mesh             Pointer to the mesh the element should belong to.
    * \param [in] tree_id          The tree id of the element in the forest defining the mesh.
    * \param [in] element_id       The element id of the element in the forest defining the mesh.
    * \param [in] is_ghost_element Flag to indicate that this element is a ghost element. Default is false.
    */
-  element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
+  element (TMeshClass* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
     : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id), m_is_ghost_element (is_ghost_element)
   {
     // Cache the t8_element_t from the forest as it is often used.
@@ -523,7 +527,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   /** Getter for the mesh to which the element belongs.
    * \return Reference to the mesh.
    */
-  const mesh_class*
+  const TMeshClass*
   get_mesh () const
   {
     return m_mesh;
@@ -538,41 +542,10 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
     return m_is_ghost_element;
   }
 
-  // --- Getter and setter for element data. ---
-  /** Getter for the element data.
-   * For ghost elements ensure that \ref mesh::exchange_ghost_data is called on each process first.
-   * Element data for non-ghost elements can be accessed (if set) directly.
-   * \return Element data with data of Type mesh_class::ElementDataType.
-   */
-  template <typename TElementDataType = typename mesh_class::ElementDataType,
-            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
-  const TElementDataType&
-  get_element_data () const
-  {
-    const t8_locidx_t handle_id = get_element_handle_id ();
-    T8_ASSERTF (static_cast<size_t> (handle_id) < m_mesh->m_element_data.size (), "Element data not set.\n");
-    return m_mesh->m_element_data[handle_id];
-  }
-
-  /** Set the element data for the element. 
-   * \note You can only set element data for non-ghost elements.
-   * \param [in] element_data The element data to be set.
-   */
-  template <typename TElementDataType = typename mesh_class::ElementDataType,
-            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
-  void
-  set_element_data (TElementDataType element_data)
-  {
-    SC_CHECK_ABORT (!m_is_ghost_element, "Element data cannot be set for ghost elements.\n");
-    // Resize for the case that no data vector has been set previously.
-    m_mesh->m_element_data.reserve (m_mesh->get_num_local_elements () + m_mesh->get_num_ghosts ());
-    m_mesh->m_element_data.resize (m_mesh->get_num_local_elements ());
-    m_mesh->m_element_data[get_element_handle_id ()] = std::move (element_data);
-  }
-
+ protected:
+  TMeshClass* m_mesh; /**< Pointer to the mesh the element is defined for. */
  private:
   // --- Private member variables. ---
-  mesh_class* m_mesh;             /**< Pointer to the mesh the element is defined for. */
   const t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
   const t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
   const bool m_is_ghost_element;  /**< Flag to indicate if the element is a ghost element. */

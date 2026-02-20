@@ -21,7 +21,8 @@
 */
 
 /** \file competence_pack.hxx
- * Define to pack different competences into one template parameter for the \ref t8_mesh_handle::mesh class.
+ * Define classes to pack different competences into one template parameter for the \ref t8_mesh_handle::mesh class.
+ * We have one class for element competences and one for mesh competences. 
  */
 
 #pragma once
@@ -29,28 +30,49 @@
 #include "competences.hxx"
 namespace t8_mesh_handle
 {
-/** Class to pack different competences into one template parameter for the \ref mesh class.
- * \tparam TCompetence The competences to be packed.
+// --- Element competence pack. ---
+/** Class to pack different element competences into one template parameter for the \ref mesh class.
+ * \tparam TElementCompetence The competences to be packed.
  */
-template <template <typename> class... TCompetence>
-struct competence_pack
+template <template <typename> class... TElementCompetence>
+struct element_competence_pack
 {
   /** Apply the competence pack to a template class, e.g. the \ref element class.
-   * \tparam Target The target template class to apply the \a TCompetence pack to.
+   * \tparam TMeshClass The mesh class given to the element class.
+   * \tparam Target The target template class to apply the \a TElementCompetence pack to.
    */
-  template <typename mesh_class, template <typename, template <typename> class...> class Target>
-  using apply = Target<mesh_class, TCompetence...>;
+  template <typename TMeshClass, template <typename, template <typename> class...> class Target>
+  using apply = Target<TMeshClass, TElementCompetence...>;
 
-  using is_competence_pack = void; /**< Tag to identify this class. */
+  using is_element_competence_pack = void; /**< Tag to identify this class. */
 };
 
-/** Predefined competence pack combining all caching competences. */
-using all_cache_competences
-  = competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid, cache_face_areas,
-                    cache_face_centroids, cache_face_normals, cache_neighbors>;
+/** Predefined element competence pack combining all caching competences. */
+using all_cache_element_competences
+  = element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid, cache_face_areas,
+                            cache_face_centroids, cache_face_normals, cache_neighbors>;
 
 /** Predefined competence pack combining all competences related to faces. */
-using cache_face_competences
-  = competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
+using cache_face_element_competences
+  = element_competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
+
+// --- Mesh competence pack. ---
+/** Class to pack different mesh competences into one template parameter for the \ref mesh class.
+ * \tparam TMeshCompetence The mesh competences to be packed.
+ */
+template <template <typename> class... TMeshCompetence>
+struct mesh_competence_pack
+{
+  /** Apply the mesh competence pack to a mesh type.
+   *  By inheriting from all mesh competences, the functionality of the competences gets added to the mesh type.
+   *  \tparam TMesh The mesh type to which the competences are applied.
+   */
+  template <typename TMesh>
+  struct apply: public TMeshCompetence<TMesh>...
+  {
+  };
+
+  using is_mesh_competence_pack = void; /**< Tag to identify this class. */
+};
 
 }  // namespace t8_mesh_handle
