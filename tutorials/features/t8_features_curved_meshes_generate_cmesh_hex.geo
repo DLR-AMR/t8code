@@ -62,8 +62,8 @@ Point(1021) = {0.24336,  0.11060, 0, lc};
 Point(1022) = {0.19780,  0.10302, 0, lc};
 Point(1023) = {0.15592,  0.09344, 0, lc};
 Point(1024) = {0.11825,  0.08231, 0, lc};
-Point(1025) = {0.08524,  0.07012, 0, lc};
-Point(1026) = {0.05726,  0.05736, 0, lc};
+Point(1025) = {0.08524,  0.04452, 0, lc};
+Point(1026) = {0.05726,  0.04452, 0, lc};
 Point(1027) = {0.03460,  0.04452, 0, lc};
 Point(1028) = {0.01745,  0.03204, 0, lc};
 Point(1029) = {0.00595,  0.02029, 0, lc};
@@ -198,6 +198,8 @@ Transfinite Curve {11, 12, 6, 7, 35, 36, 30, 31} = 6 Using Progression 1;
 Transfinite Surface{:};
 Recombine Surface{:};
 Transfinite Volume{:};
+
+Mesh.Algorithm3D = 3; 
 
 /* Now we can create the three-dimensional mesh. */
 Mesh 3;

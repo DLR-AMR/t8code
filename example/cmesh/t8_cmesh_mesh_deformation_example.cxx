@@ -97,13 +97,13 @@ main (int argc, char **argv)
     auto displacements = calculate_displacement_surface_vertices (cmesh, cad.get ());
 
     /* Write output. */
-    t8_forest_vtk_write_file (forest, "input_forest", 1, 1, 1, 1, 0, 0, NULL);
+    t8_forest_vtk_write_file (forest, "/home/albe_ol/Desktop/Mesh_test/Output/input_forest", 1, 1, 1, 1, 0, 0, NULL);
 
     /* Apply displacements. */
     apply_vertex_displacements (cmesh, displacements, cad);
 
     /* Write output. */
-    t8_forest_vtk_write_file (forest, "deformed_forest", 1, 1, 1, 1, 0, 0, NULL);
+    t8_forest_vtk_write_file (forest, "/home/albe_ol/Desktop/Mesh_test/Output/deformed_forest", 1, 1, 1, 1, 0, 0, NULL);
 
     /* Cleanup. */
     t8_forest_unref (&forest);

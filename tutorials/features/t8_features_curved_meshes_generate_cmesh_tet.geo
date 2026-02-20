@@ -81,7 +81,7 @@ Curve Loop(2) = {100};
 /* Make surface with profile cutout */
 Plane Surface(1) = {1, 2};
 /* And extrude the surface to get a volume. */
-Extrude {0, 0, 0.5} {
+Extrude {0, 0, 7} {
   Surface{1};
 }
 /* Due to the indexing behavior if Gmsh, we have to save the .brep file
