@@ -42,21 +42,19 @@ struct data_per_element
   double volume;
 };
 
-/** Check that element data can be set for the handle and 
- * that the getter has exchanged data for the ghosts.
- */
+/** Check that element data can be set for the handle and that exchanging data for the ghosts works. */
 TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
   const int level = 2;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, data_per_element>;
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, false,
-                                                                                   true, false);
-  auto forest = mesh->get_forest ();
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences, data_per_element>;
+  auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
 
   if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
     EXPECT_GT (mesh->get_num_ghosts (), 0);
   }
+
   // Create element data for all local mesh elements.
   std::vector<data_per_element> element_data;
   for (const auto &elem : *mesh) {
@@ -70,6 +68,9 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     EXPECT_EQ (mesh_element_data[ielem].level, level) << "ielem = " << ielem;
     EXPECT_EQ (mesh_element_data[ielem].volume, (*mesh)[ielem].get_volume ()) << "ielem = " << ielem;
   }
+
+  // Modify element data for elements that are in the first half of the global trees.
+  auto forest = mesh->get_forest ();
   t8_gloidx_t barrier = t8_forest_get_num_global_trees (forest) / 2.0;
   const int newlevel = 42;
   const double newvolume = 42.42;
@@ -89,7 +90,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
       EXPECT_EQ (elem.get_element_data ().volume, elem.get_volume ());
     }
   }
-
+  // Check for ghost elements with updated data.
   for (t8_locidx_t ighost = mesh->get_num_local_elements ();
        ighost < mesh->get_num_local_elements () + mesh->get_num_ghosts (); ighost++) {
     if (t8_forest_ghost_get_global_treeid (

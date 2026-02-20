@@ -49,9 +49,9 @@ TEST (t8_gtest_vec, norm)
 /* test the t8_dist function */
 TEST (t8_gtest_vec, dist)
 {
-  const t8_3D_point zero ({ 0, 0, 0 });
-  const t8_3D_point onetwothree ({ 1, 2, 3 });
-  const t8_3D_point arbitrary ({ -.05, 3.14159, 42 });
+  const t8_3D_vec zero ({ 0, 0, 0 });
+  const t8_3D_vec onetwothree ({ 1, 2, 3 });
+  const t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
   const double distzeroonetwothree = sqrt (1 + 4 + 9);
   const double distarbitraryonetwothree = 39.030830477;
   EXPECT_VEC_EQ (zero, zero, T8_PRECISION_SQRT_EPS);
@@ -252,11 +252,11 @@ TEST (t8_gtest_vec, cross_3D)
 
 TEST (t8_gtest_vec, cross_2D)
 {
-  const t8_vec<2> zero ({ 0, 0 });
-  const t8_vec<2> e1 ({ 1, 0 });   // Unit vector along x-axis
-  const t8_vec<2> e2 ({ 0, 1 });   // Unit vector along y-axis
-  const t8_vec<2> v1 ({ 3, 4 });   // Arbitrary vector
-  const t8_vec<2> v2 ({ -4, 3 });  // Perpendicular to v1
+  const t8_2D_vec zero ({ 0, 0 });
+  const t8_2D_vec e1 ({ 1, 0 });   // Unit vector along x-axis
+  const t8_2D_vec e2 ({ 0, 1 });   // Unit vector along y-axis
+  const t8_2D_vec v1 ({ 3, 4 });   // Arbitrary vector
+  const t8_2D_vec v2 ({ -4, 3 });  // Perpendicular to v1
 
   double cross;
 
@@ -295,73 +295,4 @@ TEST (t8_gtest_vec, check_less_or_equal)
     { 1.0 - T8_PRECISION_SQRT_EPS, 1.0 - T8_PRECISION_SQRT_EPS, 1.0 - T8_PRECISION_SQRT_EPS });
 
   EXPECT_VEC_EQ (one, one_minus_eps, T8_PRECISION_SQRT_EPS);
-}
-
-/**
- * Creates a vector of vec views for plain c vectors.
- * \tparam TDim                   The dimension of the vector.
- * \param [in, out] c_vectors     Pointer to the raw c vectors.
- * \param [in, out] num_vectors   Number of vectors.
- * \return                        A std::vector containing views to the c vectors.
- */
-template <size_t TDim>
-static inline std::vector<t8_vec_view<TDim, const double>>
-t8_convert_array_to_vec_view (const double* c_vectors, const size_t num_vectors)
-{
-  std::vector<t8_vec_view<TDim, const double>> vec_views;
-  vec_views.reserve (num_vectors);
-  for (size_t ivec = 0; ivec < num_vectors; ++ivec)
-    vec_views.emplace_back (make_t8_vec_view<TDim, const double> (c_vectors + ivec * TDim));
-  T8_ASSERT (vec_views.size () == num_vectors);
-  return vec_views;
-}
-
-/**
- * Create a vector of t8_vec as a copy of plain c vectors.
- * \tparam TDim                   The dimension of the vector.
- * \param [in, out] c_vectors     Pointer to the raw c vectors.
- * \param [in, out] num_vectors   Number of vectors.
- * \return                        A std::vector containing t8_vec objects.
- */
-template <size_t TDim>
-static inline std::vector<t8_vec<TDim>>
-t8_convert_array_to_vec (const double* c_vectors, const size_t num_vectors)
-{
-  std::vector<t8_vec<TDim>> vecs (num_vectors);
-  for (size_t ivec = 0; ivec < num_vectors; ++ivec)
-    std::copy_n (c_vectors + ivec * TDim, TDim, vecs[ivec].begin ());
-  T8_ASSERT (vecs.size () == num_vectors);
-  return vecs;
-}
-
-/** Test the vector/point views */
-TEST (t8_gtest_vec, vec_view)
-{
-  constexpr size_t seed = 12345;
-  constexpr double min = -1e10, max = 1e10;
-  std::mt19937_64 rng (seed);
-  std::uniform_real_distribution<double> dist (min, max);
-  constexpr size_t num_points = 10;
-
-  /* Test for each dimension */
-  unrolled_for (1, 4, idim, {
-    double c_vectors[idim * num_points] = { 0 };
-    /* Fill test vectors and create views. */
-    for (size_t icoord = 0; icoord < num_points * idim; ++icoord)
-      c_vectors[icoord] = dist (rng);
-    auto vecs = t8_convert_array_to_vec<idim> (c_vectors, num_points);
-    auto vec_views = t8_convert_array_to_vec_view<idim> (c_vectors, num_points);
-
-    for (size_t ipoint = 0; ipoint < num_points; ++ipoint) {
-      EXPECT_VEC_EQ (vecs[ipoint], vec_views[ipoint], T8_PRECISION_SQRT_EPS);
-      /* Also check if functions return the same, but only for 3D. */
-      if constexpr (idim == 3) {
-        /* Normalize c vectors and cpp vectors. */
-        t8_normalize (c_vectors + ipoint * idim);
-        t8_normalize (vecs[ipoint]);
-        /* Copied vector and vector view should be the same. */
-        EXPECT_VEC_EQ (vecs[ipoint], vec_views[ipoint], T8_PRECISION_SQRT_EPS);
-      }
-    }
-  });
 }
