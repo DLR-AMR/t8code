@@ -140,7 +140,7 @@ t8_cmesh_vtk_write_file_via_API (t8_cmesh_t cmesh, const char *fileprefix, sc_MP
  * 
  * \param[in] cmesh The cmesh
  * \param[in] fileprefix The prefix of the output files 
- * \return 0 if successful, non-zero otherwise
+ * \return True (nonzero) if successful, false (zero) otherwise 
  */
 int
 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);

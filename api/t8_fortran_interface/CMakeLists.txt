@@ -1,6 +1,6 @@
 # Link in C-Fortran interface file into libt8.
 target_sources( T8 PRIVATE t8_fortran_interface.c )
-target_sources( T8 PRIVATE t8_fortran_interface_mod.f90 )
+target_sources( T8 PRIVATE t8_fortran_interface_mod.f90 t8_fortran_example_adapt_mod.f90 )
 
 
 # Add this directory to header search path.

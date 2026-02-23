@@ -131,8 +131,7 @@ struct vtk_writer
    * A vtk-writer function that uses the vtk API
    *
    * \param[in] grid The forest or cmesh that is translated
-   * \return true
-   * \return false
+   * \return True if successful, false if not
    */
   bool
   write_ASCII (const grid_t grid);
