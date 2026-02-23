@@ -232,7 +232,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
       double point_on_face[3];
       t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
       for (int ipoint = 0; ipoint < num_points; ipoint++) {
-        const int is_inside_iface = t8_plane_point_inside (point_on_face, face_normal, &points[ipoint * 3]);
+        const int is_inside_iface = t8_plane_point_inside (point_on_face, face_normal, &points[ipoint * 3], tolerance);
         if (is_inside_iface == 0) {
           /* Point is on the outside of face iface. Update is_inside */
           is_inside[ipoint] = 0;
