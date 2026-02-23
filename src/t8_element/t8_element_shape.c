@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <t8_element_shape.h>
+#include <t8_element/t8_element_shape.h>
 
 const int t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1] = { 0, 2, 4, 8 };
 

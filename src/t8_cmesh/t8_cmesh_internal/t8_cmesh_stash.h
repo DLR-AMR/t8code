@@ -28,7 +28,7 @@
 #define T8_CMESH_STASH_H
 
 #include <t8.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 
 /**
  * Opaque pointer to a stash data structure.
