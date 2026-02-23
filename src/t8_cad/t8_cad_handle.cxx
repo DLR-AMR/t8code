@@ -43,14 +43,14 @@
 void
 t8_cad_handle::load (const std::string_view fileprefix)
 {
-  TopoDS_Shape cad_shape;
+  TopoDS_Shape loaded_cad_shape;
   BRep_Builder bob;
   const std::string filename = std::string (fileprefix) + ".brep";
   std::ifstream is (filename);
   if (is.is_open () == false) {
     SC_ABORTF ("Cannot find the file %s.\n", filename.c_str ());
   }
-  BRepTools::Read (cad_shape, is, bob);
+  BRepTools::Read (loaded_cad_shape, is, bob);
   is.close ();
   if (cad_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape. "
@@ -58,22 +58,24 @@ t8_cad_handle::load (const std::string_view fileprefix)
                "Linked cad version: %s",
                OCC_VERSION_COMPLETE);
   }
-  map (std::move (cad_shape));
+  this->cad_shape = std::move (loaded_cad_shape);
+  map ();
 }
 
 void
-t8_cad_handle::load (TopoDS_Shape cad_shape)
-{
-  if (cad_shape.IsNull ()) {
-    SC_ABORTF ("Shape is null. \n");
-  }
-  map (std::move (cad_shape));
-}
-
-void
-t8_cad_handle::map (TopoDS_Shape cad_shape_in)
+t8_cad_handle::load (TopoDS_Shape cad_shape_in)
 {
   if (cad_shape_in.IsNull ()) {
+    SC_ABORTF ("Shape is null. \n");
+  }
+  this->cad_shape = std::move (cad_shape_in);
+  map ();
+}
+
+void
+t8_cad_handle::map ()
+{
+  if (this->cad_shape.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
   }
   /* Clear maps before map the new data. */
@@ -82,14 +84,14 @@ t8_cad_handle::map (TopoDS_Shape cad_shape_in)
   cad_shape_face_map.Clear ();
   cad_shape_vertex2edge_map.Clear ();
   cad_shape_edge2face_map.Clear ();
+  cad_shape_vertex2face_map.Clear ();
 
-  cad_shape = std::move (cad_shape_in);
-
-  TopExp::MapShapes (cad_shape, TopAbs_VERTEX, cad_shape_vertex_map);
-  TopExp::MapShapes (cad_shape, TopAbs_EDGE, cad_shape_edge_map);
-  TopExp::MapShapes (cad_shape, TopAbs_FACE, cad_shape_face_map);
-  TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_VERTEX, TopAbs_EDGE, cad_shape_vertex2edge_map);
-  TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
+  TopExp::MapShapes (this->cad_shape, TopAbs_VERTEX, cad_shape_vertex_map);
+  TopExp::MapShapes (this->cad_shape, TopAbs_EDGE, cad_shape_edge_map);
+  TopExp::MapShapes (this->cad_shape, TopAbs_FACE, cad_shape_face_map);
+  TopExp::MapShapesAndUniqueAncestors (this->cad_shape, TopAbs_VERTEX, TopAbs_EDGE, cad_shape_vertex2edge_map);
+  TopExp::MapShapesAndUniqueAncestors (this->cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
+  TopExp::MapShapesAndUniqueAncestors (this->cad_shape, TopAbs_VERTEX, TopAbs_FACE, cad_shape_vertex2face_map);
 }
 
 t8_cad_handle::t8_cad_handle (const std::string_view fileprefix)
@@ -97,7 +99,7 @@ t8_cad_handle::t8_cad_handle (const std::string_view fileprefix)
   t8_refcount_init (&rc);
   t8_debugf ("Constructed the cad_handle from file.\n");
 
-  t8_cad_handle::load (fileprefix);
+  load (fileprefix);
 }
 
 t8_cad_handle::t8_cad_handle (TopoDS_Shape cad_shape_in)
@@ -164,20 +166,20 @@ t8_cad_handle::get_cad_face (const int index) const
 const gp_Pnt
 t8_cad_handle::get_cad_point (const int index) const
 {
-  return BRep_Tool::Pnt (t8_cad_handle::get_cad_vertex (index));
+  return BRep_Tool::Pnt (get_cad_vertex (index));
 }
 
 const Handle_Geom_Curve
 t8_cad_handle::get_cad_curve (const int index) const
 {
   Standard_Real first, last;
-  return BRep_Tool::Curve (t8_cad_handle::get_cad_edge (index), first, last);
+  return BRep_Tool::Curve (get_cad_edge (index), first, last);
 }
 
 const Handle_Geom_Surface
 t8_cad_handle::get_cad_surface (const int index) const
 {
-  return BRep_Tool::Surface (t8_cad_handle::get_cad_face (index));
+  return BRep_Tool::Surface (get_cad_face (index));
 }
 
 const TopTools_IndexedMapOfShape
@@ -209,7 +211,7 @@ t8_cad_handle::get_common_edge_of_vertices (const int vertex1_index, const int v
   for (auto edge1 = collection1.begin (); edge1 != collection1.end (); ++edge1) {
     for (auto edge2 = collection2.begin (); edge2 != collection2.end (); ++edge2) {
       if (edge1->IsEqual (*edge2)) {
-        return cad_shape_edge2face_map.FindIndex (*edge1);
+        return cad_shape_edge_map.FindIndex (*edge1);
       }
     }
   }
@@ -287,16 +289,10 @@ t8_cad_handle::is_edge_on_face (const int edge_index, const int face_index) cons
 int
 t8_cad_handle::is_vertex_on_face (const int vertex_index, const int face_index) const
 {
-  T8_ASSERT (vertex_index <= cad_shape_vertex2edge_map.Size ());
+  T8_ASSERT (vertex_index <= cad_shape_vertex2face_map.Size ());
   T8_ASSERT (face_index <= cad_shape_face_map.Size ());
-  const TopTools_ListOfShape edge_collection = cad_shape_vertex2edge_map.FindFromIndex (vertex_index);
-  for (auto edge = edge_collection.begin (); edge != edge_collection.end (); ++edge) {
-    const TopTools_ListOfShape face_collection = cad_shape_edge2face_map.FindFromKey (*edge);
-    if (face_collection.Contains (cad_shape_face_map.FindKey (face_index))) {
-      return 1;
-    }
-  }
-  return 0;
+  const TopTools_ListOfShape collection = cad_shape_vertex2face_map.FindFromIndex (vertex_index);
+  return collection.Contains (cad_shape_face_map.FindKey (face_index));
 }
 
 bool
@@ -304,8 +300,8 @@ t8_cad_handle::vertex_is_seam (const int vertex_index, const int edge_index) con
 {
   T8_ASSERT (vertex_index <= cad_shape_vertex_map.Size ());
   T8_ASSERT (edge_index <= cad_shape_edge_map.Size ());
-  const auto vertex = t8_cad_handle::get_cad_vertex (vertex_index);
-  const auto edge = t8_cad_handle::get_cad_edge (edge_index);
+  const auto vertex = get_cad_vertex (vertex_index);
+  const auto edge = get_cad_edge (edge_index);
   double u = BRep_Tool::Parameter (vertex, edge);
   double first = 0, last = 0;
   const auto curve = BRep_Tool::Curve (edge, first, last);
@@ -328,7 +324,7 @@ t8_cad_handle::vertex_is_on_seam_edge (const int vertex_index, const int face_in
 {
   T8_ASSERT (vertex_index <= cad_shape_vertex2edge_map.Size ());
   T8_ASSERT (face_index <= cad_shape_face_map.Size ());
-  const auto face = t8_cad_handle::get_cad_face (face_index);
+  const auto face = get_cad_face (face_index);
   const TopTools_ListOfShape edge_collection = cad_shape_vertex2edge_map.FindFromIndex (vertex_index);
   const ShapeAnalysis_Edge edge_analyzer;
   for (auto edge = edge_collection.begin (); edge != edge_collection.end (); ++edge) {
@@ -343,8 +339,8 @@ t8_cad_handle::edge_is_seam (const int edge_index, const int face_index) const
 {
   T8_ASSERT (edge_index <= cad_shape_edge_map.Size ());
   T8_ASSERT (face_index <= cad_shape_face_map.Size ());
-  const auto face = t8_cad_handle::get_cad_face (face_index);
-  const auto edge = t8_cad_handle::get_cad_edge (edge_index);
+  const auto face = get_cad_face (face_index);
+  const auto edge = get_cad_edge (edge_index);
   const ShapeAnalysis_Edge edge_analyzer;
   return edge_analyzer.IsSeam (edge, face);
 }
@@ -353,7 +349,7 @@ void
 t8_cad_handle::get_parameter_of_vertex_on_edge (const int vertex_index, const int edge_index, double *edge_param,
                                                 std::optional<double> reference_edge_param) const
 {
-  T8_ASSERT (t8_cad_handle::is_vertex_on_edge (vertex_index, edge_index));
+  T8_ASSERT (is_vertex_on_edge (vertex_index, edge_index));
   TopoDS_Vertex vertex = TopoDS::Vertex (cad_shape_vertex_map.FindKey (vertex_index));
   TopoDS_Edge edge = TopoDS::Edge (cad_shape_edge_map.FindKey (edge_index));
 
@@ -361,8 +357,8 @@ t8_cad_handle::get_parameter_of_vertex_on_edge (const int vertex_index, const in
   the parameter of the vertex on the edge. But if the edge is closed and the user provided
   said reference parameters it gets more sophisticated:*/
 
-  const bool edge_is_closed = t8_cad_handle::edge_is_closed (edge_index);
-  if (reference_edge_param.has_value () && edge_is_closed) {
+  const bool is_closed = edge_is_closed (edge_index);
+  if (reference_edge_param.has_value () && is_closed) {
     /* Edge is closed and the user provided reference parameters. We iterate over all vertices of the edge.
     Since the edge is closed, the start and end vertex should be in the same physical location.
     We choose the point where the parameters are closer to the reference parameters. For debugging reasons
@@ -411,19 +407,19 @@ t8_cad_handle::get_parameters_of_vertex_on_face (const int vertex_index, const i
   And thats why this algorithm does not work. What you see here is the more complicated workaround:
   */
 
-  T8_ASSERT (t8_cad_handle::is_vertex_on_face (vertex_index, face_index));
+  T8_ASSERT (is_vertex_on_face (vertex_index, face_index));
   std::optional<gp_Pnt2d> uv = std::nullopt; /** Final parameters on the surface */
   TopoDS_Vertex vertex = TopoDS::Vertex (cad_shape_vertex_map.FindKey (vertex_index));
   TopoDS_Face face = TopoDS::Face (cad_shape_face_map.FindKey (face_index));
 
   /* If the surface is not closed or the user did not provide any reference params we just query the parameters. */
-  if (!t8_cad_handle::surface_is_closed (face_index) || !reference_face_params.has_value ()) {
+  if (!surface_is_closed (face_index) || !reference_face_params.has_value ()) {
     uv.emplace (BRep_Tool::Parameters (vertex, face));
   }
 
   /* If the vertex is not on the seam we can also just query the parameters. */
   else {
-    const bool is_on_seam = t8_cad_handle::vertex_is_on_seam_edge (vertex_index, face_index);
+    const bool is_on_seam = vertex_is_on_seam_edge (vertex_index, face_index);
     if (!is_on_seam) {
       uv.emplace (BRep_Tool::Parameters (vertex, face));
     }
@@ -498,13 +494,13 @@ t8_cad_handle::edge_parameter_to_face_parameters (const int edge_index, const in
                                                   double face_params_out[2],
                                                   std::optional<std::span<const double, 2>> reference_face_params) const
 {
-  T8_ASSERT (t8_cad_handle::is_edge_on_face (edge_index, face_index));
+  T8_ASSERT (is_edge_on_face (edge_index, face_index));
   Standard_Real first, last;
   std::optional<gp_Pnt2d> uv = std::nullopt;
   TopoDS_Face face = TopoDS::Face (cad_shape_face_map.FindKey (face_index));
   TopoDS_Edge edge = TopoDS::Edge (cad_shape_edge_map.FindKey (edge_index));
 
-  const bool is_seam = t8_cad_handle::edge_is_seam (edge_index, face_index);
+  const bool is_seam = edge_is_seam (edge_index, face_index);
   if (is_seam && reference_face_params.has_value ()) {
     /* Convert reference parameters to OCCT point */
     gp_Pnt2d reference_point (reference_face_params.value ()[0], reference_face_params.value ()[1]);

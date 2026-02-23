@@ -85,10 +85,10 @@ class t8_cad_handle {
 
   /**
    * Loads a cad shape from an existing TopoDS_Shape and maps it.
-   * \param [in] cad_shape  The input cad shape.
+   * \param [in] cad_shape_in  The input cad shape.
    */
   void
-  load (TopoDS_Shape cad_shape);
+  load (TopoDS_Shape cad_shape_in);
 
   /** Check if a cad_curve is a line.
    * \param [in] curve_index      The index of the cad_curve.
@@ -365,10 +365,9 @@ class t8_cad_handle {
  private:
   /**
    * Map the cad shape to extract vertices, edges, faces, and their relationships.
-   * \param [in] cad_shape_in  The input cad shape to be mapped.
    */
   void
-  map (TopoDS_Shape cad_shape_in);
+  map ();
 
   TopoDS_Shape cad_shape;                          /**< cad geometry */
   TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex. */
@@ -378,9 +377,9 @@ class t8_cad_handle {
     cad_shape_vertex2edge_map; /**< Maps all TopoDS_Vertex to all its connected TopoDS_Edge */
   TopTools_IndexedDataMapOfShapeListOfShape
     cad_shape_edge2face_map; /**< Maps all TopoDS_Edge to all its connected TopoDS_Face */
-  /** The reference count of the cad handle. TODO: Replace by shared_ptr when cmesh becomes a class. */
   TopTools_IndexedDataMapOfShapeListOfShape
     cad_shape_vertex2face_map; /**< Maps all TopoDS_Vertex to all its connected TopoDS_Face */
+  /** The reference count of the cad handle. TODO: Replace by shared_ptr when cmesh becomes a class. */
   t8_refcount_t rc;
 };
 
