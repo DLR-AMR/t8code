@@ -28,7 +28,7 @@
 #define T8_GTEST_MACROS_HXX
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <iostream>
 #include <t8_schemes/t8_scheme.hxx>
@@ -55,6 +55,8 @@ auto pretty_print_eclass_scheme_and_level
 /**
  * Initializes everything needed for the t8code testsuite.
  * MPI is initialized with MPI_COMM_WORLD and SC with loglevel SC_LP_PRODUCTION.
+ * \param [in] argc Number of command-line arguments.
+ * \param [in] argv Array of command-line argument strings. 
  * \param [in] log_threshold    The log threshold used to initialize t8code.
  */
 void
@@ -85,7 +87,9 @@ t8_testsuite_get_package_id ();
 #define T8_NUM_SAMPLE_POINTS 10000
 #endif
 
+/** Google test range for parametrized covering all eclasses. */
 #define AllEclasses testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT)
+/** Google test range for parametrized covering all 2 dimensional eclasses. */
 #define AllEclasses2D testing::Values (T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE)
 
 #endif /* T8_GTEST_MACROS_HXX */

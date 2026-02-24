@@ -31,7 +31,7 @@
 #include <t8_forest/t8_forest_pfc_helper.hxx>
 #include <t8_schemes/t8_scheme.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <algorithm>
 
 t8_locidx_t

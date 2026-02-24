@@ -112,7 +112,7 @@ struct cache_vertex_coordinates: public t8_crtp_operator<TUnderlying, cache_vert
   }
 
  protected:
-  mutable std::vector<t8_3D_point>
+  mutable std::vector<t8_3D_vec>
     m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Empty vector if not filled. */
 };
 
@@ -135,7 +135,7 @@ struct cache_centroid: public t8_crtp_operator<TUnderlying, cache_centroid>
   }
 
  protected:
-  mutable std::optional<t8_3D_point>
+  mutable std::optional<t8_3D_vec>
     m_centroid; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 
@@ -183,7 +183,7 @@ struct cache_face_centroids: t8_crtp_operator<TUnderlying, cache_face_centroids>
   }
 
  protected:
-  mutable std::vector<std::optional<t8_3D_point>> m_face_centroids; /**< Vector with the face centroid for each face. */
+  mutable std::vector<std::optional<t8_3D_vec>> m_face_centroids; /**< Vector with the face centroid for each face. */
 };
 
 /**

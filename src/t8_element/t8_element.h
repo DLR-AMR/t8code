@@ -29,8 +29,8 @@
 #define T8_ELEMENT_H
 
 #include <t8.h>
-#include <t8_eclass.h>
-#include <t8_element_shape.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_element/t8_element_shape.h>
 
 /** We want to export the whole implementation to be callable from "C". */
 T8_EXTERN_C_BEGIN ();

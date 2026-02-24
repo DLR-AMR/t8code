@@ -71,19 +71,19 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Vertex coordinates. ---
       auto vertex_coordinates = mesh_iterator->get_vertex_coordinates ();
       for (int ivertex = 0; ivertex < mesh_iterator->get_num_vertices (); ++ivertex) {
-        t8_3D_point vertex_forest;
+        t8_3D_vec vertex_forest;
         t8_forest_element_coordinate (forest, itree, elem, ivertex, vertex_forest.data ());
         EXPECT_EQ (vertex_forest, vertex_coordinates[ivertex]);
       }
       // --- Centroid. ---
-      t8_3D_point centroid;
+      t8_3D_vec centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());
       EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
       // --- Face properties. ---
       // Note: Face-neighbor functionality is tested in t8_gtest_ghost.cxx.
       for (int iface = 0; iface < mesh_iterator->get_num_faces (); ++iface) {
         EXPECT_EQ (mesh_iterator->get_face_area (iface), t8_forest_element_face_area (forest, itree, elem, iface));
-        t8_3D_point coordinates;
+        t8_3D_vec coordinates;
         t8_forest_element_face_centroid (forest, itree, elem, iface, coordinates.data ());
         EXPECT_EQ (mesh_iterator->get_face_centroid (iface), coordinates);
         t8_3D_vec normal;

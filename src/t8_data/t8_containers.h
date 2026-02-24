@@ -29,7 +29,7 @@
 #define T8_CONTAINERS_H
 
 #include <t8.h>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_schemes/t8_scheme.h>
 
 /** The t8_element_array_t is an array to store t8_element_t * of a given

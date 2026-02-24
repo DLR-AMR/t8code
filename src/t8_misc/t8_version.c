@@ -24,7 +24,7 @@
  * Implements functions declared in \ref t8_version.h.
  */
 
-#include <t8_version.h>
+#include <t8_misc/t8_version.h>
 
 const char *
 t8_get_package_string ()

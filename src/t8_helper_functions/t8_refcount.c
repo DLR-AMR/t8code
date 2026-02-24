@@ -24,7 +24,7 @@
  * Implements reference counting functions declared in \ref t8_refcount.h.
  */
 
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 
 void
 t8_refcount_init (t8_refcount_t *rc)

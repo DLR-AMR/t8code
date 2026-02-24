@@ -63,8 +63,17 @@ fi
 # Redirect output to stderr.
 exec 1>&2
 
+diff_size=$(git diff | wc -l)
+
+pre_stash_size=$(git stash list | wc -l)
+git stash push --quiet --keep-index --include-untracked --message "pre-commit-stash"
+post_stash_size=$(git stash list | wc -l)
+increased_stash_size=$((post_stash_size - pre_stash_size))
+
+# If the stash size has increased, it means a new stash entry was created.
 
 nocontinue=0
+
 for file in `git diff --cached --name-only`
 do
   # only indent existing files, this is necessary since if we rename or delete
@@ -113,6 +122,14 @@ do
     fi
   fi
 done
+
+if [ $increased_stash_size -gt 0 ]; then
+  git stash pop --quiet --index
+fi
+
+if [ $nocontinue -ne 0 ]; then
+  printf '\033[38;5;208m%s\033[0m\n' "Pre-commit found errors. Did you add the latest changes?"
+fi
 
 # exit 1 if there was a nonindented file
 # this will abort the commit

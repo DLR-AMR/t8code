@@ -65,7 +65,7 @@ int
 t8_common_within_levelset (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                            t8_example_level_set_fn levelset, double band_width, double t, void *udata)
 {
-  t8_3D_point elem_midpoint;
+  t8_3D_vec elem_midpoint;
   double elem_diam;
   double value;
   const t8_eclass_t tree_class = t8_forest_get_eclass (forest, ltreeid);
@@ -76,7 +76,7 @@ t8_common_within_levelset (t8_forest_t forest, const t8_locidx_t ltreeid, const 
     /* If bandwidth = 0, we only refine the elements that are intersected by the zero level-set */
     const int num_corners = scheme->element_get_num_corners (tree_class, element);
     int sign = 1, icorner;
-    t8_3D_point coords;
+    t8_3D_vec coords;
 
     /* Compute LS function at first corner */
     t8_forest_element_coordinate (forest, ltreeid, element, 0, coords.data ());

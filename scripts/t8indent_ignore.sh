@@ -32,4 +32,4 @@
 # the usage of macros using the character '@'.
 # This causes clang to not recognize the file as a C++
 # file and will throw an error when trying to indent it.
-src/t8_with_macro_error.h
+src/t8_misc/t8_with_macro_error.h

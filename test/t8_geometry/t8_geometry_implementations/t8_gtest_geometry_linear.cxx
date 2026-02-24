@@ -27,13 +27,13 @@
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_types/t8_vec.hxx>
 
 struct geometry_test: public testing::TestWithParam<std::tuple<int, t8_eclass>>
@@ -114,7 +114,7 @@ TEST_P (geometry_test, cmesh_geometry)
 
   /* Create random points in [0,1]^d and check if they are mapped correctly. */
 
-  t8_3D_point point_mapped;
+  t8_3D_vec point_mapped;
   const t8_geometry_c *cmesh_geom;
 
   /* Double check that the geometry is the linear axis aligned geometry. */
@@ -125,7 +125,7 @@ TEST_P (geometry_test, cmesh_geometry)
 
   srand (seed);
   for (int ipoint = 0; ipoint < T8_NUM_SAMPLE_POINTS; ++ipoint) {
-    t8_3D_point point ({ 0.0, 0.0, 0.0 });
+    t8_3D_vec point ({ 0.0, 0.0, 0.0 });
     /* Compute random coordinates in [0,1].
      * These are seen as reference coordinates in the single
      * cmesh tree. Our geometry will map them into the physical

@@ -21,12 +21,13 @@
 */
 
 /** \file t8_gtest_memory_macros.hxx
-* Provide memory macros */
+ * Provide memory macros.
+ */
 
 #ifndef T8_GTEST_MEMORY_MACROS_HXX
 #define T8_GTEST_MEMORY_MACROS_HXX
 
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <iostream>
 #include <t8_schemes/t8_scheme.hxx>

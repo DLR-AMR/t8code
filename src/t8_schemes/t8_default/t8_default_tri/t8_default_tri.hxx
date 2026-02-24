@@ -29,7 +29,7 @@
 #ifndef T8_DEFAULT_TRI_HXX
 #define T8_DEFAULT_TRI_HXX
 
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
