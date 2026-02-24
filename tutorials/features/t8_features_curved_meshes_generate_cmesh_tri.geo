@@ -58,7 +58,7 @@ For i In {0 : 100}
   angle = angle + delta_angle;
 EndFor
 
-/* Build a spline fit for the points. Starting and ending with the 
+/* Build a spline fit for the points. Starting and ending with the
  * trailing edge. */
 Spline(100) = {1000:1099, 1000};
 
@@ -86,7 +86,7 @@ Save "airfoil_windtunnel_triangles.brep";
 
 /* After creating the geometry we delete and start by loading
  * in the brep file. This is necessary because Gmsh gives the geometries its
- * own indices and after reloading the brep file it uses the brep 
+ * own indices and after reloading the brep file it uses the brep
  * numeration. */
 Delete All;
 /* We re-open our brep file. */
@@ -97,15 +97,15 @@ Merge "airfoil_windtunnel_triangles.brep";
  * The recombination of elements has to be deactivated, in order to receive a triangular mesh.
  * The following algorithms are available with Gmsh 4.11.0:
  *
- * 2D mesh algorithms:             1: MeshAdapt, 2: Automatic, 3: Initial mesh only, 
- *                                 5: Delaunay, 6: Frontal-Delaunay, 7: BAMG, 
- *                                 8: Frontal-Delaunay for Quads, 9: Packing of Parallelograms, 
+ * 2D mesh algorithms:             1: MeshAdapt, 2: Automatic, 3: Initial mesh only,
+ *                                 5: Delaunay, 6: Frontal-Delaunay, 7: BAMG,
+ *                                 8: Frontal-Delaunay for Quads, 9: Packing of Parallelograms,
  *                                11: Quasi-structured Quad
  *
- * For other Gmsh versions check the Gmsh website: 
+ * For other Gmsh versions check the Gmsh website:
  * https://gmsh.info/doc/texinfo/gmsh.html#Mesh-options */
 Mesh.MeshSizeMax = 0.8;
-Mesh.MeshSizeFromCurvature = 10;
+Mesh.MeshSizeFromCurvature = 5;
 Mesh.Algorithm = 5;
 Mesh.RecombineAll = 0;
 
