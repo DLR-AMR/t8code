@@ -34,8 +34,10 @@
 /* In these tests we check the t8_forest_bin_search_lower, t8_forest_bin_search_upper
  * and t8_forest_bin_search_first_descendant_ancestor functions.
  * Iterating over all cmesh test cases, we create a uniform and an adaptive forest.
- * For each forest, we 
- * TODO: Fill out comment
+ * For each forest, we iterate over all elements and initialize searches.
+ * One search for the element E itself.
+ * One search for an element that is not in the array but for which element E will be found.
+ * Additionally, we issue one search per tree where no element at all will be found.
  */
 
 /* Maximum uniform level for forest. */
@@ -128,9 +130,8 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
 
       // If we increase the level, we expect the element to not be found, but the search
       // should return the index of the original element.
-      if (element_level < scheme->get_maxlevel (tree_class)) {
+      if (scheme->element_is_refinable (tree_class, leaf_element)) {
         t8_debugf ("Computing element for level %i, Max is %i\n", element_level, T8_DLINE_MAXLEVEL);
-        // TODO: The maxlevel eventually should be element dependent. I know that an element dependent maxlevel function was developed in a different branch (by Sandro?)
         const t8_linearidx_t element_id_at_next_level
           = scheme->element_get_linear_id (tree_class, leaf_element, element_level + 1);
 
@@ -151,7 +152,7 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
         // test logic fails. Should we ever run into this case, we need to rewrite this test accordingly.
         SC_CHECK_ABORTF (element_not_found_id > 0, "Invalid element id %li\n", element_not_found_id);
         const t8_locidx_t search_index = t8_forest_bin_search_upper (leaves, element_not_found_id, element_level);
-        EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expectec -1.";
+        EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expected -1.";
       }
     }
   }
@@ -201,9 +202,8 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
 
       // If we increase the level, we expect the element to not be found, but the search
       // should return the index of the original element.
-      if (element_level < scheme->get_maxlevel (tree_class)) {
+      if (scheme->element_is_refinable (tree_class, leaf_element)) {
         t8_debugf ("Computing element for level %i, Max is %i\n", element_level, T8_DLINE_MAXLEVEL);
-        // TODO: The maxlevel eventually should be element dependent. I know that an element dependent maxlevel function was developed in a different branch (by Sandro?)
         const t8_linearidx_t element_id_at_next_level
           = scheme->element_get_linear_id (tree_class, leaf_element, element_level + 1);
 
@@ -221,9 +221,98 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
       if (ielement == 0 && element_id > 0) {
         const t8_linearidx_t element_not_found_id = element_id - 1;
         const t8_locidx_t search_index = t8_forest_bin_search_lower (leaves, element_not_found_id, element_level);
-        EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expectec -1.";
+        EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expected -1.";
       }
     }
+  }
+}
+
+/** Test the t8_forest_bin_search_upper function.
+ * We iterate through all elements of a forest.
+ * For each element E of level L, we call t8_forest_bin_search_lower on the forest's element array and expect
+ * the element to be found.
+ * For each element we then build one case where we search for an element that is not contained but will
+ * match a different element in the element array:
+ *  We compute the linear Id of E at level L-1 (if it is >=0 ) and search for the L-1 element with this id.
+ *  We expect E to be found since it fulfills that its id is >= than the id we search for.
+ * We then build one case per tree where we search for an element that is not contained and will not match
+ * any other element:
+ *  We compute the linear Id of the last element in the tree and add 1 to it (if it is not zero).
+ *  We expect the search to not find anything.
+*/
+static void
+t8_test_forest_bin_search_first_descendant_ancestor (t8_forest_t forest)
+{
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
+    const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    const t8_element_array_t *leaves = t8_forest_tree_get_leaf_elements (forest, itree);
+    t8_element_t *search_element;
+    scheme->element_new (tree_class, 1, &search_element);
+
+    /* Iterate over all the tree's leaf elements, check whether the leaf
+     * is correctly identified by t8_forest_element_is_leaf,
+     * build its parent and its first child (if they exist), and verify
+     * that t8_forest_element_is_leaf returns false. */
+    for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
+      const t8_element_t *leaf_element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
+      const int element_level = scheme->element_get_level (tree_class, leaf_element);
+      const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, leaf_element, element_level);
+
+      /* Search for a linear element id in a sorted array of
+      * elements. If the element does not exist, return the largest index i
+      * such that the element at position i has a smaller id than the given one.
+      * If no such i exists, return -1. */
+      const t8_element_t *element_found;
+      const t8_locidx_t search_index
+        = t8_forest_bin_search_first_descendant_ancestor (leaves, leaf_element, &element_found);
+      // We expect the leaf element to be found at position ielement
+      EXPECT_EQ (search_index, ielement) << "Found wrong position of leaf element. Expected: " << ielement
+                                         << " got: " << search_index;
+      EXPECT_TRUE (scheme->element_is_equal (tree_class, element_found, leaf_element));
+
+      // If we increase the level, we expect the element to not be found, but the search
+      // should return the index of the original element.
+      if (scheme->element_is_refinable (tree_class, leaf_element)) {
+        t8_debugf ("Computing element for level %i, Max is %i\n", element_level, T8_DLINE_MAXLEVEL);
+        scheme->element_get_child (tree_class, leaf_element, 0, search_element);
+        const t8_locidx_t search_index
+          = t8_forest_bin_search_first_descendant_ancestor (leaves, search_element, &element_found);
+        // We expect the leaf element to be found at position ielement
+        EXPECT_EQ (search_index, ielement) << "Found wrong position of level " << element_level + 1 << " leaf element "
+                                           << ". Expected: " << ielement << " got: " << search_index;
+        EXPECT_TRUE (scheme->element_is_equal (tree_class, element_found, leaf_element));
+      }
+
+      // Construct an element that is definitely not in the array and
+      // does not have an element of smaller id in the array. We expect -1 as return.
+      // We take the first element of the forest and subtract 1 from its id.
+      if (ielement == num_elements_in_tree - 1) {
+        const t8_linearidx_t element_not_found_id = element_id + 1;
+        // We need to check that this Id corresponds to a valid element id.
+        // To do so, we must compute the number of elements at the given refinement level,
+        // and check that element_not_found_id is smaller.
+        // We do this by building the root element and calling element_count_leaves.
+        // Note that we do not need to check this in the upper/lower tests, since we do not generate an actual element in them.
+        scheme->element_set_linear_id (tree_class, search_element, 0, 0);
+        const t8_linearidx_t max_valid_id
+          = (t8_linearidx_t) scheme->element_count_leaves (tree_class, search_element, element_level);
+        if (element_not_found_id < max_valid_id) {
+          // Double check for possible conversion error, if element_id == MAX_POSSIBLE_VALUE. In that case, the
+          // test logic fails. Should we ever run into this case, we need to rewrite this test accordingly.
+          SC_CHECK_ABORTF (element_not_found_id > 0, "Invalid element id %li\n", element_not_found_id);
+          scheme->element_set_linear_id (tree_class, search_element, element_level, element_not_found_id);
+          const t8_locidx_t search_index
+            = t8_forest_bin_search_first_descendant_ancestor (leaves, search_element, &element_found);
+          EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expected -1.";
+          EXPECT_EQ (element_found, nullptr);
+        }
+      }
+    }
+    scheme->element_destroy (tree_class, 1, &search_element);
   }
 }
 
@@ -249,6 +338,18 @@ TEST_P (t8_bin_search_tester, bin_search_upper_uniform)
 TEST_P (t8_bin_search_tester, bin_search_upper_adapt)
 {
   t8_test_forest_bin_search_upper (forest_adapt);
+}
+
+// bin_search_first_descendant_ancestor test for uniform forest
+TEST_P (t8_bin_search_tester, bin_search_first_descendant_ancestor_uniform)
+{
+  t8_test_forest_bin_search_first_descendant_ancestor (forest);
+}
+
+// bin_search_first_descendant_ancestor test for adaptive forest
+TEST_P (t8_bin_search_tester, bin_search_first_descendant_ancestor_adapt)
+{
+  t8_test_forest_bin_search_first_descendant_ancestor (forest_adapt);
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_bin_search, t8_bin_search_tester,
