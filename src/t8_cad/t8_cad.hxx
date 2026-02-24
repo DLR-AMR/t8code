@@ -32,6 +32,11 @@
 #include <TopExp.hxx>
 #include <Geom_Surface.hxx>
 #include <Geom_Curve.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <optional>
+#include <span>
 
 /**
  * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
@@ -81,21 +86,42 @@ struct t8_cad
   int
   t8_geom_is_plane (const int surface_index) const;
 
-  /** Get an cad point from the cad_shape.
+  /** Get a cad vertex from the cad_shape.
+   * \param [in] index      The index of the vertex in the cad_shape.
+   * \return                The cad vertex.
+   */
+  const TopoDS_Vertex
+  t8_geom_get_cad_vertex (const int index) const;
+
+  /** Get a cad edge from the cad_shape.
+   * \param [in] index      The index of the edge in the cad_shape.
+   * \return                The cad edge.
+   */
+  const TopoDS_Edge
+  t8_geom_get_cad_edge (const int index) const;
+
+  /** Get a cad face from the cad_shape.
+   * \param [in] index      The index of the face in the cad_shape.
+   * \return                The cad face.
+   */
+  const TopoDS_Face
+  t8_geom_get_cad_face (const int index) const;
+
+  /** Get a cad point from the cad_shape.
    * \param [in] index      The index of the point in the cad_shape.
    * \return                The cad point.
    */
   const gp_Pnt
   t8_geom_get_cad_point (const int index) const;
 
-  /** Get an cad curve from the cad_shape.
+  /** Get a cad curve from the cad_shape.
    * \param [in] index      The index of the curve in the cad_shape.
    * \return                The cad curve.
    */
   const Handle_Geom_Curve
   t8_geom_get_cad_curve (const int index) const;
 
-  /** Get an cad surface from the cad_shape.
+  /** Get a cad surface from the cad_shape.
    * \param [in] index      The index of the surface in the cad_shape.
    * \return                The cad surface.
    */
@@ -126,7 +152,7 @@ struct t8_cad
    * \return                    Index of the shared edge. 0 if there is no shared edge.
    */
   int
-  t8_geom_get_common_edge (const int vertex1_index, const int vertex2_index) const;
+  t8_geom_get_common_edge_of_vertices (const int vertex1_index, const int vertex2_index) const;
 
   /** Check if two cad edges share a common cad face.
    * \param [in]  edge1_index    The index of the first cad edge.
@@ -134,7 +160,23 @@ struct t8_cad
    * \return                    Index of the shared face. 0 if there is no shared face.
    */
   int
-  t8_geom_get_common_face (const int edge1_index, const int edge2_index) const;
+  t8_geom_get_common_face_of_edges (const int edge1_index, const int edge2_index) const;
+
+  /** Check if a cad vertex and cad edge share a common face.
+   * \param [in]  vertex_index   The index of the cad vertex.
+   * \param [in]  edge_index     The index of the cad edge.
+   * \return                     Index of the shared face. 0 if there is no shared face.
+   */
+  int
+  t8_geom_get_common_face_of_vertex_and_edge (const int vertex_index, const int edge_index) const;
+
+  /** Check if two cad vertices share a common cad face.
+   * \param [in]  vertex1_index The index of the first cad edge.
+   * \param [in]  vertex2_index The index of the second cad edge.
+   * \return                    Index of the shared face. 0 if there is no shared face.
+   */
+  int
+  t8_geom_get_common_face_of_vertices (const int vertex1_index, const int vertex2_index) const;
 
   /** Check if a cad vertex lies on an cad edge.
    * \param [in]  vertex_index   The index of the cad vertex.
@@ -160,42 +202,86 @@ struct t8_cad
   int
   t8_geom_is_vertex_on_face (const int vertex_index, const int face_index) const;
 
+  /** Returns true if \a vertex_index is on a seam of \a edge_index.
+   * A seam is a vertex which connects a curve to itself.
+   *
+   * \param [in] vertex_index   The index of the cad vertex.
+   * \param [in] edge_index     The index of the cad edge.
+   * \return true if the vertex is a seam. false otherwise.
+   */
+  bool
+  t8_geom_vertex_is_seam (const int vertex_index, const int edge_index) const;
+
+  /** Returns true if \a vertex_index is on a seam of \a face_index.
+   * A seam is an edge which connects a surface to itself.
+   *
+   * \param [in] vertex_index   The index of the cad vertex.
+   * \param [in] face_index     The index of the cad face.
+   * \return true if the edge is a seam. false otherwise.
+   */
+  bool
+  t8_geom_vertex_is_on_seam_edge (const int vertex_index, const int face_index) const;
+
+  /** Returns true if \a edge_index is a seam of \a face_index.
+   * A seam is an edge which connects a surface to itself.
+   *
+   * \param [in] edge_index   The index of the cad edge.
+   * \param [in] face_index   The index of the cad face.
+   * \return true if the edge is a seam. false otherwise.
+   */
+  bool
+  t8_geom_edge_is_seam (const int edge_index, const int face_index) const;
+
   /** Retrieves the parameter of an cad vertex on an cad edge.
-   *  The vertex has to lie on the edge.
-   * \param [in]  vertex_index   The index of the cad vertex.
-   * \param [in]  edge_index     The index of the cad edge.
-   * \param [out] edge_param     The parameter of the vertex on the edge.
+   * The vertex has to lie on the edge.
+   * \warning If the edge is closed in any direction and the vertex is the closing bound,
+   * it is random which side of the closed edge the parameter is from. The parameter
+   * is correct, but for curved elements it has to be checked if the parameter has to be
+   * converted onto the other bound.
+   * \param [in]  vertex_index            The index of the cad vertex.
+   * \param [in]  edge_index              The index of the cad edge.
+   * \param [out] edge_param              The parameter of the vertex on the edge.
+   * \param [in]  reference_edge_param    Reference parameters on the edge.
    */
   void
-  t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const int edge_index, double *edge_param) const;
+  t8_geom_get_parameter_of_vertex_on_edge (const int vertex_index, const int edge_index, double *edge_param,
+                                           std::optional<double> reference_edge_param = std::nullopt) const;
 
   /** Retrieves the parameters of an cad vertex on a cad face.
-   *  The vertex has to lie on the face.
-   * \param [in]  vertex_index   The index of the cad vertex.
-   * \param [in]  face_index     The index of the cad face.
-   * \param [out] face_params    The parameters of the vertex on the face.
+   * The vertex has to lie on the face.
+   * If the vertex is in a seam, the vertex closer to the \a reference_face_params is chosen.
+   * \warning If the face is closed in any direction and the vertex is on the seam and no reference
+   * parameters are provided it is random which side of the closed face the parameters are from.
+   * The parameters are correct, but for curved elements it has to be checked if the parameters have to be
+   * converted onto the other bound.
+   * \param [in]  vertex_index              The index of the cad vertex.
+   * \param [in]  face_index                The index of the cad face.
+   * \param [out] face_params               The parameters of the vertex on the face.
+   * \param [in]  reference_face_params     Reference parameters on the surface.
    */
   void
-  t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const int face_index, double *face_params) const;
+  t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const int face_index, double face_params[2],
+                                            std::optional<std::span<const double, 2>> reference_face_params
+                                            = std::nullopt) const;
 
-  /** Converts the parameters of an cad edge to the corresponding parameters on an cad face.
+  /** Converts the parameters of a cad edge to the corresponding parameters on a cad face.
    * The edge has to lie on the face.
-   * For the conversion of edge parameters of mesh elements to topological face parameters of a closed surface, it is additionally
-   * checked, whether the conversion was correct, to prevent disorted elements.
-   * \param [in]  edge_index     The index of the cad edge, which parameters should be converted to face parameters.
-   * \param [in]  face_index     The index of the cad face, on to which the edge parameters should be converted.
-   * \param [in]  num_face_nodes The number of the face nodes of the evaluated element. Only needed for closed surface check, otherwise NULL.
-   * \param [in]  edge_param     The parameter on the edge.
-   * \param [in]  surface_params The parameters of the surface nodes.
-   *                             When provided, there are additional checks for closed geometries.
-   *                             If there are no surface parameter
-   *                             to pass in to the function, you can pass NULL.
-   * \param [out] face_params    The corresponding parameters on the face.
+   * If the edge is a seam, the edge closer to the \a reference_face_params is chosen.
+   * \warning If the face is closed in any direction and the edge is the seam and no reference
+   * parameters are provided it is random which side of the closed face the parameters are from.
+   * The parameters are correct, but for curved elements it has to be checked if the parameters have to be
+   * converted onto the other side of the seam.
+   * \param [in]  edge_index                The index of the cad edge, which parameters should be converted to face parameters.
+   * \param [in]  face_index                The index of the cad face, on to which the edge parameters should be converted.
+   * \param [in]  edge_param                The parameter on the edge.
+   * \param [out] face_params_out           The corresponding parameters on the face.
+   * \param [in]  reference_face_params     Reference parameters on the surface.
    */
   void
-  t8_geom_edge_parameter_to_face_parameters (const int edge_index, const int face_index, const int num_face_nodes,
-                                             const double edge_param, const double *surface_params,
-                                             double *face_params) const;
+  t8_geom_edge_parameter_to_face_parameters (const int edge_index, const int face_index, const double edge_param,
+                                             double face_params_out[2],
+                                             std::optional<std::span<const double, 2>> reference_face_params
+                                             = std::nullopt) const;
 
   /** Finds the parametric bounds of an cad face.
    * \param [in]  surface_index   The index of the cad face.
@@ -211,31 +297,40 @@ struct t8_cad
   void
   t8_geom_get_edge_parametric_bounds (const int edge_index, double *bounds) const;
 
-  /** Checks if an edge is closed in its U parameter.
+  /** Checks if an edge is closed.
    * \param [in]  edge_index   The index of the closed edge.
-   * \return                   1 if edge is closed in U. 0 if edge is not closed in U.
+   * \return                   true if edge is closed
    */
-  int
-  t8_geom_is_edge_closed (int edge_index) const;
+  bool
+  t8_geom_edge_is_closed (int edge_index) const;
 
-  /** Checks if a surface is closed in its U parameter or V parameter.
+  /** Checks if a surface is closed in any direction.
    * \param [in]  geometry_index   The index of the closed geometry.
-   * \param [in]  parameter        The parameter, which should be check for closeness.
-   *                               0 stands for the U parameter and 1 for the V parameter.
-   * \return                       1 if geometry is closed in U. 0 if geometry is not closed in U.
+   * \return                       true if geometry is closed in any direction.
    */
-  int
-  t8_geom_is_surface_closed (int geometry_index, int parameter) const;
+  bool
+  t8_geom_surface_is_closed (int geometry_index) const;
+
+  /** Checks if a surface is closed in its U direction or V direction.
+   * \param [in]  geometry_index   The index of the closed geometry.
+   * \param [in]  direction        The direction, which should be check for closeness.
+   *                               0 stands for the U direction and 1 for the V direction.
+   * \return                       true if geometry is closed in the given direction.
+   */
+  bool
+  t8_geom_surface_is_closed (int geometry_index, int direction) const;
 
  private:
   TopoDS_Shape cad_shape;                          /**< cad geometry */
-  TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex in shape. */
-  TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge in shape. */
-  TopTools_IndexedMapOfShape cad_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
+  TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex. */
+  TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge. */
+  TopTools_IndexedMapOfShape cad_shape_face_map;   /**< Map of all TopoDS_Face. */
   TopTools_IndexedDataMapOfShapeListOfShape
-    cad_shape_vertex2edge_map; /**< Maps all TopoDS_Vertex of shape to all its connected TopoDS_Edge */
+    cad_shape_vertex2edge_map; /**< Maps all TopoDS_Vertex to all its connected TopoDS_Edge */
   TopTools_IndexedDataMapOfShapeListOfShape
-    cad_shape_edge2face_map; /**< Maps all TopoDS_Edge of shape to all its connected TopoDS_Face */
+    cad_shape_edge2face_map; /**< Maps all TopoDS_Edge to all its connected TopoDS_Face */
+  TopTools_IndexedDataMapOfShapeListOfShape
+    cad_shape_vertex2face_map; /**< Maps all TopoDS_Vertex to all its connected TopoDS_Face */
 };
 
 #endif /* !T8_CAD_HXX */

@@ -38,7 +38,7 @@
 #include "t8_vtk/t8_vtk_write_ASCII.hxx"
 
 #include <string>
-#include <t8_vtk.h>
+#include <t8_vtk/t8_vtk.h>
 #include <t8_types/t8_vec.hxx>
 
 #if T8_ENABLE_VTK
@@ -131,8 +131,7 @@ struct vtk_writer
    * A vtk-writer function that uses the vtk API
    *
    * \param[in] grid The forest or cmesh that is translated
-   * \return true
-   * \return false
+   * \return True if successful, false if not
    */
   bool
   write_ASCII (const grid_t grid);

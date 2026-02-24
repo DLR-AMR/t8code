@@ -24,13 +24,11 @@
  * We define the forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_GENERAL_H
 #define T8_FOREST_GENERAL_H
 
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */
@@ -317,9 +315,11 @@ t8_forest_get_user_function (const t8_forest_t forest);
  *                          referencing \b set_from.
  *                          If NULL, a previously (or later) set forest will
  *                          be taken (\ref t8_forest_set_adapt, \ref t8_forest_set_balance).
- * \param [in]      set_for_coarsening CURRENTLY DISABLED. If true, then the partitions
- *                          are choose such that coarsening an element once is a process local
- *                          operation.
+ * \param [in]      set_for_coarsening If true, the partition will be such that coarsening a
+ *                          family of elements into their parent once is a process-local operation.
+ *                          This is ensured by a post-processing step that slightly shifts the newly
+ *                          determined process boundaries such that no full family of (same-level)
+ *                          siblings is split between processes.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
  * 1) Adapt 2) Partition 3) Balance.

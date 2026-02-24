@@ -38,7 +38,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 // Dummy user data taken from a tutorial for test purposes.
 struct dummy_user_data
 {
-  t8_3D_point midpoint;             /* The midpoint of our sphere. */
+  t8_3D_vec midpoint;               /* The midpoint of our sphere. */
   double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
   double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
 };
@@ -53,9 +53,9 @@ TEST (t8_gtest_handle_data, set_and_get_user_data)
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
   struct dummy_user_data user_data = {
-    t8_3D_point ({ 41.0, 42., 43.0 }), /* Midpoints of the sphere. */
-    100.0,                             /* Refine if inside this radius. */
-    3.0                                /* Coarsen if outside this radius. */
+    t8_3D_vec ({ 41.0, 42., 43.0 }), /* Midpoints of the sphere. */
+    100.0,                           /* Refine if inside this radius. */
+    3.0                              /* Coarsen if outside this radius. */
   };
 
   // Set user data for the mesh handle and check that the getter returns the same data.
