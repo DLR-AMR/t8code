@@ -38,7 +38,7 @@ GIT_REPO_PATH=$(git rev-parse --show-toplevel)
 
 # Set paths to check scripts
 CHECK_INDENT=$GIT_REPO_PATH/scripts/check_if_file_indented.sh
-CHECK_MACROS=$GIT_REPO_PATH/scripts/check_macros.sh
+CHECK_MACROS=$GIT_REPO_PATH/scripts/internal/check_macros.sh
 
 TYPOS=`which typos 2> /dev/null`
 TYPOS_CONFIG_FILE=./.typos.toml
@@ -92,7 +92,7 @@ do
   if ! [ -z "$status" ]; then
     echo "File $file contains typos."
     nocontinue=1
-  fi 
+  fi
 
   # We only indent .c, .cxx, .h and .hxx files
 #-a ${file: -2} != ".h" ]
@@ -102,7 +102,7 @@ do
     echo "Checking file $file"
     $CHECK_INDENT $file > /dev/null 2>&1
     status=$?
-    if test $status -ne 0 
+    if test $status -ne 0
     then
       echo "File $file is not indented."
       nocontinue=1
@@ -116,7 +116,7 @@ do
     # - nocontinue: Flag set to 1 if the incorrect macro usage is found.
     $CHECK_MACROS $file
     status=$?
-    if test $status -ne 0 
+    if test $status -ne 0
     then
       nocontinue=1
     fi

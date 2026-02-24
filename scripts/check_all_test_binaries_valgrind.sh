@@ -4,7 +4,7 @@
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element classes in parallel.
 #
-#  Copyright (C) 2025 the developers
+#  Copyright (C) 2026 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,15 +23,34 @@
 #
 # This script performs a valgrind check on each test binary given by find_all_test_binary_paths.sh.
 # The valgrind check is done by the check_valgrind.sh script.
-# The script returns 1 if an error is found and 0 otherwise. 
+# The script returns 1 if an error is found and 0 otherwise.
 # This script must be executed from the scripts/ folder.
 # It is assumed that the build folder ../build/test/ with the correct test binaries exists.
 # With "--ntasks=[NUMBER]", you can provide the number of processes to use with MPI for parallel tests (default is 1).
 #
 
 USAGE="\nUSAGE: This script executes valgrind in parallel on each test binary available. Use the syntax \n
-$0 --ntasks=[NUM_TASKS]\n 
+$0 [TEST_BINARY_PATH] --ntasks=[NUM_TASKS]\n
 Providing the number of parallel processes to use with MPI for parallel tests is optional.\n"
+
+# Check directory exists
+if [ -z "$1" ]; then
+  echo "ERROR: Need to provide a directory as first argument."
+  echo -e "$USAGE"
+  exit 1
+fi
+
+# Check if it is a directory
+if [ -d "$1" ]; then
+  TEST_BINARY_PATH="$1"
+else
+  echo "ERROR: Directory does not exist: $1"
+  echo -e "$USAGE"
+  exit 1
+fi
+
+#convert to abspath
+TEST_BINARY_ABSPATH=$(realpath $TEST_BINARY_PATH)
 
 # Check if a number of processes is provided. If not, set to 1.
 num_procs=1
@@ -61,19 +80,21 @@ if [ `basename $PWD` != scripts ]; then
 fi
 
 # Find all test binary paths.
-test_bin_paths=`bash ./find_all_test_binary_paths.sh`
+test_bin_paths=$(bash ./find_all_test_binary_paths.sh "$TEST_BINARY_ABSPATH")
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo "$test_bin_paths"
+  echo "Failed to collect test binaries."
+  exit $status
+fi
+
 num_paths=$(echo $test_bin_paths | wc -w)
 
-# This is necessary because some tests use test files specified by relative paths. 
-# These tests only work when run from the build/test/ directory. 
-if [ -d ../build/test ]; then
-  # The directory stack is automatically reset on script exit.
-  pushd ../build/test/ > /dev/null
-else
-  echo "ERROR: Couldn't find a the directory ../build/test/."
-  echo -e "$USAGE"
-  exit 1
-fi
+# This is necessary because some tests use test files specified by relative paths.
+# These tests only work when run from the test directory.
+# The directory stack is automatically reset on script exit.
+pushd $TEST_BINARY_ABSPATH > /dev/null
 
 status=0
 counter=0

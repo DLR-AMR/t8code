@@ -4,7 +4,7 @@
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element classes in parallel.
 #
-#  Copyright (C) 2025 the developers
+#  Copyright (C) 2026 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -26,16 +26,16 @@
 # The paths are relative paths assuming an execution from the test/ folder in the build directory.
 #
 
-build_test_directory="../build/test/"
+TEST_BINARY_PATH="$1"
 
 # Check that path to test folder in build directory is correct.
-if [ ! -d "$build_test_directory" ]; then
-  echo "Directory build/test/ not found!"
+if [ ! -d "$TEST_BINARY_PATH" ]; then
+  echo "Directory $TEST_BINARY_PATH not found!"
   exit 1
 fi
 
-# Find all executables in the build/test/ directory (that do not have a .so file ending) 
-# and store the relative paths to the build_test_directory with leading "./".
-test_bin_paths=$(find "$build_test_directory" -type f -executable -not -name "*.so" -exec realpath --relative-to="$build_test_directory" {} \; | sed 's|^|./|')
+# Find all executables in the build/test/ directory (that do not have a .so file ending)
+# and store the relative paths to the TEST_BINARY_PATH with leading "./".
+test_bin_paths=$(find "$TEST_BINARY_PATH" -type f -executable -not -name "*.so" -exec realpath --relative-to="$TEST_BINARY_PATH" {} \; | sed 's|^|./|')
 
-echo $test_bin_paths
+echo "$test_bin_paths"

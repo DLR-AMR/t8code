@@ -66,12 +66,12 @@ fi
 #
 #  Parsing of input files and throwing out files to be ignored
 #
-# Read all lines from the IGNORE_FILE 
+# Read all lines from the IGNORE_FILE
 # that are not empty and are not comments (i.e. start with '#').
 # Determine base directory of git repo
 GIT_REPO_PATH=$(git rev-parse --show-toplevel)
 
-IGNORE_FILE=${GIT_REPO_PATH}/scripts/t8indent_ignore.sh
+IGNORE_FILE=${GIT_REPO_PATH}/scripts/internal/indent_ignore
 files_to_ignore=()
 while read line; do
     if [[ ${line:0:1} != "#" ]] && [[ $line != "" ]]
@@ -112,7 +112,7 @@ do
     do
       echo Checking "$arg" against "${GIT_REPO_PATH}/$ignore_file"
     if [[ "$arg" -ef "${GIT_REPO_PATH}/$ignore_file" ]]
-    then 
+    then
       # arg matches and will be ignored
       echo The file \"$arg\" will be ignored by indentation as specified in \"$IGNORE_FILE\".
       ignore_arg=1
@@ -136,7 +136,7 @@ then
 else
   $FORMAT $FORMAT_OPTIONS ${newargs[@]}
   status=$?
-fi  
+fi
 
 # If the file content was not changed, the return
 # value determines whether or not the file was

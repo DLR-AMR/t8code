@@ -122,4 +122,4 @@ jobs:
     # Execute script that runs a Valgrind check for all test binaries.
     # We use 4 parallel processes to run the binaries in parallel with MPI.
     - name: Valgrind check
-      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh --ntasks=4
+      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh ../build/test/ --ntasks=4
