@@ -92,15 +92,9 @@ fi
 num_paths=$(echo $test_bin_paths | wc -w)
 
 # This is necessary because some tests use test files specified by relative paths.
-# These tests only work when run from the build/test/ directory.
-if [ -d ../build/test ]; then
-  # The directory stack is automatically reset on script exit.
-  pushd ../build/test/ > /dev/null
-else
-  echo "ERROR: Couldn't find the directory ../build/test/."
-  echo -e "$USAGE"
-  exit 1
-fi
+# These tests only work when run from the test directory.
+# The directory stack is automatically reset on script exit.
+pushd $TEST_BINARY_ABSPATH > /dev/null
 
 status=0
 counter=0
