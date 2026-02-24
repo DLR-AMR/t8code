@@ -56,13 +56,13 @@ const int t8_face_ref_coords_tet[4][2] = { { 2, 1 }, { 0, 1 }, { 0, 1 }, { 0, 2 
 
 t8_geometry_cad::t8_geometry_cad (std::string fileprefix, std::string name_in): t8_geometry_with_vertices (name_in)
 {
-  cad_manager = std::make_shared<t8_cad> (fileprefix);
+  cad_handle = std::make_shared<t8_cad_handle> (fileprefix);
 }
 
 t8_geometry_cad::t8_geometry_cad (const TopoDS_Shape cad_shape, std::string name_in)
   : t8_geometry_with_vertices (name_in)
 {
-  cad_manager = std::make_shared<t8_cad> (cad_shape);
+  cad_handle = std::make_shared<t8_cad_handle> (cad_shape);
 }
 
 t8_geometry_cad::t8_geometry_cad (): t8_geometry_with_vertices ("t8_geom_cad")
@@ -226,9 +226,9 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           t8_geom_linear_interpolation (&ref_intersection[(i_edge == 0) + offset_2d], edge_parameters, 1, 1,
                                         &interpolated_curve_parameter);
           /* Convert the interpolated edge parameter of each reference point to surface parameters */
-          cad_manager->t8_geom_edge_parameter_to_face_parameters (edges[i_edge], *faces, interpolated_curve_parameter,
-                                                                  converted_edge_surface_parameters + offset_2d,
-                                                                  std::span<const double, 2> (face_parameters, 2));
+          cad_handle->edge_parameter_to_face_parameters (edges[i_edge], *faces, interpolated_curve_parameter,
+                                                         converted_edge_surface_parameters + offset_2d,
+                                                         std::span<const double, 2> (face_parameters, 2));
         }
 
         double edge_surface_parameters[4];
@@ -397,9 +397,9 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
                                         temp_edge_parameters);
 
           /* Convert curve parameter to surface parameters */
-          cad_manager->t8_geom_edge_parameter_to_face_parameters (edges[i_edge], *faces, temp_edge_parameters[0],
-                                                                  temp_edge_parameters,
-                                                                  std::span<const double, 2> (face_parameters, 2));
+          cad_handle->edge_parameter_to_face_parameters (edges[i_edge], *faces, temp_edge_parameters[0],
+                                                         temp_edge_parameters,
+                                                         std::span<const double, 2> (face_parameters, 2));
 
           /* Interpolate between the surface parameters of the current edge */
           double edge_surface_parameters[4];
@@ -422,7 +422,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
     }
 
     /* Retrieve surface */
-    auto surface = cad_manager->t8_geom_get_cad_surface (*faces);
+    auto surface = cad_handle->get_cad_surface (*faces);
 
     /* Check if surface is valid */
     T8_ASSERT (!surface.IsNull ());
@@ -480,7 +480,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         if (edges[i_edge] > 0) {
 
           /* Retrieve curve */
-          auto curve = cad_manager->t8_geom_get_cad_curve (edges[i_edge]);
+          auto curve = cad_handle->get_cad_curve (edges[i_edge]);
 
           /* Check if curve are valid */
           T8_ASSERT (!curve.IsNull ());
@@ -512,7 +512,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         }
         else {
           /* Get surface */
-          auto surface = cad_manager->t8_geom_get_cad_surface (edges[i_edge + num_edges]);
+          auto surface = cad_handle->get_cad_surface (edges[i_edge + num_edges]);
 
           /* Check if surface is valid */
           T8_ASSERT (!surface.IsNull ());
@@ -966,7 +966,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
               }
             }
             /* Convert the interpolated parameter of the curve into the corresponding parameters on the surface */
-            cad_manager->t8_geom_edge_parameter_to_face_parameters (
+            cad_handle->edge_parameter_to_face_parameters (
               edges[t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]], faces[i_faces],
               interpolated_curve_param, surface_parameters_from_curve,
               std::span<const double, 2> (surface_parameters, 2));
@@ -1278,7 +1278,7 @@ t8_geometry_cad::process_curve (const int curve_index, const double param) const
   gp_Pnt pnt;
 
   /* Retrieve the curve of the edge */
-  const auto curve = cad_manager->t8_geom_get_cad_curve (curve_index);
+  const auto curve = cad_handle->get_cad_curve (curve_index);
 
   /* Check if curve is valid */
   T8_ASSERT (!curve.IsNull ());
@@ -1294,7 +1294,7 @@ t8_geometry_cad::process_surface (const int surface_index, const double *params)
   gp_Pnt pnt;
 
   /* Retrieve the surface of the edge */
-  const auto surface = cad_manager->t8_geom_get_cad_surface (surface_index);
+  const auto surface = cad_handle->get_cad_surface (surface_index);
 
   /* Check if surface is valid */
   T8_ASSERT (!surface.IsNull ());

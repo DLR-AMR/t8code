@@ -717,8 +717,8 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
 
           /* If both nodes are on a vertex we look if both vertices share an edge */
           if (node1.entity_dim == 0 && node2.entity_dim == 0) {
-            int common_edge = cad_geometry->get_cad_manager ()->t8_geom_get_common_edge_of_vertices (node1.entity_tag,
-                                                                                                     node2.entity_tag);
+            int common_edge
+              = cad_geometry->get_cad_handle ()->get_common_edge_of_vertices (node1.entity_tag, node2.entity_tag);
             if (common_edge > 0) {
               if (edge1_index == 0) {
                 edge1_index = common_edge;
@@ -733,7 +733,8 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       }
       /* If the face is linked to a surface we should now have two curves and we can check if both share a surface. */
       if (edge2_index > 0) {
-        surface_index = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_edges (edge1_index, edge2_index);
+
+        surface_index = cad_geometry->get_cad_handle ()->get_common_face_of_edges (edge1_index, edge2_index);
       }
       else {
         continue;
@@ -763,11 +764,11 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           break;
         case 1:
           /* If the edge is on the face we can check if it is a seam and if not we can use its parameters as reference. */
-          if (cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (face_node->entity_tag, surface_index)) {
+          if (cad_geometry->get_cad_handle ()->is_edge_on_face (face_node->entity_tag, surface_index)) {
             if (!reference_parameters_on_surface
-                && !cad_geometry->get_cad_manager ()->t8_geom_edge_is_seam (face_node->entity_tag, surface_index)) {
+                && !cad_geometry->get_cad_handle ()->edge_is_seam (face_node->entity_tag, surface_index)) {
               reference_parameters_on_surface.emplace ();
-              cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+              cad_geometry->get_cad_handle ()->edge_parameter_to_face_parameters (
                 face_node->entity_tag, surface_index, face_node->parameters[0],
                 reference_parameters_on_surface.value ().data ());
             }
@@ -780,7 +781,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         case 0:
           /* If the vertex is not on the face, we can stop the face linkage.
              We do not have to check for reference parameters since a closed face linked to four vertices makes no sense. */
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (face_node->entity_tag, surface_index))
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_face (face_node->entity_tag, surface_index))
             all_nodes_on_surface = 0;
           break;
         default:
@@ -788,7 +789,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         }
       }
       /* Abort if not all nodes are on the surface or if the surface is a plane */
-      if (!all_nodes_on_surface || cad_geometry->get_cad_manager ()->t8_geom_is_plane (surface_index)) {
+      if (!all_nodes_on_surface || cad_geometry->get_cad_handle ()->is_plane (surface_index)) {
         continue;
       }
 
@@ -804,14 +805,14 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           /* Nothing to do. */
           break;
         case 1:
-          cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+          cad_geometry->get_cad_handle ()->edge_parameter_to_face_parameters (
             face_node.entity_tag, surface_index, face_node.parameters[0], face_node.parameters.data (),
             reference_parameters_on_surface);
           face_node.entity_dim = 2;
           face_node.entity_tag = surface_index;
           break;
         case 0:
-          cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+          cad_geometry->get_cad_handle ()->get_parameters_of_vertex_on_face (
             face_node.entity_tag, surface_index, face_node.parameters.data (), reference_parameters_on_surface);
           face_node.entity_dim = 2;
           face_node.entity_tag = surface_index;
@@ -898,22 +899,19 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       int is_on_geom = 1;
       for (int i_edge = 0; i_edge < 2; ++i_edge) {
         if (edge_geometry_dim == 2 && edge_nodes[i_edge].entity_dim == 1) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_nodes[i_edge].entity_tag,
-                                                                          edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_edge_on_face (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
             is_on_geom = 0;
             break;
           }
         }
         else if (edge_geometry_dim == 2 && edge_nodes[i_edge].entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_nodes[i_edge].entity_tag,
-                                                                            edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_face (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
             is_on_geom = 0;
             break;
           }
         }
         else if (edge_geometry_dim == 1 && edge_nodes[i_edge].entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_nodes[i_edge].entity_tag,
-                                                                            edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_edge (edge_nodes[i_edge].entity_tag, edge_geometry_tag)) {
             is_on_geom = 0;
             break;
           }
@@ -935,11 +933,11 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       if (!is_on_geom) {
         int common_face = 0;
         if (edge_nodes[0].entity_dim == 1 && edge_nodes[1].entity_dim == 0)
-          common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertex_and_edge (
-            edge_nodes[1].entity_tag, edge_nodes[0].entity_tag);
+          common_face = cad_geometry->get_cad_handle ()->get_common_face_of_vertex_and_edge (edge_nodes[1].entity_tag,
+                                                                                             edge_nodes[0].entity_tag);
         if (edge_nodes[1].entity_dim == 1 && edge_nodes[0].entity_dim == 0)
-          common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertex_and_edge (
-            edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+          common_face = cad_geometry->get_cad_handle ()->get_common_face_of_vertex_and_edge (edge_nodes[0].entity_tag,
+                                                                                             edge_nodes[1].entity_tag);
         /* If a common face exists we can save it. */
         if (common_face > 0) {
           edge_geometry_dim = 2;
@@ -955,15 +953,15 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
      * But we can look if both vertices share an edge/face and use this edge/face.
      * If not we can skip this edge. */
     if (edge_geometry_dim == 0 && edge_geometry_tag == 0) {
-      int common_edge = cad_geometry->get_cad_manager ()->t8_geom_get_common_edge_of_vertices (
-        edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+      int common_edge = cad_geometry->get_cad_handle ()->get_common_edge_of_vertices (edge_nodes[0].entity_tag,
+                                                                                      edge_nodes[1].entity_tag);
       if (common_edge > 0) {
         edge_geometry_tag = common_edge;
         edge_geometry_dim = 1;
       }
       else {
-        int common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_vertices (
-          edge_nodes[0].entity_tag, edge_nodes[1].entity_tag);
+        int common_face = cad_geometry->get_cad_handle ()->get_common_face_of_vertices (edge_nodes[0].entity_tag,
+                                                                                        edge_nodes[1].entity_tag);
         if (common_face > 0) {
           edge_geometry_tag = common_face;
           edge_geometry_dim = 2;
@@ -977,8 +975,8 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
      * If not we can skip this edge */
     if (edge_nodes[0].entity_dim == 1 && edge_nodes[1].entity_dim == 1
         && edge_nodes[0].entity_tag != edge_nodes[1].entity_tag) {
-      int common_face = cad_geometry->get_cad_manager ()->t8_geom_get_common_face_of_edges (edge_nodes[0].entity_tag,
-                                                                                            edge_nodes[1].entity_tag);
+      int common_face = cad_geometry->get_cad_handle ()->get_common_face_of_edges (edge_nodes[0].entity_tag,
+                                                                                   edge_nodes[1].entity_tag);
       if (common_face > 0) {
         edge_geometry_tag = common_face;
         edge_geometry_dim = 2;
@@ -994,14 +992,14 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
 
       /* Abort if the edge is a line. If the edge is a line, the curved computation would
        * only result in more computational overhead. */
-      if (cad_geometry->get_cad_manager ()->t8_geom_is_line (edge_geometry_tag)) {
+      if (cad_geometry->get_cad_handle ()->is_line (edge_geometry_tag)) {
         continue;
       }
 
       /* Check if adjacent faces carry a surface and if this edge lies on the surface */
       for (int i_adjacent_face = 0; i_adjacent_face < 2; ++i_adjacent_face) {
         if (face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]] > 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (
+          if (!cad_geometry->get_cad_handle ()->is_edge_on_face (
                 edge_geometry_tag, face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]])) {
             t8_global_errorf ("Error during mesh-cad recombination: Adjacent edge and face of a tree carry "
                               "incompatible geometries.\n");
@@ -1032,7 +1030,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           return 0;
         }
         if (edge_node.entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on an edge, "
               "but the vertex does not lie on that edge.\n",
@@ -1049,10 +1047,10 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
             break;
           case 0:
             /* If the node is on a vertex we can convert the parameters safely if the vertex os not the seam of the edge. */
-            if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
+            if (!cad_geometry->get_cad_handle ()->vertex_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
               reference_param.emplace ();
-              cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
-                edge_node.entity_tag, edge_geometry_tag, &reference_param.value ());
+              cad_geometry->get_cad_handle ()->get_parameter_of_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag,
+                                                                                &reference_param.value ());
             }
             break;
           default:
@@ -1069,7 +1067,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       for (auto &edge_node : edge_nodes) {
         /* If the node lies on a vertex we retrieve its parameter on the curve */
         if (edge_node.entity_dim == 0) {
-          cad_geometry->get_cad_manager ()->t8_geom_get_parameter_of_vertex_on_edge (
+          cad_geometry->get_cad_handle ()->get_parameter_of_vertex_on_edge (
             edge_node.entity_tag, edge_geometry_tag, edge_node.parameters.data (), reference_param);
           edge_node.entity_dim = 1;
         }
@@ -1093,7 +1091,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
 
       /* We also skip this edge if the edge is on a plane. Planes have no curvature and
        * therefore only result in computational overhead. */
-      if (cad_geometry->get_cad_manager ()->t8_geom_is_plane (edge_geometry_tag)) {
+      if (cad_geometry->get_cad_handle ()->is_plane (edge_geometry_tag)) {
         continue;
       }
 
@@ -1113,7 +1111,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           return 0;
         }
         if (edge_node.entity_dim == 0) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_node.entity_tag, edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_vertex_on_face (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on a face, "
               "but the vertex does not lie on that face.\n",
@@ -1122,7 +1120,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
           }
         }
         if (edge_node.entity_dim == 1) {
-          if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_node.entity_tag, edge_geometry_tag)) {
+          if (!cad_geometry->get_cad_handle ()->is_edge_on_face (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
               "Error during mesh-cad recombination: Node %li should lie on an edge which lies on a face, "
               "but the edge does not lie on that face.\n",
@@ -1138,18 +1136,17 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
             break;
           case 1:
             /* If the node is on a curve, we can use the parameters if the curve is not the seam of the surface. */
-            if (!cad_geometry->get_cad_manager ()->t8_geom_edge_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
+            if (!cad_geometry->get_cad_handle ()->edge_is_seam (edge_node.entity_tag, edge_geometry_tag)) {
               reference_params.emplace ();
-              cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+              cad_geometry->get_cad_handle ()->edge_parameter_to_face_parameters (
                 edge_node.entity_tag, edge_geometry_tag, edge_node.parameters[0], reference_params.value ().data ());
             }
             break;
           case 0:
             /* If the node is on a vertex we can convert the parameters safely if the vertex is not the seam of the edge. */
-            if (!cad_geometry->get_cad_manager ()->t8_geom_vertex_is_on_seam_edge (edge_node.entity_tag,
-                                                                                   edge_geometry_tag)) {
+            if (!cad_geometry->get_cad_handle ()->vertex_is_on_seam_edge (edge_node.entity_tag, edge_geometry_tag)) {
               reference_params.emplace ();
-              cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+              cad_geometry->get_cad_handle ()->get_parameters_of_vertex_on_face (
                 edge_node.entity_tag, edge_geometry_tag, reference_params.value ().data ());
             }
             break;
@@ -1167,13 +1164,13 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       for (auto &edge_node : edge_nodes) {
         /* If the node lies on a vertex we retrieve its parameters on the surface */
         if (edge_node.entity_dim == 0) {
-          cad_geometry->get_cad_manager ()->t8_geom_get_parameters_of_vertex_on_face (
+          cad_geometry->get_cad_handle ()->get_parameters_of_vertex_on_face (
             edge_node.entity_tag, edge_geometry_tag, edge_node.parameters.data (), reference_params);
           edge_node.entity_dim = 2;
         }
         /* If the node lies on an edge we have to do the same */
         if (edge_node.entity_dim == 1) {
-          cad_geometry->get_cad_manager ()->t8_geom_edge_parameter_to_face_parameters (
+          cad_geometry->get_cad_handle ()->edge_parameter_to_face_parameters (
             edge_node.entity_tag, edge_geometry_tag, edge_node.parameters[0], edge_node.parameters.data (),
             reference_params);
           edge_node.entity_dim = 2;

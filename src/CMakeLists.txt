@@ -96,7 +96,7 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
-      t8_cad/t8_cad.cxx
+      t8_cad/t8_cad_handle.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
@@ -104,7 +104,7 @@ if( T8CODE_ENABLE_OCC )
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_geometry/t8_geometry_implementations
     )
     install( FILES
-      t8_cad/t8_cad.hxx
+      t8_cad/t8_cad_handle.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cad
     )
 endif()
