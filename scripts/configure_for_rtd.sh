@@ -20,7 +20,7 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-cd "$(git rev-parse --show-toplevel)"
+pushd "$(git rev-parse --show-toplevel)" > /dev/null
 
 git submodule init
 git submodule update
