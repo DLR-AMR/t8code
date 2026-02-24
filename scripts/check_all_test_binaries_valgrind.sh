@@ -62,10 +62,18 @@ fi
 
 # Find all test binary paths.
 test_bin_paths=`bash ./find_all_test_binary_paths.sh`
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo "$test_bin_paths"
+  echo "Failed to collect test binaries."
+  exit $status
+fi
+
 num_paths=$(echo $test_bin_paths | wc -w)
 
-# This is necessary because some tests use test files specified by relative paths. 
-# These tests only work when run from the build/test/ directory. 
+# This is necessary because some tests use test files specified by relative paths.
+# These tests only work when run from the build/test/ directory.
 if [ -d ../build/test ]; then
   # The directory stack is automatically reset on script exit.
   pushd ../build/test/ > /dev/null
