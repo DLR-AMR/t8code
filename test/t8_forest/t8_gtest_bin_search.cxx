@@ -106,7 +106,7 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_element_array_t *leafs = t8_forest_tree_get_leaf_elements (forest, itree);
+    const t8_element_array_t *leaves = t8_forest_tree_get_leaf_elements (forest, itree);
 
     /* Iterate over all the tree's leaf elements, check whether the leaf
      * is correctly identified by t8_forest_element_is_leaf,
@@ -121,7 +121,7 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
       * elements. If the element does not exist, return the largest index i
       * such that the element at position i has a smaller id than the given one.
       * If no such i exists, return -1. */
-      const t8_locidx_t search_index = t8_forest_bin_search_upper (leafs, element_id, element_level);
+      const t8_locidx_t search_index = t8_forest_bin_search_upper (leaves, element_id, element_level);
       // We expect the leaf element to be found at position ielement
       EXPECT_EQ (search_index, ielement) << "Found wrong position of leaf element. Expected: " << ielement
                                          << " got: " << search_index;
@@ -135,7 +135,7 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
           = scheme->element_get_linear_id (tree_class, leaf_element, element_level + 1);
 
         const t8_locidx_t search_index
-          = t8_forest_bin_search_upper (leafs, element_id_at_next_level, element_level + 1);
+          = t8_forest_bin_search_upper (leaves, element_id_at_next_level, element_level + 1);
         // We expect the leaf element to be found at position ielement
         EXPECT_EQ (search_index, ielement)
           << "Found wrong position of level " << element_level + 1 << " leaf element with id "
@@ -150,7 +150,7 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
         // Double check for possible conversion error, if element_id == MAX_POSSIBLE_VALUE. In that case, the
         // test logic fails. Should we ever run into this case, we need to rewrite this test accordingly.
         SC_CHECK_ABORTF (element_not_found_id > 0, "Invalid element id %li\n", element_not_found_id);
-        const t8_locidx_t search_index = t8_forest_bin_search_upper (leafs, element_not_found_id, element_level);
+        const t8_locidx_t search_index = t8_forest_bin_search_upper (leaves, element_not_found_id, element_level);
         EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expectec -1.";
       }
     }
@@ -179,7 +179,7 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
     const t8_locidx_t num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
-    const t8_element_array_t *leafs = t8_forest_tree_get_leaf_elements (forest, itree);
+    const t8_element_array_t *leaves = t8_forest_tree_get_leaf_elements (forest, itree);
 
     /* Iterate over all the tree's leaf elements, check whether the leaf
      * is correctly identified by t8_forest_element_is_leaf,
@@ -194,7 +194,7 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
       * elements. If the element does not exist, return the largest index i
       * such that the element at position i has a smaller id than the given one.
       * If no such i exists, return -1. */
-      const t8_locidx_t search_index = t8_forest_bin_search_lower (leafs, element_id, element_level);
+      const t8_locidx_t search_index = t8_forest_bin_search_lower (leaves, element_id, element_level);
       // We expect the leaf element to be found at position ielement
       EXPECT_EQ (search_index, ielement) << "Found wrong position of leaf element. Expected: " << ielement
                                          << " got: " << search_index;
@@ -208,7 +208,7 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
           = scheme->element_get_linear_id (tree_class, leaf_element, element_level + 1);
 
         const t8_locidx_t search_index
-          = t8_forest_bin_search_lower (leafs, element_id_at_next_level, element_level + 1);
+          = t8_forest_bin_search_lower (leaves, element_id_at_next_level, element_level + 1);
         // We expect the leaf element to be found at position ielement
         EXPECT_EQ (search_index, ielement)
           << "Found wrong position of level " << element_level + 1 << " leaf element with id "
@@ -220,7 +220,7 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
       // We take the first element of the forest and subtract 1 from its id.
       if (ielement == 0 && element_id > 0) {
         const t8_linearidx_t element_not_found_id = element_id - 1;
-        const t8_locidx_t search_index = t8_forest_bin_search_lower (leafs, element_not_found_id, element_level);
+        const t8_locidx_t search_index = t8_forest_bin_search_lower (leaves, element_not_found_id, element_level);
         EXPECT_EQ (search_index, -1) << "Wrong return value for element that should not be in array. Expectec -1.";
       }
     }
