@@ -19,11 +19,11 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 # This is t8code's indentation ignore file.
-# All files listed here are ignored by out t8indent.sh script and thus not
+# All files listed here are ignored by out indent.sh script and thus not
 # indented according to our indentation guidelines.
 # Since we rely on clang-format version 17 and clang-format.ignored files
 # have only been introduced in version 18, we need to manually parse
-# this list and throw out the matching files. This happens in t8indent.sh
+# this list and throw out the matching files. This happens in indent.sh
 
 # Each file that is listed here must have a comment describing why
 # it is necessary to ignore indentation for this file.

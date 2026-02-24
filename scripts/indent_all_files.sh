@@ -47,7 +47,7 @@ files=`./internal/find_all_source_files.sh`
 
 notallindented=0
 
-INDENT=./t8indent.sh
+INDENT=./indent.sh
 
 echo This script will change all source files found in
 echo	$PWD/../src/
