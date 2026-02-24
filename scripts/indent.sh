@@ -71,7 +71,7 @@ fi
 # Determine base directory of git repo
 GIT_REPO_PATH=$(git rev-parse --show-toplevel)
 
-IGNORE_FILE=${GIT_REPO_PATH}/scripts/internal/indent_ignore.sh
+IGNORE_FILE=${GIT_REPO_PATH}/scripts/internal/indent_ignore
 files_to_ignore=()
 while read line; do
     if [[ ${line:0:1} != "#" ]] && [[ $line != "" ]]

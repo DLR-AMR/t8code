@@ -14,7 +14,7 @@ You can also provide a list of files and all will get indented.
 This script uses the `clang-format` program with t8code specific settings.
 Sometimes `indent.sh` does produce undesired results. Therefore, after indenting use `git add -p` or similar to check all changes before committing. You can protect code lines from being changed by the script by enclosing them in `/* clang-format off */` and `/* clang-format on */` comments.
 
-#### internal/indent_ignore.sh
+#### internal/indent_ignore
 
 A list of files that will be ignored by `indent.sh`.
 
