@@ -3098,4 +3098,35 @@ t8_standalone_scheme<T8_ECLASS_TRIANGLE>::element_transform_face ([[maybe_unused
   }
 };
 
+template <>
+inline void
+t8_standalone_scheme<T8_ECLASS_VERTEX>::point_transform([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
+                   [[maybe_unused]] t8_scheme_point *neigh_point) const {}
+
+template <>
+inline void
+t8_standalone_scheme<T8_ECLASS_LINE>::point_transform([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
+                   [[maybe_unused]] t8_scheme_point *neigh_point) const
+  {
+    t8_scheme_point_dim<1> *p = (t8_scheme_point_dim<1> *) point;
+    t8_scheme_point_dim<1> *np = (t8_scheme_point_dim<1> *) neigh_point;
+    if (orientation) {
+      (*np)[0] = (1 << get_maxlevel()) - (*p)[0];
+    }
+    else {
+      (*np)[0] = (*p)[0];
+    }
+  }
+
+template <>
+inline void
+t8_standalone_scheme<T8_ECLASS_TRIANGLE>::point_transform([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
+                   [[maybe_unused]] t8_scheme_point *neigh_point) const {
+
+  SC_ABORT("not implemented\n");
+}
+
+
+
+
 #endif /* T8_STANDALONE_IMPLEMENTATION_HXX */

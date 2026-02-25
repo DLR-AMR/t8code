@@ -133,6 +133,7 @@ typedef class t8_neigh_info {
   t8_gloidx_t neighid;
   int neigh_bdy_id;
   int orientation;
+  int sign;
 } t8_neigh_info;
 
 std::vector<t8_neigh_info>
