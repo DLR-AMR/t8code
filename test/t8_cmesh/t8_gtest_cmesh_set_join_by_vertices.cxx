@@ -30,6 +30,8 @@
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include "t8_test_data_dir.h"
+#include <string>
 
 #include <p8est_geometry.h>
 
@@ -277,8 +279,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    const char *filename = "testfiles/test_cube_unstructured_1.inp";
-    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename);
+    std::string filename = std::string (T8_TEST_DATA_DIR) + "/test_cube_unstructured_1.inp";
+    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename.c_str ());
     t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
     p8est_connectivity_destroy (p8_conn);
@@ -286,8 +288,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    const char *filename = "testfiles/test_cube_unstructured_2.inp";
-    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename);
+    std::string filename = std::string (T8_TEST_DATA_DIR) + "/test_cube_unstructured_2.inp";
+    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename.c_str ());
     t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
     p8est_connectivity_destroy (p8_conn);
