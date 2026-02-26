@@ -30,6 +30,7 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
@@ -352,3 +353,135 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors,
                           testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
+
+/* Adapt callback that refines all elements in the tree with global id 0. */
+int
+t8_test_adapt_first_tree (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                          [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t eclass,
+                          [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                          [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                          t8_element_t *elements[])
+{
+  T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (eclass, elements[0])));
+
+  int level = scheme->element_get_level (eclass, elements[0]);
+
+  /* we set a maximum refinement level as forest user data */
+  int maxlevel = *(int *) t8_forest_get_user_data (forest);
+  if (level >= maxlevel) {
+    /* Do not refine after the maxlevel */
+    return 0;
+  }
+  const t8_gloidx_t global_tree = t8_forest_global_tree_id (forest_from, which_tree);
+  if (global_tree == 0) {
+    return 1;
+  }
+  return 0;
+}
+
+class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
+ protected:
+  void
+  SetUp () override
+  {
+
+    /* Read our specific mesh file into a cmesh and build a forest. */
+    const std::string meshfile_prefix = "test/test/testfiles/test_twosquares_twisted";
+    const int partition_mesh = 0;
+    const int mesh_dim = 2;
+    const int main_proc = 0;
+    const int use_cad = 0;
+    t8_cmesh_t cmesh = t8_cmesh_from_msh_file (meshfile_prefix.c_str (), partition_mesh, sc_MPI_COMM_WORLD, mesh_dim,
+                                               main_proc, use_cad);
+    ASSERT_NE (cmesh, nullptr) << "Could not open mesh file.";
+
+    /* Build a uniform forest on it. */
+    const int scheme_id = GetParam ();
+    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
+    const int level = 0;
+    const int do_ghost = 1;
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, do_ghost, sc_MPI_COMM_WORLD);
+
+    /* Build an adaptive forest */
+    const int do_recursive_adapt = 0;
+    const int max_adapt_level = 2;
+    adaptive_forest
+      = t8_forest_new_adapt (forest, t8_test_adapt_first_tree, do_recursive_adapt, do_ghost, (void *) &max_adapt_level);
+  }
+
+  void
+  TearDown () override
+  {
+    if (adaptive_forest != nullptr) {
+      t8_forest_unref (&adaptive_forest);
+    }
+    else if (cmesh != nullptr) {
+      t8_cmesh_unref (&cmesh);
+    }
+  }
+
+  t8_cmesh_t cmesh = nullptr;
+  t8_forest_t adaptive_forest = nullptr;
+};
+
+TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
+{
+  // For debug purpoese, we write the forest to vtk
+  t8_forest_write_vtk (adaptive_forest, "lfn_test_twoquads");
+
+  // Iterate over all elements and compute their neighbors.
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (adaptive_forest);
+  const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (adaptive_forest);
+  t8_locidx_t ielement_index = 0;
+  for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; itree++) {
+    const bool is_ghost = itree >= num_local_trees;
+    const t8_locidx_t ghost_tree_id = itree - num_local_trees;
+    /* Get the leaf element array */
+    const t8_element_array_t *leaf_elements
+      = !is_ghost ? t8_forest_get_tree_leaf_element_array (adaptive_forest, itree)
+                  : t8_forest_ghost_get_tree_leaf_elements (adaptive_forest, ghost_tree_id);
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (adaptive_forest, itree);
+    const t8_scheme *scheme = t8_forest_get_scheme (adaptive_forest);
+    const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
+    for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ++ileaf, ++ielement_index) {
+      // Iterate over each leaf element
+      const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
+      const int num_faces = scheme->element_get_num_faces (tree_class, element);
+      for (int iface = 0; iface < num_faces; ++iface) {
+        // Iterate over all faces and compute the face neighbors
+
+        // preparation
+        const t8_element_t **neighbor_leaves;
+        int *dual_faces;
+        int num_neighbors = 0;
+        t8_locidx_t *element_indices;
+        t8_eclass_t neigh_class;
+        t8_gloidx_t gneigh_tree;
+        int orientation;
+
+        t8_debugf ("Compute face neighbor for tree %i (%s) element %i (index %i), at face %i.\n", itree,
+                   is_ghost ? "ghost" : "local", ileaf, ielement_index, iface);
+
+        // Actual computation of the face neighbors
+        t8_forest_leaf_face_neighbors_ext (adaptive_forest, itree, element, &neighbor_leaves, iface, &dual_faces,
+                                           &num_neighbors, &element_indices, &neigh_class, &gneigh_tree, &orientation);
+
+        std::string buffer = "";
+        for (int ineigh = 0; ineigh < num_neighbors; ++ineigh) {
+          buffer += std::to_string (element_indices[ineigh]) + " ";
+        }
+        t8_debugf ("Tree %i, Element %i, Face %i has %i neighbors:\t%s\n", itree, ileaf, iface, num_neighbors,
+                   buffer.c_str ());
+
+        // clean-up original element neighbors
+        if (num_neighbors > 0) {
+          T8_FREE (neighbor_leaves);
+          T8_FREE (element_indices);
+          T8_FREE (dual_faces);
+        }
+      }  // End face loop
+    }    // End leaf in tree loop
+  }      // End tree loop
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors_two_quad_mesh, AllSchemeCollections);
