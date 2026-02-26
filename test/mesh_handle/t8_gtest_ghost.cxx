@@ -61,8 +61,11 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
-                                                                            true, false);
+                                                                            false, false);
 
+  EXPECT_EQ (mesh->get_num_ghosts (), 0);
+  mesh->set_ghost ();
+  mesh->commit ();
   EXPECT_EQ (mesh->get_num_ghosts (), t8_forest_get_num_ghosts (mesh->get_forest ()));
   if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
     // Ensure that we actually have ghost elements in this test.
