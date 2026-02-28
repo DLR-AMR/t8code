@@ -69,17 +69,37 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
     }
   }
   /* Call the callback function for the element */
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_check_element_time -= sc_MPI_Wtime ();
+  }
   const bool ret = check_element (ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_check_element_time += sc_MPI_Wtime ();
+  }
 
   if (!ret) {
     /* The function returned false. We abort the recursion */
     return;
   }
   std::vector<size_t> new_active_queries;
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_check_query_time -= sc_MPI_Wtime ();
+  }
   this->check_queries (new_active_queries, ltreeid, element, is_leaf, leaf_elements, tree_lindex_of_first_leaf);
-
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_check_query_time += sc_MPI_Wtime ();
+  }
   if (is_leaf) {
     return;
+  }
+
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_split_array_time -= sc_MPI_Wtime ();
   }
 
   /* Enter the recursion (the element is definitely not a leaf at this point) */
@@ -94,6 +114,11 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
   ts->element_get_children (eclass, element, num_children, children);
   /* Split the leaves array in portions belonging to the children of element */
   t8_forest_split_array (element, leaf_elements, split_offsets);
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_split_array_time += sc_MPI_Wtime ();
+  }
+
   for (int ichild = 0; ichild < num_children; ichild++) {
     /* Check if there are any leaf elements for this child */
     const size_t indexa = split_offsets[ichild];     /* first leaf of this child */
@@ -140,11 +165,22 @@ t8_search_base::search_tree (const t8_locidx_t ltreeid)
 void
 t8_search_base::do_search ()
 {
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_time = -sc_MPI_Wtime ();
+    forest->profile->search_check_element_time = 0;
+    forest->profile->search_check_query_time = 0;
+    forest->profile->search_split_array_time = 0;
+  }
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (this->forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     this->init_queries ();
     this->search_tree (itree);
+  }
+  if (forest->profile != NULL) {
+    /* If profiling is enabled, we measure the runtime of partition */
+    forest->profile->search_time += sc_MPI_Wtime ();
   }
 }
 
