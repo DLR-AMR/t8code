@@ -1109,7 +1109,7 @@ t8_advect_write_vtk (t8_advect_problem_t *problem)
   snprintf (vtk_data[1].description, BUFSIZ, "Ana. Solution");
   vtk_data[1].type = T8_VTK_SCALAR;
   vtk_data[1].data = u_and_phi_array[1];
-  snprintf (vtk_data[2].description, BUFSIZ, "Error");
+  snprintf (vtk_data[2].description, BUFSIZ, "ERROR");
   vtk_data[2].type = T8_VTK_SCALAR;
   vtk_data[2].data = u_and_phi_array[2];
   snprintf (vtk_data[3].description, BUFSIZ, "Flow");

@@ -48,7 +48,7 @@ t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int va
    * Triangle-strips and polygons will be broken down to multiple triangles. */
   t8_cmesh_t cmesh_in = t8_vtk_reader_cmesh (prefix, partition, 0, comm, vtk_file_type, user_package_id, 0);
   if (cmesh_in == NULL) {
-    t8_errorf ("Error reading file.\n");
+    t8_errorf ("ERROR reading file.\n");
     return;
   }
   char out_file[BUFSIZ];

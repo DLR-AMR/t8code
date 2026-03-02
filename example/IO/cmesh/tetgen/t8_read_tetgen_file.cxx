@@ -46,7 +46,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partitio
       t8_debugf ("Wrote to file %s\n", fileprefix);
     }
     else {
-      t8_debugf ("Error in writing cmesh vtk\n");
+      t8_debugf ("ERROR in writing cmesh vtk\n");
     }
     if (do_partition) {
       t8_cmesh_t cmesh_partitioned;
@@ -64,7 +64,7 @@ t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partitio
         t8_debugf ("Wrote to file %s\n", fileprefix);
       }
       else {
-        t8_debugf ("Error in writing cmesh vtk\n");
+        t8_debugf ("ERROR in writing cmesh vtk\n");
       }
       t8_cmesh_unref (&cmesh_partitioned);
     }

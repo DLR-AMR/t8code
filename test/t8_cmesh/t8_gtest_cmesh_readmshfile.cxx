@@ -67,5 +67,5 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
   t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix, 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   ASSERT_TRUE (cmesh == NULL) << "Expected fail of reading binary msh file v.4, but did not fail.";
 
-  t8_debugf ("Error handling successful.\n");
+  t8_debugf ("ERROR handling successful.\n");
 }

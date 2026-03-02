@@ -34,7 +34,7 @@ t8_cmesh_load_distribute (const char *fileprefix, int num_files, int no_vtk)
 
   cmesh = t8_cmesh_load_and_distribute (fileprefix, num_files, sc_MPI_COMM_WORLD, T8_LOAD_SIMPLE, -1);
   if (cmesh == NULL) {
-    t8_errorf ("Error when reading cmesh\n");
+    t8_errorf ("ERROR when reading cmesh\n");
     return;
   }
   else {
@@ -75,7 +75,7 @@ t8_cmesh_save_cmesh (const char *mshfile, int dim)
   SC_CHECK_MPI (mpiret);
   ret = t8_cmesh_save (cmesh, "cmesh_saved");
   if (ret == 0) {
-    t8_errorf ("Error when writing to file\n");
+    t8_errorf ("ERROR when writing to file\n");
   }
   else {
     t8_debugf ("Saved cmesh to %s\n", "cmesh_saved_RANK.cmesh");

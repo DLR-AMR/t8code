@@ -44,7 +44,7 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
     t8_debugf ("Wrote to file %s\n", fileprefix);
   }
   else {
-    t8_debugf ("Error in writing cmesh vtk\n");
+    t8_debugf ("ERROR in writing cmesh vtk\n");
   }
 }
 

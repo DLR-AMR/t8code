@@ -240,7 +240,7 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     /* TODO: reset cmesh */
     return;
   }
-  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup. Could not build Cmesh.");
+  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "ERROR in shared memory setup. Could not build Cmesh.");
   t8_cmesh_set_shmem_type (comm); /* TODO: do we actually need the shared array? */
   t8_stash_attribute_sort (cmesh->stash);
 

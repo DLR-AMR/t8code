@@ -560,7 +560,7 @@ struct vtk_writer
       return true;
     }
     else {
-      t8_errorf ("Error when writing vtk file.\n");
+      t8_errorf ("ERROR when writing vtk file.\n");
     }
 
     /* Return whether writing was successful */

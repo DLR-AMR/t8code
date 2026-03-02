@@ -131,7 +131,7 @@ t8_test_ghost_exchange_data_id (t8_forest_t forest)
         = scheme->element_get_linear_id (tree_class, elem, scheme->element_get_level (tree_class, elem));
       /* Compare this id with the entry in the element_data array */
       const t8_linearidx_t ghost_entry = *(t8_linearidx_t *) sc_array_index (&element_data, array_pos);
-      ASSERT_EQ (ghost_id, ghost_entry) << "Error when exchanging ghost data. Received wrong element id.\n";
+      ASSERT_EQ (ghost_id, ghost_entry) << "ERROR when exchanging ghost data. Received wrong element id.\n";
       /* Since array pos ended with the last element in the loop above, we can
        * continue counting for the ghost elements */
       array_pos++;
@@ -166,7 +166,7 @@ t8_test_ghost_exchange_data_int (t8_forest_t forest)
   for (t8_locidx_t ielem = 0; ielem < num_ghosts; ielem++) {
     /* Get the integer for this ghost */
     int ghost_int = *(int *) t8_sc_array_index_locidx (&element_data, num_elements + ielem);
-    ASSERT_EQ (ghost_int, 42) << "Error when exchanging ghost data. Received wrong data.\n";
+    ASSERT_EQ (ghost_int, 42) << "ERROR when exchanging ghost data. Received wrong data.\n";
   }
   /* clean-up */
   sc_array_reset (&element_data);

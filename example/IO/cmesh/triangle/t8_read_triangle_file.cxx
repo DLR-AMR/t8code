@@ -61,7 +61,7 @@ t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup, int do_partit
       t8_debugf ("Wrote to file %s\n", fileprefix);
     }
     else {
-      t8_debugf ("Error in writing cmesh vtk\n");
+      t8_debugf ("ERROR in writing cmesh vtk\n");
     }
     t8_cmesh_destroy (&cmesh);
   }
