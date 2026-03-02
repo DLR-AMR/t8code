@@ -49,7 +49,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   const int level = 2;
   using mesh_class = t8_mesh_handle::mesh<
     t8_mesh_handle::element_competence_pack<t8_mesh_handle::access_element_data>,
-    t8_mesh_handle::mesh_competence_pack<t8_mesh_handle::element_data_competence<data_per_element>::template type>>;
+    t8_mesh_handle::mesh_competence_pack<t8_mesh_handle::element_data_competence<data_per_element>::template type, t8_mesh_handle::mesh_second_element_data_vector>>;
   auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
 

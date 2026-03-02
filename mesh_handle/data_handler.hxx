@@ -69,9 +69,8 @@ class handle_element_data: public t8_crtp_basic<TUnderlying> {
     const auto num_local_elements = this->underlying ().get_num_local_elements ();
     const auto num_ghosts = this->underlying ().get_num_ghosts ();
     T8_ASSERT (element_data.size () == static_cast<size_t> (num_local_elements));
-    m_element_data = std::move (element_data);
     m_element_data.reserve (num_local_elements + num_ghosts);
-    m_element_data.resize (num_local_elements);
+    m_element_data = std::move (element_data);
   }
 
   /** Get the element data vector.
@@ -167,5 +166,68 @@ struct access_element_data: public t8_crtp_basic<TUnderlying>
     this->underlying ().m_mesh->m_element_data[this->underlying ().get_element_handle_id ()] = std::move (element_data);
   }
 };
+
+// --- Competences for new element data. ---
+/** With the mesh competence \ref element_data_competence and the element competence \ref access_element_data, the element data
+  * are updated in place such that we cannot access the old data afterwards. Use the following competences to store the old element data. 
+  */
+/** TODO: new element data to store 
+
+Handler for the element data of a \ref mesh.
+ * Use this competence if you want to manage element data for the elements of the mesh.
+ * Use the helper \ref element_data_competence to get this competence with the correct template parameters form for the mesh. 
+ * If you want to access the data not only in vector form but also directly for each element, 
+ * you can combine this competence with the \ref access_element_data competence.
+ * In summary you can use the competences like this: 
+ *    mesh<element_competence_pack<access_element_data>,
+ *         mesh_competence_pack<element_data_competence<YourElementDataType>::template type>>;
+ *
+ * \tparam TUnderlying Use the \ref mesh class here.
+ * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
+ *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
+ */
+template <typename TUnderlying>
+class mesh_second_element_data_vector: public t8_crtp_basic<TUnderlying> {
+ public:
+  /** Set the element data vector. The vector should have the length of num_local_elements.
+   * \param [in] element_data The element data vector to set with one entry of class TElementDataType 
+   *            for each local mesh element (excluding ghosts).
+   */
+  void
+  set_second_vec_element_data (std::vector<typename TUnderlying::ElementDataType> element_data)
+  {
+    T8_ASSERT (this->underlying ().has_element_data_handler_competence ());
+    const auto num_local_elements = this->underlying ().get_num_local_elements ();
+    T8_ASSERT (element_data.size () == static_cast<size_t> (num_local_elements));
+    m_new_element_data = std::move (element_data);
+    m_new_element_data.resize (num_local_elements);
+  }
+
+  /** Get the element data vector.
+   * The element data of the local mesh elements can be set using \ref set_element_data.
+   * If ghost entries should be filled, one should call \ref exchange_ghost_data on each process first.
+   * \return Element data vector with data of Type TElementDataType.
+   */
+  const auto&
+  get_second_vec_element_data () const
+  {
+  T8_ASSERT (this->underlying ().has_element_data_handler_competence ());
+    return m_new_element_data;
+  }
+
+  /** TODO
+   */
+  void
+  write_to_element_data () const
+  { 
+    T8_ASSERT (this->underlying ().has_element_data_handler_competence ());
+     m_new_element_data=std::move(m_new_element_data);
+     m_new_element_data.clear();
+  }
+
+ protected:
+  std::vector<typename TUnderlying::ElementDataType> m_new_element_data; /**< Vector storing the (local) element data. */
+};
+
 
 }  // namespace t8_mesh_handle
