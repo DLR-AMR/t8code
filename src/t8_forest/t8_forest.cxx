@@ -435,8 +435,8 @@ t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, 
     double stretched_ref_coords[T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
     for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
       for (int dim = 0; dim < tree_dim; ++dim) {
-        stretched_ref_coords[i_coord * tree_dim + dim]
-          = 0.5 + ((ref_coords[i_coord * tree_dim + dim] - 0.5) * stretch_factors[dim]);
+        stretched_ref_coords[i_coord * T8_ECLASS_MAX_DIM + dim]
+          = 0.5 + ((ref_coords[i_coord * T8_ECLASS_MAX_DIM + dim] - 0.5) * stretch_factors[dim]);
       }
     }
     scheme->element_get_reference_coords (tree_class, element, stretched_ref_coords, num_coords, tree_ref_coords);
