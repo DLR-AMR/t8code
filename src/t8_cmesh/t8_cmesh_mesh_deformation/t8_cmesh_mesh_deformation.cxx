@@ -30,9 +30,7 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 /**
- * \param [in] cmesh The coarse mesh structure.
- * \param [in] cad A pointer to the CAD-based geometry object.
- * \return A map from global vertex id to its displacement vector, so the difference between old and new coordinates of a vertex. 
+ * Calculate the displacement of vertices for CAD-based mesh deformation.
  */
 
 std::unordered_map<t8_gloidx_t, t8_3D_vec>
@@ -151,10 +149,7 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad)
   return displacements;
 }
 /**
- * \param [in] cmesh          The coarse mesh structure.
- * \param [in] displacements  A map from global vertex id to its displacement vector
- *         (difference between old and new coordinates) with length equal to the mesh dimension.
- * \param [in] cad            The CAD geometry handler to be updated.
+ * Apply vertex displacements to a cmesh and update the CAD geometry.
  */
 void
 apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,

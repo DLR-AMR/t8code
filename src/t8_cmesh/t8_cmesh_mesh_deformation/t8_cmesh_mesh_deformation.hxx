@@ -21,6 +21,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_mesh_deformation.hxx
+ * Implementation of CAD-based mesh deformation.
+ */
+
 #ifndef T8_CMESH_DEFORMATION_HXX
 #define T8_CMESH_DEFORMATION_HXX
 
