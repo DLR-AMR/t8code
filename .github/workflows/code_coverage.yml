@@ -101,7 +101,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage" 
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
