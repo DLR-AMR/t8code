@@ -211,7 +211,7 @@ class mesh_second_element_data_vector: public t8_crtp_basic<TUnderlying> {
   const auto&
   get_second_vec_element_data () const
   {
-  T8_ASSERT (this->underlying ().has_element_data_handler_competence ());
+    T8_ASSERT (this->underlying ().has_element_data_handler_competence ());
     return m_new_element_data;
   }
 
@@ -219,15 +219,15 @@ class mesh_second_element_data_vector: public t8_crtp_basic<TUnderlying> {
    */
   void
   write_to_element_data () const
-  { 
+  {
     T8_ASSERT (this->underlying ().has_element_data_handler_competence ());
-     m_new_element_data=std::move(m_new_element_data);
-     m_new_element_data.clear();
+    m_new_element_data = std::move (m_new_element_data);
+    m_new_element_data.clear ();
   }
 
  protected:
-  std::vector<typename TUnderlying::ElementDataType> m_new_element_data; /**< Vector storing the (local) element data. */
+  std::vector<typename TUnderlying::ElementDataType>
+    m_new_element_data; /**< Vector storing the (local) element data. */
 };
-
 
 }  // namespace t8_mesh_handle
