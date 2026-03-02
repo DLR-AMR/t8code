@@ -76,6 +76,7 @@ struct t8_standalone_element
   t8_element_coords<TEclass> coords;
   /** The refinement level of the element relative to the root at level 0. */
   t8_element_level level;
+  double stretch_factors[3];
 };
 
 #endif /* T8_STANDALONE_ELEMENTS_HXX */
