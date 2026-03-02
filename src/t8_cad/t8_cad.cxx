@@ -413,7 +413,7 @@ t8_cad::t8_geom_get_parameters_of_vertex_on_face (const int vertex_index, const 
       }
       /* Hopefully we found a seam. If not something has gone catastrophically wrong or I overlooked something.
       Probably the latter. */
-      SC_CHECK_ABORTF (seam.has_value (), "Error: Could not find seam of periodic surface.");
+      SC_CHECK_ABORTF (seam.has_value (), "ERROR: Could not find seam of periodic surface.");
 
       /* We now have the seam and can iterate over all edges of the face again. Every edge matching our seam is also a seam (in my eyes).
       In the case of our cylinder this would be the two lines. */

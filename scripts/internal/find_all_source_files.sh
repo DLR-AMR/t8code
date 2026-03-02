@@ -53,7 +53,7 @@ else
     if gfind --version >/dev/null 2>&1; then
         FIND=gfind
     else
-        echo "Error: GNU find not found."
+        echo "ERROR: GNU find not found."
         exit 1
     fi
 fi

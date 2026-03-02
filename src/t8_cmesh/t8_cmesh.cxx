@@ -702,7 +702,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
      * Geometries must therefore be added after broadcasting. */
     if (cmesh_in->geometry_handler != NULL) {
       SC_CHECK_ABORT (cmesh_in->geometry_handler->get_num_geometries () == 0,
-                      "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
+                      "ERROR: Broadcasting a cmesh with registered geometries is not possible.\n"
                       "We recommend to broadcast first and register the geometries after.\n");
     }
     memcpy (&meta_info.cmesh, cmesh_in, sizeof (*cmesh_in));
@@ -2396,13 +2396,13 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   double tree_bounds[6] = { 0.0 };
   t8_geometry_handler *geom_handler = cmesh->geometry_handler;
   if (geom_handler == NULL) {
-    t8_errorf ("Error: Trying to compute bounding box for cmesh with no geometry.\n");
+    t8_errorf ("ERROR: Trying to compute bounding box for cmesh with no geometry.\n");
     return false;
   }
   const t8_gloidx_t first_tree = cmesh->first_tree;
   bool bbox_return = geom_handler->get_tree_bounding_box (cmesh, first_tree, bounds);
   if (!bbox_return) {
-    t8_errorf ("Error: Failed to compute the bounding box for the first tree.\n");
+    t8_errorf ("ERROR: Failed to compute the bounding box for the first tree.\n");
     /* If the bounding box is not available, we return false */
     return false;
   }
@@ -2419,7 +2419,7 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   }
   if (!bbox_return) {
     /* If the bounding box is not available, we return false */
-    t8_errorf ("Error: Failed to compute the bounding box for a tree\n");
+    t8_errorf ("ERROR: Failed to compute the bounding box for a tree\n");
     return false;
   }
 #if T8_ENABLE_DEBUG

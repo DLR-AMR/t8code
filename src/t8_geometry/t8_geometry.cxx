@@ -39,7 +39,7 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
   }
 
   if (cmesh->geometry_handler == NULL) {
-    SC_ABORT ("Error: Trying to evaluate non-existing geometry.\n");
+    SC_ABORT ("ERROR: Trying to evaluate non-existing geometry.\n");
   }
 
   /* Evaluate the geometry. */
