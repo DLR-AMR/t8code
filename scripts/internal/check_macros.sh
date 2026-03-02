@@ -49,23 +49,23 @@ fi
 # - line: The content of the line where the macro definition is found.
 #
 
-found_macros=FALSE
+found_macros=false
 
 # Check for #ifdef T8_ENABLE
 while IFS=: read -r line_number line; do
     macro_name=$(echo "$line" | grep -o 'T8_ENABLE_[^ ]*')
     echo "Incorrect macro found in $file_path on line $line_number: $macro_name. Please use '#if T8_ENABLE_' instead."
-    found_macros=TRUE
+    found_macros=true
 done < <(grep -n '#ifdef T8_ENABLE_' "$file_path")
 
 # Check for #ifdef T8_WITH or #if T8_WITH
 while IFS=: read -r line_number line; do
     macro_name=$(echo "$line" | grep -o 'T8_WITH_[^ ]*')
     echo "Incorrect macro found in $file_path on line $line_number: $macro_name. Please use '#if T8_ENABLE_' instead."
-    found_macros=TRUE
+    found_macros=true
 done < <(grep -E -n '#if T8_WITH_|#ifdef T8_WITH' "$file_path")
 
-if [ "$found_macros" = "TRUE" ]; then
+if [ "$found_macros"=true ]; then
     exit 1
 else
     exit 0
