@@ -21,6 +21,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_mesh_deformation.cxx
+ *  This file implements the routines for CAD-based mesh deformation.
+ */
+
 #include <unordered_map>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cad/t8_cad.hxx>
