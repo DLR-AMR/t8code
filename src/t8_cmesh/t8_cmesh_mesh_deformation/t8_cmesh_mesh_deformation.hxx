@@ -53,8 +53,8 @@ struct t8_cmesh_mesh_deformation
 /** 
  * Computes the displacements of the surface vertices.
  * 
- * \param [in] cmesh The committed mesh
- * \param [in] cad Pointer to the CAD data
+ * \param [in]  cmesh The coarse mesh structure.
+ * \param [in]  cad A pointer to the CAD-based geometry object.
  * \return Map from global vertex ID to 3D displacement vector
  */
 std::unordered_map<t8_gloidx_t, t8_3D_vec>
@@ -66,8 +66,9 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad);
  * Iterates over the provided map of global vertex IDs to 3D displacement vectors,
  * updating the coordinates in each tree where the vertex appears.
  *
- * @param cmesh The committed coarse mesh structure.
- * @param displacements Map from global vertex ID to 3D displacement vector [dx, dy, dz].
+ * \param [in] cmesh The committed coarse mesh structure.
+ * \param [in] displacements Map from global vertex ID to 3D displacement vector [dx, dy, dz].
+ * \param [in] cad The shared pointer to the CAD geometry to update.
  */
 void
 apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,

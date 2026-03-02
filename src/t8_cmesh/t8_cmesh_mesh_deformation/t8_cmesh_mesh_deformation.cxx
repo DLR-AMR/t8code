@@ -99,7 +99,7 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad)
       const double *uv_attribute = (const double *) t8_cmesh_get_attribute (
         cmesh, t8_get_package_id (), T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY, first_tree_id);
 
-      /* Check if the (u,v)-paramters are available. */
+      /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
         t8_errorf ("Error: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
         SC_ABORT ("(u,v)-parameters are missing.");
@@ -150,10 +150,11 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad)
   }
   return displacements;
 }
-/*
- * \param [in] cmesh The coarse mesh structure.
- * \param [in] a map from global vertex id to its displacement vector
+/**
+ * \param [in] cmesh          The coarse mesh structure.
+ * \param [in] displacements  A map from global vertex id to its displacement vector
  *         (difference between old and new coordinates) with length equal to the mesh dimension.
+ * \param [in] cad            The CAD geometry handler to be updated.
  */
 void
 apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
