@@ -190,7 +190,7 @@ main (int argc, char **argv)
     /* The usage string or help message was truncated */
     /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
+    t8_debugf ("WARNING: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
 
   int mpiret = sc_MPI_Init (&argc, &argv);

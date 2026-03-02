@@ -1316,7 +1316,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 
     if (t8_eclass_to_dimension[eclass] > dim) {
       t8_errorf (
-        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+        "WARNING: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
     }
 
     /* Check if the tree is of the correct dimension */
@@ -1419,7 +1419,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   }
   free (line);
   if (tree_count == 0) {
-    t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
+    t8_global_errorf ("WARNING: No %iD elements found in msh file.\n", dim);
     t8_cmesh_destroy (&cmesh);
     return std::nullopt;
   }

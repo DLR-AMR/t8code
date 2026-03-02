@@ -57,7 +57,7 @@ main (int argc, char **argv)
     // The help message was truncated.
     // Note: gcc >= 7.1 prints a warning if we
     // do not check the return value of snprintf.
-    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+    t8_debugf ("WARNING: Truncated help message to '%s'\n", help);
   }
 
   // Initialize MPI. This has to happen before we initialize sc or t8code.

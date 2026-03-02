@@ -180,7 +180,7 @@ t8_cmesh_gather_trees_per_eclass (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
  * trees on each process,
  * additional flag whether we compute the trees per eclass or not
  * additional flag whether to check if cmesh is committed.
- * Warning: use with caution with check_commit = 0 */
+ * WARNING: use with caution with check_commit = 0 */
 static void
 t8_cmesh_gather_treecount_ext (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const int check_commit)
 {

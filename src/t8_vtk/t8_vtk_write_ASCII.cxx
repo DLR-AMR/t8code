@@ -750,7 +750,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
+          t8_debugf ("WARNING: Truncated vtk point data description to '%s'\n", description);
         }
         freturn = t8_forest_vtk_write_cell_data (forest, vtufile, description, T8_VTK_FLOAT_NAME, "", 8,
                                                  t8_forest_vtk_vertices_scalar_kernel, write_ghosts, data[idata].data);
@@ -766,7 +766,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
           /* The output was truncated */
           /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
-          t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
+          t8_debugf ("WARNING: Truncated vtk point data description to '%s'\n", description);
         }
 
         freturn = t8_forest_vtk_write_cell_data (forest, vtufile, description, T8_VTK_FLOAT_NAME, component_string,
