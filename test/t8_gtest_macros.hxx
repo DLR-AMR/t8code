@@ -42,7 +42,7 @@
 inline auto print_eclass
   = [] (const testing::TestParamInfo<t8_eclass> &info) { return t8_eclass_to_string[info.param]; };
 
-/** Define a lambda to beautify gtest output for tuples <level, cmesh>.
+/** Define a lambda to beautify gtest output for tuples <<scheme, eclass>, level>.
  * This will set the correct level and cmesh name as part of the test case name. */
 auto pretty_print_eclass_scheme_and_level
   = [] (const testing::TestParamInfo<std::tuple<std::tuple<int, t8_eclass_t>, int>> &info) {
