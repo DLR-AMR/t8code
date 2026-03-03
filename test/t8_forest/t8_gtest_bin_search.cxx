@@ -253,7 +253,7 @@ t8_test_forest_bin_search_first_descendant_ancestor (t8_forest_t forest)
       const int element_level = scheme->element_get_level (tree_class, leaf_element);
       const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, leaf_element, element_level);
 
-      // Search for the element or an ancestor or descendant in the leafs array.
+      // Search for the element or an ancestor or descendant in the leaves array.
       const t8_element_t *element_found;
       const t8_locidx_t search_index
         = t8_forest_bin_search_first_descendant_ancestor (leaves, leaf_element, &element_found);
