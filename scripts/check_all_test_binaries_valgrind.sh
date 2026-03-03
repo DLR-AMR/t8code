@@ -79,7 +79,7 @@ if [ `basename $PWD` != scripts ]; then
 fi
 
 # Find all test binary paths.
-test_bin_paths=$(bash ./find_all_test_binary_paths.sh "$TEST_BINARY_ABSPATH")
+test_bin_paths=$(bash ./internal/find_all_test_binary_paths.sh "$TEST_BINARY_ABSPATH")
 status=$?
 
 if [ $status -ne 0 ]; then
