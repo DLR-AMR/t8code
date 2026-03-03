@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v6
       - name: Check spelling
         uses: crate-ci/typos@master
-      - name: check macros
+      - name: check macros and error messages
         run: |
           for file in $(git diff --name-only --diff-filter=A); do
             ./scripts/internal/check_macros.sh "$file" &>> error.txt
@@ -45,5 +45,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v6
         with:
-          name: t8code check macros report
+          name: macro_and_error_report
           path: error.txt
