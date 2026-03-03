@@ -24,8 +24,7 @@
 # This script performs a valgrind check on each test binary given by find_all_test_binary_paths.sh.
 # The valgrind check is done by the check_valgrind.sh script.
 # The script returns 1 if an error is found and 0 otherwise.
-# This script must be executed from the scripts/ folder.
-# It is assumed that the build folder ../build/test/ with the correct test binaries exists.
+# You need to provide the path to the test binaries. So the test folder inside the build directory.
 # With "--ntasks=[NUMBER]", you can provide the number of processes to use with MPI for parallel tests (default is 1).
 #
 
