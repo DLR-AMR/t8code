@@ -25,7 +25,7 @@
  */
 
 #include <sc_statistics.h>
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 #include <t8_types/t8_vec.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -3087,7 +3087,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
 }
 
 void
-t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, int recursive)
+t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, const int recursive)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -4200,7 +4200,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
 #endif
   if (!do_not_use_API) {
     return t8_forest_vtk_write_file_via_API (forest, fileprefix, write_treeid, write_mpirank, write_level,
-                                             write_element_id, write_ghosts, write_curved, num_data, data);
+                                             write_element_id, write_curved, write_ghosts, num_data, data);
   }
   else {
     return t8_forest_vtk_write_file (forest, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,

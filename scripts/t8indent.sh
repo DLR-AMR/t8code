@@ -51,7 +51,8 @@ fi
 # Get indentation script version and split it into major, minor, patch
 CLANG_VERSION_STRING=`$FORMAT --version`
 
-VERSION=`echo $CLANG_VERSION_STRING | cut -d " " -f 3`
+[[ $CLANG_VERSION_STRING =~ version[[:space:]]+([^[:space:]]+) ]] &&
+VERSION="${BASH_REMATCH[1]}"
 MAJOR=`echo $VERSION | cut -d. -f1`
 MINOR=`echo $VERSION | cut -d. -f2`
 PATCH=`echo $VERSION | cut -d. -f3`

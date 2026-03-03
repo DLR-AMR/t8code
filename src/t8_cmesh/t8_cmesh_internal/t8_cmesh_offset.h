@@ -21,11 +21,8 @@
 */
 
 /** \file t8_cmesh_offset.h
- *
- * In this file we collect function that deal with
+ * In this file we collect functions that deal with
  * the cmesh partition offset.
- *
- * TODO: document this file
  */
 
 #ifndef T8_CMESH_OFFSET_H

@@ -138,7 +138,7 @@ typedef struct
 /** The per element data */
 typedef struct
 {
-  t8_3D_point midpoint;           /**< coordinates of element midpoint in R^3 */
+  t8_3D_vec midpoint;             /**< coordinates of element midpoint in R^3 */
   double vol;                     /**< Volume of this element */
   double phi_new;                 /**< Value of solution at midpoint in next time step */
   double *fluxes[MAX_FACES];      /**< The fluxes to each neighbor at a given face */
@@ -323,7 +323,7 @@ static double
 t8_advect_flux_upwind_1d (const t8_advect_problem_t *problem, const t8_locidx_t el_plus, const t8_locidx_t el_minus,
                           int face)
 {
-  t8_3D_point x_j_half;
+  t8_3D_vec x_j_half;
   int idim;
   t8_3D_vec u_at_x_j_half;
   double phi;
@@ -365,7 +365,7 @@ static double
 t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, double el_minus_phi, t8_locidx_t ltreeid,
                        const t8_element_t *element_plus, int face)
 {
-  t8_3D_point face_center;
+  t8_3D_vec face_center;
   t8_3D_vec u_at_face_center;
   t8_3D_vec normal;
   double area, normal_times_u;

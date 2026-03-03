@@ -52,7 +52,7 @@ jobs:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
-    timeout-minutes: 90
+    timeout-minutes: 5
     steps:
 #
 # Setup
@@ -85,7 +85,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: config.log
         path: build/config.log
@@ -94,7 +94,7 @@ jobs:
       run: cd build && ninja GenerateVersionFile && ninja package_source && mkdir tarballs && mv package/*Source.tar.gz tarballs
 # Upload the tarball
     - name: upload tarball
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: tarballs
         path: build/tarballs
@@ -103,10 +103,10 @@ jobs:
     needs: build_tarball
     runs-on: ubuntu-latest
     container: dlramr/t8code-ubuntu:t8-dependencies
-    timeout-minutes: 90
+    timeout-minutes: 15
     steps:
     - name: Download tarball
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
           name: tarballs
           path: tarballs
@@ -129,7 +129,7 @@ jobs:
       run: mkdir build_tar && cd build_tar && cmake $TAR_DIR $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: build_tar.log
         path: build_tar/config.log
@@ -143,7 +143,7 @@ jobs:
       run: cd build_tar && ctest -R _parallel
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: build_tar.log
         path: build_tar/test-suite.log

@@ -23,8 +23,8 @@
 /** \file competence_pack.hxx
  * Define to pack different competences into one template parameter for the \ref t8_mesh_handle::mesh class.
  */
-#ifndef T8_COMPETENCE_PACK_HXX
-#define T8_COMPETENCE_PACK_HXX
+
+#pragma once
 
 #include "competences.hxx"
 namespace t8_mesh_handle
@@ -45,7 +45,12 @@ struct competence_pack
 };
 
 /** Predefined competence pack combining all caching competences. */
-using cache_competences = competence_pack<cache_volume, cache_vertex_coordinates, cache_centroid, cache_neighbors>;
+using all_cache_competences
+  = competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid, cache_face_areas,
+                    cache_face_centroids, cache_face_normals, cache_neighbors>;
+
+/** Predefined competence pack combining all competences related to faces. */
+using cache_face_competences
+  = competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
 
 }  // namespace t8_mesh_handle
-#endif /* !T8_COMPETENCE_PACK_HXX */

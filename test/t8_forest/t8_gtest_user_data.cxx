@@ -30,28 +30,46 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <test/t8_gtest_schemes.hxx>
+#include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
 /* Test t8_forest_set/get_user_data.
  * We build a forest and set user data for it.
  * We then retrieve the data and check whether it is the same.
  */
-struct forest_user_data: public testing::TestWithParam<int>
+struct forest_user_data: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
 {
  protected:
   void
   SetUp () override
   {
-    const int scheme_id = GetParam ();
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
+    cmesh = std::get<1> (GetParam ())->cmesh_create ();
+    // Skip empty meshes.
+    if (t8_cmesh_is_empty (cmesh)) {
+      GTEST_SKIP ();
+    }
+    // Increase reference counters of cmesh and scheme to avoid reaching zero.
+    t8_cmesh_ref (cmesh);
+    scheme->ref ();
+    forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
   }
+  void
+  TearDown () override
+  {
+    if (!t8_cmesh_is_empty (cmesh)) {
+      t8_forest_unref (&forest);
+    }
+    t8_cmesh_destroy (&cmesh);
+    scheme->unref ();
+  }
+  t8_forest_t forest;
   const t8_scheme *scheme;
+  t8_cmesh_t cmesh;
 };
 
 TEST_P (forest_user_data, test_user_data)
 {
-  /* Build a forest */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
   /* Define user data */
   double data = 42.42;
   double *get_data;
@@ -79,9 +97,6 @@ TEST_P (forest_user_data, test_user_data)
   ASSERT_EQ (get_data2, &data2) << "Forest returned wrong user data pointer.";
   /* Check whether data was unchanged. */
   ASSERT_EQ (*get_data2, 42) << "User data value has changed.";
-
-  /* Clean up */
-  t8_forest_unref (&forest);
 }
 
 /* A test function that we can set for the 
@@ -106,10 +121,6 @@ t8_test_function_second (void)
  */
 TEST_P (forest_user_data, test_user_function)
 {
-  /* Build a forest */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 1, 0, sc_MPI_COMM_WORLD);
-
   double (*funpointer) (int);
   void (*funpointer_second) (void);
 
@@ -130,9 +141,7 @@ TEST_P (forest_user_data, test_user_function)
 
   /* Check whether the function pointer is correct. */
   ASSERT_EQ (funpointer_second, &t8_test_function_second) << "Forest returned wrong user function pointer.";
-
-  /* clean up */
-  t8_forest_unref (&forest);
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_user_data, forest_user_data, AllSchemeCollections);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_ghost_user_data, forest_user_data,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam));

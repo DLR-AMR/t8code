@@ -25,8 +25,6 @@
  * for a forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_ghost */
-
 #ifndef T8_FOREST_GHOST_H
 #define T8_FOREST_GHOST_H
 

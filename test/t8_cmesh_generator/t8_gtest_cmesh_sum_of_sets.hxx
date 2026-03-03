@@ -19,11 +19,14 @@
   along with t8code; if not, write to the Free Software Foundation, Inc.,
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
+/** \file t8_gtest_cmesh_sum_of_sets.hxx
+ * Definition of a class that holds multiple ways to create a cmesh.
+ */
 
 #ifndef T8_GTEST_cmesh_sum_of_sets_HXX
 #define T8_GTEST_cmesh_sum_of_sets_HXX
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
 
 T8_EXTERN_C_BEGIN ();
 
@@ -36,9 +39,9 @@ struct cmesh_sum_of_sets
  public:
   cmesh_sum_of_sets () {};
   /**
-   * Construct a new cmesh sum of sets object, that will generate cmeshes given by \ref cmesh_set
+   * Construct a new cmesh sum of sets object, that will generate cmeshes given by \a cmesh_set.
    * 
-   * \param[in] cmesh_set A vector of \ref parameter_cartesian_product 
+   * \param[in] cmesh_set A vector of \ref example_set. 
    */
   cmesh_sum_of_sets (std::vector<example_set *> cmesh_set)
   {
@@ -49,15 +52,14 @@ struct cmesh_sum_of_sets
   }
 
   /**
-   * Destroy the cmesh generator cxx object
-   * 
+   * Destroy the cmesh sum of sets object.
    */
   ~cmesh_sum_of_sets ()
   {
   }
 
  public:
-  std::vector<cmesh_example_base *> cmesh_examples;
+  std::vector<cmesh_example_base *> cmesh_examples; /**< Generated cmesh examples. */
 };
 
 T8_EXTERN_C_END ();

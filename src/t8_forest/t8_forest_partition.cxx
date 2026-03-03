@@ -494,7 +494,7 @@ t8_forest_partition_compute_new_offset (t8_forest_t forest)
   const int mpirank = forest_from->mpirank;
   const int mpisize = forest_from->mpisize;
   const t8_gloidx_t global_num_leaf_elements = forest_from->global_num_leaf_elements;
-  const t8_weight_fcn_t *weight_fcn = forest->weight_function;
+  t8_weight_fcn_t *weight_fcn = forest->weight_function;
 
   T8_ASSERT (forest->element_offsets == NULL);
   /* Set the shmem array type to comm */

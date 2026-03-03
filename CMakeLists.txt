@@ -66,7 +66,6 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
-option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -157,14 +156,6 @@ if( T8CODE_ENABLE_OCC )
     endif (OpenCASCADE_FOUND)
 endif( T8CODE_ENABLE_OCC )
 
-if( T8CODE_ENABLE_NETCDF )
-    find_package( NetCDF REQUIRED )
-    if(NetCDF_FOUND)
-        message("Found NetCDF")
-        include(cmake/CheckNetCDFPar.cmake)
-    endif (NetCDF_FOUND)
-endif( T8CODE_ENABLE_NETCDF )
-
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
 
@@ -192,7 +183,7 @@ else()
     # If theses warnings are interpreted as errors, the test fails even though we want it to pass.
     # This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
     set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
-    if (WIN32)
+    if (WIN32 AND NOT MINGW)
         set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w" )
     else()
         set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w" )
@@ -279,7 +270,23 @@ else()
     mark_as_advanced( FORCE ${_new_p4est_vars} )
 endif()
 
+# Workaround: Suppress warnings for googletests, so it does not compromise the usage of -WError for t8code.
+# -----------
+# 1. Save original flags
+set(ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(ORIGINAL_C_FLAGS   "${CMAKE_C_FLAGS}")
+
+# 2. Suppress warnings for GoogleTest build
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
+
 FetchContent_MakeAvailable( googletest )
+
+# 3. Restore original flags
+set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS   "${ORIGINAL_C_FLAGS}"   CACHE STRING "" FORCE)
+
+# End of workaround
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 

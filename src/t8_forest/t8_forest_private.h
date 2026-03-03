@@ -25,8 +25,6 @@
  * of the official t8_forest.h interface but used internally.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_private */
-
 #ifndef T8_FOREST_PRIVATE_H
 #define T8_FOREST_PRIVATE_H
 
@@ -34,8 +32,6 @@
 #include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
-
-/* TODO: document */
 
 /** Check whether or not \a elements contains a (in)complete family and 
  *  return the size of it or zero if no family is considered.

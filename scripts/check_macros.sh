@@ -29,9 +29,9 @@ file_path=$1
 
 echo "$file_path"
 
-if [[ "$file_path" -ef "src/t8_with_macro_error.h" ]]
+if [[ "$file_path" -ef "src/t8_misc/t8_with_macro_error.h" ]]
 then
-  echo The file \"src/t8_with_macro_error.h\" will be ignored by the check_macros.sh script.
+  echo The file \"src/t8_misc/t8_with_macro_error.h\" will be ignored by the check_macros.sh script.
   exit 0
 fi
 

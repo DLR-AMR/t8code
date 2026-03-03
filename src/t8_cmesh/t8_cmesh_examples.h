@@ -77,7 +77,7 @@ t8_cmesh_new_empty (sc_MPI_Comm comm, const int do_partition, const int dimensio
 t8_cmesh_t
 t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm);
 
-/** Construct a hypercube forest from one primitive tree class.
+/** Construct a hypercube cmesh from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension and
  *                          the number of trees needed to construct a cube.
  * \param [in] comm         The mpi communicator to be used.
@@ -92,7 +92,7 @@ t8_cmesh_new_from_class (t8_eclass_t eclass, sc_MPI_Comm comm);
 t8_cmesh_t
 t8_cmesh_new_hypercube (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic);
 
-/** Construct a hypercube forest from one primitive tree class.
+/** Construct a hypercube cmesh from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension of the cube.
  * \param [in] comm         The mpi communicator to be used.
  * \param [in] boundary     The vertices, that define the hypercube boundary.
@@ -131,7 +131,7 @@ t8_cmesh_t
 t8_cmesh_new_hypercube_pad (const t8_eclass_t eclass, sc_MPI_Comm comm, const double *boundary, t8_locidx_t polygons_x,
                             t8_locidx_t polygons_y, t8_locidx_t polygons_z, const int use_axis_aligned);
 
-/** Construct a hypercube forest from one primitive tree class.
+/** Construct a hypercube cmesh from one primitive tree class.
  * \param [in] eclass       This element class determines the dimension of the cube.
  * \param [in] comm         The mpi communicator to be used.
  * \param [in] boundary     The vertices, that define the hypercube boundary.
@@ -190,7 +190,7 @@ t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition, int periodic)
  * Hypercube?
  * TODO: redundant, remove.
  * \param [in] comm         The mpi communicator to use.
- * \param [in] dim          The dimension of the forest, 1, 2 or 3.
+ * \param [in] dim          The dimension of the cmesh, 1, 2 or 3.
  * \return                  A valid cmesh, as if _init and _commit had been called.
  */
 t8_cmesh_t
@@ -228,14 +228,14 @@ t8_cmesh_new_periodic_line_more_trees (sc_MPI_Comm comm);
 t8_cmesh_t
 t8_cmesh_new_bigmesh (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm);
 
-/** Construct a forest of three connected askew lines
+/** Construct a cmesh of three connected askew lines
   * \param [in] comm         The mpi communicator to use.
   * \return                  A valid cmesh, as if _init and _commit had been called.
   */
 t8_cmesh_t
 t8_cmesh_new_line_zigzag (sc_MPI_Comm comm);
 
-/** Construct a forest of num_of_prisms connected prism, all with one edge in 0,
+/** Construct a cmesh of num_of_prisms connected prism, all with one edge in 0,
   * except for num_of_prisms = 2, then the return is the hypercube mesh
   * \param [in] comm        The mpi communicator to use.
   * \param [in] num_of_prisms The number of prisms to be used.
@@ -256,14 +256,14 @@ t8_cmesh_new_prism_deformed (sc_MPI_Comm comm);
 t8_cmesh_t
 t8_cmesh_new_pyramid_deformed (sc_MPI_Comm comm);
 
-/** Construct a forest of six connected noncannoical oriented prisms
+/** Construct a cmesh of six connected noncannoical oriented prisms
   * \param [in] comm        The mpi communicator to use.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */
 t8_cmesh_t
 t8_cmesh_new_prism_cake_funny_oriented (sc_MPI_Comm comm);
 
-/** Construct a forest of six connected noncannoical oriented prisms
+/** Construct a cmesh of six connected noncannoical oriented prisms
   * \param [in] comm        The mpi communicator to use.
   * \return                 A valid cmesh, as if _init and _commit had been called.
   */

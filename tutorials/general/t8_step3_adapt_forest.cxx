@@ -36,7 +36,8 @@
  *   - Look at the paraview output files of the uniform and the adapted forest.
  *     For the adapted forest you can apply a slice filter to look into the cube.
  *   - Run the program with different process numbers. You should see that refining is
- *     independent of the number of processes, but coarsening is not.
+ *     independent of the number of processes, but coarsening is not
+ *     (unless the partition-for-coarsening flag 'set_for_coarsening' is activated).
  *     This is due to the face that a family can only be coarsened if it is completely
  *     local to a single process and the distribution among the process may break this property.
  *   - Change the midpoint coordinates and the radii.
@@ -97,7 +98,7 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   const struct t8_step3_adapt_data *adapt_data = (const struct t8_step3_adapt_data *) t8_forest_get_user_data (forest);
   double dist; /* Will store the distance of the element's midpoint and the sphere midpoint. */
 
-  /* You can use T8_ASSERT for assertions that are active in debug mode (when configured with --enable-debug).
+  /* You can use T8_ASSERT for assertions that are active in debug mode (when compiled with -DCMAKE_BUILD_TYPE=Debug).
    * If the condition is not true, then the code will abort.
    * In this case, we want to make sure that we actually did set a user pointer to forest and thus
    * did not get the NULL pointer from t8_forest_get_user_data.

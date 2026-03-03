@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -277,7 +277,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    const char *filename = "test/testfiles/test_cube_unstructured_1.inp";
+    const char *filename = "testfiles/test_cube_unstructured_1.inp";
     p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename);
     t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
@@ -286,7 +286,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    const char *filename = "test/testfiles/test_cube_unstructured_2.inp";
+    const char *filename = "testfiles/test_cube_unstructured_2.inp";
     p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename);
     t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
