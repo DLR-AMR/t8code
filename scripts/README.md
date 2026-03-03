@@ -34,7 +34,9 @@ This script indents all t8code source files at once. This script should only be 
 
 #### pre-commit
 
-This script should be copied to your `.git/hooks` folder. `git` then automatically checks the indentation of committed files and prevents you from committing wrongly indented files. See [Git indentation workflow](https://github.com/DLR-AMR/t8code/wiki/Coding-Guideline#git-indentation-workflow).
+This script checks for common mistakes like indentation, typos, wrong macros and error messages.
+Create a link to this script via `ln -s ../../scripts/pre-commit .git/hooks/pre-commit`.
+`git` then automatically checks added files and prevents you from committing files with mistakes which will not pass the CI.
 
 #### check_valgrind.sh
 
