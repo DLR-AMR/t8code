@@ -88,11 +88,11 @@ class t8_bin_search_tester: public testing::TestWithParam<std::tuple<std::tuple<
 
 /** Test the t8_forest_bin_search_upper function.
  * We iterate through all elements of a forest.
- * For each element E of level L, we call t8_forest_bin_search_lower on the forest's element array and expect
+ * For each element E of level L, we call t8_forest_bin_search_upper on the forest's element array and expect
  * the element to be found.
  * For each element we then build one case where we search for an element that is not contained but will
  * match a different element in the element array:
- *  We compute the linear Id of E at level L-1 (if it is >=0 ) and search for the L-1 element with this id.
+ *  We compute the linear Id of E at level L+1 (if it is >=0 ) and search for the L+1 element with this id.
  *  We expect E to be found since it fulfills that its id is >= than the id we search for.
  * We then build one case per tree where we search for an element that is not contained and will not match
  * any other element:
@@ -227,19 +227,19 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
   }
 }
 
-/** Test the t8_forest_bin_search_upper function.
+/** Test the t8_forest_bin_search_first_descendant_ancestor function.
  * We iterate through all elements of a forest.
- * For each element E of level L, we call t8_forest_bin_search_lower on the forest's element array and expect
+ * For each element E of level L, we call t8_forest_bin_search_first_descendant_ancestor on the forest's element array and expect
  * the element to be found.
  * For each element we then build one case where we search for an element that is not contained but will
  * match a different element in the element array:
- *  We compute the linear Id of E at level L-1 (if it is >=0 ) and search for the L-1 element with this id.
- *  We expect E to be found since it fulfills that its id is >= than the id we search for.
+ *  We compute the first child C of E and search for C.
+ *  We expect E to be found since it is an ancestor of C.
  * We then build one case per tree where we search for an element that is not contained and will not match
  * any other element:
- *  We compute the linear Id of the last element in the tree and add 1 to it (if it is not zero).
- *  We expect the search to not find anything.
-*/
+ *  We compute the linear Id of the last element in the tree and add 1 to it.
+ *  Construct the corresponding element with that Id on level L (if such an element exists).
+ */
 static void
 t8_test_forest_bin_search_first_descendant_ancestor (t8_forest_t forest)
 {
