@@ -30,12 +30,23 @@
 #include <src/t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-/* Adapt a forest such that always the first child of a
+/** Adapt a forest such that always the first child of a
  * family is refined and no other elements. This results in a highly
  * imbalanced forest.
  * 
  * This adapt callbacks requires an integer as forest user data.
  * This integer is the maximum refinement level.
+ * 
+ * \param [in] forest       The forest to which the new elements belong.
+ * \param [in] forest_from  The forest that is adapted.
+ * \param [in] which_tree   The local tree containing \a elements.
+ * \param [in] eclass   The eclass of \a which_tree.
+ * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
+ * \param [in] scheme       The scheme of the forest.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements that are defined
+ * \param [in] elements     Pointers to a family or, if \a is_family is zero,
+ *                          pointer to one element.
  */
 int
 t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
