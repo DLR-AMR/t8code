@@ -79,7 +79,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: cmake_doc_build.log
         path: build/config.log
@@ -87,9 +87,13 @@ jobs:
       run: |
         cd build && cd doc
         doxygen Doxyfile >> doxygen.out 2> doxygen.err
+    - name: Show doxygen log
+      if: failure()
+      run: |
+        cat build/doc/doxygen.err
     - name: Upload doxygen log
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: doxygen-log
         path: build/doc/doxygen.err
