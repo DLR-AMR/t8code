@@ -110,18 +110,15 @@ t8_test_forest_bin_search_upper (t8_forest_t forest)
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     const t8_element_array_t *leaves = t8_forest_tree_get_leaf_elements (forest, itree);
 
-    /* Iterate over all the tree's leaf elements, check whether the leaf
-     * is correctly identified by t8_forest_element_is_leaf,
-     * build its parent and its first child (if they exist), and verify
-     * that t8_forest_element_is_leaf returns false. */
+    // Iterate over all the tree's leaf elements.
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
       const t8_element_t *leaf_element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const int element_level = scheme->element_get_level (tree_class, leaf_element);
       const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, leaf_element, element_level);
 
       /* Search for a linear element id in a sorted array of
-      * elements. If the element does not exist, return the largest index i
-      * such that the element at position i has a smaller id than the given one.
+      * elements. If the element does not exist, return the smallest index i
+      * such that the element at position i has a larger id than the given one.
       * If no such i exists, return -1. */
       const t8_locidx_t search_index = t8_forest_bin_search_upper (leaves, element_id, element_level);
       // We expect the leaf element to be found at position ielement
@@ -182,10 +179,7 @@ t8_test_forest_bin_search_lower (t8_forest_t forest)
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     const t8_element_array_t *leaves = t8_forest_tree_get_leaf_elements (forest, itree);
 
-    /* Iterate over all the tree's leaf elements, check whether the leaf
-     * is correctly identified by t8_forest_element_is_leaf,
-     * build its parent and its first child (if they exist), and verify
-     * that t8_forest_element_is_leaf returns false. */
+    /* Iterate over all the tree's leaf elements. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
       const t8_element_t *leaf_element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const int element_level = scheme->element_get_level (tree_class, leaf_element);
@@ -253,19 +247,13 @@ t8_test_forest_bin_search_first_descendant_ancestor (t8_forest_t forest)
     t8_element_t *search_element;
     scheme->element_new (tree_class, 1, &search_element);
 
-    /* Iterate over all the tree's leaf elements, check whether the leaf
-     * is correctly identified by t8_forest_element_is_leaf,
-     * build its parent and its first child (if they exist), and verify
-     * that t8_forest_element_is_leaf returns false. */
+    /* Iterate over all the tree's leaf elements */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
       const t8_element_t *leaf_element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const int element_level = scheme->element_get_level (tree_class, leaf_element);
       const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, leaf_element, element_level);
 
-      /* Search for a linear element id in a sorted array of
-      * elements. If the element does not exist, return the largest index i
-      * such that the element at position i has a smaller id than the given one.
-      * If no such i exists, return -1. */
+      // Search for the element or an ancestor or descendant in the leafs array.
       const t8_element_t *element_found;
       const t8_locidx_t search_index
         = t8_forest_bin_search_first_descendant_ancestor (leaves, leaf_element, &element_found);
