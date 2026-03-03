@@ -58,7 +58,7 @@ concept MeshCompetencePack = requires { typename TType::is_mesh_competence_pack;
  *         \note Please pack your competences using the \ref element_competence_pack class.
  * \tparam TMeshCompetences The competences you want to add to the default functionality of the mesh.  
  *         \note Please pack your competences using the \ref t8_mesh_handle::mesh_competence_pack class.
- *         One of the most important competences to add is \ref handle_element_data.
+ *         One of the most important competences to add is \ref element_data_mesh_competence.
  */
 template <ElementCompetencePack TElementCompetencePack = element_competence_pack<>,
           MeshCompetencePack TMeshCompetencePack = mesh_competence_pack<>>
@@ -71,8 +71,10 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
   using mesh_iterator =
-    typename std::vector<element_class>::iterator;  /**< Non-const iterator type for the mesh elements. */
-  friend struct access_element_data<element_class>; /**< Friend struct to access its element data vector. */
+    typename std::vector<element_class>::iterator;              /**< Non-const iterator type for the mesh elements. */
+  friend struct element_data_element_competence<element_class>; /**< Friend struct to access its element data vector. */
+  friend struct new_element_data_element_competence<
+    element_class>; /**< Friend struct to access its element data vector. */
 
   /** Callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle.
@@ -249,6 +251,25 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     return const_cast<element_class&> (static_cast<const mesh*> (this)->operator[] (local_index));
   }
 
+  // --- Methods to check for mesh competences. ---
+  /** Function that checks if a competence for element data handling is given.
+   * \return true if mesh has a data handler, false otherwise.
+   */
+  static constexpr bool
+  has_element_data_handler_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.get_element_data (); };
+  }
+
+  /** Function that checks if a competence for element data handling is given.
+   * \return true if mesh has a data handler, false otherwise.
+   */
+  static constexpr bool
+  has_new_element_data_handler_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.get_new_element_data (); };
+  }
+
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
   /** Wrapper to convert an adapt callback with user data of type \ref adapt_callback_type_with_userdata
    * into a callback without user data of type \ref adapt_callback_type using the defined user data \a user_data.
@@ -376,7 +397,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     // Check if we adapted and unregister the adapt context if so.
     if (detail::AdaptRegistry::get (m_uncommitted_forest.value ()) != nullptr) {
       detail::AdaptRegistry::unregister_context (m_forest);
-      if (has_element_data_handler_competence ()) {
+      if constexpr (has_element_data_handler_competence ()) {
         t8_global_infof (
           "Please note that the element data is not interpolated automatically during adaptation. Use the "
           "function set_element_data() to provide new adapted element data.\n");
@@ -387,16 +408,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     m_forest = m_uncommitted_forest.value ();
     m_uncommitted_forest = std::nullopt;
     update_elements ();
-  }
-
-  // --- Methods to check for mesh competences. ---
-  /** Function that checks if a competence for element data handling is given.
-   * \return true if mesh has a data handler, false otherwise.
-   */
-  static constexpr bool
-  has_element_data_handler_competence ()
-  {
-    return requires (SelfType& mesh) { mesh.get_element_data (); };
+    if constexpr (has_new_element_data_handler_competence ()) {
+      this->write_new_to_element_data ();
+    }
   }
 
  private:
