@@ -87,6 +87,10 @@ jobs:
       run: |
         cd build && cd doc
         doxygen Doxyfile >> doxygen.out 2> doxygen.err
+    - name: Show doxygen log
+      if: failure()
+      run: |
+        cat build/doc/doxygen.err
     - name: Upload doxygen log
       if: failure()
       uses: actions/upload-artifact@v6
