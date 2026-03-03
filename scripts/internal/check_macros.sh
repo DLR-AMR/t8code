@@ -4,7 +4,7 @@
 # t8code is a C library to manage a collection (a forest) of multiple
 # connected adaptive space-trees of general element classes in parallel.
 #
-# Copyright (C) 2025 the developers
+# Copyright (C) 2026 the developers
 #
 # t8code is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,11 +27,8 @@ fi
 
 file_path=$1
 
-echo "$file_path"
-
 if [[ "$file_path" -ef "src/t8_misc/t8_with_macro_error.h" ]]
 then
-  echo The file \"src/t8_misc/t8_with_macro_error.h\" will be ignored by the check_macros.sh script.
   exit 0
 fi
 
@@ -51,21 +48,26 @@ fi
 
 found_macros=false
 
-# Check for #ifdef T8_ENABLE
+# Check for #ifdef and T8_WITH
 while IFS=: read -r line_number line; do
-    macro_name=$(echo "$line" | grep -o 'T8_ENABLE_[^ ]*')
-    echo "Incorrect macro found in $file_path on line $line_number: $macro_name. Please use '#if T8_ENABLE_' instead."
+    printf '\033[38;5;196m%s\n%s\n\033[0m' \
+           "Incorrect macro found in $file_path" \
+           "Line $line_number: $line"
+    # Print message for #ifdef
+    if echo $line | grep -q '#ifdef'; then
+        printf '\033[38;5;196m%s\n\033[0m' \
+               "Please do not use #ifdef with T8_ENABLE macros. Use #if instead."
+    fi
+    # Print message for T8_WITH
+    if echo $line | grep -q 'T8_WITH'; then
+        printf '\033[38;5;196m%s\n\033[0m' \
+               "T8_WITH macros are not longer supported. Use T8_ENABLE instead."
+    fi
+    printf "\n"
     found_macros=true
-done < <(grep -n '#ifdef T8_ENABLE_' "$file_path")
+done < <(grep -nE '(#ifdef T8_ENABLE|T8_WITH_)' "$file_path")
 
-# Check for #ifdef T8_WITH or #if T8_WITH
-while IFS=: read -r line_number line; do
-    macro_name=$(echo "$line" | grep -o 'T8_WITH_[^ ]*')
-    echo "Incorrect macro found in $file_path on line $line_number: $macro_name. Please use '#if T8_ENABLE_' instead."
-    found_macros=true
-done < <(grep -E -n '#if T8_WITH_|#ifdef T8_WITH' "$file_path")
-
-if [ "$found_macros"=true ]; then
+if [ "$found_macros" == true ]; then
     exit 1
 else
     exit 0
