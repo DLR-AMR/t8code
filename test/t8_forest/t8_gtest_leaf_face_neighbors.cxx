@@ -445,7 +445,8 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
     const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
     for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ++ileaf, ++ielement_index) {
       // Iterate over each leaf element
-      const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (adaptive_forest, itree, ileaf);
+      //t8_element_array_index_locidx (leaf_elements, ileaf);
       const int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; ++iface) {
         // Iterate over all faces and compute the face neighbors
