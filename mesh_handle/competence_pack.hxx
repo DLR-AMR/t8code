@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #pragma once
 
 #include "competences.hxx"
+#include "data_handler.hxx"
 namespace t8_mesh_handle
 {
 // --- Element competence pack. ---
@@ -52,9 +53,14 @@ using all_cache_element_competences
   = element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid, cache_face_areas,
                             cache_face_centroids, cache_face_normals, cache_neighbors>;
 
-/** Predefined competence pack combining all competences related to faces. */
+/** Predefined element competence pack combining all competences related to faces. */
 using cache_face_element_competences
   = element_competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
+
+/** Predefined element competence pack combining all competences related to data. 
+ *  Please note that you must combine this with \ref t8_mesh_handle::data_mesh_competences. */
+using data_element_competences
+  = element_competence_pack<element_data_element_competence, new_element_data_element_competence>;
 
 // --- Mesh competence pack. ---
 /** Class to pack different mesh competences into one template parameter for the \ref mesh class.
@@ -74,5 +80,12 @@ struct mesh_competence_pack
 
   using is_mesh_competence_pack = void; /**< Tag to identify this class. */
 };
+
+/** Predefined mesh competence pack combining all competences related to data. 
+ * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences.
+ */
+template <T8MPISafeType TElementDataType>
+using data_mesh_competences = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
+                                                   new_element_data_mesh_competence<TElementDataType>::template type>;
 
 }  // namespace t8_mesh_handle
