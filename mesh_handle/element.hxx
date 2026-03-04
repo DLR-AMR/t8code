@@ -351,7 +351,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     t8_locidx_t* neighids;          /**< Neighboring elements ids. */
     t8_eclass_t neigh_class;        /**< Neighboring elements tree class. */
 
-    t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, get_element (), &neighbors, face, &dual_faces_internal,
+    t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, m_element, &neighbors, face, &dual_faces_internal,
                                    &num_neighbors, &neighids, &neigh_class);
     if (dual_faces) {
       dual_faces->get ().assign (dual_faces_internal, dual_faces_internal + num_neighbors);
