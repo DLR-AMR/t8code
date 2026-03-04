@@ -386,7 +386,7 @@ class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
   {
 
     /* Read our specific mesh file into a cmesh and build a forest. */
-    const std::string meshfile_prefix = "test/test/testfiles/test_twosquares_twisted";
+    const std::string meshfile_prefix = "test/testfiles/test_twosquares_twisted";
     const int partition_mesh = 0;
     const int mesh_dim = 2;
     const int main_proc = 0;
