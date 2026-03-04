@@ -60,7 +60,7 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
       GTEST_SKIP ();
     }
     const t8_scheme *scheme = create_from_scheme_id (scheme_id);
-    const int level = 1;
+    const int level = 0;
     const int adapt_levels = 2;
     const int max_adapt_level = level + adapt_levels;
     const bool do_ghost = true;
