@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ using cache_face_element_competences
   = element_competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
 
 /** Predefined element competence pack combining all competences related to data. 
- *  Please note that you must combine this with \ref data_mesh_competence. */
+ *  Please note that you must combine this with \ref data_mesh_competences. */
 using data_element_competences
   = element_competence_pack<element_data_element_competence, new_element_data_element_competence>;
 
@@ -82,7 +82,7 @@ struct mesh_competence_pack
 };
 
 /** Predefined mesh competence pack combining all competences related to data. 
- * If you want to access the data also via the elements, combine this with \ref data_element_competence.
+ * If you want to access the data also via the elements, combine this with \ref data_element_competences.
  */
 template <T8MPISafeType TElementDataType>
 using data_mesh_competences = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
