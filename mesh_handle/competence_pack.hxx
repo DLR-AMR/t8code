@@ -58,7 +58,7 @@ using cache_face_element_competences
   = element_competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
 
 /** Predefined element competence pack combining all competences related to data. 
- *  Please note that you must combine this with \ref data_mesh_competences. */
+ *  Please note that you must combine this with \ref t8_mesh_handle::data_mesh_competences. */
 using data_element_competences
   = element_competence_pack<element_data_element_competence, new_element_data_element_competence>;
 
@@ -82,7 +82,7 @@ struct mesh_competence_pack
 };
 
 /** Predefined mesh competence pack combining all competences related to data. 
- * If you want to access the data also via the elements, combine this with \ref data_element_competences.
+ * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences.
  */
 template <T8MPISafeType TElementDataType>
 using data_mesh_competences = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
