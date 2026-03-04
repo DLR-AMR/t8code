@@ -66,7 +66,9 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     = element<TMeshClass, TCompetences...>; /**< Type of the current class with all template parameters specified. */
   friend TMeshClass; /**< Define TMeshClass as friend to be able to access e.g. the constructor. */
   friend struct element_data_element_competence<
-    SelfType>; /**< Define the competence to access element data as friend to be able to access e.g. the mesh. */
+    SelfType>; /**< Define the competence as friend to be able to access e.g. the mesh from competence. */
+  friend struct new_element_data_element_competence<
+    SelfType>; /**< Define the competence as friend to be able to access e.g. the mesh from competence. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
    *  This constructor should only be called by the TMeshClass (and invisible for the user).

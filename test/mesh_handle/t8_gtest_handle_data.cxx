@@ -118,16 +118,12 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   }
 }
 
-/** Check that element data can be set for the handle and that exchanging data for the ghosts works. */
+/** Check that new element data works and element data is updated on commit. */
 TEST (t8_gtest_handle_data, set_and_get_new_element_data)
 {
   const int level = 2;
-  using mesh_class
-    = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<t8_mesh_handle::element_data_element_competence,
-                                                                   t8_mesh_handle::new_element_data_element_competence>,
-                           t8_mesh_handle::mesh_competence_pack<
-                             t8_mesh_handle::element_data_mesh_competence<data_per_element>::template type,
-                             t8_mesh_handle::new_element_data_mesh_competence<data_per_element>::template type>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
+                                          t8_mesh_handle::data_mesh_competences<data_per_element>>;
   auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
 
@@ -139,15 +135,19 @@ TEST (t8_gtest_handle_data, set_and_get_new_element_data)
   }
   mesh->set_element_data (element_data);
 
-  // Modify element data via the element competence for elements that are in the first half of the global trees.
+  // Set new element data and check that data is correctly stored in the mesh.
   const int newlevel = 42;
   const double newvolume = 42.42;
   std::vector<data_per_element> new_element_data (mesh->get_num_local_elements (), { newlevel, newvolume });
-
   mesh->set_new_element_data (new_element_data);
   EXPECT_EQ (mesh->get_element_data (), element_data);
   EXPECT_EQ (mesh->get_new_element_data (), new_element_data);
-
+  // Also check that we can access the new element data via the elements.
+  for (auto &elem : *mesh) {
+    EXPECT_EQ (elem.get_new_element_data ().level, newlevel);
+    EXPECT_EQ (elem.get_new_element_data ().volume, newvolume);
+  }
+  // Commit mesh and check if element data is updated and new element data vector is cleared.
   mesh->commit ();
   for (auto &elem : *mesh) {
     EXPECT_EQ (elem.get_element_data ().level, newlevel);

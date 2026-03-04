@@ -378,6 +378,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * The forest used to define the mesh handle is replaced in this function.
    * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
    * Specialize the update with calls like \ref set_adapt first.
+   * If the competence \ref new_element_data_mesh_competence is used, the element data will be updated.
    */
   void
   commit ()
