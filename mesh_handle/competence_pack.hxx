@@ -27,6 +27,7 @@
 #pragma once
 
 #include "competences.hxx"
+#include "internal/competence_pack_union.hxx"
 namespace t8_mesh_handle
 {
 /** Class to pack different competences into one template parameter for the \ref mesh class.
@@ -52,5 +53,17 @@ using all_cache_competences
 /** Predefined competence pack combining all competences related to faces. */
 using cache_face_competences
   = competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
+
+/**
+ * \brief Convenience alias for \ref combine_competence_packs.
+ *
+ * Provides direct access to the resulting competence pack type.
+ *
+ * \tparam P1 First competence pack.
+ * \tparam P2 Second competence pack.
+ */
+template <typename P1, typename P2>
+using union_competence_packs =
+  typename combine_competence_packs<P1, P2>::type;
 
 }  // namespace t8_mesh_handle
