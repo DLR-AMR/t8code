@@ -134,7 +134,6 @@ t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t l
  */
 t8_element_t *
 t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t8_locidx_t lelement);
-<<<<<<< HEAD
 
 /**
  * Query whether a given element is a ghost of a certrain tree in a forest.
@@ -147,8 +146,6 @@ t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t
  */
 int
 t8_forest_element_is_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t lghost_tree);
-=======
->>>>>>> origin/main
 
 /** Return the array of remote ranks.
  * \param [in] forest   A forest with constructed ghost layer.
