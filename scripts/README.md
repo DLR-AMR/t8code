@@ -38,7 +38,7 @@ This script should be copied to your `.git/hooks` folder. `git` then automatical
 
 #### check_valgrind.sh
 
-This script runs Valgrind on a binary path provided as a parameter with specified memory leak detection flags. The Valgrind output is parsed. Using `--supp=[FILE]`, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors (e.g. [valgrind_suppressions_file](valgrind_suppressions_file.supp)). With `--ntasks=[NUMBER]`, you can provide the number of processes to use with mpi (default is 1).
+This script runs Valgrind on a binary path provided as a parameter with specified memory leak detection flags. The Valgrind output is parsed. Using `--supp=[FILE]`, you can provide a path to a suppression file that is used by Valgrind to suppress certain errors (e.g. [valgrind_suppressions_file](internal/valgrind_suppressions_file.supp)). With `--ntasks=[NUMBER]`, you can provide the number of processes to use with mpi (default is 1).
 
 #### check_all_test_binaries_valgrind.sh
 
