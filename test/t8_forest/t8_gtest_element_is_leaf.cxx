@@ -46,8 +46,7 @@
 #endif
 
 class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
-{
-   protected:
+ protected:
   void
   SetUp () override
   {
@@ -86,7 +85,6 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, in
   t8_forest_t forest_adapt { NULL };
   const t8_scheme *scheme;
 };
-
 
 static void
 t8_test_element_is_leaf_for_forest (t8_forest_t forest)
