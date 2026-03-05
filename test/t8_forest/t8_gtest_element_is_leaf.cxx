@@ -52,7 +52,7 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, in
   SetUp () override
   {
     /* Construct a cmesh */
-    const int scheme_id = std::get<0> (GetParam ());
+    const int scheme_id = std::get<0> std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
     const int level = std::get<1> (GetParam ());
     t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
