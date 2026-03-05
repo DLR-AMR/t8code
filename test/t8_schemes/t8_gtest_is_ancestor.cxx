@@ -83,10 +83,10 @@ class class_is_ancestor: public TestDFS {
 
 TEST_P (class_is_ancestor, t8_recursive_dfs_is_ancestor)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1  // test level medium or lower
   const int maxlvl = 4;
 #else
-  const int maxlvl = 6;
+  const int maxlvl = 6;  // test level full
 #endif
   check_recursive_dfs_to_max_lvl (maxlvl);
 }
