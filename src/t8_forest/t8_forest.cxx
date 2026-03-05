@@ -1962,6 +1962,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
   return t8_forest_element_is_leaf_or_ghost (forest, element, local_tree, check_ghost);
 }
 
+<<<<<<< HEAD
 int
 t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree,
                                     const int check_ghost)
@@ -1987,6 +1988,35 @@ t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t
   // Search for the element in the array, return true if it was found,
   // false if not.
   return t8_element_array_find (elements, element) >= 0;
+=======
+  /* We get the array of the tree's elements and then search in the array of elements for our
+   * element candidate. */
+  /* Get the array */
+  const t8_element_array_t *elements = t8_forest_get_tree_leaf_element_array (forest, local_tree);
+  T8_ASSERT (elements != NULL);
+
+  /* In order to find the element, we need to compute its linear id.
+   * To do so, we need the scheme and the level of the element. */
+  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
+  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
+  const int element_level = scheme->element_get_level (tree_class, element);
+  /* Compute the linear id. */
+  const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, element, element_level);
+  /* Search for the element.
+   * The search returns the largest index i,
+   * such that the element at position i has a smaller id than the given one.
+   * If no such i exists, it returns -1. */
+  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
+  if (search_result < 0) {
+    /* The element was not found. */
+    return 0;
+  }
+  /* An element was found but it may not be the candidate element.
+   * To identify whether the element was found, we compare these two. */
+  const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
+  T8_ASSERT (check_element != NULL);
+  return (scheme->element_is_equal (tree_class, element, check_element));
+>>>>>>> origin/main
 }
 
 /* Check if an element is owned by a specific rank */

@@ -337,6 +337,7 @@ t8_forest_ghost_num_trees (const t8_forest_t forest)
   return forest->ghosts->ghost_trees->elem_count;
 }
 
+<<<<<<< HEAD
 #if T8_ENABLE_DEBUG
 static bool
 t8_forest_tree_is_ghost (const t8_forest_t forest, const t8_locidx_t lghost_tree)
@@ -347,6 +348,8 @@ t8_forest_tree_is_ghost (const t8_forest_t forest, const t8_locidx_t lghost_tree
 }
 #endif
 
+=======
+>>>>>>> origin/main
 /** 
  * Given an index into the ghost_trees array return the ghost tree 
  * 
@@ -456,6 +459,7 @@ t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t
   return t8_element_array_index_locidx_mutable (&ghost_tree->elements, lelement);
 }
 
+<<<<<<< HEAD
 int
 t8_forest_element_is_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t lghost_tree)
 {
@@ -464,6 +468,8 @@ t8_forest_element_is_ghost (const t8_forest_t forest, const t8_element_t *elemen
   return t8_forest_element_is_leaf_or_ghost (forest, element, lghost_tree, check_ghost);
 }
 
+=======
+>>>>>>> origin/main
 /** Initialize a t8_ghost_remote_tree_t.
  * 
  *  \param[in]  forest    The forest.
