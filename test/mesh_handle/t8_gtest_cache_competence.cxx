@@ -172,10 +172,9 @@ TEST (t8_gtest_cache_competence, cache_volume)
 TEST (t8_gtest_cache_competence, cache_diameter)
 {
   const int level = 1;
-  using mesh_class
-    = t8_mesh_handle::mesh
-      < t8_mesh_handle::union_competence_packs<t8_mesh_handle::competence_pack<cache_diameter_overwrite>,
-                                               t8_mesh_handle::competence_pack<t8_mesh_handle::cache_volume>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::union_competence_packs_t<
+    t8_mesh_handle::competence_pack<cache_diameter_overwrite>,
+    t8_mesh_handle::competence_pack<t8_mesh_handle::cache_volume, cache_diameter_overwrite>>>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_diameter_cache ());
