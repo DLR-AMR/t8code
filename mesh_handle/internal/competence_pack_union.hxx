@@ -25,10 +25,10 @@
  * that contains all competences of both packs, but each competence at most once.
  */
 
- #pragma once
- #include <type_traits>
+#pragma once
+#include <type_traits>
 
- namespace t8_mesh_handle
+namespace t8_mesh_handle
 {
 /** Forward definition of the competence_pack class.
  */
@@ -48,7 +48,6 @@ struct competence_pack;
 template <typename P1, typename P2>
 struct combine_competence_packs;
 
-
 /**
  * \brief Specialization of \ref combine_competence_packs for two competence_pack types.
  *
@@ -59,15 +58,10 @@ struct combine_competence_packs;
  * \tparam C1... Competences of the first pack.
  * \tparam C2... Competences of the second pack.
  */
-template <
-    template <typename> class... C1,
-    template <typename> class... C2>
-struct combine_competence_packs<
-    competence_pack<C1...>,
-    competence_pack<C2...>>
+template <template <typename> class... C1, template <typename> class... C2>
+struct combine_competence_packs<competence_pack<C1...>, competence_pack<C2...>>
 {
-private:
-
+ private:
   /**
    * \brief Helper metafunction to accumulate unique competences.
    *
@@ -85,11 +79,8 @@ private:
      * \tparam T Competence to add.
      */
     template <template <typename> class T>
-    using add =
-      std::conditional_t<
-        (std::is_same_v<T, Acc> || ...),
-        competence_pack<Acc...>,
-        competence_pack<Acc..., T>>;
+    using add
+      = std::conditional_t<(std::is_same_v<T, Acc> || ...), competence_pack<Acc...>, competence_pack<Acc..., T>>;
   };
 
   /**
@@ -112,33 +103,20 @@ private:
   };
 
   /// \brief Recursive case: process one competence and continue.
-  template <
-      template <typename> class... Acc,
-      template <typename> class T,
-      template <typename> class... Rest>
+  template <template <typename> class... Acc, template <typename> class T, template <typename> class... Rest>
   struct build<competence_pack<Acc...>, T, Rest...>
   {
-    using next =
-      std::conditional_t<
-        (std::is_same_v<T, Acc> || ...),
-        competence_pack<Acc...>,
-        competence_pack<Acc..., T>>;
+    using next
+      = std::conditional_t<(std::is_same_v<T, Acc> || ...), competence_pack<Acc...>, competence_pack<Acc..., T>>;
 
     using type = typename build<next, Rest...>::type;
   };
 
-public:
-
+ public:
   /**
    * \brief Resulting competence pack containing the unique union.
    */
-  using type =
-    typename build<
-      competence_pack<>,
-      C1..., C2...>::type;
+  using type = typename build<competence_pack<>, C1..., C2...>::type;
 };
 
-
-
-
-} // namespace t8_mesh_handle
+}  // namespace t8_mesh_handle

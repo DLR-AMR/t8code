@@ -63,7 +63,6 @@ using cache_face_competences
  * \tparam P2 Second competence pack.
  */
 template <typename P1, typename P2>
-using union_competence_packs =
-  typename combine_competence_packs<P1, P2>::type;
+using union_competence_packs = typename combine_competence_packs<P1, P2>::type;
 
 }  // namespace t8_mesh_handle
