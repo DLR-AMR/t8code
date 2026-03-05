@@ -153,6 +153,9 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
     return cad_manager;
   }
 
+  /** Update the CAD manager with a new one. 
+   * \param[in] new_cad_manager The new CAD manager to be used.
+   */
   void
   update_cad_manager (std::shared_ptr<t8_cad> new_cad_manager)
   {
