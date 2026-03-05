@@ -230,3 +230,18 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_or_ghost, element_is_leaf_or_
                           testing::Combine (AllSchemeCollections, testing::Range (0, T8_IS_LEAF_MAX_LVL),
                                             AllCmeshsParam),
                           pretty_print_level_and_cmesh_params);
+
+TEST_P (element_is_leaf_hybrid, element_is_leaf)
+{
+  t8_test_element_is_leaf_for_forest (forest);
+}
+
+TEST_P (element_is_leaf_hybrid, element_is_leaf_adapt)
+{
+  t8_test_element_is_leaf_for_forest (forest_adapt);
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf, element_is_leaf,
+                          testing::Combine (AllSchemes, testing::Range (0, T8_IS_LEAF_MAX_LVL)),
+                          pretty_print_eclass_scheme_and_level);
+
