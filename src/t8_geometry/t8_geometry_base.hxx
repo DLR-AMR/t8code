@@ -29,11 +29,11 @@
 #define T8_GEOMETRY_BASE_HXX
 
 #include <t8.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_hash.hxx>
 
-#include <string>
 #include <functional>
 
 T8_EXTERN_C_BEGIN ();
@@ -47,9 +47,14 @@ T8_EXTERN_C_BEGIN ();
 struct t8_geometry
 {
  public:
-  /* Basic constructor that sets the name. */
-  t8_geometry (std::string name): name (name), hash (std::hash<std::string> {}(name))
+  /** Basic constructor that sets the name.
+   * \param [in] name The name of the geometry. Used to distinct the geometry from other geometries.
+  */
+  t8_geometry (std::string name): name (name), hash (t8_geometry_compute_hash (name))
   {
+    if (t8_geometry_hash_is_null (hash)) {
+      SC_ABORTF ("Registering geometry with invalid name\"%s\"\n.", name.c_str ());
+    }
   }
 
   /* Base constructor with no arguments. We need this since it
@@ -84,7 +89,7 @@ struct t8_geometry
   /**
    * Compute the jacobian of the \a t8_geom_evaluate map at a point in the reference space \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  cmesh      The cmesh in which the point lies.
-   * \param [in]  glreeid    The global tree (of the cmesh) in which the reference point is.
+   * \param [in]  gtreeid    The global tree (of the cmesh) in which the reference point is.
    * \param [in]  ref_coords  Array of tree dimension x \a num_coords many entries, specifying points in \f$ [0,1]^\mathrm{dim} \f$.
    * \param [in]  num_coords  Amount of points of \f$ \mathrm{dim} \f$ to map.
    * \param [out] jacobian    The jacobian at \a ref_coords. Array of size \a num_coords x dimension x 3. Indices \f$ 3 \cdot i\f$ , \f$ 3 \cdot i+1 \f$ , \f$ 3 \cdot i+2 \f$
@@ -106,21 +111,21 @@ struct t8_geometry
   virtual void
   t8_geom_load_tree_data (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid);
 
-  /** Query whether a batch of points lies inside an element. 
- * \param [in]      forest      The forest.
- * \param [in]      ltree_id    The forest local id of the tree in which the element is.
- * \param [in]      element     The element.
- * \param [in]      points      3-dimensional coordinates of the points to check
- * \param [in]      num_points  The number of points to check
- * \param [in, out] is_inside   An array of length \a num_points, filled with 0/1 on output. True (non-zero) if a \a point 
- *                              lies within an \a element, false otherwise. The return value is also true if the point 
- *                              lies on the element boundary. Thus, this function may return true for different leaf 
- *                              elements, if they are neighbors and the point lies on the common boundary.
- * \param [in]      tolerance   Tolerance that we allow the point to not exactly match the element.
- *                              If this value is larger we detect more points.
- *                              If it is zero we probably do not detect points even if they are inside
- *                              due to rounding errors.
- */
+  /** Query whether a batch of points lies inside an element.
+   * \param [in]      forest      The forest.
+   * \param [in]      ltreeid     The forest local id of the tree in which the element is.
+   * \param [in]      element     The element.
+   * \param [in]      points      3-dimensional coordinates of the points to check
+   * \param [in]      num_points  The number of points to check
+   * \param [in, out] is_inside   An array of length \a num_points, filled with 0/1 on output. True (non-zero) if a \a point
+   *                              lies within an \a element, false otherwise. The return value is also true if the point
+   *                              lies on the element boundary. Thus, this function may return true for different leaf
+   *                              elements, if they are neighbors and the point lies on the common boundary.
+   * \param [in]      tolerance   Tolerance that we allow the point to not exactly match the element.
+   *                              If this value is larger we detect more points.
+   *                              If it is zero we probably do not detect points even if they are inside
+   *                              due to rounding errors.
+   */
   virtual void
   t8_geom_point_batch_inside_element ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_locidx_t ltreeid,
                                       [[maybe_unused]] const t8_element_t *element,
@@ -163,7 +168,27 @@ struct t8_geometry
     return name;
   }
 
-  inline size_t
+  /**
+   * Compute the bounding box of the currently active tree.
+   *
+   * \param [in]  cmesh   The cmesh.
+   * \param [out] bounds  The bounding box of the tree in the form (xmin, xmax, ymin, ymax, zmin, zmax).
+   * \return              True if the bounding box was computed successfully, false otherwise.
+   *
+   * \note This function updates the active tree to the provided \a gtreeid.
+   */
+  virtual bool
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] double bounds[6]) const
+  {
+    t8_errorf ("Tree bounding box function not implemented");
+    return false;
+  }
+
+  /**
+   * Get the hash value of this geometry.
+   * \return The hash.
+   */
+  inline t8_geometry_hash
   t8_geom_get_hash () const
   {
     return hash;
@@ -179,7 +204,7 @@ struct t8_geometry
 
  protected:
   std::string name;              /**< The name of this geometry. */
-  size_t hash;                   /**< The hash of the name of this geometry. */
+  t8_geometry_hash hash;         /**< The hash of the name of this geometry. See also \ref t8_geometry_compute_hash */
   t8_gloidx_t active_tree;       /**< The tree of which currently vertices are loaded. */
   t8_eclass_t active_tree_class; /**< The class of the currently active tree. */
 };

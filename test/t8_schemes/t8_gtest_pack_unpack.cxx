@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
@@ -30,7 +30,9 @@
 /** Use DFS to check for all elements, if packing them, sending them to ourself and unpacking them results in the same element
  * Here, each element is sent individually.
  */
-class class_test_pack: public TestDFS {
+struct class_test_pack: public TestDFS
+{
+ private:
   /* pack the element and its children, send to ourself, unpack and check if it is the same element */
   void
   check_element () override
@@ -43,17 +45,17 @@ class class_test_pack: public TestDFS {
     const int num_children = scheme->element_get_num_children (eclass, element);
     scheme->element_MPI_Pack_size (eclass, count, comm, &pack_size);
     pack_size *= (num_children + 1);
-    char *sendbuf = T8_ALLOC (char, pack_size);
+    char *sendbuf = T8_TESTSUITE_ALLOC (char, pack_size);
 
     /* pack data */
     scheme->element_MPI_Pack (eclass, &element, count, sendbuf, pack_size, &position, comm);
-    t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
+    t8_element_t **children = T8_TESTSUITE_ALLOC (t8_element_t *, num_children);
     scheme->element_new (eclass, num_children, children);
     scheme->element_get_children (eclass, element, num_children, children);
     scheme->element_MPI_Pack (eclass, children, num_children, sendbuf, pack_size, &position, comm);
 
     int recvBufferSize = pack_size;
-    char *recvbuf = T8_ALLOC (char, recvBufferSize);
+    char *recvbuf = T8_TESTSUITE_ALLOC (char, recvBufferSize);
 #if T8_ENABLE_MPI
     /* Send data */
     sc_MPI_Request request;
@@ -79,13 +81,13 @@ class class_test_pack: public TestDFS {
     /* Unpack data */
     position = 0;
     scheme->element_MPI_Unpack (eclass, recvbuf, recvBufferSize, &position, &element_compare, count, comm);
-    t8_element_t **children_compare = T8_ALLOC (t8_element_t *, num_children);
+    t8_element_t **children_compare = T8_TESTSUITE_ALLOC (t8_element_t *, num_children);
     scheme->element_new (eclass, num_children, children_compare);
     scheme->element_MPI_Unpack (eclass, recvbuf, recvBufferSize, &position, children_compare, num_children, comm);
 
     /* free buffers */
-    T8_FREE (sendbuf);
-    T8_FREE (recvbuf);
+    T8_TESTSUITE_FREE (sendbuf);
+    T8_TESTSUITE_FREE (recvbuf);
 
     /* Check that data was sent and received correctly */
     EXPECT_ELEM_EQ (scheme, eclass, element, element_compare);
@@ -94,8 +96,8 @@ class class_test_pack: public TestDFS {
     }
     scheme->element_destroy (eclass, num_children, children);
     scheme->element_destroy (eclass, num_children, children_compare);
-    T8_FREE (children);
-    T8_FREE (children_compare);
+    T8_TESTSUITE_FREE (children);
+    T8_TESTSUITE_FREE (children_compare);
   }
 
  protected:
@@ -127,7 +129,7 @@ class class_test_pack: public TestDFS {
 
 TEST_P (class_test_pack, test_equal_dfs)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

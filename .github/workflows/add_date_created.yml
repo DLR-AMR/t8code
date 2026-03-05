@@ -1,0 +1,116 @@
+name: Add the date the issue was created to the project board entry, triggered by certain Issue events
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+on:
+  workflow_call:
+    inputs:
+      ISSUE_NODE_ID:
+        required: true
+        type: string
+        description: 'The node id of the issue that triggered the workflow'
+      CREATION_DATE:
+        required: true
+        type: string
+        description: 'The date of the issue'
+    secrets:
+        PAT:
+          required: true
+
+jobs:
+  Add_creation_date_to_card:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Add creation date to card in projects"
+      id: add_creation_date
+      run: |
+        ISSUE_NODE_ID="${{ inputs.ISSUE_NODE_ID }}"
+        CREATION_DATE="${{ inputs.CREATION_DATE }}"
+        echo "CREATION_DATE=$CREATION_DATE"
+        # Get the projects associated with the organization
+        projects=$(curl --request POST \
+            --url https://api.github.com/graphql \
+            --header "Authorization: Bearer ${{ secrets.PAT }}" \
+            --data '{"query":"{organization(login: \"DLR-AMR\") {projectsV2(first: 20) {nodes {id title}}}}"}')
+        echo "projects=$projects"
+        # Get the project IDs
+        project_ids=$(echo $projects | jq -r '.data.organization.projectsV2.nodes[].id')
+        for project_id in $project_ids; do
+          echo "project_id is $project_id"
+          # set hasNextPage initially to true
+          hasNextPage=true
+          # set the startCursor to null initially
+          startCursor=""
+          max_iter=100
+          # set the iteration counter to 0
+          iter=0
+          # start a while loop to get all the issues in the project, until hasNextPage is false
+          while [ "$hasNextPage" == "true" ] && [ "$iter" -lt "$max_iter" ]; do
+            echo "retrieve page $iter"
+            # Increment the iteration counter
+            iter=$((iter + 1))
+            # Get the issues within the project
+            project_fields_and_issues=$(curl --request POST \
+              --url https://api.github.com/graphql \
+              --header "Authorization: Bearer ${{ secrets.PAT }}" \
+              --data "{\"query\":\"{ node(id: \\\"$project_id\\\") { ... on ProjectV2 { items(first: 100, after: \\\"$startCursor\\\") { pageInfo { startCursor endCursor hasNextPage } nodes { id fieldValues(first: 8) { nodes { ... on ProjectV2ItemFieldTextValue { text field { ... on ProjectV2FieldCommon { name } } }  } } content { ... on Issue { id } } } } fields(first: 20) { nodes { ... on ProjectV2Field { id name }      } } } } }\"}")    
+            echo "issues=$project_fields_and_issues"
+            # Update hasNextPage
+            hasNextPage=$(echo $project_fields_and_issues | jq -r '.data.node.items.pageInfo.hasNextPage')
+            # Update startCursor
+            startCursor=$(echo $project_fields_and_issues | jq -r '.data.node.items.pageInfo.endCursor')
+            echo "hasNextPage=$hasNextPage"
+            echo "startCursor=$startCursor"
+            # Extract the issue ids and PVII ids. The issue_id is the global_id, the PVII id is the project specific id
+            issue_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].content.id')
+            PVII_ids=$(echo $project_fields_and_issues | jq -r '.data.node.items.nodes[].id')
+            # In the following loop we need both values, so we combine them into a single string
+            combined_ids=$(paste -d, <(echo "$issue_ids") <(echo "$PVII_ids"))
+            for combined_id in $combined_ids; do
+              issue_id=$(echo $combined_id | cut -d, -f1)
+              PVII_id=$(echo $combined_id | cut -d, -f2)
+              if [ "$issue_id" == "$ISSUE_NODE_ID" ]; then
+                echo "Found issue $issue_id in project $project_id"
+            
+                date_field_id=$(echo $project_fields_and_issues | jq -r '.data.node.fields.nodes[] | select(.name == "Date_Created") | .id')
+                echo "date_field_id is $date_field_id"
+                date_message="updateProjectV2ItemFieldValue: updateProjectV2ItemFieldValue(input: {projectId: \"'$project_id'\", itemId: \"'$PVII_id'\", fieldId: \"'$date_field_id'\", value: {date: \"'$CREATION_DATE'\"}}) {projectV2Item {id}}"
+
+          
+                # Construct the query to move the issue to the specified column.
+                # The query is a mutation that updates the status, priority, and workload fields of the issue.
+                # If priority or workload are not set, the corresponding message is empty.
+                # The query is constructed using jq and sed to remove null values and extra whitespace.
+                query=$(jq -n --arg dm "$date_message" \
+                        '{"query": "mutation { \($dm) }"}' | \
+                      jq '.query |= gsub("null"; "") | .query |= gsub("\\s+"; " ") | .query |= sub("\\{\\s*\\}"; "{}")' | \
+                      sed 's/\\\\"/"/g' | \
+                      sed "s/'//g")
+                echo "query=$query"
+                response=$(curl --request POST \
+                  --url https://api.github.com/graphql \
+                  --header "Authorization: Bearer ${{ secrets.PAT }}" \
+                  --data "$query")
+                echo "response=$response"
+              fi
+            done
+          done
+        done

@@ -27,11 +27,12 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class nca: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct nca: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override
@@ -66,7 +67,7 @@ class nca: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
 
 /**
  * Test the nca for the children of the root-element
- * 
+ *
  */
 TEST_P (nca, nca_check_shallow)
 {
@@ -80,6 +81,10 @@ TEST_P (nca, nca_check_shallow)
       scheme->element_get_nca (tree_class, desc_a, desc_b, check);
       /*expect equality */
       EXPECT_ELEM_EQ (scheme, tree_class, check, correct_nca);
+      // Check against element_is_ancestor. This adds another test layer
+      // to both element_get_nca and element_is_ancestor.
+      EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_a));
+      EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_b));
     }
   }
 }
@@ -106,7 +111,7 @@ TEST_P (nca, nca_check_deep)
     num_children = scheme->element_get_num_children (tree_class, tmp);
     for (child_id = 0; child_id < num_children; child_id++) {
       scheme->element_get_child (tree_class, tmp, child_id, correct_nca);
-      /* Compute first and last descendant at every level up to elem_max_lvl. 
+      /* Compute first and last descendant at every level up to elem_max_lvl.
        * They have the correct_nca as the nca */
       for (check_lvl_a = lvl + 1; check_lvl_a < elem_max_level; check_lvl_a++) {
         scheme->element_get_first_descendant (tree_class, correct_nca, desc_a, check_lvl_a);
@@ -124,6 +129,10 @@ TEST_P (nca, nca_check_deep)
             /* Expect equality of correct_nca and check for every other class */
             EXPECT_ELEM_EQ (scheme, tree_class, correct_nca, check);
           }
+          // Check against element_is_ancestor. This adds another test layer
+          // to both element_get_nca and element_is_ancestor.
+          EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_a));
+          EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_b));
         }
       }
     }
@@ -142,8 +151,8 @@ TEST_P (nca, nca_check_deep)
 
 /**
  * Recursively check the computation of the nca of all possible combination of descendants of the
- * \a correct_nca that have \a correct_nca as the nca. 
- * 
+ * \a correct_nca that have \a correct_nca as the nca.
+ *
  * \param[in] correct_nca       The correct nearest common ancestor
  * \param[in] desc_a            Storage for the computation of a descendant of \correct_nca
  * \param[in] desc_b            Storage for the computation of a descendant of \correct_nca
@@ -178,6 +187,10 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
     for (j = 0; j < num_children_b; j++) {
       scheme->element_get_child (tree_class, parent_b, j, desc_b);
       scheme->element_get_nca (tree_class, desc_a, desc_b, check);
+      // Check against element_is_ancestor. This adds another test layer
+      // to both element_get_nca and element_is_ancestor.
+      EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_a));
+      EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, desc_b));
 
       if (!scheme->element_is_equal (tree_class, check_nca, check)) {
         level_a = scheme->element_get_level (tree_class, desc_a);
@@ -189,23 +202,23 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
          * This makes debugging a lot easier, as one can reconstruct the descendants
          * via t8_element_set_linear_id and can directly test them instead of waiting
          * until the recursion reaches the faulty computation. */
-        t8_debugf ("id of desc_a: %li, level: %i\n",
-                   static_cast<long> (scheme->element_get_linear_id (tree_class, desc_a, level_a)), level_a);
-        t8_debugf ("id of desc_b: %li, level: %i\n",
-                   static_cast<long> (scheme->element_get_linear_id (tree_class, desc_b, level_b)), level_b);
+        t8_debugf ("id of desc_a: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                   scheme->element_get_linear_id (tree_class, desc_a, level_a), level_a);
+        t8_debugf ("id of desc_b: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                   scheme->element_get_linear_id (tree_class, desc_b, level_b), level_b);
 
         for (int k = SC_MAX (level_a, level_b); k >= 0; k--) {
-          t8_debugf ("id of desc_a: %li, level: %i\n",
-                     static_cast<long> (scheme->element_get_linear_id (tree_class, desc_a, k)), k);
-          t8_debugf ("id of desc_b: %li, level: %i\n",
-                     static_cast<long> (scheme->element_get_linear_id (tree_class, desc_b, k)), k);
+          t8_debugf ("id of desc_a: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                     scheme->element_get_linear_id (tree_class, desc_a, k), k);
+          t8_debugf ("id of desc_b: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                     scheme->element_get_linear_id (tree_class, desc_b, k), k);
         }
 
-        t8_debugf ("id of the correct nca: %li, level: %i\n",
-                   static_cast<long> (scheme->element_get_linear_id (tree_class, check_nca, level_c)), level_c);
+        t8_debugf ("id of the correct nca: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                   scheme->element_get_linear_id (tree_class, check_nca, level_c), level_c);
 
-        t8_debugf ("id of the computed nca: %li, level: %i\n",
-                   static_cast<long> (scheme->element_get_linear_id (tree_class, check, level_nca)), level_nca);
+        t8_debugf ("id of the computed nca: %" T8_LINEARIDX_FORMAT ", level: %i\n",
+                   scheme->element_get_linear_id (tree_class, check, level_nca), level_nca);
 
         SC_ABORT ("Computed nca is not the correct nca!\n");
       }
@@ -220,17 +233,14 @@ t8_recursive_nca_check (t8_element_t *check_nca, t8_element_t *desc_a, t8_elemen
 }
 
 /* Recursively check the computation of the nca. recursion_depth defines up to which
- * level we compute descendants of correct_nca that should have correct_nca as the 
+ * level we compute descendants of correct_nca that should have correct_nca as the
  * output of element_get_nca.*/
 TEST_P (nca, recursive_check)
 {
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
   const int recursion_depth = 2;
-#elif T8CODE_TEST_LEVEL >= 1
-  const int recursion_depth = 3;
 #else
-  /* User lower recursion depth for pyramids, it takes to much time otherwise */
-  const int recursion_depth = 4;
+  const int recursion_depth = 3;
 #endif
   t8_element_t *parent_a, *parent_b;
   int num_children;
@@ -258,39 +268,44 @@ TEST_P (nca, recursive_check)
 }
 
 /* Test the nca recursively for elements in the middle of the uniform refinement tree
- * up to the maximal level. 
- * Be careful when increasing the recursion_depth, as it increases the number of test-cases exponentially. */
+ * up to the maximal level.
+ * Be careful when increasing the max_lvl, as it increases the number of test-cases exponentially. */
 TEST_P (nca, recursive_check_higher_level)
 {
-#if T8CODE_TEST_LEVEL >= 2
-  const int recursion_depth = 2;
+#if T8_TEST_LEVEL_INT >= 2
+  const int start_level = 2;
 #else
-  const int recursion_depth = 3;
+  const int start_level = 3;
 #endif
 
+#if T8_TEST_LEVEL_INT >= 1
+  const int max_lvl = scheme->get_maxlevel (tree_class) / 2;
+#else
   const int max_lvl = scheme->get_maxlevel (tree_class);
+#endif
+
   t8_element_t *parent_a;
   t8_element_t *parent_b;
   t8_element_t *correct_nca_high_level;
   int num_children;
   int i, k, l;
   t8_gloidx_t leaves_on_level;
-  EXPECT_TRUE (max_lvl - recursion_depth >= 0);
+  EXPECT_TRUE (max_lvl - start_level >= 0);
 
   scheme->element_new (tree_class, 1, &parent_a);
   scheme->element_new (tree_class, 1, &parent_b);
   scheme->element_new (tree_class, 1, &correct_nca_high_level);
 
   /* Test on different levels around the middle of the refinement tree */
-  for (i = recursion_depth; i < max_lvl; i++) {
-    leaves_on_level = scheme->element_count_leaves (tree_class, correct_nca, i - recursion_depth);
+  for (i = start_level; i < max_lvl; i++) {
+    leaves_on_level = scheme->element_count_leaves (tree_class, correct_nca, i - start_level);
     /* middle = leaves/2 */
-    scheme->element_set_linear_id (tree_class, correct_nca_high_level, i - recursion_depth, leaves_on_level / 2);
+    scheme->element_set_linear_id (tree_class, correct_nca_high_level, i - start_level, leaves_on_level / 2);
 
     /* Initialization for recursive_nca_check */
     num_children = scheme->element_get_num_children (tree_class, correct_nca_high_level);
     if (num_children > 1) {
-      /* Compute children on two different branches in the tree an test them. 
+      /* Compute children on two different branches in the tree an test them.
        * This ensures, that the nca of all their descendants has to be correct_nca_high_level*/
       for (k = 0; k < num_children; k++) {
         scheme->element_get_child (tree_class, correct_nca_high_level, k, parent_a);
@@ -304,6 +319,10 @@ TEST_P (nca, recursive_check_higher_level)
             scheme->element_get_nca (tree_class, parent_a, parent_b, check);
             EXPECT_ELEM_EQ (scheme, tree_class, parent_a, check);
             EXPECT_ELEM_EQ (scheme, tree_class, parent_b, check);
+            // Check against element_is_ancestor. This adds another test layer
+            // to both element_get_nca and element_is_ancestor.
+            EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, parent_a));
+            EXPECT_TRUE (scheme->element_is_ancestor (tree_class, check, parent_b));
           }
         }
       }

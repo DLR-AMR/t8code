@@ -23,27 +23,27 @@
 /* See also: https://github.com/DLR-AMR/t8code/wiki/Step-5---Store-element-data
  *
  * This is step5 of the t8code tutorials.
- * In the following we will store data in the individual elements of our forest. 
- * To do this, we will again create a uniform forest, which will get adapted as in step4, 
+ * In the following we will store data in the individual elements of our forest.
+ * To do this, we will again create a uniform forest, which will get adapted as in step4,
  * with the difference that we partition, balance and create ghost elements all in the same step.
- * After adapting the forest we will learn how to build a data array and gather data for 
+ * After adapting the forest we will learn how to build a data array and gather data for
  * the local elements. Furthermore, we exchange the data values of the ghost elements and
  * output the volume data to vtu.
  *
  * How you can experiment here:
  *   - Look at the paraview output files of the adapted forest.
- *     You can apply a clip filter to look into the cube. Also you can apply (in addition) 
+ *     You can apply a clip filter to look into the cube. Also you can apply (in addition)
  *     the threshold filter to display only elements with certain properties.
  *     But at first you may just want to enter the tooltip selection mode 'Hover Cells On'
  *     to display cell information when hover over them.
  *   - Change the adaptation criterion as you wish to adapt elements or families as desired.
  *   - Store even more data per element, for instance the coordinates of its midpoint.
- *     You can again apply the threshold filter to your new data. Don't forget to write the 
+ *     You can again apply the threshold filter to your new data. Don't forget to write the
  *     data into the output file.
  *  */
 
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
@@ -98,13 +98,13 @@ t8_step5_create_element_data (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Get the number of local elements of forest. */
-  num_local_elements = t8_forest_get_local_num_elements (forest);
+  num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
 
   /* Now we need to build an array of our data that is as long as the number
    * of elements plus the number of ghosts. You can use any allocator such as
-   * new, malloc or the t8code provide allocation macro T8_ALLOC. 
+   * new, malloc or the t8code provide allocation macro T8_ALLOC.
    * Note that in the latter case you need
    * to use T8_FREE in order to free the memory.
    */
@@ -117,12 +117,12 @@ t8_step5_create_element_data (t8_forest_t forest)
 
   /* Let us now fill the data with something.
    * For this, we iterate through all trees and for each tree through all its elements, calling
-   * t8_forest_get_element_in_tree to get a pointer to the current element.
+   * t8_forest_get_leaf_element_in_tree to get a pointer to the current element.
    * This is the recommended and most performant way.
    * An alternative is to iterate over the number of local elements and use
-   * t8_forest_get_element. However, this function needs to perform a binary search
-   * for the element and the tree it is in, while t8_forest_get_element_in_tree has a
-   * constant look up time. You should only use t8_forest_get_element if you do not know
+   * t8_forest_get_leaf_element. However, this function needs to perform a binary search
+   * for the element and the tree it is in, while t8_forest_get_leaf_element_in_tree has a
+   * constant look up time. You should only use t8_forest_get_leaf_element if you do not know
    * in which tree an element is.
    */
   {
@@ -142,7 +142,7 @@ t8_step5_create_element_data (t8_forest_t forest)
        * of a tree, we need the scheme we obtained earlier and in order to use it we get the eclass of the tree. */
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
       /* Get the number of elements of this tree. */
-      num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+      num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
       for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
         /* This loop iterates through all the local elements of the forest in the current tree. */
 
@@ -150,7 +150,7 @@ t8_step5_create_element_data (t8_forest_t forest)
          * data for this element. */
         /* Since in this example we want to compute the data based on the element in question,
          * we need to get a pointer to this element. */
-        element = t8_forest_get_element_in_tree (forest, itree, ielement);
+        element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
         /* We want to store the elements level and its volume as data. We compute these
          * via the scheme and the forest_element interface. */
         element_data[current_index].level = scheme->element_get_level (tree_class, element);
@@ -169,7 +169,7 @@ static void
 t8_step5_exchange_ghost_data (t8_forest_t forest, struct t8_step5_data_per_element *data)
 {
   sc_array *sc_array_wrapper;
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t num_ghosts = t8_forest_get_num_ghosts (forest);
 
   /* t8_forest_ghost_exchange_data expects an sc_array (of length num_local_elements + num_ghosts).
@@ -185,7 +185,7 @@ t8_step5_exchange_ghost_data (t8_forest_t forest, struct t8_step5_data_per_eleme
 }
 
 /* Write the forest as vtu and also write the element's volumes in the file.
- * 
+ *
  * t8code supports writing element based data to vtu as long as its stored
  * as doubles. Each of the data fields to write has to be provided in its own
  * array of length num_local_elements.
@@ -195,7 +195,7 @@ t8_step5_exchange_ghost_data (t8_forest_t forest, struct t8_step5_data_per_eleme
 static void
 t8_step5_output_data_to_vtu (t8_forest_t forest, struct t8_step5_data_per_element *data, const char *prefix)
 {
-  t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   t8_locidx_t ielem;
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
@@ -215,7 +215,7 @@ t8_step5_output_data_to_vtu (t8_forest_t forest, struct t8_step5_data_per_elemen
   }
   {
     /* To write user defined data, we need the extended output function t8_forest_vtk_write_file
-     * from t8_forest_vtk.h. Despite writing user data, it also offers more control over which 
+     * from t8_forest_vtk.h. Despite writing user data, it also offers more control over which
      * properties of the forest to write. */
     int write_treeid = 1;
     int write_mpirank = 1;
@@ -282,7 +282,7 @@ t8_step5_main (int argc, char **argv)
   data = t8_step5_create_element_data (forest);
 
   t8_global_productionf (" [step5] Computed level and volume data for local elements.\n");
-  if (t8_forest_get_local_num_elements (forest) > 0) {
+  if (t8_forest_get_local_num_leaf_elements (forest) > 0) {
     /* Output the stored data of the first local element (if it exists). */
     t8_global_productionf (" [step5] Element 0 has level %i and volume %e.\n", data[0].level, data[0].volume);
   }
@@ -295,7 +295,7 @@ t8_step5_main (int argc, char **argv)
 
   if (t8_forest_get_num_ghosts (forest) > 0) {
     /* output the data of the first ghost element (if it exists) */
-    t8_locidx_t first_ghost_index = t8_forest_get_local_num_elements (forest);
+    t8_locidx_t first_ghost_index = t8_forest_get_local_num_leaf_elements (forest);
     t8_global_productionf (" [step5] Ghost 0 has level %i and volume %e.\n", data[first_ghost_index].level,
                            data[first_ghost_index].volume);
   }

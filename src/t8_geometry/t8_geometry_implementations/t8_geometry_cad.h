@@ -46,12 +46,11 @@ T8_EXTERN_C_BEGIN ();
  * additional geometry information, which is extracted from a .brep file.
  * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
  * Since the internals of this geometry are finely tuned to the .brep file
- * it is recommended to only use it with the \ref t8_cmesh_readmshfile function.
- * \param [in] dim        0 <= tree dimension <= 3. The dimension.
+ * it is recommended to only use it with the \ref t8_cmesh_from_msh_file function.
  * \param [in] fileprefix Prefix of a .brep file from which to extract an cad geometry.
- * \param [in] name       The name to give this geometry.
+ * \param [in] name_in    The name to give this geometry.
  * \return                A pointer to an allocated t8_geometry_cad struct, as
- *                        if the \ref t8_geometry_cad (std::string fileprefix, std::string name) 
+ *                        if the \ref t8_geometry_cad (std::string fileprefix, std::string name)
  *                        constructor was called.
  */
 t8_geometry_cad_c *

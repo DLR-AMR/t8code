@@ -26,9 +26,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_operators.hxx>
 #include <typeinfo>
 #include <numeric>
+#include <algorithm>
 #include <iostream>
 
-/* Tags to differencce between strong types */
+/* Tags to difference between strong types */
 struct dummy_int
 {
 };
@@ -180,6 +181,10 @@ TEST (t8_gtest_type, use_constexpr)
   constexpr DummyInt my_int_eq (5);
   static_assert (my_int_eq == my_int, "constexpr operator== failed");
   static_assert (my_int_eq != my_other_int, "constexpr operator!= failed");
+  // Check type conversion
+  constexpr int five = static_cast<int> (my_int);
+  static_assert (five == 5);
+  static_assert (five == my_int);
 }
 
 /**

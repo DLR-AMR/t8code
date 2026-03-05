@@ -1,5 +1,25 @@
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2025 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 # Conditionally adding new sources to the main T8 target as in the original BS looked wrong...
-if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
+if ( T8CODE_BUILD_AS_SHARED_LIBRARY )
     add_library( t8example SHARED )
 else()
     add_library( t8example STATIC )
@@ -39,6 +59,11 @@ function( add_t8_example )
     install( TARGETS ${ADD_T8_EXAMPLE_NAME} DESTINATION RUNTIME)
 endfunction()
 
+#copy example files to the exact same location in the builddir as they are in the source dir
+function( copy_example_file EXAMPLE_FILE_NAME_SUBPATH )
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/${EXAMPLE_FILE_NAME_SUBPATH} ${CMAKE_CURRENT_BINARY_DIR}/${EXAMPLE_FILE_NAME_SUBPATH} COPYONLY)
+endfunction()
+
 add_t8_example( NAME t8_advection                       SOURCES advect/t8_advection.cxx )
 
 add_t8_example( NAME t8_cmesh_partition                 SOURCES cmesh/t8_cmesh_partition.cxx )
@@ -61,13 +86,10 @@ add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/
 add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
 add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )
 
+copy_example_file (IO/cmesh/gmsh/circlesquare_hybrid_hole.msh)
+
 if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
-endif()
-
-if(T8CODE_ENABLE_NETCDF)
-    add_t8_example( NAME t8_write_cmesh_netcdf              SOURCES IO/cmesh/netcdf/t8_write_cmesh_netcdf.cxx )
-    add_t8_example( NAME t8_write_forest_netcdf             SOURCES IO/forest/netcdf/t8_write_forest_netcdf.cxx )
 endif()
 
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )

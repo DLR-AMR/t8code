@@ -21,13 +21,19 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_child_parent_face: public TestDFS {
+/* TODO: extend this test or new test. On each level,
+ *        go multiple levels below and check against ancestor face.
+ *       See https://github.com/DLR-AMR/t8code/issues/2011 */
+
+struct class_child_parent_face: public TestDFS
+{
+ private:
   void
   check_element () override
   {
@@ -36,7 +42,7 @@ class class_child_parent_face: public TestDFS {
       /* Iterate over all faces and determine the facechildren*/
       const int num_face_children = scheme->element_get_num_face_children (eclass, element, iface);
       t8_element_t **children;
-      children = T8_ALLOC (t8_element_t *, num_face_children);
+      children = T8_TESTSUITE_ALLOC (t8_element_t *, num_face_children);
       scheme->element_new (eclass, num_face_children, children);
 
       scheme->element_get_children_at_face (eclass, element, iface, children, num_face_children, NULL);
@@ -49,9 +55,20 @@ class class_child_parent_face: public TestDFS {
         const int parentface = scheme->element_face_get_parent_face (eclass, children[ifacechild], childface);
         /* Check, that this is equal to the face that we started with */
         EXPECT_EQ (iface, parentface);
+        const int element_level = scheme->element_get_level (eclass, element);
+        // Check the ancestor face function when input is the child and the level of the child.
+        // We expect the output face to be the input face
+        const int ancestor_face_same_level
+          = scheme->element_face_get_ancestor_face (eclass, children[ifacechild], element_level + 1, childface);
+        EXPECT_EQ (childface, ancestor_face_same_level);
+        // Check the ancestor face function when input is the element level/
+        // We expect the output face to be the original face
+        const int ancestor_face_one_level_higher
+          = scheme->element_face_get_ancestor_face (eclass, children[ifacechild], element_level, childface);
+        EXPECT_EQ (iface, ancestor_face_one_level_higher);
       }
       scheme->element_destroy (eclass, num_face_children, children);
-      T8_FREE (children);
+      T8_TESTSUITE_FREE (children);
     }
   }
 
@@ -72,7 +89,7 @@ class class_child_parent_face: public TestDFS {
 
 TEST_P (class_child_parent_face, t8_recursive_dfs_child_parent_face)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

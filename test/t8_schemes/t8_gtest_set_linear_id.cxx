@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
@@ -32,7 +32,9 @@
  * The id_counter is then increased to match the id of the next leaf. After we have reached the last element on a level, 
  * we increase the level and reset the id_counter to 0.
  */
-class class_test_set_linear_id: public TestBFS {
+struct class_test_set_linear_id: public TestBFS
+{
+ private:
   void
   check_element () override
   {
@@ -62,7 +64,7 @@ class class_test_set_linear_id: public TestBFS {
     /* Destroy BFS test */
     bfs_test_teardown ();
   }
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;

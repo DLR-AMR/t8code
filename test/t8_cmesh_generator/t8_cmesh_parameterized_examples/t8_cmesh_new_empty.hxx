@@ -20,17 +20,24 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_new_empty.hxx 
+ * Parameterized empty example cmeshes.
+ */
 #ifndef T8_CMESH_NEW_EMPTY_HXX
 #define T8_CMESH_NEW_EMPTY_HXX
 
-#include <test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx>
+#include <test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 
 namespace new_empty
 {
-
+/** Function to convert parameter values to a string.
+ * \param [in] comm  Mpi communicator to be used with the new cmesh.
+ * \param [in] do_partition Flag whether the cmesh should be partitioned or not.
+ * \param [in] dim An empty cmesh requires a dimension nevertheless. 0 <= tree dimension <= 3.
+ */
 std::string
 make_param_string (const sc_MPI_Comm &comm, const int do_partition, const int dim)
 {
@@ -40,11 +47,13 @@ make_param_string (const sc_MPI_Comm &comm, const int do_partition, const int di
     = delimiter + cmesh_params::comm_to_string (comm) + delimiter + partition + delimiter + std::to_string (dim);
   return params;
 }
-
+/** Wrapper function for \ref make_param_string. */
 std::function<std::string (const sc_MPI_Comm &, const int, const int)> print_function = make_param_string;
 
+/** Wrapper function for t8_cmesh_new_empty. */
 std::function<t8_cmesh_t (sc_MPI_Comm, const int, const int)> new_from_class_wrapper = t8_cmesh_new_empty;
 
+/** Example empty cmesh set with different parameter combinations. */
 example_set *cmesh_example
   = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::my_comms.begin ()),
                                                        decltype (cmesh_params::partition.begin ()),

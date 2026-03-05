@@ -28,8 +28,8 @@
 
 #include <iostream>
 #include <t8.h>
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h> /* geometrical information of the forest */
@@ -54,7 +54,7 @@ struct t8_step7_element_data_t
  * adaptation callback. */
 struct t8_step7_adapt_data
 {
-  t8_3D_point midpoint;             /* The midpoint of our sphere. */
+  t8_3D_vec midpoint;               /* The midpoint of our sphere. */
   double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
   double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
   sc_array_t *element_data;
@@ -115,14 +115,14 @@ t8_step7_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
 {
   /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
-  t8_3D_point centroid; /* Will hold the element midpoint. */
+  t8_3D_vec centroid; /* Will hold the element midpoint. */
   /* In t8_step3_adapt_forest we pass a t8_step3_adapt_data pointer as user data to the
    * t8_forest_new_adapt function. This pointer is stored as the used data of the new forest
    * and we can now access it with t8_forest_get_user_data (forest). */
   const struct t8_step7_adapt_data *adapt_data = (const struct t8_step7_adapt_data *) t8_forest_get_user_data (forest);
   double dist; /* Will store the distance of the element's midpoint and the sphere midpoint. */
 
-  /* You can use T8_ASSERT for assertions that are active in debug mode (when configured with --enable-debug).
+  /* You can use T8_ASSERT for assertions that are active in debug mode (when compiled with -DCMAKE_BUILD_TYPE=Debug).
    * If the condition is not true, then the code will abort.
    * In this case, we want to make sure that we actually did set a user pointer to forest and thus
    * did not get the NULL pointer from t8_forest_get_user_data.
@@ -243,7 +243,7 @@ t8_forest_replace (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t w
 static void
 t8_write_vtu (t8_forest_t forest, struct t8_step7_adapt_data *data, const char *prefix)
 {
-  const t8_locidx_t num_elements = t8_forest_get_local_num_elements (forest);
+  const t8_locidx_t num_elements = t8_forest_get_local_num_leaf_elements (forest);
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_data = T8_ALLOC (double, num_elements);
@@ -285,8 +285,8 @@ t8_interpolation ()
   t8_forest_t forest_adapt;
   t8_step7_element_data_t *elem_data;
   t8_step7_adapt_data *data;
-  t8_3D_point centroid;
-  const t8_3D_point midpoint ({ 0.5, 0.5, 1 });
+  t8_3D_vec centroid;
+  const t8_3D_vec midpoint ({ 0.5, 0.5, 1 });
   const t8_scheme *scheme = t8_scheme_new_default ();
 
   /* Construct a cmesh */
@@ -298,7 +298,8 @@ t8_interpolation ()
   /* Build initial data array and set data for the local elements. */
   data = T8_ALLOC (t8_step7_adapt_data, 1);
   elem_data = T8_ALLOC (t8_step7_element_data_t, 1);
-  data->element_data = sc_array_new_count (sizeof (t8_step7_element_data_t), t8_forest_get_local_num_elements (forest));
+  data->element_data
+    = sc_array_new_count (sizeof (t8_step7_element_data_t), t8_forest_get_local_num_leaf_elements (forest));
 
   const t8_locidx_t num_trees = t8_forest_get_num_local_trees (forest);
   /* Loop over all trees. The index of the data array is independent of the tree
@@ -308,11 +309,11 @@ t8_interpolation ()
   int itree;
   int ielem;
   for (itree = 0, ielem = 0; itree < num_trees; itree++) {
-    const t8_locidx_t num_elem = t8_forest_get_tree_num_elements (forest, itree);
+    const t8_locidx_t num_elem = t8_forest_get_tree_num_leaf_elements (forest, itree);
     /* Inner loop: Iteration over the elements of the local tree */
     for (t8_locidx_t ielem_tree = 0; ielem_tree < num_elem; ielem_tree++, ielem++) {
       /* To calculate the distance to the centroid of an element the element is saved */
-      const t8_element_t *element = t8_forest_get_element_in_tree (forest, itree, ielem_tree);
+      const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielem_tree);
 
       /* Get the centroid of the local element. */
       t8_forest_element_centroid (forest, itree, element, centroid.data ());
@@ -349,7 +350,7 @@ t8_interpolation ()
   /* Create user_data element for the adapted forest */
   struct t8_step7_adapt_data *adapt_data = T8_ALLOC (t8_step7_adapt_data, 1);
   adapt_data->element_data
-    = sc_array_new_count (sizeof (t8_step7_element_data_t), t8_forest_get_local_num_elements (forest_adapt));
+    = sc_array_new_count (sizeof (t8_step7_element_data_t), t8_forest_get_local_num_leaf_elements (forest_adapt));
 
   /* Initialize user_data element for the adapted forest */
   adapt_data->midpoint[0] = data->midpoint[0];

@@ -30,18 +30,19 @@
 #include <stdexcept>
 #include <vector>
 #include <unordered_map>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
 
 /** forward declaration of ttv class needed since the two class headers include each other. */
-class t8_cmesh_vertex_conn_tree_to_vertex;
+struct t8_cmesh_vertex_conn_tree_to_vertex;
 
 /** This class stores the vertex to tree lookup for
  * global vertex indices for a cmesh.
  * Thus, given a global vertex id the class provides
- * information about the trees the vertex belongs to and 
+ * information about the trees the vertex belongs to and
  * the corresponding local vertex ids inside these trees.
- * 
+ *
  * In particular, this class stores the lookup
  *
  * global_vertex_id -> List of (tree, tree_local_vertex)
@@ -66,7 +67,8 @@ class t8_cmesh_vertex_conn_tree_to_vertex;
  * Table global_id -> TV_LIST: std::unordered_map<t8_gloidx_t, TV_LIST>
  *
  */
-class t8_cmesh_vertex_conn_vertex_to_tree {
+struct t8_cmesh_vertex_conn_vertex_to_tree
+{
  public:
   /** Standard constructor.
    * Initializes the class and allows setting vertex entries
@@ -87,20 +89,9 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   void
   build_from_ttv (const t8_cmesh_t cmesh, t8_cmesh_vertex_conn_tree_to_vertex& ttv);
 
-  /** Variable type for (tree_id, tree_vertex_id) pair */
-  using tree_vertex_pair = std::pair<t8_locidx_t, int>;
-
-  /** list of tree vertex pairs, each global vertex id maps to
-    * such a list. */
-  using tree_vertex_list = std::vector<tree_vertex_pair>;
-
-  /** The internal storage data type used for storing the vertex to tree data. */
-  using vtt_storage_type = std::unordered_map<t8_gloidx_t, tree_vertex_list>;
-
   /* Setter functions */
   /** Given a cmesh, build up the vertex_to_tree.
    * \param [in] cmesh An initialized but not yet committed cmesh.
-   * \return: some error value to be specified.
    * The cmesh must not be committed, but all tree information and neighbor information must
    * have been set.
    * Currently, \a cmesh has to be replicated. */
@@ -108,7 +99,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
   set_vertex_to_tree_list (const t8_cmesh_t cmesh);
 
   /** Get the list of global trees and local vertex ids a global vertex is connected to.
-   * 
+   *
    * \param [in] global_vertex_id The global id of a vertex in the cmesh.
    * \return The list of local tree ids and local vertex ids of \a global_vertex_id.
    */
@@ -125,17 +116,17 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     try {
       return vertex_to_tree.at (global_vertex_id);
     } catch (const std::out_of_range& e) {
-      t8_errorf ("ERROR: Could not find vertex %li for cmesh.\n", global_vertex_id);
+      t8_errorf ("ERROR: Could not find vertex %" T8_GLOIDX_FORMAT " for cmesh.\n", global_vertex_id);
       SC_ABORTF ("Caught exception 'out of range': %s\n", e.what ());
     }
   }
 
   /** Get the state of the vertex to tree object.
    * An object is either initialized (before commit) or committed (ready to use).
-   * \return INITIALIZED or COMMITTED 
+   * \return INITIALIZED or COMMITTED
    */
   inline int
-  get_state ()
+  get_state () const
   {
     return state;
   }
@@ -144,8 +135,8 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
 
   /** A single (tree, local vertex) value connected to a global vertex is added to the vertex_to_tree_list.
    * \param [in] cmesh must be committed.
-   * \param [in] global_vertex_id The global id of the vertex to be added. 
-   * \param [in] ltreeid The local tree id of a tree that \a global_vertex_id is connected to. 
+   * \param [in] global_vertex_id The global id of the vertex to be added.
+   * \param [in] ltreeid The local tree id of a tree that \a global_vertex_id is connected to.
    * \param [in] tree_vertex The local vertex id of \a ltreeid that \a global_vertex_id is connected to.
    */
   void
