@@ -46,7 +46,8 @@
 #endif
 
 class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
- protected:
+{
+   protected:
   void
   SetUp () override
   {
