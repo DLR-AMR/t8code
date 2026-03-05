@@ -87,6 +87,7 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, in
   const t8_scheme *scheme;
 };
 
+
 static void
 t8_test_element_is_leaf_for_forest (t8_forest_t forest)
 {
