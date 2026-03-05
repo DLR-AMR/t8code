@@ -51,9 +51,8 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, in
   SetUp () override
   {
     /* Construct a cmesh */
-    const int scheme_id = std::get<0> (std::get<0> (GetParam ()));
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
-    const t8_eclass_t tree_class = std::get<1> (std::get<0> (GetParam ()));
     const int level = std::get<1> (GetParam ());
     t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
@@ -174,7 +173,7 @@ t8_test_element_is_ghost_for_forest (t8_forest_t forest)
   const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   for (t8_locidx_t ighost_tree = 0; ighost_tree < num_ghost_trees; ++ighost_tree) {
-    const t8_locidx_t num_elements_in_tree = t8_forest_ghost_tree_num_elements (forest, ighost_tree);
+    const t8_locidx_t num_elements_in_tree = t8_forest_ghost_tree_num_leaf_elements (forest, ighost_tree);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ighost_tree);
     /* Allocate memory to build a non-ghost element. */
     t8_element_t *not_ghost;
@@ -184,7 +183,7 @@ t8_test_element_is_ghost_for_forest (t8_forest_t forest)
      * build its parent and its first child (if they exist), and verify
      * that t8_forest_element_is_leaf and t8_forest_element_is_leaf_or_ghost returns false. */
     for (t8_locidx_t ielement = 0; ielement < num_elements_in_tree; ++ielement) {
-      const t8_element_t *ghost_element = t8_forest_ghost_get_element (forest, ighost_tree, ielement);
+      const t8_element_t *ghost_element = t8_forest_ghost_get_leaf_element (forest, ighost_tree, ielement);
       EXPECT_TRUE (t8_forest_element_is_ghost (forest, ghost_element, ighost_tree));
       EXPECT_TRUE (t8_forest_element_is_leaf_or_ghost (forest, ghost_element, ighost_tree, 1));
       /* Compute parent and first child of element and check that they are not in the tree */
@@ -206,7 +205,7 @@ t8_test_element_is_ghost_for_forest (t8_forest_t forest)
 
 TEST_P (element_is_leaf_or_ghost, element_is_ghost)
 {
-  t8_test_element_is_Sghost_for_forest (forest);
+  t8_test_element_is_ghost_for_forest (forest);
 }
 
 TEST_P (element_is_leaf_or_ghost, element_is_ghost_adapt)
@@ -214,8 +213,8 @@ TEST_P (element_is_leaf_or_ghost, element_is_ghost_adapt)
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
 
-/* Define a lambda to beautify gtest output for tuples <level, cmesh>.
- * This will set the correct level and cmesh name as part of the test case name. */
+/* Define a lambda to beautify gtest output for tuples <scheme, level, cmesh>.
+ * This will set the correct scheme, level and cmesh name as part of the test case name. */
 auto pretty_print_level_and_cmesh_params
   = [] (const testing::TestParamInfo<std::tuple<int, int, cmesh_example_base *>> &info) {
       std::string name = std::string ("Level_") + std::to_string (std::get<1> (info.param));
