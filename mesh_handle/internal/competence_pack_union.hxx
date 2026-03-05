@@ -21,8 +21,8 @@
 */
 
 /** \file competence_pack_union.hxx 
- * Define the implementation of the unique union of competences of several \ref competence_pack 's.
- * Users should use \ref union_competence_packs_type in \ref competence_pack.hxx.
+ * Define the implementation of the unique union of competences of several \ref t8_mesh_handle::competence_pack 's.
+ * Users should use \ref t8_mesh_handle::union_competence_packs_type in \ref competence_pack.hxx.
  */
 
 #pragma once
