@@ -337,7 +337,7 @@ t8_forest_ghost_num_trees (const t8_forest_t forest)
   return forest->ghosts->ghost_trees->elem_count;
 }
 
-if T8_ENABLE_DEBUG
+#if T8_ENABLE_DEBUG
 static bool
 t8_forest_tree_is_ghost (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
