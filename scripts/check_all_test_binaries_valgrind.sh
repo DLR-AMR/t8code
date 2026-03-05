@@ -97,7 +97,7 @@ pushd $TEST_BINARY_ABSPATH > /dev/null
 
 status=0
 counter=0
-valgrind_suppressions_file=../../scripts/valgrind_suppressions_file.supp
+valgrind_suppressions_file=../../scripts/internal/valgrind_suppressions_file.supp
 
 # First run all serial tests in parallel.
 serial_count=$(echo $test_bin_paths | tr ' ' '\n' | grep -c '_serial')
