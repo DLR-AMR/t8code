@@ -354,7 +354,9 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors,
                           testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
 
-/* Adapt callback that refines all elements in the tree with global id 0. */
+/** Adapt callback that refines all elements in the tree with global id 0.
+ * This callback belong to the test case forest_face_neighbors_two_quad_mesh.
+ */
 int
 t8_test_adapt_first_tree (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
                           [[maybe_unused]] t8_locidx_t which_tree, const t8_eclass_t eclass,
@@ -379,6 +381,24 @@ t8_test_adapt_first_tree (t8_forest_t forest, [[maybe_unused]] t8_forest_t fores
   return 0;
 }
 
+/** This test case loads a specific 2D .msh file and iterates over it to compute
+ * the leaf face neighbors.
+ * It originated from debugging session by Benedict Geihe using Trixi.jl where
+ * this setting resulted in errors.
+ * This, we implemented it as a test case in order to catch possible errors again in the future.
+ * The mesh consists of 2 quad trees that are connected via nontrivial orientation.
+ * 
+ * - Load msh file with 2 quad trees
+ * - Adapt mesh such that the first tree is refined once uniformly.
+ * - Iterate over all mesh elements and compute the leaf face neighbors.
+ * 
+ *   __ __ _____
+ *  |__|__|     |
+ *  |__|__|_____|  
+ *  Tree_0 Tree_1
+ *    
+ * 
+*/
 class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
  protected:
   void
@@ -424,6 +444,8 @@ class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
   t8_forest_t adaptive_forest = nullptr;
 };
 
+/* Perform the actual test for the forest_face_neighbors_two_quad_mesh.
+ * Iterate over all leafs and ghosts and call the leaf face neighbor function. */
 TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
 {
   // For debug purpoese, we write the forest to vtk
@@ -434,6 +456,7 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
   const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (adaptive_forest);
   t8_locidx_t ielement_index = 0;
   for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; itree++) {
+    const t8_gloidx_t gtreeid = t8_forest_global_tree_id (adaptive_forest, itree);
     const bool is_ghost = itree >= num_local_trees;
     const t8_locidx_t ghost_tree_id = itree - num_local_trees;
     /* Get the leaf element array */
@@ -443,6 +466,8 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
     const t8_eclass_t tree_class = t8_forest_get_tree_class (adaptive_forest, itree);
     const t8_scheme *scheme = t8_forest_get_scheme (adaptive_forest);
     const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
+    int num_faces_with_2_neighbors = 0;
+    int num_faces_with_1_neighbor = 0;
     for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ++ileaf, ++ielement_index) {
       // Iterate over each leaf element
       const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
@@ -473,6 +498,32 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
         t8_debugf ("Tree %i, Element %i, Face %i has %i neighbors:\t%s\n", itree, ileaf, iface, num_neighbors,
                    buffer.c_str ());
 
+        // We are now checking explicit face neighbor values.
+        // The number of neighbors must be >= 0
+        EXPECT_GE (num_neighbors, 0);
+        // Count how many faces have 1 and 2 neighbors.
+        // We expect tree 1 to have 1 face with 2 neighbors
+        // We cannot state how many faces with 1 neighbor we count for tree 0, since we
+        // do not know how the elements are distributed across processes.
+        // But we know, that each element has at least one face with 1 neighbor, so the total count must be >0.
+        if (num_neighbors == 1) {
+          num_faces_with_1_neighbor++;
+        }
+        if (num_neighbors == 2) {
+          num_faces_with_2_neighbors++;
+        }
+        if (gtreeid == 0) {
+          // Every face in global tree 0 has 0 or 1 face neighbors.
+          EXPECT_LE (num_neighbors, 1) << "Tree 0 faces must have 0 or 1 neighbor.";
+        }
+        else {
+          T8_ASSERT (gtreeid == 1);
+          // Tree 1 has only one element, it has either 0 neighbors, or 2
+          if (num_neighbors > 0) {
+            EXPECT_EQ (num_neighbors, 2) << "Tree 2 faces must have 0 or 2 neighbors.";
+          }
+        }
+
         // clean-up original element neighbors
         if (num_neighbors > 0) {
           T8_FREE (neighbor_leaves);
@@ -481,7 +532,15 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
         }
       }  // End face loop
     }    // End leaf in tree loop
-  }      // End tree loop
+    if (gtreeid == 0) {
+      // Tree 0 must have >0 faces with 1 neighbor.
+      EXPECT_GE (num_faces_with_1_neighbor, 1) << "Tree 1 must have 1 face with 2 neighbors.";
+    }
+    if (gtreeid == 1) {
+      // Tree 1 must have exactly 1 face with 2 neighbors.
+      EXPECT_EQ (num_faces_with_2_neighbors, 1) << "Tree 1 must have 1 face with 2 neighbors.";
+    }
+  }  // End tree loop
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors_two_quad_mesh, AllSchemeCollections);
