@@ -1470,7 +1470,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
   if (neigh_face == nullptr) {
     neigh_face = &dummy;
   }
-  
+
   /* Get a pointer to the tree to read its element class */
   const t8_tree_t tree = t8_forest_get_tree (forest, ltreeid);
   const t8_eclass_t eclass = tree->eclass;
