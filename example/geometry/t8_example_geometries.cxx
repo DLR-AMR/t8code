@@ -611,15 +611,8 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
   /* Check for each face of the element whether it lies on the 
    * domain boundary. If so, the element is refined. */
   for (iface = 0; iface < num_faces; ++iface) {
-    if (scheme->element_is_root_boundary (tree_class, elements[0], iface)) {
-      /* This element's face is at its tree boundary. Check whether
-         the tree's face is at the domain boundary. */
-      int tree_face = scheme->element_get_tree_face (tree_class, elements[0], iface);
-      t8_locidx_t lctreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest_from, ltree_id);
-      if (t8_cmesh_tree_face_is_boundary (cmesh, lctreeid, tree_face)) {
-        /* The tree's face is at the domain boundary, we refine the element. */
-        return 1;
-      }
+    if (t8_forest_leaf_is_boundary (forest_from, ltree_id, elements[0], iface)) {
+      return 1;
     }
   }
   /* All other elements remain unchanged. */
