@@ -20,6 +20,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_search.cxx
+ * Implements functions declared in \ref t8_forest_search.hxx 
+ *  or the C interface \ref t8_forest_search.h.
+ */
+
 #include "t8_forest/t8_forest_search/t8_forest_search.hxx"
 #include "t8_forest/t8_forest_search/t8_forest_search.h"
 #include <t8_forest/t8_forest_iterate.h>
@@ -99,8 +104,8 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
        * we construct an array of these leaves */
       t8_element_array_init_view (&child_leaves, leaf_elements, indexa, indexb - indexa);
       /* Enter the recursion */
-      search_recursion (ltreeid, children[ichild], ts, &child_leaves, indexa + tree_lindex_of_first_leaf);
       update_queries (new_active_queries);
+      search_recursion (ltreeid, children[ichild], ts, &child_leaves, indexa + tree_lindex_of_first_leaf);
     }
   }
 
@@ -138,6 +143,7 @@ t8_search_base::do_search ()
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (this->forest);
   for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
+    this->init_queries ();
     this->search_tree (itree);
   }
 }
@@ -145,9 +151,12 @@ t8_search_base::do_search ()
 /* #################### t8_forest_search c interface #################### */
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * The structure that contains the C++ search object. Needed for the C interface.
+ */
 struct t8_forest_c_search
 {
-  t8_search<void *> *cpp_search;
+  t8_search<void *> *cpp_search; /**< The C++ search object. */
 };
 
 void
@@ -190,9 +199,12 @@ t8_forest_search_destroy (t8_forest_search_c_wrapper search)
   search->cpp_search = NULL;
 }
 
+/**
+ * The structure that contains the C++ search object with queries. Needed for the C interface.
+ */
 struct t8_forest_search_with_queries
 {
-  t8_search_with_queries<void *, void *> *cpp_search;
+  t8_search_with_queries<void *, void *> *cpp_search; /**< The C++ search object with queries. */
 };
 
 void
@@ -258,11 +270,27 @@ t8_forest_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper s
   search->cpp_search = NULL;
 }
 
+/**
+ * The structure that contains the C++ search object with batched queries. Needed for the C interface.
+ */
 struct t8_forest_search_with_batched_queries
 {
-  t8_search_with_batched_queries<void *, void *> *cpp_search;
-  t8_search_batched_queries_callback_c_wrapper queries_callback;
+  t8_search_with_batched_queries<void *, void *> *cpp_search;    /**< The C++ search object. */
+  t8_search_batched_queries_callback_c_wrapper queries_callback; /**< The C++ query object. */
 
+  /**
+   * A wrapper function that converts the C callback to the C++ callback.
+   * \param[in] forest                  the forest on which the search is performed
+   * \param[in] ltreeid                 the local tree id of the tree being searched
+   * \param[in] element                 the element being searched
+   * \param[in] is_leaf                 whether the element is a leaf
+   * \param[in] leaf_elements           the array of leaf elements
+   * \param[in] tree_leaf_index         the index of the first leaf in the tree
+   * \param[in] queries                 a vector of pointers to the queries
+   * \param[in] active_query_indices    a vector of indices of the active queries
+   * \param[out] query_matches          a vector of booleans indicating whether each query matched
+   * \param[in] user_data               a pointer to user data
+   */
   void
   wrapped_queries_callback (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                             const bool is_leaf, const t8_element_array_t *leaf_elements,

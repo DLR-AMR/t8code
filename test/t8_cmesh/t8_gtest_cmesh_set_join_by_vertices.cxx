@@ -22,8 +22,9 @@
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
@@ -45,8 +46,8 @@ test_with_cmesh (t8_cmesh_t cmesh)
   const t8_locidx_t ntrees = t8_cmesh_get_num_local_trees (cmesh);
 
   /* Arrays for the face connectivity computations via vertices. */
-  double *all_verts = T8_ALLOC (double, ntrees *T8_ECLASS_MAX_CORNERS *T8_ECLASS_MAX_DIM);
-  t8_eclass_t *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
+  double *all_verts = T8_TESTSUITE_ALLOC (double, ntrees *T8_ECLASS_MAX_CORNERS *T8_ECLASS_MAX_DIM);
+  t8_eclass_t *all_eclasses = T8_TESTSUITE_ALLOC (t8_eclass_t, ntrees);
 
   /* Retrieve all tree vertices and element classes and store them into arrays. */
   for (t8_locidx_t itree = 0; itree < ntrees; itree++) {
@@ -141,8 +142,8 @@ test_with_cmesh (t8_cmesh_t cmesh)
   }
 
   T8_FREE (conn);
-  T8_FREE (all_verts);
-  T8_FREE (all_eclasses);
+  T8_TESTSUITE_FREE (all_verts);
+  T8_TESTSUITE_FREE (all_eclasses);
 }
 
 TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
@@ -276,7 +277,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    const char *filename = "test/testfiles/test_cube_unstructured_1.inp";
+    const char *filename = "testfiles/test_cube_unstructured_1.inp";
     p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename);
     t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
@@ -285,7 +286,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    const char *filename = "test/testfiles/test_cube_unstructured_2.inp";
+    const char *filename = "testfiles/test_cube_unstructured_2.inp";
     p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename);
     t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
@@ -294,7 +295,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 }
 
-class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *> {
+struct t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override

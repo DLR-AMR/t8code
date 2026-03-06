@@ -44,12 +44,12 @@ t8_norm (const double vec[3]);
 void
 t8_normalize (double vec[3]);
 
-/** Make a copy of a vector.
- * \param [in]  vec_in
- * \param [out] vec_out
+/** Make a copy of a dimensional object.
+ * \param [in]  dimensional_in
+ * \param [out] dimensional_out
  */
 void
-t8_copy (const double vec_in[3], double vec_out[3]);
+t8_copy (const double dimensional_in[3], double dimensional_out[3]);
 
 /** Euclidean distance of X and Y.
  * \param [in]  vec_x  A 3D vector.
@@ -69,7 +69,7 @@ t8_ax (double vec_x[3], const double alpha);
 
 /** Compute Y = alpha * X
  * \param [in]  vec_x  A 3D vector.
- * \param [out] vec_z  On output set to \a alpha * \a vec_x.
+ * \param [out] vec_y  On output set to \a alpha * \a vec_x.
  * \param [in]  alpha  A factor.
  */
 void
@@ -98,6 +98,7 @@ t8_axpy (const double vec_x[3], double vec_y[3], const double alpha);
  * \param [in]  vec_x  A 3D vector.
  * \param [in]  vec_y  A 3D vector.
  * \param [out] vec_z  On output set \a to vec_y + \a alpha * \a vec_x
+ * \param [in]  alpha  A factor for the multiplication of \a vec_x.
  */
 void
 t8_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha);
@@ -121,7 +122,7 @@ t8_cross_3D (const double vec_x[3], const double vec_y[3], double cross[3]);
 /** Cross product of X and Y
  * \param [in]  vec_x  A 2D vector.
  * \param [in]  vec_y  A 2D vector.
- * \param [out] cross  On output, the cross product of \a vec_x and \a vec_y.
+ * \return             The cross product of \a vec_x and \a vec_y.
  */
 double
 t8_cross_2D (const double vec_x[2], const double vec_y[2]);
@@ -135,12 +136,12 @@ void
 t8_diff (const double vec_x[3], const double vec_y[3], double diff[3]);
 
 /**
- * Check the equality of two vectors elementwise 
- * 
- * \param[in] vec_x 
- * \param[in] vec_y 
- * \param[in] tol 
- * \return true, if the vectors are equal up to \a tol 
+ * Check the equality of two vectors elementwise
+ *
+ * \param[in] vec_x
+ * \param[in] vec_y
+ * \param[in] tol
+ * \return true, if the vectors are equal up to \a tol
  */
 int
 t8_eq (const double vec_x[3], const double vec_y[3], const double tol);
@@ -156,7 +157,7 @@ t8_rescale (double vec[3], const double new_length);
  * \param [in]  p1  A 3D vector.
  * \param [in]  p2  A 3D vector.
  * \param [in]  p3  A 3D vector.
- * \param [out] Normal vector of the triangle. (Not necessarily of length 1!)
+ * \param [out] normal vector of the triangle. (Not necessarily of length 1!)
  */
 void
 t8_normal_of_tri (const double p1[3], const double p2[3], const double p3[3], double normal[3]);

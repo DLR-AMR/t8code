@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_standalone.hxx
+ * Define the standalone scheme interface.
+ */
+
 #ifndef T8_STANDALONE_HXX
 #define T8_STANDALONE_HXX
 

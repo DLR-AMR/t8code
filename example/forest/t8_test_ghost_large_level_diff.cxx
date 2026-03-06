@@ -36,7 +36,7 @@
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
@@ -219,7 +219,7 @@ main (int argc, char *argv[])
 
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated help message to '%s'\n", help);
   }

@@ -21,14 +21,16 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_test_boundary_extrude: public TestDFS {
+struct class_test_boundary_extrude: public TestDFS
+{
+ private:
   /* For elements that are on the face of the root element, check that creating the boundary element
    * and extruding it results in the original element
     */
@@ -84,7 +86,7 @@ class class_test_boundary_extrude: public TestDFS {
 
 TEST_P (class_test_boundary_extrude, test_boundary_extrude_dfs)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

@@ -21,13 +21,15 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
-class class_test_equal: public TestDFS {
+struct class_test_equal: public TestDFS
+{
+ private:
   void
   check_element () override
   {
@@ -76,7 +78,7 @@ class class_test_equal: public TestDFS {
 
 TEST_P (class_test_equal, test_equal_dfs)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 3;
 #else
   const int maxlvl = 5;

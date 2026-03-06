@@ -26,14 +26,14 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_types/t8_vec.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
 #define MAX_LEVEL_REF_COORD_TEST 3
 #else
 #define MAX_LEVEL_REF_COORD_TEST 4
@@ -223,7 +223,8 @@ t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_e
     << t8_generate_additional_info_centroid (shape, centroid_by_vertices, centroid_by_element_ref_coords);
 }
 
-class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override

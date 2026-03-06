@@ -59,13 +59,14 @@
  * Note, this test runs only on one rank.
  */
 
-class forest_permute: public testing::TestWithParam<t8_eclass_t> {
+struct forest_permute: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override
   {
     eclass = GetParam ();
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
     level = 1;
 #else
     level = eclass < 4 ? 2 : 1;
