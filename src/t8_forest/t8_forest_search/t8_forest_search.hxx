@@ -37,6 +37,7 @@
 #include <numeric>
 #include <ranges>
 #include <algorithm>
+#include <vector>
 
 /**
  *  t8_search_element_callback
@@ -174,7 +175,8 @@ using t8_partition_search_batched_queries_callback = std::function<void (
 /**
  * A base class that performs a search in a forest.
  */
-class t8_search_base {
+struct t8_search_base
+{
  public:
   /**   Constructor for the t8_search_base class.
    *
@@ -330,7 +332,8 @@ class t8_search_base {
  * \tparam Udata The type of user data to be used in the search.
  */
 template <typename Udata = void>
-class t8_search: public t8_search_base {
+struct t8_search: public t8_search_base
+{
  public:
   /**
   * Constructor for the t8_search class.
@@ -450,7 +453,8 @@ class t8_search: public t8_search_base {
  * \tparam Udata The type of the user data, defaults to void.
 */
 template <typename Query_T, typename Udata = void>
-class t8_search_with_queries: public t8_search<Udata> {
+struct t8_search_with_queries: public t8_search<Udata>
+{
  public:
   /**
    * Constructor for the t8_search_with_queries class.
@@ -563,7 +567,8 @@ class t8_search_with_queries: public t8_search<Udata> {
  * \tparam Udata The type of the user data, defaults to void.
  */
 template <typename Query_T, typename Udata = void>
-class t8_search_with_batched_queries: public t8_search<Udata> {
+struct t8_search_with_batched_queries: public t8_search<Udata>
+{
  public:
   /**
   * Constructor for the t8_search_with_batched_queries class.
@@ -667,7 +672,8 @@ class t8_search_with_batched_queries: public t8_search<Udata> {
 /**
  * A class that performs a search in the partition of a forest.
  */
-class t8_partition_search_base {
+struct t8_partition_search_base
+{
  public:
   /**  Constructor for the t8_partition_search_base class.
    *
@@ -791,7 +797,8 @@ class t8_partition_search_base {
  * \tparam Udata 
  */
 template <typename Udata = void>
-class t8_partition_search: public t8_partition_search_base {
+struct t8_partition_search: public t8_partition_search_base
+{
  public:
   /**
   * Constructor for the t8_partition_search class.
@@ -906,7 +913,8 @@ class t8_partition_search: public t8_partition_search_base {
  * \tparam Udata The type of the user data, defaults to void.
 */
 template <typename Query_T, typename Udata = void>
-class t8_partition_search_with_queries: public t8_partition_search<Udata> {
+struct t8_partition_search_with_queries: public t8_partition_search<Udata>
+{
  public:
   /**
    * Constructor for the t8_partition_search_with_queries class.
@@ -1026,7 +1034,8 @@ class t8_partition_search_with_queries: public t8_partition_search<Udata> {
  * \tparam Udata The type of the user data, defaults to void.
  */
 template <typename Query_T, typename Udata = void>
-class t8_partition_search_with_batched_queries: public t8_partition_search<Udata> {
+struct t8_partition_search_with_batched_queries: public t8_partition_search<Udata>
+{
  public:
   /**
   * Constructor for the t8_partition_search_with_batched_queries class.

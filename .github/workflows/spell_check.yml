@@ -27,6 +27,7 @@ on:
 
 jobs:
   typos-check:
+    timeout-minutes: 10
     name: Spell Check with Typos
     runs-on: ubuntu-latest
     steps:
@@ -37,11 +38,11 @@ jobs:
       - name: check macros
         run: |
           for file in $(git diff --name-only --diff-filter=A); do
-            ./scripts/check_macros.sh "$file" &>> check_macros.txt
+            ./scripts/internal/check_macros.sh "$file" &>> check_macros.txt
           done
       - name: Archive script output
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: t8code check macros report
           path: check_macros.txt

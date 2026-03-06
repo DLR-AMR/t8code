@@ -61,7 +61,6 @@ t8_time_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_destroy (&cmesh_partition);
 }
 
-#if 1
 /* add x*mpirank to all of the x-coordinates of a tree in cmesh.
  * This is useful to separate the disjoint parts visually. */
 void
@@ -138,7 +137,6 @@ t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm, int no_vtk
   /* memory clean-up */
   t8_cmesh_destroy (&cmesh_partition);
 }
-#endif
 
 int
 main (int argc, char *argv[])

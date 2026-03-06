@@ -21,11 +21,11 @@
 */
 
 /** \file t8_fortran_interface.h
- * In this file we provide a basic Fortran interface 
+ * In this file we provide a basic Fortran interface
  * for some functions of t8code.
  * Mostly, the C functions here are wrappers around more complex
  * t8code function.
- * We only export a minimum of the actual t8code functionality 
+ * We only export a minimum of the actual t8code functionality
  * to Fortran.
  */
 
@@ -73,19 +73,6 @@ t8_fortran_finalize ();
 void
 t8_fortran_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm *comm);
 
-/** This function calls t8_cmesh_set_join_by_stash with connectivity = NULL.
- * \param[in,out]   cmesh               Pointer to a t8code cmesh object. If set to NULL this argument is ignored.
- * \param[in]       do_both_directions  Compute the connectivity from both neighboring sides.
- *                                      Takes much longer to compute.
- *
- * \warning  This routine might be too expensive for very large meshes. In this case, 
- *           consider to use a fully featured mesh generator.
- *
- * \note This routine does not detect periodic boundaries.
-*/
-void
-t8_fortran_cmesh_set_join_by_stash_noConn (t8_cmesh_t cmesh, const int do_both_directions);
-
 /** Translate a fortran MPI communicator into a C MPI communicator
  * and return a pointer to it.
  * \param [in] Fcomm           Fortran MPI Communicator
@@ -125,7 +112,7 @@ t8_cmesh_new_periodic_tri_wrap (sc_MPI_Comm *Ccomm);
 t8_forest_t
 t8_forest_new_uniform_default (t8_cmesh_t cmesh, int level, int do_face_ghost, sc_MPI_Comm *comm);
 
-/** 
+/**
  * \param [in, out] forest     The forest
  * \param [in] recursive       A flag specifying whether adaptation is to be done recursively
  *                             or not. If the value is zero, adaptation is not recursive

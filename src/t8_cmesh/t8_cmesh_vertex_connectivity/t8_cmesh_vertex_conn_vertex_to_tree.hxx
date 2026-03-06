@@ -35,7 +35,7 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
 
 /** forward declaration of ttv class needed since the two class headers include each other. */
-class t8_cmesh_vertex_conn_tree_to_vertex;
+struct t8_cmesh_vertex_conn_tree_to_vertex;
 
 /** This class stores the vertex to tree lookup for
  * global vertex indices for a cmesh.
@@ -67,7 +67,8 @@ class t8_cmesh_vertex_conn_tree_to_vertex;
  * Table global_id -> TV_LIST: std::unordered_map<t8_gloidx_t, TV_LIST>
  *
  */
-class t8_cmesh_vertex_conn_vertex_to_tree {
+struct t8_cmesh_vertex_conn_vertex_to_tree
+{
  public:
   /** Standard constructor.
    * Initializes the class and allows setting vertex entries
@@ -115,7 +116,7 @@ class t8_cmesh_vertex_conn_vertex_to_tree {
     try {
       return vertex_to_tree.at (global_vertex_id);
     } catch (const std::out_of_range& e) {
-      t8_errorf ("ERROR: Could not find vertex %li for cmesh.\n", global_vertex_id);
+      t8_errorf ("ERROR: Could not find vertex %" T8_GLOIDX_FORMAT " for cmesh.\n", global_vertex_id);
       SC_ABORTF ("Caught exception 'out of range': %s\n", e.what ());
     }
   }

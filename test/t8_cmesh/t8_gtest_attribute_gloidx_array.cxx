@@ -35,7 +35,8 @@
 
 #define T8_ATTRIBUTE_TEST_MAX_NUM_ENTRIES 1000
 
-class cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int, int>> {
+struct cmesh_attribute_gloidx_array: public testing::TestWithParam<std::tuple<int, int>>
+{
  protected:
   /* in Setup we build a two tree cmesh, fill an array with entries
    * and set the array as attribute for both trees with different data_persists settings. */

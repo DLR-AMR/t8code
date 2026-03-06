@@ -32,7 +32,7 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
@@ -199,7 +199,7 @@ create_sample_element (t8_eclass_t eclass, int degree)
  * Common resources for all the tests.
  *
  */
-class LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct LagrangeCmesh: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
  protected:
   void
   SetUp () override

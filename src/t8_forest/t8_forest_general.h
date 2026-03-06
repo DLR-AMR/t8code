@@ -24,13 +24,11 @@
  * We define the forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_GENERAL_H
 #define T8_FOREST_GENERAL_H
 
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */
@@ -53,6 +51,13 @@ typedef enum {
  * a pointer to a void fun(void) function. \see t8_forest_get_user_function.
  */
 typedef void (*t8_generic_function_pointer) (void);
+
+/**
+ * The prototype of a weight function for the partition algorithm.
+ * The function should be pure, and return a positive weight given a forest, a local tree index and an element index within the local tree
+ */
+typedef double (t8_weight_fcn_t) (t8_forest_t, t8_locidx_t, t8_locidx_t);
+
 T8_EXTERN_C_BEGIN ();
 
 /** Callback function prototype to replace one set of elements with another.
@@ -258,7 +263,7 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from);
  */
 /* TODO: make recursive flag to int specifying the number of recursions? */
 void
-t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, int recursive);
+t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, const int recursive);
 
 /** Set the user data of a forest. This can i.e. be used to pass user defined
  * arguments to the adapt routine.
@@ -310,9 +315,11 @@ t8_forest_get_user_function (const t8_forest_t forest);
  *                          referencing \b set_from.
  *                          If NULL, a previously (or later) set forest will
  *                          be taken (\ref t8_forest_set_adapt, \ref t8_forest_set_balance).
- * \param [in]      set_for_coarsening CURRENTLY DISABLED. If true, then the partitions
- *                          are choose such that coarsening an element once is a process local
- *                          operation.
+ * \param [in]      set_for_coarsening If true, the partition will be such that coarsening a
+ *                          family of elements into their parent once is a process-local operation.
+ *                          This is ensured by a post-processing step that slightly shifts the newly
+ *                          determined process boundaries such that no full family of (same-level)
+ *                          siblings is split between processes.
  * \note This setting can be combined with \ref t8_forest_set_adapt and \ref
  * t8_forest_set_balance. The order in which these operations are executed is always
  * 1) Adapt 2) Partition 3) Balance.
@@ -323,6 +330,16 @@ t8_forest_get_user_function (const t8_forest_t forest);
  */
 void
 t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening);
+
+/** Set a user-defined weight function to guide the partitioning.
+ * \param [in, out] forest  The forest.
+ * \param [in]      weight_callback A callback function defining element weights for the partitioning.
+ * \pre \a weight_callback must be free of side effects (like changing the forest, some global state, etc.),
+ * the behavior is undefined otherwise.
+ * \note If \a weight_callback is null, then all the elements are assumed to have the same weight
+ */
+void
+t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *weight_callback);
 
 /** Set a source forest to be balanced during commit.
  * A forest is said to be balanced if each element has face neighbors of level

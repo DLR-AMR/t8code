@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
@@ -42,7 +42,8 @@
  * in a second test, we store the element's linear id in the data array.
  */
 
-class forest_ghost_exchange: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct forest_ghost_exchange: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override

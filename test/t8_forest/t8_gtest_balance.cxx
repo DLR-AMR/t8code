@@ -29,7 +29,7 @@
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -41,7 +41,8 @@
 #include <vector>
 #include <algorithm>
 
-class gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>> {
+struct gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>>
+{
  public:
   static const int kNumTrees = 4;
 

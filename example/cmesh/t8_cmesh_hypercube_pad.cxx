@@ -32,8 +32,6 @@ main (int argc, char **argv)
 {
   /* The prefix for our output files. */
   const char prefix[BUFSIZ] = "t8_forest_hypercube_pad";
-  t8_locidx_t local_num_trees;
-  t8_gloidx_t global_num_trees;
 
   const double boundary_coords[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
@@ -49,11 +47,11 @@ main (int argc, char **argv)
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, boundary_coords, 3, 3, 3, true);
 
   /* Compute local and global number of trees. */
-  local_num_trees = t8_cmesh_get_num_local_trees (cmesh);
-  global_num_trees = t8_cmesh_get_num_trees (cmesh);
+  t8_locidx_t local_num_trees = t8_cmesh_get_num_local_trees (cmesh);
+  t8_gloidx_t global_num_trees = t8_cmesh_get_num_trees (cmesh);
   t8_global_productionf (" [step1] Created coarse mesh.\n");
   t8_global_productionf (" [step1] Local number of trees:\t%i\n", local_num_trees);
-  t8_global_productionf (" [step1] Global number of trees:\t%li\n", static_cast<long> (global_num_trees));
+  t8_global_productionf (" [step1] Global number of trees:\t%" T8_GLOIDX_FORMAT "\n", global_num_trees);
   const t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
   t8_forest_vtk_write_file (forest, prefix, 1, 1, 1, 1, 0, 0, NULL);

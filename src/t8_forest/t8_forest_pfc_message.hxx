@@ -30,7 +30,7 @@
 #define T8_FOREST_PFC_MESSAGE_H
 
 #include <t8.h>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_pfc_helper.hxx>
 #include <t8_schemes/t8_scheme.h>
@@ -42,7 +42,8 @@
  * between the processes that will be required to decide on whether and where
  * families are split at process boundaries.
 */
-class t8_forest_pfc_message {
+struct t8_forest_pfc_message
+{
  public:
   /**
    * Pack the data to prepare sending.

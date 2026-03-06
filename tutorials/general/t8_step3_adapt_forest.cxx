@@ -24,19 +24,20 @@
  * After generating a coarse mesh (step1) and building a uniform forest
  * on it (step2), we will now adapt (= refine and coarsen) the forest
  * according to our own criterion.
- * 
+ *
  * The geometry (coarse mesh) is again a cube, this time modelled with
  * 6 tetrahedra, 6 prisms and 4 cubes.
  * We refine an element if its midpoint is within a sphere of given radius
  * around the point (0.5, 0.5, 1) and we coarsen outside of a given radius.
  * We will use non-recursive refinement, that means that the refinement level
  * of any element will change by at most +-1.
- * 
+ *
  * How you can experiment here:
  *   - Look at the paraview output files of the uniform and the adapted forest.
  *     For the adapted forest you can apply a slice filter to look into the cube.
  *   - Run the program with different process numbers. You should see that refining is
- *     independent of the number of processes, but coarsening is not.
+ *     independent of the number of processes, but coarsening is not
+ *     (unless the partition-for-coarsening flag 'set_for_coarsening' is activated).
  *     This is due to the face that a family can only be coarsened if it is completely
  *     local to a single process and the distribution among the process may break this property.
  *   - Change the midpoint coordinates and the radii.
@@ -71,7 +72,7 @@ T8_EXTERN_C_BEGIN ();
  *   return > 0 -> The first element should get refined.
  *   return = 0 -> The first element should not get refined.
  *   return < 0 -> The whole family should get coarsened.
- *  
+ *
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
@@ -97,7 +98,7 @@ t8_step3_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_
   const struct t8_step3_adapt_data *adapt_data = (const struct t8_step3_adapt_data *) t8_forest_get_user_data (forest);
   double dist; /* Will store the distance of the element's midpoint and the sphere midpoint. */
 
-  /* You can use T8_ASSERT for assertions that are active in debug mode (when configured with --enable-debug).
+  /* You can use T8_ASSERT for assertions that are active in debug mode (when compiled with -DCMAKE_BUILD_TYPE=Debug).
    * If the condition is not true, then the code will abort.
    * In this case, we want to make sure that we actually did set a user pointer to forest and thus
    * did not get the NULL pointer from t8_forest_get_user_data.
@@ -168,7 +169,7 @@ t8_step3_print_forest_information (t8_forest_t forest)
   /* Get the global number of elements. */
   global_num_elements = t8_forest_get_global_num_leaf_elements (forest);
   t8_global_productionf (" [step3] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [step3] Global number of elements:\t%li\n", static_cast<long> (global_num_elements));
+  t8_global_productionf (" [step3] Global number of elements:\t%" T8_GLOIDX_FORMAT "\n", global_num_elements);
 }
 
 int

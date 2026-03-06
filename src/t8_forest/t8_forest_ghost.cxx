@@ -950,9 +950,6 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
   t8_ghost_mpi_send_info_t *send_info, *current_send_info;
   char *current_buffer;
   size_t bytes_written, element_bytes, element_count, element_size;
-#if T8_ENABLE_DEBUG
-  size_t acc_el_count = 0;
-#endif
   int mpiret;
 
   /* Allocate a send_buffer for each remote rank */
@@ -1016,9 +1013,7 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
     memcpy (current_buffer + bytes_written, &remote_trees->elem_count, sizeof (size_t));
     bytes_written += sizeof (size_t);
     bytes_written += T8_ADD_PADDING (bytes_written);
-#if T8_ENABLE_DEBUG
-    acc_el_count = 0;
-#endif
+
     for (remote_index = 0; remote_index < remote_trees->elem_count; remote_index++) {
       /* Get a pointer to the tree */
       remote_tree = (t8_ghost_remote_tree_t *) sc_array_index (remote_trees, remote_index);
@@ -1048,9 +1043,6 @@ t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_
 
       /* Add to the counter of remote elements. */
       ghost->num_remote_elements += element_count;
-#if T8_ENABLE_DEBUG
-      acc_el_count += element_count;
-#endif
     } /* End tree loop */
 
     T8_ASSERT (bytes_written == current_send_info->num_bytes);

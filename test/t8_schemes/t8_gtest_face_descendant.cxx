@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
@@ -58,7 +58,9 @@ t8_test_manual_first_last_face_descendant (const t8_scheme *scheme, const t8_ele
   T8_TESTSUITE_FREE (child_indices);
 }
 
-class class_descendant: public TestDFS {
+struct class_descendant: public TestDFS
+{
+ private:
   void
   check_element () override
   {
