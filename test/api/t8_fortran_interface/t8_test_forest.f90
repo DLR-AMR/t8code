@@ -20,16 +20,19 @@
 
 !! Description:
 !!
-!! This program tests if the forest part of the Fortran
-!! interface can be called.
-!! Works only when MPI is enabled.
+!! This test checks for all forest-related functions of the Fortran interface
+!! whether they can be called from Fortran code without throwing segmentation
+!! faults or other errors. Note, however, that is does not verify all the
+!! outputs and return values are as expected, but only checks for errors.
+!!
+!! The test repeatedly creates example cmeshes in different ways and tests
+!! their vtk output, setting their connectivity, and destroying them.
 
 program t8_test_forest
   use mpi
   use iso_c_binding, only: c_ptr, c_int, c_char
   use t8_fortran_interface_mod
   use t8_fortran_example_adapt_mod
-
   implicit none
 
   integer :: ierror, fcomm
@@ -40,17 +43,17 @@ program t8_test_forest
   character(len=256, kind=c_char) :: vtk_prefix
   type(c_funptr) :: c_adapt_callback_ptr
 
+  ! Initialize MPI
   call MPI_Init (ierror)
-
   if (ierror /= 0) then
     write(*,*) 'MPI initialization failed.'
     stop 1
   endif
-
   fcomm = MPI_COMM_WORLD
   ccomm = t8_fortran_mpi_comm_new_f (fcomm)
   call t8_fortran_init_all_f (ccomm)
 
+  ! Create a first example forest and test-call getter functions.
   cmesh = t8_cmesh_new_periodic_tri_f (ccomm)
   forest = t8_forest_new_uniform_default_f (cmesh, 2, 0, ccomm)
   num_local_elements = t8_forest_get_local_num_leaf_elements (forest)
@@ -63,7 +66,7 @@ program t8_test_forest
   ltree_id = 0
   call t8_fortran_element_volume_f(forest, ltree_id, element)
 
-  ! Cast adapt callback into C-compatible function pointer.
+  ! Prepare adaptation: Cast adapt callback into C-compatible function pointer.
   c_adapt_callback_ptr = c_funloc(example_fortran_adapt_by_coordinates_callback)
 
   ! Adapt the forest using the Fortran-defined callback.
@@ -71,7 +74,7 @@ program t8_test_forest
   adapted_forest = t8_fortran_adapt_by_coordinates_f(forest, 0, c_adapt_callback_ptr)
   write(*,*) '*** Finished forest adaptation!'
 
-  ! Write out forest
+  ! Write out forest to vtk.
   write(*,*) '*** Start forest vtk output!'
   vtk_prefix = "fortran_forest_to_vtk" // c_null_char
   ierror = t8_forest_write_vtk_f(adapted_forest, vtk_prefix)
@@ -81,18 +84,20 @@ program t8_test_forest
   endif
   write(*,*) '*** Finished forest vtk output!'
 
+  ! Finalize MPI and t8code.
   write(*,*) 'Finalize forest tests.'
   call t8_forest_unref_f (adapted_forest)
   call t8_fortran_finalize_f ()
   call t8_fortran_mpi_comm_delete_f(ccomm)
-
   call MPI_Finalize(ierror)
   if (ierror /= 0) then
     write(*,*) 'MPI Finalize failed.'
     stop 1
   endif
 
+  !! Everything passed: Return zero.
   write(*,*) ''
-  write(*,*) 'All good!'
+  print *, 'PASSED: forest tests of Fortran interface!'
   stop 0
+
 end program

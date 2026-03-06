@@ -22,12 +22,11 @@
 !!
 !! This program tests if t8code can be initialized from Fortran
 !! without MPI communicator.
-
 program t8_test_init_no_mpi
   use mpi
   use iso_c_binding, only: c_ptr, c_int
   use t8_fortran_interface_mod
-  
+
   implicit none
 
   ! Init Fortran interface without MPI, i.e., sc_MPI_COMM_NULL communicator.
@@ -39,7 +38,9 @@ program t8_test_init_no_mpi
   ! Finalize
   call t8_fortran_finalize_f ()
 
-  print *, 'All good!'
+  ! Everything passed: Return zero.
+  write(*,*) ''
+  print *, 'PASSED: serial init test of Fortran interface!'
   stop 0
 
 end program

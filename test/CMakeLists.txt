@@ -114,7 +114,6 @@ add_t8_cpp_test( NAME t8_gtest_basics_serial            SOURCES t8_gtest_basics.
 add_t8_cpp_test( NAME t8_gtest_vtk_linkage_serial       SOURCES t8_gtest_vtk_linkage.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_type_serial                  SOURCES t8_types/t8_gtest_type.cxx )
-add_t8_cpp_test( NAME t8_gtest_random_accessible_serial     SOURCES t8_types/t8_gtest_random_accessible.cxx )
 add_t8_cpp_test( NAME t8_gtest_vec_serial                   SOURCES t8_types/t8_gtest_vec.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_hypercube_parallel                           SOURCES t8_cmesh/t8_gtest_hypercube.cxx )
@@ -136,6 +135,7 @@ add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOUR
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
 add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
 
+add_t8_cpp_test( NAME t8_gtest_bin_search_parallel                SOURCES t8_forest/t8_gtest_bin_search.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_volume_serial              SOURCES t8_forest/t8_gtest_element_volume.cxx )
 add_t8_cpp_test( NAME t8_gtest_search_parallel                    SOURCES t8_forest/t8_gtest_search.cxx )
 add_t8_cpp_test( NAME t8_gtest_half_neighbors_parallel            SOURCES t8_forest/t8_gtest_half_neighbors.cxx )
@@ -148,7 +148,7 @@ add_t8_cpp_test( NAME t8_gtest_ghost_and_owner_parallel           SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_balance_parallel                   SOURCES t8_forest/t8_gtest_balance.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_commit_parallel             SOURCES t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_face_normal_serial          SOURCES t8_forest/t8_gtest_forest_face_normal.cxx )
-add_t8_cpp_test( NAME t8_gtest_element_is_leaf_serial             SOURCES t8_forest/t8_gtest_element_is_leaf.cxx )
+add_t8_cpp_test( NAME t8_gtest_element_is_leaf_serial             SOURCES t8_forest/t8_gtest_element_is_leaf.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_data_parallel            SOURCES t8_forest/t8_gtest_partition_data.cxx )
 add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_forest/t8_gtest_set_partition_offset.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
@@ -183,6 +183,7 @@ add_t8_cpp_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_schemes/t8_gtest_face_neigh.cxx )
 add_t8_cpp_test( NAME t8_gtest_get_linear_id_serial         SOURCES t8_schemes/t8_gtest_get_linear_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_serial              SOURCES t8_schemes/t8_gtest_ancestor.cxx )
+add_t8_cpp_test( NAME t8_gtest_is_ancestor_serial              SOURCES t8_schemes/t8_gtest_is_ancestor.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_schemes/t8_gtest_element_count_leaves.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_ref_coords_serial    SOURCES t8_schemes/t8_gtest_element_ref_coords.cxx )

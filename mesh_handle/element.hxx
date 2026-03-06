@@ -27,8 +27,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #pragma once
 
 #include <t8.h>
-#include <t8_element.h>
-#include <t8_eclass.h>
+#include <t8_element/t8_element.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -57,21 +57,21 @@ namespace t8_mesh_handle
  * \tparam TCompetences The competences you want to add to the default functionality of the element.
  */
 
-template <typename mesh_class, template <typename> class... TCompetences>
-class element: public TCompetences<element<mesh_class, TCompetences...>>... {
+template <typename TMeshClass, template <typename> class... TCompetences>
+class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
  private:
   using SelfType
-    = element<mesh_class, TCompetences...>; /**< Type of the current class with all template parameters specified. */
-  friend mesh_class; /**< Define mesh_class as friend to be able to access e.g. the constructor. */
+    = element<TMeshClass, TCompetences...>; /**< Type of the current class with all template parameters specified. */
+  friend TMeshClass; /**< Define TMeshClass as friend to be able to access e.g. the constructor. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
-   *  This constructor should only be called by the mesh_class (and invisible for the user).
+   *  This constructor should only be called by the TMeshClass (and invisible for the user).
    * \param [in] mesh             Pointer to the mesh the element should belong to.
    * \param [in] tree_id          The tree id of the element in the forest defining the mesh.
    * \param [in] element_id       The element id of the element in the forest defining the mesh.
    * \param [in] is_ghost_element Flag to indicate that this element is a ghost element. Default is false.
    */
-  element (mesh_class* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
+  element (TMeshClass* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
     : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id), m_is_ghost_element (is_ghost_element)
   {
     // Cache the t8_element_t from the forest as it is often used.
@@ -113,7 +113,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   static constexpr bool
   has_volume_cache ()
   {
-    return (false || ... || volume_cache_defined<TCompetences> ());
+    return requires (SelfType& element) { element.volume_cache_filled (); };
   }
 
   /** Function that checks if a cache for the element's diameter exists.
@@ -122,7 +122,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   static constexpr bool
   has_diameter_cache ()
   {
-    return (false || ... || diameter_cache_defined<TCompetences> ());
+    return requires (SelfType& element) { element.diameter_cache_filled (); };
   }
 
   /** Function that checks if a cache for the vertex coordinates exists.
@@ -131,7 +131,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   static constexpr bool
   has_vertex_cache ()
   {
-    return (false || ... || vertex_cache_defined<TCompetences> ());
+    return requires (SelfType& element) { element.vertex_cache_filled (); };
   }
 
   /** Function that checks if a cache for the centroid exists.
@@ -140,7 +140,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   static constexpr bool
   has_centroid_cache ()
   {
-    return (false || ... || centroid_cache_defined<TCompetences> ());
+    return requires (SelfType& element) { element.centroid_cache_filled (); };
   }
 
   /** Function that checks if a cache for the face neighbors exists.
@@ -149,7 +149,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   static constexpr bool
   has_face_neighbor_cache ()
   {
-    return (false || ... || neighbor_cache_defined<TCompetences> ());
+    return requires (SelfType& element) { element.neighbor_cache_filled (0); };
   }
   /** Function that checks if a cache for the element's face areas exists.
    * \return true if a cache exists, false otherwise.
@@ -157,7 +157,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   static constexpr bool
   has_face_areas_cache ()
   {
-    return (false || ... || face_area_cache_defined<TCompetences> ());
+    return requires (SelfType& element) { element.face_area_cache_filled (0); };
   }
 
   /** Function that checks if a cache for the element's face centroids exists.
@@ -166,7 +166,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   static constexpr bool
   has_face_centroids_cache ()
   {
-    return (false || ... || face_centroid_cache_defined<TCompetences> ());
+    return requires (SelfType& element) { element.face_centroid_cache_filled (0); };
   }
 
   /** Function that checks if a cache for the element's face normals exists.
@@ -175,7 +175,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   static constexpr bool
   has_face_normals_cache ()
   {
-    return (false || ... || face_normal_cache_defined<TCompetences> ());
+    return requires (SelfType& element) { element.face_normal_cache_filled (0); };
   }
 
   // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
@@ -259,7 +259,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    *  This function uses or sets the cached version defined in TCompetence if available and calculates if not.
    * \return Vector with one coordinate array for each vertex of the element.
    */
-  std::vector<t8_3D_point>
+  std::vector<t8_3D_vec>
   get_vertex_coordinates () const
   {
     if constexpr (has_vertex_cache ()) {
@@ -269,7 +269,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
     }
     // Calculate the vertex coordinates.
     const int num_corners = get_num_vertices ();
-    std::vector<t8_3D_point> vertex_coordinates (num_corners);
+    std::vector<t8_3D_vec> vertex_coordinates (num_corners);
     for (int icorner = 0; icorner < num_corners; ++icorner) {
       t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, m_element, icorner,
                                     vertex_coordinates[icorner].data ());
@@ -288,7 +288,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * \param [in] vertex Index of the vertex.
    * \return Coordinates of the vertex.
    */
-  t8_3D_point
+  t8_3D_vec
   get_vertex_coordinates (int vertex) const
   {
     T8_ASSERT (vertex < get_num_vertices ());
@@ -299,7 +299,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
       }
       return this->m_vertex_coordinates[vertex];
     }
-    t8_3D_point coordinates;
+    t8_3D_vec coordinates;
     t8_forest_element_coordinate (m_mesh->m_forest, m_tree_id, m_element, vertex, coordinates.data ());
     return coordinates;
   }
@@ -308,7 +308,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * This function uses the cached version defined in TCompetence if available and calculates if not.
    * \return Coordinates of the center.
    */
-  t8_3D_point
+  t8_3D_vec
   get_centroid () const
   {
     // Check if we have a cached version and if the cache has already been filled.
@@ -317,7 +317,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
         return this->m_centroid.value ();
       }
     }
-    t8_3D_point coordinates;
+    t8_3D_vec coordinates;
     t8_forest_element_centroid (m_mesh->m_forest, m_tree_id, m_element, coordinates.data ());
     // Fill the cache in the cached version.
     if constexpr (has_centroid_cache ()) {
@@ -416,7 +416,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * \param [in] face Index of a face of the element.
    * \return The centroid of the face with id \a face.
    */
-  t8_3D_point
+  t8_3D_vec
   get_face_centroid (int face) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
@@ -425,7 +425,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
         return this->m_face_centroids[face].value ();
       }
     }
-    t8_3D_point coordinates;
+    t8_3D_vec coordinates;
     t8_forest_element_face_centroid (m_mesh->m_forest, m_tree_id, m_element, face, coordinates.data ());
     if constexpr (has_face_centroids_cache ()) {
       this->m_face_centroids[face] = coordinates;
@@ -523,7 +523,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   /** Getter for the mesh to which the element belongs.
    * \return Reference to the mesh.
    */
-  const mesh_class*
+  const TMeshClass*
   get_mesh () const
   {
     return m_mesh;
@@ -542,9 +542,9 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   /** Getter for the element data.
    * For ghost elements ensure that \ref mesh::exchange_ghost_data is called on each process first.
    * Element data for non-ghost elements can be accessed (if set) directly.
-   * \return Element data with data of Type mesh_class::ElementDataType.
+   * \return Element data with data of Type TMeshClass::ElementDataType.
    */
-  template <typename TElementDataType = typename mesh_class::ElementDataType,
+  template <typename TElementDataType = typename TMeshClass::ElementDataType,
             typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
   const TElementDataType&
   get_element_data () const
@@ -558,7 +558,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
    * \note You can only set element data for non-ghost elements.
    * \param [in] element_data The element data to be set.
    */
-  template <typename TElementDataType = typename mesh_class::ElementDataType,
+  template <typename TElementDataType = typename TMeshClass::ElementDataType,
             typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
   void
   set_element_data (TElementDataType element_data)
@@ -572,7 +572,7 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
 
  private:
   // --- Private member variables. ---
-  mesh_class* m_mesh;             /**< Pointer to the mesh the element is defined for. */
+  TMeshClass* m_mesh;             /**< Pointer to the mesh the element is defined for. */
   const t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest defined in the mesh. */
   const t8_locidx_t m_element_id; /**< The element id of the element in the forest defined in the mesh. */
   const bool m_is_ghost_element;  /**< Flag to indicate if the element is a ghost element. */
@@ -586,88 +586,6 @@ class element: public TCompetences<element<mesh_class, TCompetences...>>... {
   get_tree_class () const
   {
     return t8_forest_get_tree_class (m_mesh->m_forest, m_tree_id);
-  }
-
-  // --- Private variables to check which functionality is defined in TCompetence. ---
-  /** Helper function to check if class T implements the function volume_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  volume_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.volume_cache_filled (); };
-  }
-  /** Helper function to check if class T implements the function diameter_cache_defined.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  diameter_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.diameter_cache_filled (); };
-  }
-  /** Helper function to check if class T implements the function vertex_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  vertex_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.vertex_cache_filled (); };
-  }
-  /** Helper function to check if class T implements the function centroid_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  centroid_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.centroid_cache_filled (); };
-  }
-  /** Helper function to check if class T implements the function neighbor_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  neighbor_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.neighbor_cache_filled (0); };
-  }
-  /** Helper function to check if class T implements the function face_area_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  face_area_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.face_area_cache_filled (0); };
-  }
-  /** Helper function to check if class T implements the function face_centroid_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  face_centroid_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.face_centroid_cache_filled (0); };
-  }
-  /** Helper function to check if class T implements the function face_normal_cache_filled.
-   * \tparam T The competence to be checked.
-   * \return true if T implements the function, false if not.
-   */
-  template <template <typename> class T>
-  static constexpr bool
-  face_normal_cache_defined ()
-  {
-    return requires (T<SelfType>& competence) { competence.face_normal_cache_filled (0); };
   }
 };
 
