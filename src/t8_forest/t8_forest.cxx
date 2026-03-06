@@ -1886,33 +1886,35 @@ t8_forest_leaf_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 }
 
 int
-t8_forest_leaf_neighbor_subface(t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t* leaf, int face,
-                                t8_eclass_t neighbor_tree_class, const t8_element_t* neighbor_leaf, int neighbor_face){
-    t8_scheme const* scheme = t8_forest_get_scheme( forest );
+t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf, int face,
+                                 t8_eclass_t neighbor_tree_class, const t8_element_t *neighbor_leaf, int neighbor_face)
+{
+  t8_scheme const *scheme = t8_forest_get_scheme (forest);
 
-    t8_element_t* target = nullptr;
-    scheme->element_new( neighbor_tree_class, 1, &target );
+  t8_element_t *target = nullptr;
+  scheme->element_new (neighbor_tree_class, 1, &target);
 
-    int dummy; // Can't pass a nullptr to t8_forest_element_face_neighbor below (see #2214)
-    t8_forest_element_face_neighbor( forest, ltreeid, leaf, target, neighbor_tree_class, face, &dummy );
+  int dummy;  // Can't pass a nullptr to t8_forest_element_face_neighbor below (see #2214)
+  t8_forest_element_face_neighbor (forest, ltreeid, leaf, target, neighbor_tree_class, face, &dummy);
 
-    int const num_children = scheme->element_get_num_face_children( neighbor_tree_class, neighbor_leaf, neighbor_face );
+  int const num_children = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
 
-    std::array< t8_element_t*, 4 > children; // assumes a 2:1 balanced forest
-    scheme->element_new( neighbor_tree_class, 4, children.begin() );
+  std::array<t8_element_t *, 4> children;  // assumes a 2:1 balanced forest
+  scheme->element_new (neighbor_tree_class, 4, children.begin ());
 
-    scheme->element_get_children_at_face( neighbor_tree_class, neighbor_leaf, neighbor_face, children.begin(), num_children, nullptr );
+  scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face, children.begin (),
+                                        num_children, nullptr);
 
-    int result = -1;
-    for ( int i_child = 0; i_child < num_children; ++i_child ){
-        if ( scheme->element_compare( neighbor_tree_class, target, children[i_child] ) == 0 ){
-            result = i_child;
-         }
+  int result = -1;
+  for (int i_child = 0; i_child < num_children; ++i_child) {
+    if (scheme->element_compare (neighbor_tree_class, target, children[i_child]) == 0) {
+      result = i_child;
     }
+  }
 
-    scheme->element_destroy( neighbor_tree_class, 4, children.begin() );
-    scheme->element_destroy( neighbor_tree_class, 1, &target );
-    return result;
+  scheme->element_destroy (neighbor_tree_class, 4, children.begin ());
+  scheme->element_destroy (neighbor_tree_class, 1, &target);
+  return result;
 }
 
 void

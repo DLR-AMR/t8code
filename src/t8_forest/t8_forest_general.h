@@ -629,8 +629,8 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
                                    t8_gloidx_t *gneigh_tree, int *orientation);
 
 int
-t8_forest_leaf_neighbor_subface(t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t* leaf, int face,
-                                t8_eclass_t neighbor_tree_class, const t8_element_t* neighbor_leaf, int neighbor_face);
+t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf, int face,
+                                 t8_eclass_t neighbor_tree_class, const t8_element_t *neighbor_leaf, int neighbor_face);
 
 /** Exchange ghost information of user defined element data.
  * \param [in] forest       The forest. Must be committed.
