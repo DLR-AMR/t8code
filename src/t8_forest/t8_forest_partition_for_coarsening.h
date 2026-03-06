@@ -33,7 +33,7 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/** \brief Correct the partitioning if element families are split accorss process boundaries.
+/** \brief Correct the partitioning if element families are split across process boundaries.
  *
  *  The default partitioning distributes the elements into equally-sized partitions. For coarsening, however,
  *  all elements of a family have to be on the same process in order to be coarsened into their parent element.

@@ -131,7 +131,7 @@ t8_step4_partition_ghost (t8_forest_t forest)
   /* Initialize */
   t8_forest_init (&new_forest);
 
-  /* Tell the new_forest that is should partition the existing forest.
+  /* Tell the new_forest that it should partition the existing forest.
    * This will change the distribution of the forest elements among the processes
    * in such a way that afterwards each process has the same number of elements
    * (+- 1 if the number of elements is not divisible by the number of processes).
@@ -157,7 +157,7 @@ t8_step4_partition_ghost (t8_forest_t forest)
 }
 
 /* In this function we adapt a forest as in step3 and balance it.
- * In our main program the input forest is already adapted and then the resulting twice adapted forest will be unbalanced.
+ * In our main program the input forest is already adapted and then the resulting twice adapted forest will be balanced.
  */
 static t8_forest_t
 t8_step4_balance (t8_forest_t forest)

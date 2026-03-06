@@ -24,12 +24,10 @@
  * TODO
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_IO_H
 #define T8_FOREST_IO_H
 
-#include <t8_vtk.h>
+#include <t8_vtk/t8_vtk.h>
 T8_EXTERN_C_BEGIN ();
 
 /** TODO: implement */

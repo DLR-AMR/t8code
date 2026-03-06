@@ -24,13 +24,11 @@
  * We define the forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_GENERAL_H
 #define T8_FOREST_GENERAL_H
 
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_data/t8_containers.h>
 
 /** Opaque pointer to a forest implementation. */

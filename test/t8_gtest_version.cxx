@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_version.h>
+#include <t8_misc/t8_version.h>
 
 /* The following three tests check whether t8code computes the correct
  * version.

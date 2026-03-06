@@ -21,8 +21,8 @@
 */
 
 /** \file t8_cmesh_offset.c
- *
- * TODO: document this file
+ * Implementation of functions that deal with
+ * the cmesh partition offset.
  */
 
 #include "t8_cmesh_offset.h"

@@ -20,17 +20,23 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
-#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
-#include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_eclass.h>
-
+/** \file t8_cmesh_new_disjoint_bricks_param.hxx 
+ * Parameterized example cmeshes that consists only of one tree of a given element class.
+ */
 #ifndef T8_CMESH_NEW_FROM_CLASS_PARAM
 #define T8_CMESH_NEW_FROM_CLASS_PARAM
 
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
+#include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_eclass/t8_eclass.h>
+
 namespace new_from_class
 {
-
+/** Function to convert parameter values to a string.
+ * \param [in] eclass The element class.
+ * \param [in] comm Mpi communicator to be used with the new cmesh.
+ */
 std::string
 make_param_string (const t8_eclass_t &eclass, const sc_MPI_Comm &comm)
 {
@@ -39,11 +45,13 @@ make_param_string (const t8_eclass_t &eclass, const sc_MPI_Comm &comm)
     = delimiter + std::string (t8_eclass_to_string[eclass]) + delimiter + cmesh_params::comm_to_string (comm);
   return params;
 }
-
+/** Wrapper function for make_param_string. */
 std::function<std::string (const t8_eclass_t &, const sc_MPI_Comm &)> print_function = make_param_string;
 
+/** Wrapper function for t8_cmesh_new_from_class. */
 std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm)> new_from_class_wrapper = t8_cmesh_new_from_class;
 
+/** Example cmesh set with different parameter combinations using the new_from_class function. */
 example_set *cmesh_example
   = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::eclasses.begin ()),
                                                        decltype (cmesh_params::my_comms.begin ())> (
