@@ -113,7 +113,7 @@ t8_test_element_is_leaf_for_forest (t8_forest_t forest)
         EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
         EXPECT_FALSE (t8_forest_element_is_leaf_or_ghost (forest, not_leaf, itree, 0));
       }
-      if (element_level < scheme->get_maxlevel (tree_class)) {
+      if (scheme->element_is_refinable (tree_class, leaf_element)) {
         scheme->element_get_child (tree_class, leaf_element, 0, not_leaf);
         EXPECT_FALSE (t8_forest_element_is_leaf (forest, not_leaf, itree));
         EXPECT_FALSE (t8_forest_element_is_leaf_or_ghost (forest, not_leaf, itree, 0));
@@ -159,7 +159,7 @@ t8_test_element_is_ghost_for_forest (t8_forest_t forest)
         EXPECT_FALSE (t8_forest_element_is_ghost (forest, not_ghost, ighost_tree));
         EXPECT_FALSE (t8_forest_element_is_leaf_or_ghost (forest, not_ghost, ighost_tree, 1));
       }
-      if (element_level < scheme->get_maxlevel (tree_class)) {
+      if (scheme->element_is_refinable (tree_class, ghost_element)) {
         scheme->element_get_child (tree_class, ghost_element, 0, not_ghost);
         EXPECT_FALSE (t8_forest_element_is_ghost (forest, not_ghost, ighost_tree));
         EXPECT_FALSE (t8_forest_element_is_leaf_or_ghost (forest, not_ghost, ighost_tree, 1));
