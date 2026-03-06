@@ -595,7 +595,6 @@ t8_geom_adapt_boundary (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t
                         [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                         t8_element_t *elements[])
 {
-  t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
   /* Get the number of faces of the element. */
   const int num_faces = scheme->element_get_num_faces (tree_class, elements[0]);
   int iface;
