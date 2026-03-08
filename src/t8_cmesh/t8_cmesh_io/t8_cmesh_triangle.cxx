@@ -523,7 +523,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices, &num_vertices, dim);
     if (retval != 0 && retval != 1) {
-      t8_global_errorf ("Error while parsing file %s.\n", current_file);
+      t8_global_errorf ("ERROR while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
       return NULL;
     }
@@ -538,7 +538,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 #endif
       );
       if (retval != 0 && retval != 1) {
-        t8_global_errorf ("Error while parsing file %s.\n", current_file);
+        t8_global_errorf ("ERROR while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
         return NULL;
       }
@@ -547,7 +547,7 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
         snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset, current_file, dim);
         if (retval != 0) {
-          t8_global_errorf ("Error while parsing file %s.\n", current_file);
+          t8_global_errorf ("ERROR while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
           return NULL;
         }
@@ -603,7 +603,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
     snprintf (current_file, BUFSIZ, "%s.node", fileprefix);
     retval = t8_cmesh_triangle_read_nodes (cmesh, current_file, &vertices, &num_vertices, dim);
     if (retval != 0 && retval != 1) {
-      t8_global_errorf ("Error while parsing file %s.\n", current_file);
+      t8_global_errorf ("ERROR while parsing file %s.\n", current_file);
       t8_cmesh_unref (&cmesh);
       return NULL;
     }
@@ -618,7 +618,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
 #endif
       );
       if (retval != 0 && retval != 1) {
-        t8_global_errorf ("Error while parsing file %s.\n", current_file);
+        t8_global_errorf ("ERROR while parsing file %s.\n", current_file);
         t8_cmesh_unref (&cmesh);
         return NULL;
       }
@@ -627,7 +627,7 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
         snprintf (current_file, BUFSIZ, "%s.neigh", fileprefix);
         retval = t8_cmesh_triangle_read_neigh (cmesh, corner_offset, current_file, dim);
         if (retval != 0) {
-          t8_global_errorf ("Error while parsing file %s.\n", current_file);
+          t8_global_errorf ("ERROR while parsing file %s.\n", current_file);
           t8_cmesh_unref (&cmesh);
         }
       }

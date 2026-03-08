@@ -49,7 +49,7 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
       t8_debugf ("Wrote to file %s\n", fileprefix);
     }
     else {
-      t8_debugf ("Error in writing cmesh vtk\n");
+      t8_debugf ("ERROR in writing cmesh vtk\n");
     }
   }
   else {
@@ -96,9 +96,9 @@ main (int argc, char *argv[])
 
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+    t8_debugf ("WARNING: Truncated help message to '%s'\n", help);
   }
 
   mpiret = sc_MPI_Init (&argc, &argv);

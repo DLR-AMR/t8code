@@ -453,13 +453,13 @@ t8_msh_file_4_read_nodes (FILE *fp)
   for (long n_block = 0; n_block < lnum_blocks; ++n_block) {
     retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
     if (retval < 0) {
-      t8_global_errorf ("Error reading node file.\n");
+      t8_global_errorf ("ERROR reading node file.\n");
       free (line);
       return std::nullopt;
     }
     retval = sscanf (line, "%i %i %i %li", &entity_dim, &entity_tag, &parametric, &num_nodes_in_block);
     if (retval != 4) {
-      t8_global_errorf ("Error reading block after node %li in $Nodes section.\n", (long) last_index);
+      t8_global_errorf ("ERROR reading block after node %li in $Nodes section.\n", (long) last_index);
       free (line);
       return std::nullopt;
     }
@@ -468,13 +468,13 @@ t8_msh_file_4_read_nodes (FILE *fp)
     for (ln = 0; ln < num_nodes_in_block; ++ln) {
       retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
       if (retval < 0) {
-        t8_global_errorf ("Error reading node file.\n");
+        t8_global_errorf ("ERROR reading node file.\n");
         free (line);
         return std::nullopt;
       }
       retval = sscanf (line, "%li", &index_buffer[ln]);
       if (retval != 1) {
-        t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+        t8_global_errorf ("ERROR reading node file after node %li.\n", (long) last_index);
         free (line);
         return std::nullopt;
       }
@@ -488,7 +488,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
        * The coordinates followed by their parameters. */
       retval = t8_cmesh_msh_read_next_line (&line, &linen, fp);
       if (retval < 0) {
-        t8_global_errorf ("Error reading node file\n");
+        t8_global_errorf ("ERROR reading node file\n");
         free (line);
         return std::nullopt;
       }
@@ -496,7 +496,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
       if (!parametric) {
         retval = sscanf (line, "%lf %lf %lf", &coords[0], &coords[1], &coords[2]);
         if (retval != 3) {
-          t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+          t8_global_errorf ("ERROR reading node file after node %li.\n", (long) last_index);
           free (line);
           return std::nullopt;
         }
@@ -507,7 +507,7 @@ t8_msh_file_4_read_nodes (FILE *fp)
         case 1:
           retval = sscanf (line, "%lf %lf %lf %lf", &coords[0], &coords[1], &coords[2], &params[0]);
           if (retval != 4) {
-            t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+            t8_global_errorf ("ERROR reading node file after node %li.\n", (long) last_index);
             free (line);
             return std::nullopt;
           }
@@ -515,13 +515,13 @@ t8_msh_file_4_read_nodes (FILE *fp)
         case 2:
           retval = sscanf (line, "%lf %lf %lf %lf %lf", &coords[0], &coords[1], &coords[2], &params[0], &params[1]);
           if (retval != 5) {
-            t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+            t8_global_errorf ("ERROR reading node file after node %li.\n", (long) last_index);
             free (line);
             return std::nullopt;
           }
           break;
         default:
-          t8_global_errorf ("Error reading node file after node %li.\n", (long) last_index);
+          t8_global_errorf ("ERROR reading node file after node %li.\n", (long) last_index);
           free (line);
           return std::nullopt;
         }
@@ -793,7 +793,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       }
 
       if (!reference_parameters_on_surface.has_value ()) {
-        t8_global_errorf ("Error during mesh-cad recombination: Reference parameters on surface not found.\n");
+        t8_global_errorf ("ERROR during mesh-cad recombination: Reference parameters on surface not found.\n");
         return 0;
       }
 
@@ -1003,7 +1003,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         if (face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]] > 0) {
           if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (
                 edge_geometry_tag, face_geometries[t8_edge_to_face[eclass][i_tree_edges][i_adjacent_face]])) {
-            t8_global_errorf ("Error during mesh-cad recombination: Adjacent edge and face of a tree carry "
+            t8_global_errorf ("ERROR during mesh-cad recombination: Adjacent edge and face of a tree carry "
                               "incompatible geometries.\n");
             return 0;
           }
@@ -1020,13 +1020,13 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       for (const auto &edge_node : edge_nodes) {
         /* Some error checking */
         if (edge_node.entity_dim == 2) {
-          t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a vertex or an edge, "
+          t8_global_errorf ("ERROR during mesh-cad recombination: Node %li should lie on a vertex or an edge, "
                             "but it lies on a surface.\n",
                             edge_node.index);
           return 0;
         }
         if (edge_node.entity_dim == 1 && edge_node.entity_tag != edge_geometry_tag) {
-          t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a specific edge, "
+          t8_global_errorf ("ERROR during mesh-cad recombination: Node %li should lie on a specific edge, "
                             "but it lies on another edge.\n",
                             edge_node.index);
           return 0;
@@ -1034,7 +1034,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         if (edge_node.entity_dim == 0) {
           if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_edge (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
-              "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on an edge, "
+              "ERROR during mesh-cad recombination: Node %li should lie on a vertex which lies on an edge, "
               "but the vertex does not lie on that edge.\n",
               edge_node.index);
             return 0;
@@ -1062,7 +1062,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       }
 
       if (!reference_param.has_value ()) {
-        t8_global_errorf ("Error during mesh-cad recombination: Reference parameter on curve not found.\n");
+        t8_global_errorf ("ERROR during mesh-cad recombination: Reference parameter on curve not found.\n");
         return 0;
       }
 
@@ -1107,7 +1107,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       for (const auto &edge_node : edge_nodes) {
         /* Some error checking */
         if (edge_node.entity_dim == 2 && edge_node.entity_tag != edge_geometry_tag) {
-          t8_global_errorf ("Error during mesh-cad recombination: Node %li should lie on a specific face, but it lies "
+          t8_global_errorf ("ERROR during mesh-cad recombination: Node %li should lie on a specific face, but it lies "
                             "on another face.\n",
                             edge_node.index);
           return 0;
@@ -1115,7 +1115,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         if (edge_node.entity_dim == 0) {
           if (!cad_geometry->get_cad_manager ()->t8_geom_is_vertex_on_face (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
-              "Error during mesh-cad recombination: Node %li should lie on a vertex which lies on a face, "
+              "ERROR during mesh-cad recombination: Node %li should lie on a vertex which lies on a face, "
               "but the vertex does not lie on that face.\n",
               edge_node.index);
             return 0;
@@ -1124,7 +1124,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         if (edge_node.entity_dim == 1) {
           if (!cad_geometry->get_cad_manager ()->t8_geom_is_edge_on_face (edge_node.entity_tag, edge_geometry_tag)) {
             t8_global_errorf (
-              "Error during mesh-cad recombination: Node %li should lie on an edge which lies on a face, "
+              "ERROR during mesh-cad recombination: Node %li should lie on an edge which lies on a face, "
               "but the edge does not lie on that face.\n",
               edge_node.index);
             return 0;
@@ -1160,7 +1160,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       }
 
       if (!reference_params.has_value ()) {
-        t8_global_errorf ("Error during mesh-cad recombination: Reference parameter on curve not found.\n");
+        t8_global_errorf ("ERROR during mesh-cad recombination: Reference parameter on curve not found.\n");
         return 0;
       }
 
@@ -1297,7 +1297,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
     retval = sscanf (line, "%i %li %i %li", &entity_dim, &entity_tag, &ele_type, &num_ele_in_block);
     /* Checking for read/write error */
     if (retval != 4) {
-      t8_global_errorf ("Error while reading element block information.\n");
+      t8_global_errorf ("ERROR while reading element block information.\n");
       t8_debugf ("The line is %s", line);
       free (line);
       t8_cmesh_destroy (&cmesh);
@@ -1316,7 +1316,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 
     if (t8_eclass_to_dimension[eclass] > dim) {
       t8_errorf (
-        "Warning: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
+        "WARNING: Encountered element which dimension is greater than %d. Did you set the correct dimension?\n", dim);
     }
 
     /* Check if the tree is of the correct dimension */
@@ -1419,7 +1419,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
   }
   free (line);
   if (tree_count == 0) {
-    t8_global_errorf ("Warning: No %iD elements found in msh file.\n", dim);
+    t8_global_errorf ("WARNING: No %iD elements found in msh file.\n", dim);
     t8_cmesh_destroy (&cmesh);
     return std::nullopt;
   }

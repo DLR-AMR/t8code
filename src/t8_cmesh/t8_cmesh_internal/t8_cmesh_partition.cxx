@@ -180,7 +180,7 @@ t8_cmesh_gather_trees_per_eclass (const t8_cmesh_t cmesh, sc_MPI_Comm comm)
  * trees on each process,
  * additional flag whether we compute the trees per eclass or not
  * additional flag whether to check if cmesh is committed.
- * Warning: use with caution with check_commit = 0 */
+ * WARNING: use with caution with check_commit = 0 */
 static void
 t8_cmesh_gather_treecount_ext (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const int check_commit)
 {
@@ -194,7 +194,7 @@ t8_cmesh_gather_treecount_ext (const t8_cmesh_t cmesh, sc_MPI_Comm comm, const i
 
   tree_offset = cmesh->first_tree_shared ? -cmesh->first_tree - 1 : cmesh->first_tree;
   if (cmesh->tree_offsets == NULL) {
-    SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup.");
+    SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "ERROR in shared memory setup.");
     t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
     /* Only allocate the shmem array, if it is not already allocated */
     cmesh->tree_offsets = t8_cmesh_alloc_offsets (cmesh->mpisize, comm);

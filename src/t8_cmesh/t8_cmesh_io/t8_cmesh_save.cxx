@@ -532,7 +532,7 @@ t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
   }
   if (!has_linear_geom) {
     /* This cmesh does not have the linear geometry for all trees. */
-    t8_errorf ("Error when saving cmesh. Cmesh has more than one geometry or the geometry is not linear.\n");
+    t8_errorf ("ERROR when saving cmesh. Cmesh has more than one geometry or the geometry is not linear.\n");
     return 0;
   }
 
@@ -544,35 +544,35 @@ t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
   fp = fopen (filename, "w");
   if (fp == NULL) {
     /* Could not open file */
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("ERROR when opening file %s.\n", filename);
     return 0;
   }
   /* Write all metadata of the cmesh */
   if (!t8_cmesh_save_header (cmesh, fp)) {
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("ERROR when opening file %s.\n", filename);
     return 0;
   }
   /* Write all metadata of the trees */
   if (!t8_cmesh_save_trees (cmesh, fp)) {
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("ERROR when opening file %s.\n", filename);
     return 0;
   }
   if (cmesh->set_partition) {
     /* Write all ghost metadata */
     if (!t8_cmesh_save_ghosts (cmesh, fp)) {
-      t8_errorf ("Error when opening file %s.\n", filename);
+      t8_errorf ("ERROR when opening file %s.\n", filename);
       return 0;
     }
   }
   if (!t8_cmesh_save_tree_attribute (cmesh, fp)) {
     /* Write all tree attributes */
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("ERROR when opening file %s.\n", filename);
     return 0;
   }
   if (cmesh->set_partition) {
     /* Write all ghost neighbor data */
     if (!t8_cmesh_save_ghost_neighbors (cmesh, fp)) {
-      t8_errorf ("Error when opening file %s.\n", filename);
+      t8_errorf ("ERROR when opening file %s.\n", filename);
       return 0;
     }
   }
@@ -594,40 +594,40 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
   fp = fopen (filename, "r");
   if (fp == NULL) {
     /* Could not open file */
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("ERROR when opening file %s.\n", filename);
     return NULL;
   }
   t8_cmesh_init (&cmesh);
   /* Read all metadata of the cmesh */
   if (!t8_cmesh_load_header (cmesh, fp)) {
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("ERROR when opening file %s.\n", filename);
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
   /* Read all metadata of the trees */
   if (!t8_cmesh_load_trees (cmesh, fp)) {
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("ERROR when opening file %s.\n", filename);
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
   if (cmesh->set_partition) {
     /* Write all ghost metadata */
     if (!t8_cmesh_load_ghosts (cmesh, fp)) {
-      t8_errorf ("Error when opening file %s.\n", filename);
+      t8_errorf ("ERROR when opening file %s.\n", filename);
       t8_cmesh_destroy (&cmesh);
       return NULL;
     }
   }
   t8_cmesh_trees_finish_part (cmesh->trees, 0);
   if (!t8_cmesh_load_tree_attributes (cmesh, fp)) {
-    t8_errorf ("Error when opening file %s.\n", filename);
+    t8_errorf ("ERROR when opening file %s.\n", filename);
     t8_cmesh_destroy (&cmesh);
     return NULL;
   }
   if (cmesh->set_partition) {
     /* Write all ghost metadata */
     if (!t8_cmesh_load_ghost_attributes (cmesh, fp)) {
-      t8_errorf ("Error when opening file %s.\n", filename);
+      t8_errorf ("ERROR when opening file %s.\n", filename);
       t8_cmesh_destroy (&cmesh);
       return NULL;
     }
@@ -831,7 +831,7 @@ t8_cmesh_load_and_distribute (const char *fileprefix, const int num_files, sc_MP
   T8_ASSERT (mpisize >= num_files);
 
   /* Try to set the comm type */
-  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup. Could not load cmesh.");
+  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "ERROR in shared memory setup. Could not load cmesh.");
   t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
 
   /* Use cmesh_bcast, if only one process loads the cmesh: */

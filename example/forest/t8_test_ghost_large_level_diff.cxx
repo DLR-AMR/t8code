@@ -63,7 +63,7 @@
  *
  *  If the mesh is not 3D then no element is refined.
  *
- *  Warning: this refinement schemes only works with the default element
+ *  WARNING: this refinement schemes only works with the default element
  *           scheme (see t8_scheme_new_default in t8_default/t8_default.hxx).
  */
 static int
@@ -221,7 +221,7 @@ main (int argc, char *argv[])
     /* The help message was truncated */
     /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+    t8_debugf ("WARNING: Truncated help message to '%s'\n", help);
   }
 
   mpiret = sc_MPI_Init (&argc, &argv);

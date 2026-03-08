@@ -80,7 +80,7 @@ t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
       tree_indices.size () == (size_t) num_tree_vertices,
       "ERROR. Number of mapped local tree vertices for tree %i does not equal number of tree vertices. %zu != %i\n",
       itree, tree_indices.size (), num_tree_vertices);
-    /* We now build the array of global indices of this tree, sorted 
+    /* We now build the array of global indices of this tree, sorted
      * by the trees local indices. */
     t8_gloidx_t *global_tree_indices = T8_ALLOC (t8_gloidx_t, num_tree_vertices);
     for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {

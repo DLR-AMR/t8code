@@ -703,7 +703,7 @@ t8_forest_vtk_write_cells (t8_forest_t forest, FILE *vtufile, const int write_tr
   return 1;
 t8_forest_vtk_cell_failure:
   /* Something went wrong */
-  t8_errorf ("Error when writing cell data to forest vtk file.\n");
+  t8_errorf ("ERROR when writing cell data to forest vtk file.\n");
   return 0;
 }
 
@@ -750,7 +750,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
+          t8_debugf ("WARNING: Truncated vtk point data description to '%s'\n", description);
         }
         freturn = t8_forest_vtk_write_cell_data (forest, vtufile, description, T8_VTK_FLOAT_NAME, "", 8,
                                                  t8_forest_vtk_vertices_scalar_kernel, write_ghosts, data[idata].data);
@@ -766,7 +766,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
           /* The output was truncated */
           /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
-          t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
+          t8_debugf ("WARNING: Truncated vtk point data description to '%s'\n", description);
         }
 
         freturn = t8_forest_vtk_write_cell_data (forest, vtufile, description, T8_VTK_FLOAT_NAME, component_string,
@@ -783,7 +783,7 @@ t8_forest_vtk_write_points (t8_forest_t forest, FILE *vtufile, const int write_g
   return 1;
 t8_forest_vtk_cell_failure:
   /* Something went wrong */
-  t8_errorf ("Error when writing cell data to forest vtk file.\n");
+  t8_errorf ("ERROR when writing cell data to forest vtk file.\n");
   return 0;
 }
 
@@ -810,7 +810,7 @@ t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int
   if (forest->mpirank == 0) {
     if (t8_write_pvtu (fileprefix, forest->mpisize, write_treeid, write_mpirank, write_level, write_element_id,
                        num_data, data)) {
-      t8_errorf ("Error when writing file %s.pvtu\n", fileprefix);
+      t8_errorf ("ERROR when writing file %s.pvtu\n", fileprefix);
       goto t8_forest_vtk_failure;
     }
   }
@@ -826,14 +826,14 @@ t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int
   /* The filename for this processes file */
   freturn = snprintf (vtufilename, BUFSIZ, "%s_%04d.vtu", fileprefix, forest->mpirank);
   if (freturn >= BUFSIZ) {
-    t8_errorf ("Error when writing vtu file. Filename too long.\n");
+    t8_errorf ("ERROR when writing vtu file. Filename too long.\n");
     goto t8_forest_vtk_failure;
   }
 
   /* Open the vtufile to write to */
   vtufile = fopen (vtufilename, "w");
   if (vtufile == NULL) {
-    t8_errorf ("Error when opening file %s\n", vtufilename);
+    t8_errorf ("ERROR when opening file %s\n", vtufilename);
     goto t8_forest_vtk_failure;
   }
   /* Write the header information in the .vtu file.
@@ -889,7 +889,7 @@ t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int
   if (freturn != 0) {
     /* Closing failed, this usually means that the final write operation could
      * not be completed. */
-    t8_global_errorf ("Error when closing file %s\n", vtufilename);
+    t8_global_errorf ("ERROR when closing file %s\n", vtufilename);
     goto t8_forest_vtk_failure;
   }
   /* Writing was successful */
@@ -898,7 +898,7 @@ t8_forest_vtk_failure:
   if (vtufile != NULL) {
     fclose (vtufile);
   }
-  t8_errorf ("Error when writing vtk file.\n");
+  t8_errorf ("ERROR when writing vtk file.\n");
   return 0;
 }
 
@@ -948,7 +948,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
     /* Write the pvtu header file. */
     int num_ranks_that_write = cmesh->set_partition ? cmesh->mpisize : 1;
     if (t8_write_pvtu (fileprefix, num_ranks_that_write, 1, 1, 0, 0, 0, NULL)) {
-      SC_ABORTF ("Error when writing file %s.pvtu\n", fileprefix);
+      SC_ABORTF ("ERROR when writing file %s.pvtu\n", fileprefix);
     }
   }
   /* If the cmesh is replicated only rank 0 prints it,
@@ -1003,7 +1003,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
       /*  TODO: Use new geometry here. Need cmesh_get_reference coords function. */
       vertices = t8_cmesh_get_tree_vertices (cmesh, tree->treeid);
       if (vertices == nullptr) {
-        t8_errorf ("Error in writing file %s. Could not read vertex coordinates for cmesh tree %i.\n", vtufilename,
+        t8_errorf ("ERROR in writing file %s. Could not read vertex coordinates for cmesh tree %i.\n", vtufilename,
                    tree->treeid);
         fclose (vtufile);
         return write_failure;
@@ -1031,7 +1031,7 @@ t8_cmesh_vtk_write_file_ext (const t8_cmesh_t cmesh, const char *fileprefix, con
         /* Get a pointer to this ghosts vertices */
         vertices = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), 0, ighost + num_loc_trees);
         if (vertices == nullptr) {
-          t8_errorf ("Error in writing file %s. Could not read vertex coordinates for cmesh tree %i.\n", vtufilename,
+          t8_errorf ("ERROR in writing file %s. Could not read vertex coordinates for cmesh tree %i.\n", vtufilename,
                      tree->treeid);
           fclose (vtufile);
           return write_failure;

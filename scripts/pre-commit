@@ -4,7 +4,7 @@
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element classes in parallel.
 #
-#  Copyright (C) 2023 the developers
+#  Copyright (C) 2026 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,15 +23,13 @@
 
 #
 # A hook script to verify what is about to be committed.
-# This hook checks whether the code is properly indented using
-# the provided indent script.
-# Move into .git/hooks folder and name it "pre-commit".
-# Called by "git commit" with no arguments.  The hook should
+# This hook checks for typos, indentation, wrong macros and error messages.
+# Create a symbolic link in .git/hooks via
+# ln -s ../../scripts/pre-commit .git/hooks/pre-commit
+# Called by "git commit" with no arguments. The hook should
 # exit with non-zero status after issuing an appropriate message if
 # it wants to stop the commit.
 #
-
-# This is the indent script in the project's directory
 
 # Determine base directory of git repo
 GIT_REPO_PATH=$(git rev-parse --show-toplevel)
@@ -39,6 +37,7 @@ GIT_REPO_PATH=$(git rev-parse --show-toplevel)
 # Set paths to check scripts
 CHECK_INDENT=$GIT_REPO_PATH/scripts/check_if_file_indented.sh
 CHECK_MACROS=$GIT_REPO_PATH/scripts/internal/check_macros.sh
+CHECK_ERROR_MESSAGES=$GIT_REPO_PATH/scripts/internal/check_error_messages.sh
 
 TYPOS=`which typos 2> /dev/null`
 TYPOS_CONFIG_FILE=./.typos.toml
@@ -100,6 +99,8 @@ do
   if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" -o $FILE_ENDING = "cxx" -o $FILE_ENDING = "hxx" ]
   then
     echo "Checking file $file"
+
+
     $CHECK_INDENT $file > /dev/null 2>&1
     status=$?
     if test $status -ne 0
@@ -110,11 +111,15 @@ do
 
     # This script checks for the usage of #ifdef T8_ENABLE_ macros in the specified file.
     # If such macros are found, it suggests using #if T8_ENABLE_ instead and sets a flag to indicate the issue.
-    # - $CHECK_MACROS: Command or script to check the macros in the file.
-    # - $file: The file being checked.
-    # - status: The exit status of the $CHECK_MACROS command.
-    # - nocontinue: Flag set to 1 if the incorrect macro usage is found.
     $CHECK_MACROS $file
+    status=$?
+    if test $status -ne 0
+    then
+      nocontinue=1
+    fi
+
+    # This script checks if an error or warning message is not capitalized.
+    $CHECK_ERROR_MESSAGES $file
     status=$?
     if test $status -ne 0
     then

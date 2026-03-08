@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_cad.cxx
- * Implements functions declared in \ref t8_geometry_cad.hxx 
+ * Implements functions declared in \ref t8_geometry_cad.hxx
  *  or the C interface \ref t8_geometry_cad.h.
  */
 
@@ -90,7 +90,7 @@ t8_geometry_cad::t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const 
     t8_geometry_cad::t8_geom_evaluate_cad_tet (cmesh, gtreeid, ref_coords, num_coords, out_coords);
     break;
   default:
-    SC_ABORTF ("Error: Curved cad geometry for element type %s not yet implemented. \n",
+    SC_ABORTF ("ERROR: Curved cad geometry for element type %s not yet implemented. \n",
                t8_eclass_to_string[active_tree_class]);
   }
 }
