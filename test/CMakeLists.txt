@@ -38,6 +38,8 @@ function( add_t8_test )
 
     # Link base libraries.
     target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR} )
+    # Include binary dir to find generated headers like t8_test_data_dir.h.
+    target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} )
 
     target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE GTest::gtest_main T8 pthread )
 
@@ -99,10 +101,16 @@ function ( add_t8_cpp_test)
     add_t8_test( NAME ${ADD_T8_CPP_TEST_NAME} SOURCES ${ADD_T8_CPP_TEST_SOURCES} )
 endfunction()
 
-# Copy test files to build folder so that the t8_test programs can find them.
-function( copy_test_file TEST_FILE_NAME )
-    configure_file(${CMAKE_CURRENT_LIST_DIR}/testfiles/${TEST_FILE_NAME} ${CMAKE_CURRENT_BINARY_DIR}/testfiles/${TEST_FILE_NAME} COPYONLY)
-endfunction()
+# Set absolute path to test data in the source tree
+file( TO_CMAKE_PATH
+  "${CMAKE_CURRENT_LIST_DIR}/testfiles"
+  T8_TEST_DATA_DIR
+)
+configure_file(
+  ${CMAKE_CURRENT_LIST_DIR}/t8_test_data_dir.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/t8_test_data_dir.h
+  @ONLY
+)
 
 add_t8_cpp_test( NAME t8_gtest_cmesh_bcast_parallel     SOURCES t8_cmesh/t8_gtest_bcast.cxx )
 add_t8_cpp_test( NAME t8_gtest_eclass_serial            SOURCES t8_gtest_eclass.cxx )
@@ -135,6 +143,7 @@ add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOUR
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
 add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
 
+add_t8_cpp_test( NAME t8_gtest_bin_search_parallel                SOURCES t8_forest/t8_gtest_bin_search.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_volume_serial              SOURCES t8_forest/t8_gtest_element_volume.cxx )
 add_t8_cpp_test( NAME t8_gtest_search_parallel                    SOURCES t8_forest/t8_gtest_search.cxx )
 add_t8_cpp_test( NAME t8_gtest_half_neighbors_parallel            SOURCES t8_forest/t8_gtest_half_neighbors.cxx )
@@ -147,7 +156,7 @@ add_t8_cpp_test( NAME t8_gtest_ghost_and_owner_parallel           SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_balance_parallel                   SOURCES t8_forest/t8_gtest_balance.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_commit_parallel             SOURCES t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_face_normal_serial          SOURCES t8_forest/t8_gtest_forest_face_normal.cxx )
-add_t8_cpp_test( NAME t8_gtest_element_is_leaf_serial             SOURCES t8_forest/t8_gtest_element_is_leaf.cxx )
+add_t8_cpp_test( NAME t8_gtest_element_is_leaf_serial             SOURCES t8_forest/t8_gtest_element_is_leaf.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_data_parallel            SOURCES t8_forest/t8_gtest_partition_data.cxx )
 add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_forest/t8_gtest_set_partition_offset.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
@@ -182,6 +191,7 @@ add_t8_cpp_test( NAME t8_gtest_pyra_connectivity_serial     SOURCES t8_schemes/t
 add_t8_cpp_test( NAME t8_gtest_face_neigh_serial            SOURCES t8_schemes/t8_gtest_face_neigh.cxx )
 add_t8_cpp_test( NAME t8_gtest_get_linear_id_serial         SOURCES t8_schemes/t8_gtest_get_linear_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_serial              SOURCES t8_schemes/t8_gtest_ancestor.cxx )
+add_t8_cpp_test( NAME t8_gtest_is_ancestor_serial              SOURCES t8_schemes/t8_gtest_is_ancestor.cxx )
 add_t8_cpp_test( NAME t8_gtest_ancestor_id_serial           SOURCES t8_schemes/t8_gtest_ancestor_id.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_count_leaves_serial  SOURCES t8_schemes/t8_gtest_element_count_leaves.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_ref_coords_serial    SOURCES t8_schemes/t8_gtest_element_ref_coords.cxx )
@@ -217,16 +227,3 @@ if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial          SOURCES mesh_handle/t8_gtest_cache_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_handle_data_parallel             SOURCES mesh_handle/t8_gtest_handle_data.cxx )
 endif()
-
-copy_test_file( test_cube_unstructured_1.inp )
-copy_test_file( test_cube_unstructured_2.inp )
-copy_test_file( test_vtk_tri.vtu )
-copy_test_file( test_vtk_cube.vtp )
-copy_test_file( test_parallel_file.pvtu )
-copy_test_file( test_parallel_file_0.vtu )
-copy_test_file( test_parallel_file_1.vtu )
-copy_test_file( test_polydata.pvtp )
-copy_test_file( test_polydata_0.vtp )
-copy_test_file( test_polydata_1.vtp )
-copy_test_file( test_msh_file_vers4_ascii.msh )
-copy_test_file( test_msh_file_vers4_bin.msh )

@@ -35,19 +35,19 @@ then
   exit 0
 fi
 
-# 
-# This script searches for lines containing a macro definition in the style of '#ifdef T8_ENABLE_' 
+#
+# This script searches for lines containing a macro definition in the style of '#ifdef T8_ENABLE_'
 # in the specified file and processes each matching line.
-# It uses 'grep' to find all occurrences of '#ifdef T8_ENABLE_' in the file located 
-# at the path stored in the variable 'file_path'. The '-n' option with 'grep' 
+# It uses 'grep' to find all occurrences of '#ifdef T8_ENABLE_' in the file located
+# at the path stored in the variable 'file_path'. The '-n' option with 'grep'
 # ensures that the line numbers of the matching lines are included in the output.
-# The output of 'grep' is then piped into a 'while' loop, which reads each line 
+# The output of 'grep' is then piped into a 'while' loop, which reads each line
 # and splits it into the line number and the line content using ':' as the delimiter.
 # Variables:
 # - file_path: The path to the file to be searched.
 # - line_number: The line number where the macro definition is found.
 # - line: The content of the line where the macro definition is found.
-# 
+#
 
 found_macros=FALSE
 
