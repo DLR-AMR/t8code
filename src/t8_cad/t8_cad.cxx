@@ -22,6 +22,8 @@
 
 #include <t8.h>
 #include <t8_cad/t8_cad.hxx>
+
+#if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <TopoDS.hxx>
 #include <BRep_Builder.hxx>
@@ -34,6 +36,7 @@
 #include <Standard_Version.hxx>
 #include <ShapeAnalysis_Edge.hxx>
 #include <TopExp_Explorer.hxx>
+#endif
 
 #if T8_ENABLE_DEBUG
 #include <Precision.hxx>
@@ -41,6 +44,7 @@
 
 t8_cad::t8_cad (std::string fileprefix)
 {
+#if T8_ENABLE_OCC
   BRep_Builder builder;
   std::ifstream is (fileprefix + ".brep");
   if (is.is_open () == false) {
@@ -60,8 +64,19 @@ t8_cad::t8_cad (std::string fileprefix)
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_VERTEX, TopAbs_EDGE, cad_shape_vertex2edge_map);
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_VERTEX, TopAbs_FACE, cad_shape_vertex2face_map);
+#else
+  SC_ABORTF ("OpenCASCADE is not enabled. Cannot load CAD file: %s.brep\n", fileprefix.c_str ());
+#endif /* T8_ENABLE_OCC */
 }
 
+t8_cad::t8_cad ()
+{
+#if T8_ENABLE_OCC
+  cad_shape.Nullify ();
+#endif /* T8_ENABLE_OCC */
+}
+
+#if T8_ENABLE_OCC
 t8_cad::t8_cad (const TopoDS_Shape cad_shape)
 {
   if (cad_shape.IsNull ()) {
@@ -72,11 +87,6 @@ t8_cad::t8_cad (const TopoDS_Shape cad_shape)
   TopExp::MapShapes (cad_shape, TopAbs_FACE, cad_shape_face_map);
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_VERTEX, TopAbs_EDGE, cad_shape_vertex2edge_map);
   TopExp::MapShapesAndUniqueAncestors (cad_shape, TopAbs_EDGE, TopAbs_FACE, cad_shape_edge2face_map);
-}
-
-t8_cad::t8_cad ()
-{
-  cad_shape.Nullify ();
 }
 
 int
@@ -548,3 +558,4 @@ t8_cad::t8_geom_surface_is_closed (int geometry_index, int direction) const
     break;
   }
 }
+#endif /* T8_ENABLE_OCC */

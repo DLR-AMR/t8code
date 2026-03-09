@@ -28,6 +28,11 @@
 #ifndef T8_CAD_HXX
 #define T8_CAD_HXX
 
+#include <t8.h>
+#include <optional>
+#include <span>
+
+#if T8_ENABLE_OCC
 #include <gp_Pnt.hxx>
 #include <TopExp.hxx>
 #include <Geom_Surface.hxx>
@@ -35,9 +40,7 @@
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Vertex.hxx>
-#include <optional>
-#include <span>
-
+#endif /* T8_ENABLE_OCC */
 /**
  * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
 */
@@ -57,6 +60,12 @@ struct t8_cad
   t8_cad (std::string fileprefix);
 
   /**
+   * Constructor of the cad shape for testing purposes. Sets an invalid cad_shape.
+   */
+  t8_cad ();
+
+#if T8_ENABLE_OCC
+  /**
     * Constructor of the cad shape.
     * The shape is initialized directly from an existing TopoDS_Shape.
     * This constructor is especially useful for use in scripts, testing,
@@ -66,11 +75,6 @@ struct t8_cad
     * \param [in] cad_shape  cad shape geometry object.
     */
   t8_cad (const TopoDS_Shape cad_shape);
-
-  /**
-   * Constructor of the cad shape for testing purposes. Sets an invalid cad_shape.
-   */
-  t8_cad ();
 
   /** Check if a cad_curve is a line.
    * \param [in] curve_index      The index of the cad_curve.
@@ -319,8 +323,10 @@ struct t8_cad
    */
   bool
   t8_geom_surface_is_closed (int geometry_index, int direction) const;
+#endif /* T8_ENABLE_OCC */
 
  private:
+#if T8_ENABLE_OCC
   TopoDS_Shape cad_shape;                          /**< cad geometry */
   TopTools_IndexedMapOfShape cad_shape_vertex_map; /**< Map of all TopoDS_Vertex. */
   TopTools_IndexedMapOfShape cad_shape_edge_map;   /**< Map of all TopoDS_Edge. */
@@ -331,6 +337,7 @@ struct t8_cad
     cad_shape_edge2face_map; /**< Maps all TopoDS_Edge to all its connected TopoDS_Face */
   TopTools_IndexedDataMapOfShapeListOfShape
     cad_shape_vertex2face_map; /**< Maps all TopoDS_Vertex to all its connected TopoDS_Face */
+#endif                         /* T8_ENABLE_OCC */
 };
 
 #endif /* !T8_CAD_HXX */
