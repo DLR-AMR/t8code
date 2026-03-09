@@ -234,6 +234,16 @@ t8_element_array_push_count (t8_element_array_t *element_array, const size_t cou
   return new_elements;
 }
 
+t8_element_t *
+t8_element_array_pop (t8_element_array_t *element_array)
+{
+  T8_ASSERT (t8_element_array_is_valid (element_array));
+  T8_ASSERT (t8_element_array_get_count (element_array) > 0);
+  t8_element_t *popped = (t8_element_t *) (element_array->array.array
+                                           + (element_array->array.elem_size * (--element_array->array.elem_count)));
+  return popped;
+}
+
 const t8_element_t *
 t8_element_array_index_locidx (const t8_element_array_t *element_array, const t8_locidx_t index)
 {
