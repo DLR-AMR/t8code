@@ -47,7 +47,7 @@
 #if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>      /* Curved geometry calculation of trees */
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx> /* Mesh deformation struct */
-#include <t8_cad/t8_cad.hxx>                                                /* CAD data structure */
+#include <t8_cad/t8_cad_handle.hxx>                                         /* CAD data structure */
 #endif
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h> /* msh file reader */
 #include <string>                                      /* std::string */

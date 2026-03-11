@@ -27,7 +27,7 @@
 
 #include <unordered_map>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cad/t8_cad.hxx>
+#include <t8_cad/t8_cad_handle.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
@@ -38,7 +38,7 @@
  */
 
 std::unordered_map<t8_gloidx_t, t8_3D_vec>
-calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad)
+calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *cad)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
@@ -124,16 +124,16 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad)
       /* Find the new coordinates of the vertex in the cad file, based on the geometry its lying on. */
       switch (first_tree_entity_dim) {
       case 0: {
-        new_coords = cad->t8_geom_get_cad_point (first_tree_entity_tag);
+        new_coords = cad->get_cad_point (first_tree_entity_tag);
         break;
       }
       case 1: {
-        Handle_Geom_Curve curve = cad->t8_geom_get_cad_curve (first_tree_entity_tag);
+        Handle_Geom_Curve curve = cad->get_cad_curve (first_tree_entity_tag);
         curve->D0 (uv_parameter[0], new_coords);
         break;
       }
       case 2: {
-        Handle_Geom_Surface surface = cad->t8_geom_get_cad_surface (first_tree_entity_tag);
+        Handle_Geom_Surface surface = cad->get_cad_surface (first_tree_entity_tag);
         surface->D0 (uv_parameter[0], uv_parameter[1], new_coords);
         break;
       }
@@ -157,7 +157,7 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad)
  */
 void
 apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
-                            std::shared_ptr<t8_cad> cad)
+                            std::shared_ptr<t8_cad_handle> cad)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 

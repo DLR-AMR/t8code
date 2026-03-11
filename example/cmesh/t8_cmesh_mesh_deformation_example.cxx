@@ -8,7 +8,7 @@
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
-#include <t8_cad/t8_cad.hxx>
+#include <t8_cad/t8_cad_handle.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <vector>
 #include <array>
@@ -92,7 +92,7 @@ main (int argc, char **argv)
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 2, 0, comm);
 
     /* Load CAD geometry from .brep file. */
-    auto cad = std::make_shared<t8_cad> (brep_file);
+    auto cad = std::make_shared<t8_cad_handle> (brep_file);
 
     /* Calculate displacements. */
     auto displacements = calculate_displacement_surface_vertices (cmesh, cad.get ());

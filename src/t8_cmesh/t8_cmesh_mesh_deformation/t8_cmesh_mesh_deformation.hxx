@@ -34,7 +34,7 @@
 
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh.hxx>
-#include <t8_cad/t8_cad.hxx>
+#include <t8_cad/t8_cad_handle.hxx>
 #include <t8_types/t8_vec.hxx>
 
 /** Struct for mesh deformation. */
@@ -51,7 +51,7 @@ struct t8_cmesh_mesh_deformation
   /** A pointer to the cmesh for attribute retrieval */
   t8_cmesh_t associated_cmesh;
   /** A shared pointer to the updated geometry which comes from a new cad file */
-  std::shared_ptr<t8_cad> updated_geometry;
+  std::shared_ptr<t8_cad_handle> updated_geometry;
 };
 
 /** 
@@ -62,7 +62,7 @@ struct t8_cmesh_mesh_deformation
  * \return Map from global vertex ID to 3D displacement vector
  */
 std::unordered_map<t8_gloidx_t, t8_3D_vec>
-calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad);
+calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *cad);
 
 /**
  * Apply vertex displacements to a committed cmesh.
@@ -76,5 +76,5 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad *cad);
  */
 void
 apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
-                            std::shared_ptr<t8_cad> cad);
+                            std::shared_ptr<t8_cad_handle> cad);
 #endif /* !T8_CMESH_DEFORMATION_HXX */
