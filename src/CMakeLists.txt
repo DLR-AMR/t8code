@@ -97,6 +97,7 @@ if( T8CODE_ENABLE_OCC )
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
       t8_cad/t8_cad.cxx
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
