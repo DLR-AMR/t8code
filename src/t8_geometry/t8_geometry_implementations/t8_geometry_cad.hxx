@@ -33,7 +33,7 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.h>
-#include <t8_cad/t8_cad.hxx>
+#include <t8_cad/t8_cad_handle.hxx>
 #include <memory>
 #include <TopoDS_Shape.hxx>
 #include <TopExp.hxx>
@@ -147,10 +147,10 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * 
    * \return The CAD manager of the geometry.
   */
-  std::shared_ptr<t8_cad>
-  get_cad_manager () const
+  std::shared_ptr<t8_cad_handle>
+  get_cad_handle () const
   {
-    return cad_manager;
+    return cad_handle;
   }
 
  private:
@@ -235,7 +235,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   const int *edges; /**< The linked edges of the currently active tree. */
   const int *faces; /**< The linked faces of the currently active tree. */
 
-  std::shared_ptr<t8_cad> cad_manager; /**< The CAD manager of the geometry. */
+  std::shared_ptr<t8_cad_handle> cad_handle; /**< The CAD handle of the geometry. */
 };
 
 #endif /* !T8_GEOMETRY_CAD_HXX */
