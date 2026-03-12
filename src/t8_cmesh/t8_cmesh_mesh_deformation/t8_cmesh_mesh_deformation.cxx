@@ -191,7 +191,7 @@ apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx
   for (auto geom = geometry_handler->begin (); geom != geometry_handler->end (); ++geom) {
     if (geom->second->t8_geom_get_type () == T8_GEOMETRY_TYPE_CAD) {
       t8_geometry_cad *cad_geom = static_cast<t8_geometry_cad *> (geom->second.get ());
-      cad_geom->update_cad_manager (cad);
+      cad_geom->update_cad_handle (cad);
       break;
     }
   }
