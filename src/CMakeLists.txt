@@ -239,7 +239,7 @@ install( FILES
 # See https://gitlab.kitware.com/cmake/cmake/-/issues/19189
 
 install( DIRECTORY t8_helper_functions 
-  DESTINATION PRIVATE_HEADER 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
   FILES_MATCHING 
     PATTERN "*.h" 
     PATTERN "*.hxx" 
