@@ -152,6 +152,15 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
     return cad_handle;
   }
 
+  /** Update the CAD manager with a new one. 
+   * \param[in] new_cad_handle The new CAD handle to be used.
+   */
+  void
+  update_cad_handle (std::shared_ptr<t8_cad_handle> new_cad_handle)
+  {
+    cad_handle = new_cad_handle;
+  }
+
  private:
   /**
    * Maps points in the reference space \f$ [0,1]^2 \f$ to \f$ \mathbb{R}^3 \f$. Only for triangle trees.

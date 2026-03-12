@@ -28,6 +28,9 @@
 #ifndef T8_CAD_HANDLE_HXX
 #define T8_CAD_HANDLE_HXX
 
+#include <t8.h>
+#include <optional>
+#include <span>
 #include <gp_Pnt.hxx>
 #include <TopExp.hxx>
 #include <Geom_Surface.hxx>
@@ -55,6 +58,7 @@ class t8_cad_handle {
     * \param [in] fileprefix  Prefix of a .brep file from which to extract cad geometry.
     */
   t8_cad_handle (const std::string_view fileprefix);
+
   /**
     * Constructor of the cad shape.
     * The shape is initialized directly from an existing TopoDS_Shape.
