@@ -38,6 +38,7 @@ function( add_t8_test )
 
     # Link base libraries.
     target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR} )
+
     # Include binary dir to find generated headers like t8_test_data_dir.h.
     target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} )
 
@@ -161,6 +162,7 @@ add_t8_cpp_test( NAME t8_gtest_partition_data_parallel            SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_forest/t8_gtest_set_partition_offset.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
 add_t8_cpp_test( NAME t8_gtest_weighted_partitioning_parallel     SOURCES t8_forest/t8_gtest_weighted_partitioning.cxx )
+add_t8_cpp_test( NAME t8_gtest_element_is_boundary_parallel       SOURCES t8_forest/t8_gtest_element_is_boundary.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_forest_incomplete/t8_gtest_permute_hole.cxx )
 add_t8_cpp_test( NAME t8_gtest_recursive_serial             SOURCES t8_forest_incomplete/t8_gtest_recursive.cxx )
@@ -227,3 +229,4 @@ if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial          SOURCES mesh_handle/t8_gtest_cache_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_handle_data_parallel             SOURCES mesh_handle/t8_gtest_handle_data.cxx )
 endif()
+
