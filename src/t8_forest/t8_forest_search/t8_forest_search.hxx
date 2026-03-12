@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/**  \file t8_forest_search.hxx 
+/**  \file t8_forest_search.hxx
  * A C++ interface for the search functionality. The user can define search and query callbacks
- * to perform the search and query operations on the forest. Implementation details regarding the 
+ * to perform the search and query operations on the forest. Implementation details regarding the
  * callback handling are given by https://stackoverflow.com/questions/2298242/callback-functions-in-c
  * We decided for option 4, using std::function together with templates.
 */
@@ -223,7 +223,7 @@ class t8_search_base {
 
   /**  \brief Perform the search.
    *
-   * This function performs the search in the forest. 
+   * This function performs the search in the forest.
    */
   void
   do_search ();
@@ -258,7 +258,7 @@ class t8_search_base {
                     t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
 
   /** \brief Checks if the search should stop due to empty queries.
-   * 
+   *
    */
   virtual bool
   stop_due_to_queries ()
@@ -283,10 +283,10 @@ class t8_search_base {
     = 0;
 
   /** \brief Checks queries during the search.
-   * 
+   *
    * This function is called to check queries during the search.
    * It passes the arguments to the callback function provided by the user.
-   * 
+   *
    * \param[in] new_active_queries A vector of indices of active queries.
    * \param[in] ltreeid The local tree ID of the current element.
    * \param[in] element A pointer to the current element being processed.
@@ -300,10 +300,10 @@ class t8_search_base {
     = 0;
 
   /**
-   * \brief  Function the gives the user the opportunity to update the queries after 
+   * \brief  Function the gives the user the opportunity to update the queries after
    *         each step in the recursion.
    *
-   * \param old_query_indices 
+   * \param old_query_indices
    */
   virtual void
   update_queries (std::vector<size_t> &old_query_indices)
@@ -388,11 +388,11 @@ class t8_search: public t8_search_base {
   t8_search_element_callback<Udata> element_callback;
 };
 
-/** 
+/**
  * \brief A class that performs a search in a forest with queries.
  * Uses a filter-view to filter out the active queries. It is recommended to use this version of the search
- * if the number of queries is small or if the queries do not need any further computations to be evaluated. 
- * 
+ * if the number of queries is small or if the queries do not need any further computations to be evaluated.
+ *
  * \tparam Query_T The type of queries
  * \tparam Udata The type of the user data, defaults to void.
 */
@@ -458,11 +458,11 @@ class t8_search_with_queries: public t8_search<Udata> {
 
 /**
  * \brief A class that performs a search in a forest with batched queries.
- * 
- * All active queries are passed to the callback function, which processes them in a batch. It is recommended to 
+ *
+ * All active queries are passed to the callback function, which processes them in a batch. It is recommended to
  * use this version of the searcch if further computations have to be done to evaluate the queries. That way these
  * precomputations are not done for every call to the callback again and only have to be evaluated once per call.
- * 
+ *
  * \tparam Query_T The type of queries
  * \tparam Udata The type of the user data, defaults to void.
  */
@@ -590,6 +590,8 @@ class t8_partition_search_base {
    * It uses the \a search_recursion function to perform the search.
    *
    * \param[in] ltreeid The local tree ID of the tree to be searched.
+   * \param[in] pfirst  The first rank owning elements of the tree.
+   * \param[in] plast   The last rank owning elements of the tree.
    */
   void
   search_tree (const t8_locidx_t ltreeid, int pfirst, int plast);

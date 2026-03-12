@@ -152,7 +152,13 @@ t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t for
 
 /** Create a non-periodic brick coarse mesh similar to \ref t8_cmesh_new_brick_3d_ext
  * with the difference that it is mapped to the unit cube instead of
- * [0,num_x]x[0,num_y]x[0,num_y]. */
+ * [0,num_x]x[0,num_y]x[0,num_z].
+ * \param[in] num_x          The number of trees in the x direction.
+ * \param[in] num_y          The number of trees in the y direction.
+ * \param[in] num_z          The number of trees in the z direction.
+ * \param[in] comm           The MPI communicator used in the cmesh.
+ * \return A num_x x num_y x num_z brick coarse mesh with unit mapping.
+ */
 static t8_cmesh_t
 t8_tutorial_search_partition_new_unit_brick (const t8_gloidx_t num_x, const t8_gloidx_t num_y, const t8_gloidx_t num_z,
                                              sc_MPI_Comm comm)
@@ -165,7 +171,9 @@ t8_tutorial_search_partition_new_unit_brick (const t8_gloidx_t num_x, const t8_g
 
 /** Create a forest covering the unit square. Depending on the user-specified
  * example id the forest will either be a brick of hexahedra or a hybrid mesh
- * consisting of several different tree types combined into a cube. */
+ * consisting of several different tree types combined into a cube.
+ * \param[in] glob_search_ctx Context struct to store the forest in.
+ */
 static void
 t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
@@ -216,7 +224,8 @@ t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_
  * The queries are first generated with uniform distribution in the unit square
  * and are then moved closer to one of two predefined cluster centers g->b and
  * g->c. The "intensity" of the clustering can be controlled with the
- * clustering exponent. */
+ * clustering exponent.
+ * \param[in] glob_search_ctx Context to store the generate queries in. */
 static void
 t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_global_t *glob_search_ctx)
 {

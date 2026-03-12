@@ -157,6 +157,20 @@ typedef struct
   t8_shmem_array_t element_offsets;
 } t8_forest_child_type_query_t;
 
+/** Convert the global_first_desc array of a forest to be monotonous.
+ * In the global_first_desc array of a t8_forest_t the global first descendants
+ * of empty processes are always set to 0. This causes problems when using
+ * sc_array_split, as it requires a monotonous input array.
+ * This function maps the global_first_desc array to a monotonously increasing
+ * version. For the given index, if the process is empty, the function iterates
+ * through the following entries until it finds a non-empty process and uses
+ * its global first descendant.
+ * \param [in] global_first_desc The global first descendants of a forest.
+ * \param [in] index         The index into the array we want to convert.
+ * \param [in] query_data    A struct containing necessary context about the
+ *                           array range and number of elements per process.
+ * \return The entry of global_first_desc converted to be monotonous.
+ */
 static t8_linearidx_t
 t8_forest_get_monotonous_gfd (sc_array_t *global_first_desc, size_t index, t8_forest_child_type_query_t *query_data)
 {
@@ -181,6 +195,14 @@ t8_forest_get_monotonous_gfd (sc_array_t *global_first_desc, size_t index, t8_fo
   return linearid;
 }
 
+/** Compute the child id of a global first descendant on a specific level.
+ * \param [in] global_first_desc The global first descendants of a forest.
+ * \param [in] index         The entry of the array we will consider.
+ * \param [in] data          Struct containing necessary context data.
+ * \return                   The child id of the quadrant stored at position
+                             \a index of \a global_first_desc array at the level
+                             specified in the context \a data.
+ */
 static size_t
 t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *data)
 {
@@ -189,7 +211,7 @@ t8_forest_determine_childid (sc_array_t *global_first_desc, size_t index, void *
   T8_ASSERT (index < global_first_desc->elem_count);
 
   /* Get the global first descendant of the process with rank index. For empty
-   * processes we choose the next non-zero global_first_descendat to obtain a
+   * processes we choose the next non-zero global_first_descendant to obtain a
    * monotonously increasing array to sort. */
   t8_forest_child_type_query_t *query_data = (t8_forest_child_type_query_t *) data;
   const t8_linearidx_t linearid = t8_forest_get_monotonous_gfd (global_first_desc, index, query_data);
