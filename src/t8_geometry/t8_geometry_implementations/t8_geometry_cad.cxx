@@ -31,6 +31,7 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
