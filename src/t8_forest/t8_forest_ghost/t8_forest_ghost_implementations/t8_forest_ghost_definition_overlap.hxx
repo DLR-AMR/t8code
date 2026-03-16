@@ -47,8 +47,26 @@ struct t8_forest_ghost_definition_overlap : public t8_forest_ghost_definition
   /** Constructor for ghost definition overlap with uniform stretch factor. */
   t8_forest_ghost_definition_overlap (std::array<double, 3> stretch_factors) : t8_forest_ghost_definition (T8_GHOST_USER_DEFINED) , _uniform_stretch_factor(stretch_factors)
   {
-    has_uniform_stretch_factor = true;
+    _has_uniform_stretch_factor = true;
   }
+
+  /** Get the uniform stretch factor of the ghost definition. 
+   * \return uniform stretch factor in every dimension, or NULL if ther is no uniform stretch factor.
+  */
+  std::array<double, 3>
+  get_uniform_stretch_factor() const;
+  /** Set a uniform stretch factor for each dimension. */
+  void
+  set_uniform_stretch_factor(std::array<double, 3> stretch_factors);
+  /** Get if the ghost definition uses a uniform stretch factor 
+   * or computes an communicate max factors for every process. */
+  bool
+  has_uniform_stretch_factor() const;
+  /** Change the strategy of the ghost definition from a uniform stretch factor
+   * to compute and communicate max stretch factors for each process.
+   */
+  void
+  unable_uniform_stretch_factor();
 
   /** Create one layer of ghost elements for a forest.
    * \param [in,out]    forest     The forest.
@@ -109,7 +127,7 @@ struct t8_forest_ghost_definition_overlap : public t8_forest_ghost_definition
   virtual void
   clean_up (t8_forest_t forest) override;
 
-  bool has_uniform_stretch_factor = false;
+  bool _has_uniform_stretch_factor = false;
 
   std::array<double, 3> _uniform_stretch_factor;
 
