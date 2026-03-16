@@ -48,7 +48,7 @@ t8_forest_ghost_definition_overlap::set_uniform_stretch_factor(std::array<double
     _uniform_stretch_factor = stretch_factors;
     _has_uniform_stretch_factor = true;
 }
- 
+
 bool
 t8_forest_ghost_definition_overlap::has_uniform_stretch_factor() const{
     return _has_uniform_stretch_factor;
@@ -151,10 +151,6 @@ t8_forest_ghost_definition_overlap::communicate_max_stretch_factor (t8_forest_t 
     t8_shmem_array_allgather (&max_local_stretch_factors, 3, sc_MPI_DOUBLE, _max_stretch_factors, 3, sc_MPI_DOUBLE);
 }
 
-/**
- * If memory was allocated for the offset array in communicate_ownerships it is released here.
- * Use memory_flag for this.
- */
 void
 t8_forest_ghost_definition_overlap::clean_up (t8_forest_t forest){
     /* Clear up the same part, as in the parents class. */
@@ -176,7 +172,8 @@ t8_forest_ghost_definition_overlap::clean_up (t8_forest_t forest){
 }
 
 /**
- * \note the given cubes are treated as closed cubes, i.e. an intersection in one corner is enough to have an intersection.
+ * \note the given cubes are treated as closed cubes, 
+ * i.e. an intersection in one corner is enough to have an intersection.
  */
 bool
 check_if_intersection(double lu_corner_one[6], double  lu_corner_two[6], const int dimension){
@@ -266,20 +263,22 @@ t8_forest_ghost_definition_overlap::search_for_ghost_elements (t8_forest_t fores
    } /* End iteration over the local elements. */
 }
 
+
 /**
- * This subroutine of the coverfind function is a recursion in the first iteration.
- * It build the cover from the first element to the accessor.
+ * This subroutine of the cover build function is a recursion in the first iteration.
+ * It builds the cover from the first element to the ancestor,
+ * by recursively calling this subroutine on a higher level.
  * \par forest [in]                     The forest.
  * \par tree_class [in]                 The tree class of the tree,
  * \par eclass_scheme [in]              The scheme of the elements.
  * \par first_element [in]              Point to the first element, which should be covered by the cover.
  * \par lin_id_first_element [in]       The linear id of the first element at max level.
- * \par anccesor [in]                   An accessor of the first element, which is covered by the cover.
+ * \par ancestors [in]                  An ancestor of the first element, which is covered by the cover.
  * \par cover [in, out]                 The cover in progress.
  */
 int
 t8_ghost_puma_recursion_first_descandance(t8_forest_t forest, const t8_eclass_t tree_class, const t8_scheme * eclass_scheme,
-            const t8_element_t *first_element, const t8_linearidx_t lin_id_first_element, const t8_element_t *anccesor, std::vector<t8_element_t *>& cover ){
+            const t8_element_t *first_element, const t8_linearidx_t lin_id_first_element, const t8_element_t *ancestors, std::vector<t8_element_t *>& cover ){
     t8_global_productionf("--entry recursion on first desc.\n");
     /** In the recursion, build the four children of accessor and check witch of the is ancessor of the first element.
      * All elements after this accessor are part of the cover.
@@ -288,7 +287,7 @@ t8_ghost_puma_recursion_first_descandance(t8_forest_t forest, const t8_eclass_t 
     /* Allocate memory for the childrens. */
     t8_element_t **children = T8_ALLOC (t8_element_t *, 4);
     eclass_scheme->element_new (tree_class, 4, children);
-    eclass_scheme->element_get_children(tree_class, anccesor, 4, children);
+    eclass_scheme->element_get_children(tree_class, ancestors, 4, children);
     /* Store max level for the loop. */
     int max_level = eclass_scheme->get_maxlevel(tree_class);
     /* Define temporary element, for the search. */
@@ -351,14 +350,26 @@ t8_ghost_puma_recursion_first_descandance(t8_forest_t forest, const t8_eclass_t 
     return 0;
 }
 
+/**
+ * This subroutine of the cover build function is a recursion in the second iteration.
+ * It builds the cover from the first element to the ancestor,
+ * by recursively calling this subroutine on a higher level.
+ * \par forest [in]                     The forest.
+ * \par tree_class [in]                 The tree class of the tree,
+ * \par eclass_scheme [in]              The scheme of the elements.
+ * \par last_element [in]               Point to the first element, which should be covered by the cover.
+ * \par lin_id_last_element [in]        The linear id of the first element at max level.
+ * \par ancestors [in]                  An ancestor of the first element, which is covered by the cover.
+ * \par cover [in, out]                 The cover in progress.
+ */
 int 
 t8_ghost_puma_recursion_last_descandance(t8_forest_t forest, const t8_eclass_t tree_class, const t8_scheme_c * eclass_scheme,
-            const t8_element_t *last_element, const t8_linearidx_t lin_id_last_element, const t8_element_t *anccesor, std::vector<t8_element_t *>& cover )
+            const t8_element_t *last_element, const t8_linearidx_t lin_id_last_element, const t8_element_t *ancestors, std::vector<t8_element_t *>& cover )
 {
     /* Allocate memory for the childrens. */
     t8_element_t **children = T8_ALLOC (t8_element_t *, 4);
     eclass_scheme->element_new (tree_class, 4, children);
-    eclass_scheme->element_get_children(tree_class, anccesor, 4, children);
+    eclass_scheme->element_get_children(tree_class, ancestors, 4, children);
     
     int max_level = eclass_scheme->get_maxlevel(tree_class);
     
@@ -504,9 +515,10 @@ build_cover_backward_iteration (t8_forest_t forest, t8_element_t **children, con
     return parent_of_last_element_and_child_of_nca;
 }
 
-/** 
- * Build elements, that for a cover of the leaf elements of a process.
- * In a cover, every leaf is a child of an element of the cover or in the cover.
+/** Build a cover for a given process.
+ * A set of elements is a cover of a process,
+ * if for each leaf element in the process, ther is an element in the cover,
+ * that is equal to an ancestor of this leaf element or equal as the element it self.
  * Moreover the leafs of every other process have no ancestor in the cover.
  * \param [in] forest               The forest.
  * \param [in] process              The process for which the cover is built.
