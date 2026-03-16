@@ -51,6 +51,10 @@ function( add_t8_example )
         target_include_directories( ${ADD_T8_EXAMPLE_NAME} SYSTEM PRIVATE ${OpenCASCADE_INCLUDE_DIR} )
     endif()
 
+    if (T8CODE_ENABLE_MPI)
+        target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE MPI::MPI_C)
+    endif()
+
     set_target_properties(${ADD_T8_EXAMPLE_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
         LIBRARY_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
@@ -97,7 +101,7 @@ if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
 endif()
 
-if(T8CODE_ENABLE_OCC)
+if(T8CODE_ENABLE_OCC AND T8CODE_ENABLE_MPI)
     add_t8_example( NAME t8_cmesh_mesh_deformation_example  SOURCES cmesh/t8_cmesh_mesh_deformation_example.cxx )
 endif()
 
