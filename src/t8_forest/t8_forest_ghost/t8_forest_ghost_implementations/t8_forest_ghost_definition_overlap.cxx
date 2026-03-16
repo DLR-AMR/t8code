@@ -32,18 +32,38 @@
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_forest/t8_forest_geometrical.h>
 
+/**
+ * Getter, setter and more for the uniform stretch factor.
+ */
+
 
 std::array<double, 3> 
-t8_forest_ghost_definition_overlap::get_uniform_stretch_factors() const{
+t8_forest_ghost_definition_overlap::get_uniform_stretch_factor() const{
+    T8_ASSERT(_has_uniform_stretch_factor);
     return _uniform_stretch_factor;
 }
 
 void
-t8_forest_ghost_definition_overlap::set_uniform_stretch_factors(std::array<double, 3> stretch_factors) {
+t8_forest_ghost_definition_overlap::set_uniform_stretch_factor(std::array<double, 3> stretch_factors) {
     _uniform_stretch_factor = stretch_factors;
-    has_uniform_stretch_factor = true;
+    _has_uniform_stretch_factor = true;
 }
  
+bool
+t8_forest_ghost_definition_overlap::has_uniform_stretch_factor() const{
+    return _has_uniform_stretch_factor;
+}
+
+void
+t8_forest_ghost_definition_overlap::unable_uniform_stretch_factor(){
+    _has_uniform_stretch_factor = false;
+}
+
+
+/**
+ * Algorithms for the pre-, postprocessing of the search and the search it self.
+ */
+
 
 bool
 t8_forest_ghost_definition_overlap::do_ghost (t8_forest_t forest)
@@ -84,7 +104,7 @@ void
 t8_forest_ghost_definition_overlap::communicate_ownerships (t8_forest_t forest){
     /** Call the communicate ownership function of the base class. */
     t8_forest_ghost_definition::communicate_ownerships( forest);
-    if(!has_uniform_stretch_factor){
+    if(!_has_uniform_stretch_factor){
         /** Exchange also the max stretch factors of the processes, if no uniform factor is given. */
         communicate_max_stretch_factor (forest);
         size_t num_factors = t8_shmem_array_get_elem_count(_max_stretch_factors);
@@ -201,7 +221,7 @@ t8_forest_ghost_definition_overlap::search_for_ghost_elements (t8_forest_t fores
         /* Get the local element and its coords. */
         const t8_element_t *element = t8_forest_get_leaf_element_in_tree(forest, 0, ielement);
         t8_productionf("search_for_ghost_elements : calculate refcoors for element %d\n", ielement);
-        if(has_uniform_stretch_factor){
+        if(_has_uniform_stretch_factor){
             /* If a uniform stretch factor is given use this. */
             t8_forest_element_from_ref_coords_ext(forest, 0, element, ref_cords, 2, coords_out, _uniform_stretch_factor.data());
         }else{
@@ -225,7 +245,7 @@ t8_forest_ghost_definition_overlap::search_for_ghost_elements (t8_forest_t fores
                 double coords_cover_element[6];
                 t8_productionf("level of the _list_of_covers[%i][%i] = %i\n", remote_rank, icover_element, eclass_scheme->element_get_level(tree_class, _list_of_covers[remote_rank][icover_element]));
                 double * stretch_factor_cover_element;
-                if (has_uniform_stretch_factor){
+                if (_has_uniform_stretch_factor){
                   stretch_factor_cover_element = _uniform_stretch_factor.data();
                 }
                 else {
@@ -615,11 +635,11 @@ t8_forest_ghost_definition_overlap::build_all_cover (t8_forest_t forest)
         t8_productionf("build_all_cover : before build cover of process %i\n", p);
         std::vector<t8_element_t *> cover = build_cover_of_process(forest, p);
         /** If the process hase communicates stretch facotres apply them to the cover. */
-        if (_max_stretch_factors != NULL || has_uniform_stretch_factor){
+        if (_max_stretch_factors != NULL || _has_uniform_stretch_factor){
             /** Get max stretch facotres of the process p. */
             double max_stretch_factors[3];
             for (int dim = 0; dim < 3; ++dim){
-                max_stretch_factors[dim] = has_uniform_stretch_factor ? _uniform_stretch_factor[dim] : *(double *) t8_shmem_array_index (_max_stretch_factors, 3*p + dim);
+                max_stretch_factors[dim] = _has_uniform_stretch_factor ? _uniform_stretch_factor[dim] : *(double *) t8_shmem_array_index (_max_stretch_factors, 3*p + dim);
             }
             /** Set the stretch factor of all cover elements to the max stretch factor of the process. */
             for (int index = 0; index < (int) cover.size(); ++index){
