@@ -28,8 +28,7 @@
 #define T8_FOREST_GHOST_DEFINITION_OVERLAP_HXX
  
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
-#include <t8_forest/t8_forest_types.h> /* Check if necessary */
-#include <t8_forest/t8_forest_iterate.h> /* Check if necessary */
+#include <t8_forest/t8_forest_types.h>
 #include <vector>
 #include <array>
  
