@@ -38,19 +38,16 @@
  */
 
 std::unordered_map<t8_gloidx_t, t8_3D_vec>
-calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *cad)
+t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad_handle *cad)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
 
-  /* Get number of global vertices on this rank */
-  //const t8_gloidx_t num_global_vertices = t8_cmesh_get_num_global_vertices (cmesh);
-
-  const int mesh_dimension = t8_cmesh_get_dimension (cmesh);
+  const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
 
   /* Map from global vertex id -> displacement vector. */
   std::unordered_map<t8_gloidx_t, t8_3D_vec> displacements;
 
-  for (const auto &global_vertex : *(cmesh->vertex_connectivity)) {
+  for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
 
     /* Get the list of all trees associated with the vertex. */
     const auto &tree_list = global_vertex.second;
@@ -62,8 +59,8 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *
     const int local_corner_index = first_tree.second;
 
     /* Get the first tree as a reference. */
-    const int *first_tree_geom_attribute = static_cast<const int *> (
-      t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY, first_tree_id));
+    const int *first_tree_geom_attribute = static_cast<const int *> (t8_cmesh_get_attribute (
+      associated_cmesh, t8_get_package_id (), T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY, first_tree_id));
 
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
@@ -79,7 +76,7 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *
     for (const auto &[tree_id, local_corner_index] : tree_list) {
 
       const int *geom_attribute = static_cast<const int *> (
-        t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY, tree_id));
+        t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (), T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY, tree_id));
 
       const int entity_dim = geom_attribute[2 * local_corner_index];
       const int entity_tag = geom_attribute[2 * local_corner_index + 1];
@@ -99,7 +96,7 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *
 
       /* Get the pointer to the array of (u,v)-parameters for the CAD geometry. */
       const double *uv_attribute = (const double *) t8_cmesh_get_attribute (
-        cmesh, t8_get_package_id (), T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY, first_tree_id);
+        associated_cmesh, t8_get_package_id (), T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY, first_tree_id);
 
       /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
@@ -111,7 +108,7 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *
 
       /* Get the pointer to the coordinate array as it was before the deformation. */
       const double *old_coords = (const double *) t8_cmesh_get_attribute (
-        cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree_id);
+        associated_cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree_id);
 
       /* Check if the coordinates are available. */
       if (old_coords == nullptr) {
@@ -156,23 +153,23 @@ calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *
  * Apply vertex displacements to a cmesh and update the CAD geometry.
  */
 void
-apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
-                            std::shared_ptr<t8_cad_handle> cad)
+t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
+                                                       std::shared_ptr<t8_cad_handle> cad)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
 
   /* Iterate over all vertices in the displacement map. */
   for (const auto &[global_vertex, displacement] : displacements) {
 
     /* Get the list of trees where this vertex exists. */
-    const auto &tree_list = cmesh->vertex_connectivity->get_tree_list_of_vertex (global_vertex);
+    const auto &tree_list = associated_cmesh->vertex_connectivity->get_tree_list_of_vertex (global_vertex);
 
     /*Update the vertex coordinates in each tree. */
     for (const auto &[tree_id, local_vertex_index] : tree_list) {
 
       /* Get the vertex coordinates of the current tree. */
-      double *tree_vertex_coords
-        = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, tree_id);
+      double *tree_vertex_coords = (double *) t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (),
+                                                                      T8_CMESH_VERTICES_ATTRIBUTE_KEY, tree_id);
 
       /* Check if the coordinates are available. */
       if (tree_vertex_coords != nullptr) {
@@ -185,7 +182,7 @@ apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx
   }
 
   /* Update the cad geometry. */
-  t8_geometry_handler *geometry_handler = cmesh->geometry_handler;
+  t8_geometry_handler *geometry_handler = associated_cmesh->geometry_handler;
   T8_ASSERT (geometry_handler != nullptr);
 
   for (auto geom = geometry_handler->begin (); geom != geometry_handler->end (); ++geom) {

@@ -94,14 +94,17 @@ main (int argc, char **argv)
     /* Load CAD geometry from .brep file. */
     auto cad = std::make_shared<t8_cad_handle> (brep_file);
 
+    /* Initialize the deformation object for the given mesh. */
+    t8_cmesh_mesh_deformation deformation (cmesh);
+
     /* Calculate displacements. */
-    auto displacements = calculate_displacement_surface_vertices (cmesh, cad.get ());
+    auto displacements = deformation.calculate_displacement_surface_vertices (cad.get ());
 
     /* Write output. */
     t8_forest_vtk_write_file (forest, "input_forest", 1, 1, 1, 1, 0, 0, NULL);
 
     /* Apply displacements. */
-    apply_vertex_displacements (cmesh, displacements, cad);
+    deformation.apply_vertex_displacements (displacements, cad);
 
     /* Write output. */
     t8_forest_vtk_write_file (forest, "deformed_forest", 1, 1, 1, 1, 0, 0, NULL);

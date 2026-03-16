@@ -42,10 +42,32 @@ struct t8_cmesh_mesh_deformation
 {
  public:
   /** Constructor */
-  t8_cmesh_mesh_deformation (): associated_cmesh (nullptr), updated_geometry (nullptr) {};
+  t8_cmesh_mesh_deformation (t8_cmesh_t cmesh): associated_cmesh (cmesh), updated_geometry (nullptr) {};
 
   /** Destructor */
   ~t8_cmesh_mesh_deformation () {};
+
+  /** 
+ * Computes the displacements of the surface vertices.
+ * 
+ * \param [in]  cad A pointer to the CAD-based geometry object.
+ * \return Map from global vertex ID to 3D displacement vector
+ */
+  std::unordered_map<t8_gloidx_t, t8_3D_vec>
+  calculate_displacement_surface_vertices (const t8_cad_handle *cad);
+
+  /**
+ * Apply vertex displacements to a committed cmesh.
+ *
+ * Iterates over the provided map of global vertex IDs to 3D displacement vectors,
+ * updating the coordinates in each tree where the vertex appears.
+ *
+ * \param [in] displacements Map from global vertex ID to 3D displacement vector [dx, dy, dz].
+ * \param [in] cad The shared pointer to the CAD geometry to update.
+ */
+  void
+  apply_vertex_displacements (const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
+                              std::shared_ptr<t8_cad_handle> cad);
 
  private:
   /** A pointer to the cmesh for attribute retrieval */
@@ -54,27 +76,4 @@ struct t8_cmesh_mesh_deformation
   std::shared_ptr<t8_cad_handle> updated_geometry;
 };
 
-/** 
- * Computes the displacements of the surface vertices.
- * 
- * \param [in]  cmesh The coarse mesh structure.
- * \param [in]  cad A pointer to the CAD-based geometry object.
- * \return Map from global vertex ID to 3D displacement vector
- */
-std::unordered_map<t8_gloidx_t, t8_3D_vec>
-calculate_displacement_surface_vertices (t8_cmesh_t cmesh, const t8_cad_handle *cad);
-
-/**
- * Apply vertex displacements to a committed cmesh.
- *
- * Iterates over the provided map of global vertex IDs to 3D displacement vectors,
- * updating the coordinates in each tree where the vertex appears.
- *
- * \param [in] cmesh The committed coarse mesh structure.
- * \param [in] displacements Map from global vertex ID to 3D displacement vector [dx, dy, dz].
- * \param [in] cad The shared pointer to the CAD geometry to update.
- */
-void
-apply_vertex_displacements (t8_cmesh_t cmesh, const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
-                            std::shared_ptr<t8_cad_handle> cad);
 #endif /* !T8_CMESH_DEFORMATION_HXX */
