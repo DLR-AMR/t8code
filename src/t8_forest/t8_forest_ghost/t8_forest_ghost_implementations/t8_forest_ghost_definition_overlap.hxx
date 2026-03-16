@@ -76,22 +76,22 @@ struct t8_forest_ghost_definition_overlap : public t8_forest_ghost_definition
   virtual bool
   do_ghost (t8_forest_t forest) override;
 
-  // void
-  // communicate_ownerships (t8_forest_t forest) override;
-
-  std::array<double, 3> 
-  get_uniform_stretch_factors() const;
-
-  void
-  set_uniform_stretch_factors(std::array<double, 3> stretch_factors);
-
   protected:
-  /** Each process uses a the minimal covers from the communication 
-   * to check which of its elements overlap with those of the others 
-   * and creates lists of remote ghost elements for them. 
+  /**
+   * Compute and collect ownerships to create the necessary offset
+   * for elements, trees and first descendant.
+   * Use memory_flag to record the allocation of memory.
+   * If there is no uniform stretch factor, the maximum stretch factor for each process is communicated.
+   * \note this function could be used in do_ghost
    */
-  virtual void
-  search_for_ghost_elements (t8_forest_t forest);
+  void
+  communicate_ownerships (t8_forest_t forest) override;
+
+  /** 
+   * \note this function could be used in communicate_ownership.
+   */
+  void 
+  communicate_max_stretch_factor (t8_forest_t forest);
 
   /** Build a cover (coarsest possible grid of the local elements of a single process)
    * for each process.
@@ -100,25 +100,12 @@ struct t8_forest_ghost_definition_overlap : public t8_forest_ghost_definition
   void
   build_all_cover (t8_forest_t forest);
 
-  /** Build a cover of the local elements.
-   * \param [in]        forest     committed forest.
-   * \note the element scheme must support a stretch factor.
+  /** Each process uses a the minimal covers from the communication 
+   * to check which of its elements overlap with those of the others 
+   * and creates lists of remote ghost elements for them. 
    */
-  // void
-  // build_owen_cover (t8_forest_t forest);
-
-  /** Compute with build_owen_cover the cover of local process.
-   * Exchange list of covers between the processes.
-   * \param [in]        forest     The forest.
-   */
-  // void
-  // communicate_covers (t8_forest_t forest);
-
-  void
-  communicate_ownerships (t8_forest_t forest) override;
-
-  void 
-  communicate_max_stretch_factor (t8_forest_t forest);
+  virtual void
+  search_for_ghost_elements (t8_forest_t forest);
 
   /**
    * If memory was allocated for the offset array in communicate_ownerships it is released here.
