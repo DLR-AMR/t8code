@@ -26,14 +26,11 @@
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_overlap.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
-
-#include <t8_schemes/t8_standalone/t8_standalone.hxx>   // other include for scheme than default
+/* The overlap ghost definition uses the standalone scheme for the stretching factor. */
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
 #include <t8_forest/t8_forest_geometrical.h>
-
-#include <vector>
-#include <algorithm>
 
 
 std::array<double, 3> 
