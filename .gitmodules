@@ -1,8 +1,0 @@
-[submodule "p4est"]
-	path = p4est
-	url = https://github.com/cburstedde/p4est.git
-	ignore = dirty
-[submodule "sc"]
-	path = sc
-	url = https://github.com/cburstedde/libsc.git
-	ignore = dirty
