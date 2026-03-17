@@ -25,15 +25,20 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Especially, competences to cache functionalities of elements instead of calculating them each time a function
  * is called are provided.
  *
+ * \note for developers or users that want to provide their own competence:
  * All competences have the same inheritance pattern: 
  * We use the CRTP pattern as we may need to access members of the derived classes like 
  * \ref t8_mesh_handle::element. 
- * The t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
+ * The \ref t8_crtp_operator is used for convenience/clear code (avoid to type a static cast explicitly each time 
  * we need functionality of TUnderlying).
  * Especially for the competences to cache functionality, the access of members is not necessary, 
  * such that it is not obvious why we use the crtp. For competences that extend the functionality of the element, 
  * this is required. 
  * We use it for all competences for consistency and compatibility with \ref t8_mesh_handle::element.
+ *
+ * We use \ref t8_crtp_operator instead of \ref t8_crtp_basic to circumvent diamond shaped inheritance pattern in 
+ * the case that multiple competences are used together. 
+ * The distinction of the classes is made by the second template parameter of \ref t8_crtp_operator.
  */
 
 #pragma once
@@ -112,7 +117,7 @@ struct cache_vertex_coordinates: public t8_crtp_operator<TUnderlying, cache_vert
   }
 
  protected:
-  mutable std::vector<t8_3D_point>
+  mutable std::vector<t8_3D_vec>
     m_vertex_coordinates; /**< Cache for the vector of vertex coordinate arrays. Empty vector if not filled. */
 };
 
@@ -135,7 +140,7 @@ struct cache_centroid: public t8_crtp_operator<TUnderlying, cache_centroid>
   }
 
  protected:
-  mutable std::optional<t8_3D_point>
+  mutable std::optional<t8_3D_vec>
     m_centroid; /**< Cache for the coordinates of the centroid. Use optional to allow no value if cache is not filled. */
 };
 
@@ -183,7 +188,7 @@ struct cache_face_centroids: t8_crtp_operator<TUnderlying, cache_face_centroids>
   }
 
  protected:
-  mutable std::vector<std::optional<t8_3D_point>> m_face_centroids; /**< Vector with the face centroid for each face. */
+  mutable std::vector<std::optional<t8_3D_vec>> m_face_centroids; /**< Vector with the face centroid for each face. */
 };
 
 /**

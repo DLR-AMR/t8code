@@ -20,17 +20,25 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_new_prism_cake_param.hxx 
+ * Parameterized prism cake example cmeshes.
+ */
+#ifndef T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX
+#define T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX
+
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
 #include <t8_cmesh/t8_cmesh_examples.h>
 
-#ifndef T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX
-#define T8_CMESH_NEW_PRISM_CAKE_PARAM_HXX
-
 namespace new_prism_cake
 {
+/** Wrapper function for t8_cmesh_new_prism_cake. */
 std::function<t8_cmesh_t (sc_MPI_Comm, int)> prism_cake = t8_cmesh_new_prism_cake;
 
+/** Function to convert parameter values to a string.
+ * \param [in] comm The mpi communicator to use.
+ * \param [in] num_prisms The number of prisms to be used.
+ */
 std::string
 make_param_string (const sc_MPI_Comm &comm, const int &num_prisms)
 {
@@ -39,8 +47,10 @@ make_param_string (const sc_MPI_Comm &comm, const int &num_prisms)
   return params;
 }
 
+/** Wrapper function for \ref make_param_string. */
 std::function<std::string (const sc_MPI_Comm &, const int &)> make_param_string_wrapper = make_param_string;
 
+/** Example cmesh set with different parameter combinations using the prism_cake function. */
 example_set *cmesh_example
   = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::my_comms.begin ()),
                                                        decltype (cmesh_params::num_prisms.begin ())> (

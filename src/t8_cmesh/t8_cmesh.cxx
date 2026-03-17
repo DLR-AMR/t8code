@@ -28,10 +28,10 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_types/t8_vec.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_helper_functions/t8_vector_algorithms.hxx>
 #include <t8_cmesh/t8_cmesh.hxx>
@@ -41,7 +41,7 @@
 #endif
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 
 /** \file t8_cmesh.cxx
  *  This file collects all general cmesh routines that need c++ compilation.

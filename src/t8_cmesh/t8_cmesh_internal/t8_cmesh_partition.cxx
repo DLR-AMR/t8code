@@ -21,15 +21,14 @@
 */
 
 /** \file t8_cmesh_partition.cxx
- *
- * TODO: document this file
+ * Implementation of functionality related to the partitioning of a cmesh.
  */
 
 #include <cstring>
 
 #include <t8_data/t8_shmem.h>
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>

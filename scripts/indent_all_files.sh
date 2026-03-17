@@ -43,13 +43,13 @@ fi
 
 # Find all files with the appropriate suffix.
 # Excluding the sc/ and p4est/ subfolders.
-files=`./find_all_source_files.sh`
+files=`./internal/find_all_source_files.sh`
 
 notallindented=0
 
-INDENT=./t8indent.sh
+INDENT=./indent.sh
 
-echo This script will change all source files found in 
+echo This script will change all source files found in
 echo	$PWD/../src/
 echo	$PWD/../example/
 echo	$PWD/../test/
@@ -72,14 +72,14 @@ then
     then
       $INDENT $file
       status=$?
-      if test $status -ne 0 
+      if test $status -ne 0
       then
         echo "File $file is not indented."
         notallindented=1
       fi
     fi
   done
-  
+
   if test $notallindented -eq 0
   then
     echo All files are indented.
