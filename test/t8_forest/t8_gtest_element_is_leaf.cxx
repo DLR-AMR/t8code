@@ -40,9 +40,9 @@
 /* Maximum uniform level for forest. */
 
 #if T8_TEST_LEVEL_INT >= 1
-#define T8_IS_LEAF_MAX_LVL 3
+#define T8_IS_LEAF_MAX_LVL 2
 #else
-#define T8_IS_LEAF_MAX_LVL 4
+#define T8_IS_LEAF_MAX_LVL 3
 #endif
 
 class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
