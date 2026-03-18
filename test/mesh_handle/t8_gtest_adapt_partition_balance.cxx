@@ -21,11 +21,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file t8_gtest_adapt.cxx
- * Tests for the adapt routines of mesh handles. 
- * This tests uses the callback and user data of tutorial step 3 as example.
+ * \file t8_gtest_adapt_partition_balance.cxx
+ * Tests for the adapt, partition and balance routines of mesh handles. 
+ * For the adapt routine, we use the callback and user data of tutorial step 3 as example.
  * The adaptation criterion is to look at the midpoint coordinates of the current element and if
  * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
+ * The test compares the results of the mesh handle to a forest adapted with the same criterion and balanced and partitioned similarly.
+ * Therefore, the check is based on the assumption that the forest functionality works as intended and is tested elsewhere.
  */
 #include <gtest/gtest.h>
 #include <t8.h>
@@ -98,8 +100,9 @@ forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_l
   return 0;
 }
 
-/** Test the adapt routine of a mesh handle. 
- * We compare the result to a classically adapted forest with similar callback.
+/** Test the adapt partition and balance routine of a mesh handle. 
+ * The test compares the results of the mesh handle to a forest adapted with the same criterion and balanced and partitioned similarly.
+ * Therefore, the check is based on the assumption that the forest functionality works as intended and is tested elsewhere.
  */
 TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
 {
@@ -124,11 +127,29 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
     mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
   mesh_handle.commit ();
   // Adapt forest classically.
-  forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 1, &user_data);
+  forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 0, &user_data);
 
   // Compare results.
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
 
+  // Adapt the mesh handle again and apply partition and balance.
+  mesh_handle.set_balance ();
+  mesh_handle.set_partition ();
+  mesh_handle.set_adapt (
+    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
+  mesh_handle.commit ();
+  EXPECT_TRUE (mesh_handle.is_balanced ());
+
+  // Compare the results again to an appropriate forest.
+  t8_forest_t forest_compare;
+  t8_forest_init (&forest_compare);
+  t8_forest_set_user_data (forest_compare, &user_data);
+  t8_forest_set_adapt (forest_compare, forest, forest_adapt_callback_example, false);
+  t8_forest_set_partition (forest_compare, NULL, false);
+  t8_forest_set_balance (forest_compare, NULL, false);
+  t8_forest_commit (forest_compare);
+  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_compare));
+
   // Clean up.
-  t8_forest_unref (&forest);
+  t8_forest_unref (&forest_compare);
 }
