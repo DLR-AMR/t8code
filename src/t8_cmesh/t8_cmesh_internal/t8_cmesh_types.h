@@ -28,12 +28,12 @@
 #define T8_CMESH_TYPES_H
 
 #include <t8.h>
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
-#include "t8_element.h"
+#include <t8_element/t8_element.h>
 
 /** Opaque pointer to a t8_part_tree */
 typedef struct t8_part_tree *t8_part_tree_t;

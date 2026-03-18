@@ -21,7 +21,7 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #
-# This script runs Valgrind on an input binary paths with specified memory leak detection flags. 
+# This script runs Valgrind on an input binary paths with specified memory leak detection flags.
 # The Valgrind output is parsed. If any errors are found, they are printed and the script exits with a status of 1.
 # If errors are found, the Valgrind output is kept in the file valgrind-output.log for further inspection.
 # Using "--supp=[FILE]", you can provide a path to a suppression file that is used by Valgrind to suppress certain errors.
@@ -32,7 +32,7 @@ $0 [FILE] --supp=[SUPPRESSION_FILE] --ntasks=[NUM_TASKS]\n
 to run valgrind on FILE. Optionally you can provide a suppression file and the number of parallel processes to use with MPI.\n"
 
 # Check that an argument is given and that the argument is a file.
-if [ ${1-x} = x ]; then
+if [ -z "$1" ]; then
   echo "ERROR: Need to provide a file as first argument."
   echo -e "$USAGE"
   exit 1
