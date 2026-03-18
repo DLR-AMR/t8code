@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 
 TEST (t8_gtest_refcount, Init)
 {

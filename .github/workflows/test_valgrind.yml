@@ -69,7 +69,7 @@ jobs:
 # Setup
 #
     - name: Download artifacts
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
@@ -113,7 +113,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log
@@ -122,4 +122,4 @@ jobs:
     # Execute script that runs a Valgrind check for all test binaries.
     # We use 4 parallel processes to run the binaries in parallel with MPI.
     - name: Valgrind check
-      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh --ntasks=4
+      run: cd scripts && bash ./check_all_test_binaries_valgrind.sh ../build/test/ --ntasks=4
