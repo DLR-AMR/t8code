@@ -52,6 +52,7 @@
  * the query points increasingly clustering around point b and point c. */
 
 #include <t8.h>                                            /* General t8code header, always include this. */
+#include <t8_types/t8_vec.hxx>                             /* Routine computations for 3D points. */
 #include <t8_forest/t8_forest_general.h>                   /* Forest definition and basic interface. */
 #include <t8_forest/t8_forest_geometrical.h>               /* Element center computation. */
 #include <t8_cmesh.h>                                      /* cmesh definition and basic interface. */
@@ -69,11 +70,11 @@ typedef struct t8_tutorial_search_partition_point
 typedef struct t8_tutorial_search_partition_global
 {
   /* Forest */
-  int example;             /* Index of the example coarse mesh. */
-  double a[3], b[3], c[3]; /* refinement centers */
-  int uniform_level;       /* level of initial uniform refinement */
-  int max_level;           /* maximum level of adaptive refinement */
-  t8_forest_t forest;      /* the resulting forest */
+  int example;         /* Index of the example coarse mesh. */
+  t8_3D_point a, b, c; /* refinement centers */
+  int uniform_level;   /* level of initial uniform refinement */
+  int max_level;       /* maximum level of adaptive refinement */
+  t8_forest_t forest;  /* the resulting forest */
 
   /* Queries */
   t8_locidx_t num_global_queries;    /* global number of queries;
@@ -116,7 +117,8 @@ t8_tutorial_search_partition_cmesh_id (t8_forest_t forest, t8_locidx_t which_tre
 
 /** The adaptive refinement callback. First, the center of the element is
  * computed. The closer the center is to one of the two prefdefined refinement
- * centers g->a and g->b, the stronger it will be refined. */
+ * centers glob_search_ctx->a and glob_search_ctx->b, the stronger it will be
+ * refined. */
 int
 t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                                              [[maybe_unused]] t8_eclass_t tree_class,
@@ -129,20 +131,14 @@ t8_tutorial_search_partition_adapt_callback (t8_forest_t forest, t8_forest_t for
 
   /* Compute the element center's position in the unit cube. */
   t8_locidx_t gtreeid = t8_tutorial_search_partition_cmesh_id (forest, which_tree);
-  double center[3];
-  t8_forest_element_centroid (forest, gtreeid, elements[0], center);
+  t8_3D_point centroid;
+  t8_forest_element_centroid (forest, gtreeid, elements[0], centroid.data ());
 
   /* Compute distance to point a. */
-  double dist = (glob_search_ctx->a[0] - center[0]) * (glob_search_ctx->a[0] - center[0])
-                + (glob_search_ctx->a[1] - center[1]) * (glob_search_ctx->a[1] - center[1])
-                + (glob_search_ctx->a[2] - center[2]) * (glob_search_ctx->a[2] - center[2]);
-  double min_dist = sqrt (dist);
+  double min_dist = t8_dist (glob_search_ctx->a, centroid);
 
   /* Compute distance to point b. */
-  dist = (glob_search_ctx->b[0] - center[0]) * (glob_search_ctx->b[0] - center[0])
-         + (glob_search_ctx->b[1] - center[1]) * (glob_search_ctx->b[1] - center[1])
-         + (glob_search_ctx->b[2] - center[2]) * (glob_search_ctx->b[2] - center[2]);
-  min_dist = SC_MIN (min_dist, sqrt (dist));
+  min_dist = SC_MIN (min_dist, t8_dist (glob_search_ctx->b, centroid));
 
   /* refine if quadrant center is close enough to either point a or point b */
   return (scheme->element_get_level (tree_class, elements[0])
@@ -222,10 +218,10 @@ t8_tutorial_search_partition_create_forest (t8_tutorial_search_partition_global_
 
 /** Create a set of random queries on rank 0 and distribute them to all ranks.
  * The queries are first generated with uniform distribution in the unit square
- * and are then moved closer to one of two predefined cluster centers g->b and
- * g->c. The "intensity" of the clustering can be controlled with the
- * clustering exponent.
- * \param[in] glob_search_ctx Context to store the generate queries in. */
+ * and are then moved closer to one of two predefined cluster centers
+ * glob_search_ctx->b and glob_search_ctx->c. The "intensity" of the clustering
+ * can be controlled with the clustering exponent.
+ * \param[in] glob_search_ctx Context to store the generated queries in. */
 static void
 t8_tutorial_search_partition_generate_queries (t8_tutorial_search_partition_global_t *glob_search_ctx)
 {
@@ -628,15 +624,12 @@ main (int argc, char **argv)
     t8_global_productionf (" [search] \n");
 
     /* Define centers of refinement and point creation. */
-    glob_search_ctx->a[0] = 0.2;
-    glob_search_ctx->a[1] = 0.4;
-    glob_search_ctx->a[2] = 0.4;
-    glob_search_ctx->b[0] = 0.7;
-    glob_search_ctx->b[1] = 0.55;
-    glob_search_ctx->b[2] = 0.55;
-    glob_search_ctx->c[0] = 0.3;
-    glob_search_ctx->c[1] = 0.8;
-    glob_search_ctx->c[2] = 0.8;
+    t8_3D_point a ({ 0.2, 0.4, 0.4 });
+    t8_3D_point b ({ 0.7, 0.55, 0.55 });
+    t8_3D_point c ({ 0.3, 0.8, 0.8 });
+    glob_search_ctx->a = a;
+    glob_search_ctx->b = b;
+    glob_search_ctx->c = c;
 
     /*
      * Run example.
