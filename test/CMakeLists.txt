@@ -136,6 +136,7 @@ add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest
 
 add_t8_cpp_test( NAME t8_gtest_element_volume_serial        SOURCES t8_forest/t8_gtest_element_volume.cxx )
 add_t8_cpp_test( NAME t8_gtest_search_parallel              SOURCES t8_forest/t8_gtest_search.cxx )
+add_t8_cpp_test( NAME t8_gtest_search_partition_parallel    SOURCES t8_forest/t8_gtest_search_partition.cxx )
 add_t8_cpp_test( NAME t8_gtest_half_neighbors_parallel      SOURCES t8_forest/t8_gtest_half_neighbors.cxx )
 add_t8_cpp_test( NAME t8_gtest_find_owner_parallel          SOURCES t8_forest/t8_gtest_find_owner.cxx )
 add_t8_cpp_test( NAME t8_gtest_user_data_parallel           SOURCES t8_forest/t8_gtest_user_data.cxx )
