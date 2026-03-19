@@ -59,35 +59,55 @@ class forest_search_partition: public testing::TestWithParam<std::tuple<std::tup
 
 /* A search function that matches all elements.
  * This function verifies that ltreeid, pfirst and plast are sensible.
+ * If the element is a leaf of the partition search (pfirst == plast), we mark
+ * the respective rank in the user_data array.
  */
 bool
 t8_test_search_partition_all_fn (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                                 const int pfirst, const int plast, void *user_data)
+                                 const int pfirst, const int plast, std::vector<bool> *user_data)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (user_data != NULL);
   int mpisize = *(int *) user_data;
-  T8_ASSERT (0 <= pfirst && pfirst <= plast && plast < mpisize);
+  T8_ASSERT (0 <= pfirst && pfirst <= plast && plast < user_data->size ());
   T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_global_trees (forest));
+
+  if (pfirst == plast) {
+    (*user_data)[pfirst] = true;
+  }
 
   return true;
 }
 
 TEST_P (forest_search_partition, t8_test_search_partition_all_fn)
 {
+  /* Create a vector of booleans for each of the ranks. */
   sc_MPI_Comm comm = t8_forest_get_mpicomm (forest);
   int mpisize;
   int mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
+  std::vector<bool> matched_ranks (mpisize, false);
 
   /* Call search. This search matches all elements. We check each call of the
-   * callback for consistency. */
-  t8_partition_search<int> search (t8_test_search_partition_all_fn);
+   * callback for consistency. We also mark all ranks that were found during
+   * the search. */
+  t8_partition_search<std::vector<bool>> search (t8_test_search_partition_all_fn);
 
-  search.update_user_data (&mpisize);
+  search.update_user_data (&matched_ranks);
   search.update_forest (forest);
   search.do_search ();
 
+  /* We iterate over all ranks and verify that they were visited during the
+   * partition search with the all-matching callback. This is only the case, if
+   * there is at least one element per rank.
+   * Important remark: We assume that there is at least one element per rank,
+   * if there are more global leaves than ranks. If this heuristic does not work
+   * the following loop should not be executed. */
+  if (t8_forest_get_global_num_leaf_elements (forest) > mpisize) {
+    for (size_t i = 0; i < mpisize; ++i) {
+      ASSERT_TRUE (matched_ranks[i]) << "Search did not match all ranks. Mismatch at rank " << i;
+    }
+  }
   t8_forest_unref (&forest);
 }
 
