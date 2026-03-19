@@ -880,7 +880,7 @@ t8_forest_element_neighbor_eclass (t8_forest_t forest, t8_locidx_t ltreeid, cons
  *                          the data could be modified arbitrarily.
  * \param [in] neigh_eclass The eclass of \a neigh.
  * \param [in] face         The number of the face along which the neighbor should be constructed.
- * \param [out] neigh_face  The number of the face viewed from perspective of \a neigh.
+ * \param [out] neigh_face  The number of the face viewed from perspective of \a neigh. Can be nullptr.
  * \return The global tree-id of the tree in which \a neigh is in.
  *        -1 if there exists no neighbor across that face.
  */
