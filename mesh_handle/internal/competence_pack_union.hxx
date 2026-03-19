@@ -20,10 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file competence_pack_union.hxx
- * Define the implementation of the unique union of competences of several \ref
- * t8_mesh_handle::element_competence_pack 's. Users should use \ref
- * t8_mesh_handle::union_competence_packs_type in \ref competence_pack.hxx.
+/** \file competence_pack_union.hxx 
+ * Define the implementation of the unique union of competences of several \ref t8_mesh_handle::competence_pack 's.
+ * Users should use \ref t8_mesh_handle::union_competence_packs_type in \ref competence_pack.hxx.
  */
 
 #pragma once

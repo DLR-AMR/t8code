@@ -84,7 +84,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
    * is_ghost_element Flag to indicate that this element is a ghost element.
    * Default is false.
    */
-  element (TMeshClass *mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
+  element (TMeshClass* mesh, t8_locidx_t tree_id, t8_locidx_t element_id, bool is_ghost_element = false)
     : m_mesh (mesh), m_tree_id (tree_id), m_element_id (element_id), m_is_ghost_element (is_ghost_element)
   {
     // Cache the t8_element_t from the forest as it is often used.
@@ -128,7 +128,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   static constexpr bool
   has_volume_cache ()
   {
-    return requires (SelfType &element) { element.volume_cache_filled (); };
+    return requires (SelfType& element) { element.volume_cache_filled (); };
   }
 
   /** Function that checks if a cache for the element's diameter exists.
@@ -137,7 +137,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   static constexpr bool
   has_diameter_cache ()
   {
-    return requires (SelfType &element) { element.diameter_cache_filled (); };
+    return requires (SelfType& element) { element.diameter_cache_filled (); };
   }
 
   /** Function that checks if a cache for the vertex coordinates exists.
@@ -146,7 +146,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   static constexpr bool
   has_vertex_cache ()
   {
-    return requires (SelfType &element) { element.vertex_cache_filled (); };
+    return requires (SelfType& element) { element.vertex_cache_filled (); };
   }
 
   /** Function that checks if a cache for the centroid exists.
@@ -155,7 +155,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   static constexpr bool
   has_centroid_cache ()
   {
-    return requires (SelfType &element) { element.centroid_cache_filled (); };
+    return requires (SelfType& element) { element.centroid_cache_filled (); };
   }
 
   /** Function that checks if a cache for the face neighbors exists.
@@ -164,7 +164,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   static constexpr bool
   has_face_neighbor_cache ()
   {
-    return requires (SelfType &element) { element.neighbor_cache_filled (0); };
+    return requires (SelfType& element) { element.neighbor_cache_filled (0); };
   }
   /** Function that checks if a cache for the element's face areas exists.
    * \return true if a cache exists, false otherwise.
@@ -172,7 +172,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   static constexpr bool
   has_face_areas_cache ()
   {
-    return requires (SelfType &element) { element.face_area_cache_filled (0); };
+    return requires (SelfType& element) { element.face_area_cache_filled (0); };
   }
 
   /** Function that checks if a cache for the element's face centroids exists.
@@ -181,7 +181,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   static constexpr bool
   has_face_centroids_cache ()
   {
-    return requires (SelfType &element) { element.face_centroid_cache_filled (0); };
+    return requires (SelfType& element) { element.face_centroid_cache_filled (0); };
   }
 
   /** Function that checks if a cache for the element's face normals exists.
@@ -190,7 +190,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   static constexpr bool
   has_face_normals_cache ()
   {
-    return requires (SelfType &element) { element.face_normal_cache_filled (0); };
+    return requires (SelfType& element) { element.face_normal_cache_filled (0); };
   }
 
   // --- Functionality of the element. In each function, it is checked if a
@@ -353,7 +353,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
    * length num_neighbors with pointers to the elements neighboring at the given
    * face.
    */
-  std::vector<const SelfType *>
+  std::vector<const SelfType*>
   get_face_neighbors (int face, std::optional<std::reference_wrapper<std::vector<int>>> dual_faces = std::nullopt) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
@@ -367,10 +367,10 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
       }
     }
 
-    t8_element_t **neighbors; /**< Neighboring elements. */
-    int *dual_faces_internal; /**< Face indices of the neighbor elements. */
+    t8_element_t** neighbors; /**< Neighboring elements. */
+    int* dual_faces_internal; /**< Face indices of the neighbor elements. */
     int num_neighbors;        /**< Number of neighboring elements. */
-    t8_locidx_t *neighids;    /**< Neighboring elements ids. */
+    t8_locidx_t* neighids;    /**< Neighboring elements ids. */
     t8_eclass_t neigh_class;  /**< Neighboring elements tree class. */
 
     t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, m_element, &neighbors, face, &dual_faces_internal,
@@ -378,7 +378,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     if (dual_faces) {
       dual_faces->get ().assign (dual_faces_internal, dual_faces_internal + num_neighbors);
     }
-    std::vector<const SelfType *> neighbors_handle;
+    std::vector<const SelfType*> neighbors_handle;
     for (int ineighs = 0; ineighs < num_neighbors; ineighs++) {
       neighbors_handle.push_back (&((*m_mesh)[neighids[ineighs]]));
     }
@@ -548,7 +548,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   /** Getter for the mesh to which the element belongs.
    * \return Reference to the mesh.
    */
-  const TMeshClass *
+  const TMeshClass*
   get_mesh () const
   {
     return m_mesh;
@@ -565,14 +565,14 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
 
  private:
   // --- Private member variables. ---
-  TMeshClass *m_mesh;             /**< Pointer to the mesh the element is defined for. */
+  TMeshClass* m_mesh;             /**< Pointer to the mesh the element is defined for. */
   const t8_locidx_t m_tree_id;    /**< The tree id of the element in the forest
                                      defined in the mesh. */
   const t8_locidx_t m_element_id; /**< The element id of the element in the
                                      forest defined in the mesh. */
   const bool m_is_ghost_element;  /**< Flag to indicate if the element is a ghost
                                     element. */
-  const t8_element_t *m_element;  /**< Cache the pointer to element in the forest
+  const t8_element_t* m_element;  /**< Cache the pointer to element in the forest
                                     as this is often needed. */
 
   // --- Private helper function. ---
