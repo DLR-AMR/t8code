@@ -85,4 +85,13 @@ struct mesh_competence_pack
 template <typename... TPacks>
 using union_competence_packs_type = typename detail::union_competence_packs<TPacks...>::type;
 
+/** Compute the unique union of the competences of several \ref t8_mesh_handle::competence_pack 's.
+ *  This produces a new \ref t8_mesh_handle::competence_pack containing all competences of the competence packs 
+ *  with duplicates removed.
+ * \tparam TPacks The competence pack for which we should compute the unique union of the competences.
+ *         Each competence pack is expected to be of type \ref t8_mesh_handle::competence_pack.
+ */
+template <typename... TPacks>
+using union_competence_packs_type = typename detail::union_competence_packs<TPacks...>::type;
+
 }  // namespace t8_mesh_handle

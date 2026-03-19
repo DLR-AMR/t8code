@@ -22,17 +22,18 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_mesh_handle.cxx
- * Tests if the \ref t8_mesh_handle::mesh class of the handle works as intended for different types of template parameter classes. 
+ * Tests if the \ref t8_mesh_handle::mesh class of the handle works as intended
+ * for different types of template parameter classes.
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_macros.hxx>
 #include <t8.h>
+#include <test/t8_gtest_macros.hxx>
 
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competences.hxx>
 #include <mesh_handle/competence_pack.hxx>
+#include <mesh_handle/competences.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
+#include <mesh_handle/mesh.hxx>
 
 /** Parametrized test fixture for the mesh handle tests. */
 struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
@@ -49,7 +50,8 @@ struct t8_mesh_handle_test: public testing::TestWithParam<std::tuple<t8_eclass_t
   int level;          /**< Refinement level used for testing.*/
 };
 
-/** Test default \ref t8_mesh_handle::mesh handle, the iterator and some exemplary functionality. */
+/** Test default \ref t8_mesh_handle::mesh handle, the iterator and some
+ * exemplary functionality. */
 TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 {
   using mesh_class = t8_mesh_handle::mesh<>;
@@ -59,17 +61,18 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
   EXPECT_FALSE (element_class::has_vertex_cache ());
   EXPECT_FALSE (element_class::has_centroid_cache ());
 
-  // Iterate with the constant iterator over all mesh elements and check some functionality.
+  // Iterate with the constant iterator over all mesh elements and check some
+  // functionality.
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_FALSE (it->has_vertex_cache ());
     EXPECT_FALSE (it->has_centroid_cache ());
     auto centroid = it->get_centroid ();
-    for (const auto& coordinate : centroid) {
+    for (const auto &coordinate : centroid) {
       EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     auto vertex_coordinates = (*it).get_vertex_coordinates ();
     for (int ivertex = 0; ivertex < (int) vertex_coordinates.size (); ++ivertex) {
-      for (const auto& coordinate : vertex_coordinates[ivertex]) {
+      for (const auto &coordinate : vertex_coordinates[ivertex]) {
         EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
     }
@@ -82,10 +85,12 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
   }
 }
 
-/** Test mesh class with all competence available using some exemplary functionality. */
+/** Test mesh class with all competence available using some exemplary
+ * functionality. */
 TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 {
-  // --- Use predefined competences to use all available caching competences. ---
+  // --- Use predefined competences to use all available caching competences.
+  // ---
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
@@ -99,23 +104,25 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
   EXPECT_TRUE (element_class::has_face_normals_cache ());
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
-  // Iterate over all mesh elements and access some exemplary functionality which sets the caches.
+  // Iterate over all mesh elements and access some exemplary functionality
+  // which sets the caches.
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_FALSE (it->volume_cache_filled ());
     EXPECT_FALSE (it->centroid_cache_filled ());
     EXPECT_FALSE (it->vertex_cache_filled ());
     EXPECT_EQ (level, it->get_level ());
     EXPECT_GE (it->get_volume (), 0);
-    for (const auto& coordinate : it->get_centroid ()) {
+    for (const auto &coordinate : it->get_centroid ()) {
       EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     for (int ivertex = 0; ivertex < it->get_num_vertices (); ++ivertex) {
-      for (const auto& coordinate : it->get_vertex_coordinates (ivertex)) {
+      for (const auto &coordinate : it->get_vertex_coordinates (ivertex)) {
         EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
     }
   }
-  // Check if caches are set. If caches are accessed correctly is checked in another test.
+  // Check if caches are set. If caches are accessed correctly is checked in
+  // another test.
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_TRUE (it->volume_cache_filled ());
     EXPECT_TRUE (it->centroid_cache_filled ());
@@ -130,7 +137,8 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
   }
 }
 
-/** Test mesh class with all predefined face competences using some exemplary functionality. */
+/** Test mesh class with all predefined face competences using some exemplary
+ * functionality. */
 TEST_P (t8_mesh_handle_test, test_cache_face_element_competences)
 {
   // --- Use all predefined competences. ---
@@ -147,7 +155,8 @@ TEST_P (t8_mesh_handle_test, test_cache_face_element_competences)
   EXPECT_TRUE (element_class::has_face_normals_cache ());
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
-  // Iterate over all mesh elements and access some exemplary functionality which sets the caches.
+  // Iterate over all mesh elements and access some exemplary functionality
+  // which sets the caches.
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     if (it->get_num_faces () == 0) {
       GTEST_SKIP () << "Skipping test as there are no faces to be tested.";
@@ -156,12 +165,13 @@ TEST_P (t8_mesh_handle_test, test_cache_face_element_competences)
       EXPECT_FALSE (it->face_area_cache_filled (iface));
       EXPECT_FALSE (it->face_normal_cache_filled (iface));
       EXPECT_GE (it->get_face_area (iface), 0);
-      for (const auto& coordinate : it->get_face_normal (iface)) {
+      for (const auto &coordinate : it->get_face_normal (iface)) {
         EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
       }
     }
   }
-  // Check if caches are set. If caches are accessed correctly is checked in another test.
+  // Check if caches are set. If caches are accessed correctly is checked in
+  // another test.
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     for (int iface = 0; iface < it->get_num_faces (); ++iface) {
       EXPECT_TRUE (it->face_area_cache_filled (iface));
@@ -172,12 +182,14 @@ TEST_P (t8_mesh_handle_test, test_cache_face_element_competences)
   }
 }
 
-/** Check that the unique union of multiple competence packs works as intended. */
+/** Check that the unique union of multiple competence packs works as intended.
+ */
 TEST (t8_mesh_handle_test, test_union_competence_pack)
 {
   using namespace t8_mesh_handle;
-  /* Combine multiple competence packs with some overlapping competences to check that the union works correctly
-   * and duplicates are removed. Duplicates would cause an error because we inherit multiple times from the same class.
+  /* Combine multiple competence packs with some overlapping competences to
+   * check that the union works correctly and duplicates are removed. Duplicates
+   * would cause an error because we inherit multiple times from the same class.
    */
   using mesh_class = mesh<
     union_competence_packs_type<element_competence_pack<cache_volume>,

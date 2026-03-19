@@ -20,9 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file competence_pack_union.hxx 
- * Define the implementation of the unique union of competences of several \ref t8_mesh_handle::element_competence_pack 's.
- * Users should use \ref t8_mesh_handle::union_competence_packs_type in \ref competence_pack.hxx.
+/** \file competence_pack_union.hxx
+ * Define the implementation of the unique union of competences of several \ref
+ * t8_mesh_handle::element_competence_pack 's. Users should use \ref
+ * t8_mesh_handle::union_competence_packs_type in \ref competence_pack.hxx.
  */
 
 #pragma once
@@ -53,17 +54,18 @@ struct tag
 {
 };
 
-/** Insert competence TCompetence into a pack with competences TUnionCompetences if not already present.
- * A new element_competence_pack is produced.
- * \tparam TCompetence       Competence to insert.
- * \tparam TUnionCompetences Existing competences in the pack.
+/** Insert competence TCompetence into a pack with competences TUnionCompetences
+ * if not already present. A new element_competence_pack is produced. \tparam
+ * TCompetence       Competence to insert. \tparam TUnionCompetences Existing
+ * competences in the pack.
  */
 template <template <class> class TCompetence, template <class> class... TUnionCompetences>
 using insert_unique = std::conditional_t<(std::is_same_v<tag<TCompetence>, tag<TUnionCompetences>> || ...),
                                          element_competence_pack<TUnionCompetences...>,
                                          element_competence_pack<TUnionCompetences..., TCompetence>>;
 
-//--- Unique fold operation to fold competences into one competence pack without duplication. ---
+//--- Unique fold operation to fold competences into one competence pack without
+//duplication. ---
 /** Fold operation to accumulate unique competences.
  * Recursively inserts all TCompetences into the competence pack.
  * \tparam TCompetencePack Current accumulated element_competence_pack.
@@ -73,9 +75,9 @@ template <typename TCompetencePack, template <class> class... TCompetences>
 struct fold_unique;
 
 /** Termination case: no more competences to process.
- * Specialization for the case when the competence pack is already fully processed and 
- * no more competences are left to insert.
- * \tparam TUnionCompetences Existing competences in the pack.
+ * Specialization for the case when the competence pack is already fully
+ * processed and no more competences are left to insert. \tparam
+ * TUnionCompetences Existing competences in the pack.
  */
 template <template <class> class... TUnionCompetences>
 struct fold_unique<element_competence_pack<TUnionCompetences...>>
@@ -84,69 +86,73 @@ struct fold_unique<element_competence_pack<TUnionCompetences...>>
   using type = element_competence_pack<TUnionCompetences...>;
 };
 
-/** Recursive case: insert the first competence uniquely, then process the rest recursively until 
- * termination (no competences left). 
- * Specialization for the case when there is still at least one competence left to process.
- * \tparam TUnionCompetences Existing competences in the pack.
- * \tparam TCompetence Competence to insert in this recursion cycle.
- * \tparam TOtherCompetences Remaining competences to process in the next recursion cycles.
+/** Recursive case: insert the first competence uniquely, then process the rest
+ * recursively until termination (no competences left). Specialization for the
+ * case when there is still at least one competence left to process. \tparam
+ * TUnionCompetences Existing competences in the pack. \tparam TCompetence
+ * Competence to insert in this recursion cycle. \tparam TOtherCompetences
+ * Remaining competences to process in the next recursion cycles.
  */
 template <template <class> class... TUnionCompetences, template <class> class TCompetence,
           template <class> class... TOtherCompetences>
 struct fold_unique<element_competence_pack<TUnionCompetences...>, TCompetence, TOtherCompetences...>
 {
-  /** Competence pack after inserting the first competence TCompetence uniquely. */
+  /** Competence pack after inserting the first competence TCompetence uniquely.
+   */
   using type = typename fold_unique<insert_unique<TCompetence, TUnionCompetences...>, TOtherCompetences...>::type;
 };
 
 //--- Unique union of two competence packs. ---
-/** Compute the unique union of the competences of two \ref element_competence_pack 's.
- * This produces a new \ref element_competence_pack containing all competences with duplicates removed.
- * \tparam TPack1 First competence pack.
- * \tparam TPack2 Second competence pack.
+/** Compute the unique union of the competences of two \ref competence_pack 's.
+ * This produces a new \ref competence_pack containing all competences with
+ * duplicates removed. \tparam TPack1 First competence pack. \tparam TPack2
+ * Second competence pack.
  */
 template <typename TPack1, typename TPack2>
 struct union_two_element_competence_packs;
 
-/** Specialization for two \ref element_competence_pack types. 
- * This is necessary because this way, we can access the competences directly. 
- * This specialization of the class above is used if both template parameters are of type \ref element_competence_pack.
- * \tparam TCompetences1 Competences of the first competence pack.
- * \tparam TCompetences2 Competences of the second competence pack. 
+/** Specialization for two \ref element_competence_pack types.
+ * This is necessary because this way, we can access the competences directly.
+ * This specialization of the class above is used if both template parameters
+ * are of type \ref element_competence_pack. \tparam TCompetences1 Competences
+ * of the first competence pack. \tparam TCompetences2 Competences of the second
+ * competence pack.
  */
 template <template <class> class... TCompetences1, template <class> class... TCompetences2>
 struct union_two_element_competence_packs<element_competence_pack<TCompetences1...>,
                                           element_competence_pack<TCompetences2...>>
 {
-  /** The resulting element_competence_pack type with all competences from both packs, but without duplicates.
-   * The type is computed by folding the unique insertion of all competences from both packs into an 
-   * initially empty pack.
+  /** The resulting element_competence_pack type with all competences from both
+   * packs, but without duplicates. The type is computed by folding the unique
+   * insertion of all competences from both packs into an initially empty pack.
    */
   using type = typename fold_unique<element_competence_pack<>, TCompetences1..., TCompetences2...>::type;
 };
 
-//--- Recursive union of multiple competence packs using the implementation for two packs. ---
-/** Recursive case: Compute the unique union of the competences of more than one  \ref element_competence_pack 's.
- * Specialization for the case when there are still at least two competence packs left to process.
- * Uses \ref union_two_element_competence_packs recursively for pairwise combination.
- * \tparam TPack First competence pack to combine with the union of the rest of the competence packs 
- *          in this recursion cycle.
- * \tparam TPacks The competence pack for which we should compute the unique union of the competences.
- *         Each competence pack is expected to be of type \ref element_competence_pack.
+//--- Recursive union of multiple competence packs using the implementation for
+//two packs. ---
+/** Recursive case: Compute the unique union of the competences of more than one
+ * \ref element_competence_pack 's. Specialization for the case when there are
+ * still at least two competence packs left to process. Uses \ref
+ * union_two_element_competence_packs recursively for pairwise combination.
+ * \tparam TPack First competence pack to combine with the union of the rest of
+ * the competence packs in this recursion cycle. \tparam TPacks The competence
+ * pack for which we should compute the unique union of the competences. Each
+ * competence pack is expected to be of type \ref element_competence_pack.
  */
 template <typename TPack, typename... TPacks>
 struct union_competence_packs
 {
-  /** This is the type of a new \ref element_competence_pack containing all competences of the competence packs 
-   * with duplicates removed.
+  /** This is the type of a new \ref element_competence_pack containing all
+   * competences of the competence packs with duplicates removed.
    */
   using type =
     typename union_two_element_competence_packs<TPack, typename union_competence_packs<TPacks...>::type>::type;
 };
 
 /** Termination case: Only one pack left.
- * Specialization for the case when there is only one competence pack left to process.
- * \tparam TPack The only competence pack left.
+ * Specialization for the case when there is only one competence pack left to
+ * process. \tparam TPack The only competence pack left.
  */
 template <typename TPack>
 struct union_competence_packs<TPack>
