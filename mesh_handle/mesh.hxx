@@ -34,6 +34,7 @@
 #include "t8_forest/t8_forest_types.h"
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_io.h>
 #include <vector>
 #include <type_traits>
 #include <functional>
@@ -133,6 +134,12 @@ class mesh {
   get_num_local_elements () const
   {
     return t8_forest_get_local_num_leaf_elements (m_forest);
+  }
+
+  int
+  write_vtk (const char* fileprefix)
+  {
+    return t8_forest_write_vtk (m_forest, fileprefix);
   }
 
   /**
