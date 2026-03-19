@@ -157,8 +157,7 @@ add_t8_cpp_test( NAME t8_gtest_balance_parallel                   SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_forest_commit_parallel             SOURCES t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_face_normal_serial          SOURCES t8_forest/t8_gtest_forest_face_normal.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_leaf_face_neighbor_parallel SOURCES t8_forest/t8_gtest_leaf_face_neighbors.cxx t8_gtest_adapt_callbacks.cxx )
-
-( NAME t8_gtest_partition_data_parallel            SOURCES t8_forest/t8_gtest_partition_data.cxx )
+add_t8_cpp_test( NAME t8_gtest_partition_data_parallel            SOURCES t8_forest/t8_gtest_partition_data.cxx )
 add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_forest/t8_gtest_set_partition_offset.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
 add_t8_cpp_test( NAME t8_gtest_weighted_partitioning_parallel     SOURCES t8_forest/t8_gtest_weighted_partitioning.cxx )

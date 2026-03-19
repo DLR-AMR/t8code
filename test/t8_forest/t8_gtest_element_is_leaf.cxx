@@ -56,7 +56,6 @@ struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, i
     const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
     const int level = std::get<1> (GetParam ());
-
     t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
