@@ -46,7 +46,8 @@
 #define T8_IS_LEAF_MAX_LVL 3
 #endif
 
-struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
+struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override
