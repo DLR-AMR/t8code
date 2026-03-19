@@ -172,4 +172,27 @@ TEST_P (t8_mesh_handle_test, test_cache_face_element_competences)
   }
 }
 
+/** Check that the unique union of multiple competence packs works as intended. */
+TEST (t8_mesh_handle_test, test_union_competence_pack)
+{
+  using namespace t8_mesh_handle;
+  /* Combine multiple competence packs with some overlapping competences to check that the union works correctly
+   * and duplicates are removed. Duplicates would cause an error because we inherit multiple times from the same class.
+   */
+  using mesh_class = mesh<
+    union_competence_packs_type<element_competence_pack<cache_volume>,
+                                element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
+                                element_competence_pack<cache_centroid, cache_face_areas, cache_face_centroids>>>;
+  using element_class = typename mesh_class::element_class;
+
+  EXPECT_TRUE (element_class::has_volume_cache ());
+  EXPECT_TRUE (element_class::has_diameter_cache ());
+  EXPECT_TRUE (element_class::has_vertex_cache ());
+  EXPECT_TRUE (element_class::has_centroid_cache ());
+  EXPECT_TRUE (element_class::has_face_areas_cache ());
+  EXPECT_TRUE (element_class::has_face_centroids_cache ());
+  EXPECT_FALSE (element_class::has_face_normals_cache ());
+  EXPECT_FALSE (element_class::has_face_neighbor_cache ());
+}
+
 INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_handle_test, testing::Combine (AllEclasses, testing::Range (2, 3)));
