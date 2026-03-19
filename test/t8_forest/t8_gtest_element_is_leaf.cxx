@@ -46,8 +46,12 @@
 #define T8_IS_LEAF_MAX_LVL 3
 #endif
 
+<<<<<<< HEAD
 struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>>
 {
+=======
+class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
+>>>>>>> origin/main
  protected:
   void
   SetUp () override
@@ -56,7 +60,10 @@ struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, i
     const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
     const int level = std::get<1> (GetParam ());
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
     t8_cmesh_t cmesh = std::get<2> (GetParam ())->cmesh_create ();
     if (t8_cmesh_is_empty (cmesh)) {
       /* forest_commit does not support empty cmeshes, we skip this case */
@@ -67,6 +74,10 @@ struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, i
 
     forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
+<<<<<<< HEAD
+=======
+    //const int maxlevel = t8_forest_get_maxlevel (forest);
+>>>>>>> origin/main
     int maxlevel = level + 2;
     const int recursive_adapt = 1;
     forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 0, &maxlevel);
