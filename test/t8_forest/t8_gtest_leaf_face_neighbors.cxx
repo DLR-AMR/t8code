@@ -445,7 +445,7 @@ class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
 };
 
 /* Perform the actual test for the forest_face_neighbors_two_quad_mesh.
- * Iterate over all leafs and ghosts and call the leaf face neighbor function. */
+ * Iterate over all leaves and ghosts and call the leaf face neighbor function. */
 TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
 {
   // For debug purpoese, we write the forest to vtk
