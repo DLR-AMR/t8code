@@ -2162,8 +2162,8 @@ t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t
   /* We get the array of the tree's elements and then search in the array of elements for our
    * element candidate. */
   /* Get the array */
-  const t8_element_array_t *elements = !check_ghost ? t8_forest_get_tree_leaf_element_array (forest, local_tree)
-                                                    : t8_forest_ghost_get_tree_leaf_elements (forest, local_tree);
+  const t8_element_array_t *elements = check_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, local_tree)
+                                                   : t8_forest_tree_get_leaf_elements (forest, local_tree);
 
   T8_ASSERT (elements != NULL);
 
