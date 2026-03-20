@@ -23,13 +23,13 @@
 #include <gtest/gtest.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_vtk.h>
+#include <t8_vtk/t8_vtk.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_types/t8_vec.hxx>
 
@@ -48,7 +48,7 @@
 #include <Geom_BSplineSurface.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 
 #include <test/t8_gtest_custom_assertion.hxx>
 
@@ -544,7 +544,8 @@ TEST (t8_gtest_geometry_cad, jacobian)
 
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on an edge which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
-class class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_eclass, int>> {
+struct class_2d_element_cad_curve: public testing::TestWithParam<std::tuple<t8_eclass, int>>
+{
  protected:
   void
   SetUp () override
@@ -688,7 +689,8 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_cad_curve, class_2d_element_
 
 /* The test checks if the mapping algorithms for curved 2d elements do not shift values on a surface which is not curved.
  * In that case, the cad geometry should output the same out_coords as the linear geometry function. */
-class class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_eclass_t> {
+struct class_2d_element_linear_cad_surface: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override
@@ -786,7 +788,8 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_check_2d_element_linear_cad_surface, class_2d
                           AllEclasses2D, print_eclass);
 
 /* The test checks if the mapping algorithms for curved 2d elements shift values on a curved surface correctly. */
-class class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_eclass_t> {
+struct class_2d_element_curved_cad_surface: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override

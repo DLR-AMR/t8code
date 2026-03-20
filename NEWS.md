@@ -19,6 +19,16 @@ Please execute the steps in this order to ensure that your issue has the correct
 No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no issues are referenced using the Closes-keyword, an issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
 
 
+# User Updates for the upcoming t8code release (February 2026 - version format unclear)
+
+## Using structs instead of classes
+
+We decided to use `struct` instead of `class` throughout the entire codebase.
+We have some `C` code that is referring to our `C++` classes via pointers. This is only possible when these classes are declared as `struct`, since `C` does not know about `class`.
+In order to prevent mixing styles, we decided to use `struct` everywhere.
+Please keep in mind to use the `private` `protected` `public` keywords within your struct appropriately.
+
+
 # User Updates for the upcoming t8code v4.0.0
 
 Among many minor changes, we have several major updates in t8code v4.0.0.

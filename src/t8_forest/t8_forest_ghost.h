@@ -25,8 +25,6 @@
  * for a forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_ghost */
-
 #ifndef T8_FOREST_GHOST_H
 #define T8_FOREST_GHOST_H
 
@@ -118,7 +116,7 @@ t8_forest_ghost_get_tree_class (const t8_forest_t forest, const t8_locidx_t lgho
 
 /** Given a local ghost tree compute the global tree id of it.
  * \param [in]  forest    The forest. Ghost layer must exist.
- * \param [in]  lghost_tree The ghost tree id of a ghost tree.
+ * \param [in]  lghost_tree The ghost tree id of a ghost tree. (0 <= \a lghost_tree < num_ghost_trees)
  * \return                The global id of the local ghost tree \a lghost_tree.
  * \a forest must be committed before calling this function.
  * \see https://github.com/DLR-AMR/t8code/wiki/Tree-indexing for more details about tree indexing.
@@ -136,6 +134,18 @@ t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t l
  */
 t8_element_t *
 t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t8_locidx_t lelement);
+
+/**
+ * Query whether a given element is a ghost of a certrain tree in a forest.
+ * 
+ * \param [in]  forest    The forest.
+ * \param [in]  element   An element of a ghost tree in \a forest.
+ * \param [in]  lghost_tree A local ghost tree id of \a forest. (0 <= \a lghost_tree < num_ghost_trees)
+ * \return True (non-zero) if and only if \a element is a ghost in \a lghost_tree of \a forest.
+ * \note \a forest must be committed before calling this function.
+ */
+int
+t8_forest_element_is_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t lghost_tree);
 
 /** Return the array of remote ranks.
  * \param [in] forest   A forest with constructed ghost layer.

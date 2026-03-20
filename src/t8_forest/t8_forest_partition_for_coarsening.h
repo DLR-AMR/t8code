@@ -26,14 +26,14 @@
  */
 
 #ifndef T8_FOREST_PFC_H
-#define T8_FOREST_ITERATE_H
+#define T8_FOREST_PFC_H
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 
-/** \brief Correct the partitioning if element families are split accorss process boundaries.
+/** \brief Correct the partitioning if element families are split across process boundaries.
  *
  *  The default partitioning distributes the elements into equally-sized partitions. For coarsening, however,
  *  all elements of a family have to be on the same process in order to be coarsened into their parent element.
@@ -48,4 +48,4 @@ void
 t8_forest_pfc_correction_offsets (t8_forest_t forest);
 
 T8_EXTERN_C_END ();
-#endif /* T8_FOREST_ITERATE_H */
+#endif /* T8_FOREST_PFC_H */

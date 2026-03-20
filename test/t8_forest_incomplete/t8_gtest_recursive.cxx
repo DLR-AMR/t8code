@@ -37,7 +37,8 @@
  * Note, that each rank has its own local/global tree. No trees are shared.
  */
 
-class recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override

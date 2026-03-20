@@ -30,8 +30,8 @@
 
 #include <variant>
 #include <vector>
-#include <t8_refcount.h>
-#include <t8_eclass.h>
+#include <t8_helper_functions/t8_refcount.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
@@ -64,8 +64,9 @@ t8_debug_print_type ()
 
 /** This class holds one or more element schemes.
  * It also relays the function calls to the specific schemes. */
-class t8_scheme {
-  friend class t8_scheme_builder;
+struct t8_scheme
+{
+  friend struct t8_scheme_builder;
 
  public:
   t8_scheme ()
@@ -508,6 +509,21 @@ class t8_scheme {
                        eclass_schemes[tree_class]);
   };
 
+  /** Query whether element A is an ancestor of the element B.
+   * An element A is ancestor of an element B if A == B or if B can 
+   * be obtained from A via successive refinement.
+   * \param [in] tree_class The eclass of the current tree.
+   * \param [in] element_A An element of class \a eclass in scheme \a scheme.
+   * \param [in] element_B An element of class \a eclass in scheme \a scheme.
+   * \return     True if and only if \a element_A is an ancestor of \a element_B.
+  */
+  bool
+  element_is_ancestor (const t8_eclass_t tree_class, const t8_element_t *element_A, const t8_element_t *element_B) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.element_is_ancestor (element_A, element_B); },
+                       eclass_schemes[tree_class]);
+  }
+
   /** Query whether a given set of elements is a family or not.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] fam      An array of as many elements as an element of class
@@ -536,8 +552,9 @@ class t8_scheme {
   element_get_nca (const t8_eclass_t tree_class, const t8_element_t *elem1, const t8_element_t *elem2,
                    t8_element_t *const nca) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_nca (elem1, elem2, nca); },
-                       eclass_schemes[tree_class]);
+    std::visit ([&] (auto &&scheme) { return scheme.element_get_nca (elem1, elem2, nca); }, eclass_schemes[tree_class]);
+    T8_ASSERT (element_is_ancestor (tree_class, nca, elem1));
+    T8_ASSERT (element_is_ancestor (tree_class, nca, elem2));
   };
 
   /** Compute the shape of the face of an element.
@@ -627,6 +644,27 @@ class t8_scheme {
     return std::visit ([&] (auto &&scheme) { return scheme.element_face_get_parent_face (element, face); },
                        eclass_schemes[tree_class]);
   };
+
+  /** Given a face of an element and a level coarser than (or equal to)
+   * the element's level, return the face number
+   * of the ancestor of the element that matches the element's face. Or return -1 if
+   * no face of the ancestor matches the face.
+   * \param [in]  tree_class   The eclass of the current tree.
+   * \param [in]  element    The element.
+   * \param [in]  ancestor_level A refinement level smaller than (or equal to) \a element's level.
+   * \param [in]  face    Then number of a face of \a element.
+   * \return              If \a face of \a element is a subface of a face of \a element's ancestor at level \a ancestor_level,
+   *                      the face number of this face. Otherwise -1.
+   * \note For the root element this function always returns \a face.
+   */
+  int
+  element_face_get_ancestor_face (const t8_eclass_t tree_class, const t8_element_t *element, const int ancestor_level,
+                                  const int face) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_face_get_ancestor_face (element, ancestor_level, face); },
+      eclass_schemes[tree_class]);
+  }
 
   /** Given an element and a face of this element. If the face lies on the
    * tree boundary, return the face number of the tree face.

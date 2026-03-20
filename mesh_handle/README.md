@@ -6,6 +6,9 @@ Some application codes are designed for unstructured or uniform meshes and canno
 
 If you want to use the handle, note that is has its own library. Turn the option `T8CODE_BUILD_MESH_HANDLE` to `ON` and link against the target `T8_MESH_HANDLE` in addition to the usual t8code target please.
 
-The [mesh.hxx](mesh.hxx) defines the mesh class of the handle.
-The [element.hxx](element.hxx) defines the elements used in the mesh class.
-The [competences.hxx](competences.hxx) defines additional competences/functionality of an element to access additional data.
+The folder's most important files are: 
+- The [mesh.hxx](mesh.hxx) defines the mesh of the handle. This is the central file of the mesh handle. 
+- The [constructor_wrappers.hxx](constructor_wrappers.hxx) allows to define a mesh handle using a cmesh instead of a forest and provides a very small number of examples where the user needs no cmesh.
+- The [element.hxx](element.hxx) defines the elements (mesh or ghost elements) of the mesh handle.
+- The [competences.hxx](competences.hxx) defines additional competences/functionality of an element to access additional data.
+- The [competence_pack.hxx](competence_pack.hxx) is needed to pack element or mesh competences to pass it as template parameter to the mesh.

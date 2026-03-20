@@ -39,13 +39,15 @@
 #include <numeric>
 #include <type_traits>
 #include <string>
+#include <concepts>
 
 /**
  * \brief A data carrier class which is used as testable object for the partition_data functionality.
  * It provides some operator overloads in order to be handled equal to arithmetic data types within the
  * function \see TestPartitionData.
  */
-class t8_test_partition_data_t {
+struct t8_test_partition_data_t
+{
 
  public:
   t8_test_partition_data_t () = default;
@@ -66,21 +68,23 @@ class t8_test_partition_data_t {
     return old;
   };
 
-  t8_test_partition_data_t&
-  operator= (const t8_test_partition_data_t&)
-    = default;
-  t8_test_partition_data_t&
-  operator= (const t8_gloidx_t& value)
-  {
-    this->data = value;
-    return *this;
-  };
-
   explicit
   operator t8_gloidx_t ()
   {
     return data;
   };
+
+  t8_locidx_t
+  GetA () const
+  {
+    return a;
+  }
+
+  char
+  GetB () const
+  {
+    return b;
+  }
 
   t8_gloidx_t
   GetData () const
@@ -89,17 +93,17 @@ class t8_test_partition_data_t {
   };
 
  private:
-  t8_locidx_t a;
-  char b;
+  t8_locidx_t a { 42 };
+  char b { 'b' };
   t8_gloidx_t data { 0 };
 };
 
 /**
  * \brief Comparison function for floating point data.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_floating_point_v<T>, bool>
+template <std::floating_point T>
+bool
+gTestCompareEQ (const T& value1, const T& value2)
 {
   /* Use the internal floating comparison function from googletest. */
   const testing::internal::FloatingPoint<T> val1 { value1 };
@@ -111,9 +115,9 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_fl
 /**
  * \brief Comparison function for integer data.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_integral_v<T>, bool>
+template <std::integral T>
+bool
+gTestCompareEQ (const T& value1, const T& value2)
 {
   return (value1 == value2);
 }
@@ -121,11 +125,11 @@ gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_in
 /**
  * \brief Comparison function for the custom data type 't8_test_partition_data_t'.
  */
-template <typename T>
-auto
-gTestCompareEQ (const T& value1, const T& value2) -> std::enable_if_t<std::is_same_v<T, t8_test_partition_data_t>, bool>
+bool
+gTestCompareEQ (const t8_test_partition_data_t& value1, const t8_test_partition_data_t& value2)
 {
-  return (gTestCompareEQ (value1.GetData (), value2.GetData ()));
+  return gTestCompareEQ (value1.GetA (), value2.GetA ()) && gTestCompareEQ (value1.GetB (), value2.GetB ())
+         && gTestCompareEQ (value1.GetData (), value2.GetData ());
 }
 
 /**
@@ -215,7 +219,8 @@ t8_test_partition_data_adapt ([[maybe_unused]] t8_forest_t forest, t8_forest_t f
   }
 }
 
-class t8_test_partition_data_test: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct t8_test_partition_data_test: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
 
  protected:
   void

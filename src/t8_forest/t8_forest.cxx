@@ -25,7 +25,7 @@
  */
 
 #include <sc_statistics.h>
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 #include <t8_types/t8_vec.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -83,7 +83,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   scheme->element_new (tree_class, 1, &element_parent_current);
   scheme->element_new (tree_class, 1, &element_compare);
 
-  /* We first assume that we have an (in)complete family with the size of array elements. 
+  /* We first assume that we have an (in)complete family with the size of array elements.
    * In the following we try to disprove this. */
   int family_size = elements_size;
 
@@ -92,9 +92,9 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   const int child_id_current = scheme->element_get_child_id (tree_class, elements[0]);
   scheme->element_get_parent (tree_class, elements[0], element_parent_current);
 
-  /* Elements of the current family could already be passed, so that 
+  /* Elements of the current family could already be passed, so that
    * the element/family currently under consideration can no longer be coarsened.
-   * Also, there may be successors of a hypothetical previous family member 
+   * Also, there may be successors of a hypothetical previous family member
    * that would be overlapped after coarsening.
    * */
   if (child_id_current > 0 && el_considered > 0) {
@@ -136,12 +136,12 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   T8_ASSERT (family_size > 0);
   T8_ASSERT (family_size >= 0 && family_size <= elements_size);
 
-  /* There may be successors of a hypothetical later family member (with index 
+  /* There may be successors of a hypothetical later family member (with index
    * family_size in this family) that would be overlapped after coarsening. */
   if (family_size < elements_size) {
     /* Get level of element after last element of current possible family */
     const int level = scheme->element_get_level (tree_class, elements[family_size]);
-    /* Only elements with higher level then level of current element, can get 
+    /* Only elements with higher level then level of current element, can get
      * potentially be overlapped. */
     if (level > level_current) {
       /* Compare ancestors */
@@ -164,7 +164,7 @@ t8_forest_is_incomplete_family (const t8_forest_t forest, const t8_locidx_t ltre
   const int num_siblings = scheme->element_get_num_siblings (tree_class, elements[0]);
   T8_ASSERT (family_size <= num_siblings);
   /* If the first/last element at a process boundary is not the first/last
-   * element of a possible family, we are not guaranteed to consider all 
+   * element of a possible family, we are not guaranteed to consider all
    * family members.*/
   if (el_considered == 0 && child_id_current > 0 && ltree_id == 0 && forest->mpirank > 0) {
     return 0;
@@ -300,9 +300,9 @@ t8_forest_no_overlap ([[maybe_unused]] t8_forest_t forest)
        * More detailed:
        * Let e_a and e_b be two elements.
        * If the level of e_a is equal to the level of the nca of e_a and e_b,
-       * then e_b is a descendant of e_a. 
+       * then e_b is a descendant of e_a.
        * If the level of e_b is equal to the level of the nca of e_a and e_b,
-       * then e_a is a descendant of e_b. 
+       * then e_a is a descendant of e_b.
        * Thus e_a and e_b overlap in both cases.
        * Note: If e_a equals e_b, e_a is the descendant of e_b and vice versa.
        * */
@@ -1305,9 +1305,9 @@ t8_forest_tree_shared ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] int
     else {
       SC_ABORT ("For incomplete trees the method t8_forest_last_tree_shared aka "
                 "t8_forest_tree_shared(forest, 1) is not implemented.\n");
-      /* TODO: If last_local_tree is 0 of the current process and it gets 0 as the 
-       * first_local_tree of the bigger process, then it cannot be said whether 
-       * the tree with id 0 is shared or not, since the bigger process could also 
+      /* TODO: If last_local_tree is 0 of the current process and it gets 0 as the
+       * first_local_tree of the bigger process, then it cannot be said whether
+       * the tree with id 0 is shared or not, since the bigger process could also
        * carry an empty forest. */
     }
     /* If global_neighbour_tree_idx == forest->first_local_tree tree is shared */
@@ -1957,36 +1957,36 @@ t8_forest_tree_is_local (const t8_forest_t forest, const t8_locidx_t local_tree)
 int
 t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree)
 {
-  T8_ASSERT (t8_forest_is_committed (forest));
+  bool check_ghost = false;
   T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+  return t8_forest_element_is_leaf_or_ghost (forest, element, local_tree, check_ghost);
+}
 
-  /* We get the array of the tree's elements and then search in the array of elements for our 
+int
+t8_forest_element_is_leaf_or_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t local_tree,
+                                    const int check_ghost)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+#if T8_ENABLE_DEBUG
+  if (!check_ghost) {
+    T8_ASSERT (t8_forest_tree_is_local (forest, local_tree));
+  }
+  else {
+    T8_ASSERT (0 <= local_tree && local_tree < t8_forest_get_num_ghost_trees (forest));
+  }
+#endif
+
+  /* We get the array of the tree's elements and then search in the array of elements for our
    * element candidate. */
   /* Get the array */
-  const t8_element_array_t *elements = t8_forest_get_tree_leaf_element_array (forest, local_tree);
+  const t8_element_array_t *elements = check_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, local_tree)
+                                                   : t8_forest_tree_get_leaf_elements (forest, local_tree);
+
   T8_ASSERT (elements != NULL);
 
-  /* In order to find the element, we need to compute its linear id.
-   * To do so, we need the scheme and the level of the element. */
-  const t8_scheme *scheme = t8_element_array_get_scheme (elements);
-  const t8_eclass_t tree_class = t8_element_array_get_tree_class (elements);
-  const int element_level = scheme->element_get_level (tree_class, element);
-  /* Compute the linear id. */
-  const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, element, element_level);
-  /* Search for the element.
-   * The search returns the largest index i,
-   * such that the element at position i has a smaller id than the given one.
-   * If no such i exists, it returns -1. */
-  const t8_locidx_t search_result = t8_forest_bin_search_lower (elements, element_id, element_level);
-  if (search_result < 0) {
-    /* The element was not found. */
-    return 0;
-  }
-  /* An element was found but it may not be the candidate element. 
-   * To identify whether the element was found, we compare these two. */
-  const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
-  T8_ASSERT (check_element != NULL);
-  return (scheme->element_is_equal (tree_class, element, check_element));
+  // Search for the element in the array, return true if it was found,
+  // false if not.
+  return t8_element_array_find (elements, element) >= 0;
 }
 
 /* Check if an element is owned by a specific rank */
@@ -2323,7 +2323,7 @@ t8_forest_element_find_owner_old (t8_forest_t forest, t8_gloidx_t gtreeid, t8_el
     return proc;
   }
   else {
-    /* Get the next owning process. Its first descendant is in fact an element of the tree. 
+    /* Get the next owning process. Its first descendant is in fact an element of the tree.
      * If it is bigger than the descendant we look for, then proc is the owning process of element. */
     proc_next = *(int *) sc_array_index (owners_of_tree, 1);
     if (*(t8_linearidx_t *) t8_shmem_array_index (forest->global_first_desc, (size_t) proc_next)
@@ -2704,6 +2704,7 @@ t8_forest_init (t8_forest_t *pforest)
   forest->incomplete_trees = -1;
   forest->set_partition_offset = 0;
   forest->set_first_global_element = -1;
+  forest->weight_function = nullptr;
 }
 
 int
@@ -2892,7 +2893,7 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
 }
 
 void
-t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, int recursive)
+t8_forest_set_adapt (t8_forest_t forest, const t8_forest_t set_from, t8_forest_adapt_t adapt_fn, const int recursive)
 {
   T8_ASSERT (forest != NULL);
   T8_ASSERT (forest->rc.refcount > 0);
@@ -2966,9 +2967,9 @@ t8_forest_comm_global_num_leaf_elements (t8_forest_t forest)
  * Check if any tree in a forest refines irregularly.
  * An irregular refining tree is a tree with an element that does not
  * refine into 2^dim children. For example the default implementation
- * of pyramids. 
+ * of pyramids.
  * \note This function is MPI collective
- * 
+ *
  * \param[in] forest    The forest to check
  * \return          Non-zero if any tree refines irregular
  */
@@ -4005,7 +4006,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
 #endif
   if (!do_not_use_API) {
     return t8_forest_vtk_write_file_via_API (forest, fileprefix, write_treeid, write_mpirank, write_level,
-                                             write_element_id, write_ghosts, write_curved, num_data, data);
+                                             write_element_id, write_curved, write_ghosts, num_data, data);
   }
   else {
     return t8_forest_vtk_write_file (forest, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,

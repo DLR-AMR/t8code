@@ -30,7 +30,8 @@
  * cmesh is working.
  * This test is currently disabled, see https://github.com/DLR-AMR/t8code/issues/923 */
 
-class DISABLED_t8_cmesh_add_attributes: public testing::TestWithParam<cmesh_example_base *> {
+struct DISABLED_t8_cmesh_add_attributes: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override

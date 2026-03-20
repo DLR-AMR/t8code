@@ -29,16 +29,17 @@
 #ifndef T8_DEFAULT_TET_HXX
 #define T8_DEFAULT_TET_HXX
 
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
 
 /* Forward declaration of the scheme so we can use it as an argument in the eclass schemes function. */
-class t8_scheme;
+struct t8_scheme;
 
 /** Default implementation of the scheme for the tet element class. */
-class t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_default_scheme_tet> {
+struct t8_default_scheme_tet: public t8_default_scheme_common<T8_ECLASS_TET, t8_default_scheme_tet>
+{
  public:
   /** Constructor which calls the specialized constructor for the base. */
   t8_default_scheme_tet () noexcept: t8_default_scheme_common (sizeof (t8_dtet_t)) {};

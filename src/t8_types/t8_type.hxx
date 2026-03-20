@@ -44,7 +44,8 @@
  * \tparam competence Variadic template parameter for the competences.
  */
 template <typename T, typename Parameter, template <typename> class... competence>
-class T8Type: public competence<T8Type<T, Parameter, competence...>>... {
+struct T8Type: public competence<T8Type<T, Parameter, competence...>>...
+{
  public:
   /** The type of the value stored in this strong type. */
   using value_type = T;

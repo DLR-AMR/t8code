@@ -21,8 +21,7 @@
 */
 
 /** \file t8_cmesh_trees.cxx
- *
- * TODO: document this file
+ * Interface for the data layout of the coarse trees.
  */
 
 #include <vector>

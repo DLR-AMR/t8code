@@ -34,7 +34,8 @@
  * We test whether the new and original cmesh are equal.
  */
 
-class t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *> {
+struct t8_cmesh_copy: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override

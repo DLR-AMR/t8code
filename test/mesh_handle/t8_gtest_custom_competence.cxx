@@ -26,16 +26,13 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <gtest/gtest.h>
-#include <test/t8_gtest_schemes.hxx>
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/element.hxx>
 #include <mesh_handle/competences.hxx>
-#include <t8_cmesh/t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_examples.h>
+#include <mesh_handle/competence_pack.hxx>
+#include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_operators.hxx>
 
 /**
@@ -47,9 +44,9 @@ struct dummy_get_level: public t8_crtp_operator<TUnderlying, dummy_get_level>
 {
  public:
   /** Getter for the level of the element. This function needs to access several members 
-  *     of the element such that we need the crtp structure here. 
-  * \return Level of the element.
-  */
+   *     of the element such that we need the crtp structure here. 
+   * \return Level of the element.
+   */
   t8_element_level
   get_level_dummy () const
   {
@@ -78,46 +75,36 @@ struct dummy_trivial: public t8_crtp_operator<TUnderlying, dummy_trivial>
   }
 };
 
-/** This tests checks that custom defined competences can be used for the mesh class 
+/** This tests checks that custom defined competences can be used for \ref t8_mesh_handle::mesh 
  *  and that we can use the functionality defined in the competence. 
  * Also checks that we can use more than one custom competence and that predefined competences can be additionally used.
  */
 TEST (t8_gtest_custom_competence, custom_competence)
 {
-  // Define forest to construct mesh.
   const int level = 1;
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
-  const t8_scheme *scheme = t8_scheme_new_default ();
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
-  ASSERT_EQ (true, t8_forest_is_committed (forest));
-
   // Check mesh with custom defined competence.
-  t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level>> mesh
-    = t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level>> (forest);
+  using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<dummy_get_level>>;
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class_custom> (level, sc_MPI_COMM_WORLD);
 
-  for (auto it = mesh.begin (); it != mesh.end (); ++it) {
+  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (level, it->get_level_dummy ());
   }
 
   // Test with two custom competences and a predefined competence.
-  t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>>
-    mesh_2competences
-    = t8_mesh_handle::mesh<t8_mesh_handle::element<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>> (
-      forest);
+  using competences = t8_mesh_handle::competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  using mesh_class = t8_mesh_handle::mesh<competences>;
+  auto mesh_more_competences
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
-  for (auto it = mesh_2competences.begin (); it != mesh_2competences.end (); ++it) {
+  for (auto it = mesh_more_competences->cbegin (); it != mesh_more_competences->cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
     EXPECT_EQ (it->get_value_dummy (), 1);
     EXPECT_FALSE (it->centroid_cache_filled ());
-    auto centroid = it->get_centroid ();
-    for (const auto &coordinate : centroid) {
-      EXPECT_GE (1, coordinate);
-      EXPECT_LE (0, coordinate);
+    for (const auto &coordinate : it->get_centroid ()) {
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     EXPECT_TRUE (it->centroid_cache_filled ());
   }
-
-  // Unref the forest.
-  t8_forest_unref (&forest);
 }

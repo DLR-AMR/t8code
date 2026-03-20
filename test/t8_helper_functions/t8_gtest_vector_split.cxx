@@ -34,7 +34,8 @@ split (const int value, const int div)
   return value / div;
 }
 
-class test_vector_split: public testing::TestWithParam<int> {
+struct test_vector_split: public testing::TestWithParam<int>
+{
  public:
   void
   SetUp () override

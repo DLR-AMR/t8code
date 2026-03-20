@@ -21,8 +21,7 @@
 */
 
 /** \file t8_cmesh_partition.h
- *
- * TODO: document this file
+ * Functionality related to the partitioning of a cmesh.
  */
 
 #ifndef T8_CMESH_PARTITION_H

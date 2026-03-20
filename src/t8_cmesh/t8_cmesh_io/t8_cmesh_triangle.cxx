@@ -28,7 +28,7 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 
 #ifdef _WIN32
-#include "t8_windows.h"
+#include <t8_misc/t8_windows.h>
 #endif
 
 /* TODO: if partitioned then only add the needed face-connections to join faces

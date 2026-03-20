@@ -35,7 +35,8 @@
  * passed.
  */
 
-class t8_cmesh_partition_class: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct t8_cmesh_partition_class: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override
@@ -68,8 +69,12 @@ test_cmesh_committed (t8_cmesh_t cmesh)
 
 TEST_P (t8_cmesh_partition_class, test_cmesh_partition_concentrate)
 {
+#if T8_TEST_LEVEL_INT >= 2
+  const int level = 6;  // Test level basic
+#else
+  const int level = 9;  // Test level medium and full
+#endif
 
-  const int level = 11;
   int mpisize;
   int mpiret;
   int mpirank;

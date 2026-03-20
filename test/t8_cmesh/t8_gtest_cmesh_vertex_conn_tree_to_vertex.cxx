@@ -71,7 +71,8 @@ Note to future developers:
   the _temp tests should be replaced with the non-temp test suites..
 */
 
-class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cmesh_example_base *> {
+struct cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override
@@ -84,8 +85,8 @@ class cmesh_vertex_conn_ttv_with_core_classes: public testing::TestWithParam<cme
     t8_cmesh_set_partition_uniform (cmesh, 0, scheme);
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (committed_cmesh);
 
-    t8_debugf ("Starting test with cmesh of dim %i and %li global, %i local trees.\n", cmesh->dimension,
-               t8_cmesh_get_num_trees (committed_cmesh), num_local_trees);
+    t8_debugf ("Starting test with cmesh of dim %i and %" T8_GLOIDX_FORMAT " global, %i local trees.\n",
+               cmesh->dimension, t8_cmesh_get_num_trees (committed_cmesh), num_local_trees);
     for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
 
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (committed_cmesh, itree);
@@ -153,8 +154,8 @@ TEST_P (cmesh_vertex_conn_ttv_with_core_classes, DISABLED_get_global)
 #define VTT_TEST_MAX_NUM_TREES 100
 #endif
 
-class cmesh_vertex_conn_ttv_with_core_classes_temp:
-  public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>> {
+struct cmesh_vertex_conn_ttv_with_core_classes_temp: public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override
@@ -163,7 +164,8 @@ class cmesh_vertex_conn_ttv_with_core_classes_temp:
     const t8_eclass_t tree_class = std::get<1> (GetParam ());
     t8_cmesh_init (&cmesh);
 
-    t8_debugf ("Testing cmesh with %li trees of class %s\n", num_trees, t8_eclass_to_string[tree_class]);
+    t8_debugf ("Testing cmesh with %" T8_GLOIDX_FORMAT " trees of class %s\n", num_trees,
+               t8_eclass_to_string[tree_class]);
 
     for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
       /* Set this tree's class. */
@@ -267,7 +269,8 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_tree_to_vertex, cmesh_vertex_con
 INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_vertex_tree_to_vertex, cmesh_vertex_conn_ttv_with_core_classes_temp,
                           testing::Combine (testing::Values (1, VTT_TEST_MAX_NUM_TREES + 1), AllEclasses));
 
-class cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<cmesh_example_base *> {
+struct cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override
@@ -280,8 +283,8 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam<
     t8_cmesh_set_partition_uniform (cmesh, 0, scheme);
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (committed_cmesh);
 
-    t8_debugf ("Starting test with cmesh of dim %i and %li global, %i local trees.\n", cmesh->dimension,
-               t8_cmesh_get_num_trees (committed_cmesh), num_local_trees);
+    t8_debugf ("Starting test with cmesh of dim %i and %" T8_GLOIDX_FORMAT " global, %i local trees.\n",
+               cmesh->dimension, t8_cmesh_get_num_trees (committed_cmesh), num_local_trees);
     for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
 
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (committed_cmesh, itree);
@@ -341,8 +344,9 @@ TEST_P (cmesh_vertex_conn_ttv_with_cmesh_functions, DISABLED_get_global)
  *       as soon as we can enable the tests cmesh_vertex_conn_ttv.
  *       That is as soon as we can add attributes to cmeshes while deriving. */
 
-class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
-  public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>> {
+struct cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
+  public testing::TestWithParam<std::tuple<t8_gloidx_t, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override
@@ -351,7 +355,8 @@ class cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
     const t8_eclass_t tree_class = std::get<1> (GetParam ());
     t8_cmesh_init (&cmesh);
 
-    t8_debugf ("Testing cmesh with %li trees of class %s\n", num_trees, t8_eclass_to_string[tree_class]);
+    t8_debugf ("Testing cmesh with %" T8_GLOIDX_FORMAT " trees of class %s\n", num_trees,
+               t8_eclass_to_string[tree_class]);
 
     for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
       /* Set this tree's class. */

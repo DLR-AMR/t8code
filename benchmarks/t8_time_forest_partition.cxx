@@ -50,7 +50,7 @@ typedef struct
 {
   double c_min, c_max; /* constants that define the thickness of the refinement region */
   t8_3D_vec normal;    /* normal vector to the plane E */
-  int base_level;      /* A given level that is not coarsend further, see -l argument */
+  int base_level;      /* A given level that is not coarsened further, see -l argument */
   int max_level;       /* A max level that is not refined further, see -L argument */
 } adapt_data_t;
 
@@ -126,7 +126,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
 
   t8_global_productionf ("Committed cmesh with %lli global trees.\n", (long long) t8_cmesh_get_num_trees (cmesh));
 
-  /* If the input cmesh is partitioned then we use a partitioned cmehs
+  /* If the input cmesh is partitioned then we use a partitioned cmesh
    * and also repartition it in each timestep (happens automatically in
    * t8_forest_commit). We have to initially start with a uniformly refined
    * cmesh in order to be able to construct the forest on it.

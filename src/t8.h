@@ -29,6 +29,13 @@
 #ifndef T8_H
 #define T8_H
 
+#include <t8_misc/t8_with_macro_error.h>
+#ifdef __cplusplus
+#include <cinttypes>
+#else
+#include <inttypes.h>
+#endif
+
 #include <sc_config.h>
 #if (defined(T8_ENABLE_MPI) && !defined(SC_ENABLE_MPI)) || (!defined(T8_ENABLE_MPI) && defined(SC_ENABLE_MPI))
 #error "MPI configured differently in t8code and libsc"
@@ -90,6 +97,8 @@ T8_EXTERN_C_BEGIN ();
 
 /** A type for processor-local indexing. */
 typedef int32_t t8_locidx_t;
+/** The format specifier for t8_locidx_t */
+#define T8_LOCIDX_FORMAT PRId32
 /** The MPI Datatype of t8_locidx_t */
 #define T8_MPI_LOCIDX sc_MPI_INT
 /** Macro to get the absolute value of a t8_locidx_t */
@@ -102,6 +111,8 @@ typedef int32_t t8_locidx_t;
 typedef int t8_procidx_t;
 /** A type for global indexing that holds really big numbers. */
 typedef int64_t t8_gloidx_t;
+/** The format specifier for t8_gloidx_t */
+#define T8_GLOIDX_FORMAT PRId64
 /** The MPI Datatype of t8_gloidx_t */
 #define T8_MPI_GLOIDX sc_MPI_LONG_LONG_INT
 /** Macro to get the absolute value of a t8_gloidx_t */
@@ -113,6 +124,8 @@ typedef int64_t t8_gloidx_t;
 
 /** A type for storing SFC indices */
 typedef uint64_t t8_linearidx_t;
+/** The format specifier for t8_linearidx_t */
+#define T8_LINEARIDX_FORMAT PRIu64
 /** The MPI datatype of t8_linearidx_t */
 #define T8_MPI_LINEARIDX sc_MPI_UNSIGNED_LONG_LONG
 
@@ -252,7 +265,7 @@ t8_productionf (const char *fmt, ...)
 /** Log a message, no matter what rank, with priority SC_LP_DEBUG.
  * \param [in] fmt          Printf-style format string.
  * \note This function does not print anything unless t8code was compiled
- * in debug mode (--enable-debug, T8_ENABLE_DEBUG was defined).
+ * in debug mode (using -DCMAKE_BUILD_TYPE=Debug, so T8_ENABLE_DEBUG is defined).
  */
 void
 t8_debugf (const char *fmt, ...)
