@@ -38,6 +38,7 @@
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_adapt_callbacks.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
+#include "t8_test_data_dir.h"
 #include <test/t8_gtest_schemes.hxx>
 
 bool
@@ -406,7 +407,7 @@ class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
   {
 
     /* Read our specific mesh file into a cmesh and build a forest. */
-    const std::string meshfile_prefix = "testfiles/test_twosquares_twisted";
+    const std::string meshfile_prefix = std::string (T8_TEST_DATA_DIR) + "/test_twosquares_twisted";
     const int partition_mesh = 0;
     const int mesh_dim = 2;
     const int main_proc = 0;
