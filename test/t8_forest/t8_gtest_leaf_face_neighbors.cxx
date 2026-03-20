@@ -61,12 +61,12 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
       GTEST_SKIP ();
     }
     const t8_scheme *scheme = create_from_scheme_id (scheme_id);
-    const int level = 0;
+    const int uniform_level = 0;
     const int adapt_levels = 2;
-    const int max_adapt_level = level + adapt_levels;
+    const int max_adapt_level = uniform_level + adapt_levels;
     const bool do_ghost = true;
     const bool do_recursive_adapt = true;
-    forests[0] = t8_forest_new_uniform (cmesh, scheme, level, do_ghost, sc_MPI_COMM_WORLD);
+    forests[0] = t8_forest_new_uniform (cmesh, scheme, uniform_level, do_ghost, sc_MPI_COMM_WORLD);
     cmesh = t8_forest_get_cmesh (forests[0]);
     t8_forest_ref (forests[0]);
     forests[1] = t8_forest_new_adapt (forests[0], t8_test_adapt_first_child, do_recursive_adapt, do_ghost,
