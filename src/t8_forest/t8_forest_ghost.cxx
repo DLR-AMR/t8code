@@ -63,7 +63,7 @@ using t8_ghost_tree_t = struct
 /**
  * The data structure stored in the global_tree_to_ghost_tree hash table. 
  */
-using t8_ghost_gtree_hash_t = struct
+struct t8_ghost_gtree_hash_t
 {
   t8_gloidx_t global_id; /**< global tree id */
   size_t index;          /**< the index of that global tree in the ghost_trees array. */
