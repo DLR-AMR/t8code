@@ -601,7 +601,7 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
 /**
  * This struct stores the ghost boundary data of a forest.
  */
-using t8_forest_ghost_boundary_data_t = struct
+struct t8_forest_ghost_boundary_data_t
 {
 
   sc_array_t bounds_per_level; /**< For each level from the nca to the parent of the current element
