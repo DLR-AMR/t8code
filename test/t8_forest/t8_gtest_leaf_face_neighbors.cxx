@@ -115,9 +115,9 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
       const bool is_ghost = itree >= num_local_trees;
       const t8_locidx_t ghost_tree_id = itree - num_local_trees;
       /* Get the leaf element array */
-      const t8_element_array_t *leaf_elements = !is_ghost
-                                                  ? t8_forest_get_tree_leaf_element_array (forest, itree)
-                                                  : t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id);
+      const t8_element_array_t *leaf_elements = is_ghost
+                                                  ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
+                                                  : t8_forest_get_tree_leaf_element_array (forest, itree);
       const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
       const t8_scheme *scheme = t8_forest_get_scheme (forest);
       const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
