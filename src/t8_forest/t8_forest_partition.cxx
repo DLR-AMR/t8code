@@ -39,7 +39,7 @@ T8_EXTERN_C_BEGIN ();
  * For each tree that we send elements from to other processes,
  * we send the information stored in this struct to the other process
  */
-using t8_forest_partition_tree_info_t = struct
+struct t8_forest_partition_tree_info_t
 {
   t8_gloidx_t gtree_id;     /**< The global id of that tree. TODO: we could optimize this out */
   t8_eclass_t eclass;       /**< The element class of that tree. */
