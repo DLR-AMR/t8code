@@ -75,8 +75,10 @@ using T8_VTK_KERNEL_MODUS = enum { T8_VTK_KERNEL_INIT, T8_VTK_KERNEL_EXECUTE, T8
  * \return                 True if successful, false if not (i.e. file i/o error).
  */
 using t8_forest_vtk_cell_data_kernel
-  = int (*) (t8_forest_t, const t8_locidx_t, const t8_tree_t, const t8_locidx_t, const t8_element_t *,
-             const t8_eclass_t, const int, FILE *, int *, void **, T8_VTK_KERNEL_MODUS);
+  = int (*) (t8_forest_t forest, const t8_locidx_t ltree_id, const t8_tree_t tree,
+             const t8_locidx_t element_index, const t8_element_t *element,
+             const t8_eclass_t tree_class, const int is_ghost, FILE *vtufile,
+             int *columns, void **data, T8_VTK_KERNEL_MODUS modus);
 
 static t8_locidx_t
 t8_forest_num_points (t8_forest_t forest, const int count_ghosts)
