@@ -222,6 +222,23 @@ struct t8_cmesh_vertex_connectivity
     return get_tree_list_of_vertex (global_vertex_id).size ();
   }
 
+  /** Typedef for the iterator type. */
+  using const_iterator = t8_cmesh_vertex_conn_vertex_to_tree::const_iterator;
+
+  /** Iterator begin. */
+  inline const_iterator
+  begin () const
+  {
+    return vertex_to_tree.begin ();
+  }
+
+  /** Iterator end. */
+  inline const_iterator
+  end () const
+  {
+    return vertex_to_tree.end ();
+  }
+
  private:
   /** The internal state. Indicating whether this structure is new and unfilled, the ttv was filled or the vertex conn was built completely. */
   state current_state;

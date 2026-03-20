@@ -45,7 +45,9 @@
 #include <t8_schemes/t8_default/t8_default.hxx>        /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
 #if T8_ENABLE_OCC
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx> /* Curved geometry calculation of trees */
+#include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>      /* Curved geometry calculation of trees */
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx> /* Mesh deformation struct */
+#include <t8_cad/t8_cad_handle.hxx>                                         /* CAD data structure */
 #endif
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h> /* msh file reader */
 #include <string>                                      /* std::string */
@@ -300,7 +302,7 @@ t8_naca_plane_refinement (t8_forest_t forest, const std::string &fileprefix, int
 
   /* Moving plane loop */
   while (adapt_data.t < steps) {
-    /* Adapt and balance the forest.
+    /* Adapt and balance the forest. 
      * Note, that we have to hand the adapt data to the forest before the commit. */
     t8_forest_init (&forest_new);
     t8_forest_set_adapt (forest_new, forest, t8_naca_plane_adapt_callback, 1);
