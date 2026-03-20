@@ -408,7 +408,7 @@ t8_cmesh_triangle_read_neigh (t8_cmesh_t cmesh, int element_offset, char *filena
 
         int orientation = -1;
         int found_orientation = 0;
-        int const firstvertex = face1 == 0 ? 1 : 0;
+        int const firstvertex = (face1 == 0 ? 1 : 0);
 
         for (int ivertex = 1; ivertex <= dim && !found_orientation; ivertex++) {
           /* The face with number k consists of the vertices with numbers
