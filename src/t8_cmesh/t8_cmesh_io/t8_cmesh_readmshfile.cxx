@@ -1426,7 +1426,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
 /** This struct stores all information associated to a tree's face.
  * We need it to find neighbor trees.
  */
-using t8_msh_file_face_t = struct
+struct t8_msh_file_face_t
 {
   t8_locidx_t ltree_id; /**< The local id of the tree this face belongs to */
   int8_t face_number;   /**< The number of that face within the tree */
