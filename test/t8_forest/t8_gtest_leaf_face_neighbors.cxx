@@ -312,7 +312,6 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             t8_debugf ("neighbor element\n");
             scheme->element_debug_print (neigh_class, neighbor);
 #endif
-            fflush (stdout);
             // We must have found at least one face neighbor, namely the original element.
             EXPECT_GE (neigh_num_neighbors, 1);
             // The neighbor's neighbor tree must be the current tree
