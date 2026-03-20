@@ -352,7 +352,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
                 = element_index - num_local_elements
                   - t8_forest_ghost_get_tree_element_offset (forest, ghost_neigh_neigh_tree_id);
               const t8_element_t *ghost_element_from_index
-                = t8_forest_ghost_get_leaf_element (forest, ghost_neigh_neigh_tree_id, element_index);
+                = t8_forest_ghost_get_leaf_element (forest, ghost_neigh_neigh_tree_id, ghost_in_tree_index);
               EXPECT_EQ (ghost_element_from_index, element)
                 << "Neighbor neighbor ghost element at index " << element_index << " is not original element.";
             }
