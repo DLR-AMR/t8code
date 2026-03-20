@@ -92,6 +92,43 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
   t8_forest_t forests[3] { nullptr, nullptr, nullptr };
 };
 
+/* Check that a leaf/ghost element index matches a given leaf/ghost element.
+ * Returns true if the element with index "element_index" (0<= element_index < num_leafs + num_ghosts)
+ * lies in the tree "gtreeid" and matches the element "element". */
+static void
+verify_leaf_element_index (const t8_forest_t forest, const t8_gloidx_t gtreeid, const t8_locidx_t element_index,
+                           const t8_element_t *element)
+{
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
+
+  if (element_index < num_local_elements) {
+    // The element index belongs to a local leaf element.
+    // Check that the  tree is a local tree.
+    const t8_locidx_t ltreeid = t8_forest_get_local_id (forest, gtreeid);
+    EXPECT_GE (ltreeid, 0) << "Tree of local element is not a local tree.";
+    t8_locidx_t check_local_tree_id;
+    const t8_element_t *element_from_index = t8_forest_get_leaf_element (forest, element_index, &check_local_tree_id);
+    EXPECT_EQ (check_local_tree_id, ltreeid) << "Element index does not match local tree index.";
+    EXPECT_EQ (element_from_index, element)
+      << "Element at index " << element_index << " does not match the given element.";
+  }
+  else {
+    // The element index belongs to a ghost leaf element.
+    // Check that the neighbor tree is a ghost tree.
+    const t8_locidx_t ghost_tree_id = t8_forest_ghost_get_ghost_treeid (forest, gtreeid);
+    EXPECT_GE (ghost_tree_id, 0) << "Tree of ghost element is not a ghost tree.";
+    // There is no get_ghost_leaf_element function that takes only the element index.
+    // So we have to convert the element index into a tree local index first.
+    // Subtract the number of local elements and the number of ghosts in previous trees.
+    const t8_locidx_t ghost_in_tree_index
+      = element_index - num_local_elements - t8_forest_ghost_get_tree_element_offset (forest, ghost_tree_id);
+    const t8_element_t *ghost_element_from_index
+      = t8_forest_ghost_get_leaf_element (forest, ghost_tree_id, ghost_in_tree_index);
+    EXPECT_EQ (ghost_element_from_index, element)
+      << "Neighbor neighbor ghost element at index " << element_index << " is not original element.";
+  }
+}
+
 TEST_P (forest_face_neighbors, test_face_neighbors)
 {
   /* iterate over all elements */
@@ -247,26 +284,14 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             ASSERT_TRUE (scheme->element_is_valid (neigh_class, neighbor))
               << "Neighbor element " << ineigh << " is not valid";
 #endif
-            t8_locidx_t neigh_ltreeid_from_index;
             // Check that neighbor index correctly yields neighbor element.
-            if (neigh_index < num_local_elements) {
-              const t8_element_t *neighbor_from_index
-                = t8_forest_get_leaf_element (forest, neigh_index, &neigh_ltreeid_from_index);
-              EXPECT_TRUE (scheme->element_is_equal (neigh_class, neighbor_from_index, neighbor));
-            }
+            verify_leaf_element_index (forest, gneigh_tree, neigh_index, neighbor);
 
-            // TODO: Check neighbor index if the element is a ghost element
-
-            // Compute the local tree id of the neighbors tree depending on whether
-            // it is a local tree or a ghost tree.
+            // Compute the local treeid of the neighbor tree.
             const t8_locidx_t neigh_ltreeid
               = neigh_index < num_local_elements
                   ? gneigh_tree - t8_forest_get_first_local_tree_id (forest)
                   : t8_forest_ghost_get_ghost_treeid (forest, gneigh_tree) + num_local_trees;
-            if (neigh_index < num_local_elements) {
-              EXPECT_EQ (neigh_ltreeid, neigh_ltreeid_from_index);
-            }
-            // TODO: Check neighbor ltreeid if ghost tree
 
             // preparation
             const t8_element_t **neigh_neighbor_leaves;
@@ -328,35 +353,7 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
             const t8_locidx_t element_index = neigh_element_indices[position_of_original_element];
             EXPECT_GE (element_index, 0);
 
-            if (element_index < num_local_elements) {
-              // The element index belongs to a local leaf element.
-              // Check that the neighbor tree is a local tree.
-              const t8_locidx_t local_neigh_neigh_tree_id = t8_forest_get_local_id (forest, neigh_gneigh_tree);
-              EXPECT_GE (local_neigh_neigh_tree_id, 0)
-                << "Neighbor neighbor tree of local element is not a local tree.";
-              const t8_element_t *element_from_index = t8_forest_get_leaf_element (forest, element_index, NULL);
-              EXPECT_EQ (element_from_index, element)
-                << "Neighbor neighbor element at index " << element_index << " is not original element.";
-            }
-            else {
-              // The element index belongs to a ghost leaf element.
-              // Check that the neighbor tree is a ghost tree.
-              const t8_locidx_t ghost_neigh_neigh_tree_id
-                = t8_forest_ghost_get_ghost_treeid (forest, neigh_gneigh_tree);
-              EXPECT_GE (ghost_neigh_neigh_tree_id, 0)
-                << "Neighbor neighbor tree of ghost element is not a ghost tree.";
-              // There is no get_ghost_leaf_element function that takes only the element index.
-              // So we have to convert the element index into a tree local index first.
-              // Subtract the number of local elements and the number of ghosts in previous trees.
-              const t8_locidx_t ghost_in_tree_index
-                = element_index - num_local_elements
-                  - t8_forest_ghost_get_tree_element_offset (forest, ghost_neigh_neigh_tree_id);
-              const t8_element_t *ghost_element_from_index
-                = t8_forest_ghost_get_leaf_element (forest, ghost_neigh_neigh_tree_id, ghost_in_tree_index);
-              EXPECT_EQ (ghost_element_from_index, element)
-                << "Neighbor neighbor ghost element at index " << element_index << " is not original element.";
-            }
-            // TODO: Check element index if original element is a ghost element
+            verify_leaf_element_index (forest, neigh_gneigh_tree, element_index, element);
 
             // clean-up neighbor's neighbors
             if (neigh_num_neighbors > 0) {
