@@ -41,7 +41,7 @@ T8_EXTERN_C_BEGIN ();
 /**
  * The information for a remote process, what data we have to send to them.
  */
-using t8_ghost_mpi_send_info_t = struct
+struct t8_ghost_mpi_send_info_t
 {
   int recv_rank;           /**< The rank to which we send. */
   size_t num_bytes;        /**< The number of bytes that we send. */
