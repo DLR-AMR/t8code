@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
 /**
  * This struct stores query data about the elements within the forest.
  */
-using t8_forest_child_type_query_t = struct
+struct t8_forest_child_type_query_t
 {
   const t8_scheme *scheme; /**< The scheme. */
   t8_eclass_t tree_class;  /**< The tree class. */
