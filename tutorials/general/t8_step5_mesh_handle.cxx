@@ -92,6 +92,13 @@ t8_step5_set_element_data (TMeshClass &mesh)
   }
 }
 
+template <typename TMeshClass>
+void
+t8_step5_exchange_ghost_data (TMeshClass &mesh)
+{
+  mesh->exchange_ghost_data ();
+}
+
 /* Write the forest as vtu and also write the element's volumes in the file.
  *
  * t8code supports writing element based data to vtu as long as its stored
@@ -181,9 +188,6 @@ t8_step5_main (int argc, char **argv)
     mesh->write_vtk (prefix_mesh);
     t8_global_productionf (" [step5] Wrote mesh to vtu files: %s*\n", prefix_mesh);
 
-    /*
-   * Set element data.
-   */
     t8_step5_set_element_data (mesh);
 
     t8_global_productionf (" [step5] Computed level and volume data for local elements.\n");
@@ -196,7 +200,7 @@ t8_step5_main (int argc, char **argv)
     /*
    * Exchange the data values of the ghost elements
    */
-    mesh->exchange_ghost_data ();
+    t8_step5_exchange_ghost_data (mesh);
     t8_global_productionf (" [step5] Exchanged ghost data.\n");
 
     if (mesh->get_num_ghosts () > 0) {
