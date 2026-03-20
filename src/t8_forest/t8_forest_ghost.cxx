@@ -52,7 +52,7 @@ struct t8_ghost_mpi_send_info_t
 /** 
  * The information stored for the ghost trees 
  */
-using t8_ghost_tree_t = struct
+struct t8_ghost_tree_t
 {
   t8_gloidx_t global_id;       /**< Global id of the tree */
   t8_locidx_t element_offset;  /**< The count of all ghost elements in all smaller ghost trees */
@@ -72,7 +72,7 @@ struct t8_ghost_gtree_hash_t
 /**
  * The data structure stored in the process_offsets array. 
  */
-using t8_ghost_process_hash_t = struct
+struct t8_ghost_process_hash_t
 {
   int mpirank;              /**< rank of the process */
   t8_locidx_t ghost_offset; /**< The number of ghost elements for all previous ranks */
@@ -84,7 +84,7 @@ using t8_ghost_process_hash_t = struct
  * The information stored for the remote trees.
  * Each remote process stores an array of these 
  */
-using t8_ghost_remote_tree_t = struct
+struct t8_ghost_remote_tree_t
 {
   t8_gloidx_t global_id;       /**< global id of the tree */
   int mpirank;                 /**< The mpirank of the remote process */
@@ -97,7 +97,7 @@ using t8_ghost_remote_tree_t = struct
  * This struct stores information about the data that the current process needs from a specific remote_process
  * as ghost data, such as the number of remote elements and the remote trees.
 */
-using t8_ghost_remote_t = struct
+struct t8_ghost_remote_t
 {
   int remote_rank;          /**< The rank of the remote process */
   t8_locidx_t num_elements; /**< The number of remote elements for this process */
@@ -219,7 +219,7 @@ t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_dat
  * Since we use asynchronous communication, we store the
  * send buffers and mpi requests until we end the communication.
  */
-using t8_ghost_data_exchange_t = struct
+struct t8_ghost_data_exchange_t
 {
   int num_remotes;               /**< The number of processes, we send to. */
   char **send_buffers;           /**< For each remote the send buffer. */
