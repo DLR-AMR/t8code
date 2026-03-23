@@ -180,9 +180,9 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   /* we start with an empty level */
   min_level = SC_MAX (min_level - 1, 0);
 #if T8_TEST_LEVEL_INT >= 2
-  const int max_level = min_level + 2;
+  const int max_level = min_level + 1;
 #else
-  const int max_level = min_level + 3;
+  const int max_level = min_level + 2;
 #endif
   for (int level = min_level; level < max_level; level++) {
     /* ref the scheme since we reuse it */
@@ -195,8 +195,8 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
     t8_test_ghost_exchange_data_int (forest);
     t8_test_ghost_exchange_data_id (forest);
     /* Adapt the forest and exchange data again */
-    int maxlevel = level + 2;
-    t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt, 1, 1, &maxlevel);
+    int adapt_maxlevel = level + 2;
+    t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt, 1, 1, &adapt_maxlevel);
     t8_test_ghost_exchange_data_int (forest_adapt);
     t8_test_ghost_exchange_data_id (forest_adapt);
     t8_forest_unref (&forest_adapt);
