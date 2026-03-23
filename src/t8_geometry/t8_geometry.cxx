@@ -32,20 +32,20 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
   /* The geometries do not expect the in- and output vector to be the same */
   T8_ASSERT (ref_coords != out_coords);
 
-  if (cmesh->profile != NULL) {
+  if (cmesh->profile != nullptr) {
     /* Measure the runtime of geometry evaluation.
      * We accumulate the runtime over all calls. */
     start_wtime = sc_MPI_Wtime ();
   }
 
-  if (cmesh->geometry_handler == NULL) {
+  if (cmesh->geometry_handler == nullptr) {
     SC_ABORT ("Error: Trying to evaluate non-existing geometry.\n");
   }
 
   /* Evaluate the geometry. */
   cmesh->geometry_handler->evaluate_tree_geometry (cmesh, gtreeid, ref_coords, num_coords, out_coords);
 
-  if (cmesh->profile != NULL) {
+  if (cmesh->profile != nullptr) {
     /* If profiling is enabled, add the runtime to the profiling
      * variable. */
     cmesh->profile->geometry_evaluate_runtime += sc_MPI_Wtime () - start_wtime;
