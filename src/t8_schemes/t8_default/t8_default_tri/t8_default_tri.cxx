@@ -503,9 +503,9 @@ t8_default_scheme_tri::refines_irregular () const
 
 #if T8_ENABLE_DEBUG
 int
-t8_default_scheme_tri::element_is_valid (const t8_element_t *t) const
+t8_default_scheme_tri::element_is_valid (const t8_element_t *element) const
 {
-  return t8_dtri_is_valid ((const t8_dtri_t *) t);
+  return t8_dtri_is_valid ((const t8_dtri_t *) element);
 }
 
 void

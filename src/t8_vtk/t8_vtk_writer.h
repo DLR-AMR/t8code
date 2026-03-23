@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_writer.h
+ * This file contains wrappers for the vtk writer functions.
+ */
+
 #ifndef T8_VTK_WRITER_C_INTERFACE_H
 #define T8_VTK_WRITER_C_INTERFACE_H
 

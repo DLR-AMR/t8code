@@ -32,7 +32,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * t8_cmesh_vertex_connectivity_c
- * 
+ *
  * Opaque pointer to the cmesh vertex connectivity structure.
  */
 typedef struct t8_cmesh_vertex_connectivity *t8_cmesh_vertex_connectivity_c;
@@ -66,22 +66,20 @@ t8_cmesh_get_num_local_vertices (const t8_cmesh_t cmesh);
 /** Get the global vertex indices of a tree in its local vertex order.
  * \param [in] cmesh A committed cmesh.
  * \param [in] local_tree A local tree in \a cmesh.
- * \param [in] num_vertices The number of vertices of \a local_tree
+ * \param [out] num_vertices The number of vertices of \a local_tree
  * \return The global vertices of \a local_tree
  */
 const t8_gloidx_t *
-t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int num_vertices);
+t8_cmesh_get_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, int *num_vertices);
 
 /** Get a single global vertex index of a local tree's local vertex.
 * \param [in] cmesh A committed cmesh.
 * \param [in] local_tree A local tree in \a cmesh.
 * \param [in] local_tree_vertex A local vertex of \a local_tree
-* \param [in] num_vertices The number of vertices of \a local_tree
 * \return The global vertex matching \a local_tree_vertex of \a local_tree.
 */
 t8_gloidx_t
-t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex,
-                                    const int num_vertices);
+t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t local_tree, const int local_tree_vertex);
 
 /** Get the number of global trees a global vertex is connected to.
  * \param [in] cmesh A committed cmesh.

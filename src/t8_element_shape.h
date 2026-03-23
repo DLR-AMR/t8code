@@ -45,7 +45,7 @@ typedef t8_eclass_t t8_element_shape_t;
 /** The maximum number of cornes a 3-dimensional element class can have. */
 #define T8_ELEMENT_SHAPE_MAX_CORNERS 8
 
-/* Maximum possible number of corner nodes of an element in a specific dimension */
+/** Maximum possible number of corner nodes of an element in a specific dimension */
 extern const int t8_element_shape_max_num_corner[T8_ECLASS_MAX_DIM + 1];
 
 /** The number of codimension-one boundaries of an element class. */

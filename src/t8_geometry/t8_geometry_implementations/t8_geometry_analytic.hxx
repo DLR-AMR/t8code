@@ -34,6 +34,11 @@
 #include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_analytic.h>
 
+/**
+ * Geometry which maps the trees interior to a user-specified analytical function.
+ * No class has to be implemented and every member function can be filled with
+ * a function pointer.
+ */
 struct t8_geometry_analytic: public t8_geometry
 {
  public:
@@ -41,12 +46,13 @@ struct t8_geometry_analytic: public t8_geometry
    * Constructor of the analytic geometry. The geometry
    * is viable with all tree types and uses a user-provided analytic and
    * jacobian function. The actual mappings are done by these functions.
-   * \param [in] name       The name to give this geometry.
-   * \param [in] analytical The analytical function to use for this geometry.
-   * \param [in] jacobian   The jacobian of \a analytical.
-   * \param [in] load_tree_data The function that is used to load a tree's data.
-   * \param [in] tree_negative_volume_in The function that is used to compute if a trees volume is negative.
-   * \param [in] tree_compatible_in The function that is used to check if a tree is compatible with the geometry.
+   * \param [in] name                     The name to give this geometry.
+   * \param [in] analytical               The analytical function to use for this geometry.
+   * \param [in] jacobian                 The jacobian of \a analytical.
+   * \param [in] load_tree_data           The function that is used to load a tree's data.
+   * \param [in] tree_negative_volume_in  The function that is used to compute if a trees volume is negative.
+   * \param [in] tree_compatible_in       The function that is used to check if a tree is compatible with the geometry.
+   * \param [in] user_data                User data saved by the geometry. Can be accessed via \ref t8_geom_analytic_get_user_data.
    */
   t8_geometry_analytic (std::string name, t8_geom_analytic_fn analytical, t8_geom_analytic_jacobian_fn jacobian,
                         t8_geom_load_tree_data_fn load_tree_data,
@@ -59,7 +65,7 @@ struct t8_geometry_analytic: public t8_geometry
    */
   t8_geometry_analytic (std::string name);
 
-  /** The destructor. 
+  /** The destructor.
    */
   virtual ~t8_geometry_analytic ()
   {
@@ -126,7 +132,7 @@ struct t8_geometry_analytic: public t8_geometry
 
   /**
    * Check if the currently active tree has a negative volume
-   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.
    */
   bool
   t8_geom_tree_negative_volume () const override;
@@ -143,7 +149,7 @@ struct t8_geometry_analytic: public t8_geometry
 
   /** Update a possible internal data buffer for per tree data.
    * This function is called before the first coordinates in a new tree are
-   * evaluated. You can use it for example to load the vertex coordinates of the 
+   * evaluated. You can use it for example to load the vertex coordinates of the
    * tree into an internal buffer (as is done in the linear geometry).
    * \param [in]  cmesh      The cmesh.
    * \param [in]  gtreeid    The global tree.
@@ -151,6 +157,10 @@ struct t8_geometry_analytic: public t8_geometry
   void
   t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid) override;
 
+  /**
+   * Returns the user data stored in this geometry.
+   * \return The user data.
+   */
   inline const void *
   t8_geom_analytic_get_user_data ()
   {
@@ -168,7 +178,7 @@ struct t8_geometry_analytic: public t8_geometry
 
   t8_geom_tree_compatible_fn tree_compatible; /**< The function to check if a tree is compatible. */
 
-  const void *tree_data; /** Tree data pointer that can be set in \a load_tree_data and 
+  const void *tree_data; /** Tree data pointer that can be set in \a load_tree_data and
                              is passed onto \a analytical_function and \a jacobian. */
 
   const void *user_data; /** Additional user data pointer that can be set in constructor

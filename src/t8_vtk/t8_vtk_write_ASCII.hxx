@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_write_ASCII.hxx
+ * This file contains the function to write a forest in ASCII VTK format.
+ */
+
 #ifndef T8_VTK_WRITE_ASCII_HXX
 #define T8_VTK_WRITE_ASCII_HXX
 
@@ -51,6 +56,15 @@ t8_forest_vtk_write_ASCII (t8_forest_t forest, const char *fileprefix, const int
                            const int write_level, const int write_element_id, int write_ghosts, const int num_data,
                            t8_vtk_data_field_t *data);
 
+/** Write the cmesh in .pvtu file format. Writes one .vtu file per
+ * process and a meta .pvtu file.
+ * This function writes ASCII files and can be used when
+ * t8code is not configure with "--enable-vtk" and
+ * \ref t8_cmesh_vtk_write_file_via_API is not available.
+ * \param [in]  cmesh    The cmesh.
+ * \param [in]  fileprefix  The prefix of the output files.
+ * \return  True if successful, false if not (process local).
+ */
 int
 t8_cmesh_vtk_write_ASCII (t8_cmesh_t cmesh, const char *fileprefix);
 

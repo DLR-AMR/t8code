@@ -54,7 +54,7 @@ You find more information on t8code in the t8code Wiki.
 
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 3
    :caption: Contents:
 
    api/library_root

@@ -36,8 +36,16 @@ typedef struct
   int num_children;
 } t8_forest_child_type_query_t;
 
-/* This is the function that we call in sc_split_array to determine for an
- * element E that is a descendant of an element e, of which of e's children, E is a descendant. */
+/** 
+ * This is the function that we call in sc_split_array to determine for an
+ * element E that is a descendant of an element e, of which of e's children, E is a descendant. 
+ * 
+ * \param[in]   leaf_elements   The larray of eaf elements.
+ * \param[in]   index           The local id of the element within the leaf_elements array.
+ * \param[in]   data            The query data.
+ * 
+ * \return The element's ancestor id at the stored level is returned as the element's type.
+ */
 static size_t
 t8_forest_determine_child_type (sc_array_t *leaf_elements, size_t index, void *data)
 {
@@ -434,14 +442,14 @@ t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_fo
               }
             }
             T8_ASSERT (family_size <= scheme->element_get_num_children (tree_class, elem_new));
-#if T8_DEBUG
+#if T8_ENABLE_DEBUG
             /* Check whether elem_old is the first element of the family */
             for (t8_locidx_t ielem = 1;
                  ielem < scheme->element_get_num_children (tree_class, elem_old) && ielem_old - ielem >= 0; ielem++) {
               const t8_element_t *elem_old_debug
                 = t8_forest_get_leaf_element_in_tree (forest_old, itree, ielem_old - ielem);
               scheme->element_get_parent (tree_class, elem_old_debug, elem_parent);
-              SC_CHECK_ABORT (!scheme->t8_element_equal (elem_new, elem_parent),
+              SC_CHECK_ABORT (!scheme->element_is_equal (tree_class, elem_new, elem_parent),
                               "elem_old is not the first of the family.");
             }
 #endif

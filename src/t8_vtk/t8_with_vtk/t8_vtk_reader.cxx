@@ -48,8 +48,8 @@
 #include <vtkXMLPolyDataReader.h>
 
 /**
- * If the vertices of a tree describe a negative \param, 
- * permute the tree vertices. 
+ * If the vertices of a tree describe a negative volume, we need to
+ * permute the \a tree_vertices. 
  * 
  * \param[in, out] tree_vertices The vertices of a tree
  * \param[in] eclass             The eclass of the tree.
@@ -214,7 +214,9 @@ t8_vtk_grid_get_dimension (vtkSmartPointer<vtkDataSet> vtkGrid)
  * \param[in] vtkGrid       The vtkGrid that gets translated
  * \param[in, out] cmesh    An empty cmesh that is filled with the data. 
  * \param[in] first_tree    The global id of the first tree. Will be the global id of the first tree on this proc. 
- * \param[in] comm        A communicator. 
+ * \param[in] comm        A communicator.
+ * \param[in] package_id  The package id of the cmesh.
+ * \param[in] starting_key The starting key of the attributes in the cmesh.
  * \return  The number of elements that have been read by the process.
  */
 

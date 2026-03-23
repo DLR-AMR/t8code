@@ -397,10 +397,10 @@ t8_default_scheme_prism::element_get_anchor (const t8_element_t *elem, int ancho
 }
 
 void
-t8_default_scheme_prism::element_get_vertex_integer_coords (const t8_element_t *elem, int vertex, int coords[]) const
+t8_default_scheme_prism::element_get_vertex_integer_coords (const t8_element_t *element, int vertex, int coords[]) const
 {
-  T8_ASSERT (element_is_valid (elem));
-  t8_dprism_vertex_integer_coords ((const t8_dprism_t *) elem, vertex, coords);
+  T8_ASSERT (element_is_valid (element));
+  t8_dprism_vertex_integer_coords ((const t8_dprism_t *) element, vertex, coords);
 }
 
 void
@@ -436,10 +436,10 @@ t8_default_scheme_prism::refines_irregular (void) const
 #if T8_ENABLE_DEBUG
 
 int
-t8_default_scheme_prism::element_is_valid (const t8_element_t *elem) const
+t8_default_scheme_prism::element_is_valid (const t8_element_t *element) const
 {
-  T8_ASSERT (elem != NULL);
-  return t8_dprism_is_valid ((const t8_dprism_t *) elem);
+  T8_ASSERT (element != NULL);
+  return t8_dprism_is_valid ((const t8_dprism_t *) element);
 }
 
 void

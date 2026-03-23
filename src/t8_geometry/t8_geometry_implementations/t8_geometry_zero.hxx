@@ -33,6 +33,9 @@
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
 
+/**
+ * Zero geometry which maps every point to zero. Only meant for debugging purposes.
+ */
 struct t8_geometry_zero: public t8_geometry
 {
  public:
@@ -46,7 +49,7 @@ struct t8_geometry_zero: public t8_geometry
 
   /**
    * Check if  the currently active tree has a negative volume
-   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.  
+   * \return                True (non-zero) if the currently loaded tree has a negative volume. 0 otherwise.
    */
   bool
   t8_geom_tree_negative_volume () const override
@@ -54,7 +57,7 @@ struct t8_geometry_zero: public t8_geometry
     return 0;
   };
 
-  /** The destructor. 
+  /** The destructor.
    * Clears the allocated memory.
    */
   virtual ~t8_geometry_zero ();

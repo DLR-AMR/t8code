@@ -34,6 +34,12 @@
 #include <string>
 #include <unordered_map>
 
+/**
+ * Handles the geometries of a \ref t8_cmesh.
+ * Each tree can be assigned a geometry in this handler. The geometries
+ * get assigned using their hash value.
+ * Stores geometries of type \ref t8_geometry.
+ */
 struct t8_geometry_handler
 {
  public:
@@ -235,7 +241,7 @@ struct t8_geometry_handler
    * \param [in]  cmesh    The cmesh.
    * \param [in]  gtreeid  The global tree id of the tree for which the bounding box should be returned.
    * \param [out] bounds   The bounding box of the tree, in the format [xmin, xmax, ymin, ymax, zmin, zmax].
-   * 
+   *
    * \note This function updates the active tree to the provided \a gtreeid.
    */
   inline bool

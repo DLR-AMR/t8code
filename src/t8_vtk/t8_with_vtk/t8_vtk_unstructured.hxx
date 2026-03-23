@@ -24,6 +24,7 @@
 #define T8_CMESH_VTK_UNSTRUCTURED_READER
 
 /**
+ * \file t8_vtk_unstructured.hxx
  * This file contains all helper-functions needed to read a vtkUnstructuredGrid
  * from a file using the vtk-library. 
  */

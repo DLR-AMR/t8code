@@ -37,6 +37,9 @@
 #include <memory>
 #include <numeric>
 
+/**
+ * A base class for vector handlers.
+ */
 class t8_abstract_vector_handler {
  public:
   /**
@@ -171,8 +174,8 @@ class t8_vector_handler: public t8_abstract_vector_handler {
 
   /**
    * Compute the size of the buffer that is needed to pack the data.
-   * 
-   * \param[in] data The data to be set.
+   *
+   * \param[in] comm The MPI communicator used for the operation.
    * \return The size of the buffer.
    */
   int

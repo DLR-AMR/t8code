@@ -20,12 +20,19 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_writer_helper.hxx
+ * 
+ * This file contains helper functions for the vtk writer.
+ */
+
 #ifndef T8_VTK_WRITER_HELPER
 #define T8_VTK_WRITER_HELPER
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
 
+/** The maximum number of corners for a quadratic vtk element */
 #define T8_FOREST_VTK_QUADRATIC_ELEMENT_MAX_CORNERS 20
 /** Lookup table for number of nodes for curved eclasses. */
 const int t8_curved_eclass_num_nodes[T8_ECLASS_COUNT] = { 1, 3, 8, 6, 20, 10, 15, 13 };
@@ -120,7 +127,7 @@ grid_local_num_elements (const grid_t grid);
  * 
  * \tparam grid_t Either a cmesh or a forest.
  * \param[in] grid The forest/cmesh to use.
- * \param[in, out] Bounds defined by xmin, xmax, ymin, ymax, zmin, zmax.
+ * \param[in, out] bounds defined by xmin, xmax, ymin, ymax, zmin, zmax.
  */
 template <typename grid_t>
 void
