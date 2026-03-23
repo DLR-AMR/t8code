@@ -163,7 +163,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_partition.cxx
     t8_forest/t8_forest_partition_for_coarsening.cxx
     t8_forest/t8_forest_pfc_helper.cxx
-    t8_forest/t8_forest.cxx  
+    t8_forest/t8_forest.cxx
     t8_forest/t8_forest_private.cxx
     t8_forest/t8_forest_ghost.cxx
     t8_forest/t8_forest_iterate.cxx

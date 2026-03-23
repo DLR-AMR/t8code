@@ -1,10 +1,9 @@
-
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -33,9 +32,6 @@
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
-/**
- * Calculate the displacement of vertices for CAD-based mesh deformation.
- */
 
 std::unordered_map<t8_gloidx_t, t8_3D_vec>
 t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad_handle *cad)
@@ -149,9 +145,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
   }
   return displacements;
 }
-/**
- * Apply vertex displacements to a cmesh and update the CAD geometry.
- */
+
 void
 t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
                                                        std::shared_ptr<t8_cad_handle> cad)

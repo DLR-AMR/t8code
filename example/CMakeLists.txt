@@ -46,15 +46,6 @@ function( add_t8_example )
     target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE T8 t8example SC::SC )
     target_include_directories( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
 
-    if (T8CODE_ENABLE_OCC)
-        target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE ${OpenCASCADE_LIBRARIES})
-        target_include_directories( ${ADD_T8_EXAMPLE_NAME} SYSTEM PRIVATE ${OpenCASCADE_INCLUDE_DIR} )
-    endif()
-
-    if (T8CODE_ENABLE_MPI)
-        target_link_libraries( ${ADD_T8_EXAMPLE_NAME} PRIVATE MPI::MPI_C)
-    endif()
-
     set_target_properties(${ADD_T8_EXAMPLE_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
         LIBRARY_OUTPUT_DIRECTORY "${EXAMPLE_BUILD_DIR}"
@@ -80,6 +71,7 @@ add_t8_example( NAME t8_cmesh_set_join_by_vertices      SOURCES cmesh/t8_cmesh_s
 add_t8_example( NAME t8_cmesh_geometry_examples         SOURCES cmesh/t8_cmesh_geometry_examples.cxx )
 add_t8_example( NAME t8_cmesh_create_partitioned        SOURCES cmesh/t8_cmesh_create_partitioned.cxx )
 add_t8_example( NAME t8_cmesh_hypercube_pad             SOURCES cmesh/t8_cmesh_hypercube_pad.cxx )
+add_t8_example( NAME t8_cmesh_mesh_deformation          SOURCES cmesh/t8_cmesh_mesh_deformation.cxx )
 
 add_t8_example( NAME t8_test_ghost                      SOURCES forest/t8_test_ghost.cxx )
 add_t8_example( NAME t8_test_face_iterate               SOURCES forest/t8_test_face_iterate.cxx )
@@ -99,10 +91,6 @@ copy_example_file (IO/cmesh/gmsh/circlesquare_hybrid_hole.msh)
 
 if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
-endif()
-
-if(T8CODE_ENABLE_OCC AND T8CODE_ENABLE_MPI)
-    add_t8_example( NAME t8_cmesh_mesh_deformation_example  SOURCES cmesh/t8_cmesh_mesh_deformation_example.cxx )
 endif()
 
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )

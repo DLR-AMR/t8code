@@ -225,14 +225,18 @@ struct t8_cmesh_vertex_connectivity
   /** Typedef for the iterator type. */
   using const_iterator = t8_cmesh_vertex_conn_vertex_to_tree::const_iterator;
 
-  /** Iterator begin. */
+  /** Iterator begin. 
+   * \return const iterator pointing to the first element.
+  */
   inline const_iterator
   begin () const
   {
     return vertex_to_tree.begin ();
   }
 
-  /** Iterator end. */
+  /** Iterator end. 
+   * \return const iterator pointing behind the last element.
+  */
   inline const_iterator
   end () const
   {

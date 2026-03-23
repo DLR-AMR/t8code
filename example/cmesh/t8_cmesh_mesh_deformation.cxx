@@ -1,20 +1,43 @@
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <algorithm>
-#include <t8_cmesh/t8_cmesh.h>
+
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2026 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+/** \file t8_cmesh_mesh_deformation.cxx
+ *  This file implements an example for CAD-based mesh deformation.
+ */
+
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
-#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
+#include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
+#include <sc_options.h>
+
+#include <iostream>
+#include <string>
 #include <vector>
 #include <array>
-#include <mpi.h>
-#include <unordered_set>
-#include <sc_options.h>
 
 int
 main (int argc, char **argv)
@@ -50,23 +73,27 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
 
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
+  /* Initialize t8code with log level SC_LP_ESSENTIAL. See sc.h for more info on the log levels. */
+  t8_init (SC_LP_ESSENTIAL);
+
+#ifdef T8CODE_ENABLE_OCC
 
   int helpme = 0;
   const char *msh_file = NULL;
   const char *brep_file = NULL;
   int dim = 0;
+  int level = 2;
 
   /* Initialize command line argument parser. */
   sc_options_t *opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
   sc_options_add_string (opt, 'm', "mshfile", &msh_file, NULL, "File prefix of the input mesh file (without .msh)");
   sc_options_add_string (opt, 'b', "brepfile", &brep_file, NULL,
-                         "File prefix of the deformation geometry file (.brep)");
+                         "File prefix of the deformation geometry file (without .brep)");
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
+  sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
 
   int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -89,7 +116,7 @@ main (int argc, char **argv)
 
     /* Create cmesh from msh. */
     t8_cmesh_t cmesh = t8_cmesh_from_msh_file (msh_file, 0, comm, dim, 0, 1);
-    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 2, 0, comm);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
     /* Load CAD geometry from .brep file. */
     auto cad = std::make_shared<t8_cad_handle> (brep_file);
@@ -115,7 +142,15 @@ main (int argc, char **argv)
     std::cout << "Mesh deformation completed." << std::endl;
   }
 
-  MPI_Finalize ();
   sc_options_destroy (opt);
+
+#else
+  t8_global_productionf ("\n\t ERROR: This example requires OpenCASCADE support to be enabled in t8code.\n\n");
+#endif
+
+  sc_finalize ();
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
+
   return 0;
 }

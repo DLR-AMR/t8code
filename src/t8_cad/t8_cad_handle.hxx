@@ -28,9 +28,6 @@
 #ifndef T8_CAD_HANDLE_HXX
 #define T8_CAD_HANDLE_HXX
 
-#include <t8.h>
-#include <optional>
-#include <span>
 #include <gp_Pnt.hxx>
 #include <TopExp.hxx>
 #include <Geom_Surface.hxx>

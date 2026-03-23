@@ -1,10 +1,9 @@
-
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,8 +24,7 @@
  * Implementation of CAD-based mesh deformation.
  */
 
-#ifndef T8_CMESH_DEFORMATION_HXX
-#define T8_CMESH_DEFORMATION_HXX
+#pragma once
 
 #include <memory>
 #include <unordered_map>
@@ -75,5 +73,3 @@ struct t8_cmesh_mesh_deformation
   /** A shared pointer to the updated geometry which comes from a new cad file */
   std::shared_ptr<t8_cad_handle> updated_geometry;
 };
-
-#endif /* !T8_CMESH_DEFORMATION_HXX */
