@@ -26,47 +26,48 @@
 
 #ifndef T8_FOREST_GHOST_DEFINITION_OVERLAP_HXX
 #define T8_FOREST_GHOST_DEFINITION_OVERLAP_HXX
- 
+
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 #include <t8_forest/t8_forest_types.h>
 #include <vector>
 #include <array>
- 
+
 /**
  * Base class for a ghost definition with elements with stretch factors.
  */
-struct t8_forest_ghost_definition_overlap : public t8_forest_ghost_definition
+struct t8_forest_ghost_definition_overlap: public t8_forest_ghost_definition
 {
-  public:
+ public:
   /** Base constructor with no arguments. We need this since it
    * is called from derived class constructors. */
-  t8_forest_ghost_definition_overlap () : t8_forest_ghost_definition (T8_GHOST_USER_DEFINED)
+  t8_forest_ghost_definition_overlap (): t8_forest_ghost_definition (T8_GHOST_USER_DEFINED)
   {
   }
 
   /** Constructor for ghost definition overlap with uniform stretch factor. */
-  t8_forest_ghost_definition_overlap (std::array<double, 3> stretch_factors) : t8_forest_ghost_definition (T8_GHOST_USER_DEFINED) , _uniform_stretch_factor(stretch_factors)
+  t8_forest_ghost_definition_overlap (std::array<double, 3> stretch_factors)
+    : t8_forest_ghost_definition (T8_GHOST_USER_DEFINED), _uniform_stretch_factor (stretch_factors)
   {
     _has_uniform_stretch_factor = true;
   }
 
   /** Get the uniform stretch factor of the ghost definition. 
-   * \return uniform stretch factor in every dimension, or NULL if ther is no uniform stretch factor.
+   * \return uniform stretch factor in every dimension, or NULL if there is no uniform stretch factor.
   */
   std::array<double, 3>
-  get_uniform_stretch_factor() const;
+  get_uniform_stretch_factor () const;
   /** Set a uniform stretch factor for each dimension. */
   void
-  set_uniform_stretch_factor(std::array<double, 3> stretch_factors);
+  set_uniform_stretch_factor (std::array<double, 3> stretch_factors);
   /** Get if the ghost definition uses a uniform stretch factor 
    * or computes an communicate max factors for every process. */
   bool
-  has_uniform_stretch_factor() const;
+  has_uniform_stretch_factor () const;
   /** Change the strategy of the ghost definition from a uniform stretch factor
    * to compute and communicate max stretch factors for each process.
    */
   void
-  unable_uniform_stretch_factor();
+  unable_uniform_stretch_factor ();
 
   /** Create one layer of ghost elements for a forest.
    * \param [in,out]    forest     The forest.
@@ -76,7 +77,7 @@ struct t8_forest_ghost_definition_overlap : public t8_forest_ghost_definition
   virtual bool
   do_ghost (t8_forest_t forest) override;
 
-  protected:
+ protected:
   /**
    * Compute and collect ownerships to create the necessary offset
    * for elements, trees and first descendant.
@@ -90,7 +91,7 @@ struct t8_forest_ghost_definition_overlap : public t8_forest_ghost_definition
   /** 
    * \note this function could be used in communicate_ownership.
    */
-  void 
+  void
   communicate_max_stretch_factor (t8_forest_t forest);
 
   /** Build a cover (coarsest possible grid of the local elements of a single process)
@@ -118,7 +119,7 @@ struct t8_forest_ghost_definition_overlap : public t8_forest_ghost_definition
 
   std::array<double, 3> _uniform_stretch_factor;
 
-  std::vector<std::vector<t8_element_t *>> _list_of_covers{};
+  std::vector<std::vector<t8_element_t *>> _list_of_covers {};
 
   t8_shmem_array_t _max_stretch_factors = NULL;
 };
