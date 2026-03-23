@@ -29,7 +29,7 @@
 #define T8_VTK_WRITER_C_INTERFACE_H
 
 #include <t8.h>
-#include <t8_vtk.h>
+#include <t8_vtk/t8_vtk.h>
 #include <t8_forest/t8_forest_types.h>
 
 #if T8_ENABLE_VTK
@@ -42,7 +42,7 @@ T8_EXTERN_C_BEGIN ();
 /**
  * Translate a forest into a vtkUnstructuredGrid with respect to the given flags. 
  * This function uses the vtk library. t8code must be configured with
- * "--enable-vtk" in order to use it.
+ * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
  * \param [in]  forest    The forest.
  * \param[in, out] unstructuredGrid 
  * \param [in]  write_treeid If true, the global tree id is written for each element.
@@ -67,7 +67,7 @@ t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstruc
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function uses the vtk library. t8code must be configured with
- * "--enable-vtk" in order to use it.
+ * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
  * Currently does not support pyramid elements.
  * \param [in]  forest    The forest.
  * \param [in]  fileprefix The prefix of the output files. The meta file will be named \a fileprefix.pvtu .
@@ -94,7 +94,7 @@ t8_forest_vtk_write_file_via_API (t8_forest_t forest, const char *fileprefix, co
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function writes ASCII files and can be used when
- * t8code is not configure with "--enable-vtk" and
+ * t8code is not configured with "-DT8CODE_ENABLE_VTK=ON" and
  * \ref t8_forest_vtk_write_file_via_API is not available.
  * \param [in]  forest    The forest.
  * \param [in]  fileprefix  The prefix of the output files.
@@ -120,7 +120,7 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int 
  * Write the cmesh in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function uses the vtk library. t8code must be configured with
- * "--enable-vtk" in order to use it.
+ * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
  * 
  * \param[in] cmesh The cmesh
  * \param[in] fileprefix The prefix of the output files
@@ -135,12 +135,12 @@ t8_cmesh_vtk_write_file_via_API (t8_cmesh_t cmesh, const char *fileprefix, sc_MP
  * Write the cmesh in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
  * This function writes ASCII files and can be used when
- * t8code is not configure with "--enable-vtk" and
+ * t8code is not configured with "-DT8CODE_ENABLE_VTK=ON" and
  * \ref t8_cmesh_vtk_write_file_via_API is not available. 
  * 
  * \param[in] cmesh The cmesh
  * \param[in] fileprefix The prefix of the output files 
- * \return int 
+ * \return True (nonzero) if successful, false (zero) otherwise 
  */
 int
 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);

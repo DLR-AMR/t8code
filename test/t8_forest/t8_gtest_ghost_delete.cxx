@@ -21,12 +21,12 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_ghost.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_schemes.hxx>
 
@@ -56,7 +56,8 @@ test_adapt_holes ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, 
   return 0;
 }
 
-class DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<int> {
+struct DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<int>
+{
  protected:
   void
   SetUp () override

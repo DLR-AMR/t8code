@@ -496,6 +496,7 @@ t8_default_scheme_tet::element_is_valid (const t8_element_t *element) const
   return t8_dtet_is_valid ((const t8_dtet_t *) element);
 }
 
+#endif
 void
 t8_default_scheme_tet::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
@@ -505,7 +506,6 @@ t8_default_scheme_tet::element_to_string (const t8_element_t *elem, char *debug_
   snprintf (debug_string, string_size, "x: %i, y: %i, z: %i, type: %i, level: %i", tet->x, tet->y, tet->z, tet->type,
             tet->level);
 }
-#endif
 
 void
 t8_default_scheme_tet::element_new (int length, t8_element_t **elem) const

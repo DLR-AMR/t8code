@@ -25,8 +25,8 @@
  * of a cmesh.
  */
 
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
 /* Setter functions */
@@ -90,4 +90,11 @@ t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_ver
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   return cmesh->vertex_connectivity->get_tree_list_of_vertex (global_vertex).size ();
+}
+
+int
+t8_cmesh_uses_vertex_connectivity (const t8_cmesh_t cmesh)
+{
+  return (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID)
+         || (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::VALID);
 }

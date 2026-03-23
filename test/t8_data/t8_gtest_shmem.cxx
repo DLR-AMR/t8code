@@ -29,7 +29,8 @@
 
 #define T8_TEST_SHMEM_NUM_COMMS 2
 
-class shmem: public testing::TestWithParam<std::tuple<int, sc_MPI_Comm, int>> {
+struct shmem: public testing::TestWithParam<std::tuple<int, sc_MPI_Comm, int>>
+{
  protected:
   void
   SetUp () override
@@ -37,7 +38,7 @@ class shmem: public testing::TestWithParam<std::tuple<int, sc_MPI_Comm, int>> {
     icomm = std::get<0> (GetParam ());
     comm = std::get<1> (GetParam ());
     shmem_type_int = std::get<2> (GetParam ());
-    shmem_type = (sc_shmem_type_t) shmem_type;
+    shmem_type = (sc_shmem_type_t) shmem_type_int;
   }
   int icomm;
   sc_MPI_Comm comm;
@@ -58,7 +59,8 @@ TEST_P (shmem, test_shmem_init_finalize)
   int mpiret;
 
   /* setup shared memory usage */
-  t8_shmem_init (comm);
+  const int intrasize_from_init = t8_shmem_init (comm);
+  ASSERT_GT (intrasize_from_init, 0) << "Error in t8_shmem_init. No intranode communicator set.";
 
   /* Get intranode and internode comm */
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
@@ -107,18 +109,21 @@ TEST_P (shmem, test_sc_shmem_alloc)
   /* Seed random number generator. */
   srand (0);
 
+  /* setup shared memory usage */
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
+
+  t8_shmem_set_type (comm, shmem_type);
+
   /* Checking shared memory type */
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
   int intrasize, intrarank;
   t8_debugf ("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type]);
 
-  /* setup shared memory usage */
-  t8_shmem_init (comm);
-  t8_shmem_set_type (comm, shmem_type);
-
-#if T8_ENABLE_MPI
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
@@ -190,18 +195,18 @@ TEST_P (shmem, test_shmem_array_allgatherv)
   for (t8_gloidx_t i = 0; i < array_length; i++) {
     sendbuf[i] = first_array_value + i;
   }
+  /* setup shared memory usage */
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
+  t8_shmem_set_type (comm, shmem_type);
 
   t8_debugf ("Checking shared memory type %s.\n", sc_shmem_type_to_string[shmem_type_int]);
 
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
-
-  /* setup shared memory usage */
-  t8_shmem_init (comm);
-  t8_shmem_set_type (comm, shmem_type);
-
-#if T8_ENABLE_MPI
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   t8_shmem_array_t shmem_array;
@@ -242,16 +247,17 @@ TEST_P (shmem, test_shmem_array_prefix)
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  /* Checking shared memory type */
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
-
   /* setup shared memory usage */
-  t8_shmem_init (comm);
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
-#if T8_ENABLE_MPI
+  /* Checking shared memory type */
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   /* Allocate one integer */
@@ -287,16 +293,17 @@ TEST_P (shmem, test_shmem_array)
   /* Seed random number generator. */
   srand (0);
 
-  /* Checking shared memory type */
-  const sc_shmem_type_t shmem_type = (sc_shmem_type_t) shmem_type_int;
-
   /* setup shared memory usage */
-  t8_shmem_init (comm);
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
   t8_shmem_set_type (comm, shmem_type);
 
-#if T8_ENABLE_MPI
+  /* Checking shared memory type */
   const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
   ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
 #endif
 
   /* Allocate one integer */
@@ -357,6 +364,93 @@ TEST_P (shmem, test_shmem_array)
   t8_shmem_array_destroy (&shmem_array);
   t8_shmem_array_destroy (&copy_array);
 
+  t8_shmem_finalize (comm);
+}
+
+/**
+ * Comparison function for binary search.
+ * 
+ * \param[in] array The shared memory array to search in.
+ * \param[in] guess The current guess index.
+ * \param[in] value The value to search for.
+ * \return -1 if the guess is out of bounds, 0 if the value is found, 1 if the value is greater than the guess.
+ */
+static inline int
+compare (t8_shmem_array_t array, const int guess, const t8_gloidx_t value)
+{
+  if (guess >= (int) t8_shmem_array_get_elem_count (array) || guess < 0) {
+    return -1;
+  }
+  const t8_gloidx_t guess_value = t8_shmem_array_get_gloidx (array, guess);
+  return (value == guess_value) ? 0 : (value < guess_value) ? -1 : 1;
+}
+
+/**
+ * Test the binary search function of the shared memory array. 
+ * Creates an array with values 0 to array_length - 1 and searches for each value.
+ * Also searches for values not in the array and checks that -1 is returned.
+ */
+TEST_P (shmem, test_shmem_binary_search)
+{
+  const int array_length = 100;
+  const int element_size = sizeof (t8_gloidx_t);
+  int mpirank, mpisize;
+  int mpiret;
+
+  mpiret = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  /* setup shared memory usage */
+  const int intranode_size = t8_shmem_init (comm);
+  ASSERT_GT (intranode_size, 0) << "Could not initialize shared memory.";
+  t8_shmem_set_type (comm, shmem_type);
+
+  const sc_shmem_type_t control_shmem_type = sc_shmem_get_type (comm);
+#if T8_ENABLE_MPI
+  ASSERT_EQ (shmem_type, control_shmem_type) << "Setting shmem type not successful.";
+#else
+  ASSERT_EQ (SC_SHMEM_BASIC, control_shmem_type) << "Setting shmem type not successful.";
+#endif
+
+  /* Allocate array_length many integers */
+  t8_shmem_array_t shmem_array;
+  t8_shmem_array_init (&shmem_array, element_size, array_length, comm);
+
+  sc_MPI_Comm check_comm = t8_shmem_array_get_comm (shmem_array);
+  /* Check communicator of shared memory array. */
+  ASSERT_EQ (comm, check_comm) << "Shared memory array has wrong communicator.";
+
+  /* Check element count of shared memory array. */
+  const int check_count = t8_shmem_array_get_elem_count (shmem_array);
+  ASSERT_EQ (check_count, array_length) << "shared memory array has wrong element count.";
+
+  /* Check element size of shared memory array. */
+  const int check_size = t8_shmem_array_get_elem_size (shmem_array);
+  ASSERT_EQ (check_size, element_size) << "shared memory array has wrong element size.";
+  /* Fill the array with the number i at position i. */
+  if (t8_shmem_array_start_writing (shmem_array)) {
+    for (int i = 0; i < array_length; ++i) {
+      t8_shmem_array_set_gloidx (shmem_array, i, i);
+    }
+  }
+  t8_shmem_array_end_writing (shmem_array);
+
+  /* Binary search for each value. The index found should be equal to the value. */
+  for (int i = 0; i < array_length; ++i) {
+    const t8_gloidx_t found_index = (t8_gloidx_t) t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
+    EXPECT_EQ (found_index, i) << "Binary search did not find correct index for value " << i << " (got " << found_index
+                               << ")";
+  }
+
+  for (int i = array_length; i < array_length + 10; ++i) {
+    const t8_gloidx_t found_index = (t8_gloidx_t) t8_shmem_array_binary_search (shmem_array, i, array_length, compare);
+    EXPECT_EQ (found_index, -1) << "Binary search found an index for a value not in the array " << i << " (got "
+                                << found_index << ")";
+  }
+
+  t8_shmem_array_destroy (&shmem_array);
   t8_shmem_finalize (comm);
 }
 

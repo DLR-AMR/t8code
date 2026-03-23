@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_iterate.cxx
+ * Implements functions declared in \ref t8_forest_iterate.h.
+ */
+
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
@@ -89,9 +93,9 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
 }
 
 void
-t8_forest_iterate_faces (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                         const t8_element_array_t *leaf_elements, void *user_data,
-                         t8_locidx_t tree_lindex_of_first_leaf, t8_forest_iterate_face_fn callback)
+t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                         const int face, const t8_element_array_t *leaf_elements, void *user_data,
+                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback)
 {
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   t8_eclass_t eclass;

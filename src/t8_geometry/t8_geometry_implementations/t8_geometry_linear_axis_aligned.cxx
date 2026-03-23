@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_geometry_linear_axis_aligned.cxx
+ * Implements functions declared in \ref t8_geometry_linear_axis_aligned.hxx 
+ *  or the C interface \ref t8_geometry_linear_axis_aligned.h.
+ */
+
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>

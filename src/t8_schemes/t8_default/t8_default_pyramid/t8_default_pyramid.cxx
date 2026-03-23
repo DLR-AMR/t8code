@@ -307,7 +307,7 @@ t8_gloidx_t
 t8_default_scheme_pyramid::element_count_leaves (const t8_element_t *element, int level) const
 {
   const int element_level = element_get_level (element);
-  const int dim = t8_eclass_to_dimension[eclass];
+  const int dim = get_dimension ();
   const t8_element_shape_t element_shape = element_get_shape (element);
   if (element_shape == T8_ECLASS_PYRAMID) {
     const int level_diff = level - element_level;
@@ -433,6 +433,7 @@ t8_default_scheme_pyramid::element_is_valid (const t8_element_t *element) const
   return t8_dpyramid_is_valid ((const t8_dpyramid_t *) element);
 }
 
+#endif
 void
 t8_default_scheme_pyramid::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
@@ -443,7 +444,6 @@ t8_default_scheme_pyramid::element_to_string (const t8_element_t *elem, char *de
             pyra->pyramid.x, pyra->pyramid.y, pyra->pyramid.x, pyra->pyramid.type, pyra->pyramid.level,
             pyra->switch_shape_at_level);
 }
-#endif
 
 void
 t8_default_scheme_pyramid::set_to_root (t8_element_t *elem) const

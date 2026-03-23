@@ -32,12 +32,12 @@
 #include <t8_types/t8_type.hxx>
 #include <t8_types/t8_operators.hxx>
 
-T8_EXTERN_C_BEGIN ();
-
 /** Dummy tag for type trait usage of \ref t8_geometry_hash */
 struct t8_geometry_hash_tag
 {
 };
+
+T8_EXTERN_C_BEGIN ();
 
 /** Data type used for storing hash values of geometries. */
 using t8_geometry_hash = T8Type<size_t, t8_geometry_hash_tag, Addable, Subtractable, AddAssignable, Multipliable,
@@ -49,7 +49,7 @@ static const t8_geometry_hash t8_geometry_empty_hash (std::hash<std::string> {}(
 /**
  * Compute the hash value of a geometry's name.
  *  
- * \param [in] name The name of a geoemetry.
+ * \param [in] name The name of a geometry.
  * \return The hash value of \a name.
  * \note \a name being empty here is explicitly allowed and used as hash values for non-existing geometries.
  */
@@ -61,7 +61,7 @@ t8_geometry_compute_hash (const std::string &name)
 }
 
 /**
- * Query whether a given hash value corresponds to en empty string and hence
+ * Query whether a given hash value corresponds to an empty string and hence
  * a non-existing geometry.
  * 
  * \param [in] hash A hash value of a geometry.

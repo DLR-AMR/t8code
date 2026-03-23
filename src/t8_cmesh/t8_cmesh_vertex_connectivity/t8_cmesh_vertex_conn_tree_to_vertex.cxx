@@ -24,8 +24,8 @@
  *  This file implements the routines for the t8_cmesh_vertex_conn_tree_to_vertex struct.
  */
 
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
 /* constructor from a given vertex to tree list. */

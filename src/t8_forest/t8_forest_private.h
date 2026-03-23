@@ -25,8 +25,6 @@
  * of the official t8_forest.h interface but used internally.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_private */
-
 #ifndef T8_FOREST_PRIVATE_H
 #define T8_FOREST_PRIVATE_H
 
@@ -34,8 +32,6 @@
 #include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
-
-/* TODO: document */
 
 /** Check whether or not \a elements contains a (in)complete family and 
  *  return the size of it or zero if no family is considered.
@@ -204,7 +200,7 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
 
 /** Search for a linear element id in a sorted array of
  * elements. If the element does not exist, return the largest index i
- * such that the element at position i has a smaller id than the given one.
+ * such that the element at position i has a smaller or equal id than the given one.
  * If no such i exists, return -1.
  * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
  *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
@@ -216,6 +212,35 @@ t8_forest_get_tree_leaf_element_array_mutable (const t8_forest_t forest, t8_loci
 t8_locidx_t
 t8_forest_bin_search_lower (const t8_element_array_t *elements, const t8_linearidx_t element_id,
                             const int element_level);
+
+/** \brief Search for a linear element id (at level element_level) in a sorted array of
+ * elements. If the element does not exist, return the smallest index i
+ * such that the element at position i has a larger or equal id than the given one.
+ * If no such i exists, return -1.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element_id  The linear id of the element to search for.
+ * \param [in]     element_level The level of the element to search for. Thus, the level at which \a element_id was computed.
+ * \return                     The smallest index \a i of an element with linear_id larger than or equal to \a element_id in \a elements if it exists.
+ *                             -1 if no such element was found in \a elements.
+ */
+t8_locidx_t
+t8_forest_bin_search_upper (const t8_element_array_t *elements, const t8_linearidx_t element_id,
+                            const int element_level);
+
+/** \brief Search for the first descendant or ancestor of an element in a sorted array of elements.
+ * \param [in]     elements    An array of elements. Must be sorted according to linear id at maximum level.
+ *                             Must correspond to a valid refinement (i.e. contain no duplicate elements or elements and their descendants).
+ * \param [in]     element     The element to search for.
+ * \param [in]     element_found On return either a descendant or ancestor of \a element in \a elements if it exists. NULL if no
+ *                             such element exists in \a elements.
+ * \return                     The smallest index \a i such that elements[i] (= \a element_found) is an ancestor or a descendant of \a element.
+ *                             -1 if no such element was found in \a elements.
+ * \note \a element is ancestor and descendant of itself, so if \a element is contained in \a elements then it will be found by this function.
+ */
+t8_locidx_t
+t8_forest_bin_search_first_descendant_ancestor (const t8_element_array_t *elements, const t8_element_t *element,
+                                                const t8_element_t **element_found);
 
 /** Find the owner process of a given element, deprecated version.
  * Use t8_forest_element_find_owner instead.
@@ -387,13 +412,13 @@ void
 t8_forest_element_owners_at_neigh_face_bounds (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                                int face, int *lower, int *upper);
 
-/** Construct all face neighbors of half size of a given element.
+/** Construct all face neighbors of half size of a given element in linear id order.
  * \param [in]     forest  The forest.
  * \param [in]     ltreeid The local tree id of the tree in which the element is.
  * \param [in]     elem    The element of which to construct the neighbors.
  * \param [in,out] neighs An array of allocated elements of the correct element class.
  *                        On output the face neighbors of \a elem across \a face of one
- *                        bigger refinement level are stored.
+ *                        bigger refinement level are stored. Ordered by their linear id.
  * \param [in]     neigh_class The eclass of the neighbors.
  * \param [in]     face    The number of the face of \a elem.
  * \param [in]     num_neighs The number of allocated element in \a neighs. Must match the

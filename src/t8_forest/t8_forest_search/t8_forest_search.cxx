@@ -20,6 +20,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_search.cxx
+ * Implements functions declared in \ref t8_forest_search.hxx 
+ *  or the C interface \ref t8_forest_search.h.
+ */
+
 #include "t8_forest/t8_forest_search/t8_forest_search.hxx"
 #include "t8_forest/t8_forest_search/t8_forest_search.h"
 #include <t8_forest/t8_forest_iterate.h>

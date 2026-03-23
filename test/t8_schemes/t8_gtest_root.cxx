@@ -27,11 +27,12 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_macros.hxx>
 
-class root: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct root: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override
