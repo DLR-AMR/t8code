@@ -66,7 +66,7 @@ write_mesh_to_vtk_ext (TMeshClass &mesh, const char *fileprefix, const int num_d
                        bool do_not_use_API = false)
 {
   return t8_forest_write_vtk_ext (mesh->get_forest (), fileprefix, write_treeid, write_mpirank, write_level,
-                                  write_element_id, write_ghosts, write_curved, do_not_use_API, num_data, &data);
+                                  write_element_id, write_ghosts, write_curved, do_not_use_API, num_data, data);
 }
 
 /** 

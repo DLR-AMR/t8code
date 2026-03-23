@@ -153,7 +153,7 @@ t8_step5_output_data_to_vtu (TMeshClass &mesh, const char *prefix)
   }
   /* To write user defined data, we need the extended output function write_mesh_to_vtk_ext. 
    * Despite writing user data, it also offers more control over which properties to write. */
-  write_mesh_to_vtk_ext (mesh, prefix, num_data, &vtk_data);
+  t8_mesh_handle::write_mesh_to_vtk_ext (mesh, prefix, num_data, &vtk_data);
   T8_FREE (element_volumes);
 }
 
@@ -195,7 +195,7 @@ t8_step5_main (int argc, char **argv)
     using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::no_competences, t8_step5_data_per_element>;
     auto mesh = t8_step5_build_mesh<mesh_class> (comm, level);
 
-    mesh->write_vtk (prefix_mesh);
+    t8_mesh_handle::write_mesh_to_vtk (mesh, prefix_mesh);
     t8_global_productionf (" [step5] Wrote mesh to vtu files: %s*\n", prefix_mesh);
 
     t8_step5_set_element_data (mesh);

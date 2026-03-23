@@ -32,10 +32,9 @@ function( add_t8_tutorial )
     set(TUTORIAL_BUILD_DIR "${CMAKE_BINARY_DIR}/${TUTORIAL_RELATIVE_DIR}")
 
     add_executable( ${ADD_T8_TUTORIAL_NAME} ${ADD_T8_TUTORIAL_SOURCES} )
-    target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC T8_MESH_HANDLE)
+    target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC)
 
     string( FIND ${ADD_T8_TUTORIAL_NAME} "mesh_handle" is_mesh_handle_file )
-
     if ( (${is_mesh_handle_file} GREATER_EQUAL 0) )
         target_link_libraries(${ADD_T8_TUTORIAL_NAME} PRIVATE T8_MESH_HANDLE )
     endif ()
@@ -66,7 +65,6 @@ add_t8_tutorial( NAME t8_step2_uniform_forest           SOURCES general/t8_step2
 add_t8_tutorial( NAME t8_step3_adapt_forest             SOURCES general/t8_step3_main.cxx general/t8_step3_adapt_forest.cxx )
 add_t8_tutorial( NAME t8_step4_partition_balance_ghost  SOURCES general/t8_step4_main.cxx general/t8_step3_adapt_forest.cxx general/t8_step4_partition_balance_ghost.cxx )
 add_t8_tutorial( NAME t8_step5_element_data             SOURCES general/t8_step5_main.cxx general/t8_step3_adapt_forest.cxx general/t8_step5_element_data.cxx )
-add_t8_tutorial( NAME t8_step5_mesh_handle                   SOURCES general/t8_step5_mesh_handle.cxx )
 add_t8_tutorial( NAME t8_step6_stencil                  SOURCES general/t8_step6_main.cxx general/t8_step3_adapt_forest.cxx general/t8_step6_stencil.cxx )
 add_t8_tutorial( NAME t8_step7_interpolation            SOURCES general/t8_step7_main.cxx general/t8_step7_interpolation.cxx )
 add_t8_tutorial( NAME t8_tutorial_build_cmesh           SOURCES general/t8_tutorial_build_cmesh.cxx general/t8_tutorial_build_cmesh_main.cxx)
@@ -77,3 +75,7 @@ copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_hex.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_quad.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tet.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tri.geo)
+
+if( T8CODE_BUILD_MESH_HANDLE )
+    add_t8_tutorial( NAME t8_step5_mesh_handle SOURCES general/t8_step5_mesh_handle.cxx )
+endif()

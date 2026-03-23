@@ -50,6 +50,7 @@ using all_cache_competences
   = competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid, cache_face_areas,
                     cache_face_centroids, cache_face_normals, cache_neighbors>;
 
+/** Empty competence pack. */
 using no_competences = competence_pack<>;
 
 /** Predefined competence pack combining all competences related to faces. */
