@@ -1670,9 +1670,15 @@ t8_forest_leaf_face_neighbors_iterate (const t8_forest_t forest, const t8_locidx
   return 1;
 }
 
-/* 
- Set the proper return values of the leaf face neighbor computation
- in case that no neighbors are found.
+/** 
+ * Set the proper return values of the leaf face neighbor computation
+ * in case that no neighbors are found.
+ * 
+ * \param [out]   pneighbor_leaves If not NULL, will be set to NULL.
+ * \param [out]   dual_faces Will be set to NULL.
+ * \param [out]   num_neighbors Will be set to 0.
+ * \param [out]   pelement_indices Will be set to NULL.
+ * \param [out]   gneigh_tree  If not NULL, will be set to -1.
  */
 static void
 t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (const t8_element_t **pneighbor_leaves[], int *dual_faces[],
