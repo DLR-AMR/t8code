@@ -93,7 +93,7 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
 };
 
 /* Check that a leaf/ghost element index matches a given leaf/ghost element.
- * Returns true if the element with index "element_index" (0<= element_index < num_leafs + num_ghosts)
+ * Returns true if the element with index "element_index" (0<= element_index < num_leaves + num_ghosts)
  * lies in the tree "gtreeid" and matches the element "element". */
 static void
 verify_leaf_element_index (const t8_forest_t forest, const t8_gloidx_t gtreeid, const t8_locidx_t element_index,
