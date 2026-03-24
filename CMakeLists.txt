@@ -22,6 +22,7 @@ cmake_minimum_required( VERSION 3.16 )
 
 include( cmake/GitProjectVersion.cmake )
 include( FetchContent )
+# All fetchcontent cmake options+ are marked as advanced below.
 
 project(
     T8CODE
@@ -287,6 +288,14 @@ set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS   "${ORIGINAL_C_FLAGS}"   CACHE STRING "" FORCE)
 
 # End of workaround
+
+# Mark all cmake options starting with FETCHCONTENT as advanced.
+get_cmake_property(_cmake_vars VARIABLES)
+foreach(_var ${_cmake_vars})
+    if(_var MATCHES "^FETCHCONTENT_.*")
+	    mark_as_advanced(${_var})
+    endif()
+endforeach()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
