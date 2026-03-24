@@ -1428,7 +1428,8 @@ t8_forest_copy_trees (t8_forest_t forest, t8_forest_t from, int copy_elements)
 /* TODO: This function seems to be untested.
  *       On Nov 7 2025 i found a bug in it that would have been caught by testing
  *       (the face number of the element was used as the cmesh tree face number, which
- *        is incorrect).*/
+ *        is incorrect).
+ *        See https://github.com/DLR-AMR/t8code/issues/2240 */
 t8_eclass_t
 t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *elem,
                                    const int face)
