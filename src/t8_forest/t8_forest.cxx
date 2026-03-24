@@ -1481,7 +1481,7 @@ t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const 
     /* Compute the face of elem_tree at which the face connection is. */
     const int tree_face = scheme->element_get_tree_face (eclass, elem, face);
     /* compute coarse tree id */
-    const t8_locidx_t cmesh_ltreeid= t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+    const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
     T8_ASSERT (lctree_id >= 0);
 #if T8_ENABLE_DEBUG
     const bool cmesh_tree_is_local = t8_cmesh_treeid_is_local_tree (cmesh, cmesh_ltreeid);
@@ -1654,7 +1654,8 @@ t8_forest_leaf_face_neighbors_iterate (const t8_forest_t forest, const t8_locidx
   // Compute the index of the element
   const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   const t8_locidx_t tree_offset
-    = is_ghost_tree ? t8_forest_ghost_get_tree_element_offset (forest, adjusted_tree_id) + num_local_elements : t8_forest_get_tree_element_offset (forest, ltreeid);
+    = is_ghost_tree ? t8_forest_ghost_get_tree_element_offset (forest, adjusted_tree_id) + num_local_elements
+                    : t8_forest_get_tree_element_offset (forest, ltreeid);
   const t8_locidx_t element_index = tree_offset + tree_leaf_index;
   lfn_data->element_indices.push_back (element_index);
   // Add the pointer to the current element
