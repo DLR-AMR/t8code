@@ -31,6 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
+#include <mesh_handle/data_handler.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
@@ -46,7 +47,9 @@ struct data_per_element
 TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
   const int level = 2;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences, data_per_element>;
+  using mesh_class = t8_mesh_handle::mesh<
+    t8_mesh_handle::element_competence_pack<t8_mesh_handle::access_element_data>,
+    t8_mesh_handle::mesh_competence_pack<t8_mesh_handle::element_data_competence<data_per_element>::template type>>;
   auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
 
@@ -70,13 +73,15 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   }
 
   // Modify element data for elements that are in the first half of the global trees.
+  EXPECT_TRUE (mesh->has_element_data_handler_competence ());
   auto forest = mesh->get_forest ();
   t8_gloidx_t barrier = t8_forest_get_num_global_trees (forest) / 2.0;
   const int newlevel = 42;
   const double newvolume = 42.42;
   for (auto &elem : *mesh) {
     if (t8_forest_global_tree_id (forest, elem.get_local_tree_id ()) < barrier) {
-      elem.set_element_data ({ newlevel, newvolume });
+      data_per_element elem_data ({ newlevel, newvolume });
+      elem.set_element_data (elem_data);
     }
   }
   mesh->exchange_ghost_data ();

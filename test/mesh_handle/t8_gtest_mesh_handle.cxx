@@ -22,7 +22,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_mesh_handle.cxx
- * Tests if the \ref t8_mesh_handle::mesh class of the handle works as intended for different types of template parameter classes. 
+ * Tests if the \ref t8_mesh_handle::mesh class of the handle works as intended
+ * for different types of template parameter classes.
  */
 
 #include <gtest/gtest.h>
@@ -86,7 +87,7 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 {
   // --- Use predefined competences to use all available caching competences. ---
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);
@@ -133,7 +134,7 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 /** Test mesh class with all predefined face competences using some exemplary functionality. */
 TEST_P (t8_mesh_handle_test, test_cache_face_competences)
 {
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_element_competences>;
   using element_class = typename mesh_class::element_class;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             true, false);
@@ -179,9 +180,10 @@ TEST (t8_mesh_handle_test, test_union_competence_pack)
    * and duplicates are removed. Duplicates would cause an error because we inherit multiple times from the same class.
    */
   using mesh_class
-    = mesh<union_competence_packs_type<competence_pack<cache_volume>,
-                                       competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
-                                       competence_pack<cache_centroid, cache_face_areas, cache_face_centroids>>>;
+    = mesh<union_competence_packs_type<element_competence_pack<cache_volume>,
+                                       element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
+                                       element_competence_pack<cache_centroid, cache_face_areas, cache_face_centroids>>,
+           mesh_competence_pack<>>;
   using element_class = typename mesh_class::element_class;
 
   EXPECT_TRUE (element_class::has_volume_cache ());
