@@ -485,8 +485,8 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
     const t8_locidx_t ghost_tree_id = itree - num_local_trees;
     /* Get the leaf element array */
     const t8_element_array_t *leaf_elements
-      = !is_ghost ? t8_forest_get_tree_leaf_element_array (adaptive_forest, itree)
-                  : t8_forest_ghost_get_tree_leaf_elements (adaptive_forest, ghost_tree_id);
+      = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (adaptive_forest, ghost_tree_id)
+                  : t8_forest_get_tree_leaf_element_array (adaptive_forest, itree) ;
     const t8_eclass_t tree_class = t8_forest_get_tree_class (adaptive_forest, itree);
     const t8_scheme *scheme = t8_forest_get_scheme (adaptive_forest);
     const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
