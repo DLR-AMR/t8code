@@ -1456,9 +1456,8 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
   return t8_cmesh_get_tree_face_neighbor_eclass (cmesh, cmesh_local_tree_id, tree_face);
 }
 
-/* TODO: If the forest has no ghosts, then skip the ghosts
-         parts. In that case, process boundary elements will have 0 neighbors. 
-*/
+// TODO: Function declaration return statement does not match the implementation.
+//       Check this.
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
                                  const t8_eclass_t neigh_eclass, int face, int *neigh_face)
