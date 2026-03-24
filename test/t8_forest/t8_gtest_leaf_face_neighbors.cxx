@@ -533,7 +533,7 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
         if (num_neighbors == 1) {
           num_faces_with_1_neighbor++;
         }
-        if (num_neighbors == 2) {
+        else if (num_neighbors == 2) {
           num_faces_with_2_neighbors++;
         }
         if (gtreeid == 0) {
