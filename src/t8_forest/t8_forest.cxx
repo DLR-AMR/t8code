@@ -1696,9 +1696,6 @@ t8_forest_leaf_face_neighbors_set_no_neighbor_return_value (const t8_element_t *
   }
 }
 
-/* TODO: If the forest has no ghosts, then skip the ghosts
-         parts. In that case, process boundary elements will have 0 neighbors. 
-*/
 void
 t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t ltreeid,
                                    const t8_element_t *leaf_or_ghost, const t8_element_t **pneighbor_leaves[],
