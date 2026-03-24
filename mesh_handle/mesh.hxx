@@ -29,7 +29,7 @@
 #include <t8.h>
 #include "element.hxx"
 #include "competence_pack.hxx"
-#include "adapt.hxx"
+#include "internal/adapt.hxx"
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>

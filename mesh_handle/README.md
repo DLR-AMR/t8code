@@ -12,3 +12,5 @@ The folder's most important files are:
 - The [element.hxx](element.hxx) defines the elements (mesh or ghost elements) of the mesh handle.
 - The [competences.hxx](competences.hxx) defines additional competences/functionality of an element to access additional data.
 - The [competence_pack.hxx](competence_pack.hxx) is needed to pack element or mesh competences to pass it as template parameter to the mesh.
+
+Headers in the [internal/](internal/) folder are only intended to implement details of the mesh handle, so they should not need to be included for any other purpose.

@@ -29,7 +29,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include "mesh.hxx"
+#include <mesh_handle/mesh.hxx>
 #include <vector>
 #include <memory>
 
