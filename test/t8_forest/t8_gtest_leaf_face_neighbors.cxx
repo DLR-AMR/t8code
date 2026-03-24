@@ -390,10 +390,10 @@ t8_test_adapt_first_tree (t8_forest_t forest, [[maybe_unused]] t8_forest_t fores
 {
   T8_ASSERT (!is_family || (is_family && num_elements == scheme->element_get_num_children (eclass, elements[0])));
 
-  int level = scheme->element_get_level (eclass, elements[0]);
+  const int level = scheme->element_get_level (eclass, elements[0]);
 
   /* we set a maximum refinement level as forest user data */
-  int maxlevel = *(int *) t8_forest_get_user_data (forest);
+  const int maxlevel = *(int *) t8_forest_get_user_data (forest);
   if (level >= maxlevel) {
     /* Do not refine after the maxlevel */
     return 0;
