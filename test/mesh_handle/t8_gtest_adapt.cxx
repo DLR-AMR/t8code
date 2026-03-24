@@ -37,7 +37,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
-#include <vector>
+#include <span>
 
 /** Dummy user data taken from tutorial for test purposes. */
 struct dummy_user_data
@@ -60,7 +60,7 @@ struct dummy_user_data
 template <typename TMeshClass>
 int
 adapt_callback_test ([[maybe_unused]] const TMeshClass &mesh,
-                     const std::vector<typename TMeshClass::element_class> &elements, const dummy_user_data &user_data)
+                     std::span<const typename TMeshClass::element_class> elements, const dummy_user_data &user_data)
 {
   auto element_centroid = elements[0].get_centroid ();
   double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, user_data.midpoint);
