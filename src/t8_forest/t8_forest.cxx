@@ -1659,11 +1659,11 @@ t8_forest_leaf_face_neighbors_iterate (const t8_forest_t forest, const t8_locidx
   lfn_data->element_indices.push_back (element_index);
   // Add the pointer to the current element
   const t8_element_t *&pnew_element = lfn_data->neighbors.emplace_back ();
-  if (!is_ghost_tree) {
-    pnew_element = t8_forest_get_leaf_element_in_tree (forest, ltreeid, tree_leaf_index);
+  if (is_ghost_tree) {
+    pnew_element = t8_forest_ghost_get_leaf_element (forest, adjusted_tree_id, tree_leaf_index);
   }
   else {
-    pnew_element = t8_forest_ghost_get_leaf_element (forest, adjusted_tree_id, tree_leaf_index);
+    pnew_element = t8_forest_get_leaf_element_in_tree (forest, ltreeid, tree_leaf_index);
   }
   return 1;
 }
