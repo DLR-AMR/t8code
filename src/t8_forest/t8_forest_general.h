@@ -602,7 +602,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
  * \note If there are no face neighbors, then *pneighbor_leaves = NULL, num_neighbors = 0,
  * and *pelement_indices = NULL on output.
  * \note \a forest must be committed before calling this function.
- * \note If \a forest does not have a ghost layer then leaf elements at the process boundaries have 0 neighbors. (The function output for leaf elements then depends on the parallel partition.)
+ * \note If \a forest does not have a ghost layer then leaf elements at the process boundaries have 0 neighbors along the boundary face. (The function output for leaf elements then depends on the parallel partition.)
  * \note Important! This routine allocates memory which must be freed. Do it like this:
  *
  *   if (num_neighbors > 0) {
