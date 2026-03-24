@@ -354,6 +354,8 @@ TEST_P (forest_face_neighbors, test_face_neighbors)
 
             verify_leaf_element_index (forest, neigh_gneigh_tree, element_index, element);
 
+            // Devnote: We are not using T8_TESTSUITE_FREE here, since the memory is allocated inside of t8_forest_leaf_face_neighbors_ext
+            //          by t8code itself using T8_ALLOC. Thus, we need to call T8_FREE to free it.
             // clean-up neighbor's neighbors
             if (neigh_num_neighbors > 0) {
               T8_FREE (neigh_neighbor_leaves);
@@ -550,6 +552,8 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
 
         // clean-up original element neighbors
         if (num_neighbors > 0) {
+          // Devnote: We are not using T8_TESTSUITE_FREE here, since the memory is allocated inside of t8_forest_leaf_face_neighbors_ext
+          //          by t8code itself using T8_ALLOC. Thus, we need to call T8_FREE to free it.
           T8_FREE (neighbor_leaves);
           T8_FREE (element_indices);
           T8_FREE (dual_faces);
