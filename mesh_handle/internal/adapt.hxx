@@ -29,9 +29,9 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include "mesh.hxx"
-#include <vector>
+#include <mesh_handle/mesh.hxx>
 #include <memory>
+#include <span>
 
 namespace t8_mesh_handle
 {
@@ -41,70 +41,63 @@ namespace detail
 {
 
 /** Virtual base class for mesh adaptation contexts.
- * We need this base class and not only \ref MeshAdaptContext for the \ref AdaptRegistry. 
- * AdaptRegistry should not be templated because we need to access registered contexts in \ref mesh_adapt_callback_wrapper,
+ * We need this base class and not only \ref mesh_adapt_context for the \ref adapt_registry. 
+ * adapt_registry should not be templated because we need to access registered contexts in \ref mesh_adapt_callback_wrapper,
  * where we do not know the type of the mesh. Therefore, we work with a map of forests to instances of this base class to remain template free.
  */
-struct MeshAdaptContextBase
+struct mesh_adapt_context_base
 {
   /** Virtual destructor for safe polymorphic deletion.
    */
-  virtual ~MeshAdaptContextBase () = default;
+  virtual ~mesh_adapt_context_base () = default;
 
   /** Pure virtual callback for mesh adaptation.
-   * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element.
-   * \param [in] is_family          If 1, the entries with indices \a lelement_handle_id,..., \a lelement_handle_id+ \a num_elements-1
-   *                                form a family. If 0, they do not.
-   * \param [in] num_elements       The number of elements that form a family or 1 if \a is_family is 0.
+   * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element selected for adaptation.
+   * \param [in] is_family          true if the entries with indices \a lelement_handle_id,..., 
+   *                                \a lelement_handle_id+ \a num_elements-1 form a family, false otherwise.
+   * \param [in] num_elements       The number of elements that form a family or 1 if \a is_family is false.
    * \return 1 if the element with index \a lelement_handle_id should be refined,
    *        -1 if the family shall be coarsened,
    *         0 else.
    */
   virtual int
-  adapt_mesh (const t8_locidx_t lelement_handle_id, const int is_family, const int num_elements)
+  adapt_mesh (const t8_locidx_t lelement_handle_id, const bool is_family, const int num_elements)
     = 0;
 };
 
 /** Templated mesh adaptation context holding the mesh handle and the user defined callback.
- * Class inherits from \ref MeshAdaptContextBase and implements the virtual adapt callback using the mesh and the callback.
+ * Struct inherits from \ref mesh_adapt_context_base and implements the virtual adapt callback using the mesh and the callback.
  * \tparam TMesh The mesh handle class.
  */
 template <typename TMesh>
-struct MeshAdaptContext final: MeshAdaptContextBase
+struct mesh_adapt_context final: mesh_adapt_context_base
 {
   /** Constructor of the context with the mesh handle and the user defined callback.
    * \param [in] mesh_handle      The mesh handle to adapt.
    * \param [in] adapt_callback   The adapt callback.
    */
-  MeshAdaptContext (TMesh& mesh_handle, typename TMesh::adapt_callback_type adapt_callback)
+  mesh_adapt_context (TMesh& mesh_handle, typename TMesh::adapt_callback_type adapt_callback)
     : m_mesh_handle (mesh_handle), m_adapt_callback (std::move (adapt_callback))
   {
   }
 
   /** Callback for mesh adaptation using the user defined adapt callback.
    * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element.
-   * \param [in] is_family          If 1, the entries with indices \a lelement_handle_id,..., \a lelement_handle_id+ \a num_elements-1
-   *                                form a family. If 0, they do not.
-   * \param [in] num_elements       The number of elements that form a family or 1 if \a is_family is 0.
+   * \param [in] is_family          true if the entries with indices \a lelement_handle_id,..., 
+   *                                \a lelement_handle_id+ \a num_elements-1 form a family, false otherwise.
+   * \param [in] num_elements       The number of elements that form a family or 1 if \a is_family is false.
    * \return 1 if the element with index \a lelement_handle_id should be refined,
    *        -1 if the family shall be coarsened,
    *         0 else.
    */
   int
-  adapt_mesh (const t8_locidx_t lelement_handle_id, const int is_family, const int num_elements) override
+  adapt_mesh (const t8_locidx_t lelement_handle_id, const bool is_family, const int num_elements) override
   {
     // Check if adapt callback is set and call it using the correct mesh handle function arguments.
     T8_ASSERTF (m_adapt_callback, "No adapt callback set.");
-    std::vector<typename TMesh::element_class> element_vec;
-    if (is_family) {
-      for (int i = 0; i < num_elements; i++) {
-        element_vec.push_back (m_mesh_handle[lelement_handle_id + i]);
-      }
-    }
-    else {
-      element_vec.push_back (m_mesh_handle[lelement_handle_id]);
-    }
-    return m_adapt_callback (m_mesh_handle, element_vec);
+    const int count = is_family ? num_elements : 1;
+    std::span<const typename TMesh::element_class> element_view (&m_mesh_handle[lelement_handle_id], count);
+    return m_adapt_callback (m_mesh_handle, element_view);
   }
 
  private:
@@ -116,21 +109,21 @@ struct MeshAdaptContext final: MeshAdaptContextBase
  * This globally accessible static class is required to get the handle and the callback in the forest callback, 
  * as the predefined header permits to give these as function arguments. 
  */
-class AdaptRegistry {
+class adapt_registry {
  public:
   /** Static function to register \a context using \a forest as identifier. 
-   * This makes the context publicly available using the Registry.
+   * This makes the context publicly available using the registry.
    * \param [in] forest  The forest identifier. In our case, this is the forest from which we adapt the mesh because 
-   *                we do not change this forest during adaptation such that it is valid unique identifier.
+   *                     we do not change this forest during adaptation such that it is valid unique identifier.
    * \param [in] context The context to register. Use unique pointer to ensure proper memory management and ownership.
    */
   static void
-  register_context (t8_forest_t forest, std::unique_ptr<MeshAdaptContextBase> context)
+  register_context (t8_forest_t forest, std::unique_ptr<mesh_adapt_context_base> context)
   {
     auto& map = get_map ();
     auto [it, inserted] = map.emplace (forest, std::move (context));
     if (!inserted) {
-      throw std::logic_error ("Context already registered");
+      t8_global_productionf ("Context already registered!");
     }
   }
 
@@ -149,7 +142,7 @@ class AdaptRegistry {
    * \param [in] forest The forest identifier. In our case, this is the forest from which we adapt.
    * \return Pointer to the context registered with the id \a forest if found, nullptr otherwise.
    */
-  static MeshAdaptContextBase*
+  static mesh_adapt_context_base*
   get (t8_forest_t forest)
   {
     auto& map = get_map ();
@@ -158,14 +151,14 @@ class AdaptRegistry {
   }
 
  private:
-  /** Get the static map associating t8_forest_t with MeshAdaptContextBase references.
+  /** Get the static map associating t8_forest_t with mesh_adapt_context_base references.
    * We use a getter instead of private member variable to ensure single initialization.
-   * \return Reference to the static unordered map of t8_forest_t to MeshAdaptContextBase references.
+   * \return Reference to the static unordered map of t8_forest_t to mesh_adapt_context_base references.
    */
-  static std::unordered_map<t8_forest_t, std::unique_ptr<MeshAdaptContextBase>>&
+  static std::unordered_map<t8_forest_t, std::unique_ptr<mesh_adapt_context_base>>&
   get_map ()
   {
-    static std::unordered_map<t8_forest_t, std::unique_ptr<MeshAdaptContextBase>> map;
+    static std::unordered_map<t8_forest_t, std::unique_ptr<mesh_adapt_context_base>> map;
     return map;
   }
 };
@@ -193,9 +186,9 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
 {
   // Get static adapt context from the registry.
   // Via this, we can access the mesh handle and the user defined adapt callback that uses mesh handle functionality.
-  auto* context = AdaptRegistry::get (forest_from);
+  auto* context = adapt_registry::get (forest_from);
   if (!context) {
-    t8_global_infof (
+    t8_global_productionf (
       "Something went wrong while registering the adaptation callbacks. Please check your implementation.");
     return 0;  // No adaptation as default.
   }

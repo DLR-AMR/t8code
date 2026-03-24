@@ -29,7 +29,7 @@
 #include <t8.h>
 #include "element.hxx"
 #include "competence_pack.hxx"
-#include "adapt.hxx"
+#include "internal/adapt.hxx"
 #include "t8_forest/t8_forest_balance.h"
 #include "t8_forest/t8_forest_types.h"
 #include <t8_forest/t8_forest_general.h>
@@ -38,6 +38,7 @@
 #include <type_traits>
 #include <functional>
 #include <memory>
+#include <span>
 
 namespace t8_mesh_handle
 {
@@ -84,7 +85,7 @@ class mesh {
    *        -1 if the family \a elements shall be coarsened,
    *         0 else.
    */
-  using adapt_callback_type = std::function<int (const SelfType& mesh, const std::vector<element_class>& elements)>;
+  using adapt_callback_type = std::function<int (const SelfType& mesh, std::span<const element_class> elements)>;
 
   /** Templated callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle including user data.
@@ -101,7 +102,7 @@ class mesh {
    */
   template <typename TUserDataType>
   using adapt_callback_type_with_userdata
-    = std::function<int (const SelfType& mesh, const std::vector<element_class>& elements, TUserDataType user_data)>;
+    = std::function<int (const SelfType& mesh, std::span<const element_class> elements, TUserDataType user_data)>;
 
   /** 
    * Constructor for a mesh of the handle. 
@@ -262,7 +263,7 @@ class mesh {
   mesh_adapt_callback_wrapper (adapt_callback_type_with_userdata<TUserDataType> adapt_callback_with_userdata,
                                const TUserDataType& user_data)
   {
-    return [=] (const SelfType& mesh, const std::vector<element_class>& elements) {
+    return [=] (const SelfType& mesh, std::span<const element_class> elements) {
       return adapt_callback_with_userdata (mesh, elements, user_data);
     };
   }
@@ -283,8 +284,8 @@ class mesh {
       m_uncommitted_forest = new_forest;
     }
     // Create and register adaptation context holding the mesh handle and the user defined callback.
-    detail::AdaptRegistry::register_context (
-      m_forest, std::make_unique<detail::MeshAdaptContext<SelfType>> (*this, std::move (adapt_callback)));
+    detail::adapt_registry::register_context (
+      m_forest, std::make_unique<detail::mesh_adapt_context<SelfType>> (*this, std::move (adapt_callback)));
 
     // Set up the forest for adaptation using the wrapper callback.
     t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, recursive);
@@ -373,8 +374,8 @@ class mesh {
     t8_forest_ref (m_forest);
     t8_forest_commit (m_uncommitted_forest.value ());
     // Check if we adapted and unregister the adapt context if so.
-    if (detail::AdaptRegistry::get (m_uncommitted_forest.value ()) != nullptr) {
-      detail::AdaptRegistry::unregister_context (m_forest);
+    if (detail::adapt_registry::get (m_uncommitted_forest.value ()) != nullptr) {
+      detail::adapt_registry::unregister_context (m_forest);
       if (!std::is_void<TElementDataType>::value) {
         t8_global_infof (
           "Please note that the element data is not interpolated automatically during adaptation. Use the "
