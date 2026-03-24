@@ -18,10 +18,9 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-cmake_minimum_required( VERSION 3.16 )
+cmake_minimum_required( VERSION 3.19 )
 
 include( cmake/GitProjectVersion.cmake )
-include( FetchContent )
 
 project(
     T8CODE
@@ -34,16 +33,9 @@ include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
 
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY "https://github.com/DLR-SC/googletest_mpi.git"
-    GIT_TAG 98bfff426b057400268a00f97677d749a9e25096 #v1.17.0_mpi
-    GIT_PROGRESS TRUE
-    )
 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-mark_as_advanced( FORCE gtest_force_shared_crt)
-
+include(FetchContent)
+set(FETCHCONTENT_QUIET FALSE)
 
 option( T8CODE_BUILD_AS_SHARED_LIBRARY "Whether t8code should be built as a shared or a static library" ON )
 option( T8CODE_BUILD_PEDANTIC "Compile t8code with `-pedantic` as done in the Github CI." OFF )
@@ -128,12 +120,73 @@ if( T8CODE_ENABLE_MPI )
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
-    set( SC_ENABLE_MPI ON )
+    set( SC_ENABLE_MPI ON CACHE BOOL "enable mpi support in libsc" FORCE)
 else()
     set( gtest_disable_mpi ON CACHE BOOL "disable gtest mpi support" FORCE)
 endif()
 
 mark_as_advanced( FORCE gtest_disable_mpi)
+
+# 1. Read and parse the JSON
+file(READ "dependencies.json" DEPS_JSON)
+# 2. Get the number of elements in the "dependencies" array
+string(JSON DEPS_COUNT LENGTH "${DEPS_JSON}" "dependencies")
+# 3. Loop through the array (subtract 1 because it's 0-indexed)
+math(EXPR DEPS_RANGE "${DEPS_COUNT} - 1")
+
+foreach(INDEX RANGE ${DEPS_RANGE})
+    # Check for an optional "depends_on_cmake_option" field
+    # Try to read the optional field without producing warnings; capture any error message.
+    string(JSON DEP_CMAKE_OPTION ERROR_VARIABLE JSON_ERR_MSG
+        GET "${DEPS_JSON}" "dependencies" ${INDEX} "depends_on_cmake_option")
+    if(JSON_ERR_MSG)
+        # Field missing or invalid: mark as error and clear the option value.
+        set(JSON_ERR 1)
+        set(DEP_CMAKE_OPTION "")
+    else()
+        set(JSON_ERR 0)
+    endif()
+
+    # Extract common fields
+    string(JSON DEP_NAME GET "${DEPS_JSON}" "dependencies" ${INDEX} "name")
+    string(JSON DEP_TYPE GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "type")
+    string(JSON DEP_URL  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "url")
+    string(JSON DEP_REF  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "ref")
+
+    # If no error occurred and the field is non-empty, check the CMake option.
+    if(JSON_ERR EQUAL 0 AND NOT DEP_CMAKE_OPTION STREQUAL "")
+        # If the named option variable does not exist in the CMake cache, warn and proceed.
+        if(NOT DEFINED ${DEP_CMAKE_OPTION})
+            message(FATAL_ERROR "Loading dependency ${DEP_NAME} at index ${INDEX} references unknown CMake option '${DEP_CMAKE_OPTION}'. Aborting.")
+        else()
+            # If the named option is defined but set to ON, skip this dependency.
+            if(${${DEP_CMAKE_OPTION}})
+                message(STATUS "Skipping FetchContent-step for dependency ${DEP_NAME} because CMake option '${DEP_CMAKE_OPTION}' is ON")
+                continue()
+            endif()
+        endif()
+    endif()
+
+    message(STATUS "Configuring dependency: ${DEP_NAME} (Type: ${DEP_TYPE})")
+
+    # 2. Branch logic based on "type"
+    if(DEP_TYPE STREQUAL "git")
+        FetchContent_Declare(
+            ${DEP_NAME}
+            GIT_REPOSITORY ${DEP_URL}
+            GIT_TAG        ${DEP_REF}
+            GIT_PROGRESS   TRUE
+        )
+    else()
+        message(WARNING "Unknown dependency type '${DEP_TYPE}' for ${DEP_NAME}")
+    endif()
+
+    # 3. Populate the dependency
+    FetchContent_MakeAvailable(${DEP_NAME})
+endforeach()
+
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+mark_as_advanced( FORCE gtest_force_shared_crt)
 
 
 if( T8CODE_ENABLE_VTK )
@@ -155,6 +208,15 @@ if( T8CODE_ENABLE_OCC )
         message("Found OpenCASCADE")
     endif (OpenCASCADE_FOUND)
 endif( T8CODE_ENABLE_OCC )
+
+if( T8CODE_ENABLE_NETCDF )
+    find_package( NetCDF REQUIRED )
+    if(NetCDF_FOUND)
+        message("Found NetCDF")
+        include(cmake/CheckNetCDFPar.cmake)
+    endif (NetCDF_FOUND)
+endif( T8CODE_ENABLE_NETCDF )
+
 
 # Override default for this libsc option
 set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
@@ -191,10 +253,8 @@ else()
 
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property(_vars_before_sc VARIABLES )
-    list( APPEND CMAKE_MESSAGE_CONTEXT "sc" )
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
-    list( POP_BACK CMAKE_MESSAGE_CONTEXT )
-    add_library(SC INTERFACE)
+
+    FetchContent_MakeAvailable(sc)
     # Capture the list of variables after adding the subdirectory
     get_cmake_property(_vars_after_sc VARIABLES )
     # Compute the difference (new variables added by the subdirectory)
@@ -240,10 +300,13 @@ else()
     endif()
     ########################## End of fix for OpenMPI ############################################
 
+
+
     # Reactivate previous CMAKE_REQUIRED_FLAGS  
     set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
     unset( T8CODE_OLD_CMAKE_REQUIRED_FLAGS )
 endif()
+
 
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED )
@@ -253,11 +316,11 @@ else()
 
     # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
     get_cmake_property( _vars_before_p4est VARIABLES )
-    list( APPEND CMAKE_MESSAGE_CONTEXT "p4est" )
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
-    list( POP_BACK CMAKE_MESSAGE_CONTEXT )
+
+    FetchContent_MakeAvailable(p4est)
     # Capture the list of variables after adding the subdirectory
     get_cmake_property( _vars_after_p4est VARIABLES )
+
     # Compute the difference (new variables added by the subdirectory)
     set( _new_p4est_vars )
     foreach( _var IN LISTS _vars_after_p4est )
@@ -267,7 +330,7 @@ else()
     endforeach()
 
     # Mark the new variables as advanced
-    mark_as_advanced( FORCE ${_new_p4est_vars} )
+    mark_as_advanced( FORCE ${_new_p4est_vars})
 endif()
 
 # Workaround: Suppress warnings for googletests, so it does not compromise the usage of -WError for t8code.
