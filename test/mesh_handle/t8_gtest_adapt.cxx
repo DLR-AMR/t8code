@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * The adaptation criterion is to look at the midpoint coordinates of the current element and if
  * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
  */
+#include "t8_types/t8_vec.h"
 #include <gtest/gtest.h>
 #include <t8.h>
 
@@ -63,7 +64,7 @@ adapt_callback_test ([[maybe_unused]] const TMeshClass &mesh,
                      std::span<const typename TMeshClass::element_class> elements, const dummy_user_data &user_data)
 {
   auto element_centroid = elements[0].get_centroid ();
-  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, user_data.midpoint);
+  double dist = t8_dist (element_centroid, user_data.midpoint);
   if (dist < user_data.refine_if_inside_radius) {
     return 1;
   }
@@ -87,7 +88,7 @@ forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_l
   const struct dummy_user_data *adapt_data = (const struct dummy_user_data *) t8_forest_get_user_data (forest);
   t8_3D_vec centroid;
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
-  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (centroid, adapt_data->midpoint);
+  double dist = t8_dist (centroid, adapt_data->midpoint);
   if (dist < adapt_data->refine_if_inside_radius) {
     return 1;
   }

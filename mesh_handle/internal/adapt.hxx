@@ -123,7 +123,7 @@ class adapt_registry {
     auto& map = get_map ();
     auto [it, inserted] = map.emplace (forest, std::move (context));
     if (!inserted) {
-      t8_global_productionf ("Context already registered!");
+      t8_global_errorf ("ERROR: Context already registered!");
     }
   }
 
@@ -188,8 +188,8 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
   // Via this, we can access the mesh handle and the user defined adapt callback that uses mesh handle functionality.
   auto* context = adapt_registry::get (forest_from);
   if (!context) {
-    t8_global_productionf (
-      "Something went wrong while registering the adaptation callbacks. Please check your implementation.");
+    t8_global_errorf (
+      "ERROR: Something went wrong while registering the adaptation callbacks. Please check your implementation.");
     return 0;  // No adaptation as default.
   }
   // Convert to index used in the mesh handle.

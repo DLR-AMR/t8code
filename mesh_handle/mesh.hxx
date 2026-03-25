@@ -266,9 +266,8 @@ class mesh {
   set_adapt (adapt_callback_type adapt_callback, bool recursive)
   {
     if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
     }
     // Create and register adaptation context holding the mesh handle and the user defined callback.
     detail::adapt_registry::register_context (
@@ -288,9 +287,8 @@ class mesh {
   set_ghost (bool do_ghost = true, t8_ghost_type_t ghost_type = T8_GHOST_FACES)
   {
     if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
     }
     t8_forest_set_ghost (m_uncommitted_forest.value (), do_ghost, ghost_type);
   }
@@ -305,9 +303,8 @@ class mesh {
   commit ()
   {
     if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
     }
     /* It can happen that the user only calls set_ghost before commit. 
     This does not set the set_from member of the forest and we copy the current forest in this case. */
@@ -328,7 +325,7 @@ class mesh {
     t8_forest_unref (&m_forest);
     // Update underlying forest of the mesh.
     m_forest = m_uncommitted_forest.value ();
-    m_uncommitted_forest = std::nullopt;
+    m_uncommitted_forest.reset ();
     update_elements ();
   }
 
