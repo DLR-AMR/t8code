@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,12 +22,16 @@
 
 /** \file competence_pack.hxx
  * Define classes to pack different competences into one template parameter for the \ref t8_mesh_handle::mesh class.
- * We have one class for element competences and one for mesh competences. 
+ * We have one class for element competences and one for mesh competences.
+ * There are several predefined competence packs for different use cases, e.g. for all caching competences or
+ * all data related competences.
+ * Use the union operator to combine different competence packs.
  */
 
 #pragma once
 
 #include "competences.hxx"
+#include "data_handler.hxx"
 #include "internal/competence_pack_union.hxx"
 namespace t8_mesh_handle
 {
@@ -48,14 +52,21 @@ struct element_competence_pack
   using is_element_competence_pack = void; /**< Tag to identify this class. */
 };
 
+/** Empty competence pack. */
+using empty_element_competences = element_competence_pack<>;
+
 /** Predefined element competence pack combining all caching competences. */
 using all_cache_element_competences
   = element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates, cache_centroid, cache_face_areas,
                             cache_face_centroids, cache_face_normals, cache_neighbors>;
 
-/** Predefined competence pack combining all competences related to faces. */
+/** Predefined element competence pack combining all competences related to faces. */
 using cache_face_element_competences
   = element_competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
+
+/** Predefined element competence pack combining all competences related to data. 
+ *  Please note that you must combine this with \ref t8_mesh_handle::data_mesh_competences. */
+using data_element_competences = element_competence_pack<element_data_element_competence>;
 
 // --- Mesh competence pack. ---
 /** Class to pack different mesh competences into one template parameter for the \ref mesh class.
@@ -76,11 +87,22 @@ struct mesh_competence_pack
   using is_mesh_competence_pack = void; /**< Tag to identify this class. */
 };
 
-/** Compute the unique union of the competences of several \ref t8_mesh_handle::competence_pack 's.
- *  This produces a new \ref t8_mesh_handle::competence_pack containing all competences of the competence packs 
- *  with duplicates removed.
- * \tparam TPacks The competence pack for which we should compute the unique union of the competences.
- *         Each competence pack is expected to be of type \ref t8_mesh_handle::competence_pack.
+/** Empty competence pack. */
+using empty_mesh_competences = mesh_competence_pack<>;
+
+/** Predefined mesh competence pack combining all competences related to data. 
+ * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences.
+ */
+template <T8MPISafeType TElementDataType>
+using data_mesh_competences = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type>;
+
+// --- Compute union of competence packs. ---
+/** Compute the unique union of the competences of several competence_pack. This could be
+ * \ref t8_mesh_handle::element_competence_pack or \ref t8_mesh_handle::mesh_competence_pack.
+ *  A new competence pack is produced containing all competences of the given competence packs with duplicates removed.
+ * \tparam TPacks The competence packs for which we should compute the unique union of the competences.
+ *         Each competence pack is expected to be of the same type and of type 
+ *         \ref t8_mesh_handle::element_competence_pack or \ref t8_mesh_handle::mesh_competence_pack.
  */
 template <typename... TPacks>
 using union_competence_packs_type = typename detail::union_competence_packs<TPacks...>::type;

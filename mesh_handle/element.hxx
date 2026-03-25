@@ -64,7 +64,8 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   using SelfType = element<TMeshClass, TCompetences...>; /**< Type of the current class with all template
                                    parameters specified. */
   friend TMeshClass; /**< Define TMeshClass as friend to be able to access e.g. the constructor. */
-  friend struct access_element_data<SelfType>; /**< Define the competence to access element data as friend to
+  friend struct element_data_element_competence<
+    SelfType>; /**< Define the competence to access element data as friend to
                     be able to access e.g. the mesh. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
@@ -179,6 +180,15 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   has_face_normals_cache ()
   {
     return requires (SelfType& element) { element.face_normal_cache_filled (0); };
+  }
+
+  /** Function that checks if a competence for element data handling is given to the element.
+   * \return true if element has a data handler, false otherwise.
+   */
+  static constexpr bool
+  has_element_data_handler_competence ()
+  {
+    return requires (SelfType& element) { element.get_element_data (); };
   }
 
   // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---

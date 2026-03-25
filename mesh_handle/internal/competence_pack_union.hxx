@@ -121,9 +121,10 @@ struct fold_unique<TPackType, TPackType<TUnionCompetences...>, TCompetence, TOth
 template <typename TPack1, typename TPack2>
 struct union_two_competence_packs;
 
-/** Specialization for two \ref element_competence_pack types. 
+/** Specialization for two \ref t8_mesh_handle::element_competence_pack types. 
  * This is necessary because this way, we can access the competences directly. 
- * This specialization of the class above is used if both template parameters are of type \ref element_competence_pack.
+ * This specialization of the class above is used if both template parameters are of type 
+ * \ref t8_mesh_handle::element_competence_pack.
  * \tparam TCompetences1 Competences of the first competence pack.
  * \tparam TCompetences2 Competences of the second competence pack. 
  */
@@ -137,9 +138,10 @@ struct union_two_competence_packs<element_competence_pack<TCompetences1...>, ele
     typename fold_unique<element_competence_pack, element_competence_pack<TCompetences1...>, TCompetences2...>::type;
 };
 
-/** Specialization for two \ref mesh_competence_pack types. 
+/** Specialization for two \ref t8_mesh_handle::mesh_competence_pack types. 
  * This is necessary because this way, we can access the competences directly. 
- * This specialization of the class above is used if both template parameters are of type \ref mesh_competence_pack.
+ * This specialization of the class above is used if both template parameters are of type
+ * \ref t8_mesh_handle::mesh_competence_pack.
  * \tparam TCompetences1 Competences of the first competence pack.
  * \tparam TCompetences2 Competences of the second competence pack. 
  */
@@ -155,7 +157,7 @@ struct union_two_competence_packs<mesh_competence_pack<TCompetences1...>, mesh_c
 
 //--- Recursive union of multiple competence packs using the implementation for two packs. ---
 /** Recursive case: Compute the unique union of the competences of more than one competence_pack.
- * This can be \ref element_competence_pack or \ref mesh_competence_pack.
+ * This can be \ref t8_mesh_handle::element_competence_pack or \ref t8_mesh_handle::mesh_competence_pack.
  * Specialization for the case when there are still at least two competence packs left to process.
  * Uses \ref union_two_competence_packs recursively for pairwise combination.
  * \tparam TPack First competence pack to combine with the union of the rest of the competence packs 

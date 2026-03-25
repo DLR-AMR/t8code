@@ -47,9 +47,8 @@ struct data_per_element
 TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
   const int level = 2;
-  using mesh_class = t8_mesh_handle::mesh<
-    t8_mesh_handle::element_competence_pack<t8_mesh_handle::access_element_data>,
-    t8_mesh_handle::mesh_competence_pack<t8_mesh_handle::element_data_competence<data_per_element>::template type>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
+                                          t8_mesh_handle::data_mesh_competences<data_per_element>>;
   auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
 
@@ -109,4 +108,23 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
       EXPECT_EQ ((*mesh)[ighost].get_element_data ().volume, (*mesh)[ighost].get_volume ());
     }
   }
+}
+
+/** Check that the unique union of multiple mesh competence packs works as intended. 
+ * This is done in this file because there is only one mesh competence at the moment, where we need a data class. 
+ * We use the data class defined here. 
+ */
+TEST (t8_gtest_handle_data, test_union_mesh_competence_pack)
+{
+  using namespace t8_mesh_handle;
+  using mesh_class = mesh<
+    union_competence_packs_type<all_cache_element_competences, data_element_competences, empty_element_competences>,
+    union_competence_packs_type<data_mesh_competences<data_per_element>, data_mesh_competences<data_per_element>,
+                                empty_mesh_competences>>;
+  EXPECT_TRUE (mesh_class::has_element_data_handler_competence ());
+  using element_class = typename mesh_class::element_class;
+
+  EXPECT_TRUE (element_class::has_element_data_handler_competence ());
+  EXPECT_TRUE (element_class::has_volume_cache ());
+  EXPECT_TRUE (element_class::has_diameter_cache ());
 }

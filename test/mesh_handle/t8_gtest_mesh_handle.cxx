@@ -173,7 +173,7 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
 }
 
 /** Check that the unique union of multiple competence packs works as intended. */
-TEST (t8_mesh_handle_test, test_union_competence_pack)
+TEST (t8_mesh_handle_test, test_union_element_competence_pack)
 {
   using namespace t8_mesh_handle;
   /* Combine multiple competence packs with some overlapping competences to check that the union works correctly
@@ -182,8 +182,8 @@ TEST (t8_mesh_handle_test, test_union_competence_pack)
   using mesh_class
     = mesh<union_competence_packs_type<element_competence_pack<cache_volume>,
                                        element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
-                                       element_competence_pack<cache_centroid, cache_face_areas, cache_face_centroids>>,
-           mesh_competence_pack<>>;
+                                       element_competence_pack<cache_centroid, cache_face_areas, cache_face_centroids>,
+                                       empty_element_competences>>;
   using element_class = typename mesh_class::element_class;
 
   EXPECT_TRUE (element_class::has_volume_cache ());
