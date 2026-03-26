@@ -1,4 +1,3 @@
-
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
@@ -30,7 +29,9 @@
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#if T8CODE_ENABLE_OCC
 #include <t8_cad/t8_cad_handle.hxx>
+#endif
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
 
@@ -40,8 +41,10 @@
 #include <array>
 
 int
-main (int argc, char **argv)
+main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
+#if T8CODE_ENABLE_OCC
+
   char usage[BUFSIZ];
   /* Brief help message. */
   int sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t for a brief overview of all options.",
@@ -59,7 +62,7 @@ main (int argc, char **argv)
     /* The usage string or help message was truncated */
     /* Note: gcc >= 7.1 prints a warning if we 
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
+    t8_debugf ("WARNING: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
 
   /*
@@ -78,13 +81,10 @@ main (int argc, char **argv)
   /* Initialize t8code with log level SC_LP_ESSENTIAL. See sc.h for more info on the log levels. */
   t8_init (SC_LP_ESSENTIAL);
 
-#ifdef T8CODE_ENABLE_OCC
-
   int helpme = 0;
   const char *msh_file = NULL;
   const char *brep_file = NULL;
-  int dim = 0;
-  int level = 2;
+  int dim, level;
 
   /* Initialize command line argument parser. */
   sc_options_t *opt = sc_options_new (argv[0]);
@@ -102,11 +102,11 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (msh_file == NULL || brep_file == NULL || dim == 0) {
-    t8_global_productionf ("\n\t ERROR: Missing required arguments: -m, -b, and -d are mandatory.\n\n");
+    t8_global_errorf ("ERROR: Missing required arguments: -m, -b, and -d are mandatory.\n\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (dim < 1 || dim > 3) {
-    t8_global_productionf ("\n\t ERROR: Invalid mesh dimension: dim=%d. Dimension must be 1, 2 or 3.\n\n", dim);
+    t8_global_errorf ("ERROR: Invalid mesh dimension: dim=%d. Dimension must be 1, 2 or 3.\n\n", dim);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0) {
@@ -139,18 +139,18 @@ main (int argc, char **argv)
     /* Cleanup. */
     t8_forest_unref (&forest);
 
-    std::cout << "Mesh deformation completed." << std::endl;
+    t8_global_productionf ("Mesh deformation completed.");
   }
 
   sc_options_destroy (opt);
 
-#else
-  t8_global_productionf ("\n\t ERROR: This example requires OpenCASCADE support to be enabled in t8code.\n\n");
-#endif
-
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
+
+#else
+  t8_global_errorf ("ERROR: This example requires OpenCASCADE support to be enabled in t8code.\n\n");
+#endif
 
   return 0;
 }
