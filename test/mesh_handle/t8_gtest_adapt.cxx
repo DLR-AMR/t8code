@@ -98,6 +98,45 @@ forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_l
   return 0;
 }
 
+//--- Second callback type for testing purpose: Refine every second element. ---
+/** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
+ * The adaptation criterion is to refine every element with even id.
+ * The function header fits the definition of \ref TMesh::adapt_callback_type_with_userdata.
+ * \tparam TMeshClass    The mesh handle class.
+ * \param [in] mesh      The mesh that should be adapted.
+ * \param [in] elements  One element or a family of elements to consider for adaptation.
+ * \return 1 if the first entry in \a elements should be refined,
+ *        -1 if the family \a elements shall be coarsened,
+ *         0 else.
+ */
+template <typename TMeshClass>
+int
+mesh_adapt_callback_test_refine_second ([[maybe_unused]] const TMeshClass &mesh,
+                                        std::span<const typename TMeshClass::element_class> elements)
+{
+  if ((elements[0].get_element_handle_id ()) % 2 == 0) {
+    return 1;
+  }
+  return 0;
+}
+
+/** Adapt callback implementation for a forest. The adaptation criterion is to refine every element with even id.
+ * This callback defines the same adaptation rules as \ref mesh_adapt_callback_test_refine_second,
+ * but it is used for the forest instead of the mesh handle.
+ */
+int
+forest_adapt_callback_refine_second ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                                     t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                                     t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                                     [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                                     [[maybe_unused]] t8_element_t *elements[])
+{
+  if ((t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id) % 2 == 0) {
+    return 1;
+  }
+  return 0;
+}
+
 /** Test the adapt routine of a mesh handle. 
  * We compare the result to a classically adapted forest with similar callback.
  */
@@ -121,7 +160,7 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
 
   // Adapt mesh handle.
   mesh_handle.set_adapt (
-    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
+    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data));
   mesh_handle.commit ();
   // Adapt forest classically.
   forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 1, &user_data);
@@ -129,6 +168,18 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
   // Compare results.
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
 
+  // Adapt again with the second callback.
+  mesh_handle.set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
+  mesh_handle.commit ();
+
+  t8_forest_t forest_refine_second;
+  t8_forest_init (&forest_refine_second);
+  t8_forest_set_adapt (forest_refine_second, forest, forest_adapt_callback_refine_second, false);
+  t8_forest_commit (forest_refine_second);
+
+  // Compare results.
+  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_refine_second));
+
   // Clean up.
-  t8_forest_unref (&forest);
+  t8_forest_unref (&forest_refine_second);
 }

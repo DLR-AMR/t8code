@@ -256,14 +256,13 @@ class mesh {
   }
 
   /** Set an adapt function to be used to adapt the mesh on committing.
-   * \param [in] adapt_callback    The adapt callback used on committing.
-   * \param [in] recursive         Specifying whether adaptation is to be done recursively or not. 
+   * \param [in] adapt_callback The adapt callback used on committing.
    * \note The adaptation is carried out only when \ref commit is called.
    * \note This setting can be combined with set_partition and set_balance. The order in which
    * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
    */
   void
-  set_adapt (adapt_callback_type adapt_callback, bool recursive)
+  set_adapt (adapt_callback_type adapt_callback)
   {
     if (!m_uncommitted_forest.has_value ()) {
       m_uncommitted_forest.emplace ();
@@ -274,7 +273,8 @@ class mesh {
       m_forest, std::make_unique<detail::mesh_adapt_context<SelfType>> (*this, std::move (adapt_callback)));
 
     // Set up the forest for adaptation using the wrapper callback.
-    t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, recursive);
+    // Recursive adaptation is currently not supported.
+    t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, false);
   }
 
   /** Enable or disable the creation of a layer of ghost elements.
