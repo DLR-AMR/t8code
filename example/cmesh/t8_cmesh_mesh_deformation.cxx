@@ -26,11 +26,11 @@
 
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #if T8CODE_ENABLE_OCC
 #include <t8_cad/t8_cad_handle.hxx>
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
 #endif
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
