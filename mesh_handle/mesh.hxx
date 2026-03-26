@@ -167,7 +167,7 @@ class mesh {
   }
 
   /** Check if the local elements of the mesh are balanced. 
-  * The mesh is said to be balanced if each element has face neighbors of level
+  * The mesh is said to be balanced if the level difference between face neighbors is at most 1.
   * at most +1 or -1 of the element's level.
   * \return true if the local elements are balanced, false otherwise.
   */
@@ -312,8 +312,7 @@ class mesh {
   }
 
   /** If this function is called, the mesh will be balanced on committing.
-   * The mesh is said to be balanced if each element has face neighbors of level
-   * at most +1 or -1 of the element's level.
+ * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
    * \note The balance is carried out only when \ref commit is called.
    * \param [in] no_repartition Balance constructs several intermediate steps that
    *       are refined from each other. In order to maintain a balanced load, a repartitioning is performed in each 

@@ -99,7 +99,7 @@ forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_l
   return 0;
 }
 
-/** Test the adapt partition and balance routine of a mesh handle. 
+/** Test the adapt, partition and balance routines of a mesh handle. 
  * The test compares the results of the mesh handle to a forest adapted with the same criterion and balanced and partitioned similarly.
  * Therefore, the check is based on the assumption that the forest functionality works as intended and is tested elsewhere.
  */
