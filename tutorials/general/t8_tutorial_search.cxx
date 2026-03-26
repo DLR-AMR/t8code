@@ -369,9 +369,9 @@ main (int argc, char **argv)
   t8_cmesh_t cmesh;
   t8_forest_t forest;
   /* The uniform refinement level of the forest. */
-  const int level = 5;
+  const int level = 2;
   /* The number of particles to generate. */
-  const size_t num_particles = 2000;
+  const size_t num_particles = 10;
   /* The seed for the random number generator. */
   const unsigned seed = 0;
 
@@ -411,7 +411,7 @@ main (int argc, char **argv)
   /* Adapt the forest. We can reuse the forest variable, since the new adapted
    * forest will take ownership of the old forest and destroy it.
    * Note that the adapted forest is a new forest, though. */
-  forest = t8_step3_adapt_forest (forest);
+  // forest = t8_step3_adapt_forest (forest);
 
   /* Print information of our new forest. */
   t8_global_productionf (" [search] Created an adapted forest with hybrid elements on a unit cube geometry.\n");

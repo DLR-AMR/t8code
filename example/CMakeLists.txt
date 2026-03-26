@@ -99,3 +99,8 @@ add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_exampl
 add_t8_example( NAME t8_example_empty_trees             SOURCES remove/t8_example_empty_trees.cxx )
 
 add_t8_example( NAME t8_version                         SOURCES version/t8_version.cxx )
+
+
+
+add_t8_example( NAME t8_cleanliest_search          SOURCES CLEANLIEST/cleanliest_adjusted_search.cxx )
+add_t8_example( NAME t8_cleanliest_step1           SOURCES CLEANLIEST/cleanliest_step1.cxx )
