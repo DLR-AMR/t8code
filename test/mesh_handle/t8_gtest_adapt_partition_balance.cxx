@@ -22,12 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_adapt_partition_balance.cxx
- * Tests for the adapt, partition and balance routines of mesh handles. 
- * For the adapt routine, we use the callback and user data of tutorial step 3 as example.
- * The adaptation criterion is to look at the midpoint coordinates of the current element and if
- * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
- * The test compares the results of the mesh handle to a forest adapted with the same criterion and balanced and partitioned similarly.
- * Therefore, the check is based on the assumption that the forest functionality works as intended and is tested elsewhere.
+ * Tests for the adapt, partition and balance routines of mesh handle. 
  */
 #include <gtest/gtest.h>
 #include <t8.h>
@@ -50,6 +45,8 @@ struct dummy_user_data
 };
 
 /** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
+ * The adaptation criterion is to look at the midpoint coordinates of the current element and if
+ * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
  * The function header fits the definition of \ref TMesh::adapt_callback_type_with_userdata.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.

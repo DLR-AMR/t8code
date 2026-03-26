@@ -331,7 +331,6 @@ class mesh {
       t8_forest_init (&new_forest);
       m_uncommitted_forest = new_forest;
     }
-    // Disable repartitioning and let the user call set_partition if desired.
     t8_forest_set_balance (m_uncommitted_forest.value (), m_forest, no_repartition);
   }
 
