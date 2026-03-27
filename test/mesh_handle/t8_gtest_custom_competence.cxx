@@ -83,7 +83,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
 {
   const int level = 1;
   // Check mesh with custom defined competence.
-  using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<dummy_get_level>>;
+  using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<dummy_get_level>>;
   const auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class_custom> (level, sc_MPI_COMM_WORLD);
 
@@ -93,7 +93,8 @@ TEST (t8_gtest_custom_competence, custom_competence)
   }
 
   // Test with two custom competences and a predefined competence.
-  using competences = t8_mesh_handle::competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
+  using competences
+    = t8_mesh_handle::element_competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
   using mesh_class = t8_mesh_handle::mesh<competences>;
   auto mesh_more_competences
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
