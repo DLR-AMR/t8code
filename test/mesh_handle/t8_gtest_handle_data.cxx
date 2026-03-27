@@ -3,7 +3,7 @@ This file is part of t8code.
 t8code is a C library to manage a collection (a forest) of multiple
 connected adaptive space-trees of general element classes in parallel.
 
-Copyright (C) 2025 the developers
+Copyright (C) 2026 the developers
 
 t8code is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -41,14 +41,18 @@ struct data_per_element
 {
   int level;
   double volume;
+
+  bool
+  operator== (const data_per_element &) const
+    = default;
 };
 
 /** Check that element data can be set for the handle and that exchanging data for the ghosts works. */
 TEST (t8_gtest_handle_data, set_and_get_element_data)
 {
   const int level = 2;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
-                                          t8_mesh_handle::data_mesh_competences<data_per_element>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
+                                          t8_mesh_handle::data_mesh_competences_basic<data_per_element>>;
   auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
 
@@ -56,14 +60,16 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     // Ensure that we actually test with ghost elements.
     EXPECT_GT (mesh->get_num_ghosts (), 0);
   }
+  EXPECT_TRUE (mesh->has_element_data_handler_competence ());
+  EXPECT_FALSE (mesh->has_new_element_data_handler_competence ());
 
-  // Create element data for all local mesh elements.
+  // Create element data for all local mesh elements and set via mesh competence.
   std::vector<data_per_element> element_data;
   for (const auto &elem : *mesh) {
     element_data.push_back ({ elem.get_level (), elem.get_volume () });
   }
   mesh->set_element_data (std::move (element_data));
-  // Get element data and check that the data for all elements (including ghosts) is correct.
+  // Exchange element data for ghosts and check that the data for all elements (including ghosts) is correct.
   mesh->exchange_ghost_data ();
   auto mesh_element_data = mesh->get_element_data ();
   for (t8_locidx_t ielem = 0; ielem < mesh->get_num_local_elements () + mesh->get_num_ghosts (); ielem++) {
@@ -71,8 +77,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     EXPECT_EQ (mesh_element_data[ielem].volume, (*mesh)[ielem].get_volume ()) << "ielem = " << ielem;
   }
 
-  // Modify element data for elements that are in the first half of the global trees.
-  EXPECT_TRUE (mesh->has_element_data_handler_competence ());
+  // Modify element data via the element competence for elements that are in the first half of the global trees.
   auto forest = mesh->get_forest ();
   t8_gloidx_t barrier = t8_forest_get_num_global_trees (forest) / 2.0;
   const int newlevel = 42;
@@ -83,6 +88,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
       elem.set_element_data (elem_data);
     }
   }
+  // Exchange data for ghosts and check that the data for all elements (including ghosts) is correct.
   mesh->exchange_ghost_data ();
   for (auto &elem : *mesh) {
     if (t8_forest_global_tree_id (forest, elem.get_local_tree_id ()) < barrier) {
@@ -110,6 +116,45 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   }
 }
 
+/** Check that new element data works and element data is updated on commit. */
+TEST (t8_gtest_handle_data, set_and_get_new_element_data)
+{
+  const int level = 2;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::new_data_element_competences,
+                                          t8_mesh_handle::new_data_mesh_competences<data_per_element>>;
+  auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
+  EXPECT_TRUE (mesh->has_element_data_handler_competence ());
+  EXPECT_TRUE (mesh->has_new_element_data_handler_competence ());
+
+  // Create element data for all local mesh elements and set via mesh competence.
+  std::vector<data_per_element> element_data;
+  for (const auto &elem : *mesh) {
+    element_data.push_back ({ elem.get_level (), elem.get_volume () });
+  }
+  mesh->set_element_data (element_data);
+
+  // Set new element data and check that data is correctly stored in the mesh.
+  const int newlevel = 42;
+  const double newvolume = 42.42;
+  std::vector<data_per_element> new_element_data (mesh->get_num_local_elements (), { newlevel, newvolume });
+  mesh->set_new_element_data (new_element_data);
+  EXPECT_EQ (mesh->get_element_data (), element_data);
+  EXPECT_EQ (mesh->get_new_element_data (), new_element_data);
+  // Also check that we can access the new element data via the elements.
+  for (auto &elem : *mesh) {
+    EXPECT_EQ (elem.get_new_element_data ().level, newlevel);
+    EXPECT_EQ (elem.get_new_element_data ().volume, newvolume);
+  }
+  // Commit mesh and check if element data is updated and new element data vector is cleared.
+  mesh->commit ();
+  for (auto &elem : *mesh) {
+    EXPECT_EQ (elem.get_element_data ().level, newlevel);
+    EXPECT_EQ (elem.get_element_data ().volume, newvolume);
+  }
+  EXPECT_TRUE (mesh->get_new_element_data ().empty ());
+}
+
 /** Check that the unique union of multiple mesh competence packs works as intended. 
  * This is done in this file because there is only one mesh competence at the moment, where we need a data class. 
  * We use the data class defined here. 
@@ -118,9 +163,9 @@ TEST (t8_gtest_handle_data, test_union_mesh_competence_pack)
 {
   using namespace t8_mesh_handle;
   using mesh_class = mesh<
-    union_competence_packs_type<all_cache_element_competences, data_element_competences, empty_element_competences>,
-    union_competence_packs_type<data_mesh_competences<data_per_element>, data_mesh_competences<data_per_element>,
-                                empty_mesh_competences>>;
+    union_competence_packs_type<all_cache_element_competences, new_data_element_competences, empty_element_competences>,
+    union_competence_packs_type<new_data_mesh_competences<data_per_element>,
+                                data_mesh_competences_basic<data_per_element>, empty_mesh_competences>>;
   EXPECT_TRUE (mesh_class::has_element_data_handler_competence ());
   using element_class = typename mesh_class::element_class;
 

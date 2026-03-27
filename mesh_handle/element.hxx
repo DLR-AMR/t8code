@@ -55,6 +55,7 @@ namespace t8_mesh_handle
  *    2.) for the cached options to keep the number of member variables of the default element to a minimum to save memory.
  * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
  *
+ * \tparam TMeshClass The class of the mesh the element belongs to.
  * \tparam TCompetences The competences you want to add to the default functionality of the element.
  */
 
@@ -65,8 +66,9 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
                                    parameters specified. */
   friend TMeshClass; /**< Define TMeshClass as friend to be able to access e.g. the constructor. */
   friend struct element_data_element_competence<
-    SelfType>; /**< Define the competence to access element data as friend to
-                    be able to access e.g. the mesh. */
+    SelfType>; /**< Define the competence as friend to be able to access e.g. the mesh from competence. */
+  friend struct new_element_data_element_competence<
+    SelfType>; /**< Define the competence as friend to be able to access e.g. the mesh from competence. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
    *  This constructor should only be called by the TMeshClass (and invisible for the user).
