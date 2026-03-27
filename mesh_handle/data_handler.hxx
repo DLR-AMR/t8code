@@ -200,7 +200,7 @@ struct new_element_data_helper
  * Use this competence if you want to manage new element data separately that will be used to update the element data
  * on commit (or if \ref write_new_to_element_data is called).
  * \note This competence only makes sense if the mesh also has \ref element_data_mesh_competence.
- * You can use the predefined competence pack \ref data_mesh_competences to get both competences together.
+ * You can use the predefined competence pack \ref new_data_mesh_competences to get both competences together.
  * Use the helper \ref new_element_data_mesh_competence to get this competence with the correct template parameters form. 
  * If you want to access the data not only in vector form but also directly for each element, 
  * you can combine this competence with \ref new_element_data_element_competence.
