@@ -63,8 +63,8 @@ int
 adapt_callback_test ([[maybe_unused]] const TMeshClass &mesh,
                      std::span<const typename TMeshClass::element_class> elements, const dummy_user_data &user_data)
 {
-  auto element_centroid = elements[0].get_centroid ();
-  double dist = t8_dist (element_centroid, user_data.midpoint);
+  const auto element_centroid = elements[0].get_centroid ();
+  const double dist = t8_dist (element_centroid, user_data.midpoint);
   if (dist < user_data.refine_if_inside_radius) {
     return 1;
   }

@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -73,15 +73,16 @@ class mesh {
 
   /** Callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle.
-   * If \a elements contains more than one element, they must form a family and we decide whether this family should be coarsened
-   * or only the first element should be refined.
+   * If \a elements contains more than one element, they must form a family and we decide whether this family should be
+   * coarsened or only the first element should be refined.
    * Family means multiple elements that can be coarsened into one parent element.
    * \see set_adapt for the usage of this callback.
    * \param [in] mesh     The mesh that should be adapted.
-   * \param [in] elements One element or a family of elements to consider for adaptation.
+   * \param [in] elements One element or a family of elements (if more than one element) to consider for adaptation.
    * \return 1 if the first entry in \a elements should be refined,
    *        -1 if the family \a elements shall be coarsened,
    *         0 else.
+   * \note We currently do not provide functionality to delete elements.
    */
   using adapt_callback_type = std::function<int (const SelfType& mesh, std::span<const element_class> elements)>;
 
@@ -92,11 +93,12 @@ class mesh {
    * to be able to pass the callback to \ref set_adapt.
    * \tparam TUserDataType The type of the user data to be passed to the callback.
    * \param [in] mesh       The mesh that should be adapted.
-   * \param [in] elements   One element or a family of elements to consider for adaptation.
-    * \param [in] user_data The user data to be used during the adaptation process.
+   * \param [in] elements One element or a family of elements (if more than one element) to consider for adaptation.
+   * \param [in] user_data The user data to be used during the adaptation process.
    * \return 1 if the first entry in \a elements should be refined,
    *        -1 if the family \a elements shall be coarsened,
    *         0 else.
+   * \note We currently do not provide functionality to delete elements.
    */
   template <typename TUserDataType>
   using adapt_callback_type_with_userdata
@@ -258,6 +260,7 @@ class mesh {
   /** Set an adapt function to be used to adapt the mesh on committing.
    * \param [in] adapt_callback The adapt callback used on committing.
    * \note The adaptation is carried out only when \ref commit is called.
+   * \note We currently do not provide the functionality to delete elements.
    * \note This setting can be combined with set_partition and set_balance. The order in which
    * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
    */
