@@ -75,6 +75,8 @@ jobs:
   #     run: apt-get update && apt-get upgrade -y
     - name: Show Clang version
       run: clang --version
+    - name: Debug via SSH
+      uses: mxschmitt/action-tmate@v3
     - name: Show mpicc version
       run: mpicc --version
   #   - name: Make sure MPI was built with CLANG
