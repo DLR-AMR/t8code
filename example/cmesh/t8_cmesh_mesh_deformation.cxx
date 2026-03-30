@@ -31,7 +31,7 @@
 #if T8CODE_ENABLE_OCC
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
-#endif
+#endif /* T8CODE_ENABLE_OCC */
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
 
@@ -148,9 +148,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-#else
-  t8_global_errorf ("ERROR: This example requires OpenCASCADE support to be enabled in t8code.\n\n");
-#endif
+#else  /* T8CODE_ENABLE_OCC */
+  t8_global_errorf ("ERROR: This example requires OpenCASCADE support to be enabled in t8code.\n");
+#endif /* T8CODE_ENABLE_OCC */
 
   return 0;
 }

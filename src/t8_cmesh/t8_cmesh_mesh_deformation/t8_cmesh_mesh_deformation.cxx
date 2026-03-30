@@ -67,6 +67,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
     const int first_tree_entity_tag = first_tree_geom_attribute[2 * tree_list[0].second + 1];
 
+    /* Check if all trees sharing this vertex have consistent geometry attributes. */
 #if T8_ENABLE_DEBUG
     /* Iterate over all trees and compare to the reference tree. */
     for (const auto &[tree_id, local_corner_index] : tree_list) {
@@ -85,7 +86,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
         SC_ABORTF ("Inconsistency in vertex info.\n");
       }
     }
-#endif /*T8_ENABLE_DEBUG */
+#endif /* T8_ENABLE_DEBUG */
 
     /* Check if this vertex is a boundary node. */
     if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
@@ -158,7 +159,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::unordered_map<
     /* Get the list of trees where this vertex exists. */
     const auto &tree_list = associated_cmesh->vertex_connectivity->get_tree_list_of_vertex (global_vertex);
 
-    /*Update the vertex coordinates in each tree. */
+    /* Update the vertex coordinates in each tree. */
     for (const auto &[tree_id, local_vertex_index] : tree_list) {
 
       /* Get the vertex coordinates of the current tree. */
