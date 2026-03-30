@@ -94,12 +94,12 @@ jobs:
   #       mpicxx --showme:link    | grep "${OMPI_INSTALL_PATH}"
   #       echo "CHECKED: mpicc and mpicxx point to correct path"
   #     # This seems to be necessary because of the docker container
-  #   - name: disable ownership checks
-  #     run: git config --global --add safe.directory '*'
-  #   - name: init submodules
-  #     run: git submodule init
-  #   - name: update submodules
-  #     run: git submodule update
+    - name: disable ownership checks
+      run: git config --global --add safe.directory '*'
+    - name: init submodules
+      run: git submodule init
+    - name: update submodules
+      run: git submodule update
   #   - name: Get input vars
   #     run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
   #       && export MPI="${{ inputs.MPI }}"
