@@ -74,7 +74,7 @@ jobs:
     - name: Update packages
       run: brew update
     - name: Install missing packages via Homebrew
-      run: brew install open-mpi ninja cmake
+      run: brew install open-mpi ninja cmake googletest openssl
     - name: Show Clang version
       run: clang --version
     - name: Show mpicc version
@@ -102,12 +102,20 @@ jobs:
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
       run: |
-        export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_Fortran_COMPILER=mpifort -GNinja \
+        export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -GNinja \
                                -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
                                -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON \
-                               -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON \
-                               -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=$VTK_INSTALL_PATH/lib/cmake/vtk-9.1"
+                               -DT8CODE_BUILD_FORTRAN_INTERFACE=OFF -DT8CODE_BUILD_MESH_HANDLE=ON \
+                               -DT8CODE_ENABLE_OCC=ONFF -DT8CODE_ENABLE_VTK=OFF"
         echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+    # - name: build config variables
+    # run: |
+    #   export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_Fortran_COMPILER=mpifort -GNinja \
+    #                          -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
+    #                          -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON \
+    #                          -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON \
+    #                          -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=$VTK_INSTALL_PATH/lib/cmake/vtk-9.1"
+    #   echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # Run cmake
     - name: echo cmake line
       run: echo cmake ../ $CONFIG_OPTIONS
