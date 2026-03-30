@@ -66,38 +66,22 @@ jobs:
     runs-on: macos-latest
     steps:
   #
-  # Part 1: Preparation and sanity checks
+  # Part 1: Preparation
   # -------------------------------------
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - name: Update packages
       run: brew update
-    - name: Install OpenMPI
-      run: brew install open-mpi
+    - name: Install missing packages via Homebrew
+      run: brew install open-mpi ninja cmake
     - name: Show Clang version
       run: clang --version
     - name: Show mpicc version
       run: mpicc --version
-  #   - name: Make sure MPI was built with CLANG
-  #     # Note: If "clang" is not found (or "gcc" is), the workflow is exited due to fail-early mode
-  #     run: |
-  #       mpicc --version > mpi_version_output
-  #       cat mpi_version_output
-  #       grep -i "clang" mpi_version_output
-  #       ! grep -i "gcc" mpi_version_output
-  #       rm mpi_version_output
-  #       echo "CHECKED: MPI was built with Clang."
-  #   - name: Assert correct MPI paths
-  #     run: |
-  #       mpicc --showme:compile  | grep "${OMPI_INSTALL_PATH}"
-  #       mpicc --showme:link     | grep "${OMPI_INSTALL_PATH}"
-  #       mpicxx --showme:compile | grep "${OMPI_INSTALL_PATH}"
-  #       mpicxx --showme:link    | grep "${OMPI_INSTALL_PATH}"
-  #       echo "CHECKED: mpicc and mpicxx point to correct path"
-  #     # This seems to be necessary because of the docker container
-    - name: disable ownership checks
-      run: git config --global --add safe.directory '*'
+
+    # - name: disable ownership checks
+    #   run: git config --global --add safe.directory '*'
     - name: init submodules
       run: git submodule init
     - name: update submodules
@@ -116,55 +100,55 @@ jobs:
     - name: Set test level
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
-  #   - name: build config variables
-  #     run: |
-  #       export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_Fortran_COMPILER=mpifort -GNinja \
-  #                              -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
-  #                              -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON \
-  #                              -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON \
-  #                              -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=$VTK_INSTALL_PATH/lib/cmake/vtk-9.1"
-  #       echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
-  #   # Run cmake
-  #   - name: echo cmake line
-  #     run: echo cmake ../ $CONFIG_OPTIONS
-  #   - name: cmake
-  #     run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
-  #   # On failure, upload logs
-  #   - name: OnFailUploadLog
-  #     if: failure()
-  #     uses: actions/upload-artifact@v7
-  #     with:
-  #       name: cmake_w_clang_and_ompi_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-  #       path: build/CMakeFiles/CMakeOutput.log
-  #   # Build with ninja
-  #   - name: ninja
-  #     run: cd build && ninja $MAKEFLAGS
-  #   - name: ninja install
-  #     run: cd build && ninja install $MAKEFLAGS
-  # #
-  # # Part 3: Run t8code tests
-  # # ------------------------
-  #   - name: serial tests (if MPI is enabled)
-  #     run: cd build && ctest $MAKEFLAGS -R _serial
-  #     if: ${{ inputs.MPI == 'ON' }}
-  #   - name: parallel tests (if MPI is enabled)
-  #     run: cd build && ctest -R _parallel
-  #     env:
-  #       # Note: These openmpi options are required to ensure stable runs in github workflows and avoid stalling.
-  #       #       In particular, they activate oversubscription and define the communication channels, here tcp (and self).
-  #       OMPI_ALLOW_RUN_AS_ROOT: 1
-  #       OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
-  #       OMPI_MCA_rmaps_base_oversubscribe: 1
-  #       OMPI_MCA_btl: self,tcp
-  #       OMPI_MCA_pml: ob1
-  #     if: ${{ inputs.MPI == 'ON' }}
-  #   - name: tests (if MPI is disabled)
-  #     run: cd build && ctest $MAKEFLAGS
-  #     if: ${{ inputs.MPI == 'OFF' }}
-  #   # On failure, upload logs
-  #   - name: OnFailUploadLog
-  #     if: failure()
-  #     uses: actions/upload-artifact@v7
-  #     with:
-  #       name: test-suite_w_clang_and_ompi_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
-  #       path: build/Testing/Temporary/LastTest.log
+    - name: build config variables
+      run: |
+        export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_Fortran_COMPILER=mpifort -GNinja \
+                               -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
+                               -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_BUILD_WEXTRA=ON \
+                               -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON \
+                               -DT8CODE_ENABLE_OCC=ON -DT8CODE_ENABLE_VTK=ON -DVTK_DIR=$VTK_INSTALL_PATH/lib/cmake/vtk-9.1"
+        echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
+    # Run cmake
+    - name: echo cmake line
+      run: echo cmake ../ $CONFIG_OPTIONS
+    - name: cmake
+      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
+    # On failure, upload logs
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: cmake_w_clang_and_ompi_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        path: build/CMakeFiles/CMakeOutput.log
+    # Build with ninja
+    - name: ninja
+      run: cd build && ninja $MAKEFLAGS
+    - name: ninja install
+      run: cd build && ninja install $MAKEFLAGS
+  #
+  # Part 3: Run t8code tests
+  # ------------------------
+    - name: serial tests (if MPI is enabled)
+      run: cd build && ctest $MAKEFLAGS -R _serial
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: parallel tests (if MPI is enabled)
+      run: cd build && ctest -R _parallel
+      env:
+        # Note: These openmpi options are required to ensure stable runs in github workflows and avoid stalling.
+        #       In particular, they activate oversubscription and define the communication channels, here tcp (and self).
+        OMPI_ALLOW_RUN_AS_ROOT: 1
+        OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+        OMPI_MCA_rmaps_base_oversubscribe: 1
+        OMPI_MCA_btl: self,tcp
+        OMPI_MCA_pml: ob1
+      if: ${{ inputs.MPI == 'ON' }}
+    - name: tests (if MPI is disabled)
+      run: cd build && ctest $MAKEFLAGS
+      if: ${{ inputs.MPI == 'OFF' }}
+    # On failure, upload logs
+    - name: OnFailUploadLog
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-suite_w_clang_and_ompi_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
+        path: build/Testing/Temporary/LastTest.log
