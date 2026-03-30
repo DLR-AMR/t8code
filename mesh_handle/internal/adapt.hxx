@@ -182,7 +182,7 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
                              const int is_family, const int num_elements, t8_element_t* elements[])
 {
   if (is_family && !scheme->elements_are_family (tree_class, elements)) {
-    t8_global_errorf ("ERROR: We do not support deleted elements.");
+    t8_global_errorf ("ERROR: The mesh handle does not support deleted elements.");
     return 0;  // No adaptation as default.
   }
   // Get static adapt context from the registry.
