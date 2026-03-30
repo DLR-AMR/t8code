@@ -9,36 +9,20 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_iterate.h>
 
-<<<<<<< Updated upstream
-
-  static int
-  t8_my_search_callback (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
-                         [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int is_leaf,
-                         [[maybe_unused]] const t8_element_array_t *leaf_elements,
-                         [[maybe_unused]] const t8_locidx_t tree_leaf_index)
-=======
-    static int t8_my_search_callback (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
-                                      [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int is_leaf,
-                                      [[maybe_unused]] const t8_element_array_t *leaf_elements,
-                                      [[maybe_unused]] const t8_locidx_t tree_leaf_index)
->>>>>>> Stashed changes
+static int
+t8_my_search_callback (t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
+                       [[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int is_leaf,
+                       [[maybe_unused]] const t8_element_array_t *leaf_elements,
+                       [[maybe_unused]] const t8_locidx_t tree_leaf_index)
 {
 
   /* Get a pointer to our user data and increase the counter of searched elements. */
   // t8_tutorial_search_user_data_t *user_data = (t8_tutorial_search_user_data_t *) t8_forest_get_user_data (forest);
   // T8_ASSERT (user_data != NULL);
   // user_data->num_elements_searched++;
-<<<<<<< Updated upstream
   return 1;
 }
 
-
-
-=======
-  return 1;
-}
-
->>>>>>> Stashed changes
 /* Our search query, a particle together with a flag. */
 struct t8_tutorial_search_particle_t
 {
@@ -46,10 +30,6 @@ struct t8_tutorial_search_particle_t
   int is_inside_partition; /* Will be set to true if the particles lies inside this process' parallel partition. */
 };
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 /** Create an array of a given number of particles on the root process
  * and broadcast it to all other processes.
  * \param [in] num_particles  The number of particles to create.
@@ -105,12 +85,6 @@ t8_tutorial_search_build_particles (size_t num_particles, unsigned int seed, sc_
   return particles;
 }
 
-<<<<<<< Updated upstream
-
-
-
-=======
->>>>>>> Stashed changes
 int
 main (int argc, char **argv)
 // main ()
@@ -128,16 +102,9 @@ main (int argc, char **argv)
   sc_init (comm, 1, 1, NULL, SC_LP_ESSENTIAL);
   t8_init (SC_LP_DEBUG);
 
-<<<<<<< Updated upstream
-
   // Create uniform forest
   // ---------------------
   t8_global_infof ("\nCreate uniform forest and write to vtk\n---------------\n");
-=======
-  // Create uniform forest
-  // ---------------------
-  t8_global_infof ("\nCreate uniform forest and write to vtk\n---------------\n");
->>>>>>> Stashed changes
 
   // Set parameters
   const t8_eclass_t tree_class = T8_ECLASS_QUAD;
@@ -147,11 +114,7 @@ main (int argc, char **argv)
 
   // Create cmesh and forest
   // t8_cmesh_t cmesh = t8_cmesh_new_bigmesh(tree_class, num_trees, comm);
-<<<<<<< Updated upstream
   t8_cmesh_t cmesh = t8_cmesh_new_from_class (tree_class, comm);
-=======
-  t8_cmesh_t cmesh = t8_cmesh_new_from_class (tree_class, comm);
->>>>>>> Stashed changes
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
 
   // VTK output
@@ -165,7 +128,6 @@ main (int argc, char **argv)
   // const unsigned seed = 0;
   // sc_array_t *particles = t8_tutorial_search_build_particles (num_particles, seed, comm);
 
-<<<<<<< Updated upstream
   t8_forest_search (forest, t8_my_search_callback, NULL, NULL);
 
   // Clean up Memory
@@ -174,17 +136,6 @@ main (int argc, char **argv)
   t8_global_infof ("\nClean up memory\n---------------\n");
 
   t8_forest_unref (&forest);
-
-=======
-  t8_forest_search (forest, t8_my_search_callback, NULL, NULL);
-
-  // Clean up Memory
-  // ---------------------
-  sc_MPI_Barrier (comm);
-  t8_global_infof ("\nClean up memory\n---------------\n");
-
-  t8_forest_unref (&forest);
->>>>>>> Stashed changes
 
   sc_finalize ();
 
@@ -192,8 +143,4 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   return 0;
-<<<<<<< Updated upstream
 }
-=======
-}
->>>>>>> Stashed changes

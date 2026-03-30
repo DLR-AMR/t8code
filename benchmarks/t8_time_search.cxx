@@ -25,13 +25,8 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 
-#include <t8.h> /* General t8code header, always include this. */
-<<<<<<< Updated upstream
-#include <t8_cmesh/t8_cmesh.h> /* cmesh definition and basic interface. */
-  == == ==
-  =
-#include <t8_cmesh/t8_cmesh.h> /* cmesh definition and basic interface. */
-    >>>>>>> Stashed changes
+#include <t8.h>                                 /* General t8code header, always include this. */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
@@ -42,8 +37,8 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
 
-    /* Our search query, a particle together with a flag. */
-    struct t8_tutorial_search_particle_t
+/* Our search query, a particle together with a flag. */
+struct t8_tutorial_search_particle_t
 {
   double coordinates[3];   /* The coordinates of our particle. */
   int is_inside_partition; /* Will be set to true if the particles lies inside this process' parallel partition. */
