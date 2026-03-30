@@ -71,12 +71,12 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
-    - name: First dummy command
-      run: echo "Hello from Mac OS!"
   #   - name: Update packages
   #     run: apt-get update && apt-get upgrade -y
     - name: Show Clang version
       run: clang --version
+    - name: Show mpicc version
+      run: mpicc --version
   #   - name: Make sure MPI was built with CLANG
   #     # Note: If "clang" is not found (or "gcc" is), the workflow is exited due to fail-early mode
   #     run: |
@@ -100,20 +100,20 @@ jobs:
       run: git submodule init
     - name: update submodules
       run: git submodule update
-  #   - name: Get input vars
-  #     run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
-  #       && export MPI="${{ inputs.MPI }}"
-  #       && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
-  #       && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
-  #       && echo MPI="$MPI" >> $GITHUB_ENV
-  #       && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
-  # #
-  # # Part 2: Build t8code
-  # # --------------------
-  #   # Define build config
-  #   - name: Set test level
-  #     run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
-  #          && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
+    - name: Get input vars
+      run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
+        && export MPI="${{ inputs.MPI }}"
+        && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
+        && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
+        && echo MPI="$MPI" >> $GITHUB_ENV
+        && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
+  #
+  # Part 2: Build t8code
+  # --------------------
+    # Define build config
+    - name: Set test level
+      run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
+           && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
   #   - name: build config variables
   #     run: |
   #       export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DCMAKE_Fortran_COMPILER=mpifort -GNinja \
