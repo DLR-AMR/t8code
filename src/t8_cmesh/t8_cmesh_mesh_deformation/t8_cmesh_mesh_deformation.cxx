@@ -33,7 +33,7 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx>
 
-std::unordered_map<t8_gloidx_t, t8_3D_vec>
+std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>
 t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad_handle *cad)
 {
   T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
@@ -41,7 +41,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
   const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
 
   /* Map from global vertex id -> displacement vector. */
-  std::unordered_map<t8_gloidx_t, t8_3D_vec> displacements;
+  std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node> boundary_node_data;
 
   for (const auto &global_vertex : *(associated_cmesh->vertex_connectivity)) {
 
@@ -139,21 +139,29 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       const double old_y = old_coords[3 * local_corner_index + 1];
       const double old_z = old_coords[3 * local_corner_index + 2];
 
+      t8_rbf_boundary_node node;
+
+      node.position = { old_x, old_y, old_z };
+
       /* Calculate the displacement of the vertex which should be then done in the deformation. */
-      displacements[global_vertex_id] = { new_coords.X () - old_x, new_coords.Y () - old_y, new_coords.Z () - old_z };
+      node.displacement = { new_coords.X () - old_x, new_coords.Y () - old_y, new_coords.Z () - old_z };
+
+      node.weight = { 0.0, 0.0, 0.0 };
+
+      boundary_node_data[global_vertex_id] = node;
     }
   }
-  return displacements;
+  return boundary_node_data;
 }
 
 void
-t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
-                                                       std::shared_ptr<t8_cad_handle> cad)
+t8_cmesh_mesh_deformation::apply_vertex_displacements (
+  const std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node> &boundary_node_data, std::shared_ptr<t8_cad_handle> cad)
 {
   T8_ASSERT (t8_cmesh_is_committed (associated_cmesh));
 
   /* Iterate over all vertices in the displacement map. */
-  for (const auto &[global_vertex, displacement] : displacements) {
+  for (const auto &[global_vertex, rbf_boundary_node] : boundary_node_data) {
 
     /* Get the list of trees where this vertex exists. */
     const auto &tree_list = associated_cmesh->vertex_connectivity->get_tree_list_of_vertex (global_vertex);
@@ -169,7 +177,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (const std::unordered_map<
       if (tree_vertex_coords != nullptr) {
         /* Update the coordinates of the vertex. */
         for (int coord_index = 0; coord_index < 3; ++coord_index) {
-          tree_vertex_coords[3 * local_vertex_index + coord_index] += displacement[coord_index];
+          tree_vertex_coords[3 * local_vertex_index + coord_index] += rbf_boundary_node.displacement[coord_index];
         }
       }
     }
