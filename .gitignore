@@ -28,3 +28,10 @@ Testing/
 *~
 *.brep
 *.msh
+
+# Custom DO NOT MERGE
+.cache/
+.vscode/
+general_own/
+compile_commands.json
+scripts/configure_gitignore.sh
