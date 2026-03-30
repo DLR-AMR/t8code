@@ -71,8 +71,10 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
-  #   - name: Update packages
-  #     run: apt-get update && apt-get upgrade -y
+    - name: Update packages
+      run: brew update
+    - name: Install OpenMPI
+      run: brew install open-mpi
     - name: Show Clang version
       run: clang --version
     - name: Debug via SSH
