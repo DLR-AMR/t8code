@@ -44,4 +44,4 @@ struct t8_adapt_to_point_sources_user_data_t
 };
 
 t8_forest_t
-t8_adapt_to_point_sources (t8_forest_t forest, sc_array_t *points);
+t8_adapt_to_point_sources (t8_forest_t forest, sc_array_t *points, const char *prefix);

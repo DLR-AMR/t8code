@@ -413,7 +413,7 @@ main (int argc, char **argv)
   unsigned int nsd = t8_forest_get_dimension (forest);
   sc_array_t *particles = t8_cleanliest_random_particles (num_particles, seed, nsd, comm);
 
-  forest = t8_adapt_to_point_sources (forest, particles);
+  forest = t8_adapt_to_point_sources (forest, particles, "adjusted_search_adapted");
 
   // // Start iterative refinement loop
   // int iter = 0;

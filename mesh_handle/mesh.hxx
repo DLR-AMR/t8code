@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,12 +27,16 @@
 #pragma once
 
 #include <t8.h>
-#include <t8_forest/t8_forest_general.h>
 #include "element.hxx"
 #include "competence_pack.hxx"
+#include "internal/adapt.hxx"
+#include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
 #include <type_traits>
+#include <functional>
+#include <memory>
+#include <span>
 
 namespace t8_mesh_handle
 {
@@ -48,19 +52,16 @@ concept T8MPISafeType
  * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
  *         \see element for more details on the choice of the template parameter.   
  *         \note Please pack your competences using the \ref competence_pack class.
- * \tparam TUserDataType The user data type you want to associate with the mesh. Use void (this is also the default) if you do not want to set user data.
  * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
  *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
  *         Use void (this is also the default) if you do not want to set element data.
  */
-template <typename TCompetencePack = competence_pack<>, typename TUserDataType = void,
-          T8MPISafeType TElementDataType = void>
+template <typename TCompetencePack = competence_pack<>, T8MPISafeType TElementDataType = void>
 class mesh {
  public:
-  using SelfType = mesh<TCompetencePack, TUserDataType,
-                        TElementDataType>;  /**< Type of the current class with all template parameters specified. */
-  using UserDataType = TUserDataType;       /**< Make Type of the user data accessible. */
-  using ElementDataType = TElementDataType; /**< Make Type of the element data accessible. */
+  using SelfType
+    = mesh<TCompetencePack, TElementDataType>; /**< Type of the current class with all template parameters specified. */
+  using ElementDataType = TElementDataType;    /**< Make Type of the element data accessible. */
   using element_class =
     typename TCompetencePack::template apply<SelfType,
                                              element>; /**< The element class of the mesh with given competences. */
@@ -69,6 +70,39 @@ class mesh {
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
   using mesh_iterator =
     typename std::vector<element_class>::iterator; /**< Non-const iterator type for the mesh elements. */
+
+  /** Callback function prototype to decide for refining and coarsening of a family of elements
+   * or one element in a mesh handle.
+   * If \a elements contains more than one element, they must form a family and we decide whether this family should be
+   * coarsened or only the first element should be refined.
+   * Family means multiple elements that can be coarsened into one parent element.
+   * \see set_adapt for the usage of this callback.
+   * \param [in] mesh     The mesh that should be adapted.
+   * \param [in] elements One element or a family of elements (if more than one element) to consider for adaptation.
+   * \return 1 if the first entry in \a elements should be refined,
+   *        -1 if the family \a elements shall be coarsened,
+   *         0 else.
+   * \note We currently do not provide functionality to delete elements.
+   */
+  using adapt_callback_type = std::function<int (const SelfType& mesh, std::span<const element_class> elements)>;
+
+  /** Templated callback function prototype to decide for refining and coarsening of a family of elements
+   * or one element in a mesh handle including user data.
+   * See the version without user_data \ref adapt_callback_type for more details.
+   * Use \ref mesh_adapt_callback_wrapper to convert this type into \ref adapt_callback_type 
+   * to be able to pass the callback to \ref set_adapt.
+   * \tparam TUserDataType The type of the user data to be passed to the callback.
+   * \param [in] mesh       The mesh that should be adapted.
+   * \param [in] elements One element or a family of elements (if more than one element) to consider for adaptation.
+   * \param [in] user_data The user data to be used during the adaptation process.
+   * \return 1 if the first entry in \a elements should be refined,
+   *        -1 if the family \a elements shall be coarsened,
+   *         0 else.
+   * \note We currently do not provide functionality to delete elements.
+   */
+  template <typename TUserDataType>
+  using adapt_callback_type_with_userdata
+    = std::function<int (const SelfType& mesh, std::span<const element_class> elements, TUserDataType user_data)>;
 
   /** 
    * Constructor for a mesh of the handle. 
@@ -91,6 +125,7 @@ class mesh {
     t8_forest_unref (&m_forest);
   }
 
+  // --- Getter for mesh related information. ---
   /**
    * Getter for the number of local elements in the mesh.
    * \return Number of local elements in the mesh.
@@ -121,6 +156,17 @@ class mesh {
     return t8_forest_get_dimension (m_forest);
   }
 
+  /**
+   * Getter for the forest the mesh is defined for.
+   * \return The forest the mesh is defined for.
+   */
+  t8_forest_t
+  get_forest () const
+  {
+    return m_forest;
+  }
+
+  // --- Methods to access elements. ---
   /**
    * Returns a constant iterator to the first (local) mesh element.
    * \return Constant iterator to the first (local) mesh element.
@@ -192,38 +238,101 @@ class mesh {
     return const_cast<element_class&> (static_cast<const mesh*> (this)->operator[] (local_index));
   }
 
-  /**
-   * Getter for the forest the mesh is defined for.
-   * \return The forest the mesh is defined for.
-   */
-  t8_forest_t
-  get_forest () const
+  // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
+  /** Wrapper to convert an adapt callback with user data of type \ref adapt_callback_type_with_userdata
+   * into a callback without user data of type \ref adapt_callback_type using the defined user data \a user_data.
+   * This is required to pass an adapt callback with user data to \ref set_adapt.
+   * \tparam TUserDataType The type of the user data to be passed to the callback.
+   * \param [in] adapt_callback_with_userdata The adapt callback including user data.
+   * \param [in] user_data The user data to be used during the adaptation process.
+   * \return An adapt callback without user data parameter that can be passed to \ref set_adapt.
+  */
+  template <typename TUserDataType>
+  static adapt_callback_type
+  mesh_adapt_callback_wrapper (adapt_callback_type_with_userdata<TUserDataType> adapt_callback_with_userdata,
+                               const TUserDataType& user_data)
   {
-    return m_forest;
+    return [=] (const SelfType& mesh, std::span<const element_class> elements) {
+      return adapt_callback_with_userdata (mesh, elements, user_data);
+    };
   }
 
-  /** 
-   * Set the user data of the mesh. This can i.e. be used to pass user defined arguments to the adapt routine.
-   * \param [in] data The user data of class TUserDataType. Data will never be touched by mesh handling routines.
+  /** Set an adapt function to be used to adapt the mesh on committing.
+   * \param [in] adapt_callback The adapt callback used on committing.
+   * \note The adaptation is carried out only when \ref commit is called.
+   * \note We currently do not provide the functionality to delete elements.
+   * \note This setting can be combined with set_partition and set_balance. The order in which
+   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
    */
-  template <typename UserDataType = TUserDataType, typename = std::enable_if_t<!std::is_void<UserDataType>::value>>
   void
-  set_user_data (const UserDataType& data)
+  set_adapt (adapt_callback_type adapt_callback)
   {
-    t8_forest_set_user_data (m_forest, data);
+    if (!m_uncommitted_forest.has_value ()) {
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
+    }
+    // Create and register adaptation context holding the mesh handle and the user defined callback.
+    detail::adapt_registry::register_context (
+      m_forest, std::make_unique<detail::mesh_adapt_context<SelfType>> (*this, std::move (adapt_callback)));
+
+    // Set up the forest for adaptation using the wrapper callback.
+    // Recursive adaptation is currently not supported.
+    t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, false);
   }
 
-  /** 
-   * Get the user data of the mesh. 
-   * \return The user data previously set using \ref set_user_data.   
+  /** Enable or disable the creation of a layer of ghost elements.
+   * \param [in]      do_ghost  If true a ghost layer will be created.
+   * \param [in]      ghost_type Controls which neighbors count as ghost elements,
+   *                             currently only T8_GHOST_FACES is supported. This value
+   *                             is ignored if \a do_ghost = false.
    */
-  template <typename UserDataType = TUserDataType, typename = std::enable_if_t<!std::is_void<UserDataType>::value>>
-  const UserDataType&
-  get_user_data () const
+  void
+  set_ghost (bool do_ghost = true, t8_ghost_type_t ghost_type = T8_GHOST_FACES)
   {
-    return *static_cast<const UserDataType*> (t8_forest_get_user_data (m_forest));
+    if (!m_uncommitted_forest.has_value ()) {
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
+    }
+    t8_forest_set_ghost (m_uncommitted_forest.value (), do_ghost, ghost_type);
   }
 
+  /** After allocating and adding properties to the mesh, commit the changes.
+   * This call updates the internal state of the mesh.
+   * The forest used to define the mesh handle is replaced in this function.
+   * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
+   * Specialize the update with calls like \ref set_adapt first.
+   */
+  void
+  commit ()
+  {
+    if (!m_uncommitted_forest.has_value ()) {
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
+    }
+    /* It can happen that the user only calls set_ghost before commit. 
+    This does not set the set_from member of the forest and we copy the current forest in this case. */
+    if (m_uncommitted_forest.value ()->set_from == NULL) {
+      t8_forest_set_copy (m_uncommitted_forest.value (), m_forest);
+    }
+    t8_forest_ref (m_forest);
+    t8_forest_commit (m_uncommitted_forest.value ());
+    // Check if we adapted and unregister the adapt context if so.
+    if (detail::adapt_registry::get (m_uncommitted_forest.value ()) != nullptr) {
+      detail::adapt_registry::unregister_context (m_forest);
+      if (!std::is_void<TElementDataType>::value) {
+        t8_global_infof (
+          "Please note that the element data is not interpolated automatically during adaptation. Use the "
+          "function set_element_data() to provide new adapted element data.\n");
+      }
+    }
+    t8_forest_unref (&m_forest);
+    // Update underlying forest of the mesh.
+    m_forest = m_uncommitted_forest.value ();
+    m_uncommitted_forest.reset ();
+    update_elements ();
+  }
+
+  // --- Methods to set and get user and element data and exchange data between processes. ---
   /** 
    * Set the element data vector. The vector should have the length of num_local_elements.
    * \param [in] element_data The element data vector to set with one entry of class TElementDataType 
@@ -277,23 +386,6 @@ class mesh {
 
  private:
   /** 
-   * Setter for the forest. 
-   * \param [in] input_forest The forest from which the mesh should be a wrapper. 
-   */
-  void
-  set_forest (t8_forest_t input_forest)
-  {
-    T8_ASSERT (t8_forest_is_committed (input_forest));
-    m_forest = input_forest;
-    update_elements ();
-    if constexpr (!std::is_void<TElementDataType>::value) {
-      t8_global_infof ("The forest of the mesh handle has been updated. Please note that the element data in the mesh "
-                       "has to be updated accordingly. Use the function set_element_data() to provide element data "
-                       "fitting to the new forest.\n");
-    }
-  }
-
-  /** 
    * Update the storage of the mesh elements according to the current forest. 
    */
   void
@@ -317,6 +409,10 @@ class mesh {
   void
   update_ghost_elements ()
   {
+    if (get_num_ghosts () == 0) {
+      m_ghosts.clear ();
+      return;
+    }
     m_ghosts.clear ();
     m_ghosts.reserve (get_num_ghosts ());
     t8_locidx_t num_loc_trees = t8_forest_get_num_local_trees (m_forest);
@@ -334,6 +430,8 @@ class mesh {
   std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
   std::conditional_t<!std::is_void_v<TElementDataType>, std::vector<TElementDataType>, std::nullptr_t>
     m_element_data; /**< Vector storing the (local) element data. */
+  std::optional<t8_forest_t>
+    m_uncommitted_forest; /**< Forest in which the set flags are set for a new forest before committing. */
 };
 
 }  // namespace t8_mesh_handle

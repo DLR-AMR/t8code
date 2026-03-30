@@ -103,4 +103,5 @@ add_t8_example( NAME t8_version                         SOURCES version/t8_versi
 
 
 add_t8_example( NAME t8_cleanliest_search          SOURCES CLEANLIEST/cleanliest_adjusted_search.cxx  CLEANLIEST/t8_adapt_to_point_sources.cxx)
+add_t8_example( NAME t8_cleanliest_cubed_sphere          SOURCES CLEANLIEST/cleanliest_cubed_sphere.cxx  CLEANLIEST/t8_adapt_to_point_sources.cxx)
 add_t8_example( NAME t8_cleanliest_step1           SOURCES CLEANLIEST/cleanliest_step1.cxx )

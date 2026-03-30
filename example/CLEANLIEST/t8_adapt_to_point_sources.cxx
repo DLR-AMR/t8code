@@ -262,7 +262,7 @@ t8_point_sources_write_vtk (t8_forest_t forest, std::vector<int> *points_per_ele
 // ##################################### "MAIN" ROUTINE ###########################################
 
 t8_forest_t
-t8_adapt_to_point_sources (t8_forest_t forest, sc_array_t *points)
+t8_adapt_to_point_sources (t8_forest_t forest, sc_array_t *points, const char *prefix)
 {
 
   t8_adapt_to_point_sources_user_data_t user_data;
@@ -308,7 +308,7 @@ t8_adapt_to_point_sources (t8_forest_t forest, sc_array_t *points)
   } while (iter < 10);
 
   // Write resulting forest to vtk.
-  const char *prefix = "t8_adjust_to_point_sources";
+  // const char *prefix = "t8_adjust_to_point_sources";
   t8_point_sources_write_vtk (forest, (&user_data)->points_per_element, prefix);
 
   // // Balance the resulting forest
