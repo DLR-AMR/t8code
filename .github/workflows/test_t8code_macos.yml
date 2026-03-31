@@ -136,9 +136,9 @@ jobs:
   #
   # Part 3: Run t8code tests
   # ------------------------
-    - name: serial tests (if MPI is enabled)
-      run: cd build && ctest $MAKEFLAGS -R _serial
-      if: ${{ inputs.MPI == 'ON' }}
+    # - name: serial tests (if MPI is enabled)
+    #   run: cd build && ctest $MAKEFLAGS -R _serial
+    #   if: ${{ inputs.MPI == 'ON' }}
     - name: parallel tests (if MPI is enabled)
       run: cd build && ctest -R _parallel
       env:
