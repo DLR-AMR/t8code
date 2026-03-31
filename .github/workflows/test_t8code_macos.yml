@@ -103,7 +103,8 @@ jobs:
     - name: build config variables
       run: |
         export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -GNinja -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
-                               -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
+                               -DT8CODE_ENABLE_MPI=$MPI -DMPIEXEC_PREFLAGS=--oversubscribe -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} \
+                               -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
                                -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON \
                                -DT8CODE_BUILD_FORTRAN_INTERFACE=OFF -DT8CODE_BUILD_MESH_HANDLE=ON \
                                -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_VTK=OFF"
@@ -138,7 +139,7 @@ jobs:
   # ------------------------
     # - name: serial tests (if MPI is enabled)
     #   run: cd build && ctest $MAKEFLAGS -R _serial
-    #   if: ${{ inputs.MPI == 'ON' }}
+      if: ${{ inputs.MPI == 'ON' }}
     - name: parallel tests (if MPI is enabled)
       run: cd build && ctest -R _parallel
       env:
