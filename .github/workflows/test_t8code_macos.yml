@@ -107,7 +107,13 @@ jobs:
                                -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
                                -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON \
                                -DT8CODE_BUILD_FORTRAN_INTERFACE=OFF -DT8CODE_BUILD_MESH_HANDLE=ON \
-                               -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_VTK=OFF"
+                               -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_VTK=OFF" \
+                               -DCTEST_PARALLEL_LEVEL=4 \
+                               -DENV_OMPI_ALLOW_RUN_AS_ROOT=1 \
+                               -DENV_OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
+                               -DENV_OMPI_MCA_btl=self,tcp \
+                               -DENV_OMPI_MCA_pml=ob1 \
+                               -DENV_OMPI_MCA_rmaps_base_oversubscribe=1
         echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # - name: build config variables
     # run: |
