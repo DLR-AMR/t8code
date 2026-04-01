@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_hash.hxx
- * Defines data types and functions for handling hash values of 
+ * Defines data types and functions for handling hash values of
  * geometries.
  */
 
@@ -40,16 +40,15 @@ struct t8_geometry_hash_tag
 T8_EXTERN_C_BEGIN ();
 
 /** Data type used for storing hash values of geometries. */
-using t8_geometry_hash = T8Type<size_t, t8_geometry_hash_tag, Addable, Subtractable, AddAssignable, Multipliable,
-                                Dividable, EqualityComparable, Hashable>;
+using t8_geometry_hash = T8Type<size_t, t8_geometry_hash_tag, EqualityComparable, Hashable>;
 
 /** Constant that we use for hashes of non-existing geometries. */
 static const t8_geometry_hash t8_geometry_empty_hash (std::hash<std::string> {}(""));
 
 /**
  * Compute the hash value of a geometry's name.
- *  
- * \param [in] name The name of a geometry.
+ *
+ * \param [in] name The name of a geoemetry.
  * \return The hash value of \a name.
  * \note \a name being empty here is explicitly allowed and used as hash values for non-existing geometries.
  */
@@ -63,7 +62,7 @@ t8_geometry_compute_hash (const std::string &name)
 /**
  * Query whether a given hash value corresponds to an empty string and hence
  * a non-existing geometry.
- * 
+ *
  * \param [in] hash A hash value of a geometry.
  * \return true If \a hash corresponds to a non-existing geometry,i.e. if \a hash == \a t8_geometry_empty_hash.
  * \return false If \a hash corresponds to an existing geometry.
