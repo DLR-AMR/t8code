@@ -43,9 +43,13 @@
 #include <span>
 #include <unordered_set>
 
+/**
+ * Reads an OpenFOAM case into t8code data structures.
+ */
 struct t8_openfoam_reader
 {
  public:
+  /** Abbreviation for std::filesystem::path */
   using t8_path = std::filesystem::path;
 
   /**
@@ -111,7 +115,7 @@ struct t8_openfoam_reader
   /**
    * Skips the OpenFOAM file header and positions the stream at the first numeric value.
    * Also checks if the file is in the ascii format.
-   * \param[in, out] input_stream   The file stream to read from.
+   * \param[in,out] input_stream    The file stream to read from.
    * \return                        True on success, false if header not found or format not ascii.
    */
   bool
@@ -201,6 +205,7 @@ struct t8_openfoam_reader
    * Reads an OpenFOAM label list into a vector.
    * These lists can have one of three encodings (to my knowledge):
    * expanded list:
+   * \code
    * <num_values>
    * (
    * <val_0>
@@ -213,8 +218,9 @@ struct t8_openfoam_reader
    *
    * uniform list:
    * <num_values>{val} //all values are the same
+   * \endcode
    *
-   * \param [in, out] input_stream  Stream positioned at the list start.
+   * \param [in,out] input_stream   Stream positioned at the list start.
    * \param [out] values            Parsed list values.
    * \return                        True on success.
    */
