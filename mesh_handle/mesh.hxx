@@ -377,7 +377,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     // Check if we adapted and unregister the adapt context if so.
     if (detail::adapt_registry::get (m_uncommitted_forest.value ()) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
-      if (has_element_data_handler_competence ()) {
+      if constexpr (has_element_data_handler_competence ()) {
         t8_global_infof (
           "Please note that the element data is not interpolated automatically during adaptation. Use the "
           "function set_element_data() to provide new adapted element data.\n");
