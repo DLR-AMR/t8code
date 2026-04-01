@@ -170,8 +170,15 @@ cmake_path(RELATIVE_PATH libPath
     BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} # Binary directory
     OUTPUT_VARIABLE relativeRpath
 )
-set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
+
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
+
+if(APPLE)
+    set(CMAKE_MACOSX_RPATH true)
+    set(CMAKE_INSTALL_RPATH @loader_path @loader_path/${relativeRpath})
+elseif(UNIX)
+    set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
+endif()
 
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED )
