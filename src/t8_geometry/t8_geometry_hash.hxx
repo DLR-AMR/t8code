@@ -48,8 +48,8 @@ static const t8_geometry_hash t8_geometry_empty_hash (std::hash<std::string> {}(
 /**
  * Compute the hash value of a geometry's name.
  *
- * \param [in] name The name of a geoemetry.
- * \return The hash value of \a name.
+ * \param [in] name The name of a geometry.
+ * \return          The hash value of \a name.
  * \note \a name being empty here is explicitly allowed and used as hash values for non-existing geometries.
  */
 inline t8_geometry_hash
