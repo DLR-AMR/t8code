@@ -372,7 +372,7 @@ class mesh {
     t8_forest_ref (m_forest);
     t8_forest_commit (m_uncommitted_forest.value ());
     // Check if we adapted and unregister the adapt context if so.
-    if (detail::adapt_registry::get (m_uncommitted_forest.value ()) != nullptr) {
+    if (detail::adapt_registry::get (m_forest) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
       if (!std::is_void<TElementDataType>::value) {
         t8_global_infof (
