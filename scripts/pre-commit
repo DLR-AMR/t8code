@@ -129,6 +129,7 @@ fi
 
 if [ $nocontinue -ne 0 ]; then
   printf '\033[38;5;208m%s\033[0m\n' "Pre-commit found errors. Did you add the latest changes?"
+  echo "Note: To correct typos and fix indentation, run ./scripts/spell_check_and_indent.sh"
 fi
 
 # exit 1 if there was a nonindented file

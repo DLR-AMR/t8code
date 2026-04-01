@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -75,15 +75,16 @@ class mesh {
 
   /** Callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle.
-   * If \a elements contains more than one element, they must form a family and we decide whether this family should be coarsened
-   * or only the first element should be refined.
+   * If \a elements contains more than one element, they must form a family and we decide whether this family should be
+   * coarsened or only the first element should be refined.
    * Family means multiple elements that can be coarsened into one parent element.
    * \see set_adapt for the usage of this callback.
    * \param [in] mesh     The mesh that should be adapted.
-   * \param [in] elements One element or a family of elements to consider for adaptation.
+   * \param [in] elements One element or a family of elements (if more than one element) to consider for adaptation.
    * \return 1 if the first entry in \a elements should be refined,
    *        -1 if the family \a elements shall be coarsened,
    *         0 else.
+   * \note We currently do not provide functionality to delete elements.
    */
   using adapt_callback_type = std::function<int (const SelfType& mesh, std::span<const element_class> elements)>;
 
@@ -94,11 +95,12 @@ class mesh {
    * to be able to pass the callback to \ref set_adapt.
    * \tparam TUserDataType The type of the user data to be passed to the callback.
    * \param [in] mesh       The mesh that should be adapted.
-   * \param [in] elements   One element or a family of elements to consider for adaptation.
-    * \param [in] user_data The user data to be used during the adaptation process.
+   * \param [in] elements One element or a family of elements (if more than one element) to consider for adaptation.
+   * \param [in] user_data The user data to be used during the adaptation process.
    * \return 1 if the first entry in \a elements should be refined,
    *        -1 if the family \a elements shall be coarsened,
    *         0 else.
+   * \note We currently do not provide functionality to delete elements.
    */
   template <typename TUserDataType>
   using adapt_callback_type_with_userdata
@@ -269,26 +271,26 @@ class mesh {
   }
 
   /** Set an adapt function to be used to adapt the mesh on committing.
-   * \param [in] adapt_callback    The adapt callback used on committing.
-   * \param [in] recursive         Specifying whether adaptation is to be done recursively or not. 
+   * \param [in] adapt_callback The adapt callback used on committing.
    * \note The adaptation is carried out only when \ref commit is called.
+   * \note We currently do not provide the functionality to delete elements.
    * \note This setting can be combined with set_partition and set_balance. The order in which
    * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
    */
   void
-  set_adapt (adapt_callback_type adapt_callback, bool recursive)
+  set_adapt (adapt_callback_type adapt_callback)
   {
     if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
     }
     // Create and register adaptation context holding the mesh handle and the user defined callback.
     detail::adapt_registry::register_context (
       m_forest, std::make_unique<detail::mesh_adapt_context<SelfType>> (*this, std::move (adapt_callback)));
 
     // Set up the forest for adaptation using the wrapper callback.
-    t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, recursive);
+    // Recursive adaptation is currently not supported.
+    t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, false);
   }
 
   /** If this function is called, the mesh will be partitioned on committing.
@@ -343,9 +345,8 @@ class mesh {
   set_ghost (bool do_ghost = true, t8_ghost_type_t ghost_type = T8_GHOST_FACES)
   {
     if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
     }
     t8_forest_set_ghost (m_uncommitted_forest.value (), do_ghost, ghost_type);
   }
@@ -360,9 +361,8 @@ class mesh {
   commit ()
   {
     if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
+      m_uncommitted_forest.emplace ();
+      t8_forest_init (&*m_uncommitted_forest);
     }
     /* It can happen that the user only calls set_ghost before commit. 
     This does not set the set_from member of the forest and we copy the current forest in this case. */
@@ -383,7 +383,7 @@ class mesh {
     t8_forest_unref (&m_forest);
     // Update underlying forest of the mesh.
     m_forest = m_uncommitted_forest.value ();
-    m_uncommitted_forest = std::nullopt;
+    m_uncommitted_forest.reset ();
     update_elements ();
   }
 
