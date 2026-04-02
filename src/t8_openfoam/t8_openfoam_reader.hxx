@@ -479,8 +479,6 @@ struct t8_openfoam_reader
   t8_path m_case_dir;
   /** The cmesh to build. */
   t8_cmesh_t m_cmesh;
-  /** The assigned communicator. */
-  [[maybe_unised]] sc_MPI_Comm m_comm;
 
   /** Holds all points of the mesh. point_id -> x, y, z */
   std::vector<t8_3D_vec> m_points;
