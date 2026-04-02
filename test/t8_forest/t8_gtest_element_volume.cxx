@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2025 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -65,29 +65,37 @@ struct t8_forest_volume: public testing::TestWithParam<std::tuple<std::tuple<int
 /**
  * Compute the volume of a pyramid descending of a root-pyramid with volume 1/3
  * Pyramids need a special handling of the control-volume computation, because
- * they subdivide into pyramids and tetrahedra. Therefore in every refinement three 
+ * they subdivide into pyramids and tetrahedra. Therefore in every refinement four 
  * types of elements occur:
  * 
  * 1. A pyramid with 1/8 of its parents volume
  * 2. A tetrahedron with a pyramid parent, having 1/16th of its parents volume.
  * 3. A tetrahedron with a tet-parent, having 1/8th of its parents volume.
+ * 4. A pyramid with a tet-parent, having 1/4th of its parents volume.
  * 
  * On a leaf-level we therefore can have many different volumes for the
  * elements and compute it element-specific. 
  * \param[in] pyra A pyramid
  * \return The volume of the pyramid 
  */
+
+static const double shape_factor[T8_ECLASS_COUNT][T8_ECLASS_COUNT] = {
+  { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 }, { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 },
+  { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 }, { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 },
+  { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 }, { -1.0, -1.0, -1.0, -1.0, -1.0, 1.0 / 8.0, -1.0, 1.0 / 16.0 },
+  { -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0 }, { -1.0, -1.0, -1.0, -1.0, -1.0, 1.0 / 4.0, -1.0, 1.0 / 8.0 },
+};
+
 double
-pyramid_control_volume (t8_dpyramid_t *pyra)
+pyramid_control_volume (t8_element_t *pyra, t8_eclass_t eclass, const t8_scheme *scheme)
 {
   double control_volume = 1.0 / 3.0;
-  /* Both pyramids and tets have 1/8th of the parents volume, if the shape does not switch. */
-  control_volume /= 1 << ((pyra->pyramid.level) * 3);
-  /* Ancestors switch the shape. A tetrahedron has a 1/16th of its parents volume. 
-   * For all levels we already divided the control-volume by 8, hence we 
-   * divide it by 2 once. */
-  if (pyra->switch_shape_at_level > 0) {
-    control_volume /= 2;
+  int level = scheme->element_get_level (eclass, pyra);
+  for (int ilvl = level; ilvl > 0; ilvl--) {
+    t8_element_shape_t shape = scheme->element_get_shape (eclass, pyra);
+    scheme->element_get_parent (eclass, pyra, pyra);
+    t8_element_shape_t parent_shape = scheme->element_get_shape (eclass, pyra);
+    control_volume = control_volume * shape_factor[shape][parent_shape];
   }
 
   return control_volume;
@@ -110,7 +118,7 @@ TEST_P (t8_forest_volume, volume_check)
       const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       const double volume = t8_forest_element_volume (forest, itree, element);
       if (eclass == T8_ECLASS_PYRAMID) {
-        const double shape_volume = pyramid_control_volume ((t8_dpyramid_t *) element);
+        const double shape_volume = pyramid_control_volume ((t8_element_t *) element, eclass, scheme);
         EXPECT_NEAR (volume, shape_volume, T8_PRECISION_SQRT_EPS);
       }
       else {
