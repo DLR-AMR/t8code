@@ -57,8 +57,8 @@ struct t8_openfoam_reader
    * \param [in] foamfile  Path to the *.foam file inside the OpenFOAM case directory.
    * \param [in] comm      The communicator to use for the obtained forest.
    */
-  t8_openfoam_reader (t8_path foamfile, [[maybe_unused]] sc_MPI_Comm comm)
-    : m_case_dir (get_case_dir (foamfile)), m_cmesh (nullptr)
+  t8_openfoam_reader (t8_path foamfile, sc_MPI_Comm comm)
+    : m_case_dir (get_case_dir (foamfile)), m_cmesh (nullptr), m_comm (comm)
   {
     SC_CHECK_ABORTF (std::filesystem::exists (foamfile), "ERROR: Foam file does not exist: %s", foamfile.c_str ());
   };
