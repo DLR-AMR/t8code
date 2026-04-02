@@ -789,6 +789,8 @@ struct t8_openfoam_reader
   t8_path m_case_dir;
   /** The cmesh to build. */
   t8_cmesh_t m_cmesh;
+  /** The assigned communicator. */
+  sc_MPI_Comm m_comm;
 
   /** Conversion table between OpenFOAM and t8code quad numeration.
    * We only need this for quads, since triangles numerated equally.
