@@ -595,6 +595,9 @@ struct t8_openfoam_reader
     T8_ASSERT (m_face_points.size () != 0);
     T8_ASSERT (m_points.size () != 0);
 
+    /* Make the neighborhood vector the right size and default construct all elements. */
+    m_neighborhoods.resize (m_face_points.size ());
+
     t8_cmesh_init (&m_cmesh);
     t8_cmesh_register_geometry<t8_geometry_linear> (m_cmesh);
     /* Reconstruct cells */
@@ -633,6 +636,42 @@ struct t8_openfoam_reader
   }
 
   /**
+   * Compute the neighbors of a cell.
+   * \tparam TNumFaces The number of faces of the cell.
+   * \param [in] cell_id            The id of the cell.
+   * \param [in] cell_eclass        The eclass of the cell.
+   * \param [in] faces              Array containing the face ids of the cell.
+   * \param [in] face_orientations  Array containing the orientation of each face (t8 vertex 0 -> OF point id)
+   */
+  template <size_t TNumFaces>
+  void
+  compute_cell_neighbors (const size_t cell_id, const t8_eclass cell_eclass,
+                          const std::array<std::optional<size_t>, TNumFaces> faces,
+                          const std::array<u_int8_t, TNumFaces> face_orientations)
+  {
+    /* We are using \ref m_neighborhoods to link neighbors together.
+     * Each face has a unique id. For each face of the cell we will save the cell id, t8 face id and orientation
+     * in \ref m_neighborhoods. If we encounter a face, which is already filled then we know, that the already
+     * saved face and cell is the neighbor. We can now join these cells via their shared face. */
+    for (u_int8_t t8_face_id = 0; t8_face_id < TNumFaces; ++t8_face_id) {
+      const size_t OF_face_id = faces[t8_face_id];
+      if (m_neighborhoods[OF_face_id].has_value ()) {
+        /* There already is a cell saved with this face. This has to be the neighbor of the current cell. */
+        const size_t other_cell_id = std::get<0> (*(m_neighborhoods[OF_face_id]));
+        const u_int8_t other_cell_t8_face_id = std::get<1> (*(m_neighborhoods[OF_face_id]));
+        const u_int8_t other_cell_face_orientation = std::get<2> (*(m_neighborhoods[OF_face_id]));
+        t8_cmesh_set_join (m_cmesh, cell_id, other_cell_id, t8_face_id, other_cell_t8_face_id,
+                           1);  //TODO, orientation os not 1
+      }
+      else {
+        /* There is no cell with this face saved yet. Save this cell with this face. */
+        m_neighborhoods[OF_face_id].emplace (
+          std::make_tuple (cell_id, eclass, t8_face_id, face_orientations[t8_face_id]));
+      }
+    }
+  }
+
+  /**
    * Use the gathered cell information to build a hex cell and add it to the cmesh.
    * \param [in] cell_id           The id of the cell.
    * \param [in] face_ids          The ids of the cell faces.
@@ -656,7 +695,7 @@ struct t8_openfoam_reader
 
     std::array<std::optional<size_t>, t8_eclass_num_faces[T8_ECLASS_HEX]> faces {};
     std::array<std::optional<size_t>, t8_eclass_num_vertices[T8_ECLASS_HEX]> points {};
-    std::array<int8_t, t8_eclass_num_faces[T8_ECLASS_HEX]> face_orientations {};
+    std::array<u_int8_t, t8_eclass_num_faces[T8_ECLASS_HEX]> face_orientations {};
     constexpr t8_eclass_t eclass = T8_ECLASS_HEX;
 
     /** Orientation of the OpenFOAM face with regard to the t8code face.
@@ -782,8 +821,80 @@ struct t8_openfoam_reader
     t8_cmesh_set_tree_vertices (m_cmesh, cell_id, vertices.data (), t8_eclass_num_vertices[T8_ECLASS_HEX]);
 
     /* ------------------------- 6. Set neighbors and boundary conditions ------------------------- */
-    //TODO
+    compute_cell_neighbors (cell_id, T8_ECLASS_HEX, faces, face_orientations);
   }
+
+  /**
+   * Struct to map face indices to patch/group labels efficiently.
+   *
+   * Internally uses a std::map of startIndex -> hash(label).
+   * Each label is valid from its startIndex up to (but not including) the start of the next label.
+   */
+  struct face_to_boundary_group_hash_map
+  {
+   public:
+    /**
+     * Tag for boundary group hash strong type.
+     */
+    struct boundary_group_hash_tag
+    {
+    };
+    /**
+     * Strong type for boundary group hashes.
+     */
+    using boundary_group_hash = T8Type<size_t, boundary_group_hash_tag, EqualityComparable>;
+
+    /**
+     * Add a new range starting at startIndex with a label.
+     * \param[in] start_index   Index where this boundary group starts.
+     * \param[in] hash          The label name (patch or group).
+     */
+    inline void
+    add_range (const size_t start_index, const boundary_group_hash hash)
+    {
+      m_ranges[start_index] = hash;
+    }
+
+    static inline boundary_group_hash
+    hash (const std::string_view label)
+    {
+      return boundary_group_hash (std::hash<std::string_view> {}(label));
+    }
+
+    /**
+     * Get the boundary_group_hash for a given face index.
+     * \param[in] face_index  The face index to query.
+     * \return                The corresponding label, or empty string if not found.
+     */
+    inline std::optional<size_t>
+    operator[] (size_t face_index) const
+    {
+      /* upper_bound gives first key > face_index */
+      auto it = m_ranges.upper_bound (face_index);
+      if (it == m_ranges.begin ())
+        return std::nullopt; /* no label found (face before first range) */
+      --it;                  /* use previous key */
+      return it->second;
+    }
+
+#if T8_ENABLE_DEBUG
+    /**
+     * Print all ranges for debugging.
+     */
+    void
+    print_ranges () const
+    {
+      t8_debugf ("OpenFOAM boundary ranges:\n");
+      for (auto range = m_ranges.begin (); range != m_ranges.end (); ++range) {
+        t8_debugf ("StartFace %li -> boundary hash %li\n", range->first, range->second);
+      }
+    }
+#endif /* T8_ENABLE_DEBUG */
+
+   private:
+    /** Map for boundary ranges: startIndex -> hash(label) */
+    std::map<size_t, boundary_group_hash> m_ranges;
+  };
 
   /** Path to the OpenFOAM case. */
   t8_path m_case_dir;
@@ -804,4 +915,11 @@ struct t8_openfoam_reader
   /** Holds all cells and their faces. Second value shows of normal points outwards (1) or inwards (0).
    * cell_id -> face_id 0, ..., face_id n */
   std::vector<std::vector<std::pair<size_t, bool>>> m_cell_faces;
+  /** Holds the face neighbors of the mesh and is used for joining the faces of the cmesh.
+   * face id -> tree id, eclass, face of tree, orientation
+   * During reconstruction, the values will be filled by the first cell owning that face.
+   * If the second cell then also encounters the same face, the two cells will be linked together. */
+  std::vector<std::optional<std::tuple<size_t, t8_eclass, u_int8_t, u_int8_t>>> m_neighborhoods;
+  /** Assigns a hash to each boundary face. */
+  face_to_boundary_group_hash_map boundary_map;
 };
