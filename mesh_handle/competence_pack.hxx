@@ -109,6 +109,15 @@ using new_data_mesh_competences
   = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
                          new_element_data_mesh_competence<TElementDataType>::template type>;
 
+/** Predefined mesh competence pack with the functionality to work with element data and to interpolate element data after adaptation. 
+ * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::new_data_element_competences.
+ */
+template <T8MPISafeType TElementDataType>
+using interpolate_data_mesh_competence
+  = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
+                         new_element_data_mesh_competence<TElementDataType>::template type,
+                         interpolate_element_data_mesh_competence>;
+
 // --- Compute union of competence packs. ---
 /** Compute the unique union of the competences of several competence_pack. This could be
  * \ref t8_mesh_handle::element_competence_pack or \ref t8_mesh_handle::mesh_competence_pack.

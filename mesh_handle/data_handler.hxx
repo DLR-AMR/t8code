@@ -36,6 +36,7 @@
 #include <t8_types/t8_operators.hxx>
 #include <type_traits>
 #include <vector>
+#include <functional>
 
 namespace t8_mesh_handle
 {
@@ -309,103 +310,46 @@ struct new_element_data_element_competence: public t8_crtp_operator<TUnderlying,
 };
 
 // --- Mesh competence to interpolate data. ---
-
-/** Given two forest where the elements in one forest are either direct children or
- * parents of the elements in the other forest
- * compare the two forests and for each refined element or coarsened
- * family in the old one, call a callback function providing the local indices
- * of the old and new elements.
- * \param [in]  forest_new  A forest, each element is a parent or child of an element in \a forest_old.
- * \param [in]  forest_old  The initial forest.
- * \param [in]  replace_fn  A replace callback function.
- * \note To pass a user pointer to \a replace_fn use \ref t8_forest_set_user_data
- * and \ref t8_forest_get_user_data.
- */
-void
-t8_forest_iterate_replace (t8_forest_t forest_new, t8_forest_t forest_old, t8_forest_replace_t replace_fn);
-
-/** Callback function prototype to decide for refining and coarsening.
- * If \a is_family equals 1, the first \a num_elements in \a elements
- * form a family and we decide whether this family should be coarsened
- * or only the first element should be refined.
- * Otherwise \a is_family must equal zero and we consider the first entry
- * of the element array for refinement.
- * Entries of the element array beyond the first \a num_elements are undefined.
- * \param [in] forest       The forest to which the new elements belong.
- * \param [in] forest_from  The forest that is adapted.
- * \param [in] which_tree   The local tree containing \a elements.
- * \param [in] tree_class   The eclass of \a which_tree.
- * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
- * \param [in] scheme       The scheme of the forest.
- * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
- * \param [in] num_elements The number of entries in \a elements that are defined
- * \param [in] elements     Pointers to a family or, if \a is_family is zero,
- *                          pointer to one element.
- * \return 1 if the first entry in \a elements should be refined,
- *        -1 if the family \a elements shall be coarsened,
- *        -2 if the first entry in \a elements should be removed,
- *         0 else.
- */
-/* TODO: Do we really need the forest argument? Since the forest is not committed yet it
- *       seems dangerous to expose to the user. */
-typedef int (*t8_forest_adapt_t) (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  const t8_eclass_t tree_class, t8_locidx_t lelement_id, const t8_scheme_c* scheme,
-                                  const int is_family, const int num_elements, t8_element_t* elements[]);
-
-/** Detail namespace should be uninteresting for users. */
-namespace detail
-{
-/** Dummy for the inheritance of \ref interpolate_element_data_mesh_competence_impl.
-  * The dummy class is used in the inheritance pattern to avoid diamond shaped inheritance.
-  * \tparam TUnderlying Use the \ref mesh class here.
-  */
-template <typename TUnderlying>
-struct interpolate_element_data_mesh_competence_helper
-{
-};
-}  // namespace detail
-
 /** TODO
  */
-template <typename TUnderlying, T8MPISafeType TElementDataType>
-class interpolate_element_data_mesh_competence_impl:
-  public t8_crtp_operator<TUnderlying, detail::interpolate_element_data_mesh_competence_helper<typename TUnderlying>> {
+template <typename TUnderlying>
+class interpolate_element_data_mesh_competence:
+  public t8_crtp_operator<TUnderlying, interpolate_element_data_mesh_competence> {
  public:
+  // TODO: has_interpolate function und den callback type
+
+  /** Callback function prototype to replace the element data of one set of elements with another.
+ * This is used to interpolate element data after adaptation. The callback allows the user to make changes to the 
+ * elements that are either refined, coarsened or the same.
+ * \param [in] forest_old      The forest that is adapted
+ * \param [in, out] forest_new The forest that is newly constructed from \a forest_old
+ * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
+ *                             has not been touched, 1 if element got refined. See return of adapt_callback_type.
+ * \param [in] num_outgoing    The number of outgoing elements.
+ * \param [in] first_outgoing  The local handle index of the first outgoing element in the old mesh.
+ * \param [in] num_incoming    The number of incoming elements.
+ * \param [in] first_incoming  The tree local index of the first incoming element in the new mesh.
+ *
+ * If an element is being refined, \a refine and \a num_outgoing will be 1 and
+ * \a num_incoming will be the number of children.
+ * If a family is being coarsened, \a refine will be -1, \a num_outgoing will be
+ * the number of family members and \a num_incoming will be 1.
+ * Else \a refine will be 0 and \a num_outgoing and \a num_incoming will both be 1.
+ */
+  using interpolate_callback_type
+    = std::function<void (const typename TUnderlying::SelfType& mesh_old,
+                          const typename TUnderlying::SelfType& mesh_new, const int refine, const int num_outgoing,
+                          const t8_locidx_t first_outgoing, const int num_incoming, const t8_locidx_t first_incoming)>;
+
+  // TODO: with userdata
+
   /** TODO
    */
   void
-  set_interpolate_data (interpolate_callback_type adapt_callback)
+  set_interpolate_data (interpolate_callback_type interpolate_callback)
   {
-    if (!m_uncommitted_forest.has_value ()) {
-      t8_forest_t new_forest;
-      t8_forest_init (&new_forest);
-      m_uncommitted_forest = new_forest;
-    }
-    // Create and register adaptation context holding the mesh handle and the user defined callback.
-    detail::adapt_registry::register_context (
-      m_forest, std::make_unique<detail::mesh_adapt_context<SelfType>> (*this, std::move (adapt_callback)));
-
-    // Set up the forest for adaptation using the wrapper callback.
-    t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, recursive);
+    //TODO
   }
-};
-
-/** Wrapper for \ref new_element_data_mesh_competence_impl to hide TUnderlying and provide the form needed to pass 
- * it as a mesh competence.
- * Use mesh_competence_pack<new_element_data_mesh_competence<YourElementDataType>::template type> 
- * to get this competence with the correct template parameter form for the mesh.
- * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
- *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
- * \note TElementDataType must be the same as the datatype in \ref element_data_mesh_competence.
- */
-template <T8MPISafeType TElementDataType>
-struct new_element_data_mesh_competence
-{
-  /** Type to provide the form needed for the mesh competence pack. 
-  * \tparam TUnderlying Use the \ref mesh class here.
-  */
-  template <typename TUnderlying>
-  using type = new_element_data_mesh_competence_impl<TUnderlying, TElementDataType>;
 };
 
 }  // namespace t8_mesh_handle

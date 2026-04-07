@@ -271,6 +271,15 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     return requires (SelfType& mesh) { mesh.get_new_element_data (); };
   }
 
+  /** TODO
+  TODO: set_int braucht eig ein argument
+   */
+  static constexpr bool
+  has_interpolate_data_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.set_interpolate_data (); };
+  }
+
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
   /** Wrapper to convert an adapt callback with user data of type \ref adapt_callback_type_with_userdata
    * into a callback without user data of type \ref adapt_callback_type using the defined user data \a user_data.
@@ -400,9 +409,15 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     if (detail::adapt_registry::get (m_uncommitted_forest.value ()) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
       if constexpr (has_element_data_handler_competence ()) {
-        t8_global_infof (
-          "Please note that the element data is not interpolated automatically during adaptation. Use the "
-          "function set_element_data() to provide new adapted element data.\n");
+        if constexpr (has_interpolate_data_competence ()) {
+          // TODO
+          // t8_forest_iterate_replace (m_uncommitted_forest.value (), m_forest,
+          // t8_forest_replace_t replace_fn);
+        }
+        else {
+          t8_global_infof ("The element data was not interpolated during adaptation. Use set_element_data() to provide "
+                           "new data or use the mesh competence TODO.\n");
+        }
       }
     }
     t8_forest_unref (&m_forest);
