@@ -347,7 +347,9 @@ class interpolate_element_data_mesh_competence:
   void
   set_interpolate_data ([[maybe_unused]] interpolate_callback_type interpolate_callback)
   {
-    //TODO
+    // HIER WEITER, problem new mesh noch nicht bekannt, context umschreiben.
+    detail::interpolate_registry::register_context (
+      m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (*this, *this, std::move (cb)));
   }
 
   int

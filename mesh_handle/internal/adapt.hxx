@@ -101,8 +101,8 @@ struct mesh_adapt_context final: mesh_adapt_context_base
   }
 
  private:
-  TMesh& m_mesh_handle;                                 /**< The mesh handle to adapt. */
-  typename TMesh::adapt_callback_type m_adapt_callback; /**< The adapt callback. */
+  TMesh& m_mesh_handle;                                       /**< The mesh handle to adapt. */
+  const typename TMesh::adapt_callback_type m_adapt_callback; /**< The adapt callback. */
 };
 
 /** Registry pattern is used to register contexts, which provides access to the adapt callback and the mesh handle.
