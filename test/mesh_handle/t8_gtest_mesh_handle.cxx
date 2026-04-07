@@ -29,6 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8.h>
+#include "t8_gtest_common.hxx"
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences.hxx>
@@ -194,6 +195,22 @@ TEST (t8_mesh_handle_test, test_union_element_competence_pack)
   EXPECT_TRUE (element_class::has_face_centroids_cache ());
   EXPECT_FALSE (element_class::has_face_normals_cache ());
   EXPECT_FALSE (element_class::has_face_neighbor_cache ());
+}
+
+/** Check that the unique union of multiple mesh competence packs works as intended. */
+TEST (t8_mesh_handle_test, test_union_mesh_competence_pack)
+{
+  using namespace t8_mesh_handle;
+  using mesh_class = mesh<
+    union_competence_packs_type<all_cache_element_competences, new_data_element_competences, empty_element_competences>,
+    union_competence_packs_type<new_data_mesh_competences<data_per_element>,
+                                data_mesh_competences_basic<data_per_element>, empty_mesh_competences>>;
+  EXPECT_TRUE (mesh_class::has_element_data_handler_competence ());
+  using element_class = typename mesh_class::element_class;
+
+  EXPECT_TRUE (element_class::has_element_data_handler_competence ());
+  EXPECT_TRUE (element_class::has_volume_cache ());
+  EXPECT_TRUE (element_class::has_diameter_cache ());
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_handle_test, testing::Combine (AllEclasses, testing::Range (2, 3)));

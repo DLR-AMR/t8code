@@ -27,6 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <t8.h>
+#include "t8_gtest_common.hxx"
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
@@ -35,17 +36,6 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
-
-/** Dummy element data taken from a tutorial for test purposes. */
-struct data_per_element
-{
-  int level;
-  double volume;
-
-  bool
-  operator== (const data_per_element &) const
-    = default;
-};
 
 /** Check that element data can be set for the handle and that exchanging data for the ghosts works. */
 TEST (t8_gtest_handle_data, set_and_get_element_data)
@@ -153,23 +143,4 @@ TEST (t8_gtest_handle_data, set_and_get_new_element_data)
     EXPECT_EQ (elem.get_element_data ().volume, newvolume);
   }
   EXPECT_TRUE (mesh->get_new_element_data ().empty ());
-}
-
-/** Check that the unique union of multiple mesh competence packs works as intended. 
- * This is done in this file because there is only one mesh competence at the moment, where we need a data class. 
- * We use the data class defined here. 
- */
-TEST (t8_gtest_handle_data, test_union_mesh_competence_pack)
-{
-  using namespace t8_mesh_handle;
-  using mesh_class = mesh<
-    union_competence_packs_type<all_cache_element_competences, new_data_element_competences, empty_element_competences>,
-    union_competence_packs_type<new_data_mesh_competences<data_per_element>,
-                                data_mesh_competences_basic<data_per_element>, empty_mesh_competences>>;
-  EXPECT_TRUE (mesh_class::has_element_data_handler_competence ());
-  using element_class = typename mesh_class::element_class;
-
-  EXPECT_TRUE (element_class::has_element_data_handler_competence ());
-  EXPECT_TRUE (element_class::has_volume_cache ());
-  EXPECT_TRUE (element_class::has_diameter_cache ());
 }
