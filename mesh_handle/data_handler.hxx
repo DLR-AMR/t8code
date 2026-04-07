@@ -325,30 +325,35 @@ class interpolate_element_data_mesh_competence:
  * \param [in, out] forest_new The forest that is newly constructed from \a forest_old
  * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
  *                             has not been touched, 1 if element got refined. See return of adapt_callback_type.
- * \param [in] num_outgoing    The number of outgoing elements.
- * \param [in] first_outgoing  The local handle index of the first outgoing element in the old mesh.
- * \param [in] num_incoming    The number of incoming elements.
- * \param [in] first_incoming  The tree local index of the first incoming element in the new mesh.
+ * \param [in] num_old    The number of outgoing elements.
+ * \param [in] first_old  The local handle index of the first outgoing element in the old mesh.
+ * \param [in] num_new    The number of incoming elements.
+ * \param [in] first_new  The tree local index of the first incoming element in the new mesh.
  *
- * If an element is being refined, \a refine and \a num_outgoing will be 1 and
- * \a num_incoming will be the number of children.
- * If a family is being coarsened, \a refine will be -1, \a num_outgoing will be
- * the number of family members and \a num_incoming will be 1.
- * Else \a refine will be 0 and \a num_outgoing and \a num_incoming will both be 1.
+ * If an element is being refined, \a refine and \a num_old will be 1 and
+ * \a num_new will be the number of children.
+ * If a family is being coarsened, \a refine will be -1, \a num_old will be
+ * the number of family members and \a num_new will be 1.
+ * Else \a refine will be 0 and \a num_old and \a num_new will both be 1.
  */
   using interpolate_callback_type
-    = std::function<void (const typename TUnderlying::SelfType& mesh_old,
-                          const typename TUnderlying::SelfType& mesh_new, const int refine, const int num_outgoing,
-                          const t8_locidx_t first_outgoing, const int num_incoming, const t8_locidx_t first_incoming)>;
+    = std::function<void (const TUnderlying& mesh_old, TUnderlying& mesh_new, const int refine, const int num_old,
+                          const t8_locidx_t first_old, const int num_new, const t8_locidx_t first_new)>;
 
   // TODO: with userdata
 
   /** TODO
    */
   void
-  set_interpolate_data (interpolate_callback_type interpolate_callback)
+  set_interpolate_data ([[maybe_unused]] interpolate_callback_type interpolate_callback)
   {
     //TODO
+  }
+
+  int
+  get_tag ()
+  {
+    return 0;
   }
 };
 

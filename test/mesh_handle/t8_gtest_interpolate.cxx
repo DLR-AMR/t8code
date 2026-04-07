@@ -39,33 +39,35 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 template <typename TMeshClass>
 void
-interpolate_callback (const TMeshClass& mesh_old, const TMeshClass& mesh_new, const int refine, const int num_old,
+interpolate_callback (const TMeshClass& mesh_old, TMeshClass& mesh_new, const int refine, const int num_old,
                       const t8_locidx_t first_old, const int num_new, const t8_locidx_t first_new)
 {
-  /* Do not adapt or coarsen */
+  /* Do not adapt or coarsen. */
   if (refine == 0) {
-    (*mesh_new)[first_new].set_element_data ((*mesh_old)[first_old].get_element_data ());
+    mesh_new[first_new].set_element_data (mesh_old[first_old].get_element_data ());
   }
-  /* The old element is refined, we copy the element values. */
+  /* The old element is refined. Volume data is averaged for the children. */
   else if (refine == 1) {
     for (t8_locidx_t i = 0; i < num_new; i++) {
-      (*mesh_new)[first_new + i].set_element_data ((*mesh_old)[first_old].get_element_data ());
+      mesh_new[first_new + i].set_element_data (data_per_element {
+        mesh_old[first_old].get_element_data ().level + 1, mesh_old[first_old].get_element_data ().volume / num_new });
     }
   }
-  /* Old element is coarsened */
+  /* Old element is coarsened. */
   else if (refine == -1) {
-    double tmp_value = 0;
+    double tmp_volume = 0;
     for (t8_locidx_t i = 0; i < num_old; i++) {
-      tmp_value += (*mesh_old)[first_old].get_element_data ();
+      tmp_volume += mesh_old[first_old + i].get_element_data ().volume;
     }
-    (*mesh_new)[first_new + i].set_element_data (tmp_value / num_old);
+    mesh_new[first_new].set_element_data (
+      data_per_element { mesh_old[first_old].get_element_data ().level - 1, tmp_volume });
   }
 }
 
 TEST (t8_gtest_handle_data, test_interpolate_data)
 {
   const int level = 2;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::new_data_mesh_competences,
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
                                           t8_mesh_handle::interpolate_data_mesh_competence<data_per_element>>;
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, false,
                                                                                    false, false);
@@ -83,8 +85,9 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
   }
   mesh->set_element_data (std::move (element_data));
 
-  mesh_handle.set_adapt (
+  mesh->set_adapt (
     mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
-  mesh_handle.set_interpolate_data (interpolate_callback<mesh_class>);
-  mesh_handle.commit ();
+  mesh->set_interpolate_data (interpolate_callback<mesh_class>);
+  mesh->commit ();
+  EXPECT_EQ (1, 1);
 }

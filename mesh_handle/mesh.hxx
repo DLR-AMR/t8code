@@ -277,7 +277,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   static constexpr bool
   has_interpolate_data_competence ()
   {
-    return requires (SelfType& mesh) { mesh.set_interpolate_data (); };
+    return requires (SelfType& mesh) { mesh.get_tag (); };
   }
 
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---

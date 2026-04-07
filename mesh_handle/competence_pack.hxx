@@ -115,7 +115,6 @@ using new_data_mesh_competences
 template <T8MPISafeType TElementDataType>
 using interpolate_data_mesh_competence
   = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
-                         new_element_data_mesh_competence<TElementDataType>::template type,
                          interpolate_element_data_mesh_competence>;
 
 // --- Compute union of competence packs. ---
