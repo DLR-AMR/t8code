@@ -100,8 +100,8 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
                                                                neigh_class, iface, num_half_neighbors, NULL);
         if (neighbor_tree >= 0) {
           /* The face neighbors do exist, check for each one, whether it has
-         * local or ghost leaf descendants in the forest.
-         * If so, the element will be refined. */
+           * local or ghost leaf descendants in the forest.
+           * If so, the element will be refined. */
           for (ineigh = 0; ineigh < num_half_neighbors; ineigh++) {
             if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree, half_neighbors[ineigh], neigh_class)) {
               /* This element should be refined */

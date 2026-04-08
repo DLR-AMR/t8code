@@ -882,12 +882,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
           }
           if (!is_atom) {
             /* Construct each half size neighbor */
-<<<<<<< Updated upstream
-            neighbor_tree = t8_forest_element_half_face_neighbors (forest, itree, elem, half_neighbors, neigh_class,
-=======
-            (void) t8_forest_element_half_face_neighbors (forest, itree, elem, half_neighbors, neigh_class,
->>>>>>> Stashed changes
-                                                                   iface, num_face_children, nullptr);
+            (void) t8_forest_element_half_face_neighbors (forest, itree, elem, half_neighbors, neigh_class, iface,
+                                                          num_face_children, nullptr);
           }
           else {
             size_t iowner;
