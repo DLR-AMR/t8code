@@ -660,7 +660,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
 /** Given a leaf element or ghost index in "all local elements + ghosts" enumeration
  * compute the index of the face neighbor of the element - provided that only one or no
  * face neighbors exists.
- * HANDLE WITH CARE. DO NOT CALL IF THE FOREST IS ADAPTED.
+ * HANDLE WITH CARE. DO NOT CALL IF THE FOREST IS NOT UNIFORM.
  * 
  * \param[in] forest        The forest. Must be committed.
  * \param[in] element_index Index of an element in \a forest. Must have only one or no facen neighbors across the given face.
@@ -669,7 +669,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
  * \param[in] global_treeid Global index of the tree that contains \a element.
  * \param[out] dual_face    Return value, the dual_face index of the face neighbor.
  * \return The index of the face neighbor leaf (local element or ghost).
- * \note Do not call if you are unsure about the number of face neighbors. In particular if the forest is adapted and not uniform.
+ * \note Do not call if you are unsure about the number of face neighbors. In particular if the forest is not uniform.
  */
 t8_locidx_t
 t8_forest_same_level_leaf_face_neighbor_index (const t8_forest_t forest, const t8_locidx_t element_index,
