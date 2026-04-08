@@ -53,15 +53,14 @@ struct mesh_adapt_context_base
 
   /** Pure virtual callback for mesh adaptation.
    * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element selected for adaptation.
-   * \param [in] is_family          true if the entries with indices \a lelement_handle_id,..., 
-   *                                \a lelement_handle_id+ \a num_elements-1 form a family, false otherwise.
-   * \param [in] num_elements       The number of elements that form a family or 1 if \a is_family is false.
+   * \param [in] num_elements       The number of elements that should be considered. 
+   *              If >1, the elements are expected to form a family that can be coarsened.
    * \return 1 if the element with index \a lelement_handle_id should be refined,
    *        -1 if the family shall be coarsened,
    *         0 else.
    */
   virtual int
-  adapt_mesh (const t8_locidx_t lelement_handle_id, const bool is_family, const int num_elements)
+  adapt_mesh (const t8_locidx_t lelement_handle_id, const int num_elements)
     = 0;
 };
 
@@ -83,20 +82,18 @@ struct mesh_adapt_context final: mesh_adapt_context_base
 
   /** Callback for mesh adaptation using the user defined adapt callback.
    * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element.
-   * \param [in] is_family          true if the entries with indices \a lelement_handle_id,..., 
-   *                                \a lelement_handle_id+ \a num_elements-1 form a family, false otherwise.
-   * \param [in] num_elements       The number of elements that form a family or 1 if \a is_family is false.
+   * \param [in] num_elements       The number of elements that should be considered. 
+   *              If >1, the elements are expected to form a family that can be coarsened.
    * \return 1 if the element with index \a lelement_handle_id should be refined,
    *        -1 if the family shall be coarsened,
    *         0 else.
    */
   int
-  adapt_mesh (const t8_locidx_t lelement_handle_id, const bool is_family, const int num_elements) override
+  adapt_mesh (const t8_locidx_t lelement_handle_id, const int num_elements) override
   {
     // Check if adapt callback is set and call it using the correct mesh handle function arguments.
     T8_ASSERTF (m_adapt_callback, "No adapt callback set.");
-    const int count = is_family ? num_elements : 1;
-    std::span<const typename TMesh::element_class> element_view (&m_mesh_handle[lelement_handle_id], count);
+    std::span<const typename TMesh::element_class> element_view (&m_mesh_handle[lelement_handle_id], num_elements);
     return m_adapt_callback (m_mesh_handle, element_view);
   }
 
@@ -123,7 +120,7 @@ class adapt_registry {
     auto& map = get_map ();
     auto [it, inserted] = map.emplace (forest, std::move (context));
     if (!inserted) {
-      t8_global_productionf ("Context already registered!");
+      t8_global_errorf ("ERROR: Context already registered!");
     }
   }
 
@@ -145,8 +142,8 @@ class adapt_registry {
   static mesh_adapt_context_base*
   get (t8_forest_t forest)
   {
-    auto& map = get_map ();
-    auto it = map.find (forest);
+    const auto& map = get_map ();
+    const auto it = map.find (forest);
     return it != map.end () ? it->second.get () : nullptr;
   }
 
@@ -177,25 +174,29 @@ class adapt_registry {
  * \return 1 if the first entry in \a elements should be refined,
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
+ * \note We do not support removing elements for the mesh handle.
  */
 int
 mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                             [[maybe_unused]] t8_eclass_t tree_class, t8_locidx_t lelement_id,
-                             [[maybe_unused]] const t8_scheme* scheme, const int is_family, const int num_elements,
-                             [[maybe_unused]] t8_element_t* elements[])
+                             t8_eclass_t tree_class, t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme* scheme,
+                             const int is_family, const int num_elements, t8_element_t* elements[])
 {
+  if (is_family && !scheme->elements_are_family (tree_class, elements)) {
+    t8_global_errorf ("ERROR: The mesh handle does not support deleted elements.");
+    return 0;  // No adaptation as default.
+  }
   // Get static adapt context from the registry.
   // Via this, we can access the mesh handle and the user defined adapt callback that uses mesh handle functionality.
   auto* context = adapt_registry::get (forest_from);
   if (!context) {
-    t8_global_productionf (
-      "Something went wrong while registering the adaptation callbacks. Please check your implementation.");
+    t8_global_errorf (
+      "ERROR: Something went wrong while registering the adaptation callbacks. Please check your implementation.");
     return 0;  // No adaptation as default.
   }
   // Convert to index used in the mesh handle.
   const t8_locidx_t mesh_index = t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
   // Call the actual adapt callback stored in the context.
-  return context->adapt_mesh (mesh_index, is_family, num_elements);
+  return context->adapt_mesh (mesh_index, num_elements);
 }
 
 }  // namespace detail

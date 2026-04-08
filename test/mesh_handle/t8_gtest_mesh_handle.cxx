@@ -180,11 +180,11 @@ TEST (t8_mesh_handle_test, test_union_element_competence_pack)
   /* Combine multiple competence packs with some overlapping competences to check that the union works correctly
    * and duplicates are removed. Duplicates would cause an error because we inherit multiple times from the same class.
    */
-  using mesh_class
-    = mesh<union_competence_packs_type<element_competence_pack<cache_volume>,
-                                       element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
-                                       element_competence_pack<cache_centroid, cache_face_areas, cache_face_centroids>,
-                                       empty_element_competences>>;
+  using mesh_class = mesh<union_competence_packs_type<
+    element_competence_pack<cache_volume>,
+    element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
+    element_competence_pack<cache_volume, cache_centroid, cache_face_areas, cache_face_centroids>,
+    empty_element_competences>>;
   using element_class = typename mesh_class::element_class;
 
   EXPECT_TRUE (element_class::has_volume_cache ());

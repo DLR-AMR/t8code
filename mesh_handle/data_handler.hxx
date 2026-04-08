@@ -154,10 +154,8 @@ struct element_data_element_competence: public t8_crtp_operator<TUnderlying, ele
   {
     T8_ASSERT (this->underlying ().m_mesh->has_element_data_handler_competence ());
     SC_CHECK_ABORT (!this->underlying ().is_ghost_element (), "Element data cannot be set for ghost elements.\n");
-    // Resize for the case that no data vector has been set previously.
     this->underlying ().m_mesh->m_element_data.reserve (this->underlying ().m_mesh->get_num_local_elements ()
                                                         + this->underlying ().m_mesh->get_num_ghosts ());
-    this->underlying ().m_mesh->m_element_data.resize (this->underlying ().m_mesh->get_num_local_elements ());
     this->underlying ().m_mesh->m_element_data[this->underlying ().get_element_handle_id ()] = std::move (element_data);
   }
 

@@ -60,6 +60,16 @@ struct tag
 {
 };
 
+/** Check whether a competence is already contained in a competence pack.
+ * This helper compares the given competence TCompetence against a list of competences TUnionCompetences 
+ * using the tag wrapper. 
+ * \tparam TCompetence        Competence to check for.
+ * \tparam TUnionCompetences  Existing competences in the pack.
+ * \return true if TCompetence is already present, and false otherwise.
+ */
+template <template <class> class TCompetence, template <class> class... TUnionCompetences>
+inline constexpr bool contains_tag_v = std::disjunction_v<std::is_same<tag<TCompetence>, tag<TUnionCompetences>>...>;
+
 /** Insert competence TCompetence into a pack with competences TUnionCompetences if not already present.
  * A new competence_pack (element_ or mesh_competence_pack) is produced.
  * \tparam TPackType         Type of the competence. Should be element_competence_pack or mesh_competence_pack.
@@ -68,7 +78,7 @@ struct tag
  */
 template <template <template <typename> class...> class TPackType, template <class> class TCompetence,
           template <class> class... TUnionCompetences>
-using insert_unique = std::conditional_t<(std::is_same_v<tag<TCompetence>, tag<TUnionCompetences>> || ...),
+using insert_unique = std::conditional_t<contains_tag_v<TCompetence, TUnionCompetences...>,
                                          TPackType<TUnionCompetences...>, TPackType<TUnionCompetences..., TCompetence>>;
 
 //--- Unique fold operation to fold competences into one competence pack without duplication. ---
