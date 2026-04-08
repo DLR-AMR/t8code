@@ -153,10 +153,9 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *leaf_elements, size_t *offsets);
 
-/* TODO: comment */
-// TODO: Test this function. Uniform mesh test. Refine always same corner, know that neighbors follow geometric series.
-// TODO: user data should be a template parameter in the long run
-// TODO: adapt to search interface
+// TODO: Test this function. Uniform mesh test. Refine always same corner, know that neighbors follow geometric series: See https://github.com/DLR-AMR/t8code/issues/2264
+// TODO (maybe): user data should be a template parameter in the long run
+// TODO (maybe): adapt to search interface
 /**
  * Iterate over all leaves of an element that touch a given face of the element.
  * Callback is called in each recursive step with element as input.
