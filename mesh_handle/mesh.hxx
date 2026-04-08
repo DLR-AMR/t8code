@@ -74,6 +74,8 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   using mesh_iterator =
     typename std::vector<element_class>::iterator;              /**< Non-const iterator type for the mesh elements. */
   friend struct element_data_element_competence<element_class>; /**< Friend struct to access its element data vector. */
+  friend struct new_element_data_element_competence<
+    element_class>; /**< Friend struct to access its element data vector. */
 
   /** Callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle.
@@ -252,6 +254,25 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     return const_cast<element_class&> (static_cast<const mesh*> (this)->operator[] (local_index));
   }
 
+  // --- Methods to check for mesh competences. ---
+  /** Function that checks if a competence for element data handling is given.
+   * \return true if mesh has a data handler, false otherwise.
+   */
+  static constexpr bool
+  has_element_data_handler_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.get_element_data (); };
+  }
+
+  /** Function that checks if a competence for element data handling is given.
+   * \return true if mesh has a data handler, false otherwise.
+   */
+  static constexpr bool
+  has_new_element_data_handler_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.get_new_element_data (); };
+  }
+
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
   /** Wrapper to convert an adapt callback with user data of type \ref adapt_callback_type_with_userdata
    * into a callback without user data of type \ref adapt_callback_type using the defined user data \a user_data.
@@ -357,6 +378,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * The forest used to define the mesh handle is replaced in this function.
    * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
    * Specialize the update with calls like \ref set_adapt first.
+   * If the competence \ref new_element_data_mesh_competence is used, the element data will be updated.
    */
   void
   commit ()
@@ -386,16 +408,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     m_forest = m_uncommitted_forest.value ();
     m_uncommitted_forest.reset ();
     update_elements ();
-  }
-
-  // --- Methods to check for mesh competences. ---
-  /** Function that checks if a competence for element data handling is given.
-   * \return true if mesh has a data handler, false otherwise.
-   */
-  static constexpr bool
-  has_element_data_handler_competence ()
-  {
-    return requires (SelfType& mesh) { mesh.get_element_data (); };
+    if constexpr (has_new_element_data_handler_competence ()) {
+      this->write_new_to_element_data ();
+    }
   }
 
  private:

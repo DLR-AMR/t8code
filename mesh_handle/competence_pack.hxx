@@ -64,9 +64,14 @@ using all_cache_element_competences
 using cache_face_element_competences
   = element_competence_pack<cache_face_areas, cache_face_centroids, cache_face_normals, cache_neighbors>;
 
-/** Predefined element competence pack combining all competences related to data. 
- *  Please note that you must combine this with \ref t8_mesh_handle::data_mesh_competences. */
-using data_element_competences = element_competence_pack<element_data_element_competence>;
+/** Predefined element data competence pack. 
+ *  Please note that you must combine this with \ref t8_mesh_handle::data_mesh_competences_basic. */
+using data_element_competences_basic = element_competence_pack<element_data_element_competence>;
+
+/** Predefined element competence pack combining the element data competence and competence to set new element data. 
+ *  Please note that you must combine this with \ref t8_mesh_handle::new_data_mesh_competences. */
+using new_data_element_competences
+  = element_competence_pack<element_data_element_competence, new_element_data_element_competence>;
 
 // --- Mesh competence pack. ---
 /** Class to pack different mesh competences into one template parameter for the \ref mesh class.
@@ -90,11 +95,19 @@ struct mesh_competence_pack
 /** Empty competence pack. */
 using empty_mesh_competences = mesh_competence_pack<>;
 
-/** Predefined mesh competence pack combining all competences related to data. 
- * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences.
+/** Predefined mesh competence pack to handle element data. 
+ * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences_basic.
  */
 template <T8MPISafeType TElementDataType>
-using data_mesh_competences = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type>;
+using data_mesh_competences_basic = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type>;
+
+/** Predefined mesh competence pack combining all competences related to data and competence to set new element data. 
+ * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::new_data_element_competences.
+ */
+template <T8MPISafeType TElementDataType>
+using new_data_mesh_competences
+  = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
+                         new_element_data_mesh_competence<TElementDataType>::template type>;
 
 // --- Compute union of competence packs. ---
 /** Compute the unique union of the competences of several competence_pack. This could be
