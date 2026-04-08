@@ -68,11 +68,6 @@ using cache_face_element_competences
  *  Please note that you must combine this with \ref t8_mesh_handle::data_mesh_competences_basic. */
 using data_element_competences_basic = element_competence_pack<element_data_element_competence>;
 
-/** Predefined element competence pack combining the element data competence and competence to set new element data. 
- *  Please note that you must combine this with \ref t8_mesh_handle::new_data_mesh_competences. */
-using new_data_element_competences
-  = element_competence_pack<element_data_element_competence, new_element_data_element_competence>;
-
 // --- Mesh competence pack. ---
 /** Class to pack different mesh competences into one template parameter for the \ref mesh class.
  * \tparam TMeshCompetence The mesh competences to be packed.
@@ -100,14 +95,6 @@ using empty_mesh_competences = mesh_competence_pack<>;
  */
 template <T8MPISafeType TElementDataType>
 using data_mesh_competences_basic = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type>;
-
-/** Predefined mesh competence pack combining all competences related to data and competence to set new element data. 
- * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::new_data_element_competences.
- */
-template <T8MPISafeType TElementDataType>
-using new_data_mesh_competences
-  = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
-                         new_element_data_mesh_competence<TElementDataType>::template type>;
 
 /** Predefined mesh competence pack with the functionality to work with element data and to interpolate element data after adaptation. 
  * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::new_data_element_competences.
