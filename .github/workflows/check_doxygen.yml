@@ -42,12 +42,21 @@ jobs:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 0
+        fetch-tags: true
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: init submodules
       run: git submodule init
     - name: update submodules
       run: git submodule update
+    - name: Check whether a version tag is found and throw error message otherwise.
+      run: |
+        if  ! [ -n "$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*')" ]; then
+          echo "ERROR: No version TAG found! A likely explanation is that the PR was created" \
+               "from a git fork missing the associated tags. If so, here is how to fix it:" \
+               "https://github.com/DLR-AMR/t8code/wiki/Contribution-workflow#failing-version-tags-in-pr-tests"
+               exit 1
+        fi
     - name: Install LaTeX dependencies
       run: |
         sudo apt-get update
