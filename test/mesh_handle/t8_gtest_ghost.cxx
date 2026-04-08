@@ -59,7 +59,7 @@ struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
 /** Check the implementation of ghosts and all functions accessible by ghosts. */
 TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             false, false);
 
@@ -194,7 +194,7 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_neighbors_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD,
                                                                                   true, true, false);
