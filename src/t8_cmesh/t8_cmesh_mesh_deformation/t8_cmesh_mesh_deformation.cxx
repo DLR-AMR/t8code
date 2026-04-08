@@ -146,7 +146,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Calculate the displacement of the vertex which should be then done in the deformation. */
       node.displacement = { new_coords.X () - old_x, new_coords.Y () - old_y, new_coords.Z () - old_z };
 
-      node.weight = { 0.0, 0.0, 0.0 };
+      node.weight.fill (0.0);
 
       boundary_node_data[global_vertex_id] = node;
     }
@@ -166,7 +166,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
     /* Get the list of trees where this vertex exists. */
     const auto &tree_list = associated_cmesh->vertex_connectivity->get_tree_list_of_vertex (global_vertex);
 
-    /*Update the vertex coordinates in each tree. */
+    /* Update the vertex coordinates in each tree. */
     for (const auto &[tree_id, local_vertex_index] : tree_list) {
 
       /* Get the vertex coordinates of the current tree. */
