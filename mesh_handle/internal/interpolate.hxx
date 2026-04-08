@@ -62,8 +62,8 @@ struct mesh_interpolate_context final: mesh_interpolate_context_base
 {
   using callback_type = typename TMesh::interpolate_callback_type;
 
-  mesh_interpolate_context (const TMesh& mesh_old, TMesh& mesh_new, callback_type interpolate_callback)
-    : m_mesh_old (mesh_old), m_mesh_new (mesh_new), m_callback (std::move (interpolate_callback))
+  mesh_interpolate_context (const TMesh& mesh_old, TMesh& mesh_new, callback_type&& interpolate_callback)
+    : m_mesh_old (mesh_old), m_mesh_new (mesh_new), m_callback (std::forward<callback_type> (interpolate_callback))
   {
   }
 
@@ -127,8 +127,9 @@ class interpolate_registry {
  */
 inline void
 mesh_replace_callback_wrapper (t8_forest_t forest_old, [[maybe_unused]] t8_forest_t forest_new, t8_locidx_t which_tree,
-                               const t8_eclass_t tree_class, const t8_scheme_c* scheme, const int refine,
-                               const int num_outgoing, const t8_locidx_t first_outgoing, const int num_incoming,
+                               [[maybe_unused]] const t8_eclass_t tree_class,
+                               [[maybe_unused]] const t8_scheme_c* scheme, const int refine, const int num_outgoing,
+                               const t8_locidx_t first_outgoing, const int num_incoming,
                                const t8_locidx_t first_incoming)
 {
   auto* context = interpolate_registry::get (forest_old);

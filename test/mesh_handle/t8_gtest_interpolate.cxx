@@ -87,7 +87,18 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
 
   mesh->set_adapt (
     mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
-  mesh->set_interpolate_data (interpolate_callback<mesh_class>);
+  mesh->set_interpolate_callback (interpolate_callback<mesh_class>);
   mesh->commit ();
-  EXPECT_EQ (1, 1);
+  bool tested_something = false;
+  for (auto& elem : *mesh) {
+    if (!tested_something && (elem.get_level () != level)) {
+      tested_something = true;
+    }
+    EXPECT_EQ (elem.get_level (), elem.get_element_data ().level);
+    if (!(elem.get_element_data ().level > level)) {
+      // For refined elements, the volume is averaged and thus not exact.
+      EXPECT_EQ (elem.get_volume (), elem.get_element_data ().volume);
+    }
+  }
+  EXPECT_TRUE (tested_something);
 }

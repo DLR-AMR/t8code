@@ -29,12 +29,14 @@
 #include <t8.h>
 #include "element.hxx"
 #include "competence_pack.hxx"
-#include "internal/adapt.hxx"
 #include "data_handler.hxx"
+#include "internal/adapt.hxx"
+#include "internal/interpolate.hxx"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_iterate.h>
 #include <vector>
 #include <functional>
 #include <memory>
@@ -406,13 +408,23 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     t8_forest_ref (m_forest);
     t8_forest_commit (m_uncommitted_forest.value ());
     // Check if we adapted and unregister the adapt context if so.
-    if (detail::adapt_registry::get (m_uncommitted_forest.value ()) != nullptr) {
+    if (detail::adapt_registry::get (m_forest) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
       if constexpr (has_element_data_handler_competence ()) {
         if constexpr (has_interpolate_data_competence ()) {
-          // TODO
-          // t8_forest_iterate_replace (m_uncommitted_forest.value (), m_forest,
-          // t8_forest_replace_t replace_fn);
+          if (this->m_interpolate_callback) {
+            SelfType new_mesh (m_uncommitted_forest.value ());
+            t8_forest_ref (m_uncommitted_forest.value ());
+            detail::interpolate_registry::register_context (
+              m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (
+                          *this, new_mesh, std::move (this->m_interpolate_callback)));
+            t8_forest_iterate_replace (m_uncommitted_forest.value (), m_forest, detail::mesh_replace_callback_wrapper);
+            detail::interpolate_registry::unregister_context (m_forest);
+            this->m_element_data = new_mesh.take_element_data ();
+          }
+          else {
+            t8_global_infof ("No interpoaltion context set.\n");
+          }
         }
         else {
           t8_global_infof ("The element data was not interpolated during adaptation. Use set_element_data() to provide "

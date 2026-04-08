@@ -90,6 +90,12 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
     return m_element_data;
   }
 
+  std::vector<TElementDataType>
+  take_element_data ()
+  {
+    return std::move (m_element_data);
+  }
+
   /** Exchange the element data for ghost elements between processes.
   * This routine has to be called on each process after setting the element data for all local elements.
   */
@@ -345,11 +351,9 @@ class interpolate_element_data_mesh_competence:
   /** TODO
    */
   void
-  set_interpolate_data ([[maybe_unused]] interpolate_callback_type interpolate_callback)
+  set_interpolate_callback (interpolate_callback_type&& interpolate_callback)
   {
-    // HIER WEITER, problem new mesh noch nicht bekannt, context umschreiben.
-    detail::interpolate_registry::register_context (
-      m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (*this, *this, std::move (cb)));
+    m_interpolate_callback = std::forward<interpolate_callback_type> (interpolate_callback);
   }
 
   int
@@ -357,6 +361,9 @@ class interpolate_element_data_mesh_competence:
   {
     return 0;
   }
+
+ protected:
+  interpolate_callback_type m_interpolate_callback;
 };
 
 }  // namespace t8_mesh_handle
