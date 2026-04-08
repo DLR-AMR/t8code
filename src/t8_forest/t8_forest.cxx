@@ -1818,7 +1818,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
         // We add the ghost elements of that tree to our search array.
         const t8_element_array_t *ghost_leaves
           = t8_forest_ghost_get_tree_leaf_elements (forest, local_neighbor_ghost_treeid);
-        if (ghost_leaves != nullptr) {
+        if (ghost_leaves != NULL) {
           neighbor_leaf_array *leaf_array = new neighbor_leaf_array (ghost_leaves, true);
           leaf_arrays.push_back (leaf_array);
         }
