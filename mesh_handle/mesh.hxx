@@ -265,12 +265,11 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   /** TODO
-  TODO: set_int braucht eig ein argument
    */
   static constexpr bool
   has_interpolate_data_competence ()
   {
-    return requires (SelfType& mesh) { mesh.get_tag (); };
+    return requires (SelfType& mesh) { mesh.set_partition_called (); };
   }
 
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
@@ -321,12 +320,16 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * \note The partition is carried out only when \ref commit is called.
    * \note This setting can be combined with \ref set_adapt and \ref set_balance. The order in which
    * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
-   * \param [in] set_for_coarsening If true, the partitions are choose such that coarsening 
+   * \param [in] set_for_coarsening If true, the partitions are chosen such that coarsening 
    *        an element once is a process local operation. Default is false.
    */
   void
   set_partition (bool set_for_coarsening = false)
   {
+    if constexpr (has_interpolate_data_competence ()) {
+      this->m_set_for_coarsening = set_for_coarsening;
+      return;
+    }
     if (!m_uncommitted_forest.has_value ()) {
       t8_forest_t new_forest;
       t8_forest_init (&new_forest);
@@ -336,7 +339,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   /** If this function is called, the mesh will be balanced on committing.
- * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
+   * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
    * \note The balance is carried out only when \ref commit is called.
    * \param [in] no_repartition Balance constructs several intermediate steps that
    *       are refined from each other. In order to maintain a balanced load, a repartitioning is performed in each 
@@ -407,6 +410,23 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             t8_forest_iterate_replace (m_uncommitted_forest.value (), m_forest, detail::mesh_replace_callback_wrapper);
             detail::interpolate_registry::unregister_context (m_forest);
             this->m_element_data = new_mesh.take_element_data ();
+            t8_forest_unref (&m_forest);
+            if (this->set_partition_called ()) {
+              t8_forest_init (&m_forest);
+              t8_forest_set_partition (m_forest, m_uncommitted_forest.value (), this->m_set_for_coarsening);
+              if (t8_forest_get_num_ghosts (m_uncommitted_forest.value ()) > 0) {
+                t8_forest_set_ghost (m_forest, true, T8_GHOST_FACES);
+              }
+              t8_forest_commit (m_forest);
+              // TODO: repartition data with t8_forest_partition_data.
+            }
+            else {
+              // Update underlying forest of the mesh.
+              m_forest = m_uncommitted_forest.value ();
+            }
+            m_uncommitted_forest.reset ();
+            update_elements ();
+            return;
           }
           else {
             t8_global_infof ("No interpoaltion context set.\n");

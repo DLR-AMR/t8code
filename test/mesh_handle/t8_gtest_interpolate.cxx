@@ -87,6 +87,7 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
 
   mesh->set_adapt (
     mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
+  mesh->set_balance ();
   mesh->set_interpolate_callback (interpolate_callback<mesh_class>);
   mesh->commit ();
   bool tested_something = false;

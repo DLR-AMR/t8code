@@ -35,6 +35,7 @@
 #include <type_traits>
 #include <vector>
 #include <functional>
+#include <optional>
 
 namespace t8_mesh_handle
 {
@@ -217,14 +218,15 @@ class interpolate_element_data_mesh_competence:
     m_interpolate_callback = std::forward<interpolate_callback_type> (interpolate_callback);
   }
 
-  int
-  get_tag ()
+ protected:
+  bool
+  set_partition_called ()
   {
-    return 0;
+    return m_set_for_coarsening.has_value ();
   }
 
- protected:
   interpolate_callback_type m_interpolate_callback;
+  std::optional<bool> m_set_for_coarsening;
 };
 
 }  // namespace t8_mesh_handle
