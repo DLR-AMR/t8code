@@ -45,7 +45,7 @@ namespace t8_mesh_handle
  * \param [in] mesh             The mesh to write.
  * \param [in] fileprefix       The prefix of the files where the vtk will be stored.
  *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu.
- * \param [in] num_data         Number of user defined double valued data fields to write.
+ * \param [in] num_data         Number of user-defined double valued data fields to write.
  * \param [in] data             Array of t8_vtk_data_field_t of length \a num_data providing the user-defined 
  *              per element data. If scalar and vector fields are used, all scalar fields must come first in the array.
  * \param [in] write_treeid     If true, the global tree id of the underlying forest is written for each element.

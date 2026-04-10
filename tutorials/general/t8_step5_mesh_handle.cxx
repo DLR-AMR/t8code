@@ -39,8 +39,8 @@
  * In this example we want to store the element's level and volume. */
 struct t8_step5_data_per_element
 {
-  int level;
-  double volume;
+  int level;     /**< Level of the element. */
+  double volume; /**< Volume of the element. */
 };
 
 /** User data type we will pass to the adapt callback. */
@@ -98,8 +98,8 @@ t8_step5_build_mesh (sc_MPI_Comm comm, int level)
   /* Adapt, partition, balance and create ghost elements. */
   mesh_handle->set_balance ();
   mesh_handle->set_partition ();
-  mesh_handle->set_adapt (TMeshClass::template mesh_adapt_callback_wrapper<user_data> (adapt_callback<TMeshClass>, adapt_data),
-                          false);
+  mesh_handle->set_adapt (
+    TMeshClass::template mesh_adapt_callback_wrapper<user_data> (adapt_callback<TMeshClass>, adapt_data), false);
   mesh_handle->set_ghost ();
   mesh_handle->commit ();
   return mesh_handle;
