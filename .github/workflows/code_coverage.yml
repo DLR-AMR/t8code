@@ -112,7 +112,7 @@ jobs:
       run: cd build && cmake --build . --target coverage
     # Upload coverage report to Codecov.
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         files: ./build/coverage.info
         fail_ci_if_error: true
