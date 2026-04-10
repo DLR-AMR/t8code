@@ -38,7 +38,7 @@ namespace t8_mesh_handle
  * This may change in accordance with \a write_ghosts, \a write_curved and 
  * \a do_not_use_API, because the export of ghosts is not yet available with 
  * the VTK API and the export of curved elements is not available with the
- * inbuilt function to write ASCII files. The function will for example
+ * built-in function to write ASCII files. The function will for example
  * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API 
  * is set to true.
  * This function is collective and must be called on each process.
@@ -46,7 +46,7 @@ namespace t8_mesh_handle
  * \param [in] fileprefix       The prefix of the files where the vtk will be stored.
  *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu.
  * \param [in] num_data         Number of user defined double valued data fields to write.
- * \param [in] data             Array of t8_vtk_data_field_t of length \a num_data providing the user defined 
+ * \param [in] data             Array of t8_vtk_data_field_t of length \a num_data providing the user-defined 
  *              per element data. If scalar and vector fields are used, all scalar fields must come first in the array.
  * \param [in] write_treeid     If true, the global tree id of the underlying forest is written for each element.
  * \param [in] write_mpirank    If true, the mpirank is written for each element.
@@ -55,7 +55,7 @@ namespace t8_mesh_handle
  * \param [in] write_ghosts     If true, each process additionally writes its ghost elements.
  *              For ghost element the treeid of the underlying forest is -1.
  * \param [in] write_curved     If true, write the elements as curved element types from vtk.
- * \param [in] do_not_use_API   Do not use the VTK API, even if linked and available.
+ * \param [in] do_not_use_API   If true, do not use the VTK API, even if linked and available.
  * \return  True if successful, false if not (process local).
  */
 template <typename TMeshClass>

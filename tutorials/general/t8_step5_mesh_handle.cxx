@@ -79,17 +79,17 @@ adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typenam
 }
 
 /** Build a mesh with initial uniform refinement level \a level which is adapted according to \ref adapt_callback, 
- * partitioned and balanced afterwards  and ghost elements are set.
+ * partitioned and balanced afterwards, and ghost elements are set.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] comm     MPI communicator to use.
  * \param [in] level Initial refinement level.
  * \return Unique pointer to the mesh created.
  */
-template <typename TMesh>
-std::unique_ptr<TMesh>
+template <typename TMeshClass>
+std::unique_ptr<TMeshClass>
 t8_step5_build_mesh (sc_MPI_Comm comm, int level)
 {
-  auto mesh_handle = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMesh> (level, comm);
+  auto mesh_handle = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
   struct user_data adapt_data = {
     { 0.5, 0.5, 1 }, /* Midpoint of the sphere. */
     0.2,             /* Refine if inside this radius. */
@@ -98,14 +98,18 @@ t8_step5_build_mesh (sc_MPI_Comm comm, int level)
   /* Adapt, partition, balance and create ghost elements. */
   mesh_handle->set_balance ();
   mesh_handle->set_partition ();
-  mesh_handle->set_adapt (TMesh::template mesh_adapt_callback_wrapper<user_data> (adapt_callback<TMesh>, adapt_data),
+  mesh_handle->set_adapt (TMeshClass::template mesh_adapt_callback_wrapper<user_data> (adapt_callback<TMeshClass>, adapt_data),
                           false);
   mesh_handle->set_ghost ();
   mesh_handle->commit ();
   return mesh_handle;
 }
 
-/** Set element data to the mesh handle. */
+/** Set element data to the mesh handle. 
+ * \tparam TMeshClass    The mesh handle class.
+ * \param [in, out] mesh  The mesh handle.
+ */
+
 template <typename TMeshClass>
 void
 t8_step5_set_element_data (TMeshClass &mesh)
@@ -115,7 +119,10 @@ t8_step5_set_element_data (TMeshClass &mesh)
   }
 }
 
-/** Exchange element data set in \ref t8_step5_set_element_data for ghost elements. */
+/** Exchange element data set in \ref t8_step5_set_element_data for ghost elements. 
+ * \tparam TMeshClass    The mesh handle class.
+ * \param [in, out] mesh  The mesh handle.
+ */
 template <typename TMeshClass>
 void
 t8_step5_exchange_ghost_data (TMeshClass &mesh)
