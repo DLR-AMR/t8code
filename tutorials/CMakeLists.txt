@@ -33,6 +33,10 @@ function( add_t8_tutorial )
 
     add_executable( ${ADD_T8_TUTORIAL_NAME} ${ADD_T8_TUTORIAL_SOURCES} )
     target_link_libraries( ${ADD_T8_TUTORIAL_NAME} PRIVATE T8 SC::SC )
+    string( FIND ${ADD_T8_TUTORIAL_NAME} "mesh_handle" is_mesh_handle_file )
+    if ( (${is_mesh_handle_file} GREATER_EQUAL 0) )
+        target_link_libraries(${ADD_T8_TUTORIAL_NAME} PRIVATE T8_MESH_HANDLE )
+    endif ()
     target_include_directories( ${ADD_T8_TUTORIAL_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/.. )
     
     set_target_properties(${ADD_T8_TUTORIAL_NAME} PROPERTIES
@@ -69,3 +73,7 @@ copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_hex.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_quad.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tet.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tri.geo)
+
+if( T8CODE_BUILD_MESH_HANDLE )
+    add_t8_tutorial( NAME t8_step5_mesh_handle SOURCES general/t8_step5_mesh_handle.cxx )
+endif()
