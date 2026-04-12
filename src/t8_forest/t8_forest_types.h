@@ -62,7 +62,7 @@ typedef int8_t t8_forest_from_t;
 #define T8_FOREST_BALANCE_NO_REPART 2 /**< Value of forest->set_balance if balancing without repartitioning */
 
 /** The number of statistics collected by a profile struct. */
-#define T8_PROFILE_NUM_STATS 17
+#define T8_PROFILE_NUM_STATS 21
 
 /** This structure is private to the implementation. */
 typedef struct t8_forest
@@ -193,7 +193,10 @@ typedef struct t8_profile
   double cmesh_offsets_runtime;    /**< The runtime of the last call to \a t8_forest_partition_create_tree_offsets. */
   double forest_offsets_runtime;   /**< The runtime of the last call to \a t8_forest_partition_create_offsets. */
   double first_descendant_runtime; /**< The runtime of the last call to \a t8_forest_partition_create_first_desc. */
-
+  double search_time;
+  double search_check_element_time;
+  double search_check_query_time;
+  double search_split_array_time;
 } t8_profile_struct_t;
 
 /**
