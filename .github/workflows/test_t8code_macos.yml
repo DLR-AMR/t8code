@@ -83,9 +83,8 @@ jobs:
     - name: Reinstall gfortran
       run: brew reinstall gfortran
     - name: Show gfortran version
-      run: |
-        $OPENMPI_BIN/gfortran --version
-        which gfortran
+      run: $OPENMPI_BIN/mpifort --version
+    #    which gfortran
     # - name: Show Clang version
     #   run: clang --version
     - name: Show mpicc version
