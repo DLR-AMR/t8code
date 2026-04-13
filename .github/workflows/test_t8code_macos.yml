@@ -110,7 +110,7 @@ jobs:
         export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=/opt/homebrew/opt/open-mpi/bin/mpicc -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/open-mpi/bin/mpicxx -GNinja -DCMAKE_INSTALL_PREFIX=$(pwd)/install \\
                                -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
                                -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON \
-                               -DT8CODE_BUILD_FORTRAN_INTERFACE=OFF -DT8CODE_BUILD_MESH_HANDLE=ON -DT8CODE_CUSTOM_PARALLEL_TEST_COMMAND='/opt/homebrew/opt/open-mpi/bin/mpirun -np 2'\
+                               -DT8CODE_BUILD_FORTRAN_INTERFACE=OFF -DT8CODE_BUILD_MESH_HANDLE=ON \
                                -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_VTK=OFF"
         echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # - name: build config variables
@@ -125,7 +125,7 @@ jobs:
     - name: echo cmake line
       run: echo cmake ../ $CONFIG_OPTIONS
     - name: cmake
-      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
+      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS -DT8CODE_CUSTOM_PARALLEL_TEST_COMMAND="/opt/homebrew/opt/open-mpi/bin/mpirun -np 2"
     # On failure, upload logs
     - name: OnFailUploadLog
       if: failure()
