@@ -142,7 +142,7 @@ jobs:
     - name: parallel tests (if MPI is enabled)
       run: |
         env | grep OMPI
-        ompi_info --param rmaps all
+        ompi_info --param rmaps all 
         export OMPI_ALLOW_RUN_AS_ROOT=1
         export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
         export OMPI_MCA_btl=self,tcp
