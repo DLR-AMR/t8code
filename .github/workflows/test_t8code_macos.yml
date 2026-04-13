@@ -74,7 +74,12 @@ jobs:
     - name: Update packages
       run: brew update
     - name: Install missing packages via Homebrew
-      run: brew install open-mpi ninja cmake googletest openssl
+      run: |
+        brew install open-mpi ninja cmake googletest openssl
+        echo "/usr/local/opt/open-mpi/bin" >> $GITHUB_PATH
+        which mpicc
+        mpicc --version
+        ompi_info --config | grep -i rmaps
     - name: Show Clang version
       run: clang --version
     - name: Show mpicc version
