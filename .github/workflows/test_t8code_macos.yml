@@ -75,13 +75,13 @@ jobs:
       run: brew update
     - name: Install missing packages via Homebrew
       run: |
-        brew install open-mpi ninja cmake googletest openssl
+        brew install open-mpi ninja cmake googletest openssl gcc
     - name: Export correct OpenMPI path to environment variables
       run: |
         export OPENMPI_BIN="/opt/homebrew/opt/open-mpi/bin"
         echo OPENMPI_BIN="$OPENMPI_BIN" >> $GITHUB_ENV
-    - name: Show Clang version
-      run: clang --version
+    # - name: Show Clang version
+    #   run: clang --version
     - name: Show mpicc version
       run: mpicc --version
     - name: init submodules
