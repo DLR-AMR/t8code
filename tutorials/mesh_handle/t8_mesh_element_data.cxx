@@ -109,12 +109,11 @@ build_mesh (sc_MPI_Comm comm, int level)
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh  The mesh handle.
  */
-
 template <typename TMeshClass>
 void
 set_element_data_mesh (TMeshClass &mesh)
 {
-  for (auto &elem : *mesh) {
+  for (auto &elem : mesh) {
     elem.set_element_data ({ elem.get_level (), elem.get_volume () });
   }
 }
@@ -127,7 +126,7 @@ template <typename TMeshClass>
 void
 exchange_ghost_data_mesh (TMeshClass &mesh)
 {
-  mesh->exchange_ghost_data ();
+  mesh.exchange_ghost_data ();
 }
 
 /** Write the mesh as vtu and also write the element's volumes in the file.
@@ -143,9 +142,9 @@ exchange_ghost_data_mesh (TMeshClass &mesh)
  */
 template <typename TMeshClass>
 static void
-output_data_to_vtu (TMeshClass &mesh, const char *prefix)
+output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
 {
-  t8_locidx_t num_elements = mesh->get_num_local_elements ();
+  t8_locidx_t num_elements = mesh.get_num_local_elements ();
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_volumes = T8_ALLOC (double, num_elements);
@@ -160,7 +159,7 @@ output_data_to_vtu (TMeshClass &mesh, const char *prefix)
   vtk_data.data = element_volumes;
   /* Copy the element's volumes from our data array to the output array. */
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
-    element_volumes[ielem] = ((*mesh)[ielem]).get_element_data ().volume;
+    element_volumes[ielem] = mesh[ielem].get_element_data ().volume;
   }
   /* To write user defined data, we need the extended output function write_mesh_to_vtk_ext. 
    * Despite writing user data, it also offers more control over which properties to write. */
@@ -206,10 +205,10 @@ main (int argc, char **argv)
     using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, data_per_element_type>;
     auto mesh = build_mesh<mesh_class> (comm, level);
 
-    t8_mesh_handle::write_mesh_to_vtk (mesh, prefix_mesh);
+    t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_mesh);
     t8_global_productionf (" [tutorial] Wrote mesh to vtu files: %s*\n", prefix_mesh);
 
-    set_element_data_mesh (mesh);
+    set_element_data_mesh (*mesh);
     t8_global_productionf (" [tutorial] Computed level and volume data for local elements.\n");
     if (mesh->get_num_local_elements () > 0) {
       /* Output the stored data of the first local element (if it exists). */
@@ -218,7 +217,7 @@ main (int argc, char **argv)
     }
 
     /* Exchange the data values of the ghost elements. */
-    exchange_ghost_data_mesh (mesh);
+    exchange_ghost_data_mesh (*mesh);
     t8_global_productionf (" [tutorial] Exchanged ghost data.\n");
     if (mesh->get_num_ghosts () > 0) {
       /* Output the data of the first ghost element (if it exists). */
@@ -229,7 +228,7 @@ main (int argc, char **argv)
     }
 
     /* Output the volume data to vtu. */
-    output_data_to_vtu (mesh, prefix_mesh_with_data);
+    output_data_to_vtu (*mesh, prefix_mesh_with_data);
     t8_global_productionf (" [tutorial] Wrote mesh and volume data to %s*.\n", prefix_mesh_with_data);
 
     /* Cleanup. */
