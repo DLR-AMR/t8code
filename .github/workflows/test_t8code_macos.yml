@@ -75,15 +75,17 @@ jobs:
       run: brew update
     - name: Install missing packages via Homebrew
       run: |
-        brew install open-mpi ninja cmake googletest openssl gfortran
+        brew install open-mpi ninja cmake googletest openssl
     - name: Export correct OpenMPI path to environment variables
       run: |
         export OPENMPI_BIN="/opt/homebrew/opt/open-mpi/bin"
         echo OPENMPI_BIN="$OPENMPI_BIN" >> $GITHUB_ENV
+    - name: Reinstall gfortran
+      run: brew reinstall gfortran
     - name: Show gfortran version
       run: |
-        gfortran --version
-        which gfortran
+      $OPENMPI_BIN/gfortran --version
+      which gfortran
     # - name: Show Clang version
     #   run: clang --version
     - name: Show mpicc version
