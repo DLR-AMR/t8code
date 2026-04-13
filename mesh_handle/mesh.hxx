@@ -30,6 +30,8 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "internal/adapt.hxx"
+#include "t8_forest/t8_forest_balance.h"
+#include "t8_forest/t8_forest_types.h"
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
@@ -166,6 +168,17 @@ class mesh {
     return m_forest;
   }
 
+  /** Check if the local elements of the mesh are balanced. 
+  * The mesh is said to be balanced if the level difference between face neighbors is at most 1.
+  * at most +1 or -1 of the element's level.
+  * \return true if the local elements are balanced, false otherwise.
+  */
+  bool
+  is_balanced ()
+  {
+    return t8_forest_is_balanced (m_forest);
+  }
+
   // --- Methods to access elements. ---
   /**
    * Returns a constant iterator to the first (local) mesh element.
@@ -280,6 +293,48 @@ class mesh {
     t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, false);
   }
 
+  /** If this function is called, the mesh will be partitioned on committing.
+   * The partitioning is done according to the SFC and each rank is assigned
+   * the same (maybe +1) number of elements.
+   * \note The partition is carried out only when \ref commit is called.
+   * \note This setting can be combined with \ref set_adapt and \ref set_balance. The order in which
+   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * \param [in] set_for_coarsening If true, the partitions are choose such that coarsening 
+   *        an element once is a process local operation. Default is false.
+   */
+  void
+  set_partition (bool set_for_coarsening = false)
+  {
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
+    }
+    t8_forest_set_partition (m_uncommitted_forest.value (), m_forest, set_for_coarsening);
+  }
+
+  /** If this function is called, the mesh will be balanced on committing.
+ * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
+   * \note The balance is carried out only when \ref commit is called.
+   * \param [in] no_repartition Balance constructs several intermediate steps that
+   *       are refined from each other. In order to maintain a balanced load, a repartitioning is performed in each 
+   *       round and the resulting mesh is load-balanced per default. 
+   *       Set \a no_repartition to true if this behaviour is not desired.
+   *       If \a no_repartition is false (default), an additional call of \ref set_partition is not necessary.
+   * \note This setting can be combined with \ref set_adapt and \ref set_partition. The order in which
+   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   */
+  void
+  set_balance (bool no_repartition = false)
+  {
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
+    }
+    t8_forest_set_balance (m_uncommitted_forest.value (), m_forest, no_repartition);
+  }
+
   /** Enable or disable the creation of a layer of ghost elements.
    * \param [in]      do_ghost  If true a ghost layer will be created.
    * \param [in]      ghost_type Controls which neighbors count as ghost elements,
@@ -317,7 +372,7 @@ class mesh {
     t8_forest_ref (m_forest);
     t8_forest_commit (m_uncommitted_forest.value ());
     // Check if we adapted and unregister the adapt context if so.
-    if (detail::adapt_registry::get (m_uncommitted_forest.value ()) != nullptr) {
+    if (detail::adapt_registry::get (m_forest) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
       if (!std::is_void<TElementDataType>::value) {
         t8_global_infof (

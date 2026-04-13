@@ -21,11 +21,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file t8_gtest_adapt.cxx
- * Tests for the adapt routines of mesh handles. 
- * This tests uses the callback and user data of tutorial step 3 as example.
- * The adaptation criterion is to look at the midpoint coordinates of the current element and if
- * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
+ * \file t8_gtest_adapt_partition_balance.cxx
+ * Tests for the adapt, partition and balance routines of mesh handle. 
  */
 #include "t8_types/t8_vec.h"
 #include <gtest/gtest.h>
@@ -49,6 +46,8 @@ struct dummy_user_data
 };
 
 /** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
+ * The adaptation criterion is to look at the midpoint coordinates of the current element and if
+ * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. 
  * The function header fits the definition of \ref TMesh::adapt_callback_type_with_userdata.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.
@@ -137,10 +136,11 @@ forest_adapt_callback_refine_second ([[maybe_unused]] t8_forest_t forest, [[mayb
   return 0;
 }
 
-/** Test the adapt routine of a mesh handle. 
- * We compare the result to a classically adapted forest with similar callback.
+/** Test the adapt, partition and balance routines of a mesh handle. 
+ * The test compares the results of the mesh handle to a forest adapted with the same criterion and balanced and partitioned similarly.
+ * Therefore, the check is based on the assumption that the forest functionality works as intended and is tested elsewhere.
  */
-TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
+TEST (t8_gtest_handle_adapt, compare_with_forest)
 {
   // Define forest, a mesh handle and user data.
   const int level = 3;
@@ -163,23 +163,41 @@ TEST (t8_gtest_handle_adapt, compare_adapt_with_forest)
     mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data));
   mesh_handle.commit ();
   // Adapt forest classically.
-  forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 1, &user_data);
+  forest = t8_forest_new_adapt (forest, forest_adapt_callback_example, 0, 0, &user_data);
 
   // Compare results.
   EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest));
+
+  // Adapt the mesh handle again and apply partition and balance.
+  mesh_handle.set_balance ();
+  mesh_handle.set_partition ();
+  mesh_handle.set_adapt (
+    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data));
+  mesh_handle.commit ();
+  EXPECT_TRUE (mesh_handle.is_balanced ());
+
+  // Compare the results again to an appropriate forest.
+  t8_forest_t forest_compare;
+  t8_forest_init (&forest_compare);
+  t8_forest_set_user_data (forest_compare, &user_data);
+  t8_forest_set_adapt (forest_compare, forest, forest_adapt_callback_example, false);
+  t8_forest_set_partition (forest_compare, NULL, false);
+  t8_forest_set_balance (forest_compare, NULL, false);
+  t8_forest_commit (forest_compare);
+  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_compare));
 
   // Adapt again with the second callback.
   mesh_handle.set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
   mesh_handle.commit ();
 
-  t8_forest_t forest_refine_second;
-  t8_forest_init (&forest_refine_second);
-  t8_forest_set_adapt (forest_refine_second, forest, forest_adapt_callback_refine_second, false);
-  t8_forest_commit (forest_refine_second);
+  t8_forest_t forest_refine;
+  t8_forest_init (&forest_refine);
+  t8_forest_set_adapt (forest_refine, forest_compare, forest_adapt_callback_refine_second, false);
+  t8_forest_commit (forest_refine);
 
   // Compare results.
-  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_refine_second));
+  EXPECT_TRUE (t8_forest_is_equal (mesh_handle.get_forest (), forest_refine));
 
   // Clean up.
-  t8_forest_unref (&forest_refine_second);
+  t8_forest_unref (&forest_refine);
 }
