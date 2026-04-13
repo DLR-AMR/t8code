@@ -20,9 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_step5_mesh_handle.cxx
- *
- * This is the same as t8_step5_element_data.cxx but using the mesh handle interface instead of the forest interface.
+/** \file t8_mesh_element_data.cxx
+ * This is the same as general/t8_step5_element_data.cxx but using the mesh handle interface instead of the forest 
+ * interface.
  */
 
 #include <t8.h>
@@ -37,7 +37,7 @@
 
 /* The data that we want to store for each element.
  * In this example we want to store the element's level and volume. */
-struct t8_step5_data_per_element
+struct data_per_element_type
 {
   int level;     /**< Level of the element. */
   double volume; /**< Volume of the element. */
@@ -87,7 +87,7 @@ adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typenam
  */
 template <typename TMeshClass>
 std::unique_ptr<TMeshClass>
-t8_step5_build_mesh (sc_MPI_Comm comm, int level)
+build_mesh (sc_MPI_Comm comm, int level)
 {
   auto mesh_handle = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
   struct user_data adapt_data = {
@@ -112,20 +112,20 @@ t8_step5_build_mesh (sc_MPI_Comm comm, int level)
 
 template <typename TMeshClass>
 void
-t8_step5_set_element_data (TMeshClass &mesh)
+set_element_data_mesh (TMeshClass &mesh)
 {
   for (auto &elem : *mesh) {
     elem.set_element_data ({ elem.get_level (), elem.get_volume () });
   }
 }
 
-/** Exchange element data set in \ref t8_step5_set_element_data for ghost elements. 
+/** Exchange element data set in \ref set_element_data_mesh for ghost elements. 
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh  The mesh handle.
  */
 template <typename TMeshClass>
 void
-t8_step5_exchange_ghost_data (TMeshClass &mesh)
+exchange_ghost_data_mesh (TMeshClass &mesh)
 {
   mesh->exchange_ghost_data ();
 }
@@ -136,10 +136,14 @@ t8_step5_exchange_ghost_data (TMeshClass &mesh)
  * array of length num_local_elements.
  * We support two types: T8_VTK_SCALAR - One double per element
  *                  and  T8_VTK_VECTOR - 3 doubles per element
+ * \tparam TMeshClass     The mesh handle class.
+ * \param [in] mesh       The mesh handle.
+ * \param [in] fileprefix The prefix of the files where the vtk will be stored.
+ *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu
  */
 template <typename TMeshClass>
 static void
-t8_step5_output_data_to_vtu (TMeshClass &mesh, const char *prefix)
+output_data_to_vtu (TMeshClass &mesh, const char *prefix)
 {
   t8_locidx_t num_elements = mesh->get_num_local_elements ();
   /* We need to allocate a new array to store the volumes on their own.
@@ -164,13 +168,13 @@ t8_step5_output_data_to_vtu (TMeshClass &mesh, const char *prefix)
   T8_FREE (element_volumes);
 }
 
-/** Main function. */
+/** Entry point of the program. */
 int
-t8_step5_main (int argc, char **argv)
+main (int argc, char **argv)
 {
   /* The prefix for our output files. */
-  const char *prefix_mesh = "t8_step5_handle";
-  const char *prefix_mesh_with_data = "t8_step5_handle_with_volume_data";
+  const char *prefix_mesh = "mesh_element_data";
+  const char *prefix_mesh_with_data = "mesh_element_data_with_volume_data";
   /* The initial uniform refinement level. */
   const int level = 3;
 
@@ -186,47 +190,47 @@ t8_step5_main (int argc, char **argv)
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
   /* Print a message on the root process. */
-  t8_global_productionf (" [step5] \n");
-  t8_global_productionf (" [step5] Hello, this is the step5 example of t8code using the mesh handle.\n");
+  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] Hello, this is the element data example of t8code using the mesh handle.\n");
   t8_global_productionf (
-    " [step5] In this example we will store data on our elements and exchange the data of ghost elements.\n");
-  t8_global_productionf (" [step5] \n");
+    " [tutorial] In this example we will store data on our elements and exchange the data of ghost elements.\n");
+  t8_global_productionf (" [tutorial] \n");
 
-  /* Setup: Build cmesh and adapt uniformly. Adapt similar to step 3 & 4. */
-  t8_global_productionf (" [step5] \n");
-  t8_global_productionf (" [step5] Creating an adapted mesh as in step3.\n");
-  t8_global_productionf (" [step5] \n");
+  /* Setup: Build cmesh and adapt uniformly. */
+  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] Creating an adapted mesh.\n");
+  t8_global_productionf (" [tutorial] \n");
   { /* We put the mesh in its own scope so that it is automatically destroyed at the end of the scope. 
      * This is only necessary because sc_finalize checks if there are leftover references. 
      * This unique pointer would have been destroyed automatically at the end of the programme. */
-    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, t8_step5_data_per_element>;
-    auto mesh = t8_step5_build_mesh<mesh_class> (comm, level);
+    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, data_per_element_type>;
+    auto mesh = build_mesh<mesh_class> (comm, level);
 
     t8_mesh_handle::write_mesh_to_vtk (mesh, prefix_mesh);
-    t8_global_productionf (" [step5] Wrote mesh to vtu files: %s*\n", prefix_mesh);
+    t8_global_productionf (" [tutorial] Wrote mesh to vtu files: %s*\n", prefix_mesh);
 
-    t8_step5_set_element_data (mesh);
-    t8_global_productionf (" [step5] Computed level and volume data for local elements.\n");
+    set_element_data_mesh (mesh);
+    t8_global_productionf (" [tutorial] Computed level and volume data for local elements.\n");
     if (mesh->get_num_local_elements () > 0) {
       /* Output the stored data of the first local element (if it exists). */
-      t8_global_productionf (" [step5] Element 0 has level %i and volume %e.\n", ((*mesh)[0]).get_element_data ().level,
-                             ((*mesh)[0]).get_element_data ().volume);
+      t8_global_productionf (" [tutorial] Element 0 has level %i and volume %e.\n",
+                             ((*mesh)[0]).get_element_data ().level, ((*mesh)[0]).get_element_data ().volume);
     }
 
     /* Exchange the data values of the ghost elements. */
-    t8_step5_exchange_ghost_data (mesh);
-    t8_global_productionf (" [step5] Exchanged ghost data.\n");
+    exchange_ghost_data_mesh (mesh);
+    t8_global_productionf (" [tutorial] Exchanged ghost data.\n");
     if (mesh->get_num_ghosts () > 0) {
       /* Output the data of the first ghost element (if it exists). */
       t8_locidx_t first_ghost_index = mesh->get_num_local_elements ();
-      t8_global_productionf (" [step5] Ghost 0 has level %i and volume %e.\n",
+      t8_global_productionf (" [tutorial] Ghost 0 has level %i and volume %e.\n",
                              ((*mesh)[first_ghost_index]).get_element_data ().level,
                              ((*mesh)[first_ghost_index]).get_element_data ().volume);
     }
 
     /* Output the volume data to vtu. */
-    t8_step5_output_data_to_vtu (mesh, prefix_mesh_with_data);
-    t8_global_productionf (" [step5] Wrote mesh and volume data to %s*.\n", prefix_mesh_with_data);
+    output_data_to_vtu (mesh, prefix_mesh_with_data);
+    t8_global_productionf (" [tutorial] Wrote mesh and volume data to %s*.\n", prefix_mesh_with_data);
 
     /* Cleanup. */
   }  // End scope of mesh
@@ -236,11 +240,4 @@ t8_step5_main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   return 0;
-}
-
-/** Entry point of the program. */
-int
-main (int argc, char **argv)
-{
-  return t8_step5_main (argc, argv);
 }
