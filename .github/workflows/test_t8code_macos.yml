@@ -151,7 +151,9 @@ jobs:
         export OMPI_MCA_btl=self,tcp
         export OMPI_MCA_pml=ob1
         export OMPI_MCA_rmaps_base_oversubscribe=1
-        cd build && ctest -R _parallel
+        cd build
+        /opt/homebrew/opt/open-mpi/bin/mpirun --oversubscribe -np 4 ctest -R _parallel --verbose
+
       env:
         # Note: These openmpi options are required to ensure stable runs in github workflows and avoid stalling.
         #       In particular, they activate oversubscription and define the communication channels, here tcp (and self).
