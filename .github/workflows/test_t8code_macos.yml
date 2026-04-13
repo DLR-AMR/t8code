@@ -104,7 +104,7 @@ jobs:
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
       run: |
-        export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=$OPENMPI_BIN/mpicc -DCMAKE_CXX_COMPILER=$OPENMPI_BIN/mpicxx \
+        export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=$OPENMPI_BIN/mpicc -DCMAKE_CXX_COMPILER=$OPENMPI_BIN/mpicxx  -DCMAKE_Fortran_COMPILER=$OPENMPI_BIN/mpifort \
                                -GNinja -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
                                -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
                                -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON \
@@ -133,7 +133,7 @@ jobs:
   # Part 3: Run t8code tests
   # ------------------------
     - name: serial tests (if MPI is enabled)
-      run: cd build && ctest $MAKEFLAGS -R _serial
+      run: cd build && ctest -j 2 -R _serial
       if: ${{ inputs.MPI == 'ON' }}
     - name: parallel tests (if MPI is enabled)
       run: |
