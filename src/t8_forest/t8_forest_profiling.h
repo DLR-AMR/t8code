@@ -24,8 +24,6 @@
  * We define the forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_PROFILING_H
 #define T8_FOREST_PROFILING_H
 
@@ -185,6 +183,33 @@ t8_forest_profile_get_ghost_time (t8_forest_t forest, t8_locidx_t *ghosts_sent);
  */
 double
 t8_forest_profile_get_ghostexchange_waittime (t8_forest_t forest);
+
+/** Get the runtime of the last call to \ref t8_forest_partition_create_tree_offsets.
+ * \param [in]   forest         The forest.
+ * \return                      The time
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ */
+double
+t8_forest_profile_get_cmesh_offsets_runtime (t8_forest_t forest);
+
+/** Get the runtime of the last call to \ref t8_forest_partition_create_offsets.
+ * \param [in]   forest         The forest.
+ * \return                      The time
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ */
+double
+t8_forest_profile_get_forest_offsets_runtime (t8_forest_t forest);
+
+/** Get the waittime of the last call to \ref t8_forest_partition_create_first_desc.
+ * \param [in]   forest         The forest.
+ * \return                      The time
+ * \a forest must be committed before calling this function.
+ * \see t8_forest_set_profiling
+ */
+double
+t8_forest_profile_get_first_descendant_runtime (t8_forest_t forest);
 T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_PROFILING_H */

@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_geometry_linear.cxx
+ * Implements functions declared in \ref t8_geometry_linear.hxx 
+ *  or the C interface \ref t8_geometry_linear.h.
+ */
+
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_helpers.h>
@@ -287,7 +292,7 @@ t8_geometry_linear_destroy (t8_geometry_c **geom)
   T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_LINEAR);
 
   delete *geom;
-  *geom = NULL;
+  *geom = nullptr;
 }
 
 T8_EXTERN_C_END ();

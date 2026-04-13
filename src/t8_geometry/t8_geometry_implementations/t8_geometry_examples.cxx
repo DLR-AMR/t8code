@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_geometry_examples.cxx
+ * Implements functions declared in \ref t8_geometry_examples.hxx.
+ */
+
 #include <cmath>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 #include <t8_geometry/t8_geometry_helpers.h>
@@ -344,7 +348,7 @@ t8_geometry_destroy (t8_geometry_c **geom)
   T8_ASSERT (geom != NULL);
 
   delete *geom;
-  *geom = NULL;
+  *geom = nullptr;
 }
 
 /* Satisfy the C interface from t8_geometry_linear.h. */

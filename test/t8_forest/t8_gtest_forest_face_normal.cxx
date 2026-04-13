@@ -22,7 +22,7 @@
 
 #include <sc_functions.h>
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
@@ -34,7 +34,8 @@
  * This file tests the face normal computation of elements.
  */
 
-class class_forest_face_normal: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+struct class_forest_face_normal: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>>
+{
  protected:
   void
   SetUp () override

@@ -21,14 +21,15 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-class get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override

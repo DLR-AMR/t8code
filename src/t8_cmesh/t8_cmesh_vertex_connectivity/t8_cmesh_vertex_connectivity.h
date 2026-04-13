@@ -66,7 +66,7 @@ t8_cmesh_get_num_local_vertices (const t8_cmesh_t cmesh);
 /** Get the global vertex indices of a tree in its local vertex order.
  * \param [in] cmesh A committed cmesh.
  * \param [in] local_tree A local tree in \a cmesh.
- * \param [out] num_vertices The number of vertices of \a local_tree
+ * \param [out] num_vertices The number of vertices of \a local_tree, if not null
  * \return The global vertices of \a local_tree
  */
 const t8_gloidx_t *
@@ -89,6 +89,13 @@ t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t lo
  */
 int
 t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex);
+
+/** Check whether a given cmesh uses the vertex connectivity feature.
+ * \param [in] cmesh A committed cmesh.
+ * \return Nonzero if the \a cmesh uses the vertex connectivity feature, zero if not.
+ */
+int
+t8_cmesh_uses_vertex_connectivity (const t8_cmesh_t cmesh);
 
 T8_EXTERN_C_END ();
 

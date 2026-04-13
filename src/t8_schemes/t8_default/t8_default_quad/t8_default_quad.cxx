@@ -377,7 +377,7 @@ t8_default_scheme_quad::element_get_children_at_face (const t8_element_t *elem, 
    */
   this->element_get_child (elem, second_child, children[1]);
   this->element_get_child (elem, first_child, children[0]);
-  if (child_indices != NULL) {
+  if (child_indices != nullptr) {
     child_indices[0] = first_child;
     child_indices[1] = second_child;
   }
@@ -417,7 +417,7 @@ t8_default_scheme_quad::element_transform_face (const t8_element_t *elem1, t8_el
   const p4est_quadrant_t *qin = (const p4est_quadrant_t *) elem1;
   const p4est_quadrant_t *q;
   p4est_quadrant_t *p = (p4est_quadrant_t *) elem2;
-  p4est_qcoord_t h = P4EST_QUADRANT_LEN (qin->level);
+  p4est_qcoord_t const h = P4EST_QUADRANT_LEN (qin->level);
   p4est_qcoord_t x = qin->x; /* temp storage for x coordinate in case elem1 = elem 2 */
 
   T8_ASSERT (element_is_valid (elem1));
@@ -562,7 +562,7 @@ t8_default_scheme_quad::element_get_first_descendant_face (const t8_element_t *e
 
   /* Get the first corner of q that belongs to face */
   first_face_corner = p4est_face_corners[face][0];
-  /* Construce the descendant in that corner */
+  /* Construct the descendant in that corner */
   p4est_quadrant_corner_descendant (q, desc, first_face_corner, level);
 }
 
@@ -580,7 +580,7 @@ t8_default_scheme_quad::element_get_last_descendant_face (const t8_element_t *el
 
   /* Get the last corner of q that belongs to face */
   last_face_corner = p4est_face_corners[face][1];
-  /* Construce the descendant in that corner */
+  /* Construct the descendant in that corner */
   p4est_quadrant_corner_descendant (q, desc, last_face_corner, level);
 }
 
@@ -752,6 +752,7 @@ t8_default_scheme_quad::element_is_valid (const t8_element_t *element) const
   return p4est_quadrant_is_extended ((const p4est_quadrant_t *) element);
 }
 
+#endif
 void
 t8_default_scheme_quad::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
 {
@@ -760,7 +761,6 @@ t8_default_scheme_quad::element_to_string (const t8_element_t *elem, char *debug
   p4est_quadrant_t *quad = (p4est_quadrant_t *) elem;
   snprintf (debug_string, string_size, "x: %i, y: %i, level: %i", quad->x, quad->y, quad->level);
 }
-#endif
 
 void
 t8_default_scheme_quad::set_to_root (t8_element_t *elem) const

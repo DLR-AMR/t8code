@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_balance.cxx
+ * Implements functions declared in \ref t8_forest_balance.h.
+ */
+
+#include <t8.h>
 #include <sc_statistics.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
@@ -39,8 +44,8 @@ T8_EXTERN_C_BEGIN ();
  * TODO: We currently do not adapt recursively since some functions such
  * as half neighbor computation require the forest to be committed. Thus,
  * we pass forest_from as a parameter. But doing so is not valid anymore
- * if we refine recursively. 
- * 
+ * if we refine recursively.
+ *
  * \param[in, out] forest       The forest to be adapted / balanced.
  * \param[in]      forest_from  The forest from which the current one is derived.
  * \param[in]      ltree_id     The local id of the tree the element is in.
@@ -50,7 +55,7 @@ T8_EXTERN_C_BEGIN ();
  * \param[in]      is_family    A switch indicating whether the passed elements form a family.
  * \param[in]      num_elements The number of elements passed as input.
  * \param[in]      elements     The elements array.
- * 
+ *
  * \return 1 if the element(s) has/have to be refined, 0 otherwise.
  */
 static int
@@ -87,7 +92,7 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
       scheme->element_new (neigh_class, num_half_neighbors, half_neighbors);
       /* Compute the half face neighbors of element at this face */
       neighbor_tree = t8_forest_element_half_face_neighbors (forest_from, ltree_id, element, half_neighbors,
-                                                             neigh_class, iface, num_half_neighbors, NULL);
+                                                             neigh_class, iface, num_half_neighbors, nullptr);
       if (neighbor_tree >= 0) {
         /* The face neighbors do exist, check for each one, whether it has
          * local or ghost leaf descendants in the forest.
@@ -113,8 +118,8 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from, const t8_l
 }
 
 /**
- * Collective function to compute the maximum occurring refinement level in a forest 
- * 
+ * Collective function to compute the maximum occurring refinement level in a forest
+ *
  * \param[in,out] forest  The forest which the maximum refinement level is computed for and stored in.
  */
 static void
@@ -125,7 +130,7 @@ t8_forest_compute_max_element_level (t8_forest_t forest)
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   int local_max_level = 0;
 
-  /* Iterate over all local trees and all local elements and comupte the maximum occurring level */
+  /* Iterate over all local trees and all local elements and compute the maximum occurring level */
   num_trees = t8_forest_get_num_local_trees (forest);
   for (itree = 0; itree < num_trees; itree++) {
     elem_in_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
@@ -161,9 +166,9 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   t8_log_indent_push ();
 
   /* Set default value to prevent compiler warning */
-  adap_stats = ghost_stats = partition_stats = NULL;
+  adap_stats = ghost_stats = partition_stats = nullptr;
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* Profiling is enable, so we measure the runtime of balance */
     forest->profile->balance_runtime = -sc_MPI_Wtime ();
     /* We store the individual adapt, ghost, and partition runtimes */
@@ -187,7 +192,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* This function is reference neutral regarding forest_from */
   t8_forest_ref (forest_from);
 
-  if (forest->set_from->ghosts == NULL) {
+  if (forest->set_from->ghosts == nullptr) {
     forest->set_from->ghost_type = T8_GHOST_FACES;
     t8_forest_ghost_create_topdown (forest->set_from);
   }
@@ -206,15 +211,15 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
     }
     forest_temp->t8code_data = &done;
-    /* If profiling is enabled, measure ghost/adapt rumtimes */
-    if (forest->profile != NULL) {
+    /* If profiling is enabled, measure ghost/adapt runtimes */
+    if (forest->profile != nullptr) {
       t8_forest_set_profiling (forest_temp, 1);
     }
-    t8_global_productionf ("Profiling: %i\n", forest->profile != NULL);
+    t8_global_productionf ("Profiling: %i\n", forest->profile != nullptr);
     /* Adapt the forest */
     t8_forest_commit (forest_temp);
     /* Store the runtimes of adapt and ghost */
-    if (forest->profile != NULL) {
+    if (forest->profile != nullptr) {
       if (count_rounds > num_stats_allocated - 2) {
         T8_ASSERT (count_adapt_stats <= count_rounds);
         T8_ASSERT (count_ghost_stats <= count_rounds);
@@ -247,14 +252,14 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       forest_partition->maxlevel_existing = forest_temp->maxlevel_existing;
       t8_forest_set_partition (forest_partition, forest_temp, 0);
       t8_forest_set_ghost (forest_partition, 1, T8_GHOST_FACES);
-      /* If profiling is enabled, measure partition rumtimes */
-      if (forest->profile != NULL) {
+      /* If profiling is enabled, measure partition runtimes */
+      if (forest->profile != nullptr) {
         t8_forest_set_profiling (forest_partition, 1);
       }
       t8_forest_commit (forest_partition);
 
       /* Store the runtimes of partition */
-      if (forest->profile != NULL) {
+      if (forest->profile != nullptr) {
         sc_stats_set1 (&partition_stats[count_partition_stats], forest_partition->profile->partition_runtime,
                        "forest balance: Partition time");
         count_partition_stats++;
@@ -264,7 +269,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       }
 
       forest_temp = forest_partition;
-      forest_partition = NULL;
+      forest_partition = nullptr;
     }
     /* Adapt forest_temp in the next round */
     forest_from = forest_temp;
@@ -283,7 +288,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* clean-up */
   t8_forest_unref (&forest_temp);
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* Profiling is enabled, so we measure the runtime of balance. */
     forest->profile->balance_runtime += sc_MPI_Wtime ();
     forest->profile->balance_rounds = count_rounds;

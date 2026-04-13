@@ -26,7 +26,7 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-typedef t8_dline_t t8_default_line_t;
+using t8_default_line_t = t8_dline_t;
 
 T8_EXTERN_C_BEGIN ();
 
@@ -121,7 +121,7 @@ t8_default_scheme_line::element_get_children_at_face (const t8_element_t *elem, 
 
   /* We have exactly one child at a face and this is child 0 if face = 0
    * and child 1 if face = 1 */
-  if (child_indices != NULL) {
+  if (child_indices != nullptr) {
     *child_indices = face;
   }
   t8_dline_child ((const t8_dline_t *) elem, face, (t8_dline_t *) children[0]);
@@ -405,6 +405,7 @@ t8_default_scheme_line::element_is_valid (const t8_element_t *element) const
 {
   return t8_dline_is_valid ((const t8_dline_t *) element);
 }
+#endif
 
 void
 t8_default_scheme_line::element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
@@ -414,7 +415,6 @@ t8_default_scheme_line::element_to_string (const t8_element_t *elem, char *debug
   t8_dline_t *line = (t8_dline_t *) elem;
   snprintf (debug_string, string_size, "x: %i, level: %i", line->x, line->level);
 }
-#endif
 
 void
 t8_default_scheme_line::element_new (int length, t8_element_t **elem) const

@@ -25,11 +25,11 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 #include <p4est_connectivity.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_vtk/t8_vtk_writer.h>
 
-#include <t8_cmesh/t8_cmesh_partition.h>
-#include "t8_cmesh/t8_cmesh_types.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 /* Repartition a partitioned cmesh by shipping half of the local trees
@@ -61,7 +61,6 @@ t8_time_half (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_destroy (&cmesh_partition);
 }
 
-#if 1
 /* add x*mpirank to all of the x-coordinates of a tree in cmesh.
  * This is useful to separate the disjoint parts visually. */
 void
@@ -138,7 +137,6 @@ t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm, int no_vtk
   /* memory clean-up */
   t8_cmesh_destroy (&cmesh_partition);
 }
-#endif
 
 int
 main (int argc, char *argv[])

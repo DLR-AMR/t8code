@@ -34,7 +34,7 @@
 #include <vector>
 
 #include <t8.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
@@ -338,7 +338,8 @@ flatten (const std::vector<std::vector<T>> &vec)
  * some specific to the Lagrange geometry, some valid for all the
  * geometries in t8code.
  */
-class t8_lagrange_element {
+struct t8_lagrange_element
+{
  public:
   /**
    * Construct a new t8_lagrange_element object.
