@@ -76,10 +76,9 @@ jobs:
     - name: Install missing packages via Homebrew
       run: |
         brew install open-mpi ninja cmake googletest openssl
+        echo "Check OpenMPI installation"
         echo "/usr/local/opt/open-mpi/bin" >> $GITHUB_PATH
-        which mpicc
-        mpicc --version
-        ompi_info --config | grep -i rmaps
+        ls /usr/local/opt/open-mpi/bin
     - name: Show Clang version
       run: clang --version
     - name: Show mpicc version
@@ -146,16 +145,12 @@ jobs:
       if: ${{ inputs.MPI == 'ON' }}
     - name: parallel tests (if MPI is enabled)
       run: |
-        env | grep OMPI
-        ompi_info --param rmaps all 
         export OMPI_ALLOW_RUN_AS_ROOT=1
         export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
         export OMPI_MCA_btl=self,tcp
         export OMPI_MCA_pml=ob1
         export OMPI_MCA_rmaps_base_oversubscribe=1
-        env | grep OMPI
-        ompi_info --param rmaps all
-        cd build && ctest -R _parallel
+        /opt/homebrew/opt/open-mpi/bin/mpirun --oversubscribe -np 4 ctest -R _parallel --verbose
       env:
         # Note: These openmpi options are required to ensure stable runs in github workflows and avoid stalling.
         #       In particular, they activate oversubscription and define the communication channels, here tcp (and self).
