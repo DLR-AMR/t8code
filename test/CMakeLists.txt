@@ -157,8 +157,8 @@ add_t8_cpp_test( NAME t8_gtest_empty_global_tree_parallel   SOURCES t8_forest_in
 
 if( T8_ENABLE_OCC )
     add_t8_cpp_test( NAME t8_gtest_geometry_cad_serial                  SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
-    add_t8_cpp_test( NAME t8_gtest_boundary_node_list_serial                    SOURCES t8_cmesh/t8_cmesh_cad/t8_gtest_boundary_node_list.cxx )
-    add_t8_cpp_test( NAME t8_gtest_cad_boundar_serial                           SOURCES t8_cmesh/t8_cmesh_cad/t8_gtest_cad_boundary.cxx )
+    add_t8_cpp_test( NAME t8_gtest_boundary_node_list_serial            SOURCES t8_cmesh/t8_cmesh_cad/t8_gtest_boundary_node_list.cxx )
+    add_t8_cpp_test( NAME t8_gtest_cad_boundar_serial                   SOURCES t8_cmesh/t8_cmesh_cad/t8_gtest_cad_boundary.cxx )
 
 endif()
 add_t8_cpp_test( NAME t8_gtest_geometry_linear_serial                   SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )

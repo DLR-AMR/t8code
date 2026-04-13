@@ -21,11 +21,7 @@
 */
 
 /** \file t8_cmesh_boundary_node_list.cxx
- *
- * Class for boundary node list for a given cmesh. The class stores an unordered_set
- * of global node indices that are taken from the tree-to-vertex list. 
- * This class is used for the remapping of the nodes to the geometry in t8_cmesh_cad_boundary
- * 
+ * This file implements the routing of the t8_cmesh_boundary_node_list class.
  */
 
 #include <t8_cmesh.h>

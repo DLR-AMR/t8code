@@ -20,10 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_cad.cxx
- * This geometry implements OpenCASCADE geometries. It enables the option to link different 
- * 1 and 2 dimensional cad geometries to the edges and faces of refinement trees. 
- * The geometry of the refinement tree is extended into the volume accordingly.
+/** \file t8_cmesh_cad_boundary.cxx
+ * This file implements the t8_cmesh_cad_boundary class with its remapping algorithm.
  */
 
 #include <t8_cmesh.h>
