@@ -30,7 +30,7 @@
 
 namespace t8_mesh_handle
 {
-/** Concept to restrict types to \ref mesh class instantiations.
+/** Concept to restrict types to \ref t8_mesh_handle::mesh class instantiations.
  * \tparam TType Type that should be checked.
  */
 template <typename TType>
