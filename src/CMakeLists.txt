@@ -95,6 +95,8 @@ if( T8CODE_ENABLE_OCC )
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
       t8_cad/t8_cad_handle.cxx
+      t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.cxx
+      t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
@@ -104,6 +106,11 @@ if( T8CODE_ENABLE_OCC )
     install( FILES
       t8_cad/t8_cad_handle.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cad
+    )
+    install ( FILES 
+      t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx
+      t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.hxx     
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_cad
     )
 endif()
 
@@ -250,6 +257,7 @@ install( DIRECTORY t8_cmesh
     PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
+    PATTERN "t8_cmesh/t8_cmesh_cad*" EXCLUDE
 )
 install( DIRECTORY t8_data 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
