@@ -291,11 +291,13 @@ t8_orthogonal_tripod (const TVecV1 &v1, TVecV2 &v2, TVecV3 &v3)
 {
   T8_ASSERT ((std::ranges::distance (v1) >= 3) && (std::ranges::distance (v2) >= 3)
              && (std::ranges::distance (v3) >= 3));
+  T8_ASSERT (t8_dot (v1, v1) != 0);
+
   v2[0] = v1[1];
   v2[1] = v1[2];
   v2[2] = -v1[0];
 
-  t8_axpy (v1, v2, -t8_dot (v1, v2));
+  t8_axpy (v1, v2, -t8_dot (v1, v2) / t8_dot (v1, v1));
   t8_cross_3D (v1, v2, v3);
 
   t8_normalize (v2);
