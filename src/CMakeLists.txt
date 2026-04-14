@@ -91,6 +91,8 @@ if( T8CODE_ENABLE_VTK )
 endif()
 
 if( T8CODE_ENABLE_OCC )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_OCC=1 )
+    target_include_directories( T8 SYSTEM PUBLIC ${OpenCASCADE_INCLUDE_DIR} )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
