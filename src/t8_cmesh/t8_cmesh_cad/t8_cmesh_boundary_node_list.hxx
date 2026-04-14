@@ -27,8 +27,8 @@
 #ifndef T8_CMESH_BOUNDARY_NODE_LIST_HXX
 #define T8_CMESH_BOUNDARY_NODE_LIST_HXX
 
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <unordered_set>
 
 class t8_boundary_node_list {

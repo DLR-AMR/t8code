@@ -27,8 +27,8 @@
 #ifndef T8_CMESH_CAD_BOUNDARY
 #define T8_CMESH_CAD_BOUNDARY
 
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <TopoDS.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <unordered_map>

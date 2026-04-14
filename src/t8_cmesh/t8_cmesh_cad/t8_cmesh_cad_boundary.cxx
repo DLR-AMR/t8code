@@ -24,7 +24,7 @@
  * This file implements the t8_cmesh_cad_boundary class with its remapping algorithm.
  */
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.hxx>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>

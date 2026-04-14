@@ -24,10 +24,10 @@
  * This file implements the routing of the t8_cmesh_boundary_node_list class.
  */
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_eclass.h>
-#include <t8_cmesh/t8_cmesh_types.h>
-#include <t8_cmesh/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <span>
