@@ -23,7 +23,6 @@
 /* In this file we collect tests for the routines in t8_vec.hxx */
 
 #include <gtest/gtest.h>
-#include <t8_types/t8_vec.hxx>
 #include <t8_types/t8_vec.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_memory_macros.hxx>
@@ -380,4 +379,21 @@ TEST (t8_gtest_vec, orthogonal_tripod)
   EXPECT_NEAR (t8_dot (output1, output2), 0, T8_PRECISION_SQRT_EPS);
   EXPECT_NEAR (t8_norm (output1), 1., T8_PRECISION_SQRT_EPS);
   EXPECT_NEAR (t8_norm (output2), 1., T8_PRECISION_SQRT_EPS);
+}
+
+/* Test the t8_swap function. */
+TEST (t8_gtest_vec, swap)
+{
+  t8_3D_vec onetwothree ({ 1, 2, 3 });
+  t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
+
+  // Copy vectors for comparison later on.
+  t8_3D_vec onetwothreecopy;
+  t8_copy (onetwothree, onetwothreecopy);
+  t8_3D_vec arbitrarycopy;
+  t8_copy (arbitrary, arbitrarycopy);
+
+  t8_swap (onetwothree.data (), arbitrary.data ());
+  EXPECT_VEC_EQ (onetwothreecopy, arbitrary, T8_PRECISION_SQRT_EPS);
+  EXPECT_VEC_EQ (arbitrarycopy, onetwothree, T8_PRECISION_SQRT_EPS);
 }
