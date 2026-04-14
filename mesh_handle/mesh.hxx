@@ -30,25 +30,18 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "internal/adapt.hxx"
+#include "concepts.hxx"
 #include "t8_forest/t8_forest_balance.h"
 #include "t8_forest/t8_forest_types.h"
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
-#include <type_traits>
 #include <functional>
 #include <memory>
 #include <span>
 
 namespace t8_mesh_handle
 {
-
-/** Concept to ensure that a type is MPI safe.
- */
-template <typename TType>
-concept T8MPISafeType
-  = std::is_void_v<TType> || (std::is_trivially_copyable_v<TType> && std::is_standard_layout_v<TType>);
-
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
  * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
@@ -61,6 +54,7 @@ concept T8MPISafeType
 template <typename TCompetencePack = competence_pack<>, T8MPISafeType TElementDataType = void>
 class mesh {
  public:
+  using mesh_tag = void; /**< Mesh tag for identification in concept. */
   using SelfType
     = mesh<TCompetencePack, TElementDataType>; /**< Type of the current class with all template parameters specified. */
   using ElementDataType = TElementDataType;    /**< Make Type of the element data accessible. */
