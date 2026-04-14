@@ -21,14 +21,17 @@ name: CMake tests t8code on Mac OS
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-#  This workflow checks whether building and testing works on Mac OS. 
+#  This workflow checks whether building and testing works on Mac OS.
 #  In the past, this meant that Mac-OS-specific problems in t8code became
 #  apparrent only in Trixi and T8Code.jl, where they are very hard and
 #  cumbersome to debug. This workflow is intended to avoid that by catching
 #  such problems as early as possible, i.e., within t8code's CI.
 #  not just all of t8code's remaining CI workflows rely
 #  To reduce runtime, (for now) only one configuration is run, that is, Debug mode
-#  with MPI and all external libraries (VTK, OpenCASCADE).
+#  with MPI, mesh handle, and Fortran interface. The main reason the external
+#  libraries (VTK, OpenCASCADE) are deactivated is that github's Mac OS runners
+#  do not use containers, meaning we would have to install the libraries in every
+#  single CI run (or cache them).
 
 env:
   DEBUG_CONFIG: "-O1"
@@ -109,11 +112,11 @@ jobs:
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
       run: |
-        export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=$OPENMPI_BIN/mpicc -DCMAKE_CXX_COMPILER=$OPENMPI_BIN/mpicxx  -DCMAKE_Fortran_COMPILER=$OPENMPI_BIN/mpifort \
+        export CONFIG_OPTIONS="-DCMAKE_C_COMPILER=$OPENMPI_BIN/mpicc -DCMAKE_CXX_COMPILER=$OPENMPI_BIN/mpicxx  \
                                -GNinja -DCMAKE_INSTALL_PREFIX=$(pwd)/install \
                                -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${TEST_LEVEL_FLAG} -DCMAKE_C_FLAGS_DEBUG=${DEBUG_CONFIG} -DCMAKE_CXX_FLAGS_DEBUG=${DEBUG_CONFIG} \
                                -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=OFF -DT8CODE_BUILD_WEXTRA=ON \
-                               -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON \
+                               -DT8CODE_BUILD_FORTRAN_INTERFACE=OFF -DT8CODE_BUILD_MESH_HANDLE=ON \
                                -DT8CODE_ENABLE_OCC=OFF -DT8CODE_ENABLE_VTK=OFF"
         echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # Run cmake
