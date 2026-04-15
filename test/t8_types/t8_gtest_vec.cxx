@@ -24,6 +24,7 @@
 
 #include <gtest/gtest.h>
 #include <t8_types/t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_memory_macros.hxx>
 #include <t8_helper_functions/t8_unrolled_for.hxx>
@@ -48,11 +49,11 @@ TEST (t8_gtest_vec, norm)
 /* Test the t8_normalize function and t8_copy. */
 TEST (t8_gtest_vec, normalize)
 {
-  t8_3D_vec onetwothree ({ 1, 2, 3 });
+  double onetwothree[3] = { 1, 2, 3 };
   t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
 
   // Copy vectors for comparison later on.
-  t8_3D_vec onetwothreecopy;
+  double onetwothreecopy[3];
   t8_copy (onetwothree, onetwothreecopy);
   t8_3D_vec arbitrarycopy;
   t8_copy (arbitrary, arbitrarycopy);
@@ -65,10 +66,10 @@ TEST (t8_gtest_vec, normalize)
 
   // Compare to vector that is normalized with the t8_ax function.
   const double normonetwothree = sqrt (1 + 4 + 9);
-  t8_ax (onetwothreecopy, 1 / normonetwothree);
+  t8_ax (onetwothreecopy, 1. / normonetwothree);
   EXPECT_VEC_EQ (onetwothree, onetwothreecopy, T8_PRECISION_SQRT_EPS);
   const double normarbitrary = 42.117360883;
-  t8_ax (arbitrarycopy, 1 / normarbitrary);
+  t8_ax (arbitrarycopy, 1. / normarbitrary);
   EXPECT_VEC_EQ (arbitrary, arbitrarycopy, T8_PRECISION_SQRT_EPS);
 }
 
@@ -384,16 +385,16 @@ TEST (t8_gtest_vec, orthogonal_tripod)
 /* Test the t8_swap function. */
 TEST (t8_gtest_vec, swap)
 {
-  t8_3D_vec onetwothree ({ 1, 2, 3 });
-  t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
+  double onetwothree[3] = { 1, 2, 3 };
+  double arbitrary[3] = { -.05, 3.14159, 42 };
 
   // Copy vectors for comparison later on.
-  t8_3D_vec onetwothreecopy;
+  double onetwothreecopy[3];
   t8_copy (onetwothree, onetwothreecopy);
-  t8_3D_vec arbitrarycopy;
+  double arbitrarycopy[3];
   t8_copy (arbitrary, arbitrarycopy);
 
-  t8_swap (onetwothree.data (), arbitrary.data ());
+  t8_swap (onetwothree, arbitrary);
   EXPECT_VEC_EQ (onetwothreecopy, arbitrary, T8_PRECISION_SQRT_EPS);
   EXPECT_VEC_EQ (arbitrarycopy, onetwothree, T8_PRECISION_SQRT_EPS);
 }
