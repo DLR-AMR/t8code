@@ -34,11 +34,11 @@
 
 t8_boundary_node_list::t8_boundary_node_list (t8_cmesh_t cmesh_in): cmesh (cmesh_in)
 {
-  boundary_node_list = compute_boundary_node ();
+  boundary_node_list = compute_boundary_nodes ();
 }
 
 std::unordered_set<t8_gloidx_t>
-t8_boundary_node_list::compute_boundary_node ()
+t8_boundary_node_list::compute_boundary_nodes ()
 {
   std::unordered_set<t8_gloidx_t> boundary_node_list = {};
 

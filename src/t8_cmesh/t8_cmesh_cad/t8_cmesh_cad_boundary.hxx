@@ -46,21 +46,20 @@ struct t8_geom_data
     location_on_curve; /**< Parameters if point was projected -> (0D -> {-1, -1}, 1D -> {u, -1}, 2D -> {u, v}) */
 };
 
+/**
+ * This class holds objects containing the Mapping of CAD geometries with there corresponding cmesh
+ */
 class t8_boundary_node_geom_data_map {
  public:
   /** Constructor from a given CAD geometry and a corresponding committed cmesh. 
-  * 
   * \param [in] shape_in    A CAD geometry
   * \param [in] cmesh_in    A committed cmesh
   * \param [in] tolerance   A user defined tolerance to specify the precision of the boundary node remapping. Defaulted to 1e-7.
-  * 
   */
   t8_boundary_node_geom_data_map (TopoDS_Shape& shape_in, t8_cmesh_t cmesh_in, const double tolerance = 1e-7);
 
   /** Getter function for the geometry data map
-   * 
    * \return    A std::unordered_map with multiple pairs of global node ID as the key and a t8_geom_data struct as the value
-   * 
    */
   std::unordered_map<t8_gloidx_t, t8_geom_data>
   get_boundary_node_geom_data_map ();

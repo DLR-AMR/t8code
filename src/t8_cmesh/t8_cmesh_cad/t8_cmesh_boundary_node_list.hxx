@@ -31,15 +31,17 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <unordered_set>
 
+/**
+ * This class implements objects that hold a list containg a cmesh's boundary node ID's
+ */
 class t8_boundary_node_list {
  public:
   /** Basic constructor
-  * 
   * \param [in] cmesh_in  An uncommitted cmesh
   */
   t8_boundary_node_list (t8_cmesh_t cmesh_in);
 
-  /** Getter Function
+  /** Getter Function for an object of the class \ref t8_boundary_node_list 
    * 
    * \return   A std::unordered_set with the global IDs of boundary nodes
    */
@@ -47,14 +49,14 @@ class t8_boundary_node_list {
   get_boundary_node_list ();
 
  private:
-  /** Function to fill the \a t8_boundary_node_list */
+  /** Function to fill the \ref t8_boundary_node_list */
   std::unordered_set<t8_gloidx_t>
-  compute_boundary_node ();
+  compute_boundary_nodes ();
 
-  /* An uncommitted cmesh */
+  /** An uncommitted cmesh */
   t8_cmesh_t cmesh;
 
-  /* Empty boundary node list */
+  /** Empty boundary node list */
   std::unordered_set<t8_gloidx_t> boundary_node_list;
 };
 

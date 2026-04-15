@@ -1719,9 +1719,13 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
    * not know its dimension on these processes. */
   t8_cmesh_set_dimension (cmesh, dim);
 
-  /* DO NOT COMMIT THIS */
-  /* TODO: Sandro has to do something apparently*/
+/* DO NOT COMMIT THIS */
+/* TODO: Sandro has to do something apparently
+   * PLEASE SANDRO, TRY TO REMEMBER WHAT YOU WANTED TO DO
+   */
+#if T8_ENABLE_OCC
   cmesh->compute_boundary_node_list = 1;
+#endif
 
   /* Register the geometries for the cmesh. */
   const int registered_geom_success

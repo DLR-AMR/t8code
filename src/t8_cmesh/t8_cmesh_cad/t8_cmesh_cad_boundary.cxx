@@ -28,23 +28,20 @@
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.hxx>
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_boundary_node_list.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
+
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <Bnd_Box.hxx>
 #include <BRepBndLib.hxx>
-#include <TopExp_Explorer.hxx>
 #include <TopAbs.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
-#include <TopoDS_Vertex.hxx>
 #include <TopExp.hxx>
 #include <BRep_Tool.hxx>
 #include <Standard_Real.hxx>
+
 #include <unordered_map>
-#include <unordered_set>
 #include <cmath>
 
 t8_boundary_node_geom_data_map::t8_boundary_node_geom_data_map (TopoDS_Shape& shape_in, t8_cmesh_t cmesh_in,
@@ -57,7 +54,7 @@ t8_boundary_node_geom_data_map::t8_boundary_node_geom_data_map (TopoDS_Shape& sh
   TopExp::MapShapes (shape, TopAbs_FACE, cad_shape_face_map);
   boundary_node_list = cmesh->boundary_node_list->get_boundary_node_list ();
   T8_ASSERT (boundary_node_list.size () != 0);
-  t8_debugf ("Boundary Node List Size = %ld\n", boundary_node_list.size ());
+  t8_debugf ("Computed %ld boundary nodes in the mesh\n", boundary_node_list.size ());
   compute_geom_data_map ();
 }
 
@@ -74,7 +71,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
       Bnd_Box box;
       BRepBndLib::Add (static_cast<const TopoDS_Shape&> (edge), box);
 
-      int index = cad_shape_edge_map.FindIndex (*edge_iter);
+      const int index = cad_shape_edge_map.FindIndex (*edge_iter);
       edge_bboxes[index] = box;
     }
   }
@@ -87,7 +84,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
     Bnd_Box box;
     BRepBndLib::Add (static_cast<const TopoDS_Shape&> (face), box);
 
-    int index = cad_shape_face_map.FindIndex (*face_iter);
+    const int index = cad_shape_face_map.FindIndex (*face_iter);
     face_bboxes[index] = box;
   }
   t8_debugf ("List of Bounding Boxes created");
@@ -95,9 +92,9 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
   /* Iterate through t8_cmesh_boundary_node_list */
   for (auto bnl_iter = boundary_node_list.begin (); bnl_iter != boundary_node_list.end (); ++bnl_iter) {
     const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*bnl_iter);
-    t8_locidx_t local_tree_id = tree_list.at (0).first;
-    int local_vertex_id = tree_list.at (0).second;
-    double* vertices = (double*) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
+    const t8_locidx_t local_tree_id = tree_list.at (0).first;
+    const int local_vertex_id = tree_list.at (0).second;
+    const double* vertices = (double*) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
 
     /* Get mesh node coordinates */
     const gp_Pnt mesh_pt (vertices[3 * local_vertex_id],      /* x-coordinate */
@@ -107,11 +104,13 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
     /* Iterate through vertices of geometry */
     auto vertex_iter = cad_shape_vertex_map.cbegin ();
     for (; vertex_iter != cad_shape_vertex_map.cend (); ++vertex_iter) {
-      int index = cad_shape_vertex_map.FindIndex (*vertex_iter);
+      const int index = cad_shape_vertex_map.FindIndex (*vertex_iter);
       const gp_Pnt pt = BRep_Tool::Pnt (TopoDS::Vertex (*vertex_iter));
-      if (mesh_pt.Distance (pt) <= tolerance) { /* If mesh node within tolerance of vertex */
+      /* If mesh node within tolerance of vertex */
+      if (mesh_pt.Distance (pt) <= tolerance) {
         const t8_geom_data gd { 0, index, { -1, -1 } };
-        boundary_node_geom_data_map.insert ({ *bnl_iter, gd }); /* append {global ID, t8_geom_data} to map */
+        /* append {global ID, t8_geom_data} to map */
+        boundary_node_geom_data_map.insert ({ *bnl_iter, gd });
         break;
       }
     }

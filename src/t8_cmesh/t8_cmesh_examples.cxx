@@ -3728,6 +3728,7 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm)
 
 t8_cmesh_t
 t8_cmesh_hyperquad(){
+  /* Initialization of the Mesh */
   t8_cmesh_t cmesh; 
   t8_cmesh_init(&cmesh);
   t8_cmesh_vertex_conn_tree_to_vertex ttv;
@@ -3735,18 +3736,22 @@ t8_cmesh_hyperquad(){
 
   for (int i_tree = 0; i_tree < 12; i_tree++){
     if (i_tree < 4){ 
+      /* 4 trees of eclass Quad */
       t8_cmesh_set_tree_class (cmesh, i_tree, T8_ECLASS_QUAD);
     }
     else {
+      /* 8 trees of eclass Triangle */
       t8_cmesh_set_tree_class (cmesh, i_tree, T8_ECLASS_TRIANGLE);
     }
   }
 
+  /* Face Connectivity of Quads */
   t8_cmesh_set_join(cmesh, 0, 1, 1, 0, 0);
   t8_cmesh_set_join(cmesh, 2, 3, 1, 0, 0);
   t8_cmesh_set_join(cmesh, 0, 2, 3, 2, 0);
   t8_cmesh_set_join(cmesh, 1, 3, 3, 2, 0);
 
+  /* Face Connectivity of Triangles */
   t8_cmesh_set_join(cmesh, 2, 4, 3, 2, 0);
   t8_cmesh_set_join(cmesh, 4, 5, 0, 1, 0);
   t8_cmesh_set_join(cmesh, 5, 6, 2, 1, 0);
@@ -3759,6 +3764,7 @@ t8_cmesh_hyperquad(){
   t8_cmesh_set_join(cmesh, 10, 11, 2, 0, 1);
   t8_cmesh_set_join(cmesh, 6, 11, 0, 1, 0);
 
+  /* Defining global vertex IDs */
   constexpr t8_gloidx_t global_vertices_of_tree_0[4] = { 0, 1, 3, 4 };
   constexpr t8_gloidx_t global_vertices_of_tree_1[4] = { 1, 2, 4, 5 };
   constexpr t8_gloidx_t global_vertices_of_tree_2[4] = { 3, 4, 6, 7 };
@@ -3772,6 +3778,7 @@ t8_cmesh_hyperquad(){
   constexpr t8_gloidx_t global_vertices_of_tree_10[3] = { 10, 13, 12 };
   constexpr t8_gloidx_t global_vertices_of_tree_11[3] = { 8, 13, 10 };
 
+  /* Manually setting global vertix ID of trees */
   t8_cmesh_set_global_vertices_of_tree(cmesh, 0, global_vertices_of_tree_0, 4);
   t8_cmesh_set_global_vertices_of_tree(cmesh, 1, global_vertices_of_tree_1, 4);
   t8_cmesh_set_global_vertices_of_tree(cmesh, 2, global_vertices_of_tree_2, 4);
@@ -3785,15 +3792,8 @@ t8_cmesh_hyperquad(){
   t8_cmesh_set_global_vertices_of_tree(cmesh, 10, global_vertices_of_tree_10, 3);
   t8_cmesh_set_global_vertices_of_tree(cmesh, 11, global_vertices_of_tree_11, 3);
 
-
+  /* Commit the mesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   return cmesh;
 }
-
-/*
-
-
-
-
-*/
