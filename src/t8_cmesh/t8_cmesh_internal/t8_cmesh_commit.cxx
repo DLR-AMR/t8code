@@ -611,9 +611,14 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     cmesh->vertex_connectivity->build_vertex_to_tree ();
   }
 
+  /* Construct a boundary node list, only if OCC is enabled and the flag is set. */
+#if !T8_ENABLE_OCC
+  T8_ASSERT (cmesh->compute_boundary_node_list == 0);
+#else
   if (cmesh->compute_boundary_node_list) {
     cmesh->boundary_node_list = new t8_boundary_node_list (cmesh);
   }
+#endif
 
 #if T8_ENABLE_DEBUG
   t8_debugf ("Cmesh is %spartitioned.\n", cmesh->set_partition ? "" : "not ");

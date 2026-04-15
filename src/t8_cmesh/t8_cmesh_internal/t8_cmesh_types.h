@@ -41,7 +41,10 @@ typedef struct t8_part_tree *t8_part_tree_t;
 typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 /** Opaque pointer to a tree */
 typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
+
+#if T8_ENABLE_OCC
 typedef struct t8_boundary_node_list t8_boundary_node_list_c;
+#endif
 
 /* TODO: no longer needed.
  *       User may use set_derived_from, then set_from is non-NULL.
@@ -144,7 +147,10 @@ typedef struct t8_cmesh
   struct t8_cmesh_vertex_connectivity
     *vertex_connectivity;         /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
   int compute_boundary_node_list; /**< If true, compute the boundary node list during commit. */
+
+#if T8_ENABLE_OCC
   t8_boundary_node_list_c *boundary_node_list;
+#endif
 
 #if T8_ENABLE_DEBUG
   int negative_volume_check;   /**< Whether the negative volume check will be performed */
