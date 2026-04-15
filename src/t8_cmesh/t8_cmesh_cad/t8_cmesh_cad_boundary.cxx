@@ -90,6 +90,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
     int index = cad_shape_face_map.FindIndex (*face_iter);
     face_bboxes[index] = box;
   }
+  t8_debugf ("List of Bounding Boxes created");
 
   /* Iterate through t8_cmesh_boundary_node_list */
   for (auto bnl_iter = boundary_node_list.begin (); bnl_iter != boundary_node_list.end (); ++bnl_iter) {

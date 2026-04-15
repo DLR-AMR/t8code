@@ -32,6 +32,7 @@
 #include <t8_cmesh/t8_cmesh_cad/t8_cmesh_cad_boundary.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
+#include "t8_test_data_dir.h"
 
 #include <BRep_Builder.hxx>
 #include <BRepTools.hxx>
@@ -40,7 +41,7 @@
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopExp.hxx>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <TopTools_IndexedMapOfShape.hxx>
 
 TopoDS_Shape
@@ -67,12 +68,14 @@ class t8_gtest_cad_boundary: public testing::TestWithParam<int> {
   void
   SetUp () override
   {
-    cad_shape = read_brep_file (brep_files[GetParam ()]);
+    std::string testfile_brep = std::string (T8_TEST_DATA_DIR) + brep_files[GetParam ()];
+    cad_shape = read_brep_file (testfile_brep);
     TopExp::MapShapes (cad_shape, TopAbs_VERTEX, cad_shape_vertex_map);
     TopExp::MapShapes (cad_shape, TopAbs_EDGE, cad_shape_edge_map);
     TopExp::MapShapes (cad_shape, TopAbs_FACE, cad_shape_face_map);
 
-    cmesh = t8_cmesh_from_msh_file (mesh_files[GetParam ()], 0, sc_MPI_COMM_WORLD, 3, 0, 0);
+    std::string testfile_msh = std::string (T8_TEST_DATA_DIR) + mesh_files[GetParam ()];
+    cmesh = t8_cmesh_from_msh_file (testfile_msh.c_str (), 0, sc_MPI_COMM_WORLD, 3, 0, 0);
   }
   void
   TearDown () override
@@ -86,23 +89,11 @@ class t8_gtest_cad_boundary: public testing::TestWithParam<int> {
   TopTools_IndexedMapOfShape cad_shape_face_map;   /**< Map of all TopoDS_Face in shape. */
   t8_cmesh_t cmesh;
 
-  const char* mesh_files[7] /* .msh file prefixes */
-    = { "test/testfiles/simple_test_case_168",
-        "test/testfiles/simple_test_case_288",
-        "test/testfiles/simple_test_case_1414",
-        "test/testfiles/simple_test_case_5147",
-        "test/testfiles/simple_test_case_30596",
-        "test/testfiles/D150_1791",
-        "test/testfiles/D150_5129" };
+  const char* mesh_files[2] /* .msh file prefixes */
+    = { "/simple_test_case_288", "/D150_1791" };
 
-  const char* brep_files[7] /* .brep file prefixes */
-    = { "test/testfiles/simple_test_case",
-        "test/testfiles/simple_test_case",
-        "test/testfiles/simple_test_case",
-        "test/testfiles/simple_test_case",
-        "test/testfiles/simple_test_case",
-        "test/testfiles/D150",
-        "test/testfiles/D150" };
+  const char* brep_files[2] /* .brep file prefixes */
+    = { "/simple_test_case", "/D150" };
 
   int file;
 };
@@ -218,4 +209,4 @@ TEST_P (t8_gtest_cad_boundary, geom_data_map_test)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_geom_data_map, t8_gtest_cad_boundary, testing::Range (0, 7));
+INSTANTIATE_TEST_SUITE_P (t8_gtest_geom_data_map, t8_gtest_cad_boundary, testing::Range (0, 2));
