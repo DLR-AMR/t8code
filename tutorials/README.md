@@ -1,7 +1,7 @@
 # Tutorials
 
-There are two kinds of tutorials for `t8code`: The general tutorials, which lead you step by step and show the basic usage of `t8code`.  
-Furthermore, there are feature tutorials, which detail on more advanced or additional features of `t8code`. 
+There are different kinds of tutorials for `t8code`: The general tutorials, which lead you step by step and show the basic usage of `t8code`.  
+Furthermore, there are feature tutorials, which detail on more advanced or additional features of `t8code`. Folder [mesh_handle](mesh_handle/) contains tutorials using the [mesh_handle](../mesh_handle/README.md) of t8code.
 
 For all tutorials we have a corresponding article in the [Wiki](https://github.com/DLR-AMR/t8code/wiki/Tutorial---Overview). The article can be used as a step-by-step guide for each tutorial.
 
@@ -40,6 +40,10 @@ Creating a user defined mesh in two- and three dimensions.
 
 [Curved meshes](https://github.com/DLR-AMR/t8code/wiki/Feature---Curved-meshes) - 
 A tutorial about the generation of curved adaptive meshes.
+
+## Mesh handle
+[mesh_handle_element_data](mesh_handle/t8_mesh_element_data.cxx) Recreating [step5](./general/t8_step5_element_data.cxx) of the general tutorials but using the mesh handle.
+
 ## To be implemented in the future
 
 step7 - Changing a mesh with element data on it: Partitioning element data and interpolating data after adaptation.
