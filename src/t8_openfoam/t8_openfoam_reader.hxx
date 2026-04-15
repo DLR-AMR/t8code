@@ -52,6 +52,12 @@ struct t8_openfoam_reader
   /** Abbreviation for std::filesystem::path */
   using t8_path = std::filesystem::path;
 
+  /** Datatype to describe the relation between a t8 and an OpenFOAM face.
+   * orientation.first: t8 face vertex 0 -> OF point id
+   * orientation.second: t8 face normal == OF face normal
+   */
+  using t8_orientation = std::pair<u_int8_t, bool>;
+
   /**
    * Reader for OpenFOAM cases.
    * \param [in] foamfile  Path to the *.foam file inside the OpenFOAM case directory.
@@ -515,8 +521,7 @@ struct t8_openfoam_reader
    * \return                        The converted OF face vertex id
    */
   constexpr static u_int8_t
-  t8_face_vertex_to_of_point (t8_eclass_t face_class, std::pair<u_int8_t, u_int8_t> orientation,
-                              u_int8_t t8_face_vertex_id)
+  t8_face_vertex_to_of_point (t8_eclass_t face_class, t8_orientation orientation, u_int8_t t8_face_vertex_id)
   {
     /* While t8code uses the z-order for quads, OpenFOAM uses an anti-clockwise numeration.
      * So if the face is a quad, we have to switch indices in accordance with this LUT.
@@ -636,6 +641,49 @@ struct t8_openfoam_reader
   }
 
   /**
+   * Computes the orientation of two faces according to \ref t8_cmesh_set_join.
+   * \tparam TFaceClass         The eclass of the connecting face
+   * \param [in] eclass1        Cell 1 eclass
+   * \param [in] face_id1       Cell 1 face id
+   * \param [in] orient1        Cell 1 orientation
+   * \param [in] eclass2        Cell 2 eclass
+   * \param [in] face_id2       Cell 2 face id
+   * \param [in] orient2        cell 2 orientation
+   * \return                    The orientation in accordance with \ref t8_cmesh_set_join
+   */
+  int
+  compute_face_orientation (t8_eclass eclass1, u_int8_t face_id1, t8_orientation orient1, t8_eclass eclass2,
+                            u_int8_t face_id2, t8_orientation orient2)
+  {
+    const t8_eclass face_class = (t8_eclass) t8_eclass_face_types[eclass1][face_id1];
+    const u_int8_t num_vertices = t8_eclass_num_vertices[face_class];
+
+    /* First, we determine the order of cells according to the documentation of
+     * \ref t8_cmesh_set_join */
+    bool main_cell; /** true = cell 1, false = cell 2 */
+    if (eclass1 == eclass2) {
+      main_cell = face_id1 <= face_id2;
+    }
+    else {
+      main_cell = eclass1 < eclass2;
+    }
+
+    /* Save main and other cell */
+    const t8_orientation main_orient = main_cell ? orient1 : orient2;
+    const t8_orientation other_orient = main_cell ? orient2 : orient1;
+
+    /* Convert orientation */
+    const int8_t steps = other_orient.first - main_orient.first;
+    const int8_t direction = other_orient.second ? -1 : 1;
+    const int8_t final_orientation = (num_vertices + steps * direction) % num_vertices;
+
+    /* For quads we have to convert between OF and t8 numeration */
+    if (face_class == T8_ECLASS_QUAD)
+      return quad_conversion[final_orientation];
+    return final_orientation;
+  }
+
+  /**
    * Compute the neighbors of a cell.
    * \tparam TNumFaces The number of faces of the cell.
    * \param [in] cell_id            The id of the cell.
@@ -647,26 +695,31 @@ struct t8_openfoam_reader
   void
   compute_cell_neighbors (const size_t cell_id, const t8_eclass cell_eclass,
                           const std::array<std::optional<size_t>, TNumFaces> faces,
-                          const std::array<u_int8_t, TNumFaces> face_orientations)
+                          const std::array<t8_orientation, TNumFaces> face_orientations)
   {
     /* We are using \ref m_neighborhoods to link neighbors together.
      * Each face has a unique id. For each face of the cell we will save the cell id, t8 face id and orientation
      * in \ref m_neighborhoods. If we encounter a face, which is already filled then we know, that the already
      * saved face and cell is the neighbor. We can now join these cells via their shared face. */
     for (u_int8_t t8_face_id = 0; t8_face_id < TNumFaces; ++t8_face_id) {
-      const size_t OF_face_id = faces[t8_face_id];
+      const size_t OF_face_id = faces[t8_face_id].value ();
       if (m_neighborhoods[OF_face_id].has_value ()) {
         /* There already is a cell saved with this face. This has to be the neighbor of the current cell. */
         const size_t other_cell_id = std::get<0> (*(m_neighborhoods[OF_face_id]));
-        const u_int8_t other_cell_t8_face_id = std::get<1> (*(m_neighborhoods[OF_face_id]));
-        const u_int8_t other_cell_face_orientation = std::get<2> (*(m_neighborhoods[OF_face_id]));
-        t8_cmesh_set_join (m_cmesh, cell_id, other_cell_id, t8_face_id, other_cell_t8_face_id,
-                           1);  //TODO, orientation os not 1
+        const t8_eclass other_cell_eclass = std::get<1> (*(m_neighborhoods[OF_face_id]));
+        const u_int8_t other_cell_t8_face_id = std::get<2> (*(m_neighborhoods[OF_face_id]));
+        const t8_orientation other_cell_face_orientation = std::get<3> (*(m_neighborhoods[OF_face_id]));
+
+        /* Calculate the orientation between both cells. */
+        const int orientation
+          = compute_face_orientation (cell_eclass, t8_face_id, face_orientations[t8_face_id], other_cell_eclass,
+                                      other_cell_t8_face_id, other_cell_face_orientation);
+        t8_cmesh_set_join (m_cmesh, cell_id, other_cell_id, t8_face_id, other_cell_t8_face_id, orientation);
       }
       else {
         /* There is no cell with this face saved yet. Save this cell with this face. */
         m_neighborhoods[OF_face_id].emplace (
-          std::make_tuple (cell_id, eclass, t8_face_id, face_orientations[t8_face_id]));
+          std::make_tuple (cell_id, cell_eclass, t8_face_id, face_orientations[t8_face_id]));
       }
     }
   }
@@ -695,14 +748,14 @@ struct t8_openfoam_reader
 
     std::array<std::optional<size_t>, t8_eclass_num_faces[T8_ECLASS_HEX]> faces {};
     std::array<std::optional<size_t>, t8_eclass_num_vertices[T8_ECLASS_HEX]> points {};
-    std::array<u_int8_t, t8_eclass_num_faces[T8_ECLASS_HEX]> face_orientations {};
+    std::array<t8_orientation, t8_eclass_num_faces[T8_ECLASS_HEX]> face_orientations {};
     constexpr t8_eclass_t eclass = T8_ECLASS_HEX;
 
     /** Orientation of the OpenFOAM face with regard to the t8code face.
      * t8 corner 0 -> OF corner <orientation.first>
      * same normal direction <orientation.second> = 1, different normal direction<orientation.second> = -1
      */
-    std::pair<u_int8_t, bool> orientation;
+    t8_orientation orientation;
     /** Normal of the t8 face. 1 points outward, 0 inward. */
     bool t8_face_normal;
 
@@ -711,10 +764,10 @@ struct t8_openfoam_reader
     /* The orientation is 1, if both face normals point in the same direction */
     orientation.second = t8_face_normal == face_normals[0];
     orientation.first = 0;
+    face_orientations[0] = orientation;
 
     /* Now, we assign the first face to be face 0. */
     faces[0].emplace (face_ids[0]);
-    face_orientations[0] = 0;
     const std::span<size_t> face_0_points = face_point_ids[0];
     for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
       const u_int8_t of_point_id = t8_face_vertex_to_of_point (T8_ECLASS_QUAD, orientation, i_face_point);
@@ -780,7 +833,7 @@ struct t8_openfoam_reader
     orientation.first = face_1_vertex_0_iterator - face_1_points.begin ();
 
     /* After that we add the remaining four points, completing the vertices of the cell */
-    face_orientations[1] = orientation.first;
+    face_orientations[1] = orientation;
     for (u_int8_t i_face_point = 0; i_face_point < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_point) {
       const u_int8_t of_point_id = t8_face_vertex_to_of_point (T8_ECLASS_QUAD, orientation, i_face_point);
       points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][1][i_face_point]].emplace (face_1_points[of_point_id]);
@@ -801,12 +854,13 @@ struct t8_openfoam_reader
         face_id.has_value (),
         "ERROR: Could not find a specific face for hex reconstruction. Maybe this cell was falsely classified "
         "as a hex\n");
-      //t8_face_normal = t8_eclass_face_orientation[eclass][1];
-      //orientation.second = (face_normals[*face_id] == t8_face_normal);
+      t8_face_normal = t8_eclass_face_orientation[eclass][1];
+      orientation.second = (face_normals[*face_id] == t8_face_normal);
       const size_t vertex_0 = *points[t8_face_vertex_to_tree_vertex[T8_ECLASS_HEX][i_t8_face][0]];
-      face_orientations[i_t8_face]
+      orientation.first
         = std::distance (face_point_ids[*face_id].begin (),
                          std::find (face_point_ids[*face_id].begin (), face_point_ids[*face_id].end (), vertex_0));
+      face_orientations[i_t8_face] = orientation;
     }
 
     /* ------------------------- 5. Set cmesh cell ------------------------- */
@@ -822,6 +876,7 @@ struct t8_openfoam_reader
 
     /* ------------------------- 6. Set neighbors and boundary conditions ------------------------- */
     compute_cell_neighbors (cell_id, T8_ECLASS_HEX, faces, face_orientations);
+    // TODO: Boundary conditions
   }
 
   /**
@@ -886,7 +941,7 @@ struct t8_openfoam_reader
     {
       t8_debugf ("OpenFOAM boundary ranges:\n");
       for (auto range = m_ranges.begin (); range != m_ranges.end (); ++range) {
-        t8_debugf ("StartFace %li -> boundary hash %li\n", range->first, range->second);
+        t8_debugf ("StartFace %lu -> boundary hash %lu\n", range->first, range->second.get ());
       }
     }
 #endif /* T8_ENABLE_DEBUG */
@@ -906,7 +961,7 @@ struct t8_openfoam_reader
   /** Conversion table between OpenFOAM and t8code quad numeration.
    * We only need this for quads, since triangles numerated equally.
    */
-  static constexpr std::array<int, 4> quad_conversion = { { 0, 1, 3, 2 } };
+  static constexpr std::array<u_int8_t, 4> quad_conversion = { { 0, 1, 3, 2 } };
 
   /** Holds all points of the mesh. point_id -> x, y, z */
   std::vector<t8_3D_vec> m_points;
@@ -919,7 +974,7 @@ struct t8_openfoam_reader
    * face id -> tree id, eclass, face of tree, orientation
    * During reconstruction, the values will be filled by the first cell owning that face.
    * If the second cell then also encounters the same face, the two cells will be linked together. */
-  std::vector<std::optional<std::tuple<size_t, t8_eclass, u_int8_t, u_int8_t>>> m_neighborhoods;
+  std::vector<std::optional<std::tuple<size_t, t8_eclass, u_int8_t, t8_orientation>>> m_neighborhoods;
   /** Assigns a hash to each boundary face. */
   face_to_boundary_group_hash_map boundary_map;
 };
