@@ -155,6 +155,8 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
       for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
+
+        t8_global_productionf ("irank = %i \n", irank);
         const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
         check_result = (rank == size) ? num_elems : check_result;
 
@@ -168,7 +170,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
         /* Update the rank */
         rank *= rank_growth;
       }
-      t8_global_productionf ("Left ielem loop\n");
+      t8_global_productionf ("Left irank loop\n");
       /* Update the result with respect to the updated number of elements. */
       check_result_elem *= elem_growth;
       check_result_elem += elem_growth * check_result_elem_remain / size;
@@ -176,10 +178,11 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       /* Update the number of elements */
       num_elems *= elem_growth;
     }
-    t8_global_productionf ("Left isize loop\n");
+    t8_global_productionf ("Left ielem loop\n");
     /* Update mpisize */
     size *= size_growth;
   }
+  t8_global_productionf ("Left isize loop\n");
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
