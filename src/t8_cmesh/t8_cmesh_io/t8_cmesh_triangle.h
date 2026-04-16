@@ -51,6 +51,9 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] do_dup     Whether \a comm should be duplicated by cmesh.
  * \return                A committed, replicated cmesh constructed from the info
  *                        in the TRIANGLE files.
+ *
+ * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
+ *                  Calling it will thus result in an error.
  */
 t8_cmesh_t
 t8_cmesh_from_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup);
