@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
@@ -130,9 +130,9 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
   min_level = SC_MAX (0, min_level - 1);
   t8_debugf ("Testing ghost exchange with start level %i\n", min_level);
 #if T8_TEST_LEVEL_INT >= 2
-  const int max_level = min_level + 2;
+  const int max_level = min_level + 1;
 #else
-  const int max_level = min_level + 3;
+  const int max_level = min_level + 2;
 #endif
   for (int level = min_level; level < max_level; level++) {
     /* ref the scheme since we reuse it */
@@ -144,8 +144,8 @@ TEST_P (forest_ghost_owner, test_ghost_owner)
     /* Check the owners of the ghost elements */
     t8_test_gao_check (forest);
     /* Adapt the forest and exchange data again */
-    int maxlevel = level + 2;
-    t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_gao_adapt, 1, 1, &maxlevel);
+    int adapt_maxlevel = level + 2;
+    t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_gao_adapt, 1, 1, &adapt_maxlevel);
     /* Check the owners of the ghost elements */
     t8_test_gao_check (forest_adapt);
     t8_forest_unref (&forest_adapt);

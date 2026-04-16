@@ -33,28 +33,30 @@ program t8_test_mpi_init
   integer :: ierror, fcomm
   type(c_ptr) :: ccomm
 
+  ! Initialize MPI.
   call MPI_Init (ierror)
-
   if (ierror /= 0) then
     print *, 'MPI initialization failed.'
     stop 1
   endif
-
   fcomm = MPI_COMM_WORLD
   ccomm = t8_fortran_mpi_comm_new_f (fcomm)
 
+  ! Initialize t8code.
   call t8_fortran_init_all_f (ccomm)
+
+  ! Finalize MPI and t8code.
   call t8_fortran_finalize_f ()
-
-
   call t8_fortran_mpi_comm_delete_f(ccomm)
   call MPI_Finalize(ierror)
-
   if (ierror /= 0) then
     print *, 'MPI Finalize failed.'
     stop 1
   endif
-  print *, 'All good!'
+
+  ! Everything passed: Return zero.
+  write(*,*) ''
+  print *, 'PASSED: mpi init test of Fortran interface!'
   stop 0
 
 end program

@@ -29,7 +29,7 @@
 #define T8_VTK_WRITER_C_INTERFACE_H
 
 #include <t8.h>
-#include <t8_vtk.h>
+#include <t8_vtk/t8_vtk.h>
 #include <t8_forest/t8_forest_types.h>
 
 #if T8_ENABLE_VTK
@@ -140,7 +140,7 @@ t8_cmesh_vtk_write_file_via_API (t8_cmesh_t cmesh, const char *fileprefix, sc_MP
  * 
  * \param[in] cmesh The cmesh
  * \param[in] fileprefix The prefix of the output files 
- * \return 0 if successful, non-zero otherwise
+ * \return True (nonzero) if successful, false (zero) otherwise 
  */
 int
 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);

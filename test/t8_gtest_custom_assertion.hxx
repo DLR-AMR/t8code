@@ -91,38 +91,39 @@ element_equality (const char *ts_expr, const char *tree_class_expr, const char *
   ASSERT_PRED_FORMAT4 (element_equality, (scheme), (eclass), (elem1), (elem2))
 
 /**
- * Test if two 3D Dimensionaltors are equal with respect to a given precision
+ * Test if two vectors are equal with respect to a given precision.
  *
- * \tparam TDimensional2 Type of the first Dimensionaltor.
- * \param[in] Dimensional_1_expr Name of the first Dimensionaltor
- * \param[in] Dimensional_2_expr Name of the second Dimensionaltor
+ * \tparam TContainer1 Type of the first container.
+ * \tparam TContainer2 Type of the second container.
+ * \param[in] container_1_expr Name of the first container
+ * \param[in] container_2_expr Name of the second container
  * \param[in] precision_expr Name of the precision
- * \param[in] Dimensional_1 First Dimensionaltor to compare
- * \param[in] Dimensional_2 Second Dimensionaltor to compare
+ * \param[in] container_1 First container to compare
+ * \param[in] container_2 Second container to compare
  * \param[in] precision Test equality up to this precision
  * \return testing::AssertionResult
  */
-template <T8DimensionalType TDimensional1, T8DimensionalType TDimensional2>
+template <T8InputRange TContainer1, T8InputRange TContainer2>
 static inline testing::AssertionResult
-dimensional_equality (const char *Dimensional_1_expr, const char *Dimensional_2_expr, const char *precision_expr,
-                      const TDimensional1 &Dimensional_1, const TDimensional2 &Dimensional_2, const double precision)
+container_equality (const char *container_1_expr, const char *container_2_expr, const char *precision_expr,
+                    const TContainer1 &container_1, const TContainer2 &container_2, const double precision)
 {
-  if (t8_eq (Dimensional_1, Dimensional_2, precision)) {
+  if (t8_eq (container_1, container_2, precision)) {
     return testing::AssertionSuccess ();
   }
   else {
-    return testing::AssertionFailure () << Dimensional_1_expr << " is not equal to " << Dimensional_2_expr << " \n"
+    return testing::AssertionFailure () << container_1_expr << " is not equal to " << container_2_expr << " \n"
                                         << "Precision given by " << precision_expr << " " << precision;
   }
 }
 
 /** Macro for a non-fatal failure test to check for equality of two vectors.
- * \param[in] Dimensional_1 First Dimensionaltor to compare.
- * \param[in] Dimensional_2 Second Dimensionaltor to compare.
+ * \param[in] container_1 First container to compare.
+ * \param[in] container_2 Second container to compare.
  * \param[in] precision Test equality up to this precision.
  */
-#define EXPECT_VEC_EQ(Dimensional_1, Dimensional_2, precision) \
-  EXPECT_PRED_FORMAT3 (dimensional_equality, (Dimensional_1), (Dimensional_2), (precision))
+#define EXPECT_VEC_EQ(container_1, container_2, precision) \
+  EXPECT_PRED_FORMAT3 (container_equality, (container_1), (container_2), (precision))
 
 /**
  * Test two forests for equality.

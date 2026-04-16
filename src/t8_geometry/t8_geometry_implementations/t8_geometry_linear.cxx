@@ -100,7 +100,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
   }
   case T8_ECLASS_QUAD: {
     /* We divide the quad in two triangles and use the triangle check. */
-    t8_3D_point p_0, p_1, p_2, p_3;
+    t8_3D_vec p_0, p_1, p_2, p_3;
     /* Compute the vertex coordinates of the quad */
     t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
     t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1.data ());
@@ -247,7 +247,7 @@ t8_geometry_linear_destroy (t8_geometry_c **geom)
   T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_LINEAR);
 
   delete *geom;
-  *geom = NULL;
+  *geom = nullptr;
 }
 
 T8_EXTERN_C_END ();

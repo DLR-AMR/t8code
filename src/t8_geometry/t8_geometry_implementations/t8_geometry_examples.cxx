@@ -348,7 +348,7 @@ t8_geometry_destroy (t8_geometry_c **geom)
   T8_ASSERT (geom != NULL);
 
   delete *geom;
-  *geom = NULL;
+  *geom = nullptr;
 }
 
 /* Satisfy the C interface from t8_geometry_linear.h. */

@@ -54,8 +54,8 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 {
   using mesh_class = t8_mesh_handle::mesh<>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
-                                                                            true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
+    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
   EXPECT_FALSE (element_class::has_vertex_cache ());
   EXPECT_FALSE (element_class::has_centroid_cache ());
 
@@ -88,8 +88,8 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
   // --- Use predefined competences to use all available caching competences. ---
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
-                                                                            true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
+    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
   EXPECT_TRUE (element_class::has_volume_cache ());
   EXPECT_TRUE (element_class::has_diameter_cache ());
   EXPECT_TRUE (element_class::has_vertex_cache ());
@@ -116,28 +116,27 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
     }
   }
   // Check if caches are set. If caches are accessed correctly is checked in another test.
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    EXPECT_TRUE (it->volume_cache_filled ());
-    EXPECT_TRUE (it->centroid_cache_filled ());
-    EXPECT_TRUE (it->vertex_cache_filled ());
-    EXPECT_FALSE (it->diameter_cache_filled ());
-    if (it->get_num_faces () > 0) {
-      EXPECT_FALSE (it->face_area_cache_filled (0));
-      EXPECT_FALSE (it->face_centroid_cache_filled (0));
-      EXPECT_FALSE (it->face_normal_cache_filled (0));
+  for (const auto& elem : *mesh) {
+    EXPECT_TRUE (elem.volume_cache_filled ());
+    EXPECT_TRUE (elem.centroid_cache_filled ());
+    EXPECT_TRUE (elem.vertex_cache_filled ());
+    EXPECT_FALSE (elem.diameter_cache_filled ());
+    if (elem.get_num_faces () > 0) {
+      EXPECT_FALSE (elem.face_area_cache_filled (0));
+      EXPECT_FALSE (elem.face_centroid_cache_filled (0));
+      EXPECT_FALSE (elem.face_normal_cache_filled (0));
     }
-    EXPECT_FALSE (it->neighbor_cache_filled_any ());
+    EXPECT_FALSE (elem.neighbor_cache_filled_any ());
   }
 }
 
 /** Test mesh class with all predefined face competences using some exemplary functionality. */
 TEST_P (t8_mesh_handle_test, test_cache_face_competences)
 {
-  // --- Use all predefined competences. ---
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_competences>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
-                                                                            true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
+    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
   EXPECT_FALSE (element_class::has_volume_cache ());
   EXPECT_FALSE (element_class::has_diameter_cache ());
   EXPECT_FALSE (element_class::has_vertex_cache ());
@@ -170,6 +169,29 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
     }
     EXPECT_FALSE (it->neighbor_cache_filled_any ());
   }
+}
+
+/** Check that the unique union of multiple competence packs works as intended. */
+TEST (t8_mesh_handle_test, test_union_competence_pack)
+{
+  using namespace t8_mesh_handle;
+  /* Combine multiple competence packs with some overlapping competences to check that the union works correctly
+   * and duplicates are removed. Duplicates would cause an error because we inherit multiple times from the same class.
+   */
+  using mesh_class
+    = mesh<union_competence_packs_type<competence_pack<cache_volume>,
+                                       competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
+                                       competence_pack<cache_centroid, cache_face_areas, cache_face_centroids>>>;
+  using element_class = typename mesh_class::element_class;
+
+  EXPECT_TRUE (element_class::has_volume_cache ());
+  EXPECT_TRUE (element_class::has_diameter_cache ());
+  EXPECT_TRUE (element_class::has_vertex_cache ());
+  EXPECT_TRUE (element_class::has_centroid_cache ());
+  EXPECT_TRUE (element_class::has_face_areas_cache ());
+  EXPECT_TRUE (element_class::has_face_centroids_cache ());
+  EXPECT_FALSE (element_class::has_face_normals_cache ());
+  EXPECT_FALSE (element_class::has_face_neighbor_cache ());
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_handle_test, testing::Combine (AllEclasses, testing::Range (2, 3)));

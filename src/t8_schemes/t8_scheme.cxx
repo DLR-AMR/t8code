@@ -24,7 +24,7 @@
  * Implements functions declared in \ref t8_scheme.h.
  */
 
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme.h>
 #include <t8_forest/t8_forest_types.h>
@@ -43,7 +43,7 @@ t8_scheme_unref (t8_scheme_c **pscheme)
   T8_ASSERT (pscheme != NULL);
 
   if ((*pscheme)->unref () < 1) {
-    *pscheme = NULL;
+    *pscheme = nullptr;
   }
 }
 

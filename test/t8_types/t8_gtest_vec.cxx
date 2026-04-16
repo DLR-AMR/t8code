@@ -23,8 +23,8 @@
 /* In this file we collect tests for the routines in t8_vec.hxx */
 
 #include <gtest/gtest.h>
-#include <t8_types/t8_vec.hxx>
 #include <t8_types/t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_memory_macros.hxx>
 #include <t8_helper_functions/t8_unrolled_for.hxx>
@@ -46,12 +46,39 @@ TEST (t8_gtest_vec, norm)
   EXPECT_NEAR (t8_norm (arbitrary), normarbitrary, T8_PRECISION_SQRT_EPS);
 }
 
+/* Test the t8_normalize function and t8_copy. */
+TEST (t8_gtest_vec, normalize)
+{
+  double onetwothree[3] = { 1, 2, 3 };
+  t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
+
+  // Copy vectors for comparison later on.
+  double onetwothreecopy[3];
+  t8_copy (onetwothree, onetwothreecopy);
+  t8_3D_vec arbitrarycopy;
+  t8_copy (arbitrary, arbitrarycopy);
+
+  // Normalize and check if norm is one as expected.
+  t8_normalize (onetwothree);
+  t8_normalize (arbitrary);
+  EXPECT_NEAR (t8_norm (onetwothree), 1, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_norm (arbitrary), 1, T8_PRECISION_SQRT_EPS);
+
+  // Compare to vector that is normalized with the t8_ax function.
+  const double normonetwothree = sqrt (1 + 4 + 9);
+  t8_ax (onetwothreecopy, 1. / normonetwothree);
+  EXPECT_VEC_EQ (onetwothree, onetwothreecopy, T8_PRECISION_SQRT_EPS);
+  const double normarbitrary = 42.117360883;
+  t8_ax (arbitrarycopy, 1. / normarbitrary);
+  EXPECT_VEC_EQ (arbitrary, arbitrarycopy, T8_PRECISION_SQRT_EPS);
+}
+
 /* test the t8_dist function */
 TEST (t8_gtest_vec, dist)
 {
-  const t8_3D_point zero ({ 0, 0, 0 });
-  const t8_3D_point onetwothree ({ 1, 2, 3 });
-  const t8_3D_point arbitrary ({ -.05, 3.14159, 42 });
+  const t8_3D_vec zero ({ 0, 0, 0 });
+  const t8_3D_vec onetwothree ({ 1, 2, 3 });
+  const t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
   const double distzeroonetwothree = sqrt (1 + 4 + 9);
   const double distarbitraryonetwothree = 39.030830477;
   EXPECT_VEC_EQ (zero, zero, T8_PRECISION_SQRT_EPS);
@@ -252,11 +279,11 @@ TEST (t8_gtest_vec, cross_3D)
 
 TEST (t8_gtest_vec, cross_2D)
 {
-  const t8_vec<2> zero ({ 0, 0 });
-  const t8_vec<2> e1 ({ 1, 0 });   // Unit vector along x-axis
-  const t8_vec<2> e2 ({ 0, 1 });   // Unit vector along y-axis
-  const t8_vec<2> v1 ({ 3, 4 });   // Arbitrary vector
-  const t8_vec<2> v2 ({ -4, 3 });  // Perpendicular to v1
+  const t8_2D_vec zero ({ 0, 0 });
+  const t8_2D_vec e1 ({ 1, 0 });   // Unit vector along x-axis
+  const t8_2D_vec e2 ({ 0, 1 });   // Unit vector along y-axis
+  const t8_2D_vec v1 ({ 3, 4 });   // Arbitrary vector
+  const t8_2D_vec v2 ({ -4, 3 });  // Perpendicular to v1
 
   double cross;
 
@@ -297,71 +324,77 @@ TEST (t8_gtest_vec, check_less_or_equal)
   EXPECT_VEC_EQ (one, one_minus_eps, T8_PRECISION_SQRT_EPS);
 }
 
-/**
- * Creates a vector of vec views for plain c vectors.
- * \tparam TDim                   The dimension of the vector.
- * \param [in, out] c_vectors     Pointer to the raw c vectors.
- * \param [in, out] num_vectors   Number of vectors.
- * \return                        A std::vector containing views to the c vectors.
- */
-template <size_t TDim>
-static inline std::vector<t8_vec_view<TDim, const double>>
-t8_convert_array_to_vec_view (const double* c_vectors, const size_t num_vectors)
+/* Test the t8_rescale function. */
+TEST (t8_gtest_vec, rescale)
 {
-  std::vector<t8_vec_view<TDim, const double>> vec_views;
-  vec_views.reserve (num_vectors);
-  for (size_t ivec = 0; ivec < num_vectors; ++ivec)
-    vec_views.emplace_back (make_t8_vec_view<TDim, const double> (c_vectors + ivec * TDim));
-  T8_ASSERT (vec_views.size () == num_vectors);
-  return vec_views;
+  t8_3D_vec onetwothree ({ 1, 2, 3 });
+  t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
+
+  const double normonetwothree = sqrt (1 + 4 + 9);
+  const double normarbitrary = 42.117360883;
+  const double newlength = 3.;
+
+  // Copy vectors for comparison later on.
+  t8_3D_vec onetwothreecopy;
+  t8_copy (onetwothree, onetwothreecopy);
+  t8_3D_vec arbitrarycopy;
+  t8_copy (arbitrary, arbitrarycopy);
+
+  // Compare rescaled vector with the one rescaled by hand.
+  t8_ax (onetwothree, newlength / normonetwothree);
+  t8_rescale (onetwothreecopy, newlength);
+  EXPECT_VEC_EQ (onetwothree, onetwothreecopy, T8_PRECISION_SQRT_EPS);
+  t8_ax (arbitrary, newlength / normarbitrary);
+  t8_rescale (arbitrarycopy, newlength);
+  EXPECT_VEC_EQ (arbitrary, arbitrarycopy, T8_PRECISION_SQRT_EPS);
 }
 
-/**
- * Create a vector of t8_vec as a copy of plain c vectors.
- * \tparam TDim                   The dimension of the vector.
- * \param [in, out] c_vectors     Pointer to the raw c vectors.
- * \param [in, out] num_vectors   Number of vectors.
- * \return                        A std::vector containing t8_vec objects.
- */
-template <size_t TDim>
-static inline std::vector<t8_vec<TDim>>
-t8_convert_array_to_vec (const double* c_vectors, const size_t num_vectors)
+/* Test the t8_normal_of_tri function. */
+TEST (t8_gtest_vec, normal_of_tri)
 {
-  std::vector<t8_vec<TDim>> vecs (num_vectors);
-  for (size_t ivec = 0; ivec < num_vectors; ++ivec)
-    std::copy_n (c_vectors + ivec * TDim, TDim, vecs[ivec].begin ());
-  T8_ASSERT (vecs.size () == num_vectors);
-  return vecs;
+  // Define triangle points.
+  const t8_3D_vec p0 ({ 0, 0, 0 });
+  const t8_3D_vec p1 ({ 1, 0, 0 });
+  const t8_3D_vec p2 ({ 0, 1, 0 });
+  // Expected normal.
+  const t8_3D_vec expected_normal ({ 0, 0, 1 });
+
+  t8_3D_vec computed_normal;
+  t8_normal_of_tri (p0, p1, p2, computed_normal);
+  // Compare with expected.
+  EXPECT_VEC_EQ (expected_normal, computed_normal, T8_PRECISION_SQRT_EPS);
 }
 
-/** Test the vector/point views */
-TEST (t8_gtest_vec, vec_view)
+/* Test the t8_orthogonal_tripod function. */
+TEST (t8_gtest_vec, orthogonal_tripod)
 {
-  constexpr size_t seed = 12345;
-  constexpr double min = -1e10, max = 1e10;
-  std::mt19937_64 rng (seed);
-  std::uniform_real_distribution<double> dist (min, max);
-  constexpr size_t num_points = 10;
+  // Define triangle points.
+  t8_3D_vec onetwothree ({ 1, 2, 3 });
+  t8_3D_vec output1;
+  t8_3D_vec output2;
 
-  /* Test for each dimension */
-  unrolled_for (1, 4, idim, {
-    double c_vectors[idim * num_points] = { 0 };
-    /* Fill test vectors and create views. */
-    for (size_t icoord = 0; icoord < num_points * idim; ++icoord)
-      c_vectors[icoord] = dist (rng);
-    auto vecs = t8_convert_array_to_vec<idim> (c_vectors, num_points);
-    auto vec_views = t8_convert_array_to_vec_view<idim> (c_vectors, num_points);
+  t8_orthogonal_tripod (onetwothree, output1, output2);
+  // Check if result is orthogonal and normalized.
+  EXPECT_NEAR (t8_dot (output1, onetwothree), 0, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_dot (output2, onetwothree), 0, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_dot (output1, output2), 0, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_norm (output1), 1., T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_norm (output2), 1., T8_PRECISION_SQRT_EPS);
+}
 
-    for (size_t ipoint = 0; ipoint < num_points; ++ipoint) {
-      EXPECT_VEC_EQ (vecs[ipoint], vec_views[ipoint], T8_PRECISION_SQRT_EPS);
-      /* Also check if functions return the same, but only for 3D. */
-      if constexpr (idim == 3) {
-        /* Normalize c vectors and cpp vectors. */
-        t8_normalize (c_vectors + ipoint * idim);
-        t8_normalize (vecs[ipoint]);
-        /* Copied vector and vector view should be the same. */
-        EXPECT_VEC_EQ (vecs[ipoint], vec_views[ipoint], T8_PRECISION_SQRT_EPS);
-      }
-    }
-  });
+/* Test the t8_swap function. */
+TEST (t8_gtest_vec, swap)
+{
+  double onetwothree[3] = { 1, 2, 3 };
+  double arbitrary[3] = { -.05, 3.14159, 42 };
+
+  // Copy vectors for comparison later on.
+  double onetwothreecopy[3];
+  t8_copy (onetwothree, onetwothreecopy);
+  double arbitrarycopy[3];
+  t8_copy (arbitrary, arbitrarycopy);
+
+  t8_swap (onetwothree, arbitrary);
+  EXPECT_VEC_EQ (onetwothreecopy, arbitrary, T8_PRECISION_SQRT_EPS);
+  EXPECT_VEC_EQ (arbitrarycopy, onetwothree, T8_PRECISION_SQRT_EPS);
 }

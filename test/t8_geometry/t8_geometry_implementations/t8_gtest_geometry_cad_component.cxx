@@ -46,9 +46,10 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <src/t8_vtk/t8_with_vtk/t8_vtk_reader.hxx>
+#include <t8_test_data_dir.h>
 
 #include <string>
 #include <array>
@@ -61,10 +62,11 @@ enum test_filetype { VTK_FILE, MSH_FILE };
 
 inline constexpr int num_testfiles = 5;
 inline constexpr std::array<std::string_view, num_testfiles> test_files
-  = { "cad_component_quad", "cad_component_tri", "cad_component_hybrid2d", "cad_component_hex", "cad_component_tet" };
+  = { "/cad_component_quad", "/cad_component_tri", "/cad_component_hybrid2d", "/cad_component_hex",
+      "/cad_component_tet" };
 inline constexpr std::array<int, num_testfiles> test_file_dimension = { 2, 2, 2, 3, 3 };
 inline constexpr std::array<int, num_testfiles> test_file_format = { MSH_FILE, MSH_FILE, MSH_FILE, MSH_FILE, VTK_FILE };
-inline constexpr std::string_view test_file_path ("test/testfiles/");
+inline constexpr std::string_view test_file_path (T8_TEST_DATA_DIR);
 inline constexpr std::string_view test_file_refined_ending ("_refined");
 
 class geometry_cad_component: public testing::TestWithParam<int> {
@@ -118,8 +120,8 @@ class geometry_cad_component: public testing::TestWithParam<int> {
 /** To identify a cell we use its centroid and its vertices. */
 struct cell_search_query
 {
-  t8_3D_point centroid;
-  std::array<t8_3D_point, T8_ECLASS_MAX_CORNERS> vertices;
+  t8_3D_vec centroid;
+  std::array<t8_3D_vec, T8_ECLASS_MAX_CORNERS> vertices;
 };
 
 /**
@@ -209,7 +211,7 @@ search_query_callback (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_e
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
     const t8_eclass_t eclass = t8_forest_get_eclass (forest, ltreeid);
     const t8_element_shape_t shape = scheme->element_get_shape (eclass, element);
-    t8_3D_point vertex;
+    t8_3D_vec vertex;
     for (int corner_number = 0; corner_number < t8_eclass_num_vertices[shape]; ++corner_number) {
       t8_forest_element_coordinate (forest, ltreeid, element, corner_number, vertex.data ());
       bool cell_vertex_found = false;
