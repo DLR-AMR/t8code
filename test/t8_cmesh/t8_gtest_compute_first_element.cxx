@@ -138,7 +138,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
   // t8_global_productionf ("Debug print 1\n");
   uint64_t size = 1;
   for (uint32_t isize = 1; isize < size_iter; ++isize) {
-    t8_global_productionf ("isize = %i \n", isize);
+    // t8_global_productionf ("isize = %i \n", isize);
     /* The very first result is 1 * 1 / size */
     uint64_t check_result_elem = 1 / size;
     /* The remainder of the element update */
