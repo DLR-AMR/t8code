@@ -174,6 +174,9 @@ endif()
 
 if( T8CODE_ENABLE_OCC )
     add_t8_cpp_test( NAME t8_gtest_geometry_cad_serial                  SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
+endif()
+
+if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_VTK )
     add_t8_cpp_test( NAME t8_gtest_geometry_cad_component_serial        SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad_component.cxx )
 endif()
 
