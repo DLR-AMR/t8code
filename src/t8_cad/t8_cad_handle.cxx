@@ -97,24 +97,22 @@ t8_cad_handle::map ()
 t8_cad_handle::t8_cad_handle (const std::string_view fileprefix)
 {
   t8_refcount_init (&rc);
-  t8_debugf ("Constructed the cad_handle from file.\n");
-
   load (fileprefix);
+  t8_debugf ("Constructed the cad_handle from file.\n");
 }
 
 t8_cad_handle::t8_cad_handle (TopoDS_Shape cad_shape_in)
 {
   t8_refcount_init (&rc);
-  t8_debugf ("Constructed the cad_handle from shape.\n");
-
   load (std::move (cad_shape_in));
+  t8_debugf ("Constructed the cad_handle from shape.\n");
 }
 
 t8_cad_handle::t8_cad_handle ()
 {
   t8_refcount_init (&rc);
-  t8_debugf ("Constructed the empty cad_handle.\n");
   cad_shape.Nullify ();
+  t8_debugf ("Constructed the empty cad_handle.\n");
 }
 
 t8_cad_handle::~t8_cad_handle ()
