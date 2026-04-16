@@ -121,7 +121,7 @@ jobs:
     # Run cmake
     # Note that DT8CODE_CUSTOM_PARALLEL_TEST_COMMAND is not included in $CONFIG_OPTIONS because of whitespace issues.
     - name: echo cmake line
-      run: echo 'cmake ../ $CONFIG_OPTIONS
+      run: echo 'cmake ../ $CONFIG_OPTIONS'
     - name: cmake
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     # On failure, upload logs
