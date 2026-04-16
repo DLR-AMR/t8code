@@ -77,7 +77,8 @@ class geometry_cad_component: public testing::TestWithParam<int> {
 #endif
     /* Load both input meshes. The source and the target mesh. */
     const auto filepath = t8_test_data_dir / test_files[GetParam ()];
-    const auto filepath_target = filepath / test_file_refined_ending;
+    auto filepath_target = filepath;
+    filepath_target += test_file_refined_ending;
     const int dim = test_file_dimension[GetParam ()];
 
     const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
