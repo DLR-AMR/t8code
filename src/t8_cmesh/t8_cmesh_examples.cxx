@@ -3778,7 +3778,7 @@ t8_cmesh_hyperquad(){
   constexpr t8_gloidx_t global_vertices_of_tree_10[3] = { 10, 13, 12 };
   constexpr t8_gloidx_t global_vertices_of_tree_11[3] = { 8, 13, 10 };
 
-  /* Manually setting global vertix ID of trees */
+  /* Manually setting global vertex ID of trees */
   t8_cmesh_set_global_vertices_of_tree(cmesh, 0, global_vertices_of_tree_0, 4);
   t8_cmesh_set_global_vertices_of_tree(cmesh, 1, global_vertices_of_tree_1, 4);
   t8_cmesh_set_global_vertices_of_tree(cmesh, 2, global_vertices_of_tree_2, 4);

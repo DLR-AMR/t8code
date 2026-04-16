@@ -32,7 +32,7 @@
 #include <unordered_set>
 
 /**
- * This class implements objects that hold a list containg a cmesh's boundary node ID's
+ * This class implements objects that hold a list containing a cmesh's boundary node ID's
  */
 struct t8_boundary_node_list
 {
