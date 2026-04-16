@@ -135,7 +135,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
    * We use integer division, therefore we store the remainder of each update to 
    * prevent rounding errors.
   */
-  t8_global_productionf ("Debug print 1\n");
+  // t8_global_productionf ("Debug print 1\n");
   uint64_t size = 1;
   for (uint32_t isize = 1; isize < size_iter; ++isize) {
     t8_global_productionf ("isize = %i \n", isize);
@@ -147,7 +147,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
     uint64_t num_elems = 1;
     /* Initialize factors */
     for (uint32_t ielem = 1; ielem < elem_iter; ++ielem) {
-      t8_global_productionf ("ielem = %i \n", ielem);
+      // t8_global_productionf ("ielem = %i \n", ielem);
       uint32_t rank = 1;
 
       /** Used to compute elem^n * rank^m / size, where n is fixed. */
@@ -156,7 +156,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       uint64_t rank_remainder = check_result_elem_remain;
       for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
 
-        t8_global_productionf ("irank = %i \n", irank);
+        // t8_global_productionf ("irank = %i \n", irank);
         const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
         check_result = (rank == size) ? num_elems : check_result;
 
@@ -170,7 +170,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
         /* Update the rank */
         rank *= rank_growth;
       }
-      t8_global_productionf ("Left irank loop\n");
+      // t8_global_productionf ("Left irank loop\n");
       /* Update the result with respect to the updated number of elements. */
       check_result_elem *= elem_growth;
       check_result_elem += elem_growth * check_result_elem_remain / size;
@@ -178,11 +178,11 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       /* Update the number of elements */
       num_elems *= elem_growth;
     }
-    t8_global_productionf ("Left ielem loop\n");
+    // t8_global_productionf ("Left ielem loop\n");
     /* Update mpisize */
     size *= size_growth;
   }
-  t8_global_productionf ("Left isize loop\n");
+  // t8_global_productionf ("Left isize loop\n");
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
