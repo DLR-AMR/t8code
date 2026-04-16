@@ -94,7 +94,8 @@ class geometry_cad_component: public testing::TestWithParam<int> {
     case VTK_FILE:
 #if T8_ENABLE_VTK
     {
-      const auto filepath_w_filetype = filepath_target / ".vtu";
+      auto filepath_w_filetype = filepath_target;
+      filepath_w_filetype.replace_extension ("vtu");
       target_cmesh = t8_vtk_reader_cmesh (filepath_w_filetype.c_str (), 0, 0, comm, VTK_UNSTRUCTURED_FILE,
                                           t8_testsuite_get_package_id (), 0);
     }
