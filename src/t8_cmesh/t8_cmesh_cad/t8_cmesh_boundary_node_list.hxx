@@ -34,7 +34,8 @@
 /**
  * This class implements objects that hold a list containg a cmesh's boundary node ID's
  */
-class t8_boundary_node_list {
+struct t8_boundary_node_list
+{
  public:
   /** Basic constructor
   * \param [in] cmesh_in  An uncommitted cmesh

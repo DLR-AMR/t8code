@@ -42,6 +42,7 @@ typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 /** Opaque pointer to a tree */
 typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 
+/** Opaque pointer to a boundary node list */
 #if T8_ENABLE_OCC
 typedef struct t8_boundary_node_list t8_boundary_node_list_c;
 #endif
@@ -149,7 +150,7 @@ typedef struct t8_cmesh
   int compute_boundary_node_list; /**< If true, compute the boundary node list during commit. */
 
 #if T8_ENABLE_OCC
-  t8_boundary_node_list_c *boundary_node_list;
+  t8_boundary_node_list_c *boundary_node_list; /**< Structure that that holds every globale ID of boundary nodes */
 #endif
 
 #if T8_ENABLE_DEBUG

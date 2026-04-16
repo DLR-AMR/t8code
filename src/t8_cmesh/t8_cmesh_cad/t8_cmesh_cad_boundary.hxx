@@ -49,7 +49,8 @@ struct t8_geom_data
 /**
  * This class holds objects containing the Mapping of CAD geometries with there corresponding cmesh
  */
-class t8_boundary_node_geom_data_map {
+struct t8_boundary_node_geom_data_map
+{
  public:
   /** Constructor from a given CAD geometry and a corresponding committed cmesh. 
   * \param [in] shape_in    A CAD geometry
