@@ -62,11 +62,9 @@ enum test_filetype { VTK_FILE, MSH_FILE };
 
 inline constexpr int num_testfiles = 5;
 inline constexpr std::array<std::string_view, num_testfiles> test_files
-  = { "/cad_component_quad", "/cad_component_tri", "/cad_component_hybrid2d", "/cad_component_hex",
-      "/cad_component_tet" };
+  = { "cad_component_quad", "cad_component_tri", "cad_component_hybrid2d", "cad_component_hex", "cad_component_tet" };
 inline constexpr std::array<int, num_testfiles> test_file_dimension = { 2, 2, 2, 3, 3 };
 inline constexpr std::array<int, num_testfiles> test_file_format = { MSH_FILE, MSH_FILE, MSH_FILE, MSH_FILE, VTK_FILE };
-inline constexpr std::string_view test_file_path (T8_TEST_DATA_DIR);
 inline constexpr std::string_view test_file_refined_ending ("_refined");
 
 class geometry_cad_component: public testing::TestWithParam<int> {
@@ -78,8 +76,8 @@ class geometry_cad_component: public testing::TestWithParam<int> {
     GTEST_SKIP ();
 #endif
     /* Load both input meshes. The source and the target mesh. */
-    const std::string filepath = std::string (test_file_path) + std::string (test_files[GetParam ()]);
-    const std::string filepath_target = filepath + std::string (test_file_refined_ending);
+    const auto filepath = t8_test_data_dir / test_files[GetParam ()];
+    const auto filepath_target = filepath / test_file_refined_ending;
     const int dim = test_file_dimension[GetParam ()];
 
     const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
@@ -95,7 +93,7 @@ class geometry_cad_component: public testing::TestWithParam<int> {
     case VTK_FILE:
 #if T8_ENABLE_VTK
     {
-      const std::string filepath_w_filetype = filepath_target + ".vtu";
+      const auto filepath_w_filetype = filepath_target / ".vtu";
       target_cmesh = t8_vtk_reader_cmesh (filepath_w_filetype.c_str (), 0, 0, comm, VTK_UNSTRUCTURED_FILE,
                                           t8_testsuite_get_package_id (), 0);
     }
