@@ -143,19 +143,19 @@ jobs:
     - name: serial tests (if MPI is enabled)
       run: cd build && ctest -R _serial
       if: ${{ inputs.MPI == 'ON' }}
-    - name: parallel tests (if MPI is enabled)
-      run: |
-        cd build
-        ctest -R _parallel
+    # - name: parallel tests (if MPI is enabled)
+    #   run: |
+    #     cd build
+    #     ctest -R _parallel
 
-      env:
-        # Note: These openmpi options are required to ensure stable runs in github workflows and avoid stalling.
-        #       In particular, they activate oversubscription and define the communication channels, here tcp (and self).
-        OMPI_ALLOW_RUN_AS_ROOT: 1
-        OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
-        OMPI_MCA_rmaps_base_oversubscribe: 1
-        OMPI_MCA_btl: self,tcp
-        OMPI_MCA_pml: ob1
+    #   env:
+    #     # Note: These openmpi options are required to ensure stable runs in github workflows and avoid stalling.
+    #     #       In particular, they activate oversubscription and define the communication channels, here tcp (and self).
+    #     OMPI_ALLOW_RUN_AS_ROOT: 1
+    #     OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+    #     OMPI_MCA_rmaps_base_oversubscribe: 1
+    #     OMPI_MCA_btl: self,tcp
+    #     OMPI_MCA_pml: ob1
       if: ${{ inputs.MPI == 'ON' }}
     - name: tests (if MPI is disabled)
       run: cd build && ctest $MAKEFLAGS

@@ -135,8 +135,10 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
    * We use integer division, therefore we store the remainder of each update to 
    * prevent rounding errors.
   */
+  t8_global_productionf ("Debug print 1\n");
   uint64_t size = 1;
   for (uint32_t isize = 1; isize < size_iter; ++isize) {
+    t8_global_productionf ("isize = %i \n", isize);
     /* The very first result is 1 * 1 / size */
     uint64_t check_result_elem = 1 / size;
     /* The remainder of the element update */
@@ -145,6 +147,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
     uint64_t num_elems = 1;
     /* Initialize factors */
     for (uint32_t ielem = 1; ielem < elem_iter; ++ielem) {
+      t8_global_productionf ("ielem = %i \n", ielem);
       uint32_t rank = 1;
 
       /** Used to compute elem^n * rank^m / size, where n is fixed. */
@@ -165,6 +168,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
         /* Update the rank */
         rank *= rank_growth;
       }
+      t8_global_productionf ("Left ielem loop\n");
       /* Update the result with respect to the updated number of elements. */
       check_result_elem *= elem_growth;
       check_result_elem += elem_growth * check_result_elem_remain / size;
@@ -172,6 +176,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       /* Update the number of elements */
       num_elems *= elem_growth;
     }
+    t8_global_productionf ("Left isize loop\n");
     /* Update mpisize */
     size *= size_growth;
   }
