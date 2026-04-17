@@ -135,6 +135,11 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
    * We use integer division, therefore we store the remainder of each update to 
    * prevent rounding errors.
   */
+  bool success = true;
+  uint32_t fail_rank;
+  uint64_t fail_num;
+  uint64_t fail_size;
+
   // t8_global_productionf ("Debug print 1\n");
   uint64_t size = 1;
   for (uint32_t isize = 1; isize < size_iter; ++isize) {
@@ -160,8 +165,15 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
         const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
         check_result = (rank == size) ? num_elems : check_result;
 
-        ASSERT_EQ (computed_result, check_result)
-          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
+        // ASSERT_EQ (computed_result, check_result)
+        // << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
+        if (computed_result != check_result) {
+          success = false;
+          fail_rank = rank;
+          fail_num = num_elems;
+          fail_size = size;
+          break;
+        }
 
         /* Update the result with respect to the updated rank */
         check_result *= rank_growth;
@@ -177,12 +189,19 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       check_result_elem_remain = (elem_growth * check_result_elem_remain) % size;
       /* Update the number of elements */
       num_elems *= elem_growth;
+
+      if (not success)
+        break;
     }
-    // t8_global_productionf ("Left ielem loop\n");
     /* Update mpisize */
     size *= size_growth;
+
+    if (not success)
+      break;
   }
   // t8_global_productionf ("Left isize loop\n");
+
+  ASSERT_TRUE (success) << "Failure at rank: " << fail_rank << " num_elems: " << fail_num << " size: " << fail_size;
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_rank_times_global_num_elems_over_size,
