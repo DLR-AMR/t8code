@@ -1,3 +1,9 @@
+# Updated dependencies
+
+We have switched from a submodules approach to a FetchContent approach for our dependencies towards p4est and sc. If you don't have already installed p4est and sc, calling cmake will install the right branch from their github. If you have p4est and sc installed already and want to use that version no further code will be downloaded.
+For devs: Further dependencies can be managed in our dependencies.json.
+
+
 # Updated contribution workflow.
 
 The team of main-developers of t8code and contributors to t8code is getting bigger and we needed an improved workflow to manage all of our contributions.
