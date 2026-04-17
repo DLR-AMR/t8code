@@ -225,7 +225,7 @@ struct manipulator
          * \param [in] tree_class            The class of the tree.
          * \param [in] el_considered         The index of the element being considered.
          * \param [in] el_offset             The offset of the element being considered.
-         * \param [in,out] el_inserted       The index of the elements in the target tree.
+         * \param [in,out] el_inserted       The number of elements inserted in the target tree.
          * \param [in] actions               The global adapt actions vector.
          * \param [in] is_family             Whether the current elements form a family.
          */

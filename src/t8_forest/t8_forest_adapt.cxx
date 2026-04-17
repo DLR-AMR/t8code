@@ -707,10 +707,22 @@ t8_forest_adapt (t8_forest_t forest)
  */
 t8_adapt::action
 dummy_callback ([[maybe_unused]] const t8_forest_t forest, [[maybe_unused]] const t8_locidx_t ltreeid,
-                [[maybe_unused]] const t8_locidx_t lelement_id, [[maybe_unused]] const t8_element_t *element,
+                [[maybe_unused]] const t8_locidx_t lelement_id, const t8_element_t *element,
                 [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const t8_eclass_t tree_class)
 {
-  return t8_adapt::action::REFINE;
+  const int level = scheme->element_get_level (tree_class, element);
+
+  /* we set a maximum refinement level as forest user data */
+  int maxlevel = 3;
+  if (level >= maxlevel) {
+    /* Do not refine after the maxlevel */
+    return t8_adapt::action::KEEP;
+  }
+  const int child_id = scheme->element_get_child_id (tree_class, element);
+  if (child_id == 1) {
+    return t8_adapt::action::REFINE;
+  }
+  return t8_adapt::action::KEEP;
 }
 
 void
@@ -732,10 +744,16 @@ t8_forest_adapt (t8_forest_t forest)
   t8_forest_t forest_from = forest->set_from;
 
   using namespace t8_standard_adapt;
-
-  t8_adapt::adaptor<adapt_collector, family_checker, manipulator, true> standard_adaptor (
-    forest, forest_from, dummy_callback, forest->profile != NULL);
-  standard_adaptor.adapt ();
+  if (forest->set_adapt_recursive) {
+    t8_adapt::adaptor<adapt_collector, family_checker, manipulator, true> standard_adaptor (
+      forest, forest_from, dummy_callback, forest->profile != NULL);
+    standard_adaptor.adapt ();
+  }
+  else {
+    t8_adapt::adaptor<adapt_collector, family_checker, manipulator, false> standard_adaptor (
+      forest, forest_from, dummy_callback, forest->profile != NULL);
+    standard_adaptor.adapt ();
+  }
   /*TODO: Update incomplete trees logic.  */
   forest->incomplete_trees = 0;
   t8_debugf ("t8_forest_adapt: Adaptation completed using dummy callback.\n");

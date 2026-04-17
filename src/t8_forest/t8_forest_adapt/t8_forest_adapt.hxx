@@ -492,9 +492,7 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
     for (t8_locidx_t i = 0; i < recursively_inserted; ++i) {
       t8_debugf ("[D] push child element %d\n", el_offset + i);
       t8_element_t *child = t8_element_array_push (children);
-      child = t8_element_array_index_locidx_mutable (elements, el_offset + i);
-      memcpy ((void *) child, (void *) t8_element_array_index_locidx (elements_from, el_offset + el_considered),
-              element_size);
+      memcpy ((void *) child, (void *) t8_element_array_index_locidx (elements_from, el_considered + i), element_size);
     }
     std::vector<action> child_actions;
     while (t8_element_array_get_count (children) > 0) {
@@ -502,31 +500,50 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
       const t8_element_t *child = t8_element_array_index_locidx (children, next_child);
       t8_debugf ("[D] recursive adapt: tree %d, child element %d\n", ltree_id, next_child);
       /** TODO: next_child is currently the wrong linear id of child */
+      const size_t action_idx = child_actions.size ();
       child_actions.push_back (callback (forest_from, ltree_id, next_child, child, scheme, tree_class));
       const int level = scheme->element_get_level (tree_class, child);
-      if (child_actions[next_child + 1] != action::COARSEN && level < forest->maxlevel) {
-        t8_debugf ("[D] adapt action: %d\n", int (child_actions[next_child + 1]));
+      if (child_actions[action_idx] != action::COARSEN && level < forest->maxlevel) {
+        t8_debugf ("[D] adapt action: %d\n", int (child_actions[action_idx]));
         t8_locidx_t inserted = recursively_inserted;
-        TManipulate::element_manipulator (elements, children, scheme, tree_class, next_child, el_offset,
-                                          recursively_inserted, child_actions, false);
+
+        // Save parent pointer BEFORE push_count potentially reallocates children
+        const size_t element_size = scheme->get_element_size (tree_class);
+        t8_element_t *parent_copy = (t8_element_t *) T8_ALLOC (char, element_size);
+        memcpy ((void *) parent_copy, (void *) t8_element_array_index_locidx (children, next_child), element_size);
+
+        TManipulate::element_manipulator (elements, children, scheme, tree_class, next_child,
+                                          el_offset + recursively_inserted, recursively_inserted, child_actions, false);
         inserted = recursively_inserted - inserted;
+
+        // Save action before pop removes it
+        const action current_action = child_actions[action_idx];
         t8_element_array_pop (children);
-        child_actions.pop_back ();
+
         /* push children */
-        if (child_actions[next_child + 1] == action::REFINE) {
-          t8_element_array_push_count (children, inserted);
+        if (current_action == action::REFINE) {
+          const int num_new_children = scheme->element_get_num_children (tree_class, parent_copy);
+          t8_element_t **new_children_ptrs = T8_ALLOC (t8_element_t *, num_new_children);
+
+          t8_element_array_push_count (children, num_new_children);
           const t8_locidx_t children_count = t8_element_array_get_count (children);
-          t8_debugf ("[D] children_count: %d, inserted: %d\n", children_count, inserted);
-          for (t8_locidx_t i = children_count - 1; i >= children_count - inserted; --i) {
-            t8_element_t *new_child = t8_element_array_index_locidx_mutable (children, i);
-            memcpy ((void *) new_child, (void *) t8_element_array_index_locidx (elements, el_offset + i), element_size);
+
+          for (t8_locidx_t i = 0; i < num_new_children; ++i) {
+            new_children_ptrs[i]
+              = t8_element_array_index_locidx_mutable (children, children_count - num_new_children + i);
           }
+
+          scheme->element_get_children (tree_class, parent_copy, num_new_children, new_children_ptrs);
+
+          T8_FREE (new_children_ptrs);
         }
+
+        T8_FREE (parent_copy);
       }
       else {
         t8_element_array_pop (children);
-        child_actions.pop_back ();
       }
+      child_actions.pop_back ();
     }
 
     el_inserted += recursively_inserted;
