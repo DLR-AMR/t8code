@@ -21,7 +21,7 @@
 */
 
 /** \file t8_cmesh_boundary_node_list.cxx
- * This file implements the routing of the t8_cmesh_boundary_node_list class.
+ * This file implements the routing of the t8_cmesh_boundary_node_list struct.
  */
 
 #include <t8_cmesh/t8_cmesh.h>

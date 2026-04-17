@@ -21,7 +21,7 @@
 */
 
 /** \file t8_cmesh_cad_boundary.cxx
- * This file implements the t8_cmesh_cad_boundary class with its remapping algorithm.
+ * This file implements the t8_cmesh_cad_boundary struct with its remapping algorithm.
  */
 
 #include <t8_cmesh/t8_cmesh.h>
@@ -125,27 +125,29 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
       const TopoDS_Edge& edge = TopoDS::Edge (*edge_iter);
 
       /* Check if mesh node within bounding box */
-      if (!BRep_Tool::Degenerated (edge) && !edge_bboxes[index].IsOut (mesh_pt)) {
-        Standard_Real first, last;
-        Handle (Geom_Curve) curve = BRep_Tool::Curve (edge, first, last);
-        GeomAPI_ProjectPointOnCurve proj (mesh_pt, curve, first, last);
+      if (!BRep_Tool::Degenerated (edge)) {
+        if (!edge_bboxes[index].IsOut (mesh_pt)) {
+          Standard_Real first, last;
+          Handle (Geom_Curve) curve = BRep_Tool::Curve (edge, first, last);
+          GeomAPI_ProjectPointOnCurve proj (mesh_pt, curve, first, last);
 
-        /* Check if projection was successful and mesh node within tolerance of curve*/
-        if (proj.NbPoints () && proj.LowerDistance () <= tolerance) {
-          t8_geom_data gd;
-          gd.entity_dim = 1;
-          gd.entity_tag = index;
-          gd.location_on_curve = { proj.LowerDistanceParameter (), -1 };
+          /* Check if projection was successful and mesh node within tolerance of curve*/
+          if (proj.NbPoints () && proj.LowerDistance () <= tolerance) {
+            t8_geom_data gd;
+            gd.entity_dim = 1;
+            gd.entity_tag = index;
+            gd.location_on_curve = { proj.LowerDistanceParameter (), -1 };
 
-          /* append {global ID, t8_geom_data} to map */
-          boundary_node_geom_data_map.insert ({ *bnl_iter, gd });
-          break;
+            /* append {global ID, t8_geom_data} to map */
+            boundary_node_geom_data_map.insert ({ *bnl_iter, gd });
+            break;
+          }
         }
       }
-    }
 
-    if (edge_iter != cad_shape_edge_map.cend ()) {
-      continue;
+      if (edge_iter != cad_shape_edge_map.cend ()) {
+        continue;
+      }
     }
 
     /* Iterate through surfaces of geometry */

@@ -47,7 +47,7 @@ struct t8_geom_data
 };
 
 /**
- * This class holds objects containing the Mapping of CAD geometries with there corresponding cmesh
+ * This struct holds objects containing the Mapping of CAD geometries with there corresponding cmesh
  */
 struct t8_boundary_node_geom_data_map
 {
