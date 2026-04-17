@@ -214,8 +214,11 @@ struct t8_forest_pfc_message
 
     // If we are already the root element, we cannot be part of a split family, so we send any(the root) element and no num_siblings.
     if (scheme->element_get_level (eclass, element_closest_to_receiver) == 0) {
+      // Allocate memory for the parent element.
       t8_element_new (scheme, eclass, 1, &parent);
+      // Copy the root element to the allocated parent element.
       scheme->element_copy (eclass, element_closest_to_receiver, parent);
+      // Set the number of siblings to zero, since there are none on the root level.
       num_siblings = 0;
     }
     else {
