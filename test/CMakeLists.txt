@@ -29,7 +29,7 @@ function( add_t8_test )
     # Get the path of the first file listed in the SOURCES list and use it to determine the build directory.
     list (LENGTH ADD_T8_TEST_SOURCES TEST_SOURCES_LENGTH)
     list(GET ADD_T8_TEST_SOURCES 0 TEST_SOURCE)
-    
+
     get_filename_component(TEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${TEST_SOURCE}" DIRECTORY)
     file(RELATIVE_PATH TEST_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${TEST_SOURCE_DIR}")
     set(TEST_BUILD_DIR "${CMAKE_BINARY_DIR}/${TEST_RELATIVE_DIR}")
@@ -47,7 +47,7 @@ function( add_t8_test )
     string( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file )
     string( FIND ${TEST_BUILD_DIR} "mesh_handle" is_mesh_handle_file )
 
-    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI ) 
+    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI )
         target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE MPI::MPI_Fortran )
     endif ()
     if ( (${is_mesh_handle_file} GREATER_EQUAL 0) )
@@ -125,7 +125,7 @@ add_t8_cpp_test( NAME t8_gtest_type_serial                  SOURCES t8_types/t8_
 add_t8_cpp_test( NAME t8_gtest_vec_serial                   SOURCES t8_types/t8_gtest_vec.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_hypercube_parallel                           SOURCES t8_cmesh/t8_gtest_hypercube.cxx )
-add_t8_cpp_test( NAME t8_gtest_cmesh_readmshfile_serial                     SOURCES t8_cmesh/t8_gtest_cmesh_readmshfile.cxx )
+add_t8_cpp_test( NAME t8_gtest_cmesh_readmshfile_serial                     SOURCES t8_IO/t8_gtest_cmesh_readmshfile.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_copy_serial                            SOURCES t8_cmesh/t8_gtest_cmesh_copy.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_face_is_boundary_parallel              SOURCES t8_cmesh/t8_gtest_cmesh_face_is_boundary.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_partition_parallel                     SOURCES t8_cmesh/t8_gtest_cmesh_partition.cxx )
@@ -175,6 +175,11 @@ endif()
 if( T8CODE_ENABLE_OCC )
     add_t8_cpp_test( NAME t8_gtest_geometry_cad_serial                  SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad.cxx )
 endif()
+
+if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_VTK )
+    add_t8_cpp_test( NAME t8_gtest_geometry_cad_component_serial        SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_cad_component.cxx )
+endif()
+
 add_t8_cpp_test( NAME t8_gtest_geometry_linear_serial                   SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_linear.cxx )
 add_t8_cpp_test( NAME t8_gtest_geometry_lagrange_serial                 SOURCES t8_geometry/t8_geometry_implementations/t8_gtest_geometry_lagrange.cxx )
 add_t8_cpp_test( NAME t8_gtest_geometry_triangular_interpolation_serial SOURCES t8_geometry/t8_gtest_geometry_triangular_interpolation.cxx )
@@ -216,7 +221,7 @@ if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_cmesh_parallel   SOURCES api/t8_fortran_interface/t8_test_cmesh.f90 )
   add_t8_test( NAME t8_test_fortran_mpi_interface_forest_parallel  SOURCES api/t8_fortran_interface/t8_test_forest.f90 )
 endif()
- 
+
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_functions/t8_gtest_vector_split.cxx )
 
 if( T8CODE_BUILD_MESH_HANDLE )

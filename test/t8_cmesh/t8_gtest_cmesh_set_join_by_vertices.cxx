@@ -154,7 +154,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
   const int do_partition = 0;
 
-  /* 
+  /*
    * Tests from `t8code` that are not included in AllCmeshsParam.
    */
 
@@ -200,7 +200,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
    * }
    */
 
-  /* 
+  /*
    * Tests with 2D and 3D example meshes from `p4est`.
    */
 
@@ -279,8 +279,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    std::string filename = std::string (T8_TEST_DATA_DIR) + "/test_cube_unstructured_1.inp";
-    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename.c_str ());
+    auto testfile = t8_test_data_dir / "test_cube_unstructured_1.inp";
+    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (testfile.c_str ());
     t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
     p8est_connectivity_destroy (p8_conn);
@@ -288,8 +288,8 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    std::string filename = std::string (T8_TEST_DATA_DIR) + "/test_cube_unstructured_2.inp";
-    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename.c_str ());
+    auto testfile = t8_test_data_dir / "test_cube_unstructured_2.inp";
+    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (testfile.c_str ());
     t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
     p8est_connectivity_destroy (p8_conn);

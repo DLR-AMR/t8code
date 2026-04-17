@@ -20,17 +20,21 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_test_data_dir.h.in 
+/** \file t8_test_data_dir.h.in
  * This header defines the macro T8_TEST_DATA_DIR, which specifies the path to the test data directory.
- * The value is substituted by CMake during the build configuration process. 
+ * The value is substituted by CMake during the build configuration process.
  * This creates the file t8_test_data_dir.h in the build directory,
  * which can be included in test source files to access the test data directory path.
  *
  * Usage:
  * #include "t8_test_data_dir.h"
- * std::string data_dir = T8_TEST_DATA_DIR;
+ * auto testfile = t8_test_data_dir / "file.format";
  */
 
 #pragma once
 
+#include <filesystem>
+
 #define T8_TEST_DATA_DIR "@T8_TEST_DATA_DIR@"
+const std::filesystem::path t8_test_data_dir (T8_TEST_DATA_DIR);
+#undef T8_TEST_DATA_DIR
