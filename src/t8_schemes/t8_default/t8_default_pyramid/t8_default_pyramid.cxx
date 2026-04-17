@@ -28,7 +28,7 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-typedef t8_dpyramid_t t8_default_pyramid_t;
+using t8_default_pyramid_t = t8_dpyramid_t;
 
 T8_EXTERN_C_BEGIN ();
 
