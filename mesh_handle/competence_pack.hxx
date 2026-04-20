@@ -31,7 +31,7 @@
 #pragma once
 
 #include "competences/cache_element_competences.hxx"
-#include "data_handler.hxx"
+#include "competences/element_data_competences.hxx"
 #include "internal/competence_pack_union.hxx"
 namespace t8_mesh_handle
 {

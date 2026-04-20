@@ -29,7 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/data_handler.hxx>
+#include <mesh_handle/competences/element_data_competences.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>

@@ -10,9 +10,8 @@ The folder's most important files are:
 - The [mesh.hxx](mesh.hxx) defines the mesh of the handle. This is the central file of the mesh handle. 
 - The [constructor_wrappers.hxx](constructor_wrappers.hxx) allows to define a mesh handle using a cmesh instead of a forest and provides a very small number of examples where the user needs no cmesh.
 - The [element.hxx](element.hxx) defines the elements (mesh or ghost elements) of the mesh handle.
-- In the folder [competences/](competences/), there are files that define additional competences/functionality of an element to access additional data.
+- In the folder [competences/](competences/README.md), there are files that define additional competences/functionality of an element to access additional data.
 - The [competence_pack.hxx](competence_pack.hxx) is needed to pack element or mesh competences to pass it as template parameter to the mesh.
-- The [data_handler.hxx](data_handler.hxx) provides competences to work with element data.
 - The [mesh_io.hxx](mesh_io.hxx) allows to output results in vtk format.
 
 Headers in the [internal/](internal/) folder are only intended to implement details of the mesh handle, so they should not need to be included for any other purpose.

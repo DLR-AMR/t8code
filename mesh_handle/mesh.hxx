@@ -30,7 +30,7 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "internal/adapt.hxx"
-#include "data_handler.hxx"
+#include "competences/element_data_competences.hxx"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>

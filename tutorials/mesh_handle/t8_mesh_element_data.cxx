@@ -114,7 +114,8 @@ void
 set_element_data_mesh (TMeshClass &mesh)
 {
   for (auto &elem : mesh) {
-    elem.set_element_data ({ elem.get_level (), elem.get_volume () });
+    data_per_element_type data ({ elem.get_level (), elem.get_volume () });
+    elem.set_element_data (data);
   }
 }
 
@@ -202,7 +203,8 @@ main (int argc, char **argv)
   { /* We put the mesh in its own scope so that it is automatically destroyed at the end of the scope. 
      * This is only necessary because sc_finalize checks if there are leftover references. 
      * This unique pointer would have been destroyed automatically at the end of the programme. */
-    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, data_per_element_type>;
+    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
+                                            t8_mesh_handle::data_mesh_competences<data_per_element_type>>;
     auto mesh = build_mesh<mesh_class> (comm, level);
 
     t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_mesh);

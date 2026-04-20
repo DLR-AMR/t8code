@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file data_handler.hxx
+/** \file element_data_competences.hxx
  * Handler for the element data of a \ref t8_mesh_handle::mesh.
  * The file defines a mesh and an element competence for element data handling.
  * Use both competences together if you want to manage element data for the elements of the mesh and access it directly for each element.
@@ -146,8 +146,12 @@ struct element_data_element_competence: public t8_crtp_basic<TUnderlying>
   {
     T8_ASSERT (this->underlying ().m_mesh->has_element_data_handler_competence ());
     SC_CHECK_ABORT (!this->underlying ().is_ghost_element (), "Element data cannot be set for ghost elements.\n");
-    this->underlying ().m_mesh->m_element_data.reserve (this->underlying ().m_mesh->get_num_local_elements ()
-                                                        + this->underlying ().m_mesh->get_num_ghosts ());
+    if ((t8_locidx_t) this->underlying ().m_mesh->m_element_data.size ()
+        <= this->underlying ().get_element_handle_id ()) {
+      this->underlying ().m_mesh->m_element_data.reserve (this->underlying ().m_mesh->get_num_local_elements ()
+                                                          + this->underlying ().m_mesh->get_num_ghosts ());
+      this->underlying ().m_mesh->m_element_data.resize (this->underlying ().m_mesh->get_num_local_elements ());
+    }
     this->underlying ().m_mesh->m_element_data[this->underlying ().get_element_handle_id ()] = std::move (element_data);
   }
 
