@@ -84,7 +84,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
     }
   }
   mesh->exchange_ghost_data ();
-  for (auto &elem : *mesh) {
+  for (const auto &elem : *mesh) {
     if (t8_forest_global_tree_id (forest, elem.get_local_tree_id ()) < barrier) {
       EXPECT_EQ (elem.get_element_data ().level, newlevel);
       EXPECT_EQ (elem.get_element_data ().volume, newvolume);

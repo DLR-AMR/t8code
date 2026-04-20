@@ -147,21 +147,22 @@ TEST (t8_gtest_cache_competence, cache_volume)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_volume_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_volume_cache ());
 
   double unrealistic_volume = -3000;
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
+  for (const auto &elem : *mesh) {
     // Check that cache is empty at the beginning.
-    EXPECT_FALSE (it->volume_cache_filled ());
+    EXPECT_FALSE (elem.volume_cache_filled ());
     // Fill cache and check that volume is valid.
-    EXPECT_GE (it->get_volume (), 0);
+    EXPECT_GE (elem.get_volume (), 0);
     // Check that cache is set.
-    EXPECT_TRUE (it->volume_cache_filled ());
+    EXPECT_TRUE (elem.volume_cache_filled ());
     // Overwrite the cache with unrealistic values.
-    it->overwrite_cache (unrealistic_volume);
+    elem.overwrite_cache (unrealistic_volume);
     // Check that the cache is actually used.
-    EXPECT_EQ (it->get_volume (), unrealistic_volume);
+    EXPECT_EQ (elem.get_volume (), unrealistic_volume);
   }
 }
 
@@ -174,16 +175,17 @@ TEST (t8_gtest_cache_competence, cache_diameter)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_diameter_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_diameter_cache ());
 
   double unrealistic_diameter = -3000.0;
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    EXPECT_FALSE (it->diameter_cache_filled ());
-    EXPECT_GE (it->get_diameter (), 0);
-    EXPECT_TRUE (it->diameter_cache_filled ());
-    it->overwrite_cache (unrealistic_diameter);
-    EXPECT_EQ (it->get_diameter (), unrealistic_diameter);
+  for (const auto &elem : *mesh) {
+    EXPECT_FALSE (elem.diameter_cache_filled ());
+    EXPECT_GE (elem.get_diameter (), 0);
+    EXPECT_TRUE (elem.diameter_cache_filled ());
+    elem.overwrite_cache (unrealistic_diameter);
+    EXPECT_EQ (elem.get_diameter (), unrealistic_diameter);
   }
 }
 
@@ -196,20 +198,21 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_vertex_coordinates_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_vertex_cache ());
 
   std::vector<t8_3D_vec> unrealistic_vertex = { t8_3D_vec ({ 41, 42, 43 }), t8_3D_vec ({ 99, 100, 101 }) };
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    EXPECT_FALSE (it->vertex_cache_filled ());
-    for (int ivertex = 0; ivertex < it->get_num_vertices (); ++ivertex) {
-      for (const auto &coordinate : it->get_vertex_coordinates (ivertex)) {
+  for (const auto &elem : *mesh) {
+    EXPECT_FALSE (elem.vertex_cache_filled ());
+    for (int ivertex = 0; ivertex < elem.get_num_vertices (); ++ivertex) {
+      for (const auto &coordinate : elem.get_vertex_coordinates (ivertex)) {
         EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
     }
-    EXPECT_TRUE (it->vertex_cache_filled ());
-    it->overwrite_cache (unrealistic_vertex);
-    EXPECT_EQ (it->get_vertex_coordinates (), unrealistic_vertex);
+    EXPECT_TRUE (elem.vertex_cache_filled ());
+    elem.overwrite_cache (unrealistic_vertex);
+    EXPECT_EQ (elem.get_vertex_coordinates (), unrealistic_vertex);
   }
 }
 
@@ -222,18 +225,19 @@ TEST (t8_gtest_cache_competence, cache_centroid)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_centroid_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_centroid_cache ());
 
   t8_3D_vec unrealistic_centroid ({ 999.0, 1000.0, 998.0 });
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    EXPECT_FALSE (it->centroid_cache_filled ());
-    for (const auto &coordinate : it->get_centroid ()) {
+  for (const auto &elem : *mesh) {
+    EXPECT_FALSE (elem.centroid_cache_filled ());
+    for (const auto &coordinate : elem.get_centroid ()) {
       EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
-    EXPECT_TRUE (it->centroid_cache_filled ());
-    it->overwrite_cache (unrealistic_centroid);
-    EXPECT_EQ (it->get_centroid (), unrealistic_centroid);
+    EXPECT_TRUE (elem.centroid_cache_filled ());
+    elem.overwrite_cache (unrealistic_centroid);
+    EXPECT_EQ (elem.get_centroid (), unrealistic_centroid);
   }
 }
 
@@ -247,18 +251,19 @@ TEST (t8_gtest_cache_competence, cache_face_areas)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_face_areas_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_areas_cache ());
 
   double unrealistic_face_area = 41.1;
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    for (int iface = 0; iface < it->get_num_faces (); ++iface) {
-      EXPECT_FALSE (it->face_area_cache_filled (iface));
-      auto face_area = it->get_face_area (iface);
+  for (const auto &elem : *mesh) {
+    for (int iface = 0; iface < elem.get_num_faces (); ++iface) {
+      EXPECT_FALSE (elem.face_area_cache_filled (iface));
+      auto face_area = elem.get_face_area (iface);
       EXPECT_LE (0, face_area);
-      EXPECT_TRUE (it->face_area_cache_filled (iface));
-      it->overwrite_cache (iface, unrealistic_face_area + iface);
-      EXPECT_EQ (it->get_face_area (iface), unrealistic_face_area + iface);
+      EXPECT_TRUE (elem.face_area_cache_filled (iface));
+      elem.overwrite_cache (iface, unrealistic_face_area + iface);
+      EXPECT_EQ (elem.get_face_area (iface), unrealistic_face_area + iface);
     }
   }
 }
@@ -272,19 +277,20 @@ TEST (t8_gtest_cache_competence, cache_face_centroids)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_face_centroids_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_centroids_cache ());
 
   t8_3D_vec unrealistic_face_centroid ({ 999.0, 1000.0, 998.0 });
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    for (int iface = 0; iface < it->get_num_faces (); ++iface) {
-      EXPECT_FALSE (it->face_centroid_cache_filled (iface));
-      for (const auto &coordinate : it->get_face_centroid (iface)) {
+  for (const auto &elem : *mesh) {
+    for (int iface = 0; iface < elem.get_num_faces (); ++iface) {
+      EXPECT_FALSE (elem.face_centroid_cache_filled (iface));
+      for (const auto &coordinate : elem.get_face_centroid (iface)) {
         EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
       }
-      EXPECT_TRUE (it->face_centroid_cache_filled (iface));
-      it->overwrite_cache (iface, unrealistic_face_centroid);
-      EXPECT_EQ (it->get_face_centroid (iface), unrealistic_face_centroid);
+      EXPECT_TRUE (elem.face_centroid_cache_filled (iface));
+      elem.overwrite_cache (iface, unrealistic_face_centroid);
+      EXPECT_EQ (elem.get_face_centroid (iface), unrealistic_face_centroid);
     }
   }
 }
@@ -298,19 +304,20 @@ TEST (t8_gtest_cache_competence, cache_face_normals)
   const int level = 1;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_face_normals_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  const auto mesh
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
   EXPECT_TRUE (element_class::has_face_normals_cache ());
 
   t8_3D_vec unrealistic_face_normal ({ 41.1, 42.0, 43.0 });
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
-    for (int iface = 0; iface < it->get_num_faces (); ++iface) {
-      EXPECT_FALSE (it->face_normal_cache_filled (iface));
-      for (const auto &coordinate : it->get_face_normal (iface)) {
+  for (const auto &elem : *mesh) {
+    for (int iface = 0; iface < elem.get_num_faces (); ++iface) {
+      EXPECT_FALSE (elem.face_normal_cache_filled (iface));
+      for (const auto &coordinate : elem.get_face_normal (iface)) {
         EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
       }
-      EXPECT_TRUE (it->face_normal_cache_filled (iface));
-      it->overwrite_cache (iface, unrealistic_face_normal);
-      EXPECT_EQ (it->get_face_normal (iface), unrealistic_face_normal);
+      EXPECT_TRUE (elem.face_normal_cache_filled (iface));
+      elem.overwrite_cache (iface, unrealistic_face_normal);
+      EXPECT_EQ (elem.get_face_normal (iface), unrealistic_face_normal);
     }
   }
 }

@@ -85,7 +85,7 @@ TEST (t8_gtest_custom_competence, custom_competence)
   // Check mesh with custom defined competence.
   using mesh_class_custom = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<dummy_get_level>>;
   const auto mesh
-    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class_custom> (level, sc_MPI_COMM_WORLD);
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class_custom> (level, sc_MPI_COMM_WORLD);
 
   for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
     EXPECT_EQ (it->get_level (), it->get_level_dummy ());
@@ -96,16 +96,15 @@ TEST (t8_gtest_custom_competence, custom_competence)
   using competences
     = t8_mesh_handle::element_competence_pack<dummy_get_level, dummy_trivial, t8_mesh_handle::cache_centroid>;
   using mesh_class = t8_mesh_handle::mesh<competences>;
-  auto mesh_more_competences
-    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
-
-  for (auto it = mesh_more_competences->cbegin (); it != mesh_more_competences->cend (); ++it) {
-    EXPECT_EQ (it->get_level (), it->get_level_dummy ());
-    EXPECT_EQ (it->get_value_dummy (), 1);
-    EXPECT_FALSE (it->centroid_cache_filled ());
-    for (const auto &coordinate : it->get_centroid ()) {
+  const auto mesh_more_competences
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
+  for (const auto &elem : *mesh_more_competences) {
+    EXPECT_EQ (elem.get_level (), elem.get_level_dummy ());
+    EXPECT_EQ (elem.get_value_dummy (), 1);
+    EXPECT_FALSE (elem.centroid_cache_filled ());
+    for (const auto &coordinate : elem.get_centroid ()) {
       EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
-    EXPECT_TRUE (it->centroid_cache_filled ());
+    EXPECT_TRUE (elem.centroid_cache_filled ());
   }
 }
