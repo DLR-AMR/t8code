@@ -27,8 +27,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #pragma once
 
 #include <t8.h>
-#include <t8_element/t8_element.h>
+#include "data_handler.hxx"
 #include <t8_eclass/t8_eclass.h>
+#include <t8_element/t8_element.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -60,9 +61,12 @@ namespace t8_mesh_handle
 template <typename TMeshClass, template <typename> class... TCompetences>
 class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
  private:
-  using SelfType
-    = element<TMeshClass, TCompetences...>; /**< Type of the current class with all template parameters specified. */
+  using SelfType = element<TMeshClass, TCompetences...>; /**< Type of the current class with all template
+                                   parameters specified. */
   friend TMeshClass; /**< Define TMeshClass as friend to be able to access e.g. the constructor. */
+  friend struct element_data_element_competence<
+    SelfType>; /**< Define the competence to access element data as friend to
+                    be able to access e.g. the mesh. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
    *  This constructor should only be called by the TMeshClass (and invisible for the user).
@@ -176,6 +180,15 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   has_face_normals_cache ()
   {
     return requires (SelfType& element) { element.face_normal_cache_filled (0); };
+  }
+
+  /** Function that checks if a competence for element data handling is given to the element.
+   * \return true if element has a data handler, false otherwise.
+   */
+  static constexpr bool
+  has_element_data_handler_competence ()
+  {
+    return requires (SelfType& element) { element.get_element_data (); };
   }
 
   // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
@@ -536,38 +549,6 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   is_ghost_element () const
   {
     return m_is_ghost_element;
-  }
-
-  // --- Getter and setter for element data. ---
-  /** Getter for the element data.
-   * For ghost elements ensure that \ref mesh::exchange_ghost_data is called on each process first.
-   * Element data for non-ghost elements can be accessed (if set) directly.
-   * \return Element data with data of Type TMeshClass::ElementDataType.
-   */
-  template <typename TElementDataType = typename TMeshClass::ElementDataType,
-            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
-  const TElementDataType&
-  get_element_data () const
-  {
-    const t8_locidx_t handle_id = get_element_handle_id ();
-    T8_ASSERTF (static_cast<size_t> (handle_id) < m_mesh->m_element_data.size (), "Element data not set.\n");
-    return m_mesh->m_element_data[handle_id];
-  }
-
-  /** Set the element data for the element. 
-   * \note You can only set element data for non-ghost elements.
-   * \param [in] element_data The element data to be set.
-   */
-  template <typename TElementDataType = typename TMeshClass::ElementDataType,
-            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
-  void
-  set_element_data (TElementDataType element_data)
-  {
-    SC_CHECK_ABORT (!m_is_ghost_element, "Element data cannot be set for ghost elements.\n");
-    // Resize for the case that no data vector has been set previously.
-    m_mesh->m_element_data.reserve (m_mesh->get_num_local_elements () + m_mesh->get_num_ghosts ());
-    m_mesh->m_element_data.resize (m_mesh->get_num_local_elements ());
-    m_mesh->m_element_data[get_element_handle_id ()] = std::move (element_data);
   }
 
  private:
