@@ -146,8 +146,14 @@ struct element_data_element_competence: public t8_crtp_basic<TUnderlying>
   {
     T8_ASSERT (this->underlying ().m_mesh->has_element_data_handler_competence ());
     SC_CHECK_ABORT (!this->underlying ().is_ghost_element (), "Element data cannot be set for ghost elements.\n");
-    this->underlying ().m_mesh->m_element_data.reserve (this->underlying ().m_mesh->get_num_local_elements ()
-                                                        + this->underlying ().m_mesh->get_num_ghosts ());
+    /* If not yet initialized, reserve capacity for local and ghost elements and resize to the number of local 
+     * elements such that it is ensured that the element data vector is large enough to store data for this element. */
+    if ((t8_locidx_t) this->underlying ().m_mesh->m_element_data.size ()
+        <= this->underlying ().get_element_handle_id ()) {
+      this->underlying ().m_mesh->m_element_data.reserve (this->underlying ().m_mesh->get_num_local_elements ()
+                                                          + this->underlying ().m_mesh->get_num_ghosts ());
+      this->underlying ().m_mesh->m_element_data.resize (this->underlying ().m_mesh->get_num_local_elements ());
+    }
     this->underlying ().m_mesh->m_element_data[this->underlying ().get_element_handle_id ()] = std::move (element_data);
   }
 
