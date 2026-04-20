@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "competences.hxx"
+#include "competences/cache_element_competences.hxx"
 #include "internal/competence_pack_union.hxx"
 namespace t8_mesh_handle
 {

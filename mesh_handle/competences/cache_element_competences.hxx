@@ -20,7 +20,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file competences.hxx
+/** \file cache_element_competences.hxx
  * Definition of the additional competences/functionalities that can be used for \ref t8_mesh_handle::mesh.
  * Especially, competences to cache functionalities of elements instead of calculating them each time a function
  * is called are provided.
