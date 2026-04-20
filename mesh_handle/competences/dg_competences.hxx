@@ -24,38 +24,81 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * TODO
  */
 
-// #pragma once
+#pragma once
 
-// #include <t8.h>
-// #include <t8_types/t8_operators.hxx>
-// #include <t8_types/t8_vec.hxx>
-// #include <vector>
-// #include <optional>
+#include <t8.h>
+#include <t8_types/t8_operators.hxx>
+#include <t8_types/t8_vec.hxx>
+#include <vector>
+#include <optional>
 
-// namespace t8_mesh_handle
-// {
+namespace t8_mesh_handle
+{
 
-// /**
-//  * TODO
-//  * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
-//  */
-// template <typename TUnderlying>
-// struct face_vect: public t8_crtp_operator<TUnderlying, cache_volume>
-// {
-//  public:
-//   /**
-//    * Function that checks if the cache for the volume has been filled.
-//    * \return true if the cache has been filled, false otherwise.
-//    */
-//   bool
-//   volume_cache_filled () const
-//   {
-//     return m_volume.has_value ();
-//   }
+struct mortar_type
+{
+  static const int CONFORMAL = 0;
+  static const int SMALLMORTAR = 1;
+  static const int BIGMORTAR = 2;
+  static const int BOUNDARY = -1;
+} struct face
+{
+  mortar_type m_mortartype;
+  std::vector<int> m_element_ids;
+  std::optional<int> ranks;
+};
 
-//  protected:
-//   mutable std::optional<double>
-//     m_volume; /**< Cache for the volume. Use optional to allow no value if cache is not filled. */
-// };
+/**
+ * TODO
+ * \tparam TUnderlying Use the \ref element with specified competences as template parameter.
+ */
+template <typename TUnderlying>
+struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_vector_mesh_competence>
+{
+ public:
+  /**
+   * TODO
+   */
+  void
+  set_unique_face_vector () const
+  {
+    for (const auto &elem : this->underlying ()) {
+      for (int iface = 0; iface < elem.get_num_faces (); ++iface) {
+        auto neighs = elem.get_face_neighbors (iface);
+        auto num_neighs = neighs.size ();
+        if (num_neighs == 0) {
+          // Face is a geometry boundary.
+          m_faces.push_back ({ mortar_type::BOUNDARY, { elem.get_element_handle_id () } });
+        }
+        else if (num_neighs > 1) {
+          // Face is a big mortar.
+          std::vector<int> temp;
+          temp.push_back (elem.get_element_handle_id ());
+          for (int ineigh = 0; ineigh < num_neighs; ++ineigh) {
+            temp.push_back (neighs[ineigh]->get_element_handle_id ());
+          }
+          m_faces.push_back ({ mortar_type::BIGMORTAR, temp });
+        }
+        else {  //num_neighs==1
+          if (neighs[0]->get_level () == elem.get_level ()) {
+            // For conformal faces, the face should only be added once to the unique faces vector.
+            if (elem.get_element_handle_id () < neighs[0]->get_element_handle_id ()) {
+              m_faces.push_back (
+                { mortar_type::CONFORMAL, { elem.get_element_handle_id (), neighs[0]->get_element_handle_id () } });
+            }
+          }
+          else {
+            // Face is the small mortar.
+            m_faces.push_back (
+              { mortar_type::SMALLMORTAR, { elem.get_element_handle_id (), neighs[0]->get_element_handle_id () } });
+          }
+        }
+      }
+    }
+  }
 
-// }
+ protected:
+  mutable std::vector<face> m_faces;
+  mutable std::vector<std::vector<const face &>> m_elements_to_faces;
+};
+}  // namespace t8_mesh_handle
