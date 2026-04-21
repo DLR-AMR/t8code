@@ -46,7 +46,7 @@ namespace t8_mesh_handle
  * \param [in] level         An initial uniform refinement level.
  * \param [in] comm          MPI communicator to use.
  * \param [in] do_face_ghost If true, a layer of ghost elements is created.
- * \tparam TMeshClass             The mesh handle class.
+ * \tparam TMeshClass        The mesh handle class.
  * \return Unique pointer to a uniformly refined mesh handle with coarse mesh \a cmesh and refinement level \a level.
  */
 template <T8MeshType TMeshClass>
@@ -63,7 +63,7 @@ handle_new_uniform (const t8_cmesh_t cmesh, const t8_scheme *scheme, const int l
  * \param [in] level         An initial uniform refinement level.
  * \param [in] comm          MPI communicator to use.
  * \param [in] do_face_ghost If true, a layer of ghost elements is created.
- * \tparam TMeshClass             The mesh handle class.
+ * \tparam TMeshClass        The mesh handle class.
  * \return Unique pointer to a uniformly refined mesh handle with coarse mesh \a cmesh and refinement level \a level.
  */
 template <T8MeshType TMeshClass>
@@ -81,7 +81,7 @@ handle_new_uniform_default (const t8_cmesh_t cmesh, const int level, const sc_MP
  * \param [in] do_partition  If non-zero create a partitioned cmesh.
  * \param [in] do_face_ghost If true, a layer of ghost elements is created.
  * \param [in] periodic      If non-zero create a periodic cmesh in each direction.
- * \tparam TMeshClass             The mesh handle class.
+ * \tparam TMeshClass        The mesh handle class.
  * \return Unique pointer to a uniformly refined mesh handle initially consisting of 6 Tets, 6 prism and 4 hex.
  *         Together, they form a cube.
 */
@@ -101,7 +101,7 @@ handle_hypercube_hybrid_uniform_default (const int level, const sc_MPI_Comm comm
  * \param [in] do_partition  If non-zero create a partitioned cmesh.
  * \param [in] do_face_ghost If true, a layer of ghost elements is created.
  * \param [in] periodic      If non-zero create a periodic cmesh in each direction. Not possible with \a eclass pyramid.
- * \tparam TMeshClass             The mesh handle class.
+ * \tparam TMeshClass        The mesh handle class.
  * \return Unique pointer to a uniformly refined mesh handle hypercube.
 */
 template <T8MeshType TMeshClass>
