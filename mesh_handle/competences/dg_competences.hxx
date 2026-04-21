@@ -34,18 +34,44 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 namespace t8_mesh_handle
 {
+// Sentinel value for "this side is local"
+inline constexpr int LOCAL_RANK = -1;
 
-struct mortar_type
+struct face_side
 {
-  static const int CONFORMAL = 0;
-  static const int SMALLMORTAR = 1;
-  static const int BIGMORTAR = 2;
-  static const int BOUNDARY = -1;
-} struct face
+  int m_element_id;         // local element id, or ghost layer index if remote
+  int m_local_face_id;      // which face of that element points to this interface
+  int m_orientation;        // face orientation code for coordinate permutation
+  int m_rank = LOCAL_RANK;  // LOCAL_RANK if owned locally, else MPI rank of owner
+  bool
+  is_remote () const
+  {
+    return m_rank != LOCAL_RANK;
+  }
+};
+
+enum class face_type {
+  CONFORMAL,      // exactly 2 sides, same level, all local
+  MORTAR,         // 1 large side + N small sides (N=2 in 2D, up to 4 in 3D hex)
+  BOUNDARY,       // exactly 1 side, domain boundary
+  MPI_CONFORMAL,  // exactly 2 sides, same level, at least one remote
+  MPI_MORTAR,     // mortar where at least one side is remote
+};
+
+struct face
 {
-  mortar_type m_mortartype;
-  std::vector<int> m_element_ids;
-  std::optional<int> ranks;
+  face_type m_type;
+  std::vector<face_side> m_sides;
+  // Convention for MORTAR / MPI_MORTAR:
+  //   m_sides[0]     = large side
+  //   m_sides[1..N]  = small sides (in face-corner order of the large element)
+  // Convention for CONFORMAL / MPI_CONFORMAL:
+  //   m_sides[0]     = primary (lower global id or local owner)
+  //   m_sides[1]     = secondary
+  // Convention for BOUNDARY:
+  //   m_sides[0]     = the single local side
+  /** \note Currently unused but may be filled with t8_cmesh_set_attribute. */
+  int m_boundary_tag = 0;  // meaningful only for BOUNDARY // \note
 };
 
 /**
@@ -64,7 +90,8 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
   {
     for (const auto &elem : this->underlying ()) {
       for (int iface = 0; iface < elem.get_num_faces (); ++iface) {
-        auto neighs = elem.get_face_neighbors (iface);
+        std::vector<int> dual_faces;
+        auto neighs = elem.get_face_neighbors (iface, dual_faces);
         auto num_neighs = neighs.size ();
         if (num_neighs == 0) {
           // Face is a geometry boundary.
@@ -99,6 +126,8 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
 
  protected:
   mutable std::vector<face> m_faces;
-  mutable std::vector<std::vector<const face &>> m_elements_to_faces;
+  // Inverse map: for each element, which face entries does it participate in?
+  // Store as (type, index_into_vector, side_role) for each local face
+  std::vector<std::array<std::optional<face_ref>, MAX_FACES_PER_ELEM>> m_element_face_map;
 };
 }  // namespace t8_mesh_handle
