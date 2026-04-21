@@ -215,6 +215,26 @@ class mesh {
   }
 
   /**
+   * Returns a constant iterator to the first (local) mesh element.
+   * \return Constant iterator to the first (local) mesh element.
+   */
+  mesh_const_iterator
+  begin () const
+  {
+    return this->cbegin ();
+  }
+
+  /**
+   * Returns a constant iterator to a mesh element following the last (local) element of the mesh.
+   * \return Constant iterator to the mesh element following the last (local) element of the mesh.
+   */
+  mesh_const_iterator
+  end () const
+  {
+    return this->cend ();
+  }
+
+  /**
    * Getter for an element given its local index. This could be a (local) mesh element or 
    *  a ghost element. 
    * The indices 0, 1, ... num_local_el - 1 refer to local mesh elements and 
