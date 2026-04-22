@@ -46,12 +46,12 @@ struct t8_boundary_node_list
    * 
    * \return   A std::unordered_set with the global IDs of boundary nodes
    */
-  std::unordered_set<t8_gloidx_t>
+  const std::unordered_set<t8_gloidx_t>&
   get_boundary_node_list ();
 
  private:
   /** Function to fill the \ref t8_boundary_node_list */
-  std::unordered_set<t8_gloidx_t>
+  void
   compute_boundary_nodes ();
 
   /** An uncommitted cmesh */

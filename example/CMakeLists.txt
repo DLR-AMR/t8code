@@ -93,9 +93,6 @@ if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
 endif()
 
-if(T8CODE_ENABLE_OCC)
-    add_t8_example( NAME t8_brep_mesh_file_example          SOURCES cmesh/t8_brep_mesh_file_example.cxx)
-endif()
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )
 
 add_t8_example( NAME t8_example_spheres                 SOURCES remove/t8_example_spheres.cxx )

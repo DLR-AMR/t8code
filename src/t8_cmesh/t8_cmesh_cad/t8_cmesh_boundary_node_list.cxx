@@ -21,7 +21,7 @@
 */
 
 /** \file t8_cmesh_boundary_node_list.cxx
- * This file implements the routing of the t8_cmesh_boundary_node_list struct.
+ * This file implements the routines of the t8_cmesh_boundary_node_list struct.
  */
 
 #include <t8_cmesh/t8_cmesh.h>
@@ -34,42 +34,42 @@
 
 t8_boundary_node_list::t8_boundary_node_list (t8_cmesh_t cmesh_in): cmesh (cmesh_in)
 {
-  boundary_node_list = compute_boundary_nodes ();
+  compute_boundary_nodes ();
 }
 
-std::unordered_set<t8_gloidx_t>
+void
 t8_boundary_node_list::compute_boundary_nodes ()
 {
-  std::unordered_set<t8_gloidx_t> boundary_node_list = {};
+  this->boundary_node_list.clear ();
 
-  const t8_locidx_t num_trees = cmesh->num_local_trees;
+  const t8_locidx_t num_trees = this->cmesh->num_local_trees;
 
   /* Iterate through trees */
-  for (t8_locidx_t i_tree = 0; i_tree < num_trees; i_tree++) {
-    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, i_tree);
-    int num_faces = t8_eclass_num_faces[(int) eclass];
+  for (t8_locidx_t i_tree = 0; i_tree < num_trees; ++i_tree) {
+    const t8_eclass eclass = t8_cmesh_get_tree_class (cmesh, i_tree);
+    const int num_faces = t8_eclass_num_faces[eclass];
 
     /* Get global node IDs of i_tree */
     const std::span<const t8_gloidx_t> global_vertices_of_tree
       = cmesh->vertex_connectivity->get_global_vertices_of_tree (i_tree);
 
     /* Iterate through faces of i_tree */
-    for (int i_face = 0; i_face < num_faces; i_face++) {
+    for (int i_face = 0; i_face < num_faces; ++i_face) {
       const int vertex_per_face = t8_eclass_num_vertices[t8_eclass_face_types[eclass][i_face]];
 
       /* Check if i_face is boundary face*/
       if (t8_cmesh_tree_face_is_boundary (cmesh, i_tree, i_face)) {
-        for (int count = 0; count < vertex_per_face; count++) {
+        for (int count = 0; count < vertex_per_face; ++count) {
           /* Append global node IDs of i_face*/
-          boundary_node_list.insert (global_vertices_of_tree[t8_face_vertex_to_tree_vertex[eclass][i_face][count]]);
+          this->boundary_node_list.insert (
+            global_vertices_of_tree[t8_face_vertex_to_tree_vertex[eclass][i_face][count]]);
         }
       }
     }
   }
-  return boundary_node_list;
 }
 
-std::unordered_set<t8_gloidx_t>
+const std::unordered_set<t8_gloidx_t>&
 t8_boundary_node_list::get_boundary_node_list ()
 {
   return this->boundary_node_list;
