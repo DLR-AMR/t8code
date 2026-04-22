@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -62,18 +62,17 @@ struct t8_boundary_node_geom_data_map
   /** Getter function for the geometry data map
    * \return    A std::unordered_map with multiple pairs of global node ID as the key and a t8_geom_data struct as the value
    */
-  std::unordered_map<t8_gloidx_t, t8_geom_data>
+  const std::unordered_map<t8_gloidx_t, t8_geom_data>&
   get_boundary_node_geom_data_map ();
 
  private:
   /** Function to fill the \a t8_boundary_node_geom_data_map */
   void
-  compute_geom_data_map ();
+  compute_geom_data_map (const std::unordered_set<t8_gloidx_t>& boundary_node_list);
 
-  TopoDS_Shape& shape;                                /** CAD Geometry */
-  t8_cmesh_t cmesh;                                   /** Corresponding mesh */
-  const double tolerance;                             /** User specified tolerance */
-  std::unordered_set<t8_gloidx_t> boundary_node_list; /** Boundary node list of the given cmesh */
+  TopoDS_Shape& shape;    /** CAD Geometry */
+  t8_cmesh_t cmesh;       /** Corresponding mesh */
+  const double tolerance; /** User specified tolerance */
   std::unordered_map<t8_gloidx_t, t8_geom_data>
     boundary_node_geom_data_map; /** Hashmap with key-value pairs of global_index - geom_data */
 

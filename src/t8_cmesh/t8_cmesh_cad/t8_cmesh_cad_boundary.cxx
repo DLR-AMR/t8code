@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2025 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -52,49 +52,42 @@ t8_boundary_node_geom_data_map::t8_boundary_node_geom_data_map (TopoDS_Shape& sh
   TopExp::MapShapes (shape, TopAbs_VERTEX, cad_shape_vertex_map);
   TopExp::MapShapes (shape, TopAbs_EDGE, cad_shape_edge_map);
   TopExp::MapShapes (shape, TopAbs_FACE, cad_shape_face_map);
-  boundary_node_list = cmesh->boundary_node_list->get_boundary_node_list ();
+  const std::unordered_set<t8_gloidx_t>& boundary_node_list = cmesh->boundary_node_list->get_boundary_node_list ();
   T8_ASSERT (boundary_node_list.size () != 0);
   t8_debugf ("Computed %ld boundary nodes in the mesh\n", boundary_node_list.size ());
-  compute_geom_data_map ();
+  compute_geom_data_map (boundary_node_list);
 }
 
 void
-t8_boundary_node_geom_data_map::compute_geom_data_map ()
+t8_boundary_node_geom_data_map::compute_geom_data_map (const std::unordered_set<t8_gloidx_t>& boundary_node_list)
 {
 
   /* Create list of bounding boxes for curves */
   std::vector<Bnd_Box> edge_bboxes (cad_shape_edge_map.Extent () + 1);
-  for (auto edge_iter = cad_shape_edge_map.cbegin (); edge_iter != cad_shape_edge_map.cend (); ++edge_iter) {
+  for (auto edge_iter = cad_shape_edge_map.cbegin (); edge_iter != cad_shape_edge_map.cend (); edge_iter++) {
     const TopoDS_Edge& edge = TopoDS::Edge (*edge_iter);
 
     if (!BRep_Tool::Degenerated (edge)) {
-      Bnd_Box box;
-      BRepBndLib::Add (static_cast<const TopoDS_Shape&> (edge), box);
-
       const int index = cad_shape_edge_map.FindIndex (*edge_iter);
-      edge_bboxes[index] = box;
+      BRepBndLib::Add (static_cast<const TopoDS_Shape&> (edge), edge_bboxes[index]);
     }
   }
 
   /* Create list of bounding boxes for surfaces */
   std::vector<Bnd_Box> face_bboxes (cad_shape_face_map.Extent () + 1);
-  for (auto face_iter = cad_shape_face_map.cbegin (); face_iter != cad_shape_face_map.cend (); ++face_iter) {
+  for (auto face_iter = cad_shape_face_map.cbegin (); face_iter != cad_shape_face_map.cend (); face_iter++) {
     const TopoDS_Face& face = TopoDS::Face (*face_iter);
-
-    Bnd_Box box;
-    BRepBndLib::Add (static_cast<const TopoDS_Shape&> (face), box);
-
     const int index = cad_shape_face_map.FindIndex (*face_iter);
-    face_bboxes[index] = box;
+    BRepBndLib::Add (static_cast<const TopoDS_Shape&> (face), face_bboxes[index]);
   }
-  t8_debugf ("List of Bounding Boxes created");
 
   /* Iterate through t8_cmesh_boundary_node_list */
-  for (auto bnl_iter = boundary_node_list.begin (); bnl_iter != boundary_node_list.end (); ++bnl_iter) {
+  for (auto bnl_iter = boundary_node_list.cbegin (); bnl_iter != boundary_node_list.cend (); bnl_iter++) {
     const tree_vertex_list tree_list = cmesh->vertex_connectivity->vertex_to_trees (*bnl_iter);
-    const t8_locidx_t local_tree_id = tree_list.at (0).first;
-    const int local_vertex_id = tree_list.at (0).second;
+    const t8_locidx_t local_tree_id = tree_list[0].first;
+    const int local_vertex_id = tree_list[0].second;
     const double* vertices = (double*) t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
+    T8_ASSERT (vertices != 0);
 
     /* Get mesh node coordinates */
     const gp_Pnt mesh_pt (vertices[3 * local_vertex_id],      /* x-coordinate */
@@ -103,7 +96,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
 
     /* Iterate through vertices of geometry */
     auto vertex_iter = cad_shape_vertex_map.cbegin ();
-    for (; vertex_iter != cad_shape_vertex_map.cend (); ++vertex_iter) {
+    for (; vertex_iter != cad_shape_vertex_map.cend (); vertex_iter++) {
       const int index = cad_shape_vertex_map.FindIndex (*vertex_iter);
       const gp_Pnt pt = BRep_Tool::Pnt (TopoDS::Vertex (*vertex_iter));
       /* If mesh node within tolerance of vertex */
@@ -178,7 +171,7 @@ t8_boundary_node_geom_data_map::compute_geom_data_map ()
   }
 }
 
-std::unordered_map<t8_gloidx_t, t8_geom_data>
+const std::unordered_map<t8_gloidx_t, t8_geom_data>&
 t8_boundary_node_geom_data_map::get_boundary_node_geom_data_map ()
 {
   return this->boundary_node_geom_data_map;
