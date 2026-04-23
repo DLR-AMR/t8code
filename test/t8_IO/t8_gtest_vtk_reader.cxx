@@ -31,8 +31,8 @@
 /**
  * This is currently a place-holder for a proper cmesh_vtk_reader-test.
  * The function is not implemented yet and therefore we do not provide a proper
- * test yet. A proper test would compare the read files with a reference-cmesh. 
- * 
+ * test yet. A proper test would compare the read files with a reference-cmesh.
+ *
  */
 const vtk_file_type_t gtest_vtk_filetypes[VTK_NUM_TYPES]
   = { VTK_FILE_ERROR, VTK_UNSTRUCTURED_FILE, VTK_POLYDATA_FILE, VTK_PARALLEL_UNSTRUCTURED_FILE,
@@ -69,7 +69,7 @@ struct vtk_reader: public testing::TestWithParam<std::tuple<int, int, int>>
   const char* failing_files[5] = { "no_file", "non-existing-file.vtu", "non-existing-file.vtp",
                                    "non-existing-file.pvtu", "non-existing-file.pvtp" };
   const char* test_files[5]
-    = { "no_file", "/test_vtk_tri.vtu", "/test_vtk_cube.vtp", "/test_parallel_file.pvtu", "/test_polydata.pvtp" };
+    = { "no_file", "test_vtk_tri.vtu", "test_vtk_cube.vtp", "test_parallel_file.pvtu", "test_polydata.pvtp" };
   const int num_points[5] = { 0, 121, 24, 6144, 900 };
   const int num_trees[5] = { 0, 200, 12, 1024, 1680 };
 };
@@ -88,7 +88,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
   int mpirank;
   int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  std::string testfile = std::string (T8_TEST_DATA_DIR) + test_files[file];
+  auto testfile = t8_test_data_dir / test_files[file];
   t8_cmesh_t cmesh = t8_vtk_reader_cmesh (testfile.c_str (), partition, main_proc, sc_MPI_COMM_WORLD, file_type,
                                           t8_testsuite_get_package_id (), 0);
   if (file_type != VTK_FILE_ERROR) {
@@ -119,7 +119,7 @@ TEST_P (vtk_reader, vtk_to_cmesh_success)
 TEST_P (vtk_reader, vtk_to_pointSet)
 {
   if (file_type != VTK_FILE_ERROR) {
-    std::string testfile = std::string (T8_TEST_DATA_DIR) + test_files[file];
+    auto testfile = t8_test_data_dir / test_files[file];
     vtkSmartPointer<vtkPointSet> points
       = t8_vtk_reader_pointSet (testfile.c_str (), partition, main_proc, sc_MPI_COMM_WORLD, file_type);
     int test_points = points->GetNumberOfPoints ();

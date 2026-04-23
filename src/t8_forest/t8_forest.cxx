@@ -49,6 +49,7 @@
 #include <t8_data/t8_element_array_iterator.hxx>
 
 #include <algorithm>
+#include <span>
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -511,6 +512,33 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
                                      coordinates);
 }
 
+/* Compute the center of mass of an element. We can use the element reference
+ * coordinates of the centroid.*/
+void
+t8_forest_element_linear_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+                                   double *coordinates_c)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  std::span<double, 3> coordinates = std::span<double, 3> (coordinates_c, 3);
+  std::fill (coordinates.begin (), coordinates.end (), 0);
+
+  /* Get the tree's eclass and scheme. */
+  T8_ASSERT (scheme->element_is_valid (tree_class, element));
+
+  /* Get the element class and calculate the centroid using its corners. The centroid is
+    the sum of all corner coordinates divided by the number of corners. */
+  const t8_element_shape_t element_shape = scheme->element_get_shape (tree_class, element);
+  const int num_corners = t8_eclass_num_vertices[element_shape];
+  std::array<double, 3> corner {};
+  for (int icorner = 0; icorner < num_corners; ++icorner) {
+    t8_forest_element_coordinate (forest, ltreeid, element, icorner, corner.data ());
+    t8_axpy (corner.data (), coordinates.data (), 1);
+  }
+  t8_ax (coordinates.data (), 1.0 / num_corners);
+}
+
 /* Compute the length of the line from one corner to a second corner in an element */
 static double
 t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int corner_a,
@@ -871,52 +899,6 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
   }
 }
 
-#if T8_ENABLE_DEBUG
-/* Test whether four given points in 3D are coplanar up to a given tolerance.
- */
-static int
-t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double p_2[3], const double p_3[3],
-                         const double tolerance)
-{
-  /* Let p0, p1, p2, p3 be the four points.
-   * The four points are coplanar if the normal vectors to the triangles
-   * p0, p1, p2 and p0, p2, p3 are pointing in the same direction.
-   *
-   * We build the vectors A = p1 - p0, B = p2 - p0 and C = p3 - p0.
-   * The normal vectors to the triangles are n1 = A x B and n2 = A x C.
-   * These are pointing in the same direction if their cross product is 0.
-   * Hence we check if || n1 x n2 || < tolerance. */
-
-  /* A = p1 - p0 */
-  double A[3];
-  t8_axpyz (p_0, p_1, A, -1);
-
-  /* B = p2 - p0 */
-  double B[3];
-  t8_axpyz (p_0, p_2, B, -1);
-
-  /* C = p3 - p0 */
-  double C[3];
-  t8_axpyz (p_0, p_3, C, -1);
-
-  /* n1 = A x B */
-  double A_cross_B[3];
-  t8_cross_3D (A, B, A_cross_B);
-
-  /* n2 = A x C */
-  double A_cross_C[3];
-  t8_cross_3D (A, C, A_cross_C);
-
-  /* n1 x n2 */
-  double n1_cross_n2[3];
-  t8_cross_3D (A_cross_B, A_cross_C, n1_cross_n2);
-
-  /* || n1 x n2 || */
-  const double norm = t8_norm (n1_cross_n2);
-  return norm < tolerance;
-}
-#endif
-
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                                double normal[3])
@@ -984,7 +966,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     t8_forest_element_coordinate (forest, ltreeid, element, corner_a, vertex_a);
     t8_forest_element_coordinate (forest, ltreeid, element, corner_b, vertex_b);
     /* Compute the center */
-    t8_forest_element_centroid (forest, ltreeid, element, center);
+    t8_forest_element_linear_centroid (forest, ltreeid, element, center);
 
     /* Compute the difference with V_a.
        * Compute the dot products */
@@ -1066,7 +1048,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     norm = t8_norm (normal);
     T8_ASSERT (norm > 1e-14);
     /* Compute the coordinates of the center of the element */
-    t8_forest_element_centroid (forest, ltreeid, element, center);
+    t8_forest_element_linear_centroid (forest, ltreeid, element, center);
     /* Compute center = center - vertex_0 */
     t8_axpy (corner_vertices[0], center, -1);
     /* Compute the dot-product of normal and center */
