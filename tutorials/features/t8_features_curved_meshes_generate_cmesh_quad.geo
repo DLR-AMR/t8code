@@ -35,39 +35,43 @@ SetFactory("OpenCASCADE");
 lc = 1;
 
 /* Trailing edge */
-Point(1000) = {1.00400,  0.00000, 0, lc};
+Point(1000) = {1.00000,  0.00000, 0, lc};
 
 /* Dorsal side */
-Point(1001) = {1.00025,  0.00124, 0, lc};
-Point(1002) = {0.99758,  0.00216, 0, lc};
-Point(1003) = {0.98961,  0.00490, 0, lc};
-Point(1004) = {0.97640,  0.00935, 0, lc};
-Point(1005) = {0.95808,  0.01538, 0, lc};
-Point(1006) = {0.93481,  0.02278, 0, lc};
-Point(1007) = {0.90682,  0.03130, 0, lc};
-Point(1008) = {0.87436,  0.04068, 0, lc};
-Point(1009) = {0.83777,  0.05062, 0, lc};
-Point(1010) = {0.79740,  0.06082, 0, lc};
-Point(1011) = {0.75366,  0.07097, 0, lc};
-Point(1012) = {0.70702,  0.08079, 0, lc};
-Point(1013) = {0.65797,  0.08998, 0, lc};
-Point(1014) = {0.60703,  0.09827, 0, lc};
-Point(1015) = {0.55477,  0.10543, 0, lc};
-Point(1016) = {0.50176,  0.11124, 0, lc};
-Point(1017) = {0.44863,  0.11554, 0, lc};
-Point(1018) = {0.39587,  0.11817, 0, lc};
-Point(1019) = {0.34306,  0.11841, 0, lc};
-Point(1020) = {0.29199,  0.11583, 0, lc};
-Point(1021) = {0.24336,  0.11060, 0, lc};
-Point(1022) = {0.19780,  0.10302, 0, lc};
-Point(1023) = {0.15592,  0.09344, 0, lc};
-Point(1024) = {0.11825,  0.08231, 0, lc};
-Point(1025) = {0.08524,  0.07012, 0, lc};
-Point(1026) = {0.05726,  0.05736, 0, lc};
-Point(1027) = {0.03460,  0.04452, 0, lc};
-Point(1028) = {0.01745,  0.03204, 0, lc};
-Point(1029) = {0.00595,  0.02029, 0, lc};
-Point(1030) = {0.00014,  0.00955, 0, lc};
+Point(1001) = {0.99758,  0.00216, 0, lc};
+Point(1002) = {0.98961,  0.00490, 0, lc};
+Point(1003) = {0.97640,  0.00935, 0, lc};
+Point(1004) = {0.95808,  0.01538, 0, lc};
+Point(1005) = {0.93481,  0.02278, 0, lc};
+Point(1006) = {0.90682,  0.03130, 0, lc};
+Point(1007) = {0.87436,  0.04068, 0, lc};
+Point(1008) = {0.83777,  0.05062, 0, lc};
+Point(1009) = {0.79740,  0.06082, 0, lc};
+Point(1010) = {0.75366,  0.07097, 0, lc};
+Point(1011) = {0.70702,  0.08079, 0, lc};
+
+/* To have a hard kink at the trailing edge we need to constriuct
+ * the airfoil using two splines. This point is aligned-ish with the
+ * points surrounding it so this will be our second splitting point. */
+Point(1012) = {0.65703,  0.08953, 0, lc};
+
+Point(1013) = {0.60703,  0.09827, 0, lc};
+Point(1014) = {0.55477,  0.10543, 0, lc};
+Point(1015) = {0.50176,  0.11124, 0, lc};
+Point(1016) = {0.44863,  0.11554, 0, lc};
+Point(1017) = {0.39587,  0.11817, 0, lc};
+Point(1018) = {0.34306,  0.11841, 0, lc};
+Point(1019) = {0.29199,  0.11583, 0, lc};
+Point(1020) = {0.24336,  0.11060, 0, lc};
+Point(1021) = {0.19780,  0.10302, 0, lc};
+Point(1022) = {0.15592,  0.09344, 0, lc};
+Point(1023) = {0.11825,  0.08231, 0, lc};
+Point(1024) = {0.08524,  0.07012, 0, lc};
+Point(1025) = {0.05726,  0.05736, 0, lc};
+Point(1026) = {0.03460,  0.04452, 0, lc};
+Point(1027) = {0.01745,  0.03204, 0, lc};
+Point(1028) = {0.00595,  0.02029, 0, lc};
+Point(1029) = {0.00014,  0.00955, 0, lc};
 
 /* Leading edge */
 Point(2000) = {0.00000,  0.00000, 0, lc};
@@ -100,38 +104,29 @@ Point(2024) = {0.90220,  0.00386, 0, lc};
 Point(2025) = {0.93121,  0.00252, 0, lc};
 Point(2026) = {0.95546,  0.00129, 0, lc};
 Point(2027) = {0.97465,  0.00024, 0, lc};
-Point(2028) = {1.00000,  0.00000, 0, lc};
 
-/* Build a spline fit for the points. Starting and ending with the 
- * trailing edge. */
-Spline(100) = {1000:1030, 2000:2028, 1000};
+/* Build a splines with the points. Starting and ending with the
+ * trailing edge and the other splitting point. */
+Spline(100) = {1000:1012};
+Spline(101) = {1012:1029, 2000:2027, 1000};
 
-/* Due to a known issue in t8code, there should be no geometries which start 
- * in the same point/curve as they end. Therefore, we split the spline in half.
- * The issue can be observed, if you comment the following line out and make
- * the changes described at the definition of the curve loop. */
-BooleanFragments{ Curve{100}; Delete; }{ Point{2000}; }
 
-/* Definition of the corner points of the flow domain. Note, that we
- * to define more than the four corner points. With these additional
- * points we can divide the domain into quadrilaterals. 
- * This is important to structurally mesh the domain. */
+/* Definition of the corner points of the flow domain. */
 Point(2030) = {-0.2, -0.5, 0, 1.0};
 Point(2031) = {-0.2, 0.5, 0, 1.0};
 Point(2032) = {1.5, 0.5, 0, 1.0};
 Point(2033) = {1.5, -0.5, 0, 1.0};
 
 /* Build lines through the points. */
-Line(101) = {2030, 2031};
-Line(102) = {2031, 2032};
-Line(103) = {2032, 2033};
-Line(104) = {2033, 2030};
+Line(200) = {2030, 2031};
+Line(201) = {2031, 2032};
+Line(202) = {2032, 2033};
+Line(203) = {2033, 2030};
 
 /* Close lines to loop */
-Curve Loop(1) = {101, 102, 103, 104};
+Curve Loop(1) = {200, 201, 202, 203};
 /* Swap the next two lines to see the known issues effect. */
-Curve Loop(2) = {1, 2};
-// Curve Loop(2) = {100};
+Curve Loop(2) = {100, 101};
 
 /* Make surface with profile cutout */
 Plane Surface(1) = {1, 2};
@@ -141,25 +136,25 @@ Save "airfoil_windtunnel_quadrilaterals.brep";
 
 /* After creating the geometry we delete and start by loading
  * in the brep file. This is necessary because Gmsh gives the geometries its
- * own indices and after reloading the brep file it uses the brep 
+ * own indices and after reloading the brep file it uses the brep
  * numeration. */
 Delete All;
 /* We re-open our brep file. */
 Merge "airfoil_windtunnel_quadrilaterals.brep";
 
 /* We want a full-quad mesh and therefore have to use the right meshing algorithms.
- * Here we use the Frontal-Delaunay 2D meshing algorithm and the 
+ * Here we use the Frontal-Delaunay 2D meshing algorithm and the
  * simple full-quad recombination algorithm. Feel free to experiment here.
  * The following algorithms are available with Gmsh 4.11.0:
  *
- * 2D mesh algorithms:             1: MeshAdapt, 2: Automatic, 3: Initial mesh only, 
- *                                 5: Delaunay, 6: Frontal-Delaunay, 7: BAMG, 
- *                                 8: Frontal-Delaunay for Quads, 9: Packing of Parallelograms, 
+ * 2D mesh algorithms:             1: MeshAdapt, 2: Automatic, 3: Initial mesh only,
+ *                                 5: Delaunay, 6: Frontal-Delaunay, 7: BAMG,
+ *                                 8: Frontal-Delaunay for Quads, 9: Packing of Parallelograms,
  *                                11: Quasi-structured Quad
- * Mesh recombination algorithms   0: simple, 1: blossom, 
+ * Mesh recombination algorithms   0: simple, 1: blossom,
  *                                 2: simple full-quad, 3: blossom full-quad
  *
- * For other Gmsh versions check the Gmsh website: 
+ * For other Gmsh versions check the Gmsh website:
  * https://gmsh.info/doc/texinfo/gmsh.html#Mesh-options */
 Mesh.MeshSizeFromCurvature = 5;
 Mesh.Algorithm = 6;
