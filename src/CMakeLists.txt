@@ -114,6 +114,18 @@ if( T8CODE_ENABLE_OCC )
     )
 endif()
 
+if( T8CODE_ENABLE_EIGEN )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_EIGEN=1 )
+    target_link_libraries( T8 PRIVATE Eigen3::Eigen )
+    target_sources(T8 PRIVATE
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.cxx
+    )
+    install( FILES
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
+    )
+endif()
+
 if( T8CODE_BUILD_PEDANTIC )
   target_compile_options( T8 PUBLIC -pedantic )
   set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")

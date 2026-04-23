@@ -25,6 +25,11 @@ if(T8CODE_ENABLE_VTK)
     set (T8CODE_VTK_VERSION_USED "@T8CODE_VTK_VERSION_USED@")
 endif()
 
+# Ensure that external libraries using for example find_package ( t8code REQUIRED) link automatically against eigen
+if(T8CODE_ENABLE_EIGEN)
+    find_dependency(Eigen3)
+endif()
+
 include( "${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake" )
 
 check_required_components( @PROJECT_NAME@ )

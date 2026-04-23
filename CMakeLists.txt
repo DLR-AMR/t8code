@@ -41,6 +41,14 @@ FetchContent_Declare(
     GIT_PROGRESS TRUE
     )
 
+FetchContent_Declare(
+    eigen
+    GIT_REPOSITORY "https://gitlab.com/libeigen/eigen.git"
+    GIT_TAG 5.0.1
+    GIT_PROGRESS TRUE
+    GIT_SHALLOW TRUE
+    )
+
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 mark_as_advanced( FORCE gtest_force_shared_crt)
 
@@ -66,6 +74,7 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
+option( T8CODE_ENABLE_EIGEN "Enable t8code's features which rely on eigen" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -270,7 +279,7 @@ else()
     mark_as_advanced( FORCE ${_new_p4est_vars} )
 endif()
 
-# Workaround: Suppress warnings for googletests, so it does not compromise the usage of -WError for t8code.
+# Workaround: Suppress warnings for fetchcontent libraries, so it does not compromise the usage of -WError for t8code.
 # -----------
 # 1. Save original flags
 set(ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -281,6 +290,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
 
 FetchContent_MakeAvailable( googletest )
+if ( T8CODE_ENABLE_EIGEN )
+    FetchContent_MakeAvailable( eigen )
+endif()
 
 # 3. Restore original flags
 set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)

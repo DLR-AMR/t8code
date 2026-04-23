@@ -26,3 +26,7 @@
 
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx>
 #include <t8_types/t8_vec.h>
+
+#include <Eigen/Dense>
+
+/** Hier solve rein. */

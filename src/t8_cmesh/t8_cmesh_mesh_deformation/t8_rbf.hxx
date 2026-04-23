@@ -93,7 +93,9 @@ struct t8_rbf_cpc2: public t8_rbf_function
   double
   evaluate (double distance) const override
   {
-    double r = distance / radius;
+    double r
+      = distance
+        / radius;  //guten radius finden und zeit darein verschwenden ;) inspo von molekulardynamik, schranken erarbeiten und shcon schreiben,
     if (r < 1.0) {
       double d = 1.0 - r;
       return (d * d * d * d) * (4.0 * r + 1.0);
@@ -185,12 +187,18 @@ struct t8_rbf
   /** Destructor. */
   ~t8_rbf () {};
 
+  /**
+   * Transfers the boundary node data to the internal data structure of the RBF.
+   */
   void
   set_boundary_nodes (std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>&& boundary_node_data)
   {
     boundary_nodes.clear ();
     boundary_nodes.reserve (boundary_node_data.size ());
     for (auto& [global_vertex_id, boundary_node] : boundary_node_data) {
+
+      boundary_node.global_id = global_vertex_id;
+
       boundary_nodes.push_back (std::move (boundary_node));
     }
   }
@@ -202,6 +210,48 @@ struct t8_rbf
   void
   solve ()
   {
+    /** */
+    const size_t num_boundary_nodes = boundary_nodes.size ();
+    /** Check if there are any boundary nodes. */
+    if (num_boundary_nodes == 0) {
+      t8_errorf ("ERROR: Boundary nodes are not added correctly.\n.");
+      SC_ABORTF ("The current RBF instance has no boundary nodes.");
+    }
+
+    if (rbf_function->is_compactly_supported ()) {
+      /** If the RBF used is compactly supported use a sparse matrix. Then the conjugate gradient method can be used for solving the linear equation system. */
+    }
+    else {
+      /** If the RBF used is globally supported use a dense matrix. */
+    }
+
+    /** Create the matrix A for the linear system. */
+    std::vector<double> A (num_boundary_nodes * num_boundary_nodes);
+    /** Fill the matrix A with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
+    for (size_t row = 0; row < num_boundary_nodes; ++row) {
+      /** Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part of the matrix 
+       * and can mirror the values to the lower triangular part. */
+      for (size_t col = row; col < num_boundary_nodes; ++col) {
+        /** Calculate the distance between the current pair of boundary nodes. */
+        const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
+        /** Evaluate the radial basis function for the current distance. */
+        const double psi = rbf_function->evaluate (distance);
+        /** Write the value to the matrix A. */
+        A[row * num_boundary_nodes + col] = psi;
+        /** Mirror the value to the lower triangular part of the matrix if it's not on the diagonal. */
+        if (col != row) {
+          A[col * num_boundary_nodes + row] = psi;
+        }
+      }
+    }
+
+    /** Create the right-hand side vector for the linear system. It contains the displacements of the boundary nodes. */
+    std::vector<double> displacements (num_boundary_nodes * 3);
+    for (size_t i = 0; i < num_boundary_nodes; ++i) {
+      displacements[3 * i + 0] = boundary_nodes[i].displacement[0];
+      displacements[3 * i + 1] = boundary_nodes[i].displacement[1];
+      displacements[3 * i + 2] = boundary_nodes[i].displacement[2];
+    }
   }
 
   /**
