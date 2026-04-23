@@ -92,10 +92,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
   set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
       STRING "Choose the type of build. Build types available: Release Debug RelWithDebInfo" FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-    "Debug" "Release" "RelWithDebInfo")
 endif()
+# Set the possible values of build type for cmake-gui
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo")
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   # Option to generate code coverage target.
@@ -154,6 +153,7 @@ foreach(INDEX RANGE ${DEPS_RANGE})
     string(JSON DEP_TYPE GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "type")
     string(JSON DEP_URL  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "url")
     string(JSON DEP_REF  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "ref")
+    string(JSON DEP_SHALLOW  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "shallow")
 
     # If no error occurred and the field is non-empty, check the CMake option.
     if(JSON_ERR EQUAL 0 AND NOT DEP_CMAKE_OPTION STREQUAL "")
@@ -169,7 +169,13 @@ foreach(INDEX RANGE ${DEPS_RANGE})
         endif()
     endif()
 
-    message(STATUS "Configuring dependency: ${DEP_NAME} (Type: ${DEP_TYPE})")
+    message(STATUS "Configuring dependency: ${DEP_NAME} (Type: ${DEP_TYPE}, SHALLOW: ${DEP_SHALLOW})")
+
+    #If Dep_SHALLOW is not a valid boolean, set it to FALSE and print a warning.
+    if(NOT DEP_SHALLOW STREQUAL "TRUE" AND NOT DEP_SHALLOW STREQUAL "FALSE")
+        message(STATUS "Invalid value for 'shallow' in dependency ${DEP_NAME}: '${DEP_SHALLOW}'. Expected 'true' or 'false'. Defaulting to 'false'.")
+        set(DEP_SHALLOW FALSE)
+    endif()
 
     # 2. Branch logic based on "type"
     if(DEP_TYPE STREQUAL "git")
@@ -178,6 +184,7 @@ foreach(INDEX RANGE ${DEPS_RANGE})
             GIT_REPOSITORY ${DEP_URL}
             GIT_TAG        ${DEP_REF}
             GIT_PROGRESS   TRUE
+            GIT_SHALLOW    ${DEP_SHALLOW}
         )
     else()
         message(WARNING "Unknown dependency type '${DEP_TYPE}' for ${DEP_NAME}")
