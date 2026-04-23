@@ -229,7 +229,7 @@ target_compile_definitions( T8 PUBLIC T8_LIBS="${T8_LIBS}" )
 
 install( FILES
     t8.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 # Note: Some of the created install directories will be empty, for example t8_cmesh/t8_cmesh_internal
@@ -238,42 +238,42 @@ install( FILES
 # It seems like we cannot force CMake to not create the folder.
 # See https://gitlab.kitware.com/cmake/cmake/-/issues/19189
 
-install( DIRECTORY t8_helper_functions 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.h" 
-    PATTERN "*.hxx" 
+install( DIRECTORY t8_helper_functions
+  DESTINATION PRIVATE_HEADER
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hxx"
 )
 install( DIRECTORY t8_cmesh
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.h" 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
-install( DIRECTORY t8_data 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+install( DIRECTORY t8_data
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
-install( DIRECTORY t8_eclass 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+install( DIRECTORY t8_eclass
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
-install( DIRECTORY t8_element 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+install( DIRECTORY t8_element
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
 install( DIRECTORY t8_forest
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
@@ -289,33 +289,40 @@ install( DIRECTORY t8_geometry
     PATTERN "t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx" EXCLUDE
 )
 install( DIRECTORY t8_misc
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
 )
-install( DIRECTORY t8_schemes 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.h"
-    PATTERN "*.hxx" 
-)
-install( DIRECTORY t8_types 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
-  FILES_MATCHING 
-    PATTERN "*.hxx" 
-    PATTERN "*.h"
-)
-install( DIRECTORY t8_vtk 
+install( DIRECTORY t8_schemes
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  FILES_MATCHING 
-    PATTERN "*.h" 
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hxx"
+)
+install( DIRECTORY t8_types
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.hxx"
+    PATTERN "*.h"
+)
+install( DIRECTORY t8_vtk
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_vtk/t8_with_vtk/t8_vtk_parallel.hxx"      EXCLUDE
     PATTERN "t8_vtk/t8_with_vtk/t8_vtk_polydata.hxx"      EXCLUDE
     PATTERN "t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
     PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
     PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
+)
+
+install( DIRECTORY t8_openfoam
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.hxx"
+    PATTERN "*.h"
 )
 
 install( TARGETS T8
