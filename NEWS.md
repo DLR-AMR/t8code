@@ -1,6 +1,9 @@
 # Updated dependencies
 
-We have switched from a submodules approach to a FetchContent approach for our dependencies towards p4est and sc. If you don't have already installed p4est and sc, calling cmake will install the right branch from their github. If you have p4est and sc installed already and want to use that version no further code will be downloaded.
+We have switched from a submodules approach to a FetchContent approach for our dependencies towards p4est and sc. If you don't have already installed p4est and sc, calling cmake will install the right branch from their github. If you have p4est and sc installed already and want to use that version no further code will be downloaded. If your current configuration is to the internal p4est and sc installation you don't need to update your workflow. The submodules of p4est and sc should be removed with this update. Instead they will be downloaded and installed in the _deps folder in your build folder.
+If you use a separate installation of p4est and sc it is important to set the boolean CMake Options "T8CODE_USE_SYSTEM_P4EST" and "T8CODE_USE_SYSTEM_SC". It prevents the triggering of the automatic installation of the libraries.
+Our recommendation is to delete any existing sc/ and p4est/ folders and use the automatically downloaded FetchContent.
+For further information have a look at our [Installation Guide](https://github.com/DLR-AMR/t8code/wiki/Installation).
 For devs: Further dependencies can be managed in our dependencies.json.
 
 

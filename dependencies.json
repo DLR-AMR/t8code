@@ -5,7 +5,8 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DLR-SC/googletest_mpi.git",
-                "ref": "98bfff426b057400268a00f97677d749a9e25096"
+                "ref": "98bfff426b057400268a00f97677d749a9e25096",
+                "shallow": "TRUE"
             }
         },
         {
@@ -14,7 +15,8 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/cburstedde/libsc.git",
-                "ref": "f8c5099bd5ad553c1bf6e34dc7b6c290f3cc3cca"
+                "ref": "f8c5099bd5ad553c1bf6e34dc7b6c290f3cc3cca",
+                "shallow": "TRUE"
             }
         },
         {
@@ -23,7 +25,8 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/cburstedde/p4est.git",
-                "ref": "2296a990d8b6b54731a63be0ba5bc17b08cd1f3d"
+                "ref": "2296a990d8b6b54731a63be0ba5bc17b08cd1f3d",
+                "shallow": "TRUE"
             }
         }
     ]
