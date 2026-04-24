@@ -613,14 +613,14 @@ t8_cmesh_get_tree_class (t8_cmesh_t cmesh, t8_locidx_t ltree_id);
 
 /** Query whether a face of a local tree or ghost is at the domain boundary.
  * \param [in]    cmesh         The cmesh to be considered.
- * \param [in]    ltree_id      The local id of a tree.
+ * \param [in]    ltreeid       The local id of a tree.
  * \param [in]    face          The number of a face of the tree.
  * \return                      True if the face is at the domain boundary.
  *                              False otherwise.
- * \a cmesh must be committed before calling this function.
+ * \a cmesh must be committed. Works on ghost elements.
  */
 int
-t8_cmesh_tree_face_is_boundary (t8_cmesh_t cmesh, t8_locidx_t ltree_id, int face);
+t8_cmesh_tree_face_is_boundary (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face);
 
 /** Return the eclass of a given local ghost.
  * TODO: Should we refer to indices or consequently use cghost_t?
