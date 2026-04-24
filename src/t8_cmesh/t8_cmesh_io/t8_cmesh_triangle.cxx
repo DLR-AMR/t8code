@@ -31,6 +31,7 @@
 #include <t8_misc/t8_windows.h>
 #endif
 
+#if 0   // Beginning of deactivated code section
 /* TODO: if partitioned then only add the needed face-connections to join faces
  *       maybe also only trees and ghosts to classes.
  *       Specifying all face-connections makes commit algorithm slow! */
@@ -68,7 +69,9 @@ t8_cmesh_triangle_read_next_line (char **line, size_t *n, FILE *fp)
   while (*line[0] == '#' || strspn (*line, " \t\r\v\n") == strlen (*line));
   return retval;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section
 /* Open .node file  and read node input
  * vertices is needed to temporarily store the vertex coordinates and pass
  * to t8_cmesh_triangle_read_eles.
@@ -162,7 +165,9 @@ die_node:
   free (line);
   return -1;
 }
+#endif  // End of deactivated code section.
 
+#if 0  // Beginning of deactivated code section
 /* Open .ele file and read element input
  * On success the index of the first element is returned (0 or 1).
  * On failure -1 is returned. */
@@ -274,7 +279,9 @@ die_ele:
   free (line);
   return -1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 /* Open .neigh file and read element neighbor information
  * On success 0 is returned.
  * On failure -1 is returned. */
@@ -494,7 +501,9 @@ die_neigh:
   free (line);
   return -1;
 }
+#endif  // End of deactivated code section.
 
+#if 0  // Beginning of deactivated code section.
 /* TODO: remove do_dup argument */
 static t8_cmesh_t
 t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, [[maybe_unused]] int do_dup,
@@ -576,7 +585,9 @@ t8_cmesh_from_tetgen_or_triangle_file (char *fileprefix, int partition, sc_MPI_C
 #endif
   return cmesh;
 }
+#endif  // End of deactivated code section.
 
+#if 0  // Beginning of deactivated code section.
 static t8_cmesh_t
 t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_MPI_Comm comm,
                                             [[maybe_unused]] int do_dup, int dim, sc_flopinfo_t *fi,
@@ -658,23 +669,61 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
   }
   return cmesh;
 }
+#endif  // End of deactivated code section.
 
 t8_cmesh_t
 t8_cmesh_from_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup)
 {
+  SC_ABORT ("The function t8_cmesh_from_triangle_file is currently not supported, because it's functionality is not "
+            "up-to-date!\n");
+
+  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
+  (void) fileprefix;
+  (void) partition;
+  (void) comm;
+  (void) do_dup;
+
+#if 0   // Beginning of deactivated code section.
   return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm, do_dup, 2);
+#endif  // End of deactivated code section.
 }
 
 t8_cmesh_t
 t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, sc_flopinfo_t *fi,
                                 sc_flopinfo_t *snapshot, sc_statinfo_t *stats, int statentry)
 {
+  SC_ABORT ("The function t8_cmesh_from_tetgen_file_time is currently not supported, because it's functionality is not "
+            "up-to-date!\n");
+
+  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
+  (void) fileprefix;
+  (void) partition;
+  (void) comm;
+  (void) do_dup;
+  (void) fi;
+  (void) snapshot;
+  (void) stats;
+  (void) statentry;
+
+#if 0   // Beginning of deactivated code section.
   return t8_cmesh_from_tetgen_or_triangle_file_time (fileprefix, partition, comm, do_dup, 3, fi, snapshot, stats,
                                                      statentry);
+#endif  // End of deactivated code section.
 }
 
 t8_cmesh_t
 t8_cmesh_from_tetgen_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup)
 {
+  SC_ABORT ("The function t8_cmesh_from_tetgen_file is currently not supported, because it's functionality is not "
+            "up-to-date!\n");
+
+  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
+  (void) fileprefix;
+  (void) partition;
+  (void) comm;
+  (void) do_dup;
+
+#if 0   // Beginning of deactivated code section.
   return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm, do_dup, 3);
+#endif  // End of deactivated code section.
 }
