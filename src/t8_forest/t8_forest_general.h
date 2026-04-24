@@ -675,6 +675,21 @@ t8_locidx_t
 t8_forest_same_level_leaf_face_neighbor_index (const t8_forest_t forest, const t8_locidx_t element_index,
                                                const int face_index, const t8_gloidx_t global_treeid, int *dual_face);
 
+/** Compute the subface index for a coarser neighbor
+ * \param [in] forest       The forest. Must be committed and balanced.
+ * \param [in] ltreeid      A local tree id.
+ * \param [in] leaf         A leaf in \a ltreeid.
+ * \param [in] face         The face index of \a leaf to consider.
+ * \param [in] neighbor_tree_eclass The eclass of the neighbor element.
+ * \param [in] neighbor_leaf The leaf of \a forest on the other side of the face of index \a face of element \a leaf. Must be one level coarser than \a leaf.
+ * \param [in] neighbor_face The face index of \a neighbor_leaf (i.e. the dual face of \a face).
+ * \returns The index of the subface of \a neighbor_face which corresponds to \a face.
+ * \note This function is designed to be called after \ref t8_forest_leaf_face_neighbors_ext to complement its output.
+ */
+int
+t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf, int face,
+                                 t8_eclass_t neighbor_tree_class, const t8_element_t *neighbor_leaf, int neighbor_face);
+
 /** Exchange ghost information of user defined element data.
  * \param [in] forest       The forest. Must be committed.
  * \param [in] element_data An array of length num_local_elements + num_ghosts
