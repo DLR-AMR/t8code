@@ -142,14 +142,23 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   }
 
   /**
-   * Getter function for the CAD manager.
+   * Getter function for the CAD handle.
    * 
-   * \return The CAD manager of the geometry.
+   * \return The CAD handle of the geometry.
   */
   std::shared_ptr<t8_cad_handle>
   get_cad_handle () const
   {
     return cad_handle;
+  }
+
+  /** Update the CAD handle with a new one. 
+   * \param[in] new_cad_handle The new CAD handle to be used.
+   */
+  void
+  update_cad_handle (std::shared_ptr<t8_cad_handle> new_cad_handle)
+  {
+    cad_handle = new_cad_handle;
   }
 
  private:
