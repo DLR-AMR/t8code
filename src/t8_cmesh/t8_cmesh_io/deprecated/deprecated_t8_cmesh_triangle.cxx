@@ -21,8 +21,8 @@
 */
 
 #include <t8_cmesh/t8_cmesh.hxx>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_tetgen.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_triangle.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_tetgen.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
@@ -672,16 +672,11 @@ t8_cmesh_from_tetgen_or_triangle_file_time (char *fileprefix, int partition, sc_
 #endif  // End of deactivated code section.
 
 t8_cmesh_t
-t8_cmesh_from_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup)
+t8_cmesh_from_triangle_file ([[maybe_unused]] char *fileprefix, [[maybe_unused]] int partition,
+                             [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] int do_dup)
 {
   SC_ABORT ("The function t8_cmesh_from_triangle_file is currently not supported, because it's functionality is not "
             "up-to-date!\n");
-
-  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
-  (void) fileprefix;
-  (void) partition;
-  (void) comm;
-  (void) do_dup;
 
 #if 0   // Beginning of deactivated code section.
   return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm, do_dup, 2);
@@ -689,21 +684,13 @@ t8_cmesh_from_triangle_file (char *fileprefix, int partition, sc_MPI_Comm comm, 
 }
 
 t8_cmesh_t
-t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup, sc_flopinfo_t *fi,
-                                sc_flopinfo_t *snapshot, sc_statinfo_t *stats, int statentry)
+t8_cmesh_from_tetgen_file_time ([[maybe_unused]] char *fileprefix, [[maybe_unused]] int partition,
+                                [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] int do_dup,
+                                [[maybe_unused]] sc_flopinfo_t *fi, [[maybe_unused]] sc_flopinfo_t *snapshot,
+                                [[maybe_unused]] sc_statinfo_t *stats, [[maybe_unused]] int statentry)
 {
   SC_ABORT ("The function t8_cmesh_from_tetgen_file_time is currently not supported, because it's functionality is not "
             "up-to-date!\n");
-
-  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
-  (void) fileprefix;
-  (void) partition;
-  (void) comm;
-  (void) do_dup;
-  (void) fi;
-  (void) snapshot;
-  (void) stats;
-  (void) statentry;
 
 #if 0   // Beginning of deactivated code section.
   return t8_cmesh_from_tetgen_or_triangle_file_time (fileprefix, partition, comm, do_dup, 3, fi, snapshot, stats,
@@ -712,16 +699,11 @@ t8_cmesh_from_tetgen_file_time (char *fileprefix, int partition, sc_MPI_Comm com
 }
 
 t8_cmesh_t
-t8_cmesh_from_tetgen_file (char *fileprefix, int partition, sc_MPI_Comm comm, int do_dup)
+t8_cmesh_from_tetgen_file ([[maybe_unused]] char *fileprefix, [[maybe_unused]] int partition,
+                           [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] int do_dup)
 {
   SC_ABORT ("The function t8_cmesh_from_tetgen_file is currently not supported, because it's functionality is not "
             "up-to-date!\n");
-
-  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
-  (void) fileprefix;
-  (void) partition;
-  (void) comm;
-  (void) do_dup;
 
 #if 0   // Beginning of deactivated code section.
   return t8_cmesh_from_tetgen_or_triangle_file (fileprefix, partition, comm, do_dup, 3);

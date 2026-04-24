@@ -24,7 +24,7 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_tetgen.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_tetgen.h>
 #include <t8_vtk/t8_vtk_writer.h>
 
 void

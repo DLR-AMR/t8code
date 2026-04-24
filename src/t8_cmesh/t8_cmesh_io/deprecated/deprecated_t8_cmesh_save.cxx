@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_save.cxx
+/** \file deprecated_t8_cmesh_save.cxx
  * We define routines to save and load a cmesh to/from the file system.
  */
 
@@ -28,7 +28,7 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_save.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry.h>
@@ -531,13 +531,9 @@ t8_cmesh_load_header (const t8_cmesh_t cmesh, FILE *fp)
 #endif  // End of deactivated code section.
 
 int
-t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
+t8_cmesh_save ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] const char *fileprefix)
 {
   SC_ABORT ("The function t8_cmesh_save is currently not supported, because it's functionality is not up-to-date!\n");
-
-  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
-  (void) cmesh;
-  (void) fileprefix;
 
 #if 0  // Beginning of deactivated code section.
   FILE *fp;
@@ -613,13 +609,9 @@ t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
 #undef T8_SAVE_CHECK_CLOSE
 
 t8_cmesh_t
-t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
+t8_cmesh_load ([[maybe_unused]] const char *filename, [[maybe_unused]] sc_MPI_Comm comm)
 {
   SC_ABORT ("The function t8_cmesh_load is currently not supported, because it's functionality is not up-to-date!\n");
-
-  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
-  (void) filename;
-  (void) comm;
 
   t8_cmesh_t cmesh;
 
@@ -856,19 +848,13 @@ t8_cmesh_load_bigger_nonloading (const int mpirank, const int mpisize, const int
  * If N = 1, the cmesh is broadcasted and not partitioned.
  */
 t8_cmesh_t
-t8_cmesh_load_and_distribute (const char *fileprefix, const int num_files, sc_MPI_Comm comm, const t8_load_mode_t mode,
-                              const int procs_per_node)
+t8_cmesh_load_and_distribute ([[maybe_unused]] const char *fileprefix, [[maybe_unused]] const int num_files,
+                              [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] const t8_load_mode_t mode,
+                              [[maybe_unused]] const int procs_per_node)
 {
   SC_ABORT ("The function t8_cmesh_load_and_distribute is currently not supported, because it's functionality is not "
             "up-to-date!\n");
   t8_cmesh_t cmesh;
-
-  // Pseudo-usage of function arguments to suppress unused-argument compiler warning.
-  (void) fileprefix;
-  (void) num_files;
-  (void) comm;
-  (void) mode;
-  (void) procs_per_node;
 
 #if 0   // Beginning of deactivated code section.
   char buffer[BUFSIZ];
