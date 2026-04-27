@@ -42,8 +42,8 @@ typedef struct t8_cmesh_trees *t8_cmesh_trees_t;
 /** Opaque pointer to a tree */
 typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 
-/** Opaque pointer to a boundary node list */
 #if T8_ENABLE_OCC
+/** Opaque pointer to a boundary node list */
 typedef struct t8_boundary_node_list t8_boundary_node_list_c;
 #endif
 

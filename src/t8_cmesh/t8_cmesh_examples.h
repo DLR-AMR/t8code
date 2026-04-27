@@ -470,6 +470,7 @@ t8_cmesh_new_cubed_sphere (const double radius, sc_MPI_Comm comm);
 /**
  * Four quads joined together for global index testing purposes
  * 
+ * \return                        A cmesh with boundary nodes being (0, 1, 2, 3, 5, 6, 8, 11, 12, 13)
  */
 t8_cmesh_t
 t8_cmesh_hyperquad ();
