@@ -1,6 +1,9 @@
 # Updated dependencies
 
-We have switched from a submodules approach to a FetchContent approach for our dependencies towards p4est and sc. If you don't have already installed p4est and sc, calling cmake will install the right branch from their github. If you have p4est and sc installed already and want to use that version no further code will be downloaded.
+We have switched from a submodules approach to a FetchContent approach for our dependencies towards p4est and sc. If you don't have already installed p4est and sc, calling cmake will install the right branch from their github. If you have p4est and sc installed already and want to use that version no further code will be downloaded. If your current configuration is to the internal p4est and sc installation you don't need to update your workflow. The submodules of p4est and sc should be removed with this update. Instead they will be downloaded and installed in the _deps folder in your build folder.
+If you use a separate installation of p4est and sc it is important to set the boolean CMake Options "T8CODE_USE_SYSTEM_P4EST" and "T8CODE_USE_SYSTEM_SC". It prevents the triggering of the automatic installation of the libraries.
+Our recommendation is to delete any existing sc/ and p4est/ folders and use the automatically downloaded FetchContent.
+For further information have a look at our [Installation Guide](https://github.com/DLR-AMR/t8code/wiki/Installation).
 For devs: Further dependencies can be managed in our dependencies.json.
 
 
@@ -26,6 +29,24 @@ No! If your code is only a couple of lines long AND has very little impact on th
 
 
 # User Updates for the upcoming t8code release (February 2026 - version format unclear)
+
+## Updates to t8_forest_leaf_face_neighbors
+
+The t8_forest_leaf_face_neighbors and t8_forest_leaf_face_neighbors_ext functions (see t8_forest_general.h) have undergone a major update.
+
+- The forest does not need to be balanced anymore to compute the leaf face neighbors. Thus, there can be any arbitrary number of leaf face neighbors for a given element.
+The last argument (forest_is_balanced) was removed.
+
+- The allocation behaviour changed. element_destroy should not be called anymore.
+The function now returns pointers to t8code internal elements in the neighbor_leaves array.
+To free the memory use
+```C++
+if (num_neighbors > 0) {
+   T8_FREE (pneighbor_leaves);
+   T8_FREE (pelement_indices);
+   T8_FREE (dual_faces);
+}
+```
 
 ## Using structs instead of classes
 

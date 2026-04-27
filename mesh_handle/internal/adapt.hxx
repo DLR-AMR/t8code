@@ -66,16 +66,16 @@ struct mesh_adapt_context_base
 
 /** Templated mesh adaptation context holding the mesh handle and the user defined callback.
  * Struct inherits from \ref mesh_adapt_context_base and implements the virtual adapt callback using the mesh and the callback.
- * \tparam TMesh The mesh handle class.
+ * \tparam TMeshClass The mesh handle class.
  */
-template <typename TMesh>
+template <typename TMeshClass>
 struct mesh_adapt_context final: mesh_adapt_context_base
 {
   /** Constructor of the context with the mesh handle and the user defined callback.
    * \param [in] mesh_handle      The mesh handle to adapt.
    * \param [in] adapt_callback   The adapt callback.
    */
-  mesh_adapt_context (TMesh& mesh_handle, typename TMesh::adapt_callback_type adapt_callback)
+  mesh_adapt_context (TMeshClass& mesh_handle, typename TMeshClass::adapt_callback_type adapt_callback)
     : m_mesh_handle (mesh_handle), m_adapt_callback (std::move (adapt_callback))
   {
   }
@@ -93,13 +93,13 @@ struct mesh_adapt_context final: mesh_adapt_context_base
   {
     // Check if adapt callback is set and call it using the correct mesh handle function arguments.
     T8_ASSERTF (m_adapt_callback, "No adapt callback set.");
-    std::span<const typename TMesh::element_class> element_view (&m_mesh_handle[lelement_handle_id], num_elements);
+    std::span<const typename TMeshClass::element_class> element_view (&m_mesh_handle[lelement_handle_id], num_elements);
     return m_adapt_callback (m_mesh_handle, element_view);
   }
 
  private:
-  TMesh& m_mesh_handle;                                 /**< The mesh handle to adapt. */
-  typename TMesh::adapt_callback_type m_adapt_callback; /**< The adapt callback. */
+  TMeshClass& m_mesh_handle;                                 /**< The mesh handle to adapt. */
+  typename TMeshClass::adapt_callback_type m_adapt_callback; /**< The adapt callback. */
 };
 
 /** Registry pattern is used to register contexts, which provides access to the adapt callback and the mesh handle.
