@@ -1462,6 +1462,11 @@ t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
                                  const t8_eclass_t neigh_eclass, int face, int *neigh_face)
 {
+  int dummy = 0;
+  if (neigh_face == nullptr) {
+    neigh_face = &dummy;
+  }
+
   /* Get a pointer to the tree to read its element class */
   const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
