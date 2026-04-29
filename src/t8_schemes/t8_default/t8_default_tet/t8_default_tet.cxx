@@ -30,7 +30,7 @@
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
 
-typedef t8_dtet_t t8_default_tet_t;
+using t8_default_tet_t = t8_dtet_t;
 
 size_t
 t8_default_scheme_tet::get_element_size (void) const

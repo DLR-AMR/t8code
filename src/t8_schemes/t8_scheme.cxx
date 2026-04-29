@@ -43,7 +43,7 @@ t8_scheme_unref (t8_scheme_c **pscheme)
   T8_ASSERT (pscheme != NULL);
 
   if ((*pscheme)->unref () < 1) {
-    *pscheme = NULL;
+    *pscheme = nullptr;
   }
 }
 

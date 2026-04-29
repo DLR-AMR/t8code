@@ -84,7 +84,7 @@ t8_forest_ghost_tree_num_leaf_elements (t8_forest_t forest, t8_locidx_t lghost_t
 
 /** Get a pointer to the ghost leaf element array of a ghost tree.
  * \param [in]  forest    The forest. Ghost layer must exist.
- * \param [in]  lghost_tree The ghost tree id of a ghost tree.
+ * \param [in]  lghost_tree The ghost tree id of a ghost tree. 0 <= \a lghost_tree < num_ghost_trees
  * \return                A pointer to the array of ghost leaf elements of the tree.
  * \a forest must be committed before calling this function.
  */
