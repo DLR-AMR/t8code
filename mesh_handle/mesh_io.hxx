@@ -26,6 +26,7 @@
 
 #pragma once
 #include <t8_forest/t8_forest_io.h>
+#include "concepts.hxx"
 
 namespace t8_mesh_handle
 {
@@ -58,7 +59,7 @@ namespace t8_mesh_handle
  * \param [in] do_not_use_API   If true, do not use the VTK API, even if linked and available.
  * \return  True if successful, false if not (process local).
  */
-template <typename TMeshClass>
+template <T8MeshType TMeshClass>
 int
 write_mesh_to_vtk_ext (TMeshClass &mesh, const char *fileprefix, const int num_data, t8_vtk_data_field_t *data,
                        bool write_treeid = false, bool write_mpirank = true, bool write_level = true,
@@ -82,7 +83,7 @@ write_mesh_to_vtk_ext (TMeshClass &mesh, const char *fileprefix, const int num_d
  *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu.
  * \return  True if successful, false if not (process local).
  */
-template <typename TMeshClass>
+template <T8MeshType TMeshClass>
 int
 write_mesh_to_vtk (TMeshClass &mesh, const char *fileprefix)
 {
