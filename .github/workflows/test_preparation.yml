@@ -119,17 +119,12 @@ jobs:
     - name: install sc
       run: echo "Install sc"
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - name: get sc source
-      ## minimal amount of history and fetches
-      run: |
-        if [ ! -d $SC_SOURCE ]; then
-          git init $SC_SOURCE
-          cd $SC_SOURCE
-          git remote add origin ${{ env.sc_url }}
-        fi
-        cd $SC_SOURCE
-        git fetch --depth 1 origin HEAD
-        git checkout ${{ env.sc_commit }}
+    - uses: actions/checkout@v6
+      with:
+        repository: ${{ env.sc_url }}
+        ref: ${{ env.sc_commit }}
+        fetch_depth: 1
+        path: ${{ env.SC_SOURCE }}
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc debug build
     - name: sc cmake debug
@@ -184,17 +179,13 @@ jobs:
     - name: install p4est
       run: echo "Install p4est"
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - name: get p4est source
-      ## minimal amount of history and fetches
-      run: |
-        if [ ! -d $P4EST_SOURCE ]; then
-          git init $P4EST_SOURCE
-          cd $P4EST_SOURCE
-          git remote add origin ${{ env.p4est_url }}
-        fi
-        cd $P4EST_SOURCE
-        git fetch --depth 1 origin HEAD
-        git checkout ${{ env.p4est_commit }}
+    - uses: actions/checkout@v6
+      with:
+        repository: ${{ env.p4est_url }}
+        ref: ${{ env.p4est_commit }}
+        fetch_depth: 1
+        path: ${{ env.P4EST_SOURCE }}
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     ## p4est debug build
     - name: p4est cmake debug
       run: cd $P4EST_DEBUG && cmake $P4EST_SOURCE -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
