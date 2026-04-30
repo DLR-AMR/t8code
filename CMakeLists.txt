@@ -136,34 +136,23 @@ string(JSON DEPS_COUNT LENGTH "${DEPS_JSON}" "dependencies")
 math(EXPR DEPS_RANGE "${DEPS_COUNT} - 1")
 
 foreach(INDEX RANGE ${DEPS_RANGE})
-    # Check for an optional "depends_on_cmake_option" field
-    # Try to read the optional field without producing warnings; capture any error message.
-    string(JSON DEP_CMAKE_OPTION ERROR_VARIABLE JSON_ERR_MSG
-        GET "${DEPS_JSON}" "dependencies" ${INDEX} "depends_on_cmake_option")
-    if(JSON_ERR_MSG)
-        # Field missing or invalid: mark as error and clear the option value.
-        set(JSON_ERR 1)
-        set(DEP_CMAKE_OPTION "")
-    else()
-        set(JSON_ERR 0)
-    endif()
-
-    # Extract common fields
+    # Extract fields
     string(JSON DEP_NAME GET "${DEPS_JSON}" "dependencies" ${INDEX} "name")
+    string(JSON DEP_CMAKE_OPTION GET "${DEPS_JSON}" "dependencies" ${INDEX} "depends_on_cmake_option")
     string(JSON DEP_TYPE GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "type")
     string(JSON DEP_URL  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "url")
     string(JSON DEP_REF  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "ref")
     string(JSON DEP_SHALLOW  GET "${DEPS_JSON}" "dependencies" ${INDEX} "source" "shallow")
 
-    # If no error occurred and the field is non-empty, check the CMake option.
-    if(JSON_ERR EQUAL 0 AND NOT DEP_CMAKE_OPTION STREQUAL "")
+    # If the DEP_CMAKE_OPTION field is non-empty, check the CMake option.
+    if(NOT DEP_CMAKE_OPTION STREQUAL "")
         # If the named option variable does not exist in the CMake cache, warn and proceed.
         if(NOT DEFINED ${DEP_CMAKE_OPTION})
             message(FATAL_ERROR "Loading dependency ${DEP_NAME} at index ${INDEX} references unknown CMake option '${DEP_CMAKE_OPTION}'. Aborting.")
         else()
             # If the named option is defined but set to ON, skip this dependency.
             if(${${DEP_CMAKE_OPTION}})
-                message(STATUS "Skipping FetchContent-step for dependency ${DEP_NAME} because CMake option '${DEP_CMAKE_OPTION}' is ON")
+                message(STATUS "Skipping FetchContent-step for dependency ${DEP_NAME} because CMake option '${DEP_CMAKE_OPTION}' is '${${DEP_CMAKE_OPTION}}'")
                 continue()
             endif()
         endif()
@@ -318,7 +307,7 @@ else()
 
 
 
-    # Reactivate previous CMAKE_REQUIRED_FLAGS  
+    # Reactivate previous CMAKE_REQUIRED_FLAGS
     set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
     unset( T8CODE_OLD_CMAKE_REQUIRED_FLAGS )
 endif()

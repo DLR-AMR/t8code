@@ -2,6 +2,7 @@
     "dependencies": [
         {
             "name": "googletest",
+            "depends_on_cmake_option": "",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DLR-SC/googletest_mpi.git",
