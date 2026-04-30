@@ -87,9 +87,9 @@ jobs:
         && echo SC_RELEASE=$PWD/sc/build/Release >> $GITHUB_ENV
     - name: Get sc commit hash  and url from thirdparty.json
       run: |
-        hash=$(jq -r '.thirdparty[] | select(.name=="SC") .source.ref' thirdparty.json)
+        hash=$(jq -r '.thirdparty[] | select(.name=="SC") .source.ref' cmake/thirdparty.json)
         echo sc_commit=$hash >> $GITHUB_ENV
-        url=$(jq -r '.thirdparty[] | select(.name=="SC") .source.url' thirdparty.json)
+        url=$(jq -r '.thirdparty[] | select(.name=="SC") .source.url' cmake/thirdparty.json)
         echo sc_url=$url >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cmake_cache
@@ -155,9 +155,9 @@ jobs:
         && echo P4EST_RELEASE=$PWD/p4est/build/Release >> $GITHUB_ENV
     - name: Get p4est commit hash and url from thirdparty.json
       run: |
-        hash=$(jq -r '.thirdparty[] | select(.name=="P4EST") .source.ref' thirdparty.json)
+        hash=$(jq -r '.thirdparty[] | select(.name=="P4EST") .source.ref' cmake/thirdparty.json)
         echo p4est_commit=$hash >> $GITHUB_ENV
-        url=$(jq -r '.thirdparty[] | select(.name=="P4EST") .source.url' thirdparty.json)
+        url=$(jq -r '.thirdparty[] | select(.name=="P4EST") .source.url' cmake/thirdparty.json)
         echo p4est_url=$url >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cmake_cache
