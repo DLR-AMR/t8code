@@ -126,9 +126,8 @@ mark_as_advanced( FORCE gtest_disable_mpi)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 mark_as_advanced( FORCE gtest_force_shared_crt)
 
-
-# Populate the dependencies
-include (cmake/dependencies.cmake)
+# Populate the thirdparty libraries
+include (cmake/thirdparty.cmake)
 
 
 if( T8CODE_ENABLE_VTK )
@@ -299,14 +298,6 @@ set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS   "${ORIGINAL_C_FLAGS}"   CACHE STRING "" FORCE)
 
 # End of workaround
-
-# Mark all cmake options starting with FETCHCONTENT as advanced.
-get_cmake_property(_cmake_vars VARIABLES)
-foreach(_var ${_cmake_vars})
-    if(_var MATCHES "^FETCHCONTENT_.*")
-	    mark_as_advanced(${_var})
-    endif()
-endforeach()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 

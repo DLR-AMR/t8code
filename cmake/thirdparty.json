@@ -1,5 +1,5 @@
 {
-    "dependencies": [
+    "thirdparty": [
         {
             "name": "googletest",
             "depends_on_cmake_option": "",
