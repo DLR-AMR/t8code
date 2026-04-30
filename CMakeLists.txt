@@ -122,12 +122,67 @@ else()
     set( gtest_disable_mpi ON CACHE BOOL "disable gtest mpi support" FORCE)
 endif()
 
+############################################ ThirdParty ############################################
+
+# Set some variables for the thirdparty libraries
 mark_as_advanced( FORCE gtest_disable_mpi)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 mark_as_advanced( FORCE gtest_force_shared_crt)
+set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
+set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
+set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+
+# When executing CMake tests for some thirdparty libraries like sc, i.e. check_c_source_compiles/check_cxx_source_compiles and others
+# we need to ignore the -Werror option, since these tests often produce warnings (see check_mpicommshared.cmake from sc for example).
+# If theses warnings are interpreted as errors, the test fails even though we want it to pass.
+# This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
+set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
+if (WIN32 AND NOT MINGW)
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w" )
+else()
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w" )
+endif()
+
+# Do the same for the normal build flags to suppress warnings from the thirdparty library
+set(ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(ORIGINAL_C_FLAGS   "${CMAKE_C_FLAGS}")
+if (WIN32 AND NOT MINGW)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   /w" CACHE STRING "" FORCE)
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
+endif()
+
+# Capture the list of variables before adding the thirdparty libraries to mark the added ones as advanced.
+get_cmake_property(_vars_before_thirdparty VARIABLES )
 
 # Populate the thirdparty libraries
 include (cmake/thirdparty.cmake)
+
+# Capture the list of variables after adding the thirdparty libraries
+get_cmake_property(_vars_after_thirdparty VARIABLES )
+# Compute the difference (new variables added by the libraries)
+set( _new_thirdparty_vars)
+foreach( _var IN LISTS _vars_after_thirdparty )
+    if( NOT _var IN_LIST _vars_before_thirdparty )
+            list( APPEND _new_thirdparty_vars ${_var} )
+    endif()
+endforeach()
+
+# Mark the new variables as advanced
+mark_as_advanced( FORCE ${_new_thirdparty_vars} )
+
+# Reactivate previous CMAKE_REQUIRED_FLAGS and CMAKE_C/CXX_FLAGS
+set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
+unset( T8CODE_OLD_CMAKE_REQUIRED_FLAGS )
+set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS   "${ORIGINAL_C_FLAGS}"   CACHE STRING "" FORCE)
+unset (ORIGINAL_CXX_FLAGS)
+unset (ORIGINAL_C_FLAGS)
+
+############################################ End of ThirdParty ############################################
 
 
 if( T8CODE_ENABLE_VTK )
@@ -185,37 +240,6 @@ endif()
 if ( T8CODE_USE_SYSTEM_SC )
     find_package( SC REQUIRED )
 else()
-    set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
-    set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
-
-    # When executing CMake tests for libsc, i.e. check_c_source_compiles/check_cxx_source_compiles and others
-    # we need to ignore the -Werror option, since these tests often produce warnings (see check_mpicommshared.cmake for example).
-    # If theses warnings are interpreted as errors, the test fails even though we want it to pass.
-    # This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
-    set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
-    if (WIN32 AND NOT MINGW)
-        set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w" )
-    else()
-        set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w" )
-    endif()
-
-    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
-    get_cmake_property(_vars_before_sc VARIABLES )
-
-    FetchContent_MakeAvailable(sc)
-    # Capture the list of variables after adding the subdirectory
-    get_cmake_property(_vars_after_sc VARIABLES )
-    # Compute the difference (new variables added by the subdirectory)
-    set( _new_sc_vars)
-    foreach( _var IN LISTS _vars_after_sc )
-        if( NOT _var IN_LIST _vars_before_sc )
-            list( APPEND _new_sc_vars ${_var} )
-        endif()
-    endforeach()
-
-    # Mark the new variables as advanced
-    mark_as_advanced( FORCE ${_new_sc_vars} )
-
     ########################## Fix for OpenMPI ############################################
     # OpenMPI sometimes has a mismatch between their C and CXX interface which produces a warning in SC.
     # The warning makes t8codes build fail when Werror is activated. This fix checks if t8code
@@ -247,57 +271,12 @@ else()
         message(WARNING "mpi.h not found!")
     endif()
     ########################## End of fix for OpenMPI ############################################
-
-
-
-    # Reactivate previous CMAKE_REQUIRED_FLAGS
-    set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
-    unset( T8CODE_OLD_CMAKE_REQUIRED_FLAGS )
 endif()
 
 
 if ( T8CODE_USE_SYSTEM_P4EST )
     find_package( P4EST REQUIRED )
-else()
-    set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
-    set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
-
-    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
-    get_cmake_property( _vars_before_p4est VARIABLES )
-
-    FetchContent_MakeAvailable(p4est)
-    # Capture the list of variables after adding the subdirectory
-    get_cmake_property( _vars_after_p4est VARIABLES )
-
-    # Compute the difference (new variables added by the subdirectory)
-    set( _new_p4est_vars )
-    foreach( _var IN LISTS _vars_after_p4est )
-        if( NOT _var IN_LIST _vars_before_p4est )
-            list( APPEND _new_p4est_vars ${_var} )
-        endif()
-    endforeach()
-
-    # Mark the new variables as advanced
-    mark_as_advanced( FORCE ${_new_p4est_vars})
 endif()
-
-# Workaround: Suppress warnings for googletests, so it does not compromise the usage of -WError for t8code.
-# -----------
-# 1. Save original flags
-set(ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-set(ORIGINAL_C_FLAGS   "${CMAKE_C_FLAGS}")
-
-# 2. Suppress warnings for GoogleTest build
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
-
-FetchContent_MakeAvailable( googletest )
-
-# 3. Restore original flags
-set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS   "${ORIGINAL_C_FLAGS}"   CACHE STRING "" FORCE)
-
-# End of workaround
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
 
