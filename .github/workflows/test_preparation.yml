@@ -121,9 +121,9 @@ jobs:
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - uses: actions/checkout@v6
       with:
-        repository: ${{ env.sc_url }}
+        repository: cburstedde/libsc
         ref: ${{ env.sc_commit }}
-        fetch_depth: 1
+        fetch-depth: 1
         path: ${{ env.SC_SOURCE }}
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc debug build
@@ -181,9 +181,9 @@ jobs:
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - uses: actions/checkout@v6
       with:
-        repository: ${{ env.p4est_url }}
+        repository: cburstedde/p4est
         ref: ${{ env.p4est_commit }}
-        fetch_depth: 1
+        fetch-depth: 1
         path: ${{ env.P4EST_SOURCE }}
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     ## p4est debug build
