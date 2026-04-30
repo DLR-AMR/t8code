@@ -113,9 +113,6 @@ jobs:
       if: ${{ inputs.IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
       run: rm -r $SC_BUILD || true
-    - name: make folders
-      run: mkdir -p $SC_DEBUG $SC_RELEASE
-      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: install sc
       run: echo "Install sc"
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
@@ -125,6 +122,9 @@ jobs:
         ref: ${{ env.sc_commit }}
         fetch-depth: 1
         path: ${{ env.SC_SOURCE }}
+      if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
+    - name: make folders
+      run: mkdir -p $SC_DEBUG $SC_RELEASE
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc debug build
     - name: sc cmake debug
@@ -173,9 +173,6 @@ jobs:
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
       run: rm -r $P4EST_BUILD || true
-    - name: make folders
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-      run: mkdir -p $P4EST_DEBUG $P4EST_RELEASE
     - name: install p4est
       run: echo "Install p4est"
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
@@ -186,6 +183,9 @@ jobs:
         fetch-depth: 1
         path: ${{ env.P4EST_SOURCE }}
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
+    - name: make folders
+      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
+      run: mkdir -p $P4EST_DEBUG $P4EST_RELEASE
     ## p4est debug build
     - name: p4est cmake debug
       run: cd $P4EST_DEBUG && cmake $P4EST_SOURCE -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$P4EST_DEBUG/install -DP4EST_USE_SYSTEM_SC=ON -DSC_DIR=$SC_DEBUG/install/cmake -DP4EST_ENABLE_MPI=$MPI -GNinja
