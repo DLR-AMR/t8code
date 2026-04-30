@@ -21,8 +21,6 @@
 cmake_minimum_required( VERSION 3.19 )
 
 include( cmake/GitProjectVersion.cmake )
-include( FetchContent )
-# All fetchcontent cmake options+ are marked as advanced below.
 
 project(
     T8CODE
