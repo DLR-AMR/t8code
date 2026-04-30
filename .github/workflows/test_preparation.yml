@@ -106,9 +106,6 @@ jobs:
     - name: Cache info
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' ||  inputs.IGNORE_CACHE == 1 }}
       run: echo No cache found or cache will be ignored. IGNORE_CACHE=$IGNORE_CACHE
-    - name: install p4est
-      run: echo "Install p4est"
-      if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
     - name: if ignore cache, delete folders
       if: ${{ inputs.IGNORE_CACHE == 1 }}
       # The true at the end is to ignore errors that i.e. occur when the folders do not exist
