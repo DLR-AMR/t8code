@@ -40,6 +40,10 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 
 #include "t8_adapt_to_point_sources.h"
+#include "t8_point_source_parser.h"
+
+#include <cmath>
+#include <numbers>
 
 /** Create an array of a given number of particles on the root process
  * and broadcast it to all other processes.
@@ -48,7 +52,8 @@
  * \param [in] comm           MPI communicator to specify on which processes we create this array.
  */
 static sc_array *
-t8_cubed_sphere_random_particles (size_t num_particles, unsigned int seed, unsigned int nsd, sc_MPI_Comm comm)
+t8_spherical_shell_random_particles (size_t num_particles, unsigned int seed, double inner_radius, 
+                                     double shell_thickness, sc_MPI_Comm comm)
 {
   /* Specify lower and upper bounds for the coordinates in each dimension. */
   double boundary_low[3] = { 0.0, 0.0, 0.0 };
@@ -56,6 +61,7 @@ t8_cubed_sphere_random_particles (size_t num_particles, unsigned int seed, unsig
   int mpirank;
   int mpiret;
   sc_array *particles;
+  const unsigned int nsd = 3;
 
   /* Get the MPI rank. */
   mpiret = sc_MPI_Comm_rank (comm, &mpirank);
@@ -84,12 +90,20 @@ t8_cubed_sphere_random_particles (size_t num_particles, unsigned int seed, unsig
       }
       // radius = sqrt(radius);
 
-      for (unsigned int dim = 0; dim < nsd; ++dim) {
-        /* Create a random value between boundary_low[dim] and boundary_high[dim] */
-        particle->coordinates[dim] = rand_number[dim] / sqrt (3);
-        /* Initialize the is_inside_partition flag. */
-        particle->is_inside_partition = 0;
-      }
+      // Transform random number into (some pseudo-random) spherical coordinates 
+      // (1) Distance r
+      double r = inner_radius + rand_number[0] * shell_thickness;
+      // (2,3) Angles: theta and phi
+      double theta = rand_number[1] * std::numbers::pi;
+      double phi   = rand_number[2] * std::numbers::pi * 2.0;
+
+      // Convert them to Cartesian coordinates
+      particle->coordinates[0] = r * sin(theta) * cos(phi);
+      particle->coordinates[1] = r * sin(theta) * sin(phi);
+      particle->coordinates[2] = r * cos(theta);
+
+      /* Initialize the is_inside_partition flag. */
+      particle->is_inside_partition = 0;
 
       t8_debugf ("Coordinates: %.3f %.3f %.3f\n", particle->coordinates[0], particle->coordinates[1],
                  particle->coordinates[2]);
@@ -114,6 +128,8 @@ main (int argc, char **argv)
 
   size_t num_particles;
   int level;
+  int num_layers;
+  int num_horizontal_trees_per_quarter;
   const unsigned seed = 0;
 
   sc_options_t *opt;
@@ -123,7 +139,9 @@ main (int argc, char **argv)
   t8_global_productionf (" [search] Hello, this is some cubed sphere test for CLEANLIEST.\n");
   opt = sc_options_new (argv[1]);
   sc_options_add_int (opt, 'l', "level", &level, 5, "The level of the forest.");
-  sc_options_add_size_t (opt, 'n', "num_particles", &num_particles, 20, "The number of particles.");
+  sc_options_add_size_t (opt, 'p', "num_particles", &num_particles, 20, "The number of particles.");
+  sc_options_add_int (opt, 'v', "vertical_layers", &num_layers, 5, "The number of shell layers (vertical direction) of the cmesh.");
+  sc_options_add_int (opt, 'h', "horizontal_trees", &num_horizontal_trees_per_quarter, 5, "The number of horizontal trees per quarter of the spherical shell.");
   sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
 
   t8_cmesh_t cmesh;
@@ -137,8 +155,12 @@ main (int argc, char **argv)
   t8_init (SC_LP_DEBUG);
   comm = sc_MPI_COMM_WORLD;
 
-  // Create cmesh for cubed sphere
-  cmesh = t8_cmesh_new_cubed_sphere (1.0, comm);
+  double earth_radius = 6.0e+3;
+  double atmosphere_height = 50.0;
+
+
+  // Create cmesh: Spherical shell representing the atmosphere.
+  cmesh = t8_cmesh_new_cubed_spherical_shell(earth_radius, atmosphere_height, num_horizontal_trees_per_quarter, num_layers, comm);
 
   // Create uniform forest
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
@@ -146,12 +168,39 @@ main (int argc, char **argv)
   // Write uniform forest to vtk
   t8_forest_write_vtk (forest, "t8_cubed_sphere_uniform");
 
-  /* Create an array with random particles. */
-  unsigned int nsd = t8_forest_get_dimension (forest);
-  sc_array_t *particles = t8_cubed_sphere_random_particles (num_particles, seed, nsd, comm);
+  // Parse point sources from CSV file into std::vector
+  auto parsedPointSources = t8_parse_point_sources_from_file("global_emission_sources.csv");
+
+  // Convert std::vector<PointSourceH2> to sc_array of t8_point_source_t:
+  sc_array *point_sources;
+  int num_point_sources = parsedPointSources.size();
+  point_sources = sc_array_new_count (sizeof (t8_point_source_t), num_point_sources);
+  for( unsigned int isrc=0; isrc < parsedPointSources.size(); isrc++)
+  {
+    // Access SC array entry as pointer
+    t8_point_source_t *cur_point_source = (t8_point_source_t *) sc_array_index_int (point_sources, isrc);
+
+    // Copy coordinates
+    cur_point_source->coordinates[0] = parsedPointSources[isrc].coordinates.at(0);
+    cur_point_source->coordinates[1] = parsedPointSources[isrc].coordinates.at(1);
+    cur_point_source->coordinates[2] = parsedPointSources[isrc].coordinates.at(2);
+
+    // t8_glo
+
+    /* Initialize the is_inside_partition flag. */
+    cur_point_source->is_inside_partition = 0;
+  }
+
+  /* Broadcast this array to all other processes. */
+  mpiret = sc_MPI_Bcast (point_sources->array, sizeof (t8_point_source_t) * num_point_sources, sc_MPI_BYTE, 0, comm);
+  SC_CHECK_MPI (mpiret);
+
+
+  // /* Create an array with random particles. */
+  // sc_array_t *particles = t8_spherical_shell_random_particles (num_particles, seed, earth_radius, atmosphere_height, comm);
 
   // Adapt forest
-  forest = t8_adapt_to_point_sources (forest, particles, "cubed_sphere_adapted");
+  forest = t8_adapt_to_point_sources (forest, point_sources, "cubed_spherical_shell_adapted", false);
 
   /*
    * clean-up
@@ -160,7 +209,7 @@ main (int argc, char **argv)
   /* Destroy the forest. */
   t8_forest_unref (&forest);
 
-  sc_array_destroy (particles);
+  sc_array_destroy (point_sources);
 
   sc_options_destroy (opt);
   sc_finalize ();

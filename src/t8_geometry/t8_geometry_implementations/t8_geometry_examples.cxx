@@ -273,6 +273,59 @@ t8_geometry_cubed_spherical_shell::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t
 }
 
 void
+t8_geometry_cubed_spherical_shell::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid,
+                                                              const t8_element_t *element, const double *points,
+                                                              const int num_points, int *is_inside,
+                                                              const double tolerance) const
+{
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_element_shape_t element_shape = scheme->element_get_shape (tree_class, element);
+  switch (element_shape) {
+  case T8_ECLASS_HEX: {
+    /* For bilinearly interpolated volume elements, a point is inside an element
+     * if and only if it lies on the inner side of each face.
+     * The inner side is defined as the side where the outside normal vector does not
+     * point to.
+     * The point is on this inner side if and only if the scalar product of
+     * a point on the plane minus the point with the outer normal of the face
+     * is >= 0.
+     *
+     * In other words, let p be the point to check, n the outer normal and x a point
+     * on the plane, then p is on the inner side if and only if
+     *  <x - p, n> >= 0
+     */
+
+    const int num_faces = scheme->element_get_num_faces (tree_class, element);
+    /* Assume that every point is inside of the element */
+    for (int ipoint = 0; ipoint < num_points; ipoint++) {
+      is_inside[ipoint] = 1;
+    }
+    for (int iface = 0; iface < num_faces; ++iface) {
+      double face_normal[3];
+      /* Compute the outer normal n of the face */
+      t8_forest_element_face_normal (forest, ltreeid, element, iface, face_normal);
+      /* Compute a point x on the face */
+      const int afacecorner = scheme->element_get_face_corner (tree_class, element, iface, 0);
+      double point_on_face[3];
+      t8_forest_element_coordinate (forest, ltreeid, element, afacecorner, point_on_face);
+      for (int ipoint = 0; ipoint < num_points; ipoint++) {
+        const int is_inside_iface = t8_plane_point_inside (point_on_face, face_normal, &points[ipoint * 3]);
+        if (is_inside_iface == 0) {
+          /* Point is on the outside of face iface. Update is_inside */
+          is_inside[ipoint] = 0;
+        }
+      }
+    }
+    return;
+  }
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+}
+
+
+void
 t8_geometry_cubed_sphere::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid,
                                                               const t8_element_t *element, const double *points,
                                                               const int num_points, int *is_inside,

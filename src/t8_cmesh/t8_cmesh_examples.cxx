@@ -3469,7 +3469,7 @@ t8_cmesh_new_cubed_spherical_shell (const double inner_radius, const double shel
   t8_cmesh_init (&cmesh);
 
   t8_cmesh_register_geometry<t8_geometry_cubed_spherical_shell> (cmesh); /* Use spherical geometry. */
-
+  // t8_cmesh_register_geometry<t8_geometry_linear> (cmesh); /* Use spherical geometry. */
   /* clang-format off */
   const int nrotas = t8_eclass_num_faces[T8_ECLASS_HEX]; /* Number of 3D cmesh elements resp. trees. */
   const int ntrees = nrotas * num_trees * num_trees * num_layers; /* Number of 3D cmesh elements resp. trees. */

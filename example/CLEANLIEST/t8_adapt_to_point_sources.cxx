@@ -217,7 +217,7 @@ t8_adapt_to_point_sources_adapt_callback ([[maybe_unused]] t8_forest_t forest, t
                                           [[maybe_unused]] t8_element_t *elements[])
 {
   // TODO: Define somewhere outside
-  const int threshold_level = 6;
+  const int threshold_level = 3;
 
   // Get pointer to user data
   t8_adapt_to_point_sources_user_data_t *user_data
@@ -262,7 +262,7 @@ t8_point_sources_write_vtk (t8_forest_t forest, std::vector<int> *points_per_ele
 // ##################################### "MAIN" ROUTINE ###########################################
 
 t8_forest_t
-t8_adapt_to_point_sources (t8_forest_t forest, sc_array_t *points, const char *prefix)
+t8_adapt_to_point_sources (t8_forest_t forest, sc_array_t *points, const char *prefix, bool use_balance)
 {
 
   t8_adapt_to_point_sources_user_data_t user_data;
@@ -300,6 +300,17 @@ t8_adapt_to_point_sources (t8_forest_t forest, sc_array_t *points, const char *p
     T8_ASSERT (t8_forest_is_committed (forest));
     t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_adapt_to_point_sources_adapt_callback, 0, 0, NULL);
     forest = forest_adapt;
+
+    if(use_balance)
+    {
+      t8_forest_t forest_balanced;
+      t8_forest_init (&forest_balanced);
+      // t8_forest_set_user_data (forest_new, &adapt_data);
+      t8_forest_set_balance (forest_balanced, forest, 0);
+      t8_forest_commit (forest_balanced);
+      forest = forest_balanced;
+    }
+
 
     const size_t element_count_after = points_per_element->size ();
     t8_debugf ("element_count_after: %li \n", element_count_after);
