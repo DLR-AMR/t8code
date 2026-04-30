@@ -128,7 +128,7 @@ jobs:
           git remote add origin ${{ env.sc_url }}
         fi
         cd $SC_SOURCE
-        git fetch --depth 1 origin ${{ env.sc_commit }}
+        git fetch --depth 1 origin HEAD
         git checkout ${{ env.sc_commit }}
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
       ## sc debug build
@@ -193,7 +193,7 @@ jobs:
           git remote add origin ${{ env.p4est_url }}
         fi
         cd $P4EST_SOURCE
-        git fetch --depth 1 origin ${{ env.p4est_commit }}
+        git fetch --depth 1 origin HEAD
         git checkout ${{ env.p4est_commit }}
     ## p4est debug build
     - name: p4est cmake debug
