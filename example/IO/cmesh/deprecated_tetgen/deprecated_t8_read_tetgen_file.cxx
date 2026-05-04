@@ -23,38 +23,57 @@
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_tetgen.h>
-#include <sc_flops.h>
-#include <sc_statistics.h>
-#include <sc_options.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_tetgen.h>
+#include <t8_vtk/t8_vtk_writer.h>
 
 void
 t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partition)
 {
   t8_cmesh_t cmesh;
+  char fileprefix[BUFSIZ];
   int mpirank, mpiret;
-  sc_flopinfo_t fi, snapshot;
-  sc_statinfo_t stats[6];
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  sc_flops_start (&fi);
-  cmesh = t8_cmesh_from_tetgen_file_time ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, do_dup, &fi, &snapshot,
-                                          stats, 0);
+  cmesh = t8_cmesh_from_tetgen_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, do_dup);
   if (cmesh != NULL) {
     t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
-    t8_debugf ("cmesh has:\n\t%lli tetrahedra %li local\n", (long long) t8_cmesh_get_num_trees (cmesh),
-               (long) t8_cmesh_get_num_local_trees (cmesh));
+    t8_debugf ("cmesh has:\n\t%lli tetrahedra\n", (long long) t8_cmesh_get_num_trees (cmesh));
+    snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen", prefix);
+    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix)) {
+      t8_debugf ("Wrote to file %s\n", fileprefix);
+    }
+    else {
+      t8_debugf ("Error in writing cmesh vtk\n");
+    }
+    if (do_partition) {
+      t8_cmesh_t cmesh_partitioned;
+
+      t8_cmesh_init (&cmesh_partitioned);
+
+      t8_cmesh_set_derive (cmesh_partitioned, cmesh);
+      t8_cmesh_set_partition_offsets (cmesh_partitioned,
+                                      t8_cmesh_offset_random (sc_MPI_COMM_WORLD, cmesh->num_trees, 1, -1));
+      t8_cmesh_commit (cmesh_partitioned, sc_MPI_COMM_WORLD);
+      t8_debugf ("Successfully partitioned %s.\n", "cmesh");
+      t8_debugf ("cmesh has:\n\t%li local tetrahedra\n", (long) t8_cmesh_get_num_local_trees (cmesh_partitioned));
+      snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_partitioned", prefix);
+      if (!t8_cmesh_vtk_write_file (cmesh_partitioned, fileprefix)) {
+        t8_debugf ("Wrote to file %s\n", fileprefix);
+      }
+      else {
+        t8_debugf ("Error in writing cmesh vtk\n");
+      }
+      t8_cmesh_unref (&cmesh_partitioned);
+    }
     t8_cmesh_unref (&cmesh);
   }
   else {
     t8_debugf ("An error occurred while reading %s files.\n", prefix);
   }
   fflush (stdout);
-
-  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
 }
 
 int

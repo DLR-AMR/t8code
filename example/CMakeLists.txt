@@ -78,13 +78,8 @@ add_t8_example( NAME t8_test_ghost_large_level_diff     SOURCES forest/t8_test_g
 
 add_t8_example( NAME t8_example_geometries              SOURCES geometry/t8_example_geometries.cxx )
 
-add_t8_example( NAME t8_cmesh_load_save                 SOURCES IO/cmesh/t8_cmesh_load_save.cxx )
 add_t8_example( NAME t8_read_msh_file                   SOURCES IO/cmesh/gmsh/t8_read_msh_file.cxx )
 add_t8_example( NAME t8_load_and_refine_square_w_hole   SOURCES IO/cmesh/gmsh/t8_load_and_refine_square_w_hole.cxx )
-add_t8_example( NAME t8_read_tetgen                     SOURCES IO/cmesh/tetgen/t8_read_tetgen_file.cxx )
-add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/t8_time_tetgen_file.cxx )
-add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
-add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )
 
 copy_example_file (IO/cmesh/gmsh/circlesquare_hybrid_hole.msh)
 
@@ -99,3 +94,10 @@ add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_exampl
 add_t8_example( NAME t8_example_empty_trees             SOURCES remove/t8_example_empty_trees.cxx )
 
 add_t8_example( NAME t8_version                         SOURCES version/t8_version.cxx )
+
+# NOTE: The following examples are (currently) deprecated and no longer compiled.
+# add_t8_example( NAME t8_cmesh_load_save                 SOURCES IO/cmesh/t8_cmesh_load_save.cxx )
+# add_t8_example( NAME t8_read_tetgen                     SOURCES IO/cmesh/tetgen/t8_read_tetgen_file.cxx )
+# add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/t8_time_tetgen_file.cxx )
+# add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
+# add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )
