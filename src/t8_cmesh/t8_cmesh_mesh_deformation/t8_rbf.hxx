@@ -208,51 +208,7 @@ struct t8_rbf
    * This step is mandatory to later be able to interpolate the inner nodes.
    */
   void
-  solve ()
-  {
-    /** */
-    const size_t num_boundary_nodes = boundary_nodes.size ();
-    /** Check if there are any boundary nodes. */
-    if (num_boundary_nodes == 0) {
-      t8_errorf ("ERROR: Boundary nodes are not added correctly.\n.");
-      SC_ABORTF ("The current RBF instance has no boundary nodes.");
-    }
-
-    if (rbf_function->is_compactly_supported ()) {
-      /** If the RBF used is compactly supported use a sparse matrix. Then the conjugate gradient method can be used for solving the linear equation system. */
-    }
-    else {
-      /** If the RBF used is globally supported use a dense matrix. */
-    }
-
-    /** Create the matrix A for the linear system. */
-    std::vector<double> A (num_boundary_nodes * num_boundary_nodes);
-    /** Fill the matrix A with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
-    for (size_t row = 0; row < num_boundary_nodes; ++row) {
-      /** Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part of the matrix 
-       * and can mirror the values to the lower triangular part. */
-      for (size_t col = row; col < num_boundary_nodes; ++col) {
-        /** Calculate the distance between the current pair of boundary nodes. */
-        const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
-        /** Evaluate the radial basis function for the current distance. */
-        const double psi = rbf_function->evaluate (distance);
-        /** Write the value to the matrix A. */
-        A[row * num_boundary_nodes + col] = psi;
-        /** Mirror the value to the lower triangular part of the matrix if it's not on the diagonal. */
-        if (col != row) {
-          A[col * num_boundary_nodes + row] = psi;
-        }
-      }
-    }
-
-    /** Create the right-hand side vector for the linear system. It contains the displacements of the boundary nodes. */
-    std::vector<double> displacements (num_boundary_nodes * 3);
-    for (size_t i = 0; i < num_boundary_nodes; ++i) {
-      displacements[3 * i + 0] = boundary_nodes[i].displacement[0];
-      displacements[3 * i + 1] = boundary_nodes[i].displacement[1];
-      displacements[3 * i + 2] = boundary_nodes[i].displacement[2];
-    }
-  }
+  solve ();
 
   /**
    * Interpolates the inner node.

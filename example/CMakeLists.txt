@@ -93,6 +93,12 @@ if(T8CODE_ENABLE_VTK)
     add_t8_example( NAME t8_cmesh_read_from_vtk             SOURCES IO/cmesh/vtk/t8_cmesh_read_from_vtk.cxx )
 endif()
 
+if (T8CODE_ENABLE_EIGEN)
+    add_t8_example( NAME t8_rbf_test  SOURCES cmesh/t8_rbf.cxx )
+    
+    target_link_libraries( t8_rbf_test PRIVATE Eigen3::Eigen )
+endif ()
+
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )
 
 add_t8_example( NAME t8_example_spheres                 SOURCES remove/t8_example_spheres.cxx )
