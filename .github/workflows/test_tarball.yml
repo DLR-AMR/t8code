@@ -62,10 +62,6 @@ jobs:
         fetch-tags: true # required to get version tags
         fetch-depth: 0    # required to get all history, especially the version tags
     # Start building tarball
-    - name: Install pandoc
-      uses: nikeee/setup-pandoc@v1
-    - name: Test pandoc
-      run: pandoc --version
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
     - name: init submodules
