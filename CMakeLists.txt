@@ -110,22 +110,20 @@ if( T8CODE_ENABLE_MPI )
     else()
       find_package( MPI 3.0 COMPONENTS C REQUIRED )
     endif()
-    set (gtest_disable_mpi OFF CACHE BOOL "disable gtest mpi support" FORCE)
+    set (gtest_disable_mpi OFF CACHE INTERNAL "disable gtest mpi support" FORCE)
 
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
-    set( SC_ENABLE_MPI ON CACHE BOOL "enable mpi support in libsc" FORCE)
+    set( SC_ENABLE_MPI ON CACHE INTERNAL "enable mpi support in libsc" FORCE)
 else()
-    set( gtest_disable_mpi ON CACHE BOOL "disable gtest mpi support" FORCE)
+    set( gtest_disable_mpi ON CACHE INTERNAL "disable gtest mpi support" FORCE)
 endif()
 
 ############################################ ThirdParty ############################################
 
 # Set some variables for the thirdparty libraries
-mark_as_advanced( FORCE gtest_disable_mpi)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-mark_as_advanced( FORCE gtest_force_shared_crt)
+set(gtest_force_shared_crt ON CACHE INTERNAL "" FORCE)
 set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
 set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
 set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
