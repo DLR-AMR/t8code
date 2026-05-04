@@ -66,7 +66,6 @@ foreach(INDEX RANGE ${DEPS_RANGE})
             ${DEP_NAME}
             GIT_REPOSITORY ${DEP_URL}
             GIT_TAG        ${DEP_REF}
-            GIT_PROGRESS   TRUE
             GIT_SHALLOW    ${DEP_SHALLOW}
         )
     else()
