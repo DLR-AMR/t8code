@@ -31,6 +31,7 @@
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <mesh_handle/mesh_io.hxx>
+#include <mesh_handle/concepts.hxx>
 #include <t8_types/t8_vec.hxx>
 #include <memory>
 #include <span>
@@ -61,7 +62,7 @@ struct user_data
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 int
 adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typename TMeshClass::element_class> elements,
                 const user_data &user_data)
@@ -85,7 +86,7 @@ adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typenam
  * \param [in] level Initial refinement level.
  * \return Unique pointer to the mesh created.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 std::unique_ptr<TMeshClass>
 build_mesh (sc_MPI_Comm comm, int level)
 {
@@ -109,7 +110,7 @@ build_mesh (sc_MPI_Comm comm, int level)
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh  The mesh handle.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 void
 set_element_data_mesh (TMeshClass &mesh)
 {
@@ -122,7 +123,7 @@ set_element_data_mesh (TMeshClass &mesh)
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh  The mesh handle.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 void
 exchange_ghost_data_mesh (TMeshClass &mesh)
 {
@@ -140,7 +141,7 @@ exchange_ghost_data_mesh (TMeshClass &mesh)
  * \param [in] fileprefix The prefix of the files where the vtk will be stored.
  *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 static void
 output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
 {

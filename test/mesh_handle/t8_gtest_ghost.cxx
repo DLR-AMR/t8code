@@ -135,14 +135,13 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
       EXPECT_EQ (mesh_iterator->get_num_faces (), num_faces);
       for (int iface = 0; iface < num_faces; iface++) {
         // --- Get neighbors from forest. ---
-        t8_element_t** neighbors;
+        const t8_element_t** neighbors;
         int num_neighbors;
-        const int forest_is_balanced = t8_forest_is_balanced (forest);
         t8_eclass_t neigh_eclass;
         int* dual_faces;
         t8_locidx_t* neigh_ids;
         t8_forest_leaf_face_neighbors (forest, itree, elem, &neighbors, iface, &dual_faces, &num_neighbors, &neigh_ids,
-                                       &neigh_eclass, forest_is_balanced);
+                                       &neigh_eclass);
         // --- Get neighbors from mesh element. ---
         std::vector<int> dual_faces_handle;
         auto neighbors_handle = mesh_iterator->get_face_neighbors (iface, dual_faces_handle);
@@ -158,7 +157,6 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
         }
         // Free memory.
         if (num_neighbors > 0) {
-          scheme->element_destroy (neigh_eclass, num_neighbors, neighbors);
           T8_FREE (neigh_ids);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
@@ -196,8 +194,8 @@ TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
   using element_class = typename mesh_class::element_class;
-  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD,
-                                                                                  true, true, false);
+  const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
+    eclass, level, sc_MPI_COMM_WORLD, true, true, false);
   EXPECT_TRUE (element_class::has_face_neighbor_cache ());
 
   if (mesh->get_num_local_elements () == 0) {
@@ -206,18 +204,18 @@ TEST_P (t8_mesh_ghost_test, cache_neighbors)
   const std::vector<const element_class*> unrealistic_neighbors
     = { &((*mesh)[0]), &((*mesh)[mesh->get_num_local_elements () - 1]) };
   const std::vector<int> unrealistic_dual_faces = { 100, 1012000 };
-  for (auto it = mesh->cbegin (); it != mesh->cend (); ++it) {
+  for (const auto& elem : *mesh) {
     // Check that cache is empty at the beginning.
-    EXPECT_FALSE (it->neighbor_cache_filled_any ());
-    it->fill_face_neighbor_cache ();
-    for (int iface = 0; iface < it->get_num_faces (); iface++) {
-      EXPECT_TRUE (it->neighbor_cache_filled (iface));
+    EXPECT_FALSE (elem.neighbor_cache_filled_any ());
+    elem.fill_face_neighbor_cache ();
+    for (int iface = 0; iface < elem.get_num_faces (); iface++) {
+      EXPECT_TRUE (elem.neighbor_cache_filled (iface));
       std::vector<int> dual_faces;
-      auto neighbors = it->get_face_neighbors (iface, dual_faces);
+      auto neighbors = elem.get_face_neighbors (iface, dual_faces);
       // Overwrite cache with unrealistic values.
-      it->overwrite_cache (iface, unrealistic_neighbors, unrealistic_dual_faces);
-      EXPECT_TRUE (it->neighbor_cache_filled (iface));
-      neighbors = it->get_face_neighbors (iface, dual_faces);
+      elem.overwrite_cache (iface, unrealistic_neighbors, unrealistic_dual_faces);
+      EXPECT_TRUE (elem.neighbor_cache_filled (iface));
+      neighbors = elem.get_face_neighbors (iface, dual_faces);
       // --- Compare results. ---
       EXPECT_EQ (neighbors, unrealistic_neighbors);
       EXPECT_EQ (dual_faces, unrealistic_dual_faces);
