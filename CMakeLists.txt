@@ -159,18 +159,22 @@ get_cmake_property(_vars_before_thirdparty VARIABLES )
 # Populate the thirdparty libraries
 include (cmake/thirdparty.cmake)
 
-# Capture the list of variables after adding the thirdparty libraries
-get_cmake_property(_vars_after_thirdparty VARIABLES )
-# Compute the difference (new variables added by the libraries)
-set( _new_thirdparty_vars)
-foreach( _var IN LISTS _vars_after_thirdparty )
-    if( NOT _var IN_LIST _vars_before_thirdparty )
-            list( APPEND _new_thirdparty_vars ${_var} )
+# Capture the list of variables after adding thirdparty libraries
+get_cmake_property(_vars_after_thirdparty VARIABLES)
+
+# Find variables that exist after but not before
+set(_new_thirdparty_vars)
+foreach(_var IN LISTS _vars_after_thirdparty)
+    list(FIND _vars_before_thirdparty "${_var}" _index)
+    if(_index EQUAL -1)
+        list(APPEND _new_thirdparty_vars ${_var})
     endif()
 endforeach()
 
 # Mark the new variables as advanced
-mark_as_advanced( FORCE ${_new_thirdparty_vars} )
+if(_new_thirdparty_vars)
+    mark_as_advanced(FORCE ${_new_thirdparty_vars})
+endif()
 
 # Reactivate previous CMAKE_REQUIRED_FLAGS and CMAKE_C/CXX_FLAGS
 set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
