@@ -76,10 +76,10 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* Initialize the sc library, has to happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_PRODUCTION);
 
-  /* Initialize t8code with log level SC_LP_ESSENTIAL. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_ESSENTIAL);
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
+  t8_init (SC_LP_PRODUCTION);
 
   int helpme = 0;
   const char *msh_file = NULL;
@@ -101,8 +101,8 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (msh_file == NULL || brep_file == NULL || dim == 0) {
-    t8_global_errorf ("ERROR: Missing required arguments: -m, -b, and -d are mandatory.\n\n");
+  else if (msh_file == NULL || brep_file == NULL || dim == 0 || parsed < 0) {
+    t8_global_errorf ("\n\t ERROR: Wrong usage\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (dim < 1 || dim > 3) {

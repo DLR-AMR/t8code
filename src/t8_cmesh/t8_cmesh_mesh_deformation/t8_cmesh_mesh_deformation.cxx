@@ -61,7 +61,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
       t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree_id);
-      SC_ABORTF ("Geometry attribute is missing.");
+      SC_ABORTF ("Geometry attribute is missing.\n");
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
@@ -98,7 +98,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
         t8_errorf ("Error: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
-        SC_ABORT ("(u,v)-parameters are missing.");
+        SC_ABORT ("(u,v)-parameters are missing.\n");
       }
       /* Get the (u,v)-parameter of the vertex. */
       const double *uv_parameter = &uv_attribute[2 * local_corner_index];
@@ -110,7 +110,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Check if the coordinates are available. */
       if (old_coords == nullptr) {
         t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
-        SC_ABORTF ("Vertex coordinates are missing.");
+        SC_ABORTF ("Vertex coordinates are missing.\n");
       }
 
       gp_Pnt new_coords;
