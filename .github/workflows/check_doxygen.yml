@@ -34,7 +34,7 @@ on:
 jobs:
   check_documentation:
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu-gcc:t8-dependencies
+    container: dlramr/t8code-dependencies:t8-dependencies-ubuntu-gcc
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@v6
