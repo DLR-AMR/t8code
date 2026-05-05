@@ -58,8 +58,10 @@ do
     status=$?
     if test $status -ne 0
     then
-      echo "File $file is not indented."
+      echo "ERROR: File $file is not indented."
       notallindented=1
+    else
+      echo "File $file is indented."
     fi
   fi
 done
