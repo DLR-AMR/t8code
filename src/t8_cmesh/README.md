@@ -6,7 +6,7 @@ It is usually created from an input mesh, either from a mesh generator or by han
 See also our Wiki tutorials [Creating a coarse mesh](https://github.com/DLR-AMR/t8code/wiki/Step-1---Creating-a-coarse-mesh)
 and [Building a Cmesh by hand](https://github.com/DLR-AMR/t8code/wiki/Building-a-Cmesh-by-hand).
 
-Your entry point should be [t8_cmesh.h](https://github.com/DLR-AMR/t8code/blob/18e8af64286bef9370042a8c4d7885d279d2b933/src/t8_cmesh.h) which is the main cmesh interface.
+Your entry point to familiarize yourself with the code should be [t8_cmesh.h](https://github.com/DLR-AMR/t8code/blob/18e8af64286bef9370042a8c4d7885d279d2b933/src/t8_cmesh.h) which is the main cmesh interface.
 
 An incomplete list of the source files in this folder:
 

@@ -6,23 +6,23 @@ Here is an overview over the different modules:
 
 ### [src](https://github.com/DLR-AMR/t8code/tree/main/src)
 
-The main source folder, it holds main header files like [t8.h](https://github.com/DLR-AMR/t8code/blob/main/src/t8.h), [t8_cmesh.hxx](https://github.com/DLR-AMR/t8code/blob/main/src/t8_cmesh.hxx) and more.
+The main source folder. It holds main header files like [t8.h](https://github.com/DLR-AMR/t8code/blob/main/src/t8.h), [t8_cmesh.hxx](https://github.com/DLR-AMR/t8code/blob/main/src/t8_cmesh.hxx) and more.
 
 #### [src/t8_cmesh](https://github.com/DLR-AMR/t8code/tree/main/src/t8_cmesh)
 
 Contains implementation details of algorithms and data structures related to the coarse mesh.
-See [cmesh README](t8_cmesh/README.md) and the tutorial about coarse meshes: [Creating a coarse mesh](https://github.com/DLR-AMR/t8code/wiki/Step-1---Creating-a-coarse-mesh)
+See [cmesh README](t8_cmesh/README.md) and the tutorials about coarse meshes: [Creating a coarse mesh](https://github.com/DLR-AMR/t8code/wiki/Step-1---Creating-a-coarse-mesh)
 and [Building a Cmesh by hand](https://github.com/DLR-AMR/t8code/wiki/Building-a-Cmesh-by-hand).
 
 #### [src/t8_data](https://github.com/DLR-AMR/t8code/tree/feature-folder_README/src/t8_data)
 
 Contains data handling classes and algorithms related to data containers, including arrays to handle element data.
-See [data README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_data/README)
+See [data README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_data/README).
 
 #### [src/t8_forest](https://github.com/DLR-AMR/t8code/tree/main/src/t8_forest)
 
 Contains implementation details of algorithms and data structures related to the forest, i.e. the actual computational mesh.
-See [forest README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_forest/README) and the tutorials, [Step 2](https://github.com/DLR-AMR/t8code/wiki/Step-2---Creating-a-uniform-forest), [Step 3](https://github.com/DLR-AMR/t8code/wiki/Step-3---Adapting-a-forest), [Step 4](https://github.com/DLR-AMR/t8code/wiki/Step-3---Adapting-a-forest).
+See [forest README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_forest/README) and the tutorials, [Step 2](https://github.com/DLR-AMR/t8code/wiki/Step-2---Creating-a-uniform-forest), [Step 3](https://github.com/DLR-AMR/t8code/wiki/Step-3---Adapting-a-forest), [Step 4](https://github.com/DLR-AMR/t8code/wiki/Step-4---Partition,-Balance,-Ghost).
 
 #### [src/t8_geometry](https://github.com/DLR-AMR/t8code/tree/main/src/t8_geometry)
 
@@ -37,8 +37,8 @@ See [scheme README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_schemes/R
 
 #### [src/t8_types](https://github.com/DLR-AMR/t8code/tree/main/src/t8_types)
 
-Custom data types and strong types. Also contains t8_vec vector implementation.
-See [types README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_schemes/README).
+Custom data types and strong types. Also contains `t8_vec` vector implementation.
+See [types README](https://github.com/DLR-AMR/t8code/tree/main/src/t8_types/README).
 
 #### [src/t8_vector_helper](https://github.com/DLR-AMR/t8code/tree/main/src/t8_vector_helper)
 
