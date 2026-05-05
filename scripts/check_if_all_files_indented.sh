@@ -43,18 +43,27 @@ then
 fi
 
 # Find all files with the appropriate suffix.
-# Excluding the sc/ and p4est/ subfolders.
-files=`./internal/find_all_source_files.sh`
+files=$(./internal/find_all_source_files.sh) || {
+  echo "ERROR: failed to find source files."
+  exit 1
+}
+
+if [ -z "$files" ]; then
+  echo "ERROR: no source files found."
+  exit 1
+fi
 
 notallindented=0
+file_found=0
 for file in $files
 do
   # Find also gives us directories,
   # so we ensure that $file is a proper
   # file before checking for indentation.
-  if [ -f $file ]
+  if [ -f "$file" ]
   then
-    ./check_if_file_indented.sh $file > /dev/null 2>&1
+    file_found=1
+    ./check_if_file_indented.sh "$file" > /dev/null 2>&1
     status=$?
     if test $status -ne 0
     then
@@ -66,9 +75,16 @@ do
   fi
 done
 
+if test $file_found -eq 0
+then
+  echo Error: Could not find any files.
+  exit 1
+fi
+
 if test $notallindented -eq 0
 then
   echo All files are indented.
+  exit 0
 fi
 
-exit $notallindented
+exit 1
