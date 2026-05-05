@@ -22,7 +22,7 @@ name: t8code indentation check
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #
-# This github CI script checks whether all code files in the t8code 
+# This github CI script checks whether all code files in the t8code
 # repository are indented according to the indentation conventions.
 # It is triggered for pull requests into main and develop and will also run once a day
 # on main.
@@ -47,9 +47,7 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-tags: true # required to get version tags
-        fetch-depth: 0    # required to get all history, especially the version tags      
-    - name: Install indent
-      run: pip install clang-format==17.0.1
+        fetch-depth: 0    # required to get all history, especially the version tags
     - name: Indentation check
       run: cd scripts/ && ./check_if_all_files_indented.sh &> >(tee -a indent_script_output.txt)
     - name: Archive script output
@@ -60,4 +58,4 @@ jobs:
       with:
         name: t8code indentation report
         path: scripts/indent_script_output.txt
-        
+

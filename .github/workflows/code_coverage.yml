@@ -51,7 +51,7 @@ jobs:
   generate-codecov:
     timeout-minutes: 20
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: dlramr/t8code-ubuntu-gcc:t8-dependencies
     steps:
 #
 # Setup
@@ -76,9 +76,6 @@ jobs:
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
-    ## Install lcov.
-    - name: Install lcov
-      run: sudo apt-get install -y lcov
     - name: Print lcov version
       run: lcov --version
 #

@@ -52,7 +52,7 @@ env:
 jobs:
   cmake_preparation:
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: dlramr/t8code-ubuntu-gcc:t8-dependencies
     timeout-minutes: 10
     outputs:
       USED_CACHE: ${{ steps.used_cache.outputs.USED_CACHE }}

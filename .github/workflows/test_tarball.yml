@@ -51,7 +51,7 @@ jobs:
   build_tarball:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: dlramr/t8code-ubuntu-gcc:t8-dependencies
     timeout-minutes: 5
     steps:
 #
@@ -98,7 +98,7 @@ jobs:
   test_tarball:
     needs: build_tarball
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: dlramr/t8code-ubuntu-gcc:t8-dependencies
     timeout-minutes: 15
     steps:
     - name: Download tarball
