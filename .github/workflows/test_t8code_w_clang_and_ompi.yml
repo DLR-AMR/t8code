@@ -61,7 +61,7 @@ jobs:
   #                  Clang version of OpenMPI.
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-clang-dependencies
+    container: dlramr/t8code-ubuntu-clang:t8-dependencies
     steps:
   #
   # Part 1: Preparation and sanity checks
