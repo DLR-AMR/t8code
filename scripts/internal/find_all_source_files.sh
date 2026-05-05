@@ -58,8 +58,19 @@ else
     fi
 fi
 
+
 # Find all files with the appropriate suffix in the
 # src/, example/, test/, tutorials/, benchmark/, /api and /mesh_handle subfolders.
-files=`$FIND ../src ../example ../test ../tutorials ../benchmarks ../api ../mesh_handle -regextype egrep -iregex ".*\.($suffixes)"`
+repo_main_dir=`git rev-parse --show-toplevel`
+folders="\
+$repo_main_dir/src \
+$repo_main_dir/example \
+$repo_main_dir/test \
+$repo_main_dir/tutorials \
+$repo_main_dir/benchmarks \
+$repo_main_dir/api \
+$repo_main_dir/mesh_handle"
+
+files=`$FIND $folders -regextype egrep -iregex ".*\.($suffixes)"`
 
 echo $files
