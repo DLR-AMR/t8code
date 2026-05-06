@@ -15,17 +15,17 @@ This folder contains the following sub-directories:
 #### [src/t8_cmesh/t8_cmesh_internal](t8_cmesh_internal)
 
 Contains cmesh functionality intended for internal use within t8code only.
-See [cmesh internal README](t8_cmesh_internal/README).
+See [cmesh internal README](t8_cmesh_internal/README.md).
 
 #### [src/t8_cmesh/t8_cmesh_io](t8_cmesh_io)
 
 Contains functionality for input and output of cmeshes, in particular for reading `.msh` files (usually from the Gmsh mesh generator).
-See [cmesh IO README](t8_cmesh_io/README).
+See [cmesh IO README](t8_cmesh_io/README.md).
 
 #### [src/t8_cmesh/t8_cmesh_vertex_connectivity](t8_cmesh_vertex_connectivity)
 
 Contains functionality for handling the vertex connectivity of a cmesh.
-See [cmesh vertex connectivity README](t8_cmesh_vertex_connectivity/README).
+See [cmesh vertex connectivity README](t8_cmesh_vertex_connectivity/README.md).
 
 
 An incomplete list of the source files in this folder:
