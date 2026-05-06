@@ -395,7 +395,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_locidx_t el_offset;
   t8_tree_t tree;
   t8_tree_t tree_from;
-  sc_list_t *refine_list = NULL; /* This is only needed when we adapt recursively */
+  sc_list_t *refine_list = nullptr; /* This is only needed when we adapt recursively */
   int num_children;
   int num_siblings;
   int curr_size_elements_from;
@@ -411,7 +411,7 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_adapt_recursive != -1);
 
   /* if profiling is enabled, measure runtime */
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     forest->profile->adapt_runtime = -sc_MPI_Wtime ();
     /* DO NOT DELETE THE FOLLOWING line.
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
@@ -431,7 +431,7 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
 
   if (forest->set_adapt_recursive) {
-    refine_list = sc_list_new (NULL);
+    refine_list = sc_list_new (nullptr);
   }
   forest->local_num_leaf_elements = 0;
   el_offset = 0;
@@ -665,7 +665,8 @@ t8_forest_adapt (t8_forest_t forest)
   if (!forest_from->incomplete_trees) {
     T8_ASSERT (element_removed == 1 || element_removed == 0);
     int incomplete_trees;
-    int mpiret = sc_MPI_Allreduce (&element_removed, &incomplete_trees, 1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
+    int const mpiret
+      = sc_MPI_Allreduce (&element_removed, &incomplete_trees, 1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (incomplete_trees == 1 || incomplete_trees == 0);
     forest->incomplete_trees = incomplete_trees;
@@ -679,7 +680,7 @@ t8_forest_adapt (t8_forest_t forest)
                          (long long) forest->global_num_leaf_elements);
 
   /* if profiling is enabled, measure runtime */
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     forest->profile->adapt_runtime += sc_MPI_Wtime ();
     /* DO NOT DELETE THE FOLLOWING line.
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the

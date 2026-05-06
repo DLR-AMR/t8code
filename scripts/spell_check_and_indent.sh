@@ -45,7 +45,7 @@ then
   echo
   echo "Changed files according to git diff:"
   changed_files=``
-  for file in `(cd $repo_main_dir && git diff --name-only)`
+  for file in `(cd $repo_main_dir && git diff HEAD --name-only)`
   do
     # only check existing files, this is necessary since if we rename or delete
     # a file it is added to the committed files and we thus would try to indent a

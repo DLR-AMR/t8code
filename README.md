@@ -186,11 +186,11 @@ to install the package on your system.
 
   [K] **Hanging node resolution 3D**:
   Tabea Leistikow (2024) *Derivation and implementation of a hanging nodes resolution scheme for hexahedral non-conforming meshes in t8code*. Master's thesis, Universität zu Köln.
-  Full text currently not available.
+  [Full text available](https://elib.dlr.de/204843/)
 
   ### Citing t8code
   
-  If you use t8code in any of your publications, please cite the [github repository](https://doi.org/10.5281/zenodo.7034838), [1] and [2]. For publications specifically related to 
+  If you use t8code in any of your publications, please cite the GitHub repository via the [Zenodo DOI](https://doi.org/10.5281/zenodo.7034838), as well as [1] and [2]. For publications specifically related to 
 - **the tetrahedral index**, please cite [3].
 - **coarse mesh partitioning**, please cite [4].
 - **construction and handling of the ghost layer**, please cite [5].

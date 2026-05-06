@@ -96,7 +96,7 @@ if( T8CODE_ENABLE_OCC )
     target_link_libraries( T8 PUBLIC ${OpenCASCADE_LIBRARIES} )
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
-      t8_cad/t8_cad.cxx
+      t8_cad/t8_cad_handle.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
@@ -104,7 +104,7 @@ if( T8CODE_ENABLE_OCC )
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_geometry/t8_geometry_implementations
     )
     install( FILES
-      t8_cad/t8_cad.hxx
+      t8_cad/t8_cad_handle.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cad
     )
 endif()
@@ -151,8 +151,8 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx
     t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_save.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.cxx
+    t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.cxx
+    t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_triangle.cxx
     t8_data/t8_shmem.c
     t8_data/t8_containers.cxx
     t8_eclass/t8_eclass.c
@@ -239,7 +239,7 @@ install( FILES
 # See https://gitlab.kitware.com/cmake/cmake/-/issues/19189
 
 install( DIRECTORY t8_helper_functions 
-  DESTINATION PRIVATE_HEADER 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
   FILES_MATCHING 
     PATTERN "*.h" 
     PATTERN "*.hxx" 
