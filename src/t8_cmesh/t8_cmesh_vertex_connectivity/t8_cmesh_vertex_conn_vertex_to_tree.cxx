@@ -26,8 +26,8 @@
 
 #include <algorithm>
 #include <memory>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 
 /* Builds vertex_to_tree with existing tree_to_vertex list. */
@@ -95,7 +95,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::add_vertex_to_tree ([[maybe_unused]] const 
     SC_ABORTF ("%s:%i: Trying to add vertex to committed vertex to tree structure.\n", __FILE__, __LINE__);
   }
 
-  tree_vertex_pair pair (ltreeid, tree_vertex);
+  tree_vertex_pair const pair (ltreeid, tree_vertex);
   tree_vertex_list& list_of_globalid = vertex_to_tree[global_vertex_id];
 
   list_of_globalid.push_back (pair);
@@ -189,7 +189,7 @@ t8_cmesh_vertex_conn_vertex_to_tree::contains_all_vertices (const t8_cmesh_t cme
   }
 
   /* Now all entries must be set to 0 */
-  for (int& entry : vertex_counts) {
+  for (int const& entry : vertex_counts) {
     if (entry != 0) {
       return 0;
     }

@@ -59,7 +59,8 @@
  * Note, this test runs only on one rank.
  */
 
-class forest_permute: public testing::TestWithParam<t8_eclass_t> {
+struct forest_permute: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override

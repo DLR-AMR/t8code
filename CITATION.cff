@@ -4,7 +4,7 @@ date-released: "2024-12-10"
 repository-code: "https://github.com/dlr-amr/t8code"
 url: "https://dlr-amr.github.io/t8code/"
 doi: "10.5281/zenodo.7034838"
-license: GPL-2.0
+license: GPL-2.0-or-later
 type: software
 authors:
   #Authors
@@ -71,6 +71,16 @@ authors:
     email: "Ole.Albers@dlr.de"
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0009-0001-5102-151X"
+  - given-names: Lena
+    family-names: Ploetzke
+    email: lena.ploetzke@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0003-0440-1429"
+  - given-names: Thomas
+    family-names: Spenke
+    email: thomas.spenke@dlr.de
+    affiliation: "German Aerospace Center (DLR)"
+    orcid: "https://orcid.org/0000-0002-0856-8763"
   #Contributors
   - given-names: Veli
     family-names: Uenlue
@@ -90,9 +100,9 @@ authors:
     family-names: Csati
     email: csati@cerfacs.fr
     affiliation: CERFACS
-  - given-names: Alexandra
+  - given-names: Alexandre
     family-names: Dutka
-    email: adutkat@cerfacs.fr
+    email: adutka@cerfacs.fr
     affiliation: CERFACS
   - given-names: Benedict
     family-names: Geihe

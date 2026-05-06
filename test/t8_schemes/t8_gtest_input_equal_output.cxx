@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
@@ -31,7 +31,9 @@
 /* The mainly tested function in this test is element_get_children_at_face. The function allows that the input elem is equal children[0] (output).
 Therefore the test checks if this is true and the input is not overridden in the loop or is overridden in the last iteration.
 This is tested by comparing the output of two cases. In the first case the condition is not true in the second case elem is equal children[0]. */
-class class_test_equal: public TestDFS {
+struct class_test_equal: public TestDFS
+{
+ private:
   void
   check_element () override
   {

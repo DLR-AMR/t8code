@@ -31,11 +31,11 @@
 
 #define MAX_NUM_RANKS 8
 
-/* In this test, a partitioned forest with one global tree and at 
- * least so many elements, such that each process has at least one 
+/* In this test, a partitioned forest with one global tree and at
+ * least so many elements, such that each process has at least one
  * local element is given. Let x be the number of mpi ranks.
  * There are 2^x many ways to empty these x local trees.
- * 
+ *
  * Example:
  * x = 3
  * instances - binary representation
@@ -43,20 +43,21 @@
  *      1    -  0 1
  *      2    -  1 0
  *      3    -  1 1
- * We remove all elements from rank with id i if the i`th bit 
+ * We remove all elements from rank with id i if the i`th bit
  * in the current instances is 0.
- * 
+ *
  * Note, this test runs only on two to maxmal 8 ranks.
- * 
- * We adapt the given forest twice. 
- * The first time, we partition the forest in the same call. 
+ *
+ * We adapt the given forest twice.
+ * The first time, we partition the forest in the same call.
  * The second time, we do the adapting and partitioning separately.
  * The two resulting forests must be equal.
  */
 
 /** This test covers the functionality described in Issue: https://github.com/DLR-AMR/t8code/issues/1137
  * Remove `DISABLED_` from the name of the Test(suite) or use `--gtest_also_run_disabled_tests` when you start working on the issue. */
-class DISABLED_local_tree: public testing::TestWithParam<t8_eclass_t> {
+struct DISABLED_local_tree: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override
@@ -82,7 +83,7 @@ class DISABLED_local_tree: public testing::TestWithParam<t8_eclass_t> {
   t8_forest_t forest;
 };
 
-/** This structure contains a bitset with all 
+/** This structure contains a bitset with all
  * local trees on all processes to be removed.
  */
 struct t8_trees_to_remove
@@ -90,7 +91,7 @@ struct t8_trees_to_remove
   std::bitset<MAX_NUM_RANKS> remove;
 };
 
-/** Remove every element of rank i if the i`th bit in 
+/** Remove every element of rank i if the i`th bit in
  * the current instance \a remove is 0. */
 static int
 t8_adapt_remove (t8_forest_t forest, t8_forest_t forest_from, [[maybe_unused]] t8_locidx_t which_tree,

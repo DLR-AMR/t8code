@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <test/t8_cmesh_generator/t8_cmesh_example_sets.hxx>
 
@@ -31,8 +31,8 @@
  * We iterate over all cmeshes and for each case we
  * construct two global id lists.
  * 1. A single global vertex that maps to all local vertices.
- * 2. Multiple global vertices in a non geometric/semi-random pattern. 
- * 
+ * 2. Multiple global vertices in a non geometric/semi-random pattern.
+ *
  * We add the information to the list and then check whether
  * this information is maintained with the getter functions. */
 
@@ -57,7 +57,8 @@ t8_compute_global_vertex_hash (t8_locidx_t itree, t8_locidx_t ivertex, t8_locidx
   return (itree * ivertex) % (num_local_trees + 1);
 }
 
-class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example_base *> {
+struct t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override
@@ -67,8 +68,8 @@ class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example
     const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
     const t8_locidx_t num_ghost_trees = t8_cmesh_get_num_ghosts (cmesh);
 
-    t8_debugf ("Starting test with cmesh of dim %i and %li global, %i local trees.\n", cmesh->dimension,
-               t8_cmesh_get_num_trees (cmesh), num_local_trees);
+    t8_debugf ("Starting test with cmesh of dim %i and %" T8_GLOIDX_FORMAT " global, %i local trees.\n",
+               cmesh->dimension, t8_cmesh_get_num_trees (cmesh), num_local_trees);
 
     /* look over all local trees */
     for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; ++itree) {
@@ -77,7 +78,7 @@ class t8_test_cmesh_vertex_conn_vtt: public testing::TestWithParam<cmesh_example
       /* loop over all vertices of this tree */
       for (int ivertex = 0; ivertex < num_tree_vertices; ++ivertex) {
         /* Set global id of this tree and this vertex to 1 */
-        t8_debugf ("Adding vertex %li to tree %i v %i\n", global_vertex_id, itree, ivertex);
+        t8_debugf ("Adding vertex %" T8_GLOIDX_FORMAT " to tree %i v %i\n", global_vertex_id, itree, ivertex);
         vtt_all_to_one.add_vertex_to_tree (cmesh, global_vertex_id, itree, ivertex);
         /* We assign a arbitrary but computable global id to this vertex.
          * We compute the id to be (tree_index * vertex_index) mod num_local_trees + 1 */
@@ -160,8 +161,8 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, check_all_to_one)
 /* Check stored global ids for the case with multiple global ids. */
 TEST_P (t8_test_cmesh_vertex_conn_vtt, check_multiple_ids)
 {
-  /* We need to check that each local tree/ghost and each vertex 
-   * exists exactly once in the list. 
+  /* We need to check that each local tree/ghost and each vertex
+   * exists exactly once in the list.
    * We do so by setting up an indicator array storing the
    * number of vertices for each tree and count down for each occurrence.
    * At the end the values must be zero. */
@@ -209,7 +210,7 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, check_multiple_ids)
   }
 }
 
-/* TODO: Enable this test as soon as we can add attribute to 
+/* TODO: Enable this test as soon as we can add attribute to
  *       derived cmeshes. */
 /* Check stored global ids for the case with multiple global ids. */
 TEST_P (t8_test_cmesh_vertex_conn_vtt, DISABLED_convert_to_ttv_and_back)
@@ -218,7 +219,7 @@ TEST_P (t8_test_cmesh_vertex_conn_vtt, DISABLED_convert_to_ttv_and_back)
   t8_cmesh_init (&derived_cmesh_A);
   t8_cmesh_init (&derived_cmesh_B);
   /* The original cmesh must survive this test to be destroyed during TearDown and
-   * to be used in other tests. 
+   * to be used in other tests.
    * Hence we need to ref it twice, once for each new cmesh. */
   t8_cmesh_ref (cmesh);
   t8_cmesh_ref (cmesh);

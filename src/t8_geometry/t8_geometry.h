@@ -29,7 +29,7 @@
 #define T8_GEOMETRY_H
 
 #include <t8.h>
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 
 /** This enumeration contains all possible geometries. */
 typedef enum t8_geometry_type {
@@ -68,7 +68,7 @@ typedef struct t8_geometry_handler t8_geometry_handler_c;
 
 /* The t8_geometry_c type must be know to cmesh.h, thus we
  * include it after the typedef. */
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 
 T8_EXTERN_C_BEGIN ();
 

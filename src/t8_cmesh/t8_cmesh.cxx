@@ -21,27 +21,27 @@
 */
 
 #include <sc_statistics.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_refcount.h>
+#include <t8_helper_functions/t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_types/t8_vec.h>
-#include <t8_eclass.h>
-#include "t8_cmesh_types.h"
-#include <t8_vector_helper/t8_vector_algorithms.hxx>
-#include <t8_cmesh.hxx>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_helper_functions/t8_vector_algorithms.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #if T8_ENABLE_METIS
 #include <metis.h>
 
 #endif
-#include "t8_cmesh_trees.h"
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 
 /** \file t8_cmesh.cxx
  *  This file collects all general cmesh routines that need c++ compilation.
@@ -50,7 +50,7 @@
 int
 t8_cmesh_is_initialized (t8_cmesh_t cmesh)
 {
-  if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) && !cmesh->committed)) {
+  if (!(cmesh != nullptr && t8_refcount_is_active (&cmesh->rc) && !cmesh->committed)) {
     return 0;
   }
 
@@ -107,7 +107,7 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
   if (!is_checking) {
     is_checking = 1;
 
-    if (!(cmesh != NULL && t8_refcount_is_active (&cmesh->rc) && cmesh->committed)) {
+    if (!(cmesh != nullptr && t8_refcount_is_active (&cmesh->rc) && cmesh->committed)) {
       is_checking = 0;
       return 0;
     }
@@ -128,9 +128,17 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
   return 1;
 }
 
+void
+t8_cmesh_disable_negative_volume_check ([[maybe_unused]] t8_cmesh_t cmesh)
+{
+#if T8_ENABLE_DEBUG
+  cmesh->negative_volume_check = 0;
+#endif
+}
+
 #if T8_ENABLE_DEBUG
 int
-t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
+t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume)
 {
   /* After a cmesh is committed, check whether all trees in a cmesh are compatible
  * with their geometry and if they have positive volume.
@@ -146,6 +154,7 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
     return true;
   }
   if (cmesh->geometry_handler->get_num_geometries () > 0) {
+    bool is_valid = true;
     /* Iterate over all trees, get their vertices and check the volume */
     for (t8_locidx_t itree = 0; itree < cmesh->num_local_trees; itree++) {
       /* Check if tree and geometry are compatible. */
@@ -153,18 +162,19 @@ t8_cmesh_validate_geometry (const t8_cmesh_t cmesh)
         = cmesh->geometry_handler->tree_compatible_with_geom (cmesh, t8_cmesh_get_global_id (cmesh, itree));
       if (!geometry_compatible) {
         t8_debugf ("Detected incompatible geometry for tree %li\n", (long) itree);
-        return false;
+        is_valid = false;
       }
-      if (geometry_compatible) {
+      else if (check_for_negative_volume) {
         /* Check for negative volume. This only makes sense if the geometry is valid for the tree. */
         const int negative_volume
           = cmesh->geometry_handler->tree_negative_volume (cmesh, t8_cmesh_get_global_id (cmesh, itree));
         if (negative_volume) {
           t8_debugf ("Detected negative volume in tree %li\n", (long) itree);
-          return false;
+          is_valid = false;
         }
       }
     }
+    return is_valid;
   }
   return true;
 }
@@ -208,8 +218,11 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
   /* Set the geometry handler to NULL.
    * It will get initialized either when a geometry is registered
    * or when the cmesh gets committed. */
-  cmesh->geometry_handler = NULL;
+  cmesh->geometry_handler = nullptr;
   cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
+#if T8_ENABLE_DEBUG
+  cmesh->negative_volume_check = 1;
+#endif /* T8_ENABLE_DEBUG */
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -228,13 +241,13 @@ t8_cmesh_set_derive (const t8_cmesh_t cmesh, const t8_cmesh_t set_from)
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (set_from == NULL || t8_cmesh_is_committed (set_from));
 
-  if (cmesh->set_from != NULL) {
+  if (cmesh->set_from != nullptr) {
     /* If we overwrite a previously set cmesh, then we unref it. */
     t8_cmesh_unref (&cmesh->set_from);
   }
   cmesh->set_from = set_from;
 
-  if (set_from != NULL) {
+  if (set_from != nullptr) {
     t8_cmesh_set_dimension (cmesh, set_from->dimension);
     SC_CHECK_ABORT (cmesh->stash->attributes.elem_count == 0,
                     "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
@@ -279,9 +292,9 @@ t8_cmesh_set_partition_range (t8_cmesh_t cmesh, const int set_face_knowledge, co
   cmesh->num_local_trees = last_local_tree - cmesh->first_tree + 1;
   cmesh->set_partition = 1;
   /* Overwrite previous partition settings */
-  if (cmesh->tree_offsets != NULL) {
+  if (cmesh->tree_offsets != nullptr) {
     t8_shmem_array_destroy (&cmesh->tree_offsets);
-    cmesh->tree_offsets = NULL;
+    cmesh->tree_offsets = nullptr;
   }
   cmesh->set_partition_level = -1;
 }
@@ -291,14 +304,14 @@ t8_cmesh_set_partition_offsets (t8_cmesh_t cmesh, t8_shmem_array_t tree_offsets)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
-  if (cmesh->tree_offsets != NULL && cmesh->tree_offsets != tree_offsets) {
+  if (cmesh->tree_offsets != nullptr && cmesh->tree_offsets != tree_offsets) {
     /* We overwrite a previously set offset array, so
      * we need to free its memory first. */
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
   cmesh->tree_offsets = tree_offsets;
   cmesh->set_partition = 1;
-  if (tree_offsets != NULL) {
+  if (tree_offsets != nullptr) {
     /* We overwrite any previously partition settings */
     cmesh->first_tree = -1;
     cmesh->first_tree_shared = -1;
@@ -321,9 +334,9 @@ t8_cmesh_set_partition_uniform (t8_cmesh_t cmesh, const int element_level, const
     /* We overwrite any previous partition settings */
     cmesh->first_tree = -1;
     cmesh->num_local_trees = -1;
-    if (cmesh->tree_offsets != NULL) {
+    if (cmesh->tree_offsets != nullptr) {
       t8_shmem_array_destroy (&cmesh->tree_offsets);
-      cmesh->tree_offsets = NULL;
+      cmesh->tree_offsets = nullptr;
     }
   }
 }
@@ -380,7 +393,7 @@ t8_cmesh_get_first_tree (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
-  return cmesh->num_local_trees > 0 ? t8_cmesh_get_tree (cmesh, 0) : NULL;
+  return cmesh->num_local_trees > 0 ? t8_cmesh_get_tree (cmesh, 0) : nullptr;
 }
 
 /* returns the next local tree in the cmesh (by treeid)
@@ -395,7 +408,7 @@ t8_cmesh_get_next_tree (const t8_cmesh_t cmesh, const t8_ctree_t tree)
   T8_ASSERT (tree != NULL);
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, tree->treeid));
   T8_ASSERT (cmesh->committed);
-  return tree->treeid < cmesh->num_local_trees - 1 ? t8_cmesh_get_tree (cmesh, tree->treeid + 1) : NULL;
+  return tree->treeid < cmesh->num_local_trees - 1 ? t8_cmesh_get_tree (cmesh, tree->treeid + 1) : nullptr;
 }
 
 void
@@ -410,7 +423,8 @@ t8_cmesh_set_attribute (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const int 
     T8_ASSERT (key < T8_CMESH_NEXT_POSSIBLE_KEY && key >= 0);
   }
 #endif
-  SC_CHECK_ABORT (cmesh->set_from == NULL, "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
+  SC_CHECK_ABORT (cmesh->set_from == nullptr,
+                  "ERROR: Cannot add attributes to cmesh when deriving from another cmesh.\n");
 
   t8_stash_add_attribute (cmesh->stash, gtree_id, package_id, key, data_size, data, !data_persists);
 }
@@ -422,7 +436,7 @@ t8_cmesh_set_attribute_string (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, con
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   /* The size is the string's length + the terminating '\0' */
-  size_t size = strlen (string) + 1;
+  size_t const size = strlen (string) + 1;
   /* Add the string as an attribute. */
   t8_cmesh_set_attribute (cmesh, gtree_id, package_id, key, (void *) string, size, 0);
 }
@@ -452,8 +466,9 @@ t8_cmesh_get_attribute (const t8_cmesh_t cmesh, const int package_id, const int 
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltree_id) || t8_cmesh_treeid_is_ghost (cmesh, ltree_id));
   const int is_ghost = t8_cmesh_treeid_is_ghost (cmesh, ltree_id);
 
-  return t8_cmesh_trees_get_attribute (
-    cmesh->trees, is_ghost ? t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id) : ltree_id, package_id, key, NULL, is_ghost);
+  return t8_cmesh_trees_get_attribute (cmesh->trees,
+                                       is_ghost ? t8_cmesh_ltreeid_to_ghostid (cmesh, ltree_id) : ltree_id, package_id,
+                                       key, nullptr, is_ghost);
 }
 
 t8_gloidx_t *
@@ -470,7 +485,7 @@ t8_cmesh_get_partition_table (const t8_cmesh_t cmesh)
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   if (!cmesh->set_partition) {
     /* The mesh is not partitioned. We return NULL. */
-    return NULL;
+    return nullptr;
   }
   /* If the mesh is not stored, NULL is returned, otherwise the
    * partition array. */
@@ -522,107 +537,6 @@ t8_cmesh_set_tree_class (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const t8_
 #endif
 }
 
-/* Given a set of vertex coordinates for a tree of a given eclass.
- * Query whether the geometric volume of the tree with this coordinates
- * would be negative.
- * Returns true if a tree of the given eclass with the given vertex
- * coordinates does have negative volume.
- */
-int
-t8_cmesh_tree_vertices_negative_volume (const t8_eclass_t eclass, const double *vertices, const int num_vertices)
-{
-  T8_ASSERT (num_vertices == t8_eclass_num_vertices[eclass]);
-
-  /* Points and lines do not have a volume orientation. */
-  if (t8_eclass_to_dimension[eclass] < 2) {
-    return 0;
-  }
-
-  T8_ASSERT (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_TET
-             || eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_PRISM || eclass == T8_ECLASS_PYRAMID);
-
-  /* Skip negative volume check (orientation of face normal) of 2D elements
-   * when z-coordinates are not (almost) zero. */
-  if (t8_eclass_to_dimension[eclass] < 3) {
-    for (int ivert = 0; ivert < num_vertices; ivert++) {
-      const double z_coordinate = vertices[3 * ivert + 2];
-      if (std::abs (z_coordinate) > 10 * T8_PRECISION_EPS) {
-        return false;
-      }
-    }
-  }
-
-  /*
-   *      z             For 2D meshes we enforce the right-hand-rule in terms
-   *      |             of node ordering. The volume is defined by the parallelepiped
-   *      | 2- - -(3)   spanned by the vectors between nodes 0:1 and 0:2 as well as the
-   *      |/____ /      unit vector in z-direction. This definition works for both triangles and quads.
-   *      0     1
-   *
-   *      6 ______  7   For Hexes and pyramids, if the vertex 4 is below the 0-1-2-3 plane,
-   *       /|     /     the volume is negative. This is the case if and only if
-   *    4 /_____5/|     the scalar product of v_4 with the cross product of v_1 and v_2 is
-   *      | | _ |_|     smaller 0:
-   *      | 2   | / 3   < v_4, v_1 x v_2 > < 0
-   *      |/____|/
-   *     0      1
-   *
-   *
-   *    For tets/prisms, if the vertex 3 is below/above the 0-1-2 plane, the volume
-   *    is negative. This is the case if and only if
-   *    the scalar product of v_3 with the cross product of v_1 and v_2 is
-   *    greater 0:
-   *
-   *    < v_3, v_1 x v_2 > > 0
-   *
-   */
-
-  /* Build the vectors v_i as vertices_i - vertices_0. */
-  double v_1[3], v_2[3], v_j[3], cross[3], sc_prod;
-
-  if (eclass == T8_ECLASS_TRIANGLE || eclass == T8_ECLASS_QUAD) {
-    for (int i = 0; i < 3; i++) {
-      v_1[i] = vertices[3 + i] - vertices[i];
-      v_2[i] = vertices[6 + i] - vertices[i];
-    }
-
-    /* Unit vector in z-direction. */
-    v_j[0] = 0.0;
-    v_j[1] = 0.0;
-    v_j[2] = 1.0;
-
-    /* Compute cross = v_1 x v_2. */
-    t8_cross_3D (v_1, v_2, cross);
-    /* Compute sc_prod = <v_j, cross>. */
-    sc_prod = t8_dot (v_j, cross);
-
-    T8_ASSERT (sc_prod != 0);
-    return sc_prod < 0;
-  }
-
-  int j;
-  if (eclass == T8_ECLASS_TET || eclass == T8_ECLASS_PRISM) {
-    /* In the tet/prism case, the third vector is v_3 */
-    j = 3;
-  }
-  else {
-    /* For pyramids and Hexes, the third vector is v_4 */
-    j = 4;
-  }
-  for (int i = 0; i < 3; i++) {
-    v_1[i] = vertices[3 + i] - vertices[i];
-    v_2[i] = vertices[6 + i] - vertices[i];
-    v_j[i] = vertices[3 * j + i] - vertices[i];
-  }
-  /* compute cross = v_1 x v_2 */
-  t8_cross_3D (v_1, v_2, cross);
-  /* Compute sc_prod = <v_j, cross> */
-  sc_prod = t8_dot (v_j, cross);
-
-  T8_ASSERT (sc_prod != 0);
-  return eclass == T8_ECLASS_TET ? sc_prod > 0 : sc_prod < 0;
-}
-
 void
 t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const double *vertices,
                             const int num_vertices)
@@ -651,7 +565,7 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, const t8_gloidx_t gtree1, const t8_gloidx_t
 static void
 t8_cmesh_init_profile (t8_cmesh_t cmesh)
 {
-  if (cmesh->profile == NULL) {
+  if (cmesh->profile == nullptr) {
     /* Allocate new profile if it is not enabled already */
     cmesh->profile = T8_ALLOC_ZERO (t8_cprofile_struct_t, 1);
   }
@@ -679,7 +593,7 @@ t8_cmesh_set_profiling (t8_cmesh_t cmesh, const int set_profiling)
   }
   else {
     /* Free any profile that is already set */
-    if (cmesh->profile != NULL) {
+    if (cmesh->profile != nullptr) {
       T8_FREE (cmesh->profile);
     }
   }
@@ -713,8 +627,8 @@ t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b)
                         T8_ECLASS_COUNT * sizeof (t8_locidx_t));
 
   /* check tree_offsets */
-  if (cmesh_a->tree_offsets != NULL) {
-    if (cmesh_b->tree_offsets == NULL) {
+  if (cmesh_a->tree_offsets != nullptr) {
+    if (cmesh_b->tree_offsets == nullptr) {
       return 0;
     }
     else {
@@ -749,7 +663,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
 {
   int mpirank, mpisize, mpiret;
   int iclass;
-  t8_cmesh_t cmesh_out = NULL; /* NULL initializer prevents compiler warning. */
+  t8_cmesh_t cmesh_out = nullptr; /* NULL initializer prevents compiler warning. */
 
   struct
   {
@@ -788,7 +702,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
      * We cannot broadcast the geometries, since they are pointers to derived
      * classes that we cannot know of on the receiving process.
      * Geometries must therefore be added after broadcasting. */
-    if (cmesh_in->geometry_handler != NULL) {
+    if (cmesh_in->geometry_handler != nullptr) {
       SC_CHECK_ABORT (cmesh_in->geometry_handler->get_num_geometries () == 0,
                       "Error: Broadcasting a cmesh with registered geometries is not possible.\n"
                       "We recommend to broadcast first and register the geometries after.\n");
@@ -835,7 +749,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
     cmesh_out->first_tree_shared = 0;
     cmesh_out->num_ghosts = 0;
     T8_ASSERT (cmesh_out->set_partition == 0);
-    if (meta_info.cmesh.profile != NULL) {
+    if (meta_info.cmesh.profile != nullptr) {
       t8_cmesh_set_profiling (cmesh_in, 1);
     }
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
@@ -843,6 +757,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       cmesh_out->num_local_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
     }
 #if T8_ENABLE_DEBUG
+    cmesh_out->negative_volume_check = meta_info.cmesh.negative_volume_check;
     int result;
     mpiret = sc_MPI_Comm_compare (comm, meta_info.comm, &result);
     SC_CHECK_MPI (mpiret);
@@ -1188,21 +1103,51 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
 
   /* Decode the ttf information to get the orientation and the dual face */
   t8_cmesh_tree_to_face_decode (cmesh->dimension, ttf, &dual_face_temp, &orientation_temp);
-  if (dual_face != NULL) {
+  if (dual_face != nullptr) {
     *dual_face = dual_face_temp;
   }
-  if (orientation != NULL) {
+  if (orientation != nullptr) {
     *orientation = orientation_temp;
   }
   /* Return the face neighbor */
   return face_neigh;
 }
 
+t8_eclass_t
+t8_cmesh_get_tree_face_neighbor_eclass (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int face)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) || t8_cmesh_treeid_is_ghost (cmesh, ltreeid));
+  T8_ASSERT (0 <= face);
+
+  const t8_locidx_t neighbor_id = t8_cmesh_get_face_neighbor (cmesh, ltreeid, face, nullptr, nullptr);
+  if (neighbor_id < 0) {
+    // No neighbor was found.
+    return T8_ECLASS_INVALID;
+  }
+  const bool neighbor_is_ghost = t8_cmesh_treeid_is_ghost (cmesh, neighbor_id);
+  if (!neighbor_is_ghost) {
+    // Neighbor was found and is a local tree
+    return t8_cmesh_get_tree_class (cmesh, neighbor_id);
+  }
+  else {
+    // Neighbor was found and is a ghost.
+    // Translate ltreeid from range num_local_trees <= ltreeid < num_local_trees + num_ghost_trees
+    // into 0 <= lghost_id < num_ghost_trees
+    const t8_locidx_t lghost_neighbor_id = neighbor_id - t8_cmesh_get_num_local_trees (cmesh);
+
+    t8_debugf ("in: %i out: %i, num t: %i num g: %i\n", neighbor_id, lghost_neighbor_id,
+               t8_cmesh_get_num_local_trees (cmesh), t8_cmesh_get_num_ghosts (cmesh));
+    // Look up ghost tree class
+    return t8_cmesh_get_ghost_class (cmesh, lghost_neighbor_id);
+  }
+}
+
 void
 t8_cmesh_print_profile (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  if (cmesh->profile != NULL) {
+  if (cmesh->profile != nullptr) {
     /* Only print something if profiling is enabled */
     sc_statinfo_t stats[T8_CPROFILE_NUM_STATS];
     t8_cprofile_t *profile = cmesh->profile;
@@ -1238,7 +1183,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   T8_ASSERT (cmesh->rc.refcount == 0);
 
   /* free tree_offset */
-  if (cmesh->tree_offsets != NULL) {
+  if (cmesh->tree_offsets != nullptr) {
 #if T8_ENABLE_DEBUG
     sc_MPI_Comm comm;
     /* Check whether a correct communicator was stored at tree_offsets.
@@ -1254,37 +1199,37 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
   /*TODO: write this */
   if (!cmesh->committed) {
     t8_stash_destroy (&cmesh->stash);
-    if (cmesh->set_from != NULL) {
+    if (cmesh->set_from != nullptr) {
       /* We unref our reference of set_from */
       t8_cmesh_unref (&cmesh->set_from);
     }
   }
   else {
-    if (cmesh->trees != NULL) {
+    if (cmesh->trees != nullptr) {
       t8_cmesh_trees_destroy (&cmesh->trees);
     }
     T8_ASSERT (cmesh->set_from == NULL);
   }
-  if (cmesh->profile != NULL) {
+  if (cmesh->profile != nullptr) {
     T8_FREE (cmesh->profile);
   }
 
-  if (cmesh->geometry_handler != NULL) {
+  if (cmesh->geometry_handler != nullptr) {
     cmesh->geometry_handler->unref ();
-    cmesh->geometry_handler = NULL;
+    cmesh->geometry_handler = nullptr;
   }
 
   /* unref the partition scheme (if set) */
-  if (cmesh->set_partition_scheme != NULL) {
+  if (cmesh->set_partition_scheme != nullptr) {
     cmesh->set_partition_scheme->unref ();
   }
 
-  if (cmesh->vertex_connectivity != NULL) {
+  if (cmesh->vertex_connectivity != nullptr) {
     delete cmesh->vertex_connectivity;
   }
 
   T8_FREE (cmesh);
-  *pcmesh = NULL;
+  *pcmesh = nullptr;
 }
 
 void
@@ -1427,7 +1372,8 @@ t8_cmesh_debug_print_trees ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unu
   }
 
 #else
-  t8_global_errorf ("Do not call t8_cmesh_debug_print_trees if t8code is not compiled with --enable-debug.\n");
+  t8_global_errorf (
+    "Do not call t8_cmesh_debug_print_trees if t8code is not compiled with -DCMAKE_BUILD_TYPE=Debug.\n");
 #endif /* T8_ENABLE_DEBUG */
 }
 
@@ -1448,13 +1394,13 @@ t8_cmesh_uniform_set_return_parameters_to_empty (t8_gloidx_t *first_local_tree, 
                                                  int8_t *first_tree_shared)
 {
   *first_local_tree = *last_local_tree = -1;
-  if (child_in_tree_begin != NULL) {
+  if (child_in_tree_begin != nullptr) {
     *child_in_tree_begin = -1;
   }
-  if (child_in_tree_end != NULL) {
+  if (child_in_tree_end != nullptr) {
     *child_in_tree_end = -1;
   }
-  if (first_tree_shared != NULL) {
+  if (first_tree_shared != nullptr) {
     *first_tree_shared = 0;
   }
 }
@@ -1520,11 +1466,11 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
   T8_ASSERT (tree_scheme != NULL);
 
   *first_local_tree = 0;
-  if (child_in_tree_begin != NULL) {
+  if (child_in_tree_begin != nullptr) {
     *child_in_tree_begin = 0;
   }
   *last_local_tree = 0;
-  if (child_in_tree_end != NULL) {
+  if (child_in_tree_end != nullptr) {
     *child_in_tree_end = 0;
   }
 
@@ -1572,7 +1518,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
 
   if (cmesh->mpirank == 0) {
     first_global_child = 0;
-    if (child_in_tree_begin != NULL) {
+    if (child_in_tree_begin != nullptr) {
       *child_in_tree_begin = 0;
     }
   }
@@ -1596,14 +1542,14 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
 
   *first_local_tree = first_global_child / children_per_tree;
   child_in_tree_begin_temp = first_global_child - *first_local_tree * children_per_tree;
-  if (child_in_tree_begin != NULL) {
+  if (child_in_tree_begin != nullptr) {
     *child_in_tree_begin = child_in_tree_begin_temp;
   }
 
   *last_local_tree = (last_global_child - 1) / children_per_tree;
 
   is_empty = *first_local_tree >= *last_local_tree && first_global_child >= last_global_child;
-  if (first_tree_shared != NULL) {
+  if (first_tree_shared != nullptr) {
 #if T8_ENABLE_DEBUG
     prev_last_tree = (first_global_child - 1) / children_per_tree;
     T8_ASSERT (cmesh->mpirank > 0 || prev_last_tree <= 0);
@@ -1619,11 +1565,11 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
       *first_tree_shared = 0;
     }
   }
-  if (child_in_tree_end != NULL) {
+  if (child_in_tree_end != nullptr) {
     *child_in_tree_end = (last_global_child - *last_local_tree * children_per_tree);
   }
   if (is_empty) {
-    /* This process is empty 
+    /* This process is empty
      * We now set the first local tree to the first local tree that is owned by the
      * next nonempty rank, and the last local tree to first - 1 */
     *first_local_tree = last_global_child / children_per_tree;
@@ -1645,7 +1591,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
  * \param[in] num_procs The total number of processes.
  * \param[in] process_offset The offset of the current process in the global numbering.
  * \return The rank of the process that will have the element in a uniform partition.
- * 
+ *
  * \note This function is used standalone and as a callback for vector splitting
  */
 static size_t
@@ -1692,7 +1638,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
      * all trees to find the trees in which these are contained.
      * We cast to long double and double to prevent overflow. */
   /* Since the full cmesh is available on each process, the computation of local_num_children equals the global number of children*/
-  uint64_t global_num_children = (uint64_t) local_num_children;
+  uint64_t const global_num_children = (uint64_t) local_num_children;
   const t8_gloidx_t first_child
     = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, global_num_children);
   const t8_gloidx_t last_child = t8_cmesh_get_first_element_of_process (
@@ -1701,6 +1647,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
      * -> No, we cannot. Since in any case we have to compute the t8_element_count_leaves_from_root
      *    for each tree.
      */
+  *last_local_tree = -1;  // Initialize for the case of num_trees <= 0
   if (last_child <= first_child) {
     /* This process is empty. */
     /* Find the next non-empty proc */
@@ -1731,7 +1678,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
 
       if (current_tree_element_offset <= first_child_next_non_empty
           && first_child_next_non_empty < current_tree_element_offset + num_leaf_elems_in_tree) {
-        if (child_in_tree_begin != NULL) {
+        if (child_in_tree_begin != nullptr) {
           *child_in_tree_begin = first_child_next_non_empty - current_tree_element_offset;
         }
         /* We have found the first tree; since this process is empty, we can immediately return,
@@ -1740,7 +1687,7 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
         *last_local_tree = igtree - 1;
         /* If our first element is not the very first element in the tree, we share
            * this tree with the previous process. */
-        if (first_tree_shared != NULL) {
+        if (first_tree_shared != nullptr) {
           *first_tree_shared = current_tree_element_offset < first_child_next_non_empty ? 1 : 0;
         }
       }
@@ -1753,27 +1700,27 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
   // Loop over all trees to find the ones containing the first and last element of this process
   for (t8_gloidx_t igtree = 0; igtree < num_trees; ++igtree) {
     const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, (t8_locidx_t) igtree);
-    /* TODO: We can optimize by buffering the num_leaf_elems_in_tree value. Thus, if 
+    /* TODO: We can optimize by buffering the num_leaf_elems_in_tree value. Thus, if
          the computation is expensive (may be for non-morton-type schemes),
          we do it only once. */
     const t8_gloidx_t num_leaf_elems_in_tree = scheme->count_leaves_from_root (tree_class, level);
     /* Check if the first element is on the current tree */
     if (current_tree_element_offset <= first_child
         && first_child < current_tree_element_offset + num_leaf_elems_in_tree) {
-      if (child_in_tree_begin != NULL) {
+      if (child_in_tree_begin != nullptr) {
         *child_in_tree_begin = first_child - current_tree_element_offset;
       }
       *first_local_tree = igtree;
       /* If our first element is not the very first element in the tree, we share
          * this tree with the previous process. */
-      if (first_tree_shared != NULL) {
+      if (first_tree_shared != nullptr) {
         *first_tree_shared = current_tree_element_offset < first_child ? 1 : 0;
       }
     }
     /* Check if the last element is on the current tree */
     if (current_tree_element_offset < last_child
         && last_child <= current_tree_element_offset + num_leaf_elems_in_tree) {
-      if (child_in_tree_end != NULL) {
+      if (child_in_tree_end != nullptr) {
         *child_in_tree_end = last_child - current_tree_element_offset;
       }
       *last_local_tree = igtree;
@@ -1791,13 +1738,12 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
   T8_ASSERT (num_trees == 0);
   t8_cmesh_uniform_set_return_parameters_to_empty (first_local_tree, child_in_tree_begin, last_local_tree,
                                                    child_in_tree_end, first_tree_shared);
-  return;
 }
 
 /**
- * Send the start or end message to the process given by iproc. The message contains the global id of the first/last tree and 
+ * Send the start or end message to the process given by iproc. The message contains the global id of the first/last tree and
  * the global id of the first/last element in the tree.
- * 
+ *
  * \param[in] cmesh The cmesh.
  * \param[in] start_message If true, send the start message, otherwise send the end message.
  * \param[in] proc_is_empty If true, the process the message will be send to is empty.
@@ -1809,13 +1755,12 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
  * \param[in] current_pos_in_send_buffer The current position in the send buffer.
  * \param[in] first_or_last_element_in_tree_index_of_iproc The tree-local id of the first/last element in the tree. If we send an end message, this is the tree-local index of the last tree on this process.
  * \param[in, out] first_or_last_local_tree The global id of the first/last tree of the current process.
- * \param[in, out] first_tree_shared The first tree shared flag. Only used if we send the start message. Set to NULL if not used. 
+ * \param[in, out] first_tree_shared The first tree shared flag. Only used if we send the start message. Set to NULL if not used.
  * \param[in, out] child_in_tree_end_or_begin The tree-local id of the first/last element in the tree. Set to NULL if not used.
  * \param[in, out] expect_start_or_end_message If true, we expect a start or end message from the process.
+ * \param[in] global_num_elements The global number of elements in the cmesh.
  * \param[in] comm The MPI communicator.
- * \param[in, out] num_received_start_or_end_messages The number of received start or end messages. Only used if T8_ENABLE_DEBUG is defined.
- * \param[in, out] num_message_sent The number of sent messages. Only used if T8_ENABLE_DEBUG is defined.
- * 
+ *
  */
 static void
 t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_message, const bool proc_is_empty,
@@ -1855,17 +1800,17 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
   else { /* We are the current proc, so we just copy the data. */
     (*first_or_last_local_tree) = global_id_of_first_or_last_tree;
     if (start_message && first_or_last_element_in_tree_index_of_iproc > 0) {
-      if (first_tree_shared != NULL) {
+      if (first_tree_shared != nullptr) {
         *first_tree_shared = 1;
       }
     }
     else {
-      if (first_tree_shared != NULL) {
+      if (first_tree_shared != nullptr) {
         *first_tree_shared = 0;
       }
     }
-    if (child_in_tree_end_or_begin != NULL) {
-      /* If we send the last element add 1 to the id. During later processing of the cmesh we iterate 
+    if (child_in_tree_end_or_begin != nullptr) {
+      /* If we send the last element add 1 to the id. During later processing of the cmesh we iterate
        * as long as ielement < child_in_tree_end. Therefore we have to shift by one. */
       *child_in_tree_end_or_begin = first_or_last_element_in_tree_index_of_iproc;
     }
@@ -1875,8 +1820,8 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
 }
 
 /**
- * Receive a start or end message. Which is defined by the \a start flag. 
- * 
+ * Receive a start or end message. Which is defined by the \a start flag.
+ *
  * \param[in] start                           If true, receive the start message, otherwise receive the end message.
  * \param[in, out] first_last_local_tree      On Input empty but allocated, on output the global id of the first or last tree of the current process.
  * \param[in, out] child_in_tree_begin_end    On Input empty but allocated, on output the global id of the first or last element in the tree of the current process.
@@ -1884,6 +1829,7 @@ t8_cmesh_bounds_send_start_or_end (const t8_cmesh_t cmesh, const bool start_mess
  * \param[in, out] child_in_tree_begin_temp   On input empty but allocated, on output the global id of the first element in the tree of the current process.
  * \param[in] global_num_elements             The global number of elements in the mesh.
  * \param[in] cmesh                           The cmesh.
+ * \param[in] recv_from                       The rank to receive a message from.
  * \param[in] comm                            The MPI communicator.
  */
 static void
@@ -1905,7 +1851,7 @@ recv_message (const bool start, t8_gloidx_t *first_last_local_tree, t8_gloidx_t 
   if (start) {
     *child_in_tree_begin_temp = message[1];
   }
-  if (child_in_tree_begin_end != NULL) {
+  if (child_in_tree_begin_end != nullptr) {
     *child_in_tree_begin_end = message[1];
     T8_ASSERT (*child_in_tree_begin_end == -1
                || (start ? (0 <= *child_in_tree_begin_end && *child_in_tree_begin_end < global_num_elements)
@@ -1913,25 +1859,25 @@ recv_message (const bool start, t8_gloidx_t *first_last_local_tree, t8_gloidx_t 
   }
   if (message[1] > 0 && start) {
     /* The first tree is shared */
-    if (first_tree_shared != NULL) {
+    if (first_tree_shared != nullptr) {
       *first_tree_shared = 1;
     }
   }
   else {
-    if (first_tree_shared != NULL) {
+    if (first_tree_shared != nullptr) {
       *first_tree_shared = 0;
     }
   }
 }
 
 /**
- * Find the bounds of a value in a given offset array. Used for a binary search to find the 
+ * Find the bounds of a value in a given offset array. Used for a binary search to find the
  * rank that contains the value.
- * 
+ *
  * \param[in] array The offset array.
  * \param[in] guess The index to start searching from.
  * \param[in] value The value to find the bounds for.
- * 
+ *
  * \return 0 if the value is within the bounds, -1 if it is below the bounds, and 1 otherwise.
  */
 inline int
@@ -1974,6 +1920,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   if (cmesh->mpirank == 0) {
     *first_local_tree = 0;
   }
+  *last_local_tree = -1;  // Initialize for the case of num_trees <= 0
 
   /* Compute number of non-shared-trees and the local index of the first non-shared-tree */
   const int first_tree_shared_shift = cmesh->first_tree_shared ? 1 : 0;
@@ -2001,7 +1948,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     first_element_tree[0] = t8_shmem_array_get_gloidx (offset_array, cmesh->mpirank);
 
     /* Compute the first element in every pure local tree.
-     * This array stores for each tree the global element index offset. 
+     * This array stores for each tree the global element index offset.
      * Example: 2 local trees, each has 8 Elements. First element index 12: | 12 | 20 | 28 | */
     for (t8_locidx_t itree = 0; itree < num_pure_local_trees; ++itree, ++igtree) {
       const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, igtree);
@@ -2071,7 +2018,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
        belongs to send_first+i.
        If no such tree exists, then the index of the previous process is stored.
 
-       Examples: 
+       Examples:
        We describe the situation via
        Proc i needs tree first local_tree_id, with i as the index in send_first + i.
 
@@ -2125,7 +2072,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         const t8_locidx_t possibly_first_puretree_of_next_proc = tree_offsets_partition[iproc + 1 - send_first];
         const t8_gloidx_t first_el_index_of_first_tree = first_element_tree[possibly_first_puretree_of_iproc];
         if (first_element_index_of_iproc >= first_element_tree[num_pure_local_trees]) {
-          /* We do not send to this process iproc at all. Its first element is in a tree that belongs 
+          /* We do not send to this process iproc at all. Its first element is in a tree that belongs
            * to the next process. */
           send_start_message = send_end_message = false;
           first_puretree_of_iproc = -1;
@@ -2151,11 +2098,11 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
           }
         }
         /* Compute the last tree of this proc and whether we need to send an end message to it. */
-        /* We know 
-         * 
+        /* We know
+         *
          * possibly_first_puretree_of_next_proc - The tree whose first element lies on the next process.
-         * 
-         * 
+         *
+         *
          * If the next process is empty, then possibly_first_puretree_of_next_proc = possibly_first_puretree_of_iproc
          * and this is our last tree.
          */
@@ -2237,7 +2184,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         send_start_message = first_child_next_non_empty < first_element_tree[num_pure_local_trees];
         if (send_start_message) {
           /* We might have detected a larger range of empty processes. We directly send to this range to avoid a recomputation
-           * of this information. We have to take into account, that in the last iteration of the above do-while-loop 
+           * of this information. We have to take into account, that in the last iteration of the above do-while-loop
            * next_non_empty_proc has been added up by one again, so this loop goes [iproc, next_non_empty_proc - 1). */
           for (t8_gloidx_t iempty_proc = iproc; iempty_proc < next_non_empty_proc; ++iempty_proc) {
             t8_cmesh_bounds_send_start_or_end (cmesh, send_start_message, proc_is_empty, first_puretree_of_iproc,
@@ -2259,7 +2206,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       /*
        *
        *  MPI Communication for non-empty processes starts here
-       * 
+       *
        */
 
       /* Post the start message: We send the first tree id of the process
@@ -2283,7 +2230,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       if (send_end_message) {
         t8_cmesh_bounds_send_start_or_end (cmesh, false, proc_is_empty, last_puretree_of_iproc, first_tree_shared_shift,
                                            iproc, send_requests, send_buffer, &current_pos_in_send_buffer,
-                                           last_element_in_tree_index_of_iproc, last_local_tree, NULL,
+                                           last_element_in_tree_index_of_iproc, last_local_tree, nullptr,
                                            child_in_tree_end, &expect_end_message, global_num_elements, comm);
 #if T8_ENABLE_DEBUG
         num_message_sent += (iproc != cmesh->mpirank) ? 1 : 0;
@@ -2329,7 +2276,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
       = t8_shmem_array_binary_search (offset_array, last_element - 1, cmesh->mpisize - 1, find_bounds_in_offset);
 
     T8_ASSERT (0 <= recv_from && recv_from < cmesh->mpisize);
-    recv_message (false, last_local_tree, child_in_tree_end, NULL, NULL, global_num_elements, cmesh, recv_from, comm);
+    recv_message (false, last_local_tree, child_in_tree_end, nullptr, nullptr, global_num_elements, cmesh, recv_from,
+                  comm);
 #if T8_ENABLE_DEBUG
     num_received_end_messages++;
     num_message_recv++;
@@ -2343,7 +2291,7 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   T8_ASSERT (num_received_start_messages == 1);
   T8_ASSERT (num_received_end_messages == 1);
 
-  if (first_tree_shared != NULL) {
+  if (first_tree_shared != nullptr) {
     if (!this_proc_is_empty && cmesh->mpirank > 0 && child_in_tree_begin_temp > 0) {
       /* The first tree is shared */
       *first_tree_shared = 1;
@@ -2365,7 +2313,6 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
   T8_ASSERT (total_num_sent == total_num_recv);
 #endif
   t8_debugf ("Done with t8_cmesh_uniform_bounds_from_partition.\n");
-  return;
 }
 
 /* TODO: Shared trees, binary search in offset-array to avoid recv_any,
@@ -2377,7 +2324,7 @@ t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const 
                                                   int8_t *first_tree_shared, sc_MPI_Comm comm)
 {
   T8_ASSERT (cmesh != NULL);
-  /* TODO: Clean up size_t and gloidx_t data types, ensure that each variables has the 
+  /* TODO: Clean up size_t and gloidx_t data types, ensure that each variables has the
    *          matching type. */
 
   t8_debugf ("Into t8_cmesh_uniform_bounds_for_irregular_refinement.\n");
@@ -2449,7 +2396,7 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   T8_ASSERT (num_local_trees > 0);
   double tree_bounds[6] = { 0.0 };
   t8_geometry_handler *geom_handler = cmesh->geometry_handler;
-  if (geom_handler == NULL) {
+  if (geom_handler == nullptr) {
     t8_errorf ("Error: Trying to compute bounding box for cmesh with no geometry.\n");
     return false;
   }

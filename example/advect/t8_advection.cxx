@@ -31,8 +31,8 @@
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <example/common/t8_example_common.hxx>
-#include <t8_cmesh.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_types/t8_vec.hxx>
@@ -112,10 +112,9 @@ typedef struct
     *element_data_adapt; /**< element_data for the adapted forest, used during adaptation to interpolate values */
   /* We store the phi values in an extra array, since this data must exist for ghost
    * element as well and is communicated with other processes in ghost_exchange. */
-  sc_array_t *phi_values; /**< For each element and ghost its phi value. */
-  sc_array_t
-    *phi_values_adapt; /**< phi values for the adapted forest, used during adaptaption to interpolate values. */
-  sc_MPI_Comm comm;    /**< MPI communicator used */
+  sc_array_t *phi_values;       /**< For each element and ghost its phi value. */
+  sc_array_t *phi_values_adapt; /**< phi values for the adapted forest, used during adaptation to interpolate values. */
+  sc_MPI_Comm comm;             /**< MPI communicator used */
   sc_statinfo_t stats[ADVECT_NUM_STATS]; /**< Runtimes and other statistics. */
   double t;                              /**< Current simulation time */
   double T;                              /**< End time */
@@ -139,10 +138,10 @@ typedef struct
 /** The per element data */
 typedef struct
 {
-  t8_3D_point midpoint;           /**< coordinates of element midpoint in R^3 */
+  t8_3D_vec midpoint;             /**< coordinates of element midpoint in R^3 */
   double vol;                     /**< Volume of this element */
   double phi_new;                 /**< Value of solution at midpoint in next time step */
-  double *fluxes[MAX_FACES];      /**< The fluxes to each neeighbor at a given face */
+  double *fluxes[MAX_FACES];      /**< The fluxes to each neighbor at a given face */
   int flux_valid[MAX_FACES];      /**< If > 0, this flux was computed, if 0 memory was allocated
                                                    for this flux, but not computed. If < 0, no memory was allocated. */
   int level;                      /**< The refinement level of the element. */
@@ -324,7 +323,7 @@ static double
 t8_advect_flux_upwind_1d (const t8_advect_problem_t *problem, const t8_locidx_t el_plus, const t8_locidx_t el_minus,
                           int face)
 {
-  t8_3D_point x_j_half;
+  t8_3D_vec x_j_half;
   int idim;
   t8_3D_vec u_at_x_j_half;
   double phi;
@@ -343,7 +342,7 @@ t8_advect_flux_upwind_1d (const t8_advect_problem_t *problem, const t8_locidx_t 
   }
   /* Compute u at the interval boundary. */
   problem->u (x_j_half, problem->t, u_at_x_j_half);
-  /* In 1D we are only interested in the firs coordinate of u */
+  /* In 1D we are only interested in the first coordinate of u */
 
   sign = face == 0 ? -1 : 1;
   if (sign * u_at_x_j_half[0] >= 0) {
@@ -366,7 +365,7 @@ static double
 t8_advect_flux_upwind (const t8_advect_problem_t *problem, double el_plus_phi, double el_minus_phi, t8_locidx_t ltreeid,
                        const t8_element_t *element_plus, int face)
 {
-  t8_3D_point face_center;
+  t8_3D_vec face_center;
   t8_3D_vec u_at_face_center;
   t8_3D_vec normal;
   double area, normal_times_u;
@@ -929,7 +928,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_l
   problem->num_time_steps = 0;            /* current time step */
   problem->comm = comm;                   /* MPI communicator */
   problem->vtk_count = 0;                 /* number of pvtu files written */
-  problem->band_width = band_width;       /* width of the refinemen band around 0 level-set */
+  problem->band_width = band_width;       /* width of the refinement band around 0 level-set */
   problem->dim = dim;                     /* dimension of the mesh */
   problem->dummy_op = dummy_op;           /* If true, emulate more computational load per element */
 
@@ -985,7 +984,7 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 {
   t8_locidx_t itree, ielement, idata;
   t8_locidx_t num_trees, num_elems_in_tree;
-  t8_element_t **neighbors;
+  const t8_element_t **neighbors;
   int iface, ineigh;
   t8_advect_element_data_t *elem_data;
   const t8_scheme *scheme = t8_forest_get_scheme (problem->forest);
@@ -1036,13 +1035,12 @@ t8_advect_problem_init_elements (t8_advect_problem_t *problem)
 
         t8_forest_leaf_face_neighbors (problem->forest, itree, element, &neighbors, iface,
                                        &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
-                                       &elem_data->neighs[iface], &neigh_eclass, 1);
+                                       &elem_data->neighs[iface], &neigh_eclass);
         for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
           elem_data->neigh_level[iface] = scheme->element_get_level (neigh_eclass, neighbors[ineigh]);
         }
 
         if (elem_data->num_neighbors[iface] > 0) {
-          scheme->element_destroy (neigh_eclass, elem_data->num_neighbors[iface], neighbors);
           T8_FREE (neighbors);
           //t8_global_essentialf("alloc face %i of elem %i\n", iface, ielement);
           elem_data->fluxes[iface] = T8_ALLOC (double, elem_data->num_neighbors[iface]);
@@ -1198,7 +1196,7 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   int done = 0;
   int adapted_or_partitioned = 0;
   int dual_face;
-  t8_element_t **neighs;
+  const t8_element_t **neighs;
   t8_eclass_t neigh_eclass;
   double total_time, solve_time = 0;
   double ghost_exchange_time, ghost_waittime, neighbor_time, flux_time;
@@ -1250,8 +1248,8 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
   modulus = SC_MAX (1, time_steps / 10);
   for (problem->num_time_steps = 0; !done; problem->num_time_steps++, problem->t += problem->delta_t) {
     if (problem->num_time_steps % modulus == modulus - 1) {
-      t8_global_essentialf ("[advect] Step %i  %li elems\n", problem->num_time_steps + 1,
-                            static_cast<long> (t8_forest_get_global_num_leaf_elements (problem->forest)));
+      t8_global_essentialf ("[advect] Step %i  %" T8_GLOIDX_FORMAT " elems\n", problem->num_time_steps + 1,
+                            t8_forest_get_global_num_leaf_elements (problem->forest));
     }
     /* Time loop */
 
@@ -1292,15 +1290,13 @@ t8_advect_solve (t8_cmesh_t cmesh, t8_flow_function_3d_fn u, t8_example_level_se
               neighbor_time = -sc_MPI_Wtime ();
               t8_forest_leaf_face_neighbors (problem->forest, itree, elem, &neighs, iface,
                                              &elem_data->dual_faces[iface], &elem_data->num_neighbors[iface],
-                                             &elem_data->neighs[iface], &neigh_eclass, 1);
+                                             &elem_data->neighs[iface], &neigh_eclass);
               for (ineigh = 0; ineigh < elem_data->num_neighbors[iface]; ineigh++) {
                 elem_data->neigh_level[iface] = scheme->element_get_level (neigh_eclass, neighs[ineigh]);
               }
 
               T8_ASSERT (neighs != NULL || elem_data->num_neighbors[iface] == 0);
               if (neighs != NULL) {
-                scheme->element_destroy (neigh_eclass, elem_data->num_neighbors[iface], neighs);
-
                 T8_FREE (neighs);
               }
 
