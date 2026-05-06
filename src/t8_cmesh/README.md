@@ -24,7 +24,7 @@ See [cmesh IO README](t8_cmesh_io/README).
 
 #### [src/t8_cmesh/t8_cmesh_vertex_connectivity](t8_cmesh_vertex_connectivity)
 
-Contains functionality for handling the vertex connectiviy of a cmesh.
+Contains functionality for handling the vertex connectivity of a cmesh.
 See [cmesh vertex connectivity README](t8_cmesh_vertex_connectivity/README).
 
 
