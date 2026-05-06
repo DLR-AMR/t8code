@@ -1,3 +1,5 @@
+# src/t8_cmesh
+
 This folder contains the coarse mesh interface.
 
 The coarse mesh (t8_cmesh) contains information about the domain topology and geometry.
@@ -8,38 +10,28 @@ and [Building a Cmesh by hand](https://github.com/DLR-AMR/t8code/wiki/Building-a
 
 Your entry point to familiarize yourself with the code should be [t8_cmesh.h](t8_cmesh.h) which is the main cmesh interface.
 
+This folder contains the following sub-directories:
+
+#### [src/t8_cmesh/t8_cmesh_internal](t8_cmesh_internal)
+
+Contains cmesh functionality intended for internal use within t8code only.
+See [cmesh internal README](t8_cmesh_internal/README).
+
+#### [src/t8_cmesh/t8_cmesh_io](t8_cmesh_io)
+
+Contains functionality for input and output of cmeshes, in particular for reading `.msh` files (usually from the Gmsh mesh generator).
+See [cmesh IO README](t8_cmesh_io/README).
+
+#### [src/t8_cmesh/t8_cmesh_vertex_connectivity](t8_cmesh_vertex_connectivity)
+
+Contains functionality for handling the vertex connectiviy of a cmesh.
+See [cmesh vertex connectivity README](t8_cmesh_vertex_connectivity/README).
+
+
 An incomplete list of the source files in this folder:
-
-
 
 #### [t8_cmesh_examples.h](t8_cmesh_examples.h)
 
 Contains many example cases for coarse mesh generation.
 
-### Input/Output
-
-#### [t8_cmesh_readmshfile.h](t8_cmesh_readmshfile.h)
-
-Input routines for reading `.msh` files (usually from the Gmsh mesh generator).
-
-#### [t8_cmesh_tetgen.h](t8_cmesh_tetgen.h) and [t8_cmesh_triangle.h](t8_cmesh_triangle.h)
-
-Input routines for the TRIANGLE and TETGEN mesh generators.
-These have not been maintained for a long time and might be incorrect.
-
-#### [t8_cmesh_netcdf.h](t8_cmesh_netcdf.h)
-
-netcdf output
-
-### Internal
-
-#### [t8_cmesh_types.h](t8_cmesh/t8_cmesh_types.h)
-
-Contains the class definition of `t8_cmesh` and various subclasses.
-This is internal and should only be touched if you need to add member variables to the cmesh.
-
-#### [t8_cmesh_stash.h](t8_cmesh/t8_cmesh_stash.h)
-
-The stash is an intermediate data structure that we use while a cmesh is being constructed.
-It is very unhandy and contains lots of void pointers.
-Do not touch unless really necessary.
+TODO: Complete this list
