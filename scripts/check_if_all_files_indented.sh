@@ -61,8 +61,6 @@ do
     if test $status -ne 0
     then
       notallindented=1
-    else
-      echo "REMOVE THIS: File $file is indented."
     fi
   else
     echo "ERROR: find_all_source_files.sh returned a file which does not exist."
