@@ -28,28 +28,24 @@
 #
 
 #
-# This script must be executed from the scripts/ folder.
+# This script must be executed from within the repository.
 #
-if [ `basename $PWD` != scripts ]
-then
-  if [ -d scripts ]
-  then
-    # The directory stack is automatically reset on script exit.
-    pushd scripts/ > /dev/null
-  else
-    echo ERROR: scripts/ directory not found.
-    exit 1
-  fi
+repo_main_dir=$(git rev-parse --show-toplevel 2>/dev/null)
+
+if [ $? -ne 0 ]; then
+  echo "ERROR: No git repository found."
+  exit 1
 fi
 
 # Find all files with the appropriate suffix.
-files=$(./internal/find_all_source_files.sh) || {
-  echo "ERROR: failed to find source files."
+files=$($repo_main_dir/scripts/internal/find_all_source_files.sh) || {
+  echo $files # return error message of find_all_source_files.sh
+  echo "ERROR: find_all_source_files.sh returned exit code 1"
   exit 1
 }
 
 if [ -z "$files" ]; then
-  echo "ERROR: no source files found."
+  echo "ERROR: find_all_source_files.sh returned nothing."
   exit 1
 fi
 
@@ -63,21 +59,20 @@ do
   if [ -f "$file" ]
   then
     file_found=1
-    ./check_if_file_indented.sh "$file" > /dev/null 2>&1
+    $repo_main_dir/scripts/check_if_file_indented.sh "$file"
     status=$?
     if test $status -ne 0
     then
-      echo "ERROR: File $file is not indented."
       notallindented=1
     else
-      echo "File $file is indented."
+      echo "REMOVE THIS: File $file is indented."
     fi
   fi
 done
 
 if test $file_found -eq 0
 then
-  echo Error: Could not find any files.
+  echo Error: Could not find any source files.
   exit 1
 fi
 
