@@ -29,7 +29,8 @@
 #
 # If you call this script with "NO_CHANGE" as first argument it will run
 # in dry-mode, not changing the file contents.
-FORMAT_OPTIONS="--Werror -i --style=file"
+
+FORMAT_OPTIONS="--Werror --style=file"
 
 # Required version of the clang format program.
 REQUIRED_VERSION_MAJOR="17"
@@ -91,6 +92,9 @@ then
   shift # Removes first argument from $@ list
   NO_CHANGE=TRUE
   FORMAT_OPTIONS="${FORMAT_OPTIONS} --dry-run"
+else
+  # -i does not work with input deom stdin, therefore it has to be set if the ci is not checking
+  FORMAT_OPTIONS="${FORMAT_OPTIONS} -i"
 fi
 
 
