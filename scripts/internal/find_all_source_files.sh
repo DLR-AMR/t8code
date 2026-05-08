@@ -30,7 +30,7 @@
 repo_main_dir=$(git rev-parse --show-toplevel 2>/dev/null)
 
 if [ $? -ne 0 ]; then
-  echo "ERROR: No git repository found."
+  echo "ERROR: find_all_source_files.sh was not called from inside the git repository."
   exit 1
 fi
 
