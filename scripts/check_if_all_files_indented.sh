@@ -53,9 +53,6 @@ notallindented=0
 file_found=0
 for file in $files
 do
-  # Find also gives us directories,
-  # so we ensure that $file is a proper
-  # file before checking for indentation.
   if [ -f "$file" ]
   then
     file_found=1
@@ -67,6 +64,9 @@ do
     else
       echo "REMOVE THIS: File $file is indented."
     fi
+  else
+    echo "ERROR: find_all_source_files.sh returned a file which does not exist."
+    exit 1
   fi
 done
 
