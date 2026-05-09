@@ -655,6 +655,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
  * \param [in] neighbor_face The face index of \a neighbor_leaf (i.e. the dual face of \a face).
  * \returns The index of the subface of \a neighbor_face which corresponds to \a face.
  * \note This function is designed to be called after \ref t8_forest_leaf_face_neighbors_ext to complement its output.
+ * \note Since this function requires the \a neighbor_leaf to be one level coarser than \a leaf, this function is primarily intended for balanced forests.
  */
 int
 t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf, int face,
