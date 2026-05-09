@@ -28,7 +28,10 @@
 #include <vector>
 #include <cmath>
 #include <memory>
+#include <unordered_map>
 #include <t8_types/t8_vec.hxx>
+#include <Eigen/Sparse>
+#include <Eigen/Dense>
 
 /** 
  * The available RBF function types. 
@@ -224,7 +227,7 @@ struct t8_rbf
 
       double distance = t8_dist (inner_node.position, boundary_node.position);
       const double psi = rbf_function->evaluate (distance);
-      /** Check if the basis function value (the infleunce factor) is not equal to zero with a numerical tolerance of 1e-12. */
+      /** Check if the basis function value (the influence factor) is not equal to zero with a numerical tolerance of 1e-12. */
       if (std::abs (psi) > 1e-12) {
 
         for (int coordinate = 0; coordinate < 3; ++coordinate) {
@@ -235,8 +238,18 @@ struct t8_rbf
   }
 
  private:
+  /** The specialised solve function for either compactly supported or globally supported RBFs. 
+   * \param[in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
+   *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
+   * \param[in] num_boundary_nodes The number of boundary nodes.
+   * \return The matrix of the calculated weights alpha.
+  */
+  Eigen::MatrixXd
+  solve_compactly_supported_rbf (const Eigen::MatrixXd& displacements, const size_t num_boundary_nodes) const;
+  Eigen::MatrixXd
+  solve_globally_supported_rbf (const Eigen::MatrixXd& displacements, const size_t num_boundary_nodes) const;
   /** List of all registered support nodes. */
   std::vector<t8_rbf_boundary_node> boundary_nodes;
-  /** */
+  /** Pointer to the radial basis function. */
   std::unique_ptr<t8_rbf_function> rbf_function;
 };
