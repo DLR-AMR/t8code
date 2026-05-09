@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_save.h
+/** \file deprecated_t8_cmesh_save.h
  * We define routines to save and load a cmesh to/from the file system.
  */
 
