@@ -109,7 +109,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     t8_global_errorf ("ERROR: Invalid mesh dimension: dim=%d. Dimension must be 1, 2 or 3.\n\n", dim);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0) {
+  else {
 
     /* We will use MPI_COMM_WORLD as a communicator. */
     sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
