@@ -658,7 +658,7 @@ t8_forest_leaf_face_neighbors_ext (t8_forest_t forest, t8_locidx_t ltreeid, cons
  *      and \a neighbor_face for \a neighbor_leaf respectively. \a neighbor_leaf must be one level coarser than \a leaf.
  *      Otherwise the behavior is undefined.
  * \note This function is designed to be called after \ref t8_forest_leaf_face_neighbors_ext to complement its output.
- *       It is primarily intended for balanced forests, but can be used on any commited forest as long as the preconditions 
+ *       It is primarily intended for balanced forests, but can be used on any committed forest as long as the preconditions 
  *       hold (i.e. the forest must be ''locally balanced'').
  */
 int
