@@ -1911,6 +1911,7 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
       result = i_child;
     }
   }
+  T8_ASSERT(result != -1); // make sure the face was found
 
   scheme->element_destroy (neighbor_tree_class, 4, children.begin ());
   scheme->element_destroy (neighbor_tree_class, 1, &target);
