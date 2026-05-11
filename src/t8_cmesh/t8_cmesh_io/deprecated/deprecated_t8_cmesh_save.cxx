@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_save.cxx
+/** \file deprecated_t8_cmesh_save.cxx
  * We define routines to save and load a cmesh to/from the file system.
  */
 
@@ -28,7 +28,7 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_save.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
 #include <t8_geometry/t8_geometry.h>
@@ -49,6 +49,7 @@
     return 0; \
   }
 
+#if 0   // Beginning of deactivated code section.
 /* Write the neighbor data of all ghosts */
 static int
 t8_cmesh_save_ghost_neighbors (const t8_cmesh_t cmesh, FILE *fp)
@@ -78,7 +79,9 @@ t8_cmesh_save_ghost_neighbors (const t8_cmesh_t cmesh, FILE *fp)
   }
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 static int
 t8_cmesh_load_ghost_attributes (const t8_cmesh_t cmesh, FILE *fp)
 {
@@ -108,7 +111,9 @@ t8_cmesh_load_ghost_attributes (const t8_cmesh_t cmesh, FILE *fp)
   }
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 static int
 t8_cmesh_save_ghosts (const t8_cmesh_t cmesh, FILE *fp)
 {
@@ -127,7 +132,9 @@ t8_cmesh_save_ghosts (const t8_cmesh_t cmesh, FILE *fp)
   }
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 static int
 t8_cmesh_load_ghosts (const t8_cmesh_t cmesh, FILE *fp)
 {
@@ -164,7 +171,9 @@ t8_cmesh_load_ghosts (const t8_cmesh_t cmesh, FILE *fp)
   }
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 /* Load all attributes that were stored in a file */
 static int
 t8_cmesh_load_tree_attributes (const t8_cmesh_t cmesh, FILE *fp)
@@ -232,7 +241,9 @@ t8_cmesh_load_tree_attributes (const t8_cmesh_t cmesh, FILE *fp)
   SC_FREE (vertices);
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 static int
 t8_cmesh_save_tree_attribute (const t8_cmesh_t cmesh, FILE *fp)
 {
@@ -298,7 +309,9 @@ t8_cmesh_save_tree_attribute (const t8_cmesh_t cmesh, FILE *fp)
   }
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 static int
 t8_cmesh_save_trees (const t8_cmesh_t cmesh, FILE *fp)
 {
@@ -333,7 +346,9 @@ t8_cmesh_save_trees (const t8_cmesh_t cmesh, FILE *fp)
   }
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 /* Load all tree data (eclasses, neighbors, vertex coordinates,...)
  * from a cmesh file into a cmesh */
 static int
@@ -375,7 +390,9 @@ t8_cmesh_load_trees (const t8_cmesh_t cmesh, FILE *fp)
   }
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 static int
 t8_cmesh_save_header (const t8_cmesh_t cmesh, FILE *fp)
 {
@@ -430,7 +447,9 @@ t8_cmesh_save_header (const t8_cmesh_t cmesh, FILE *fp)
   T8_SAVE_CHECK_CLOSE (ret > 0, fp);
   return 1;
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 /* Read the number of trees, dimension, etc. from a saved cmesh file.
  * If anything goes wrong, the file is closed and 0 is returned */
 static int
@@ -509,10 +528,14 @@ t8_cmesh_load_header (const t8_cmesh_t cmesh, FILE *fp)
   T8_SAVE_CHECK_CLOSE (!cmesh->set_partition || cmesh->first_tree_shared == 0 || cmesh->first_tree_shared == 1, fp);
   return 1;
 }
+#endif  // End of deactivated code section.
 
 int
-t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
+t8_cmesh_save ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] const char *fileprefix)
 {
+  SC_ABORT ("The function t8_cmesh_save is currently not supported, because it's functionality is not up-to-date!\n");
+
+#if 0  // Beginning of deactivated code section.
   FILE *fp;
   char filename[BUFSIZ];
   int has_linear_geom = 0;
@@ -578,16 +601,22 @@ t8_cmesh_save (const t8_cmesh_t cmesh, const char *fileprefix)
   }
   /* Close the file */
   fclose (fp);
+
+#endif  // End of deactivated code section.
   return 1;
 }
 
 #undef T8_SAVE_CHECK_CLOSE
 
 t8_cmesh_t
-t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
+t8_cmesh_load ([[maybe_unused]] const char *filename, [[maybe_unused]] sc_MPI_Comm comm)
 {
-  FILE *fp;
+  SC_ABORT ("The function t8_cmesh_load is currently not supported, because it's functionality is not up-to-date!\n");
+
   t8_cmesh_t cmesh;
+
+#if 0  // Beginning of deactivated code section.
+  FILE *fp;
   int mpiret;
 
   /* Open the file in read mode */
@@ -641,9 +670,12 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm)
   mpiret = sc_MPI_Comm_size (comm, &cmesh->mpisize);
   SC_CHECK_MPI (mpiret);
   t8_stash_destroy (&cmesh->stash);
+
+#endif  // End of deactivated code section.
   return cmesh;
 }
 
+#if 0   // Beginning of deactivated code section
 /* Query whether a given process will open a cmesh saved file.
  * This depends on the number of processes, the number of files and
  * the load mode.
@@ -729,7 +761,9 @@ t8_cmesh_load_proc_loads (const int mpirank, const int mpisize, const int num_fi
   }
   SC_ABORT_NOT_REACHED ();
 }
+#endif  // End of deactivated code section.
 
+#if 0   // Beginning of deactivated code section.
 /* After we loaded a cmesh on a part of the processes, we have to correctly
  * set the first tree on the other, empty, cmeshes.
  * In load mode simple, the first tree is just the global number of trees.
@@ -806,6 +840,7 @@ t8_cmesh_load_bigger_nonloading (const int mpirank, const int mpisize, const int
   }
   return next_bigger_nonloading;
 }
+#endif  // End of deactivated code section.
 
 /* Load the files fileprefix_0000.cmesh, ... , fileprefix_N.cmesh
  * (N = num_files - 1)
@@ -813,10 +848,15 @@ t8_cmesh_load_bigger_nonloading (const int mpirank, const int mpisize, const int
  * If N = 1, the cmesh is broadcasted and not partitioned.
  */
 t8_cmesh_t
-t8_cmesh_load_and_distribute (const char *fileprefix, const int num_files, sc_MPI_Comm comm, const t8_load_mode_t mode,
-                              const int procs_per_node)
+t8_cmesh_load_and_distribute ([[maybe_unused]] const char *fileprefix, [[maybe_unused]] const int num_files,
+                              [[maybe_unused]] sc_MPI_Comm comm, [[maybe_unused]] const t8_load_mode_t mode,
+                              [[maybe_unused]] const int procs_per_node)
 {
+  SC_ABORT ("The function t8_cmesh_load_and_distribute is currently not supported, because it's functionality is not "
+            "up-to-date!\n");
   t8_cmesh_t cmesh;
+
+#if 0   // Beginning of deactivated code section.
   char buffer[BUFSIZ];
   int mpiret, mpirank, mpisize;
   int file_to_load;
@@ -899,5 +939,6 @@ t8_cmesh_load_and_distribute (const char *fileprefix, const int num_files, sc_MP
     t8_cmesh_gather_treecount (cmesh, comm);
   }
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+#endif  // End of deactivated code section.
   return cmesh;
 }

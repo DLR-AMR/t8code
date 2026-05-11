@@ -151,8 +151,8 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx
     t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_save.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.cxx
+    t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.cxx
+    t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_triangle.cxx
     t8_data/t8_shmem.c
     t8_data/t8_containers.cxx
     t8_eclass/t8_eclass.c
