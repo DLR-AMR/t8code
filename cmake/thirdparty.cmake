@@ -75,11 +75,3 @@ foreach(INDEX RANGE ${DEPS_RANGE})
     # 3. Populate the thirdparty library
     FetchContent_MakeAvailable(${DEP_NAME})
 endforeach()
-
-# Mark all cmake options starting with FETCHCONTENT as advanced.
-get_cmake_property(_cmake_vars VARIABLES)
-foreach(_var ${_cmake_vars})
-    if(_var MATCHES "^FETCHCONTENT_.*")
-	    mark_as_advanced(${_var})
-    endif()
-endforeach()
