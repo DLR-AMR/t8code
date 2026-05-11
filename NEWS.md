@@ -19,7 +19,7 @@ Please execute the steps in this order to ensure that your issue has the correct
 No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no issues are referenced using the Closes-keyword, an issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
 
 
-# User Updates for the upcoming t8code release (February 2026 - version format unclear)
+# User Updates for the upcoming t8code release (February 2026 - v4.0.0-26.02)
 
 ## Updates to t8_forest_leaf_face_neighbors
 
