@@ -88,7 +88,7 @@ jobs:
     - name: Get sc commit hash  and url from thirdparty.json
       run: |
         hash=$(jq -r '.thirdparty[] | select(.name=="SC") .source.ref' cmake/thirdparty.json)
-        echo sc_commit=$hash >> $GITHUB_ENV
+        echo SC_COMMIT=$hash >> $GITHUB_ENV
         url=$(jq -r '.thirdparty[] | select(.name=="SC") .source.url' cmake/thirdparty.json)
         echo sc_url=$url >> $GITHUB_ENV
     - name: Check cache for previous sc installation
@@ -99,7 +99,7 @@ jobs:
           ${{ env.SC_DEBUG }}
           ${{ env.SC_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: sc-cmake-MPI-${{ inputs.MPI }}-${{ env.sc_commit }}-${{ inputs.CACHE_COUNTER }}
+        key: sc-cmake-MPI-${{ inputs.MPI }}-${{ env.SC_COMMIT }}-${{ inputs.CACHE_COUNTER }}
     - name: Log that no cache was found
       run: echo USED_CACHE=0 >> $GITHUB_ENV
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' }}
@@ -116,7 +116,7 @@ jobs:
     - uses: actions/checkout@v6
       with:
         repository: cburstedde/libsc
-        ref: ${{ env.sc_commit }}
+        ref: ${{ env.SC_COMMIT }}
         fetch-depth: 1
         path: ${{ env.SC_SOURCE }}
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
@@ -148,7 +148,7 @@ jobs:
     - name: Get p4est commit hash and url from thirdparty.json
       run: |
         hash=$(jq -r '.thirdparty[] | select(.name=="P4EST") .source.ref' cmake/thirdparty.json)
-        echo p4est_commit=$hash >> $GITHUB_ENV
+        echo P4EST_COMMIT=$hash >> $GITHUB_ENV
         url=$(jq -r '.thirdparty[] | select(.name=="P4EST") .source.url' cmake/thirdparty.json)
         echo p4est_url=$url >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
@@ -159,7 +159,7 @@ jobs:
           ${{ env.P4EST_DEBUG }}
           ${{ env.P4EST_RELEASE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
-        key: p4est-cmake-MPI-${{ inputs.MPI }}-${{ env.p4est_commit }}-${{ env.sc_commit }}-${{ inputs.CACHE_COUNTER }}
+        key: p4est-cmake-MPI-${{ inputs.MPI }}-${{ env.P4EST_COMMIT }}-${{ env.SC_COMMIT }}-${{ inputs.CACHE_COUNTER }}
     - name: Log that no cache was found
       run: echo USED_CACHE=0 >> $GITHUB_ENV
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' }}
@@ -176,7 +176,7 @@ jobs:
     - uses: actions/checkout@v6
       with:
         repository: cburstedde/p4est
-        ref: ${{ env.p4est_commit }}
+        ref: ${{ env.P4EST_COMMIT }}
         fetch-depth: 1
         path: ${{ env.P4EST_SOURCE }}
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
