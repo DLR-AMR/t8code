@@ -40,7 +40,7 @@ foreach(INDEX RANGE ${DEPS_RANGE})
 
     # If the DEP_CMAKE_OPTION field is non-empty, check the CMake option.
     if(NOT DEP_CMAKE_OPTION STREQUAL "")
-        # If the named option variable does not exist in the CMake cache, warn and proceed.
+        # If the named option variable does not exist in the CMake cache, abort.
         if(NOT DEFINED ${DEP_CMAKE_OPTION})
             message(FATAL_ERROR "Loading thirdparty library ${DEP_NAME} at index ${INDEX} references unknown CMake option '${DEP_CMAKE_OPTION}'. Aborting.")
         else()
