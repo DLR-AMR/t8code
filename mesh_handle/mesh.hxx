@@ -301,7 +301,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   void
   set_adapt (adapt_callback_type adapt_callback)
   {
-    SC_CHECK_ABORT (m_forest->incomplete_trees, "The mesh handle can't adapt forests with incomplete trees.\n");
+    SC_CHECK_ABORT (m_forest->incomplete_trees == 0, "The mesh handle can't adapt forests with incomplete trees.\n");
     if (!m_uncommitted_forest.has_value ()) {
       m_uncommitted_forest.emplace ();
       t8_forest_init (&*m_uncommitted_forest);

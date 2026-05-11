@@ -21,6 +21,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /** \file dg_element_competences.hxx
+ * Mesh competences that are useful for discontinuous Galerkin methods. This includes the storage of the remote 
+ * ranks of the ghost elements and the face connectivity.
  * TODO: IDEA for test: write rank on element data and then check if this is correct for the ghosts
  */
 
@@ -59,7 +61,6 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
   void
   set_rank_vector () const
   {
-    //TODO if no ghost is defined then return vec with only local ranks (num ghosts is 0 )
     const TUnderlying& mesh = this->underlying ();
     const t8_locidx_t num_local = mesh.get_num_local_elements ();
     const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
@@ -125,7 +126,7 @@ enum class face_type {
   MPI_MORTAR,     ///< Mortar where at least one side (large or small) is remote.
 };
 
-/** Class for the face side of an element. One face can have multiple face sides of different elements. */
+/** Class for the face side of an element. One \ref face can have multiple face sides of different elements. */
 struct face_side
 {
   int m_element_id;         ///< Mesh element handle id of the side's element.
@@ -190,7 +191,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
       SC_ABORT ("Use remote_ranks_mesh_competence together with face_vector_mesh_competence.\n");
     }
     const t8_forest_t forest = mesh.get_forest ();
-    SC_CHECK_ABORT (forest->incomplete_trees, "This functionality is not specified for incomplete trees.\n");
+    SC_CHECK_ABORT (forest->incomplete_trees == 0, "This functionality is not specified for incomplete trees.\n");
 
     // Vector should store one entry per face of each element, so reserve space accordingly.
     m_element_face_vector.assign (mesh.get_num_local_elements () + mesh.get_num_ghosts (), {});
@@ -270,7 +271,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
           /* --- Large side of a MORTAR or MPI_MORTAR (num_neighs > 1) ---  */
           // We are the coarse element; neighs are all finer small sides.
           bool any_remote = false;
-          for (int ineigh = 0; ineigh < num_neighs; ++in) {
+          for (int ineigh = 0; ineigh < num_neighs; ++ineigh) {
             if (mesh.get_rank (neighs[ineigh]->get_element_handle_id ()) != LOCAL_RANK) {
               any_remote = true;
               break;
@@ -293,13 +294,35 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
                                                  neighs[0]->get_element (), dual_faces[ineigh]);
             f.m_sides.push_back ({ neigh_id, dual_faces[ineigh], orientation_neigh, neigh_rank });
             // Record face index for the small side element.
-            m_element_face_vector[neighs[in]->get_element_handle_id ()].push_back (face_idx);
+            m_element_face_vector[neighs[ineigh]->get_element_handle_id ()].push_back (face_idx);
           }
           // Insert face f.
           m_faces.push_back (std::move (f));
         }
       }
     }
+  }
+
+  /** Get the vector of unique faces. \ref set_unique_face_vector must be called beforehand to populate the vector.
+   * \return Const reference to the vector of faces.
+   */
+  const std::vector<face>&
+  get_unique_face_vector () const
+  {
+    T8_ASSERTF (m_faces.empty (), "m_faces has not been set. Call set_unique_face_vector() first.");
+    return m_faces;
+  }
+
+  /** Get the vector with indices of faces for each mesh handle element.
+ * \ref set_unique_face_vector must be called beforehand to populate the vector.
+ * \return Const reference to the element-face vector.
+ */
+  const std::vector<std::vector<int>>&
+  get_element_face_vector () const
+  {
+    T8_ASSERTF (m_element_face_vector.empty (),
+                " m_element_face_vector has not been set. Call set_unique_face_vector() first.");
+    return m_element_face_vector;
   }
 
  protected:

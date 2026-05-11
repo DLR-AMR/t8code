@@ -32,6 +32,7 @@
 
 #include "competences/cache_element_competences.hxx"
 #include "competences/element_data_competences.hxx"
+#include "competences/dg_competences.hxx"
 #include "internal/competence_pack_union.hxx"
 namespace t8_mesh_handle
 {
@@ -95,6 +96,9 @@ using empty_mesh_competences = mesh_competence_pack<>;
  */
 template <T8MPISafeType TElementDataType>
 using data_mesh_competences = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type>;
+
+/** Predefined mesh competence pack combining all competences that are useful for discontinuous Galerkin methods. */
+using dg_mesh_competences = mesh_competence_pack<remote_ranks_mesh_competence, face_vector_mesh_competence>;
 
 // --- Compute union of competence packs. ---
 /** Compute the unique union of the competences of several competence_pack. This could be
