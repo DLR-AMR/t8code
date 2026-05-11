@@ -123,7 +123,7 @@ endif()
 ############################################ ThirdParty ############################################
 
 # Set some variables for the thirdparty libraries
-set(gtest_force_shared_crt ON CACHE INTERNAL "" FORCE)
+set( gtest_force_shared_crt ON CACHE INTERNAL "" FORCE )
 set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
 set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
 set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
