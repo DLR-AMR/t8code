@@ -26,6 +26,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #pragma once
 
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_ghost.h>
 #include <t8.h>
 #include <t8_types/t8_operators.hxx>
 #include <t8_types/t8_vec.hxx>
@@ -57,41 +59,31 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
   void
   set_rank_vector () const
   {
-    //TODO if no ghost is defined then return vec with only llocal ranks (num ghosts is 0 )
+    //TODO if no ghost is defined then return vec with only local ranks (num ghosts is 0 )
     const TUnderlying& mesh = this->underlying ();
-    t8_forest_t forest = mesh.get_forest ();
-
     const t8_locidx_t num_local = mesh.get_num_local_elements ();
     const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
-
-    m_ranks.resize (num_local + num_ghosts);
-
-    /* --- local elements: rank = LOCAL_RANK --- */
-    for (t8_locidx_t ilocal = 0; ilocal < num_local; ++ilocal) {
-      m_ranks[ilocal] = LOCAL_RANK;
-    }
-
     if (num_ghosts == 0) {
+      m_ranks.assign (num_local, LOCAL_RANK);
       return;
     }
 
-    /* --- ghost elements: determine rank per ghost element --- */
+    /* --- local elements: rank = LOCAL_RANK --- */
+    m_ranks.resize (num_local + num_ghosts);
+    std::fill_n (m_ranks.begin (), num_local, LOCAL_RANK);
 
-    /* t8_forest_ghost_get_remotes returns a plain int array of length
-     * num_remotes in ascending order, and fills num_remotes. */
+    /* --- ghost elements: determine rank per ghost element. --- */
+    /* Get array with remote ranks in ascending order. */
+    const t8_forest_t forest = mesh.get_forest ();
     int num_remotes = 0;
     int* remotes = t8_forest_ghost_get_remotes (forest, &num_remotes);
 
     for (int iremote = 0; iremote < num_remotes; ++iremote) {
       const int remote = remotes[iremote];
-
-      /* First ghost-element index (0-based within ghost elements only)
-       * that belongs to this remote rank. */
+      /* First ghost-element index that belongs to this remote rank. */
       const t8_locidx_t first_elem = t8_forest_ghost_remote_first_elem (forest, remote);
-
-      /* The number of ghost elements of this remote is the difference
-       * between its first element index and the next remote's first
-       * element index (or the total ghost count for the last remote). */
+      /* The number of ghost elements of this remote is the difference between first_elem and the next remote's first
+       * element index. */
       t8_locidx_t num_elems_of_remote;
       if (iremote + 1 < num_remotes) {
         const int next_remote = remotes[iremote + 1];
@@ -102,14 +94,17 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
         num_elems_of_remote = num_ghosts - first_elem;
       }
 
-      /* Write the remote rank for every ghost element of this remote.
-       * The handle id of a ghost element is num_local + (ghost-only index). */
+      /* Write remote rank for every ghost element of this remote. */
       for (t8_locidx_t ielem = 0; ielem < num_elems_of_remote; ++ielem) {
         m_ranks[num_local + first_elem + ielem] = remote;
       }
     }
   }
-
+  /**
+   * Get the rank associated with a given element handle.
+   * \param[in] element_handle_id The ID of the element handle.
+   * \return The rank of the specified element if \ref set_rank_vector was called beforehand.
+   */
   int
   get_rank (t8_locidx_t element_handle_id)
   {
@@ -118,49 +113,60 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
   }
 
  protected:
-  mutable std::vector<int> m_ranks;
+  mutable std::vector<int> m_ranks;  ///< The rank of the owner for each element.
 };
 
+/** Type of the face. */
+enum class face_type {
+  BOUNDARY,       ///< Exactly 1 side, domain boundary.
+  CONFORMAL,      ///< Exactly 2 sides, same level, all local.
+  MORTAR,         ///< 1 large side + N small sides, all local.
+  MPI_CONFORMAL,  ///< Exactly 2 sides, same level, exactly one remote.
+  MPI_MORTAR,     ///< Mortar where at least one side (large or small) is remote.
+};
+
+/** Class for the face side of an element. One face can have multiple face sides of different elements. */
 struct face_side
 {
-  int m_element_id;         // local element id, or ghost layer index if remote
-  int m_local_face_id;      // which face of that element points to this interface
-  int m_orientation;        // face orientation code for coordinate permutation
-  int m_rank = LOCAL_RANK;  // LOCAL_RANK if owned locally, else MPI rank of owner
-
-  bool
-  is_remote () const
-  {
-    return m_rank != LOCAL_RANK;
-  }
+  int m_element_id;         ///< Mesh element handle id of the side's element.
+  int m_local_face_id;      ///< The face of that element pointing to this interface.
+  int m_orientation;        ///< Face orientation code for coordinate permutation.
+  int m_rank = LOCAL_RANK;  ///< LOCAL_RANK if owned locally, else MPI rank of owner.
 };
 
-enum class face_type {
-  CONFORMAL,      // exactly 2 sides, same level, all local
-  MORTAR,         // 1 large side + N small sides (N=2 in 2D, up to 4 in 3D hex)
-  BOUNDARY,       // exactly 1 side, domain boundary
-  MPI_CONFORMAL,  // exactly 2 sides, same level, at least one remote
-  MPI_MORTAR,     // mortar where at least one side is remote
-};
-
+/** Class for a face. A face can have multiple \ref face_side s if different elements faces share the same face.
+ */
 struct face
 {
-  face_type m_type;
+  face_type m_type;  ///< The face type of the face, see \ref face_type for the possible types and their meaning.
+  /** The face sides of different elements adjacent to this face. 
+   * Order conventions for the sides in the vector depend on the face type:
+   * - BOUNDARY: m_sides[0]     = the single local side
+   * - MORTAR / MPI_MORTAR: m_sides[0] = large side; 
+   *                        m_sides[1..N] = small sides (in face-corner order of the large element)
+   * - CONFORMAL / MPI_CONFORMAL: m_sides[0] = primary (smaller handle id); m_sides[1] = secondary
+   */
   std::vector<face_side> m_sides;
-  // Convention for MORTAR / MPI_MORTAR:
-  //   m_sides[0]     = large side
-  //   m_sides[1..N]  = small sides (in face-corner order of the large element)
-  // Convention for CONFORMAL / MPI_CONFORMAL:
-  //   m_sides[0]     = primary (lower global id or local owner)
-  //   m_sides[1]     = secondary
-  // Convention for BOUNDARY:
-  //   m_sides[0]     = the single local side
-  /** \note Currently unused but may be filled with t8_cmesh_set_attribute. */
-  int m_boundary_tag = 0;  // meaningful only for BOUNDARY
+  /** Boundary tag; meaningful only for BOUNDARY. 
+   * \note Currently unused but may be filled with t8_cmesh_set_attribute. 
+   */
+  int m_boundary_tag = 0;
 };
 
 /**
- * TODO
+ * Mesh competence to build a unique vector of faces, where each face appears exactly once. 
+ * This is useful for DG methods, where we need to loop over faces and access the neighboring elements across the face.
+ * This mesh competence should be combined with the competence \ref remote_ranks_mesh_competence.
+ * Each vector entry is of type \ref face and we have the following uniqueness rules for the face types specified in
+ * \ref face_type:
+ * - BOUNDARY: only one local side exists, always added.
+ * - CONFORMAL / MPI_CONFORMAL: added by the side whose element has the smaller handle_id. 
+ *      For a local–ghost pair the local element always has the smaller id (local ids < ghost ids),
+ *      so the local side is always the one that inserts the face.
+ * - MORTAR / MPI_MORTAR: the large (coarser) side owns the face and inserts it (also for ghosts). 
+ *      The small sides are specified in m_sides.
+ * Additionally, a vector is build that holds the face indices for each element.
+ * 
  * \tparam TUnderlying Use the \ref mesh with specified competences as template parameter.
  */
 template <typename TUnderlying>
@@ -168,164 +174,139 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
 {
  public:
   /**
-   * Build \a m_faces so that every face touching at least one local element
-   * appears exactly once.  Simultaneously populate \a m_element_face_vector
-   * so that m_element_face_vector[handle_id] holds one index into m_faces
-   * per face of that element.
-   *
-   * Uniqueness rules
-   * ----------------
-   * BOUNDARY      – only one local side exists, always added.
-   * CONFORMAL /
-   * MPI_CONFORMAL – added by the side whose element has the smaller
-   *                 handle_id.  For a local–ghost pair the local element
-   *                 always has the smaller id (local ids < ghost ids), so
-   *                 the local side is always the one that inserts the face.
-   * MORTAR /
-   * MPI_MORTAR    – the large (coarser) side owns the face and inserts it.
-   *                 The small sides are added to m_faces[*].m_sides by the
-   *                 large-side owner; they do not trigger their own insertion.
+   * Build \a m_faces so that every face touching at least one local element appears exactly once. 
+   * Simultaneously populate \a m_element_face_vector so that m_element_face_vector[handle_id] holds one index 
+   * into m_faces per face of that element.
    */
   void
   set_unique_face_vector () const
   {
     const TUnderlying& mesh = this->underlying ();
-    if constexpr (requires (TUnderlying& meshvar) { meshvar.set_rank_vector (); })
+    // Ensure that rank vector is set.
+    if constexpr (mesh.has_remote_ranks_mesh_competence ()) {
       mesh.set_rank_vector ();
-  }
-  else
-  {
-    SC_ABORT ("Use remote_ranks_mesh_competence together with face_vector_mesh_competence.\n");
-  }
+    }
+    else {
+      SC_ABORT ("Use remote_ranks_mesh_competence together with face_vector_mesh_competence.\n");
+    }
+    const t8_forest_t forest = mesh.get_forest ();
+    SC_CHECK_ABORT (forest->incomplete_trees, "This functionality is not specified for incomplete trees.\n");
 
-  /* One entry per element (local + ghost), each entry is a list of
-     * indices into m_faces. */
-  m_element_face_vector.assign (mesh.get_num_local_elements () + mesh.get_num_ghosts (), {});
+    // Vector should store one entry per face of each element, so reserve space accordingly.
+    m_element_face_vector.assign (mesh.get_num_local_elements () + mesh.get_num_ghosts (), {});
 
-  for (const auto& elem : mesh) {
-    const int handle_id = elem.get_element_handle_id ();
+    // Check each face of each element and insert into vectors.
+    for (const auto& elem : mesh) {
+      const int handle_id = elem.get_element_handle_id ();
+      for (int iface = 0; iface < elem.get_num_faces (); ++iface) {
+        // Get neighbors and their dual face numbers to check the face_type.
+        std::vector<int> dual_faces;
+        auto neighs = elem.get_face_neighbors (iface, dual_faces);
+        const int num_neighs = static_cast<int> (neighs.size ());
 
-    for (int iface = 0; iface < elem.get_num_faces (); ++iface) {
-      std::vector<int> dual_faces;
-      auto neighs = elem.get_face_neighbors (iface, dual_faces);
-      const int num_neighs = static_cast<int> (neighs.size ());
-
-      if (num_neighs == 0) {
-        /* ---- BOUNDARY ---- */
-        face f;
-        f.m_type = face_type::BOUNDARY;
-        f.m_sides.push_back ({ handle_id, iface, /*orientation=*/0, LOCAL_RANK });
-
-        const int face_idx = static_cast<int> (m_faces.size ());
-        m_faces.push_back (std::move (f));
-        m_element_face_vector[handle_id].push_back (face_idx);
-      }
-      else if (num_neighs == 1) {
-        const int neigh_handle = neighs[0]->get_element_handle_id ();
-        const int neigh_rank = mesh.get_rank (neigh_handle);
-        const bool neigh_is_remote = (neigh_rank != LOCAL_RANK);
-
-        if (elem.get_level () == neighs[0]->get_level ()) {
-          /* ---- CONFORMAL or MPI_CONFORMAL ----
-             * Insert only from the side with the smaller handle_id so that
-             * each conformal face appears exactly once.  For a local–ghost
-             * pair the local element always wins (local ids < ghost ids). */
-          if (handle_id < neigh_handle) {
-            face f;
-            f.m_type = neigh_is_remote ? face_type::MPI_CONFORMAL : face_type::CONFORMAL;
-            f.m_sides.push_back ({ handle_id, iface, /*orientation=*/0, LOCAL_RANK });
-            f.m_sides.push_back ({ neigh_handle, dual_faces[0], /*orientation=*/0, neigh_rank });
-
-            const int face_idx = static_cast<int> (m_faces.size ());
-            m_faces.push_back (std::move (f));
-            m_element_face_vector[handle_id].push_back (face_idx);
-            m_element_face_vector[neigh_handle].push_back (face_idx);
-          }
-          else {
-            /* The neighbour (local) will insert this face; just record
-               * that we will participate so the index can be filled in when
-               * the neighbour processes its face.  Because we iterate in
-               * handle_id order the neighbour has already done so. */
-            /* Find the face index already inserted by the neighbour. */
-            for (int fi : m_element_face_vector[neigh_handle]) {
-              const face& candidate = m_faces[fi];
-              if (candidate.m_sides.size () >= 2
-                  && ((candidate.m_sides[0].m_element_id == neigh_handle
-                       && candidate.m_sides[1].m_element_id == handle_id)
-                      || (candidate.m_sides[1].m_element_id == neigh_handle
-                          && candidate.m_sides[0].m_element_id == handle_id))) {
-                m_element_face_vector[handle_id].push_back (fi);
-                break;
-              }
-            }
-          }
-        }
-        else if (elem.get_level () > neighs[0]->get_level ()) {
-          /* ---- Small side of a MORTAR or MPI_MORTAR ----
-             * The large (coarser) neighbour owns and inserts this face.
-             * We are on a small side; do not insert, but record the
-             * face index once the large side has inserted it.
-             * Because we may reach the small side before the large side
-             * has been processed (it is a ghost), we defer: the large
-             * side's insertion loop will also update our entry. */
-          /* Nothing to insert here; the large side handles it. */
-        }
-        else {
-          /* ---- Large side of a MORTAR or MPI_MORTAR (num_neighs==1) ----
-             * Our level < neighbour level: we are the coarse side.
-             * This branch is reached when a coarse local element borders a
-             * single finer element (possible in 2D with triangles). */
+        if (num_neighs == 0) {
+          /* --- BOUNDARY --- */
           face f;
-          f.m_type = neigh_is_remote ? face_type::MPI_MORTAR : face_type::MORTAR;
+          f.m_type = face_type::BOUNDARY;
           f.m_sides.push_back ({ handle_id, iface, /*orientation=*/0, LOCAL_RANK });
-          f.m_sides.push_back ({ neigh_handle, dual_faces[0], /*orientation=*/0, neigh_rank });
 
           const int face_idx = static_cast<int> (m_faces.size ());
           m_faces.push_back (std::move (f));
           m_element_face_vector[handle_id].push_back (face_idx);
-          m_element_face_vector[neigh_handle].push_back (face_idx);
         }
-      }
-      else {
-        /* ---- Large side of a MORTAR or MPI_MORTAR (num_neighs > 1) ----
-           * We are the coarse element; neighs are all finer small sides. */
-        bool any_remote = false;
-        for (int in = 0; in < num_neighs; ++in) {
-          if (neighs[in]->get_rank () != LOCAL_RANK) {
-            any_remote = true;
-            break;
+        else if (num_neighs == 1) {
+          const int neigh_id = neighs[0]->get_element_handle_id ();
+          const int neigh_rank = mesh.get_rank (neigh_id);
+
+          if (elem.get_level () == neighs[0]->get_level ()) {
+            /* --- CONFORMAL or MPI_CONFORMAL --- */
+            // Insert only from the side with the smaller handle_id so that each conformal face appears exactly once.
+            if (handle_id < neigh_id) {
+              face f;
+              f.m_type = (neigh_rank != LOCAL_RANK) ? face_type::MPI_CONFORMAL : face_type::CONFORMAL;
+              const int orientation = t8_forest_leaf_face_orientation (
+                forest, elem.get_tree_id (), t8_forest_get_scheme (forest), elem.get_element (), iface);
+
+              f.m_sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
+              const int orientation_neigh
+                = t8_forest_leaf_face_orientation (forest, neighs[0]->get_tree_id (), t8_forest_get_scheme (forest),
+                                                   neighs[0]->get_element (), dual_faces[0]);
+              f.m_sides.push_back ({ neigh_id, dual_faces[0], orientation_neigh, neigh_rank });
+
+              const int face_idx = static_cast<int> (m_faces.size ());
+              m_faces.push_back (std::move (f));
+              m_element_face_vector[handle_id].push_back (face_idx);
+              m_element_face_vector[neigh_id].push_back (face_idx);
+            }
+          }
+          else if (elem.get_level () < neighs[0]->get_level ()) {
+            /* --- Small side of a MORTAR or MPI_MORTAR --- */
+            /* The large (coarser) neighbour owns and inserts this face.
+             * We only need to do something here if the neighbor is remote.
+             */
+            if (neigh_rank == LOCAL_RANK) {
+              continue;  // local large side will insert the face, so we can skip this
+            }
+            face f;
+            f.m_type = face_type::MPI_MORTAR;
+            const int orientation_neigh
+              = t8_forest_leaf_face_orientation (forest, neighs[0]->get_tree_id (), t8_forest_get_scheme (forest),
+                                                 neighs[0]->get_element (), dual_faces[0]);
+            f.m_sides.push_back ({ neigh_id, dual_faces[0], orientation_neigh, neigh_rank });
+            const int orientation = t8_forest_leaf_face_orientation (
+              forest, elem.get_tree_id (), t8_forest_get_scheme (forest), elem.get_element (), iface);
+            f.m_sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
+
+            const int face_idx = static_cast<int> (m_faces.size ());
+            m_faces.push_back (std::move (f));
+            m_element_face_vector[handle_id].push_back (face_idx);
+            m_element_face_vector[neigh_id].push_back (face_idx);
+          }
+          else {
+            SC_ABORT ("Not possible.\n");
           }
         }
+        else {
+          /* --- Large side of a MORTAR or MPI_MORTAR (num_neighs > 1) ---  */
+          // We are the coarse element; neighs are all finer small sides.
+          bool any_remote = false;
+          for (int ineigh = 0; ineigh < num_neighs; ++in) {
+            if (mesh.get_rank (neighs[ineigh]->get_element_handle_id ()) != LOCAL_RANK) {
+              any_remote = true;
+              break;
+            }
+          }
+          // Face index for the face we are about to insert.
+          const int face_idx = static_cast<int> (m_faces.size ());
+          m_element_face_vector[handle_id].push_back (face_idx);
 
-        face f;
-        f.m_type = any_remote ? face_type::MPI_MORTAR : face_type::MORTAR;
-        /* m_sides[0] = large side (us) */
-        f.m_sides.push_back ({ handle_id, iface, /*orientation=*/0, LOCAL_RANK });
-        /* m_sides[1..N] = small sides in face-corner order */
-        for (int in = 0; in < num_neighs; ++in) {
-          const int nh = neighs[in]->get_element_handle_id ();
-          const int nr = neighs[in]->get_rank ();
-          f.m_sides.push_back ({ nh, dual_faces[in], /*orientation=*/0, nr });
-        }
-
-        const int face_idx = static_cast<int> (m_faces.size ());
-        m_faces.push_back (std::move (f));
-
-        /* Record this face index for the large side and all small sides. */
-        m_element_face_vector[handle_id].push_back (face_idx);
-        for (int in = 0; in < num_neighs; ++in) {
-          m_element_face_vector[neighs[in]->get_element_handle_id ()].push_back (face_idx);
+          face f;
+          f.m_type = any_remote ? face_type::MPI_MORTAR : face_type::MORTAR;
+          const int orientation = t8_forest_leaf_face_orientation (
+            forest, elem.get_tree_id (), t8_forest_get_scheme (forest), elem.get_element (), iface);
+          f.m_sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
+          for (int ineigh = 0; ineigh < num_neighs; ++ineigh) {
+            const int neigh_id = neighs[ineigh]->get_element_handle_id ();
+            const int neigh_rank = mesh.get_rank (neigh_id);
+            const int orientation_neigh
+              = t8_forest_leaf_face_orientation (forest, neighs[ineigh]->get_tree_id (), t8_forest_get_scheme (forest),
+                                                 neighs[0]->get_element (), dual_faces[ineigh]);
+            f.m_sides.push_back ({ neigh_id, dual_faces[ineigh], orientation_neigh, neigh_rank });
+            // Record face index for the small side element.
+            m_element_face_vector[neighs[in]->get_element_handle_id ()].push_back (face_idx);
+          }
+          // Insert face f.
+          m_faces.push_back (std::move (f));
         }
       }
     }
   }
-}
 
-protected:
-  mutable std::vector<face>
-    m_faces;
-/* For each element (local + ghost), the list of indices into m_faces
-   * that this element participates in.  One entry per face of the element. */
-mutable std::vector<std::vector<int>> m_element_face_vector;
+ protected:
+  /** Vector with one entry per unique face. */
+  mutable std::vector<face> m_faces;
+  /** For each element (local + ghost), the list of indices into m_faces
+   * that this element participates in. One entry per face of the element. */
+  mutable std::vector<std::vector<int>> m_element_face_vector;
 };
 }  // namespace t8_mesh_handle
