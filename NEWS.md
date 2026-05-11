@@ -1,8 +1,7 @@
 # Updated dependencies
 
-We have switched from a submodules approach to a FetchContent approach for our dependencies towards p4est and sc. If you don't have already installed p4est and sc, calling cmake will install the right branch from their github. If you have p4est and sc installed already and want to use that version no further code will be downloaded. If your current configuration is to the internal p4est and sc installation you don't need to update your workflow. The submodules of p4est and sc should be removed with this update. Instead they will be downloaded and installed in the _deps folder in your build folder.
-If you use a separate installation of p4est and sc it is important to set the boolean CMake Options "T8CODE_USE_SYSTEM_P4EST" and "T8CODE_USE_SYSTEM_SC". It prevents the triggering of the automatic installation of the libraries.
-Our recommendation is to delete any existing sc/ and p4est/ folders and use the automatically downloaded FetchContent.
+We have switched from a submodules approach to a FetchContent approach for our dependencies p4est and sc. If you use p4est and sc shipped with t8code, calling cmake will pull and add the right commit from github. You can also still link against your local installations. Either way you do not need to update your workflow. The submodules of p4est and sc should be removed with this update. Instead they will be downloaded and installed in the _deps folder in your build folder.
+If you use a separate installation of p4est and sc it is important to set the boolean CMake Options "T8CODE_USE_SYSTEM_P4EST" and "T8CODE_USE_SYSTEM_SC" as before. It prevents the triggering of the automatic installation of the libraries.
 For further information have a look at our [Installation Guide](https://github.com/DLR-AMR/t8code/wiki/Installation).
 For devs: Further dependencies can be managed in our dependencies.json.
 
@@ -246,7 +245,7 @@ Similarly, the following member variables have been renamed:
 
 # Renaming of macros T8_WITH_ to T8_ENABLE_
 We renamed the macros T8_WITH_... to T8_ENABLE_... for consistency reasons with the related cmake options (T8CODE_ENABLE...) and other macros. We are currently working on an automatized way to check for wrong usages.
-Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script. 
+Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script.
 
 
 # Update to MPI 3.0
@@ -280,4 +279,4 @@ For more details, see the pull request https://github.com/DLR-AMR/t8code/pull/19
 
 # Documentation on readthedocs
 
-To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster. 
+To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster.
