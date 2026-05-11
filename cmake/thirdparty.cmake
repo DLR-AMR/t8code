@@ -54,7 +54,7 @@ foreach(INDEX RANGE ${DEPS_RANGE})
 
     message(STATUS "Configuring thirdparty library: ${DEP_NAME} (Type: ${DEP_TYPE}, SHALLOW: ${DEP_SHALLOW})")
 
-    #If Dep_SHALLOW is not a valid boolean, set it to FALSE and print a warning.
+    # If Dep_SHALLOW is not a valid boolean, set it to FALSE and print a warning.
     if(NOT DEP_SHALLOW STREQUAL "TRUE" AND NOT DEP_SHALLOW STREQUAL "FALSE")
         message(STATUS "Invalid value for 'shallow' in thirdparty library ${DEP_NAME}: '${DEP_SHALLOW}'. Expected 'true' or 'false'. Defaulting to 'false'.")
         set(DEP_SHALLOW FALSE)
