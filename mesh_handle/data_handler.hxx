@@ -28,6 +28,7 @@
 #pragma once
 
 #include <t8.h>
+#include "concepts.hxx"
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_crtp.hxx>
 #include <type_traits>
@@ -36,11 +37,6 @@
 namespace t8_mesh_handle
 {
 // --- Mesh competence for element data management. ---
-/** Concept to ensure that a type is MPI safe. */
-template <typename TType>
-concept T8MPISafeType
-  = std::is_void_v<TType> || (std::is_trivially_copyable_v<TType> && std::is_standard_layout_v<TType>);
-
 /** Handler for the element data of a \ref mesh.
  * Use this competence if you want to manage element data for the elements of the mesh.
  * Use the helper \ref element_data_mesh_competence to get this competence with the correct template parameters form for the mesh. 
