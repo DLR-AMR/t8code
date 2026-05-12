@@ -58,15 +58,14 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
 
   /** Set the element data vector. The vector should have the length of num_local_elements.
    * \param [in] element_data The element data vector to set with one entry of class TElementDataType 
-   *            for each local mesh element (excluding ghosts).
+   *            for each local mesh element (excluding ghosts). The vector is moved, not copied.
    */
   void
   set_element_data (std::vector<TElementDataType> element_data)
   {
     const auto num_local_elements = this->underlying ().get_num_local_elements ();
-    const auto num_ghosts = this->underlying ().get_num_ghosts ();
     T8_ASSERT (element_data.size () == static_cast<size_t> (num_local_elements));
-    m_element_data.reserve (num_local_elements + num_ghosts);
+    // element_data is moved, not copied.
     m_element_data = std::move (element_data);
   }
 
@@ -135,21 +134,20 @@ struct element_data_element_competence: public t8_crtp_basic<TUnderlying>
   // --- Getter and setter for element data. ---
   /** Set the element data for the element. 
    * \note You can only set element data for non-ghost elements.
-   * \param [in] element_data The element data to be set of Type TMeshClass::ElementDataType.
+   * \param [in] element_data The element data to be set of Type TMeshClass::ElementDataType. 
+   *              element_data is moved, not copied.
    */
   void
   set_element_data (auto element_data)
   {
     T8_ASSERT (this->underlying ().m_mesh->has_element_data_handler_competence ());
     SC_CHECK_ABORT (!this->underlying ().is_ghost_element (), "Element data cannot be set for ghost elements.\n");
-    /* If not yet initialized, reserve capacity for local and ghost elements and resize to the number of local 
-     * elements such that it is ensured that the element data vector is large enough to store data for this element. */
-    if ((t8_locidx_t) this->underlying ().m_mesh->m_element_data.size ()
+    // Resize to num_local_elements on first use so that operator[] is valid.S
+    if (static_cast<t8_locidx_t> (this->underlying ().m_mesh->m_element_data.size ())
         <= this->underlying ().get_element_handle_id ()) {
-      this->underlying ().m_mesh->m_element_data.reserve (this->underlying ().m_mesh->get_num_local_elements ()
-                                                          + this->underlying ().m_mesh->get_num_ghosts ());
       this->underlying ().m_mesh->m_element_data.resize (this->underlying ().m_mesh->get_num_local_elements ());
     }
+    // element_data is moved, not copied.
     this->underlying ().m_mesh->m_element_data[this->underlying ().get_element_handle_id ()] = std::move (element_data);
   }
 
