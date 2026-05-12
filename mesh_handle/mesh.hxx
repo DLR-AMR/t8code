@@ -31,6 +31,7 @@
 #include "competence_pack.hxx"
 #include "internal/adapt.hxx"
 #include "competences/element_data_competences.hxx"
+#include "concepts.hxx"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
@@ -67,8 +68,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
  public:
   using SelfType = mesh<TElementCompetencePack, TMeshCompetencePack>; /**< Type of the current class. */
   using element_class = typename TElementCompetencePack::template apply<
-    SelfType, element>; /**< The element class of the mesh with given competences. */
-  friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
+    SelfType, element>;  /**< The element class of the mesh with given competences. */
+  friend element_class;  /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
+  using mesh_tag = void; /**< Mesh tag for identification in concept. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
   using mesh_iterator =

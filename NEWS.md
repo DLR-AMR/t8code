@@ -19,7 +19,25 @@ Please execute the steps in this order to ensure that your issue has the correct
 No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no issues are referenced using the Closes-keyword, an issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
 
 
-# User Updates for the upcoming t8code release (February 2026 - version format unclear)
+# User Updates for the upcoming t8code release (February 2026 - v4.0.0-26.02)
+
+## Updates to t8_forest_leaf_face_neighbors
+
+The t8_forest_leaf_face_neighbors and t8_forest_leaf_face_neighbors_ext functions (see t8_forest_general.h) have undergone a major update.
+
+- The forest does not need to be balanced anymore to compute the leaf face neighbors. Thus, there can be any arbitrary number of leaf face neighbors for a given element.
+The last argument (forest_is_balanced) was removed.
+
+- The allocation behaviour changed. element_destroy should not be called anymore.
+The function now returns pointers to t8code internal elements in the neighbor_leaves array.
+To free the memory use
+```C++
+if (num_neighbors > 0) {
+   T8_FREE (pneighbor_leaves);
+   T8_FREE (pelement_indices);
+   T8_FREE (dual_faces);
+}
+```
 
 ## Using structs instead of classes
 

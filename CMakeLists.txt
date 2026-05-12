@@ -40,6 +40,7 @@ FetchContent_Declare(
     GIT_REPOSITORY "https://github.com/DLR-SC/googletest_mpi.git"
     GIT_TAG 98bfff426b057400268a00f97677d749a9e25096 #v1.17.0_mpi
     GIT_PROGRESS TRUE
+	GIT_SHALLOW TRUE
     )
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -99,10 +100,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
   set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
       STRING "Choose the type of build. Build types available: Release Debug RelWithDebInfo" FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-    "Debug" "Release" "RelWithDebInfo")
 endif()
+# Set the possible values of build type for cmake-gui
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo")
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   # Option to generate code coverage target.
