@@ -52,10 +52,10 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
 {
  public:
   /**
-   * Fill \a m_ranks with LOCAL_RANK for each local element and with the
+   * Fill \a ranks with LOCAL_RANK for each local element and with the
    * corresponding remote MPI rank for each ghost element, i.e.:
-   *   m_ranks[0 .. num_local_elements - 1]  = LOCAL_RANK
-   *   m_ranks[num_local_elements .. num_local_elements + num_ghosts - 1]
+   *   ranks[0 .. num_local_elements - 1]  = LOCAL_RANK
+   *   ranks[num_local_elements .. num_local_elements + num_ghosts - 1]
    *                                         = remote rank of that ghost
    */
   void
@@ -65,13 +65,13 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
     const t8_locidx_t num_local = mesh.get_num_local_elements ();
     const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
     if (num_ghosts == 0) {
-      m_ranks.assign (num_local, LOCAL_RANK);
+      ranks.assign (num_local, LOCAL_RANK);
       return;
     }
 
     /* --- local elements: rank = LOCAL_RANK --- */
-    m_ranks.resize (num_local + num_ghosts);
-    std::fill_n (m_ranks.begin (), num_local, LOCAL_RANK);
+    ranks.resize (num_local + num_ghosts);
+    std::fill_n (ranks.begin (), num_local, LOCAL_RANK);
 
     /* --- ghost elements: determine rank per ghost element. --- */
     /* Get array with remote ranks in ascending order. */
@@ -97,7 +97,7 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
 
       /* Write remote rank for every ghost element of this remote. */
       for (t8_locidx_t ielem = 0; ielem < num_elems_of_remote; ++ielem) {
-        m_ranks[num_local + first_elem + ielem] = remote;
+        ranks[num_local + first_elem + ielem] = remote;
       }
     }
   }
@@ -107,14 +107,14 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
    * \return The rank of the specified element if \ref set_rank_vector was called beforehand.
    */
   int
-  get_rank (t8_locidx_t element_handle_id)
+  get_rank (t8_locidx_t element_handle_id) const
   {
-    T8_ASSERT (element_handle_id < m_ranks.size ());
-    return m_ranks[element_handle_id];
+    T8_ASSERT (static_cast<size_t> (element_handle_id) < ranks.size ());
+    return ranks[element_handle_id];
   }
 
  protected:
-  mutable std::vector<int> m_ranks;  ///< The rank of the owner for each element.
+  mutable std::vector<int> ranks;  ///< The rank of the owner for each element.
 };
 
 /** Type of the face. */
@@ -129,29 +129,26 @@ enum class face_type {
 /** Class for the face side of an element. One \ref face can have multiple face sides of different elements. */
 struct face_side
 {
-  int m_element_id;         ///< Mesh element handle id of the side's element.
-  int m_local_face_id;      ///< The face of that element pointing to this interface.
-  int m_orientation;        ///< Face orientation code for coordinate permutation.
-  int m_rank = LOCAL_RANK;  ///< LOCAL_RANK if owned locally, else MPI rank of owner.
+  int element_id;         ///< Mesh element handle id of the side's element.
+  int local_face_id;      ///< The face of that element pointing to this interface.
+  int orientation = 0;    ///< Face orientation code for coordinate permutation.
+  int rank = LOCAL_RANK;  ///< LOCAL_RANK if owned locally, else MPI rank of owner.
 };
 
 /** Class for a face. A face can have multiple \ref face_side s if different elements faces share the same face.
  */
 struct face
 {
-  face_type m_type;  ///< The face type of the face, see \ref face_type for the possible types and their meaning.
+  face_type type;  ///< The face type of the face, see \ref face_type for the possible types and their meaning.
   /** The face sides of different elements adjacent to this face. 
    * Order conventions for the sides in the vector depend on the face type:
-   * - BOUNDARY: m_sides[0]     = the single local side
-   * - MORTAR / MPI_MORTAR: m_sides[0] = large side; 
-   *                        m_sides[1..N] = small sides (in face-corner order of the large element)
-   * - CONFORMAL / MPI_CONFORMAL: m_sides[0] = primary (smaller handle id); m_sides[1] = secondary
+   * - BOUNDARY: sides[0]     = the single local side
+   * - CONFORMAL / MPI_CONFORMAL: sides[0] = primary (smaller handle id); sides[1] = secondary.
+   *                              For MPI_CONFORMAL the local side is always the primary side with the smaller handle id (local ids < ghost ids).
+   * - MORTAR / MPI_MORTAR: sides[0] = large side; 
+   *                        sides[1..N] = small sides (in face-corner order of the large element)
    */
-  std::vector<face_side> m_sides;
-  /** Boundary tag; meaningful only for BOUNDARY. 
-   * \note Currently unused but may be filled with t8_cmesh_set_attribute. 
-   */
-  int m_boundary_tag = 0;
+  std::vector<face_side> sides;
 };
 
 /**
@@ -165,7 +162,7 @@ struct face
  *      For a local–ghost pair the local element always has the smaller id (local ids < ghost ids),
  *      so the local side is always the one that inserts the face.
  * - MORTAR / MPI_MORTAR: the large (coarser) side owns the face and inserts it (also for ghosts). 
- *      The small sides are specified in m_sides.
+ *      The small sides are specified in sides.
  * Additionally, a vector is build that holds the face indices for each element.
  * 
  * \tparam TUnderlying Use the \ref mesh with specified competences as template parameter.
@@ -182,6 +179,10 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
   void
   set_unique_face_vector () const
   {
+    if (!m_faces.empty () || !m_element_face_vector.empty ()) {
+      m_faces.clear ();
+      m_element_face_vector.clear ();
+    }
     const TUnderlying& mesh = this->underlying ();
     // Ensure that rank vector is set.
     if constexpr (mesh.has_remote_ranks_mesh_competence ()) {
@@ -208,8 +209,8 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
         if (num_neighs == 0) {
           /* --- BOUNDARY --- */
           face f;
-          f.m_type = face_type::BOUNDARY;
-          f.m_sides.push_back ({ handle_id, iface, /*orientation=*/0, LOCAL_RANK });
+          f.type = face_type::BOUNDARY;
+          f.sides.push_back ({ handle_id, iface, /*orientation=*/0, LOCAL_RANK });
 
           const int face_idx = static_cast<int> (m_faces.size ());
           m_faces.push_back (std::move (f));
@@ -224,15 +225,15 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
             // Insert only from the side with the smaller handle_id so that each conformal face appears exactly once.
             if (handle_id < neigh_id) {
               face f;
-              f.m_type = (neigh_rank != LOCAL_RANK) ? face_type::MPI_CONFORMAL : face_type::CONFORMAL;
+              f.type = (neigh_rank != LOCAL_RANK) ? face_type::MPI_CONFORMAL : face_type::CONFORMAL;
               const int orientation = t8_forest_leaf_face_orientation (
-                forest, elem.get_tree_id (), t8_forest_get_scheme (forest), elem.get_element (), iface);
+                forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
 
-              f.m_sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
-              const int orientation_neigh
-                = t8_forest_leaf_face_orientation (forest, neighs[0]->get_tree_id (), t8_forest_get_scheme (forest),
-                                                   neighs[0]->get_element (), dual_faces[0]);
-              f.m_sides.push_back ({ neigh_id, dual_faces[0], orientation_neigh, neigh_rank });
+              f.sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
+              const int orientation_neigh = t8_forest_leaf_face_orientation (
+                forest, neighs[0]->get_local_tree_id (), t8_forest_get_scheme (forest),
+                neighs[0]->get_forest_element (), dual_faces[0]);
+              f.sides.push_back ({ neigh_id, dual_faces[0], orientation_neigh, neigh_rank });
 
               const int face_idx = static_cast<int> (m_faces.size ());
               m_faces.push_back (std::move (f));
@@ -240,7 +241,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
               m_element_face_vector[neigh_id].push_back (face_idx);
             }
           }
-          else if (elem.get_level () < neighs[0]->get_level ()) {
+          else if (elem.get_level () > neighs[0]->get_level ()) {
             /* --- Small side of a MORTAR or MPI_MORTAR --- */
             /* The large (coarser) neighbour owns and inserts this face.
              * We only need to do something here if the neighbor is remote.
@@ -249,14 +250,14 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
               continue;  // local large side will insert the face, so we can skip this
             }
             face f;
-            f.m_type = face_type::MPI_MORTAR;
+            f.type = face_type::MPI_MORTAR;
             const int orientation_neigh
-              = t8_forest_leaf_face_orientation (forest, neighs[0]->get_tree_id (), t8_forest_get_scheme (forest),
-                                                 neighs[0]->get_element (), dual_faces[0]);
-            f.m_sides.push_back ({ neigh_id, dual_faces[0], orientation_neigh, neigh_rank });
+              = t8_forest_leaf_face_orientation (forest, neighs[0]->get_local_tree_id (), t8_forest_get_scheme (forest),
+                                                 neighs[0]->get_forest_element (), dual_faces[0]);
+            f.sides.push_back ({ neigh_id, dual_faces[0], orientation_neigh, neigh_rank });
             const int orientation = t8_forest_leaf_face_orientation (
-              forest, elem.get_tree_id (), t8_forest_get_scheme (forest), elem.get_element (), iface);
-            f.m_sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
+              forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
+            f.sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
 
             const int face_idx = static_cast<int> (m_faces.size ());
             m_faces.push_back (std::move (f));
@@ -264,7 +265,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
             m_element_face_vector[neigh_id].push_back (face_idx);
           }
           else {
-            SC_ABORT ("Not possible.\n");
+            SC_ABORT ("Not possible without incomplete trees.\n");
           }
         }
         else {
@@ -282,17 +283,17 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
           m_element_face_vector[handle_id].push_back (face_idx);
 
           face f;
-          f.m_type = any_remote ? face_type::MPI_MORTAR : face_type::MORTAR;
+          f.type = any_remote ? face_type::MPI_MORTAR : face_type::MORTAR;
           const int orientation = t8_forest_leaf_face_orientation (
-            forest, elem.get_tree_id (), t8_forest_get_scheme (forest), elem.get_element (), iface);
-          f.m_sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
+            forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
+          f.sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
           for (int ineigh = 0; ineigh < num_neighs; ++ineigh) {
             const int neigh_id = neighs[ineigh]->get_element_handle_id ();
             const int neigh_rank = mesh.get_rank (neigh_id);
-            const int orientation_neigh
-              = t8_forest_leaf_face_orientation (forest, neighs[ineigh]->get_tree_id (), t8_forest_get_scheme (forest),
-                                                 neighs[0]->get_element (), dual_faces[ineigh]);
-            f.m_sides.push_back ({ neigh_id, dual_faces[ineigh], orientation_neigh, neigh_rank });
+            const int orientation_neigh = t8_forest_leaf_face_orientation (
+              forest, neighs[ineigh]->get_local_tree_id (), t8_forest_get_scheme (forest),
+              neighs[ineigh]->get_forest_element (), dual_faces[ineigh]);
+            f.sides.push_back ({ neigh_id, dual_faces[ineigh], orientation_neigh, neigh_rank });
             // Record face index for the small side element.
             m_element_face_vector[neighs[ineigh]->get_element_handle_id ()].push_back (face_idx);
           }
@@ -309,7 +310,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
   const std::vector<face>&
   get_unique_face_vector () const
   {
-    T8_ASSERTF (m_faces.empty (), "m_faces has not been set. Call set_unique_face_vector() first.");
+    T8_ASSERTF (!m_faces.empty (), "m_faces has not been set. Call set_unique_face_vector() first.");
     return m_faces;
   }
 
@@ -320,7 +321,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
   const std::vector<std::vector<int>>&
   get_element_face_vector () const
   {
-    T8_ASSERTF (m_element_face_vector.empty (),
+    T8_ASSERTF (!m_element_face_vector.empty (),
                 " m_element_face_vector has not been set. Call set_unique_face_vector() first.");
     return m_element_face_vector;
   }

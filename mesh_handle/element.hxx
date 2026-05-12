@@ -349,7 +349,6 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_face_neighbors (int face, std::optional<std::reference_wrapper<std::vector<int>>> dual_faces = std::nullopt) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
-    SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
     if constexpr (has_face_neighbor_cache ()) {
       if (this->neighbor_cache_filled (face)) {
         if (dual_faces) {
@@ -382,7 +381,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
     if (num_neighbors > 0) {
       // Free allocated memory.
-      t8_forest_get_scheme (m_mesh->m_forest)->element_destroy (get_tree_class (), num_neighbors, neighbors);
+      t8_forest_get_scheme (m_mesh->m_forest)->element_destroy (neigh_class, num_neighbors, neighbors);
       T8_FREE (neighbors);
       T8_FREE (dual_faces_internal);
       T8_FREE (neighids);
@@ -519,6 +518,16 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_local_tree_id () const
   {
     return m_tree_id;
+  }
+
+  /** Getter for the underlying forest element pointer.
+   *  This function is mainly relevant for writing custom competences that need to access t8code functionality.
+   * \return Pointer to the underlying forest element.
+   */
+  const t8_element_t*
+  get_forest_element () const
+  {
+    return m_element;
   }
 
   /** Getter for the local element id in the tree of the element in the forest related to the mesh.
