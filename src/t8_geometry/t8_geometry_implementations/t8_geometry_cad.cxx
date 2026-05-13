@@ -143,7 +143,7 @@ t8_geometry_cad::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 }
 
 void
-t8_geometry_cad::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid,
+t8_geometry_cad::t8_geom_point_batch_inside_element (const t8_forest_t forest, const t8_locidx_t ltreeid,
                                                      const t8_element_t *element, const double *points,
                                                      const int num_points, int *is_inside, const double tolerance) const
 {

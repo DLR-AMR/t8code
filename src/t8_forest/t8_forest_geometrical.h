@@ -115,7 +115,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
  *                             the x, y and z coordinates of the centroid.
  */
 void
-t8_forest_element_linear_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+t8_forest_element_linear_centroid (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                    double *coordinates);
 
 /** Compute the diameter of an element if a geometry for this tree is registered in the forest's cmesh.

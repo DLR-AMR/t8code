@@ -186,7 +186,7 @@ t8_swap (double p1[3], double p2[3]);
  * \param [in]  tolerance   The tolerance
  * \return true if points are coplanar.
  */
-int
+constexpr int
 t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double p_2[3], const double p_3[3],
                          const double tolerance);
 

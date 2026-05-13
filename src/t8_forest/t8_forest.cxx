@@ -515,7 +515,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
 /* Compute the center of mass of an element. We can use the element reference
  * coordinates of the centroid.*/
 void
-t8_forest_element_linear_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
+t8_forest_element_linear_centroid (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                                    double *coordinates_c)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
