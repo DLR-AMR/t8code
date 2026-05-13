@@ -63,7 +63,7 @@
  *
  *  If the mesh is not 3D then no element is refined.
  *
- *  WARNING: this refinement schemes only works with the default element
+ *  Warning: this refinement schemes only works with the default element
  *           scheme (see t8_scheme_new_default in t8_default/t8_default.hxx).
  */
 static int
