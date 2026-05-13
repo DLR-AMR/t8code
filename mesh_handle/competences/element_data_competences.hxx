@@ -63,8 +63,7 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
   void
   set_element_data (std::vector<TElementDataType> element_data)
   {
-    const auto num_local_elements = this->underlying ().get_num_local_elements ();
-    T8_ASSERT (element_data.size () == static_cast<size_t> (num_local_elements));
+    T8_ASSERT (element_data.size () == static_cast<size_t> (this->underlying ().get_num_local_elements ()));
     // element_data is moved, not copied.
     m_element_data = std::move (element_data);
   }
