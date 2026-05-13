@@ -43,7 +43,7 @@ jobs:
           done
       - name: Archive script output
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: macro_and_error_report
           path: error.txt

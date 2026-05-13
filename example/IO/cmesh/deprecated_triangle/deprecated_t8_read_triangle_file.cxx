@@ -23,15 +23,13 @@
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_tetgen.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_triangle.h>
 #include <t8_vtk/t8_vtk_writer.h>
-#include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_io.h>
 
-static t8_cmesh_t
-t8_cmesh_from_tetgen (const char *prefix, int do_partition)
+#include <t8_schemes/t8_default/t8_default.hxx>
+
+void
+t8_read_triangle_file_build_cmesh (const char *prefix, int do_dup, int do_partition)
 {
   t8_cmesh_t cmesh;
   char fileprefix[BUFSIZ];
@@ -40,47 +38,43 @@ t8_cmesh_from_tetgen (const char *prefix, int do_partition)
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  cmesh = t8_cmesh_from_tetgen_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, 0);
+  cmesh = t8_cmesh_from_triangle_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, do_dup);
+
   if (cmesh != NULL) {
+    if (do_partition) {
+      t8_cmesh_t cmesh_part;
+      t8_cmesh_init (&cmesh_part);
+      t8_cmesh_ref (cmesh);
+      t8_cmesh_set_derive (cmesh_part, cmesh);
+      t8_cmesh_set_partition_uniform (cmesh_part, 1, t8_scheme_new_default ());
+      t8_cmesh_commit (cmesh_part, sc_MPI_COMM_WORLD);
+      snprintf (fileprefix, BUFSIZ, "%s_t8_triangle_partition", prefix);
+      if (!t8_cmesh_vtk_write_file (cmesh_part, fileprefix)) {
+        t8_debugf ("Wrote to file %s\n", fileprefix);
+      }
+      t8_cmesh_destroy (&cmesh_part);
+    }
     t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
-    t8_debugf ("cmesh has:\n\t%lli tetrahedra\n", (long long) t8_cmesh_get_num_trees (cmesh));
-    snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_%04d", prefix, mpirank);
+    t8_debugf ("cmesh has:\n\t%lli triangles\n", (long long) t8_cmesh_get_num_trees (cmesh));
+    snprintf (fileprefix, BUFSIZ, "%s_t8_triangle", prefix);
     if (!t8_cmesh_vtk_write_file (cmesh, fileprefix)) {
       t8_debugf ("Wrote to file %s\n", fileprefix);
     }
     else {
       t8_debugf ("ERROR in writing cmesh vtk\n");
     }
+    t8_cmesh_destroy (&cmesh);
   }
   else {
     t8_debugf ("An error occurred while reading %s files.\n", prefix);
   }
-  return cmesh;
-}
-
-static void
-t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
-{
-  t8_forest_t forest;
-  char fileprefix[BUFSIZ];
-
-  t8_debugf ("Construct Forest from Tetmesh\n");
-  t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
-  t8_forest_set_level (forest, level);
-  t8_forest_commit (forest);
-  t8_debugf ("Committed forest. Has %i elements.\n", t8_forest_get_local_num_leaf_elements (forest));
-  snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_forest", prefix);
-  t8_forest_write_vtk (forest, fileprefix);
-  t8_debugf ("Wrote to file %s\n", fileprefix);
-  t8_forest_unref (&forest);
+  fflush (stdout);
 }
 
 int
 main (int argc, char *argv[])
 {
-  int mpiret, parsed, partition, level;
+  int mpiret, parsed, partition;
   sc_options_t *opt;
   const char *prefix;
   char usage[BUFSIZ];
@@ -89,7 +83,7 @@ main (int argc, char *argv[])
 
   snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS> <ARGUMENTS>", basename (argv[0]));
   sreturn = snprintf (help, BUFSIZ,
-                      "This program reads a collection of .node, .ele and .neigh files created by the TETGEN program "
+                      "This program reads a collection of .node, .ele and .neigh files created by the TRIANGLE program "
                       "and constructs a t8code coarse mesh from them.\nAll three files must have the same prefix."
                       "\n\n%s\n\nExample: %s -f A1\nTo open the files A1.node, A1.ele and A1.neigh.\n",
                       usage, basename (argv[0]));
@@ -108,16 +102,16 @@ main (int argc, char *argv[])
   t8_init (SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);
-  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the tetgen files.");
+  sc_options_add_string (opt, 'f', "prefix", &prefix, "", "The prefix of the triangle files.");
   sc_options_add_bool (opt, 'p', "Partition", &partition, 0, "If true the generated cmesh is partitioned.");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
   if (parsed < 0 || strcmp (prefix, "") == 0) {
-    fprintf (stderr, "%s", help);
+    fprintf (stderr, "%s\n", help);
+    sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
   else {
-    level = 0;
-    t8_forest_from_cmesh (t8_cmesh_from_tetgen (prefix, partition), level, prefix);
+    t8_read_triangle_file_build_cmesh (prefix, 0, partition);
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 

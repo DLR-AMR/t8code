@@ -63,19 +63,17 @@ jobs:
   valgrind_check:
     timeout-minutes: 90
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: dlramr/t8code-dependencies:t8-dependencies-ubuntu-gcc
     steps:
 #
 # Setup
 #
     - name: Download artifacts
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
       run: tar -xf artifact.tar && rm artifact.tar
-    - name: Update packages
-      run: sudo apt-get update && sudo apt-get upgrade -y
       # This seems to be necessary because of the docker container.
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -90,9 +88,6 @@ jobs:
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
-    ## Install Valgrind.
-    - name: Install Valgrind
-      run: sudo apt-get install -y valgrind
     - name: Print Valgrind version
       run: valgrind --version
 
@@ -113,7 +108,7 @@ jobs:
       run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS
     - name: OnFailUploadLog
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: cmake_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}.log
         path: build/CMakeFiles/CMakeOutput.log

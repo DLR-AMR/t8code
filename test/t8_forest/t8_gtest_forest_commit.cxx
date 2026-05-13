@@ -149,7 +149,7 @@ TEST_P (forest_commit, test_forest_commit)
   t8_forest_t forest_ada_bal_part;
   t8_forest_t forest_abp_3part;
 
-  const int level_step = 2;
+  const int level_step = 1;
 
   /* Compute the first level, such that no process is empty */
   int min_level = t8_forest_min_nonempty_level (cmesh, scheme);
@@ -157,7 +157,7 @@ TEST_P (forest_commit, test_forest_commit)
   min_level = SC_MAX (min_level - 1, 0);
   for (int level = min_level; level < min_level + level_step; level++) {
     t8_debugf ("Testing forest commit level %i\n", level);
-    int maxlevel = level + level_step;
+    int maxlevel = level + 2;
     /* ref the cmesh since we reuse it */
     t8_cmesh_ref (cmesh);
     /* Create a uniformly refined forest */

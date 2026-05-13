@@ -23,44 +23,64 @@
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_tetgen.h>
-#include <sc_flops.h>
-#include <sc_statistics.h>
-#include <sc_options.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_tetgen.h>
+#include <t8_vtk/t8_vtk_writer.h>
+#include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_io.h>
 
-void
-t8_read_tetgen_file_build_cmesh (const char *prefix, int do_dup, int do_partition)
+static t8_cmesh_t
+t8_cmesh_from_tetgen (const char *prefix, int do_partition)
 {
   t8_cmesh_t cmesh;
+  char fileprefix[BUFSIZ];
   int mpirank, mpiret;
-  sc_flopinfo_t fi, snapshot;
-  sc_statinfo_t stats[6];
 
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  sc_flops_start (&fi);
-  cmesh = t8_cmesh_from_tetgen_file_time ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, do_dup, &fi, &snapshot,
-                                          stats, 0);
+  cmesh = t8_cmesh_from_tetgen_file ((char *) prefix, do_partition, sc_MPI_COMM_WORLD, 0);
   if (cmesh != NULL) {
     t8_debugf ("Successfully constructed cmesh from %s files.\n", prefix);
-    t8_debugf ("cmesh has:\n\t%lli tetrahedra %li local\n", (long long) t8_cmesh_get_num_trees (cmesh),
-               (long) t8_cmesh_get_num_local_trees (cmesh));
-    t8_cmesh_unref (&cmesh);
+    t8_debugf ("cmesh has:\n\t%lli tetrahedra\n", (long long) t8_cmesh_get_num_trees (cmesh));
+    snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_%04d", prefix, mpirank);
+    if (!t8_cmesh_vtk_write_file (cmesh, fileprefix)) {
+      t8_debugf ("Wrote to file %s\n", fileprefix);
+    }
+    else {
+      t8_debugf ("ERROR in writing cmesh vtk\n");
+    }
   }
   else {
     t8_debugf ("An error occurred while reading %s files.\n", prefix);
   }
-  fflush (stdout);
+  return cmesh;
+}
 
-  sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
-  sc_stats_print (t8_get_package_id (), SC_LP_STATISTICS, 1, stats, 1, 1);
+static void
+t8_forest_from_cmesh (t8_cmesh_t cmesh, int level, const char *prefix)
+{
+  t8_forest_t forest;
+  char fileprefix[BUFSIZ];
+
+  t8_debugf ("Construct Forest from Tetmesh\n");
+  t8_forest_init (&forest);
+  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  t8_forest_set_level (forest, level);
+  t8_forest_commit (forest);
+  t8_debugf ("Committed forest. Has %i elements.\n", t8_forest_get_local_num_leaf_elements (forest));
+  snprintf (fileprefix, BUFSIZ, "%s_t8_tetgen_forest", prefix);
+  t8_forest_write_vtk (forest, fileprefix);
+  t8_debugf ("Wrote to file %s\n", fileprefix);
+  t8_forest_unref (&forest);
 }
 
 int
 main (int argc, char *argv[])
 {
-  int mpiret, parsed, partition;
+  int mpiret, parsed, partition, level;
   sc_options_t *opt;
   const char *prefix;
   char usage[BUFSIZ];
@@ -96,7 +116,8 @@ main (int argc, char *argv[])
     return 1;
   }
   else {
-    t8_read_tetgen_file_build_cmesh (prefix, 0, partition);
+    level = 0;
+    t8_forest_from_cmesh (t8_cmesh_from_tetgen (prefix, partition), level, prefix);
     sc_options_print_summary (t8_get_package_id (), SC_LP_PRODUCTION, opt);
   }
 
