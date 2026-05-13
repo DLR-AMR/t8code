@@ -29,6 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
+#include <mesh_handle/concepts.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -57,7 +58,7 @@ struct dummy_user_data
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 int
 adapt_callback_test ([[maybe_unused]] const TMeshClass &mesh,
                      std::span<const typename TMeshClass::element_class> elements, const dummy_user_data &user_data)
@@ -108,7 +109,7 @@ forest_adapt_callback_example (t8_forest_t forest, t8_forest_t forest_from, t8_l
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 int
 mesh_adapt_callback_test_refine_second ([[maybe_unused]] const TMeshClass &mesh,
                                         std::span<const typename TMeshClass::element_class> elements)
