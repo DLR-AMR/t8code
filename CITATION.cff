@@ -9,7 +9,7 @@ type: software
 authors:
   #Authors
   - given-names: Johannes
-    family-names: Holke
+    family-names: Albrecht Holke
     email: Johannes.Holke@dlr.de
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-2783-3286"
