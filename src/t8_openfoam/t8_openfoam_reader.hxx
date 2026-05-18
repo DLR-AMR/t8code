@@ -279,7 +279,7 @@ struct t8_openfoam_reader
   }
 
   /**
-   * Reads in an OpenFOAM points file and stores the points.
+   * Reads in an OpenFOAM points file and stores the points in the member variable \ref m_points.
    * \param [in] points_file The path to the points file.
    * \return                True on success.
    */
@@ -333,7 +333,7 @@ struct t8_openfoam_reader
   }
 
   /**
-   * Reads in an OpenFOAM faces file stores the faces.
+   * Reads in an OpenFOAM faces file and stores the faces in the member variable \ref m_face_points.
    * \param [in] faces_file  The path to the faces file.
    * \return                True on success.
    */
