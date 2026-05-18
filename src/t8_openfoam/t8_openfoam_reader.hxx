@@ -53,7 +53,7 @@ struct t8_openfoam_reader
   using t8_path = std::filesystem::path;
 
   /**
-   * Reader for OpenFOAM cases.
+   * Constructor of OpenFOAM reader.
    * \param [in] foamfile  Path to the *.foam file inside the OpenFOAM case directory.
    * \param [in] comm      The communicator to use for the obtained forest.
    */
@@ -83,9 +83,9 @@ struct t8_openfoam_reader
     /* The file reading needs to happen in this order, since these functions depend on each other. */
     bool error = 0;
     error = !read_points (case_points_dir);
-    error &= !read_faces (case_faces_dir);
-    error &= !read_owner (case_owner_dir);
-    error &= !read_neighbor (case_neighbor_dir);
+    error = error && !read_faces (case_faces_dir);
+    error = error && !read_owner (case_owner_dir);
+    error = error && !read_neighbor (case_neighbor_dir);
 
     if (error) {
       /* Return the uninitialized cmesh (nullptr) */
@@ -152,7 +152,7 @@ struct t8_openfoam_reader
     std::string line;
     bool format_checked = false;
 
-    /* Loop through file till end of file or thill we break manually at the right position. */
+    /* Loop through file till end of file or till we break manually at the right position. */
     while (std::getline (input_stream, line)) {
       std::istringstream line_stream (line);
 
@@ -425,7 +425,7 @@ struct t8_openfoam_reader
   }
 
   /**
-   * Reads in an OpenFOAM owner file, assigns the faces to their cells and
+   * Reads in an OpenFOAM neighbor file, assigns the faces to their cells and
    * also fills the other half of the neighborhoods.
    * \param [in] neighbor_dir  The path to the points file.
    * \return                    True on success.
@@ -472,7 +472,7 @@ struct t8_openfoam_reader
   build_cmesh ()
   {
     t8_global_errorf ("ERROR: Not implemented yet. \n");
-    return 0;
+    return false;
   }
 
   /** Path to the OpenFOAM case. */
