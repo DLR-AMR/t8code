@@ -74,18 +74,18 @@ struct t8_openfoam_reader
   {
 
     /* Build paths to the standard OpenFOAM mesh files. */
-    const t8_path case_faces_dir = m_case_dir / "constant/polyMesh/faces";
-    const t8_path case_boundary_dir = m_case_dir / "constant/polyMesh/boundary";
-    const t8_path case_neighbor_dir = m_case_dir / "constant/polyMesh/neighbour";
-    const t8_path case_owner_dir = m_case_dir / "constant/polyMesh/owner";
-    const t8_path case_points_dir = m_case_dir / "constant/polyMesh/points";
+    const t8_path case_faces_file = m_case_dir / "constant/polyMesh/faces";
+    const t8_path case_boundary_file = m_case_dir / "constant/polyMesh/boundary";
+    const t8_path case_neighbor_file = m_case_dir / "constant/polyMesh/neighbour";
+    const t8_path case_owner_file = m_case_dir / "constant/polyMesh/owner";
+    const t8_path case_points_file = m_case_dir / "constant/polyMesh/points";
 
     /* The file reading needs to happen in this order, since these functions depend on each other. */
     bool error = 0;
-    error = !read_points (case_points_dir);
-    error = error && !read_faces (case_faces_dir);
-    error = error && !read_owner (case_owner_dir);
-    error = error && !read_neighbor (case_neighbor_dir);
+    error = !read_points (case_points_file);
+    error = error && !read_faces (case_faces_file);
+    error = error && !read_owner (case_owner_file);
+    error = error && !read_neighbor (case_neighbor_file);
 
     if (error) {
       /* Return the uninitialized cmesh (nullptr) */
@@ -280,23 +280,23 @@ struct t8_openfoam_reader
 
   /**
    * Reads in an OpenFOAM points file and stores the points.
-   * \param [in] points_dir The path to the points file.
+   * \param [in] points_file The path to the points file.
    * \return                True on success.
    */
   bool
-  read_points (const t8_path& points_dir)
+  read_points (const t8_path& points_file)
   {
     /* TODO: Implement compact lists for points (mostly happen when mesh only has one element) */
 
-    std::ifstream file { points_dir };
+    std::ifstream file { points_file };
     if (!file) {
-      t8_errorf ("ERROR: File not found: %s\n", points_dir.c_str ());
+      t8_errorf ("ERROR: File not found: %s\n", points_file.c_str ());
       m_points.clear ();
       return false;
     }
     /* Skip OpenFOAM header. */
     if (!skip_openfoam_header (file)) {
-      t8_errorf ("ERROR: Unable to parse file: %s\n", points_dir.c_str ());
+      t8_errorf ("ERROR: Unable to parse file: %s\n", points_file.c_str ());
       return false;
     }
 
@@ -323,7 +323,7 @@ struct t8_openfoam_reader
       char c;
       t8_3D_vec point;
       if (!(iss >> c >> point[0] >> point[1] >> point[2] >> c)) {
-        t8_errorf ("ERROR: Unable to parse file: %s\n", points_dir.c_str ());
+        t8_errorf ("ERROR: Unable to parse file: %s\n", points_file.c_str ());
         m_points.clear ();
         return false;
       }
@@ -334,22 +334,22 @@ struct t8_openfoam_reader
 
   /**
    * Reads in an OpenFOAM faces file stores the faces.
-   * \param [in] faces_dir  The path to the faces file.
+   * \param [in] faces_file  The path to the faces file.
    * \return                True on success.
    */
   bool
-  read_faces (const t8_path& faces_dir)
+  read_faces (const t8_path& faces_file)
   {
-    std::ifstream file (faces_dir);
+    std::ifstream file (faces_file);
     /* Check if file exists. */
     if (!file) {
-      t8_errorf ("ERROR: File not found: %s\n", faces_dir.c_str ());
+      t8_errorf ("ERROR: File not found: %s\n", faces_file.c_str ());
       m_face_points.clear ();
       return false;
     }
     /* Skip OpenFOAM header. */
     if (!skip_openfoam_header (file)) {
-      t8_errorf ("ERROR: Unable to parse file: %s\n", faces_dir.c_str ());
+      t8_errorf ("ERROR: Unable to parse file: %s\n", faces_file.c_str ());
       return false;
     }
 
@@ -359,7 +359,7 @@ struct t8_openfoam_reader
     std::getline (file, line);
     std::istringstream iss (line);
     if (!(iss >> n_faces)) {
-      t8_errorf ("ERROR: Unable to parse file: %s\n", faces_dir.c_str ());
+      t8_errorf ("ERROR: Unable to parse file: %s\n", faces_file.c_str ());
     }
 
     /* skip opening '(' */
@@ -371,7 +371,7 @@ struct t8_openfoam_reader
     for (size_t i_face = 0; i_face < n_faces; ++i_face) {
       std::vector<size_t> points;
       if (!read_openfoam_label_list (file, points)) {
-        t8_errorf ("ERROR: Unable to parse file: %s\n", faces_dir.c_str ());
+        t8_errorf ("ERROR: Unable to parse file: %s\n", faces_file.c_str ());
         return false;
       }
       m_face_points.emplace_back (std::move (points));
@@ -382,22 +382,22 @@ struct t8_openfoam_reader
   /**
    * Reads in an OpenFOAM owner file, assigns the faces to their cells and
    * also fills one half of the neighborhoods.
-   * \param [in] owner_dir  The path to the owner file.
+   * \param [in] owner_file  The path to the owner file.
    * \return                True on success.
    */
   bool
-  read_owner (const t8_path& owner_dir)
+  read_owner (const t8_path& owner_file)
   {
     T8_ASSERT (!m_face_points.empty ());
 
-    std::ifstream file (owner_dir);
+    std::ifstream file (owner_file);
     /* Check if file can be opened */
     if (!file) {
-      t8_errorf ("ERROR: File not found: %s\n", owner_dir.c_str ());
+      t8_errorf ("ERROR: File not found: %s\n", owner_file.c_str ());
       return false;
     }
     if (!skip_openfoam_header (file)) {
-      t8_errorf ("ERROR: Unable to parse file: %s\n", owner_dir.c_str ());
+      t8_errorf ("ERROR: Unable to parse file: %s\n", owner_file.c_str ());
       return false;
     }
 
@@ -405,7 +405,7 @@ struct t8_openfoam_reader
      * is the owner of the face. face_id -> cell_id */
     std::vector<size_t> owner_list;
     if (!read_openfoam_label_list (file, owner_list)) {
-      t8_errorf ("ERROR: Unable to parse file: %s\n", owner_dir.c_str ());
+      t8_errorf ("ERROR: Unable to parse file: %s\n", owner_file.c_str ());
       return false;
     }
 
@@ -427,22 +427,22 @@ struct t8_openfoam_reader
   /**
    * Reads in an OpenFOAM neighbor file, assigns the faces to their cells and
    * also fills the other half of the neighborhoods.
-   * \param [in] neighbor_dir  The path to the points file.
+   * \param [in] neighbor_file  The path to the points file.
    * \return                    True on success.
    */
   bool
-  read_neighbor (const t8_path& neighbor_dir)
+  read_neighbor (const t8_path& neighbor_file)
   {
     T8_ASSERT (!m_cell_faces.empty ());
     /* Check if file can be opened */
-    std::ifstream file (neighbor_dir);
+    std::ifstream file (neighbor_file);
     if (!file) {
-      t8_errorf ("ERROR: File not found: %s\n", neighbor_dir.c_str ());
+      t8_errorf ("ERROR: File not found: %s\n", neighbor_file.c_str ());
       return false;
     }
 
     if (!skip_openfoam_header (file)) {
-      t8_errorf ("ERROR: Unable to parse file: %s\n", neighbor_dir.c_str ());
+      t8_errorf ("ERROR: Unable to parse file: %s\n", neighbor_file.c_str ());
       return false;
     }
 
@@ -450,7 +450,7 @@ struct t8_openfoam_reader
      * is the neighbor of the face. face_id -> cell_id */
     std::vector<size_t> neighbor_list;
     if (!read_openfoam_label_list (file, neighbor_list)) {
-      t8_errorf ("ERROR: Unable to parse file: %s\n", neighbor_dir.c_str ());
+      t8_errorf ("ERROR: Unable to parse file: %s\n", neighbor_file.c_str ());
       return false;
     }
 
