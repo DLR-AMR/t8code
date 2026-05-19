@@ -20,7 +20,47 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 #include <t8_cmesh_tree_reindex.hxx>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_forest/t8_forest.h>
+#include <t8_geometry/t8_geometry_with_vertices.h>
+#include <array>
 
-std::map<t8_gloidx_t, t8_gloidx_t> t8_cmesh_reindex_tree(t8_cmesh_t cmesh){
-    
+std::array<double, 24>
+bbox_bounds_to_hex_vertices (const double bounds[6])
+{
+  const double x_min = bounds[0];
+  const double x_max = bounds[1];
+  const double y_min = bounds[2];
+  const double y_max = bounds[3];
+  const double z_min = bounds[4];
+  const double z_max = bounds[5];
+
+  return {
+    x_min, y_min, z_min,  // vertex 0
+    x_max, y_min, z_min,  // vertex 1
+    x_min, y_max, z_min,  // vertex 2
+    x_max, y_max, z_min,  // vertex 3
+
+    x_min, y_min, z_max,  // vertex 4
+    x_max, y_min, z_max,  // vertex 5
+    x_min, y_max, z_max,  // vertex 6
+    x_max, y_max, z_max   // vertex 7
+  };
+}
+
+std::map<t8_gloidx_t, t8_gloidx_t>
+t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
+{
+  double bounding_box[6];
+  t8_cmesh_get_local_bounding_box (cmesh, bounding_box);
+
+  t8_cmesh_t bbox_cmesh;
+
+  t8_cmesh_init (&bbox_cmesh);
+  t8_cmesh_set_tree_class (bbox_cmesh, 0, T8_ECLASS_HEX);
+  std::array<double, 24> vertices = bbox_bounds_to_hex_vertices (bounding_box);
+
+  t8_cmesh_set_tree_vertices (bbox_cmesh, 0, vertices.data (), 8);
+
+  t8_cmesh_commit (bbox_cmesh, comm);
 };
