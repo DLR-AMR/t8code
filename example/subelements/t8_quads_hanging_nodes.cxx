@@ -24,6 +24,7 @@
  * This is an example to demonstrate hanging node resolution for quads. 
  */
 
+#include "t8_schemes/t8_subelement/t8_subelement.hxx"
 #include <t8.h>                                 /* General t8code header, always include this. */
 #include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
@@ -80,10 +81,10 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
 /* This is the adapt function, called for each element in a balanced forest during transition.
  * We refine an element into a suitable transition cell if it has at most one hanging face */
 int
-t8_remove_hanging_nodes_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+t8_remove_hanging_nodes_callback (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, t8_locidx_t which_tree,
                                   [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                                  const t8_scheme *scheme, const int is_family, [[maybe_unused]] const int num_elements,
-                                  t8_element_t *elements[])
+                                  const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                                  [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   int subelement_type = 0;
   /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
@@ -176,15 +177,15 @@ main (int argc, char **argv)
   /* ---Setup.  Build cmesh and uniform forest.---   */
   /* Build a cube cmesh with tet, hex, and prism trees. */
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);  // TODO: New scheme
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, comm);  // TODO: New scheme
 
   /* --- Adapt the forest. ---   */
   forest = t8_adapt_forest (forest);
 
   // --- Remove hanging nodes via adapting again. ---
-  forest = t8_remove_hanging_nodes (forest);
+  // forest = t8_remove_hanging_nodes (forest);
   //TODO: permit forest_from->incomplete_trees
-
+  std::cout << "Scheme : " << t8_element_get_element_size (t8_forest_get_scheme (forest), T8_ECLASS_QUAD) << "\n";
   // --- Cleanup. ---
   t8_forest_unref (&forest);
 
