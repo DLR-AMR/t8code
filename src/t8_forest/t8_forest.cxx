@@ -1961,20 +1961,17 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
           *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, const t8_element_t *, total_num_neighbors);
           T8_ASSERT (*pneighbor_leaves != NULL);
           // Copy the pointers to pneighbor_leaves
-          for (t8_locidx_t ielem = 0; ielem < num_neighbors_current_tree; ++ielem) {
-            (*pneighbor_leaves)[ielem] = user_data.neighbors.data ()[*num_neighbors + ielem];
-          }
+          std::copy_n (user_data.neighbors.begin (), num_neighbors_current_tree, *pneighbor_leaves + *num_neighbors);
         }
         // Copy element indices
         *pelement_indices = T8_REALLOC (*pelement_indices, t8_locidx_t, total_num_neighbors);
         T8_ASSERT (*pelement_indices != NULL);
-        memcpy (*pelement_indices + *num_neighbors, user_data.element_indices.data () + *num_neighbors,
-                num_neighbors_current_tree * sizeof (t8_locidx_t));
+        std::copy_n (user_data.element_indices.begin (), num_neighbors_current_tree,
+                     *pelement_indices + *num_neighbors);
         // Copy dual face
         *dual_faces = T8_REALLOC (*dual_faces, int, total_num_neighbors);
         T8_ASSERT (*dual_faces != NULL);
-        memcpy (*dual_faces + *num_neighbors, user_data.dual_faces.data () + *num_neighbors,
-                num_neighbors_current_tree * sizeof (int));
+        std::copy_n (user_data.dual_faces.begin (), num_neighbors_current_tree, *dual_faces + *num_neighbors);
         *num_neighbors = total_num_neighbors;
       }
     }  // End if neighbors exist (first_leaf_index > 0)
