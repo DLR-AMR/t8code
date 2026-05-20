@@ -44,20 +44,6 @@ struct element_neighbor_eclass: public testing::TestWithParam<std::tuple<int, in
 
     // Build a uniform forest
     forest = t8_forest_new_uniform (cmesh, scheme, level, do_ghost, sc_MPI_COMM_WORLD);
-
-    // Go through all the trees in the forest and store their eclass
-    tree_eclass_ref.resize (t8_cmesh_get_num_local_trees (cmesh));
-    for (t8_locidx_t itree = 0; itree < t8_cmesh_get_num_local_trees (cmesh); itree++) {
-      tree_eclass_ref[itree] = t8_cmesh_get_tree_class (cmesh, itree);
-      std::cerr << "tree " << itree << "  eclass " << tree_eclass_ref[itree] << std::endl;
-    }
-
-    // Likewise for all ghost trees
-    ghost_eclass_ref.resize (t8_cmesh_get_num_ghosts (cmesh));
-    for (t8_locidx_t ighost = 0; ighost < t8_cmesh_get_num_ghosts (cmesh); ighost++) {
-      ghost_eclass_ref[ighost] = t8_cmesh_get_ghost_class (cmesh, ighost);
-      std::cerr << "ghost " << ighost << "  eclass " << tree_eclass_ref[ighost] << std::endl;
-    }
   }
 
   void
@@ -69,8 +55,6 @@ struct element_neighbor_eclass: public testing::TestWithParam<std::tuple<int, in
   t8_cmesh_t cmesh;
   t8_forest_t forest;
   const t8_scheme *scheme;
-  std::vector<t8_eclass_t> tree_eclass_ref;
-  std::vector<t8_eclass_t> ghost_eclass_ref;
 };
 
 TEST_P (element_neighbor_eclass, test_half_neighbors)
@@ -109,15 +93,23 @@ TEST_P (element_neighbor_eclass, test_half_neighbors)
         else {
           // Get neighbor tree id
           const int tree_face = scheme->element_get_tree_face (tree_eclass, element, iface);
-          t8_locidx_t const cmesh_dual_itree
+          t8_locidx_t const neighbor_id
             = t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, tree_face, nullptr, nullptr);
 
-          if (cmesh_dual_itree < 0) {
+          if (neighbor_id < 0) {
             // No neighbor
             EXPECT_EQ (neigh_class, T8_ECLASS_INVALID);
           }
           else {
-            EXPECT_EQ (neigh_class, tree_eclass_ref[cmesh_dual_itree]);
+            // Neighbor
+            const bool neighbor_is_ghost = t8_cmesh_treeid_is_ghost (cmesh, neighbor_id);
+            if (!neighbor_is_ghost) {
+              EXPECT_EQ (neigh_class, t8_cmesh_get_tree_class (cmesh, neighbor_id));
+            }
+            else {
+              const t8_locidx_t lghost_neighbor_id = neighbor_id - t8_cmesh_get_num_local_trees (cmesh);
+              EXPECT_EQ (neigh_class, t8_cmesh_get_ghost_class (cmesh, lghost_neighbor_id));
+            }
           }
         }
       }
