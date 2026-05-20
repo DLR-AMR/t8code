@@ -153,8 +153,9 @@ t8_openfoam_reader::read_openfoam_label_list (std::istream& input_stream, std::v
   values.clear ();
   values.reserve (list_size);
 
+  switch (opening_delimiter) {
   /* Expanded or compact list: <num_values>(val_0 ... val_n) with or without line break */
-  if (opening_delimiter == '(') {
+  case '(': {
     /* Read values */
     while (values.size () < list_size) {
       size_t list_value;
@@ -165,32 +166,35 @@ t8_openfoam_reader::read_openfoam_label_list (std::istream& input_stream, std::v
     /* Check if closing delimiter is at the expected place. */
     char closing_delimiter = '\0';
     input_stream >> closing_delimiter;
-    if (closing_delimiter != ')') {
-      return false;
+    if (closing_delimiter == ')') {
+      return true;
     }
-
-    return true;
+    [[fallthrough]];
   }
 
   /* Uniform encoding: <num_values>{val} */
-  if (opening_delimiter == '{') {
+  case '{': {
     /* Get the uniform value. */
     size_t uniform_value = 0;
     input_stream >> uniform_value;
 
-    /* Check for expected closing delimiter. */
-    char closing_delimiter = '\0';
-    input_stream >> closing_delimiter;
-    if (closing_delimiter != '}') {
-      return false;
-    }
-
     /* Assign uniform values to list. */
     values.assign (list_size, uniform_value);
     return true;
+
+    /* Check for expected closing delimiter. */
+    char closing_delimiter = '\0';
+    input_stream >> closing_delimiter;
+    if (closing_delimiter == '}') {
+      return true;
+    }
+    [[fallthrough]];
   }
 
-  return false;
+  default:
+    t8_errorf ("Unrecognized encoding of OpenFOAM list.\n");
+    return false;
+  }
 }
 
 bool
