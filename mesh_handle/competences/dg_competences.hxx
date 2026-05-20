@@ -20,7 +20,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file dg_element_competences.hxx
+/** \file dg_competences.hxx
  * Mesh competences that are useful for discontinuous Galerkin methods. This includes the storage of the remote 
  * ranks of the ghost elements and the face connectivity.
  * TODO: IDEA for test: write rank on element data and then check if this is correct for the ghosts
@@ -156,7 +156,7 @@ struct face
  * This is useful for DG methods, where we need to loop over faces and access the neighboring elements across the face.
  * This mesh competence should be combined with the competence \ref remote_ranks_mesh_competence.
  * Each vector entry is of type \ref face and we have the following uniqueness rules for the face types specified in
- * \ref face_type:
+ * \ref face_type :
  * - BOUNDARY: only one local side exists, always added.
  * - CONFORMAL / MPI_CONFORMAL: added by the side whose element has the smaller handle_id. 
  *      For a local–ghost pair the local element always has the smaller id (local ids < ghost ids),
@@ -184,6 +184,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
       m_element_face_vector.clear ();
     }
     const TUnderlying& mesh = this->underlying ();
+    T8_ASSERT (mesh.is_balanced ());
     // Ensure that rank vector is set.
     if constexpr (TUnderlying::has_remote_ranks_mesh_competence ()) {
       mesh.set_rank_vector ();
@@ -191,6 +192,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
     else {
       SC_ABORT ("Use remote_ranks_mesh_competence together with face_vector_mesh_competence.\n");
     }
+
     const t8_forest_t forest = mesh.get_forest ();
     SC_CHECK_ABORT (forest->incomplete_trees == 0, "This functionality is not specified for incomplete trees.\n");
 
@@ -205,10 +207,10 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
         m_element_face_vector[handle_id].assign (num_faces, -1);
       }
       for (int iface = 0; iface < num_faces; ++iface) {
-        // // Continue if the face entry is already filled.
-        // if (m_element_face_vector[handle_id][iface] != -1) {
-        //   continue;
-        // }
+        // Continue if the face entry is already filled.
+        if (m_element_face_vector[handle_id][iface] != -1) {
+          continue;
+        }
         // Get neighbors and their dual face numbers to check the face_type.
         std::vector<int> dual_faces;
         auto neighs = elem.get_face_neighbors (iface, dual_faces);
@@ -216,10 +218,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
 
         if (num_neighs == 0) {
           /* --- BOUNDARY --- */
-          face f;
-          f.type = face_type::BOUNDARY;
-          f.sides.push_back ({ handle_id, iface, /*orientation=*/0, LOCAL_RANK });
-
+          face f { face_type::BOUNDARY, { { handle_id, iface, /*orientation=*/0, LOCAL_RANK } } };
           const int face_idx = static_cast<int> (m_faces.size ());
           m_faces.push_back (std::move (f));
           m_element_face_vector[handle_id][iface] = face_idx;
@@ -234,10 +233,11 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
             if (handle_id < neigh_id) {
               face f;
               f.type = (neigh_rank != LOCAL_RANK) ? face_type::MPI_CONFORMAL : face_type::CONFORMAL;
+
               const int orientation = t8_forest_leaf_face_orientation (
                 forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
-
               f.sides.push_back ({ handle_id, iface, orientation, LOCAL_RANK });
+
               const int orientation_neigh = t8_forest_leaf_face_orientation (
                 forest, neighs[0]->get_local_tree_id (), t8_forest_get_scheme (forest),
                 neighs[0]->get_forest_element (), dual_faces[0]);
@@ -258,9 +258,10 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
              * We only need to do something here if the neighbor is remote.
              */
             if (neigh_rank == LOCAL_RANK) {
-              continue;  // local large side will insert the face, so we can skip this
+              continue;  // local large side will insert the face, so we can skip this.
             }
 
+            // Check if the ghost is already inserted by another small mortar. If yes, only add the face.
             if (!m_element_face_vector[neigh_id].empty () && m_element_face_vector[neigh_id][dual_faces[0]] != -1) {
               const int orientation = t8_forest_leaf_face_orientation (
                 forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
@@ -276,7 +277,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
             const int orientation = t8_forest_leaf_face_orientation (
               forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
             face f { face_type::MPI_MORTAR,
-                     { { neigh_id, dual_faces[0], orientation_neigh, neigh_rank },
+                     { { neigh_id, dual_faces[0], orientation_neigh, neigh_rank },  // Large mortar first.
                        { handle_id, iface, orientation, LOCAL_RANK } } };
 
             const int face_idx = static_cast<int> (m_faces.size ());
@@ -293,7 +294,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
         }
         else {
           /* --- Large side of a MORTAR or MPI_MORTAR (num_neighs > 1) ---  */
-          // We are the coarse element; neighs are all finer small sides.
+          // We are the coarse element; neighs are all small mortars.
           bool any_remote = std::any_of (neighs.begin (), neighs.end (), [&] (const auto* neigh) {
             return mesh.get_rank (neigh->get_element_handle_id ()) != LOCAL_RANK;
           });
@@ -313,7 +314,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
               forest, neighs[ineigh]->get_local_tree_id (), t8_forest_get_scheme (forest),
               neighs[ineigh]->get_forest_element (), dual_faces[ineigh]);
             f.sides.push_back ({ neigh_id, dual_faces[ineigh], orientation_neigh, neigh_rank });
-            // Record face index for the small side element.
+            // Record face index for the small mortar.
             if (m_element_face_vector[neigh_id].empty ()) {
               m_element_face_vector[neigh_id].assign (neighs[ineigh]->get_num_faces (), -1);
             }

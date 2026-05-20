@@ -177,7 +177,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   * \return true if the local elements are balanced, false otherwise.
   */
   bool
-  is_balanced ()
+  is_balanced () const
   {
     return t8_forest_is_balanced (m_forest);
   }
