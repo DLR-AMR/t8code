@@ -1456,12 +1456,15 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
   return t8_cmesh_get_tree_face_neighbor_eclass (cmesh, cmesh_local_tree_id, tree_face);
 }
 
-// TODO: Function declaration return statement does not match the implementation.
-//       Check this.
 t8_gloidx_t
 t8_forest_element_face_neighbor (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *elem, t8_element_t *neigh,
                                  const t8_eclass_t neigh_eclass, int face, int *neigh_face)
 {
+  int dummy = 0;
+  if (neigh_face == nullptr) {
+    neigh_face = &dummy;
+  }
+
   /* Get a pointer to the tree to read its element class */
   const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
@@ -1958,20 +1961,17 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
           *pneighbor_leaves = T8_REALLOC (*pneighbor_leaves, const t8_element_t *, total_num_neighbors);
           T8_ASSERT (*pneighbor_leaves != NULL);
           // Copy the pointers to pneighbor_leaves
-          for (t8_locidx_t ielem = 0; ielem < num_neighbors_current_tree; ++ielem) {
-            (*pneighbor_leaves)[ielem] = user_data.neighbors.data ()[*num_neighbors + ielem];
-          }
+          std::copy_n (user_data.neighbors.begin (), num_neighbors_current_tree, *pneighbor_leaves + *num_neighbors);
         }
         // Copy element indices
         *pelement_indices = T8_REALLOC (*pelement_indices, t8_locidx_t, total_num_neighbors);
         T8_ASSERT (*pelement_indices != NULL);
-        memcpy (*pelement_indices + *num_neighbors, user_data.element_indices.data () + *num_neighbors,
-                num_neighbors_current_tree * sizeof (t8_locidx_t));
+        std::copy_n (user_data.element_indices.begin (), num_neighbors_current_tree,
+                     *pelement_indices + *num_neighbors);
         // Copy dual face
         *dual_faces = T8_REALLOC (*dual_faces, int, total_num_neighbors);
         T8_ASSERT (*dual_faces != NULL);
-        memcpy (*dual_faces + *num_neighbors, user_data.dual_faces.data () + *num_neighbors,
-                num_neighbors_current_tree * sizeof (int));
+        std::copy_n (user_data.dual_faces.begin (), num_neighbors_current_tree, *dual_faces + *num_neighbors);
         *num_neighbors = total_num_neighbors;
       }
     }  // End if neighbors exist (first_leaf_index > 0)
