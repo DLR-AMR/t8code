@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,16 +28,16 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_private.h>
 
-struct element_neighbor_eclass: public testing::TestWithParam<int>
+struct element_neighbor_eclass: public testing::TestWithParam<std::tuple<int, int>>
 {
  protected:
   void
   SetUp () override
   {
-    const int level = 1;
     const bool do_ghost = true;
-    const int scheme_id = GetParam ();
+    const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
+    const int level = std::get<1> (GetParam ());
 
     // Construct a hybrid coarse mesh
     cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
@@ -125,4 +125,5 @@ TEST_P (element_neighbor_eclass, test_half_neighbors)
   }
 }
 
-INSTANTIATE_TEST_SUITE_P (t8_gtest_element_neighbor_eclass, element_neighbor_eclass, AllSchemeCollections);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_element_neighbor_eclass, element_neighbor_eclass,
+                          testing::Combine (AllSchemeCollections, testing::Range (0, 4)));
