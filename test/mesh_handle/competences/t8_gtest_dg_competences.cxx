@@ -22,10 +22,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_dg_competences.cxx
- * Checks that the competences for discontinuous Galerkin methods work as expected.
+ * Checks that the competences for discontinuous Galerkin methods defined in \ref dg_competences.hxx work as expected.
  */
 #include <gtest/gtest.h>
-#include <iostream>
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
@@ -38,9 +37,10 @@ struct data_per_element
 {
   int rank;  ///< Rank of the element.
 };
+
 /** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
  * The adaptation criterion is to refine every element with even id.
- * The function header fits the definition of \ref TMesh::adapt_callback_type_with_userdata.
+ * The function header fits the definition of \ref TMesh::adapt_callback_type.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.
  * \param [in] elements  One element or a family of elements to consider for adaptation.
@@ -59,7 +59,8 @@ mesh_adapt_callback_test_refine_second ([[maybe_unused]] const TMeshClass& mesh,
   return 0;
 }
 
-/** TODO
+/** Check the competence remote_ranks_mesh_competence for correctness. The ranks are set as data first, exchanged for 
+ * ghost elements and then checked against the competence functionality.
  */
 TEST (t8_gtest_dg_competences, remote_ranks)
 {
@@ -74,9 +75,11 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   mesh->set_ghost ();
   mesh->commit ();
 
-  if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
+  const t8_locidx_t num_local = mesh->get_num_local_elements ();
+  const t8_locidx_t num_ghosts = mesh->get_num_ghosts ();
+  if ((mesh->get_dimension () > 1) && (num_local > 1)) {
     // Ensure that we actually test with ghost elements.
-    ASSERT_GT (mesh->get_num_ghosts (), 0);
+    ASSERT_GT (num_ghosts, 0);
   }
 
   int mpirank;
@@ -84,24 +87,27 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   SC_CHECK_MPI (mpiret);
 
   // Set local rank for all local mesh elements.
-  std::vector<data_per_element> element_data (mesh->get_num_local_elements (), { mpirank });
+  std::vector<data_per_element> element_data (num_local, { mpirank });
   mesh->set_element_data (std::move (element_data));
-  // Get element data and check that the remote ranks functionality works as expected.
+  // Get element data and check that the remote ranks competence works as expected.
   mesh->exchange_ghost_data ();
   mesh->set_rank_vector ();
   for (const auto& elem : *mesh) {
     EXPECT_EQ (elem.get_element_data ().rank, mpirank);
     EXPECT_EQ (LOCAL_RANK, mesh->get_rank (elem.get_element_handle_id ()));
   }
-  for (t8_locidx_t ighost = mesh->get_num_local_elements ();
-       ighost < mesh->get_num_local_elements () + mesh->get_num_ghosts (); ighost++) {
+  for (t8_locidx_t ighost = num_local; ighost < num_local + num_ghosts; ighost++) {
     EXPECT_EQ ((*mesh)[ighost].get_element_data ().rank, mesh->get_rank ((*mesh)[ighost].get_element_handle_id ()));
   }
 }
 
+/** Check the competence face_vector_mesh_competence for correctness. 
+ * The test checks that the face vector and the element-face vector are consistent with each other and with the 
+ * neighbors of the elements.
+ */
 TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
 {
-  const int level = 1;
+  const int level = 2;
   using namespace t8_mesh_handle;
   using mesh_class = mesh<element_competence_pack<cache_neighbors>, dg_mesh_competences>;
   auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
@@ -144,14 +150,19 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
 
     std::vector<int> dual_faces;
     auto neighs = elem_first.get_face_neighbors (face.sides[0].local_face_id, dual_faces);
-    // --- BOUNDARY ---
+    /* --- BOUNDARY --- */
     if (face.type == face_type::BOUNDARY) {
       EXPECT_EQ (face.sides.size (), 1) << "BOUNDARY face must have exactly 1 side.";
       EXPECT_EQ (face.sides[0].rank, LOCAL_RANK) << "BOUNDARY side must be local.";
       EXPECT_FALSE (elem_first.is_ghost_element ()) << "BOUNDARY side element must be local.";
       EXPECT_EQ (neighs.size (), 0) << "BOUNDARY side must not have neighbors.";
+      EXPECT_EQ (face.orientation,
+                 t8_forest_leaf_face_orientation (mesh->get_forest (), elem_first.get_local_tree_id (),
+                                                  t8_forest_get_scheme (mesh->get_forest ()),
+                                                  elem_first.get_forest_element (), face.sides[0].local_face_id))
+        << "BOUNDARY side face orientation must match the one computed from the forest.";
     }
-    // --- CONFORMAL ---
+    /* --- CONFORMAL --- */
     else if (face.type == face_type::CONFORMAL || face.type == face_type::MPI_CONFORMAL) {
       EXPECT_EQ (face.sides.size (), 2) << "CONFORMAL face must have exactly 2 sides.";
       EXPECT_EQ (face.sides[0].rank, LOCAL_RANK) << "CONFORMAL primary side must be local.";
@@ -166,20 +177,25 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
       EXPECT_EQ (neighs[0]->get_element_handle_id (), face.sides[1].element_id)
         << "CONFORMAL side neighbor must match the second side of the face.";
       EXPECT_EQ (dual_faces[0], face.sides[1].local_face_id) << "CONFORMAL side neighbor face index must match.";
-      EXPECT_EQ (face.sides[0].orientation, face.sides[1].orientation)
-        << "ATTENTION if this is correct we can pull orientation information to the face instead of face sides.";
+      EXPECT_EQ (face.orientation,
+                 t8_forest_leaf_face_orientation (mesh->get_forest (), neighs[0]->get_local_tree_id (),
+                                                  t8_forest_get_scheme (mesh->get_forest ()),
+                                                  neighs[0]->get_forest_element (), dual_faces[0]))
+        << "CONFORMAL side face orientation must match.";
     }
+    /* --- MORTAR --- */
     else if (face.type == face_type::MORTAR || face.type == face_type::MPI_MORTAR) {
       bool has_remote = std::any_of (face.sides.begin (), face.sides.end (),
                                      [] (const face_side& s) { return s.rank != LOCAL_RANK; });
       EXPECT_EQ (has_remote, face.type == face_type::MPI_MORTAR);
 
       if (face.type == face_type::MORTAR) {
-        // Check that first element is the large mortar and has more than one neighbors.
+        // Check that first element is the large mortar.
         // For MPI_MORTARs, the large mortar could have only one neighbor.
         EXPECT_GT (neighs.size (), 1) << "MORTAR face must have more than 2 sides.";
       }
-      EXPECT_GT (neighs[0]->get_level (), elem_first.get_level ()) << "MORTAR first element must be the large mortar.";
+      EXPECT_EQ (neighs[0]->get_level (), elem_first.get_level () + 1)
+        << "MORTAR first element must be the large mortar.";
       EXPECT_EQ (neighs.size (), face.sides.size () - 1)
         << "MORTAR side must have as many neighbors as small sides of the face.";
 
@@ -194,8 +210,11 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
           << "MORTAR side neighbor must have exactly one neighbor on this face.";
         EXPECT_EQ (dual_faces[ineigh], (*neigh_face_side).local_face_id)
           << "MORTAR side neighbor face index must match.";
-        EXPECT_EQ (face.sides[0].orientation, (*neigh_face_side).orientation)
-          << "ATTENTION if this is correct we can pull orientation information to the face instead of face sides.";
+        EXPECT_EQ (face.orientation,
+                   t8_forest_leaf_face_orientation (mesh->get_forest (), neighs[ineigh]->get_local_tree_id (),
+                                                    t8_forest_get_scheme (mesh->get_forest ()),
+                                                    neighs[ineigh]->get_forest_element (), dual_faces[ineigh]))
+          << "MORTAR side face orientation must match.";
       }
     }
 
