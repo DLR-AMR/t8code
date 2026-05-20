@@ -36,11 +36,11 @@ struct element_neighbor_eclass: public testing::TestWithParam<std::tuple<int, in
   {
     const bool do_ghost = true;
     const int scheme_id = std::get<0> (GetParam ());
-    scheme = create_from_scheme_id (scheme_id);
+    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
     const int level = std::get<1> (GetParam ());
 
     // Construct a hybrid coarse mesh
-    cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
+    const t8_cmesh_t cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
 
     // Build a uniform forest
     forest = t8_forest_new_uniform (cmesh, scheme, level, do_ghost, sc_MPI_COMM_WORLD);
@@ -52,17 +52,17 @@ struct element_neighbor_eclass: public testing::TestWithParam<std::tuple<int, in
     t8_forest_unref (&forest);
   }
 
-  t8_cmesh_t cmesh;
   t8_forest_t forest;
-  const t8_scheme *scheme;
 };
 
 TEST_P (element_neighbor_eclass, test_half_neighbors)
 {
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+
   // Iterate over all trees (local and ghosts)
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
   const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
-
   for (t8_locidx_t itree = 0; itree < num_local_trees + num_ghost_trees; itree++) {
 
     const t8_eclass_t tree_eclass = t8_forest_get_tree_class (forest, itree);
@@ -93,7 +93,7 @@ TEST_P (element_neighbor_eclass, test_half_neighbors)
         else {
           // Get neighbor tree id
           const int tree_face = scheme->element_get_tree_face (tree_eclass, element, iface);
-          t8_locidx_t const neighbor_id
+          const t8_locidx_t neighbor_id
             = t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, tree_face, nullptr, nullptr);
 
           if (neighbor_id < 0) {
