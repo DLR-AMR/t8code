@@ -96,8 +96,7 @@ jobs:
       uses: actions/cache@v5
       with:
         path: |
-          ${{ env.SC_DEBUG }}
-          ${{ env.SC_RELEASE }}
+          ${{ env.SC_SOURCE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
         key: sc-cmake-MPI-${{ inputs.MPI }}-${{ env.SC_COMMIT }}-${{ inputs.CACHE_COUNTER }}
     - name: Log that no cache was found
@@ -156,8 +155,7 @@ jobs:
       uses: actions/cache@v5
       with:
         path: |
-          ${{ env.P4EST_DEBUG }}
-          ${{ env.P4EST_RELEASE }}
+          ${{ env.P4EST_SOURCE }}
         # You can increase the counter at the end to force a new key and hence recomputing the cache
         key: p4est-cmake-MPI-${{ inputs.MPI }}-${{ env.P4EST_COMMIT }}-${{ env.SC_COMMIT }}-${{ inputs.CACHE_COUNTER }}
     - name: Log that no cache was found
