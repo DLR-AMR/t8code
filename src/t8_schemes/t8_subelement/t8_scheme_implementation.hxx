@@ -306,7 +306,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    * \note \a source and \a dest may point to the same element.
    */
   void
-  element_copy ([[maybe_unused]] const t8_element_t *source, [[maybe_unused]] t8_element_t *dest) const noexcept
+  element_copy (const t8_element_t *source, t8_element_t *dest) const noexcept
   {
     SC_ABORT ("This function is not implemented yet.\n");
   }
@@ -563,7 +563,17 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_first_descendant ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *desc,
                                 [[maybe_unused]] const t8_element_level level) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    t8_subelement_element *descsubelement = (t8_subelement_element *) desc;
+    T8_ASSERT (element_is_valid (elem));
+    if (subelement->subelement_type == 0) {
+      t8_standalone_scheme<T8_ECLASS_QUAD>::element_get_first_descendant (
+        (const t8_element_t *) &subelement->element, (t8_element_t *) &descsubelement->element, level);
+      return;
+    }
+    SC_ABORT ("SUBELEMENTS: This function is not implemented yet.\n");
+
+    // TODO: reset subelem values
   }
 
   /** Compute the last descendant of a given element.
@@ -576,7 +586,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_last_descendant ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *desc,
                                [[maybe_unused]] const t8_element_level level) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    t8_subelement_element *descsubelement = (t8_subelement_element *) desc;
+    T8_ASSERT (element_is_valid (elem));
+    if (subelement->subelement_type == 0) {
+      t8_standalone_scheme<T8_ECLASS_QUAD>::element_get_last_descendant (
+        (const t8_element_t *) &subelement->element, (t8_element_t *) &descsubelement->element, level);
+      return;
+    }
+    SC_ABORT ("SUBELEMENTS: This function is not implemented yet.\n");
   }
 
   // ################################################____FACE REFINEMENT____################################################
@@ -860,6 +878,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
       t8_subelement_element *subelement2 = (t8_subelement_element *) elem2;
       t8_standalone_scheme<T8_ECLASS_QUAD>::element_construct_successor ((const t8_element_t *) &subelement1->element,
                                                                          (t8_element_t *) &subelement2->element);
+      return;
     }
     SC_ABORT ("SUBELEMENTS: This function is not implemented yet.\n");
   }
@@ -966,10 +985,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    */
   /* TODO: would it be better to directly allocate an array of elements,
    *       not element pointers? */
-  void
-  element_new ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t **elems) const noexcept
+  static void
+  element_new ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t **elems) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    t8_subelement_element *subelements = (t8_subelement_element *) elems;
+    for (int i = 0; i < length; i++) {
+      subelements[i].subelement_type = 0;
+      subelements[i].subelement_id = 0;
+      t8_standalone_scheme<T8_ECLASS_QUAD>::element_init (1, (t8_element_t *) &subelements[i].element);
+    }
   }
 
   /** Initialize an array of allocated elements.
