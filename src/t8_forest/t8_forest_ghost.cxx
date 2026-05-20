@@ -828,11 +828,10 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
   t8_locidx_t itree, ielem;
   t8_tree_t tree;
   t8_eclass_t last_class;
-  t8_gloidx_t neighbor_tree;
 
   int iface, num_faces;
   int num_face_children, max_num_face_children = 0;
-  int ichild, owner;
+  int owner;
   sc_array_t owners, tree_owners;
   int is_atom;
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
@@ -865,11 +864,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
         is_atom = 0;
       }
       for (iface = 0; iface < num_faces; iface++) {
-        /* TODO: Check whether the neighbor element is inside the forest,
-         *       if not then do not compute the half_neighbors.
-         *       This will save computing time. Needs an "element is in forest" function
-         *       Currently we perform this check in the half_neighbors function. */
-
         /* Get the element class of the neighbor tree */
         const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
         if (ghost_method == 0) {
@@ -888,46 +882,24 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
           }
           if (!is_atom) {
             /* Construct each half size neighbor */
-            neighbor_tree = t8_forest_element_half_face_neighbors (forest, itree, elem, half_neighbors, neigh_class,
-                                                                   iface, num_face_children, nullptr);
+            (void) t8_forest_element_half_face_neighbors (forest, itree, elem, half_neighbors, neigh_class, iface,
+                                                          num_face_children, nullptr);
           }
           else {
-            int dummy_neigh_face;
-            /* This element has maximum level, we only construct its neighbor */
-            neighbor_tree = t8_forest_element_face_neighbor (forest, itree, elem, half_neighbors[0], neigh_class, iface,
-                                                             &dummy_neigh_face);
-          }
-          if (neighbor_tree >= 0) {
-            /* If there exist face neighbor elements (we are not at a domain boundary */
-            /* Find the owner process of each face_child */
-            for (ichild = 0; ichild < num_face_children; ichild++) {
-              /* find the owner */
-              owner = t8_forest_element_find_owner (forest, neighbor_tree, half_neighbors[ichild], neigh_class);
+            /* Construct the owners at the face of the neighbor element */
+            t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface, &owners);
+            /* Iterate over all owners and if any is not the current process,
+            * add this element as remote */
+            for (size_t iowner = 0; iowner < owners.elem_count; iowner++) {
+              owner = *(int *) sc_array_index (&owners, iowner);
               T8_ASSERT (0 <= owner && owner < forest->mpisize);
               if (owner != forest->mpirank) {
                 /* Add the element as a remote element */
                 t8_ghost_add_remote (forest, ghost, owner, itree, elem, ielem);
               }
             }
+            sc_array_truncate (&owners);
           }
-          scheme->element_destroy (neigh_class, num_face_children, half_neighbors);
-          T8_FREE (half_neighbors);
-        } /* end ghost_method 0 */
-        else {
-          size_t iowner;
-          /* Construct the owners at the face of the neighbor element */
-          t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface, &owners);
-          /* Iterate over all owners and if any is not the current process,
-           * add this element as remote */
-          for (iowner = 0; iowner < owners.elem_count; iowner++) {
-            owner = *(int *) sc_array_index (&owners, iowner);
-            T8_ASSERT (0 <= owner && owner < forest->mpisize);
-            if (owner != forest->mpirank) {
-              /* Add the element as a remote element */
-              t8_ghost_add_remote (forest, ghost, owner, itree, elem, ielem);
-            }
-          }
-          sc_array_truncate (&owners);
         }
       } /* end face loop */
     }   /* end element loop */
