@@ -33,7 +33,7 @@ SetFactory("OpenCASCADE");
 /* Now, we can define the points of our airfoil. The coordinates
  * are calculated via the Joukowsky transform. */
 lc = 1;
-center_chi = -0.08;
+center_chi = -0.15;
 center_eta = 0.08;
 radius = Sqrt(((1 - center_chi) * (1 - center_chi)) + center_eta);
 delta_angle = (2 * Pi) / 100;
@@ -58,13 +58,13 @@ For i In {0 : 100}
   angle = angle + delta_angle;
 EndFor
 
-/* Build a spline fit for the points. Starting and ending with the 
+/* Build a spline fit for the points. Starting and ending with the
  * trailing edge. */
 Spline(100) = {1000:1099, 1000};
 
 /* Definition of the corner points of the flow domain. */
-Point(2040) = {-2.5, -2, 0, 1.0};
-Point(2041) = {-2.5, 2, 0, 1.0};
+Point(2040) = {-3, -2, 0, 1.0};
+Point(2041) = {-3, 2, 0, 1.0};
 Point(2042) = {4, 2, 0, 1.0};
 Point(2043) = {4, -2, 0, 1.0};
 
@@ -82,7 +82,7 @@ Curve Loop(2) = {100};
 Plane Surface(1) = {1, 2};
 /* And extrude the surface to get a volume. */
 Extrude {0, 0, 0.5} {
-  Surface{1}; 
+  Surface{1};
 }
 /* Due to the indexing behavior if Gmsh, we have to save the .brep file
  * and reopen it again. */
@@ -90,26 +90,14 @@ Save "airfoil_windtunnel_tetrahedra.brep";
 
 /* After creating the geometry we delete and start by loading
  * in the brep file. This is necessary because Gmsh gives the geometries its
- * own indices and after reloading the brep file it uses the brep 
+ * own indices and after reloading the brep file it uses the brep
  * numeration. */
 Delete All;
 /* We re-open our brep file. */
 Merge "airfoil_windtunnel_tetrahedra.brep";
 
-/* We want a triangle mesh and therefore have to use the right meshing algorithms.
- * Here we use the Frontal-Delaunay 2D meshing algorithm. Feel free to experiment here.
- * The recombination of elements has to be deactivated, in order to receive a triangular mesh.
- * The following algorithms are available with Gmsh 4.11.0:
- *
- * 2D mesh algorithms:             1: MeshAdapt, 2: Automatic, 3: Initial mesh only, 
- *                                 5: Delaunay, 6: Frontal-Delaunay, 7: BAMG, 
- *                                 8: Frontal-Delaunay for Quads, 9: Packing of Parallelograms, 
- *                                11: Quasi-structured Quad
- *
- * For other Gmsh versions check the Gmsh website: 
- * https://gmsh.info/doc/texinfo/gmsh.html#Mesh-options */
-
-/* Now we can create the three-dimensional mesh. */
+/* Now, we can create the three-dimensional mesh. */
+Mesh.MeshSizeFromCurvature = 4;
 Mesh 3;
 
 /* Lastly, we can save the mesh. Note, that we are using msh version 4.X
