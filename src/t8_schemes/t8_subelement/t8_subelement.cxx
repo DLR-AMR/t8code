@@ -35,7 +35,7 @@ t8_scheme_new_subelement (void)
 
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_LINE>> ();
-  builder.add_eclass_scheme<t8_subelementquad_scheme> ();
+  builder.add_eclass_scheme<t8_subelementquad_scheme<>> ();
   builder.add_eclass_scheme<t8_default_scheme_tri> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
   builder.add_eclass_scheme<t8_default_scheme_tet> ();
