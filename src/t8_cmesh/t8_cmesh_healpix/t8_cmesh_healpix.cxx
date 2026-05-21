@@ -70,7 +70,7 @@ std::vector<double> getCoordsEquator (int k){
 }
 
 t8_cmesh_t
-t8_cmesh_new_healpix (const double radius, sc_MPI_Comm comm)
+t8_cmesh_new_healpix (sc_MPI_Comm comm)
 {
     /* Initialization of the mesh */
     t8_cmesh_t cmesh;
