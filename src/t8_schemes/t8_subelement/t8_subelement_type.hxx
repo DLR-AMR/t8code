@@ -29,15 +29,15 @@
 #include <t8_eclass/t8_eclass.h>
 
 #define T8_SUBELEMENT_FACES 3
-#define T8_SUB_QUAD_MAX_SUBELEMENT_TYPE 15
+#define T8_SUB_QUAD_MAX_SUBELEMENT_TYPE 14
 #define T8_SUB_QUAD_MIN_SUBELEMENT_TYPE 1
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
 #define T8_SUB_QUAD_MIN_SUBELEMENT_ID 0
 
 struct t8_subelement_element
 {
-  t8_standalone_element<T8_ECLASS_QUAD> element;
-  int
-    subelement_type; /* saves the information, which type of transition cell a subelement is associated to (default is 0, meaning no subelement). */
-  int subelement_id; /* saves the information, what children subelement the given element is (default is 0) */
+  t8_standalone_element<T8_ECLASS_QUAD>* element;
+  int subelement_type
+    = 0; /* saves the information, which type of transition cell a subelement is associated to (default is 0, meaning no subelement). */
+  int subelement_id = 0; /* saves the information, what children subelement the given element is (default is 0) */
 };

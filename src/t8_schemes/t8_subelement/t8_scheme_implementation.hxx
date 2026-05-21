@@ -37,15 +37,14 @@
 #include <algorithm>
 
 /** TODO. */
-template <t8_eclass TEclass = T8_ECLASS_QUAD>
-struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_subelementquad_scheme<TEclass>>
+struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_subelementquad_scheme>
 {
  public:
   using standalone_scheme = t8_standalone_scheme<T8_ECLASS_QUAD>;
   /** Constructor
   */
   t8_subelementquad_scheme () noexcept
-    : element_size (sizeof (t8_standalone_element<T8_ECLASS_QUAD>)), scheme_context (sc_mempool_new (element_size)) {};
+    : element_size (sizeof (t8_subelement_element)), scheme_context (sc_mempool_new (element_size)) {};
 
  protected:
   // What do i need this for?
@@ -116,7 +115,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr size_t
   get_element_size (void) noexcept
   {
-    return sizeof (t8_standalone_element<TEclass>);
+    return sizeof (t8_subelement_element);
   }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
@@ -126,10 +125,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   refines_irregular (void) noexcept
   {
-    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      return 1;
-    }
-    return 0;
+    return true;  // Potentially there are subelements.
   }
 
   /** Return the maximum allowed level for any element of a given class.
@@ -138,7 +134,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   get_maxlevel (void) noexcept
   {
-    return T8_ELEMENT_MAXLEVEL[TEclass];
+    return standalone_scheme::get_maxlevel () - 1;  // We need to reserve one level for the subelements.
   }
 
   // ################################################____SHAPE INFORMATION____################################################
@@ -147,24 +143,32 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    * \param [in] elem The element.
    * \return          The number of corners of \a elem.
    */
-  static constexpr int
-  element_get_num_corners ([[maybe_unused]] const t8_element_t *elem) noexcept
+  static int
+  element_get_num_corners (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    if (subelement->subelement_type == 0) {
+      return standalone_scheme::element_get_num_corners (subelement_to_element (subelement));
+    }
 
-    return T8_ELEMENT_NUM_CORNERS[TEclass];
+    return T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE];
   }
 
   /** Compute the number of faces of a given element.
    * \param [in] elem The element.
    * \return          The number of faces of \a elem.
    */
-  static constexpr int
-  element_get_num_faces ([[maybe_unused]] const t8_element_t *elem) noexcept
+  static int
+  element_get_num_faces (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    /* Note: With the introduction of pyramids the implementation will be adjusted. */
-    return T8_ELEMENT_NUM_FACES[TEclass];
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    if (subelement->subelement_type == 0) {
+      return standalone_scheme::element_get_num_faces (subelement_to_element (subelement));
+    }
+
+    return T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE];
   }
 
   /** Compute the maximum number of faces of a given element and all of its
@@ -172,11 +176,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
-  static constexpr int
-  element_get_max_num_faces ([[maybe_unused]] const t8_element_t *elem) noexcept
+  static int
+  element_get_max_num_faces (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    return T8_ELEMENT_NUM_FACES[TEclass];
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    // As subelements are discarded for the next adaptation cycle, descendants are also quads.
+    return standalone_scheme::element_get_max_num_faces (subelement_to_element (subelement));
   }
 
   /** Return the shape of an allocated element according its type.
@@ -185,11 +191,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    * \param [in] elem     The element to be considered
    * \return              The shape of the element as an eclass
    */
-  static constexpr t8_element_shape_t
-  element_get_shape ([[maybe_unused]] const t8_element_t *elem) noexcept
+  static t8_element_shape_t
+  element_get_shape (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    return TEclass;
+    if (!element_is_subelement (elem)) {
+      return T8_ECLASS_QUAD;
+    }
+
+    return T8_ECLASS_TRIANGLE;
   }
 
   /** Return the corner number of an element's face corner.
@@ -211,14 +221,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    *                      'outside' of the element.
    */
   static constexpr int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, const int face, const int corner) noexcept
+  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face,
+                           [[maybe_unused]] const int corner) noexcept
   {
-    T8_ASSERT (element_is_valid (element));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[TEclass]);
-    const int face_sign = face % 2;
-    const int face_dim = face / 2;
-    return get_hypercube_face_corner_index (face_dim, face_sign, corner);
+    SC_ABORT ("element_get_face_corner is not implemented for subelements yet.\n");
   }
 
   /** Return the face numbers of the faces sharing an element's corner.
@@ -236,10 +242,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   element_get_corner_face ([[maybe_unused]] const t8_element_t *element, const int corner, const int face) noexcept
   {
-    T8_ASSERT (element_is_valid (element));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[TEclass]);
-    return (corner >> face & 1) + 2 * face;
+    SC_ABORT ("element_get_face_corner is not implemented for subelements yet.\n");
   }
 
   /** Compute the shape of the face of an element.
@@ -254,19 +257,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_face_shape ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    switch (TEclass) {
-    case T8_ECLASS_VERTEX:
-      SC_ABORT ("Vertices do not have faces.\n");
-    case T8_ECLASS_LINE:
-      return T8_ECLASS_VERTEX;
-    case T8_ECLASS_QUAD:
-      return T8_ECLASS_LINE;
-    case T8_ECLASS_HEX:
-      return T8_ECLASS_QUAD;
-    default:
-      SC_ABORT ("This function is not implemented yet.\n");
+    if (element_is_subelement (elem)) {
+      T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE]);
     }
+    else {
+      T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]);
+    }
+    return T8_ECLASS_LINE;
   }
 
   // ################################################____GENERAL HELPER____################################################
@@ -284,8 +281,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     T8_ASSERT (element_is_valid (source));
     if (source == dest)
       return;
-    memcpy ((t8_standalone_element<TEclass> *) dest, (const t8_standalone_element<TEclass> *) source,
-            sizeof (t8_standalone_element<TEclass>));
+    memcpy ((t8_subelement_element *) dest, (const t8_subelement_element *) source, sizeof (t8_subelement_element));
     T8_ASSERT (element_is_valid (dest));
   }
 
@@ -300,17 +296,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     T8_ASSERT (element_is_valid (elem1));
     T8_ASSERT (element_is_valid (elem2));
 
-    const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
-    const t8_standalone_element<TEclass> *el2 = (const t8_standalone_element<TEclass> *) elem2;
-    if (el1->level != el2->level)
+    const t8_subelement_element *el1 = (const t8_subelement_element *) elem1;
+    const t8_subelement_element *el2 = (const t8_subelement_element *) elem2;
+    if (el1->subelement_type != el2->subelement_type) {
       return 0;
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      if (el1->coords[idim] != el2->coords[idim])
-        return 0;
     }
-    /* return el1->type == el2->type;
-    ToDo-Type */
-    return 1;
+    if (el1->subelement_id != el2->subelement_id) {
+      return 0;
+    }
+    return standalone_scheme::element_is_equal (subelement_to_element (el1), subelement_to_element (el2));
   }
 
   // ################################################____ACCESSOR____################################################
@@ -323,7 +317,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_level (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    return ((const t8_standalone_element<TEclass> *) elem)->level;
+    return standalone_scheme::element_get_level (element_to_element (elem));
   }
 
   // ################################################____REFINEMENT____################################################
@@ -334,14 +328,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   set_to_root (t8_element_t *elem) noexcept
   {
-    t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
-    el->level = 0;
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      el->coords[idim] = 0;
-    }
-    /* el->type = 0;
-    ToDo-Type */
-    return;
+    t8_subelement_element *subelement = (t8_subelement_element *) elem;
+    reset_subelement_values (subelement);
+    standalone_scheme::set_to_root (subelement_to_element (subelement));
   }
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
@@ -361,22 +350,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (element_is_valid (elem));
 
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> *parent_elem = (t8_standalone_element<TEclass> *) parent;
-
-    T8_ASSERT (el->level > 0);
-
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
+    const t8_subelement_element *el = (const t8_subelement_element *) elem;
+    t8_subelement_element *parent_elem = (t8_subelement_element *) parent;
+    reset_subelement_values (parent_elem);
+    if (element_is_subelement (elem)) {
+      // For subelements, the parent is the element from which they are refined.
+      standalone_scheme::element_copy (subelement_to_element (el), subelement_to_element (parent_elem));
+      return;
     }
-
-    const t8_element_coord length = element_get_len ((el->level));
-    set_coords_at_level_to_zero (el, parent_elem, length);
-
-    parent_elem->level = el->level - 1;
-    T8_ASSERT (parent_elem->level >= 0);
-
-    T8_ASSERT (element_is_valid (parent));
+    standalone_scheme::element_get_parent (subelement_to_element (el), subelement_to_element (parent_elem));
   }
 
   /** Compute the number of siblings of an element. That is the number of
@@ -390,18 +372,16 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_num_siblings (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    if (el->level == 0)
-      return 1;
-    T8_ASSERT (0 < el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-    /* To get the number siblings, we first get the parent and then get the number of children of that parent*/
-    if constexpr (refines_irregular ()) {
-      SC_ABORT ("This function is not implemented yet.\n");
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    if (!element_is_subelement (elem)) {
+      return standalone_scheme::element_get_num_siblings (subelement_to_element (subelement));
     }
-    else {
-      return T8_ELEMENT_NUM_CHILDREN[TEclass];
+    int num_hanging_faces = 0;
+    // For subelements, the siblings are the other subelements of the same parent element.
+    for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++i) {
+      num_hanging_faces += (subelement->subelement_type & (1 << i)) >> i;
     }
+    return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
   }
 
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
@@ -422,7 +402,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     SC_ABORT ("This function is not implemented yet.\n");
   }
 
-  /** Construct the child element of a given number.
+  /** ONLY for non subelements!
+   * Construct the child element of a given number.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
    * \param [in] childid  The number of the child to construct.
    * \param [in,out] child        The storage for this element must exist
@@ -437,31 +418,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   element_get_child (const t8_element_t *elem, const int childid, t8_element_t *child) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= childid);
-    T8_ASSERT (childid < element_get_num_children (elem));
-
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> *c = (t8_standalone_element<TEclass> *) child;
-
-    T8_ASSERT (0 <= childid && childid < T8_ELEMENT_NUM_CHILDREN[TEclass]);
-    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    /* Compute the cube id and shift the coordinates accordingly */
-    t8_cube_id cube_id;
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-    else {
-      cube_id = childid;
-    }
-
-    const t8_element_coord length = element_get_len (el->level + 1);
-
-    put_cube_id_at_level (el, c, length, cube_id);
-
-    c->level = el->level + 1;
-
+    T8_ASSERT (!element_is_subelement (elem));
+    T8_ASSERT (element_is_refinable (elem));
+    standalone_scheme::element_get_child (element_to_element (elem), childid, element_to_element (child));
     T8_ASSERT (element_is_valid (child));
   }
 
@@ -472,9 +431,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   element_get_num_children ([[maybe_unused]] const t8_element_t *elem) noexcept
   {
+    /* Note that children of subelements equal the children of the parent quadrant. 
+     * Therefore, the number of children of a subelement equals T8_ECLASS_QUAD. */
     T8_ASSERT (element_is_valid (elem));
-
-    return T8_ELEMENT_NUM_CHILDREN[TEclass];
+    return T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_QUAD];
   }
 
   /** Return the max number of children of an eclass.
@@ -483,7 +443,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   get_max_num_children () noexcept
   {
-    return T8_ELEMENT_NUM_CHILDREN[TEclass];
+    SC_ABORT ("get_max_num_children is not implemented for subelements yet.\n");
   }
 
   /**
@@ -496,8 +456,11 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_is_refinable (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-
-    return element_get_level (elem) < get_maxlevel ();
+    if (element_is_subelement (elem)) {
+      // Subelements are not refinable, as they are discarded for the next adaptation cycle.
+      return false;
+    }
+    return standalone_scheme::element_get_level (element_to_element (elem)) < get_maxlevel ();
   }
 
   /** Construct all children of a given element.
@@ -514,17 +477,25 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[]) noexcept
   {
+    /* if elem is a subelement, then this function will construct the children of its parent. */
     T8_ASSERT (element_is_valid (elem));
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    t8_quad_with_subelements **subelement_children = (t8_quad_with_subelements **) c;
 
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    t8_standalone_element<T8_ECLASS_QUAD> *standalone_children[];
 
-    const int num_children = length;
-    T8_ASSERT (length == element_get_num_children ((const t8_element_t *) el));
+    if (element_is_subelement (elem)) {
+      t8_subelement_element *parent;
+      element_get_parent (elem, parent);
+      standalone_scheme::element_get_children (subelement_to_element (parent), length, standalone_children);
+    }
+    else {
+      standalone_scheme::element_get_children (subelement_to_element (elem), length, standalone_children);
+    }
 
-    for (int ichild = num_children - 1; ichild >= 0; ichild--) {
-      element_get_child ((const t8_element_t *) el, ichild, c[ichild]);
-      T8_ASSERT (element_is_valid (c[ichild]));
+    for (int ichild = 0; i < length; ++i) {
+      c[ichild].element = standalone_children[ichild];
+      reset_subelement_values (c[ichild]);
     }
   }
 
@@ -536,21 +507,12 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_child_id (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    T8_ASSERT (el->level >= 0);
-    if (el->level == 0) {
-      return -1;
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    if (element_is_subelement (elem)) {
+      // For subelements, the child id is the subelement id.
+      return subelement->subelement_id;
     }
-    const t8_cube_id cube_id = compute_cubeid (el, el->level);
-    t8_child_id child_id;
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-    else {
-      child_id = cube_id;
-    }
-    return child_id;
+    return standalone_scheme::element_get_child_id (subelement_to_element (subelement));
   }
 
   /** Compute the ancestor id of an element, that is the child id
@@ -562,15 +524,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   element_get_ancestor_id (const t8_element_t *elem, const t8_element_level level) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> ancestor;
-    T8_ASSERT (0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    element_get_ancestor (el, level, &ancestor);
-    return element_get_child_id ((const t8_element_t *) &ancestor);
+    SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_ancestor_id is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_ancestor_id (element_to_element (elem), level);
   }
 
   /** Query whether a given set of elements is a family or not.
@@ -588,27 +543,26 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
       T8_ASSERT (element_is_valid (fam[isib]));
     }
 #endif
-
-    t8_standalone_element<TEclass> parent, compare;
-    /* Take the parent of the first element as baseline to compare against */
-    element_get_parent ((const t8_element_t *) fam[0], (t8_element_t *) &parent);
-    const int num_children = element_get_num_children ((const t8_element_t *) &parent);
-    for (int childid = 0; childid < num_children; childid++) {
-      /* check whether each element has the same parent */
-      element_get_parent ((const t8_element_t *) fam[childid], (t8_element_t *) &compare);
-      if (element_compare ((const t8_element_t *) &parent, (const t8_element_t *) &compare)) {
-        return 0;
+    /* If the first element is a subelement, the remaining elements also have to be subelements and the elements must be equal. */
+    if (element_is_subelement (fam[0])) {
+      auto element_0 = element_to_element (fam[0]);
+      for (int isib = 1; isib < element_get_num_siblings (fam[0]); ++isib) {
+        if (!element_is_subelement (fam[isib])
+            || !standalone_scheme::element_is_equal (element_0, element_to_element ([isib]))) {
+          return 0;
+        }
       }
-
-      /* check whether each element is the correct child of the collective parent */
-      /* Could be replaced by type comparison as level is already checked in parent comparison */
-      element_get_child ((const t8_element_t *) &parent, childid, (t8_element_t *) &compare);
-
-      if (element_compare ((const t8_element_t *) fam[childid], (const t8_element_t *) &compare)) {
-        return 0;
-      }
+      return 1;
     }
-    return 1;
+    /* If the first element is no subelement, the remaining elements also have to be no subelements and they must form a family. */
+    t8_standalone_element<T8_ECLASS_QUAD> *standalone_children[];
+    for (int isib = 0; isib < element_get_num_siblings (fam[0]); ++isib) {
+      if (element_is_subelement (fam[isib])) {
+        return 0;
+      }
+      standalone_children[isib] = element_to_element (fam[isib]);
+    }
+    return standalone_scheme::elements_are_family (standalone_children);
   }
 
   // Note to devs: element_is_ancestor currently cannot be static
@@ -620,43 +574,20 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    * \param [in] element_B An element of class \a eclass in scheme \a scheme.
    * \return     True if and only if \a element_A is an ancestor of \a element_B.
   */
-  bool
-  element_is_ancestor (const t8_element_t *element_A, const t8_element_t *element_B) const noexcept
+  static bool
+  element_is_ancestor (const t8_element_t *element_A, const t8_element_t *element_B) noexcept
   {
-    /* We compute whether A is an ancestor of B by
-    
-     - If level(A) > level(B) then A cannot be an ancestor.
-     - Otherwise compute the ancestor of B at level(A)
-     - Compare the computed ancestor with A.
-    */
     T8_ASSERT (element_is_valid (element_A));
     T8_ASSERT (element_is_valid (element_B));
-
-    const t8_standalone_element<TEclass> *el_B = (const t8_standalone_element<TEclass> *) element_B;
-
-    const int level_A = element_get_level (element_A);
-    const int level_B = element_get_level (element_B);
-
-    if (level_A > level_B) {
-      // A is finer than B and thus cannot be an ancestor.
+    if (element_is_equal (element_A, element_B)) {
+      return true;
+    }
+    if (element_is_subelement (element_A)) {
+      // Subelements are not ancestors of any element, as they are discarded for the next adaptation cycle.
+      // B could be a subelement if the underlying element is an ancestor of A.
       return false;
     }
-
-    // Compute the ancestor of B at level_A and compare it with A
-    t8_element_t *ancestor;
-    element_new (1, &ancestor);
-
-    t8_standalone_element<TEclass> *ancestor_casted = (t8_standalone_element<TEclass> *) ancestor;
-
-    element_get_ancestor (el_B, level_A, ancestor_casted);
-
-    const bool is_ancestor = element_is_equal (ancestor, element_A);
-
-    element_destroy (1, &ancestor);
-
-    // Return true if A == ancestor
-    // Return false if A != ancestor
-    return is_ancestor;
+    return standalone_scheme::element_is_ancestor (element_to_element (element_A, element_to_element (element_B)));
   }
 
   /** Compute the nearest common ancestor of two elements. That is,
@@ -670,25 +601,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    *                      \b elem1 and \b elem2.
    */
   static constexpr void
-  element_get_nca (const t8_element_t *elem1, const t8_element_t *elem2, t8_element_t *nca) noexcept
+  element_get_nca ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] const t8_element_t *elem2,
+                   [[maybe_unused]] t8_element_t *nca) noexcept
   {
-    T8_ASSERT (element_is_valid (elem1));
-    T8_ASSERT (element_is_valid (elem2));
-
-    const t8_standalone_element<TEclass> *el1 = (const t8_standalone_element<TEclass> *) elem1;
-    const t8_standalone_element<TEclass> *el2 = (const t8_standalone_element<TEclass> *) elem2;
-    /* get the first possible level of the nca*/
-    int cube_ancestor_level = element_get_cube_nca_level (el1, el2);
-    int real_level;
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-    else {
-      real_level = cube_ancestor_level;
-    }
-    /* get the ancestor at the calculated level*/
-    element_get_ancestor (el1, real_level, (t8_standalone_element<TEclass> *) nca);
-    T8_ASSERT (element_is_valid (nca));
+    SC_ABORT ("This function is not implemented yet.\n");
   }
 
   /** Compute the first descendant of a given element.
@@ -700,19 +616,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> *d = (t8_standalone_element<TEclass> *) desc;
-
-    T8_ASSERT (level >= el->level);
-    T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    /* The first descendant of an element has the same anchor coords and type, but another level */
-    element_copy ((const t8_element_t *) el, (t8_element_t *) d);
-    d->level = level;
-
-    T8_ASSERT (element_is_valid ((t8_element_t *) d));
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_get_first_descendant is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_first_descendant (element_to_element (elem), element_to_element (desc),
+                                                            level);
   }
 
   /** Compute the last descendant of a given element.
@@ -724,25 +631,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> *d = (t8_standalone_element<TEclass> *) desc;
-
-    T8_ASSERT (level >= el->level);
-    T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    element_copy ((const t8_element_t *) el, (t8_element_t *) d);
-    d->level = level;
-
-    /* Shift the coords to the eighth cube. The type of the last descendant
-    * is the type of the input element */
-    t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      d->coords[idim] |= coord_offset;
-    }
-
-    T8_ASSERT (element_is_valid (desc));
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_get_last_descendant is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_last_descendant (element_to_element (elem), element_to_element (desc), level);
   }
 
   // ################################################____FACE REFINEMENT____################################################
@@ -755,10 +646,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   element_get_num_face_children ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    // Not true anymore for 4D with pyramids as faces
-    return (TEclass == T8_ECLASS_VERTEX) ? 0 : 1 << (T8_ELEMENT_DIM[TEclass] - 1);
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_get_num_face_children is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_num_face_children (element_to_element (elem), face);
   }
 
   /** Given an element and a face of the element, compute all children of
@@ -779,23 +669,14 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_children_at_face ([[maybe_unused]] const t8_element_t *elem, const int face, t8_element_t *children[],
                                 const int num_children, [[maybe_unused]] int *child_indices) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= num_children && num_children == element_get_num_face_children (elem, face));
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> **children_els = (t8_standalone_element<TEclass> **) children;
-    int local_indices[T8_ELEMENT_NUM_CHILDREN[TEclass]];
-
-    if (child_indices == NULL) {
-      child_indices = local_indices;
-    }
-    const int face_sign = face % 2;
-    const int face_dim = face / 2;
-    for (int ifacechild = 0; ifacechild < num_children; ifacechild++) {
-      child_indices[ifacechild] = get_hypercube_face_corner_index (face_dim, face_sign, ifacechild);
-    }
-    for (int ifacechild = num_children - 1; ifacechild >= 0; ifacechild--) {
-      element_get_child ((const t8_element_t *) el, child_indices[ifacechild],
-                         (t8_element_t *) children_els[ifacechild]);
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_get_children_at_face is not implemented for subelements yet.\n");
+    t8_standalone_element<T8_ECLASS_QUAD> *standalone_children[];
+    standalone_scheme::element_get_children_at_face (element_to_element (elem), face, standalone_children, num_children,
+                                                     child_indices);
+    for (int ichild = 0; ichild < num_children; ++ichild) {
+      children[ichild].element = standalone_children[ichild];
+      reset_subelement_values (children[ichild]);
     }
   }
 
@@ -823,7 +704,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, const int face,
                                [[maybe_unused]] const int face_child) noexcept
   {
-    return face;
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_face_get_child_face is not implemented for subelements yet.\n");
+    return standalone_scheme::element_face_get_child_face (element_to_element (elem), face, child_face);
   }
 
   /** Given a face of an element return the face number
@@ -839,24 +722,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   element_face_get_parent_face ([[maybe_unused]] const t8_element_t *elem, const int face) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    if (el->level == 0)
-      return -1;
-    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      /* Check if the least significant bit of the face normal coord is equal to the face_sign bit to get a valid parent face.*/
-      const int least_significant_bit = ((el->coords[face / 2]) >> (T8_ELEMENT_MAXLEVEL[TEclass] - el->level)) % 2;
-      const bool invalid_parent_face = (element_face_is_1_boundary (el, face) != least_significant_bit);
-      if (invalid_parent_face) {
-        return -1;
-      }
-      return face;
-    }
-    else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-      return 0;
-    }
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_face_get_parent_face is not implemented for subelements yet.\n");
+    return standalone_scheme::element_face_get_parent_face (element_to_element (elem), face);
   }
 
   /** Construct the first descendant of an element at a given level that touches a given face.
@@ -871,27 +739,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_first_descendant_face (const t8_element_t *elem, const int face, t8_element_t *first_desc,
                                      const t8_element_level level) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> *first_descendant = (t8_standalone_element<TEclass> *) first_desc;
-
-    first_descendant->level = level;
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-    std::copy (el->coords.begin (), el->coords.end (), first_descendant->coords.begin ());
-
-    const bool face_is_1_boundary = face % 2;
-
-    if (face_is_1_boundary) {  //the face is a xi=1 boundary
-      const int facenormal_dim = face / 2;
-
-      const t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
-
-      first_descendant->coords[facenormal_dim] += coord_offset;
-    }
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_get_first_descendant_face is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_first_descendant_face (element_to_element (elem), face,
+                                                                 element_to_element (first_desc), level);
   }
 
   /** Construct the last descendant of an element at a given level that touches a given face.
@@ -906,23 +757,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_last_descendant_face ([[maybe_unused]] const t8_element_t *elem, const int face, t8_element_t *last_desc,
                                     const t8_element_level level) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> *last_descendant = (t8_standalone_element<TEclass> *) last_desc;
-
-    last_descendant->level = level;
-    const t8_element_coord coord_offset = element_get_len (el->level) - element_get_len (level);
-
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      const int multiplier = (idim == face / 2) ? face % 2 : 1;
-      last_descendant->coords[idim] = el->coords[idim] + multiplier * coord_offset;
-    }
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_get_last_descendant_face is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_last_descendant_face (element_to_element (elem), face,
+                                                                element_to_element (last_desc), level);
   }
 
   // ################################################____FACE NEIGHBOR____################################################
@@ -934,49 +772,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    * \note You can compute the corresponding face number of the tree via \ref element_get_tree_face.
    */
   static constexpr int
-  element_is_root_boundary (const t8_element_t *elem, const int face) noexcept
+  element_is_root_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-
-    if (!element_is_face_internal (el, face)) {
-      const int dim = element_face_normal_dim (el, face);
-      if (element_face_is_1_boundary (el, face)) {
-        // a_d must be full of 1s up to level l
-        const t8_element_coord coord_offset = get_root_len () - element_get_len (el->level);
-        if (el->coords[dim] != coord_offset) {
-          return 0;
-        }
-        // all edges containing dim must be fulfilled with x_d-a_d >= x_j-a_j or x_j-a_j <= x_d-a_d
-        if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-          SC_ABORT ("Only implemented for hypercubes.\n");
-        }
-      }
-      else {
-        //zeroboundary
-        // x_d must be full of 0s up to level l
-        if (el->coords[dim] != 0) {
-          return 0;
-        }
-        // all edges containing dimid must be fulfilled with x_d-a_d <= x_j-a_j or x_j-a_j >= x_d-a_d
-        if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-          SC_ABORT ("Only implemented for hypercubes.\n");
-        }
-      }
-    }
-    else {
-      // internalface
-      // get graph edge e (or ieq) = (xi,xj)
-      // ai = aj is necessary and sufficient
-      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        SC_ABORT ("Only implemented for hypercubes.\n");
-      }
-      else {
-        SC_ABORT ("Cubes should not have internal faces!\n");
-      }
-    }
-    return 1;
+    SC_ABORT ("This function is not implemented yet.\n");
   }
 
   /** Given an element and a face of this element. If the face lies on the
@@ -993,11 +791,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    *   the element does not lie on the root boundary.
    */
   static constexpr int
-  element_get_tree_face ([[maybe_unused]] const t8_element_t *elem, const int face) noexcept
+  element_get_tree_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    return face;
+    SC_ABORT ("This function is not implemented yet.\n");
   }
 
   /** Construct the face neighbor of a given element if this face neighbor
@@ -1016,33 +812,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    *                  on output.
    */
   static constexpr int
-  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, t8_element_t *neigh, const int face,
-                                    int *neigh_face) noexcept
+  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *neigh,
+                                    [[maybe_unused]] const int face, [[maybe_unused]] int *neigh_face) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    T8_ASSERT (element_get_level (elem) >= 0);
-    element_copy (elem, neigh);
-
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> *neighbor = (t8_standalone_element<TEclass> *) neigh;
-
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-    const int facenormal_dim = face / 2;
-    const int sign = face % 2 ? 1 : -1;
-
-    /**Adapt coordinates*/
-    const t8_element_coord length = element_get_len (el->level);
-
-    neighbor->coords[facenormal_dim] += length * sign;
-
-    *neigh_face = face ^ 1;
-
-    T8_ASSERT (element_is_valid ((t8_element_t *) neighbor));
-    /**check inside root*/
-    return element_is_inside_root (neighbor);
+    SC_ABORT ("This function is not implemented yet.\n");
   }
 
   // ################################################____TREE FACE TRANSFORMATION____################################################  */
@@ -1109,30 +882,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    * and will not be modified.
    */
   static constexpr void
-  element_get_boundary_face (const t8_element_t *elem, const int face, [[maybe_unused]] t8_element_t *boundary,
-                             [[maybe_unused]] const t8_scheme *scheme) noexcept
+  element_get_boundary_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
+                             [[maybe_unused]] t8_element_t *boundary, [[maybe_unused]] const t8_scheme *scheme) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    const int root_face = element_get_tree_face (elem, face);
-    const t8_eclass_t TFaceEclass = get_face_eclass ();
-
-    switch (TFaceEclass) {
-    case T8_ECLASS_VERTEX:
-      compute_boundary_face<T8_ECLASS_VERTEX> (elem, root_face, (t8_standalone_element<T8_ECLASS_VERTEX> *) boundary);
-      return;
-    case T8_ECLASS_LINE:
-      compute_boundary_face<T8_ECLASS_LINE> (elem, root_face, (t8_standalone_element<T8_ECLASS_LINE> *) boundary);
-      return;
-    case T8_ECLASS_QUAD:
-      compute_boundary_face<T8_ECLASS_QUAD> (elem, root_face, (t8_standalone_element<T8_ECLASS_QUAD> *) boundary);
-      return;
-    default:
-      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        SC_ABORT ("Only implemented for hypercubes.\n");
-      }
-      return;
-    }
+    SC_ABORT ("This function is not implemented yet.\n");
   }
 
   // ################################################____LINEAR ID____################################################
@@ -1148,7 +901,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_set_linear_id (t8_element_t *elem, const t8_element_level level, t8_linearidx_t id) noexcept
   {
 
-    t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elem;
+    t8_standalone_element<T8_ECLASS_QUAD> *el = (t8_standalone_element<T8_ECLASS_QUAD> *) elem;
 
     set_to_root ((t8_element_t *) el);
 
@@ -1159,8 +912,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
 
     T8_ASSERT (id < (size_t) element_count_leaves (elem, level));
-    T8_ASSERT (1 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-    t8_standalone_element<TEclass> child;
+    T8_ASSERT (1 <= level && level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
+    t8_standalone_element<T8_ECLASS_QUAD> child;
 
     while (el->level < level) {
       /* Shortcut if we need the first descendant of the subtree*/
@@ -1209,8 +962,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    t8_standalone_element<TEclass> ancestor;
+    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
+    t8_standalone_element<T8_ECLASS_QUAD> ancestor;
 
     /* Determine the starting element for the iterative linear id computation. */
     if (level < el->level) {
@@ -1224,7 +977,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
 
     t8_linearidx_t id = 0;
-    t8_standalone_element<TEclass> child;
+    t8_standalone_element<T8_ECLASS_QUAD> child;
 
     while (ancestor.level != 0) {
       const t8_child_id childid = element_get_child_id ((t8_element_t *) &ancestor);
@@ -1253,8 +1006,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (element_is_valid (elem1));
 
-    const t8_standalone_element<TEclass> *elem = (const t8_standalone_element<TEclass> *) elem1;
-    t8_standalone_element<TEclass> *succ = (t8_standalone_element<TEclass> *) elem2;
+    const t8_standalone_element<T8_ECLASS_QUAD> *elem = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem1;
+    t8_standalone_element<T8_ECLASS_QUAD> *succ = (t8_standalone_element<T8_ECLASS_QUAD> *) elem2;
 
     element_copy ((const t8_element_t *) elem, (t8_element_t *) succ);
 
@@ -1290,7 +1043,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_count_leaves (const t8_element_t *elem, const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
     if (level < element_get_level (elem)) {
       return 0;
     }
@@ -1310,12 +1063,12 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr t8_gloidx_t
   count_leaves_from_root (const t8_element_level level) noexcept
   {
-    T8_ASSERT (level <= T8_ELEMENT_MAXLEVEL[TEclass]);
+    T8_ASSERT (level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
     T8_ASSERT (level >= 0);
-    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
+    if constexpr (T8_ECLASS_QUAD == T8_ECLASS_PYRAMID) {
       SC_ABORT ("Not implemented yet.\n");
     }
-    return 1LL << (level * T8_ELEMENT_DIM[TEclass]);
+    return 1LL << (level * T8_ELEMENT_DIM[T8_ECLASS_QUAD]);
   }
 
   /** Compare two elements.
@@ -1331,8 +1084,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     T8_ASSERT (element_is_valid (elem1));
     T8_ASSERT (element_is_valid (elem2));
 
-    const t8_standalone_element<TEclass> *e1 = (const t8_standalone_element<TEclass> *) elem1;
-    const t8_standalone_element<TEclass> *e2 = (const t8_standalone_element<TEclass> *) elem2;
+    const t8_standalone_element<T8_ECLASS_QUAD> *e1 = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem1;
+    const t8_standalone_element<T8_ECLASS_QUAD> *e2 = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem2;
 
     const int maxlvl = SC_MAX (e1->level, e2->level);
 
@@ -1363,15 +1116,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (element_is_valid (elem));
 
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-    if constexpr (TEclass == T8_ECLASS_VERTEX) {
+    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
+    if constexpr (T8_ECLASS_QUAD == T8_ECLASS_VERTEX) {
       return;
     }
     else {
-      int coords_int[T8_ELEMENT_DIM[TEclass]];
-      T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[TEclass]);
+      int coords_int[T8_ELEMENT_DIM[T8_ECLASS_QUAD]];
+      T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[T8_ECLASS_QUAD]);
       element_compute_coords (el, vertex, coords_int);
-      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      for (int idim = 0; idim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; idim++) {
         coords[idim] = coords_int[idim] / (double) get_root_len ();
       }
     }
@@ -1394,15 +1147,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     t8_element_coord length = element_get_len (element_get_level (elem));
 
     for (size_t coord = 0; coord < num_coords; ++coord) {
-      for (int dim = 0; dim < T8_ELEMENT_DIM[TEclass]; ++dim) {
+      for (int dim = 0; dim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; ++dim) {
         current_out_coords[dim]
-          = ((t8_standalone_element<TEclass> *) elem)->coords[dim] + current_ref_coords[dim] * length;
+          = ((t8_standalone_element<T8_ECLASS_QUAD> *) elem)->coords[dim] + current_ref_coords[dim] * length;
 
         current_out_coords[dim] /= (double) get_root_len ();
       }
 
       current_ref_coords += T8_ECLASS_MAX_DIM;
-      current_out_coords += T8_ELEMENT_DIM[TEclass];
+      current_out_coords += T8_ELEMENT_DIM[T8_ECLASS_QUAD];
     }
   }
 
@@ -1465,7 +1218,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elems) noexcept
   {
 #if T8_ENABLE_DEBUG
-    t8_standalone_element<TEclass> *el = (t8_standalone_element<TEclass> *) elems;
+    t8_standalone_element<T8_ECLASS_QUAD> *el = (t8_standalone_element<T8_ECLASS_QUAD> *) elems;
     /* Set all values to 0 */
     for (int ielem = 0; ielem < length; ielem++) {
       element_set_linear_id ((t8_element_t *) (el + ielem), 0, 0);
@@ -1529,13 +1282,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (elem != NULL);
 
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
     const t8_element_coord max_coord = 2LL * get_root_len () - 1;
 
     /* Check the level */
-    int is_valid = 0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[TEclass];
+    int is_valid = 0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD];
     /* Check coordinates, we allow a boundary layer around the root-element */
-    for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
+    for (int i = 0; i < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; i++) {
       is_valid = is_valid && -(int64_t) get_root_len () <= el->coords[i] && el->coords[i] <= max_coord;
     }
 
@@ -1553,13 +1306,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_debug_print (const t8_element_t *elem) noexcept
   {
 
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
 
     t8_debugf ("level: %i\n", el->level);
-    for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
+    for (int i = 0; i < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; i++) {
       t8_debugf ("x_%i: %i \n", i, el->coords[i]);
     }
-    /**  for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e++) {
+    /**  for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_QUAD]; e++) {
     *  t8_debugf ("t_%i: %i \n", e, el->type[e]);
     *}
     * ToDo-Type */
@@ -1575,10 +1328,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) noexcept
   {
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
+    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
     int offset = 0;
     offset += snprintf (debug_string + offset, string_size - offset, "level: %i\n", el->level);
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+    for (int idim = 0; idim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; idim++) {
       offset += snprintf (debug_string + offset, string_size - offset, "x_%i: %i \n", idim, el->coords[idim]);
     }
   }
@@ -1599,10 +1352,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
 
   {
     int mpiret;
-    t8_standalone_element<TEclass> **els = (t8_standalone_element<TEclass> **) elements;
+    t8_standalone_element<T8_ECLASS_QUAD> **els = (t8_standalone_element<T8_ECLASS_QUAD> **) elements;
 
     for (unsigned int ielem = 0; ielem < count; ielem++) {
-      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      for (int idim = 0; idim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; idim++) {
         mpiret = sc_MPI_Pack (&(els[ielem]->coords[idim]), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
         SC_CHECK_MPI (mpiret);
       }
@@ -1626,7 +1379,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     /* x,y,z */
     mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
     SC_CHECK_MPI (mpiret);
-    singlesize += T8_ELEMENT_DIM[TEclass] * datasize;
+    singlesize += T8_ELEMENT_DIM[T8_ECLASS_QUAD] * datasize;
 
     /* level */
     mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
@@ -1649,10 +1402,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
                       const unsigned int count, sc_MPI_Comm comm) const noexcept
   {
     int mpiret;
-    t8_standalone_element<TEclass> **els = (t8_standalone_element<TEclass> **) elements;
+    t8_standalone_element<T8_ECLASS_QUAD> **els = (t8_standalone_element<T8_ECLASS_QUAD> **) elements;
 
     for (unsigned int ielem = 0; ielem < count; ielem++) {
-      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
+      for (int idim = 0; idim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; idim++) {
         mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(els[ielem]->coords[idim]), 1, sc_MPI_INT, comm);
         SC_CHECK_MPI (mpiret);
       }
@@ -1662,404 +1415,47 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   }
 
  private:
-  // ################################################____HELPER____################################################
+  // PRIVATE HELPER
+  static constexpr const t8_element_t *
+  subelement_to_element (const t8_subelement_element *subelement) noexcept
+  {
+    return (const t8_element_t *) &subelement->element;
+  }
 
-  /** The length of a element at a given level in integer coordinates
-   * \param[in] level     Level of the element
+  static constexpr t8_element_t *
+  subelement_to_element (t8_subelement_element *subelement) noexcept
+  {
+    return (t8_element_t *) &subelement->element;
+  }
+
+  static constexpr const t8_element_t *
+  element_to_element (const t8_element_t *element) noexcept
+  {
+    const t8_subelement_element *subelement = (const t8_subelement_element *) element;
+    return subelement_to_element (subelement);
+  }
+
+  static constexpr t8_element_t *
+  element_to_element (t8_element_t *element) noexcept
+  {
+    t8_subelement_element *subelement = (t8_subelement_element *) element;
+    return subelement_to_element (subelement);
+  }
+
+  static bool
+  element_is_subelement (const t8_element_t *elem) noexcept
+  {
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    return (subelement->subelement_type != 0);
+  }
+
+  /** create the root element
+   * \param [in,out] elem The element that is filled with the root
    */
-  static constexpr t8_element_coord
-  element_get_len (const t8_element_level level) noexcept
+  static void
+  reset_subelement_values (t8_subelement_element *subelement) noexcept
   {
-    return 1 << (T8_ELEMENT_MAXLEVEL[TEclass] - (level));
-  }
-
-  /** Compute the cube id of an element
-  * \param[in] elem      Input element
-  * \param[in] level     The refinement level
-  */
-  static constexpr t8_cube_id
-  compute_cubeid (const t8_standalone_element<TEclass> *elem, const t8_element_level level) noexcept
-  {
-    t8_cube_id cube_id = 0;
-
-    T8_ASSERT (0 <= elem->level && elem->level <= T8_ELEMENT_MAXLEVEL[TEclass]);
-    const t8_element_coord h = element_get_len (level);
-
-    /* The cube id of the root element is 0.*/
-    if (level != 0) {
-      for (int i = 0; i < T8_ELEMENT_DIM[TEclass]; i++) {
-        cube_id |= ((elem->coords[i] & h) ? 1 << i : 0);
-      }
-    }
-    return cube_id;
-  }
-
-  /**
- * Compute the ancestor of \a el at a given level via the equation properties
- *
- * \param[in] elem            Input element
- * \param[in] level           Level of the ancestor to compute
- * \param[in, out] ancestor   Allocated element that will be filled with the data of the ancestor.
- */
-  static constexpr void
-  element_get_ancestor (const t8_standalone_element<TEclass> *elem, const t8_element_level level,
-                        t8_standalone_element<TEclass> *ancestor) noexcept
-  {
-    T8_ASSERT (element_is_valid ((t8_element_t *) elem));
-    T8_ASSERT (0 <= level && level <= elem->level);
-    if (elem != ancestor) {
-      element_copy ((const t8_element_t *) elem, (t8_element_t *) ancestor);
-    }
-    if (elem->level == level) {
-      return;
-    }
-
-    /* Set type */
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-
-    /* The coordinates and the type of the ancestor are defined by the level. */
-    element_cut_coordinates (ancestor, T8_ELEMENT_MAXLEVEL[TEclass] - level);
-
-    ancestor->level = level;
-  }
-
-  /** Use the number of zero bits on the left to detrime the level of the nearest common ancestor of two elements.
-   * \param[in] elem1      First input element
-   * \param[in] elem2      Second input element
-   * \return               The level of the nearest common ancestor of the two elements
-  */
-  static constexpr t8_element_level
-  element_get_cube_nca_level (const t8_standalone_element<TEclass> *elem1,
-                              const t8_standalone_element<TEclass> *elem2) noexcept
-  {
-    /* XOR all coordinates. The number of zeros on the left determines the level needed, so that the coordinates equal.
-    OR over all these bit representations. The number of zeros on the left in this new number equals the coarses of all of these levels.
-    Therefore this is the level needed so that all coordinates equal.*/
-    t8_element_coord maxexclor = 0;
-
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      maxexclor |= (elem1->coords[idim] ^ elem2->coords[idim]);
-    }
-
-    const int num_zeros = number_of_leading_zeros (maxexclor);
-    /* If one element already is the ancestor of the other element num_zeros evaluates to maxlevel, in that case return the coarser of both levels*/
-    return SC_MIN (num_zeros, (int) SC_MIN (elem1->level, elem2->level));
-  }
-
-  /** Compute the number of zero bits on the left side of coords.
-   * \param[in] coordinates      Input coordinates
-   * \return                    Number of leading zeros
-   */
-  static constexpr int
-  number_of_leading_zeros (const t8_element_coord coordinates) noexcept
-  {
-    const int num_of_active_bits_used = SC_LOG2_32 (coordinates) + 1;
-    T8_ASSERT (num_of_active_bits_used <= T8_ELEMENT_MAXLEVEL[TEclass]);
-
-    return T8_ELEMENT_MAXLEVEL[TEclass] - num_of_active_bits_used;
-  }
-
-  /**
- * Set the \a shift last bits of every coordinate to zero.
- *
- * \param[in, out]  elem     Input element
- * \param[in]       shift Number of bits to set to zero
- */
-  static constexpr void
-  element_cut_coordinates (t8_standalone_element<TEclass> *elem, const int shift) noexcept
-  {
-    T8_ASSERT (0 <= shift && shift <= T8_ELEMENT_MAXLEVEL[TEclass]);
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      elem->coords[idim] = (elem->coords[idim] >> shift) << shift;
-    }
-  }
-
-  /**
- * Set the least significant coordinates bits to zero.
- *
- * \param[in]  elem        Input element
- * \param[in, out]       parent_elem Parent element
- * \param[in]       length      int that is 1 at the level of the input element
- * Note length is used as additional input to avoid recomputation.
- */
-  static constexpr void
-  set_coords_at_level_to_zero (const t8_standalone_element<TEclass> *elem, t8_standalone_element<TEclass> *parent_elem,
-                               const t8_element_coord length) noexcept
-  {
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      parent_elem->coords[idim] = elem->coords[idim] & ~length;
-    }
-  }
-
-  /**
- * Adjust the coordinates based on the cube ID.
- *
- * \param[in]           parent       Input element
- * \param[in, out]      child     Output element
- * \param[in]           length   int that is 1 at the level of the child element
- * \param[in]           cube_id  Cube ID for bitwise operation
- * Note length is used as additional input to avoid recomputation.
- */
-  static constexpr void
-  put_cube_id_at_level (const t8_standalone_element<TEclass> *parent, t8_standalone_element<TEclass> *child,
-                        const t8_element_coord length, const t8_cube_id cube_id) noexcept
-  {
-    for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-      child->coords[idim] = parent->coords[idim] + ((cube_id & (1 << idim)) ? length : 0);
-    }
-  }
-
-  /** Compute the length of the root element of the current TEclass. The length for a Vertex root element is always 0.
-   * \return The length of the root element
-  */
-
-  static constexpr t8_element_coord
-  get_root_len () noexcept
-  {
-    if constexpr (TEclass == T8_ECLASS_VERTEX) {
-      return 0;
-    }
-    else {
-      return 1 << T8_ELEMENT_MAXLEVEL[TEclass];
-    }
-  }
-
-  /** Get the number of descendants of an element at a given leveldiff.
-   * \param[in] elem      Input element
-   * \param[in] leveldiff Difference between the level of the element
-   * \return             number of descendants
-   * Note Caller is responsible for taking the absolute value of leveldiff
-  */
-  static constexpr t8_linearidx_t
-  num_descendants_at_leveldiff ([[maybe_unused]] const t8_element_t *elem, const t8_element_level leveldiff) noexcept
-  {
-    T8_ASSERT (leveldiff <= get_maxlevel ());
-    if constexpr (TEclass == T8_ECLASS_PYRAMID) {
-      SC_ABORT ("Not implemented yet.\n");
-    }
-    return 1LL << (T8_ELEMENT_DIM[TEclass] * leveldiff);
-  }
-
-  /** Compute the coordinates of a vertex of an element.
- * \param [in] elem    Input element.
- * \param [in] vertex The number of the vertex.
- * \param [out] coords An array of 3 t8_element_coord that
- * 		     will be filled with the coordinates of the vertex.
- */
-  static constexpr void
-  element_compute_coords (const t8_standalone_element<TEclass> *elem, const int vertex, int coords[]) noexcept
-  {
-    T8_ASSERT (0 <= vertex && vertex < element_get_num_corners ((const t8_element_t *) elem));
-
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-    else {
-      //Hypercubes
-      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-        coords[idim] = elem->coords[idim] + ((vertex & (1 << idim)) >> idim) * element_get_len (elem->level);
-      }
-    }
-  }
-
-  /** Check if the element is inside the root tree
-   * \param [in] elem  The input element.
-   * \return 1 if the element is inside the root tree, 0 otherwise.
-   */
-  static inline int
-  element_is_inside_root ([[maybe_unused]] const t8_standalone_element<TEclass> *elem) noexcept
-  {
-    SC_ABORT ("Not implemented yet.");
-  }
-
-  /** Check if the face is an internal face
-   * \param [in] elem  The input element.
-   * \param [in] face  The input face.
-   * \return 1 if the face is internal, 0 otherwise.
-   */
-  static constexpr int
-  element_is_face_internal ([[maybe_unused]] const t8_standalone_element<TEclass> *elem,
-                            [[maybe_unused]] const int face) noexcept
-  {
-    T8_ASSERT (element_is_valid ((const t8_element_t *) elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      return 0;
-    }
-    else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-  }
-
-  /** Get the normal dim of the face
-   * \param [in] elem  The input element.
-   * \param [in] face  The input face.
-   * \return          The normal dimension of the face.
-   */
-  static constexpr int
-  element_face_normal_dim ([[maybe_unused]] const t8_standalone_element<TEclass> *elem, const int face) noexcept
-  {
-    T8_ASSERT (element_is_valid ((const t8_element_t *) elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      return face / 2;
-    }
-    else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-  }
-
-  /** Given a face of an element that is also a hypercube face, determine if it is the boundary x_i == 1.
-   * \param [in] elem   The input element.
-   * \param [in] face   The input face. Needs to be a face of the hypercube the element is embedded in.
-   * \return            1 if the face is the boundary x_i == 1, 0 otherwise.
-   */
-  static constexpr int
-  element_face_is_1_boundary ([[maybe_unused]] const t8_standalone_element<TEclass> *elem, const int face) noexcept
-  {
-    T8_ASSERT (element_is_valid ((const t8_element_t *) elem));
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[TEclass]);
-    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      return face % 2;
-    }
-    else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-  }
-
-  /** Given a root_face that is also a hypercube face, determine if it is the boundary x_i == 1.
-   * \param [in] root_face    The root_face. Needs to be a face of the hypercube the element is embedded in.
-   * \return                  1 if the root_face is the boundary x_i == 1, 0 otherwise.
-   */
-  static constexpr int
-  root_face_is_1_boundary (const int root_face) noexcept
-  {
-    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      return root_face % 2;
-    }
-    else {
-      /* Get root element or type*/
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-  }
-
-  /** Get the eclass of the face for the element eclass
-   * \return The eclass of the face.
-   * Note: Only implemented for hypercubes
-   */
-  static constexpr t8_eclass_t
-  get_face_eclass () noexcept
-  {
-    switch (TEclass) {
-    case T8_ECLASS_VERTEX:
-      SC_ABORT_NOT_REACHED ();
-      return T8_ECLASS_INVALID;
-    case T8_ECLASS_LINE:
-      return T8_ECLASS_VERTEX;
-    case T8_ECLASS_QUAD:
-      return T8_ECLASS_LINE;
-    case T8_ECLASS_HEX:
-      return T8_ECLASS_QUAD;
-    default:
-      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-        SC_ABORT ("Only implemented for hypercubes.\n");
-      }
-      return T8_ECLASS_INVALID;
-    }
-  }
-
-  /** Construct the boundary element at a specific face.
-   * \param [in] elem           The input element.
-   * \param [in] root_face      The index of the face of the root tree in which \a face
-   *                            lies.
-   * \param [in,out] boundary   An allocated element of dimension of \a element
-   *                            minus 1. The entries will be filled with the entries
-   *                            of the face of \a element.
-   */
-  template <t8_eclass_t TFaceEclass>
-  static constexpr void
-  compute_boundary_face (const t8_element_t *elem, const int root_face,
-                         t8_standalone_element<TFaceEclass> *boundary) noexcept
-  {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= root_face && root_face < T8_ELEMENT_NUM_FACES[TEclass]);
-    const t8_standalone_element<TEclass> *el = (const t8_standalone_element<TEclass> *) elem;
-
-    /* Avoid problems for unneeded instantiations*/
-    if constexpr (T8_ELEMENT_DIM[TFaceEclass] >= T8_ELEMENT_DIM[TEclass]) {
-      return;
-    }
-
-    else {
-      boundary->level = el->level;
-      /* Delete the coordinate orthogonal to the given face and combine the remaining coordinates*/
-      for (int idim = 0; idim < T8_ELEMENT_DIM[TEclass]; idim++) {
-        const int ifacedim = get_facedim (idim, root_face);
-
-        if (ifacedim != -1) {
-          /** Currently this part of the code is also compiled for vertices and faces of higher dim than the element.
-          * This leads to invalid shift inputs.*/
-          if constexpr (TFaceEclass != T8_ECLASS_VERTEX) {
-            /** Set the boundary coordinates to the corresponding coordinates of the element,
-           * adjusted to the maxlevel of the face-scheme*/
-            boundary->coords[ifacedim] = el->coords[idim]
-                                         << (T8_ELEMENT_MAXLEVEL[TFaceEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
-          }
-          else {
-            SC_ABORT_NOT_REACHED ();
-          }
-        }
-      }
-    }
-    if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-    T8_ASSERT (t8_standalone_scheme<TFaceEclass>::element_is_valid ((t8_element_t *) boundary));
-  }
-
-  /* Compute the index of the corner of a face
-  \ref element_get_face_corner
-  */
-  static constexpr int
-  get_hypercube_face_corner_index (const int face_dim, const int face_sign, const int corner) noexcept
-  {
-    /** Bitoperation to put the face_sign bit at the face_dim position in the binary representation of corner.
-     *  Example with the binary representation shown as aaaabb:
-     *  corner = aaaabb, face_sign = x, then element_corner = aaaaxbb */
-    const t8_element_coord first_part = (corner >> face_dim) << (face_dim + 1);
-    const t8_element_coord last_part = corner & ((1 << face_dim) - 1);
-    const t8_element_coord face_part = face_sign << face_dim;
-    return first_part + face_part + last_part;
-  }
-
-  /** Delete the coordinate orthogonal to the given face and combine the remaining coordinates
-   * \param [in] idim      The input coordinate index.
-   * \param [in] root_face The root_face
-   * \return               The facedim
-  */
-  static inline int
-  get_facedim (const int idim, const int root_face) noexcept
-  {
-    if constexpr (!T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      const int facenormal_dim = root_face / 2;
-      if (idim == facenormal_dim) {
-        /* Coordinate direction is orthogonal to face, therefore it does not influence boundary face representation.*/
-        return -1;
-      }
-      else if (idim > facenormal_dim) {
-        /* Coordinate direction is after the face normal direction, therefore we need to shift the coordinate index.*/
-        return idim - 1;
-      }
-      else {
-        /* Coordinate direction is before the face normal direction, therefore we keep the coordinate index.*/
-        return idim;
-      }
-    }
-    else {
-      SC_ABORT ("Only implemented for hypercubes.\n");
-    }
-    return 0;
+    subelement->subelement_type = 0;
+    subelement->subelement_id = 0;
   }
 };

@@ -53,27 +53,13 @@ struct t8_adapt_data
  * \param [in] elements     The element or family of elements to consider for refinement/coarsening.
  */
 int
-t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
-                   [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                   [[maybe_unused]] const t8_scheme *scheme, const int is_family,
-                   [[maybe_unused]] const int num_elements, t8_element_t *elements[])
+t8_adapt_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                   t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class, t8_locidx_t lelement_id,
+                   [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                   [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
 {
-  /* Our adaptation criterion is to look at the midpoint coordinates of the current element and if
-   * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
-  const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
-  T8_ASSERT (adapt_data != NULL);
-
-  /* Compute the element's centroid coordinates. */
-  double centroid[3];
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-
-  /* Compute the distance to our sphere midpoint. */
-  double dist = t8_dist (centroid, adapt_data->midpoint);
-  if (dist < adapt_data->refine_if_inside_radius) {
+  if ((t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id) % 2 == 0) {
     return 1;
-  }
-  else if (is_family && dist > adapt_data->coarsen_if_outside_radius) {
-    return -1;
   }
   return 0;
 }
