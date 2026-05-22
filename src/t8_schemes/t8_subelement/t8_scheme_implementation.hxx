@@ -900,56 +900,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   element_set_linear_id (t8_element_t *elem, const t8_element_level level, t8_linearidx_t id) noexcept
   {
-
-    t8_standalone_element<T8_ECLASS_QUAD> *el = (t8_standalone_element<T8_ECLASS_QUAD> *) elem;
-
-    set_to_root ((t8_element_t *) el);
-
-    /* There is only one element at level 0, so it must be root */
-    if (level == 0) {
-      T8_ASSERT (id == 0);
-      return;
-    }
-
-    T8_ASSERT (id < (size_t) element_count_leaves (elem, level));
-    T8_ASSERT (1 <= level && level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
-    t8_standalone_element<T8_ECLASS_QUAD> child;
-
-    while (el->level < level) {
-      /* Shortcut if we need the first descendant of the subtree*/
-      if (id == 0) {
-        element_get_first_descendant ((const t8_element_t *) el, (t8_element_t *) el, level);
-        return;
-      }
-
-      t8_linearidx_t sum_descendants_of_children_before;
-      t8_linearidx_t sum_descendants_of_children_until_current = 0;
-      int childindex = -1;
-
-      /* Find the first child id so that the sum of descendants of previous child and the own number of descendants is greater than id */
-      do {
-        /* Go to the next child */
-        sum_descendants_of_children_before = sum_descendants_of_children_until_current;
-        childindex++;
-        T8_ASSERT (childindex < element_get_num_children ((const t8_element_t *) el));
-
-        element_get_num_children ((const t8_element_t *) el);
-
-        element_get_child ((const t8_element_t *) el, childindex, (t8_element_t *) &child);
-        const t8_linearidx_t num_descendants_of_child = element_count_leaves ((t8_element_t *) &child, level);
-
-        /* Add number of descendant of current child to cumulative sum */
-        sum_descendants_of_children_until_current = sum_descendants_of_children_before + num_descendants_of_child;
-
-      } while (sum_descendants_of_children_until_current <= id);
-
-      /* Replace el by child to go into next iteration at finer level*/
-      element_get_child ((const t8_element_t *) el, childindex, (t8_element_t *) el);
-      /* get id in subtree of child */
-      id -= sum_descendants_of_children_before;
-    }
-    T8_ASSERT (id == 0);
-    return;
+    SC_CHECK_ABORT (element_is_subelement (elem), "element_set_linear_id is not implemented for subelements yet.\n");
+    standalone_scheme::element_set_linear_id (element_to_element (elem), level, id);
   }
 
   /** Compute the linear id of a given element in a hypothetical uniform
@@ -961,40 +913,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr t8_linearidx_t
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
-    t8_standalone_element<T8_ECLASS_QUAD> ancestor;
-
-    /* Determine the starting element for the iterative linear id computation. */
-    if (level < el->level) {
-      /* Throw away child ids up to the coarser level */
-      element_get_ancestor (el, level, &ancestor);
-    }
-    else {
-      /* Start with the input element.
-       Copy to have a mutable element. */
-      element_copy ((const t8_element_t *) el, (t8_element_t *) &ancestor);
-    }
-
-    t8_linearidx_t id = 0;
-    t8_standalone_element<T8_ECLASS_QUAD> child;
-
-    while (ancestor.level != 0) {
-      const t8_child_id childid = element_get_child_id ((t8_element_t *) &ancestor);
-      element_get_parent ((t8_element_t *) &ancestor, (t8_element_t *) &ancestor);
-      t8_linearidx_t parent_id = 0;
-
-      for (int ichild = 0; ichild < childid; ichild++) {
-        /* el is now parent, so compute child to get sibling of previous el */
-
-        element_get_child ((const t8_element_t *) &ancestor, ichild, (t8_element_t *) &child);
-        const t8_linearidx_t num_child_descendants = element_count_leaves ((t8_element_t *) &child, level);
-        parent_id += num_child_descendants;
-      }
-      id += parent_id;
-    }
-    T8_ASSERT (id < (size_t) element_count_leaves ((t8_element_t *) &ancestor, level));
-    return id;
+    SC_CHECK_ABORT (element_is_subelement (elem), "element_get_linear_id is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_linear_id (element_to_element (elem), level);
   }
 
   /** Construct the successor in a uniform refinement of a given element.
@@ -1004,28 +924,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   element_construct_successor (const t8_element_t *elem1, t8_element_t *elem2) noexcept
   {
-    T8_ASSERT (element_is_valid (elem1));
-
-    const t8_standalone_element<T8_ECLASS_QUAD> *elem = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem1;
-    t8_standalone_element<T8_ECLASS_QUAD> *succ = (t8_standalone_element<T8_ECLASS_QUAD> *) elem2;
-
-    element_copy ((const t8_element_t *) elem, (t8_element_t *) succ);
-
-    const t8_child_id child_id = element_get_child_id ((const t8_element_t *) elem);
-    const int num_siblings = element_get_num_siblings ((const t8_element_t *) elem);
-    T8_ASSERT (0 <= child_id && child_id < num_siblings);
-    /* If the element is the last child of the parent, we need to go to the parent's successor (go to a coarser level)*/
-    if (child_id == num_siblings - 1) {
-      element_get_parent ((const t8_element_t *) succ, (t8_element_t *) succ);
-      element_construct_successor ((const t8_element_t *) succ, (t8_element_t *) succ);
-      element_get_child ((const t8_element_t *) succ, 0, (t8_element_t *) succ);
-    }
-    else {
-      element_get_parent ((const t8_element_t *) succ, (t8_element_t *) succ);
-      element_get_child ((const t8_element_t *) succ, child_id + 1, (t8_element_t *) succ);
-    }
-
-    T8_ASSERT (element_is_valid (elem2));
+    SC_CHECK_ABORT (element_is_subelement (elem1),
+                    "element_construct_successor is not implemented for subelements yet.\n");
+    return standalone_scheme::element_construct_successor (element_to_element (elem1), element_to_element (elem2));
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
@@ -1042,14 +943,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr t8_gloidx_t
   element_count_leaves (const t8_element_t *elem, const t8_element_level level) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    T8_ASSERT (0 <= level && level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
-    if (level < element_get_level (elem)) {
-      return 0;
-    }
-    else {
-      return num_descendants_at_leveldiff (elem, level - element_get_level (elem));
-    }
+    SC_CHECK_ABORT (element_is_subelement (elem), "element_count_leaves is not implemented for subelements yet.\n");
+    return standalone_scheme::element_count_leaves (element_to_element (elem1), level);
   }
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
@@ -1063,12 +958,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr t8_gloidx_t
   count_leaves_from_root (const t8_element_level level) noexcept
   {
-    T8_ASSERT (level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
-    T8_ASSERT (level >= 0);
-    if constexpr (T8_ECLASS_QUAD == T8_ECLASS_PYRAMID) {
-      SC_ABORT ("Not implemented yet.\n");
-    }
-    return 1LL << (level * T8_ELEMENT_DIM[T8_ECLASS_QUAD]);
+    return standalone_scheme::count_leaves_from_root (level);
   }
 
   /** Compare two elements.
@@ -1081,25 +971,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr int
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) noexcept
   {
-    T8_ASSERT (element_is_valid (elem1));
-    T8_ASSERT (element_is_valid (elem2));
-
-    const t8_standalone_element<T8_ECLASS_QUAD> *e1 = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem1;
-    const t8_standalone_element<T8_ECLASS_QUAD> *e2 = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem2;
-
-    const int maxlvl = SC_MAX (e1->level, e2->level);
-
-    const t8_linearidx_t id1 = element_get_linear_id ((const t8_element_t *) e1, maxlvl);
-    const t8_linearidx_t id2 = element_get_linear_id ((const t8_element_t *) e2, maxlvl);
-    if (id1 == id2) {
-      if (e1->level == e2->level) {
-        return 0;
-      }
-      else {
-        return e1->level - e2->level;
-      }
-    }
-    return id1 < id2 ? -1 : 1;
+    SC_CHECK_ABORT (element_is_subelement (elem1) || element_is_subelement (elem2),
+                    "element_compare is not implemented for subelements yet.\n");
+    return standalone_scheme::element_compare (element_to_element (elem1), element_to_element (elem2));
   }
 
   // ################################################____VISUALIZATION____################################################
@@ -1114,20 +988,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static constexpr void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-
-    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
-    if constexpr (T8_ECLASS_QUAD == T8_ECLASS_VERTEX) {
-      return;
-    }
-    else {
-      int coords_int[T8_ELEMENT_DIM[T8_ECLASS_QUAD]];
-      T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[T8_ECLASS_QUAD]);
-      element_compute_coords (el, vertex, coords_int);
-      for (int idim = 0; idim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; idim++) {
-        coords[idim] = coords_int[idim] / (double) get_root_len ();
-      }
-    }
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_get_vertex_reference_coords is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_vertex_reference_coords (element_to_element (elem), vertex, coords);
   }
 
   /** Convert a point in the reference space of an element to a point in the
@@ -1142,21 +1005,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
                                 double *out_coords) noexcept
   {
-    double *current_ref_coords = (double *) ref_coords;
-    double *current_out_coords = out_coords;
-    t8_element_coord length = element_get_len (element_get_level (elem));
-
-    for (size_t coord = 0; coord < num_coords; ++coord) {
-      for (int dim = 0; dim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; ++dim) {
-        current_out_coords[dim]
-          = ((t8_standalone_element<T8_ECLASS_QUAD> *) elem)->coords[dim] + current_ref_coords[dim] * length;
-
-        current_out_coords[dim] /= (double) get_root_len ();
-      }
-
-      current_ref_coords += T8_ECLASS_MAX_DIM;
-      current_out_coords += T8_ELEMENT_DIM[T8_ECLASS_QUAD];
-    }
+    SC_CHECK_ABORT (element_is_subelement (elem),
+                    "element_get_reference_coords is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_vertex_reference_coords (element_to_element (elem), ref_coords, num_coords,
+                                                                   out_coords);
   }
 
   // ################################################____MEMORY____################################################
@@ -1218,11 +1070,11 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elems) noexcept
   {
 #if T8_ENABLE_DEBUG
-    t8_standalone_element<T8_ECLASS_QUAD> *el = (t8_standalone_element<T8_ECLASS_QUAD> *) elems;
-    /* Set all values to 0 */
+    t8_subelement_element *subelement = (t8_subelement_element *) elem;
     for (int ielem = 0; ielem < length; ielem++) {
-      element_set_linear_id ((t8_element_t *) (el + ielem), 0, 0);
-      T8_ASSERT (element_is_valid ((t8_element_t *) (el + ielem)));
+      reset_subelement_values (subelement + ielem);
+      standalone_scheme::element_init (subelement_to_element (subelement + ielem));
+      T8_ASSERT (element_is_valid ((t8_element_t *) (subelement + ielem)));
     }
 #endif
   }
@@ -1282,40 +1134,30 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (elem != NULL);
 
-    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
-    const t8_element_coord max_coord = 2LL * get_root_len () - 1;
-
-    /* Check the level */
-    int is_valid = 0 <= el->level && el->level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD];
-    /* Check coordinates, we allow a boundary layer around the root-element */
-    for (int i = 0; i < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; i++) {
-      is_valid = is_valid && -(int64_t) get_root_len () <= el->coords[i] && el->coords[i] <= max_coord;
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    int element_valid = standalone_scheme::element_is_valid (subelement_to_element (subelement));
+    if (element_is_subelement (elem)) {
+      return element_valid;
     }
+    bool subelement_valid = (subelement->subelement_type >= T8_SUB_QUAD_MIN_SUBELEMENT_TYPE
+                             && subelement->subelement_type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE)
+                            && (subelement->subelement_id >= T8_SUB_QUAD_MIN_SUBELEMENT_ID
+                                && subelement->subelement_id <= T8_SUB_QUAD_MAX_SUBELEMENT_ID);
 
-    return is_valid;
+    return subelement_valid && element_valid;
   }
 
   /**
- * Print a given element. For a example for a triangle print the coordinates
- * and the level of the triangle. This function is only available in the
- * debugging configuration.
- *
- * \param [in]        elem  The element to print
- */
+  * Print a given element. For a example for a triangle print the coordinates
+  * and the level of the triangle. This function is only available in the
+  * debugging configuration.
+  *
+  * \param [in]        elem  The element to print
+  */
   static constexpr void
-  element_debug_print (const t8_element_t *elem) noexcept
+  element_debug_print ([[maybe_unused]] const t8_element_t *elem) noexcept
   {
-
-    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
-
-    t8_debugf ("level: %i\n", el->level);
-    for (int i = 0; i < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; i++) {
-      t8_debugf ("x_%i: %i \n", i, el->coords[i]);
-    }
-    /**  for (int e = 0; e < T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_QUAD]; e++) {
-    *  t8_debugf ("t_%i: %i \n", e, el->type[e]);
-    *}
-    * ToDo-Type */
+    SC_ABORT ("Not implemented.");
   }
 
 #endif
@@ -1326,14 +1168,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
  * \param[in] string_size Buffer size of c-string
  */
   static constexpr void
-  element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) noexcept
+  element_to_string ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] char *debug_string,
+                     [[maybe_unused]] const int string_size) noexcept
   {
-    const t8_standalone_element<T8_ECLASS_QUAD> *el = (const t8_standalone_element<T8_ECLASS_QUAD> *) elem;
-    int offset = 0;
-    offset += snprintf (debug_string + offset, string_size - offset, "level: %i\n", el->level);
-    for (int idim = 0; idim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; idim++) {
-      offset += snprintf (debug_string + offset, string_size - offset, "x_%i: %i \n", idim, el->coords[idim]);
-    }
+    SC_ABORT ("Not implemented.");
   }
 
   // ################################################____MPI____################################################
@@ -1351,15 +1189,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
                     int *position, sc_MPI_Comm comm) const noexcept
 
   {
-    int mpiret;
-    t8_standalone_element<T8_ECLASS_QUAD> **els = (t8_standalone_element<T8_ECLASS_QUAD> **) elements;
-
+    t8_subelement_element **els = (t8_subelement_element **) elements;
     for (unsigned int ielem = 0; ielem < count; ielem++) {
-      for (int idim = 0; idim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; idim++) {
-        mpiret = sc_MPI_Pack (&(els[ielem]->coords[idim]), 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
-        SC_CHECK_MPI (mpiret);
-      }
-      mpiret = sc_MPI_Pack (&els[ielem]->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
+      standalone_scheme::element_MPI_Pack (subelement_to_element (els[ielem]), 1, send_buffer, buffer_size, position,
+                                           comm);
+      int mpiret = sc_MPI_Pack (&els[ielem]->subelement_type, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
+      SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Pack (&els[ielem]->subelement_id, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
       SC_CHECK_MPI (mpiret);
     }
   }
@@ -1372,19 +1208,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   constexpr void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const noexcept
   {
-    int singlesize = 0;
+    // Get single size from standalone scheme.
+    standalone_scheme::element_MPI_Pack_size (1, comm, pack_size);
+    int singlesize = *pack_size;
+
+    /* Type and id are both of type int. */
     int datasize = 0;
-    int mpiret;
-
-    /* x,y,z */
-    mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
+    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
     SC_CHECK_MPI (mpiret);
-    singlesize += T8_ELEMENT_DIM[T8_ECLASS_QUAD] * datasize;
-
-    /* level */
-    mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
-    SC_CHECK_MPI (mpiret);
-    singlesize += datasize;
+    singlesize += 2 * datasize;
 
     *pack_size = count * singlesize;
   }
@@ -1401,15 +1233,14 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const noexcept
   {
-    int mpiret;
-    t8_standalone_element<T8_ECLASS_QUAD> **els = (t8_standalone_element<T8_ECLASS_QUAD> **) elements;
+    t8_subelement_element **els = (t8_subelement_element **) elements;
 
     for (unsigned int ielem = 0; ielem < count; ielem++) {
-      for (int idim = 0; idim < T8_ELEMENT_DIM[T8_ECLASS_QUAD]; idim++) {
-        mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(els[ielem]->coords[idim]), 1, sc_MPI_INT, comm);
-        SC_CHECK_MPI (mpiret);
-      }
-      mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &(els[ielem]->level), 1, sc_MPI_INT8_T, comm);
+      standalone_scheme::element_MPI_Unpack (recvbuf, buffer_size, position, subelement_to_element (els[ielem]), 1,
+                                             comm);
+      int mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &els[ielem]->subelement_type, 1, sc_MPI_INT, comm);
+      SC_CHECK_MPI (mpiret);
+      mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &els[ielem]->subelement_id, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
     }
   }
