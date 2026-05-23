@@ -35,17 +35,17 @@ T8_EXTERN_C_BEGIN ();
 
 #if T8_ENABLE_DEBUG
 /** Return zero if the first \a num_elements in \a elements are not a (sub)family.
- * \param [in] scheme       The element scheme for current local tree 
+ * \param [in] scheme       The element scheme for current local tree
  *                           where the elements are from.
  * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] elements      The elements array.
  * \param [in] num_elements  The first \a num_elements to be checked in \a elements.
- * \return                   0 if the first \a num_elements in \a elements are 
+ * \return                   0 if the first \a num_elements in \a elements are
  *                           not a (sub)family.
  * \note If the first element has level 0, the return is 0.
  * \note This test does not compare with the elements before and after the elements
  *       given by \a elements in the current forest. A non-zero return is therefore
- *       not valid. 
+ *       not valid.
  */
 static int
 t8_forest_is_family_callback (const t8_scheme *scheme, t8_eclass_t tree_class, const int num_elements,
@@ -100,7 +100,7 @@ t8_forest_is_family_callback (const t8_scheme *scheme, t8_eclass_t tree_class, c
  * \param [in] telements_pos The index of an element in \a telement
  *                           array which could be coarsened recursively.
  * \return                   The index of the first family member whose family is
- *                           defined by \a telements_pos in \a telement.                    
+ *                           defined by \a telements_pos in \a telement.
  * \note The element with index \a telements_pos must be the last child in its family.
  *       \see t8_forest_adapt_coarsen_recursive.
  * \note If the element with index \a telements_pos in \a telement can not be coarsened
@@ -125,7 +125,7 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, const t8_scheme *sche
     const int child_id = scheme->element_get_child_id (tree_class, element);
     /* Left if condition:
      * If child_id is not last, elements cannot be coarsened recursively.
-     * But elements (vertex) whose family consist of exactly one element do 
+     * But elements (vertex) whose family consist of exactly one element do
      * also not get coarsened recursively.
      * Right if condition:
      * Elements with level 0 cannot be further coarsened. */
@@ -136,7 +136,7 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, const t8_scheme *sche
     T8_ASSERT (level_current > 0);
   }
 
-  /* If the forest is complete, the family is also complete. 
+  /* If the forest is complete, the family is also complete.
    * Thus, the index of the first member can be determined. */
   if (!forest->incomplete_trees) {
     return telements_pos - (t8_locidx_t) num_siblings - 1;
@@ -149,8 +149,8 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, const t8_scheme *sche
   /* Get parent of a family member by coarsening last member. */
   scheme->element_get_parent (tree_class, element, element_parent);
 
-  /* Loop backward over all possible family members until we hit an 
-   * element that is not part of the family or we have reached the 
+  /* Loop backward over all possible family members until we hit an
+   * element that is not part of the family or we have reached the
    * maximum number of member. */
   t8_locidx_t el_iter; /* Loop running variable */
   t8_locidx_t pos = -1;
@@ -171,12 +171,12 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, const t8_scheme *sche
     }
   }
 
-  /* If the current set of considered elements is smaller in size than a possible 
+  /* If the current set of considered elements is smaller in size than a possible
    * family, check if the first element along the space-filling-curve next to the
    * considered elements is overlapped when set is coarsened. */
   if (el_iter < (t8_locidx_t) num_siblings && el_iter < elements_in_array) {
     int level_compare = scheme->element_get_level (tree_class, element_compare);
-    /* Only elements with higher level then level of elements in family, can get 
+    /* Only elements with higher level then level of elements in family, can get
      * potentially be overlapped. */
     if (level_compare > level_current) {
       /* Compare ancestors */
@@ -194,7 +194,7 @@ t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, const t8_scheme *sche
   scheme->element_destroy (tree_class, 1, &element_parent_compare);
 
 #if T8_ENABLE_MPI
-  /* The first element on process rank must have child_id 0, otherwise other 
+  /* The first element on process rank must have child_id 0, otherwise other
    * family members could be on process rank-1. */
   if (pos == 0 && forest->mpirank > 0) {
     const t8_element_t *element_boarder = t8_element_array_index_locidx (telements, pos);
@@ -660,7 +660,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_forest_comm_global_num_leaf_elements (forest);
 
   /* Updating other processes about local (in)complete trees.
-   * If the old forest already contained incomplete trees, 
+   * If the old forest already contained incomplete trees,
    * this step is not necessary. */
   if (!forest_from->incomplete_trees) {
     T8_ASSERT (element_removed == 1 || element_removed == 0);

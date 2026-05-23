@@ -180,7 +180,7 @@ struct t8_geometry
   virtual bool
   get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, [[maybe_unused]] double bounds[6]) const
   {
-    t8_errorf ("Tree bounding box function not implemented");
+    t8_errorf ("Tree bounding box function not implemented\n");
     return false;
   }
 

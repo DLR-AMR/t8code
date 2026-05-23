@@ -560,14 +560,14 @@ struct vtk_writer
       return true;
     }
     else {
-      t8_errorf ("Error when writing vtk file.\n");
+      t8_errorf ("ERROR when writing vtk file.\n");
     }
 
     /* Return whether writing was successful */
     return false;
 
 #else
-    t8_global_errorf ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
+    t8_global_errorf ("WARNING: t8code is not linked against vtk library. Vtk output will not be generated.\n");
     t8_global_productionf ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
     return false;
 #endif

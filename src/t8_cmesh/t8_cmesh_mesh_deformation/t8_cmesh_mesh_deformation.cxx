@@ -60,7 +60,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
-      t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree_id);
+      t8_errorf ("ERROR: Geometry attribute missing for tree %d\n.", first_tree_id);
       SC_ABORTF ("Geometry attribute is missing.\n");
     }
 
@@ -81,7 +81,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Check if the attribute of the vertex is the same in all trees. */
       if (!(entity_dim == first_tree_entity_dim && entity_tag == first_tree_entity_tag)) {
         t8_errorf (
-          "Error: Inconsistent entity info for global vertex %li: tree %d: dim=%d tag=%d, expected dim=%d tag=%d\n",
+          "ERROR: Inconsistent entity info for global vertex %li: tree %d: dim=%d tag=%d, expected dim=%d tag=%d\n",
           global_vertex_id, tree_id, entity_dim, entity_tag, first_tree_entity_dim, first_tree_entity_tag);
         SC_ABORTF ("Inconsistency in vertex info.\n");
       }
@@ -97,7 +97,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
-        t8_errorf ("Error: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
+        t8_errorf ("ERROR: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
         SC_ABORT ("(u,v)-parameters are missing.\n");
       }
       /* Get the (u,v)-parameter of the vertex. */
@@ -109,7 +109,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       /* Check if the coordinates are available. */
       if (old_coords == nullptr) {
-        t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
+        t8_errorf ("ERROR: Coordinates attribute missing for tree %d\n.", first_tree_id);
         SC_ABORTF ("Vertex coordinates are missing.\n");
       }
 

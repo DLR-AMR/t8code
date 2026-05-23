@@ -48,18 +48,18 @@ main (int argc, char **argv)
 
   if (sreturn >= BUFSIZ) {
     /* Usage string was truncated. */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated usage string to '%s'\n", usage);
+    t8_debugf ("WARNING: Truncated usage string to '%s'\n", usage);
   }
 
   /* long help message */
   sreturn = snprintf (help, BUFSIZ, "This program prints the version number of t8code.\n\n%s\n", usage);
   if (sreturn >= BUFSIZ) {
     /* help message was truncated. */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+    t8_debugf ("WARNING: Truncated help message to '%s'\n", help);
   }
 
   /* initialize command line argument parser */

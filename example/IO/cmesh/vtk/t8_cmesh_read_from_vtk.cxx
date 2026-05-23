@@ -29,8 +29,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 /**
  * Construct a cmesh read from a VTK-file type supported by our vtk-reader.
  * Given the number of cell-values in the file we read the data again from the forest
- * and write it into the file forest.(p)vtu . 
- * 
+ * and write it into the file forest.(p)vtu .
+ *
  * \param[in] prefix  The prefix of the file to read the mesh from
  * \param[in] comm    The communicator used in this example
  * \param[in] values_per_cell   The number of values per cell in the mesh.
@@ -43,12 +43,12 @@ void
 t8_forest_construct_from_vtk (const char *prefix, sc_MPI_Comm comm, const int values_per_cell, const int partition,
                               vtk_file_type_t vtk_file_type, const int user_package_id, const char *out_prefix)
 {
-  /* Read a poly-data file (.ply, .vtp, .obj, .stl, .vtk, .g) and construct a cmesh 
-   * representing the mesh. If  there is any cell-data, it will be read too. 
+  /* Read a poly-data file (.ply, .vtp, .obj, .stl, .vtk, .g) and construct a cmesh
+   * representing the mesh. If  there is any cell-data, it will be read too.
    * Triangle-strips and polygons will be broken down to multiple triangles. */
   t8_cmesh_t cmesh_in = t8_vtk_reader_cmesh (prefix, partition, 0, comm, vtk_file_type, user_package_id, 0);
   if (cmesh_in == NULL) {
-    t8_errorf ("Error reading file.\n");
+    t8_errorf ("ERROR reading file.\n");
     return;
   }
   char out_file[BUFSIZ];
@@ -140,9 +140,9 @@ main (int argc, char **argv)
                       usage);
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
-    t8_debugf ("Warning: Truncated help message to '%s'\n", help);
+    t8_debugf ("WARNING: Truncated help message to '%s'\n", help);
   }
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);

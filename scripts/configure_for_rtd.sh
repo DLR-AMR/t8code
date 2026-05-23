@@ -39,7 +39,7 @@ cd build
 if [ "$READTHEDOCS" = "True" ]; then
     DOXYFILE_PATH="../doc/Doxyfile.in"
     if [ ! -f "$DOXYFILE_PATH" ]; then
-        echo "Error: $DOXYFILE_PATH does not exist or is not a regular file."
+        echo "ERROR: $DOXYFILE_PATH does not exist or is not a regular file."
         exit 1
     fi
     echo "Configuring Doxygen for ReadTheDocs: Excluding source files."

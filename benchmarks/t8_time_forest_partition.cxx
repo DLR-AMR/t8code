@@ -264,7 +264,7 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
     /* Partition only if more than 1 input file */
     partition = num_files > 1;
   }
-  SC_CHECK_ABORT (cmesh != NULL, "Error when creating cmesh.\n");
+  SC_CHECK_ABORT (cmesh != NULL, "ERROR when creating cmesh.\n");
 
   if (partition) {
     /* partition the cmesh uniformly */
