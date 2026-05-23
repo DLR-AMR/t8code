@@ -47,6 +47,12 @@ if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
   target_compile_definitions( T8 PUBLIC T8_ENABLE_DEBUG=1 )
 endif()
 
+if (T8CODE_ACTIVATE_EXPERIMENTAL_ADAPT)
+    target_compile_definitions( T8 PUBLIC T8CODE_EXPERIMENTAL_ADAPT=1 )
+else()
+    target_compile_definitions( T8 PUBLIC T8CODE_EXPERIMENTAL_ADAPT=0 )
+endif()
+
 if( T8CODE_EXPORT_COMPILE_COMMANDS )
   set_target_properties( T8 PROPERTIES EXPORT_COMPILE_COMMANDS ON )
 endif( T8CODE_EXPORT_COMPILE_COMMANDS )
