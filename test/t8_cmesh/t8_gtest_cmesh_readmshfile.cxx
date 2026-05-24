@@ -39,7 +39,6 @@
 
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 {
-
   std::string fileprefix = std::string (T8_TEST_DATA_DIR) + "/test_msh_file_vers4_ascii";
   char filename[BUFSIZ];
 
