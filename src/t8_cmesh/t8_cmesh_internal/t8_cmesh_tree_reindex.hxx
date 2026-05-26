@@ -25,5 +25,5 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <map>
 
-std::map<t8_gloidx_t, t8_gloidx_t> t8_cmesh_reindex_tree(t8_cmesh_t cmesh){};
-
+std::map<t8_locidx_t, t8_locidx_t>
+t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm);
