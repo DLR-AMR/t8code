@@ -1905,17 +1905,15 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
   scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face, children.begin (),
                                         num_children, nullptr);
 
-  int result = -1;
-  for (int i_child = 0; i_child < num_children; ++i_child) {
-    if (scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, children[i_child]) == 0) {
-      result = i_child;
-    }
-  }
-  T8_ASSERT(result != -1); // make sure the face was found
+  auto iter = std::find_if(children.begin(), children.end(), [&](t8_element* candidate) -> bool {
+    return scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, candidate) == 0;
+  });
+  T8_ASSERT(iter != children.end()); // make sure the face was found
+  int neighbor_subface_index = iter - children.begin();
 
   scheme->element_destroy (neighbor_tree_class, 4, children.begin ());
   scheme->element_destroy (neighbor_tree_class, 1, &target_virtual_face_neighbor);
-  return result;
+  return neighbor_subface_index;
 }
 
 void
