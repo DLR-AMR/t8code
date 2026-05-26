@@ -170,8 +170,12 @@ main (int argc, char **argv)
 
   // --- Remove hanging nodes via adapting again. ---
   // forest = t8_remove_hanging_nodes (forest);
-  //TODO: permit forest_from->incomplete_trees
-  std::cout << "Scheme : " << t8_element_get_element_size (t8_forest_get_scheme (forest), T8_ECLASS_QUAD) << "\n";
+
+  // Now output to vtk.
+  const char *prefix_with_hanging_nodes = "t8_with_hanging_nodes";
+  t8_forest_write_vtk (forest, prefix_with_hanging_nodes);
+  t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n",
+                         prefix_with_hanging_nodes);
   // --- Cleanup. ---
   t8_forest_unref (&forest);
 
