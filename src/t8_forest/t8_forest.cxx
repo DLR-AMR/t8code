@@ -1899,8 +1899,8 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
   int const num_children = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
 
-  std::array<t8_element_t *, 4> children;  // assumes a 2:1 balanced forest
-  scheme->element_new (neighbor_tree_class, 4, children.begin ());
+  std::array<t8_element_t *, T8_ECLASS_MAX_FACE_CHILDREN> children;  // assumes a 2:1 balanced forest
+  scheme->element_new (neighbor_tree_class, children.size (), children.begin ());
 
   scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face, children.begin (),
                                         num_children, nullptr);
