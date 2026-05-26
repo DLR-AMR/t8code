@@ -1891,11 +1891,11 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
 {
   t8_scheme const *scheme = t8_forest_get_scheme (forest);
 
-  t8_element_t *target = nullptr;
-  scheme->element_new (neighbor_tree_class, 1, &target);
+  t8_element_t *target_virtual_face_neighbor = nullptr; // this is the neighbor subface we are looking for
+  scheme->element_new (neighbor_tree_class, 1, &target_virtual_face_neighbor);
 
-  int dummy;  // Can't pass a nullptr to t8_forest_element_face_neighbor below (see #2214)
-  t8_forest_element_face_neighbor (forest, ltreeid, leaf, target, neighbor_tree_class, face, &dummy);
+  int dummy;  // can't pass a nullptr to t8_forest_element_face_neighbor below (see #2214)
+  t8_forest_element_face_neighbor (forest, ltreeid, leaf, target_virtual_face_neighbor, neighbor_tree_class, face, &dummy);
 
   int const num_children = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
 
@@ -1907,14 +1907,14 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
   int result = -1;
   for (int i_child = 0; i_child < num_children; ++i_child) {
-    if (scheme->element_compare (neighbor_tree_class, target, children[i_child]) == 0) {
+    if (scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, children[i_child]) == 0) {
       result = i_child;
     }
   }
   T8_ASSERT(result != -1); // make sure the face was found
 
   scheme->element_destroy (neighbor_tree_class, 4, children.begin ());
-  scheme->element_destroy (neighbor_tree_class, 1, &target);
+  scheme->element_destroy (neighbor_tree_class, 1, &target_virtual_face_neighbor);
   return result;
 }
 
