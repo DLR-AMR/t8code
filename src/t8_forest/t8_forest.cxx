@@ -2081,10 +2081,8 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
   t8_element_t *target_virtual_face_neighbor = nullptr;  // the neighbor subface we are looking for
   scheme->element_new (neighbor_tree_class, 1, &target_virtual_face_neighbor);
-
-  int dummy;  // can't pass a nullptr to t8_forest_element_face_neighbor below (see #2214)
   t8_forest_element_face_neighbor (forest, ltreeid, leaf, target_virtual_face_neighbor, neighbor_tree_class, face,
-                                   &dummy);
+                                   nullptr);
 
   int const num_children = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
 
