@@ -2079,7 +2079,7 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
 {
   t8_scheme const *scheme = t8_forest_get_scheme (forest);
 
-  t8_element_t *target_virtual_face_neighbor = nullptr;  // this is the neighbor subface we are looking for
+  t8_element_t *target_virtual_face_neighbor = nullptr;  // the neighbor subface we are looking for
   scheme->element_new (neighbor_tree_class, 1, &target_virtual_face_neighbor);
 
   int dummy;  // can't pass a nullptr to t8_forest_element_face_neighbor below (see #2214)
@@ -2088,7 +2088,7 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
   int const num_children = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
 
-  std::array<t8_element_t *, T8_ECLASS_MAX_FACE_CHILDREN> children;  // assumes a 2:1 balanced forest
+  std::array<t8_element_t *, T8_ECLASS_MAX_FACE_CHILDREN> children;  // assumes the forest is (locally) 2:1 balanced
   scheme->element_new (neighbor_tree_class, children.size (), children.begin ());
 
   scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face, children.begin (),
@@ -2097,7 +2097,7 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
   auto iter = std::find_if (children.begin (), children.end (), [&] (t8_element *candidate) -> bool {
     return scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, candidate) == 0;
   });
-  T8_ASSERT (iter != children.end ());  // make sure the face was found
+  T8_ASSERT (iter != children.end ());  // make sure target_virtual_face_neighbor was found
   int neighbor_subface_index = iter - children.begin ();
 
   scheme->element_destroy (neighbor_tree_class, 4, children.begin ());
