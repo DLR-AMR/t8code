@@ -680,7 +680,7 @@ t8_forest_same_level_leaf_face_neighbor_index (const t8_forest_t forest, const t
  * \param [in] ltreeid      A local tree id.
  * \param [in] leaf         A leaf in \a ltreeid.
  * \param [in] face         The face index of \a leaf to consider.
- * \param [in] neighbor_tree_eclass The eclass of the neighbor element.
+ * \param [in] neighbor_tree_class The eclass of the neighbor element.
  * \param [in] neighbor_leaf The leaf of \a forest on the other side of the face of index \a face of element \a leaf.
  * \param [in] neighbor_face The face index of \a neighbor_leaf (i.e. the dual face of \a face).
  * \returns The index of the subface of \a neighbor_face which corresponds to \a face.
