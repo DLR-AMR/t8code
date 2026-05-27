@@ -24,22 +24,15 @@
  * This is an example to demonstrate hanging node resolution for quads. 
  */
 
-#include "t8_schemes/t8_subelement/t8_subelement.hxx"
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>             /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
-#include <t8_types/t8_vec.h>                    /* Basic operations on 3D vectors. */
-
-struct t8_adapt_data
-{
-  double midpoint[3];               /* The midpoint of our sphere. */
-  double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
-};
+#include <t8.h>                                       /* General t8code header, always include this. */
+#include <t8_cmesh/t8_cmesh.h>                        /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_examples.h>               /* A collection of exemplary cmeshes */
+#include <t8_forest/t8_forest_general.h>              /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>                   /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>          /* geometrical information of the forest */
+#include <t8_forest/t8_forest_subelement.hxx>         /* Function for adding subelements. */
+#include <t8_schemes/t8_subelement/t8_subelement.hxx> /* Subelement refinement scheme. */
+#include <t8_types/t8_vec.h>                          /* Basic operations on 3D vectors. */
 
 /** The adaptation callback function.
  * \param [in] forest       The current forest that is in construction.
@@ -64,84 +57,12 @@ t8_adapt_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_fore
   return 0;
 }
 
-/* This is the adapt function, called for each element in a balanced forest during transition.
- * We refine an element into a suitable transition cell if it has at most one hanging face */
-int
-t8_remove_hanging_nodes_callback (t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from, t8_locidx_t which_tree,
-                                  [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
-                                  const t8_scheme *scheme, [[maybe_unused]] const int is_family,
-                                  [[maybe_unused]] const int num_elements, t8_element_t *elements[])
-{
-  int subelement_type = 0;
-  /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-     * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level 
-     * and to 0, if the level of the neighbour is at most the level of the element.   
-     *             
-     *              f0                         1
-     *        x - - x - - x              x - - x - - x       
-     *        |           |              | \   |   / |
-     *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
-     *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
-     *        |           |              |   /   \   |
-     *        | elem      |              | /       \ |
-     *        x - - - - - x              x - - - - - x
-     *              f1                         0 
-     *                      
-     */
-  const int num_faces = scheme->element_get_num_faces (tree_class, elements[0]);
-  for (int iface = 0; iface < num_faces; iface++) {
-    const t8_element_t **neighbors; /**< Neighboring elements. */
-    int *dual_faces_internal;       /**< Face indices of the neighbor elements. */
-    int num_neighbors;              /**< Number of neighboring elements. */
-    t8_locidx_t *neighids;          /**< Neighboring elements ids. */
-    t8_eclass_t neigh_class;        /**< Neighboring elements tree class. */
-
-    t8_forest_leaf_face_neighbors (forest, which_tree, elements[0], &neighbors, iface, &dual_faces_internal,
-                                   &num_neighbors, &neighids, &neigh_class);
-
-    if (num_neighbors > 1) {
-      subelement_type += 1 << ((num_faces - 1) - iface);
-    }
-    /* clean-up */
-    if (num_neighbors > 0) {
-      // Free allocated memory.
-      T8_FREE (neighbors);
-      T8_FREE (dual_faces_internal);
-      T8_FREE (neighids);
-    }
-  }
-
-  /* returning the right subelement types */
-  if (subelement_type == 0) { /* in this case, there are no hanging nodes and we do not need to do anything */
-    return 0;
-  }
-  else if (subelement_type == 15) { /* Normal 1:8 refinement */
-    return 1;
-  }
-  else { /* use subelements and add 1 to every type, to avoid refine = 1 */
-    return subelement_type + 1;
-  }
-}
-
 /** Adapt forest according to callback. */
 t8_forest_t
 t8_adapt_forest (t8_forest_t forest)
 {
   t8_forest_t forest_adapt;
-  struct t8_adapt_data adapt_data = {
-    { 0.5, 0.5, 1 }, /* Midpoints of the sphere. */
-    0.2,             /* Refine if inside this radius. */
-    0.4              /* Coarsen if outside this radius. */
-  };
-  forest_adapt = t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, &adapt_data);
-  return forest_adapt;
-}
-
-/** Adapt forest according to callback. */
-t8_forest_t
-t8_remove_hanging_nodes (t8_forest_t forest)
-{
-  t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_remove_hanging_nodes_callback, 0, 0, NULL);
+  forest_adapt = t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, NULL);
   return forest_adapt;
 }
 
@@ -167,16 +88,17 @@ main (int argc, char **argv)
 
   /* --- Adapt the forest. ---   */
   forest = t8_adapt_forest (forest);
+  std::cout << "Subelements before removing: " << t8_forest_has_subelements (forest) << std::endl;
 
   // --- Remove hanging nodes via adapting again. ---
-  // forest = t8_remove_hanging_nodes (forest);
-
+  t8_forest_remove_hanging_nodes (forest);
+  std::cout << "Subelements after removing: " << t8_forest_has_subelements (forest) << std::endl;
   // Now output to vtk.
-  const char *prefix_with_hanging_nodes = "t8_with_hanging_nodes";
-  t8_forest_write_vtk (forest, prefix_with_hanging_nodes);
-  t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n",
-                         prefix_with_hanging_nodes);
-  // --- Cleanup. ---
+  // const char *prefix_with_hanging_nodes = "t8_with_hanging_nodes";
+  // t8_forest_write_vtk (forest, prefix_with_hanging_nodes);
+  // t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n",
+  //                        prefix_with_hanging_nodes);
+  // // --- Cleanup. ---
   t8_forest_unref (&forest);
 
   sc_finalize ();

@@ -23,11 +23,13 @@
  * Implements functions declared in \ref t8_forest_adapt.h.
  */
 
+#include "t8_eclass/t8_eclass.h"
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #include <t8_data/t8_containers.h>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -431,6 +433,8 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
 
   if (forest->set_adapt_recursive) {
+    SC_CHECK_ABORT (!t8_eclass_scheme_is_subelement (t8_forest_get_scheme (forest_from), T8_ECLASS_QUAD),
+                    "Recursive adaptation is currently not implemented for subelement schemes.");
     refine_list = sc_list_new (nullptr);
   }
   forest->local_num_leaf_elements = 0;
@@ -617,6 +621,23 @@ t8_forest_adapt (t8_forest_t forest)
                                                  el_coarsen, &el_inserted, elements);
             }
           }
+          el_considered++;
+        }
+        else if (refine > 1) {  // Subelement case.
+          T8_ASSERT (t8_eclass_scheme_is_subelement (t8_forest_get_scheme (forest_from), T8_ECLASS_QUAD));
+          const t8_subelementquad_scheme *subelemscheme = (const t8_subelementquad_scheme *) scheme;
+          /* The subelement-callback function returns refine = subelement_type + 1 to avoid subelement_type = 1.
+             * We undo this to use the subelement_type-values that match the binary encoding of the neighbour structure. */
+          int subelement_type = refine - 1;
+
+          int num_subelements = subelemscheme->element_get_number_of_subelements (subelement_type);
+          (void) t8_element_array_push_count (telements, num_subelements);
+          for (int zz = 0; zz < num_subelements; zz++) {
+            /* TODO: In a future version elements_from[zz] should be const and we should call t8_element_array_index_locidx (the const version). */
+            elements[zz] = t8_element_array_index_locidx_mutable (telements, el_inserted + zz);
+          }
+          subelemscheme->element_to_subelement (elements_from[0], subelement_type, elements);
+          el_inserted += (t8_locidx_t) num_subelements;
           el_considered++;
         }
         else {

@@ -377,12 +377,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     if (!element_is_subelement (elem)) {
       return standalone_scheme::element_get_num_siblings (subelement_to_element (subelement));
     }
-    int num_hanging_faces = 0;
-    // For subelements, the siblings are the other subelements of the same parent element.
-    for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++i) {
-      num_hanging_faces += (subelement->subelement_type & (1 << i)) >> i;
-    }
-    return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
+    return element_get_number_of_subelements (subelement->subelement_type);
   }
 
   /** Compute a specific sibling of a given element \b elem and store it in \b sibling.
@@ -632,9 +627,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static void
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem),
-                    "element_get_last_descendant is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_last_descendant (element_to_element (elem), element_to_element (desc), level);
+    // Info: For subelements, the last descendant is the same as the first descendant, as they are discarded for the next adaptation cycle.
+    standalone_scheme::element_get_last_descendant (element_to_element (elem), element_to_element (desc), level);
+    reset_subelement_values ((t8_subelement_element *) desc);
   }
 
   // ################################################____FACE REFINEMENT____################################################
@@ -775,9 +770,11 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    * \note You can compute the corresponding face number of the tree via \ref element_get_tree_face.
    */
   static int
-  element_is_root_boundary ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
+  element_is_root_boundary (const t8_element_t *elem, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    SC_CHECK_ABORT (!element_is_subelement (elem),
+                    "element_is_root_boundary is not implemented for subelements yet.\n");
+    return standalone_scheme::element_is_root_boundary (element_to_element (elem), face);
   }
 
   /** Given an element and a face of this element. If the face lies on the
@@ -794,9 +791,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    *   the element does not lie on the root boundary.
    */
   static int
-  element_get_tree_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face) noexcept
+  element_get_tree_face (const t8_element_t *elem, const int face) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_tree_face is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_tree_face (element_to_element (elem), face);
   }
 
   /** Construct the face neighbor of a given element if this face neighbor
@@ -815,10 +813,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
    *                  on output.
    */
   static int
-  element_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *neigh,
-                                    [[maybe_unused]] const int face, [[maybe_unused]] int *neigh_face) noexcept
+  element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face,
+                                    int *neigh_face) noexcept
   {
-    SC_ABORT ("This function is not implemented yet.\n");
+    SC_CHECK_ABORT (!element_is_subelement (elem),
+                    "element_get_face_neighbor_inside is not implemented for subelements yet.\n");
+    return standalone_scheme::element_get_face_neighbor_inside (element_to_element (elem), element_to_element (neigh),
+                                                                face, neigh_face);
   }
 
   // ################################################____TREE FACE TRANSFORMATION____################################################  */
@@ -1158,9 +1159,12 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   * \param [in]        elem  The element to print
   */
   static void
-  element_debug_print ([[maybe_unused]] const t8_element_t *elem) noexcept
+  element_debug_print (const t8_element_t *elem) noexcept
   {
-    SC_ABORT ("Not implemented.");
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    t8_debugf ("Subelement type: %i\n", subelement->subelement_type);
+    t8_debugf ("Subelementid: %i\n", subelement->subelement_id);
+    standalone_scheme::element_debug_print (subelement_to_element (subelement));
   }
 
 #endif
@@ -1250,6 +1254,72 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
   }
 
+  // --- Functions special for subelements ---
+
+  static bool
+  element_is_subelement (const t8_element_t *elem) noexcept
+  {
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+    return (subelement->subelement_type != 0);
+  }
+  static int
+  element_get_number_of_subelements (int subelement_type)
+  {
+
+    int num_hanging_faces = 0;
+    /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
+    for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++i) {
+      num_hanging_faces += (subelement_type & (1 << i)) >> i;
+    }
+    return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
+  }
+
+  static void
+  element_to_subelement (const t8_element_t *elem, int type, t8_element_t *c[])
+  {
+    const t8_subelement_element *element = (const t8_subelement_element *) elem;
+    t8_subelement_element **subelements = (t8_subelement_element **) c;
+
+    // const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
+
+    int num_subelements = element_get_number_of_subelements (type);
+
+    T8_ASSERT (type >= T8_SUB_QUAD_MIN_SUBELEMENT_TYPE && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
+
+    T8_ASSERT (!element_is_subelement (elem));
+    T8_ASSERT (element_is_valid (elem));
+#if T8_ENABLE_DEBUG
+    {
+      for (int j = 0; j < num_subelements; j++) {
+        T8_ASSERT (element_is_valid (c[j]));
+      }
+    }
+#endif
+
+    /* Setting the parameter values for different subelements. 
+   * The different subelement types (up to rotation) are:
+   *                               
+   *      x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x        x - - x - - x
+   *      |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |        | \   |   / |
+   *      |             |         | 1 \   /   |        |   \   /   |        |   \   /   |        |   \ | /   |        |   \ | /   |
+   *      |             |   -->   x - - X   3 |   or   x - - x     |   or   x - - x - - x   or   x - - x - - x   or   x - - x - - x
+   *      |             |         | 0 /   \   |        |   / | \   |        |   /   \   |        |   /   \   |        |   / | \   |
+   *      | elem        |         | /   4   \ |        | /   |   \ |        | /       \ |        | /       \ |        | /   |   \ |
+   *      + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x        x - - x - - x
+   *           
+   * Sub_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
+   * Note, that we do not change the underlying quadrant. */
+
+    for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
+
+      standalone_scheme::element_copy (subelement_to_element (element),
+                                       subelement_to_element (subelements[sub_id_counter]));
+      subelements[sub_id_counter]->subelement_type = type;
+      subelements[sub_id_counter]->subelement_id = sub_id_counter;
+      T8_ASSERT (element_is_valid (c[sub_id_counter]));
+    }
+  }
+
  private:
   // PRIVATE HELPER
   static const t8_element_t *
@@ -1276,13 +1346,6 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     t8_subelement_element *subelement = (t8_subelement_element *) element;
     return subelement_to_element (subelement);
-  }
-
-  static bool
-  element_is_subelement (const t8_element_t *elem) noexcept
-  {
-    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
-    return (subelement->subelement_type != 0);
   }
 
   /** create the root element
