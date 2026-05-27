@@ -11,3 +11,4 @@ Therefore, the tests are structured as follows:
 - [t8_gtest_cache_competence.cxx](t8_gtest_cache_competence.cxx) tests that *all predefined caching competences* work as intended.
 - [t8_gtest_ghost.cxx](t8_gtest_ghost.cxx) checks ghosts and the neighbor algorithm. Furthermore tests if *all functions work also for ghost cells* if applicable.
 - [t8_gtest_handle_data.cxx](t8_gtest_handle_data.cxx) tests that user and element data functionality works as intended.
+- [t8_gtest_adapt_partition_balance.cxx](t8_gtest_adapt_partition_balance.cxx) implements tests for the adapt, partition and balance routines of mesh handle. 

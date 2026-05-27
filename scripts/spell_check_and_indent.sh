@@ -29,7 +29,13 @@ then
   exit 1
 fi
 
-repo_main_dir=`git rev-parse --show-toplevel`
+repo_main_dir=$(git rev-parse --show-toplevel 2>/dev/null)
+
+if [ $? -ne 0 ]; then
+  echo "ERROR: spell_check_and_indent.sh was not called from inside the git repository."
+  exit 1
+fi
+
 (cd $repo_main_dir && typos)
 
 echo "This script will correct all previously listed typos."
@@ -45,7 +51,7 @@ then
   echo
   echo "Changed files according to git diff:"
   changed_files=``
-  for file in `(cd $repo_main_dir && git diff --name-only)`
+  for file in `(cd $repo_main_dir && git diff HEAD --name-only)`
   do
     # only check existing files, this is necessary since if we rename or delete
     # a file it is added to the committed files and we thus would try to indent a
