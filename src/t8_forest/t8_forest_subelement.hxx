@@ -31,11 +31,11 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_element/t8_element.h>
 
-void
+t8_forest_t
 t8_forest_remove_hanging_nodes (t8_forest_t forest);
 
 bool
 t8_forest_has_subelements (t8_forest_t forest);
 
-void
+t8_forest_t
 t8_forest_discard_subelements (t8_forest_t forest);

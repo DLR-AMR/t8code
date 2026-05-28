@@ -91,7 +91,7 @@ main (int argc, char **argv)
   std::cout << "Subelements before removing: " << t8_forest_has_subelements (forest) << std::endl;
 
   // --- Remove hanging nodes via adapting again. ---
-  t8_forest_remove_hanging_nodes (forest);
+  forest = t8_forest_remove_hanging_nodes (forest);
   std::cout << "Subelements after removing: " << t8_forest_has_subelements (forest) << std::endl;
   // Now output to vtk.
   // const char *prefix_with_hanging_nodes = "t8_with_hanging_nodes";

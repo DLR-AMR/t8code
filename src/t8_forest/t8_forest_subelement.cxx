@@ -115,7 +115,7 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
 bool
 t8_forest_has_subelements (t8_forest_t forest)
 {
-  if (t8_eclass_scheme_is_subelement (t8_forest_get_scheme (forest), T8_ECLASS_QUAD)) {
+  if (!t8_eclass_scheme_is_subelement (t8_forest_get_scheme (forest), T8_ECLASS_QUAD)) {
     return false;
   }
   const t8_subelementquad_scheme *scheme = (const t8_subelementquad_scheme *) t8_forest_get_scheme (forest);
@@ -131,22 +131,20 @@ t8_forest_has_subelements (t8_forest_t forest)
   return false;
 }
 
-/** Adapt forest according to callback. */
-void
+t8_forest_t
 t8_forest_discard_subelements (t8_forest_t forest)
 {
   if (!t8_forest_has_subelements (forest)) {
-    return;
+    return forest;
   }
-  forest = t8_forest_new_adapt (forest, discard_subelements_callback, 0, 0, NULL);
+  return t8_forest_new_adapt (forest, discard_subelements_callback, 0, 0, NULL);
 }
 
-/** Adapt forest according to callback. */
-void
+t8_forest_t
 t8_forest_remove_hanging_nodes (t8_forest_t forest)
 {
-
   t8_global_productionf ("Into t8_forest_remove_hanging_nodes.\n");
   forest = t8_forest_new_adapt (forest, t8_remove_hanging_nodes_callback, 0, 0, NULL);
   t8_global_productionf ("Done t8_forest_remove_hanging_nodes.\n");
+  return forest;
 }

@@ -604,6 +604,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   }
 
   /** Compute the first descendant of a given element.
+   * The first descendant of a subelement is the descendant of the parent element, as they are discarded for the next adaptation cycle.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The first element in a uniform refinement of \a elem
    *                      of the given level.
@@ -612,13 +613,12 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static void
   element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem),
-                    "element_get_first_descendant is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_first_descendant (element_to_element (elem), element_to_element (desc),
-                                                            level);
+    standalone_scheme::element_get_first_descendant (element_to_element (elem), element_to_element (desc), level);
+    reset_subelement_values ((t8_subelement_element *) desc);
   }
 
   /** Compute the last descendant of a given element.
+   * The last descendant of a subelement is the descendant of the parent element, as they are discarded for the next adaptation cycle.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The last element in a uniform refinement of \a elem
    *                      of the given level.
@@ -627,7 +627,6 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static void
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
-    // Info: For subelements, the last descendant is the same as the first descendant, as they are discarded for the next adaptation cycle.
     standalone_scheme::element_get_last_descendant (element_to_element (elem), element_to_element (desc), level);
     reset_subelement_values ((t8_subelement_element *) desc);
   }
@@ -910,6 +909,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
 
   /** Compute the linear id of a given element in a hypothetical uniform
    * refinement of a given level.
+   * Note that the id of a subelement equals the id of its parent.
+   * Therefore, the binary search (for example used in the leaf_face_neighbor function) 
+   * will find a random subelement of the transition cell which might not be the desired neighbor of a given element. 
    * \param [in] elem     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
@@ -917,7 +919,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static t8_linearidx_t
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_linear_id is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (elem));
     return standalone_scheme::element_get_linear_id (element_to_element (elem), level);
   }
 
@@ -1279,8 +1281,6 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     const t8_subelement_element *element = (const t8_subelement_element *) elem;
     t8_subelement_element **subelements = (t8_subelement_element **) c;
-
-    // const p4est_quadrant_t *q = &pquad_w_sub_elem->p4q;
 
     int num_subelements = element_get_number_of_subelements (type);
 
