@@ -57,14 +57,6 @@ jobs:
                "https://github.com/DLR-AMR/t8code/wiki/Contribution-workflow#failing-version-tags-in-pr-tests"
                exit 1
         fi
-    - name: Download precompiled doxygen version 1.13.2 from official website
-      run: wget https://www.doxygen.nl/files/doxygen-1.13.2.linux.bin.tar.gz
-    - name: Unpack doxygen tar file
-      run: |
-        tar xf doxygen-1.13.2.linux.bin.tar.gz
-        mv doxygen-1.13.2/bin/doxygen ./doxygen
-        chmod +x ./doxygen
-        echo "$PWD" >> $GITHUB_PATH
     - name: Echo doxygen executable and version
       run: |
         which doxygen
