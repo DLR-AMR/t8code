@@ -35,6 +35,7 @@
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <utility>
 #include <algorithm>
+#include <utility>
 
 /** TODO. */
 struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_subelementquad_scheme>
@@ -286,7 +287,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     T8_ASSERT (element_is_valid (dest));
   }
 
-  /** Check if two elements are equal.
+  /** Check if two elements are equal. For two subelements,it is only checked that the type is equal and not the id!!
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            true if the elements are equal, false if they are not equal
@@ -300,9 +301,6 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     const t8_subelement_element *el1 = (const t8_subelement_element *) elem1;
     const t8_subelement_element *el2 = (const t8_subelement_element *) elem2;
     if (el1->subelement_type != el2->subelement_type) {
-      return 0;
-    }
-    if (el1->subelement_id != el2->subelement_id) {
       return 0;
     }
     return standalone_scheme::element_is_equal (subelement_to_element (el1), subelement_to_element (el2));
@@ -996,7 +994,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_vertex_reference_coords is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_vertex_reference_coords (element_to_element (elem), vertex, coords);
+    standalone_scheme::element_get_vertex_reference_coords (element_to_element (elem), vertex, coords);
   }
 
   /** Convert a point in the reference space of an element to a point in the
@@ -1011,10 +1009,12 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
                                 double *out_coords) noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem),
-                    "element_get_reference_coords is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_reference_coords (element_to_element (elem), ref_coords, num_coords,
-                                                            out_coords);
+    if (element_is_subelement (elem)) {
+      subelement_get_reference_coords (elem, ref_coords, num_coords, out_coords);
+    }
+    else {
+      standalone_scheme::element_get_reference_coords (element_to_element (elem), ref_coords, num_coords, out_coords);
+    }
   }
 
   // ################################################____MEMORY____################################################
@@ -1320,6 +1320,37 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
   }
 
+  static void
+  subelement_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
+                                   double *out_coords) noexcept
+  {
+
+    /* Get the 3 integer vertex coords of the subelement triangle */
+    int v0[2], v1[2], v2[2];
+    vertex_coords_of_subelement (elem, 0, v0);
+    vertex_coords_of_subelement (elem, 1, v1);
+    vertex_coords_of_subelement (elem, 2, v2);
+
+    /* Normalize to [0,1] by dividing by root length */
+    const double root_len = (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
+    double n0[2] = { v0[0] / root_len, v0[1] / root_len };
+    double n1[2] = { v1[0] / root_len, v1[1] / root_len };
+    double n2[2] = { v2[0] / root_len, v2[1] / root_len };
+
+    for (size_t coord = 0; coord < num_coords; ++coord) {
+      const double u = ref_coords[coord * 2 + 0];
+      const double v = ref_coords[coord * 2 + 1];
+
+      /* * Mapping verification:
+   * (0,0) -> n0
+   * (1,0) -> n1
+   * (1,1) -> n2
+   */
+      out_coords[coord * 2 + 0] = (1.0 - u) * n0[0] + (u - v) * n1[0] + v * n2[0];
+      out_coords[coord * 2 + 1] = (1.0 - u) * n0[1] + (u - v) * n1[1] + v * n2[1];
+    }
+  }
+
  private:
   // PRIVATE HELPER
   static const t8_element_t *
@@ -1356,5 +1387,231 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     subelement->subelement_type = 0;
     subelement->subelement_id = 0;
+  }
+
+  static void
+  vertex_coords_of_subelement (const t8_element_t *elem, int vertex, int coords[])
+  {
+    T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (element_is_subelement (elem));
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+
+    T8_ASSERT (vertex >= 0 && vertex < T8_SUBELEMENT_FACES); /* all subelements are triangles */
+
+    /* get the length of the current quadrant */
+    double len = parent_element_get_len (subelement);
+
+    /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number 
+   * (faces enumerated clockwise, starting at the center of the transition cell): 
+   *
+   *               f1                      V1
+   *         x - - - - - x                 x
+   *         | \   2   / |               / |
+   *         | 1 \   / 3 |             / 3 |
+   *      f0 x - - + - - x f2  -->   + - - x 
+   *         | 0 / | \ 4 |           V0    V2
+   *         | / 6 | 5 \ | 
+   *         x - - x - - x
+   *               f3
+   * 
+   * In this example, the below location array would contain the values [2, 1, 1] 
+   * (second face, split, first subelement at this face) */
+
+    /* get location information of the given subelement */
+    int location[3] = {};
+    t8_element_get_location_of_subelement (elem, location);
+
+    /* the face number, the subelement is adjacent to */
+    int face_number = location[0];
+    /* = 1, if the adjacent face is split and = 0, if not */
+    int split = location[1];
+    /* = 0, if the subelement is the first (of two) subelements, at the adjacent face and = 1 if it is the second */
+    int sub_face_id = location[2];
+
+    /* Check, whether the get_location function provides meaningful location data */
+    T8_ASSERT (face_number == 0 || face_number == 1 || face_number == 2 || face_number == 3);
+    T8_ASSERT ((split == 0 && sub_face_id == 0) || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
+
+    coords[0] = subelement->element.coords[0];
+    coords[1] = subelement->element.coords[1];
+
+    /* using the location data to determine vertex coordinates */
+    if (vertex == 0) { /* vertex 0 (the first vertex always equals the center of the element) */
+      coords[0] += len / 2.;
+      coords[1] += len / 2.;
+    }                       /* end of vertex == 0 */
+    else if (vertex == 1) { /* vertex 1 */
+      if (face_number == 0) {
+        if (split && sub_face_id) {
+          coords[1] += len / 2.;
+        }
+      }
+      else if (face_number == 1) {
+        coords[1] += len;
+        if (split && sub_face_id) {
+          coords[0] += len / 2.;
+        }
+      }
+      else if (face_number == 2) {
+        coords[0] += len;
+        coords[1] += len;
+        if (split && sub_face_id) {
+          coords[1] -= len / 2.;
+        }
+      }
+      else {
+        coords[0] += len;
+        if (split && sub_face_id) {
+          coords[0] -= len / 2.;
+        }
+      }
+    }                       /* end of vertex == 1 */
+    else if (vertex == 2) { /* vertex 2 */
+      if (face_number == 0) {
+        coords[1] += len;
+        if (split && (sub_face_id == 0)) {
+          coords[1] -= len / 2.;
+        }
+      }
+      else if (face_number == 1) {
+        coords[0] += len;
+        coords[1] += len;
+        if (split && (sub_face_id == 0)) {
+          coords[0] -= len / 2.;
+        }
+      }
+      else if (face_number == 2) {
+        coords[0] += len;
+        if (split && (sub_face_id == 0)) {
+          coords[1] += len / 2.;
+        }
+      }
+      else {
+        if (split && (sub_face_id == 0)) {
+          coords[0] += len / 2.;
+        }
+      }
+    } /* end of vertex == 2 */
+  }
+
+  static t8_element_coord
+  parent_element_get_len (const t8_subelement_element *subelement) noexcept
+  {
+    return 1 << (T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]
+                 - (standalone_scheme::element_get_level (subelement_to_element (subelement))));
+  }
+
+  static void
+  t8_element_get_location_of_subelement (const t8_element_t *elem, int location[])
+  {
+    const t8_subelement_element *subelement = (const t8_subelement_element *) elem;
+
+    /* this function only works for subelements */
+    T8_ASSERT (element_is_subelement (elem));
+
+    T8_ASSERT (element_is_valid (elem));
+
+    /* Consider the following subelement of type 13:
+   *            
+   *              f0                         1
+   *        x - - x - - x              x - - x - - x           
+   *        |           |              | \ 2 | 3 / |           faces:                                                      f3   f2   f1   f0
+   *        |           |              | 1 \ | / 4 |           binary code:                                                 1    1    0    1   (=13)
+   *     f3 x           x f2   -->   1 x - - x - - x 1   -->   rearrange binaries s.t. the faces are enumerated clockwise:  1    1    1    0
+   *        |           |              | 0 /   \ 5 |           number subelements at face:                                  2    2    2    1
+   *        | elem      |              | /   6   \ |           consider sub_id 3:                                                x -> second subelement on the upper face
+   *        + - - - - - x              x - - - - - x
+   *              f1                         0
+   *           
+   * We will use the binary representation to determine the location of the given subelement. 
+   * 
+   * We need to know: 
+   *     i)   the face number of the first vertex (values: {0,1,2,3}).
+   *     ii)  whether this face is split in half (values: {0,1}).
+   *     iii) if the subelement is the first or second subelement at the face (values: {0,1}).
+   * 
+   * These information are then saved in the location array which will be used by the element_vertex function, 
+   * to automatically determine the vertex coordinates of the given subelement. 
+   * 
+   * The location array for the above example would be {1,1,1} (upper face, split = true, second subelement at the upper face). */
+
+    /* 1) convert the subelement type from a decimal to a binary representation */
+    int type = subelement->subelement_type;
+    int num_faces_quad = T8_ELEMENT_NUM_CORNERS[T8_ECLASS_QUAD];
+    int binary_array[num_faces_quad] = {};
+
+    for (
+      int i = 0; i < num_faces_quad;
+      i++) { /* need an array with 4 elements to store all subelement types of the quad scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
+      binary_array[(num_faces_quad - 1) - i] = (type & (1 << i)) >> i;
+    } /* we now got a binary representation of the subelement type, bitwise stored in an array */
+
+    /* 2) rearrange the binary representation to be in clockwise order */
+    int binary_array_temp[num_faces_quad] = {};
+
+    int j;
+
+    for (j = 0; j < num_faces_quad; j++) { /* copying the binary array */
+      binary_array_temp[j] = binary_array[j];
+    }
+    const int subelement_location_to_parent_face[4] = { 0, 3, 1, 2 };
+    for (j = 0; j < num_faces_quad; j++) { /* bringing the entries of binary array into clockwise order */
+      binary_array[j] = binary_array_temp[subelement_location_to_parent_face[j]];
+    }
+
+    /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
+    /*     3.1) location[0] -> the face_number, the subelement is adjacent to */
+    /*     3.2) location[1] -> if the face is split or not */
+    /*     3.3) location[2] -> if the subelement is the first or second subelement of the face (always the first, if the face is not split) */
+    int num_subelements = element_get_number_of_subelements (subelement->subelement_type);
+    T8_ASSERT (subelement->subelement_id < num_subelements);
+
+    int sub_id = subelement->subelement_id;
+    int sub_face_id;
+    int face_number;
+    int split;
+
+    int k;
+
+    int cum_neigh_array[num_faces_quad] = {};
+
+    /* construct a cumulative array of the number of neighbors from face 0 to face 3 */
+    cum_neigh_array[0] = binary_array[0] + 1;
+    cum_neigh_array[1] = cum_neigh_array[0] + binary_array[1] + 1;
+    cum_neigh_array[2] = cum_neigh_array[1] + binary_array[2] + 1;
+    cum_neigh_array[3] = cum_neigh_array[2] + binary_array[3] + 1;
+
+    /* 3.1) we can use the cumulative array to determine the face number of the given subelement */
+    if (sub_id < cum_neigh_array[0]) {
+      face_number = 0;
+    }
+    else {
+      for (k = 0; k < num_faces_quad - 1; ++k) {
+        if (sub_id >= cum_neigh_array[k] && sub_id < cum_neigh_array[k + 1]) {
+          face_number = k + 1;
+          break;
+        }
+      }
+    }
+
+    /* 3.2) determine, whether the face is split or not */
+    if (binary_array[face_number] == 0) {
+      split = 0; /* the face is not split */
+    }
+    else {
+      split = 1; /* the face is split */
+    }
+
+    /* 3.3) determine, whether the subelement is the first or the second subelement at the face */
+    if (sub_id + 1 == cum_neigh_array[face_number] && split == 1) {
+      sub_face_id = 1; /* second subelement */
+    }
+    else {
+      sub_face_id = 0; /* first subelement */
+    }
+
+    location[0] = face_number;
+    location[1] = split;
+    location[2] = sub_face_id;
   }
 };
