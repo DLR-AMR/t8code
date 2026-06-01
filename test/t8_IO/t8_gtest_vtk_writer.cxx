@@ -79,6 +79,24 @@ destroy_grid<t8_forest_t> (t8_forest_t *forest)
   t8_forest_unref (forest);
 }
 
+/**
+ * Call the C interface of the vtk writer for a forest or a cmesh. 
+ * 
+ * \tparam grid_t 
+ * \param[in] grid The forest/cmesh to write.
+ * \param[in] fileprefix The prefix of the output file name.
+ * \param[in] write_treeid Whether to write the tree id as a data field.
+ * \param[in] write_mpirank Whether to write the MPI rank as a data field.
+ * \param[in] write_level Whether to write the level as a data field.
+ * \param[in] write_element_id Whether to write the element id as a data field.
+ * \param[in] curved_flag Whether to write curved elements (only for forests).
+ * \param[in] write_ghosts Whether to write ghost elements.
+ * \param[in] num_data The number of additional data fields to write.
+ * \param[in] data An array of descriptors for the additional data fields to write.
+ * \param[in] comm The MPI communicator to use for writing the file in parallel.
+ * \param[in] use_api Whether to call the API function or the direct C interface function. 
+ * \return 0 on success, non-zero on failure.
+ */
 template <typename grid_t>
 static int
 use_c_interface (const grid_t grid, const char *fileprefix, const int write_treeid, const int write_mpirank,
