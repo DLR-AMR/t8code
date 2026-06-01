@@ -110,12 +110,11 @@ use_c_interface<t8_forest_t> (const t8_forest_t grid, const char *fileprefix, co
                               [[maybe_unused]] const int curved_flag, const int write_ghosts, const int num_data,
                               t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm, const bool use_api)
 {
-  if (use_api)
-  {
-    return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
-                                           curved_flag, write_ghosts, num_data, data);
+  if (use_api) {
+    return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level,
+                                             write_element_id, curved_flag, write_ghosts, num_data, data);
   }
-    return t8_forest_vtk_write_file (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
+  return t8_forest_vtk_write_file (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                    write_ghosts, num_data, data);
 }
 
@@ -125,10 +124,10 @@ use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, [[ma
                              [[maybe_unused]] const int write_mpirank, [[maybe_unused]] const int write_level,
                              [[maybe_unused]] const int write_element_id, [[maybe_unused]] const int curved_flag,
                              [[maybe_unused]] const int write_ghosts, [[maybe_unused]] const int num_data,
-                             [[maybe_unused]] t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm, const bool use_api)
+                             [[maybe_unused]] t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm,
+                             const bool use_api)
 {
-  if (use_api)
-  {
+  if (use_api) {
     return t8_cmesh_vtk_write_file_via_API (grid, fileprefix, comm);
   }
   return t8_cmesh_vtk_write_file (grid, fileprefix);
@@ -217,29 +216,26 @@ TYPED_TEST_SUITE_P (vtk_writer_test);
  */
 TYPED_TEST_P (vtk_writer_test, write_vtk)
 {
-  if (this->use_api)
-  {
-    #if T8_ENABLE_VTK
-      EXPECT_TRUE (this->writer->write_with_API (this->grid));
-    #else
-      EXPECT_FALSE (this->writer->write_with_API (this->grid));
-    #endif
+  if (this->use_api) {
+#if T8_ENABLE_VTK
+    EXPECT_TRUE (this->writer->write_with_API (this->grid));
+#else
+    EXPECT_FALSE (this->writer->write_with_API (this->grid));
+#endif
   }
-  else
-  {
+  else {
     EXPECT_TRUE (this->writer->write_ASCII (this->grid));
   }
 }
 
 TYPED_TEST_P (vtk_writer_test, c_interface)
 {
-  if (this->use_api)
-  {
-    #if T8_ENABLE_VTK
-      EXPECT_TRUE (this->grid_c_interface ());
-    #else
-      EXPECT_FALSE (this->grid_c_interface ());
-    #endif
+  if (this->use_api) {
+#if T8_ENABLE_VTK
+    EXPECT_TRUE (this->grid_c_interface ());
+#else
+    EXPECT_FALSE (this->grid_c_interface ());
+#endif
   }
   else {
     EXPECT_TRUE (this->grid_c_interface ());
@@ -249,22 +245,21 @@ TYPED_TEST_P (vtk_writer_test, c_interface)
 REGISTER_TYPED_TEST_SUITE_P (vtk_writer_test, write_vtk, c_interface);
 
 template <typename T, bool api_usage>
-struct TestConfig{
+struct TestConfig
+{
   using grid_t = T;
   static constexpr bool use_api = api_usage;
 };
-using GridTypes = ::testing::Types<
-  TestConfig<t8_cmesh_t, false>,
-  TestConfig<t8_cmesh_t, true>,
-  TestConfig<t8_forest_t, false>,
-  TestConfig<t8_forest_t, true>
->;
+using GridTypes = ::testing::Types<TestConfig<t8_cmesh_t, false>, TestConfig<t8_cmesh_t, true>,
+                                   TestConfig<t8_forest_t, false>, TestConfig<t8_forest_t, true> >;
 
 // Name generator for typed-tests: produces readable test-case suffixes such as
 // "t8_cmesh_noapi", "t8_forest_api", ...
-struct GridTypesNameGenerator {
+struct GridTypesNameGenerator
+{
   template <typename T>
-  static std::string GetName(int)
+  static std::string
+  GetName (int)
   {
     // use std::is_same without if constexpr for broader compiler compatibility
     std::string name = std::is_same<typename T::grid_t, t8_cmesh_t>::value ? "t8_cmesh" : "t8_forest";
