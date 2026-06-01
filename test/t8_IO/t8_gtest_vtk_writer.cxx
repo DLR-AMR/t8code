@@ -112,10 +112,8 @@ use_c_interface<t8_forest_t> (const t8_forest_t grid, const char *fileprefix, co
 {
   if (use_api)
   {
-    #if T8_ENABLE_VTK
-      return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
+    return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                            curved_flag, write_ghosts, num_data, data);
-    #endif
   }
     return t8_forest_vtk_write_file (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                    write_ghosts, num_data, data);
@@ -131,9 +129,7 @@ use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, [[ma
 {
   if (use_api)
   {
-    #if T8_ENABLE_VTK
-      return t8_cmesh_vtk_write_file_via_API (grid, fileprefix, comm);
-    #endif
+    return t8_cmesh_vtk_write_file_via_API (grid, fileprefix, comm);
   }
   return t8_cmesh_vtk_write_file (grid, fileprefix);
 }
@@ -226,7 +222,7 @@ TYPED_TEST_P (vtk_writer_test, write_vtk)
     #if T8_ENABLE_VTK
       EXPECT_TRUE (this->writer->write_with_API (this->grid));
     #else
-    GTEST_SKIP () << "Testing API without linking against VTK, skipping API test\n";
+      EXPECT_FALSE (this->writer->write_with_API (this->grid));
     #endif
   }
   else
@@ -242,7 +238,7 @@ TYPED_TEST_P (vtk_writer_test, c_interface)
     #if T8_ENABLE_VTK
       EXPECT_TRUE (this->grid_c_interface ());
     #else
-      GTEST_SKIP () << "Testing API without linking against VTK, skipping API test\n";
+      EXPECT_FALSE (this->grid_c_interface ());
     #endif
   }
   else {
