@@ -83,22 +83,25 @@ template <typename grid_t>
 static int
 use_c_interface (const grid_t grid, const char *fileprefix, const int write_treeid, const int write_mpirank,
                  const int write_level, const int write_element_id, const int curved_flag, const int write_ghosts,
-                 const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm);
+                 const int num_data, t8_vtk_data_field_t *data, sc_MPI_Comm comm, const bool use_api);
 
 template <>
 int
 use_c_interface<t8_forest_t> (const t8_forest_t grid, const char *fileprefix, const int write_treeid,
                               const int write_mpirank, const int write_level, const int write_element_id,
                               [[maybe_unused]] const int curved_flag, const int write_ghosts, const int num_data,
-                              t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm)
+                              t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm, const bool use_api)
 {
-#if T8_ENABLE_VTK
-  return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
+  if (use_api)
+  {
+    #if T8_ENABLE_VTK
+      return t8_forest_vtk_write_file_via_API (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                            curved_flag, write_ghosts, num_data, data);
-#else
-  return t8_forest_vtk_write_file (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
+    #endif
+      t8_errorf ("Testing API without linking against VTK, falling back to non-VTK API\n");
+  }
+    return t8_forest_vtk_write_file (grid, fileprefix, write_treeid, write_mpirank, write_level, write_element_id,
                                    write_ghosts, num_data, data);
-#endif
 }
 
 template <>
@@ -107,13 +110,16 @@ use_c_interface<t8_cmesh_t> (const t8_cmesh_t grid, const char *fileprefix, [[ma
                              [[maybe_unused]] const int write_mpirank, [[maybe_unused]] const int write_level,
                              [[maybe_unused]] const int write_element_id, [[maybe_unused]] const int curved_flag,
                              [[maybe_unused]] const int write_ghosts, [[maybe_unused]] const int num_data,
-                             [[maybe_unused]] t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm)
+                             [[maybe_unused]] t8_vtk_data_field_t *data, [[maybe_unused]] sc_MPI_Comm comm, const bool use_api)
 {
-#if T8_ENABLE_VTK
-  return t8_cmesh_vtk_write_file_via_API (grid, fileprefix, comm);
-#else
+  if (use_api)
+  {
+    #if T8_ENABLE_VTK
+      return t8_cmesh_vtk_write_file_via_API (grid, fileprefix, comm);
+    #endif
+    t8_errorf ("Testing API without linking against VTK, falling back to non-VTK API\n");
+  }
   return t8_cmesh_vtk_write_file (grid, fileprefix);
-#endif
 }
 
 void
@@ -139,7 +145,7 @@ vtk_writer_test_fill_data (const t8_locidx_t cells_to_write_count, std::vector<d
  * 
  * @tparam grid_t 
  */
-template <typename grid_t>
+template <typename T>
 struct vtk_writer_test: public testing::Test
 {
  protected:
@@ -147,6 +153,7 @@ struct vtk_writer_test: public testing::Test
   SetUp () override
   {
     grid = make_grid<grid_t> ();
+    use_api = T::use_api;
     const t8_locidx_t cells_to_write_count = num_cells_to_write (grid, 1);
 
     // Fill the test data vectors with dummy data.
@@ -168,7 +175,7 @@ struct vtk_writer_test: public testing::Test
   grid_c_interface ()
   {
     return use_c_interface (grid, "test_vtk_writer_c_interface", 1, 1, 1, 1, 1, 1, num_vtk_data, vtk_data,
-                            sc_MPI_COMM_WORLD);
+                            sc_MPI_COMM_WORLD, use_api);
   }
 
   void
@@ -180,13 +187,14 @@ struct vtk_writer_test: public testing::Test
     }
     destroy_grid (&grid);
   }
-
+  using grid_t = typename T::grid_t;
   grid_t grid;
   vtk_writer<grid_t> *writer;
   std::vector<double> scalar_data;             // Scalar data used for data output
   std::vector<double> vector_data;             // Vector data used for data output
   static constexpr int num_vtk_data = 2;       // Number of data items
   t8_vtk_data_field_t vtk_data[num_vtk_data];  // The metadata descriptor for data output
+  bool use_api = false;                        // Should we use the api or not
 };
 
 TYPED_TEST_SUITE_P (vtk_writer_test);
@@ -197,11 +205,16 @@ TYPED_TEST_SUITE_P (vtk_writer_test);
  */
 TYPED_TEST_P (vtk_writer_test, write_vtk)
 {
-#if T8_ENABLE_VTK
-  EXPECT_TRUE (this->writer->write_with_API (this->grid));
-#else
-  EXPECT_TRUE (this->writer->write_ASCII (this->grid));
-#endif
+  if (this->use_api)
+  {
+    #if T8_ENABLE_VTK
+      EXPECT_TRUE (this->writer->write_with_API (this->grid));
+    #endif
+  }
+  else
+  {
+    EXPECT_TRUE (this->writer->write_ASCII (this->grid));
+  }
 }
 
 TYPED_TEST_P (vtk_writer_test, c_interface)
@@ -211,6 +224,29 @@ TYPED_TEST_P (vtk_writer_test, c_interface)
 
 REGISTER_TYPED_TEST_SUITE_P (vtk_writer_test, write_vtk, c_interface);
 
-using GridTypes = ::testing::Types<t8_cmesh_t, t8_forest_t>;
+template <typename T, bool api_usage>
+struct TestConfig{
+  using grid_t = T;
+  static constexpr bool use_api = api_usage;
+};
+using GridTypes = ::testing::Types<
+  TestConfig<t8_cmesh_t, false>,
+  TestConfig<t8_cmesh_t, true>,
+  TestConfig<t8_forest_t, false>,
+  TestConfig<t8_forest_t, true>
+>;
 
-INSTANTIATE_TYPED_TEST_SUITE_P (Test_vtk_writer, vtk_writer_test, GridTypes, );
+// Name generator for typed-tests: produces readable test-case suffixes such as
+// "t8_cmesh_noapi", "t8_forest_api", ...
+struct GridTypesNameGenerator {
+  template <typename T>
+  static std::string GetName(int)
+  {
+    // use std::is_same without if constexpr for broader compiler compatibility
+    std::string name = std::is_same<typename T::grid_t, t8_cmesh_t>::value ? "t8_cmesh" : "t8_forest";
+    name += T::use_api ? "_with_api" : "_no_api";
+    return name;
+  }
+};
+
+INSTANTIATE_TYPED_TEST_SUITE_P (Test_vtk_writer, vtk_writer_test, GridTypes, GridTypesNameGenerator);
