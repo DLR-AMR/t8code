@@ -25,53 +25,52 @@
 #include <t8_cmesh/t8_cmesh_healpix/t8_geometry_healpix.hxx>
 
 void
-t8_geometry_healpix::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh,
-                                       t8_gloidx_t gtreeid, const double *ref_coords,
+t8_geometry_healpix::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords,
                                        const size_t num_coords, double *out_coords) const
 {
-    // This geometry is inspired by HEALPix
-    const t8_gloidx_t layer = gtreeid / 4;
-    const t8_gloidx_t face  = gtreeid % 4;
+  // This geometry is inspired by HEALPix
+  const t8_gloidx_t layer = gtreeid / 4;
+  const t8_gloidx_t face = gtreeid % 4;
 
-    // Calculate the offsets based on the specific layer and face of this tree.
-    const double offset_y = static_cast<double>(layer) - 1.0;
-    const double offset_x = 2.0 * face + ((layer + 1) % 2);
+  // Calculate the offsets based on the specific layer and face of this tree.
+  const double offset_y = static_cast<double> (layer) - 1.0;
+  const double offset_x = 2.0 * face + ((layer + 1) % 2);
 
-    for (size_t i = 0; i < num_coords; ++i) {
-        size_t base_idx_2d = i * 2;
-        size_t base_idx_3d = i * 3; // t8code outputs 3D Cartesian coordinates (x, y, z)
+  for (size_t i = 0; i < num_coords; ++i) {
+    size_t base_idx_2d = i * 2;
+    size_t base_idx_3d = i * 3;  // t8code outputs 3D Cartesian coordinates (x, y, z)
 
-        const double xi  = std::clamp(ref_coords[base_idx_2d + 0], 1e-10, 1.0 - 1e-10);
-        const double eta = std::clamp(ref_coords[base_idx_2d + 1], 1e-10, 1.0 - 1e-10);
+    const double xi = std::clamp (ref_coords[base_idx_2d + 0], 1e-10, 1.0 - 1e-10);
+    const double eta = std::clamp (ref_coords[base_idx_2d + 1], 1e-10, 1.0 - 1e-10);
 
-        // Transform reference coordinates into the HEALPix intermediate project space (dX, dY)
-        const double dX = offset_x + (xi - eta);
-        const double dY = offset_y + (xi + eta - 1.0);
+    // Transform reference coordinates into the HEALPix intermediate project space (dX, dY)
+    const double dX = offset_x + (xi - eta);
+    const double dY = offset_y + (xi + eta - 1.0);
 
-        double z   = 0.0;
-        double phi = 0.0;
+    double z = 0.0;
+    double phi = 0.0;
 
-        if (std::abs(dY) <= 1.0) {
-            z   = (2.0 / 3.0) * dY;
-            phi = (std::numbers::pi / 4.0) * dX;
-        }
-        else if (dY > 1.0) {
-            z   = 1.0 - (1.0 / 3.0) * std::pow(2.0 - dY, 2.0);
-            phi = (std::numbers::pi / 4.0) * (offset_x + (dX - offset_x) / (2.0 - dY));
-        }
-        else {
-            z   = -1.0 + (1.0 / 3.0) * std::pow(2.0 + dY, 2.0);
-            phi = (std::numbers::pi / 4.0) * (offset_x + (dX - offset_x) / (2.0 + dY));
-        }
-
-        z = std::clamp(z, -1.0, 1.0);
-
-        // Convert Spherical coordinates (z, phi) to 3D Cartesian coordinates (x, y, z)
-        const double theta = std::acos(z);
-        const double sin_theta = std::sin(theta);
-
-        out_coords[base_idx_3d + 0] = sin_theta * std::cos(phi);
-        out_coords[base_idx_3d + 1] = sin_theta * std::sin(phi);
-        out_coords[base_idx_3d + 2] = z;
+    if (std::abs (dY) <= 1.0) {
+      z = (2.0 / 3.0) * dY;
+      phi = (std::numbers::pi / 4.0) * dX;
     }
+    else if (dY > 1.0) {
+      z = 1.0 - (1.0 / 3.0) * std::pow (2.0 - dY, 2.0);
+      phi = (std::numbers::pi / 4.0) * (offset_x + (dX - offset_x) / (2.0 - dY));
+    }
+    else {
+      z = -1.0 + (1.0 / 3.0) * std::pow (2.0 + dY, 2.0);
+      phi = (std::numbers::pi / 4.0) * (offset_x + (dX - offset_x) / (2.0 + dY));
+    }
+
+    z = std::clamp (z, -1.0, 1.0);
+
+    // Convert Spherical coordinates (z, phi) to 3D Cartesian coordinates (x, y, z)
+    const double theta = std::acos (z);
+    const double sin_theta = std::sin (theta);
+
+    out_coords[base_idx_3d + 0] = sin_theta * std::cos (phi);
+    out_coords[base_idx_3d + 1] = sin_theta * std::sin (phi);
+    out_coords[base_idx_3d + 2] = z;
+  }
 }

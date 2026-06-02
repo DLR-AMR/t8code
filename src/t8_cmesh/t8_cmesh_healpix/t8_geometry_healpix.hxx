@@ -23,14 +23,13 @@
 #include <t8.h>
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 
-
 struct t8_geometry_healpix: public t8_geometry_with_vertices
 {
  public:
   /* Basic constructor that sets the dimension and the name. */
   t8_geometry_healpix (): t8_geometry_with_vertices ("t8_geometry_healpix")
   {
-    std::cout<<"done1"<<std::endl;
+    std::cout << "done1" << std::endl;
   }
 
   /* The destructor. */
