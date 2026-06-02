@@ -21,7 +21,7 @@
 */
 
 /** \file t8_forest_subelement.hxx
- *  TODO
+ *  Functionality to handle subelements in a forest.
  */
 #pragma once
 
@@ -31,11 +31,26 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_element/t8_element.h>
 
+/** Remove hanging nodes from the forest by transitioning elements with hanging nodes into subelements. 
+* \param [in] forest The input forest, which may contain hanging nodes. 
+*        \a forest must be committed before calling this function. Please note that the scheme provided with the 
+*         forest has to be a fitting subelement scheme.
+* \return A new forest with the same number of trees and the same connectivity, but conformal without hanging nodes. 
+*/
 t8_forest_t
 t8_forest_remove_hanging_nodes (t8_forest_t forest);
 
-bool
-t8_forest_has_subelements (t8_forest_t forest);
-
+/** Remove all subelements from a forest. This is required to restore the original mesh using only recursive refinement
+*    and to be able to adapt again.
+* \param [in] forest The input forest which may contain subelements.
+* \return A new forest with the same number of trees and the same connectivity, but without subelements. 
+*/
 t8_forest_t
 t8_forest_discard_subelements (t8_forest_t forest);
+
+/** Check if a forest contains subelements.
+* \param [in] forest The forest to be checked.
+* \return true if there are subelements in the forest, false otherwise.
+*/
+bool
+t8_forest_has_subelements (const t8_forest_t forest);

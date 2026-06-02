@@ -28,7 +28,7 @@
 
 #include <t8_schemes/t8_scheme.hxx>
 
-/** Return the subelement implementation of t8code. */
+/** Return the subelement scheme implementation of t8code. */
 const t8_scheme *
 t8_scheme_new_subelement (void);
 

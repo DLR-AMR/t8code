@@ -148,7 +148,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (element_is_valid (elem));
     if (!element_is_subelement (elem)) {
-      return standalone_scheme::element_get_num_corners (element_to_element (elem));
+      return standalone_scheme::element_get_num_corners (element_to_standalone (elem));
     }
     return T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE];
   }
@@ -162,7 +162,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (element_is_valid (elem));
     if (!element_is_subelement (elem)) {
-      return standalone_scheme::element_get_num_faces (element_to_element (elem));
+      return standalone_scheme::element_get_num_faces (element_to_standalone (elem));
     }
     return T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE];
   }
@@ -176,7 +176,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (element_is_valid (elem));
     // As subelements are discarded for the next adaptation cycle, descendants are also quads.
-    return standalone_scheme::element_get_max_num_faces (element_to_element (elem));
+    return standalone_scheme::element_get_max_num_faces (element_to_standalone (elem));
   }
 
   /** Return the shape of an allocated element.
@@ -245,7 +245,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_level (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    return standalone_scheme::element_get_level (element_to_element (elem));
+    return standalone_scheme::element_get_level (element_to_standalone (elem));
   }
 
   // ################################################____GENERAL HELPER____#############################################
@@ -262,8 +262,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     T8_ASSERT (element_is_valid (source));
     if (source == dest)
       return;
-    memcpy (reinterpret_cast<t8_subelement_element *> (dest), reinterpret_cast<const t8_subelement_element *> (source),
-            sizeof (t8_subelement_element));
+    memcpy (as_subelement (dest), as_subelement (source), sizeof (t8_subelement_element));
     T8_ASSERT (element_is_valid (dest));
   }
 
@@ -277,12 +276,12 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_is_equal (const t8_element_t *elem1, const t8_element_t *elem2) noexcept
   {
     T8_ASSERT (element_is_valid (elem1) && element_is_valid (elem2));
-    const auto *el1 = reinterpret_cast<const t8_subelement_element *> (elem1);
-    const auto *el2 = reinterpret_cast<const t8_subelement_element *> (elem2);
+    const auto *el1 = as_subelement (elem1);
+    const auto *el2 = as_subelement (elem2);
     if (el1->subelement_type != el2->subelement_type) {
       return 0;
     }
-    return standalone_scheme::element_is_equal (subelement_to_element (el1), subelement_to_element (el2));
+    return standalone_scheme::element_is_equal (subelement_to_standalone (el1), subelement_to_standalone (el2));
   }
 
   // ################################################____REFINEMENT____################################################
@@ -292,9 +291,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   static void
   set_to_root (t8_element_t *elem) noexcept
   {
-    auto *subelement = reinterpret_cast<t8_subelement_element *> (elem);
+    auto *subelement = as_subelement (elem);
     reset_subelement_values (subelement);
-    standalone_scheme::set_to_root (subelement_to_element (subelement));
+    standalone_scheme::set_to_root (subelement_to_standalone (subelement));
   }
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
@@ -308,16 +307,17 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_parent (const t8_element_t *elem, t8_element_t *parent) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    const auto *subelement = reinterpret_cast<const t8_subelement_element *> (elem);
-    auto *parent_subelement = reinterpret_cast<t8_subelement_element *> (parent);
+    const auto *subelement = as_subelement (elem);
+    auto *parent_subelement = as_subelement (parent);
     reset_subelement_values (parent_subelement);
     if (element_is_subelement (elem)) {
       // For subelements, the parent is the element from which they are refined.
-      standalone_scheme::element_copy (subelement_to_element (subelement), subelement_to_element (parent_subelement));
+      standalone_scheme::element_copy (subelement_to_standalone (subelement),
+                                       subelement_to_standalone (parent_subelement));
       return;
     }
-    standalone_scheme::element_get_parent (subelement_to_element (subelement),
-                                           subelement_to_element (parent_subelement));
+    standalone_scheme::element_get_parent (subelement_to_standalone (subelement),
+                                           subelement_to_standalone (parent_subelement));
   }
 
   /** Compute the number of siblings of an element. That is the number of elements with the same parent (if available).
@@ -330,9 +330,9 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     T8_ASSERT (element_is_valid (elem));
     if (!element_is_subelement (elem)) {
-      return standalone_scheme::element_get_num_siblings (element_to_element (elem));
+      return standalone_scheme::element_get_num_siblings (element_to_standalone (elem));
     }
-    return element_get_number_of_subelements (reinterpret_cast<const t8_subelement_element *> (elem)->subelement_type);
+    return element_get_number_of_subelements (as_subelement (elem)->subelement_type);
   }
 
   /** Not implemented for this scheme
@@ -356,7 +356,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_child (const t8_element_t *elem, const int childid, t8_element_t *child) noexcept
   {
     SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_child: Cannot construct child of a subelement.\n");
-    standalone_scheme::element_get_child (element_to_element (elem), childid, element_to_element (child));
+    standalone_scheme::element_get_child (element_to_standalone (elem), childid, element_to_standalone (child));
   }
 
   /** Return the number of children of an element when it is refined. Not for subelements as they do not have children.
@@ -368,7 +368,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_num_children: Cannot construct child of a subelement.\n");
-    return standalone_scheme::element_get_num_children (element_to_element (elem));
+    return standalone_scheme::element_get_num_children (element_to_standalone (elem));
   }
 
   /** Return the max number of children of an eclass. 
@@ -394,45 +394,31 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
       // Subelements are not refinable, as they are discarded for the next adaptation cycle.
       return false;
     }
-    return standalone_scheme::element_get_level (element_to_element (elem)) < get_maxlevel ();
+    return standalone_scheme::element_get_level (element_to_standalone (elem)) < get_maxlevel ();
   }
 
-  /** Construct all children of a given element.
+  /** Construct all children of a given element. Not possible for subelements as they have no children.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
-   * \param [in] length   The length of the output array \a c must match the number of children.
-   * \param [in,out] c    The storage for these \a length elements must exist
-   *                      and match the element class in the children's ordering.
-   *                      On output, all children are valid.
+   * \param [in] length   The length of the output array \a c must match the number of children. 
+   *                      See \ref element_get_num_children.
+   * \param [in,out] c    The storage for these \a length elements must exist and match the element class in 
+   *                      the children's ordering. On output, all children are valid.
    * It is valid to call this function with elem = c[0].
-   * \see t8_element_num_children
-   * \see t8_element_child_eclass
    */
   static void
   element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[]) noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem),
-                    "element_get_num_children: Cannot construct child of a subelement.\n");
-    /* if elem is a subelement, then this function will construct the children of its parent. */
+    SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_children: Cannot construct child of a subelement.\n");
     T8_ASSERT (element_is_valid (elem));
-    const auto *subelement = reinterpret_cast<const t8_subelement_element *> (elem);
+    const auto *subelement = as_subelement (elem);
 
     t8_element_t *standalone_children_ptrs[T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_QUAD]];
     for (int ichild = 0; ichild < length; ++ichild) {
-      standalone_children_ptrs[ichild] = subelement_to_element ((t8_subelement_element *) c[ichild]);
+      auto *child = as_subelement (c[ichild]);
+      standalone_children_ptrs[ichild] = subelement_to_standalone (child);
+      reset_subelement_values (child);
     }
-
-    if (element_is_subelement (elem)) {
-      t8_subelement_element parent_storage;
-      element_get_parent (elem, (t8_element_t *) &parent_storage);
-      standalone_scheme::element_get_children (subelement_to_element (&parent_storage), length,
-                                               standalone_children_ptrs);
-    }
-    else {
-      standalone_scheme::element_get_children (subelement_to_element (subelement), length, standalone_children_ptrs);
-    }
-    for (int ichild = 0; ichild < length; ++ichild) {
-      reset_subelement_values ((t8_subelement_element *) c[ichild]);
-    }
+    standalone_scheme::element_get_children (subelement_to_standalone (subelement), length, standalone_children_ptrs);
   }
 
   /** Compute the child id of an element.
@@ -443,16 +429,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_child_id (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    const auto *subelement = reinterpret_cast<const t8_subelement_element *> (elem);
+    const auto *subelement = as_subelement (elem);
     if (element_is_subelement (elem)) {
       // For subelements, the child id is the subelement id.
       return subelement->subelement_id;
     }
-    return standalone_scheme::element_get_child_id (subelement_to_element (subelement));
+    return standalone_scheme::element_get_child_id (subelement_to_standalone (subelement));
   }
 
-  /** Compute the ancestor id of an element, that is the child id
-   * at a given level.
+  /** Compute the ancestor id of an element, that is the child id at a given level.
    * \param [in] elem     This must be a valid element.
    * \param [in] level    A refinement level. Must satisfy \a level < elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
@@ -461,7 +446,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_ancestor_id (const t8_element_t *elem, const t8_element_level level) noexcept
   {
     SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_ancestor_id is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_ancestor_id (element_to_element (elem), level);
+    return standalone_scheme::element_get_ancestor_id (element_to_standalone (elem), level);
   }
 
   /** Query whether a given set of elements is a family or not.
@@ -479,24 +464,26 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
       T8_ASSERT (element_is_valid (fam[isib]));
     }
 #endif
-    /* If the first element is a subelement, the remaining elements also have to be subelements and the elements must be equal. */
+    /* If the first element is a subelement, the remaining elements also have to be subelements and the standalone 
+     * elements must be equal. */
     if (element_is_subelement (fam[0])) {
-      auto element_0 = element_to_element (fam[0]);
+      auto element_0 = element_to_standalone (fam[0]);
       for (int isib = 1; isib < element_get_num_siblings (fam[0]); ++isib) {
         if (!element_is_subelement (fam[isib])
-            || !standalone_scheme::element_is_equal (element_0, element_to_element (fam[isib]))) {
+            || !standalone_scheme::element_is_equal (element_0, element_to_standalone (fam[isib]))) {
           return 0;
         }
       }
       return 1;
     }
-    /* If the first element is no subelement, the remaining elements also have to be no subelements and they must form a family. */
+    /* If the first element is no subelement, the remaining elements should not be subelements and 
+     * they must form a family. */
     t8_element_t *standalone_children[T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_QUAD]];
     for (int isib = 0; isib < element_get_num_siblings (fam[0]); ++isib) {
       if (element_is_subelement (fam[isib])) {
         return 0;
       }
-      standalone_children[isib] = element_to_element (fam[isib]);
+      standalone_children[isib] = element_to_standalone (fam[isib]);
     }
     return standalone_scheme::elements_are_family (standalone_children);
   }
@@ -522,18 +509,14 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
       return false;
     }
     standalone_scheme tmp {};
-    return tmp.element_is_ancestor (element_to_element (element_A), element_to_element (element_B));
+    return tmp.element_is_ancestor (element_to_standalone (element_A), element_to_standalone (element_B));
   }
 
-  /** Compute the nearest common ancestor of two elements. That is,
-   * the element with highest level that still has both given elements as
-   * descendants.
+  /** Compute the nearest common ancestor of two elements. Not implemented yet.
    * \param [in] elem1    The first of the two input elements.
    * \param [in] elem2    The second of the two input elements.
-   * \param [in,out] nca  The storage for this element must exist
-   *                      and match the element class of the child.
-   *                      On output the unique nearest common ancestor of
-   *                      \b elem1 and \b elem2.
+   * \param [in,out] nca  The storage for this element must exist and match the element class of the child.
+   *                      On output the unique nearest common ancestor of \b elem1 and \b elem2.
    */
   static void
   element_get_nca ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] const t8_element_t *elem2,
@@ -543,36 +526,37 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   }
 
   /** Compute the first descendant of a given element.
-   * The first descendant of a subelement is the descendant of the parent element, as they are discarded for the next adaptation cycle.
+   * The first descendant of a subelement is the descendant of the parent element, 
+   * as they are discarded for the next adaptation cycle.
    * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The first element in a uniform refinement of \a elem
-   *                      of the given level.
+   * \param [out] desc    The first element in a uniform refinement of \a elem of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
   static void
   element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
-    standalone_scheme::element_get_first_descendant (element_to_element (elem), element_to_element (desc), level);
+    standalone_scheme::element_get_first_descendant (element_to_standalone (elem), element_to_standalone (desc), level);
     reset_subelement_values ((t8_subelement_element *) desc);
   }
 
   /** Compute the last descendant of a given element.
-   * The last descendant of a subelement is the descendant of the parent element, as they are discarded for the next adaptation cycle.
+   * The last descendant of a subelement is the descendant of the parent element, 
+   * as they are discarded for the next adaptation cycle.
    * \param [in] elem     The element whose descendant is computed.
-   * \param [out] desc    The last element in a uniform refinement of \a elem
-   *                      of the given level.
+   * \param [out] desc    The last element in a uniform refinement of \a elem of the given level.
    * \param [in] level    The level, at which the descendant is computed.
    */
   static void
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, const t8_element_level level) noexcept
   {
-    standalone_scheme::element_get_last_descendant (element_to_element (elem), element_to_element (desc), level);
+    standalone_scheme::element_get_last_descendant (element_to_standalone (elem), element_to_standalone (desc), level);
     reset_subelement_values ((t8_subelement_element *) desc);
   }
 
-  // ################################################____FACE REFINEMENT____################################################
+  // ################################################____FACE REFINEMENT____############################################
 
   /** Return the number of children of an element's face when the element is refined.
+   * \note This is not implemented for subelements.
    * \param [in] elem   The element whose face is considered.
    * \param [in] face   A face of \a elem.
    * \return            The number of children of \a face if \a elem is to be refined.
@@ -582,19 +566,17 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_num_face_children is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_num_face_children (element_to_element (elem), face);
+    return standalone_scheme::element_get_num_face_children (element_to_standalone (elem), face);
   }
 
-  /** Given an element and a face of the element, compute all children of
-   * the element that touch the face.
+  /** Given an element and a face of the element, compute all children of the element that touch the face.
+   * \note This is not implemented for subelements.
    * \param [in] elem     The element.
    * \param [in] face     A face of \a elem.
-   * \param [in,out] children Allocated elements, in which the children of \a elem
-   *                      that share a face with \a face are stored.
-   *                      They will be stored in order of their linear id.
-   * \param [in] num_children The number of elements in \a children. Must match
-   *                      the number of children that touch \a face.
-   *                      \ref element_get_num_face_children
+   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with 
+   *                          \a face are stored. They will be stored in order of their linear id.
+   * \param [in] num_children The number of elements in \a children. Must match the number of children 
+   *                          that touch \a face. See \ref element_get_num_face_children.
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
    *                      on output its i-th entry is the child_id of the i-th face_child.
    * It is valid to call this function with elem = children[0].
@@ -607,34 +589,23 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
                     "element_get_children_at_face is not implemented for subelements yet.\n");
     t8_element_t *standalone_children_ptrs[T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_QUAD]];
     for (int ichild = 0; ichild < num_children; ++ichild) {
-      standalone_children_ptrs[ichild] = subelement_to_element ((t8_subelement_element *) children[ichild]);
+      auto *child = as_subelement (children[ichild]);
+      standalone_children_ptrs[ichild] = subelement_to_standalone (child);
+      reset_subelement_values (child);
     }
-    standalone_scheme::element_get_children_at_face (element_to_element (elem), face, standalone_children_ptrs,
+    standalone_scheme::element_get_children_at_face (element_to_standalone (elem), face, standalone_children_ptrs,
                                                      num_children, child_indices);
-    for (int ichild = 0; ichild < num_children; ++ichild) {
-      reset_subelement_values ((t8_subelement_element *) children[ichild]);
-    }
   }
 
   /** Given a face of an element and a child number of a child of that face, return the face number
-   * of the child of the element that matches the child face.
-   * \verbatim
-      x ---- x   x      x           x ---- x
-      |      |   |      |           |   |  | <-- f
-      |      |   |      x           |   x--x
-      |      |   |                  |      |
-      x ---- x   x                  x ---- x
-      elem    face  face_child    Returns the face number f
-    \endverbatim
-
+    * of the child of the element that matches the child face.
+    * \note This is not implemented for subelements.
     * \param [in]  elem    The element.
     * \param [in]  face    Then number of the face.
-    * \param [in]  face_child A number 0 <= \a face_child < num_face_children,
-    *                      specifying a child of \a elem that shares a face with \a face.
-    *                      These children are counted in linear order. This coincides with
-    *                      the order of children from a call to \ref element_get_children_at_face.
-    * \return              The face number of the face of a child of \a elem
-    *                      that coincides with \a face_child.
+    * \param [in]  face_child A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that 
+    *                         shares a face with \a face. These children are counted in linear order. 
+    *                        This coincides with the order of children from a call to \ref element_get_children_at_face.
+    * \return              The face number of the face of a child of \a elem that coincides with \a face_child.
     */
   static int
   element_face_get_child_face ([[maybe_unused]] const t8_element_t *elem, const int face,
@@ -642,17 +613,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_face_get_child_face is not implemented for subelements yet.\n");
-    return standalone_scheme::element_face_get_child_face (element_to_element (elem), face, face_child);
+    return standalone_scheme::element_face_get_child_face (element_to_standalone (elem), face, face_child);
   }
 
-  /** Given a face of an element return the face number
-   * of the parent of the element that matches the element's face. Or return -1 if
-   * no face of the parent matches the face.
-
+  /** Given a face of an element return the face number of the parent of the element that matches the element's face. 
+    * \note This is not implemented for subelements.
     * \param [in]  elem    The element.
     * \param [in]  face    Then number of the face.
-    * \return              If \a face of \a elem is also a face of \a elem's parent,
-    *                      the face number of this face. Otherwise -1.
+    * \return              If \a face of \a elem is also a face of \a elem's parent, the face number of this face.
+    *                      Otherwise -1.
     * \note For the root element this function always returns \a face.
     */
   static int
@@ -660,15 +629,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_face_get_parent_face is not implemented for subelements yet.\n");
-    return standalone_scheme::element_face_get_parent_face (element_to_element (elem), face);
+    return standalone_scheme::element_face_get_parent_face (element_to_standalone (elem), face);
   }
 
   /** Construct the first descendant of an element at a given level that touches a given face.
+   * \note This is not implemented for subelements.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
-   * \param [in, out] first_desc An allocated element. This element's data will be
-   *                       filled with the data of the first descendant of \a elem
-   *                       that shares a face with \a face.
+   * \param [in, out] first_desc An allocated element. This element's data will be filled with the data of the first 
+   *                       descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the first descendant is constructed
    */
   static void
@@ -677,16 +646,16 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_first_descendant_face is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_first_descendant_face (element_to_element (elem), face,
-                                                                 element_to_element (first_desc), level);
+    standalone_scheme::element_get_first_descendant_face (element_to_standalone (elem), face,
+                                                          element_to_standalone (first_desc), level);
   }
 
   /** Construct the last descendant of an element at a given level that touches a given face.
+   * \note This is not implemented for subelements.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
-   * \param [in, out] last_desc An allocated element. This element's data will be
-   *                       filled with the data of the last descendant of \a elem
-   *                       that shares a face with \a face.
+   * \param [in, out] last_desc An allocated element. This element's data will be filled with the data of the last 
+   *                       descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the last descendant is constructed
    */
   static void
@@ -695,13 +664,14 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_last_descendant_face is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_last_descendant_face (element_to_element (elem), face,
-                                                                element_to_element (last_desc), level);
+    standalone_scheme::element_get_last_descendant_face (element_to_standalone (elem), face,
+                                                         element_to_standalone (last_desc), level);
   }
 
-  // ################################################____FACE NEIGHBOR____################################################
+  // ################################################____FACE NEIGHBOR____##############################################
 
   /** Compute whether a given element shares a given face with its root tree.
+   * \note This is not implemented for subelements.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
    * \return              True if \a face is a subface of the element's root element.
@@ -712,43 +682,36 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_is_root_boundary is not implemented for subelements yet.\n");
-    return standalone_scheme::element_is_root_boundary (element_to_element (elem), face);
+    return standalone_scheme::element_is_root_boundary (element_to_standalone (elem), face);
   }
 
-  /** Given an element and a face of this element. If the face lies on the
-   *  tree boundary, return the face number of the tree face.
-   *  If not the return value is arbitrary.
-   *  You can call \ref t8_element_is_root_boundary to query whether the face is
-   *  at the tree boundary.
+  /** Given an element and a face of this element. If the face lies on the tree boundary, return the face number
+   *  of the tree face. If not the return value is arbitrary.
+   *  You can call \ref t8_element_is_root_boundary to query whether the face is at the tree boundary.
+   * \note This is not implemented for subelements.
    * \param [in] elem     The element.
    * \param [in] face     The index of a face of \a elem.
-   * \return The index of the tree face that \a face is a subface of, if
-   *         \a face is on a tree boundary.
+   * \return The index of the tree face that \a face is a subface of, if \a face is on a tree boundary.
    *         Any arbitrary integer if \a is not at a tree boundary.
-   * \warning The return value may look like a valid face of the tree even if
-   *   the element does not lie on the root boundary.
+   * \warning The return value may look like a valid face of the tree even if the element does not lie on the root boundary.
    */
   static int
   element_get_tree_face (const t8_element_t *elem, const int face) noexcept
   {
     SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_tree_face is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_tree_face (element_to_element (elem), face);
+    return standalone_scheme::element_get_tree_face (element_to_standalone (elem), face);
   }
 
-  /** Construct the face neighbor of a given element if this face neighbor
-   * is inside the root tree. Return 0 otherwise.
+  /** Construct the face neighbor of a given element if this face neighbor is inside the root tree. Return 0 otherwise.
+   * \note This is not implemented for subelements.
    * \param [in] elem The element to be considered.
-   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside
-   *                  the root tree, this element's data is filled with the
-   *                  data of the face neighbor. Otherwise the data can be modified
-   *                  arbitrarily.
-   * \param [in] face The number of the face along which the neighbor should be
-   *                  constructed.
+   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside the root tree, this element's data 
+   *                  is filled with the data of the face neighbor. Otherwise the data can be modified arbitrarily.
+   * \param [in] face The number of the face along which the neighbor should be constructed.
    * \param [out] neigh_face The number of \a face as viewed from \a neigh.
    *                  An arbitrary value, if the neighbor is not inside the root tree.
    * \return          True if \a neigh is inside the root tree.
-   *                  False if not. In this case \a neigh's data can be arbitrary
-   *                  on output.
+   *                  False if not. In this case \a neigh's data can be arbitrary on output.
    */
   static int
   element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face,
@@ -756,72 +719,45 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_face_neighbor_inside is not implemented for subelements yet.\n");
-    return standalone_scheme::element_get_face_neighbor_inside (element_to_element (elem), element_to_element (neigh),
-                                                                face, neigh_face);
+    return standalone_scheme::element_get_face_neighbor_inside (element_to_standalone (elem),
+                                                                element_to_standalone (neigh), face, neigh_face);
   }
 
-  // ################################################____TREE FACE TRANSFORMATION____################################################  */
+  // ######################################____TREE FACE TRANSFORMATION____#############################################
 
-  /** Suppose we have two trees that share a common face f.
-   *  Given an element e that is a subface of f in one of the trees
-   *  and given the orientation of the tree connection, construct the face
-   *  element of the respective tree neighbor that logically coincides with e
-   *  but lies in the coordinate system of the neighbor tree.
-   *  \param [in] elem1     The face element.
-   *  \param [in,out] elem2 On return the face element \a elem1 with respective
-   *                        to the coordinate system of the other tree.
-   *  \param [in] orientation The orientation of the tree-tree connection.
-   *                        \see t8_cmesh_set_join
-   *  \param [in] sign      Depending on the topological orientation of the two tree faces,
-   *                        either 0 (both faces have opposite orientation)
-   *                        or 1 (both faces have the same top. orientation).
-   *                        \ref t8_eclass_face_orientation
-   *  \param [in] is_smaller_face Flag to declare whether \a elem1 belongs to
-   *                        the smaller face. A face f of tree T is smaller than
-   *                        f' of T' if either the eclass of T is smaller or if
-   *                        the classes are equal and f<f'. The orientation is
-   *                        defined in relation to the smaller face.
-   * \note \a elem1 and \a elem2 may point to the same element.
+  /** \note This is not implemented for this scheme.
+   *  \param [in] elem1     
+   *  \param [in,out] elem2 
+   *  \param [in] orientation 
+   *  \param [in] sign     
+   *  \param [in] is_smaller_face
    */
   static void
   element_transform_face ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] t8_element_t *elem2,
                           [[maybe_unused]] const int orientation, [[maybe_unused]] const int sign,
                           [[maybe_unused]] const int is_smaller_face) noexcept
   {
-    /* This function has an explicit template specialization outside of t8_subelementquad_scheme*/
-    SC_ABORT ("Not implemented for this eclass.\n");
+    SC_ABORT ("Not implemented.\n");
   }
 
-  /** Given a boundary face inside a root tree's face construct
-   *  the element inside the root tree that has the given face as a
-   *  face.
-   * \param [in] face     A face element.
-   * \param [in,out] elem An allocated element. The entries will be filled with
-   *                      the data of the element that has \a face as a face and
-   *                      lies within the root tree.
-   * \param [in] root_face The index of the face of the root tree in which \a face
-   *                      lies.
-   * \param [in] scheme   The scheme collection with a scheme for the eclass of the face.
-   * \return              The face number of the face of \a elem that coincides
-   *                      with \a face.
+  /** \note This is not implemented for this scheme.
+   * \param [in] face  
+   * \param [in,out] elem 
+   * \param [in] root_face 
+   * \param [in] scheme   
    */
   static int
   element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
                         [[maybe_unused]] const int root_face, [[maybe_unused]] const t8_scheme *scheme) noexcept
   {
-    SC_ABORT ("This function is nt implemented yet.");
+    SC_ABORT ("This function is not implemented yet.");
   }
 
-  /** Construct the boundary element at a specific face.
-   * \param [in] elem     The input element.
-   * \param [in] face     The index of the face of which to construct the
-   *                      boundary element.
-   * \param [in,out] boundary An allocated element of dimension of \a element
-   *                      minus 1. The entries will be filled with the entries
-   *                      of the face of \a element.
-   * \param [in] scheme   The scheme containing an eclass scheme for the boundary face.
-   * If \a elem is of class T8_ECLASS_VERTEX, then \a boundary must be NULL
-   * and will not be modified.
+  /** \note This is not implemented for this scheme.
+   * \param [in] elem    
+   * \param [in] face    
+   * \param [in,out] boundary 
+   * \param [in] scheme
    */
   static void
   element_get_boundary_face ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int face,
@@ -832,25 +768,23 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
 
   // ################################################____LINEAR ID____################################################
 
-  /** Initialize the entries of an allocated element according to a
-   *  given linear id in a uniform refinement.
+  /** Initialize the entries of an allocated element according to a given linear id in a uniform refinement.
+   * \note This is not implemented for subelements.
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
-   * \param [in] id       The linear id.
-   *                      id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
+   * \param [in] id       The linear id. id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
    */
   static void
   element_set_linear_id (t8_element_t *elem, const t8_element_level level, t8_linearidx_t id) noexcept
   {
     SC_CHECK_ABORT (!element_is_subelement (elem), "element_set_linear_id is not implemented for subelements yet.\n");
-    standalone_scheme::element_set_linear_id (element_to_element (elem), level, id);
+    standalone_scheme::element_set_linear_id (element_to_standalone (elem), level, id);
   }
 
-  /** Compute the linear id of a given element in a hypothetical uniform
-   * refinement of a given level.
-   * Note that the id of a subelement equals the id of its parent.
-   * Therefore, the binary search (for example used in the leaf_face_neighbor function) 
-   * will find a random subelement of the transition cell which might not be the desired neighbor of a given element. 
+  /** Compute the linear id of a given element in a hypothetical uniform refinement of a given level.
+   * \note that the id of a subelement equals the id of its parent.
+   * Therefore, the binary search (for example used in the leaf_face_neighbor function) will find a random subelement 
+   * of the transition cell which might not be the desired neighbor of a given element. 
    * \param [in] elem     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
@@ -859,10 +793,11 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    return standalone_scheme::element_get_linear_id (element_to_element (elem), level);
+    return standalone_scheme::element_get_linear_id (element_to_standalone (elem), level);
   }
 
   /** Construct the successor in a uniform refinement of a given element.
+   * \note This is not implemented for subelements.
    * \param [in] elem1    The element whose successor should be constructed.
    * \param [in,out] elem2  The element whose entries will be set.
    */
@@ -871,34 +806,26 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem1),
                     "element_construct_successor is not implemented for subelements yet.\n");
-    return standalone_scheme::element_construct_successor (element_to_element (elem1), element_to_element (elem2));
+    return standalone_scheme::element_construct_successor (element_to_standalone (elem1),
+                                                           element_to_standalone (elem2));
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
+   * \note This is not implemented for subelements.
    * \param [in] elem  The element to be checked.
    * \param [in] level A refinement level.
-   * \return Suppose \a elem is uniformly refined up to level \a level. The return value
-   * is the resulting number of elements (of the given level).
-   * If \a level < t8_element_level(t), the return value should be 0.
-   *
-   * Example: If \a elem is a line element that refines into 2 line elements on each level,
-   *  then the return value is max(0, 2^{\a level - level(\a t)}).
-   *  Thus, if \a elem's level is 0, and \a level = 3, the return value is 2^3 = 8.
    */
   static t8_gloidx_t
   element_count_leaves (const t8_element_t *elem, const t8_element_level level) noexcept
   {
     SC_CHECK_ABORT (!element_is_subelement (elem), "element_count_leaves is not implemented for subelements yet.\n");
-    return standalone_scheme::element_count_leaves (element_to_element (elem), level);
+    return standalone_scheme::element_count_leaves (element_to_standalone (elem), level);
   }
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
    * \param [in] level A refinement level.
    * \return The value of \ref t8_element_count_leaves if the input element
    *      is the root (level 0) element.
-   *
-   * This is a convenience function, and can be implemented via
-   * \ref t8_element_count_leaves.
    */
   static t8_gloidx_t
   count_leaves_from_root (const t8_element_level level) noexcept
@@ -907,24 +834,23 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   }
 
   /** Compare two elements.
+   * \note This is not implemented for subelements.
    * \param [in] elem1  The first element.
    * \param [in] elem2  The second element.
-   * \return       negative if elem1 < elem2, zero if elem1 equals elem2
-   *               and positive if elem1 > elem2.
-   *  If elem2 is a copy of elem1 then the elements are equal.
    */
   static int
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) noexcept
   {
     SC_CHECK_ABORT (!element_is_subelement (elem1) && !element_is_subelement (elem2),
                     "element_compare is not implemented for subelements yet.\n");
-    return standalone_scheme::element_compare (element_to_element (elem1), element_to_element (elem2));
+    return standalone_scheme::element_compare (element_to_standalone (elem1), element_to_standalone (elem2));
   }
 
-  // ################################################____VISUALIZATION____################################################
+  // ################################################____VISUALIZATION____##############################################
 
-  /** Compute the coordinates of a given element vertex inside a reference tree
+  /** Compute the coordinates of a given element vertex inside a reference tree 
    *  that is embedded into [0,1]^d (d = dimension).
+   *   \note This is not implemented for subelements.
    *   \param [in] elem      The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
@@ -935,14 +861,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_vertex_reference_coords is not implemented for subelements yet.\n");
-    standalone_scheme::element_get_vertex_reference_coords (element_to_element (elem), vertex, coords);
+    standalone_scheme::element_get_vertex_reference_coords (element_to_standalone (elem), vertex, coords);
   }
 
-  /** Convert a point in the reference space of an element to a point in the
-   *  reference space of the tree.
-   *
+  /** Convert a point in the reference space of an element to a point in the reference space of the tree.
    * \param [in] elem         The element.
-   * \param [in] ref_coords   The coordinates of the point in the reference space of the element.
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point in the reference space
+   *                          of the element. 
    * \param [in] num_coords   The number of coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
    */
@@ -954,7 +879,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
       subelement_get_reference_coords (elem, ref_coords, num_coords, out_coords);
     }
     else {
-      standalone_scheme::element_get_reference_coords (element_to_element (elem), ref_coords, num_coords, out_coords);
+      standalone_scheme::element_get_reference_coords (element_to_standalone (elem), ref_coords, num_coords,
+                                                       out_coords);
     }
   }
 
@@ -962,36 +888,26 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
 
   /** Allocate memory for an array of elements of a given class and initialize them.
    * \param [in] length   The number of elements to be allocated.
-   * \param [in,out] elems On input an array of \b length many unallocated
-   *                      element pointers.
-   *                      On output all these pointers will point to an allocated
-   *                      and initialized element.
-   * \note Not every element that is created in t8code will be created by a call
-   * to this function. However, if an element is not created using \ref element_new,
-   * then it is guaranteed that \ref element_init is called on it.
-   * \note In debugging mode, an element that was created with \ref element_new
-   * must pass \ref element_is_valid.
-   * \note If an element was created by \ref element_new then \ref element_init
-   * may not be called for it. Thus, \ref element_new should initialize an element
-   * in the same way as a call to \ref element_init would.
+   * \param [in,out] elems On input an array of \b length many unallocated element pointers.
+   *                      On output all these pointers will point to an allocated and initialized element.
+   * \note Not every element that is created in t8code will be created by a call to this function. However, if an 
+   *  element is not created using \ref element_new, then it is guaranteed that \ref element_init is called on it.
+   * \note In debugging mode, an element that was created with \ref element_new must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init may not be called for it.
+   *   Thus, \ref element_new should initialize an element in the same way as a call to \ref element_init would.
    * \see element_init
    * \see element_is_valid
    */
-  /* TODO: would it be better to directly allocate an array of elements,
-   *       not element pointers? */
   void
   element_new (const int length, t8_element_t **elems) const noexcept
   {
-    /* allocate memory */
     T8_ASSERT (this->scheme_context != NULL);
     T8_ASSERT (0 <= length);
     T8_ASSERT (elems != NULL);
-
     for (int i = 0; i < length; ++i) {
       elems[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) this->scheme_context);
     }
-
-/* in debug mode, set sensible default values. */
+/* In debug mode, set sensible default values. */
 #if T8_ENABLE_DEBUG
     {
       for (int i = 0; i < length; i++) {
@@ -1003,13 +919,10 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
 
   /** Initialize an array of allocated elements.
    * \param [in] length   The number of elements to be initialized.
-   * \param [in,out] elems On input an array of \b length many allocated
-   *                       elements.
-   * \note In debugging mode, an element that was passed to \ref element_init
-   * must pass \ref element_is_valid.
-   * \note If an element was created by \ref element_new then \ref element_init
-   * may not be called for it. Thus, \ref element_new should initialize an element
-   * in the same way as a call to \ref element_init would.
+   * \param [in,out] elems On input an array of \b length many allocated elements.
+   * \note In debugging mode, an element that was passed to \ref element_init must pass \ref element_is_valid.
+   * \note If an element was created by \ref element_new then \ref element_init may not be called for it.
+   *  Thus, \ref element_new should initialize an element in the same way as a call to \ref element_init would.
    * \see element_new
    * \see element_is_valid
    */
@@ -1020,7 +933,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     t8_subelement_element *subelement = (t8_subelement_element *) elems;
     for (int ielem = 0; ielem < length; ielem++) {
       reset_subelement_values (subelement + ielem);
-      standalone_scheme::element_init (1, subelement_to_element (subelement + ielem));
+      standalone_scheme::element_init (1, subelement_to_standalone (subelement + ielem));
       T8_ASSERT (element_is_valid ((t8_element_t *) (subelement + ielem)));
     }
 #endif
@@ -1028,8 +941,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
 
   /** Deinitialize an array of allocated elements.
    * \param [in] length   The number of elements to be deinitialized.
-   * \param [in,out] elems On input an array of \a length many allocated
-   *                       and initialized elements, on output an array of
+   * \param [in,out] elems On input an array of \a length many allocated and initialized elements, on output an array of
    *                       \a length many allocated, but not initialized elements.
    * \note Call this function if you called element_init on the element pointers.
    * \see element_init
@@ -1041,10 +953,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
 
   /** Deallocate an array of elements.
    * \param [in] length   The number of elements in the array.
-   * \param [in,out] elems On input an array of \b length many allocated
-   *                      element pointers.
-   *                      On output all these pointers will be freed.
-   *                      \b elems itself will not be freed by this function.
+   * \param [in,out] elems On input an array of \b length many allocated element pointers.
+   *                     On output all these pointers will be freed. \b elems itself will not be freed by this function.
    */
   void
   element_destroy (const int length, t8_element_t **elems) const noexcept
@@ -1057,22 +967,16 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
   }
 
-  // ################################################____DEBUG____################################################
+  // ############################################____DEBUG____##########################################################
 
 #if T8_ENABLE_DEBUG
-  /** Query whether a given element can be considered as 'valid' and it is
-   *  safe to perform any of the above algorithms on it.
-   *  For example this could mean that all coordinates are in valid ranges
-   *  and other membervariables do have meaningful values.
+  /** Query whether a given element can be considered as 'valid' and it is safe to perform any of the above 
+   *  algorithms on it. For example this could mean that all coordinates are in valid ranges and other member variables
+   *  do have meaningful values.
    * \param [in]      elem  The element to be checked.
    * \return          True if \a elem is safe to use. False otherwise.
-   * \note            An element that is constructed with \ref element_new
-   *                  must pass this test.
-   * \note            An element for which \ref element_init was called must pass
-   *                  this test.
-   * \note            This function is used for debugging to catch certain errors.
-   *                  These can for example occur when an element points to a region
-   *                  of memory which should not be interpreted as an element.
+   * \note            This function is used for debugging to catch certain errors. These can for example occur when 
+   *                  an element points to a region of memory which should not be interpreted as an element.
    * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
    */
@@ -1080,9 +984,8 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   element_is_valid (const t8_element_t *elem) noexcept
   {
     T8_ASSERT (elem != NULL);
-
-    const auto *subelement = reinterpret_cast<const t8_subelement_element *> (elem);
-    int element_valid = standalone_scheme::element_is_valid (subelement_to_element (subelement));
+    const auto *subelement = as_subelement (elem);
+    int element_valid = standalone_scheme::element_is_valid (subelement_to_standalone (subelement));
     if (!element_is_subelement (elem)) {
       return element_valid;
     }
@@ -1094,29 +997,25 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     return subelement_valid && element_valid;
   }
 
-  /**
-  * Print a given element. For a example for a triangle print the coordinates
-  * and the level of the triangle. This function is only available in the
-  * debugging configuration.
-  *
-  * \param [in]        elem  The element to print
-  */
+  /** Print a given element. This prints the subelement information and the standalone debug print. 
+   * This function is only available in the debugging configuration.
+   * \param [in]        elem  The element to print
+   */
   static void
   element_debug_print (const t8_element_t *elem) noexcept
   {
-    const auto *subelement = reinterpret_cast<const t8_subelement_element *> (elem);
+    const auto *subelement = as_subelement (elem);
     t8_debugf ("Subelement type: %i\n", subelement->subelement_type);
-    t8_debugf ("Subelementid: %i\n", subelement->subelement_id);
-    standalone_scheme::element_debug_print (subelement_to_element (subelement));
+    t8_debugf ("Subelement id: %i\n", subelement->subelement_id);
+    standalone_scheme::element_debug_print (subelement_to_standalone (subelement));
   }
 
 #endif
-  /**
- * Fill a string with readable information about the element
- * \param[in] elem The element to translate into human-readable information
- * \param[in, out] debug_string The string to fill.
- * \param[in] string_size Buffer size of c-string
- */
+  /** Fill a string with readable information about the element
+   * \param[in] elem The element to translate into human-readable information
+   * \param[in, out] debug_string The string to fill.
+   * \param[in] string_size Buffer size of c-string
+   */
   static void
   element_to_string ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] char *debug_string,
                      [[maybe_unused]] const int string_size) noexcept
@@ -1124,16 +1023,15 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     SC_ABORT ("Not implemented.");
   }
 
-  // ################################################____MPI____################################################
-
+  // ################################################____MPI____########################################################
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-     * \param [in] elements Array of elements that are to be packed
-     * \param [in] count Number of elements to pack
-     * \param [in,out] send_buffer Buffer in which to pack the elements
-     * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-     * \param [in, out] position the position of the first byte that is not already packed
-     * \param [in] comm MPI Communicator
-    */
+   * \param [in] elements Array of elements that are to be packed
+   * \param [in] count Number of elements to pack
+   * \param [in,out] send_buffer Buffer in which to pack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] comm MPI Communicator
+   */
   void
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
                     int *position, sc_MPI_Comm comm) const noexcept
@@ -1142,7 +1040,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     t8_subelement_element **els = (t8_subelement_element **) elements;
     standalone_scheme tmp {};
     for (unsigned int ielem = 0; ielem < count; ielem++) {
-      t8_element_t *element = subelement_to_element (els[ielem]);
+      t8_element_t *element = subelement_to_standalone (els[ielem]);
       tmp.element_MPI_Pack (&element, 1, send_buffer, buffer_size, position, comm);
       int mpiret = sc_MPI_Pack (&els[ielem]->subelement_type, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
       SC_CHECK_MPI (mpiret);
@@ -1151,11 +1049,11 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
   }
 
-  /** Determine an upper bound for the size of the packed message of \a count elements
-     * \param [in] count Number of elements to pack
-     * \param [in] comm MPI Communicator
-     * \param [out] pack_size upper bound on the message size
-    */
+  /** Determine an upper bound for the size of the packed message of \a count elements.
+   * \param [in] count Number of elements to pack
+   * \param [in] comm MPI Communicator
+   * \param [out] pack_size upper bound on the message size
+   */
   void
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const noexcept
   {
@@ -1174,13 +1072,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   }
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
-     * \param [in] recvbuf Buffer from which to unpack the elements
-     * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
-     * \param [in, out] position the position of the first byte that is not already packed
-     * \param [in] elements Array of initialised elements that is to be filled from the message
-     * \param [in] count Number of elements to unpack
-     * \param [in] comm MPI Communicator
-    */
+   * \param [in] recvbuf Buffer from which to unpack the elements
+   * \param [in] buffer_size size of the buffer (in order to check that we don't access out of range)
+   * \param [in, out] position the position of the first byte that is not already packed
+   * \param [in] elements Array of initialised elements that is to be filled from the message
+   * \param [in] count Number of elements to unpack
+   * \param [in] comm MPI Communicator
+   */
   void
   element_MPI_Unpack (void *recvbuf, const int buffer_size, int *position, t8_element_t **elements,
                       const unsigned int count, sc_MPI_Comm comm) const noexcept
@@ -1188,7 +1086,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     t8_subelement_element **els = (t8_subelement_element **) elements;
     standalone_scheme tmp {};
     for (unsigned int ielem = 0; ielem < count; ielem++) {
-      t8_element_t *single = subelement_to_element (els[ielem]);
+      t8_element_t *single = subelement_to_standalone (els[ielem]);
       tmp.element_MPI_Unpack (recvbuf, buffer_size, position, &single, 1, comm);
       int mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &els[ielem]->subelement_type, 1, sc_MPI_INT, comm);
       SC_CHECK_MPI (mpiret);
@@ -1197,18 +1095,23 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
   }
 
-  // --- Functions special for subelements ---
-
+  // ########################################____SUBELEMENTS____########################################################
+  /** Check if \ref elem is a subelement.
+   * \param [in] elem The elem to be checked. 
+   */
   static bool
   element_is_subelement (const t8_element_t *elem) noexcept
   {
-    const auto *subelement = reinterpret_cast<const t8_subelement_element *> (elem);
+    const auto *subelement = as_subelement (elem);
     return (subelement->subelement_type != 0);
   }
+
+  /** Get the number of subelements an element is refined into for a specific type.
+   * \param [in] subelement_type The subelement type used for refinement.
+   */
   static int
   element_get_number_of_subelements (int subelement_type)
   {
-
     int num_hanging_faces = 0;
     /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
     for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++i) {
@@ -1217,16 +1120,32 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
   }
 
+  /** This defines how an element is refined in subelements using a specified subelement type. 
+   * \param [in] elem The element to be refined.
+   * \param [in] type The subelement type to be used for refinement. This is a binary encoding of the hanging faces.
+   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
+   *                  The number of subelements is determined by \ref element_get_number_of_subelements.
+   * \note The different subelement types (up to rotation) are:
+   *                               
+   *      x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x 
+   *      |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |   
+   *      |             |         | 1 \   /   |        |   \   /   |        |   \   /   |        |   \ | /   |        
+   *      |             |   -->   x - - X   3 |   or   x - - x     |   or   x - - x - - x   or   x - - x - - x   
+   *      |             |         | 0 /   \   |        |   / | \   |        |   /   \   |        |   /   \   |       
+   *      | elem        |         | /   4   \ |        | /   |   \ |        | /       \ |        | /       \ |      
+   *      + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x 
+   *           
+   * Subelement_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
+   * Note, that we do not change the underlying quadrant. 
+   */
   static void
-  element_to_subelement (const t8_element_t *elem, int type, t8_element_t *c[])
+  refine_element_in_subelements (const t8_element_t *elem, int type, t8_element_t *c[])
   {
     const t8_subelement_element *element = (const t8_subelement_element *) elem;
     t8_subelement_element **subelements = (t8_subelement_element **) c;
-
-    int num_subelements = element_get_number_of_subelements (type);
+    const int num_subelements = element_get_number_of_subelements (type);
 
     T8_ASSERT (type >= T8_SUB_QUAD_MIN_SUBELEMENT_TYPE && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
-
     T8_ASSERT (!element_is_subelement (elem));
     T8_ASSERT (element_is_valid (elem));
 #if T8_ENABLE_DEBUG
@@ -1237,28 +1156,62 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
 #endif
 
-    /* Setting the parameter values for different subelements. 
-   * The different subelement types (up to rotation) are:
-   *                               
-   *      x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x        x - - x - - x
-   *      |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |        | \   |   / |
-   *      |             |         | 1 \   /   |        |   \   /   |        |   \   /   |        |   \ | /   |        |   \ | /   |
-   *      |             |   -->   x - - X   3 |   or   x - - x     |   or   x - - x - - x   or   x - - x - - x   or   x - - x - - x
-   *      |             |         | 0 /   \   |        |   / | \   |        |   /   \   |        |   /   \   |        |   / | \   |
-   *      | elem        |         | /   4   \ |        | /   |   \ |        | /       \ |        | /       \ |        | /   |   \ |
-   *      + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x        x - - x - - x
-   *           
-   * Sub_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
-   * Note, that we do not change the underlying quadrant. */
-
+    /* Setting the parameter values for different subelements. */
     for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
-
-      standalone_scheme::element_copy (subelement_to_element (element),
-                                       subelement_to_element (subelements[sub_id_counter]));
+      standalone_scheme::element_copy (subelement_to_standalone (element),
+                                       subelement_to_standalone (subelements[sub_id_counter]));
       subelements[sub_id_counter]->subelement_type = type;
       subelements[sub_id_counter]->subelement_id = sub_id_counter;
       T8_ASSERT (element_is_valid (c[sub_id_counter]));
     }
+  }
+
+ private:
+  // PRIVATE HELPER
+  static const t8_element_t *
+  subelement_to_standalone (const t8_subelement_element *subelement) noexcept
+  {
+    return (const t8_element_t *) &subelement->element;
+  }
+
+  static t8_element_t *
+  subelement_to_standalone (t8_subelement_element *subelement) noexcept
+  {
+    return (t8_element_t *) &subelement->element;
+  }
+
+  static const t8_element_t *
+  element_to_standalone (const t8_element_t *element) noexcept
+  {
+    return subelement_to_standalone (as_subelement (element));
+  }
+
+  static t8_element_t *
+  element_to_standalone (t8_element_t *element) noexcept
+  {
+    return subelement_to_standalone (as_subelement (element));
+  }
+
+  static const t8_subelement_element *
+  as_subelement (const t8_element_t *element) noexcept
+  {
+    return reinterpret_cast<const t8_subelement_element *> (element);
+  }
+
+  static t8_subelement_element *
+  as_subelement (t8_element_t *element) noexcept
+  {
+    return reinterpret_cast<t8_subelement_element *> (element);
+  }
+
+  /** create the root element
+   * \param [in,out] elem The element that is filled with the root
+   */
+  static void
+  reset_subelement_values (t8_subelement_element *subelement) noexcept
+  {
+    subelement->subelement_type = 0;
+    subelement->subelement_id = 0;
   }
 
   static void
@@ -1292,50 +1245,12 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
     }
   }
 
- private:
-  // PRIVATE HELPER
-  static const t8_element_t *
-  subelement_to_element (const t8_subelement_element *subelement) noexcept
-  {
-    return (const t8_element_t *) &subelement->element;
-  }
-
-  static t8_element_t *
-  subelement_to_element (t8_subelement_element *subelement) noexcept
-  {
-    return (t8_element_t *) &subelement->element;
-  }
-
-  static const t8_element_t *
-  element_to_element (const t8_element_t *element) noexcept
-  {
-    const t8_subelement_element *subelement = (const t8_subelement_element *) element;
-    return subelement_to_element (subelement);
-  }
-
-  static t8_element_t *
-  element_to_element (t8_element_t *element) noexcept
-  {
-    t8_subelement_element *subelement = (t8_subelement_element *) element;
-    return subelement_to_element (subelement);
-  }
-
-  /** create the root element
-   * \param [in,out] elem The element that is filled with the root
-   */
-  static void
-  reset_subelement_values (t8_subelement_element *subelement) noexcept
-  {
-    subelement->subelement_type = 0;
-    subelement->subelement_id = 0;
-  }
-
   static void
   vertex_coords_of_subelement (const t8_element_t *elem, int vertex, int coords[])
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (element_is_subelement (elem));
-    const auto *subelement = reinterpret_cast<const t8_subelement_element *> (elem);
+    const auto *subelement = as_subelement (elem);
 
     T8_ASSERT (vertex >= 0 && vertex < T8_SUBELEMENT_FACES); /* all subelements are triangles */
 
@@ -1360,7 +1275,7 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
 
     /* get location information of the given subelement */
     int location[3] = {};
-    t8_element_get_location_of_subelement (elem, location);
+    element_get_location_of_subelement (elem, location);
 
     /* the face number, the subelement is adjacent to */
     int face_number = location[0];
@@ -1439,13 +1354,13 @@ struct t8_subelementquad_scheme: public t8_scheme_helpers<T8_ECLASS_QUAD, t8_sub
   parent_element_get_len (const t8_subelement_element *subelement) noexcept
   {
     return 1 << (T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]
-                 - (standalone_scheme::element_get_level (subelement_to_element (subelement))));
+                 - (standalone_scheme::element_get_level (subelement_to_standalone (subelement))));
   }
 
   static void
-  t8_element_get_location_of_subelement (const t8_element_t *elem, int location[])
+  element_get_location_of_subelement (const t8_element_t *elem, int location[])
   {
-    const auto *subelement = reinterpret_cast<const t8_subelement_element *> (elem);
+    const auto *subelement = as_subelement (elem);
 
     /* this function only works for subelements */
     T8_ASSERT (element_is_subelement (elem));

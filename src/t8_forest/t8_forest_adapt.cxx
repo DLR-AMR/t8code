@@ -636,7 +636,7 @@ t8_forest_adapt (t8_forest_t forest)
             /* TODO: In a future version elements_from[zz] should be const and we should call t8_element_array_index_locidx (the const version). */
             elements[zz] = t8_element_array_index_locidx_mutable (telements, el_inserted + zz);
           }
-          subelemscheme->element_to_subelement (elements_from[0], subelement_type, elements);
+          subelemscheme->refine_element_in_subelements (elements_from[0], subelement_type, elements);
           el_inserted += (t8_locidx_t) num_subelements;
           el_considered++;
         }

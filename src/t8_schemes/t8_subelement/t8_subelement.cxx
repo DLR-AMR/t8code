@@ -57,5 +57,5 @@ t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclas
   default:
     SC_ABORT_NOT_REACHED ();
   }
-  return 0; /* Default return value false */
+  return 0; /* Default return value false. */
 }

@@ -20,8 +20,8 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_quads_hanging_nodes.cxx
- * This is an example to demonstrate hanging node resolution for quads. 
+/** \file t8_forest_subelement.cxx
+ * Implementation of functionality in \ref t8_forest_subelement.hxx.
  */
 
 #include "t8_forest_subelement.hxx"
@@ -36,8 +36,13 @@
 #include <t8_element/t8_element.h>
 #include "t8_forest_adapt.h"
 
-/* This is the adapt function, called for each element in a balanced forest during transition.
- * We refine an element into a suitable transition cell if it has at most one hanging face */
+/** Namespace to hide implementation details.*/
+namespace detail
+{
+
+/** Adapt callback for \ref t8_forest_discard_subelements. All subelements are coarsened such that the mesh using only
+ * recursive refinement is restored and the subelements are discarded. This is necessary for another adaption cycle. 
+ */
 int
 discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
                               [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
@@ -52,8 +57,14 @@ discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unuse
   return 0;
 }
 
-/* This is the adapt function, called for each element in a balanced forest during transition.
- * We refine an element into a suitable transition cell if it has at most one hanging face */
+/* Adapt callback for hanging node resolution. 
+ * We use the face enumeration to determine which subelement type to use for the transition cell.
+ * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level 
+ * and to 0, if the level of the neighbour is at most the level of the element.   
+ * If all faces are hanging, we use the normal 1:8 refinement and return 1.
+ * Otherwise, we use subelements and add 1 to every type, to avoid refine = 1.
+ * \return The subelement type + 1 to be used for the transition cell, which is a binary encoding of the hanging faces.
+ */
 int
 t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                                   [[maybe_unused]] t8_eclass_t tree_class, [[maybe_unused]] t8_locidx_t lelement_id,
@@ -61,21 +72,6 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
                                   [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
   int subelement_type = 0;
-  /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-     * Every face has a flag parameter, which is set to 1, if there is a neighbour with a higher level 
-     * and to 0, if the level of the neighbour is at most the level of the element.   
-     *             
-     *              f0                         1
-     *        x - - x - - x              x - - x - - x       
-     *        |           |              | \   |   / |
-     *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
-     *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
-     *        |           |              |   /   \   |
-     *        | elem      |              | /       \ |
-     *        x - - - - - x              x - - - - - x
-     *              f1                         0 
-     *                      
-     */
   const int num_faces = scheme->element_get_num_faces (tree_class, elements[0]);
   for (int iface = 0; iface < num_faces; iface++) {
     const t8_element_t **neighbors; /**< Neighboring elements. */
@@ -86,34 +82,52 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
 
     t8_forest_leaf_face_neighbors (forest_from, which_tree, elements[0], &neighbors, iface, &dual_faces_internal,
                                    &num_neighbors, &neighids, &neigh_class);
-
     if (num_neighbors > 1) {
       subelement_type += 1 << ((num_faces - 1) - iface);
     }
-    /* clean-up */
+
+    // Free allocated memory.
     if (num_neighbors > 0) {
-      // Free allocated memory.
       T8_FREE (neighbors);
       T8_FREE (dual_faces_internal);
       T8_FREE (neighids);
     }
   }
 
-  /* returning the right subelement types */
-  if (subelement_type == 0) { /* in this case, there are no hanging nodes and we do not need to do anything */
+  /* Returning the correct subelement type. */
+  if (subelement_type == 0) { /* In this case, there are no hanging nodes and we do not need to do anything. */
     return 0;
   }
-  else if (subelement_type == 15) { /* Normal 1:8 refinement */
+  else if (subelement_type == 15) { /* Normal 1:8 refinement. */
     return 1;
   }
-  else { /* use subelements and add 1 to every type, to avoid refine = 1 */
+  else { /* Use subelements and add 1 to every type, to avoid refine = 1. */
     return subelement_type + 1;
   }
 }
 
-/** Adapt forest according to callback. */
+}  // namespace detail
+
+t8_forest_t
+t8_forest_remove_hanging_nodes (t8_forest_t forest)
+{
+  t8_global_productionf ("Into t8_forest_remove_hanging_nodes.\n");
+  forest = t8_forest_new_adapt (forest, detail::t8_remove_hanging_nodes_callback, 0, 0, NULL);
+  t8_global_productionf ("Done t8_forest_remove_hanging_nodes.\n");
+  return forest;
+}
+
+t8_forest_t
+t8_forest_discard_subelements (t8_forest_t forest)
+{
+  if (!t8_forest_has_subelements (forest)) {
+    return forest;
+  }
+  return t8_forest_new_adapt (forest, detail::discard_subelements_callback, 0, 0, NULL);
+}
+
 bool
-t8_forest_has_subelements (t8_forest_t forest)
+t8_forest_has_subelements (const t8_forest_t forest)
 {
   if (!t8_eclass_scheme_is_subelement (t8_forest_get_scheme (forest), T8_ECLASS_QUAD)) {
     return false;
@@ -129,22 +143,4 @@ t8_forest_has_subelements (t8_forest_t forest)
     }
   }
   return false;
-}
-
-t8_forest_t
-t8_forest_discard_subelements (t8_forest_t forest)
-{
-  if (!t8_forest_has_subelements (forest)) {
-    return forest;
-  }
-  return t8_forest_new_adapt (forest, discard_subelements_callback, 0, 0, NULL);
-}
-
-t8_forest_t
-t8_forest_remove_hanging_nodes (t8_forest_t forest)
-{
-  t8_global_productionf ("Into t8_forest_remove_hanging_nodes.\n");
-  forest = t8_forest_new_adapt (forest, t8_remove_hanging_nodes_callback, 0, 0, NULL);
-  t8_global_productionf ("Done t8_forest_remove_hanging_nodes.\n");
-  return forest;
 }
