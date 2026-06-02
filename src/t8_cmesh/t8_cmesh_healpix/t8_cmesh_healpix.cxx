@@ -27,44 +27,44 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_cmesh/t8_cmesh_healpix/t8_geometry_healpix.hxx>
 
-std::vector<double> getCoordsUpperRing(int k) {
-    if (k < 0 || k > 3) {
+std::array <double, 3> getCoordsUpperRing(int side) {
+    if (side < 0 || side > 3) {
         return {};
     }
 
     const double phi = M_PI / 2;
-    std::vector<double> coords(3);
+    std::array <double, 3> coords;
 
-    coords[0] = cos(k * phi);
-    coords[1] = sin(k * phi);
+    coords[0] = cos(side * phi);
+    coords[1] = sin(side * phi);
     coords[2] = 2.0 / 3;
 
     return coords;
 }
 
-std::vector<double> getCoordsBottomRing (int k){
-    if (k < 0 || k > 3) {
+std::array <double, 3> getCoordsBottomRing (int side){
+    if (side < 0 || side > 3) {
         return {};
     }
-    std::vector <double> coords(3);
+    std::array <double, 3>  coords;
     const double phi = M_PI / 2 ;
-    coords[0]= cos(k*phi);
-    coords[1]= sin(k*phi);
+    coords[0]= cos(side*phi);
+    coords[1]= sin(side*phi);
     coords[2]= -2.0/3;
     return coords;
 }
 
 
-std::vector<double> getCoordsEquator (int k){
-    if(k < 0 || k > 3) {
+std::array <double, 3>  getCoordsEquator (int side){
+    if(side < 0 || side > 3) {
         return {};
     }
-    std::vector <double> coords(3);
+    std::array <double, 3>  coords;
     const double phi = M_PI / 2 ;
     const double shift = M_PI / 4;
 
-    coords[0]= cos(k*phi - shift);
-    coords[1]= sin(k*phi - shift);
+    coords[0]= cos(side*phi - shift);
+    coords[1]= sin(side*phi - shift);
     coords[2]= 0;
     return coords;
 }
@@ -81,7 +81,7 @@ t8_cmesh_new_healpix (sc_MPI_Comm comm)
     const int ntrees = 12;
     const int nverts = 4; /* Number of vertices per cmesh element. */
     std::vector <double> verts;
-    t8_eclass_t *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
+    t8_eclass_t all_eclasses[ntrees];
     std::vector <double> all_verts;
     t8_cmesh_register_geometry<t8_geometry_healpix> (cmesh);
     /* Defitition of the tree class. */
@@ -89,17 +89,17 @@ t8_cmesh_new_healpix (sc_MPI_Comm comm)
         t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
         all_eclasses[itree] = T8_ECLASS_QUAD;
     }
-    std::vector <double> northPole = {0,0,1};
-    std::vector <double> southPole = {0,0,-1};
+    std::array <double, 3>  northPole = {0,0,1};
+    std::array <double, 3>  southPole = {0,0,-1};
     int itree = 0;
     // every side section has 4 quads, this builds the upper layer
     // build upper section
-for (int k = 0; k < 4; k++) {
+for (int  side = 0; side < 4; side++) {
     verts.clear();
 
-    auto equator = getCoordsEquator((k+1) % 4);
-    auto upper0  = getCoordsUpperRing(k % 4);
-    auto upper1  = getCoordsUpperRing((k + 1) % 4);
+    auto equator = getCoordsEquator((side+1) % 4);
+    auto upper0  = getCoordsUpperRing(side % 4);
+    auto upper1  = getCoordsUpperRing((side + 1) % 4);
 
     verts.insert(verts.end(), northPole.begin(), northPole.end());
     verts.insert(verts.end(), upper1.begin(), upper1.end());
@@ -113,13 +113,13 @@ for (int k = 0; k < 4; k++) {
 }
 
 // build middle section
-for (int k = 0; k < 4; k++) {
+for (int side = 0; side < 4; side++) {
     verts.clear();
 
-    auto bottom0  = getCoordsBottomRing(k % 4);
-    auto equator1 = getCoordsEquator((k + 1) % 4);
-    auto equator0 = getCoordsEquator(k % 4);
-    auto upper0   = getCoordsUpperRing(k % 4);
+    auto bottom0  = getCoordsBottomRing(side % 4);
+    auto equator1 = getCoordsEquator((side + 1) % 4);
+    auto equator0 = getCoordsEquator(side % 4);
+    auto upper0   = getCoordsUpperRing(side % 4);
 
     verts.insert(verts.end(), bottom0.begin(), bottom0.end());
     verts.insert(verts.end(), equator0.begin(), equator0.end());
@@ -133,12 +133,12 @@ for (int k = 0; k < 4; k++) {
 }
 
 // build lower section
-for (int k = 0; k < 4; k++) {
+for (int side = 0; side < 4; side++) {
     verts.clear();
 
-    auto bottom1 = getCoordsBottomRing((k + 1) % 4);
-    auto bottom0 = getCoordsBottomRing(k % 4);
-    auto equator = getCoordsEquator((k+1) % 4);
+    auto bottom1 = getCoordsBottomRing((side + 1) % 4);
+    auto bottom0 = getCoordsBottomRing(side % 4);
+    auto equator = getCoordsEquator((side + 1) % 4);
 
     verts.insert(verts.end(), southPole.begin(), southPole.end());
     verts.insert(verts.end(), bottom0.begin(), bottom0.end());

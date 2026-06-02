@@ -26,9 +26,10 @@
 
 void
 t8_geometry_healpix::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh,
-                                       [[maybe_unused]] t8_gloidx_t gtreeid, const double *ref_coords,
+                                       t8_gloidx_t gtreeid, const double *ref_coords,
                                        const size_t num_coords, double *out_coords) const
 {
+    // This geometry is inspired by HEALPix
     const t8_gloidx_t layer = gtreeid / 4;
     const t8_gloidx_t face  = gtreeid % 4;
 

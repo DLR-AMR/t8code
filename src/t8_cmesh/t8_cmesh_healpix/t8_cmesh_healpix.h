@@ -21,6 +21,10 @@
 */
 
 #include <t8_cmesh/t8_cmesh.h>
-
+/** Creates a t8code cmesh consisting of 12 quadrilateral trees arranged
+ * according to the HEALPix base decomposition
+ * \param [in] comm   MPI Communicator to use.
+ * \return            A coarse mesh representing the HEALPix base grid.
+ */
 t8_cmesh_t
 t8_cmesh_new_healpix (sc_MPI_Comm comm);
