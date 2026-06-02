@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2023 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ struct t8_geometry_healpix: public t8_geometry_with_vertices
    * \param [in]  num_coords  The number of points to map.
    * \param [out] out_coords  The mapped coordinates in physical space of \a ref_coords. The length is \a num_coords * 3.
    *
-   * This routine expects an input mesh of six hexaeders arranged into a cube.
+   * This routine expects an input mesh of twelve quadrilaterals in a configuration of the healpix base-mesh
    *
    */
   void
