@@ -145,7 +145,7 @@ struct cache_face_normals_overwrite: public t8_mesh_handle::cache_face_normals<T
 TEST (t8_gtest_cache_competence, cache_volume)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_volume_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_volume_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
@@ -173,7 +173,7 @@ TEST (t8_gtest_cache_competence, cache_volume)
 TEST (t8_gtest_cache_competence, cache_diameter)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_diameter_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_diameter_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
@@ -196,7 +196,7 @@ TEST (t8_gtest_cache_competence, cache_diameter)
 TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_vertex_coordinates_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_vertex_coordinates_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
@@ -223,7 +223,7 @@ TEST (t8_gtest_cache_competence, cache_vertex_coordinates)
 TEST (t8_gtest_cache_competence, cache_centroid)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_centroid_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_centroid_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
@@ -249,7 +249,7 @@ TEST (t8_gtest_cache_competence, cache_centroid)
 TEST (t8_gtest_cache_competence, cache_face_areas)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_face_areas_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_face_areas_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
@@ -275,7 +275,7 @@ TEST (t8_gtest_cache_competence, cache_face_areas)
 TEST (t8_gtest_cache_competence, cache_face_centroids)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_face_centroids_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_face_centroids_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
@@ -302,7 +302,7 @@ TEST (t8_gtest_cache_competence, cache_face_centroids)
 TEST (t8_gtest_cache_competence, cache_face_normals)
 {
   const int level = 1;
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_face_normals_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_face_normals_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<const mesh_class> (level, sc_MPI_COMM_WORLD);
