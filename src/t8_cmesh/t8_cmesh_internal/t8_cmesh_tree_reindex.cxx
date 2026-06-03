@@ -20,19 +20,26 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+*/
+
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_tree_reindex.hxx>
 
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_data/t8_element_array_iterator.hxx>
 
 #include <array>
-#include <map>
-#include <vector>
 #include <cmath>
+#include <map>
 #include <set>
 #include <tuple>
+#include <vector>
 
 std::array<double, 24>
 bbox_bounds_to_hex_vertices (const double bounds[6])
@@ -101,6 +108,12 @@ struct cell_coordinate
   t8_locidx_t z;
 };
 
+static std::tuple<t8_locidx_t, t8_locidx_t, t8_locidx_t>
+cell_to_key (const cell_coordinate &cell)
+{
+  return std::make_tuple (cell.x, cell.y, cell.z);
+}
+
 cell_coordinate
 point_to_bbox_cell (const std::array<double, 3> &point, const double bounds[6], const int level)
 {
@@ -151,7 +164,7 @@ refinement_level_is_unique (const std::map<t8_locidx_t, std::array<double, 3>> &
 
     const cell_coordinate cell = point_to_bbox_cell (center, bounds, level);
 
-    const auto key = std::make_tuple (cell.x, cell.y, cell.z);
+    const auto key = cell_to_key (cell);
 
     const auto insert_result = occupied_cells.insert (key);
 
@@ -176,35 +189,51 @@ find_required_refinement_level (const std::map<t8_locidx_t, std::array<double, 3
   return -1;
 }
 
+static t8_linearidx_t
+cell_to_linear_id (const cell_coordinate &cell, const int level)
+{
+  const t8_linearidx_t cells_per_direction = static_cast<t8_linearidx_t> (1) << level;
+
+  return static_cast<t8_linearidx_t> (cell.x) + cells_per_direction * static_cast<t8_linearidx_t> (cell.y)
+         + cells_per_direction * cells_per_direction * static_cast<t8_linearidx_t> (cell.z);
+}
+
 std::map<t8_locidx_t, t8_locidx_t>
 t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   std::map<t8_locidx_t, t8_locidx_t> tree_reindex;
 
+  /*
+   * 1. Get local bounding box of the original cmesh.
+   */
   double bounding_box[6];
   t8_cmesh_get_local_bounding_box (cmesh, bounding_box);
 
-  auto vertices = bbox_bounds_to_hex_vertices (bounding_box);
-
   /*
-   * Build auxiliary bounding-box cmesh.
+   * 2. Build auxiliary bounding-box cmesh.
    */
+  const auto vertices = bbox_bounds_to_hex_vertices (bounding_box);
+
   t8_cmesh_t bbox_cmesh;
   t8_cmesh_init (&bbox_cmesh);
 
   t8_cmesh_set_tree_class (bbox_cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_set_tree_vertices (bbox_cmesh, 0, vertices.data (), 8);
 
+  /*
+   * If bounding_box is process-local, SC_MPI_COMM_SELF is usually safer.
+   * If you intentionally want this bbox cmesh on the same communicator,
+   * keep bbox_comm = comm.
+   */
   sc_MPI_Comm bbox_comm = comm;
 
   t8_cmesh_commit (bbox_cmesh, bbox_comm);
 
   /*
-   * Build a level-0 forest from the original cmesh.
-   * This is only used to evaluate the physical centers of the original trees.
+   * 3. Build level-0 forest from original cmesh to evaluate tree centers.
    *
    * t8_forest_new_uniform takes ownership of a cmesh reference.
-   * Since cmesh belongs to the caller, increase the refcount first.
+   * Since cmesh belongs to the caller, we increase the refcount first.
    */
   t8_cmesh_ref (cmesh);
 
@@ -213,12 +242,12 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (center_forest);
 
   /*
-   * Compute one center point per original local tree.
+   * 4. Compute one physical center point per original local tree.
    */
   std::map<t8_locidx_t, std::array<double, 3>> tree_to_center;
 
   for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
-    std::array<double, 3> midpoint = compute_tree_midpoint_with_geometry (center_forest, itree);
+    const std::array<double, 3> midpoint = compute_tree_midpoint_with_geometry (center_forest, itree);
 
     tree_to_center.insert ({ itree, midpoint });
 
@@ -227,8 +256,8 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
 
   /*
-   * Now find the first bounding-box refinement level where each cell contains
-   * at most one tree center.
+   * 5. Find the first bbox refinement level where each cell contains
+   *    at most one tree center.
    */
   const int max_level = 29;
 
@@ -238,11 +267,8 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     t8_productionf ("Could not find a refinement level where all tree centers are separated.\n"
                     "This can happen if two trees have exactly the same center.\n");
 
-    /*
-     * Fallback: identity reindexing.
-     */
     for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
-      tree_reindex.insert ({ itree, itree });
+      tree_reindex[itree] = itree;
     }
 
     t8_forest_unref (&center_forest);
@@ -258,33 +284,96 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_productionf ("Required bounding-box refinement level: %i\n", required_level);
 
   /*
-   * Now create the actual refined bounding-box forest.
-   * This forest represents your refined auxiliary bounding box.
+   * 6. Map each original tree center to the logical bbox-cell linear id
+   *    at required_level.
    *
-   * t8_forest_new_uniform takes ownership of bbox_cmesh and of the scheme.
+   * Since required_level passed the uniqueness test, each logical cell
+   * should contain at most one tree center.
+   */
+  std::map<t8_linearidx_t, t8_locidx_t> linear_id_to_tree;
+
+  for (const auto &entry : tree_to_center) {
+    const t8_locidx_t original_tree = entry.first;
+    const std::array<double, 3> &center = entry.second;
+
+    const cell_coordinate cell = point_to_bbox_cell (center, bounding_box, required_level);
+
+    const t8_linearidx_t linear_id = cell_to_linear_id (cell, required_level);
+
+    const auto insert_result = linear_id_to_tree.insert ({ linear_id, original_tree });
+
+    if (!insert_result.second) {
+      /*
+       * This should not happen because required_level was checked.
+       */
+      t8_productionf ("Unexpected collision: more than one center in cell (%u, %u, %u), linear id %li.\n",
+                      static_cast<unsigned> (cell.x), static_cast<unsigned> (cell.y), static_cast<unsigned> (cell.z),
+                      static_cast<long> (linear_id));
+    }
+
+    t8_productionf ("Tree %u lies in bbox cell (%u, %u, %u), linear id %li at level %i\n",
+                    static_cast<unsigned> (original_tree), static_cast<unsigned> (cell.x),
+                    static_cast<unsigned> (cell.y), static_cast<unsigned> (cell.z), static_cast<long> (linear_id),
+                    required_level);
+  }
+
+  /*
+   * 7. Create the refined bbox forest.
+   *
+   * This forest is only used to get the t8code/SFC order of the bbox leaves.
+   * t8_forest_new_uniform takes ownership of bbox_cmesh and the scheme.
    */
   t8_forest_t bbox_forest = t8_forest_new_uniform (bbox_cmesh, t8_scheme_new_default (), required_level, 0, bbox_comm);
 
   /*
-   * At this point:
+   * 8. Iterate over bbox leaves in t8code order.
    *
-   * - center_forest stores the original cmesh trees at level 0.
-   * - bbox_forest stores the refined bounding box.
-   * - required_level satisfies your criterion.
-   *
-   * For now, fill identity reindexing.
-   * The next step will be to replace this with SFC/Morton ordering.
+   * We do not evaluate geometry on bbox_forest here.
+   * Instead, we use each leaf's linear id at required_level.
    */
-  for (t8_locidx_t itree = 0; itree < num_local_trees; ++itree) {
-    const cell_coordinate cell = point_to_bbox_cell (tree_to_center[itree], bounding_box, required_level);
+  t8_locidx_t next_sfc_index = 0;
 
-    tree_reindex.insert ({ itree, itree });
+  const t8_locidx_t num_bbox_local_trees = t8_forest_get_num_local_trees (bbox_forest);
 
-    t8_productionf ("Tree %u lies in bbox cell (%u, %u, %u) at level %i\n", static_cast<unsigned> (itree),
-                    static_cast<unsigned> (cell.x), static_cast<unsigned> (cell.y), static_cast<unsigned> (cell.z),
-                    required_level);
+  for (t8_locidx_t bbox_tree = 0; bbox_tree < num_bbox_local_trees; ++bbox_tree) {
+    t8_element_array_t *leaf_elements = t8_forest_tree_get_leaf_elements (bbox_forest, bbox_tree);
+
+    for (auto leaf_it = t8_element_array_begin (leaf_elements); leaf_it != t8_element_array_end (leaf_elements);
+         ++leaf_it) {
+      const t8_linearidx_t leaf_linear_id = leaf_it.get_linear_id_at_level (required_level);
+
+      const auto found_tree = linear_id_to_tree.find (leaf_linear_id);
+
+      if (found_tree == linear_id_to_tree.end ()) {
+        /*
+         * Empty bbox leaf. No original tree center lies here.
+         */
+        continue;
+      }
+
+      const t8_locidx_t original_tree = found_tree->second;
+
+      tree_reindex[original_tree] = next_sfc_index;
+
+      t8_productionf ("bbox leaf linear id %li maps original tree %u to new SFC index %u\n",
+                      static_cast<long> (leaf_linear_id), static_cast<unsigned> (original_tree),
+                      static_cast<unsigned> (next_sfc_index));
+
+      ++next_sfc_index;
+    }
   }
 
+  /*
+   * 9. Sanity check.
+   */
+  if (tree_reindex.size () != static_cast<size_t> (num_local_trees)) {
+    t8_productionf ("Warning: only mapped %u of %u local trees.\n", static_cast<unsigned> (tree_reindex.size ()),
+                    static_cast<unsigned> (num_local_trees));
+  }
+
+  /*
+   * 10. Cleanup.
+   */
   t8_forest_unref (&bbox_forest);
   t8_forest_unref (&center_forest);
 
