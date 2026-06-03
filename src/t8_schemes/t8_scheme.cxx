@@ -24,10 +24,12 @@
  * Implements functions declared in \ref t8_scheme.h.
  */
 
+#include "sc.h"
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 
 void
 t8_scheme_ref (t8_scheme_c *scheme)
@@ -434,4 +436,49 @@ t8_element_MPI_Unpack (const t8_scheme_c *scheme, const t8_eclass_t tree_class, 
                        int *position, t8_element_t **elements, const unsigned int count, sc_MPI_Comm comm)
 {
   return scheme->element_MPI_Unpack (tree_class, recvbuf, buffer_size, position, elements, count, comm);
+}
+
+/** Check if \ref elem is a subelement.
+   * \param [in] scheme        The scheme of the forest.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] elem The elem to be checked. 
+   */
+int
+t8_element_is_subelement (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem)
+{
+  SC_CHECK_ABORT (t8_eclass_scheme_is_subelement (scheme, tree_class),
+                  "t8_element_is_subelement was called for a scheme or eclass that does not support subelements.\n");
+  return scheme->element_is_subelement (tree_class, elem);
+}
+
+/** Get the number of subelements an element is refined into for a specific type.
+   * \param [in] scheme        The scheme of the forest.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] subelement_type The subelement type used for refinement.
+   */
+int
+t8_element_get_number_of_subelements (const t8_scheme_c *scheme, const t8_eclass_t tree_class, int subelement_type)
+{
+  SC_CHECK_ABORT (
+    t8_eclass_scheme_is_subelement (scheme, tree_class),
+    "t8_element_get_number_of_subelements was called for a scheme or eclass that does not support subelements.\n");
+  return scheme->element_get_number_of_subelements (tree_class, subelement_type);
+}
+
+/** This defines how an element is refined in subelements using a specified subelement type.
+   * \param [in] scheme        The scheme of the forest. 
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] elem The element to be refined.
+   * \param [in] type The subelement type to be used for refinement.
+   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
+   *                  The number of subelements is determined by \ref element_get_number_of_subelements.
+   */
+void
+t8_refine_element_in_subelements (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,
+                                  int type, t8_element_t *c[])
+{
+  SC_CHECK_ABORT (
+    t8_eclass_scheme_is_subelement (scheme, tree_class),
+    "t8_refine_element_in_subelements was called for a scheme or eclass that does not support subelements.\n");
+  scheme->refine_element_in_subelements (tree_class, elem, type, c);
 }

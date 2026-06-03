@@ -32,7 +32,6 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
-#include <t8_schemes/t8_subelement/t8_scheme_implementation.hxx>
 #include <t8_element/t8_element.h>
 #include "t8_forest_adapt.h"
 
@@ -45,13 +44,13 @@ namespace detail
  */
 int
 discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                              [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                              [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
                               [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
                               [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                               t8_element_t *elements[])
 {
-  const t8_subelementquad_scheme *subelem_scheme = (const t8_subelementquad_scheme *) scheme;
-  if (subelem_scheme->element_is_subelement (elements[0])) {
+  // TODO
+  if (t8_element_is_subelement (scheme, tree_class, elements[0])) {
     return -1;
   }
   return 0;
@@ -129,15 +128,18 @@ t8_forest_discard_subelements (t8_forest_t forest)
 bool
 t8_forest_has_subelements (const t8_forest_t forest)
 {
-  if (!t8_eclass_scheme_is_subelement (t8_forest_get_scheme (forest), T8_ECLASS_QUAD)) {
+  auto scheme = t8_forest_get_scheme (forest);
+  if (!t8_scheme_has_subelement_scheme (scheme)) {
     return false;
   }
-  const t8_subelementquad_scheme *scheme = (const t8_subelementquad_scheme *) t8_forest_get_scheme (forest);
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
-
+    auto eclass = t8_forest_get_eclass (forest, itree);
+    if (!t8_eclass_scheme_is_subelement (scheme, eclass)) {
+      continue;
+    }
     for (t8_locidx_t ielem = 0; ielem < t8_forest_get_tree_num_leaf_elements (forest, itree); ++ielem) {
       const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
-      if (scheme->element_is_subelement (elem)) {
+      if (t8_element_is_subelement (scheme, eclass, elem)) {
         return true;
       }
     }

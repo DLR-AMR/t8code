@@ -25,7 +25,9 @@
  */
 
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
-#include "t8_scheme_implementation.hxx"
+#include "specializations/t8_scheme_quads.hxx"
+#include "t8_eclass/t8_eclass.h"
+#include "t8_subelement_scheme.hxx"
 #include <t8_schemes/t8_scheme_builder.hxx>
 
 const t8_scheme *
@@ -35,7 +37,7 @@ t8_scheme_new_subelement (void)
 
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_LINE>> ();
-  builder.add_eclass_scheme<t8_subelementquad_scheme> ();
+  builder.add_eclass_scheme<t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>> ();
   builder.add_eclass_scheme<t8_default_scheme_tri> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
   builder.add_eclass_scheme<t8_default_scheme_tet> ();
@@ -48,14 +50,21 @@ int
 t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclass)
 {
   switch (eclass) {
-  case T8_ECLASS_VERTEX:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_VERTEX>> (T8_ECLASS_VERTEX);
-  case T8_ECLASS_LINE:
-    return scheme->check_eclass_scheme_type<t8_standalone_scheme<T8_ECLASS_LINE>> (T8_ECLASS_LINE);
   case T8_ECLASS_QUAD:
-    return scheme->check_eclass_scheme_type<t8_subelementquad_scheme> (T8_ECLASS_QUAD);
+    return scheme->check_eclass_scheme_type<t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>> (
+      T8_ECLASS_QUAD);
   default:
-    SC_ABORT_NOT_REACHED ();
+    return 0; /* Default return value false. */
   }
-  return 0; /* Default return value false. */
+}
+
+bool
+t8_scheme_has_subelement_scheme (const t8_scheme *scheme)
+{
+  for (int ieclass = T8_ECLASS_ZERO; ieclass < T8_ECLASS_COUNT; ++ieclass) {
+    if (t8_eclass_scheme_is_subelement (scheme, static_cast<t8_eclass_t> (ieclass))) {
+      return true;
+    }
+  }
+  return false;
 }

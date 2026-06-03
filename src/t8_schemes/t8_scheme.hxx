@@ -43,7 +43,8 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
-#include <t8_schemes/t8_subelement/t8_scheme_implementation.hxx>
+#include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_quads.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
@@ -103,7 +104,7 @@ struct t8_scheme
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
                                 t8_standalone_scheme<T8_ECLASS_HEX>,
                                 /* Subelement schemes */
-                                t8_subelementquad_scheme
+                                t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>
                                 >;
   /* clang-format on */
 
@@ -1192,6 +1193,67 @@ struct t8_scheme
       [&] (auto &&scheme) { return scheme.element_MPI_Unpack (recvbuf, buffer_size, position, elements, count, comm); },
       eclass_schemes[tree_class]);
   };
+
+  /** Check if \ref elem is a subelement.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] elem The elem to be checked. 
+   */
+  inline int
+  element_is_subelement (const t8_eclass_t tree_class, const t8_element_t *elem) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) -> int {
+        if constexpr (requires { scheme.element_is_subelement (elem); }) {
+          return scheme.element_is_subelement (elem);
+        }
+        else {
+          SC_ABORT ("element_is_subelement not supported by this scheme");
+        }
+      },
+      eclass_schemes[tree_class]);
+  };
+
+  /** Get the number of subelements an element is refined into for a specific type.
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] subelement_type The subelement type used for refinement.
+   */
+  inline int
+  element_get_number_of_subelements (const t8_eclass_t tree_class, int subelement_type) const
+  {
+    return std::visit (
+      [&] (auto &&scheme) -> int {
+        if constexpr (requires { scheme.element_get_number_of_subelements (subelement_type); }) {
+          return scheme.element_get_number_of_subelements (subelement_type);
+        }
+        else {
+          SC_ABORT ("element_get_number_of_subelements not supported by this scheme");
+        }
+      },
+      eclass_schemes[tree_class]);
+  }
+
+  /** This defines how an element is refined in subelements using a specified subelement type. 
+   * \param [in] tree_class    The eclass of the current tree.
+   * \param [in] elem The element to be refined.
+   * \param [in] type The subelement type to be used for refinement.
+   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
+   *                  The number of subelements is determined by \ref element_get_number_of_subelements.
+   */
+  inline void
+  refine_element_in_subelements (const t8_eclass_t tree_class, const t8_element_t *elem, int type,
+                                 t8_element_t *c[]) const
+  {
+    std::visit (
+      [&] (auto &&scheme) -> void {
+        if constexpr (requires { scheme.refine_element_in_subelements (elem, type, c); }) {
+          scheme.refine_element_in_subelements (elem, type, c);
+        }
+        else {
+          SC_ABORT ("refine_element_in_subelements not supported by this scheme");
+        }
+      },
+      eclass_schemes[tree_class]);
+  }
 };
 
 #endif /* !T8_SCHEME_HXX */

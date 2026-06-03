@@ -39,3 +39,11 @@ t8_scheme_new_subelement (void);
  */
 bool
 t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclass);
+
+/** Check if \a scheme uses a subelement scheme for any eclass. 
+ * This means that it checks if \ref t8_eclass_scheme_is_subelement is true for any eclass.
+ * \param [in] scheme   A (pointer to a) scheme.
+ * \return              True if \a scheme uses a subelement scheme for any eclass, false otherwise.
+ */
+bool
+t8_scheme_has_subelement_scheme (const t8_scheme *scheme);
