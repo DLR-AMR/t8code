@@ -200,7 +200,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
         << "MORTAR side must have as many neighbors as small sides of the face.";
 
       for (int ineigh = 0; ineigh < static_cast<int> (neighs.size ()); ++ineigh) {
-        // The neighbors must not have the same order as the face sides.
+        // The neighbors do not necessarily have the same order as the face sides.
         auto neigh_face_side
           = std::find_if (face.sides.begin (), face.sides.end (), [&neighs, ineigh] (const face_side& s) {
               return (neighs[ineigh]->get_element_handle_id () == s.element_id);

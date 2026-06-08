@@ -135,7 +135,7 @@ struct face_side
   int rank = LOCAL_RANK;  ///< LOCAL_RANK if owned locally, else MPI rank of owner.
 };
 
-/** Class for a face. A face can have multiple \ref face_side s if different elements faces share the same face.
+/** Class for a face. A face can have multiple \ref face_side s if different elements share the same face.
  */
 struct face
 {
@@ -164,7 +164,7 @@ struct face
  *      so the local side is always the one that inserts the face.
  * - MORTAR / MPI_MORTAR: the large (coarser) side owns the face and inserts it (also for ghosts). 
  *      The small sides are specified in sides.
- * Additionally, a vector is build that holds the face indices for each element.
+ * Additionally, a vector is built that holds the face indices for each element.
  * 
  * \tparam TUnderlying Use the \ref mesh with specified competences as template parameter.
  */
@@ -174,7 +174,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
  public:
   /**
    * Build \a m_faces so that every face touching at least one local element appears exactly once. 
-   * Simultaneously populate \a m_element_face_vector so that m_element_face_vector[handle_id][face_id] gives the 
+   * Simultaneously populate \a m_element_face_vector so that m_element_face_vector[element_handle_id][face_id] gives the 
    * index of the corresponding face in m_faces.
    */
   void
@@ -242,6 +242,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
               const int face_idx = static_cast<int> (m_faces.size ());
               m_faces.push_back (std::move (f));
               m_element_face_vector[handle_id][iface] = face_idx;
+              // Write neighbor information into m_element_face_vector.
               if (m_element_face_vector[neigh_id].empty ()) {
                 m_element_face_vector[neigh_id].assign (neighs[0]->get_num_faces (), -1);
               }
@@ -257,7 +258,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
               continue;  // local large side will insert the face, so we can skip this.
             }
 
-            // Check if the ghost is already inserted by another small mortar. If yes, only add the face.
+            // Check if the ghost is already inserted by another small mortar. If yes, only add the face to the neighbor's \a sides array.
             if (!m_element_face_vector[neigh_id].empty () && m_element_face_vector[neigh_id][dual_faces[0]] != -1) {
               m_faces[m_element_face_vector[neigh_id][dual_faces[0]]].sides.push_back (
                 { handle_id, iface, LOCAL_RANK });
@@ -265,6 +266,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
               continue;
             }
 
+            // Add large mortar face (ghost) to \a m_faces and update \a m_element_face_vector.
             const int orientation = t8_forest_leaf_face_orientation (
               forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
             face f { face_type::MPI_MORTAR,

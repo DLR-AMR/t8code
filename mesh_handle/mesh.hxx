@@ -430,7 +430,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     return requires (SelfType& mesh) { mesh.set_rank_vector (); };
   }
 
-  /** Function that checks if a competence to determine a unique vector if the faces is given.
+  /** Function that checks if a competence to determine a unique vector of the faces is given.
    * \return true if mesh has the competence, false otherwise.
    */
   static constexpr bool
