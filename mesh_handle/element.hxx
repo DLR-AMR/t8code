@@ -27,7 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #pragma once
 
 #include <t8.h>
-#include "data_handler.hxx"
+#include "competences/element_data_competences.hxx"
 #include <t8_eclass/t8_eclass.h>
 #include <t8_element/t8_element.h>
 #include <t8_forest/t8_forest_general.h>
@@ -44,7 +44,7 @@ namespace t8_mesh_handle
  * An element without specified template parameters provides default implementations for basic functionality 
  * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
  * the function is called. 
- * Use the competences defined in \ref competences.hxx as template parameter to cache the functionality instead of 
+ * Use the competences defined in \ref cache_element_competences.hxx as template parameter to cache the functionality instead of 
  * recalculation in every function call.
  * To add functionality to the element, you can also simply write your own competence and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 
@@ -349,7 +349,6 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_face_neighbors (int face, std::optional<std::reference_wrapper<std::vector<int>>> dual_faces = std::nullopt) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
-    SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
     if constexpr (has_face_neighbor_cache ()) {
       if (this->neighbor_cache_filled (face)) {
         if (dual_faces) {
@@ -517,6 +516,16 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_local_tree_id () const
   {
     return m_tree_id;
+  }
+
+  /** Getter for the underlying forest element pointer.
+   *  This function is mainly relevant for writing custom competences that need to access t8code functionality.
+   * \return Pointer to the underlying forest element.
+   */
+  const t8_element_t*
+  get_forest_element () const
+  {
+    return m_element;
   }
 
   /** Getter for the local element id in the tree of the element in the forest related to the mesh.

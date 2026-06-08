@@ -31,7 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
-#include <mesh_handle/data_handler.hxx>
+#include <mesh_handle/competences/element_data_competences.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
 #include <vector>

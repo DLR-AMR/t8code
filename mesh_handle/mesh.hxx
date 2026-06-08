@@ -30,8 +30,8 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "internal/adapt.hxx"
+#include "competences/element_data_competences.hxx"
 #include "concepts.hxx"
-#include "data_handler.hxx"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
@@ -177,7 +177,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   * \return true if the local elements are balanced, false otherwise.
   */
   bool
-  is_balanced ()
+  is_balanced () const
   {
     return t8_forest_is_balanced (m_forest);
   }
@@ -303,6 +303,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   void
   set_adapt (adapt_callback_type adapt_callback)
   {
+    SC_CHECK_ABORT (m_forest->incomplete_trees == 0, "The mesh handle can't adapt forests with incomplete trees.\n");
     if (!m_uncommitted_forest.has_value ()) {
       m_uncommitted_forest.emplace ();
       t8_forest_init (&*m_uncommitted_forest);
@@ -418,6 +419,24 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   has_element_data_handler_competence ()
   {
     return requires (SelfType& mesh) { mesh.get_element_data (); };
+  }
+
+  /** Function that checks if a competence to determine the ranks of the elements is given.
+   * \return true if mesh has the competence, false otherwise.
+   */
+  static constexpr bool
+  has_remote_ranks_mesh_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.fill_rank_vector (); };
+  }
+
+  /** Function that checks if a competence to determine a unique vector of the faces is given.
+   * \return true if mesh has the competence, false otherwise.
+   */
+  static constexpr bool
+  has_face_vector_mesh_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.fill_unique_face_vector (); };
   }
 
  private:
