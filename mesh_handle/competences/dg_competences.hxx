@@ -51,27 +51,27 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
 {
  public:
   /**
-   * Fill \a ranks with LOCAL_RANK for each local element and with the
+   * Fill \a m_ranks with LOCAL_RANK for each local element and with the
    * corresponding remote MPI rank for each ghost element, i.e.:
-   *   ranks[0 .. num_local_elements - 1]  = LOCAL_RANK
-   *   ranks[num_local_elements .. num_local_elements + num_ghosts - 1]
+   *   m_ranks[0 .. num_local_elements - 1]  = LOCAL_RANK
+   *   m_ranks[num_local_elements .. num_local_elements + num_ghosts - 1]
    *                                         = remote rank of that ghost
    */
   void
-  set_rank_vector () const
+  fill_rank_vector () const
   {
     const TUnderlying& mesh = this->underlying ();
     const t8_locidx_t num_local = mesh.get_num_local_elements ();
     const t8_locidx_t num_ghosts = mesh.get_num_ghosts ();
     // Nothing to do if all elements are local.
     if (num_ghosts == 0) {
-      ranks.assign (num_local, LOCAL_RANK);
+      m_ranks.assign (num_local, LOCAL_RANK);
       return;
     }
 
     /* --- Local elements: rank = LOCAL_RANK --- */
-    ranks.resize (num_local + num_ghosts);
-    std::fill_n (ranks.begin (), num_local, LOCAL_RANK);
+    m_ranks.resize (num_local + num_ghosts);
+    std::fill_n (m_ranks.begin (), num_local, LOCAL_RANK);
 
     /* --- Ghost elements: determine rank per ghost element. --- */
     /* Get array with remote ranks in ascending order. */
@@ -97,7 +97,7 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
 
       /* Write remote rank for every ghost element of this remote. */
       for (t8_locidx_t ielem = 0; ielem < num_elems_of_remote; ++ielem) {
-        ranks[num_local + first_elem + ielem] = remote;
+        m_ranks[num_local + first_elem + ielem] = remote;
       }
     }
   }
@@ -105,17 +105,17 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
   /**
    * Get the rank associated with a given element handle.
    * \param[in] element_handle_id The ID of the element handle.
-   * \return The rank of the specified element if \ref set_rank_vector was called beforehand.
+   * \return The rank of the specified element if \ref fill_rank_vector was called beforehand.
    */
   int
   get_rank (t8_locidx_t element_handle_id) const
   {
-    T8_ASSERT (static_cast<size_t> (element_handle_id) < ranks.size ());
-    return ranks[element_handle_id];
+    T8_ASSERT (static_cast<size_t> (element_handle_id) < m_ranks.size ());
+    return m_ranks[element_handle_id];
   }
 
  protected:
-  mutable std::vector<int> ranks;  ///< The rank of the owner for each element.
+  mutable std::vector<int> m_ranks;  ///< The rank of the owner for each element.
 };
 
 /** Type of the face. */
@@ -178,7 +178,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
    * index of the corresponding face in m_faces.
    */
   void
-  set_unique_face_vector () const
+  fill_unique_face_vector () const
   {
     if (!m_faces.empty () || !m_element_face_vector.empty ()) {
       m_faces.clear ();
@@ -188,7 +188,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
     T8_ASSERT (mesh.is_balanced ());
     // Ensure that rank vector is set.
     if constexpr (TUnderlying::has_remote_ranks_mesh_competence ()) {
-      mesh.set_rank_vector ();
+      mesh.fill_rank_vector ();
     }
     else {
       SC_ABORT ("Use remote_ranks_mesh_competence together with face_vector_mesh_competence.\n");
@@ -317,25 +317,25 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
     }
   }
 
-  /** Get the vector of unique faces. \ref set_unique_face_vector must be called beforehand to populate the vector.
+  /** Get the vector of unique faces. \ref fill_unique_face_vector must be called beforehand to populate the vector.
    * \return Const reference to the vector of faces.
    */
   const std::vector<face>&
   get_unique_face_vector () const
   {
-    T8_ASSERTF (!m_faces.empty (), "m_faces has not been set. Call set_unique_face_vector() first.");
+    T8_ASSERTF (!m_faces.empty (), "m_faces has not been set. Call fill_unique_face_vector() first.");
     return m_faces;
   }
 
   /** Get the vector with indices of faces for each mesh handle element.
-   * \ref set_unique_face_vector must be called beforehand to populate the vector.
+   * \ref fill_unique_face_vector must be called beforehand to populate the vector.
    * \return Const reference to the element-face vector.
    */
   const std::vector<std::vector<int>>&
   get_element_face_vector () const
   {
     T8_ASSERTF (!m_element_face_vector.empty (),
-                " m_element_face_vector has not been set. Call set_unique_face_vector() first.");
+                " m_element_face_vector has not been set. Call fill_unique_face_vector() first.");
     return m_element_face_vector;
   }
 

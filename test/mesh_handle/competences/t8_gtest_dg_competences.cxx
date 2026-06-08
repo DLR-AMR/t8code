@@ -91,7 +91,7 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   mesh->set_element_data (std::move (element_data));
   // Get element data and check that the remote ranks competence works as expected.
   mesh->exchange_ghost_data ();
-  mesh->set_rank_vector ();
+  mesh->fill_rank_vector ();
   for (const auto& elem : *mesh) {
     EXPECT_EQ (elem.get_element_data ().rank, mpirank);
     EXPECT_EQ (LOCAL_RANK, mesh->get_rank (elem.get_element_handle_id ()));
@@ -117,7 +117,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
   mesh->commit ();
 
   // Set the face vector using the competence function.
-  mesh->set_unique_face_vector ();
+  mesh->fill_unique_face_vector ();
 
   const auto& faces = mesh->get_unique_face_vector ();
   const auto& element_face_vector = mesh->get_element_face_vector ();
@@ -151,7 +151,8 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
     std::vector<int> dual_faces;
     auto neighs = elem_first.get_face_neighbors (face.sides[0].local_face_id, dual_faces);
     /* --- BOUNDARY --- */
-    if (face.type == face_type::BOUNDARY) {
+    switch (face.type) {
+    case face_type::BOUNDARY:
       EXPECT_EQ (face.sides.size (), 1) << "BOUNDARY face must have exactly 1 side.";
       EXPECT_EQ (face.sides[0].rank, LOCAL_RANK) << "BOUNDARY side must be local.";
       EXPECT_FALSE (elem_first.is_ghost_element ()) << "BOUNDARY side element must be local.";
@@ -161,18 +162,19 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
                                                   t8_forest_get_scheme (mesh->get_forest ()),
                                                   elem_first.get_forest_element (), face.sides[0].local_face_id))
         << "BOUNDARY side face orientation must match the one computed from the forest.";
-    }
+      break;
     /* --- CONFORMAL --- */
-    else if (face.type == face_type::CONFORMAL || face.type == face_type::MPI_CONFORMAL) {
-      EXPECT_EQ (face.sides.size (), 2) << "CONFORMAL face must have exactly 2 sides.";
-      EXPECT_EQ (face.sides[0].rank, LOCAL_RANK) << "CONFORMAL primary side must be local.";
-      if (face.type == face_type::CONFORMAL) {
-        EXPECT_EQ (face.sides[1].rank, LOCAL_RANK) << "CONFORMAL secondary side must be local.";
-      }
-      else {
+    case face_type::CONFORMAL:
+      EXPECT_EQ (face.sides[1].rank, LOCAL_RANK) << "CONFORMAL secondary side must be local.";
+      [[fallthrough]];
+    case face_type::MPI_CONFORMAL:
+      if (face.type == face_type::MPI_CONFORMAL) {
         EXPECT_EQ (face.sides[1].rank, mesh->get_rank (face.sides[1].element_id))
           << "MPI_CONFORMAL secondary side must be remote.";
       }
+      EXPECT_EQ (face.sides.size (), 2) << "CONFORMAL face must have exactly 2 sides.";
+      EXPECT_EQ (face.sides[0].rank, LOCAL_RANK) << "CONFORMAL primary side must be local.";
+
       EXPECT_EQ (neighs.size (), 1) << "CONFORMAL side must have exactly one neighbor.";
       EXPECT_EQ (neighs[0]->get_element_handle_id (), face.sides[1].element_id)
         << "CONFORMAL side neighbor must match the second side of the face.";
@@ -182,18 +184,17 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
                                                   t8_forest_get_scheme (mesh->get_forest ()),
                                                   neighs[0]->get_forest_element (), dual_faces[0]))
         << "CONFORMAL side face orientation must match.";
-    }
+      break;
     /* --- MORTAR --- */
-    else if (face.type == face_type::MORTAR || face.type == face_type::MPI_MORTAR) {
+    case face_type::MORTAR:
+      // Check that first element is the large mortar.
+      // For MPI_MORTARs, the large mortar could have only one neighbor.
+      EXPECT_GT (neighs.size (), 1) << "MORTAR face must have more than 2 sides.";
+      [[fallthrough]];
+    case face_type::MPI_MORTAR: {
       bool has_remote = std::any_of (face.sides.begin (), face.sides.end (),
                                      [] (const face_side& s) { return s.rank != LOCAL_RANK; });
       EXPECT_EQ (has_remote, face.type == face_type::MPI_MORTAR);
-
-      if (face.type == face_type::MORTAR) {
-        // Check that first element is the large mortar.
-        // For MPI_MORTARs, the large mortar could have only one neighbor.
-        EXPECT_GT (neighs.size (), 1) << "MORTAR face must have more than 2 sides.";
-      }
       EXPECT_EQ (neighs[0]->get_level (), elem_first.get_level () + 1)
         << "MORTAR first element must be the large mortar.";
       EXPECT_EQ (neighs.size (), face.sides.size () - 1)
@@ -216,6 +217,10 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
                                                     neighs[ineigh]->get_forest_element (), dual_faces[ineigh]))
           << "MORTAR side face orientation must match.";
       }
+      break;
+    }
+    default:
+      EXPECT_TRUE (false) << "The face type should be valid such that this code is unreachable.";
     }
 
     // This ensures that the element_face_vector is filled correctly.

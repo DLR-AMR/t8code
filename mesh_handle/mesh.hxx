@@ -427,7 +427,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   static constexpr bool
   has_remote_ranks_mesh_competence ()
   {
-    return requires (SelfType& mesh) { mesh.set_rank_vector (); };
+    return requires (SelfType& mesh) { mesh.fill_rank_vector (); };
   }
 
   /** Function that checks if a competence to determine a unique vector of the faces is given.
@@ -436,7 +436,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   static constexpr bool
   has_face_vector_mesh_competence ()
   {
-    return requires (SelfType& mesh) { mesh.set_unique_face_vector (); };
+    return requires (SelfType& mesh) { mesh.fill_unique_face_vector (); };
   }
 
  private:
