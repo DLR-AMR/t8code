@@ -477,6 +477,31 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     return t8_forest_get_scheme (m_mesh->m_forest)->element_get_face_shape (get_tree_class (), m_element, face);
   }
 
+  /** The number of vertices adjacent to \a face.
+   * \param [in] face Index of a face of the element.
+   * \return Number of vertices.
+   */
+  int
+  get_num_vertices_of_face (int face) const
+  {
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
+    return t8_eclass_num_vertices[get_face_shape (face)];
+  }
+
+  /** Maps vertex index of \a face to the vertex index of the element.
+   * \param [in] face Index of a face of the element.
+   * \param [in] vertex Vertex index of the face (should lie in [0, \ref get_num_vertices_of_face).
+   * \return Vertex index of the element (lies in [0, \ref get_num_vertices).
+   */
+  int
+  face_vertex_to_element_vertex (int face, int vertex) const
+  {
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
+    T8_ASSERT (get_num_vertices_of_face (face) > vertex);
+    return t8_forest_get_scheme (m_mesh->m_forest)
+      ->element_get_face_corner (get_tree_class (), m_element, face, vertex);
+  }
+
   // --- Print for the element for debugging purpose. ---
 #if T8_ENABLE_DEBUG
   /** Print the element. 
