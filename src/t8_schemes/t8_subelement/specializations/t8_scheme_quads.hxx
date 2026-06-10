@@ -364,7 +364,7 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
 
     /* 1) convert the subelement type from a decimal to a binary representation */
     int type = subelement->subelement_type;
-    int num_faces_quad = T8_ELEMENT_NUM_CORNERS[T8_ECLASS_QUAD];
+    int num_faces_quad = T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD];
     int binary_array[num_faces_quad] = {};
 
     for (
