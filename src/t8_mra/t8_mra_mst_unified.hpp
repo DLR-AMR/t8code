@@ -161,6 +161,56 @@ class UnifiedMST
   static constexpr unsigned int DOF = TElement::DOF;
 
   /**
+   * @brief Compute detail coefficients for leaf families without modifying the grid data
+   *
+   * For every complete family whose children are present in lmi_map at levels
+   * (l_min, l_max], the parent element (u_coeffs + details) is computed and
+   * stored in d_map at the parent level. lmi_map stays untouched, so the
+   * single-scale leaf representation remains valid.
+   *
+   * Used for refinement: details are needed for thresholding / Harten's
+   * prediction, but the grid keeps its leaves.
+   *
+   * @param l_min Minimum refinement level
+   * @param l_max Maximum refinement level
+   * @param lmi_map Map from levelmultiindex to element data (read-only here)
+   * @param d_map Detail coefficient storage (output)
+   * @param mask_coefficients Mask coefficient matrices M[k]
+   */
+  static void
+  leaf_details (unsigned int l_min, unsigned int l_max, levelindex_map<levelmultiindex, element_t> *lmi_map,
+                levelindex_map<levelmultiindex, element_t> &d_map, const std::vector<t8_mra::mat> &mask_coefficients)
+  {
+    index_set I_set;
+    element_t data_on_coarse;
+    std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
+
+    for (auto l = l_max; l > l_min; --l) {
+      for (const auto &[lmi, _] : lmi_map->operator[] (l))
+        I_set.emplace (t8_mra::parent_lmi (lmi));
+
+      for (const auto &lmi : I_set) {
+        const auto siblings_lmi = t8_mra::children_lmi (lmi);
+
+        // Incomplete families (siblings on finer levels) carry no detail information
+        const auto family_complete
+          = std::all_of (siblings_lmi.begin (), siblings_lmi.end (),
+                         [&] (const levelmultiindex &sibling) { return lmi_map->contains (sibling); });
+        if (!family_complete)
+          continue;
+
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+          data_on_siblings[k] = lmi_map->get (siblings_lmi[k]);
+
+        transform_family (data_on_siblings, data_on_coarse, mask_coefficients);
+        d_map.insert (lmi, data_on_coarse);
+      }
+
+      I_set.clear ();
+    }
+  }
+
+  /**
    * @brief Forward multiscale transformation (restriction: fine -> coarse)
    *
    * Computes parent coefficients and detail coefficients:

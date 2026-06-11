@@ -256,6 +256,23 @@ class multiscale_base: public multiscale_data<TShape> {
     MST::inverse_transformation (l_min, l_max, get_lmi_map (), d_map, mask_coefficients);
   }
 
+  /**
+   * @brief Compute details of leaf families without modifying the grid data
+   *
+   * Non-destructive counterpart of multiscale_transformation: fills d_map at
+   * the parent levels of complete leaf families in (l_min, l_max], while
+   * lmi_map keeps the single-scale leaf representation. Basis for the
+   * refinement criterion (thresholding / Harten's prediction on details).
+   *
+   * @param l_min Minimum refinement level
+   * @param l_max Maximum refinement level
+   */
+  void
+  compute_leaf_details (unsigned int l_min, unsigned int l_max)
+  {
+    MST::leaf_details (l_min, l_max, get_lmi_map (), d_map, mask_coefficients);
+  }
+
   //=============================================================================
   // Thresholding (Element-specific via virtual function)
   //=============================================================================
