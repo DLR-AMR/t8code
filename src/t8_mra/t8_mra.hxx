@@ -20,8 +20,13 @@
  *
  * t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, comm);
  *
- * // Project a function onto a uniform forest of level max_level
+ * // Project a function onto a uniform forest of level max_level ...
  * mra.initialize_data (cmesh, scheme, max_level, func);
+ *
+ * // ... or build the grid bottom-up: refine towards max_level only where
+ * // the coarsening criterion finds significant details (never builds the
+ * // uniform fine grid)
+ * mra.initialize_data_adaptive (cmesh, scheme, max_level, func);
  *
  * // Adapt: defaults are hard thresholding / Harten's prediction ...
  * mra.coarsen (min_level, max_level);
