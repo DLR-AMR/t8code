@@ -27,6 +27,7 @@
 #include <sc_statistics.h>
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_types/t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
@@ -51,6 +52,7 @@
 #include <t8_data/t8_element_array_iterator.hxx>
 
 #include <algorithm>
+#include <span>
 #include <vector>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -514,6 +516,33 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
                                      coordinates);
 }
 
+/* Compute the center of mass of an element. We can use the element reference
+ * coordinates of the centroid.*/
+void
+t8_forest_element_linear_centroid (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                   double *coordinates_c)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  std::span<double, 3> coordinates = std::span<double, 3> (coordinates_c, 3);
+  std::fill (coordinates.begin (), coordinates.end (), 0);
+
+  /* Get the tree's eclass and scheme. */
+  T8_ASSERT (scheme->element_is_valid (tree_class, element));
+
+  /* Get the element class and calculate the centroid using its corners. The centroid is
+    the sum of all corner coordinates divided by the number of corners. */
+  const t8_element_shape_t element_shape = scheme->element_get_shape (tree_class, element);
+  const int num_corners = t8_eclass_num_vertices[element_shape];
+  std::array<double, 3> corner {};
+  for (int icorner = 0; icorner < num_corners; ++icorner) {
+    t8_forest_element_coordinate (forest, ltreeid, element, icorner, corner.data ());
+    t8_axpy (corner.data (), coordinates.data (), 1);
+  }
+  t8_ax (coordinates.data (), 1.0 / num_corners);
+}
+
 /* Compute the length of the line from one corner to a second corner in an element */
 static double
 t8_forest_element_line_length (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int corner_a,
@@ -874,52 +903,6 @@ t8_forest_element_face_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const 
   }
 }
 
-#if T8_ENABLE_DEBUG
-/* Test whether four given points in 3D are coplanar up to a given tolerance.
- */
-static int
-t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double p_2[3], const double p_3[3],
-                         const double tolerance)
-{
-  /* Let p0, p1, p2, p3 be the four points.
-   * The four points are coplanar if the normal vectors to the triangles
-   * p0, p1, p2 and p0, p2, p3 are pointing in the same direction.
-   *
-   * We build the vectors A = p1 - p0, B = p2 - p0 and C = p3 - p0.
-   * The normal vectors to the triangles are n1 = A x B and n2 = A x C.
-   * These are pointing in the same direction if their cross product is 0.
-   * Hence we check if || n1 x n2 || < tolerance. */
-
-  /* A = p1 - p0 */
-  double A[3];
-  t8_axpyz (p_0, p_1, A, -1);
-
-  /* B = p2 - p0 */
-  double B[3];
-  t8_axpyz (p_0, p_2, B, -1);
-
-  /* C = p3 - p0 */
-  double C[3];
-  t8_axpyz (p_0, p_3, C, -1);
-
-  /* n1 = A x B */
-  double A_cross_B[3];
-  t8_cross_3D (A, B, A_cross_B);
-
-  /* n2 = A x C */
-  double A_cross_C[3];
-  t8_cross_3D (A, C, A_cross_C);
-
-  /* n1 x n2 */
-  double n1_cross_n2[3];
-  t8_cross_3D (A_cross_B, A_cross_C, n1_cross_n2);
-
-  /* || n1 x n2 || */
-  const double norm = t8_norm (n1_cross_n2);
-  return norm < tolerance;
-}
-#endif
-
 void
 t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
                                double normal[3])
@@ -987,7 +970,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     t8_forest_element_coordinate (forest, ltreeid, element, corner_a, vertex_a);
     t8_forest_element_coordinate (forest, ltreeid, element, corner_b, vertex_b);
     /* Compute the center */
-    t8_forest_element_centroid (forest, ltreeid, element, center);
+    t8_forest_element_linear_centroid (forest, ltreeid, element, center);
 
     /* Compute the difference with V_a.
        * Compute the dot products */
@@ -1034,13 +1017,13 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 #if T8_ENABLE_DEBUG
     /* Issue a warning if the points of the quad do not lie in the same plane */
     {
-      double p_0[3], p_1[3], p_2[3], p_3[3];
+      t8_3D_vec p_0, p_1, p_2, p_3;
       /* Compute the vertex coordinates of the quad */
-      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
-      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
-      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
-      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
-      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, 1e-16)) {
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1.data ());
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2.data ());
+      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3.data ());
+      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, T8_PRECISION_SQRT_EPS)) {
         t8_debugf ("WARNING: Computing normal to a quad that is not coplanar. This computation will be inaccurate.\n");
       }
     }
@@ -1069,7 +1052,7 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     norm = t8_norm (normal);
     T8_ASSERT (norm > 1e-14);
     /* Compute the coordinates of the center of the element */
-    t8_forest_element_centroid (forest, ltreeid, element, center);
+    t8_forest_element_linear_centroid (forest, ltreeid, element, center);
     /* Compute center = center - vertex_0 */
     t8_axpy (corner_vertices[0], center, -1);
     /* Compute the dot-product of normal and center */
@@ -1614,7 +1597,7 @@ t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, 
 /** Internal data used for t8_forest_leaf_face_neighbors_iterate
  * to buffer face neighbor information during leaf face neighbor search
  * \ref t8_forest_leaf_face_neighbors_ext
- * 
+ *
  * Given an element and a face, the search iterates through all leaves
  * at that face and stores their information in this buffer.
  * After the search the entries of the buffer are used and the
@@ -1672,10 +1655,10 @@ t8_forest_leaf_face_neighbors_iterate (const t8_forest_t forest, const t8_locidx
   return 1;
 }
 
-/** 
+/**
  * Set the proper return values of the leaf face neighbor computation
  * in case that no neighbors are found.
- * 
+ *
  * \param [out]   pneighbor_leaves If not NULL, will be set to NULL.
  * \param [out]   dual_faces Will be set to NULL.
  * \param [out]   num_neighbors Will be set to 0.
@@ -1852,7 +1835,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
     T8_ASSERT (tree_leaves != NULL);
     const t8_element_t *first_descendant;
     /*
-    * Compute the index of the first leaf in tree_leaves that is an ancestor or descendant of 
+    * Compute the index of the first leaf in tree_leaves that is an ancestor or descendant of
     * the same_level_neighbor (might be the neighbor itself).
     * Such an element might not exist in which case there are no neighbors in this tree_leaves
     * array.
@@ -1896,7 +1879,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
       else {
         /* We need to compute the first element that is not longer contained in the same_level_neighbor.
          * To do so, we compute the successor of the same_level_neighbor and do
-         * an upper search for it in the leaf array. 
+         * an upper search for it in the leaf array.
          * The found element (if existing) is the first leaf that is not a descendant of same_level_neighbor. */
         /* The successor might not exist because the same level neighbor is the last
          * element of its level in the tree.
@@ -2071,6 +2054,36 @@ t8_forest_same_level_leaf_face_neighbor_index (const t8_forest_t forest, const t
   T8_FREE (dual_faces);
 
   return neigh_index;
+}
+
+int
+t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf, int face,
+                                 t8_eclass_t neighbor_tree_class, const t8_element_t *neighbor_leaf, int neighbor_face)
+{
+  t8_scheme const *scheme = t8_forest_get_scheme (forest);
+
+  t8_element_t *target_virtual_face_neighbor = nullptr;  // the neighbor subface we are looking for
+  scheme->element_new (neighbor_tree_class, 1, &target_virtual_face_neighbor);
+  t8_forest_element_face_neighbor (forest, ltreeid, leaf, target_virtual_face_neighbor, neighbor_tree_class, face,
+                                   nullptr);
+
+  int const num_children = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
+
+  std::array<t8_element_t *, T8_ECLASS_MAX_FACE_CHILDREN> children;  // assumes the forest is (locally) 2:1 balanced
+  scheme->element_new (neighbor_tree_class, children.size (), children.begin ());
+
+  scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face, children.begin (),
+                                        num_children, nullptr);
+
+  auto iter = std::find_if (children.begin (), children.end (), [&] (t8_element *candidate) -> bool {
+    return scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, candidate) == 0;
+  });
+  T8_ASSERT (iter != children.end ());  // make sure target_virtual_face_neighbor was found
+  int neighbor_subface_index = iter - children.begin ();
+
+  scheme->element_destroy (neighbor_tree_class, 4, children.begin ());
+  scheme->element_destroy (neighbor_tree_class, 1, &target_virtual_face_neighbor);
+  return neighbor_subface_index;
 }
 
 void

@@ -40,7 +40,7 @@
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 {
 
-  std::string fileprefix = std::string (T8_TEST_DATA_DIR) + "/test_msh_file_vers4_ascii";
+  auto fileprefix = t8_test_data_dir / "test_msh_file_vers4_ascii";
   char filename[BUFSIZ];
 
   snprintf (filename, BUFSIZ, "%s.msh", fileprefix.c_str ());
@@ -58,7 +58,7 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
 TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
 {
 
-  std::string fileprefix = std::string (T8_TEST_DATA_DIR) + "/test_msh_file_vers4_bin";
+  auto fileprefix = t8_test_data_dir / "test_msh_file_vers4_bin";
   char filename[BUFSIZ];
 
   snprintf (filename, BUFSIZ, "%s.msh", fileprefix.c_str ());

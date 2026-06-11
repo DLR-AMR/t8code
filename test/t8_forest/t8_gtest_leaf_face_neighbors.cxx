@@ -413,17 +413,17 @@ t8_test_adapt_first_tree (t8_forest_t forest, [[maybe_unused]] t8_forest_t fores
  * this setting resulted in errors.
  * This, we implemented it as a test case in order to catch possible errors again in the future.
  * The mesh consists of 2 quad trees that are connected via nontrivial orientation.
- * 
+ *
  * - Load msh file with 2 quad trees
  * - Adapt mesh such that the first tree is refined once uniformly.
  * - Iterate over all mesh elements and compute the leaf face neighbors.
- * 
+ *
  *   __ __ _____
  *  |__|__|     |
- *  |__|__|_____|  
+ *  |__|__|_____|
  *  Tree_0 Tree_1
- *    
- * 
+ *
+ *
 */
 class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
  protected:
@@ -432,7 +432,7 @@ class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
   {
 
     /* Read our specific mesh file into a cmesh and build a forest. */
-    const std::string meshfile_prefix = std::string (T8_TEST_DATA_DIR) + "/test_twosquares_twisted";
+    auto meshfile_prefix = t8_test_data_dir / "test_twosquares_twisted";
     const int partition_mesh = 0;
     const int mesh_dim = 2;
     const int main_proc = 0;
