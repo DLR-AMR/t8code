@@ -29,7 +29,7 @@
 
 #include <t8.h>
 #include <t8_data/t8_shmem.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_save.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.h>
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_scheme.h>
 
@@ -432,7 +432,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  * \param[in] cmesh The cmesh to save.
  * \param[in] fileprefix The prefix of the file to save the cmesh to.
  *
- * \note Currently, it is only legal to save cmeshes that use the linear geometry.
+ * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
+ *                  Calling it will thus result in an error.
+ * \note So far, it was only legal to save cmeshes that use the linear geometry.
  */
 int
 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
@@ -442,6 +444,9 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
  *
  * \param[in] filename The name of the file to load the cmesh from.
  * \param[in] comm The MPI communicator to use.
+ *
+ * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
+ *                  Calling it will thus result in an error.
  */
 t8_cmesh_t
 t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
@@ -455,6 +460,8 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
  * \param[in] mode The load mode to use, see \ref t8_load_mode_t.
  * \param[in] procs_per_node The number of processes per node, only relevant in JUQUEEN mode.
  *
+ * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
+ *                  Calling it will thus result in an error.
  * \note \a procs_per_node is only relevant in mode==JUQUEEN. If \a num_files = 1 a replicated cmesh is constructed.
  */
 t8_cmesh_t

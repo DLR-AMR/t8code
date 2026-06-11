@@ -27,8 +27,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #pragma once
 
 #include <t8.h>
-#include <t8_element/t8_element.h>
+#include "competences/element_data_competences.hxx"
 #include <t8_eclass/t8_eclass.h>
+#include <t8_element/t8_element.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -43,7 +44,7 @@ namespace t8_mesh_handle
  * An element without specified template parameters provides default implementations for basic functionality 
  * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
  * the function is called. 
- * Use the competences defined in \ref competences.hxx as template parameter to cache the functionality instead of 
+ * Use the competences defined in \ref cache_element_competences.hxx as template parameter to cache the functionality instead of 
  * recalculation in every function call.
  * To add functionality to the element, you can also simply write your own competence and give it as a template parameter.
  * You can access the functions implemented in your competence via the element. 
@@ -60,9 +61,12 @@ namespace t8_mesh_handle
 template <typename TMeshClass, template <typename> class... TCompetences>
 class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
  private:
-  using SelfType
-    = element<TMeshClass, TCompetences...>; /**< Type of the current class with all template parameters specified. */
+  using SelfType = element<TMeshClass, TCompetences...>; /**< Type of the current class with all template
+                                   parameters specified. */
   friend TMeshClass; /**< Define TMeshClass as friend to be able to access e.g. the constructor. */
+  friend struct element_data_element_competence<
+    SelfType>; /**< Define the competence to access element data as friend to
+                    be able to access e.g. the mesh. */
 
   /** Private constructor for an element of a mesh. This could be a simple mesh element or a ghost element.
    *  This constructor should only be called by the TMeshClass (and invisible for the user).
@@ -176,6 +180,15 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   has_face_normals_cache ()
   {
     return requires (SelfType& element) { element.face_normal_cache_filled (0); };
+  }
+
+  /** Function that checks if a competence for element data handling is given to the element.
+   * \return true if element has a data handler, false otherwise.
+   */
+  static constexpr bool
+  has_element_data_handler_competence ()
+  {
+    return requires (SelfType& element) { element.get_element_data (); };
   }
 
   // --- Functionality of the element. In each function, it is checked if a cached version exists (and is used then). ---
@@ -336,7 +349,6 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_face_neighbors (int face, std::optional<std::reference_wrapper<std::vector<int>>> dual_faces = std::nullopt) const
   {
     T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
-    SC_CHECK_ABORT (!m_is_ghost_element, "get_face_neighbors is not implemented for ghost elements.\n");
     if constexpr (has_face_neighbor_cache ()) {
       if (this->neighbor_cache_filled (face)) {
         if (dual_faces) {
@@ -345,15 +357,14 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
         return this->m_neighbors[face];
       }
     }
-
-    t8_element_t** neighbors; /**< Neighboring elements. */
-    int* dual_faces_internal; /**< Face indices of the neighbor elements. */
-    int num_neighbors;        /**< Number of neighboring elements. */
-    t8_locidx_t* neighids;    /**< Neighboring elements ids. */
-    t8_eclass_t neigh_class;  /**< Neighboring elements tree class. */
+    const t8_element_t** neighbors; /**< Neighboring elements. */
+    int* dual_faces_internal;       /**< Face indices of the neighbor elements. */
+    int num_neighbors;              /**< Number of neighboring elements. */
+    t8_locidx_t* neighids;          /**< Neighboring elements ids. */
+    t8_eclass_t neigh_class;        /**< Neighboring elements tree class. */
 
     t8_forest_leaf_face_neighbors (m_mesh->m_forest, m_tree_id, m_element, &neighbors, face, &dual_faces_internal,
-                                   &num_neighbors, &neighids, &neigh_class, t8_forest_is_balanced (m_mesh->m_forest));
+                                   &num_neighbors, &neighids, &neigh_class);
     if (dual_faces) {
       dual_faces->get ().assign (dual_faces_internal, dual_faces_internal + num_neighbors);
     }
@@ -369,7 +380,6 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
     if (num_neighbors > 0) {
       // Free allocated memory.
-      t8_forest_get_scheme (m_mesh->m_forest)->element_destroy (get_tree_class (), num_neighbors, neighbors);
       T8_FREE (neighbors);
       T8_FREE (dual_faces_internal);
       T8_FREE (neighids);
@@ -467,6 +477,31 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     return t8_forest_get_scheme (m_mesh->m_forest)->element_get_face_shape (get_tree_class (), m_element, face);
   }
 
+  /** The number of vertices adjacent to \a face.
+   * \param [in] face Index of a face of the element.
+   * \return Number of vertices.
+   */
+  int
+  get_num_vertices_of_face (int face) const
+  {
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
+    return t8_eclass_num_vertices[get_face_shape (face)];
+  }
+
+  /** Maps vertex index of \a face to the vertex index of the element.
+   * \param [in] face Index of a face of the element.
+   * \param [in] vertex Vertex index of the face (should lie in [0, \ref get_num_vertices_of_face).
+   * \return Vertex index of the element (lies in [0, \ref get_num_vertices).
+   */
+  int
+  face_vertex_to_element_vertex (int face, int vertex) const
+  {
+    T8_ASSERT ((face >= 0) && (face < get_num_faces ()));
+    T8_ASSERT (get_num_vertices_of_face (face) > vertex);
+    return t8_forest_get_scheme (m_mesh->m_forest)
+      ->element_get_face_corner (get_tree_class (), m_element, face, vertex);
+  }
+
   // --- Print for the element for debugging purpose. ---
 #if T8_ENABLE_DEBUG
   /** Print the element. 
@@ -508,6 +543,16 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     return m_tree_id;
   }
 
+  /** Getter for the underlying forest element pointer.
+   *  This function is mainly relevant for writing custom competences that need to access t8code functionality.
+   * \return Pointer to the underlying forest element.
+   */
+  const t8_element_t*
+  get_forest_element () const
+  {
+    return m_element;
+  }
+
   /** Getter for the local element id in the tree of the element in the forest related to the mesh.
    *  \warning This is related to t8code's tree structure and should not be confused with \ref mesh specific ids.
    *  For mesh specific id use \ref get_element_handle_id. 
@@ -536,38 +581,6 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   is_ghost_element () const
   {
     return m_is_ghost_element;
-  }
-
-  // --- Getter and setter for element data. ---
-  /** Getter for the element data.
-   * For ghost elements ensure that \ref mesh::exchange_ghost_data is called on each process first.
-   * Element data for non-ghost elements can be accessed (if set) directly.
-   * \return Element data with data of Type TMeshClass::ElementDataType.
-   */
-  template <typename TElementDataType = typename TMeshClass::ElementDataType,
-            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
-  const TElementDataType&
-  get_element_data () const
-  {
-    const t8_locidx_t handle_id = get_element_handle_id ();
-    T8_ASSERTF (static_cast<size_t> (handle_id) < m_mesh->m_element_data.size (), "Element data not set.\n");
-    return m_mesh->m_element_data[handle_id];
-  }
-
-  /** Set the element data for the element. 
-   * \note You can only set element data for non-ghost elements.
-   * \param [in] element_data The element data to be set.
-   */
-  template <typename TElementDataType = typename TMeshClass::ElementDataType,
-            typename = std::enable_if_t<!std::is_void<TElementDataType>::value>>
-  void
-  set_element_data (TElementDataType element_data)
-  {
-    SC_CHECK_ABORT (!m_is_ghost_element, "Element data cannot be set for ghost elements.\n");
-    // Resize for the case that no data vector has been set previously.
-    m_mesh->m_element_data.reserve (m_mesh->get_num_local_elements () + m_mesh->get_num_ghosts ());
-    m_mesh->m_element_data.resize (m_mesh->get_num_local_elements ());
-    m_mesh->m_element_data[get_element_handle_id ()] = std::move (element_data);
   }
 
  private:
