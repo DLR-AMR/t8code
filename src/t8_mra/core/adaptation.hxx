@@ -525,6 +525,93 @@ class multiscale_adaptation {
         break;
     }
   }
+
+  //=============================================================================
+  // Bottom-up Initialization
+  //=============================================================================
+
+  /**
+   * @brief Refine every leaf at the given level and project the initial data
+   *
+   * Unlike refine(), the children data is not predicted by the inverse
+   * two-scale transform but projected directly from the initial data, which
+   * is exact up to quadrature. Building block of the bottom-up
+   * initialization.
+   *
+   * @param level Level whose leaves are refined (children appear at level+1)
+   * @param func Initial data to project onto the new leaves
+   * @return Number of leaves refined
+   */
+  template <typename Func>
+  unsigned int
+  refine_by_projection (int level, Func &&func)
+  {
+    clear_multiscale_state ();
+
+    for (const auto &[lmi, _] : (*derived ().get_lmi_map ())[level])
+      derived ().refinement_set.insert (lmi);
+
+    const auto num_marked = derived ().refinement_set[level].size ();
+    if (num_marked == 0)
+      return 0;
+
+    adapt_forest (static_refinement_callback);
+
+    // The forest already carries the children, lmi_map still the parents.
+    // Project the initial data onto every leaf without map entry (exactly
+    // the new children), then drop the refined parents.
+    auto *lmi_map = derived ().get_lmi_map ();
+    auto *user_data = derived ().get_user_data ();
+
+    const auto num_local_trees = t8_forest_get_num_local_trees (derived ().forest);
+    auto current_idx = t8_locidx_t { 0 };
+    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+      const auto num_elements = t8_forest_get_tree_num_leaf_elements (derived ().forest, tree_idx);
+      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
+        if (lmi_map->contains (lmi))
+          continue;
+
+        const auto *element = t8_forest_get_leaf_element_in_tree (derived ().forest, tree_idx, ele_idx);
+        lmi_map->insert (lmi, derived ().project_leaf (tree_idx, element, func));
+      }
+    }
+
+    for (const auto &lmi : derived ().refinement_set[level])
+      lmi_map->erase (lmi);
+
+    clear_multiscale_state ();
+
+    return num_marked;
+  }
+
+  /**
+   * @brief Adaptive bottom-up initialization on given initial data
+   *
+   * Projects onto the uniform level-1 forest, then per level thresholds the
+   * details with the coarsening criterion and refines the significant leaves
+   * one further level by direct projection. Never builds the uniform
+   * max_level grid.
+   *
+   * @param mesh Coarse mesh
+   * @param scheme Element scheme
+   * @param max_level Maximum refinement level
+   * @param func Initial data to project
+   * @param criterion Coarsening criterion (default: hard thresholding)
+   */
+  template <typename Func, typename Criterion = hard_thresholding>
+    requires coarsening_criterion<Criterion, Derived>
+  void
+  initialize_data_adaptive (t8_cmesh_t mesh, const t8_scheme *scheme, int max_level, Func &&func,
+                            Criterion criterion = {})
+  {
+    derived ().initialize_data (mesh, scheme, 1, func);
+
+    for (auto l = 1; l < max_level; ++l) {
+      coarsen (std::max (l - 1, 1), l, criterion);
+      refine_by_projection (l, func);
+    }
+  }
 };
 
 }  // namespace t8_mra
