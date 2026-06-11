@@ -188,7 +188,6 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (Base::maximum_level);
     user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local_elements + num_ghost_elements);
     user_data->mra_instance = this;
-    user_data->current_refinement_level = level;
 
     const auto num_local_trees = t8_forest_get_num_local_trees (Base::forest);
     auto current_idx = 0u;
