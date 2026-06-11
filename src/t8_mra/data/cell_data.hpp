@@ -99,7 +99,7 @@ struct data_per_element
 
   std::array<int, 3> order;  // Point order
 
-  explicit data_per_element (): u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), order ({})
+  explicit data_per_element (): u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), vol (0.0), order ({})
   {
   }
 
