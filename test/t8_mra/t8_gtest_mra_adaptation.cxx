@@ -160,6 +160,28 @@ expect_maps_equal (const MapT &expected, const MapT &actual, unsigned int max_le
   }
 }
 
+/* Constant initial data: all detail coefficients vanish exactly, so the
+ * bottom-up initialization must never keep a refined level. */
+template <int U, int DIM>
+auto
+constant_func ()
+{
+  if constexpr (DIM == 2)
+    return [] (double, double) {
+      std::array<double, U> res;
+      for (auto u = 0; u < U; ++u)
+        res[u] = 3.0 * (u + 1);
+      return res;
+    };
+  else
+    return [] (double, double, double) {
+      std::array<double, U> res;
+      for (auto u = 0; u < U; ++u)
+        res[u] = 3.0 * (u + 1);
+      return res;
+    };
+}
+
 /* Custom coarsening criterion without prepare(): nothing is significant
  * -> coarsening must collapse the grid completely. Exercises the
  * coarsening_criterion extension point. */
@@ -315,6 +337,90 @@ TYPED_TEST (mra_adaptation, custom_criterion_collapse)
   mra.cleanup ();
   t8_cmesh_destroy (&cmesh);
   t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
+}
+
+/* Bottom-up initialization on constant data: every detail is exactly zero,
+ * so nothing is significant and the result must be the level-1 grid with
+ * the level-1 projection. */
+TYPED_TEST (mra_adaptation, bottom_up_constant_collapses)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+  auto mra = make_mra<Shape, U, P> (max_level);
+  auto reference = make_mra<Shape, U, P> (max_level);
+
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
+  auto *scheme = t8_scheme_new_default ();
+  /* Two forests consume one reference each; keep our own on top */
+  t8_cmesh_ref (cmesh);
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
+  mra.initialize_data_adaptive (cmesh, scheme, max_level, constant_func<U, DIM> ());
+  expect_forest_map_consistent (mra);
+
+  reference.initialize_data (cmesh, scheme, 1, constant_func<U, DIM> ());
+
+  EXPECT_EQ (t8_forest_get_global_num_leaf_elements (mra.get_forest ()),
+             t8_forest_get_global_num_leaf_elements (reference.get_forest ()));
+  expect_maps_equal (*reference.get_lmi_map (), *mra.get_lmi_map (), max_level, 1e-9);
+
+  mra.cleanup ();
+  reference.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
+}
+
+/* Bottom-up initialization on discontinuous data must produce an adaptive
+ * grid: strictly coarser than uniform, refined to max_level at the jump,
+ * and a valid starting point for the regular adaptation cycle. */
+TYPED_TEST (mra_adaptation, bottom_up_adaptive_grid)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  if constexpr (P == 1) {
+    GTEST_SKIP () << "coarsening behaviour for P=1 is threshold-dependent";
+  }
+  else {
+    using levelmultiindex = typename t8_mra::multiscale<Shape, U, P>::levelmultiindex;
+
+    const int max_level = (DIM == 3) ? 4 : 5;
+    auto mra = make_mra<Shape, U, P> (max_level);
+
+    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
+    auto *scheme = t8_scheme_new_default ();
+    t8_cmesh_ref (cmesh);
+    t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
+    mra.initialize_data_adaptive (cmesh, scheme, max_level, jump_func<U, DIM> ());
+    expect_forest_map_consistent (mra);
+
+    const auto num_adaptive = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+    const auto num_trees = t8_forest_get_num_global_trees (mra.get_forest ());
+    const auto num_uniform
+      = num_trees * static_cast<t8_gloidx_t> (std::pow (levelmultiindex::NUM_CHILDREN, max_level));
+
+    EXPECT_LT (num_adaptive, num_uniform) << "smooth regions must stay coarse";
+    EXPECT_GT (mra.get_lmi_map ()->size (max_level), 0u) << "the jump must reach max_level";
+    EXPECT_EQ (mra.get_lmi_map ()->size (0), 0u) << "level 1 is the minimum level";
+
+    /* The result must be a valid input for the regular adaptation cycle */
+    mra.coarsen (1, max_level);
+    expect_forest_map_consistent (mra);
+    EXPECT_LE (t8_forest_get_global_num_leaf_elements (mra.get_forest ()), num_adaptive);
+
+    mra.cleanup ();
+    t8_cmesh_destroy (&cmesh);
+    t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
+  }
 }
 
 }  // namespace
