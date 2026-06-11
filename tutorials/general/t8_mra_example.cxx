@@ -153,13 +153,9 @@ example_triangle_adaptive_with_plotting ()
   const int min_level = 0;
   const int max_level = 7;
   const double c_thresh = 1.0;
-  const int gamma = 1;
-  const int dunavant_rule = 10;
-  const bool balanced = false;
 
   // Create multiscale object
-  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, c_thresh, gamma, dunavant_rule, balanced,
-                                                    sc_MPI_COMM_WORLD);
+  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
 
   // Create mesh
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
@@ -188,7 +184,7 @@ example_triangle_adaptive_with_plotting ()
 
   // Perform adaptive coarsening
   std::cout << "2. Performing adaptive coarsening...\n";
-  mra.coarsen (min_level, max_level);
+  mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After coarsening:\n";
@@ -200,7 +196,7 @@ example_triangle_adaptive_with_plotting ()
 
   // Perform adaptive refinement
   std::cout << "3. Performing adaptive refinement...\n";
-  mra.refine (min_level, max_level);
+  mra.refine (min_level, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After refinement:\n";
@@ -213,7 +209,7 @@ example_triangle_adaptive_with_plotting ()
   // Coarsen again: the zero-detail children created by the refinement carry
   // no information and must be removed again -> grid close to step 1
   std::cout << "4. Performing second adaptive coarsening...\n";
-  mra.coarsen (min_level, max_level);
+  mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After second coarsening:\n";
@@ -248,13 +244,9 @@ example_quad_adaptive_with_plotting ()
   const int min_level = 0;
   const int max_level = 6;
   const double c_thresh = 0.1;
-  const int gamma = 1;
-  const int num_quad_points_1d = 4;
-  const bool balanced = false;
 
   // Create multiscale object
-  t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra (max_level, c_thresh, gamma, num_quad_points_1d, balanced,
-                                                sc_MPI_COMM_WORLD);
+  t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra (max_level, sc_MPI_COMM_WORLD);
 
   // Create mesh
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
@@ -283,7 +275,7 @@ example_quad_adaptive_with_plotting ()
 
   // Perform adaptive coarsening
   std::cout << "2. Performing adaptive coarsening...\n";
-  mra.coarsen (min_level, max_level);
+  mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After coarsening:\n";
@@ -295,7 +287,7 @@ example_quad_adaptive_with_plotting ()
 
   // Perform adaptive refinement
   std::cout << "3. Performing adaptive refinement...\n";
-  mra.refine (min_level, max_level);
+  mra.refine (min_level, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After refinement:\n";
@@ -331,13 +323,9 @@ example_hex_adaptive_with_plotting ()
   const int min_level = 0;
   const int max_level = 4;  // Lower max level for 3D (8^4 = 4096 elements)
   const double c_thresh = 1.0;
-  const int gamma = 1;
-  const int num_quad_points_1d = 4;
-  const bool balanced = false;
 
   // Create multiscale object for HEX
-  t8_mra::multiscale<T8_ECLASS_HEX, U, P> mra (max_level, c_thresh, gamma, num_quad_points_1d, balanced,
-                                               sc_MPI_COMM_WORLD);
+  t8_mra::multiscale<T8_ECLASS_HEX, U, P> mra (max_level, sc_MPI_COMM_WORLD);
 
   // Create 3D hypercube mesh
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
@@ -366,7 +354,7 @@ example_hex_adaptive_with_plotting ()
 
   // Perform adaptive coarsening
   std::cout << "2. Performing adaptive coarsening...\n";
-  mra.coarsen (min_level, max_level);
+  mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After coarsening:\n";
@@ -406,13 +394,9 @@ example_full_adaptation_cycle ()
   const int min_level = 2;
   const int max_level = 6;
   const double c_thresh = 0.03;
-  const int gamma = 1;
-  const int dunavant_rule = 5;
-  const bool balanced = false;
 
   // Create multiscale object
-  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, c_thresh, gamma, dunavant_rule, balanced,
-                                                    sc_MPI_COMM_WORLD);
+  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
 
   // Create mesh
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
@@ -475,9 +459,6 @@ example_comparison_test_functions ()
   const int min_level = 2;
   const int max_level = 5;
   const double c_thresh = 0.05;
-  const int gamma = 1;
-  const int num_quad_points_1d = 4;
-  const bool balanced = false;
 
   auto *scheme = t8_scheme_new_default ();
 
@@ -498,8 +479,7 @@ example_comparison_test_functions ()
     std::cout << "Testing function: " << test.name << "\n";
 
     // Create quad MRA
-    t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra (max_level, c_thresh, gamma, num_quad_points_1d, balanced,
-                                                  sc_MPI_COMM_WORLD);
+    t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra (max_level, sc_MPI_COMM_WORLD);
 
     // Create mesh
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
