@@ -307,7 +307,9 @@ class UnifiedMST
         transform_family (data_on_siblings, data_on_coarse, mask_coefficients);
 
         lmi_map->insert (lmi, data_on_coarse);
-        d_map[l - 1].emplace (lmi, data_on_coarse);
+        // insert (assignment) rather than emplace: a stale entry under this
+        // key must be overwritten, never silently kept
+        d_map.insert (lmi, data_on_coarse);
 
         // Consume only this family's children; members of skipped (incomplete)
         // families must stay in the map as leaves.

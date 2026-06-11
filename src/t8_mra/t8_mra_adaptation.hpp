@@ -247,6 +247,14 @@ class multiscale_adaptation {
       derived ().get_user_data ()->current_refinement_level = l;
 
       std::cout << "Before mst: " << derived ().get_user_data ()->lmi_map->size () << "\n";
+      // Start each pass with clean multiscale state; stale td_set/d_map
+      // entries would corrupt the thresholding (sync_d_with_td inserts
+      // empty elements for td entries missing from d_map)
+      derived ().d_map.erase_all ();
+      derived ().td_set.erase_all ();
+      derived ().refinement_set.erase_all ();
+      derived ().coarsening_set.erase_all ();
+
       derived ().multiscale_transformation (l - 1, l);
       derived ().threshold (l - 1, l);
       // restore_balancing (l - 1, l); /// TODO
@@ -280,12 +288,6 @@ class multiscale_adaptation {
 
       t8_forest_set_user_data (new_forest, new_user_data);
       t8_forest_iterate_replace (new_forest, derived ().forest, static_iterate_replace_callback);
-
-      // Clear sets for next iteration.
-      // We keep d_map as it stores the multiscale representation.
-      derived ().td_set.erase_all ();
-      derived ().refinement_set.erase_all ();
-      derived ().coarsening_set.erase_all ();
 
       // Cleanup old forest and user data
       auto *old_user_data = derived ().get_user_data ();
@@ -462,8 +464,14 @@ class multiscale_adaptation {
     std::cout << "Refinement analysis: " << num_families << " leaf families, " << derived ().td_set.size ()
               << " significant, max d/eps = " << max_ratio << ", " << num_marked << " leaves marked\n";
 
-    if (num_marked == 0)
+    if (num_marked == 0) {
+      // Leave no stale state behind (td_set still holds the significant
+      // families of the analysis)
+      derived ().td_set.erase_all ();
+      derived ().refinement_set.erase_all ();
+      derived ().coarsening_set.erase_all ();
       return 0;
+    }
 
     //--------------------------------------------------------------------------
     // Adaptation phase: one forest pass per level with marked leaves
