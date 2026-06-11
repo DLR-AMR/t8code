@@ -3,6 +3,8 @@
 #ifdef T8_ENABLE_MRA
 
 #include "t8_mra/t8_mra_base.hpp"
+#include "t8_mra/t8_mra_coarsening_criterion.hpp"
+#include "t8_mra/t8_mra_refinement_criterion.hpp"
 #include "t8_forest/t8_forest_adapt.h"
 #include "t8_forest/t8_forest_iterate.h"
 
@@ -17,9 +19,14 @@ namespace t8_mra
  *
  * Provides the t8code forest adaptation functionality:
  *   - coarsen(): remove non-significant detail information level by level
- *   - refine(): Harten's prediction (steep gradients + neighbourhood)
+ *   - refine(): refine steep families and grade their neighbourhood
  *   - the adapt/iterate_replace machinery keeping lmi_idx and lmi_map
  *     in sync with the forest leaves
+ *
+ * What counts as "significant" or in need of refinement is decided by
+ * exchangeable criteria: a coarsening_criterion (default: hard_thresholding,
+ * see t8_mra_coarsening_criterion.hpp) and a refinement_criterion (default:
+ * harten_prediction, see t8_mra_refinement_criterion.hpp).
  *
  * @tparam Derived CRTP-derived class (multiscale implementation)
  */
@@ -261,7 +268,7 @@ class multiscale_adaptation {
    * Per level l (fine to coarse, levels depend on each other):
    *   1. Two-scale transform of all complete leaf families at level l
    *      (parent data + details at level l-1).
-   *   2. Threshold the details; non-significant families lose their details
+   *   2. Apply the criterion; non-significant families lose their details
    *      and their children (the current leaves) are marked for coarsening.
    *   3. Inverse transform reconstructs the children of significant families
    *      exactly (details were kept).
@@ -269,24 +276,26 @@ class multiscale_adaptation {
    *
    * @param min_level Minimum level to coarsen to
    * @param max_level Maximum level to start from
+   * @param criterion Coarsening criterion (default: hard thresholding)
    */
+  template <typename Criterion = hard_thresholding>
+    requires coarsening_criterion<Criterion, Derived>
   void
-  coarsen (int min_level, int max_level)
+  coarsen (int min_level, int max_level, Criterion criterion = {})
   {
-    /// Scaling due to (2.39)
-    derived ().c_scaling = derived ().threshold_scaling_factor ();
+    if constexpr (criterion_has_prepare<Criterion, Derived>)
+      criterion.prepare (derived ());
 
     for (auto l = max_level; l > min_level; --l) {
       clear_multiscale_state ();
 
       derived ().multiscale_transformation (l - 1, l);
-      derived ().threshold (l - 1, l);
 
       // Prune non-significant families: drop their details and mark their
       // children for coarsening. Iterate over a copy since we erase entries.
       const auto details = derived ().d_map[l - 1];
       for (const auto &[lmi, _] : details) {
-        if (!derived ().td_set.contains (lmi)) {
+        if (!criterion.significant (derived (), lmi)) {
           derived ().d_map.erase (lmi);
           for (const auto &child : t8_mra::children_lmi (lmi))
             derived ().coarsening_set.insert (child);
@@ -311,11 +320,11 @@ class multiscale_adaptation {
   /**
    * @brief Harten's neighbour prediction on the leaf level
    *
-   * Reference semantics: a significant detail at cell lambda (level L) marks
-   * all same-level neighbours of lambda as significant, i.e. their children
-   * at L+1 must exist. Leaf formulation used here: every leaf whose family
-   * detail is significant (parent in td_set) constructs its same-level face
-   * neighbours and pulls the covering leaf up by one level if it is coarser.
+   * A family marked by the refinement criterion (refine_neighbours -> parent
+   * in td_set) requires all its same-level neighbours to carry children too
+   * (Harten reference semantics). Leaf formulation used here: every leaf of
+   * a marked family constructs its same-level face neighbours and pulls the
+   * covering leaf up by one level if it is coarser.
    * Repeated refine calls reach the fixpoint for level jumps larger
    * than one.
    *
@@ -353,7 +362,7 @@ class multiscale_adaptation {
         if (lmi.level () == 0)
           continue;
 
-        // Only leaves of significant families predict their neighbourhood
+        // Only leaves of marked families (refine_neighbours) grade their neighbourhood
         if (!derived ().td_set.contains (t8_mra::parent_lmi (lmi)))
           continue;
 
@@ -393,10 +402,10 @@ class multiscale_adaptation {
    * Analysis phase (whole grid, before any adaptation):
    *   1. Compute details of ALL complete leaf families via the
    *      non-destructive two-scale transform (stored at the parent levels).
-   *   2. Harten's prediction on each family detail (level L):
-   *        - significant (d > eps): same-level neighbours must carry children
+   *   2. Apply the refinement criterion to each family detail (level L):
+   *        - refine_neighbours: same-level neighbours must carry children
    *          -> neighbour_prediction pulls coarser neighbour leaves up
-   *        - steep (d > 2^(P+1) eps, L < max_level-1): the family's children
+   *        - refine (only for L < max_level-1): the family's children
    *          (leaves at L+1) are refined one further level
    * Adaptation phase: children data of all marked leaves is reconstructed by
    * inverse two-scale with zero details (= exact polynomial subdivision),
@@ -408,10 +417,13 @@ class multiscale_adaptation {
    *
    * @param min_level Minimum level to start from
    * @param max_level Maximum level to refine to
+   * @param criterion Refinement criterion
    * @return Number of leaves marked for refinement in this round
    */
+  template <typename Criterion>
+    requires refinement_criterion<Criterion, Derived>
   unsigned int
-  refine_round (int min_level, int max_level)
+  refine_round (int min_level, int max_level, Criterion &criterion)
   {
     using element_t = typename Derived::element_t;
 
@@ -424,36 +436,26 @@ class multiscale_adaptation {
     // 1. Details of all complete leaf families; lmi_map stays untouched.
     derived ().compute_leaf_details (0, max_level);
 
-    // 2. Harten's prediction on the family details
-    const auto steep_factor = std::pow (2.0, static_cast<int> (Derived::P_DIM) + 1);
+    // 2. Apply the criterion to every family detail
     auto num_families = 0u;
-    auto max_ratio = 0.0;
 
     for (auto L = 0; L < max_level; ++L) {
       for (const auto &[lmi, _] : derived ().d_map[L]) {
-        auto detail_norm = derived ().local_detail_norm (lmi);
-        for (auto u = 0u; u < Derived::U_DIM; ++u)
-          detail_norm[u] /= derived ().c_scaling[u];
-
-        const auto d_max = *std::max_element (detail_norm.begin (), detail_norm.end ());
-        const auto local_eps = derived ().c_thresh * derived ().local_threshold_value (lmi);
-
         ++num_families;
-        max_ratio = std::max (max_ratio, d_max / local_eps);
 
-        // Significant: remember for neighbour prediction
-        if (d_max > local_eps)
+        // Remember families whose neighbourhood must be graded
+        if (criterion.refine_neighbours (derived (), lmi))
           derived ().td_set.insert (lmi);
 
-        // Steep gradient: refine the family's children (leaves at L+1).
+        // Refine the family's children (leaves at L+1).
         // Guard keeps the result within max_level.
-        if (d_max > steep_factor * local_eps && L < max_level - 1)
+        if (L < max_level - 1 && criterion.refine (derived (), lmi))
           for (const auto &child : t8_mra::children_lmi (lmi))
             derived ().refinement_set.insert (child);
       }
     }
 
-    // 3. Neighbour prediction on the significant families
+    // 3. Grade the neighbourhood of the marked families
     neighbour_prediction ();
 
     // Details are consumed; only the refinement_set is needed from here on
@@ -466,8 +468,8 @@ class multiscale_adaptation {
     auto num_marked = 0u;
     for (auto l = min_level; l < max_level; ++l)
       num_marked += derived ().refinement_set[l].size ();
-    t8_debugf ("MRA refine analysis: %u leaf families, %zu significant, max d/eps = %g, %u leaves marked\n",
-               num_families, derived ().td_set.size (), max_ratio, num_marked);
+    t8_debugf ("MRA refine analysis: %u leaf families, %zu grading neighbourhoods, %u leaves marked\n", num_families,
+               derived ().td_set.size (), num_marked);
 
     if (num_marked == 0) {
       clear_multiscale_state ();
@@ -499,24 +501,27 @@ class multiscale_adaptation {
    * @brief Perform adaptive refinement from min_level up to max_level
    *
    * Iterates refinement rounds until the grading fixpoint is reached:
-   * Harten's neighbour prediction lifts a coarser neighbour of a significant
-   * family by one level per round, so a neighbour across a multi-level jump
-   * needs several rounds to arrive at the family's leaf level. Newly created
+   * the neighbour prediction lifts a coarser neighbour of a marked family
+   * by one level per round, so a neighbour across a multi-level jump needs
+   * several rounds to arrive at the family's leaf level. Newly created
    * children carry zero details and trigger no further marks, hence the
    * iteration terminates (bounded by max_level rounds).
    *
    * @param min_level Minimum level to start from
    * @param max_level Maximum level to refine to
+   * @param criterion Refinement criterion (default: Harten's prediction)
    */
+  template <typename Criterion = harten_prediction>
+    requires refinement_criterion<Criterion, Derived>
   void
-  refine (int min_level, int max_level)
+  refine (int min_level, int max_level, Criterion criterion = {})
   {
-    /// Scaling due to (2.39)
-    derived ().c_scaling = derived ().threshold_scaling_factor ();
+    if constexpr (criterion_has_prepare<Criterion, Derived>)
+      criterion.prepare (derived ());
 
     for (auto round = 0; round < max_level; ++round) {
       t8_debugf ("MRA refine round %d\n", round);
-      if (refine_round (min_level, max_level) == 0)
+      if (refine_round (min_level, max_level, criterion) == 0)
         break;
     }
   }
