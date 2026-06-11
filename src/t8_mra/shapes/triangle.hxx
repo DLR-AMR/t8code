@@ -35,6 +35,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   // Make adaptation methods accessible
   using Adaptation::coarsen;
   using Adaptation::refine;
+  using Adaptation::initialize_data_adaptive;
 
   //=============================================================================
   // Constructor
@@ -152,6 +153,33 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     }
   }
 
+  /**
+   * @brief Project a function onto a single forest leaf
+   *
+   * Builds the complete element data (vertex order, volume, DG coefficients)
+   * for the given leaf.
+   *
+   * @param tree_idx Tree index in forest
+   * @param element Pointer to element
+   * @param func Function to project
+   * @return Element data of the leaf
+   */
+  template <typename Func>
+  element_t
+  project_leaf (int tree_idx, const t8_element_t *element, Func &&func)
+  {
+    element_t data;
+
+    const auto gtreeid = t8_forest_global_tree_id (Base::forest, tree_idx);
+    const auto *scheme = t8_forest_get_scheme (Base::forest);
+    triangle_order::get_point_order_at_level (gtreeid, element, scheme, data.order);
+
+    data.vol = t8_forest_element_volume (Base::forest, tree_idx, element);
+    project_impl (data.u_coeffs, tree_idx, element, data.order, func);
+
+    return data;
+  }
+
   //=============================================================================
   // Initialization
   //=============================================================================
@@ -192,21 +220,10 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
       const auto base_element = t8_forest_global_tree_id (Base::forest, tree_idx);
 
       for (auto ele_idx = 0u; ele_idx < num_elements_in_tree; ++ele_idx, ++current_idx) {
-        element_t data_element;
         const auto *element = t8_forest_get_leaf_element_in_tree (Base::forest, tree_idx, ele_idx);
         const auto lmi = levelmultiindex (base_element, element, scheme);
 
-        // Get vertex ordering for projection
-        std::array<int, 3> point_order;
-        triangle_order::get_point_order_at_level (base_element, element, scheme, point_order);
-
-        data_element.order = point_order;
-        data_element.vol = t8_forest_element_volume (Base::forest, tree_idx, element);
-
-        // Project function using element-specific projection (pass point_order like old version)
-        project_impl (data_element.u_coeffs, tree_idx, element, point_order, func);
-
-        user_data->lmi_map->insert (lmi, data_element);
+        user_data->lmi_map->insert (lmi, project_leaf (tree_idx, element, func));
 
         // Insert lmi into forest
         t8_mra::set_lmi_forest_data (user_data, current_idx, lmi);
