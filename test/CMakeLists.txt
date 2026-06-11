@@ -18,7 +18,11 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-add_library( gtest ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi/gtest/gtest-all.cc )
+# Always build the vendored gtest statically: with BUILD_SHARED_LIBS=ON a
+# shared libgtest.so is not found via rpath at runtime and the loader may pick
+# up an ABI-incompatible system libgtest.so instead.
+add_library( gtest STATIC ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi/gtest/gtest-all.cc )
+set_target_properties( gtest PROPERTIES POSITION_INDEPENDENT_CODE ON )
 target_include_directories( gtest SYSTEM PUBLIC ${CMAKE_CURRENT_LIST_DIR}/../thirdparty/googletest-mpi ${CMAKE_CURRENT_LIST_DIR}/.. )
 
 # Function to add a test executable and register it with CTest.
@@ -196,6 +200,10 @@ if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
 endif()
 
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_vector_helper/t8_gtest_vector_split.cxx )
+
+if( T8CODE_ENABLE_MRA )
+  add_t8_cpp_test( NAME t8_gtest_mra_adaptation_serial      SOURCES t8_mra/t8_gtest_mra_adaptation.cxx )
+endif()
 
 copy_test_file( test_cube_unstructured_1.inp )
 copy_test_file( test_cube_unstructured_2.inp )
