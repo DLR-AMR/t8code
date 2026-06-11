@@ -5,6 +5,7 @@ build/
 
 .deps/
 .libs/
+.cache/
 
 Makefile
 Makefile.in
