@@ -23,7 +23,7 @@ namespace t8_mra
  * Default policy: no-op for cartesian elements (QUAD, LINE, HEX)
  */
 template <t8_eclass TShape>
-struct OrderingPolicy
+struct ordering_policy
 {
   /**
    * @brief Adjust parent element ordering (no-op for cartesian elements)
@@ -53,7 +53,7 @@ struct OrderingPolicy
  * across refinement levels
  */
 template <>
-struct OrderingPolicy<T8_ECLASS_TRIANGLE>
+struct ordering_policy<T8_ECLASS_TRIANGLE>
 {
   /**
    * @brief Compute parent vertex order from child order
@@ -84,7 +84,7 @@ struct OrderingPolicy<T8_ECLASS_TRIANGLE>
  * in the multiscale transformation
  */
 template <t8_eclass TShape>
-struct MSTScalingPolicy
+struct mst_scaling_policy
 {
   /**
    * @brief Forward MST normalization factor
@@ -114,7 +114,7 @@ struct MSTScalingPolicy
  * Triangles use a different normalization convention
  */
 template <>
-struct MSTScalingPolicy<T8_ECLASS_TRIANGLE>
+struct mst_scaling_policy<T8_ECLASS_TRIANGLE>
 {
   /**
    * @brief Forward MST normalization factor for triangles
@@ -138,19 +138,19 @@ struct MSTScalingPolicy<T8_ECLASS_TRIANGLE>
 };
 
 /**
- * @brief Unified multiscale transformation (MST) operations
+ * @brief Multiscale transformation (MST) operations
  *
- * This class template provides unified forward and inverse multiscale
+ * This class template provides forward and inverse multiscale
  * transformations that work for both triangular and cartesian elements.
  * Element-specific behavior is controlled via policy classes.
  *
- * @tparam TElement Element type (data_per_element<TShape, U, P>)
- * @tparam OrderingPolicyT Policy for vertex ordering (default: OrderingPolicy<TElement::Shape>)
- * @tparam ScalingPolicyT Policy for scaling factors (default: MSTScalingPolicy<TElement::Shape>)
+ * @tparam TElement Element type (element_data<TShape, U, P>)
+ * @tparam ordering_policy_t Policy for vertex ordering (default: ordering_policy<TElement::Shape>)
+ * @tparam scaling_policy_t Policy for scaling factors (default: mst_scaling_policy<TElement::Shape>)
  */
-template <typename TElement, typename OrderingPolicyT = OrderingPolicy<TElement::Shape>,
-          typename ScalingPolicyT = MSTScalingPolicy<TElement::Shape>>
-class UnifiedMST
+template <typename TElement, typename ordering_policy_t = ordering_policy<TElement::Shape>,
+          typename scaling_policy_t = mst_scaling_policy<TElement::Shape>>
+class mst
 {
  public:
   using element_t = TElement;
@@ -176,7 +176,7 @@ class UnifiedMST
   transform_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
                     element_t &data_on_coarse, const std::vector<t8_mra::mat> &mask_coefficients)
   {
-    const double scaling_factor = ScalingPolicyT::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
+    const double scaling_factor = scaling_policy_t::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
 
     for (auto u = 0u; u < U_DIM; ++u) {
       // Parent coefficients: u_parent[i] = scaling * Σ_k Σ_j u_child[k][j] * M[k](j,i)
@@ -205,7 +205,7 @@ class UnifiedMST
 
     data_on_coarse.vol = data_on_siblings[0].vol * levelmultiindex::NUM_CHILDREN;
     data_on_coarse.order = data_on_siblings[0].order;
-    OrderingPolicyT::adjust_parent_order (data_on_coarse);
+    ordering_policy_t::adjust_parent_order (data_on_coarse);
   }
 
   /**
@@ -340,7 +340,7 @@ class UnifiedMST
                           const std::vector<t8_mra::mat> &mask_coefficients)
   {
     element_t new_data;
-    const double inv_scaling_factor = ScalingPolicyT::inverse_scaling_factor ();
+    const double inv_scaling_factor = scaling_policy_t::inverse_scaling_factor ();
 
     for (auto l = l_min; l < l_max; ++l) {
       lmi_map->operator[] (l + 1).reserve (d_map[l].size ());
@@ -366,7 +366,7 @@ class UnifiedMST
 
           // Apply element-specific ordering adjustments
           new_data.vol = lmi_data.vol / levelmultiindex::NUM_CHILDREN;
-          OrderingPolicyT::adjust_child_order (new_data, k, lmi_data);
+          ordering_policy_t::adjust_child_order (new_data, k, lmi_data);
 
           lmi_map->insert (children_lmi[k], new_data);
         }

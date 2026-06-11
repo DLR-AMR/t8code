@@ -37,8 +37,8 @@ class multiscale<TShape, U, P>:
   using index_set = typename Base::index_set;
 
   // Make adaptation methods accessible
-  using Adaptation::coarsening_new;
-  using Adaptation::refinement_new;
+  using Adaptation::coarsen;
+  using Adaptation::refine;
 
   //=============================================================================
   // Constructor
@@ -135,21 +135,21 @@ class multiscale<TShape, U, P>:
     }
 
     // Get physical quadrature points via direct mapping
-    const auto phys_quad_points = Base::DG_basis.deref_quad_points (vertices);
+    const auto phys_quad_points = Base::basis.deref_quad_points (vertices);
 
     // ONE-TO-ONE implementation from old t8_mra_cartesian.hpp::project()
     // Note: For orthonormal Legendre basis, NO volume/Jacobian scaling in projection!
     // The basis functions are normalized on reference element [0,1]^DIM
 
     // Precompute basis values at all quadrature points
-    std::vector<std::array<double, Base::DOF>> basis_at_quad (Base::DG_basis.num_quad_points);
-    for (auto q = 0u; q < Base::DG_basis.num_quad_points; ++q) {
+    std::vector<std::array<double, Base::DOF>> basis_at_quad (Base::basis.num_quad_points);
+    for (auto q = 0u; q < Base::basis.num_quad_points; ++q) {
       // Extract reference quadrature point
       std::vector<double> x_ref (Base::DIM);
       for (unsigned int d = 0; d < Base::DIM; ++d)
-        x_ref[d] = Base::DG_basis.ref_quad_points[Base::DIM * q + d];
+        x_ref[d] = Base::basis.ref_quad_points[Base::DIM * q + d];
 
-      const auto basis_vals = Base::DG_basis.basis_value (x_ref);
+      const auto basis_vals = Base::basis.basis_value (x_ref);
       for (auto i = 0u; i < Base::DOF; ++i)
         basis_at_quad[q][i] = basis_vals[i];
     }
@@ -158,7 +158,7 @@ class multiscale<TShape, U, P>:
     for (auto i = 0u; i < Base::DOF; ++i) {
       std::array<double, Base::U_DIM> sum = {};
 
-      for (auto q = 0u; q < Base::DG_basis.num_quad_points; ++q) {
+      for (auto q = 0u; q < Base::basis.num_quad_points; ++q) {
         // Extract physical coordinates
         std::array<double, Base::DIM> x_phys;
         for (unsigned int d = 0; d < Base::DIM; ++d)
@@ -191,7 +191,7 @@ class multiscale<TShape, U, P>:
         // Accumulate quadrature sum: integral(f * phi_i)
         // Note: For orthonormal basis, the volume scaling cancels out
         for (auto u = 0u; u < Base::U_DIM; ++u)
-          sum[u] += Base::DG_basis.quad_weights[q] * f_val[u] * basis_at_quad[q][i];
+          sum[u] += Base::basis.quad_weights[q] * f_val[u] * basis_at_quad[q][i];
       }
 
       // Store coefficients directly (already includes volume scaling from quadrature)

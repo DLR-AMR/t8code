@@ -146,10 +146,10 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/t8_basis.hpp
     t8_mra/t8_mra_base.hpp
     t8_mra/t8_mra_adaptation.hpp
-    t8_mra/t8_mra_mst_unified.hpp
-    t8_mra/t8_mra_unified_triangle.hpp
-    t8_mra/t8_mra_unified_cartesian.hpp
-    t8_mra/t8_mra_vtk_unified.hpp
+    t8_mra/t8_mra_mst.hpp
+    t8_mra/t8_mra_triangle.hpp
+    t8_mra/t8_mra_cartesian.hpp
+    t8_mra/t8_mra_vtk.hpp
     DESTINATION include/t8_mra )
 
   install( FILES

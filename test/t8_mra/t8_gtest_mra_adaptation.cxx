@@ -21,7 +21,7 @@
 */
 
 /** \file t8_gtest_mra_adaptation.cxx
- * Regression tests for the unified MRA path (multiscale_base + UnifiedMST +
+ * Regression tests for the MRA path (multiscale_base + mst +
  * multiscale_adaptation), typed over (element shape, U components, order P):
  *   - forward/inverse multiscale transformation round-trip is the identity
  *   - coarsen -> refine -> coarsen returns to the coarsened grid and data
@@ -41,8 +41,8 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-#include <t8_mra/t8_mra_unified_triangle.hpp>
-#include <t8_mra/t8_mra_unified_cartesian.hpp>
+#include <t8_mra/t8_mra_triangle.hpp>
+#include <t8_mra/t8_mra_cartesian.hpp>
 
 #include <array>
 #include <cmath>
@@ -57,7 +57,7 @@ struct Config
   static constexpr t8_eclass Shape = TShape;
   static constexpr int U = U_;
   static constexpr int P = P_;
-  static constexpr int DIM = t8_mra::t8_eclass_DIM<TShape> ();
+  static constexpr int DIM = t8_mra::t8_eclass_dim<TShape> ();
 };
 
 /* Smooth test function for the MST round-trip; components differ to catch
@@ -261,19 +261,19 @@ TYPED_TEST (mra_adaptation, coarsen_refine_roundtrip)
     mra.initialize_data (cmesh, scheme, max_level, jump_func<U, DIM> ());
     const auto num_uniform = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
 
-    mra.coarsening_new (0, max_level);
+    mra.coarsen (0, max_level);
     expect_forest_map_consistent (mra);
     const auto num_coarse = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
     EXPECT_LT (num_coarse, num_uniform) << "smooth regions must coarsen";
 
     const auto snapshot = *mra.get_lmi_map ();
 
-    mra.refinement_new (0, max_level);
+    mra.refine (0, max_level);
     expect_forest_map_consistent (mra);
     const auto num_refined = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
     EXPECT_GT (num_refined, num_coarse) << "neighbour prediction must refine around the jump";
 
-    mra.coarsening_new (0, max_level);
+    mra.coarsen (0, max_level);
     expect_forest_map_consistent (mra);
     const auto num_recoarse = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
     EXPECT_EQ (num_recoarse, num_coarse) << "zero-detail children must coarsen away again";

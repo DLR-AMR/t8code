@@ -2,7 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/t8_mra_mst_unified.hpp"
+#include "t8_mra/t8_mra_mst.hpp"
 #include "t8_mra/data/cell_data.hpp"
 #include "t8_mra/data/levelmultiindex.hpp"
 #include "t8_mra/data/levelindex_map.hpp"
@@ -44,7 +44,7 @@ template <t8_eclass TShape, int U, int P>
 class multiscale;
 
 /**
- * @brief Unified multiscale analysis base class
+ * @brief Multiscale analysis base class
  *
  * This class template provides a complete MRA implementation that works
  * for both triangular and cartesian elements. It contains all common
@@ -64,10 +64,10 @@ class multiscale;
 template <t8_eclass TShape, unsigned short U, unsigned short P>
 class multiscale_base: public multiscale_data<TShape> {
  public:
-  using element_t = data_per_element<TShape, U, P>;
+  using element_t = element_data<TShape, U, P>;
   using levelmultiindex = t8_mra::levelmultiindex<TShape>;
   using index_set = ankerl::unordered_dense::set<levelmultiindex>;
-  using MST = UnifiedMST<element_t>;
+  using MST = mst<element_t>;
 
   static constexpr auto Shape = TShape;
   static constexpr unsigned int DIM = element_t::DIM;
@@ -104,7 +104,7 @@ class multiscale_base: public multiscale_data<TShape> {
   int dunavant_rule;       // For triangles: Dunavant quadrature rule
 
   /// DG basis for projection
-  t8_mra::dg_basis<element_t> DG_basis;
+  t8_mra::dg_basis<element_t> basis;
 
   /// Detail coefficient storage
   levelindex_map<levelmultiindex, element_t> d_map;
@@ -146,7 +146,7 @@ class multiscale_base: public multiscale_data<TShape> {
                    sc_MPI_Comm _comm)
     requires is_cartesian<TShape>
     : maximum_level (_max_level), c_thresh (_c_thresh), gamma (_gamma), num_quad_points_1d (_num_quad_points_1d),
-      dunavant_rule (-1), balanced (_balanced), comm (_comm), DG_basis (_num_quad_points_1d, P_DIM),
+      dunavant_rule (-1), balanced (_balanced), comm (_comm), basis (_num_quad_points_1d, P_DIM),
       d_map (maximum_level), td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level)
   {
     initialize_common ();
@@ -166,7 +166,7 @@ class multiscale_base: public multiscale_data<TShape> {
     requires (TShape == T8_ECLASS_TRIANGLE)
     : maximum_level (_max_level), c_thresh (_c_thresh), gamma (_gamma), num_quad_points_1d (-1),
       dunavant_rule (_dunavant_rule), balanced (_balanced), comm (_comm),
-      DG_basis (t8_mra::dunavant_order_num (_dunavant_rule), _dunavant_rule), d_map (maximum_level),
+      basis (t8_mra::dunavant_order_num (_dunavant_rule), _dunavant_rule), d_map (maximum_level),
       td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level)
   {
     initialize_common ();
@@ -223,14 +223,14 @@ class multiscale_base: public multiscale_data<TShape> {
   }
 
   //=============================================================================
-  // Multiscale Transformation (Unified Implementation)
+  // Multiscale Transformation
   //=============================================================================
 
   /**
    * @brief Forward multiscale transformation (restriction: fine -> coarse)
    *
    * Computes parent coefficients and detail coefficients using the
-   * unified MST implementation.
+   * MST implementation.
    *
    * @param l_min Minimum refinement level
    * @param l_max Maximum refinement level
@@ -245,7 +245,7 @@ class multiscale_base: public multiscale_data<TShape> {
    * @brief Inverse multiscale transformation (prolongation: coarse -> fine)
    *
    * Reconstructs children from parent and detail coefficients using the
-   * unified MST implementation.
+   * MST implementation.
    *
    * @param l_min Minimum refinement level
    * @param l_max Maximum refinement level

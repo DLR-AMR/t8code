@@ -33,8 +33,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   using index_set = typename Base::index_set;
 
   // Make adaptation methods accessible
-  using Adaptation::coarsening_new;
-  using Adaptation::refinement_new;
+  using Adaptation::coarsen;
+  using Adaptation::refine;
 
   //=============================================================================
   // Constructor
@@ -123,8 +123,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
       t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[point_order[i]]);
 
     // Compute transformation to reference element
-    auto [trafo_mat, perm] = Base::DG_basis.trafo_matrix_to_ref_element (vertices);
-    const auto deref_quad_points = Base::DG_basis.deref_quad_points (vertices);
+    auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
+    const auto deref_quad_points = Base::basis.deref_quad_points (vertices);
     const auto volume = t8_forest_element_volume (Base::forest, tree_idx, element);
 
     // Triangle-specific scaling factor
@@ -134,22 +134,22 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     for (auto i = 0u; i < Base::DOF; ++i) {
       std::array<double, Base::U_DIM> sum = {};
 
-      for (auto j = 0u; j < Base::DG_basis.num_quad_points; ++j) {
+      for (auto j = 0u; j < Base::basis.num_quad_points; ++j) {
         const auto x_deref = deref_quad_points[2 * j];
         const auto y_deref = deref_quad_points[1 + 2 * j];
 
         // Transform to reference coordinates
-        const auto ref = Base::DG_basis.ref_point (trafo_mat, perm, { x_deref, y_deref, 1.0 });
+        const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_deref, y_deref, 1.0 });
 
         // Evaluate function at physical point
         const auto f_val = func (x_deref, y_deref);
 
         // Evaluate basis at reference point
-        const auto basis_val = Base::DG_basis.basis_value (ref);
+        const auto basis_val = Base::basis.basis_value (ref);
 
         // Accumulate: ∫ f(x) φᵢ(x) dx ≈ Σ w_j f(x_j) φᵢ(x_j) * scaling
         for (auto k = 0u; k < Base::U_DIM; ++k)
-          sum[k] += Base::DG_basis.quad_weights[j] * f_val[k] * scaling_factor * basis_val[i];
+          sum[k] += Base::basis.quad_weights[j] * f_val[k] * scaling_factor * basis_val[i];
       }
 
       for (auto k = 0u; k < Base::U_DIM; ++k)

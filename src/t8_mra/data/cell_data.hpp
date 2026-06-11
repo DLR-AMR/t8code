@@ -24,7 +24,7 @@ binom (int n, int k) noexcept
 
 template <t8_eclass TShape>
 static constexpr unsigned short
-t8_eclass_DIM ()
+t8_eclass_dim ()
 {
   if constexpr (TShape == T8_ECLASS_LINE)
     return 1;
@@ -39,7 +39,7 @@ t8_eclass_DIM ()
 
 template <t8_eclass TShape>
 static constexpr unsigned short
-t8_eclass_NUM_CHILDREN ()
+t8_eclass_num_children ()
 {
   if constexpr (TShape == T8_ECLASS_LINE)
     return 2;
@@ -60,9 +60,9 @@ t8_eclass_NUM_CHILDREN ()
  */
 template <t8_eclass TShape, unsigned short P>
 static constexpr unsigned short
-compute_DOF ()
+compute_dof ()
 {
-  constexpr unsigned short DIM = t8_eclass_DIM<TShape> ();
+  constexpr unsigned short DIM = t8_eclass_dim<TShape> ();
 
   if constexpr (TShape == T8_ECLASS_TRIANGLE || TShape == T8_ECLASS_TET)
     return binom (DIM + P - 1, DIM);
@@ -80,16 +80,16 @@ compute_DOF ()
 /// TODO template specialization
 /// TOOD change to std::array
 template <t8_eclass TShape, unsigned short U, unsigned short P>
-struct data_per_element
+struct element_data
 {
 
   static constexpr t8_eclass Shape = TShape;
-  static constexpr unsigned short DIM = t8_eclass_DIM<TShape> ();
-  static constexpr unsigned short NUM_CHILDREN = t8_eclass_NUM_CHILDREN<TShape> ();
+  static constexpr unsigned short DIM = t8_eclass_dim<TShape> ();
+  static constexpr unsigned short NUM_CHILDREN = t8_eclass_num_children<TShape> ();
   static constexpr unsigned short U_DIM = U;
 
   static constexpr unsigned short P_DIM = P;
-  static constexpr unsigned short DOF = compute_DOF<TShape, P> ();
+  static constexpr unsigned short DOF = compute_dof<TShape, P> ();
   static constexpr unsigned short W_DOF = DOF * NUM_CHILDREN;
 
   std::vector<double> u_coeffs;  // Single-scale coefficients
@@ -99,7 +99,7 @@ struct data_per_element
 
   std::array<int, 3> order;  // Point order
 
-  explicit data_per_element (): u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), vol (0.0), order ({})
+  explicit element_data (): u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), vol (0.0), order ({})
   {
   }
 

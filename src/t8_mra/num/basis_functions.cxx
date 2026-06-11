@@ -11,7 +11,7 @@
 namespace t8_mra
 {
 double
-skalierungsfunktion (int i, double tau1, double tau2)
+scaling_function (int i, double tau1, double tau2)
 {
   switch (i) {
   case 0:
@@ -1259,11 +1259,11 @@ muttermultiwavelet (int p, int i, double tau1, double tau2)
 }
 
 double
-skalierungsfunktion_nextlevel (int i, double tau1, double tau2)
+scaling_function_nextlevel (int i, double tau1, double tau2)
 {
   if ((tau1 < 0.) || (tau1 > 1.) || (tau2 < 0.) || (tau2 > 1.) || (tau1 + tau2 > 1.))
     return 0.;
-  return skalierungsfunktion (i, tau1, tau2);
+  return scaling_function (i, tau1, tau2);
 }
 
 }  // namespace t8_mra

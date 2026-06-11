@@ -312,7 +312,7 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
     else if constexpr (Shape == T8_ECLASS_TRIANGLE) {
       // Triangle elements: use existing scaling functions
       for (auto i = 0u; i < DOF; ++i)
-        res[i] = t8_mra::skalierungsfunktion (i, x_ref[0], x_ref[1]);
+        res[i] = t8_mra::scaling_function (i, x_ref[0], x_ref[1]);
     }
 
     return res;

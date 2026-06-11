@@ -4,7 +4,7 @@
 namespace t8_mra
 {
 double
-skalierungsfunktion (int i, double tau1, double tau2);
+scaling_function (int i, double tau1, double tau2);
 
 double
 muttermultiwavelets (int p, int i, double tau1, double tau2, int e);
@@ -13,7 +13,7 @@ double
 muttermultiwavelet (int p, int i, double tau1, double tau2);
 
 double
-skalierungsfunktion_nextlevel (int i, double tau1, double tau2);
+scaling_function_nextlevel (int i, double tau1, double tau2);
 
 }  // namespace t8_mra
 #endif

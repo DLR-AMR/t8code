@@ -1,9 +1,9 @@
 /**
- * @file t8_mra_unified_plotting_example.cxx
+ * @file t8_mra_example.cxx
  * @brief Example showing MRA with VTK plotting for 2D and 3D elements
  *
  * Demonstrates:
- * 1. Triangle, quad, and hex MRA with unified interface
+ * 1. Triangle, quad, and hex MRA for triangle, quad and hex
  * 2. 2D and 3D VTK output generation at different stages
  * 3. Adaptive refinement/coarsening with visualization
  * 4. Comparison between uniform and adapted meshes
@@ -12,9 +12,9 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/t8_mra_unified_triangle.hpp"
-#include "t8_mra/t8_mra_unified_cartesian.hpp"
-#include "t8_mra/t8_mra_vtk_unified.hpp"
+#include "t8_mra/t8_mra_triangle.hpp"
+#include "t8_mra/t8_mra_cartesian.hpp"
+#include "t8_mra/t8_mra_vtk.hpp"
 #include "t8_cmesh.h"
 #include "t8_cmesh/t8_cmesh_examples.h"
 
@@ -132,9 +132,9 @@ write_vtk_output (MRA &mra, const std::string &prefix, int step)
   // Write high-order Lagrange VTK (P-1 is polynomial degree)
   /// TODO Fix 3D Bug
   if (MRA::DIM == 3)
-    t8_mra::write_forest_lagrange_vtk_unified (mra, filename.c_str (), 1);
+    t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), 1);
   else
-    t8_mra::write_forest_lagrange_vtk_unified (mra, filename.c_str (), MRA::P_DIM - 1);
+    t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), MRA::P_DIM - 1);
 }
 
 //=============================================================================
@@ -186,11 +186,11 @@ example_triangle_adaptive_with_plotting ()
   std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
 
   // Write initial uniform solution
-  write_vtk_output (mra, "unified/triangle_uniform", 0);
+  write_vtk_output (mra, "mra_output/triangle_uniform", 0);
 
   // Perform adaptive coarsening
   std::cout << "2. Performing adaptive coarsening...\n";
-  mra.coarsening_new (min_level, max_level);
+  mra.coarsen (min_level, max_level);
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After coarsening:\n";
@@ -198,11 +198,11 @@ example_triangle_adaptive_with_plotting ()
   std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
 
   // Write coarsened solution
-  write_vtk_output (mra, "unified/triangle_coarsened", 1);
+  write_vtk_output (mra, "mra_output/triangle_coarsened", 1);
 
   // Perform adaptive refinement
   std::cout << "3. Performing adaptive refinement...\n";
-  mra.refinement_new (min_level, max_level);
+  mra.refine (min_level, max_level);
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After refinement:\n";
@@ -210,19 +210,19 @@ example_triangle_adaptive_with_plotting ()
   std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
 
   // Write refined solution
-  write_vtk_output (mra, "unified/triangle_refined", 2);
+  write_vtk_output (mra, "mra_output/triangle_refined", 2);
 
   // Coarsen again: the zero-detail children created by the refinement carry
   // no information and must be removed again -> grid close to step 1
   std::cout << "4. Performing second adaptive coarsening...\n";
-  mra.coarsening_new (min_level, max_level);
+  mra.coarsen (min_level, max_level);
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After second coarsening:\n";
   std::cout << "   Elements: " << num_elements << "\n";
   std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
 
-  write_vtk_output (mra, "unified/triangle_coarsened2", 3);
+  write_vtk_output (mra, "mra_output/triangle_coarsened2", 3);
 
   // Cleanup
   mra.cleanup ();
@@ -281,11 +281,11 @@ example_quad_adaptive_with_plotting ()
   std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
 
   // Write initial uniform solution
-  write_vtk_output (mra, "unified/quad_uniform", 0);
+  write_vtk_output (mra, "mra_output/quad_uniform", 0);
 
   // Perform adaptive coarsening
   std::cout << "2. Performing adaptive coarsening...\n";
-  mra.coarsening_new (min_level, max_level);
+  mra.coarsen (min_level, max_level);
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After coarsening:\n";
@@ -293,11 +293,11 @@ example_quad_adaptive_with_plotting ()
   std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
 
   // Write coarsened solution
-  write_vtk_output (mra, "unified/quad_coarsened", 1);
+  write_vtk_output (mra, "mra_output/quad_coarsened", 1);
 
   // Perform adaptive refinement
   std::cout << "3. Performing adaptive refinement...\n";
-  mra.refinement_new (min_level, max_level);
+  mra.refine (min_level, max_level);
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After refinement:\n";
@@ -305,7 +305,7 @@ example_quad_adaptive_with_plotting ()
   std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
 
   // Write refined solution
-  write_vtk_output (mra, "unified/quad_refined", 2);
+  write_vtk_output (mra, "mra_output/quad_refined", 2);
 
   // Cleanup
   mra.cleanup ();
@@ -364,11 +364,11 @@ example_hex_adaptive_with_plotting ()
   std::cout << "   Memory estimate: ~" << ((num_elements * mra.DOF * sizeof (double)) / (1024 * 1024)) << " MB\n\n";
 
   // Write initial uniform solution
-  write_vtk_output (mra, "unified/hex_uniform", 0);
+  write_vtk_output (mra, "mra_output/hex_uniform", 0);
 
   // Perform adaptive coarsening
   std::cout << "2. Performing adaptive coarsening...\n";
-  mra.coarsening_new (min_level, max_level);
+  mra.coarsen (min_level, max_level);
 
   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "\n   After coarsening:\n";
@@ -377,7 +377,7 @@ example_hex_adaptive_with_plotting ()
   std::cout << "   Memory estimate: ~" << ((num_elements * mra.DOF * sizeof (double)) / (1024 * 1024)) << " MB\n\n";
 
   // Write coarsened solution
-  write_vtk_output (mra, "unified/hex_coarsened", 1);
+  write_vtk_output (mra, "mra_output/hex_coarsened", 1);
 
   // Cleanup
   mra.cleanup ();
@@ -433,7 +433,7 @@ example_full_adaptation_cycle ()
   auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   std::cout << "Initial elements: " << num_elements << "\n\n";
 
-  write_vtk_output (mra, "unified/cycle_initial", 0);
+  write_vtk_output (mra, "mra_output/cycle_initial", 0);
 
   // // Perform multiple adaptation cycles
   // const int num_cycles = 3;
@@ -448,7 +448,7 @@ example_full_adaptation_cycle ()
   //   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
   //   std::cout << "Elements after cycle " << cycle << ": " << num_elements << "\n\n";
   //
-  //   write_vtk_output (mra, "unified/cycle_adapted", cycle);
+  //   write_vtk_output (mra, "mra_output/cycle_adapted", cycle);
   // }
 
   // Cleanup
@@ -515,7 +515,7 @@ example_comparison_test_functions ()
     mra.initialize_data (cmesh, scheme, max_level, test.func);
 
     const auto num_init = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    write_vtk_output (mra, "unified/compare_" + test.name + "_uniform", 0);
+    write_vtk_output (mra, "mra_output/compare_" + test.name + "_uniform", 0);
 
     // // Adapt
     // mra.adapt (min_level, max_level);
@@ -524,7 +524,7 @@ example_comparison_test_functions ()
     // std::cout << "  Elements: " << num_init << " -> " << num_adapted;
     // std::cout << " (compression: " << (100.0 * (1.0 - (double) num_adapted / num_init)) << "%)\n";
     //
-    // write_vtk_output (mra, "unified/compare_" + test.name + "_adapted", 1);
+    // write_vtk_output (mra, "mra_output/compare_" + test.name + "_adapted", 1);
 
     // Cleanup
     mra.cleanup ();
@@ -558,7 +558,7 @@ main (int argc, char **argv)
   std::cout << "║     Unified MRA: Adaptive Refinement with VTK Output      ║\n";
   std::cout << "║                                                            ║\n";
   std::cout << "║  This example demonstrates:                               ║\n";
-  std::cout << "║  • Triangle, quad, and hex MRA with unified interface     ║\n";
+  std::cout << "║  • Triangle, quad, and hex MRA for triangle, quad and hex     ║\n";
   std::cout << "║  • 2D and 3D adaptive refinement and coarsening           ║\n";
   std::cout << "║  • VTK output generation for visualization                ║\n";
   std::cout << "║  • Comparison of different test functions                 ║\n";
@@ -567,9 +567,9 @@ main (int argc, char **argv)
   // Run examples
   example_triangle_adaptive_with_plotting ();
   example_quad_adaptive_with_plotting ();
-  // example_hex_adaptive_with_plotting ();
-  // example_full_adaptation_cycle ();
-  // example_comparison_test_functions ();
+  example_hex_adaptive_with_plotting ();
+  example_full_adaptation_cycle ();
+  example_comparison_test_functions ();
 
   std::cout << "════════════════════════════════════════════════════════════\n";
   std::cout << "✓ All plotting examples completed!\n";
@@ -577,22 +577,22 @@ main (int argc, char **argv)
 
   std::cout << "Generated VTK files:\n";
   std::cout << "  Triangle (2D):\n";
-  std::cout << "    - unified/triangle_uniform_step0.vtu\n";
-  std::cout << "    - unified/triangle_coarsened_step1.vtu\n\n";
+  std::cout << "    - mra_output/triangle_uniform_step0.vtu\n";
+  std::cout << "    - mra_output/triangle_coarsened_step1.vtu\n\n";
   std::cout << "  Quad (2D):\n";
-  std::cout << "    - unified/quad_uniform_step0.vtu\n";
-  std::cout << "    - unified/quad_coarsened_step1.vtu\n\n";
+  std::cout << "    - mra_output/quad_uniform_step0.vtu\n";
+  std::cout << "    - mra_output/quad_coarsened_step1.vtu\n\n";
   std::cout << "  Hex (3D):\n";
-  std::cout << "    - unified/hex_uniform_step0.vtu\n";
-  std::cout << "    - unified/hex_coarsened_step1.vtu\n\n";
+  std::cout << "    - mra_output/hex_uniform_step0.vtu\n";
+  std::cout << "    - mra_output/hex_coarsened_step1.vtu\n\n";
   std::cout << "  Cycles:\n";
-  std::cout << "    - unified/cycle_initial_step0.vtu\n";
-  std::cout << "    - unified/cycle_adapted_step1.vtu ... step3.vtu\n\n";
+  std::cout << "    - mra_output/cycle_initial_step0.vtu\n";
+  std::cout << "    - mra_output/cycle_adapted_step1.vtu ... step3.vtu\n\n";
   std::cout << "  Comparison:\n";
-  std::cout << "    - unified/compare_gaussian_uniform_step0.vtu\n";
-  std::cout << "    - unified/compare_gaussian_adapted_step1.vtu\n";
-  std::cout << "    - unified/compare_sine_*.vtu\n";
-  std::cout << "    - unified/compare_step_*.vtu\n\n";
+  std::cout << "    - mra_output/compare_gaussian_uniform_step0.vtu\n";
+  std::cout << "    - mra_output/compare_gaussian_adapted_step1.vtu\n";
+  std::cout << "    - mra_output/compare_sine_*.vtu\n";
+  std::cout << "    - mra_output/compare_step_*.vtu\n\n";
 
   std::cout << "Open these files in ParaView to visualize the results!\n";
   std::cout << "For 3D (hex) files, use 'Clip' or 'Slice' filters to view internal structure.\n\n";

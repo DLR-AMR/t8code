@@ -360,7 +360,7 @@ write_vtk_footer (std::ofstream &file)
 /**
  * @brief Evaluate Legendre basis at given reference point for triangle
  *
- * IMPORTANT: ref_point contains (xi, eta) but skalierungsfunktion expects barycentric coords (λ0, λ1)
+ * IMPORTANT: ref_point contains (xi, eta) but scaling_function expects barycentric coords (λ0, λ1)
  * Conversion: λ0 = 1 - xi - eta, λ1 = xi
  */
 template <int P_DIM, int DOF>
@@ -374,9 +374,9 @@ eval_legendre_basis_triangle (const std::array<double, 2> &ref_point)
   const double lambda0 = 1.0 - ref_point[0] - ref_point[1];
   const double lambda1 = ref_point[0];
 
-  // Use existing skalierungsfunktion for triangle basis (expects barycentric coords)
+  // Use existing scaling_function for triangle basis (expects barycentric coords)
   for (size_t i = 0; i < DOF; ++i) {
-    basis_vals[i] = t8_mra::skalierungsfunktion (i, lambda0, lambda1);
+    basis_vals[i] = t8_mra::scaling_function (i, lambda0, lambda1);
   }
 
   return basis_vals;
@@ -445,7 +445,7 @@ eval_legendre_basis_hex (const std::array<double, 3> &ref_point)
 }
 
 /**
- * @brief Write unified VTK Lagrange file for any MRA implementation
+ * @brief Write a VTK Lagrange file for any MRA implementation
  *
  * @tparam MRA The multiscale class type (triangle, quad, line, or hex specialization)
  * @param mra The multiscale object
@@ -454,7 +454,7 @@ eval_legendre_basis_hex (const std::array<double, 3> &ref_point)
  */
 template <typename MRA>
 void
-write_forest_lagrange_vtk_unified (MRA &mra, const char *prefix, int lagrange_order)
+write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 {
   static constexpr auto TShape = MRA::Shape;
   static constexpr int U_DIM = MRA::U_DIM;

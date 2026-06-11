@@ -232,7 +232,7 @@ class multiscale_adaptation {
    * @param max_level Maximum level to start from
    */
   void
-  coarsening_new (int min_level, int max_level)
+  coarsen (int min_level, int max_level)
   {
     using element_t = typename Derived::element_t;
     using levelmultiindex = typename Derived::levelmultiindex;
@@ -313,7 +313,7 @@ class multiscale_adaptation {
    * at L+1 must exist. Leaf formulation used here: every leaf whose family
    * detail is significant (parent in td_set) constructs its same-level face
    * neighbours and pulls the covering leaf up by one level if it is coarser.
-   * Repeated refinement_new calls reach the fixpoint for level jumps larger
+   * Repeated refine calls reach the fixpoint for level jumps larger
    * than one.
    *
    * The same-level neighbour is constructed geometrically via
@@ -406,7 +406,7 @@ class multiscale_adaptation {
    * @return Number of leaves marked for refinement in this round
    */
   unsigned int
-  refinement_round (int min_level, int max_level)
+  refine_round (int min_level, int max_level)
   {
     using element_t = typename Derived::element_t;
     using levelmultiindex = typename Derived::levelmultiindex;
@@ -553,14 +553,14 @@ class multiscale_adaptation {
    * @param max_level Maximum level to refine to
    */
   void
-  refinement_new (int min_level, int max_level)
+  refine (int min_level, int max_level)
   {
     /// Scaling due to (2.39)
     derived ().c_scaling = derived ().threshold_scaling_factor ();
 
     for (auto round = 0; round < max_level; ++round) {
       std::cout << "Refinement round " << round << ":\n";
-      if (refinement_round (min_level, max_level) == 0)
+      if (refine_round (min_level, max_level) == 0)
         break;
     }
   }
