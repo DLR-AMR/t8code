@@ -246,7 +246,6 @@ class multiscale_adaptation {
 
       derived ().get_user_data ()->current_refinement_level = l;
 
-      std::cout << "Before mst: " << derived ().get_user_data ()->lmi_map->size () << "\n";
       // Start each pass with clean multiscale state; stale td_set/d_map
       // entries would corrupt the thresholding (sync_d_with_td inserts
       // empty elements for td entries missing from d_map)
@@ -263,12 +262,8 @@ class multiscale_adaptation {
 
       derived ().inverse_multiscale_transformation (l - 1, l);
 
-      std::cout << "After mst: " << derived ().get_user_data ()->lmi_map->size () << "\n";
-      std::cout << "  Level " << (l - 1)
-                << " in map: " << derived ().get_user_data ()->lmi_map->operator[] (l - 1).size () << "\n";
-      std::cout << "  Level " << l << " in map: " << derived ().get_user_data ()->lmi_map->operator[] (l).size ()
-                << "\n";
-      std::cout << "  coarsening_set[" << l << "] size: " << derived ().coarsening_set[l].size () << "\n";
+      t8_debugf ("MRA coarsen pass %d: coarsening %zu of %zu leaves\n", l, derived ().coarsening_set[l].size (),
+                 derived ().get_user_data ()->lmi_map->size ());
 
       new_forest
         = t8_forest_new_adapt (derived ().forest, static_coarsening_callback, 0, 0, derived ().get_user_data ());
@@ -461,8 +456,8 @@ class multiscale_adaptation {
     auto num_marked = 0u;
     for (auto l = 0; l <= max_level; ++l)
       num_marked += derived ().refinement_set[l].size ();
-    std::cout << "Refinement analysis: " << num_families << " leaf families, " << derived ().td_set.size ()
-              << " significant, max d/eps = " << max_ratio << ", " << num_marked << " leaves marked\n";
+    t8_debugf ("MRA refine analysis: %u leaf families, %zu significant, max d/eps = %g, %u leaves marked\n",
+               num_families, derived ().td_set.size (), max_ratio, num_marked);
 
     if (num_marked == 0) {
       // Leave no stale state behind (td_set still holds the significant
@@ -483,8 +478,8 @@ class multiscale_adaptation {
       if (derived ().refinement_set[l].empty ())
         continue;
 
-      std::cout << "Level " << l << " -> " << (l + 1) << ": refining " << derived ().refinement_set[l].size ()
-                << " elements\n";
+      t8_debugf ("MRA refine pass %d -> %d: refining %zu elements\n", l, l + 1,
+                 derived ().refinement_set[l].size ());
 
       // Reconstruct children data for the leaves to be refined: inverse
       // two-scale with zero details. This moves the refined leaves' data
@@ -559,7 +554,7 @@ class multiscale_adaptation {
     derived ().c_scaling = derived ().threshold_scaling_factor ();
 
     for (auto round = 0; round < max_level; ++round) {
-      std::cout << "Refinement round " << round << ":\n";
+      t8_debugf ("MRA refine round %d\n", round);
       if (refine_round (min_level, max_level) == 0)
         break;
     }

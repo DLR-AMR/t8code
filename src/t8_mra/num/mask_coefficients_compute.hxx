@@ -5,9 +5,8 @@
 #include <cmath>
 #include <vector>
 #include <array>
-#include <iostream>
-#include <iomanip>
 
+#include <t8.h>
 #include <t8_eclass.h>
 #include <t8_mra/num/mat.hpp>
 #include <t8_mra/num/legendre_basis.hxx>
@@ -96,10 +95,6 @@ compute_mask_coefficients (size_t order, size_t dof, std::vector<t8_mra::mat> &m
     }
   }
 
-  for (auto i = 0; i < P_set.size (); ++i)
-    std::cout << "[" << P_set[i][0] << ", " << P_set[i][1] << "], ";
-  std::cout << std::endl;
-
   // Generate child shift vectors E_set[k] ∈ {0,1}^D
   std::vector<std::array<int, DIM>> E_set (NUM_CHILDREN);
   for (int k = 0; k < NUM_CHILDREN; ++k) {
@@ -148,7 +143,7 @@ compute_mask_coefficients (size_t order, size_t dof, std::vector<t8_mra::mat> &m
   // This gives the prolongation matrix for inverse MST: u_child_k = M_k * u_parent
   // For forward MST (restriction), we use the transpose: u_parent = (1/2^D) * sum_k M_k^T * u_child_k
 
-  std::cout << "Computing mask coefficients for " << t8_eclass_to_string[ECLASS] << ", P=" << order << "...\n";
+  t8_debugf ("Computing mask coefficients for %s, P=%zu\n", t8_eclass_to_string[ECLASS], order);
 
   for (int k = 0; k < NUM_CHILDREN; ++k) {
     for (size_t i = 0; i < dof; ++i) {
@@ -200,18 +195,6 @@ compute_mask_coefficients (size_t order, size_t dof, std::vector<t8_mra::mat> &m
     }
   }
 
-  // Debug output: print first mask matrix
-  std::cout << "\nMask matrix for child 0 (scaling functions):\n";
-  for (size_t i = 0; i < std::min (dof, size_t (5)); ++i) {
-    for (size_t j = 0; j < std::min (dof, size_t (5)); ++j) {
-      std::cout << std::setw (12) << std::setprecision (6) << mask_coeffs[0](i, j) << " ";
-    }
-    std::cout << (dof > 5 ? "..." : "") << "\n";
-  }
-  if (dof > 5)
-    std::cout << "...\n";
-
-  std::cout << "\nMask coefficients computed successfully.\n\n";
 }
 
 /**

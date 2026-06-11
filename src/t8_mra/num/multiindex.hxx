@@ -94,14 +94,6 @@ generate_tensor_pset (int P)
     //   }
     // }
 
-    // Debug: print pset ordering for P=3
-    // if (P == 3) {
-    //   std::cout << "DEBUG: P=" << P << " pset ordering: ";
-    //   for (unsigned i = 0; i < idx; ++i) {
-    //     std::cout << "[" << pset[i][0] << " " << pset[i][1] << "] ";
-    //   }
-    //   std::cout << "\n";
-    // }
   }
   else if constexpr (DIM == 3) {
     // 3D case: ix-fast, then iy, then iz

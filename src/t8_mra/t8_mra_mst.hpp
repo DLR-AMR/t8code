@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 
 namespace t8_mra
 {

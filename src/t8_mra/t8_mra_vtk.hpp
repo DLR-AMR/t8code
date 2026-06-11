@@ -795,7 +795,7 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 
   file.close ();
 
-  std::cout << "  Wrote VTK file: " << filename << std::endl;
+  t8_debugf ("Wrote VTK file: %s\n", filename.c_str ());
 }
 
 }  // namespace t8_mra

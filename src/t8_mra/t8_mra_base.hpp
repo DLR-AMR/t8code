@@ -15,7 +15,6 @@
 
 #include <array>
 #include <vector>
-#include <iostream>
 
 namespace t8_mra
 {
