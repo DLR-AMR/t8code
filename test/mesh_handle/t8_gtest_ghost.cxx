@@ -102,6 +102,8 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     for (const auto& coordinate : (*mesh)[ighost].get_face_normal (0)) {
       EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
     }
+    EXPECT_LT (0, (*mesh)[ighost].get_num_vertices_of_face (0));
+    EXPECT_LE (0, (*mesh)[ighost].face_vertex_to_element_vertex (0, 0));
     // Check exemplary that caches work for ghost elements.
     EXPECT_TRUE ((*mesh)[ighost].volume_cache_filled ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
