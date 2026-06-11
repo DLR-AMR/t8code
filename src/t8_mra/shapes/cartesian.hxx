@@ -48,14 +48,9 @@ class multiscale<TShape, U, P>:
    * @brief Constructor for cartesian multiscale
    *
    * @param _max_level Maximum refinement level
-   * @param _c_thresh Coarsening threshold
-   * @param _gamma Gamma parameter for thresholding
-   * @param _num_quad_points_1d Number of 1D Gauss-Legendre quadrature points
-   * @param _balanced Whether to balance the forest
    * @param _comm MPI communicator
    */
-  multiscale (int _max_level, double _c_thresh, int _gamma, int _num_quad_points_1d, bool _balanced, sc_MPI_Comm _comm)
-    : Base (_max_level, _c_thresh, _gamma, _num_quad_points_1d, _balanced, _comm)
+  multiscale (int _max_level, sc_MPI_Comm _comm): Base (_max_level, _comm)
   {
     // Initialize mask coefficients via computation
     t8_mra::initialize_mask_coefficients_computed<TShape> (Base::P_DIM, Base::DOF, Base::mask_coefficients,

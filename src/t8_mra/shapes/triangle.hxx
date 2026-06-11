@@ -44,14 +44,9 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    * @brief Constructor for triangle multiscale
    *
    * @param _max_level Maximum refinement level
-   * @param _c_thresh Coarsening threshold
-   * @param _gamma Gamma parameter for thresholding
-   * @param _dunavant_rule Dunavant quadrature rule
-   * @param _balanced Whether to balance the forest
    * @param _comm MPI communicator
    */
-  multiscale (int _max_level, double _c_thresh, int _gamma, int _dunavant_rule, bool _balanced, sc_MPI_Comm _comm)
-    : Base (_max_level, _c_thresh, _gamma, _dunavant_rule, _balanced, _comm)
+  multiscale (int _max_level, sc_MPI_Comm _comm): Base (_max_level, _comm)
   {
     // Initialize mask coefficients from hardcoded values
     t8_mra::initialize_mask_coefficients<TShape> (Base::P_DIM, Base::DOF, Base::mask_coefficients,
