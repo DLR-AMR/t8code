@@ -291,8 +291,8 @@ class multiscale_base: public multiscale_data<TShape> {
   /**
    * @brief Perform hard thresholding on detail coefficients
    *
-   * Only populates td_set. refinement_set and coarsening_set are populated
-   * later in sync_d_with_td().
+   * Marks significant details in td_set; the adaptation routines decide
+   * what to do with the rest.
    *
    * @param l_min Minimum refinement level
    * @param l_max Maximum refinement level
@@ -317,41 +317,6 @@ class multiscale_base: public multiscale_data<TShape> {
   }
 
   /**
-   * @brief Perform Harten's prediction for refinement
-   *
-   * Predicts significant details at finer levels based on current details.
-   * If a detail at level l is significant, its children at level l+1
-   * are added to the td_set.
-   *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
-   */
-  void
-  hartens_prediction (unsigned int l_min, unsigned int l_max)
-  {
-    for (auto l = l_min; l < l_max; ++l) {
-      for (const auto &[lmi, _] : d_map[l]) {
-        auto detail_norm = local_detail_norm (lmi);
-
-        for (auto u = 0u; u < U_DIM; ++u)
-          detail_norm[u] /= c_scaling[u];
-
-        const auto d_max = *std::max_element (detail_norm.begin (), detail_norm.end ());
-        const auto local_eps = c_thresh * local_threshold_value (lmi);
-
-        // Harten's heuristic: if current detail is significant, children might be too
-        if (d_max > local_eps) {
-          td_set.insert (lmi);
-          const auto children = t8_mra::children_lmi (lmi);
-          for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-            td_set.insert (children[k]);
-          }
-        }
-      }
-    }
-  }
-
-  /**
    * @brief Compute local threshold value for an element
    *
    * Implements uniform subdivision thresholding (Veli eq. 2.44)
@@ -369,64 +334,6 @@ class multiscale_base: public multiscale_data<TShape> {
     const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
 
     return h_max_level / h_lambda;
-  }
-
-  /**
-   * @brief Synchronize detail map with significant detail set
-   *
-   * Adds elements from td_set to d_map (for refinement) and
-   * removes elements not in td_set from d_map (for coarsening).
-   *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
-   */
-  void
-  sync_d_with_td (unsigned int l_min, unsigned int l_max)
-  {
-    // Add significant elements to detail map
-    for (auto l = l_min; l < l_max; ++l) {
-      for (const auto &lmi : td_set[l]) {
-        if (!d_map.contains (lmi)) {
-          d_map.insert (lmi, element_t {});
-          refinement_set.insert (lmi);
-        }
-      }
-    }
-
-    // Remove non-significant elements from detail map
-    const auto d_copy = d_map;
-    for (auto l = static_cast<int> (l_max) - 1; l >= static_cast<int> (l_min); --l) {
-      for (const auto &[lmi, _] : d_copy[l]) {
-        if (!td_set.contains (lmi)) {
-          d_map.erase (lmi);
-          for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-            const auto children = t8_mra::children_lmi (lmi);
-            coarsening_set.insert (children[k]);
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * @brief Generate td_tree by including parents of significant elements
-   *
-   * Ensures that if an element is in td_set, all its ancestors are also included.
-   * This maintains tree consistency for the adapted forest.
-   *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
-   */
-  void
-  generate_td_tree (unsigned int l_min, unsigned int l_max)
-  {
-    for (auto l = static_cast<int> (l_max) - 1; l > static_cast<int> (l_min); --l) {
-      for (const auto &lmi : td_set[l]) {
-        const auto parent_lmi = t8_mra::parent_lmi (lmi);
-        if (!td_set.contains (parent_lmi))
-          td_set.insert (parent_lmi);
-      }
-    }
   }
 
   /**
