@@ -288,6 +288,9 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
       }
       T8_FREE (user_data);
     }
+
+    if (Base::forest != nullptr)
+      t8_forest_unref (&this->forest);
   }
 };
 

@@ -286,6 +286,9 @@ class multiscale<TShape, U, P>:
       }
       T8_FREE (user_data);
     }
+
+    if (Base::forest != nullptr)
+      t8_forest_unref (&this->forest);
   }
 };
 
