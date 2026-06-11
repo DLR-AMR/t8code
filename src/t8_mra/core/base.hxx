@@ -87,21 +87,8 @@ class multiscale_base: public multiscale_data<TShape> {
   /// Maximum refinement level
   unsigned int maximum_level;
 
-  /// Coarsening threshold
-  double c_thresh;
-
-  /// Scaling factors for each solution component
+  /// Scaling factors for each solution component (set by criteria via prepare)
   std::array<double, U> c_scaling;
-
-  /// Gamma parameter for thresholding
-  int gamma;
-
-  /// Epsilon values for thresholding
-  std::vector<double> eps;
-
-  /// Quadrature/integration parameters (element-specific)
-  int num_quad_points_1d;  // For cartesian: Gauss-Legendre points per dimension
-  int dunavant_rule;       // For triangles: Dunavant quadrature rule
 
   /// DG basis for projection
   t8_mra::dg_basis<element_t> basis;
@@ -121,11 +108,14 @@ class multiscale_base: public multiscale_data<TShape> {
   /// t8code forest
   t8_forest_t forest;
 
-  /// Whether to balance the forest
-  bool balanced;
-
   /// MPI communicator
   sc_MPI_Comm comm;
+
+  /// Default quadrature accuracy, derived from the polynomial order: exact
+  /// for products of two basis functions (degree 2(P-1)), with margin for
+  /// the projection of general data.
+  static constexpr int default_dunavant_rule = 2 * P;       // rule number == polynomial exactness
+  static constexpr int default_num_quad_points_1d = P + 1;  // n points exact to degree 2n-1
 
  public:
   //=============================================================================
@@ -136,59 +126,32 @@ class multiscale_base: public multiscale_data<TShape> {
    * @brief Constructor for cartesian elements (QUAD, LINE, HEX)
    *
    * @param _max_level Maximum refinement level
-   * @param _c_thresh Coarsening threshold
-   * @param _gamma Gamma parameter for thresholding
-   * @param _num_quad_points_1d Number of 1D Gauss-Legendre quadrature points
-   * @param _balanced Whether to balance the forest
    * @param _comm MPI communicator
    */
-  multiscale_base (int _max_level, double _c_thresh, int _gamma, int _num_quad_points_1d, bool _balanced,
-                   sc_MPI_Comm _comm)
+  multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires is_cartesian<TShape>
-    : maximum_level (_max_level), c_thresh (_c_thresh), gamma (_gamma), num_quad_points_1d (_num_quad_points_1d),
-      dunavant_rule (-1), balanced (_balanced), comm (_comm), basis (_num_quad_points_1d, P_DIM),
-      d_map (maximum_level), td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level)
+    : maximum_level (_max_level), basis (default_num_quad_points_1d, P_DIM), d_map (maximum_level),
+      td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level), comm (_comm)
   {
-    initialize_common ();
+    c_scaling.fill (1.0);
   }
 
   /**
    * @brief Constructor for triangular elements
    *
    * @param _max_level Maximum refinement level
-   * @param _c_thresh Coarsening threshold
-   * @param _gamma Gamma parameter for thresholding
-   * @param _dunavant_rule Dunavant quadrature rule
-   * @param _balanced Whether to balance the forest
    * @param _comm MPI communicator
    */
-  multiscale_base (int _max_level, double _c_thresh, int _gamma, int _dunavant_rule, bool _balanced, sc_MPI_Comm _comm)
+  multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires (TShape == T8_ECLASS_TRIANGLE)
-    : maximum_level (_max_level), c_thresh (_c_thresh), gamma (_gamma), num_quad_points_1d (-1),
-      dunavant_rule (_dunavant_rule), balanced (_balanced), comm (_comm),
-      basis (t8_mra::dunavant_order_num (_dunavant_rule), _dunavant_rule), d_map (maximum_level),
-      td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level)
+    : maximum_level (_max_level), basis (t8_mra::dunavant_order_num (default_dunavant_rule), default_dunavant_rule),
+      d_map (maximum_level), td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level),
+      comm (_comm)
   {
-    initialize_common ();
+    c_scaling.fill (1.0);
   }
 
   virtual ~multiscale_base () = default;
-
- protected:
-  /**
-   * @brief Common initialization for all element types
-   */
-  void
-  initialize_common ()
-  {
-    // Initialize scaling factors (can be customized per component)
-    c_scaling.fill (1.0);
-
-    // Epsilon values for level-dependent thresholding
-    eps.resize (maximum_level + 1);
-    for (auto l = 0u; l <= maximum_level; ++l)
-      eps[l] = c_thresh * std::pow (2.0, -gamma * static_cast<int> (l));
-  }
 
  public:
   //=============================================================================
@@ -313,10 +276,11 @@ class multiscale_base: public multiscale_data<TShape> {
    * Implements uniform subdivision thresholding (Veli eq. 2.44)
    *
    * @param lmi Level multi-index
+   * @param gamma Expected order of convergence (criterion parameter)
    * @return Local threshold value
    */
   double
-  local_threshold_value (const levelmultiindex &lmi)
+  local_threshold_value (const levelmultiindex &lmi, int gamma)
   {
     const auto vol = d_map.get (lmi).vol;
 
