@@ -33,11 +33,15 @@
 /** The scheme builder adds eclass schemes to a scheme container and returns it.
  * TODO: Make return value a reference.
  */
-class t8_scheme_builder {
+struct t8_scheme_builder
+{
  public:
   t8_scheme_builder (): scheme (new t8_scheme) {};
   ~t8_scheme_builder () {};
 
+  /** Datatype for scheme variable, storing a variant of 
+   * all scheme types. \see t8_scheme::scheme_var
+  */
   using scheme_var = t8_scheme::scheme_var;
 
   /** Add a new element class scheme to the scheme.

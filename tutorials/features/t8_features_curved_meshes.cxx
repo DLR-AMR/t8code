@@ -23,7 +23,7 @@
 /* See also: https://github.com/DLR-AMR/t8code/wiki/Feature---Curved-meshes
  *
  * This is a feature tutorial about curved meshes.
- * In the following we will generate an input mesh and input geometry in Gmsh. 
+ * In the following we will generate an input mesh and input geometry in Gmsh.
  * Furthermore, we will read those files in and build a curved forest with them.
  * As refinement criterion we will define a wall which is moving through the mesh
  * and we will refine elements based on their neighboring geometrical geometries.
@@ -35,23 +35,23 @@
  *   - Refine the mesh at different geometries.
  *  */
 
-#include <t8.h>                                 /* General t8code header, always include this. */
-#include <sc_options.h>                         /* CLI parser */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
-#include <t8_cmesh/t8_cmesh_types.h>            /* For the attribute keys.  */
-#include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
-#include <t8_forest/t8_forest_io.h>             /* save forest */
-#include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default.hxx> /* default refinement scheme. */
+#include <t8.h>                                        /* General t8code header, always include this. */
+#include <sc_options.h>                                /* CLI parser */
+#include <t8_cmesh/t8_cmesh.h>                         /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h> /* For the attribute keys.  */
+#include <t8_forest/t8_forest_general.h>               /* forest definition and basic interface. */
+#include <t8_forest/t8_forest_io.h>                    /* save forest */
+#include <t8_forest/t8_forest_geometrical.h>           /* geometrical information of the forest */
+#include <t8_schemes/t8_default/t8_default.hxx>        /* default refinement scheme. */
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx> /* Linear geometry calculation of trees */
 #if T8_ENABLE_OCC
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx> /* Curved geometry calculation of trees */
 #endif
-#include <t8_cmesh_readmshfile.h> /* msh file reader */
-#include <string>                 /* std::string */
-#include <array>                  /* std::array */
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h> /* msh file reader */
+#include <string>                                      /* std::string */
+#include <array>                                       /* std::array */
 
-/* We use this data to control to which level the elements at which 
+/* We use this data to control to which level the elements at which
  * geometry get refined. */
 struct t8_naca_geometry_adapt_data
 {
@@ -61,7 +61,7 @@ struct t8_naca_geometry_adapt_data
   int *levels;      /** Array with refinement levels */
 };
 
-/** 
+/**
  * The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
  *   return > 0 -> This element should get refined.
@@ -72,11 +72,11 @@ struct t8_naca_geometry_adapt_data
  *   return > 0 -> The first element should get refined.
  *   return = 0 -> The first element should not get refined.
  *   return < 0 -> The whole family should get coarsened.
- * 
+ *
  * In this case, the function retrieves the geometry information of the tree the element belongs to.
  * Based on that the function looks whether the tree is linked to a specific geometry
  * and if this element touches this geometry. If true, it returns 1. Otherwise it returns 0.
- *  
+ *
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
@@ -130,9 +130,9 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
   return 0;
 }
 
-/** 
+/**
  * The geometry refinement function. Here, we refine all elements, which touch certain geometries.
- *  
+ *
  * \param [in] forest           The forest that has to be refined
  * \param [in] fileprefix       The prefix of the msh and brep file.
  *                              Influences only the vtu file name.
@@ -172,7 +172,7 @@ t8_naca_geometry_refinement (t8_forest_t forest, const std::string &fileprefix, 
     geometries.data (), /* Array with geometry indices */
     levels.data ()      /* Array with refinement levels */
   };
-  /* Adapt and balance the forest. 
+  /* Adapt and balance the forest.
    * Note, that we have to hand the adapt data to the forest before the commit. */
   t8_forest_init (&forest_new);
   t8_forest_set_adapt (forest_new, forest, t8_naca_geometry_adapt_callback, 1);
@@ -204,7 +204,7 @@ struct t8_naca_plane_adapt_data
   int rlevel;   /* The max refinement level */
 };
 
-/** 
+/**
  * The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
  *   return > 0 -> This element should get refined.
@@ -215,12 +215,12 @@ struct t8_naca_plane_adapt_data
  *   return > 0 -> The first element should get refined.
  *   return = 0 -> The first element should not get refined.
  *   return < 0 -> The whole family should get coarsened.
- * 
+ *
  * In this case the function checks whether the element or family is in a certain proximity to a refinement plane.
  * If true and the element does not have a max level, 1 is returned. If a family of elements
- * is too far away and the level is not below or equal the min level threshold -1 is returned. 
+ * is too far away and the level is not below or equal the min level threshold -1 is returned.
  * Otherwise 0 is returned.
- *  
+ *
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
@@ -264,10 +264,10 @@ t8_naca_plane_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_lo
   return 0;
 }
 
-/** 
+/**
  * The plane refinement function. Here we create a refinement loop, which moves a plane
  * through the mesh and refines it near the plane.
- *  
+ *
  * \param [in] forest           The forest which has to be refined.
  * \param [in] fileprefix       The prefix of the msh and brep file.
  *                              Influences only the vtu file name.
@@ -300,7 +300,7 @@ t8_naca_plane_refinement (t8_forest_t forest, const std::string &fileprefix, int
 
   /* Moving plane loop */
   while (adapt_data.t < steps) {
-    /* Adapt and balance the forest. 
+    /* Adapt and balance the forest.
      * Note, that we have to hand the adapt data to the forest before the commit. */
     t8_forest_init (&forest_new);
     t8_forest_set_adapt (forest_new, forest, t8_naca_plane_adapt_callback, 1);

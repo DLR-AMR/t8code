@@ -63,8 +63,8 @@ typedef int8_t t8_dpyramid_type_t;
  */
 typedef struct t8_dpyramid
 {
-  t8_dtet_t pyramid; /* Coordinates, level and type */
-  int8_t switch_shape_at_level;
+  t8_dtet_t pyramid;            /**< Coordinates, level and type */
+  int8_t switch_shape_at_level; /**< Level, at which the shape switches from tet, to pyra. */
 } t8_dpyramid_t;
 
 #endif /* T8_DPYRAMID_H */

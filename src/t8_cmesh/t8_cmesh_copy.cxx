@@ -20,30 +20,32 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_copy.cxx
- *
- * TODO: document this file
+/** \file t8_cmesh_copy.c
+ * Functionality to copy a cmesh.
  */
 
 #include <t8_data/t8_shmem.h>
-#include <t8_cmesh.h>
-#include "t8_cmesh_types.h"
-#include "t8_cmesh_partition.h"
-#include "t8_cmesh_trees.h"
-#include "t8_cmesh_copy.h"
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
-
-T8_EXTERN_C_BEGIN ();
 
 void
 t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
 {
-  size_t num_parts, iz;
+  size_t num_parts;
   t8_locidx_t first_tree, num_trees, first_ghost, num_ghosts;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (!cmesh->committed);
   T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
+
+  if (t8_cmesh_uses_vertex_connectivity (cmesh_from)) {
+    SC_ABORT ("Error in t8_cmesh_copy: The given cmesh cannot be copied because it uses vertex connectivity, "
+              "see https://github.com/DLR-AMR/t8code/issues/1799.\n");
+  }
 
   /* Copy all variables */
   cmesh->dimension = cmesh_from->dimension;
@@ -57,6 +59,9 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
   cmesh->num_trees = cmesh_from->num_trees;
   cmesh->set_partition = cmesh_from->set_partition;
   cmesh->set_partition_level = cmesh_from->set_partition_level;
+#if T8_ENABLE_DEBUG
+  cmesh->negative_volume_check = cmesh_from->negative_volume_check;
+#endif /* T8_ENABLE_DEBUG */
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
   if (cmesh_from->vertex_connectivity != nullptr)
@@ -80,10 +85,10 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
     num_parts = t8_cmesh_trees_get_numproc (cmesh_from->trees);
     t8_cmesh_trees_init (&cmesh->trees, num_parts, cmesh_from->num_local_trees, cmesh_from->num_ghosts);
     t8_cmesh_trees_copy_toproc (cmesh->trees, cmesh_from->trees, cmesh_from->num_local_trees, cmesh_from->num_ghosts);
-    for (iz = 0; iz < num_parts; iz++) {
-      t8_cmesh_trees_get_part_data (cmesh_from->trees, iz, &first_tree, &num_trees, &first_ghost, &num_ghosts);
-      t8_cmesh_trees_start_part (cmesh->trees, iz, first_tree, num_trees, first_ghost, num_ghosts, 0);
-      t8_cmesh_trees_copy_part (cmesh->trees, iz, cmesh_from->trees, iz);
+    for (size_t ipart = 0; ipart < num_parts; ipart++) {
+      t8_cmesh_trees_get_part_data (cmesh_from->trees, ipart, &first_tree, &num_trees, &first_ghost, &num_ghosts);
+      t8_cmesh_trees_start_part (cmesh->trees, ipart, first_tree, num_trees, first_ghost, num_ghosts, 0);
+      t8_cmesh_trees_copy_part (cmesh->trees, ipart, cmesh_from->trees, ipart);
     }
   }
 }

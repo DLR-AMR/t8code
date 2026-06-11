@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_parallel.hxx
+ * This file contains all helper functions to translate parallel vtk files. 
+ */
+
 #ifndef T8_VTK_PARALLEL_HXX
 #define T8_VTK_PARALLEL_HXX
 

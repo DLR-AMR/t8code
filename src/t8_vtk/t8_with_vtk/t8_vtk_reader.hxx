@@ -29,7 +29,7 @@
 #ifndef T8_VTK_READER
 #define T8_VTK_READER
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_vtk/t8_vtk_types.h>
 
 #include <vtkSmartPointer.h>

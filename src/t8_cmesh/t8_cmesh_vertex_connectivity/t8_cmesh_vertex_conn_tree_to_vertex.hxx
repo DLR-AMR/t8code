@@ -41,18 +41,19 @@
 #define T8_CMESH_VERTEX_CONN_TREE_TO_VERTEX_HXX
 
 #include <algorithm>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <span>
 
-/** forward declaration of ttv class needed since the two class headers include each other. */
-class t8_cmesh_vertex_conn_vertex_to_tree;
+/** forward declaration of the class needed since the two class headers include each other. */
+struct t8_cmesh_vertex_conn_vertex_to_tree;
 
 /**
  * A class to hold the tree to vertex connectivity of a cmesh.
  */
-class t8_cmesh_vertex_conn_tree_to_vertex {
+struct t8_cmesh_vertex_conn_tree_to_vertex
+{
  public:
   /** Standard constructor. Does nothing. */
   t8_cmesh_vertex_conn_tree_to_vertex (): current_state (state::EMPTY)
@@ -77,7 +78,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
    * \param [in] cmesh      An initialized but not committed cmesh that is to be derived from \a cmesh_from.
    * \param [in] vtt        A committed vertex to tree connectivity for \a cmesh_from.
    *
-   * As a result a tree to vertec connectivity for \a cmesh will be constructed.
+   * As a result a tree to vertex connectivity for \a cmesh will be constructed.
    * \note \a cmesh_from must be committed.
    * \note \a cmesh must not be committed.
    * \note \a vtt must be committed.
@@ -112,7 +113,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
 
     /* We copy the data directly, hence set data_persiss to 0 */
     const int data_persists = 0;
-    t8_debugf ("Setting %i global vertices for global tree %li.\n", num_vertices, global_tree);
+    t8_debugf ("Setting %i global vertices for global tree %" T8_GLOIDX_FORMAT ".\n", num_vertices, global_tree);
     t8_cmesh_set_attribute_gloidx_array (cmesh, global_tree, t8_get_package_id (),
                                          T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY, global_tree_vertices, num_vertices,
                                          data_persists);
@@ -169,7 +170,7 @@ class t8_cmesh_vertex_conn_tree_to_vertex {
   friend struct t8_cmesh_vertex_connectivity;
 
  private:
-  enum class state {
+  enum struct state {
     EMPTY, /*< Is initialized but empty. */
     FILLED /*< Is filled with at least one entry. */
   };

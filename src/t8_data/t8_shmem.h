@@ -30,7 +30,7 @@
 #include <t8.h>
 #include <sc_shmem.h>
 
-typedef struct t8_shmem_array *t8_shmem_array_t;
+typedef struct t8_shmem_array *t8_shmem_array_t; /**< A shared memory array structure. */
 
 /** Defines the shared memory type that is best suited for t8code and the
  * current machine.
@@ -53,8 +53,11 @@ T8_EXTERN_C_BEGIN ();
  * \note This function needs to be called to enable shared memory usage for a communicator.
  * \note Calling this function multiple times with the same communicator is safe and does
  *  not change the behaviour.
+ * \return                    If the intranode communicator cannot be
+ *                            obtained, return 0.
+ *                            Otherwise return size of intranode communicator.
  */
-void
+int
 t8_shmem_init (sc_MPI_Comm comm);
 
 #if T8_ENABLE_DEBUG
@@ -100,6 +103,8 @@ t8_shmem_array_init (t8_shmem_array_t *parray, size_t elem_size, size_t elem_cou
 
 /** Enable writing mode for a shmem array. Only some processes may be allowed
  *  to write into the array, which is indicated by the return value being non-zero.
+ *  The shared memory is managed via inter- and intranode communicators.
+ *  Only rank 0 of the intranode communicator will be allowed to write into the array.
  * \param [in,out]      array Initialized array. Writing will be enabled on certain processes.
  * \return                    True if the calling process can write into the array.
  * \note This function is MPI collective.
@@ -138,7 +143,7 @@ t8_shmem_array_copy (t8_shmem_array_t dest, t8_shmem_array_t source);
  * \param[in] sendbuf         the source from this process
  * \param[in] sendcount       the number of items to allgather
  * \param[in] sendtype        the type of items to allgather
- * \param[in,out] recvbuf     the destination shmem array
+ * \param[in,out] recvarray   the destination shmem array
  * \param[in] recvcount       the number of items to allgather
  * \param[in] recvtype        the type of items to allgather
  * \note Writing mode must be disabled for \a recvarray.
@@ -152,31 +157,31 @@ t8_shmem_array_allgather (const void *sendbuf, int sendcount, sc_MPI_Datatype se
  * Computes the recvcount-array and displacement-array for each rank of a node using the
  * sendcount.
  * The total number of items of each node is then used to compute the
- * recvcount-array and displacement-array between nodes. 
- * Use t8_shmem_array_allgather if the sendcount is equal on all procs for better scaling. 
- * 
+ * recvcount-array and displacement-array between nodes.
+ * Use t8_shmem_array_allgather if the sendcount is equal on all procs for better scaling.
+ *
  * \param[in] sendbuf         the source from this process
  * \param[in] sendcount       the number of items to gather on this proc
  * \param[in] sendtype        the type of items to gather
  * \param[in, out] recvarray  array of type recvtype where the data gets written to
  * \param[in] recvtype        the type of items to receive
  * \param[in] comm            the mpi communicator
- * 
+ *
  */
 void
 t8_shmem_array_allgatherv (void *sendbuf, const int sendcount, sc_MPI_Datatype sendtype, t8_shmem_array_t recvarray,
                            sc_MPI_Datatype recvtype, sc_MPI_Comm comm);
 
 /**
- * Fill a t8_shmem array with an Allgather of the prefix operation over all 
- * processes. 
- * 
+ * Fill a t8_shmem array with an Allgather of the prefix operation over all
+ * processes.
+ *
  * The receive array will be
  * (0, send0, send0 op send1, send0 op send1 op send2, ...)
- * 
- * \note the first entry of \a recvarray will be set to 0 using memset. 
- * The entry can be changed after calling t8_shmem_array_prefix 
- * 
+ *
+ * \note the first entry of \a recvarray will be set to 0 using memset.
+ * The entry can be changed after calling t8_shmem_array_prefix
+ *
  * \param[in] sendbuf           The source from this process
  * \param[in, out] recvarray    The destination shmem array
  * \param[in] count             The number of items to gather
@@ -264,8 +269,11 @@ t8_shmem_array_index (t8_shmem_array_t array, size_t index);
 void *
 t8_shmem_array_index_for_writing (t8_shmem_array_t array, size_t index);
 
-/* TODO: implement and comment */
-/* returns true if arrays are equal 
+/**
+ * Check if two t8_shmem arrays are equal.
+ * \param [in]          array_a The first t8_shmem_array to compare.
+ * \param [in]          array_b The second t8_shmem_array to compare.
+ * \return              1 if the arrays are equal, 0 otherwise.
  * \note Writing mode must be disabled for \a array_a and \a array_b.
  */
 int

@@ -24,11 +24,11 @@
  * In this tutorial we discuss t8code's search algorithm.
  * search is a powerful tool to identify leaf elements that match a given condition
  * and execute a function on them.
- * 
+ *
  * In the example we will create random 'particles', thus points in a subdomain of our domain,
  * and then use search to find those leaf elements that contain particles and for each element
  * count the number of particles it contains.
- * 
+ *
  * How you can experiment here:
  *    - Load the generated vtu files with paraview and add a threshold to the
  *      "Number of particles" field to display the elements with 1 or more particles.
@@ -39,15 +39,15 @@
  *    - Do not count particles in elements whose x-coordinates are all smaller than 0.5 .
  *    - Advanced: Use adapt to refine elements with more than 1 particle in them recursively until each
  *                element contains at most 1 particle.
- * 
- * 
- * The search algorithm does not iterate linearly through our elements, instead 
+ *
+ *
+ * The search algorithm does not iterate linearly through our elements, instead
  * it traverses recursively through the mesh hierarchy. This has the benefit, that we
  * can exclude whole regions of the mesh from our search as soon as we can determine that
  * they will not match the criterion.
  * You can see in the output of this program that the number of searched elements is
  * significantly smaller than the actual number of elements.
- * 
+ *
  * In each (process local) tree of the forest, search will create the level 0 element that
  * coincides with the tree and call the search-callback function on it.
  * In the callback the user decides whether to continue the search or not.
@@ -55,15 +55,15 @@
  * search callback will be called for them -- again deciding whether to continue or not.
  * This process repeats recursively and stops at those fine elements that are actually contained
  * in the forest (leaf elements).
- * 
- * The search algorithm can be given an array of 'queries' and a query-callback. 
+ *
+ * The search algorithm can be given an array of 'queries' and a query-callback.
  * These queries can be arbitrarily defined data. In our case this will be the array of particles.
  * If queries and a query-callback are provided, then for each element first the search-callback
  * is called to decide whether or not to continue searching. If it returns true, the query-callback
- * will be called once for each active query object. 
+ * will be called once for each active query object.
  * If the query object returns 0, this query object will get deactivated for this element and its
  * recursive children. The recursion stops when no queries are active anymore.
- * 
+ *
  * It is probably best to illustrate this with an example. Let the following forest
  * with 2 quad trees be given.
  *  __ __ __ __ __________
@@ -71,44 +71,44 @@
  * |_*|_*|__ __|  *       |
  * |__|__|__|__|    *     |
  * |__|__|__|__|__________|
- * 
+ *
  * The '*' should mark particles for which we want to find the elements containing them.
  * These particles are our queries. Let us enumerate them 0, 1, 2, 3, 4 from left to right.
  * The search should always continue for an element as long as we still may have particles to look for,
  * thus the search callback can always return true. The query-callback will return true if
  * and only if the current particle is contained inside the element.
  * We discuss the search process in the left tree.
- * 
+ *
  *   __ __ __ __                                         __ __ __ __
  *  |        *  |                                       |     |  *  |
  *  | *  *      |  *                                    |_* _*|__ __|
  *  |           |      *                        --->    |     |     |
  *  |__ __ __ __|                                       |__ __|__ __|
- * 
- *  At first, the tree element is considered            The children are created and the search is called 
+ *
+ *  At first, the tree element is considered            The children are created and the search is called
  *  and all queries are active. The first 3 are         for each one of them. For the upper left, queries 0 and 1
  *  inside the element, the last 2 not. Thus the        will remain active. The upper right is the final forest leaf, so the search stops.
- *  search will continue, but only queries 0, 1, 2      For the bottom two children no queries will remain active 
+ *  search will continue, but only queries 0, 1, 2      For the bottom two children no queries will remain active
  *  remain active.                                      and hence the search won't continue here.
- * 
- *  __ __ 
+ *
+ *  __ __
  * |__|__|
  * |_*|_*|
- * 
+ *
  *  The search continues with the children of the upper left element.
  *  Those are all leaves in the forest and hence the search will stop after
  *  executing the query callback.
- *  
+ *
  *  Afterwards the search will continue similarly in the second tree.
- * 
+ *
  *  Note that the performance of the search could be improved by using an approximative check
  *  on all but the leaf elements.
  *  This check should return true whenever a particle is inside an element, but may have false positives.
- * 
+ *
  */
 
 #include <t8.h>                                 /* General t8code header, always include this. */
-#include <t8_cmesh.h>                           /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>         /* A collection of exemplary cmeshes */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>             /* save forest */
@@ -135,13 +135,13 @@ struct t8_tutorial_search_user_data_t
 
 /*
  * The search callback.
- * It will be called once per element and generally decides whether or not 
+ * It will be called once per element and generally decides whether or not
  * to continue the search with the children of the element.
  * Since we will continue as long as there are particles left to consider,
  * we always return 1 here.
  * The search will then only stop when no queries are active (thus, no particles
  * could be in this element) or the element is a leaf element.
- * 
+ *
  * We also increase a counter by one in order to count how many elements we
  * looked at during the search process.
  */
@@ -296,12 +296,12 @@ t8_tutorial_search_for_particles (t8_forest_t forest, sc_array *particles)
 
   /* Print the number of elements and number of searched elements. */
   global_num_elements = t8_forest_get_global_num_leaf_elements (forest);
-  t8_global_productionf (" [search] Searched forest with %li global elements.\n",
-                         static_cast<long> (global_num_elements));
+  t8_global_productionf (" [search] Searched forest with %" T8_GLOIDX_FORMAT " global elements.\n",
+                         global_num_elements);
   t8_global_errorf (" [search] Looked at %i elements during search.\n", global_num_searched_elements);
 
   /*
-   * Clean up 
+   * Clean up
    */
   sc_array_reset (&particles_per_element);
 }
@@ -420,7 +420,7 @@ main (int argc, char **argv)
   /* Create an array with random particles. */
   sc_array_t *particles = t8_tutorial_search_build_particles (num_particles, seed, comm);
 
-  /* 
+  /*
    * Search for particles.
    */
 

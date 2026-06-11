@@ -20,6 +20,9 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_example_sets.hxx
+ * Define macro that includes all the cmesh example sets. Each example set should be defined in a separate file and included here.
+ */
 #ifndef T8_GTEST_CMESH_COMM_CREATOR_HXX
 #define T8_GTEST_CMESH_COMM_CREATOR_HXX
 
@@ -34,15 +37,14 @@
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_hypercube_param.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_empty.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_new_periodic.hxx"
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
 #include "test/t8_cmesh_generator/t8_gtest_cmesh_sum_of_sets.hxx"
 #include "test/t8_gtest_schemes.hxx"
 
 T8_EXTERN_C_BEGIN ();
 
 /**
- * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current cmesh_example_base
- * 
+ * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current \ref cmesh_example_base.
  */
 auto pretty_print_base_example = [] (const testing::TestParamInfo<cmesh_example_base *> &info) {
   std::string name;
@@ -50,6 +52,10 @@ auto pretty_print_base_example = [] (const testing::TestParamInfo<cmesh_example_
   return name;
 };
 
+/**
+ * lambda to pass to an INSTANTIATE_TEST_SUITE_P to print the current \ref cmesh_example_base and the scheme.
+ * 
+ */
 auto pretty_print_base_example_scheme = [] (const testing::TestParamInfo<std::tuple<int, cmesh_example_base *>> &info) {
   std::string name;
   std::get<1> (info.param)->param_to_string (name);
@@ -59,6 +65,7 @@ auto pretty_print_base_example_scheme = [] (const testing::TestParamInfo<std::tu
 
 namespace cmesh_list
 {
+/** Vector of all example cmesh sets. */
 std::vector<example_set *> cart_prod_vec = { new_from_class::cmesh_example,
                                              new_prism_cake::cmesh_example,
                                              new_bigmesh::cmesh_example,
@@ -71,10 +78,12 @@ std::vector<example_set *> cart_prod_vec = { new_from_class::cmesh_example,
                                              new_empty::cmesh_example,
                                              new_periodic::cmesh_example };
 
+/** Constructs cmeshes according to \ref cart_prod_vec. */
 cmesh_sum_of_sets cmesh_sums (cart_prod_vec);
 
 }  // namespace cmesh_list
 
+/** Macro that includes all cmesh example sets. */
 #define AllCmeshsParam \
   ::testing::ValuesIn (cmesh_list::cmesh_sums.cmesh_examples.begin (), cmesh_list::cmesh_sums.cmesh_examples.end ())
 

@@ -29,8 +29,8 @@
 #define T8_CMESH_VERTEX_CONNECTIVITY
 
 #include <memory>
-#include <t8_cmesh.h>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
@@ -53,7 +53,7 @@ struct t8_cmesh_vertex_connectivity
   ~t8_cmesh_vertex_connectivity () {};
 
   /** The state this connectivity can be in. */
-  enum class state {
+  enum struct state {
     INITIALIZED,          /**< Initialized but not filled */
     TREE_TO_VERTEX_VALID, /**< Ready to use, but only tree_to_vertex functionality. */
     VALID                 /**< Ready to use for full vertex connectivity. Cannot be altered anymore. */
@@ -220,6 +220,27 @@ struct t8_cmesh_vertex_connectivity
   {
     T8_ASSERT (current_state == state::VALID);
     return get_tree_list_of_vertex (global_vertex_id).size ();
+  }
+
+  /** Typedef for the iterator type. */
+  using const_iterator = t8_cmesh_vertex_conn_vertex_to_tree::const_iterator;
+
+  /** Iterator begin.
+   * \return const iterator pointing to the first element.
+  */
+  inline const_iterator
+  begin () const
+  {
+    return vertex_to_tree.begin ();
+  }
+
+  /** Iterator end.
+   * \return const iterator pointing behind the last element.
+  */
+  inline const_iterator
+  end () const
+  {
+    return vertex_to_tree.end ();
   }
 
  private:

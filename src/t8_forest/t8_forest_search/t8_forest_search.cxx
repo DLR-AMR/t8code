@@ -20,6 +20,11 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_search.cxx
+ * Implements functions declared in \ref t8_forest_search.hxx 
+ *  or the C interface \ref t8_forest_search.h.
+ */
+
 #include "t8_forest/t8_forest_search/t8_forest_search.hxx"
 #include "t8_forest/t8_forest_search/t8_forest_search.h"
 #include <t8_forest/t8_forest_iterate.h>
@@ -146,9 +151,12 @@ t8_search_base::do_search ()
 /* #################### t8_forest_search c interface #################### */
 T8_EXTERN_C_BEGIN ();
 
+/**
+ * The structure that contains the C++ search object. Needed for the C interface.
+ */
 struct t8_forest_c_search
 {
-  t8_search<void *> *cpp_search;
+  t8_search<void *> *cpp_search; /**< The C++ search object. */
 };
 
 void
@@ -188,12 +196,15 @@ t8_forest_search_destroy (t8_forest_search_c_wrapper search)
 {
   T8_ASSERT (search != NULL);
   delete search->cpp_search;
-  search->cpp_search = NULL;
+  search->cpp_search = nullptr;
 }
 
+/**
+ * The structure that contains the C++ search object with queries. Needed for the C interface.
+ */
 struct t8_forest_search_with_queries
 {
-  t8_search_with_queries<void *, void *> *cpp_search;
+  t8_search_with_queries<void *, void *> *cpp_search; /**< The C++ search object with queries. */
 };
 
 void
@@ -256,20 +267,36 @@ t8_forest_search_with_queries_destroy (t8_forest_search_with_queries_c_wrapper s
 {
   T8_ASSERT (search != NULL);
   delete search->cpp_search;
-  search->cpp_search = NULL;
+  search->cpp_search = nullptr;
 }
 
+/**
+ * The structure that contains the C++ search object with batched queries. Needed for the C interface.
+ */
 struct t8_forest_search_with_batched_queries
 {
-  t8_search_with_batched_queries<void *, void *> *cpp_search;
-  t8_search_batched_queries_callback_c_wrapper queries_callback;
+  t8_search_with_batched_queries<void *, void *> *cpp_search;    /**< The C++ search object. */
+  t8_search_batched_queries_callback_c_wrapper queries_callback; /**< The C++ query object. */
 
+  /**
+   * A wrapper function that converts the C callback to the C++ callback.
+   * \param[in] forest                  the forest on which the search is performed
+   * \param[in] ltreeid                 the local tree id of the tree being searched
+   * \param[in] element                 the element being searched
+   * \param[in] is_leaf                 whether the element is a leaf
+   * \param[in] leaf_elements           the array of leaf elements
+   * \param[in] tree_leaf_index         the index of the first leaf in the tree
+   * \param[in] queries                 a vector of pointers to the queries
+   * \param[in] active_query_indices    a vector of indices of the active queries
+   * \param[out] query_matches          a vector of booleans indicating whether each query matched
+   * \param[in] user_data               a pointer to user data
+   */
   void
   wrapped_queries_callback (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
                             const bool is_leaf, const t8_element_array_t *leaf_elements,
                             const t8_locidx_t tree_leaf_index, const std::vector<void *> &queries,
                             const std::vector<size_t> &active_query_indices, std::vector<bool> &query_matches,
-                            void *user_data)
+                            void *user_data) const
   {
     std::vector<int> query_matches_int (query_matches.size ());
     queries_callback (forest, ltreeid, element, is_leaf, leaf_elements, tree_leaf_index, queries.data (),
@@ -340,7 +367,7 @@ t8_forest_search_with_batched_queries_destroy (t8_forest_search_with_batched_que
 {
   T8_ASSERT (search != NULL);
   delete search->cpp_search;
-  search->cpp_search = NULL;
+  search->cpp_search = nullptr;
 }
 
 void
