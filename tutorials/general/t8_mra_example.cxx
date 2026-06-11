@@ -1,13 +1,13 @@
 /**
  * @file t8_mra_example.cxx
- * @brief Example showing MRA with VTK plotting for 2D and 3D elements
+ * @brief MRA tutorial: adaptive coarsening/refinement with VTK output
  *
  * Demonstrates:
- * 1. Triangle, quad, and hex MRA for triangle, quad and hex
- * 2. 2D and 3D VTK output generation at different stages
- * 3. Adaptive refinement/coarsening with visualization
- * 4. Comparison between uniform and adapted meshes
- * 5. High-order Lagrange element visualization
+ * 1. Full adaptation cycle (top-down): initialize -> coarsen -> refine -> coarsen
+ * 2. Bottom-up initialization: adaptive grid without building the uniform grid
+ * 3. Custom adaptation criteria
+ * 4. Triangle vs quad comparison on the same data
+ * 5. 3D (hex) adaptation
  */
 
 #ifdef T8_ENABLE_MRA
@@ -16,8 +16,8 @@
 #include "t8_cmesh.h"
 #include "t8_cmesh/t8_cmesh_examples.h"
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 #include <string>
 
 //=============================================================================
@@ -61,7 +61,7 @@ step_function ()
 }
 
 /**
- * @brief Quartercircle example
+ * @brief Two polynomials separated by a jump along a quarter circle
  */
 template <int U>
 auto
@@ -88,46 +88,19 @@ gaussian_bump_3d ()
   };
 }
 
-/**
- * @brief 3D Sine wave function
- */
-template <int U>
-auto
-sine_wave_3d ()
-{
-  return [] (double x, double y, double z) -> std::array<double, U> {
-    return { std::sin (2 * M_PI * x) * std::sin (2 * M_PI * y) * std::sin (2 * M_PI * z) };
-  };
-}
-
-/**
- * @brief 3D Step function (discontinuous octant)
- */
-template <int U>
-auto
-step_function_3d ()
-{
-  return [] (double x, double y, double z) -> std::array<double, U> {
-    return { (x > 0.5 && y > 0.5 && z > 0.5) ? 1.0 : 0.0 };
-  };
-}
-
 //=============================================================================
-// VTK Output Helpers
+// Helpers
 //=============================================================================
 
 /**
- * @brief Write VTK output for a given MRA state
+ * @brief Write high-order Lagrange VTK output (polynomial degree P-1)
  */
 template <typename MRA>
 void
-write_vtk_output (MRA &mra, const std::string &prefix, int step)
+write_vtk_output (MRA &mra, const std::string &filename)
 {
-  const std::string filename = prefix + "_step" + std::to_string (step);
+  std::cout << "  Writing VTK: " << filename << ".vtu\n";
 
-  std::cout << "  Writing VTK: " << filename << ".vtu" << std::endl;
-
-  // Write high-order Lagrange VTK (P-1 is polynomial degree)
   /// TODO Fix 3D Bug
   if (MRA::DIM == 3)
     t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), 1);
@@ -135,383 +108,282 @@ write_vtk_output (MRA &mra, const std::string &prefix, int step)
     t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), MRA::P_DIM - 1);
 }
 
-//=============================================================================
-// Example 1: Triangle MRA with Adaptation and Plotting
-//=============================================================================
-
-void
-example_triangle_adaptive_with_plotting ()
+/**
+ * @brief Print element and DOF count of the current grid
+ */
+template <typename MRA>
+t8_gloidx_t
+print_grid_stats (MRA &mra, const std::string &label)
 {
-  std::cout << "\n";
-  std::cout << "════════════════════════════════════════════════════════════\n";
-  std::cout << "  Triangle MRA: Adaptive Refinement with VTK Output\n";
-  std::cout << "════════════════════════════════════════════════════════════\n\n";
+  const auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  std::cout << "  " << label << ": " << num_elements << " elements, " << (num_elements * MRA::DOF * MRA::U_DIM)
+            << " DOF\n";
+  return num_elements;
+}
 
-  // MRA parameters
+//=============================================================================
+// Example 1: Full Adaptation Cycle (top-down)
+//=============================================================================
+
+/**
+ * Initialize on the uniform max_level grid, then coarsen away the
+ * non-significant details, refine via Harten's prediction (grading band at
+ * the jump) and coarsen again: the zero-detail children created by the
+ * refinement carry no information, so the grid returns to the coarsened one.
+ */
+void
+example_adaptation_cycle ()
+{
+  std::cout << "\n=== 1. Triangle: full adaptation cycle (top-down) ===\n";
+
   constexpr int U = 1;
   constexpr int P = 3;
   const int min_level = 0;
   const int max_level = 7;
   const double c_thresh = 1.0;
 
-  // Create multiscale object
   t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
 
-  // Create mesh
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
   auto *scheme = t8_scheme_new_default ();
-
-  // Initialize with Gaussian bump
-  std::cout << "1. Initializing uniform mesh at level " << max_level << "...\n";
-  // auto func = gaussian_bump<U> ();
-  // auto func = sine_wave<U> ();
-  // auto func = step_function<U> ();
-  auto func = quarter_circle<U> ();
-
   /* The forest takes ownership of cmesh and scheme; keep our own references
    * since we destroy/unref them explicitly below. */
   t8_cmesh_ref (cmesh);
   t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
-  mra.initialize_data (cmesh, scheme, max_level, func);
+  mra.initialize_data (cmesh, scheme, max_level, quarter_circle<U> ());
+  print_grid_stats (mra, "Uniform level " + std::to_string (max_level));
+  write_vtk_output (mra, "mra_output/01_cycle_step0_uniform");
 
-  auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
-
-  // Write initial uniform solution
-  write_vtk_output (mra, "mra_output/triangle_uniform", 0);
-
-  // Perform adaptive coarsening
-  std::cout << "2. Performing adaptive coarsening...\n";
   mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
+  const auto num_coarse = print_grid_stats (mra, "After coarsening");
+  write_vtk_output (mra, "mra_output/01_cycle_step1_coarsened");
 
-  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "\n   After coarsening:\n";
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
-
-  // Write coarsened solution
-  write_vtk_output (mra, "mra_output/triangle_coarsened", 1);
-
-  // Perform adaptive refinement
-  std::cout << "3. Performing adaptive refinement...\n";
   mra.refine (min_level, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
+  print_grid_stats (mra, "After refinement");
+  write_vtk_output (mra, "mra_output/01_cycle_step2_refined");
 
-  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "\n   After refinement:\n";
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
-
-  // Write refined solution
-  write_vtk_output (mra, "mra_output/triangle_refined", 2);
-
-  // Coarsen again: the zero-detail children created by the refinement carry
-  // no information and must be removed again -> grid close to step 1
-  std::cout << "4. Performing second adaptive coarsening...\n";
   mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
+  const auto num_recoarse = print_grid_stats (mra, "After second coarsening");
+  write_vtk_output (mra, "mra_output/01_cycle_step3_coarsened");
 
-  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "\n   After second coarsening:\n";
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
+  std::cout << "  Round-trip: " << num_coarse << " -> " << num_recoarse
+            << (num_coarse == num_recoarse ? " (exact)\n" : "\n");
 
-  write_vtk_output (mra, "mra_output/triangle_coarsened2", 3);
-
-  // Cleanup
   mra.cleanup ();
   t8_cmesh_destroy (&cmesh);
   t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
-
-  std::cout << "✓ Triangle example completed!\n\n";
 }
 
 //=============================================================================
-// Example 2: Quad MRA with Adaptation and Plotting
+// Example 2: Bottom-Up Initialization
 //=============================================================================
 
+/**
+ * Build the adaptive grid directly from the initial data: project on level 1,
+ * then refine level by level only where the details are significant. The
+ * uniform max_level grid of example 1 is never built.
+ */
 void
-example_quad_adaptive_with_plotting ()
+example_bottom_up ()
 {
-  std::cout << "\n";
-  std::cout << "════════════════════════════════════════════════════════════\n";
-  std::cout << "  Quad MRA: Adaptive Refinement with VTK Output\n";
-  std::cout << "════════════════════════════════════════════════════════════\n\n";
+  std::cout << "\n=== 2. Triangle: bottom-up initialization ===\n";
 
-  // MRA parameters
+  constexpr int U = 1;
+  constexpr int P = 3;
+  const int max_level = 7;
+  const double c_thresh = 1.0;
+
+  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
+
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
+  auto *scheme = t8_scheme_new_default ();
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
+  mra.initialize_data_adaptive (cmesh, scheme, max_level, quarter_circle<U> (),
+                                t8_mra::hard_thresholding { .c_thresh = c_thresh });
+
+  const auto num_adaptive = print_grid_stats (mra, "Adaptive grid");
+  const auto num_trees = t8_forest_get_num_global_trees (mra.get_forest ());
+  const auto num_uniform = num_trees * static_cast<t8_gloidx_t> (std::pow (4, max_level));
+  std::cout << "  Uniform level " << max_level << " grid (never built): " << num_uniform << " elements\n";
+  std::cout << "  Compression: " << (100.0 * (1.0 - static_cast<double> (num_adaptive) / num_uniform)) << " %\n";
+
+  write_vtk_output (mra, "mra_output/02_bottom_up");
+
+  mra.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
+}
+
+//=============================================================================
+// Example 3: Custom Adaptation Criterion
+//=============================================================================
+
+/**
+ * @brief Hard thresholding with an enforced minimum refinement level
+ *
+ * Any type satisfying the coarsening_criterion concept can be passed to
+ * coarsen(). This one composes the default thresholding with a level floor:
+ * families below floor_level are always kept refined.
+ */
+struct thresholding_with_floor
+{
+  t8_mra::hard_thresholding thresholding;
+  unsigned int floor_level = 2;
+
+  template <typename MRA>
+  void
+  prepare (MRA &mra)
+  {
+    thresholding.prepare (mra);
+  }
+
+  template <typename MRA>
+  bool
+  significant (MRA &mra, const typename MRA::levelmultiindex &lmi)
+  {
+    return lmi.level () < floor_level || thresholding.significant (mra, lmi);
+  }
+};
+
+void
+example_custom_criterion ()
+{
+  std::cout << "\n=== 3. Quad: custom coarsening criterion (level floor) ===\n";
+
   constexpr int U = 1;
   constexpr int P = 3;
   const int min_level = 0;
   const int max_level = 6;
   const double c_thresh = 0.1;
+  const unsigned int floor_level = 3;
 
-  // Create multiscale object
-  t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra (max_level, sc_MPI_COMM_WORLD);
+  t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra_plain (max_level, sc_MPI_COMM_WORLD);
+  t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra_floor (max_level, sc_MPI_COMM_WORLD);
 
-  // Create mesh
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
   auto *scheme = t8_scheme_new_default ();
+  /* Two forests consume one reference each; keep our own on top */
+  t8_cmesh_ref (cmesh);
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
-  // Initialize with Gaussian bump
-  std::cout << "1. Initializing uniform mesh at level " << max_level << "...\n";
   auto func = gaussian_bump<U> ();
-  // auto func = sine_wave<U> ();
-  // auto func = step_function<U> ();
-  // auto func = quarter_circle<U> ();
 
-  /* The forest takes ownership of cmesh and scheme; keep our own references
-   * since we destroy/unref them explicitly below. */
+  mra_plain.initialize_data (cmesh, scheme, max_level, func);
+  mra_plain.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
+  print_grid_stats (mra_plain, "Plain thresholding");
+  write_vtk_output (mra_plain, "mra_output/03_criterion_plain");
+
+  mra_floor.initialize_data (cmesh, scheme, max_level, func);
+  mra_floor.coarsen (min_level, max_level,
+                     thresholding_with_floor { { .c_thresh = c_thresh }, floor_level });
+  print_grid_stats (mra_floor, "With level floor " + std::to_string (floor_level));
+  write_vtk_output (mra_floor, "mra_output/03_criterion_floor");
+
+  mra_plain.cleanup ();
+  mra_floor.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
+}
+
+//=============================================================================
+// Example 4: Triangle vs Quad
+//=============================================================================
+
+template <t8_eclass Shape>
+t8_gloidx_t
+run_shape (const std::string &name, auto &&func, int max_level, double c_thresh)
+{
+  constexpr int U = 1;
+  constexpr int P = 3;
+
+  t8_mra::multiscale<Shape, U, P> mra (max_level, sc_MPI_COMM_WORLD);
+
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
+  auto *scheme = t8_scheme_new_default ();
   t8_cmesh_ref (cmesh);
   t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
   mra.initialize_data (cmesh, scheme, max_level, func);
+  const auto num_uniform = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
 
-  auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
+  mra.coarsen (0, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
+  mra.refine (0, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
 
-  // Write initial uniform solution
-  write_vtk_output (mra, "mra_output/quad_uniform", 0);
+  const auto num_adapted = print_grid_stats (mra, name + " adapted");
+  std::cout << "    " << num_uniform << " -> " << num_adapted
+            << " elements (compression: " << (100.0 * (1.0 - static_cast<double> (num_adapted) / num_uniform))
+            << " %)\n";
+  write_vtk_output (mra, "mra_output/04_compare_" + name);
 
-  // Perform adaptive coarsening
-  std::cout << "2. Performing adaptive coarsening...\n";
-  mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
-
-  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "\n   After coarsening:\n";
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
-
-  // Write coarsened solution
-  write_vtk_output (mra, "mra_output/quad_coarsened", 1);
-
-  // Perform adaptive refinement
-  std::cout << "3. Performing adaptive refinement...\n";
-  mra.refine (min_level, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
-
-  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "\n   After refinement:\n";
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
-
-  // Write refined solution
-  write_vtk_output (mra, "mra_output/quad_refined", 2);
-
-  // Cleanup
   mra.cleanup ();
   t8_cmesh_destroy (&cmesh);
   t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
 
-  std::cout << "✓ Quad example completed!\n\n";
+  return num_adapted;
+}
+
+/**
+ * Same data, same threshold, same domain: compare how triangle and quad
+ * grids adapt. The triangle hypercube consists of two base trees, the quad
+ * of one; DOF per element differ (P(P+1)/2 vs P^2), so compare total DOF.
+ */
+void
+example_triangle_vs_quad ()
+{
+  std::cout << "\n=== 4. Triangle vs quad on the same data ===\n";
+
+  const int max_level = 6;
+  const double c_thresh = 1.0;
+  auto func = quarter_circle<1> ();
+
+  run_shape<T8_ECLASS_TRIANGLE> ("triangle", func, max_level, c_thresh);
+  run_shape<T8_ECLASS_QUAD> ("quad", func, max_level, c_thresh);
 }
 
 //=============================================================================
-// Example 3: Hex MRA (3D) with Adaptation and Plotting
+// Example 5: Hex (3D)
 //=============================================================================
 
 void
-example_hex_adaptive_with_plotting ()
+example_hex_3d ()
 {
-  std::cout << "\n";
-  std::cout << "════════════════════════════════════════════════════════════\n";
-  std::cout << "  Hex MRA (3D): Adaptive Refinement with VTK Output\n";
-  std::cout << "════════════════════════════════════════════════════════════\n\n";
+  std::cout << "\n=== 5. Hex: 3D adaptation ===\n";
 
-  // MRA parameters
   constexpr int U = 1;
   constexpr int P = 2;
   const int min_level = 0;
-  const int max_level = 4;  // Lower max level for 3D (8^4 = 4096 elements)
+  const int max_level = 4;
   const double c_thresh = 1.0;
 
-  // Create multiscale object for HEX
   t8_mra::multiscale<T8_ECLASS_HEX, U, P> mra (max_level, sc_MPI_COMM_WORLD);
 
-  // Create 3D hypercube mesh
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
   auto *scheme = t8_scheme_new_default ();
-
-  // Initialize with 3D Gaussian bump
-  std::cout << "1. Initializing uniform 3D mesh at level " << max_level << "...\n";
-  auto func = gaussian_bump_3d<U> ();
-  // auto func = sine_wave_3d<U> ();
-  // auto func = step_function_3d<U> ();
-
-  /* The forest takes ownership of cmesh and scheme; keep our own references
-   * since we destroy/unref them explicitly below. */
   t8_cmesh_ref (cmesh);
   t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
-  mra.initialize_data (cmesh, scheme, max_level, func);
+  mra.initialize_data (cmesh, scheme, max_level, gaussian_bump_3d<U> ());
+  print_grid_stats (mra, "Uniform level " + std::to_string (max_level));
+  write_vtk_output (mra, "mra_output/05_hex_step0_uniform");
 
-  auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n";
-  std::cout << "   Memory estimate: ~" << ((num_elements * mra.DOF * sizeof (double)) / (1024 * 1024)) << " MB\n\n";
-
-  // Write initial uniform solution
-  write_vtk_output (mra, "mra_output/hex_uniform", 0);
-
-  // Perform adaptive coarsening
-  std::cout << "2. Performing adaptive coarsening...\n";
   mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
+  print_grid_stats (mra, "After coarsening");
+  write_vtk_output (mra, "mra_output/05_hex_step1_coarsened");
 
-  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "\n   After coarsening:\n";
-  std::cout << "   Elements: " << num_elements << "\n";
-  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n";
-  std::cout << "   Memory estimate: ~" << ((num_elements * mra.DOF * sizeof (double)) / (1024 * 1024)) << " MB\n\n";
+  mra.refine (min_level, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
+  print_grid_stats (mra, "After refinement");
+  write_vtk_output (mra, "mra_output/05_hex_step2_refined");
 
-  // Write coarsened solution
-  write_vtk_output (mra, "mra_output/hex_coarsened", 1);
-
-  // Cleanup
   mra.cleanup ();
   t8_cmesh_destroy (&cmesh);
   t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
 
-  std::cout << "✓ Hex (3D) example completed!\n\n";
-  std::cout << "NOTE: Open hex_*.vtu files in ParaView to visualize the 3D solution.\n";
-  std::cout << "      Use 'Extract Surface' filter to see the outer surface,\n";
-  std::cout << "      or 'Clip' / 'Slice' filters to see internal structure.\n\n";
-}
-
-//=============================================================================
-// Example 4: Full Adaptation Cycle with Multiple Iterations
-//=============================================================================
-
-void
-example_full_adaptation_cycle ()
-{
-  std::cout << "\n";
-  std::cout << "════════════════════════════════════════════════════════════\n";
-  std::cout << "  Full Adaptation Cycle: Multiple Iterations\n";
-  std::cout << "════════════════════════════════════════════════════════════\n\n";
-
-  // MRA parameters
-  constexpr int U = 1;
-  constexpr int P = 3;
-  const int min_level = 2;
-  const int max_level = 6;
-  const double c_thresh = 0.03;
-
-  // Create multiscale object
-  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
-
-  // Create mesh
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
-  auto *scheme = t8_scheme_new_default ();
-
-  // Initialize with sine wave
-  std::cout << "Initializing with sine wave function...\n";
-  auto func = sine_wave<U> ();
-  /* The forest takes ownership of cmesh and scheme; keep our own references
-   * since we destroy/unref them explicitly below. */
-  t8_cmesh_ref (cmesh);
-  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
-
-  mra.initialize_data (cmesh, scheme, max_level, func);
-
-  auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "Initial elements: " << num_elements << "\n\n";
-
-  write_vtk_output (mra, "mra_output/cycle_initial", 0);
-
-  // // Perform multiple adaptation cycles
-  // const int num_cycles = 3;
-  // for (int cycle = 1; cycle <= num_cycles; ++cycle) {
-  //   std::cout << "─────────────────────────────────────\n";
-  //   std::cout << "Adaptation Cycle " << cycle << ":\n";
-  //   std::cout << "─────────────────────────────────────\n";
-  //
-  //   // Full adaptation (coarsening + refinement)
-  //   mra.adapt (min_level, max_level);
-  //
-  //   num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  //   std::cout << "Elements after cycle " << cycle << ": " << num_elements << "\n\n";
-  //
-  //   write_vtk_output (mra, "mra_output/cycle_adapted", cycle);
-  // }
-
-  // Cleanup
-  mra.cleanup ();
-  t8_cmesh_destroy (&cmesh);
-  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
-
-  std::cout << "✓ Full adaptation cycle completed!\n\n";
-}
-
-//=============================================================================
-// Example 4: Comparison - Different Test Functions
-//=============================================================================
-
-void
-example_comparison_test_functions ()
-{
-  std::cout << "\n";
-  std::cout << "════════════════════════════════════════════════════════════\n";
-  std::cout << "  Comparison: Different Test Functions\n";
-  std::cout << "════════════════════════════════════════════════════════════\n\n";
-
-  // MRA parameters
-  constexpr int U = 1;
-  constexpr int P = 3;
-  const int min_level = 2;
-  const int max_level = 5;
-  const double c_thresh = 0.05;
-
-  auto *scheme = t8_scheme_new_default ();
-
-  // Test functions
-  struct TestCase
-  {
-    std::string name;
-    std::function<std::array<double, U> (double, double)> func;
-  };
-
-  std::vector<TestCase> test_cases = {
-    { "gaussian", gaussian_bump<U> () },
-    { "sine", sine_wave<U> () },
-    { "step", step_function<U> () },
-  };
-
-  for (const auto &test : test_cases) {
-    std::cout << "Testing function: " << test.name << "\n";
-
-    // Create quad MRA
-    t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra (max_level, sc_MPI_COMM_WORLD);
-
-    // Create mesh
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
-
-    // Initialize
-    /* The forest takes ownership of cmesh and scheme; keep our own references
-     * since we destroy/unref them explicitly below. */
-    t8_cmesh_ref (cmesh);
-    t8_scheme_ref (const_cast<t8_scheme *> (scheme));
-
-    mra.initialize_data (cmesh, scheme, max_level, test.func);
-
-    const auto num_init = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    write_vtk_output (mra, "mra_output/compare_" + test.name + "_uniform", 0);
-
-    // // Adapt
-    // mra.adapt (min_level, max_level);
-    //
-    // const auto num_adapted = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    // std::cout << "  Elements: " << num_init << " -> " << num_adapted;
-    // std::cout << " (compression: " << (100.0 * (1.0 - (double) num_adapted / num_init)) << "%)\n";
-    //
-    // write_vtk_output (mra, "mra_output/compare_" + test.name + "_adapted", 1);
-
-    // Cleanup
-    mra.cleanup ();
-    t8_cmesh_destroy (&cmesh);
-  }
-
-  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
-
-  std::cout << "\n✓ Comparison example completed!\n\n";
+  std::cout << "  Use ParaView 'Clip' / 'Slice' filters to see the internal structure.\n";
 }
 
 //=============================================================================
@@ -521,59 +393,19 @@ example_comparison_test_functions ()
 int
 main (int argc, char **argv)
 {
-  int mpiret;
-  sc_MPI_Comm comm;
-
-  mpiret = sc_MPI_Init (&argc, &argv);
+  int mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  comm = sc_MPI_COMM_WORLD;
-  sc_init (comm, 1, 1, nullptr, SC_LP_ESSENTIAL);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, nullptr, SC_LP_ESSENTIAL);
   t8_init (SC_LP_PRODUCTION);
 
-  std::cout << "\n";
-  std::cout << "╔════════════════════════════════════════════════════════════╗\n";
-  std::cout << "║     Unified MRA: Adaptive Refinement with VTK Output      ║\n";
-  std::cout << "║                                                            ║\n";
-  std::cout << "║  This example demonstrates:                               ║\n";
-  std::cout << "║  • Triangle, quad, and hex MRA for triangle, quad and hex     ║\n";
-  std::cout << "║  • 2D and 3D adaptive refinement and coarsening           ║\n";
-  std::cout << "║  • VTK output generation for visualization                ║\n";
-  std::cout << "║  • Comparison of different test functions                 ║\n";
-  std::cout << "╚════════════════════════════════════════════════════════════╝\n";
+  example_adaptation_cycle ();
+  example_bottom_up ();
+  example_custom_criterion ();
+  example_triangle_vs_quad ();
+  example_hex_3d ();
 
-  // Run examples
-  example_triangle_adaptive_with_plotting ();
-  example_quad_adaptive_with_plotting ();
-  example_hex_adaptive_with_plotting ();
-  example_full_adaptation_cycle ();
-  example_comparison_test_functions ();
-
-  std::cout << "════════════════════════════════════════════════════════════\n";
-  std::cout << "✓ All plotting examples completed!\n";
-  std::cout << "════════════════════════════════════════════════════════════\n\n";
-
-  std::cout << "Generated VTK files:\n";
-  std::cout << "  Triangle (2D):\n";
-  std::cout << "    - mra_output/triangle_uniform_step0.vtu\n";
-  std::cout << "    - mra_output/triangle_coarsened_step1.vtu\n\n";
-  std::cout << "  Quad (2D):\n";
-  std::cout << "    - mra_output/quad_uniform_step0.vtu\n";
-  std::cout << "    - mra_output/quad_coarsened_step1.vtu\n\n";
-  std::cout << "  Hex (3D):\n";
-  std::cout << "    - mra_output/hex_uniform_step0.vtu\n";
-  std::cout << "    - mra_output/hex_coarsened_step1.vtu\n\n";
-  std::cout << "  Cycles:\n";
-  std::cout << "    - mra_output/cycle_initial_step0.vtu\n";
-  std::cout << "    - mra_output/cycle_adapted_step1.vtu ... step3.vtu\n\n";
-  std::cout << "  Comparison:\n";
-  std::cout << "    - mra_output/compare_gaussian_uniform_step0.vtu\n";
-  std::cout << "    - mra_output/compare_gaussian_adapted_step1.vtu\n";
-  std::cout << "    - mra_output/compare_sine_*.vtu\n";
-  std::cout << "    - mra_output/compare_step_*.vtu\n\n";
-
-  std::cout << "Open these files in ParaView to visualize the results!\n";
-  std::cout << "For 3D (hex) files, use 'Clip' or 'Slice' filters to view internal structure.\n\n";
+  std::cout << "\nAll examples completed. Output in mra_output/ (open in ParaView).\n";
 
   sc_finalize ();
   return 0;
