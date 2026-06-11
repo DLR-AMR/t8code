@@ -41,6 +41,11 @@ concept refinement_criterion = requires (C c, MRA &mra, const typename MRA::leve
  */
 struct harten_prediction
 {
+  /// Threshold constant
+  double c_thresh = 1.0;
+  /// Expected order of convergence (enters the level-dependent threshold)
+  int gamma = 1;
+
   template <typename MRA>
   void
   prepare (MRA &mra)
@@ -53,7 +58,7 @@ struct harten_prediction
   bool
   refine_neighbours (MRA &mra, const typename MRA::levelmultiindex &lmi)
   {
-    return mra.scaled_detail_norm (lmi) > mra.c_thresh * mra.local_threshold_value (lmi);
+    return mra.scaled_detail_norm (lmi) > c_thresh * mra.local_threshold_value (lmi, gamma);
   }
 
   template <typename MRA>
@@ -61,7 +66,7 @@ struct harten_prediction
   refine (MRA &mra, const typename MRA::levelmultiindex &lmi)
   {
     const auto steep_factor = std::pow (2.0, static_cast<int> (MRA::P_DIM) + 1);
-    return mra.scaled_detail_norm (lmi) > steep_factor * mra.c_thresh * mra.local_threshold_value (lmi);
+    return mra.scaled_detail_norm (lmi) > steep_factor * c_thresh * mra.local_threshold_value (lmi, gamma);
   }
 };
 

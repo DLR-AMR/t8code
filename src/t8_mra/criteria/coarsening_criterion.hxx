@@ -46,6 +46,11 @@ concept criterion_has_prepare = requires (C c, MRA &mra) { c.prepare (mra); };
  */
 struct hard_thresholding
 {
+  /// Threshold constant
+  double c_thresh = 1.0;
+  /// Expected order of convergence (enters the level-dependent threshold)
+  int gamma = 1;
+
   template <typename MRA>
   void
   prepare (MRA &mra)
@@ -58,7 +63,7 @@ struct hard_thresholding
   bool
   significant (MRA &mra, const typename MRA::levelmultiindex &lmi)
   {
-    return mra.scaled_detail_norm (lmi) > mra.c_thresh * mra.local_threshold_value (lmi);
+    return mra.scaled_detail_norm (lmi) > c_thresh * mra.local_threshold_value (lmi, gamma);
   }
 };
 
