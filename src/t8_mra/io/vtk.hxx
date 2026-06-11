@@ -21,63 +21,54 @@ namespace t8_mra
 {
 
 /**
- * @brief Get Lagrange node positions for a triangle of given order in reference coordinates
- *
- * Follows VTK's Lagrange triangle ordering:
- * - First 3 nodes: corner vertices
- * - Next 3*(order-1) nodes: edge nodes (edge 0, edge 1, edge 2)
- * - Remaining nodes: interior nodes
+ * @brief Barycentric index of the node at a given position in VTK's Lagrange
+ * triangle ordering (port of vtkHigherOrderTriangle::BarycentricIndex)
+ */
+static std::array<int, 3>
+vtk_triangle_barycentric_index (int index, int order)
+{
+  int max = order;
+  int min = 0;
+
+  // Scope into the correct inner triangle
+  while (index != 0 && index >= 3 * order) {
+    index -= 3 * order;
+    max -= 2;
+    ++min;
+    order -= 3;
+  }
+
+  if (index == 0)
+    return { min, min, max };
+  if (index == 1)
+    return { max, min, min };
+  if (index == 2)
+    return { min, max, min };
+
+  std::array<int, 3> bindex;
+  index -= 3;
+  const int dim = index / (order - 1);
+  const int offset = index - dim * (order - 1);
+  bindex[dim] = min + 1 + offset;
+  bindex[(dim + 1) % 3] = min;
+  bindex[(dim + 2) % 3] = max - 1 - offset;
+
+  return bindex;
+}
+
+/**
+ * @brief Lagrange node positions for a triangle of given order in reference
+ * coordinates, in VTK's Lagrange triangle ordering
  */
 static std::vector<std::array<double, 2>>
 get_triangle_lagrange_nodes (int order)
 {
-  std::vector<std::array<double, 2>> nodes;
   const int num_nodes = (order + 1) * (order + 2) / 2;
-  nodes.reserve (num_nodes);
+  std::vector<std::array<double, 2>> nodes (num_nodes);
 
-  if (order == 1) {
-    // Linear triangle: just the 3 vertices
-    nodes.push_back ({ 0.0, 0.0 });  // v0
-    nodes.push_back ({ 1.0, 0.0 });  // v1
-    nodes.push_back ({ 0.0, 1.0 });  // v2
-    return nodes;
-  }
-
-  // Step 1: Add 3 corner vertices
-  nodes.push_back ({ 0.0, 0.0 });  // v0
-  nodes.push_back ({ 1.0, 0.0 });  // v1
-  nodes.push_back ({ 0.0, 1.0 });  // v2
-
-  // Step 2: Add edge nodes
-  // Edge 0: from v0 to v1 (along xi axis, eta=0)
-  for (int i = 1; i < order; ++i) {
-    double xi = static_cast<double> (i) / order;
-    nodes.push_back ({ xi, 0.0 });
-  }
-
-  // Edge 1: from v1 to v2 (diagonal edge)
-  for (int i = 1; i < order; ++i) {
-    double t = static_cast<double> (i) / order;
-    double xi = 1.0 - t;
-    double eta = t;
-    nodes.push_back ({ xi, eta });
-  }
-
-  // Edge 2: from v2 to v0 (along eta axis, xi=0)
-  for (int i = 1; i < order; ++i) {
-    double eta = 1.0 - static_cast<double> (i) / order;
-    nodes.push_back ({ 0.0, eta });
-  }
-
-  // Step 3: Add interior nodes (if order >= 3)
-  if (order >= 3) {
-    for (int j = 1; j < order - 1; ++j) {
-      for (int i = 1; i < order - j; ++i) {
-        double xi = static_cast<double> (i) / order;
-        double eta = static_cast<double> (j) / order;
-        nodes.push_back ({ xi, eta });
-      }
-    }
+  for (int idx = 0; idx < num_nodes; ++idx) {
+    const auto bindex = vtk_triangle_barycentric_index (idx, order);
+    nodes[idx] = { static_cast<double> (bindex[0]) / order, static_cast<double> (bindex[1]) / order };
   }
 
   return nodes;
@@ -110,212 +101,88 @@ get_line_lagrange_nodes (int order)
 }
 
 /**
- * @brief Get Lagrange node positions for a quad of given order in reference coordinates
- *
- * Follows VTK's Lagrange quad ordering:
- * - First 4 nodes: corner vertices
- * - Next 4*(order-1) nodes: edge nodes (edge 0, edge 1, edge 2, edge 3)
- * - Remaining nodes: interior nodes
+ * @brief Index of the grid node (i, j) in VTK's Lagrange quad ordering
+ * (port of vtkHigherOrderQuadrilateral::PointIndexFromIJK, uniform order)
+ */
+static int
+vtk_quad_point_index (int i, int j, int order)
+{
+  const bool ibdy = (i == 0 || i == order);
+  const bool jbdy = (j == 0 || j == order);
+
+  if (ibdy && jbdy)  // vertex
+    return (i ? (j ? 2 : 1) : (j ? 3 : 0));
+
+  int offset = 4;
+  if (ibdy || jbdy) {  // edge
+    if (!ibdy)
+      return (i - 1) + (j ? 2 * (order - 1) : 0) + offset;
+    return (j - 1) + (i ? order - 1 : 3 * (order - 1)) + offset;
+  }
+
+  offset += 4 * (order - 1);  // interior
+  return offset + (i - 1) + (order - 1) * (j - 1);
+}
+
+/**
+ * @brief Lagrange node positions for a quad of given order in reference
+ * coordinates, in VTK's Lagrange quad ordering
  */
 static std::vector<std::array<double, 2>>
 get_quad_lagrange_nodes (int order)
 {
-  std::vector<std::array<double, 2>> nodes;
   const int num_nodes = (order + 1) * (order + 1);
-  nodes.reserve (num_nodes);
+  std::vector<std::array<double, 2>> nodes (num_nodes);
 
-  if (order == 1) {
-    // Bilinear quad: just the 4 vertices in VTK order
-    nodes.push_back ({ 0.0, 0.0 });  // v0
-    nodes.push_back ({ 1.0, 0.0 });  // v1
-    nodes.push_back ({ 1.0, 1.0 });  // v2
-    nodes.push_back ({ 0.0, 1.0 });  // v3
-    return nodes;
-  }
-
-  // Step 1: Add 4 corner vertices
-  nodes.push_back ({ 0.0, 0.0 });  // v0
-  nodes.push_back ({ 1.0, 0.0 });  // v1
-  nodes.push_back ({ 1.0, 1.0 });  // v2
-  nodes.push_back ({ 0.0, 1.0 });  // v3
-
-  // Step 2: Add edge nodes
-  // Edge 0: from v0 to v1 (bottom edge, eta=0)
-  for (int i = 1; i < order; ++i) {
-    double xi = static_cast<double> (i) / order;
-    nodes.push_back ({ xi, 0.0 });
-  }
-
-  // Edge 1: from v1 to v2 (right edge, xi=1)
-  for (int i = 1; i < order; ++i) {
-    double eta = static_cast<double> (i) / order;
-    nodes.push_back ({ 1.0, eta });
-  }
-
-  // Edge 2: from v2 to v3 (top edge, eta=1)
-  for (int i = 1; i < order; ++i) {
-    double xi = 1.0 - static_cast<double> (i) / order;
-    nodes.push_back ({ xi, 1.0 });
-  }
-
-  // Edge 3: from v3 to v0 (left edge, xi=0)
-  for (int i = 1; i < order; ++i) {
-    double eta = 1.0 - static_cast<double> (i) / order;
-    nodes.push_back ({ 0.0, eta });
-  }
-
-  // Step 3: Add interior nodes (if order >= 2)
-  if (order >= 2) {
-    for (int j = 1; j < order; ++j) {
-      for (int i = 1; i < order; ++i) {
-        double xi = static_cast<double> (i) / order;
-        double eta = static_cast<double> (j) / order;
-        nodes.push_back ({ xi, eta });
-      }
-    }
-  }
+  for (int j = 0; j <= order; ++j)
+    for (int i = 0; i <= order; ++i)
+      nodes[vtk_quad_point_index (i, j, order)]
+        = { static_cast<double> (i) / order, static_cast<double> (j) / order };
 
   return nodes;
 }
 
 /**
- * @brief Get Lagrange node positions for a hex of given order in reference coordinates
- *
- * Follows VTK's Lagrange hex ordering:
- * - First 8 nodes: corner vertices (in VTK hex vertex order)
- * - Next 12*(order-1) nodes: edge nodes (12 edges in VTK edge order)
- * - Next 6*(order-1)^2 nodes: face nodes (6 faces in VTK face order)
- * - Remaining (order-1)^3 nodes: interior nodes
- *
- * Reference domain is [0,1]^3.
+ * @brief Index of the grid node (i, j, k) in VTK's Lagrange hex ordering
+ * (port of vtkHigherOrderHexahedron::PointIndexFromIJK, uniform order)
  */
-static std::vector<std::array<double, 3>>
-get_hex_lagrange_nodes (int order)
+static int
+vtk_hex_point_index (int i, int j, int k, int order)
 {
-  std::vector<std::array<double, 3>> nodes;
-  const int num_nodes = (order + 1) * (order + 1) * (order + 1);
-  nodes.reserve (num_nodes);
+  const bool ibdy = (i == 0 || i == order);
+  const bool jbdy = (j == 0 || j == order);
+  const bool kbdy = (k == 0 || k == order);
+  const int nbdy = (ibdy ? 1 : 0) + (jbdy ? 1 : 0) + (kbdy ? 1 : 0);
 
-  if (order == 1) {
-    // Linear hex: just the 8 vertices in VTK order
-    nodes.push_back ({ 0.0, 0.0, 0.0 });  // v0
-    nodes.push_back ({ 1.0, 0.0, 0.0 });  // v1
-    nodes.push_back ({ 1.0, 1.0, 0.0 });  // v2
-    nodes.push_back ({ 0.0, 1.0, 0.0 });  // v3
-    nodes.push_back ({ 0.0, 0.0, 1.0 });  // v4
-    nodes.push_back ({ 1.0, 0.0, 1.0 });  // v5
-    nodes.push_back ({ 1.0, 1.0, 1.0 });  // v6
-    nodes.push_back ({ 0.0, 1.0, 1.0 });  // v7
-    return nodes;
+  if (nbdy == 3)  // vertex
+    return (i ? (j ? 2 : 1) : (j ? 3 : 0)) + (k ? 4 : 0);
+
+  int offset = 8;
+  if (nbdy == 2) {  // edge
+    if (!ibdy)
+      return (i - 1) + (j ? 2 * (order - 1) : 0) + (k ? 4 * (order - 1) : 0) + offset;
+    if (!jbdy)
+      return (j - 1) + (i ? order - 1 : 3 * (order - 1)) + (k ? 4 * (order - 1) : 0) + offset;
+    offset += 8 * (order - 1);
+    return (k - 1) + (order - 1) * (i ? (j ? 2 : 1) : (j ? 3 : 0)) + offset;
   }
 
-  // Step 1: Add 8 corner vertices (VTK hex vertex order)
-  nodes.push_back ({ 0.0, 0.0, 0.0 });  // v0
-  nodes.push_back ({ 1.0, 0.0, 0.0 });  // v1
-  nodes.push_back ({ 1.0, 1.0, 0.0 });  // v2
-  nodes.push_back ({ 0.0, 1.0, 0.0 });  // v3
-  nodes.push_back ({ 0.0, 0.0, 1.0 });  // v4
-  nodes.push_back ({ 1.0, 0.0, 1.0 });  // v5
-  nodes.push_back ({ 1.0, 1.0, 1.0 });  // v6
-  nodes.push_back ({ 0.0, 1.0, 1.0 });  // v7
-
-  // Step 2: Add edge nodes (12 edges in VTK order)
-  // Exact match to bla.py edge_list using linear interpolation
-  struct Edge
-  {
-    double sx, sy, sz, ex, ey, ez;
-  };
-  Edge edges[12] = {
-    { 0, 0, 0, 1, 0, 0 },  // 0: v0->v1
-    { 1, 0, 0, 1, 1, 0 },  // 1: v1->v2
-    { 0, 1, 0, 1, 1, 0 },  // 2: v3->v2 (CORRECTED)
-    { 0, 1, 0, 0, 0, 0 },  // 3: v3->v0
-    { 0, 0, 1, 1, 0, 1 },  // 4: v4->v5
-    { 1, 0, 1, 1, 1, 1 },  // 5: v5->v6
-    { 0, 1, 1, 1, 1, 1 },  // 6: v7->v6 (CORRECTED)
-    { 0, 1, 1, 0, 0, 1 },  // 7: v7->v4
-    { 0, 0, 0, 0, 0, 1 },  // 8: v0->v4
-    { 1, 0, 0, 1, 0, 1 },  // 9: v1->v5
-    { 1, 1, 0, 1, 1, 1 },  // 10: v2->v6
-    { 0, 1, 0, 0, 1, 1 }   // 11: v3->v7
-  };
-
-  for (const auto &edge : edges) {
-    for (int k = 1; k < order; ++k) {
-      double t = static_cast<double> (k) / order;
-      double xi = edge.sx + t * (edge.ex - edge.sx);
-      double eta = edge.sy + t * (edge.ey - edge.sy);
-      double zeta = edge.sz + t * (edge.ez - edge.sz);
-      nodes.push_back ({ xi, eta, zeta });
-    }
+  offset += 12 * (order - 1);
+  const int face_size = (order - 1) * (order - 1);
+  if (nbdy == 1) {  // face
+    if (ibdy)
+      return (j - 1) + (order - 1) * (k - 1) + (i ? face_size : 0) + offset;
+    offset += 2 * face_size;
+    if (jbdy)
+      return (i - 1) + (order - 1) * (k - 1) + (j ? face_size : 0) + offset;
+    offset += 2 * face_size;
+    return (i - 1) + (order - 1) * (j - 1) + (k ? face_size : 0) + offset;
   }
 
-  // Step 3: Add face nodes (6 faces, if order >= 2)
-  // VTK face ordering from GitHub larsgeb/vtk-higher-order (correct version):
-  // Face 0: xmin (x=0), Face 1: xmax (x=1)
-  // Face 2: ymin (y=0), Face 3: ymax (y=1)
-  // Face 4: zmin (z=0), Face 5: zmax (z=1)
-  // Second coordinate (b) varies fastest in all faces!
-  if (order >= 2) {
-    // Face 0: xmin (x=0) - left face, vertices (0,3,7,4)
-    // Edges: (0,3), (3,7), (4,7), (0,4) - b varies faster (zeta)
-    for (int j = 1; j < order; ++j) {
-      for (int i = 1; i < order; ++i) {
-        double eta = static_cast<double> (i) / order;
-        double zeta = static_cast<double> (j) / order;
-        nodes.push_back ({ 0.0, eta, zeta });
-      }
-    }
+  offset += 6 * face_size;  // interior
+  return offset + (i - 1) + (order - 1) * ((j - 1) + (order - 1) * (k - 1));
+}
 
-    // Face 1: xmax (x=1) - right face, vertices (1,2,6,5)
-    // Edges: (1,2), (2,6), (5,6), (1,5) - SWAP loops (opposite of Face 0)
-    for (int b = 1; b < order; ++b) {
-      for (int a = 1; a < order; ++a) {
-        double eta = static_cast<double> (a) / order;
-        double zeta = static_cast<double> (b) / order;
-        nodes.push_back ({ 1.0, eta, zeta });
-      }
-    }
-
-    // Face 2: ymin (y=0) - front face, vertices (0,1,5,4)
-    // Edges: (0,1), (1,5), (4,5), (0,4) - b varies faster (zeta)
-    for (int a = 1; a < order; ++a) {
-      for (int b = 1; b < order; ++b) {
-        double xi = static_cast<double> (a) / order;
-        double zeta = static_cast<double> (b) / order;
-        nodes.push_back ({ xi, 0.0, zeta });
-      }
-    }
-
-    // Face 3: ymax (y=1) - back face, vertices (3,2,6,7)
-    // Edges: (3,2), (2,6), (7,6), (3,7) - SWAP loops (opposite of Face 2)
-    for (int b = 1; b < order; ++b) {
-      for (int a = 1; a < order; ++a) {
-        double xi = static_cast<double> (a) / order;
-        double zeta = static_cast<double> (b) / order;
-        nodes.push_back ({ xi, 1.0, zeta });
-      }
-    }
-
-    // Face 4: zmin (z=0) - bottom face, vertices (0,1,2,3)
-    // Edges: (0,1), (1,2), (3,2), (0,3) - b varies faster (eta)
-    for (int a = 1; a < order; ++a) {
-      for (int b = 1; b < order; ++b) {
-        double xi = static_cast<double> (a) / order;
-        double eta = static_cast<double> (b) / order;
-        nodes.push_back ({ xi, eta, 0.0 });
-      }
-    }
-
-    // Face 5: zmax (z=1) - top face, vertices (4,5,6,7)
-    // Edges: (4,5), (5,6), (7,6), (4,7) - SWAP loops (opposite of Face 4)
-    for (int b = 1; b < order; ++b) {
-      for (int a = 1; a < order; ++a) {
-        double xi = static_cast<double> (a) / order;
-        double eta = static_cast<double> (b) / order;
-        nodes.push_back ({ xi, eta, 1.0 });
-      }
-    }
 
     // Step 4: Add interior nodes (if order >= 2)
     // From bla.py: loop order is i (outermost), j (middle), k (innermost)
