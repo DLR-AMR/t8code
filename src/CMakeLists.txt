@@ -128,13 +128,6 @@ if( T8CODE_ENABLE_MRA )
   # Add GSL library 
   target_link_libraries( T8 PUBLIC GSL::gsl GSL::gslcblas )
 
-  target_sources( T8 PRIVATE 
-    t8_mra/t8_gsl.cxx
-  )
-  install( FILES 
-    t8_mra/t8_gsl.hxx
-  DESTINATION include )
-
   # Add unordered_dense library https://github.com/martinus/unordered_dense
   set( UNORDERED_DENSE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/unordered_dense/include" )
 
@@ -145,34 +138,43 @@ if( T8CODE_ENABLE_MRA )
   )
 
   target_sources( T8 PRIVATE
-    t8_mra/t8_unordered_dense.cxx
-    t8_mra/vecmat.cxx
     t8_mra/num/basis_functions.cxx
     t8_mra/num/dunavant.cxx
-    t8_mra/mask_coefficients.cxx
   )
 
   install( FILES
-    # t8_mra/t8_mra.hpp
-    t8_mra/t8_mra_cartesian.hpp
     t8_mra/t8_basis.hpp
+    t8_mra/t8_mra_base.hpp
+    t8_mra/t8_mra_adaptation.hpp
+    t8_mra/t8_mra_mst_unified.hpp
+    t8_mra/t8_mra_unified_triangle.hpp
+    t8_mra/t8_mra_unified_cartesian.hpp
+    t8_mra/t8_mra_vtk_unified.hpp
+    DESTINATION include/t8_mra )
+
+  install( FILES
+    t8_mra/data/cell_data.hpp
     t8_mra/data/levelindex_map.hpp
     t8_mra/data/levelindex_set.hpp
-    t8_mra/data/cell_data.hpp
     t8_mra/data/levelmultiindex.hpp
     t8_mra/data/triangle_order.hpp
-    t8_mra/t8_unordered_dense.hxx
-    t8_mra/vecmat.hxx
+    DESTINATION include/t8_mra/data )
+
+  install( FILES
     t8_mra/num/basis_functions.hxx
     t8_mra/num/dunavant.hxx
-    t8_mra/num/legendre_basis.hxx
-    t8_mra/num/quadrature.hxx
-    t8_mra/num/multiindex.hxx
     t8_mra/num/geometry.hxx
+    t8_mra/num/legendre_basis.hxx
     t8_mra/num/mask_coefficients.hpp
-    tr_mra/num/mask_coeffs_triangle.hpp
-    t8_mra/mask_coefficients.hxx
-    DESTINATION include)
+    t8_mra/num/mask_coefficients_compute.hxx
+    t8_mra/num/mask_coeffs_quad.hpp
+    t8_mra/num/mask_coeffs_triangle.hpp
+    t8_mra/num/mat.hpp
+    t8_mra/num/multiindex.hxx
+    t8_mra/num/quadrature.hpp
+    t8_mra/num/quadrature.hxx
+    t8_mra/num/vec.hpp
+    DESTINATION include/t8_mra/num )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )
