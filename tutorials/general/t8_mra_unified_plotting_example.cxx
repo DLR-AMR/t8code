@@ -153,7 +153,7 @@ example_triangle_adaptive_with_plotting ()
   constexpr int U = 1;
   constexpr int P = 3;
   const int min_level = 0;
-  const int max_level = 6;
+  const int max_level = 7;
   const double c_thresh = 1.0;
   const int gamma = 1;
   const int dunavant_rule = 10;
@@ -169,10 +169,15 @@ example_triangle_adaptive_with_plotting ()
 
   // Initialize with Gaussian bump
   std::cout << "1. Initializing uniform mesh at level " << max_level << "...\n";
-  auto func = gaussian_bump<U> ();
+  // auto func = gaussian_bump<U> ();
   // auto func = sine_wave<U> ();
   // auto func = step_function<U> ();
-  // auto func = quarter_circle<U> ();
+  auto func = quarter_circle<U> ();
+
+  /* The forest takes ownership of cmesh and scheme; keep our own references
+   * since we destroy/unref them explicitly below. */
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
   mra.initialize_data (cmesh, scheme, max_level, func);
 
@@ -196,16 +201,28 @@ example_triangle_adaptive_with_plotting ()
   write_vtk_output (mra, "unified/triangle_coarsened", 1);
 
   // Perform adaptive refinement
-  // std::cout << "3. Performing adaptive refinement...\n";
-  // mra.refinement_new (min_level, max_level);
-  //
-  // num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  // std::cout << "\n   After refinement:\n";
-  // std::cout << "   Elements: " << num_elements << "\n";
-  // std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
-  //
-  // // Write refined solution
-  // write_vtk_output (mra, "unified/triangle_refined", 2);
+  std::cout << "3. Performing adaptive refinement...\n";
+  mra.refinement_new (min_level, max_level);
+
+  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  std::cout << "\n   After refinement:\n";
+  std::cout << "   Elements: " << num_elements << "\n";
+  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
+
+  // Write refined solution
+  write_vtk_output (mra, "unified/triangle_refined", 2);
+
+  // Coarsen again: the zero-detail children created by the refinement carry
+  // no information and must be removed again -> grid close to step 1
+  std::cout << "4. Performing second adaptive coarsening...\n";
+  mra.coarsening_new (min_level, max_level);
+
+  num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  std::cout << "\n   After second coarsening:\n";
+  std::cout << "   Elements: " << num_elements << "\n";
+  std::cout << "   Total DOF: " << (num_elements * mra.DOF) << "\n\n";
+
+  write_vtk_output (mra, "unified/triangle_coarsened2", 3);
 
   // Cleanup
   mra.cleanup ();
@@ -232,7 +249,7 @@ example_quad_adaptive_with_plotting ()
   constexpr int P = 3;
   const int min_level = 0;
   const int max_level = 6;
-  const double c_thresh = 1.0;
+  const double c_thresh = 0.1;
   const int gamma = 1;
   const int num_quad_points_1d = 4;
   const bool balanced = false;
@@ -251,6 +268,11 @@ example_quad_adaptive_with_plotting ()
   // auto func = sine_wave<U> ();
   // auto func = step_function<U> ();
   // auto func = quarter_circle<U> ();
+
+  /* The forest takes ownership of cmesh and scheme; keep our own references
+   * since we destroy/unref them explicitly below. */
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
   mra.initialize_data (cmesh, scheme, max_level, func);
 
@@ -329,6 +351,11 @@ example_hex_adaptive_with_plotting ()
   // auto func = sine_wave_3d<U> ();
   // auto func = step_function_3d<U> ();
 
+  /* The forest takes ownership of cmesh and scheme; keep our own references
+   * since we destroy/unref them explicitly below. */
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
   mra.initialize_data (cmesh, scheme, max_level, func);
 
   auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
@@ -396,6 +423,11 @@ example_full_adaptation_cycle ()
   // Initialize with sine wave
   std::cout << "Initializing with sine wave function...\n";
   auto func = sine_wave<U> ();
+  /* The forest takes ownership of cmesh and scheme; keep our own references
+   * since we destroy/unref them explicitly below. */
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
   mra.initialize_data (cmesh, scheme, max_level, func);
 
   auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
@@ -475,6 +507,11 @@ example_comparison_test_functions ()
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
 
     // Initialize
+    /* The forest takes ownership of cmesh and scheme; keep our own references
+     * since we destroy/unref them explicitly below. */
+    t8_cmesh_ref (cmesh);
+    t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
     mra.initialize_data (cmesh, scheme, max_level, test.func);
 
     const auto num_init = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
@@ -530,7 +567,7 @@ main (int argc, char **argv)
   // Run examples
   example_triangle_adaptive_with_plotting ();
   example_quad_adaptive_with_plotting ();
-  example_hex_adaptive_with_plotting ();
+  // example_hex_adaptive_with_plotting ();
   // example_full_adaptation_cycle ();
   // example_comparison_test_functions ();
 
