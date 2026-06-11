@@ -234,6 +234,8 @@ class multiscale: public multiscale_data<TShape> {
 
     user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (maximum_level);
     user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local_elements + num_ghost_elements);
+    user_data->mra_instance = this;
+    user_data->current_refinement_level = level;
 
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
     auto current_idx = 0u;
