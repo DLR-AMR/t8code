@@ -319,6 +319,41 @@ class multiscale_base: public multiscale_data<TShape> {
   }
 
   /**
+   * @brief Perform Harten's prediction for refinement
+   *
+   * Predicts significant details at finer levels based on current details.
+   * If a detail at level l is significant, its children at level l+1
+   * are added to the td_set.
+   *
+   * @param l_min Minimum refinement level
+   * @param l_max Maximum refinement level
+   */
+  void
+  hartens_prediction (unsigned int l_min, unsigned int l_max)
+  {
+    for (auto l = l_min; l < l_max; ++l) {
+      for (const auto &[lmi, _] : d_map[l]) {
+        auto detail_norm = local_detail_norm (lmi);
+
+        for (auto u = 0u; u < U_DIM; ++u)
+          detail_norm[u] /= c_scaling[u];
+
+        const auto d_max = *std::max_element (detail_norm.begin (), detail_norm.end ());
+        const auto local_eps = c_thresh * local_threshold_value (lmi);
+
+        // Harten's heuristic: if current detail is significant, children might be too
+        if (d_max > local_eps) {
+          td_set.insert (lmi);
+          const auto children = t8_mra::children_lmi (lmi);
+          for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+            td_set.insert (children[k]);
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * @brief Compute local threshold value for an element
    *
    * Implements uniform subdivision thresholding (Veli eq. 2.44)
