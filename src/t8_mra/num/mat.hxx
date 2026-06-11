@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <t8_mra/num/vec.hpp>
+#include <t8_mra/num/vec.hxx>
 
 namespace t8_mra
 {

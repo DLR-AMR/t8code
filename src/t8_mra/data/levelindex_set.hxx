@@ -5,7 +5,7 @@
 #include <vector>
 
 #include <ankerl/unordered_dense.h>
-#include "t8_mra/data/levelmultiindex.hpp"
+#include "t8_mra/data/levelmultiindex.hxx"
 
 namespace t8_mra
 {

@@ -12,9 +12,7 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/t8_mra_triangle.hpp"
-#include "t8_mra/t8_mra_cartesian.hpp"
-#include "t8_mra/t8_mra_vtk.hpp"
+#include "t8_mra/t8_mra.hxx"
 #include "t8_cmesh.h"
 #include "t8_cmesh/t8_cmesh_examples.h"
 

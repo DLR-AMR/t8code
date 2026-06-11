@@ -2,8 +2,8 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/t8_mra_base.hpp"
-#include "t8_mra/t8_mra_adaptation.hpp"
+#include "t8_mra/core/base.hxx"
+#include "t8_mra/core/adaptation.hxx"
 #include "t8_mra/num/mask_coefficients_compute.hxx"
 
 namespace t8_mra
@@ -137,7 +137,7 @@ class multiscale<TShape, U, P>:
     // Get physical quadrature points via direct mapping
     const auto phys_quad_points = Base::basis.deref_quad_points (vertices);
 
-    // ONE-TO-ONE implementation from old t8_mra_cartesian.hpp::project()
+    
     // Note: For orthonormal Legendre basis, NO volume/Jacobian scaling in projection!
     // The basis functions are normalized on reference element [0,1]^DIM
 

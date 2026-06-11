@@ -6,8 +6,8 @@
 #include <array>
 #include "t8_eclass.h"
 
-#include "t8_mra/data/levelindex_map.hpp"
-#include "t8_mra/data/levelmultiindex.hpp"
+#include "t8_mra/data/levelindex_map.hxx"
+#include "t8_mra/data/levelmultiindex.hxx"
 
 namespace t8_mra
 {

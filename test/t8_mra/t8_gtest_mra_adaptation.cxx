@@ -41,8 +41,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
-#include <t8_mra/t8_mra_triangle.hpp>
-#include <t8_mra/t8_mra_cartesian.hpp>
+#include <t8_mra/t8_mra.hxx>
 
 #include <array>
 #include <cmath>

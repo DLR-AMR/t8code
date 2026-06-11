@@ -8,7 +8,7 @@
 
 #include <t8.h>
 #include <t8_eclass.h>
-#include <t8_mra/num/mat.hpp>
+#include <t8_mra/num/mat.hxx>
 #include <t8_mra/num/legendre_basis.hxx>
 #include <t8_mra/num/quadrature.hxx>
 

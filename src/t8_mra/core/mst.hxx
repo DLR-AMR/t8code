@@ -2,13 +2,13 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/data/cell_data.hpp"
-#include "t8_mra/data/levelmultiindex.hpp"
-#include "t8_mra/data/levelindex_map.hpp"
-#include "t8_mra/data/levelindex_set.hpp"
-#include "t8_mra/data/triangle_order.hpp"
-#include "t8_mra/num/mat.hpp"
-#include "t8_mra/t8_basis.hpp"
+#include "t8_mra/data/element_data.hxx"
+#include "t8_mra/data/levelmultiindex.hxx"
+#include "t8_mra/data/levelindex_map.hxx"
+#include "t8_mra/data/levelindex_set.hxx"
+#include "t8_mra/data/triangle_order.hxx"
+#include "t8_mra/num/mat.hxx"
+#include "t8_mra/num/dg_basis.hxx"
 
 #include <algorithm>
 #include <array>

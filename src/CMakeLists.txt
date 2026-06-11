@@ -143,39 +143,50 @@ if( T8CODE_ENABLE_MRA )
   )
 
   install( FILES
-    t8_mra/t8_basis.hpp
-    t8_mra/t8_mra_base.hpp
-    t8_mra/t8_mra_adaptation.hpp
-    t8_mra/t8_mra_coarsening_criterion.hpp
-    t8_mra/t8_mra_refinement_criterion.hpp
-    t8_mra/t8_mra_mst.hpp
-    t8_mra/t8_mra_triangle.hpp
-    t8_mra/t8_mra_cartesian.hpp
-    t8_mra/t8_mra_vtk.hpp
+    t8_mra/t8_mra.hxx
     DESTINATION include/t8_mra )
 
   install( FILES
-    t8_mra/data/cell_data.hpp
-    t8_mra/data/levelindex_map.hpp
-    t8_mra/data/levelindex_set.hpp
-    t8_mra/data/levelmultiindex.hpp
-    t8_mra/data/triangle_order.hpp
+    t8_mra/core/base.hxx
+    t8_mra/core/adaptation.hxx
+    t8_mra/core/mst.hxx
+    DESTINATION include/t8_mra/core )
+
+  install( FILES
+    t8_mra/io/vtk.hxx
+    DESTINATION include/t8_mra/io )
+
+  install( FILES
+    t8_mra/shapes/triangle.hxx
+    t8_mra/shapes/cartesian.hxx
+    DESTINATION include/t8_mra/shapes )
+
+  install( FILES
+    t8_mra/criteria/coarsening_criterion.hxx
+    t8_mra/criteria/refinement_criterion.hxx
+    DESTINATION include/t8_mra/criteria )
+
+  install( FILES
+    t8_mra/data/element_data.hxx
+    t8_mra/data/levelindex_map.hxx
+    t8_mra/data/levelindex_set.hxx
+    t8_mra/data/levelmultiindex.hxx
+    t8_mra/data/triangle_order.hxx
     DESTINATION include/t8_mra/data )
 
   install( FILES
     t8_mra/num/basis_functions.hxx
+    t8_mra/num/dg_basis.hxx
     t8_mra/num/dunavant.hxx
     t8_mra/num/geometry.hxx
     t8_mra/num/legendre_basis.hxx
-    t8_mra/num/mask_coefficients.hpp
+    t8_mra/num/mask_coefficients.hxx
     t8_mra/num/mask_coefficients_compute.hxx
-    t8_mra/num/mask_coeffs_quad.hpp
-    t8_mra/num/mask_coeffs_triangle.hpp
-    t8_mra/num/mat.hpp
+    t8_mra/num/mask_coefficients_triangle.hxx
+    t8_mra/num/mat.hxx
     t8_mra/num/multiindex.hxx
-    t8_mra/num/quadrature.hpp
     t8_mra/num/quadrature.hxx
-    t8_mra/num/vec.hpp
+    t8_mra/num/vec.hxx
     DESTINATION include/t8_mra/num )
 endif()
 

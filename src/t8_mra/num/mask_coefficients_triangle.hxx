@@ -6,7 +6,7 @@
 #include <vector>
 
 #include <t8_eclass.h>
-#include <t8_mra/num/mat.hpp>
+#include <t8_mra/num/mat.hxx>
 
 namespace t8_mra
 {

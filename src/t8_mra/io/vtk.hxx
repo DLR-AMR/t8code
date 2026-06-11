@@ -12,7 +12,7 @@
 // #include "t8_forest.h"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
-#include "t8_mra/data/cell_data.hpp"
+#include "t8_mra/data/element_data.hxx"
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/legendre_basis.hxx"
 #include "t8_mra/num/multiindex.hxx"

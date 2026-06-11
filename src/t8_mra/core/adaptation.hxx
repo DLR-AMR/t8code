@@ -2,9 +2,9 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/t8_mra_base.hpp"
-#include "t8_mra/t8_mra_coarsening_criterion.hpp"
-#include "t8_mra/t8_mra_refinement_criterion.hpp"
+#include "t8_mra/core/base.hxx"
+#include "t8_mra/criteria/coarsening_criterion.hxx"
+#include "t8_mra/criteria/refinement_criterion.hxx"
 #include "t8_forest/t8_forest_adapt.h"
 #include "t8_forest/t8_forest_iterate.h"
 
@@ -25,8 +25,8 @@ namespace t8_mra
  *
  * What counts as "significant" or in need of refinement is decided by
  * exchangeable criteria: a coarsening_criterion (default: hard_thresholding,
- * see t8_mra_coarsening_criterion.hpp) and a refinement_criterion (default:
- * harten_prediction, see t8_mra_refinement_criterion.hpp).
+ * see criteria/coarsening_criterion.hxx) and a refinement_criterion (default:
+ * harten_prediction, see criteria/refinement_criterion.hxx).
  *
  * @tparam Derived CRTP-derived class (multiscale implementation)
  */

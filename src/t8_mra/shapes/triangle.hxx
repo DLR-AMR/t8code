@@ -2,10 +2,10 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/t8_mra_base.hpp"
-#include "t8_mra/t8_mra_adaptation.hpp"
-#include "t8_mra/data/triangle_order.hpp"
-#include "t8_mra/num/mask_coefficients.hpp"
+#include "t8_mra/core/base.hxx"
+#include "t8_mra/core/adaptation.hxx"
+#include "t8_mra/data/triangle_order.hxx"
+#include "t8_mra/num/mask_coefficients.hxx"
 
 namespace t8_mra
 {
