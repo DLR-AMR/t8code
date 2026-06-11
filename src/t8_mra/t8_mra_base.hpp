@@ -13,6 +13,7 @@
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
 
+#include <algorithm>
 #include <array>
 #include <vector>
 
@@ -289,31 +290,21 @@ class multiscale_base: public multiscale_data<TShape> {
   local_detail_norm (const levelmultiindex &lmi) = 0;
 
   /**
-   * @brief Perform hard thresholding on detail coefficients
+   * @brief Maximum detail norm over all components, scaled by c_scaling
    *
-   * Marks significant details in td_set; the adaptation routines decide
-   * what to do with the rest.
+   * Common building block for detail-based adaptation criteria.
    *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
+   * @param lmi Level multi-index
+   * @return max_u ||d_u|| / c_scaling_u
    */
-  void
-  threshold (unsigned int l_min, unsigned int l_max)
+  double
+  scaled_detail_norm (const levelmultiindex &lmi)
   {
-    for (auto l = l_min; l < l_max; ++l) {
-      for (const auto &[lmi, d] : d_map[l]) {
-        auto tmp = local_detail_norm (lmi);
+    auto detail_norm = local_detail_norm (lmi);
+    for (auto u = 0u; u < U_DIM; ++u)
+      detail_norm[u] /= c_scaling[u];
 
-        for (auto u = 0u; u < U_DIM; ++u)
-          tmp[u] /= c_scaling[u];
-
-        const auto local_norm = *std::max_element (tmp.begin (), tmp.end ());
-        const auto local_eps = c_thresh * local_threshold_value (lmi);
-
-        if (local_norm > local_eps)
-          td_set.insert (lmi);
-      }
-    }
+    return *std::max_element (detail_norm.begin (), detail_norm.end ());
   }
 
   /**
