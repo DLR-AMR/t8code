@@ -183,20 +183,22 @@ vtk_hex_point_index (int i, int j, int k, int order)
   return offset + (i - 1) + (order - 1) * ((j - 1) + (order - 1) * (k - 1));
 }
 
+/**
+ * @brief Lagrange node positions for a hex of given order in reference
+ * coordinates [0,1]^3, in VTK's Lagrange hex ordering
+ */
+static std::vector<std::array<double, 3>>
+get_hex_lagrange_nodes (int order)
+{
+  const int num_nodes = (order + 1) * (order + 1) * (order + 1);
+  std::vector<std::array<double, 3>> nodes (num_nodes);
 
-    // Step 4: Add interior nodes (if order >= 2)
-    // From bla.py: loop order is i (outermost), j (middle), k (innermost)
-    for (int i = 1; i < order; ++i) {
-      for (int j = 1; j < order; ++j) {
-        for (int k = 1; k < order; ++k) {
-          double xi = static_cast<double> (i) / order;
-          double eta = static_cast<double> (j) / order;
-          double zeta = static_cast<double> (k) / order;
-          nodes.push_back ({ xi, eta, zeta });
-        }
-      }
-    }
-  }
+  for (int k = 0; k <= order; ++k)
+    for (int j = 0; j <= order; ++j)
+      for (int i = 0; i <= order; ++i)
+        nodes[vtk_hex_point_index (i, j, k, order)] = { static_cast<double> (i) / order,
+                                                        static_cast<double> (j) / order,
+                                                        static_cast<double> (k) / order };
 
   return nodes;
 }
@@ -208,7 +210,9 @@ static void
 write_vtk_header (std::ofstream &file, int num_points, int num_cells)
 {
   file << "<?xml version=\"1.0\"?>\n";
-  file << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+  // Version >= 2.2 required: for older versions VTK's reader assumes the
+  // pre-9.0 Lagrange hex numbering and permutes the cell connectivity.
+  file << "<VTKFile type=\"UnstructuredGrid\" version=\"2.2\" byte_order=\"LittleEndian\">\n";
   file << "  <UnstructuredGrid>\n";
   file << "    <Piece NumberOfPoints=\"" << num_points << "\" NumberOfCells=\"" << num_cells << "\">\n";
 }
