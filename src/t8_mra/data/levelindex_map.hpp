@@ -6,6 +6,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <ankerl/unordered_dense.h>
+#include <t8.h>
 #include "t8_mra/data/levelmultiindex.hpp"
 
 namespace t8_mra
@@ -389,7 +390,11 @@ levelindex_map<TLmi, T>::get (unsigned int level, size_t key)
 
   TLmi lmi;
   lmi.index = key;
-  return level_map[level][lmi];
+  const auto it = level_map[level].find (lmi);
+  if (it == level_map[level].end ())
+    SC_ABORTF ("levelindex_map::get: missing entry (level=%u, index=%zu)", level, key);
+
+  return it->second;
 }
 
 template <lmi_type TLmi, typename T>
@@ -404,9 +409,14 @@ const T &
 levelindex_map<TLmi, T>::get (unsigned int level, size_t key) const
 {
   check_level (level);
+
   TLmi lmi;
   lmi.index = key;
-  return level_map[level].at (lmi);
+  const auto it = level_map[level].find (lmi);
+  if (it == level_map[level].end ())
+    SC_ABORTF ("levelindex_map::get: missing entry (level=%u, index=%zu)", level, key);
+
+  return it->second;
 }
 
 template <lmi_type TLmi, typename T>
