@@ -133,7 +133,7 @@ extract_cartesian_vertices (const double physical_vertices[][3], std::array<doub
     vertices_max[0] = physical_vertices[1][0];
   }
   else if constexpr (DIM == 2) {
-    // QUAD: After permutation [0,1,3,2] applied in t8_mra_cartesian.hpp:
+    // QUAD: After permutation [0,1,3,2] applied in t8_mra_unified_cartesian.hpp:
     // vertices[0] = t8code vertex 0 = (xmin, ymin)
     // vertices[1] = t8code vertex 1 = (xmax, ymin)
     // vertices[2] = t8code vertex 3 = (xmax, ymax)

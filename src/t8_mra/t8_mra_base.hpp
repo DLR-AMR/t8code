@@ -292,7 +292,6 @@ class multiscale_base: public multiscale_data<TShape> {
   /**
    * @brief Perform hard thresholding on detail coefficients
    *
-   * ONE-TO-ONE implementation of old t8_mra.hpp::hard_thresholding()
    * Only populates td_set. refinement_set and coarsening_set are populated
    * later in sync_d_with_td().
    *
