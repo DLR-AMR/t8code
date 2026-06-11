@@ -27,6 +27,7 @@
 #include <sc_statistics.h>
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_types/t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
@@ -1016,13 +1017,13 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 #if T8_ENABLE_DEBUG
     /* Issue a warning if the points of the quad do not lie in the same plane */
     {
-      double p_0[3], p_1[3], p_2[3], p_3[3];
+      t8_3D_vec p_0, p_1, p_2, p_3;
       /* Compute the vertex coordinates of the quad */
-      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0);
-      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1);
-      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2);
-      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3);
-      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, 1e-16)) {
+      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
+      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1.data ());
+      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2.data ());
+      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3.data ());
+      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, T8_PRECISION_SQRT_EPS)) {
         t8_debugf ("WARNING: Computing normal to a quad that is not coplanar. This computation will be inaccurate.\n");
       }
     }

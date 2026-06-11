@@ -109,7 +109,7 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
 
 #if T8_ENABLE_DEBUG
     /* Issue a warning if the points of the quad do not lie in the same plane */
-    if (!t8_four_points_coplanar (p_0.data (), p_1.data (), p_2.data (), p_3.data (), tolerance)) {
+    if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, tolerance)) {
       t8_debugf ("WARNING: Testing if point is inside a quad that is not coplanar. This test will be inaccurate.\n");
     }
 #endif

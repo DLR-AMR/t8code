@@ -177,19 +177,6 @@ t8_orthogonal_tripod (const double v1[3], double v2[3], double v3[3]);
 void
 t8_swap (double p1[3], double p2[3]);
 
-/**
- * Test whether four given points in 3D are coplanar up to a given tolerance.
- * \param [in]  p_0         First point to check.
- * \param [in]  p_1         Second point to check.
- * \param [in]  p_2         Third point to check.
- * \param [in]  p_3         Fourth point to check.
- * \param [in]  tolerance   The tolerance
- * \return true if points are coplanar.
- */
-constexpr int
-t8_four_points_coplanar (const double p_0[3], const double p_1[3], const double p_2[3], const double p_3[3],
-                         const double tolerance);
-
 T8_EXTERN_C_END ();
 
 #endif /* T8_VEC_H */
