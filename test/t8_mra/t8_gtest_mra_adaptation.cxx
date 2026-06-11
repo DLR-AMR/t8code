@@ -172,6 +172,19 @@ expect_maps_equal (const MapT &expected, const MapT &actual, unsigned int max_le
   }
 }
 
+/* Custom coarsening criterion without prepare(): nothing is significant
+ * -> coarsening must collapse the grid completely. Exercises the
+ * coarsening_criterion extension point. */
+struct collapse_criterion
+{
+  template <typename MRA>
+  bool
+  significant (MRA &, const typename MRA::levelmultiindex &)
+  {
+    return false;
+  }
+};
+
 template <typename Cfg>
 class mra_adaptation: public ::testing::Test {
 };
@@ -284,6 +297,36 @@ TYPED_TEST (mra_adaptation, coarsen_refine_roundtrip)
     t8_cmesh_destroy (&cmesh);
     t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
   }
+}
+
+/* A criterion that finds nothing significant must collapse the grid to the
+ * base cells, regardless of the data. */
+TYPED_TEST (mra_adaptation, custom_criterion_collapse)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+  auto mra = make_mra<Shape, U, P> (max_level, 1.0);
+
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
+  auto *scheme = t8_scheme_new_default ();
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
+  mra.initialize_data (cmesh, scheme, max_level, jump_func<U, DIM> ());
+
+  mra.coarsen (0, max_level, collapse_criterion {});
+  expect_forest_map_consistent (mra);
+
+  EXPECT_EQ (t8_forest_get_global_num_leaf_elements (mra.get_forest ()),
+             t8_forest_get_num_global_trees (mra.get_forest ()));
+
+  mra.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
 }
 
 }  // namespace
