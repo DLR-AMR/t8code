@@ -34,7 +34,7 @@
 #include <t8_schemes/t8_scheme.h>
 
 /** Forward pointer reference to hidden cmesh implementation.
- * This reference needs to be known by t8_geometry, hence we 
+ * This reference needs to be known by t8_geometry, hence we
  * put it before the include. */
 typedef struct t8_cmesh *t8_cmesh_t;
 
@@ -432,9 +432,13 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  * \param[in] cmesh The cmesh to save.
  * \param[in] fileprefix The prefix of the file to save the cmesh to.
  *
+<<<<<<< HEAD:src/t8_cmesh.h
+ * \note Currently, it is only legal to save cmeshes that use the linear geometry.
+=======
  * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
  *                  Calling it will thus result in an error.
  * \note So far, it was only legal to save cmeshes that use the linear geometry.
+>>>>>>> main:src/t8_cmesh/t8_cmesh.h
  */
 int
 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
@@ -460,8 +464,11 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
  * \param[in] mode The load mode to use, see \ref t8_load_mode_t.
  * \param[in] procs_per_node The number of processes per node, only relevant in JUQUEEN mode.
  *
+<<<<<<< HEAD:src/t8_cmesh.h
+=======
  * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
  *                  Calling it will thus result in an error.
+>>>>>>> main:src/t8_cmesh/t8_cmesh.h
  * \note \a procs_per_node is only relevant in mode==JUQUEEN. If \a num_files = 1 a replicated cmesh is constructed.
  */
 t8_cmesh_t
@@ -685,9 +692,9 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
                             int *orientation);
 
 /**
- * Given a local tree id (of a local tree or ghost tree) and a face compute the eclass of the 
+ * Given a local tree id (of a local tree or ghost tree) and a face compute the eclass of the
  * tree's face neighbor.
- * 
+ *
  * \param [in]      cmesh   The cmesh to be considered.
  * \param [in]      ltreeid The local id of a tree or a ghost.
  * \param [in]      face    A face number of the tree/ghost.
@@ -773,7 +780,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  *                                  the calling processor anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the previous process.
- * \a cmesh must be committed before calling this function. 
+ * \a cmesh must be committed before calling this function.
  */
 void
 t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, const t8_scheme_c *tree_scheme,
@@ -782,11 +789,17 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
                                              int8_t *first_tree_shared);
 
 /**
- * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially 
+ * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially
  * meshes where not all elements refine into 1:2^dim manner. The section is calculated without assuming such refinement
+<<<<<<< HEAD:src/t8_cmesh.h
+ * and each process computes its number of elements on the given \var level, communicates the number to other processes,
+ * and the correct section is computed based on this information.
+ *
+=======
  * and each process computes its number of elements on the given \a level, communicates the number to other processes,
- * and the correct section is computed based on this information. 
- * 
+ * and the correct section is computed based on this information.
+ *
+>>>>>>> main:src/t8_cmesh/t8_cmesh.h
  * \param [in] cmesh        The cmesh to be considered.
  * \param [in] level        The uniform refinement level to be created.
  * \param [in] scheme       The element scheme for which to compute the bounds.
@@ -797,7 +810,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
  *                                  the calling process anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the previous process.
- * \param [in] comm         The communicator 
+ * \param [in] comm         The communicator
  */
 void
 t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const int level, const t8_scheme_c *scheme,

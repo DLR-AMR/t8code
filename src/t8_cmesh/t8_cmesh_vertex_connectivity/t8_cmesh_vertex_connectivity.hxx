@@ -89,7 +89,7 @@ struct t8_cmesh_vertex_connectivity
    * Sets all global ids and associated tree vertices from
    * the associated cmesh.
    * Afterwards, this class is ready to be used and cannot be altered.
-  */
+   */
   void
   build_vertex_to_tree ()
   {
@@ -103,7 +103,7 @@ struct t8_cmesh_vertex_connectivity
 
   /** Return the total number of global vertices of a cmesh (across all processes).
    * \return The total number of global vertices of \a cmesh.
-  */
+   */
   inline t8_gloidx_t
   get_global_number_of_vertices () const
   {
@@ -112,7 +112,7 @@ struct t8_cmesh_vertex_connectivity
 
   /** Return the number of process local global vertices of a cmesh.
    * \return The number of process local global vertices of \a cmesh.
-  */
+   */
   inline t8_gloidx_t
   get_local_number_of_vertices ()
   {
@@ -225,7 +225,7 @@ struct t8_cmesh_vertex_connectivity
   /** Typedef for the iterator type. */
   using const_iterator = t8_cmesh_vertex_conn_vertex_to_tree::const_iterator;
 
-  /** Iterator begin. 
+  /** Iterator begin.
    * \return const iterator pointing to the first element.
   */
   inline const_iterator
@@ -234,7 +234,7 @@ struct t8_cmesh_vertex_connectivity
     return vertex_to_tree.begin ();
   }
 
-  /** Iterator end. 
+  /** Iterator end.
    * \return const iterator pointing behind the last element.
   */
   inline const_iterator

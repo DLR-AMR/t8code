@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_copy.c
+/** \file t8_cmesh_copy.cxx
  * Functionality to copy a cmesh.
  */
 
@@ -30,7 +30,9 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.h>
-#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+
+T8_EXTERN_C_BEGIN ();
 
 void
 t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
@@ -64,6 +66,9 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
 #endif /* T8_ENABLE_DEBUG */
   T8_ASSERT (t8_cmesh_comm_is_valid (cmesh, comm));
 
+  if (cmesh_from->vertex_connectivity != nullptr)
+    cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
+
   /* Copy the tree_offsets */
   if (cmesh_from->tree_offsets != NULL) {
     T8_ASSERT (cmesh->tree_offsets == NULL);
@@ -89,3 +94,5 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
     }
   }
 }
+
+T8_EXTERN_C_END ();
