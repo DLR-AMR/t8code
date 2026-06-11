@@ -10,6 +10,7 @@
 #include "t8_mra/num/mat.hpp"
 #include "t8_mra/t8_basis.hpp"
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 
@@ -161,6 +162,53 @@ class UnifiedMST
   static constexpr unsigned int DOF = TElement::DOF;
 
   /**
+   * @brief Two-scale transform of one complete family (children -> parent + details)
+   *
+   * Pure computation, no map bookkeeping:
+   *   u_parent[i] = scaling * Σ_k Σ_j u_child[k][j] * M[k](j,i)
+   *   d[k][i] = u_child[k][i] - Σ_j M[k](i,j) * u_parent[j]
+   *
+   * @param data_on_siblings Element data of all NUM_CHILDREN children
+   * @param data_on_coarse Output: parent element with u_coeffs, d_coeffs, vol, order
+   * @param mask_coefficients Mask coefficient matrices M[k]
+   */
+  static void
+  transform_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
+                    element_t &data_on_coarse, const std::vector<t8_mra::mat> &mask_coefficients)
+  {
+    const double scaling_factor = ScalingPolicyT::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
+
+    for (auto u = 0u; u < U_DIM; ++u) {
+      // Parent coefficients: u_parent[i] = scaling * Σ_k Σ_j u_child[k][j] * M[k](j,i)
+      for (auto i = 0u; i < DOF; ++i) {
+        auto sum = 0.0;
+
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+          for (auto j = 0u; j < DOF; ++j)
+            sum += data_on_siblings[k].u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](j, i);
+
+        data_on_coarse.u_coeffs[element_t::dg_idx (u, i)] = sum * scaling_factor;
+      }
+
+      // Detail coefficients: d[k][i] = u_child[k][i] - Σ_j M[k](i,j) * u_parent[j]
+      for (auto i = 0u; i < DOF; ++i) {
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          auto sum = 0.0;
+          for (auto j = 0u; j < DOF; ++j)
+            sum += mask_coefficients[k](i, j) * data_on_coarse.u_coeffs[element_t::dg_idx (u, j)];
+
+          data_on_coarse.d_coeffs[element_t::wavelet_idx (k, u, i)]
+            = data_on_siblings[k].u_coeffs[element_t::dg_idx (u, i)] - sum;
+        }
+      }
+    }
+
+    data_on_coarse.vol = data_on_siblings[0].vol * levelmultiindex::NUM_CHILDREN;
+    data_on_coarse.order = data_on_siblings[0].order;
+    OrderingPolicyT::adjust_parent_order (data_on_coarse);
+  }
+
+  /**
    * @brief Compute detail coefficients for leaf families without modifying the grid data
    *
    * For every complete family whose children are present in lmi_map at levels
@@ -233,8 +281,6 @@ class UnifiedMST
     element_t data_on_coarse;
     std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
 
-    const double scaling_factor = ScalingPolicyT::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
-
     for (auto l = l_max; l > l_min; --l) {
       // Collect all parent indices at level l-1
       for (const auto &[lmi, _] : lmi_map->operator[] (l))
@@ -245,46 +291,30 @@ class UnifiedMST
       for (const auto &lmi : I_set) {
         const auto siblings_lmi = t8_mra::children_lmi (lmi);
 
+        // On an adaptive grid a family may be incomplete: some siblings stayed
+        // refined on finer levels. Such families cannot be two-scale transformed;
+        // their members remain leaves at level l.
+        const auto family_complete
+          = std::all_of (siblings_lmi.begin (), siblings_lmi.end (),
+                         [&] (const levelmultiindex &sibling) { return lmi_map->contains (sibling); });
+        if (!family_complete)
+          continue;
+
         // Load children - LMI structure encodes the ordering
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
           data_on_siblings[k] = lmi_map->get (siblings_lmi[k]);
 
-        // Forward MST: Compute parent coefficients
-        // u_parent[i] = scaling * Σ_k Σ_j u_child[k][j] * M[k](j,i)
-        for (auto u = 0u; u < U_DIM; ++u) {
-          for (auto i = 0u; i < DOF; ++i) {
-            auto sum = 0.0;
-
-            for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
-              for (auto j = 0u; j < DOF; ++j)
-                sum += data_on_siblings[k].u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](j, i);
-
-            data_on_coarse.u_coeffs[element_t::dg_idx (u, i)] = sum * scaling_factor;
-            data_on_coarse.vol = data_on_siblings[0].vol * levelmultiindex::NUM_CHILDREN;
-          }
-
-          // Compute detail coefficients: d[k][i] = u_child[k][i] - Σ_j M[k](i,j) * u_parent[j]
-          for (auto i = 0u; i < DOF; ++i) {
-            for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-              auto sum = 0.0;
-              for (auto j = 0u; j < DOF; ++j)
-                sum += mask_coefficients[k](i, j) * data_on_coarse.u_coeffs[element_t::dg_idx (u, j)];
-
-              data_on_coarse.d_coeffs[element_t::wavelet_idx (k, u, i)]
-                = data_on_siblings[k].u_coeffs[element_t::dg_idx (u, i)] - sum;
-            }
-          }
-        }
-
-        // Apply element-specific ordering adjustments
-        data_on_coarse.order = data_on_siblings[0].order;
-        OrderingPolicyT::adjust_parent_order (data_on_coarse);
+        transform_family (data_on_siblings, data_on_coarse, mask_coefficients);
 
         lmi_map->insert (lmi, data_on_coarse);
         d_map[l - 1].emplace (lmi, data_on_coarse);
+
+        // Consume only this family's children; members of skipped (incomplete)
+        // families must stay in the map as leaves.
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+          lmi_map->erase (siblings_lmi[k]);
       }
 
-      lmi_map->erase (l);
       I_set.clear ();
     }
   }
