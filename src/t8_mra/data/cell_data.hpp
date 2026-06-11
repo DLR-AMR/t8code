@@ -135,9 +135,7 @@ struct forest_data
   sc_array_t *lmi_idx;
   t8_mra::levelindex_map<lmi_type, T> *lmi_map;
 
-  /// Global information needed for refinement/coarsening
-  int current_refinement_level;  // Which level do we refine?
-  void *mra_instance;            // Pointer to multiscale object for callbacks
+  void *mra_instance;  // Pointer to multiscale object for callbacks
 };
 
 template <typename T>
