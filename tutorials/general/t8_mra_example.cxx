@@ -101,11 +101,7 @@ write_vtk_output (MRA &mra, const std::string &filename)
 {
   std::cout << "  Writing VTK: " << filename << ".vtu\n";
 
-  /// TODO Fix 3D Bug
-  if (MRA::DIM == 3)
-    t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), 1);
-  else
-    t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), MRA::P_DIM - 1);
+  t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), MRA::P_DIM - 1);
 }
 
 /**
@@ -355,7 +351,7 @@ example_hex_3d ()
   std::cout << "\n=== 5. Hex: 3D adaptation ===\n";
 
   constexpr int U = 1;
-  constexpr int P = 2;
+  constexpr int P = 3;
   const int min_level = 0;
   const int max_level = 4;
   const double c_thresh = 1.0;
