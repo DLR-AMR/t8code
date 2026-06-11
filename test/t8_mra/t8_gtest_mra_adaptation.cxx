@@ -108,20 +108,9 @@ jump_func ()
 
 template <t8_eclass TShape, int U, int P>
 t8_mra::multiscale<TShape, U, P>
-make_mra (int max_level, double c_thresh)
+make_mra (int max_level)
 {
-  constexpr int gamma = 1;
-  constexpr bool balanced = false;
-
-  if constexpr (TShape == T8_ECLASS_TRIANGLE) {
-    constexpr int dunavant_rule = 10;
-    return t8_mra::multiscale<TShape, U, P> (max_level, c_thresh, gamma, dunavant_rule, balanced, sc_MPI_COMM_WORLD);
-  }
-  else {
-    constexpr int num_quad_points_1d = 4;
-    return t8_mra::multiscale<TShape, U, P> (max_level, c_thresh, gamma, num_quad_points_1d, balanced,
-                                             sc_MPI_COMM_WORLD);
-  }
+  return t8_mra::multiscale<TShape, U, P> (max_level, sc_MPI_COMM_WORLD);
 }
 
 /* Every forest leaf must have its lmi stored in lmi_idx with the element's
@@ -220,7 +209,7 @@ TYPED_TEST (mra_adaptation, mst_roundtrip)
   constexpr auto DIM = TypeParam::DIM;
 
   const int max_level = (DIM == 3) ? 3 : 4;
-  auto mra = make_mra<Shape, U, P> (max_level, 1.0);
+  auto mra = make_mra<Shape, U, P> (max_level);
 
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
   auto *scheme = t8_scheme_new_default ();
@@ -263,7 +252,7 @@ TYPED_TEST (mra_adaptation, coarsen_refine_roundtrip)
   }
   else {
     const int max_level = (DIM == 3) ? 4 : 5;
-    auto mra = make_mra<Shape, U, P> (max_level, 1.0);
+    auto mra = make_mra<Shape, U, P> (max_level);
 
     t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
     auto *scheme = t8_scheme_new_default ();
@@ -308,7 +297,7 @@ TYPED_TEST (mra_adaptation, custom_criterion_collapse)
   constexpr auto DIM = TypeParam::DIM;
 
   const int max_level = (DIM == 3) ? 3 : 4;
-  auto mra = make_mra<Shape, U, P> (max_level, 1.0);
+  auto mra = make_mra<Shape, U, P> (max_level);
 
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
   auto *scheme = t8_scheme_new_default ();
