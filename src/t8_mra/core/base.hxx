@@ -350,7 +350,7 @@ class multiscale_base: public multiscale_data<TShape> {
    *
    * Derived classes should implement:
    *   template <typename Func>
-   *   void project_impl(std::vector<double> &dg_coeffs, int tree_idx,
+   *   void project_impl(std::span<double> dg_coeffs, int tree_idx,
    *                     const t8_element_t *element, Func &&func)
    */
 

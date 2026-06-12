@@ -6,6 +6,8 @@
 #include "t8_mra/core/adaptation.hxx"
 #include "t8_mra/num/mask_coefficients_compute.hxx"
 
+#include <span>
+
 namespace t8_mra
 {
 
@@ -112,7 +114,7 @@ class multiscale<TShape, U, P>:
    */
   template <typename Func>
   void
-  project_impl (std::vector<double> &dg_coeffs, int tree_idx, const t8_element_t *element, Func &&func)
+  project_impl (std::span<double> dg_coeffs, int tree_idx, const t8_element_t *element, Func &&func)
   {
     // Extract element vertices (cartesian: axis-aligned box)
     constexpr int num_vertices = (Base::DIM == 1 ? 2 : (Base::DIM == 2 ? 4 : 8));

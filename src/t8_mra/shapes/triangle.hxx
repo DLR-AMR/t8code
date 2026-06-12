@@ -7,6 +7,8 @@
 #include "t8_mra/data/triangle_order.hxx"
 #include "t8_mra/num/mask_coefficients.hxx"
 
+#include <span>
+
 namespace t8_mra
 {
 
@@ -106,7 +108,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    */
   template <typename Func>
   void
-  project_impl (std::vector<double> &dg_coeffs, int tree_idx, const t8_element_t *element,
+  project_impl (std::span<double> dg_coeffs, int tree_idx, const t8_element_t *element,
                 const std::array<int, 3> &point_order, Func &&func)
   {
     // ONE-TO-ONE implementation of old t8_mra.hpp::project()

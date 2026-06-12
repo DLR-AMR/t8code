@@ -78,7 +78,6 @@ compute_dof ()
 }
 
 /// TODO template specialization
-/// TOOD change to std::array
 template <t8_eclass TShape, unsigned short U, unsigned short P>
 struct element_data
 {
@@ -92,16 +91,15 @@ struct element_data
   static constexpr unsigned short DOF = compute_dof<TShape, P> ();
   static constexpr unsigned short W_DOF = DOF * NUM_CHILDREN;
 
-  std::vector<double> u_coeffs;  // Single-scale coefficients
+  // Fixed-size storage: keeps the struct trivially copyable, so element
+  // data can be shipped between ranks as raw bytes (repartitioning, ghost
+  // exchange) and lives inline in the dense maps.
+  std::array<double, U_DIM * DOF> u_coeffs = {};  // Single-scale coefficients
   /// TODO get rid of details
-  std::vector<double> d_coeffs;  // Detail coefficients
-  double vol;
+  std::array<double, U_DIM * W_DOF> d_coeffs = {};  // Detail coefficients
+  double vol = 0.0;
 
-  std::array<int, 3> order;  // Point order
-
-  explicit element_data (): u_coeffs (U_DIM * DOF, 0.0), d_coeffs (U_DIM * W_DOF, 0.0), vol (0.0), order ({})
-  {
-  }
+  std::array<int, 3> order = {};  // Point order
 
   size_t static dg_idx (size_t u, size_t p) noexcept
   {
