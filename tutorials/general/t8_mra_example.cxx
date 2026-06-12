@@ -250,7 +250,7 @@ example_bottom_up ()
 struct thresholding_with_floor
 {
   t8_mra::hard_thresholding thresholding;
-  unsigned int floor_level = 2;
+  unsigned int floor_level = 4;
 
   template <typename MRA>
   void
@@ -276,8 +276,8 @@ example_custom_criterion ()
   constexpr int P = 3;
   const int min_level = 0;
   const int max_level = 6;
-  const double c_thresh = 0.1;
-  const unsigned int floor_level = 3;
+  const double c_thresh = 1.0;
+  const unsigned int floor_level = 4;
 
   t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra_plain (max_level, sc_MPI_COMM_WORLD);
   t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra_floor (max_level, sc_MPI_COMM_WORLD);
