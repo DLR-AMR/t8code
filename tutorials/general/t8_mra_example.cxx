@@ -24,6 +24,38 @@
 #include <string>
 
 //=============================================================================
+// Output Helpers
+//=============================================================================
+
+/**
+ * @brief Rank-0-only stdout
+ *
+ * Every printed value in the examples is global (global element counts,
+ * parameters), so the other ranks would only duplicate the lines.
+ */
+struct root_ostream
+{
+  bool root;
+
+  template <typename T>
+  const root_ostream &
+  operator<< (const T &v) const
+  {
+    if (root)
+      std::cout << v;
+    return *this;
+  }
+};
+
+static root_ostream
+root_out ()
+{
+  int rank;
+  sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &rank);
+  return { rank == 0 };
+}
+
+//=============================================================================
 // Test Functions
 //=============================================================================
 
@@ -120,7 +152,7 @@ template <typename MRA>
 void
 write_vtk_output (MRA &mra, const std::string &filename)
 {
-  std::cout << "  Writing VTK: " << filename << ".vtu\n";
+  root_out () << "  Writing VTK: " << filename << ".vtu\n";
 
   t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), MRA::P_DIM - 1);
 }
@@ -133,8 +165,8 @@ t8_gloidx_t
 print_grid_stats (MRA &mra, const std::string &label)
 {
   const auto num_elements = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-  std::cout << "  " << label << ": " << num_elements << " elements, " << (num_elements * MRA::DOF * MRA::U_DIM)
-            << " DOF\n";
+  root_out () << "  " << label << ": " << num_elements << " elements, " << (num_elements * MRA::DOF * MRA::U_DIM)
+              << " DOF\n";
   return num_elements;
 }
 
@@ -151,7 +183,7 @@ print_grid_stats (MRA &mra, const std::string &label)
 void
 example_adaptation_cycle ()
 {
-  std::cout << "\n=== 1. Triangle: full adaptation cycle (top-down) ===\n";
+  root_out () << "\n=== 1. Triangle: full adaptation cycle (top-down) ===\n";
 
   constexpr int U = 1;
   constexpr int P = 3;
@@ -184,8 +216,8 @@ example_adaptation_cycle ()
   const auto num_recoarse = print_grid_stats (mra, "After second coarsening");
   write_vtk_output (mra, "mra_output/01_cycle_step3_coarsened");
 
-  std::cout << "  Round-trip: " << num_coarse << " -> " << num_recoarse
-            << (num_coarse == num_recoarse ? " (exact)\n" : "\n");
+  root_out () << "  Round-trip: " << num_coarse << " -> " << num_recoarse
+              << (num_coarse == num_recoarse ? " (exact)\n" : "\n");
 
   mra.balance ();
   const auto num_balanced = print_grid_stats (mra, "After balancing");
@@ -208,11 +240,11 @@ example_adaptation_cycle ()
 void
 example_bottom_up ()
 {
-  std::cout << "\n=== 2. Triangle: bottom-up initialization ===\n";
+  root_out () << "\n=== 2. Triangle: bottom-up initialization ===\n";
 
   constexpr int U = 1;
   constexpr int P = 3;
-  const int max_level = 7;
+  const int max_level = 13;
   const double c_thresh = 1.0;
 
   t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
@@ -228,8 +260,8 @@ example_bottom_up ()
   const auto num_adaptive = print_grid_stats (mra, "Adaptive grid");
   const auto num_trees = t8_forest_get_num_global_trees (mra.get_forest ());
   const auto num_uniform = num_trees * static_cast<t8_gloidx_t> (std::pow (4, max_level));
-  std::cout << "  Uniform level " << max_level << " grid (never built): " << num_uniform << " elements\n";
-  std::cout << "  Compression: " << (100.0 * (1.0 - static_cast<double> (num_adaptive) / num_uniform)) << " %\n";
+  root_out () << "  Uniform level " << max_level << " grid (never built): " << num_uniform << " elements\n";
+  root_out () << "  Compression: " << (100.0 * (1.0 - static_cast<double> (num_adaptive) / num_uniform)) << " %\n";
 
   write_vtk_output (mra, "mra_output/02_bottom_up");
 
@@ -272,7 +304,7 @@ struct thresholding_with_floor
 void
 example_custom_criterion ()
 {
-  std::cout << "\n=== 3. Quad: custom coarsening criterion (level floor) ===\n";
+  root_out () << "\n=== 3. Quad: custom coarsening criterion (level floor) ===\n";
 
   constexpr int U = 1;
   constexpr int P = 3;
@@ -334,9 +366,9 @@ run_shape (const std::string &name, auto &&func, int max_level, double c_thresh)
   mra.coarsen (0, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
 
   const auto num_adapted = print_grid_stats (mra, name + " adapted");
-  std::cout << "    " << num_uniform << " -> " << num_adapted
-            << " elements (compression: " << (100.0 * (1.0 - static_cast<double> (num_adapted) / num_uniform))
-            << " %)\n";
+  root_out () << "    " << num_uniform << " -> " << num_adapted
+              << " elements (compression: " << (100.0 * (1.0 - static_cast<double> (num_adapted) / num_uniform))
+              << " %)\n";
   write_vtk_output (mra, "mra_output/04_compare_" + name);
 
   mra.cleanup ();
@@ -354,7 +386,7 @@ run_shape (const std::string &name, auto &&func, int max_level, double c_thresh)
 void
 example_triangle_vs_quad ()
 {
-  std::cout << "\n=== 4. Triangle vs quad on the same data ===\n";
+  root_out () << "\n=== 4. Triangle vs quad on the same data ===\n";
 
   const int max_level = 6;
   const double c_thresh = 1.0;
@@ -371,7 +403,7 @@ example_triangle_vs_quad ()
 void
 example_hex_3d ()
 {
-  std::cout << "\n=== 5. Hex: 3D adaptation ===\n";
+  root_out () << "\n=== 5. Hex: 3D adaptation ===\n";
 
   constexpr int U = 1;
   constexpr int P = 3;
@@ -402,7 +434,7 @@ example_hex_3d ()
   t8_cmesh_destroy (&cmesh);
   t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
 
-  std::cout << "  Use ParaView 'Clip' / 'Slice' filters to see the internal structure.\n";
+  root_out () << "  Use ParaView 'Clip' / 'Slice' filters to see the internal structure.\n";
 }
 
 //=============================================================================
@@ -417,7 +449,7 @@ example_hex_3d ()
 void
 example_two_components ()
 {
-  std::cout << "\n=== 6. Triangle: two state variables ===\n";
+  root_out () << "\n=== 6. Triangle: two state variables ===\n";
 
   constexpr int U = 2;
   constexpr int P = 3;
@@ -444,7 +476,7 @@ example_two_components ()
   print_grid_stats (mra, "After refinement");
   write_vtk_output (mra, "mra_output/06_two_components_step2_refined");
 
-  std::cout << "  Color by u0 / u1 in ParaView: the grid follows both jumps.\n";
+  root_out () << "  Color by u0 / u1 in ParaView: the grid follows both jumps.\n";
 
   mra.cleanup ();
   t8_cmesh_destroy (&cmesh);
@@ -464,7 +496,13 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, nullptr, SC_LP_ESSENTIAL);
   t8_init (SC_LP_PRODUCTION);
 
-  if (!std::filesystem::create_directory ("mra_output"))
+  // Rank 0 creates the output directory; everyone writes into it
+  int mpirank;
+  sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  if (mpirank == 0)
+    std::filesystem::create_directory ("mra_output");
+  sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+  if (!std::filesystem::exists ("mra_output"))
     t8_errorf ("Could not create directory");
 
   example_adaptation_cycle ();
@@ -474,9 +512,12 @@ main (int argc, char **argv)
   example_hex_3d ();
   example_two_components ();
 
-  std::cout << "\nAll examples completed. Output in mra_output/ (open in ParaView).\n";
+  root_out () << "\nAll examples completed. Output in mra_output/ (open in ParaView).\n";
 
   sc_finalize ();
+
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
   return 0;
 }
 
