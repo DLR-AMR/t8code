@@ -527,6 +527,115 @@ class multiscale_adaptation {
   }
 
   //=============================================================================
+  // Balancing
+  //=============================================================================
+
+  /**
+   * @brief One balancing round: pull up covering leaves across faces
+   *
+   * Every leaf constructs its same-level face neighbours geometrically and
+   * resolves them to the covering leaf via the LMI hierarchy. A covering
+   * leaf more than one level coarser is marked and refined one level;
+   * children data comes from the inverse two-scale transform with zero
+   * details, so the represented data is unchanged.
+   *
+   * @return Number of leaves marked in this round
+   */
+  unsigned int
+  balance_round ()
+  {
+    using element_t = typename Derived::element_t;
+    using levelmultiindex = typename Derived::levelmultiindex;
+
+    clear_multiscale_state ();
+
+    auto *user_data = derived ().get_user_data ();
+    auto *forest = derived ().forest;
+    const auto *scheme = t8_forest_get_scheme (forest);
+    auto *lmi_map = derived ().get_lmi_map ();
+
+    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+    auto current_idx = t8_locidx_t { 0 };
+    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+      const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
+      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+
+      t8_element_t *neigh_element;
+      scheme->element_new (tree_class, 1, &neigh_element);
+
+      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
+        if (lmi.level () < 2)
+          continue;
+
+        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+        const auto num_faces = scheme->element_get_num_faces (tree_class, element);
+
+        for (auto face = 0; face < num_faces; ++face) {
+          int neigh_face;
+          const auto neigh_gtreeid
+            = t8_forest_element_face_neighbor (forest, tree_idx, element, neigh_element, tree_class, face, &neigh_face);
+
+          // Domain boundary
+          if (neigh_gtreeid < 0)
+            continue;
+
+          auto walk = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
+          while (walk.level () > 0 && !lmi_map->contains (walk))
+            walk = t8_mra::parent_lmi (walk);
+
+          // Not found: neighbour region is refined finer (it checks back
+          // itself) or lives on another rank (TODO MPI, cf.
+          // neighbour_prediction).
+          if (lmi_map->contains (walk) && walk.level () + 1 < lmi.level ())
+            derived ().refinement_set.insert (walk);
+        }
+      }
+
+      scheme->element_destroy (tree_class, 1, &neigh_element);
+    }
+
+    auto num_marked = 0u;
+    for (auto l = 0; l < derived ().maximum_level; ++l)
+      num_marked += derived ().refinement_set[l].size ();
+
+    if (num_marked == 0) {
+      clear_multiscale_state ();
+      return 0;
+    }
+
+    for (auto l = 0; l < derived ().maximum_level; ++l)
+      for (const auto &lmi : derived ().refinement_set[l])
+        derived ().d_map.insert (lmi, element_t {});
+
+    derived ().inverse_multiscale_transformation (0, derived ().maximum_level);
+
+    adapt_forest (static_refinement_callback);
+
+    clear_multiscale_state ();
+
+    return num_marked;
+  }
+
+  /**
+   * @brief Restore the 2:1 face balance of the grid
+   *
+   * Rounds iterate until no leaf has a face neighbour more than one level
+   * coarser. Each round lifts violating covering leaves by one level, so a
+   * jump of k levels resolves in k-1 rounds; refining a leaf can create new
+   * violations against its own coarser neighbours, which the next round
+   * catches. Terminates: every round refines at least one leaf and levels
+   * are bounded by max_level.
+   */
+  void
+  balance ()
+  {
+    auto round = 0;
+    while (balance_round () > 0)
+      t8_debugf ("MRA balance round %d\n", round++);
+  }
+
+  //=============================================================================
   // Bottom-up Initialization
   //=============================================================================
 
