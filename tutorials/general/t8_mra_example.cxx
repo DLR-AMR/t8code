@@ -11,6 +11,7 @@
  * 6. Two state variables (U = 2) with different jump locations
  */
 
+#include "t8.h"
 #ifdef T8_ENABLE_MRA
 
 #include "t8_mra/t8_mra.hxx"
@@ -18,6 +19,7 @@
 #include "t8_cmesh/t8_cmesh_examples.h"
 
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <string>
 
@@ -461,6 +463,9 @@ main (int argc, char **argv)
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, nullptr, SC_LP_ESSENTIAL);
   t8_init (SC_LP_PRODUCTION);
+
+  if (!std::filesystem::create_directory ("mra_output"))
+    t8_errorf ("Could not create directory");
 
   example_adaptation_cycle ();
   example_bottom_up ();
