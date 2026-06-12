@@ -330,7 +330,6 @@ run_shape (const std::string &name, auto &&func, int max_level, double c_thresh)
   const auto num_uniform = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
 
   mra.coarsen (0, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
-  mra.refine (0, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
 
   const auto num_adapted = print_grid_stats (mra, name + " adapted");
   std::cout << "    " << num_uniform << " -> " << num_adapted
