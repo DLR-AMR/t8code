@@ -324,8 +324,13 @@ class multiscale_base: public multiscale_data<TShape> {
       }
     }
 
+    // The scaling is a domain integral (eq. 2.39): sum the per-rank
+    // partials so all ranks threshold consistently.
+    std::array<double, U_DIM> global_res = {};
+    sc_MPI_Allreduce (res.data (), global_res.data (), U_DIM, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+
     for (auto u = 0u; u < U_DIM; ++u)
-      res[u] = std::max (1.0, res[u]);
+      res[u] = std::max (1.0, global_res[u]);
 
     return res;
   }
