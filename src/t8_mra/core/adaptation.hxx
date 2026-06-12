@@ -640,6 +640,125 @@ class multiscale_adaptation {
   //=============================================================================
 
   /**
+   * @brief Mean-value jump detection on the leaves of one level
+   *
+   * Compares each leaf's component means against its same-level face
+   * neighbours, normalized per component by the mean magnitude where it
+   * exceeds 1. Marks the leaf's family when the difference exceeds
+   * c_thresh * sqrt(h): smooth data decays as O(h) and falls below, a
+   * discontinuity stays O(1) and keeps firing on every level. Catches jumps
+   * aligned with family boundaries, where the detail coefficients vanish.
+   *
+   * @param level Leaves of this level are checked
+   * @param c_thresh Threshold constant
+   * @return Parent lmis of the jumping families
+   */
+  auto
+  detect_jumps (int level, double c_thresh)
+  {
+    using element_t = typename Derived::element_t;
+    using levelmultiindex = typename Derived::levelmultiindex;
+
+    typename Derived::index_set jumps;
+
+    auto *user_data = derived ().get_user_data ();
+    auto *forest = derived ().forest;
+    const auto *scheme = t8_forest_get_scheme (forest);
+    auto *lmi_map = derived ().get_lmi_map ();
+
+    const auto mean = [&] (const levelmultiindex &lmi) {
+      const auto &data = lmi_map->get (lmi);
+      std::array<double, Derived::U_DIM> m;
+      for (auto u = 0u; u < Derived::U_DIM; ++u)
+        m[u] = data.u_coeffs[element_t::dg_idx (u, 0)];
+      if constexpr (Derived::Shape == T8_ECLASS_TRIANGLE)
+        for (auto u = 0u; u < Derived::U_DIM; ++u)
+          m[u] /= std::sqrt (data.vol);
+      return m;
+    };
+
+    std::array<double, Derived::U_DIM> v_max;
+    v_max.fill (1.0);
+    for (const auto &[lmi, _] : (*lmi_map)[level]) {
+      const auto m = mean (lmi);
+      for (auto u = 0u; u < Derived::U_DIM; ++u)
+        v_max[u] = std::max (v_max[u], std::abs (m[u]));
+    }
+
+    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+    auto current_idx = t8_locidx_t { 0 };
+    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+      const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
+      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+
+      t8_element_t *neigh_element;
+      scheme->element_new (tree_class, 1, &neigh_element);
+
+      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
+        if (lmi.level () != static_cast<unsigned int> (level))
+          continue;
+
+        const auto mean_inner = mean (lmi);
+        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+        const auto num_faces = scheme->element_get_num_faces (tree_class, element);
+
+        auto max_diff = 0.0;
+        for (auto face = 0; face < num_faces; ++face) {
+          int neigh_face;
+          const auto neigh_gtreeid
+            = t8_forest_element_face_neighbor (forest, tree_idx, element, neigh_element, tree_class, face, &neigh_face);
+
+          // Domain boundary
+          if (neigh_gtreeid < 0)
+            continue;
+
+          // Same-level neighbour only; coarser neighbours are skipped
+          const auto neigh_lmi = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
+          if (!lmi_map->contains (neigh_lmi))
+            continue;
+
+          const auto mean_neigh = mean (neigh_lmi);
+          for (auto u = 0u; u < Derived::U_DIM; ++u)
+            max_diff = std::max (max_diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
+        }
+
+        const auto h = std::pow (lmi_map->get (lmi).vol, 1.0 / Derived::DIM);
+        if (max_diff > c_thresh * std::sqrt (h))
+          jumps.insert (t8_mra::parent_lmi (lmi));
+      }
+
+      scheme->element_destroy (tree_class, 1, &neigh_element);
+    }
+
+    return jumps;
+  }
+
+  /**
+   * @brief Coarsening criterion wrapper: families with a detected jump are
+   * always significant. Only used by the bottom-up initialization.
+   */
+  template <typename Criterion>
+  struct jump_guarded
+  {
+    Criterion &criterion;
+    const typename Derived::index_set &jumps;
+
+    void
+    prepare (Derived &mra)
+    {
+      if constexpr (criterion_has_prepare<Criterion, Derived>)
+        criterion.prepare (mra);
+    }
+
+    bool
+    significant (Derived &mra, const typename Derived::levelmultiindex &lmi)
+    {
+      return jumps.contains (lmi) || criterion.significant (mra, lmi);
+    }
+  };
+
+  /**
    * @brief Refine every leaf at the given level and project the initial data
    *
    * Unlike refine(), the children data is not predicted by the inverse
@@ -699,8 +818,9 @@ class multiscale_adaptation {
    *
    * Projects onto the uniform level-1 forest, then per level thresholds the
    * details with the coarsening criterion and refines the significant leaves
-   * one further level by direct projection. Never builds the uniform
-   * max_level grid.
+   * one further level by direct projection. Families with a mean-value jump
+   * across faces are kept regardless of their details (detect_jumps). Never
+   * builds the uniform max_level grid.
    *
    * @param mesh Coarse mesh
    * @param scheme Element scheme
@@ -714,10 +834,16 @@ class multiscale_adaptation {
   initialize_data_adaptive (t8_cmesh_t mesh, const t8_scheme *scheme, int max_level, Func &&func,
                             Criterion criterion = {})
   {
+    // Jump tolerance follows the criterion's threshold constant where it has one
+    auto c_thresh = 1.0;
+    if constexpr (requires { criterion.c_thresh; })
+      c_thresh = criterion.c_thresh;
+
     derived ().initialize_data (mesh, scheme, 1, func);
 
     for (auto l = 1; l < max_level; ++l) {
-      coarsen (std::max (l - 1, 1), l, criterion);
+      const auto jumps = detect_jumps (l, c_thresh);
+      coarsen (std::max (l - 1, 1), l, jump_guarded<Criterion> { criterion, jumps });
       refine_by_projection (l, func);
     }
   }
