@@ -185,6 +185,10 @@ example_adaptation_cycle ()
   std::cout << "  Round-trip: " << num_coarse << " -> " << num_recoarse
             << (num_coarse == num_recoarse ? " (exact)\n" : "\n");
 
+  mra.balance ();
+  const auto num_balanced = print_grid_stats (mra, "After balancing");
+  write_vtk_output (mra, "mra_output/01_cycle_step4_balance");
+
   mra.cleanup ();
   t8_cmesh_destroy (&cmesh);
   t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
@@ -418,7 +422,7 @@ example_two_components ()
   constexpr int P = 3;
   const int min_level = 0;
   const int max_level = 7;
-  const double c_thresh = 1.0;
+  const double c_thresh = 0.2;
 
   t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
 
@@ -429,7 +433,7 @@ example_two_components ()
 
   mra.initialize_data_adaptive (cmesh, scheme, max_level, two_quarter_circles<U> ());
   print_grid_stats (mra, "Uniform level " + std::to_string (max_level));
-  write_vtk_output (mra, "mra_output/06_two_components_step0_uniform");
+  write_vtk_output (mra, "mra_output/06_two_components_step0_initial");
 
   mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
   print_grid_stats (mra, "After coarsening");
