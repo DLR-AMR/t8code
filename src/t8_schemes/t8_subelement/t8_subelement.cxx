@@ -38,8 +38,8 @@ t8_scheme_new_subelement (void)
 
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_LINE>> ();
-  builder.add_eclass_scheme<t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>> ();
-  builder.add_eclass_scheme<t8_subelement_scheme_common<T8_ECLASS_TRIANGLE, t8_subelementtri_scheme>> ();
+  builder.add_eclass_scheme<t8_subelementquad_scheme> ();
+  builder.add_eclass_scheme<t8_subelementtri_scheme> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
   builder.add_eclass_scheme<t8_default_scheme_tet> ();
   builder.add_eclass_scheme<t8_default_scheme_prism> ();
@@ -52,11 +52,9 @@ t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclas
 {
   switch (eclass) {
   case T8_ECLASS_QUAD:
-    return scheme->check_eclass_scheme_type<t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>> (
-      T8_ECLASS_QUAD);
+    return scheme->check_eclass_scheme_type<t8_subelementquad_scheme> (T8_ECLASS_QUAD);
   case T8_ECLASS_TRIANGLE:
-    return scheme->check_eclass_scheme_type<t8_subelement_scheme_common<T8_ECLASS_TRIANGLE, t8_subelementtri_scheme>> (
-      T8_ECLASS_TRIANGLE);
+    return scheme->check_eclass_scheme_type<t8_subelementtri_scheme> (T8_ECLASS_TRIANGLE);
   default:
     return 0; /* Default return value false. */
   }

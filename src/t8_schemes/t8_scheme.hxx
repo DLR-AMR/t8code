@@ -44,7 +44,6 @@
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
-#include <t8_schemes/t8_subelement/specializations/t8_scheme_quads.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
@@ -104,8 +103,8 @@ struct t8_scheme
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
                                 t8_standalone_scheme<T8_ECLASS_HEX>,
                                 /* Subelement schemes */
-                                t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>,
-                                t8_subelement_scheme_common<T8_ECLASS_TRIANGLE, t8_subelementri_scheme>
+                               t8_subelementquad_scheme,
+                                 t8_subelementtri_scheme
                                 >;
   /* clang-format on */
 

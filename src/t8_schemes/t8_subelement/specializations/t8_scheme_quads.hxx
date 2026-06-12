@@ -26,12 +26,7 @@
  */
 
 #pragma once
-#include <t8_schemes/t8_standalone/t8_standalone_elements.hxx>
-#include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
 #include <t8_eclass/t8_eclass.h>
-#include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
-#include <t8_schemes/t8_subelement/t8_subelement_type.hxx>
-#include <t8_schemes/t8_subelement/t8_subelement_traits.hxx>
 
 #define T8_SUB_QUAD_MAX_SUBELEMENT_TYPE 14
 
@@ -63,6 +58,8 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     UnderlyingScheme; /**< The used recursive scheme for the underlying elements. Every time we do not need the subelement logic, the scheme calls the functionality of this underlying scheme. */
   using TSubelementType = typename t8_subelement_traits<t8_subelementquad_scheme>::SubelementType;
   using Base = t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>;
+
+  TUnderlyingScheme underlying_scheme {};
 
   /** Compute the number of corners of an element.
    * \param [in] elem The subelement.
@@ -163,37 +160,37 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
    * Subelement_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
    * Note, that we do not change the underlying quadrant. 
    */
-  static void
-  refine_element_in_subelements (const t8_element_t *elem, int type, t8_element_t *c[])
+  void
+  refine_element_in_subelements (const t8_element_t *elem, int type, t8_element_t *c[]) const noexcept
   {
     const TSubelementType *element = (const TSubelementType *) elem;
     TSubelementType **subelements = (TSubelementType **) c;
-    const int num_subelements = Base::element_get_number_of_subelements (type);
+    const int num_subelements = this->element_get_number_of_subelements (type);
 
     T8_ASSERT (type >= 1 && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
-    T8_ASSERT (!Base::element_is_subelement (elem));
-    T8_ASSERT (Base::element_is_valid (elem));
+    T8_ASSERT (!this->element_is_subelement (elem));
+    T8_ASSERT (this->element_is_valid (elem));
 #if T8_ENABLE_DEBUG
     {
       for (int j = 0; j < num_subelements; j++) {
-        T8_ASSERT (Base::element_is_valid (c[j]));
+        T8_ASSERT (this->element_is_valid (c[j]));
       }
     }
 #endif
 
     /* Setting the parameter values for different subelements. */
     for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
-      TUnderlyingScheme::element_copy (Base::subelement_to_standalone (element),
-                                       Base::subelement_to_standalone (subelements[sub_id_counter]));
+      TUnderlyingScheme::element_copy (this->subelement_to_standalone (element),
+                                       this->subelement_to_standalone (subelements[sub_id_counter]));
       subelements[sub_id_counter]->subelement_type = type;
       subelements[sub_id_counter]->subelement_id = sub_id_counter;
-      T8_ASSERT (Base::element_is_valid (c[sub_id_counter]));
+      T8_ASSERT (this->element_is_valid (c[sub_id_counter]));
     }
   }
 
-  static void
+  void
   subelement_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                   double *out_coords) noexcept
+                                   double *out_coords) const noexcept
   {
 
     /* Get the 3 integer vertex coords of the subelement triangle */
@@ -223,17 +220,17 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
   }
 
  private:
-  static void
-  vertex_coords_of_subelement (const t8_element_t *elem, int vertex, int coords[])
+  void
+  vertex_coords_of_subelement (const t8_element_t *elem, int vertex, int coords[]) const noexcept
   {
-    T8_ASSERT (Base::element_is_valid (elem));
-    T8_ASSERT (Base::element_is_subelement (elem));
-    const auto *subelement = Base::as_subelement (elem);
+    T8_ASSERT (this->element_is_valid (elem));
+    T8_ASSERT (this->element_is_subelement (elem));
+    const auto *subelement = this->as_subelement (elem);
 
     T8_ASSERT (vertex >= 0 && vertex < subelement_get_num_faces (subelement)); /* all subelements are triangles */
 
     /* get the length of the current quadrant */
-    int len = Base::parent_element_get_len (subelement);
+    int len = this->parent_element_get_len (subelement);
 
     /* Compute the x and y coordinates of subelement vertices, depending on the subelement type, id and vertex number 
    * (faces enumerated clockwise, starting at the center of the transition cell): 
@@ -328,15 +325,15 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     } /* end of vertex == 2 */
   }
 
-  static void
-  element_get_location_of_subelement (const t8_element_t *elem, int location[])
+  void
+  element_get_location_of_subelement (const t8_element_t *elem, int location[]) const
   {
-    const auto *subelement = Base::as_subelement (elem);
+    const auto *subelement = this->as_subelement (elem);
 
     /* this function only works for subelements */
-    T8_ASSERT (Base::element_is_subelement (elem));
+    T8_ASSERT (this->element_is_subelement (elem));
 
-    T8_ASSERT (Base::element_is_valid (elem));
+    T8_ASSERT (this->element_is_valid (elem));
 
     /* Consider the following subelement of type 13:
    *            
