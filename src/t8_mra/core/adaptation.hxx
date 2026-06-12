@@ -6,7 +6,6 @@
 #include "t8_mra/criteria/coarsening_criterion.hxx"
 #include "t8_mra/criteria/refinement_criterion.hxx"
 #include "t8_forest/t8_forest_adapt.h"
-#include "t8_forest/t8_forest_iterate.h"
 
 #include <algorithm>
 #include <cmath>
@@ -18,10 +17,16 @@ namespace t8_mra
  * @brief Adaptation mixin for multiscale classes
  *
  * Provides the t8code forest adaptation functionality:
- *   - coarsen(): remove non-significant detail information level by level
+ *   - coarsen(): remove non-significant families
  *   - refine(): refine steep families and grade their neighbourhood
- *   - the adapt/iterate_replace machinery keeping lmi_idx and lmi_map
- *     in sync with the forest leaves
+ *
+ * Both work the same way: the full multi-level decision is computed on the
+ * maps (non-destructive detail analysis, marks, data moves, iterated to
+ * the cascade/grading fixpoint), then ONE recursive forest adapt realizes
+ * all marks — t8code re-feeds newly formed elements to the callback within
+ * the pass, so the forest is rebuilt exactly once.
+ *   - the adapt machinery keeping lmi_idx and lmi_map in sync with the
+ *     forest leaves
  *
  * What counts as "significant" or in need of refinement is decided by
  * exchangeable criteria: a coarsening_criterion (default: hard_thresholding,
@@ -65,17 +70,18 @@ class multiscale_adaptation {
    *
    * Performs one t8_forest_new_adapt pass, moves the lmi_map (already
    * updated by the MST operations) into fresh user data of the new forest,
-   * rebuilds the per-leaf lmi index via iterate_replace, releases the old
-   * forest and runs the element-specific post-adaptation hook.
+   * recomputes the per-leaf lmi index directly from the new leaves, releases
+   * the old forest and runs the element-specific post-adaptation hook.
    */
   void
-  adapt_forest (t8_forest_adapt_t adapt_callback)
+  adapt_forest (t8_forest_adapt_t adapt_callback, int recursive = 0)
   {
     using element_t = typename Derived::element_t;
     using levelmultiindex = typename Derived::levelmultiindex;
 
     t8_forest_ref (derived ().forest);
-    t8_forest_t new_forest = t8_forest_new_adapt (derived ().forest, adapt_callback, 0, 0, derived ().get_user_data ());
+    t8_forest_t new_forest
+      = t8_forest_new_adapt (derived ().forest, adapt_callback, recursive, 0, derived ().get_user_data ());
 
     t8_mra::forest_data<element_t> *new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
     new_user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (derived ().maximum_level);
@@ -87,7 +93,21 @@ class multiscale_adaptation {
     new_user_data->mra_instance = &derived ();
 
     t8_forest_set_user_data (new_forest, new_user_data);
-    t8_forest_iterate_replace (new_forest, derived ().forest, static_iterate_replace_callback);
+
+    // The LMI is computable from the element alone, so the index needs no
+    // old/new leaf correspondence (cf. iterate_replace): one sweep over the
+    // new leaves.
+    const auto *scheme = t8_forest_get_scheme (new_forest);
+    const auto num_local_trees = t8_forest_get_num_local_trees (new_forest);
+    auto current_idx = t8_locidx_t { 0 };
+    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+      const auto gtreeid = t8_forest_global_tree_id (new_forest, tree_idx);
+      const auto num_elements = t8_forest_get_tree_num_leaf_elements (new_forest, tree_idx);
+      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+        const auto *element = t8_forest_get_leaf_element_in_tree (new_forest, tree_idx, ele_idx);
+        t8_mra::set_lmi_forest_data (new_user_data, current_idx, levelmultiindex (gtreeid, element, scheme));
+      }
+    }
 
     auto *old_user_data = derived ().get_user_data ();
     delete old_user_data->lmi_map;
@@ -107,9 +127,12 @@ class multiscale_adaptation {
   /**
    * @brief Coarsening callback for t8code
    *
-   * A family is coarsened iff its (first) member is marked in
-   * coarsening_set. The stored LMI encodes the level, so set membership
-   * is exact.
+   * A family is coarsened iff one of its members is marked in
+   * coarsening_set (all children of a pruned family are marked, so testing
+   * the first member suffices regardless of child ordering). The LMI is
+   * computed from the element itself, not looked up in forest_from's index:
+   * this keeps the callback valid for recursive adaptation, where t8code
+   * passes newly formed families that have no forest_from index.
    *
    * @return -1 to coarsen the family, 0 to keep
    */
@@ -118,15 +141,13 @@ class multiscale_adaptation {
                        t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, int is_family, int num_elements,
                        t8_element_t *elements[])
   {
-    using element_t = typename Derived::element_t;
+    using levelmultiindex = typename Derived::levelmultiindex;
 
     if (!is_family)
       return 0;
 
-    auto *user_data = reinterpret_cast<t8_mra::forest_data<element_t> *> (t8_forest_get_user_data (forest_from));
-
-    const auto offset = t8_forest_get_tree_element_offset (forest_from, which_tree);
-    const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_ele_idx + offset);
+    const auto gtreeid = t8_forest_global_tree_id (forest_from, which_tree);
+    const auto lmi = levelmultiindex (gtreeid, elements[0], scheme);
 
     return derived ().coarsening_set.contains (lmi) ? -1 : 0;
   }
@@ -134,8 +155,10 @@ class multiscale_adaptation {
   /**
    * @brief Refinement callback for t8code
    *
-   * A leaf is refined iff it is marked in refinement_set. The stored LMI
-   * encodes the level, so set membership is exact.
+   * A leaf is refined iff it is marked in refinement_set. The LMI is
+   * computed from the element itself, not looked up in forest_from's index:
+   * this keeps the callback valid for recursive adaptation, where t8code
+   * passes newly created children that have no forest_from index.
    *
    * @return 1 to refine, 0 to keep
    */
@@ -144,12 +167,10 @@ class multiscale_adaptation {
                        t8_locidx_t local_ele_idx, const t8_scheme_c *scheme, int is_family, int num_elements,
                        t8_element_t *elements[])
   {
-    using element_t = typename Derived::element_t;
+    using levelmultiindex = typename Derived::levelmultiindex;
 
-    auto *user_data = reinterpret_cast<t8_mra::forest_data<element_t> *> (t8_forest_get_user_data (forest_from));
-
-    const auto offset = t8_forest_get_tree_element_offset (forest_from, which_tree);
-    const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_ele_idx + offset);
+    const auto gtreeid = t8_forest_global_tree_id (forest_from, which_tree);
+    const auto lmi = levelmultiindex (gtreeid, elements[0], scheme);
 
     return derived ().refinement_set.contains (lmi) ? 1 : 0;
   }
@@ -191,88 +212,26 @@ class multiscale_adaptation {
   }
 
   //=============================================================================
-  // Replace Callback (rebuilds the per-leaf lmi index)
-  //=============================================================================
-
-  /**
-   * @brief Replace callback: updates the lmi_idx array to match the new forest
-   *
-   * Only the lmi_idx array is updated here. The lmi_map was already
-   * populated by the MST operations and swapped to the new user data.
-   */
-  void
-  iterate_replace_callback (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
-                            const t8_eclass_t tree_class, const t8_scheme *scheme, int refine, int num_outgoing,
-                            t8_locidx_t first_outgoing, int num_incoming, t8_locidx_t first_incoming)
-  {
-    using element_t = typename Derived::element_t;
-    using levelmultiindex = typename Derived::levelmultiindex;
-
-    auto *old_user_data = reinterpret_cast<t8_mra::forest_data<element_t> *> (t8_forest_get_user_data (forest_old));
-    auto *new_user_data = reinterpret_cast<t8_mra::forest_data<element_t> *> (t8_forest_get_user_data (forest_new));
-
-    // Adjust indices with tree offsets
-    const auto first_incoming_in_tree = first_incoming;
-    first_incoming += t8_forest_get_tree_element_offset (forest_new, which_tree);
-    first_outgoing += t8_forest_get_tree_element_offset (forest_old, which_tree);
-
-    const auto old_lmi = t8_mra::get_lmi_from_forest_data (old_user_data, first_outgoing);
-
-    if (refine == 0) {
-      // No change: copy LMI as-is
-      t8_mra::set_lmi_forest_data (new_user_data, first_incoming, old_lmi);
-    }
-    else if (refine == -1) {
-      // Coarsening: set parent LMI
-      t8_mra::set_lmi_forest_data (new_user_data, first_incoming, t8_mra::parent_lmi (old_lmi));
-    }
-    else {
-      // Refinement: construct each child's LMI from the actual incoming
-      // element. The forest's child ordering (Bey, type-dependent for
-      // triangles) does not generally match the LMI reference ordering, so
-      // positional assignment of children_lmi(old_lmi) would mislabel cells.
-      const auto gtreeid = t8_forest_global_tree_id (forest_new, which_tree);
-      for (int i = 0; i < num_incoming; ++i) {
-        const auto *child_element
-          = t8_forest_get_leaf_element_in_tree (forest_new, which_tree, first_incoming_in_tree + i);
-        const auto child_lmi = levelmultiindex (gtreeid, child_element, scheme);
-        t8_mra::set_lmi_forest_data (new_user_data, first_incoming + i, child_lmi);
-      }
-    }
-  }
-
-  /**
-   * @brief Static wrapper for iterate_replace_callback, routes via forest user data
-   */
-  static void
-  static_iterate_replace_callback (t8_forest_t forest_old, t8_forest_t forest_new, t8_locidx_t which_tree,
-                                   const t8_eclass_t tree_class, const t8_scheme *scheme, int refine, int num_outgoing,
-                                   t8_locidx_t first_outgoing, int num_incoming, t8_locidx_t first_incoming)
-  {
-    using element_t = typename Derived::element_t;
-    auto *old_user_data = reinterpret_cast<t8_mra::forest_data<element_t> *> (t8_forest_get_user_data (forest_old));
-
-    auto *mra = old_user_data->mra_instance;
-    static_cast<Derived *> (mra)->iterate_replace_callback (forest_old, forest_new, which_tree, tree_class, scheme,
-                                                            refine, num_outgoing, first_outgoing, num_incoming,
-                                                            first_incoming);
-  }
-
-  //=============================================================================
   // Coarsening
   //=============================================================================
 
   /**
    * @brief Perform adaptive coarsening from max_level down to min_level
    *
-   * Per level l (fine to coarse, levels depend on each other):
-   *   1. Two-scale transform of all complete leaf families at level l
-   *      (parent data + details at level l-1).
-   *   2. Apply the criterion; non-significant families lose their details
-   *      and their children (the current leaves) are marked for coarsening.
-   *   3. Inverse transform reconstructs the children of significant families
-   *      exactly (details were kept).
-   *   4. Forest adapt removes the marked families.
+   * Analysis phase, a map-side cascade to the fixpoint (forest untouched):
+   *   1. Compute details of all complete leaf families with parents in
+   *      [min_level, max_level) via the non-destructive two-scale transform.
+   *   2. The children of a non-significant family are marked; the parent
+   *      takes its data straight from the analysis and the children leave
+   *      lmi_map. Significant families are never touched — no
+   *      forward/inverse round-trip on kept data.
+   *   A new parent can complete a coarser leaf family, which the next
+   *   cascade round analyses (lmi_map IS the virtual leaf set), so
+   *   multi-level coarsening resolves entirely on the maps. The cascade
+   *   depth bounds the loop by max_level - min_level rounds.
+   * Adaptation phase: ONE recursive forest adapt realizes all accumulated
+   * marks; t8code re-feeds newly formed families to the callback within the
+   * pass, collapsing the cascade into a single forest rebuild.
    *
    * @param min_level Minimum level to coarsen to
    * @param max_level Maximum level to start from
@@ -286,29 +245,45 @@ class multiscale_adaptation {
     if constexpr (criterion_has_prepare<Criterion, Derived>)
       criterion.prepare (derived ());
 
-    for (auto l = max_level; l > min_level; --l) {
-      clear_multiscale_state ();
+    clear_multiscale_state ();
 
-      derived ().multiscale_transformation (l - 1, l);
+    auto *lmi_map = derived ().get_lmi_map ();
+    auto num_marked = 0u;
 
-      // Prune non-significant families: drop their details and mark their
-      // children for coarsening. Iterate over a copy since we erase entries.
-      const auto details = derived ().d_map[l - 1];
-      for (const auto &[lmi, _] : details) {
-        if (!criterion.significant (derived (), lmi)) {
-          derived ().d_map.erase (lmi);
+    for (auto round = 0; round < max_level - min_level; ++round) {
+      derived ().d_map.erase_all ();
+      derived ().compute_leaf_details (min_level, max_level);
+
+      typename Derived::index_set coarsen_parents;
+      for (auto L = min_level; L < max_level; ++L) {
+        for (const auto &[lmi, _] : derived ().d_map[L]) {
+          if (criterion.significant (derived (), lmi))
+            continue;
+
+          coarsen_parents.insert (lmi);
           for (const auto &child : t8_mra::children_lmi (lmi))
             derived ().coarsening_set.insert (child);
         }
       }
 
-      derived ().inverse_multiscale_transformation (l - 1, l);
+      t8_debugf ("MRA coarsen cascade round %d: %zu families marked\n", round, coarsen_parents.size ());
+      if (coarsen_parents.empty ())
+        break;
+      num_marked += coarsen_parents.size ();
 
-      t8_debugf ("MRA coarsen pass %d: coarsening %zu of %zu leaves\n", l, derived ().coarsening_set[l].size (),
-                 derived ().get_user_data ()->lmi_map->size ());
-
-      adapt_forest (static_coarsening_callback);
+      // Data move on the maps: parent data straight from the analysis, the
+      // children leave lmi_map — the next round sees the coarsened grid.
+      for (const auto &lmi : coarsen_parents) {
+        lmi_map->insert (lmi, derived ().d_map.get (lmi));
+        for (const auto &child : t8_mra::children_lmi (lmi))
+          lmi_map->erase (child);
+      }
     }
+
+    t8_debugf ("MRA coarsen: %u families marked, %zu leaves remain\n", num_marked, lmi_map->size ());
+
+    if (num_marked > 0)
+      adapt_forest (static_coarsening_callback, 1);
 
     clear_multiscale_state ();
   }
@@ -318,27 +293,40 @@ class multiscale_adaptation {
   //=============================================================================
 
   /**
-   * @brief Harten's neighbour prediction on the leaf level
+   * @brief Harten's neighbour prediction: one grading round on the maps
    *
    * A family marked by the refinement criterion (refine_neighbours -> parent
    * in td_set) requires all its same-level neighbours to carry children too
    * (Harten reference semantics). Leaf formulation used here: every leaf of
    * a marked family constructs its same-level face neighbours and pulls the
    * covering leaf up by one level if it is coarser.
-   * Repeated refine calls reach the fixpoint for level jumps larger
-   * than one.
+   *
+   * The fixpoint for level jumps larger than one is reached by repeated
+   * calls WITHOUT touching the forest: marks realized in earlier rounds
+   * count as performed, so the covering leaf is resolved against lmi_map and
+   * then descended along the realized path towards the neighbour. Grading
+   * sources are always real forest leaves — td_set only ever holds families
+   * from the analysis of the actual grid (virtual children carry zero
+   * details and never enter it).
    *
    * The same-level neighbour is constructed geometrically via
-   * t8_forest_element_face_neighbor (no balance or ghost layer required) and
-   * resolved to the covering leaf by walking up the LMI hierarchy in lmi_map.
+   * t8_forest_element_face_neighbor (no balance or ghost layer required).
    *
    * TODO MPI: a neighbour lmi whose covering leaf is not local resolves to
    * "not found" here. Collect those lmis per owner rank and exchange them
    * (cf. reference implementation: data_to_send), the owner then resolves
    * them against its local lmi_map.
+   *
+   * @param min_level No marks are generated below this level
+   * @param realized Marks of EARLIER rounds (not this one), treated as
+   *                 performed refinements during the descent
+   * @return Number of NEW marks in this round
    */
-  void
-  neighbour_prediction ()
+  // RealizedSet deduced (= levelindex_set): naming Derived's nested types in
+  // the signature would require the still-incomplete Derived (CRTP).
+  template <typename RealizedSet>
+  unsigned int
+  neighbour_prediction (int min_level, const RealizedSet &realized)
   {
     using levelmultiindex = typename Derived::levelmultiindex;
 
@@ -346,6 +334,8 @@ class multiscale_adaptation {
     auto *forest = derived ().forest;
     const auto *scheme = t8_forest_get_scheme (forest);
     auto *lmi_map = derived ().get_lmi_map ();
+
+    auto num_new_marks = 0u;
 
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
     auto current_idx = t8_locidx_t { 0 };
@@ -380,52 +370,82 @@ class multiscale_adaptation {
 
           // Same-level neighbour as LMI, then resolve to the covering leaf:
           // walk up until an entry exists in lmi_map.
-          auto walk = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
+          const auto neigh_lmi = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
+          auto walk = neigh_lmi;
           while (walk.level () > 0 && !lmi_map->contains (walk))
             walk = t8_mra::parent_lmi (walk);
 
-          // Covering leaf coarser than this leaf -> pull it up one level.
           // Not found at all: neighbour region is refined finer (children
           // handle themselves) or lives on another rank (TODO MPI above).
-          if (lmi_map->contains (walk) && walk.level () < lmi.level ())
+          if (!lmi_map->contains (walk))
+            continue;
+
+          // Marks realized in earlier rounds count as performed: descend
+          // along the path to the neighbour while the covering leaf is one
+          // of them.
+          while (walk.level () < lmi.level () && realized.contains (walk)) {
+            auto down = neigh_lmi;
+            while (down.level () > walk.level () + 1)
+              down = t8_mra::parent_lmi (down);
+            walk = down;
+          }
+
+          // Covering leaf coarser than this leaf -> pull it up one level
+          if (walk.level () < lmi.level () && static_cast<int> (walk.level ()) >= min_level
+              && !derived ().refinement_set.contains (walk)) {
             derived ().refinement_set.insert (walk);
+            ++num_new_marks;
+          }
         }
       }
 
       scheme->element_destroy (tree_class, 1, &neigh_element);
     }
+
+    return num_new_marks;
   }
 
   /**
-   * @brief One refinement round: analysis, then a single forest adapt
+   * @brief Perform adaptive refinement from min_level up to max_level
    *
-   * Analysis phase (whole grid, before any adaptation):
+   * Analysis phase (whole grid, forest untouched):
    *   1. Compute details of ALL complete leaf families via the
    *      non-destructive two-scale transform (stored at the parent levels).
    *   2. Apply the refinement criterion to each family detail (level L):
    *        - refine_neighbours: same-level neighbours must carry children
-   *          -> neighbour_prediction pulls coarser neighbour leaves up
+   *          -> the family grades its neighbourhood (td_set)
    *        - refine (only for L < max_level-1): the family's children
    *          (leaves at L+1) are refined one further level
-   * Adaptation phase: children data of all marked leaves is reconstructed by
-   * inverse two-scale with zero details (= exact polynomial subdivision),
-   * then a single forest adapt refines exactly the marked leaves; lmi_map
-   * and forest stay in sync by construction.
+   *      One pass suffices: children created by refinement carry zero
+   *      details and trigger no further criterion marks.
+   *   3. Grading fixpoint on the maps: each round pulls covering leaves up
+   *      by one level against the marks realized in earlier rounds. A
+   *      family with a marked child stops grading — once the marks are
+   *      realized it is no longer a leaf family.
+   * Adaptation phase: children data of all marks is reconstructed by
+   * inverse two-scale with zero details (= exact polynomial subdivision);
+   * multi-level mark chains descend from a real leaf through contiguous
+   * marks, so the level-ascending inverse transform always finds its
+   * parents. Then ONE recursive forest adapt realizes all marks; t8code
+   * re-feeds new children to the callback within the pass, collapsing the
+   * grading rounds into a single forest rebuild.
    *
    * Leaves at level 0 have no parent family and are never refinement
    * candidates themselves (their families are, via their parents).
    *
    * @param min_level Minimum level to start from
    * @param max_level Maximum level to refine to
-   * @param criterion Refinement criterion
-   * @return Number of leaves marked for refinement in this round
+   * @param criterion Refinement criterion (default: Harten's prediction)
    */
-  template <typename Criterion>
+  template <typename Criterion = harten_prediction>
     requires refinement_criterion<Criterion, Derived>
-  unsigned int
-  refine_round (int min_level, int max_level, Criterion &criterion)
+  void
+  refine (int min_level, int max_level, Criterion criterion = {})
   {
     using element_t = typename Derived::element_t;
+
+    if constexpr (criterion_has_prepare<Criterion, Derived>)
+      criterion.prepare (derived ());
 
     clear_multiscale_state ();
 
@@ -455,75 +475,63 @@ class multiscale_adaptation {
       }
     }
 
-    // 3. Grade the neighbourhood of the marked families
-    neighbour_prediction ();
-
-    // Details are consumed; only the refinement_set is needed from here on
-    derived ().d_map.erase_all ();
-
     // Marks below min_level are outside the requested range
     for (auto l = 0; l < min_level; ++l)
       derived ().refinement_set.erase (l);
 
+    // 3. Grading fixpoint
+    auto realized = derived ().refinement_set;
+    realized.erase_all ();
+
+    for (auto round = 0;; ++round) {
+      const auto new_marks = neighbour_prediction (min_level, realized);
+      t8_debugf ("MRA refine grading round %d: %u new marks\n", round, new_marks);
+      if (new_marks == 0)
+        break;
+
+      realized = derived ().refinement_set;
+
+      // Families with a marked child stop grading
+      typename Derived::index_set stopped;
+      for (auto L = 0; L < max_level; ++L)
+        for (const auto &lmi : derived ().td_set[L]) {
+          const auto children = t8_mra::children_lmi (lmi);
+          if (std::any_of (children.begin (), children.end (),
+                           [&] (const auto &child) { return derived ().refinement_set.contains (child); }))
+            stopped.insert (lmi);
+        }
+      for (const auto &lmi : stopped)
+        derived ().td_set.erase (lmi);
+    }
+
     auto num_marked = 0u;
     for (auto l = min_level; l < max_level; ++l)
       num_marked += derived ().refinement_set[l].size ();
-    t8_debugf ("MRA refine analysis: %u leaf families, %zu grading neighbourhoods, %u leaves marked\n", num_families,
-               derived ().td_set.size (), num_marked);
+    t8_debugf ("MRA refine analysis: %u leaf families, %u leaves marked\n", num_families, num_marked);
 
     if (num_marked == 0) {
       clear_multiscale_state ();
-      return 0;
+      return;
     }
 
     //--------------------------------------------------------------------------
     // Adaptation phase
     //--------------------------------------------------------------------------
 
-    // Reconstruct children data for all marked leaves: inverse two-scale
-    // with zero details. This moves each refined leaf's data one level down
-    // in lmi_map, exactly mirroring what the forest adapt below does.
+    // Reconstruct children data for all marks: inverse two-scale with zero
+    // details. This moves the data one level down in lmi_map per mark,
+    // exactly mirroring what the forest adapt below does.
+    derived ().d_map.erase_all ();
     for (auto l = min_level; l < max_level; ++l)
       for (const auto &lmi : derived ().refinement_set[l])
         derived ().d_map.insert (lmi, element_t {});
 
     derived ().inverse_multiscale_transformation (min_level, max_level);
 
-    // A single forest adapt refines all marked leaves across all levels
-    adapt_forest (static_refinement_callback);
+    // ONE recursive forest adapt realizes all marks across all levels
+    adapt_forest (static_refinement_callback, 1);
 
     clear_multiscale_state ();
-
-    return num_marked;
-  }
-
-  /**
-   * @brief Perform adaptive refinement from min_level up to max_level
-   *
-   * Iterates refinement rounds until the grading fixpoint is reached:
-   * the neighbour prediction lifts a coarser neighbour of a marked family
-   * by one level per round, so a neighbour across a multi-level jump needs
-   * several rounds to arrive at the family's leaf level. Newly created
-   * children carry zero details and trigger no further marks, hence the
-   * iteration terminates (bounded by max_level rounds).
-   *
-   * @param min_level Minimum level to start from
-   * @param max_level Maximum level to refine to
-   * @param criterion Refinement criterion (default: Harten's prediction)
-   */
-  template <typename Criterion = harten_prediction>
-    requires refinement_criterion<Criterion, Derived>
-  void
-  refine (int min_level, int max_level, Criterion criterion = {})
-  {
-    if constexpr (criterion_has_prepare<Criterion, Derived>)
-      criterion.prepare (derived ());
-
-    for (auto round = 0; round < max_level; ++round) {
-      t8_debugf ("MRA refine round %d\n", round);
-      if (refine_round (min_level, max_level, criterion) == 0)
-        break;
-    }
   }
 
   //=============================================================================
