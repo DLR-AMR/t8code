@@ -297,8 +297,10 @@ class multiscale_adaptation {
 
     t8_debugf ("MRA coarsen: %u families marked, %zu leaves remain\n", num_marked, lmi_map->size ());
 
-    if (num_marked > 0)
+    if (global_num_marks (num_marked) > 0) {
       adapt_forest (static_coarsening_callback, 1);
+      repartition ();
+    }
 
     clear_multiscale_state ();
   }
@@ -306,6 +308,132 @@ class multiscale_adaptation {
   //=============================================================================
   // Refinement
   //=============================================================================
+
+  /// Empty realized-set stand-in for callers that realize their marks per
+  /// round (balance) and never descend virtually
+  struct no_marks
+  {
+    template <typename Lmi>
+    bool
+    contains (const Lmi &) const
+    {
+      return false;
+    }
+  };
+
+  /**
+   * @brief Resolve a same-level neighbour lmi to its covering leaf, mark it
+   *
+   * The covering leaf is found by walking up the LMI hierarchy in lmi_map,
+   * then descending the path back towards the neighbour through the marks
+   * in realized (treated as performed refinements). A covering leaf more
+   * than level_slack levels coarser than the neighbour is pulled up one
+   * level (slack 0: grading, slack 1: balance).
+   *
+   * @param neigh_lmi Same-level neighbour of some source leaf
+   * @param min_level No marks are generated below this level
+   * @param level_slack Tolerated level difference
+   * @param realized Marks treated as performed refinements
+   * @return 1 on a new mark, 0 if nothing to do, -1 if no covering leaf is
+   *         local (finer region or remote rank — caller decides)
+   */
+  // Lmi/RealizedSet deduced: naming Derived's nested types in the signature
+  // would require the still-incomplete Derived (CRTP).
+  template <typename Lmi, typename RealizedSet>
+  int
+  resolve_pull_up (const Lmi &neigh_lmi, int min_level, unsigned int level_slack, const RealizedSet &realized)
+  {
+    auto *lmi_map = derived ().get_lmi_map ();
+
+    auto walk = neigh_lmi;
+    while (walk.level () > 0 && !lmi_map->contains (walk))
+      walk = t8_mra::parent_lmi (walk);
+
+    if (!lmi_map->contains (walk))
+      return -1;
+
+    // Marks realized in earlier rounds count as performed: descend along
+    // the path to the neighbour while the covering leaf is one of them.
+    while (walk.level () + level_slack < neigh_lmi.level () && realized.contains (walk)) {
+      auto down = neigh_lmi;
+      while (down.level () > walk.level () + 1)
+        down = t8_mra::parent_lmi (down);
+      walk = down;
+    }
+
+    // Covering leaf too coarse -> pull it up one level
+    if (walk.level () + level_slack < neigh_lmi.level () && static_cast<int> (walk.level ()) >= min_level
+        && !derived ().refinement_set.contains (walk)) {
+      derived ().refinement_set.insert (walk);
+      return 1;
+    }
+
+    return 0;
+  }
+
+  /**
+   * @brief Ship pull-up requests to their owner ranks, resolve received ones
+   *
+   * A same-level neighbour whose covering leaf is not local is sent to the
+   * rank owning that region (payload: the raw lmi index). The owner
+   * resolves the request against its own lmi_map and inserts the mark into
+   * its own refinement_set — no reply needed, the mark belongs to the
+   * owner. Collective: every rank must call this once per round.
+   *
+   * @param outgoing Per-rank request lists
+   * @param min_level Passed through to resolve_pull_up
+   * @param level_slack Passed through to resolve_pull_up
+   * @param realized Passed through to resolve_pull_up
+   * @return Number of new LOCAL marks created by received requests
+   */
+  template <typename RealizedSet>
+  unsigned int
+  exchange_pull_up_requests (const std::vector<std::vector<size_t>> &outgoing, int min_level,
+                             unsigned int level_slack, const RealizedSet &realized)
+  {
+    using levelmultiindex = typename Derived::levelmultiindex;
+
+    int mpisize;
+    sc_MPI_Comm_size (derived ().comm, &mpisize);
+
+    std::vector<int> send_counts (mpisize, 0);
+    for (auto rank = 0; rank < mpisize; ++rank)
+      send_counts[rank] = static_cast<int> (outgoing[rank].size ());
+
+    std::vector<int> recv_counts (mpisize, 0);
+    sc_MPI_Alltoall (send_counts.data (), 1, sc_MPI_INT, recv_counts.data (), 1, sc_MPI_INT, derived ().comm);
+
+    std::vector<std::vector<size_t>> incoming (mpisize);
+    std::vector<sc_MPI_Request> requests;
+    requests.reserve (2 * mpisize);
+
+    for (auto rank = 0; rank < mpisize; ++rank) {
+      if (recv_counts[rank] > 0) {
+        incoming[rank].resize (recv_counts[rank]);
+        requests.emplace_back ();
+        sc_MPI_Irecv (incoming[rank].data (), recv_counts[rank] * sizeof (size_t), sc_MPI_BYTE, rank, 0,
+                      derived ().comm, &requests.back ());
+      }
+      if (send_counts[rank] > 0) {
+        requests.emplace_back ();
+        sc_MPI_Isend (const_cast<size_t *> (outgoing[rank].data ()), send_counts[rank] * sizeof (size_t), sc_MPI_BYTE,
+                      rank, 0, derived ().comm, &requests.back ());
+      }
+    }
+    sc_MPI_Waitall (static_cast<int> (requests.size ()), requests.data (), sc_MPI_STATUSES_IGNORE);
+
+    auto num_new_marks = 0u;
+    for (const auto &batch : incoming)
+      for (const auto index : batch) {
+        auto neigh_lmi = levelmultiindex {};
+        neigh_lmi.index = index;
+        // Not resolvable here either (finer region): nothing to do
+        if (resolve_pull_up (neigh_lmi, min_level, level_slack, realized) > 0)
+          ++num_new_marks;
+      }
+
+    return num_new_marks;
+  }
 
   /**
    * @brief Harten's neighbour prediction: one grading round on the maps
