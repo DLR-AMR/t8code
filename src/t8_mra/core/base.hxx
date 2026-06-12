@@ -105,6 +105,12 @@ class multiscale_base: public multiscale_data<TShape> {
   /// Set of elements marked for coarsening
   levelindex_set<levelmultiindex> coarsening_set;
 
+  /// Ghost element data, keyed by lmi. Read-only snapshot filled by
+  /// ghost_exchange; invalidated by every adaptation/repartition. Kept
+  /// separate from lmi_map, where ghost entries would masquerade as local
+  /// leaves in the family analysis.
+  levelindex_map<levelmultiindex, element_t> ghost_map;
+
   /// t8code forest
   t8_forest_t forest;
 
@@ -131,7 +137,8 @@ class multiscale_base: public multiscale_data<TShape> {
   multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires is_cartesian<TShape>
     : maximum_level (_max_level), basis (default_num_quad_points_1d, P_DIM), d_map (maximum_level),
-      td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level), comm (_comm)
+      td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level),
+      ghost_map (maximum_level), comm (_comm)
   {
     c_scaling.fill (1.0);
   }
@@ -146,7 +153,7 @@ class multiscale_base: public multiscale_data<TShape> {
     requires (TShape == T8_ECLASS_TRIANGLE)
     : maximum_level (_max_level), basis (t8_mra::dunavant_order_num (default_dunavant_rule), default_dunavant_rule),
       d_map (maximum_level), td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level),
-      comm (_comm)
+      ghost_map (maximum_level), comm (_comm)
   {
     c_scaling.fill (1.0);
   }
@@ -386,6 +393,7 @@ class multiscale_base: public multiscale_data<TShape> {
     td_set.erase_all ();
     refinement_set.erase_all ();
     coarsening_set.erase_all ();
+    ghost_map.erase_all ();
   }
 };
 

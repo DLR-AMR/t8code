@@ -6,9 +6,12 @@
 #include "t8_mra/criteria/coarsening_criterion.hxx"
 #include "t8_mra/criteria/refinement_criterion.hxx"
 #include "t8_forest/t8_forest_adapt.h"
+#include "t8_forest/t8_forest_ghost.h"
+#include "t8_forest/t8_forest_partition.h"
 
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 
 namespace t8_mra
 {
@@ -131,6 +134,8 @@ class multiscale_adaptation {
     t8_forest_unref (&derived ().forest);
 
     derived ().forest = new_forest;
+    // Ghost layer and ghost data do not survive the rebuild
+    derived ().ghost_map.erase_all ();
     derived ().post_adaptation_hook ();
   }
 
@@ -453,17 +458,17 @@ class multiscale_adaptation {
    * details and never enter it).
    *
    * The same-level neighbour is constructed geometrically via
-   * t8_forest_element_face_neighbor (no balance or ghost layer required).
+   * t8_forest_element_face_neighbor (no balance or ghost layer required). A
+   * neighbour whose covering leaf lives on another rank is shipped to its
+   * owner (exchange_pull_up_requests), which marks its own refinement_set.
    *
-   * TODO MPI: a neighbour lmi whose covering leaf is not local resolves to
-   * "not found" here. Collect those lmis per owner rank and exchange them
-   * (cf. reference implementation: data_to_send), the owner then resolves
-   * them against its local lmi_map.
+   * Collective: the returned mark count is global, so all ranks run the
+   * same number of grading rounds.
    *
    * @param min_level No marks are generated below this level
    * @param realized Marks of EARLIER rounds (not this one), treated as
    *                 performed refinements during the descent
-   * @return Number of NEW marks in this round
+   * @return GLOBAL number of new marks in this round
    */
   // RealizedSet deduced (= levelindex_set): naming Derived's nested types in
   // the signature would require the still-incomplete Derived (CRTP).
@@ -476,7 +481,11 @@ class multiscale_adaptation {
     auto *user_data = derived ().get_user_data ();
     auto *forest = derived ().forest;
     const auto *scheme = t8_forest_get_scheme (forest);
-    auto *lmi_map = derived ().get_lmi_map ();
+
+    int mpirank, mpisize;
+    sc_MPI_Comm_rank (derived ().comm, &mpirank);
+    sc_MPI_Comm_size (derived ().comm, &mpisize);
+    std::vector<std::vector<size_t>> outgoing (mpisize);
 
     auto num_new_marks = 0u;
 
@@ -785,6 +794,56 @@ class multiscale_adaptation {
     auto round = 0;
     while (balance_round () > 0)
       t8_debugf ("MRA balance round %d\n", round++);
+  //=============================================================================
+  // Ghost Exchange
+  //=============================================================================
+
+  /**
+   * @brief Fill the ghost layer: lmi index and ghost element data
+   *
+   * Creates the face-ghost layer on demand (t8_forest_ghost_create handles
+   * unbalanced forests), extends lmi_idx by the ghost slots and exchanges
+   * them, then ships the element data of all remote leaves touching the
+   * local partition into ghost_map.
+   *
+   * The ghost data is a read-only snapshot for solver stencils: every
+   * coarsen/refine/balance/repartition invalidates it (ghost_map is
+   * cleared) — call again after adapting. Adaptation itself never needs
+   * ghosts; remote grading is handled by exchange_pull_up_requests.
+   * Collective.
+   */
+  void
+  ghost_exchange ()
+  {
+    using element_t = typename Derived::element_t;
+
+    auto *forest = derived ().forest;
+
+    if (t8_forest_get_num_ghosts (forest) == 0)
+      t8_forest_ghost_create (forest);
+
+    const auto num_local = t8_forest_get_local_num_leaf_elements (forest);
+    const auto num_ghosts = t8_forest_get_num_ghosts (forest);
+
+    // lmi_idx was allocated before the ghost layer existed
+    auto *user_data = derived ().get_user_data ();
+    sc_array_resize (user_data->lmi_idx, num_local + num_ghosts);
+    t8_forest_ghost_exchange_data (forest, user_data->lmi_idx);
+
+    // Leaf data in leaf order; the exchange fills the ghost slots
+    auto *data = sc_array_new_count (sizeof (element_t), num_local + num_ghosts);
+    auto *lmi_map = derived ().get_lmi_map ();
+    for (t8_locidx_t i = 0; i < num_local; ++i)
+      *reinterpret_cast<element_t *> (sc_array_index (data, i))
+        = lmi_map->get (t8_mra::get_lmi_from_forest_data (user_data, i));
+
+    t8_forest_ghost_exchange_data (forest, data);
+
+    derived ().ghost_map.erase_all ();
+    for (auto i = num_local; i < num_local + num_ghosts; ++i)
+      derived ().ghost_map.insert (t8_mra::get_lmi_from_forest_data (user_data, i),
+                                   *reinterpret_cast<element_t *> (sc_array_index (data, i)));
+    sc_array_destroy (data);
   }
 
   //=============================================================================
