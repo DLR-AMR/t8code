@@ -36,6 +36,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   using Adaptation::coarsen;
   using Adaptation::refine;
   using Adaptation::initialize_data_adaptive;
+  using Adaptation::balance;
 
   //=============================================================================
   // Constructor

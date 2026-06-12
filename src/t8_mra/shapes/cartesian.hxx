@@ -40,6 +40,7 @@ class multiscale<TShape, U, P>:
   using Adaptation::coarsen;
   using Adaptation::refine;
   using Adaptation::initialize_data_adaptive;
+  using Adaptation::balance;
 
   //=============================================================================
   // Constructor
