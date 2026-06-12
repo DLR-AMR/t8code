@@ -5,11 +5,12 @@
 #include <array>
 #include <vector>
 #include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <iomanip>
+#include <string>
 
 #include "t8.h"
-// #include "t8_forest.h"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
 #include "t8_mra/data/element_data.hxx"
@@ -136,8 +137,7 @@ get_quad_lagrange_nodes (int order)
 
   for (int j = 0; j <= order; ++j)
     for (int i = 0; i <= order; ++i)
-      nodes[vtk_quad_point_index (i, j, order)]
-        = { static_cast<double> (i) / order, static_cast<double> (j) / order };
+      nodes[vtk_quad_point_index (i, j, order)] = { static_cast<double> (i) / order, static_cast<double> (j) / order };
 
   return nodes;
 }
@@ -196,9 +196,8 @@ get_hex_lagrange_nodes (int order)
   for (int k = 0; k <= order; ++k)
     for (int j = 0; j <= order; ++j)
       for (int i = 0; i <= order; ++i)
-        nodes[vtk_hex_point_index (i, j, k, order)] = { static_cast<double> (i) / order,
-                                                        static_cast<double> (j) / order,
-                                                        static_cast<double> (k) / order };
+        nodes[vtk_hex_point_index (i, j, k, order)]
+          = { static_cast<double> (i) / order, static_cast<double> (j) / order, static_cast<double> (k) / order };
 
   return nodes;
 }
@@ -225,6 +224,42 @@ write_vtk_footer (std::ofstream &file)
 {
   file << "    </Piece>\n";
   file << "  </UnstructuredGrid>\n";
+  file << "</VTKFile>\n";
+}
+
+/**
+ * @brief Write the .pvtu master referencing the per-rank .vtu pieces
+ */
+static void
+write_vtk_master (const char *prefix, int mpisize, int u_dim)
+{
+  std::ofstream file (std::string (prefix) + ".pvtu");
+
+  // Piece sources are relative to the master's directory
+  const std::string p (prefix);
+  const auto pos = p.find_last_of ('/');
+  const auto base = pos == std::string::npos ? p : p.substr (pos + 1);
+
+  file << "<?xml version=\"1.0\"?>\n";
+  file << "<VTKFile type=\"PUnstructuredGrid\" version=\"2.2\" byte_order=\"LittleEndian\">\n";
+  file << "  <PUnstructuredGrid GhostLevel=\"0\">\n";
+  file << "    <PPoints>\n";
+  file << "      <PDataArray type=\"Float64\" NumberOfComponents=\"3\"/>\n";
+  file << "    </PPoints>\n";
+  file << "    <PCellData>\n";
+  file << "      <PDataArray type=\"Int32\" Name=\"HigherOrderDegrees\" NumberOfComponents=\"3\"/>\n";
+  file << "      <PDataArray type=\"Int32\" Name=\"Level\"/>\n";
+  file << "    </PCellData>\n";
+  file << "    <PPointData>\n";
+  for (auto u = 0; u < u_dim; ++u)
+    file << "      <PDataArray type=\"Float64\" Name=\"u" << u << "\"/>\n";
+  file << "    </PPointData>\n";
+  for (auto rank = 0; rank < mpisize; ++rank) {
+    char piece[32];
+    std::snprintf (piece, sizeof piece, "_%04d.vtu", rank);
+    file << "    <Piece Source=\"" << base << piece << "\"/>\n";
+  }
+  file << "  </PUnstructuredGrid>\n";
   file << "</VTKFile>\n";
 }
 
@@ -369,8 +404,17 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 
   const int total_points = num_local_elements * num_nodes_per_elem;
 
-  // Open output file
+  // One piece per rank plus a .pvtu master; single file on one rank
+  int mpirank = 0, mpisize = 1;
+  sc_MPI_Comm_rank (t8_forest_get_mpicomm (forest), &mpirank);
+  sc_MPI_Comm_size (t8_forest_get_mpicomm (forest), &mpisize);
+
   std::string filename = std::string (prefix) + ".vtu";
+  if (mpisize > 1) {
+    char suffix[32];
+    std::snprintf (suffix, sizeof suffix, "_%04d.vtu", mpirank);
+    filename = std::string (prefix) + suffix;
+  }
   std::ofstream file (filename);
   file << std::scientific << std::setprecision (16);
 
@@ -665,6 +709,9 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
   write_vtk_footer (file);
 
   file.close ();
+
+  if (mpisize > 1 && mpirank == 0)
+    write_vtk_master (prefix, mpisize, U_DIM);
 
   t8_debugf ("Wrote VTK file: %s\n", filename.c_str ());
 }
