@@ -511,41 +511,30 @@ class multiscale_adaptation {
           if (neigh_gtreeid < 0)
             continue;
 
-          // Same-level neighbour as LMI, then resolve to the covering leaf:
-          // walk up until an entry exists in lmi_map.
           const auto neigh_lmi = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
-          auto walk = neigh_lmi;
-          while (walk.level () > 0 && !lmi_map->contains (walk))
-            walk = t8_mra::parent_lmi (walk);
+          const auto res = resolve_pull_up (neigh_lmi, min_level, 0u, realized);
 
-          // Not found at all: neighbour region is refined finer (children
-          // handle themselves) or lives on another rank (TODO MPI above).
-          if (!lmi_map->contains (walk))
+          // No local covering leaf: refined finer (children handle
+          // themselves) or remote — ship the request to the owner
+          if (res < 0 && mpisize > 1) {
+            const auto owner = t8_forest_element_find_owner (forest, neigh_gtreeid, neigh_element, tree_class);
+            if (owner != mpirank)
+              outgoing[owner].push_back (neigh_lmi.index);
             continue;
-
-          // Marks realized in earlier rounds count as performed: descend
-          // along the path to the neighbour while the covering leaf is one
-          // of them.
-          while (walk.level () < lmi.level () && realized.contains (walk)) {
-            auto down = neigh_lmi;
-            while (down.level () > walk.level () + 1)
-              down = t8_mra::parent_lmi (down);
-            walk = down;
           }
 
-          // Covering leaf coarser than this leaf -> pull it up one level
-          if (walk.level () < lmi.level () && static_cast<int> (walk.level ()) >= min_level
-              && !derived ().refinement_set.contains (walk)) {
-            derived ().refinement_set.insert (walk);
+          if (res > 0)
             ++num_new_marks;
-          }
         }
       }
 
       scheme->element_destroy (tree_class, 1, &neigh_element);
     }
 
-    return num_new_marks;
+    if (mpisize > 1)
+      num_new_marks += exchange_pull_up_requests (outgoing, min_level, 0u, realized);
+
+    return global_num_marks (num_new_marks);
   }
 
   /**
@@ -735,15 +724,17 @@ class multiscale_adaptation {
           if (neigh_gtreeid < 0)
             continue;
 
-          auto walk = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
-          while (walk.level () > 0 && !lmi_map->contains (walk))
-            walk = t8_mra::parent_lmi (walk);
+          // Marks are realized by this round's adapt, no virtual descent
+          const auto neigh_lmi = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
+          const auto res = resolve_pull_up (neigh_lmi, 0, 1u, no_marks {});
 
-          // Not found: neighbour region is refined finer (it checks back
-          // itself) or lives on another rank (TODO MPI, cf.
-          // neighbour_prediction).
-          if (lmi_map->contains (walk) && walk.level () + 1 < lmi.level ())
-            derived ().refinement_set.insert (walk);
+          // No local covering leaf: refined finer (it checks back itself)
+          // or remote — ship the request to the owner
+          if (res < 0 && mpisize > 1) {
+            const auto owner = t8_forest_element_find_owner (forest, neigh_gtreeid, neigh_element, tree_class);
+            if (owner != mpirank)
+              outgoing[owner].push_back (neigh_lmi.index);
+          }
         }
       }
 
