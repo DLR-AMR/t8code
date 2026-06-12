@@ -671,6 +671,7 @@ class multiscale_adaptation {
 
     // ONE recursive forest adapt realizes all marks across all levels
     adapt_forest (static_refinement_callback, 1);
+    repartition ();
 
     clear_multiscale_state ();
   }
@@ -791,9 +792,103 @@ class multiscale_adaptation {
   void
   balance ()
   {
-    auto round = 0;
+    auto rounds = 0;
     while (balance_round () > 0)
-      t8_debugf ("MRA balance round %d\n", round++);
+      t8_debugf ("MRA balance round %d\n", rounds++);
+
+    if (rounds > 0)
+      repartition ();
+  }
+
+  //=============================================================================
+  // Repartitioning
+  //=============================================================================
+
+  /**
+   * @brief Repartition the forest along the SFC and migrate the leaf data
+   *
+   * Adaptive passes unbalance the per-rank load. Builds the partitioned
+   * forest, ships each leaf's element_data along the partition
+   * (t8_forest_partition_data, SFC leaf order), then rebuilds lmi_map and
+   * lmi_idx from the new local leaves. Requires the standing invariant
+   * (forest leaves <-> lmi_map keys 1:1); collective.
+   *
+   * t8code's set_for_coarsening is currently disabled, so families may
+   * still straddle rank boundaries afterwards; coarsening silently skips
+   * such families (grids stay finer at the seams).
+   */
+  void
+  repartition ()
+  {
+    using element_t = typename Derived::element_t;
+    using levelmultiindex = typename Derived::levelmultiindex;
+
+    static_assert (std::is_trivially_copyable_v<element_t>, "element data is shipped as raw bytes");
+
+    int mpisize;
+    sc_MPI_Comm_size (derived ().comm, &mpisize);
+    if (mpisize == 1)
+      return;
+
+    auto *forest = derived ().forest;
+    auto *user_data = derived ().get_user_data ();
+    auto *lmi_map = derived ().get_lmi_map ();
+
+    // Pack the leaf data in SFC leaf order
+    const auto num_old = t8_forest_get_local_num_leaf_elements (forest);
+    auto *data_in = sc_array_new_count (sizeof (element_t), num_old);
+    for (t8_locidx_t i = 0; i < num_old; ++i) {
+      const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, i);
+      *reinterpret_cast<element_t *> (sc_array_index (data_in, i)) = lmi_map->get (lmi);
+    }
+
+    t8_forest_ref (forest);
+    t8_forest_t new_forest;
+    t8_forest_init (&new_forest);
+    t8_forest_set_partition (new_forest, forest, 0);
+    t8_forest_commit (new_forest);
+
+    const auto num_new = t8_forest_get_local_num_leaf_elements (new_forest);
+    auto *data_out = sc_array_new_count (sizeof (element_t), num_new);
+    t8_forest_partition_data (forest, new_forest, data_in, data_out);
+    sc_array_destroy (data_in);
+
+    // Fresh user data; lmi_map and lmi_idx rebuilt from the new leaves (the
+    // migrated data arrives in the new SFC leaf order)
+    auto *new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+    new_user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (derived ().maximum_level);
+    new_user_data->lmi_idx
+      = sc_array_new_count (sizeof (levelmultiindex), num_new + t8_forest_get_num_ghosts (new_forest));
+    new_user_data->mra_instance = &derived ();
+    t8_forest_set_user_data (new_forest, new_user_data);
+
+    const auto *scheme = t8_forest_get_scheme (new_forest);
+    const auto num_local_trees = t8_forest_get_num_local_trees (new_forest);
+    auto current_idx = t8_locidx_t { 0 };
+    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+      const auto gtreeid = t8_forest_global_tree_id (new_forest, tree_idx);
+      const auto num_elements = t8_forest_get_tree_num_leaf_elements (new_forest, tree_idx);
+      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+        const auto *element = t8_forest_get_leaf_element_in_tree (new_forest, tree_idx, ele_idx);
+        const auto lmi = levelmultiindex (gtreeid, element, scheme);
+        t8_mra::set_lmi_forest_data (new_user_data, current_idx, lmi);
+        new_user_data->lmi_map->insert (lmi,
+                                        *reinterpret_cast<element_t *> (sc_array_index (data_out, current_idx)));
+      }
+    }
+    sc_array_destroy (data_out);
+
+    delete user_data->lmi_map;
+    sc_array_destroy (user_data->lmi_idx);
+    T8_FREE (user_data);
+    t8_forest_unref (&derived ().forest);
+
+    derived ().forest = new_forest;
+    // Ghost layer and ghost data do not survive the rebuild
+    derived ().ghost_map.erase_all ();
+    derived ().post_adaptation_hook ();
+  }
+
   //=============================================================================
   // Ghost Exchange
   //=============================================================================
