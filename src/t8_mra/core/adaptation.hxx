@@ -66,6 +66,21 @@ class multiscale_adaptation {
   }
 
   /**
+   * @brief Global mark count across all ranks
+   *
+   * t8_forest_new_adapt is collective: the decision to adapt or skip must
+   * be unanimous. Adapting with an empty local set is a no-op, so ranks
+   * without local marks simply participate.
+   */
+  unsigned int
+  global_num_marks (unsigned int local_marks)
+  {
+    auto global_marks = local_marks;
+    sc_MPI_Allreduce (&local_marks, &global_marks, 1, sc_MPI_UNSIGNED, sc_MPI_MAX, derived ().comm);
+    return global_marks;
+  }
+
+  /**
    * @brief Adapt the forest with the given callback and rebuild the lmi index
    *
    * Performs one t8_forest_new_adapt pass, moves the lmi_map (already
@@ -509,7 +524,7 @@ class multiscale_adaptation {
       num_marked += derived ().refinement_set[l].size ();
     t8_debugf ("MRA refine analysis: %u leaf families, %u leaves marked\n", num_families, num_marked);
 
-    if (num_marked == 0) {
+    if (global_num_marks (num_marked) == 0) {
       clear_multiscale_state ();
       return;
     }
@@ -560,7 +575,11 @@ class multiscale_adaptation {
     auto *user_data = derived ().get_user_data ();
     auto *forest = derived ().forest;
     const auto *scheme = t8_forest_get_scheme (forest);
-    auto *lmi_map = derived ().get_lmi_map ();
+
+    int mpirank, mpisize;
+    sc_MPI_Comm_rank (derived ().comm, &mpirank);
+    sc_MPI_Comm_size (derived ().comm, &mpisize);
+    std::vector<std::vector<size_t>> outgoing (mpisize);
 
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
     auto current_idx = t8_locidx_t { 0 };
@@ -603,9 +622,15 @@ class multiscale_adaptation {
       scheme->element_destroy (tree_class, 1, &neigh_element);
     }
 
+    if (mpisize > 1)
+      exchange_pull_up_requests (outgoing, 0, 1u, no_marks {});
+
     auto num_marked = 0u;
     for (auto l = 0; l < derived ().maximum_level; ++l)
       num_marked += derived ().refinement_set[l].size ();
+
+    // Global count: all ranks must agree on another round vs. done
+    num_marked = global_num_marks (num_marked);
 
     if (num_marked == 0) {
       clear_multiscale_state ();
@@ -692,6 +717,11 @@ class multiscale_adaptation {
       for (auto u = 0u; u < Derived::U_DIM; ++u)
         v_max[u] = std::max (v_max[u], std::abs (m[u]));
     }
+
+    // All ranks must normalize identically
+    auto v_max_local = v_max;
+    sc_MPI_Allreduce (v_max_local.data (), v_max.data (), Derived::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX,
+                      derived ().comm);
 
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
     auto current_idx = t8_locidx_t { 0 };
@@ -788,7 +818,7 @@ class multiscale_adaptation {
       derived ().refinement_set.insert (lmi);
 
     const auto num_marked = derived ().refinement_set[level].size ();
-    if (num_marked == 0)
+    if (global_num_marks (num_marked) == 0)
       return 0;
 
     adapt_forest (static_refinement_callback);
