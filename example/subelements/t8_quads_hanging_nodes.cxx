@@ -85,7 +85,7 @@ main (int argc, char **argv)
   /* ---Setup.  Build cmesh and uniform forest.---   */
   /* Build a cube cmesh with tet, hex, and prism trees. */
   // t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, comm, 0, 0, 0);
-  t8_cmesh_t cmesh = t8_cmesh_new_periodic_hybrid (comm);
+  t8_cmesh_t cmesh = t8_cmesh_new_2D_hypercube_hybrid (comm);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, comm);  // TODO: New scheme
 
   /* --- Adapt the forest. ---   */

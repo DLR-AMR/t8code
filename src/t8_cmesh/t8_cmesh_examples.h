@@ -185,6 +185,13 @@ t8_cmesh_new_hypercube_pad_ext (const t8_eclass_t eclass, sc_MPI_Comm comm, cons
 t8_cmesh_t
 t8_cmesh_new_hypercube_hybrid (sc_MPI_Comm comm, int do_partition, int periodic);
 
+/** Construct a unit square of two quads and four triangles.
+ * \param [in] comm         The mpi communicator to use.
+ * \return                  A valid cmesh, as if _init and _commit had been called.
+ */
+t8_cmesh_t
+t8_cmesh_new_2D_hypercube_hybrid (sc_MPI_Comm comm);
+
 /** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?
  * Hypercube?
