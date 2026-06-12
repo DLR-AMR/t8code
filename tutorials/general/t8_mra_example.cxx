@@ -8,6 +8,7 @@
  * 3. Custom adaptation criteria
  * 4. Triangle vs quad comparison on the same data
  * 5. 3D (hex) adaptation
+ * 6. Two state variables (U = 2) with different jump locations
  */
 
 #ifdef T8_ENABLE_MRA
@@ -70,6 +71,24 @@ quarter_circle ()
   return [] (double x, double y) -> std::array<double, U> {
     double r = x * x + y * y;
     return { (r < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x) };
+  };
+}
+
+/**
+ * @brief Two components with quarter-circle jumps around the bottom-left
+ * (u0) and top-right (u1) corner
+ */
+template <int U>
+auto
+two_quarter_circles ()
+{
+  return [] (double x, double y) -> std::array<double, U> {
+    const double xm = 1. - x;
+    const double ym = 1. - y;
+    const double r0 = x * x + y * y;
+    const double r1 = xm * xm + ym * ym;
+    return { (r0 < 0.25) ? (x * y + x + 3.) : (x * x * y - 2. * x * y * y + 3. * x),
+             (r1 < 0.25) ? (xm * ym + xm + 3.) : (xm * xm * ym - 2. * xm * ym * ym + 3. * xm) };
   };
 }
 
@@ -275,8 +294,7 @@ example_custom_criterion ()
   write_vtk_output (mra_plain, "mra_output/03_criterion_plain");
 
   mra_floor.initialize_data (cmesh, scheme, max_level, func);
-  mra_floor.coarsen (min_level, max_level,
-                     thresholding_with_floor { { .c_thresh = c_thresh }, floor_level });
+  mra_floor.coarsen (min_level, max_level, thresholding_with_floor { { .c_thresh = c_thresh }, floor_level });
   print_grid_stats (mra_floor, "With level floor " + std::to_string (floor_level));
   write_vtk_output (mra_floor, "mra_output/03_criterion_floor");
 
@@ -383,6 +401,52 @@ example_hex_3d ()
 }
 
 //=============================================================================
+// Example 6: Two State Variables
+//=============================================================================
+
+/**
+ * U = 2: each component carries its own quarter-circle jump (bottom-left vs
+ * top-right corner). Significance is the maximum over the components, so
+ * the grid refines along both arcs.
+ */
+void
+example_two_components ()
+{
+  std::cout << "\n=== 6. Triangle: two state variables ===\n";
+
+  constexpr int U = 2;
+  constexpr int P = 3;
+  const int min_level = 0;
+  const int max_level = 7;
+  const double c_thresh = 1.0;
+
+  t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
+
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
+  auto *scheme = t8_scheme_new_default ();
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
+  mra.initialize_data_adaptive (cmesh, scheme, max_level, two_quarter_circles<U> ());
+  print_grid_stats (mra, "Uniform level " + std::to_string (max_level));
+  write_vtk_output (mra, "mra_output/06_two_components_step0_uniform");
+
+  mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
+  print_grid_stats (mra, "After coarsening");
+  write_vtk_output (mra, "mra_output/06_two_components_step1_coarsened");
+
+  mra.refine (min_level, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
+  print_grid_stats (mra, "After refinement");
+  write_vtk_output (mra, "mra_output/06_two_components_step2_refined");
+
+  std::cout << "  Color by u0 / u1 in ParaView: the grid follows both jumps.\n";
+
+  mra.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
+}
+
+//=============================================================================
 // Main
 //=============================================================================
 
@@ -400,6 +464,7 @@ main (int argc, char **argv)
   example_custom_criterion ();
   example_triangle_vs_quad ();
   example_hex_3d ();
+  example_two_components ();
 
   std::cout << "\nAll examples completed. Output in mra_output/ (open in ParaView).\n";
 
