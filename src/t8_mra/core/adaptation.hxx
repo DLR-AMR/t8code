@@ -265,44 +265,55 @@ class multiscale_adaptation {
     if constexpr (criterion_has_prepare<Criterion, Derived>)
       criterion.prepare (derived ());
 
-    clear_multiscale_state ();
+    // Outer fixpoint: each pass coarsens every family that is complete on its
+    // rank (the inner cascade peels multiple levels map-side), then adapts and
+    // repartitions. The repartition is coarsening-aligned (set_for_coarsening),
+    // so a family split across a rank seam — which compute_leaf_details skips as
+    // incomplete — becomes whole on the next pass and finally coarsens. Repeat
+    // until no rank marks anything. Serial / power-of-2 ranks have no split
+    // families, so this is one real adapt plus a cheap empty pass.
+    for (auto pass = 0;; ++pass) {
+      clear_multiscale_state ();
+      auto num_marked = 0u;
+      // Re-fetch each pass: adapt_forest/repartition delete and replace lmi_map.
+      auto *lmi_map = derived ().get_lmi_map ();
 
-    auto *lmi_map = derived ().get_lmi_map ();
-    auto num_marked = 0u;
+      for (auto round = 0; round < max_level - min_level; ++round) {
+        derived ().d_map.erase_all ();
+        derived ().compute_leaf_details (min_level, max_level);
 
-    for (auto round = 0; round < max_level - min_level; ++round) {
-      derived ().d_map.erase_all ();
-      derived ().compute_leaf_details (min_level, max_level);
+        typename Derived::index_set coarsen_parents;
+        for (auto L = min_level; L < max_level; ++L) {
+          for (const auto &[lmi, _] : derived ().d_map[L]) {
+            if (criterion.significant (derived (), lmi))
+              continue;
 
-      typename Derived::index_set coarsen_parents;
-      for (auto L = min_level; L < max_level; ++L) {
-        for (const auto &[lmi, _] : derived ().d_map[L]) {
-          if (criterion.significant (derived (), lmi))
-            continue;
+            coarsen_parents.insert (lmi);
+            for (const auto &child : t8_mra::children_lmi (lmi))
+              derived ().coarsening_set.insert (child);
+          }
+        }
 
-          coarsen_parents.insert (lmi);
+        t8_debugf ("MRA coarsen pass %d round %d: %zu families marked\n", pass, round, coarsen_parents.size ());
+        if (coarsen_parents.empty ())
+          break;
+        num_marked += coarsen_parents.size ();
+
+        // Data move on the maps: parent data straight from the analysis, the
+        // children leave lmi_map — the next round sees the coarsened grid.
+        for (const auto &lmi : coarsen_parents) {
+          lmi_map->insert (lmi, derived ().d_map.get (lmi));
           for (const auto &child : t8_mra::children_lmi (lmi))
-            derived ().coarsening_set.insert (child);
+            lmi_map->erase (child);
         }
       }
 
-      t8_debugf ("MRA coarsen cascade round %d: %zu families marked\n", round, coarsen_parents.size ());
-      if (coarsen_parents.empty ())
+      t8_debugf ("MRA coarsen pass %d: %u families marked, %zu leaves remain\n", pass, num_marked,
+                 lmi_map->size ());
+
+      if (global_num_marks (num_marked) == 0)
         break;
-      num_marked += coarsen_parents.size ();
 
-      // Data move on the maps: parent data straight from the analysis, the
-      // children leave lmi_map — the next round sees the coarsened grid.
-      for (const auto &lmi : coarsen_parents) {
-        lmi_map->insert (lmi, derived ().d_map.get (lmi));
-        for (const auto &child : t8_mra::children_lmi (lmi))
-          lmi_map->erase (child);
-      }
-    }
-
-    t8_debugf ("MRA coarsen: %u families marked, %zu leaves remain\n", num_marked, lmi_map->size ());
-
-    if (global_num_marks (num_marked) > 0) {
       adapt_forest (static_coarsening_callback, 1);
       repartition ();
     }
@@ -813,9 +824,9 @@ class multiscale_adaptation {
    * lmi_idx from the new local leaves. Requires the standing invariant
    * (forest leaves <-> lmi_map keys 1:1); collective.
    *
-   * t8code's set_for_coarsening is currently disabled, so families may
-   * still straddle rank boundaries afterwards; coarsening silently skips
-   * such families (grids stay finer at the seams).
+   * Partitions with set_for_coarsening = 1 (t8code PFC): boundaries are
+   * rounded so no family of same-level siblings is split across ranks, so
+   * the next coarsen pass can merge a family that was a seam family before.
    */
   void
   repartition ()
