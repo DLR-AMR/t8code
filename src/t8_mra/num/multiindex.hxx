@@ -78,22 +78,6 @@ generate_tensor_pset (int P)
         ++idx;
       }
     }
-
-    /// TODO
-    // multiindex<DIM> buffer;
-    // for (unsigned i = 0; i < idx; ++i) {
-    //   if (pset[i][0] == 1 && pset[i][1] == 0) {
-    //     buffer = pset[1];
-    //     pset[1] = pset[i];
-    //     pset[i] = buffer;
-    //   }
-    //   if (pset[i][0] == 0 && pset[i][1] == 1) {
-    //     buffer = pset[2];
-    //     pset[2] = pset[i];
-    //     pset[i] = buffer;
-    //   }
-    // }
-
   }
   else if constexpr (DIM == 3) {
     // 3D case: ix-fast, then iy, then iz

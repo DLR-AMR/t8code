@@ -2,7 +2,6 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <vector>
 #include <array>
 #include "t8_eclass/t8_eclass.h"
 
@@ -106,24 +105,11 @@ struct element_data
     return u * DOF + p;
   }
 
-  // size_t static wavelet_idx (size_t u, size_t p) noexcept
-  // {
-  //   return u * W_DOF + p;
-  // }
   size_t static wavelet_idx (size_t k, size_t u, size_t p) noexcept
   {
     return k * U_DIM * DOF + u * DOF + p;
   }
 };
-
-template <typename T>
-concept data_has_triangle = T::Shape == T8_ECLASS_TRIANGLE;
-
-// template <t8_eclass TShape>
-// struct element_data
-// {
-//   t8_mra::levelmultiindex<TShape> lmi_idx;
-// };
 
 template <typename T>
 struct forest_data

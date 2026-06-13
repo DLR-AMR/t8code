@@ -200,11 +200,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   {
     Base::forest = t8_forest_new_uniform (mesh, scheme, level, 0, Base::comm);
 
-    levelmultiindex *elem_data;
-    t8_mra::forest_data<element_t> *user_data;
-
-    user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
-    elem_data = T8_ALLOC (levelmultiindex, 1);
+    auto *user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
 
     T8_ASSERT (t8_forest_is_committed (Base::forest));
 
@@ -233,7 +229,6 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
       }
     }
 
-    T8_FREE (elem_data);
     t8_forest_set_user_data (Base::forest, user_data);
   }
 

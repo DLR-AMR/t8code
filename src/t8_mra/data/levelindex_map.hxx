@@ -27,7 +27,6 @@ template <lmi_type TLmi, typename T>
 class levelindex_map {
  public:
   using map = ankerl::unordered_dense::map<TLmi, T>;
-  using Value_type = typename map::mapped_type;
 
   using iterator = typename map::iterator;
   using const_iterator = typename map::const_iterator;

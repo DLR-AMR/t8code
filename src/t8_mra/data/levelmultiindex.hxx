@@ -39,9 +39,7 @@ struct levelmultiindex: public lmi_properties<TShape>
 
   static constexpr auto ECLASS = TShape;
 
-  levelmultiindex () {
-    // SC_ABORTF ("levelmultiindex has not been implemented for shape %d", TShape);
-  };
+  levelmultiindex () = default;
 
   levelmultiindex (size_t _basecell) noexcept;
   levelmultiindex (size_t _basecell, const t8_element_t *elem, const t8_scheme *scheme) noexcept;
@@ -54,9 +52,6 @@ struct levelmultiindex: public lmi_properties<TShape>
 
   [[nodiscard]] unsigned int
   level () const noexcept;
-
-  [[nodiscard]] size_t
-  multiindex () const noexcept;
 
   /**
  * @brief Get parent of a given levelmultiindex.
@@ -220,7 +215,6 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::children (levelmultiindex<T8_ECLASS_TRIANGL
 
   for (size_t j = 0u; j < NUM_CHILDREN; ++j)
     child_vec[j] = jth_child (lmi, j);
-  // child_vec[j] = jth_child (lmi.index, j);
 
   return child_vec;
 }
@@ -515,13 +509,6 @@ template <lmi_type TLmi>
 parent_lmi (TLmi lmi)
 {
   return TLmi::parent (lmi);
-}
-
-template <lmi_type TLmi>
-[[nodiscard]] inline TLmi
-jth_child_lmi (TLmi lmi, size_t j)
-{
-  return TLmi::jth_child (lmi, j);
 }
 
 template <lmi_type TLmi>

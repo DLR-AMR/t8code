@@ -525,7 +525,6 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
       }
       else if constexpr (TShape == T8_ECLASS_HEX) {
         const auto lagrange_nodes = get_hex_lagrange_nodes (lagrange_order);
-        int node_idx = 0;
         for (const auto &ref_node : lagrange_nodes) {
           std::array<double, 3> phys_point = { 0, 0, 0 };
           const double xi = ref_node[0];
@@ -547,7 +546,6 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 
           all_points.push_back (phys_point);
           file << "          " << phys_point[0] << " " << phys_point[1] << " " << phys_point[2] << "\n";
-          node_idx++;
         }
       }
     }
