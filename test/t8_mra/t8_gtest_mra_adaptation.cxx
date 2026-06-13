@@ -36,8 +36,8 @@
 #ifdef T8_ENABLE_MRA
 
 #include <t8.h>
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 

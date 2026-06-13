@@ -6,7 +6,7 @@
 #include <array>
 #include <type_traits>
 
-#include "t8_eclass.h"
+#include "t8_eclass/t8_eclass.h"
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/dunavant.hxx"
 #include "t8_mra/num/mat.hxx"

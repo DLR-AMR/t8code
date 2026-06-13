@@ -845,7 +845,9 @@ class multiscale_adaptation {
     t8_forest_ref (forest);
     t8_forest_t new_forest;
     t8_forest_init (&new_forest);
-    t8_forest_set_partition (new_forest, forest, 0);
+    // set_for_coarsening = 1: PFC rounds partition boundaries so no family of
+    // same-level siblings is split across ranks, letting seam families coarsen.
+    t8_forest_set_partition (new_forest, forest, 1);
     t8_forest_commit (new_forest);
 
     const auto num_new = t8_forest_get_local_num_leaf_elements (new_forest);

@@ -25,7 +25,7 @@
  * TODO: document this file
  */
 
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_cad.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 

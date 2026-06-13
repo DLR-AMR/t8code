@@ -27,10 +27,6 @@
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 
-/** Get the name of a geometry.
- * \param [in]  geom  A geometry.
- * \return            The name of \a geom.
- */
 const char *
 t8_geom_get_name (const t8_geometry_c *geom)
 {
@@ -39,10 +35,6 @@ t8_geom_get_name (const t8_geometry_c *geom)
   return geom->t8_geom_get_name ().c_str ();
 }
 
-/** Get the type of the geometry.
- * \param [in]  geom  A geometry.
- * \return            The type of \a geom.
- */
 t8_geometry_type_t
 t8_geom_get_type (const t8_geometry_c *geom)
 {

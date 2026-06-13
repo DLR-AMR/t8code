@@ -2,7 +2,7 @@
 #  t8code is a C library to manage a collection (a forest) of multiple
 #  connected adaptive space-trees of general element types in parallel.
 #
-#  Copyright (C) 2025 the developers
+#  Copyright (C) 2026 the developers
 #
 #  t8code is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -18,19 +18,19 @@
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-cmake_minimum_required( VERSION 3.16 )
+cmake_minimum_required( VERSION 3.19 )
 
 include( cmake/GitProjectVersion.cmake )
 
-project( 
+project(
     T8CODE
     DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
     LANGUAGES C CXX
-    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" 
+    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}"
     )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-    
+
 include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
@@ -50,13 +50,13 @@ cmake_dependent_option( T8CODE_BUILD_TPL_EXAMPLES "Build the examples from libsc
 
 option( T8CODE_BUILD_TUTORIALS "Build t8code's tutorials" ON )
 option( T8CODE_BUILD_BENCHMARKS "Build t8code's benchmarks" ON )
+option( T8CODE_BUILD_MESH_HANDLE "Build t8code's mesh handle" OFF )
 option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
 option( T8CODE_ENABLE_MRA "Enable t8code's features which rely on MRA" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
-option( T8CODE_ENABLE_NETCDF "Enable t8code's features which rely on netCDF" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
 option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
@@ -64,9 +64,23 @@ option( T8CODE_USE_SYSTEM_P4EST "Use system-installed p4est library" OFF )
 option( T8CODE_BUILD_DOCUMENTATION "Build t8code's documentation" OFF )
 cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's documentation using sphinx" OFF "T8CODE_BUILD_DOCUMENTATION" OFF )
 
-set(T8CODE_TEST_LEVEL 0 CACHE STRING "Test level: 0 for full tests, 1 for less thorough tests, 2 for minimal tests. (WARNING: Use with care.)")
 set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
 set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
+
+# Reading the option T8CODE_TEST_LEVEL: Possible choices are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC. Default is T8_TEST_LEVEL_FULL.
+set(T8CODE_TEST_LEVEL "T8_TEST_LEVEL_FULL" CACHE STRING "Test level: T8_TEST_LEVEL_FULL for full tests, T8_TEST_LEVEL_MEDIUM for less thorough tests, T8_TEST_LEVEL_BASIC for minimal tests. (WARNING: Use with care.)")
+set_property(CACHE T8CODE_TEST_LEVEL PROPERTY STRINGS "T8_TEST_LEVEL_FULL" "T8_TEST_LEVEL_MEDIUM" "T8_TEST_LEVEL_BASIC")
+
+# Parse string T8CODE_TEST_LEVEL into integer T8_TEST_LEVEL_INT for easier usage within the code.
+if(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_BASIC" )
+    set(T8_TEST_LEVEL_INT 2)
+elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_MEDIUM" )
+    set(T8_TEST_LEVEL_INT 1)
+elseif(T8CODE_TEST_LEVEL STREQUAL "T8_TEST_LEVEL_FULL" )
+    set(T8_TEST_LEVEL_INT 0)
+else()
+    message( FATAL_ERROR "Invalid string for T8CODE_TEST_LEVEL: ${T8CODE_TEST_LEVEL}. Valid options are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC.")
+endif()
 
 # Set a default build type if none was specified
 set(default_build_type "Release")
@@ -75,9 +89,16 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
   set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
       STRING "Choose the type of build. Build types available: Release Debug RelWithDebInfo" FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-    "Debug" "Release" "RelWithDebInfo")
+endif()
+# Set the possible values of build type for cmake-gui
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo")
+
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+  # Option to generate code coverage target.
+  option( T8CODE_CODE_COVERAGE "Enable code coverage reporting" OFF)
+  if(T8CODE_CODE_COVERAGE)
+    include(./cmake/CodeCoverage.cmake)
+  endif()
 endif()
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -88,16 +109,107 @@ endif()
 
 if( T8CODE_ENABLE_MPI )
     if( T8CODE_BUILD_FORTRAN_INTERFACE )
-      find_package( MPI COMPONENTS C Fortran REQUIRED )
+      find_package( MPI 3.0 COMPONENTS C Fortran REQUIRED )
     else()
-      find_package( MPI COMPONENTS C REQUIRED )
+      find_package( MPI 3.0 COMPONENTS C REQUIRED )
     endif()
+    set (gtest_disable_mpi OFF CACHE INTERNAL "disable gtest mpi support" FORCE)
 
     if( NOT MPIEXEC_EXECUTABLE )
         message( FATAL_ERROR "MPIEXEC was not found" )
     endif()
-    set( SC_ENABLE_MPI ON )
+    set( SC_ENABLE_MPI ON CACHE INTERNAL "enable mpi support in libsc" FORCE)
+else()
+    set( gtest_disable_mpi ON CACHE INTERNAL "disable gtest mpi support" FORCE)
 endif()
+
+# Rpath options necessary for shared library install to work correctly in user projects.
+# Compute the relative Rpath for proper library installation
+set(libPath ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}) # Library directory)
+cmake_path(RELATIVE_PATH libPath
+    BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} # Binary directory
+    OUTPUT_VARIABLE relativeRpath
+)
+
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
+
+if(APPLE)
+    set(CMAKE_MACOSX_RPATH true)
+    set(CMAKE_INSTALL_RPATH @loader_path @loader_path/${relativeRpath})
+elseif(UNIX)
+    set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
+endif()
+
+############################################ ThirdParty ############################################
+
+# Override default for this libsc option
+set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
+
+# Prevent `libsc` and `p4est` from overwriting the default install prefix.
+set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
+
+# Set some variables for the thirdparty libraries
+set( gtest_force_shared_crt ON CACHE INTERNAL "" FORCE )
+set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
+set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
+set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
+
+# When executing CMake tests for some thirdparty libraries like sc, i.e. check_c_source_compiles/check_cxx_source_compiles and others
+# we need to ignore the -Werror option, since these tests often produce warnings (see check_mpicommshared.cmake from sc for example).
+# If theses warnings are interpreted as errors, the test fails even though we want it to pass.
+# This behaviour caused a serious bug and did not initialize our shared memory. See https://github.com/DLR-AMR/t8code/issues/1985.
+set( T8CODE_OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" )
+if (WIN32 AND NOT MINGW)
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /w" )
+else()
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -w" )
+endif()
+
+# Do the same for the normal build flags to suppress warnings from the thirdparty library
+set(ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(ORIGINAL_C_FLAGS   "${CMAKE_C_FLAGS}")
+if (WIN32 AND NOT MINGW)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   /w" CACHE STRING "" FORCE)
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -w" CACHE STRING "" FORCE)
+endif()
+
+# Capture the list of variables before adding the thirdparty libraries to mark the added ones as advanced.
+get_cmake_property(_vars_before_thirdparty VARIABLES )
+
+# Populate the thirdparty libraries
+include (cmake/thirdparty.cmake)
+
+# Capture the list of variables after adding thirdparty libraries
+get_cmake_property(_vars_after_thirdparty VARIABLES)
+
+# Find variables that exist after but not before
+set(_new_thirdparty_vars)
+foreach(_var IN LISTS _vars_after_thirdparty)
+    list(FIND _vars_before_thirdparty "${_var}" _index)
+    if(_index EQUAL -1)
+        list(APPEND _new_thirdparty_vars ${_var})
+    endif()
+endforeach()
+
+# Mark the new variables as advanced
+if(_new_thirdparty_vars)
+    mark_as_advanced(FORCE ${_new_thirdparty_vars})
+endif()
+
+# Reactivate previous CMAKE_REQUIRED_FLAGS and CMAKE_C/CXX_FLAGS
+set( CMAKE_REQUIRED_FLAGS "${T8CODE_OLD_CMAKE_REQUIRED_FLAGS}" )
+unset( T8CODE_OLD_CMAKE_REQUIRED_FLAGS )
+set(CMAKE_CXX_FLAGS "${ORIGINAL_CXX_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS   "${ORIGINAL_C_FLAGS}"   CACHE STRING "" FORCE)
+unset (ORIGINAL_CXX_FLAGS)
+unset (ORIGINAL_C_FLAGS)
+
+############################################ End of ThirdParty ############################################
+
 
 if( T8CODE_ENABLE_VTK )
     find_package( VTK REQUIRED COMPONENTS
@@ -126,77 +238,52 @@ if( T8CODE_ENABLE_OCC )
     endif (OpenCASCADE_FOUND)
 endif( T8CODE_ENABLE_OCC )
 
-if( T8CODE_ENABLE_NETCDF )
-    find_package( netCDF REQUIRED )
-    if(netCDF_FOUND)
-        message("Found netCDF")
-        include(cmake/CheckNetCDFPar.cmake)
-    endif (netCDF_FOUND)
-endif( T8CODE_ENABLE_NETCDF )
-
-# Override default for this libsc option
-set( BUILD_SHARED_LIBS ON CACHE BOOL "Build libsc as a shared library" )
-
-# Prevent `libsc` and `p4est` from overwriting the default install prefix.
-set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)
-
-# Rpath options necessary for shared library install to work correctly in user projects.
-# Compute the relative Rpath for proper library installation
-set(libPath ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}) # Library directory)
-cmake_path(RELATIVE_PATH libPath
-    BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR} # Binary directory
-    OUTPUT_VARIABLE relativeRpath 
-)
-set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${relativeRpath})
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
-
 if ( T8CODE_USE_SYSTEM_SC )
-    find_package( SC REQUIRED PATHS /path/to/system/sc )
+    find_package( SC REQUIRED )
 else()
-    set( SC_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
-    set( SC_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
-    
-    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
-    get_cmake_property(_vars_before_sc VARIABLES )
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/sc )
-    # Capture the list of variables after adding the subdirectory
-    get_cmake_property(_vars_after_sc VARIABLES )
-    # Compute the difference (new variables added by the subdirectory)
-    set( _new_sc_vars)
-    foreach( _var IN LISTS _vars_after_sc )
-        if( NOT _var IN_LIST _vars_before_sc )
-            list( APPEND _new_sc_vars ${_var} )
+    ########################## Fix for OpenMPI ############################################
+    # OpenMPI sometimes has a mismatch between their C and CXX interface which produces a warning in SC.
+    # The warning makes t8codes build fail when Werror is activated. This fix checks if t8code
+    # is linked against OpenMPI and then suppresses that Werror treats this warning as error.
+    # The warning is still displayed while compiling.
+    # We compile a test program mich checks if a OpenMPI specific macro is defined and then apply the fix.
+
+    include(CheckIncludeFile)
+
+    # Check if mpi.h is available
+    check_include_file("mpi.h" MPI_HEADER_FOUND)
+
+    if(MPI_HEADER_FOUND)
+        # Create a temporary C++ source file to check for OpenMPI-specific macros
+        include(CheckCXXSourceCompiles)
+        check_cxx_source_compiles("
+        #include <mpi.h>
+        #ifndef OPEN_MPI
+        #error 'Not OpenMPI'
+        #endif
+        int main() { return 0; }" HAS_OPENMPI)
+
+        if(HAS_OPENMPI)
+            message(STATUS "OpenMPI detected via mpi.h")
+            # Suppress warning
+            target_compile_options(SC::SC INTERFACE -Wno-error=cast-function-type)
         endif()
-    endforeach()
-    
-    # Mark the new variables as advanced
-    mark_as_advanced( FORCE ${_new_sc_vars} )
+    else()
+        message(WARNING "mpi.h not found!")
+    endif()
+    ########################## End of fix for OpenMPI ############################################
 endif()
 
+
 if ( T8CODE_USE_SYSTEM_P4EST )
-    find_package( P4EST REQUIRED PATHS /path/to/system/p4est )
-else()
-    set( P4EST_BUILD_EXAMPLES ${T8CODE_BUILD_TPL_EXAMPLES} )
-    set( P4EST_BUILD_TESTING ${T8CODE_BUILD_TPL_TESTS} )
-    
-    # Capture the list of variables before adding the subdirectory to mark the added ones as advanced.
-    get_cmake_property( _vars_before_p4est VARIABLES )
-    add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/p4est )
-    # Capture the list of variables after adding the subdirectory
-    get_cmake_property( _vars_after_p4est VARIABLES )
-    # Compute the difference (new variables added by the subdirectory)
-    set( _new_p4est_vars )
-    foreach( _var IN LISTS _vars_after_p4est )
-        if( NOT _var IN_LIST _vars_before_p4est )
-            list( APPEND _new_p4est_vars ${_var} )
-        endif()
-    endforeach()
-    
-    # Mark the new variables as advanced
-    mark_as_advanced( FORCE ${_new_p4est_vars} )
+    find_package( P4EST REQUIRED )
 endif()
 
 add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/src )
+
+if( T8CODE_BUILD_MESH_HANDLE )
+  add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/mesh_handle )
+endif()
 
 if ( T8CODE_BUILD_TESTS )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/test )

@@ -20,7 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_vtk_writer.cxx
+ * Implements functions declared in \ref t8_vtk_writer.hxx 
+ *  or the C interface \ref t8_vtk_writer.h.
+ */
+
 #include <t8_vtk/t8_vtk_writer.hxx>
+#include <t8_vtk/t8_vtk_writer.h>
 
 #if T8_ENABLE_VTK
 #include <vtkUnstructuredGrid.h>
@@ -28,8 +34,8 @@
 
 #if T8_ENABLE_VTK
 /**
- * \brief template specialization for forests. 
- * 
+ * Template specialization for forests.
+ *
  */
 template <>
 void
@@ -37,9 +43,9 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
   const t8_forest_t forest, [[maybe_unused]] vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points, int *cellTypes,
   const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id, const t8_gloidx_t offset,
-  const bool ghosts, const t8_locidx_t itree)
+  const bool ghosts, const t8_locidx_t itree, const bool merge_points)
 {
   /* For both ghosts and pure-local trees iterate over all elements and translate them into a vtk cell. */
   if (ghosts) {
@@ -48,7 +54,7 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
       const t8_element_t *element = t8_forest_ghost_get_leaf_element (forest, itree, ielem_ghost);
       this->t8_grid_element_to_vtk_cell (forest, element, itree + num_local_trees, offset, true, *elem_id, point_id,
                                          cellTypes, points, cellArray, vtk_treeid, vtk_mpirank, vtk_level,
-                                         vtk_element_id);
+                                         vtk_element_id, merge_points);
       (*elem_id)++;
     }
   }
@@ -58,8 +64,8 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
     for (t8_locidx_t ielement = 0; ielement < elems_in_tree; ielement++) {
       const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       T8_ASSERT (element != NULL);
-      this->t8_grid_element_to_vtk_cell (forest, element, itree, offset, true, *elem_id, point_id, cellTypes, points,
-                                         cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
+      this->t8_grid_element_to_vtk_cell (forest, element, itree, offset, false, *elem_id, point_id, cellTypes, points,
+                                         cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id, merge_points);
       (*elem_id)++;
 
     } /* end of loop over elements */
@@ -68,8 +74,8 @@ vtk_writer<t8_forest_t>::t8_grid_tree_to_vtk_cells (
 }
 
 /**
- * \brief template specialization for cmeshes. 
- * 
+ * Template specialization for cmeshes.
+ *
  */
 template <>
 void
@@ -77,18 +83,21 @@ vtk_writer<t8_cmesh_t>::t8_grid_tree_to_vtk_cells (
   const t8_cmesh_t cmesh, [[maybe_unused]] vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_treeid, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_mpirank,
   vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_level, vtkSmartPointer<t8_vtk_gloidx_array_type_t> vtk_element_id,
-  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkPoints> points, int *cellTypes,
+  vtkSmartPointer<vtkCellArray> cellArray, vtkSmartPointer<vtkMergePoints> points, int *cellTypes,
   [[maybe_unused]] const t8_locidx_t num_local_trees, t8_gloidx_t *elem_id, long int *point_id,
-  const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree)
+  const t8_gloidx_t offset, const bool ghosts, const t8_locidx_t itree, const bool merge_points)
 {
   /* A cmesh does not have any further elements, we can call the translator directly. */
   this->t8_grid_element_to_vtk_cell (cmesh, NULL, itree, offset, ghosts, *elem_id, point_id, cellTypes, points,
-                                     cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id);
+                                     cellArray, vtk_treeid, vtk_mpirank, vtk_level, vtk_element_id, merge_points);
   (*elem_id)++;
   return;
 }
 #endif /* T8_ENABLE_VTK */
 
+/**
+ * Write a forest to a VTK file in ASCII format.
+ */
 template <>
 bool
 vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
@@ -98,11 +107,14 @@ vtk_writer<t8_forest_t>::write_ASCII (const t8_forest_t forest)
                                     this->data);
 }
 
+/**
+ * Write a cmesh to a VTK file in ASCII format.
+ */
 template <>
 bool
-vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t forest)
+vtk_writer<t8_cmesh_t>::write_ASCII (const t8_cmesh_t cmesh)
 {
-  return t8_cmesh_vtk_write_ASCII (forest, this->fileprefix.c_str ());
+  return t8_cmesh_vtk_write_ASCII (cmesh, this->fileprefix.c_str ());
 }
 
 /* Implementation of the c-interface */

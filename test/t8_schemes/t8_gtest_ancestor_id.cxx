@@ -27,13 +27,15 @@
  */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include "t8_gtest_dfs_base.hxx"
 #include <test/t8_gtest_macros.hxx>
 
-class class_ancestor_id: public TestDFS {
+struct class_ancestor_id: public TestDFS
+{
+ private:
   void
   check_element () override
   {
@@ -75,7 +77,7 @@ class class_ancestor_id: public TestDFS {
 
 TEST_P (class_ancestor_id, t8_recursive_dfs_ancestor_id)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

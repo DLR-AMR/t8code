@@ -20,17 +20,17 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_conn_tree_to_vertex.cxx
- *  This file implements the routines for the t8_cmesh_conn_tree_to_vertex struct.
+/** \file t8_cmesh_vertex_conn_tree_to_vertex.cxx
+ *  This file implements the routines for the t8_cmesh_vertex_conn_tree_to_vertex struct.
  */
 
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.hxx>
 
 /* constructor from a given vertex to tree list. */
 t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
-  const t8_cmesh_t cmesh_from, const t8_cmesh_t cmesh, const t8_cmesh_vertex_conn_vertex_to_tree &vtt)
+  const t8_cmesh_t cmesh_from, const t8_cmesh_t cmesh, const struct t8_cmesh_vertex_conn_vertex_to_tree &vtt)
   : t8_cmesh_vertex_conn_tree_to_vertex ()
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
@@ -56,7 +56,7 @@ t8_cmesh_vertex_conn_tree_to_vertex::t8_cmesh_vertex_conn_tree_to_vertex (
     /* Iterate over all entries of the vertex list,
      * thus, each entry is a local tree id and vertex index. */
     for (auto &[tree_index, vertex_index] : vertex_list) {
-      global_local_index_pair new_pair (global_vertex, vertex_index);
+      global_local_index_pair const new_pair (global_vertex, vertex_index);
       global_ids_per_tree[tree_index].push_back (new_pair);
     }
   }

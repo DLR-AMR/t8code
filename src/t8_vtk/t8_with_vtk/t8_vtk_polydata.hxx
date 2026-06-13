@@ -21,8 +21,8 @@
 */
 
 /**
+ * \file t8_vtk_polydata.hxx
  * This file contains all helper functions to translate vtk-polydata. 
- * 
  */
 
 #ifndef T8_CMESH_VTK_POLYDATA

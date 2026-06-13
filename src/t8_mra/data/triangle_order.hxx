@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>

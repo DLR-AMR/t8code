@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
@@ -30,7 +30,9 @@
 /** Use DFS to check for all elements, if packing them, sending them to ourself and unpacking them results in the same element
  * Here, each element is sent individually.
  */
-class class_test_pack: public TestDFS {
+struct class_test_pack: public TestDFS
+{
+ private:
   /* pack the element and its children, send to ourself, unpack and check if it is the same element */
   void
   check_element () override
@@ -74,7 +76,7 @@ class class_test_pack: public TestDFS {
     SC_CHECK_MPI (mpiret);
 #else
     /* just copy the data, if we did not compile with MPI*/
-    mempcpy (recvbuf, sendbuf, pack_size);
+    memcpy (recvbuf, sendbuf, pack_size);
 #endif
     /* Unpack data */
     position = 0;
@@ -127,7 +129,7 @@ class class_test_pack: public TestDFS {
 
 TEST_P (class_test_pack, test_equal_dfs)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

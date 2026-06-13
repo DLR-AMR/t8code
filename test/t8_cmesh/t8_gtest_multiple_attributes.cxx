@@ -21,9 +21,9 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_cmesh/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
@@ -42,7 +42,8 @@ t8_cmesh_partition_cmesh (t8_cmesh_t cmesh, const t8_scheme *scheme, sc_MPI_Comm
   return cmesh_partition;
 }
 
-class cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, int>> {
+struct cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, int>>
+{
  protected:
   void
   SetUp () override

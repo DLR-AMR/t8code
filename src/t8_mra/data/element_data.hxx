@@ -4,7 +4,7 @@
 
 #include <vector>
 #include <array>
-#include "t8_eclass.h"
+#include "t8_eclass/t8_eclass.h"
 
 #include "t8_mra/data/levelindex_map.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"

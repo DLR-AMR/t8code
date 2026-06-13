@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 #include <t8_mra/num/mat.hxx>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 
 namespace t8_mra
 {

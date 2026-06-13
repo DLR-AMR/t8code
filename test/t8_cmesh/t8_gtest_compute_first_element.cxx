@@ -37,9 +37,10 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <cmath>
-#include <t8_cmesh.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 
-class t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithParam<std::tuple<int, int, int>> {
+struct t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithParam<std::tuple<int, int, int>>
+{
  protected:
   void
   SetUp () override
@@ -59,9 +60,9 @@ class t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithPa
   uint32_t rank_growth;
   uint32_t elem_growth;
   uint32_t size_growth;
-#if T8CODE_TEST_LEVEL == 0
+#if T8_TEST_LEVEL_INT == 0
   const uint32_t max_iter = 100;
-#elif T8CODE_TEST_LEVEL == 1
+#elif T8_TEST_LEVEL_INT == 1
   const uint32_t max_iter = 50;
 #else
   const uint32_t max_iter = 10;

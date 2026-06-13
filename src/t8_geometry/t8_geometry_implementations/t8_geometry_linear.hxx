@@ -31,10 +31,14 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
+/**
+ * Linear geometry. Performs a (tri-/bi-)linear interpolation between the
+ * vertices of the assigned tree. Produces linear trees and elements.
+ */
 struct t8_geometry_linear: public t8_geometry_with_vertices
 {
  public:
-  /** 
+  /**
    * Constructor of the linear geometry. The geometry
    * is viable with all tree types and uses as many vertices as the tree type has.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
@@ -42,7 +46,7 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
    */
   t8_geometry_linear ();
 
-  /** The destructor. 
+  /** The destructor.
    * Clears the allocated memory.
    */
   virtual ~t8_geometry_linear ();
@@ -82,7 +86,8 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
   t8_geom_evaluate_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                              double *jacobian) const;
 
-  /**
+  /** Checks if points are inside the element. Input a list of points \a points
+   * and it returns a list of flags \a is_inside if the points are contained.
    * \param[in] forest            The forest of the element.
    * \param[in] ltreeid           The local tree id of the element's tree
    * \param[in] element           The element
@@ -106,6 +111,15 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
   {
     return true;
   }
+
+  /**
+   * Get the bounding box of the tree in the geometry.
+   * \param[in] cmesh   The cmesh containing the tree.
+   * \param[out] bounds The bounding box of the tree, stored as {xmin, xmax, ymin, ymax, zmin, zmax}.
+   * \return            True if the bounding box was successfully computed, false otherwise.
+   */
+  virtual bool
+  get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };

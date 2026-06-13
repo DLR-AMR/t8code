@@ -21,13 +21,14 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
-class are_family: public TestDFS {
-
+struct are_family: public TestDFS
+{
+ private:
   void
   check_element () override
   {
@@ -63,7 +64,7 @@ class are_family: public TestDFS {
 
 TEST_P (are_family, test_are_family)
 {
-#if T8CODE_TEST_LEVEL >= 1
+#if T8_TEST_LEVEL_INT >= 1
   const int maxlvl = 4;
 #else
   const int maxlvl = 6;

@@ -27,14 +27,12 @@
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_options.h>
 
-T8_EXTERN_C_BEGIN ();
-
 struct t8_adapt_data
 {
   const int num_spheres;
   const double spheres_radius_inner;
   const double spheres_radius_outer;
-  std::vector<t8_3D_point> midpoints;
+  std::vector<t8_3D_vec> midpoints;
 };
 
 /* Refine, if element is within a given radius. */
@@ -47,11 +45,11 @@ t8_adapt_callback_refine (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  t8_3D_point centroid;
+  t8_3D_vec centroid;
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
 
   auto within_radius
-    = [&] (const t8_3D_point &midpoint) { return t8_dist (midpoint, centroid) < adapt_data->spheres_radius_outer; };
+    = [&] (const t8_3D_vec &midpoint) { return t8_dist (midpoint, centroid) < adapt_data->spheres_radius_outer; };
 
   if (std::any_of (adapt_data->midpoints.begin (), adapt_data->midpoints.end (), within_radius)) {
     return 1;
@@ -69,11 +67,11 @@ t8_adapt_callback_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   const struct t8_adapt_data *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
   T8_ASSERT (adapt_data != NULL);
 
-  t8_3D_point centroid;
+  t8_3D_vec centroid;
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
 
   auto within_radius
-    = [&] (const t8_3D_point &midpoint) { return t8_dist (midpoint, centroid) < adapt_data->spheres_radius_inner; };
+    = [&] (const t8_3D_vec &midpoint) { return t8_dist (midpoint, centroid) < adapt_data->spheres_radius_inner; };
 
   if (std::any_of (adapt_data->midpoints.begin (), adapt_data->midpoints.end (), within_radius)) {
     return 1;
@@ -81,14 +79,14 @@ t8_adapt_callback_remove (t8_forest_t forest, t8_forest_t forest_from, t8_locidx
   return 0;
 }
 
-/** Create a cube in which 6 half-spheres are removed, each on one side, 
+/** Create a cube in which 6 half-spheres are removed, each on one side,
  * using geometric criteria. The surface of the spheres get refined.
  * \param [in]    initial_level  Initial level of the unit forest.
  * \param [in]    radius_inner   Radius of inner side of spheres shell.
  * \param [in]    radius_outer   Radius of outer side of spheres shell.
- * \param [in]    eclass         Element class. If 0, use hypercube hybrid.  
+ * \param [in]    eclass         Element class. If 0, use hypercube hybrid.
  * \param [in]    vtuname        Path for outputfiles.
- * \note The difference of \ref radius_inner and \ref radius_outer defines 
+ * \note The difference of \ref radius_inner and \ref radius_outer defines
  * the thickness of the refined surface of the spheres.
  */
 static void
@@ -107,12 +105,12 @@ t8_construct_spheres (const int initial_level, const double radius_inner, const 
     cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
   }
 
-  /* On each face of a cube, a sphere rises halfway in. 
+  /* On each face of a cube, a sphere rises halfway in.
    * Its center is therefore the center of the corresponding surface. */
   const int num_spheres = 6;
-  std::vector<t8_3D_point> midpoints
-    = { t8_3D_point ({ 1.0, 0.5, 0.5 }), t8_3D_point ({ 0.5, 1.0, 0.5 }), t8_3D_point ({ 0.5, 0.5, 1.0 }),
-        t8_3D_point ({ 0.0, 0.5, 0.5 }), t8_3D_point ({ 0.5, 0.0, 0.5 }), t8_3D_point ({ 0.5, 0.5, 0.0 }) };
+  std::vector<t8_3D_vec> midpoints
+    = { t8_3D_vec ({ 1.0, 0.5, 0.5 }), t8_3D_vec ({ 0.5, 1.0, 0.5 }), t8_3D_vec ({ 0.5, 0.5, 1.0 }),
+        t8_3D_vec ({ 0.0, 0.5, 0.5 }), t8_3D_vec ({ 0.5, 0.0, 0.5 }), t8_3D_vec ({ 0.5, 0.5, 0.0 }) };
   struct t8_adapt_data adapt_data = { num_spheres, radius_inner, radius_outer, midpoints };
 
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), initial_level, 0, sc_MPI_COMM_WORLD);
@@ -144,7 +142,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
@@ -189,7 +187,7 @@ main (int argc, char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (parsed >= 0 && 0 <= initial_level && radius_inner <= radius_outer && radius_inner >= 0
-           && (eclass_int > 1 || eclass_int < 8 || eclass_int == 0)) {
+           && ((eclass_int > 1 && eclass_int < 8) || eclass_int == 0)) {
     t8_construct_spheres (initial_level, radius_inner, radius_outer, (t8_eclass_t) eclass_int, vtuname);
   }
   else {
@@ -206,5 +204,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-T8_EXTERN_C_END ();

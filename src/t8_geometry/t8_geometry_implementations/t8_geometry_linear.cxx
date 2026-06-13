@@ -20,11 +20,17 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_geometry_linear.cxx
+ * Implements functions declared in \ref t8_geometry_linear.hxx
+ *  or the C interface \ref t8_geometry_linear.h.
+ */
+
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_helpers.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
+#include <t8_types/t8_vec.h>
 
 t8_geometry_linear::t8_geometry_linear (): t8_geometry_with_vertices ("t8_geom_linear")
 {
@@ -49,52 +55,6 @@ t8_geometry_linear::t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh
 {
   SC_ABORT ("Not implemented.");
 }
-
-#if T8_ENABLE_DEBUG
-/* Test whether four given points in 3D are coplanar up to a given tolerance.
- */
-static int
-t8_four_points_coplanar (const t8_3D_vec p_0, const t8_3D_vec p_1, const t8_3D_vec p_2, const t8_3D_vec p_3,
-                         const double tolerance)
-{
-  /* Let p0, p1, p2, p3 be the four points.
-   * The four points are coplanar if the normal vectors to the triangles
-   * p0, p1, p2 and p0, p2, p3 are pointing in the same direction.
-   *
-   * We build the vectors A = p1 - p0, B = p2 - p0 and C = p3 - p0.
-   * The normal vectors to the triangles are n1 = A x B and n2 = A x C.
-   * These are pointing in the same direction if their cross product is 0.
-   * Hence we check if || n1 x n2 || < tolerance. */
-
-  /* A = p1 - p0 */
-  t8_3D_vec A;
-  t8_axpyz (p_0, p_1, A, -1);
-
-  /* B = p2 - p0 */
-  t8_3D_vec B;
-  t8_axpyz (p_0, p_2, B, -1);
-
-  /* C = p3 - p0 */
-  t8_3D_vec C;
-  t8_axpyz (p_0, p_3, C, -1);
-
-  /* n1 = A x B */
-  t8_3D_vec A_cross_B;
-  t8_cross_3D (A, B, A_cross_B);
-
-  /* n2 = A x C */
-  t8_3D_vec A_cross_C;
-  t8_cross_3D (A, C, A_cross_C);
-
-  /* n1 x n2 */
-  t8_3D_vec n1_cross_n2;
-  t8_cross_3D (A_cross_B, A_cross_C, n1_cross_n2);
-
-  /* || n1 x n2 || */
-  const double norm = t8_norm (n1_cross_n2);
-  return norm < tolerance;
-}
-#endif
 
 void
 t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_locidx_t ltreeid,
@@ -241,6 +201,34 @@ t8_geometry_linear::t8_geom_point_batch_inside_element (t8_forest_t forest, t8_l
   }
 }
 
+inline bool
+t8_geometry_linear::get_tree_bounding_box ([[maybe_unused]] const t8_cmesh_t cmesh, double bounds[6]) const
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (active_tree_vertices != NULL);
+  /* For linear geometry the bounding box is determined by the minimum/maximum occurring
+   * vertex coordinates. */
+  /* Set bounds to the first vertex */
+  bounds[0] = active_tree_vertices[0];
+  bounds[1] = active_tree_vertices[0];
+  bounds[2] = active_tree_vertices[1];
+  bounds[3] = active_tree_vertices[1];
+  bounds[4] = active_tree_vertices[2];
+  bounds[5] = active_tree_vertices[2];
+  const int num_vertices = t8_eclass_num_vertices[active_tree_class];
+  T8_ASSERT (num_vertices > 0);
+  /* iterate over all vertices in the tree and update bounds */
+  for (int ivertex = 1; ivertex < num_vertices; ++ivertex) {
+    bounds[0] = std::min (bounds[0], active_tree_vertices[3 * ivertex]);
+    bounds[1] = std::max (bounds[1], active_tree_vertices[3 * ivertex]);
+    bounds[2] = std::min (bounds[2], active_tree_vertices[3 * ivertex + 1]);
+    bounds[3] = std::max (bounds[3], active_tree_vertices[3 * ivertex + 1]);
+    bounds[4] = std::min (bounds[4], active_tree_vertices[3 * ivertex + 2]);
+    bounds[5] = std::max (bounds[5], active_tree_vertices[3 * ivertex + 2]);
+  }
+  return true;
+}
+
 T8_EXTERN_C_BEGIN ();
 
 /* Satisfy the C interface from t8_geometry_linear.h.
@@ -259,7 +247,7 @@ t8_geometry_linear_destroy (t8_geometry_c **geom)
   T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_LINEAR);
 
   delete *geom;
-  *geom = NULL;
+  *geom = nullptr;
 }
 
 T8_EXTERN_C_END ();

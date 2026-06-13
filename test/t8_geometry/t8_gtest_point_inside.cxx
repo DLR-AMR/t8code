@@ -23,8 +23,8 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_memory_macros.hxx>
 #include <sc_functions.h>
-#include <t8_eclass.h>
-#include <t8_cmesh.hxx>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -117,7 +117,8 @@ TEST (t8_point_inside, test_point_inside_specific_quad)
   t8_forest_unref (&forest);
 }
 
-class geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass, int, int>> {
+struct geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass, int, int>>
+{
  protected:
   void
   SetUp () override
@@ -342,7 +343,7 @@ auto print_test = [] (const testing::TestParamInfo<std::tuple<t8_eclass, int, in
   return name;
 };
 
-#if T8CODE_TEST_LEVEL >= 2
+#if T8_TEST_LEVEL_INT >= 2
 INSTANTIATE_TEST_SUITE_P (t8_gtest_point_inside, geometry_point_inside,
                           testing::Combine (testing::Range (T8_ECLASS_LINE, T8_ECLASS_QUAD), testing::Range (0, 4),
                                             testing::Range (0, 2)),

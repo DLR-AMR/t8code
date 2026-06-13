@@ -9,7 +9,7 @@
 #include "t8_mra/data/levelindex_set.hxx"
 #include "t8_mra/num/dg_basis.hxx"
 #include "t8_mra/num/mat.hxx"
-#include "t8_cmesh.h"
+#include "t8_cmesh/t8_cmesh.h"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
 
