@@ -244,7 +244,7 @@ example_bottom_up ()
 
   constexpr int U = 1;
   constexpr int P = 3;
-  const int max_level = 13;
+  const int max_level = 7;
   const double c_thresh = 1.0;
 
   t8_mra::multiscale<T8_ECLASS_TRIANGLE, U, P> mra (max_level, sc_MPI_COMM_WORLD);
