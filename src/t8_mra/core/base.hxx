@@ -20,12 +20,7 @@
 namespace t8_mra
 {
 
-/**
- * @brief Forward declaration of multiscale_data
- *
- * Stores mask coefficients for MST operations.
- * Should be specialized for each element type.
- */
+/// Per-shape mask coefficients for the MST.
 template <t8_eclass TShape>
 struct multiscale_data
 {
@@ -34,32 +29,17 @@ struct multiscale_data
   std::vector<t8_mra::mat> inverse_mask_coefficients;
 };
 
-/**
- * @brief Forward declaration of multiscale (primary template)
- *
- * This is the primary template that will be specialized for
- * different element types (triangle, quad, etc.)
- */
+/// Primary template; specialized per shape in shapes/.
 template <t8_eclass TShape, int U, int P>
 class multiscale;
 
 /**
- * @brief Multiscale analysis base class
+ * @brief Common MRA functionality for all element shapes: the multiscale
+ * transformations, thresholding, projection, and forest/data management.
+ * Shape-specific behaviour is supplied by the derived multiscale<> via
+ * virtual hooks (local_detail_norm, post_adaptation_hook) and project_impl.
  *
- * This class template provides a complete MRA implementation that works
- * for both triangular and cartesian elements. It contains all common
- * functionality including:
- *   - Multiscale transformations (forward/inverse)
- *   - Thresholding and adaptation
- *   - Forest management
- *   - Data structure management
- *
- * Element-specific behavior is controlled via policy classes and
- * virtual functions that can be overridden in derived classes.
- *
- * @tparam TShape Element shape (T8_ECLASS_TRIANGLE, T8_ECLASS_QUAD, etc.)
- * @tparam U Number of solution components
- * @tparam P Polynomial order (number of nodes per direction)
+ * @tparam TShape element shape, @tparam U solution components, @tparam P order
  */
 template <t8_eclass TShape, unsigned short U, unsigned short P>
 class multiscale_base: public multiscale_data<TShape> {

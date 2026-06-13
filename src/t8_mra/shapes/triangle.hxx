@@ -111,12 +111,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   project_impl (std::span<double> dg_coeffs, int tree_idx, const t8_element_t *element,
                 const std::array<int, 3> &point_order, Func &&func)
   {
-    // ONE-TO-ONE implementation of old t8_mra.hpp::project()
-    // Takes point_order as parameter (already computed in initialize_data)
-
-    // Get triangle vertices from t8code and reorder them
-    // OLD IMPLEMENTATION: vertices[order[i]] = t8code_vertex[i]
-    // This stores t8code vertex i at position order[i] in the array
+    // Reorder t8code vertices into reference order: t8code vertex i goes to
+    // position point_order[i].
     double vertices[3][3];
     for (auto i = 0; i < 3; ++i)
       t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[point_order[i]]);
