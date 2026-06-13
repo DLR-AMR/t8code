@@ -294,26 +294,11 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
   std::array<double, DOF>
   basis_value (const std::vector<double> &x_ref)
   {
-    std::array<double, DOF> res;
+    std::array<double, DIM> x;
+    for (unsigned int d = 0; d < DIM; ++d)
+      x[d] = x_ref[d];
 
-    if constexpr (is_cartesian<Shape>) {
-      // Cartesian elements: use tensor product of Legendre polynomials
-      std::array<double, DIM> x_array;
-      for (unsigned int d = 0; d < DIM; ++d) {
-        x_array[d] = x_ref[d];
-      }
-
-      for (auto i = 0u; i < DOF; ++i) {
-        res[i] = eval_tensor_basis<DIM> (x_array, i, pset, phi_1d);
-      }
-    }
-    else if constexpr (Shape == T8_ECLASS_TRIANGLE) {
-      // Triangle elements: use existing scaling functions
-      for (auto i = 0u; i < DOF; ++i)
-        res[i] = t8_mra::scaling_function (i, x_ref[0], x_ref[1]);
-    }
-
-    return res;
+    return eval_basis<Shape, P_DIM, DOF> (x);
   }
 
   /**

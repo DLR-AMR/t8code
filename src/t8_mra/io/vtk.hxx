@@ -13,6 +13,7 @@
 #include "t8.h"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
+#include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/data/element_data.hxx"
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/legendre_basis.hxx"
@@ -261,93 +262,6 @@ write_vtk_master (const char *prefix, int mpisize, int u_dim)
   }
   file << "  </PUnstructuredGrid>\n";
   file << "</VTKFile>\n";
-}
-
-/**
- * @brief Evaluate Legendre basis at given reference point for triangle
- *
- * IMPORTANT: ref_point contains (xi, eta) but scaling_function expects barycentric coords (λ0, λ1)
- * Conversion: λ0 = 1 - xi - eta, λ1 = xi
- */
-template <int P_DIM, int DOF>
-static std::array<double, DOF>
-eval_legendre_basis_triangle (const std::array<double, 2> &ref_point)
-{
-  std::array<double, DOF> basis_vals = {};
-
-  // Convert from reference coords (xi, eta) to barycentric coords (λ0, λ1)
-  // Reference: xi = λ1, eta = λ2, so λ0 = 1 - xi - eta
-  const double lambda0 = 1.0 - ref_point[0] - ref_point[1];
-  const double lambda1 = ref_point[0];
-
-  // Use existing scaling_function for triangle basis (expects barycentric coords)
-  for (size_t i = 0; i < DOF; ++i) {
-    basis_vals[i] = t8_mra::scaling_function (i, lambda0, lambda1);
-  }
-
-  return basis_vals;
-}
-
-/**
- * @brief Evaluate Legendre basis at given reference point for line
- */
-template <int P_DIM, int DOF>
-static std::array<double, DOF>
-eval_legendre_basis_line (const std::array<double, 1> &ref_point)
-{
-  std::array<double, DOF> basis_vals = {};
-
-  // 1D Legendre polynomials
-  for (size_t i = 0; i < DOF; ++i) {
-    basis_vals[i] = t8_mra::phi_1d (ref_point[0], i);
-  }
-
-  return basis_vals;
-}
-
-/**
- * @brief Evaluate Legendre basis at given reference point for quad
- */
-template <int P_DIM, int DOF>
-static std::array<double, DOF>
-eval_legendre_basis_quad (const std::array<double, 2> &ref_point)
-{
-  std::array<double, DOF> basis_vals = {};
-
-  // Tensor product of 1D Legendre polynomials
-  int idx = 0;
-  for (int j = 0; j < P_DIM; ++j) {
-    for (int i = 0; i < P_DIM; ++i) {
-      const double val = t8_mra::phi_1d (ref_point[0], i) * t8_mra::phi_1d (ref_point[1], j);
-      basis_vals[idx++] = val;
-    }
-  }
-
-  return basis_vals;
-}
-
-/**
- * @brief Evaluate Legendre basis at given reference point for hex
- */
-template <int P_DIM, int DOF>
-static std::array<double, DOF>
-eval_legendre_basis_hex (const std::array<double, 3> &ref_point)
-{
-  std::array<double, DOF> basis_vals = {};
-
-  // Tensor product of 1D Legendre polynomials (3D)
-  int idx = 0;
-  for (int k = 0; k < P_DIM; ++k) {
-    for (int j = 0; j < P_DIM; ++j) {
-      for (int i = 0; i < P_DIM; ++i) {
-        const double val
-          = t8_mra::phi_1d (ref_point[0], i) * t8_mra::phi_1d (ref_point[1], j) * t8_mra::phi_1d (ref_point[2], k);
-        basis_vals[idx++] = val;
-      }
-    }
-  }
-
-  return basis_vals;
 }
 
 /**
@@ -657,7 +571,7 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
         if constexpr (TShape == T8_ECLASS_LINE) {
           const auto lagrange_nodes = get_line_lagrange_nodes (lagrange_order);
           for (const auto &ref_node : lagrange_nodes) {
-            const auto basis_vals = eval_legendre_basis_line<P_DIM, DOF> (ref_node);
+            const auto basis_vals = eval_basis<T8_ECLASS_LINE, P_DIM, DOF> (ref_node);
             double u_val = 0.0;
             for (int i = 0; i < DOF; ++i)
               u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;
@@ -667,7 +581,9 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
         else if constexpr (TShape == T8_ECLASS_TRIANGLE) {
           const auto lagrange_nodes = get_triangle_lagrange_nodes (lagrange_order);
           for (const auto &ref_node : lagrange_nodes) {
-            const auto basis_vals = eval_legendre_basis_triangle<P_DIM, DOF> (ref_node);
+            // scaling_function expects barycentric coords (lambda0, lambda1)
+            const std::array<double, 2> bary = { 1.0 - ref_node[0] - ref_node[1], ref_node[0] };
+            const auto basis_vals = eval_basis<T8_ECLASS_TRIANGLE, P_DIM, DOF> (bary);
             double u_val = 0.0;
             for (int i = 0; i < DOF; ++i)
               u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;
@@ -677,7 +593,7 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
         else if constexpr (TShape == T8_ECLASS_QUAD) {
           const auto lagrange_nodes = get_quad_lagrange_nodes (lagrange_order);
           for (const auto &ref_node : lagrange_nodes) {
-            const auto basis_vals = eval_legendre_basis_quad<P_DIM, DOF> (ref_node);
+            const auto basis_vals = eval_basis<T8_ECLASS_QUAD, P_DIM, DOF> (ref_node);
             double u_val = 0.0;
             for (int i = 0; i < DOF; ++i)
               u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;
@@ -687,7 +603,7 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
         else if constexpr (TShape == T8_ECLASS_HEX) {
           const auto lagrange_nodes = get_hex_lagrange_nodes (lagrange_order);
           for (const auto &ref_node : lagrange_nodes) {
-            const auto basis_vals = eval_legendre_basis_hex<P_DIM, DOF> (ref_node);
+            const auto basis_vals = eval_basis<T8_ECLASS_HEX, P_DIM, DOF> (ref_node);
             double u_val = 0.0;
             for (int i = 0; i < DOF; ++i)
               u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;

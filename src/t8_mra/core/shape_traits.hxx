@@ -4,6 +4,9 @@
 
 #include <t8_eclass/t8_eclass.h>
 
+#include "t8_mra/num/basis_functions.hxx"
+#include "t8_mra/num/legendre_basis.hxx"
+
 #include <array>
 #include <cstddef>
 
@@ -110,6 +113,41 @@ struct shape_traits<T8_ECLASS_HEX>
     return P * P * P;
   }
 };
+
+/**
+ * @brief Evaluate all DOF basis functions at a reference point.
+ *
+ * Cartesian shapes: tensor product of 1D Legendre polynomials phi_1d, basis
+ * index decomposed lexicographically (first coordinate fastest). Triangle:
+ * the orthonormal Dubiner basis (scaling_function) in barycentric coords
+ * (x = {lambda0, lambda1}). The single evaluator shared by projection
+ * (dg_basis) and VTK output.
+ */
+template <t8_eclass TShape, int P, int DOF>
+inline std::array<double, DOF>
+eval_basis (const std::array<double, shape_traits<TShape>::DIM> &x)
+{
+  std::array<double, DOF> res = {};
+
+  if constexpr (is_cartesian<TShape>) {
+    constexpr int DIM = shape_traits<TShape>::DIM;
+    for (int p = 0; p < DOF; ++p) {
+      double v = 1.0;
+      int idx = p;
+      for (int d = 0; d < DIM; ++d) {
+        v *= phi_1d (x[d], idx % P);
+        idx /= P;
+      }
+      res[p] = v;
+    }
+  }
+  else {
+    for (int i = 0; i < DOF; ++i)
+      res[i] = scaling_function (i, x[0], x[1]);
+  }
+
+  return res;
+}
 
 }  // namespace t8_mra
 
