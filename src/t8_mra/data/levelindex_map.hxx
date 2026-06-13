@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <optional>
 
 #ifdef T8_ENABLE_MRA
 
@@ -113,26 +112,16 @@ class levelindex_map {
   end (unsigned int level) const;
 
   /**
-   * @brief Returns data for a given (level, multiindex)
+   * @brief Pointer to the data for an lmi, or nullptr if absent.
    *
-   * @param level Refinement level
-   * @param key Multiindex
-   *
-   * @return If (level, multiindex) exists return given data otherwise
-   * std::nullopt
+   * Combines existence check and access in one lookup; the non-const overload
+   * allows in-place mutation. Prefer over contains + get when the value is
+   * used.
    */
-  std::optional<T>
-  find (unsigned int level, size_t key) const;
+  T *
+  find (const TLmi &lmi);
 
-  /**
-   * @brief Returns data for a given levelmultiindex
-   *
-   * @param lmi levelmultiindex
-   *
-   * @return If lmi exists return given data otherwise
-   * std::nullopt
-   */
-  std::optional<T>
+  const T *
   find (const TLmi &lmi) const;
 
   /**
@@ -303,26 +292,25 @@ levelindex_map<TLmi, T>::end (unsigned int level) const
 }
 
 template <lmi_type TLmi, typename T>
-std::optional<T>
-levelindex_map<TLmi, T>::find (unsigned int level, size_t key) const
+T *
+levelindex_map<TLmi, T>::find (const TLmi &lmi)
 {
-  check_level (level);
+  check_level (lmi.level ());
 
-  TLmi lmi;
-  lmi.index = key;
-  const auto search = level_map[level].find (lmi);
-
-  if (search != level_map[level].end ())
-    return search->second;
-
-  return std::nullopt;
+  auto &m = level_map[lmi.level ()];
+  const auto it = m.find (lmi);
+  return it == m.end () ? nullptr : &it->second;
 }
 
 template <lmi_type TLmi, typename T>
-std::optional<T>
+const T *
 levelindex_map<TLmi, T>::find (const TLmi &lmi) const
 {
-  return find (lmi.level (), lmi.index);
+  check_level (lmi.level ());
+
+  const auto &m = level_map[lmi.level ()];
+  const auto it = m.find (lmi);
+  return it == m.end () ? nullptr : &it->second;
 }
 
 template <lmi_type TLmi, typename T>

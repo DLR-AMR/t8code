@@ -266,13 +266,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
         const auto *elem = t8_forest_get_leaf_element_in_tree (Base::forest, tree_idx, elem_idx);
         const auto lmi = t8_mra::get_lmi_from_forest_data<element_t> (forest_data, elem_offset + elem_idx);
 
-        if (forest_data->lmi_map->contains (lmi)) {
-          std::array<int, 3> correct_order;
-          t8_mra::triangle_order::get_point_order_at_level (base_element, elem, forest_scheme, correct_order);
-
-          auto &elem_data = forest_data->lmi_map->get (lmi);
-          elem_data.order = correct_order;
-        }
+        if (auto *elem_data = forest_data->lmi_map->find (lmi))
+          t8_mra::triangle_order::get_point_order_at_level (base_element, elem, forest_scheme, elem_data->order);
       }
       elem_offset += num_elems;
     }

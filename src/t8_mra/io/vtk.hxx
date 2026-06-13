@@ -450,9 +450,8 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
       }
       else if constexpr (TShape == T8_ECLASS_TRIANGLE) {
         // Apply triangle vertex ordering from element data
-        if (lmi_map->contains (lmi)) {
-          const auto &elem_data = lmi_map->get (lmi);
-          const auto &point_order = elem_data.order;
+        if (const auto *elem_data = lmi_map->find (lmi)) {
+          const auto &point_order = elem_data->order;
 
           // Apply permutation: t8code vertex v goes to position order[v]
           for (int v = 0; v < 3; ++v) {
@@ -634,15 +633,15 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
         // Get LMI for this element
         const auto lmi = typename MRA::levelmultiindex (base_tree, element, scheme);
 
-        if (!lmi_map->contains (lmi)) {
+        const auto *data = lmi_map->find (lmi);
+        if (!data) {
           // Element not in map, output zeros
           for (int i = 0; i < num_nodes_per_elem; ++i)
             file << "          0.0\n";
           continue;
         }
 
-        const auto &data = lmi_map->get (lmi);
-        const auto &u_coeffs = data.u_coeffs;
+        const auto &u_coeffs = data->u_coeffs;
 
         // Get element volume for scaling factor (element-specific)
         const auto volume = t8_forest_element_volume (forest, tree_idx, element);
