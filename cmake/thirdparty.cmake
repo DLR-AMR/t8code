@@ -72,6 +72,22 @@ foreach(INDEX RANGE ${DEPS_RANGE})
         message(WARNING "Unknown thirdparty library type '${DEP_TYPE}' for ${DEP_NAME}")
     endif()
 
-    # 3. Populate the thirdparty library
-    FetchContent_MakeAvailable(${DEP_NAME})
+    # 3. Populate the thirdparty library.
+    # Build googletest statically even when t8code is a shared library: a shared
+    # libgtest.so collides at load time with a system libgtest.so of the same
+    # soname but different symbols (e.g. the DLR-SC MPI fork), causing runtime
+    # "undefined symbol" errors. A static gtest is baked into each test binary.
+    if(DEP_NAME STREQUAL "googletest")
+        set(_t8_saved_build_shared "${BUILD_SHARED_LIBS}")
+        set(_t8_saved_pic "${CMAKE_POSITION_INDEPENDENT_CODE}")
+        set(BUILD_SHARED_LIBS OFF)
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+        FetchContent_MakeAvailable(${DEP_NAME})
+        set(BUILD_SHARED_LIBS "${_t8_saved_build_shared}")
+        set(CMAKE_POSITION_INDEPENDENT_CODE "${_t8_saved_pic}")
+        unset(_t8_saved_build_shared)
+        unset(_t8_saved_pic)
+    else()
+        FetchContent_MakeAvailable(${DEP_NAME})
+    endif()
 endforeach()
