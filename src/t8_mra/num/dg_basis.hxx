@@ -7,6 +7,7 @@
 #include <type_traits>
 
 #include "t8_eclass/t8_eclass.h"
+#include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/num/basis_functions.hxx"
 #include "t8_mra/num/dunavant.hxx"
 #include "t8_mra/num/mat.hxx"
@@ -17,9 +18,6 @@
 
 namespace t8_mra
 {
-
-template <t8_eclass TShape>
-concept is_cartesian = (TShape == T8_ECLASS_LINE || TShape == T8_ECLASS_QUAD || TShape == T8_ECLASS_HEX);
 
 template <t8_eclass TShape, typename = void>
 struct dg_basis_base

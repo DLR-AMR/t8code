@@ -56,7 +56,7 @@ struct Config
   static constexpr t8_eclass Shape = TShape;
   static constexpr int U = U_;
   static constexpr int P = P_;
-  static constexpr int DIM = t8_mra::t8_eclass_dim<TShape> ();
+  static constexpr int DIM = t8_mra::shape_traits<TShape>::DIM;
 };
 
 /* Smooth test function for the MST round-trip; components differ to catch
