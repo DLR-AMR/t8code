@@ -137,15 +137,21 @@ struct mst_scaling_policy<T8_ECLASS_TRIANGLE>
 };
 
 /**
- * @brief Multiscale transformation (MST) operations
+ * @brief Multiscale transformation (MST) operations.
  *
- * This class template provides forward and inverse multiscale
- * transformations that work for both triangular and cartesian elements.
- * Element-specific behavior is controlled via policy classes.
+ * The two-scale relation between a family of children and its parent is the
+ * core of the method. Three operations build on it:
+ *   - multiscale_transformation: forward analysis (parent + details into
+ *     d_map), non-destructive. coarsen/refine run this to get the details
+ *     their criteria act on.
+ *   - inverse_multiscale_transformation: reconstruction (coarse + details ->
+ *     children). refinement's realization step.
+ *   - multiscale_decomposition: full destructive forward collapse to the
+ *     coarsest level (single-scale -> multiscale representation).
+ * two_scale_family is the per-family kernel they all share.
  *
- * @tparam TElement Element type (element_data<TShape, U, P>)
- * @tparam ordering_policy_t Policy for vertex ordering (default: ordering_policy<TElement::Shape>)
- * @tparam scaling_policy_t Policy for scaling factors (default: mst_scaling_policy<TElement::Shape>)
+ * Works for triangular and cartesian elements; element-specific behaviour is
+ * routed through the ordering and scaling policies.
  */
 template <typename TElement, typename ordering_policy_t = ordering_policy<TElement::Shape>,
           typename scaling_policy_t = mst_scaling_policy<TElement::Shape>>
@@ -172,7 +178,7 @@ class mst
    * @param mask_coefficients Mask coefficient matrices M[k]
    */
   static void
-  transform_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
+  two_scale_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
                     element_t &data_on_coarse, const std::vector<t8_mra::mat> &mask_coefficients)
   {
     const double scaling_factor = scaling_policy_t::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
@@ -208,25 +214,19 @@ class mst
   }
 
   /**
-   * @brief Compute detail coefficients for leaf families without modifying the grid data
+   * @brief Forward multiscale transformation (analysis), non-destructive.
    *
-   * For every complete family whose children are present in lmi_map at levels
-   * (l_min, l_max], the parent element (u_coeffs + details) is computed and
-   * stored in d_map at the parent level. lmi_map stays untouched, so the
-   * single-scale leaf representation remains valid.
-   *
-   * Used for refinement: details are needed for thresholding / Harten's
-   * prediction, but the grid keeps its leaves.
-   *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
-   * @param lmi_map Map from levelmultiindex to element data (read-only here)
-   * @param d_map Detail coefficient storage (output)
-   * @param mask_coefficients Mask coefficient matrices M[k]
+   * For every complete family in (l_min, l_max] computes the parent
+   * (u_coeffs + details) via the two-scale relation and stores it in d_map;
+   * lmi_map keeps its single-scale leaves. This is the decomposition step
+   * coarsen and refine run to obtain the details their criteria act on. The
+   * destructive full collapse is multiscale_decomposition.
    */
   static void
-  leaf_details (unsigned int l_min, unsigned int l_max, levelindex_map<levelmultiindex, element_t> *lmi_map,
-                levelindex_map<levelmultiindex, element_t> &d_map, const std::vector<t8_mra::mat> &mask_coefficients)
+  multiscale_transformation (unsigned int l_min, unsigned int l_max,
+                            levelindex_map<levelmultiindex, element_t> *lmi_map,
+                            levelindex_map<levelmultiindex, element_t> &d_map,
+                            const std::vector<t8_mra::mat> &mask_coefficients)
   {
     index_set I_set;
     element_t data_on_coarse;
@@ -249,7 +249,7 @@ class mst
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
           data_on_siblings[k] = lmi_map->get (siblings_lmi[k]);
 
-        transform_family (data_on_siblings, data_on_coarse, mask_coefficients);
+        two_scale_family (data_on_siblings, data_on_coarse, mask_coefficients);
         d_map.insert (lmi, data_on_coarse);
       }
 
@@ -258,23 +258,20 @@ class mst
   }
 
   /**
-   * @brief Forward multiscale transformation (restriction: fine -> coarse)
+   * @brief Full forward multiscale transformation (restriction), destructive.
    *
-   * Computes parent coefficients and detail coefficients:
-   *   u_parent[i] = scaling * Σ_k Σ_j u_child[k][j] * M[k](j,i)
-   *   d[k][i] = u_child[k][i] - Σ_j M[k](i,j) * u_parent[j]
-   *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
-   * @param lmi_map Map from levelmultiindex to element data
-   * @param d_map Detail coefficient storage
-   * @param mask_coefficients Mask coefficient matrices M[k]
+   * Collapses the single-scale representation down to l_min: each complete
+   * family is replaced by its parent in lmi_map (children erased) and its
+   * details go to d_map. The single-scale leaves below l_min are gone; the
+   * data now lives as (coarsest scaling coeffs + details). Inverted exactly by
+   * inverse_multiscale_transformation. Used by the MST round-trip test; the
+   * non-destructive analysis used during adaptation is multiscale_transformation.
    */
   static void
-  forward_transformation (unsigned int l_min, unsigned int l_max,
-                          levelindex_map<levelmultiindex, element_t> *lmi_map,
-                          levelindex_map<levelmultiindex, element_t> &d_map,
-                          const std::vector<t8_mra::mat> &mask_coefficients)
+  multiscale_decomposition (unsigned int l_min, unsigned int l_max,
+                            levelindex_map<levelmultiindex, element_t> *lmi_map,
+                            levelindex_map<levelmultiindex, element_t> &d_map,
+                            const std::vector<t8_mra::mat> &mask_coefficients)
   {
     index_set I_set;
     element_t data_on_coarse;
@@ -303,7 +300,7 @@ class mst
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
           data_on_siblings[k] = lmi_map->get (siblings_lmi[k]);
 
-        transform_family (data_on_siblings, data_on_coarse, mask_coefficients);
+        two_scale_family (data_on_siblings, data_on_coarse, mask_coefficients);
 
         lmi_map->insert (lmi, data_on_coarse);
         // insert (assignment) rather than emplace: a stale entry under this
@@ -333,10 +330,10 @@ class mst
    * @param mask_coefficients Mask coefficient matrices M[k]
    */
   static void
-  inverse_transformation (unsigned int l_min, unsigned int l_max,
-                          levelindex_map<levelmultiindex, element_t> *lmi_map,
-                          levelindex_map<levelmultiindex, element_t> &d_map,
-                          const std::vector<t8_mra::mat> &mask_coefficients)
+  inverse_multiscale_transformation (unsigned int l_min, unsigned int l_max,
+                                    levelindex_map<levelmultiindex, element_t> *lmi_map,
+                                    levelindex_map<levelmultiindex, element_t> &d_map,
+                                    const std::vector<t8_mra::mat> &mask_coefficients)
   {
     element_t new_data;
     const double inv_scaling_factor = scaling_policy_t::inverse_scaling_factor ();

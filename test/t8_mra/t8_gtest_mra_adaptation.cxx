@@ -244,7 +244,7 @@ TYPED_TEST (mra_adaptation, mst_roundtrip)
 
   const auto snapshot = *mra.get_lmi_map ();
 
-  mra.multiscale_transformation (0, max_level);
+  mra.multiscale_decomposition (0, max_level);
   /* All single-scale data restricted to level 0 */
   EXPECT_EQ (mra.get_lmi_map ()->size (), mra.get_lmi_map ()->size (0));
 

@@ -240,7 +240,7 @@ class multiscale_adaptation {
    *
    * Analysis phase, a map-side cascade to the fixpoint (forest untouched):
    *   1. Compute details of all complete leaf families with parents in
-   *      [min_level, max_level) via the non-destructive two-scale transform.
+   *      [min_level, max_level) via the non-destructive multiscale transformation.
    *   2. The children of a non-significant family are marked; the parent
    *      takes its data straight from the analysis and the children leave
    *      lmi_map. Significant families are never touched — no
@@ -268,19 +268,21 @@ class multiscale_adaptation {
     // Outer fixpoint: each pass coarsens every family that is complete on its
     // rank (the inner cascade peels multiple levels map-side), then adapts and
     // repartitions. The repartition is coarsening-aligned (set_for_coarsening),
-    // so a family split across a rank seam — which compute_leaf_details skips as
+    // so a family split across a rank seam — which multiscale_transformation skips as
     // incomplete — becomes whole on the next pass and finally coarsens. Repeat
     // until no rank marks anything. Serial / power-of-2 ranks have no split
     // families, so this is one real adapt plus a cheap empty pass.
     for (auto pass = 0;; ++pass) {
       clear_multiscale_state ();
+
       auto num_marked = 0u;
       // Re-fetch each pass: adapt_forest/repartition delete and replace lmi_map.
       auto *lmi_map = derived ().get_lmi_map ();
 
       for (auto round = 0; round < max_level - min_level; ++round) {
         derived ().d_map.erase_all ();
-        derived ().compute_leaf_details (min_level, max_level);
+
+        derived ().multiscale_transformation (min_level, max_level);
 
         typename Derived::index_set coarsen_parents;
         for (auto L = min_level; L < max_level; ++L) {
@@ -297,6 +299,7 @@ class multiscale_adaptation {
         t8_debugf ("MRA coarsen pass %d round %d: %zu families marked\n", pass, round, coarsen_parents.size ());
         if (coarsen_parents.empty ())
           break;
+
         num_marked += coarsen_parents.size ();
 
         // Data move on the maps: parent data straight from the analysis, the
@@ -308,8 +311,7 @@ class multiscale_adaptation {
         }
       }
 
-      t8_debugf ("MRA coarsen pass %d: %u families marked, %zu leaves remain\n", pass, num_marked,
-                 lmi_map->size ());
+      t8_debugf ("MRA coarsen pass %d: %u families marked, %zu leaves remain\n", pass, num_marked, lmi_map->size ());
 
       if (global_num_marks (num_marked) == 0)
         break;
@@ -404,8 +406,8 @@ class multiscale_adaptation {
    */
   template <typename RealizedSet>
   unsigned int
-  exchange_pull_up_requests (const std::vector<std::vector<size_t>> &outgoing, int min_level,
-                             unsigned int level_slack, const RealizedSet &realized)
+  exchange_pull_up_requests (const std::vector<std::vector<size_t>> &outgoing, int min_level, unsigned int level_slack,
+                             const RealizedSet &realized)
   {
     using levelmultiindex = typename Derived::levelmultiindex;
 
@@ -606,7 +608,7 @@ class multiscale_adaptation {
     //--------------------------------------------------------------------------
 
     // 1. Details of all complete leaf families; lmi_map stays untouched.
-    derived ().compute_leaf_details (0, max_level);
+    derived ().multiscale_transformation (0, max_level);
 
     // 2. Apply the criterion to every family detail
     auto num_families = 0u;
@@ -885,8 +887,7 @@ class multiscale_adaptation {
         const auto *element = t8_forest_get_leaf_element_in_tree (new_forest, tree_idx, ele_idx);
         const auto lmi = levelmultiindex (gtreeid, element, scheme);
         t8_mra::set_lmi_forest_data (new_user_data, current_idx, lmi);
-        new_user_data->lmi_map->insert (lmi,
-                                        *reinterpret_cast<element_t *> (sc_array_index (data_out, current_idx)));
+        new_user_data->lmi_map->insert (lmi, *reinterpret_cast<element_t *> (sc_array_index (data_out, current_idx)));
       }
     }
     sc_array_destroy (data_out);
@@ -1006,8 +1007,7 @@ class multiscale_adaptation {
 
     // All ranks must normalize identically
     auto v_max_local = v_max;
-    sc_MPI_Allreduce (v_max_local.data (), v_max.data (), Derived::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX,
-                      derived ().comm);
+    sc_MPI_Allreduce (v_max_local.data (), v_max.data (), Derived::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, derived ().comm);
 
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
     auto current_idx = t8_locidx_t { 0 };

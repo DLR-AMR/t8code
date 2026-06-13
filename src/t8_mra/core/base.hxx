@@ -197,50 +197,41 @@ class multiscale_base: public multiscale_data<TShape> {
   //=============================================================================
 
   /**
-   * @brief Forward multiscale transformation (restriction: fine -> coarse)
+   * @brief Forward multiscale transformation (analysis), non-destructive.
    *
-   * Computes parent coefficients and detail coefficients using the
-   * MST implementation.
-   *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
+   * Fills d_map with parent coeffs + details of complete families in
+   * (l_min, l_max]; lmi_map keeps its single-scale leaves. The decomposition
+   * step coarsen and refine run before deciding on details.
    */
   void
   multiscale_transformation (unsigned int l_min, unsigned int l_max)
   {
-    MST::forward_transformation (l_min, l_max, get_lmi_map (), d_map, mask_coefficients);
+    MST::multiscale_transformation (l_min, l_max, get_lmi_map (), d_map, mask_coefficients);
   }
 
   /**
-   * @brief Inverse multiscale transformation (prolongation: coarse -> fine)
+   * @brief Inverse multiscale transformation (reconstruction: coarse -> fine).
    *
-   * Reconstructs children from parent and detail coefficients using the
-   * MST implementation.
-   *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
+   * Reconstructs children from parent + details. Refinement's realization step
+   * (children from zero details = exact subdivision).
    */
   void
   inverse_multiscale_transformation (unsigned int l_min, unsigned int l_max)
   {
-    MST::inverse_transformation (l_min, l_max, get_lmi_map (), d_map, mask_coefficients);
+    MST::inverse_multiscale_transformation (l_min, l_max, get_lmi_map (), d_map, mask_coefficients);
   }
 
   /**
-   * @brief Compute details of leaf families without modifying the grid data
+   * @brief Full forward multiscale transformation (restriction), destructive.
    *
-   * Non-destructive counterpart of multiscale_transformation: fills d_map at
-   * the parent levels of complete leaf families in (l_min, l_max], while
-   * lmi_map keeps the single-scale leaf representation. Basis for the
-   * refinement criterion (thresholding / Harten's prediction on details).
-   *
-   * @param l_min Minimum refinement level
-   * @param l_max Maximum refinement level
+   * Collapses the single-scale representation to l_min (coarsest scaling
+   * coeffs + details). Inverse of inverse_multiscale_transformation; used for
+   * the MST round-trip property.
    */
   void
-  compute_leaf_details (unsigned int l_min, unsigned int l_max)
+  multiscale_decomposition (unsigned int l_min, unsigned int l_max)
   {
-    MST::leaf_details (l_min, l_max, get_lmi_map (), d_map, mask_coefficients);
+    MST::multiscale_decomposition (l_min, l_max, get_lmi_map (), d_map, mask_coefficients);
   }
 
   //=============================================================================
