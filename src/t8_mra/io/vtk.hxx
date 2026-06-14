@@ -515,9 +515,9 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 
         const auto &u_coeffs = data->u_coeffs;
 
-        // Same basis normalization the projection used (see shape_traits::basis_scale).
+        // Same basis normalization the projection used (see shape_traits::basis_normalization).
         const auto volume = t8_forest_element_volume (forest, tree_idx, element);
-        const double scaling = shape_traits<TShape>::basis_scale (volume);
+        const double scaling = shape_traits<TShape>::basis_normalization (volume);
 
         const auto lagrange_nodes = get_lagrange_nodes<TShape> (lagrange_order);
         for (const auto &ref_node : lagrange_nodes) {

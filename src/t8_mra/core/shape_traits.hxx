@@ -55,7 +55,7 @@ struct shape_traits
   }
 
   static double
-  basis_scale (double)
+  basis_normalization (double)
   {
     return 1.0;
   }
@@ -78,7 +78,7 @@ struct shape_traits<T8_ECLASS_LINE>
   // Cartesian Legendre is orthonormal on the reference cell; coefficients are
   // stored in that convention, so evaluation needs no volume normalization.
   static double
-  basis_scale (double)
+  basis_normalization (double)
   {
     return 1.0;
   }
@@ -102,7 +102,7 @@ struct shape_traits<T8_ECLASS_TRIANGLE>
   // the physical-orthonormal basis used for the stored coefficients scales by
   // sqrt(1/(2*vol)). Projection and evaluation must apply the same factor.
   static double
-  basis_scale (double vol)
+  basis_normalization (double vol)
   {
     return std::sqrt (1.0 / (2.0 * vol));
   }
@@ -123,7 +123,7 @@ struct shape_traits<T8_ECLASS_QUAD>
   }
 
   static double
-  basis_scale (double)
+  basis_normalization (double)
   {
     return 1.0;
   }
@@ -144,7 +144,7 @@ struct shape_traits<T8_ECLASS_HEX>
   }
 
   static double
-  basis_scale (double)
+  basis_normalization (double)
   {
     return 1.0;
   }
