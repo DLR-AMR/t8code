@@ -70,51 +70,6 @@ phi_prime_1d (double x, int p)
   return 2.0 * deriv_std * std::sqrt (2.0 * p + 1.0);
 }
 
-/**
- * @brief Evaluates all Legendre basis functions up to order p_max at point x
- *
- * @param x Point in [0,1] where to evaluate
- * @param p_max Maximum polynomial degree
- * @param values Output array of size (p_max + 1) to store the values
- */
-inline void
-phi_1d_array (double x, int p_max, double *values)
-{
-  // Transform x from [0,1] to [-1,1]
-  const auto x_std = 2.0 * x - 1.0;
-
-  // Compute all Legendre polynomials up to p_max
-  std::vector<double> leg_array (p_max + 1);
-  gsl_sf_legendre_Pl_array (p_max, x_std, leg_array.data ());
-
-  // Apply L2-normalization for [0,1] interval to each polynomial
-  for (int p = 0; p <= p_max; ++p)
-    values[p] = leg_array[p] * std::sqrt (2.0 * p + 1.0);
-}
-
-/**
- * @brief Evaluates derivatives of all Legendre basis functions up to order p_max at point x
- *
- * @param x Point in [0,1] where to evaluate
- * @param p_max Maximum polynomial degree
- * @param derivs Output array of size (p_max + 1) to store the derivatives
- */
-inline void
-phi_prime_1d_array (double x, int p_max, double *derivs)
-{
-  // Transform x from [0,1] to [-1,1]
-  const auto x_std = 2.0 * x - 1.0;
-
-  // Compute all Legendre polynomials and derivatives up to p_max
-  std::vector<double> leg_array (p_max + 1);
-  std::vector<double> deriv_array (p_max + 1);
-  gsl_sf_legendre_Pl_deriv_array (p_max, x_std, leg_array.data (), deriv_array.data ());
-
-  // Apply chain rule and L2-normalization for [0,1] interval to each derivative
-  for (int p = 0; p <= p_max; ++p)
-    derivs[p] = 2.0 * deriv_array[p] * std::sqrt (2.0 * p + 1.0);
-}
-
 }  // namespace t8_mra
 
 #endif  // T8_ENABLE_MRA
