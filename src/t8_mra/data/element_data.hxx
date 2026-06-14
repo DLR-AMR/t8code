@@ -29,8 +29,6 @@ struct element_data
   // data can be shipped between ranks as raw bytes (repartitioning, ghost
   // exchange) and lives inline in the dense maps.
   std::array<double, U_DIM * DOF> u_coeffs = {};  // Single-scale coefficients
-  /// TODO get rid of details
-  std::array<double, U_DIM * W_DOF> d_coeffs = {};  // Detail coefficients
   double vol = 0.0;
 
   std::array<int, 3> order = {};  // Point order
@@ -39,10 +37,21 @@ struct element_data
   {
     return u * DOF + p;
   }
+};
+
+/// Leaf data plus detail (wavelet) coefficients. Only d_map entries carry
+/// details; the leaves in lmi_map stay lean (no d_coeffs), which keeps the
+/// data shipped between ranks small.
+template <t8_eclass TShape, unsigned short U, unsigned short P>
+struct detail_data: element_data<TShape, U, P>
+{
+  using base = element_data<TShape, U, P>;
+
+  std::array<double, base::U_DIM * base::W_DOF> d_coeffs = {};
 
   size_t static wavelet_idx (size_t k, size_t u, size_t p) noexcept
   {
-    return k * U_DIM * DOF + u * DOF + p;
+    return k * base::U_DIM * base::DOF + u * base::DOF + p;
   }
 };
 
