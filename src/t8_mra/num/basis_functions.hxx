@@ -3,17 +3,10 @@
 
 namespace t8_mra
 {
+/// Orthonormal Dubiner scaling functions on the reference triangle (i in
+/// [0, 10), tabulated up to P=4). tau1, tau2 are barycentric-ish coords.
 double
 scaling_function (int i, double tau1, double tau2);
-
-double
-muttermultiwavelets (int p, int i, double tau1, double tau2, int e);
-
-double
-muttermultiwavelet (int p, int i, double tau1, double tau2);
-
-double
-scaling_function_nextlevel (int i, double tau1, double tau2);
 
 }  // namespace t8_mra
 #endif

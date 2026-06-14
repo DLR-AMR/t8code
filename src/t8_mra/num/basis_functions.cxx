@@ -53,8 +53,9 @@ scaling_function (int i, double tau1, double tau2)
                + (3. / 5.) * tau2 * tau2 * (1. - tau1 - tau2)
                + (3. / 2.) * tau2 * (1. - tau1 - tau2) * (1. - tau1 - tau2)))
            * std::sqrt (14.);
-  default:;
-  };
+  default:
+    return 0.0;  // i out of the tabulated range [0, 10)
+  }
 }
 
 
