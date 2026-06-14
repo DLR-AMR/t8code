@@ -4,11 +4,6 @@
 
 #include <t8_eclass/t8_eclass.h>
 
-#include "t8_mra/num/basis_functions.hxx"
-#include "t8_mra/num/legendre_basis.hxx"
-
-#include <array>
-#include <cmath>
 #include <cstddef>
 
 namespace t8_mra
@@ -17,12 +12,11 @@ namespace t8_mra
 // ============================================================================
 // Adding a new element shape
 // ============================================================================
-// Specialize shape_traits<Shape> below with the shape's compile-time facts
-// (dimension, child count, vertex count, VTK cell type, DOF count) and, for
-// the VTK writer, its reference Lagrange-node layout and basis evaluation
-// (added in shapes that need output). The lmi bit layout lives in
-// lmi_properties (data/levelmultiindex.hxx); projection and mask coefficients
-// live in the per-shape multiscale<> specialization (shapes/).
+// Specialize shape_traits<Shape> below with the shape's compile-time mesh facts
+// (dimension, child count, vertex count, VTK cell type, DOF count). The basis
+// function space lives in basis<Shape, P> (num/basis.hxx); the lmi bit layout
+// in lmi_properties (data/levelmultiindex.hxx); projection and mask
+// coefficients in the per-shape multiscale<> specialization (shapes/).
 
 template <t8_eclass TShape>
 concept is_cartesian = (TShape == T8_ECLASS_LINE || TShape == T8_ECLASS_QUAD || TShape == T8_ECLASS_HEX);
@@ -53,12 +47,6 @@ struct shape_traits
   {
     return 0;
   }
-
-  static double
-  basis_normalization (double)
-  {
-    return 1.0;
-  }
 };
 
 template <>
@@ -73,14 +61,6 @@ struct shape_traits<T8_ECLASS_LINE>
   dof (unsigned short P)
   {
     return P;
-  }
-
-  // Cartesian Legendre is orthonormal on the reference cell; coefficients are
-  // stored in that convention, so evaluation needs no volume normalization.
-  static double
-  basis_normalization (double)
-  {
-    return 1.0;
   }
 };
 
@@ -97,15 +77,6 @@ struct shape_traits<T8_ECLASS_TRIANGLE>
   {
     return binom (DIM + P - 1, DIM);
   }
-
-  // The Dubiner basis is orthonormal on the unit reference triangle (area 1/2);
-  // the physical-orthonormal basis used for the stored coefficients scales by
-  // sqrt(1/(2*vol)). Projection and evaluation must apply the same factor.
-  static double
-  basis_normalization (double vol)
-  {
-    return std::sqrt (1.0 / (2.0 * vol));
-  }
 };
 
 template <>
@@ -120,12 +91,6 @@ struct shape_traits<T8_ECLASS_QUAD>
   dof (unsigned short P)
   {
     return P * P;
-  }
-
-  static double
-  basis_normalization (double)
-  {
-    return 1.0;
   }
 };
 
@@ -142,48 +107,7 @@ struct shape_traits<T8_ECLASS_HEX>
   {
     return P * P * P;
   }
-
-  static double
-  basis_normalization (double)
-  {
-    return 1.0;
-  }
 };
-
-/**
- * @brief Evaluate all DOF basis functions at a reference point.
- *
- * Cartesian shapes: tensor product of 1D Legendre polynomials phi_1d, basis
- * index decomposed lexicographically (first coordinate fastest). Triangle:
- * the orthonormal Dubiner basis (scaling_function) in barycentric coords
- * (x = {lambda0, lambda1}). The single evaluator shared by projection
- * (dg_basis) and VTK output.
- */
-template <t8_eclass TShape, int P, int DOF>
-inline std::array<double, DOF>
-eval_basis (const std::array<double, shape_traits<TShape>::DIM> &x)
-{
-  std::array<double, DOF> res = {};
-
-  if constexpr (is_cartesian<TShape>) {
-    constexpr int DIM = shape_traits<TShape>::DIM;
-    for (int p = 0; p < DOF; ++p) {
-      double v = 1.0;
-      int idx = p;
-      for (int d = 0; d < DIM; ++d) {
-        v *= phi_1d (x[d], idx % P);
-        idx /= P;
-      }
-      res[p] = v;
-    }
-  }
-  else {
-    for (int i = 0; i < DOF; ++i)
-      res[i] = scaling_function (i, x[0], x[1]);
-  }
-
-  return res;
-}
 
 }  // namespace t8_mra
 
