@@ -183,6 +183,7 @@ if( T8CODE_ENABLE_MRA )
     DESTINATION include/t8_mra/num/basis )
 
   install( FILES
+    t8_mra/num/quadrature/quadrature.hxx
     t8_mra/num/quadrature/gauss_legendre.hxx
     t8_mra/num/quadrature/dunavant.hxx
     DESTINATION include/t8_mra/num/quadrature )
