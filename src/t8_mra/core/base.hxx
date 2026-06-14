@@ -404,6 +404,16 @@ class multiscale_base: public multiscale_data<TShape> {
     refinement_set.erase_all ();
     coarsening_set.erase_all ();
     ghost_map.erase_all ();
+
+    if (forest != nullptr) {
+      if (auto *user_data = get_user_data ()) {
+        delete user_data->lmi_map;
+        if (user_data->lmi_idx)
+          sc_array_destroy (user_data->lmi_idx);
+        T8_FREE (user_data);
+      }
+      t8_forest_unref (&forest);
+    }
   }
 };
 

@@ -224,34 +224,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
       [&] (t8_locidx_t tree_idx, const t8_element_t *elem, unsigned int local_idx, t8_gloidx_t) {
         const auto lmi = t8_mra::get_lmi_from_forest_data<element_t> (forest_data, local_idx);
         if (auto *elem_data = forest_data->lmi_map->find (lmi))
-
-  //=============================================================================
-  // Cleanup
-  //=============================================================================
-
-  /**
-   * @brief Clean up forest data structures
-   */
-  void
-  cleanup ()
-  {
-    Base::cleanup ();
-
-    auto *user_data = Base::get_user_data ();
-    if (user_data) {
-      if (user_data->lmi_map) {
-        delete user_data->lmi_map;
-        user_data->lmi_map = nullptr;
-      }
-      if (user_data->lmi_idx) {
-        sc_array_destroy (user_data->lmi_idx);
-        user_data->lmi_idx = nullptr;
-      }
-      T8_FREE (user_data);
-    }
-
-    if (Base::forest != nullptr)
-      t8_forest_unref (&this->forest);
+          t8_mra::triangle_order::get_point_order_at_level (tree_idx, elem, forest_scheme, elem_data->order);
+      });
   }
 };
 

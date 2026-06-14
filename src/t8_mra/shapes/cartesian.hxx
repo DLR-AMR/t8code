@@ -239,33 +239,9 @@ class multiscale<TShape, U, P>:
   initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, Func &&func)
   {
     Base::forest = t8_forest_new_uniform (mesh, scheme, level, 0, Base::comm);
-  //=============================================================================
-  // Cleanup
-  //=============================================================================
-
-  /**
-   * @brief Clean up forest data structures
-   */
-  void
-  cleanup ()
-  {
-    Base::cleanup ();
-
-    auto *user_data = Base::get_user_data ();
-    if (user_data) {
-      if (user_data->lmi_map) {
-        delete user_data->lmi_map;
-        user_data->lmi_map = nullptr;
-      }
-      if (user_data->lmi_idx) {
-        sc_array_destroy (user_data->lmi_idx);
-        user_data->lmi_idx = nullptr;
-      }
-      T8_FREE (user_data);
-    }
-
-    if (Base::forest != nullptr)
-      t8_forest_unref (&this->forest);
+    Base::build_lmi_map (scheme, [&] (int tree_idx, const t8_element_t *element) {
+      return project_leaf (tree_idx, element, func);
+    });
   }
 };
 
