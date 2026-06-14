@@ -330,25 +330,16 @@ class multiscale_base: public multiscale_data<TShape> {
   {
     std::array<double, U_DIM> res = {};
 
-    auto current_idx = 0u;
-    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
-    for (auto tree_idx = 0u; tree_idx < num_local_trees; ++tree_idx) {
-      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
-      for (auto ele_idx = 0u; ele_idx < num_elements; ++ele_idx, ++current_idx) {
-        const auto element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+    for_each_local_leaf ([&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int local_idx, t8_gloidx_t) {
+      const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), local_idx);
+      const auto vol = t8_forest_element_volume (forest, tree_idx, element);
 
-        const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), current_idx);
-        const auto vol = t8_forest_element_volume (forest, tree_idx, element);
-
-        // Compute mean value for each component
-        for (auto u = 0u; u < U_DIM; ++u) {
-          // Mean value is approximately the first DG coefficient (constant mode)
-          // times the scaling function value at the element center
-          const auto mean_val = get_lmi_map ()->get (lmi).u_coeffs[element_t::dg_idx (u, 0)];
-          res[u] += std::abs (mean_val) * vol;
-        }
+      // Mean value ~ first DG coefficient (constant mode) times the cell volume.
+      for (auto u = 0u; u < U_DIM; ++u) {
+        const auto mean_val = get_lmi_map ()->get (lmi).u_coeffs[element_t::dg_idx (u, 0)];
+        res[u] += std::abs (mean_val) * vol;
       }
-    }
+    });
 
     // The scaling is a domain integral (eq. 2.39): sum the per-rank
     // partials so all ranks threshold consistently.

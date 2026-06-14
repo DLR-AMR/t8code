@@ -190,41 +190,14 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    * @param level Uniform refinement level
    * @param func Function to project onto the mesh
    */
+  template <typename Func>
   void
-  initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, auto &&func)
+  initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, Func &&func)
   {
     Base::forest = t8_forest_new_uniform (mesh, scheme, level, 0, Base::comm);
-
-    auto *user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
-
-    T8_ASSERT (t8_forest_is_committed (Base::forest));
-
-    const auto num_local_elements = t8_forest_get_global_num_leaf_elements (Base::forest);
-    const auto num_ghost_elements = t8_forest_get_num_ghosts (Base::forest);
-
-    user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (Base::maximum_level);
-    user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local_elements + num_ghost_elements);
-    user_data->mra_instance = this;
-
-    const auto num_local_trees = t8_forest_get_num_local_trees (Base::forest);
-    auto current_idx = 0u;
-
-    for (auto tree_idx = 0u; tree_idx < num_local_trees; ++tree_idx) {
-      const auto num_elements_in_tree = t8_forest_get_tree_num_leaf_elements (Base::forest, tree_idx);
-      const auto base_element = t8_forest_global_tree_id (Base::forest, tree_idx);
-
-      for (auto ele_idx = 0u; ele_idx < num_elements_in_tree; ++ele_idx, ++current_idx) {
-        const auto *element = t8_forest_get_leaf_element_in_tree (Base::forest, tree_idx, ele_idx);
-        const auto lmi = levelmultiindex (base_element, element, scheme);
-
-        user_data->lmi_map->insert (lmi, project_leaf (tree_idx, element, func));
-
-        // Insert lmi into forest
-        t8_mra::set_lmi_forest_data (user_data, current_idx, lmi);
-      }
-    }
-
-    t8_forest_set_user_data (Base::forest, user_data);
+    Base::build_lmi_map (scheme, [&] (int tree_idx, const t8_element_t *element) {
+      return project_leaf (tree_idx, element, func);
+    });
   }
 
   //=============================================================================
@@ -246,22 +219,11 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
 
     auto *forest_data = Base::get_user_data ();
     const auto *forest_scheme = t8_forest_get_scheme (Base::forest);
-    t8_locidx_t elem_offset = 0;
 
-    for (t8_locidx_t tree_idx = 0; tree_idx < t8_forest_get_num_local_trees (Base::forest); ++tree_idx) {
-      const auto num_elems = t8_forest_get_tree_num_leaf_elements (Base::forest, tree_idx);
-      const auto base_element = tree_idx;
-
-      for (t8_locidx_t elem_idx = 0; elem_idx < num_elems; ++elem_idx) {
-        const auto *elem = t8_forest_get_leaf_element_in_tree (Base::forest, tree_idx, elem_idx);
-        const auto lmi = t8_mra::get_lmi_from_forest_data<element_t> (forest_data, elem_offset + elem_idx);
-
+    Base::for_each_local_leaf (
+      [&] (t8_locidx_t tree_idx, const t8_element_t *elem, unsigned int local_idx, t8_gloidx_t) {
+        const auto lmi = t8_mra::get_lmi_from_forest_data<element_t> (forest_data, local_idx);
         if (auto *elem_data = forest_data->lmi_map->find (lmi))
-          t8_mra::triangle_order::get_point_order_at_level (base_element, elem, forest_scheme, elem_data->order);
-      }
-      elem_offset += num_elems;
-    }
-  }
 
   //=============================================================================
   // Cleanup
