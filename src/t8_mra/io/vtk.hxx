@@ -14,6 +14,7 @@
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
 #include "t8_mra/core/shape_traits.hxx"
+#include "t8_mra/num/basis.hxx"
 #include "t8_mra/data/element_data.hxx"
 
 namespace t8_mra
@@ -515,18 +516,18 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 
         const auto &u_coeffs = data->u_coeffs;
 
-        // Same basis normalization the projection used (see shape_traits::basis_normalization).
+        // Same basis normalization the projection used (see basis<>::normalization).
         const auto volume = t8_forest_element_volume (forest, tree_idx, element);
-        const double scaling = shape_traits<TShape>::basis_normalization (volume);
+        const double scaling = basis<TShape, P_DIM>::normalization (volume);
 
         const auto lagrange_nodes = get_lagrange_nodes<TShape> (lagrange_order);
         for (const auto &ref_node : lagrange_nodes) {
-          // eval_basis takes reference coords; triangle uses barycentric (lambda0, lambda1).
+          // basis::eval takes reference coords; triangle uses barycentric (lambda0, lambda1).
           std::array<double, shape_traits<TShape>::DIM> x = ref_node;
           if constexpr (TShape == T8_ECLASS_TRIANGLE)
             x = { 1.0 - ref_node[0] - ref_node[1], ref_node[0] };
 
-          const auto basis_vals = eval_basis<TShape, P_DIM, DOF> (x);
+          const auto basis_vals = basis<TShape, P_DIM>::eval (x);
           double u_val = 0.0;
           for (int i = 0; i < DOF; ++i)
             u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;

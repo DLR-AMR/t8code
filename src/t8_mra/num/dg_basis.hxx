@@ -8,54 +8,14 @@
 
 #include "t8_eclass/t8_eclass.h"
 #include "t8_mra/core/shape_traits.hxx"
-#include "t8_mra/num/basis_functions.hxx"
+#include "t8_mra/num/basis.hxx"
 #include "t8_mra/num/dunavant.hxx"
 #include "t8_mra/num/mat.hxx"
 #include "t8_mra/num/quadrature.hxx"
-#include "t8_mra/num/legendre_basis.hxx"
 #include "t8_mra/num/geometry.hxx"
 
 namespace t8_mra
 {
-
-/// Tensor index: the per-axis 1D Legendre degrees of one tensor-product basis
-/// function. pset[p] = (i_0, ..., i_{DIM-1}) so phi_p = prod_d phi_1d(., i_d).
-template <unsigned int DIM>
-using tensor_index = std::array<int, DIM>;
-
-/// Enumerate the P^DIM tensor indices, first axis varying fastest.
-template <unsigned int DIM>
-std::vector<tensor_index<DIM>>
-generate_tensor_pset (int P)
-{
-  int num_basis = 1;
-  for (unsigned int d = 0; d < DIM; ++d)
-    num_basis *= P;
-
-  std::vector<tensor_index<DIM>> pset (num_basis);
-  for (int idx = 0; idx < num_basis; ++idx) {
-    int rest = idx;
-    for (unsigned int d = 0; d < DIM; ++d) {
-      pset[idx][d] = rest % P;
-      rest /= P;
-    }
-  }
-
-  return pset;
-}
-
-/// dir-th partial of tensor basis function p (product rule, 1D Legendre
-/// factors). P is the number of 1D modes (degrees 0..P-1).
-template <unsigned int DIM, int P>
-inline double
-eval_tensor_basis_gradient (const std::array<double, DIM> &x, int p, int dir, const std::vector<tensor_index<DIM>> &pset)
-{
-  double result = 1.0;
-  for (unsigned int d = 0; d < DIM; ++d)
-    result *= (d == static_cast<unsigned int> (dir)) ? phi_prime_1d<P> (x[d], pset[p][d]) : phi_1d (x[d], pset[p][d]);
-
-  return result;
-}
 
 template <t8_eclass TShape, typename = void>
 struct dg_basis_base
@@ -77,7 +37,6 @@ struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
 
   int num_quad_points_1d;  // Number of 1D quadrature points
   size_t num_quad_points;  // Total number of quad points (num_quad_points_1d^DIM)
-  int P;                   // Polynomial order (stored for pset generation)
 
   std::vector<double> ref_quad_points_1d;  // 1D quadrature points
   std::vector<double> quad_weights_1d;     // 1D quadrature weights
@@ -87,13 +46,9 @@ struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
 
   dg_basis_base () = default;
 
-  /**
-   * @brief Constructor for cartesian elements using Gauss-Legendre quadrature
-   *
-   * @param _num_quad_points_1d Number of quadrature points in each dimension
-   * @param _P Polynomial order for basis (used to generate pset later in dg_basis)
-   */
-  dg_basis_base (int _num_quad_points_1d, int _P): num_quad_points_1d (_num_quad_points_1d), P (_P)
+  /// Cartesian Gauss-Legendre quadrature; the second argument (polynomial order)
+  /// is kept for a uniform constructor signature across shapes.
+  dg_basis_base (int _num_quad_points_1d, int): num_quad_points_1d (_num_quad_points_1d)
   {
     // Generate 1D Gauss-Legendre quadrature on [0,1]
     t8_mra::gauss_legendre_1d (num_quad_points_1d, ref_quad_points_1d, quad_weights_1d);
@@ -307,10 +262,9 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
   static constexpr unsigned int DOF = Element::DOF;
   static constexpr unsigned int W_DOF = Element::W_DOF;
 
-  // Multiindex set for tensor basis (cartesian elements only)
+  using basis_t = basis<Shape, P_DIM>;
 
  public:
-  std::vector<tensor_index<DIM>> pset;
   dg_basis () = default;
 
   // Constructor for triangular elements
@@ -325,10 +279,9 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
     requires is_cartesian<Shape>
     : Base (_num_quad_points_1d, _P)
   {
-    // Generate multiindex set for tensor-structured basis
-    pset = generate_tensor_pset<DIM> (_P);
   }
 
+  /// All basis function values at a reference point.
   std::array<double, DOF>
   basis_value (const std::vector<double> &x_ref)
   {
@@ -336,33 +289,19 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
     for (unsigned int d = 0; d < DIM; ++d)
       x[d] = x_ref[d];
 
-    return eval_basis<Shape, P_DIM, DOF> (x);
+    return basis_t::eval (x);
   }
 
-  /**
-   * @brief Evaluates gradient of all basis functions at a point (cartesian elements only)
-   *
-   * @param x_ref Point in reference element [0,1]^DIM
-   * @return std::array<std::array<double, DOF>, DIM> grad[dir][i] = d(phi_i)/dx_dir at x_ref
-   */
+  /// grad[dir][i] = d(phi_i)/dx_dir at a reference point (cartesian only).
   std::array<std::array<double, DOF>, DIM>
   basis_gradient (const std::vector<double> &x_ref)
     requires is_cartesian<Shape>
   {
-    std::array<std::array<double, DOF>, DIM> grad;
+    std::array<double, DIM> x;
+    for (unsigned int d = 0; d < DIM; ++d)
+      x[d] = x_ref[d];
 
-    std::array<double, DIM> x_array;
-    for (unsigned int d = 0; d < DIM; ++d) {
-      x_array[d] = x_ref[d];
-    }
-
-    for (unsigned int dir = 0; dir < DIM; ++dir) {
-      for (auto i = 0u; i < DOF; ++i) {
-        grad[dir][i] = eval_tensor_basis_gradient<DIM, P_DIM> (x_array, i, dir, pset);
-      }
-    }
-
-    return grad;
+    return basis_t::eval_gradient (x);
   }
 };
 
