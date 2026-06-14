@@ -20,8 +20,8 @@ namespace t8_mra
  * @param xR Right endpoint of physical interval
  * @return double Point in reference interval [0, 1]
  */
-inline double
-ref_1d (double x, double xL, double xR)
+constexpr double
+ref_1d (double x, double xL, double xR) noexcept
 {
   return (x - xL) / (xR - xL);
 }
@@ -36,8 +36,8 @@ ref_1d (double x, double xL, double xR)
  * @param xR Right endpoint of physical interval
  * @return double Point in physical interval [xL, xR]
  */
-inline double
-deref_1d (double x_ref, double xL, double xR)
+constexpr double
+deref_1d (double x_ref, double xL, double xR) noexcept
 {
   return x_ref * (xR - xL) + xL;
 }
@@ -54,9 +54,9 @@ deref_1d (double x_ref, double xL, double xR)
  * @return std::array<double, DIM> Point in reference element [0,1]^DIM
  */
 template <unsigned int DIM>
-inline std::array<double, DIM>
+constexpr std::array<double, DIM>
 ref (const std::array<double, DIM> &x, const std::array<double, DIM> &vertices_min,
-     const std::array<double, DIM> &vertices_max)
+     const std::array<double, DIM> &vertices_max) noexcept
 {
   std::array<double, DIM> x_ref;
   for (unsigned int d = 0; d < DIM; ++d)
@@ -77,9 +77,9 @@ ref (const std::array<double, DIM> &x, const std::array<double, DIM> &vertices_m
  * @return std::array<double, DIM> Point in physical element
  */
 template <unsigned int DIM>
-inline std::array<double, DIM>
+constexpr std::array<double, DIM>
 deref (const std::array<double, DIM> &x_ref, const std::array<double, DIM> &vertices_min,
-       const std::array<double, DIM> &vertices_max)
+       const std::array<double, DIM> &vertices_max) noexcept
 {
   std::array<double, DIM> x;
   for (unsigned int d = 0; d < DIM; ++d)
@@ -102,7 +102,7 @@ deref (const std::array<double, DIM> &x_ref, const std::array<double, DIM> &vert
  */
 template <unsigned int DIM>
 inline double
-jacobian_determinant (const std::array<double, DIM> &vertices_min, const std::array<double, DIM> &vertices_max)
+jacobian_determinant (const std::array<double, DIM> &vertices_min, const std::array<double, DIM> &vertices_max) noexcept
 {
   double det = 1.0;
   for (unsigned int d = 0; d < DIM; ++d)
@@ -125,7 +125,7 @@ jacobian_determinant (const std::array<double, DIM> &vertices_min, const std::ar
 template <unsigned int DIM>
 inline void
 extract_cartesian_vertices (const double physical_vertices[][3], std::array<double, DIM> &vertices_min,
-                            std::array<double, DIM> &vertices_max)
+                            std::array<double, DIM> &vertices_max) noexcept
 {
   if constexpr (DIM == 1) {
     // LINE: vertices[0] and vertices[1]
