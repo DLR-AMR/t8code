@@ -9,9 +9,8 @@
 #include "t8_eclass/t8_eclass.h"
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/num/basis/basis.hxx"
-#include "t8_mra/num/quadrature/dunavant.hxx"
+#include "t8_mra/num/quadrature/quadrature.hxx"
 #include "t8_mra/num/mat.hxx"
-#include "t8_mra/num/quadrature/gauss_legendre.hxx"
 #include "t8_mra/num/geometry.hxx"
 
 namespace t8_mra
@@ -35,76 +34,16 @@ struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
   static constexpr unsigned int DIM = T == T8_ECLASS_LINE ? 1 : (T == T8_ECLASS_QUAD ? 2 : 3);
   static constexpr t8_eclass Shape = T;
 
-  int num_quad_points_1d;  // Number of 1D quadrature points
-  size_t num_quad_points;  // Total number of quad points (num_quad_points_1d^DIM)
-
-  std::vector<double> ref_quad_points_1d;  // 1D quadrature points
-  std::vector<double> quad_weights_1d;     // 1D quadrature weights
-
-  std::vector<double> ref_quad_points;  // Multi-D quadrature points (flattened)
-  std::vector<double> quad_weights;     // Multi-D quadrature weights
+  // Reference Gauss-Legendre rule; the second ctor argument (polynomial order)
+  // is kept for a uniform constructor signature across shapes.
+  quadrature<T> quad;
 
   dg_basis_base () = default;
 
-  /// Cartesian Gauss-Legendre quadrature; the second argument (polynomial order)
-  /// is kept for a uniform constructor signature across shapes.
-  dg_basis_base (int _num_quad_points_1d, int): num_quad_points_1d (_num_quad_points_1d)
+  dg_basis_base (int num_quad_points_1d, int): quad (num_quad_points_1d)
   {
-    // Generate 1D Gauss-Legendre quadrature on [0,1]
-    t8_mra::gauss_legendre_1d (num_quad_points_1d, ref_quad_points_1d, quad_weights_1d);
-
-    // Build multi-dimensional quadrature via tensor product
-    build_tensor_quadrature ();
   }
 
- private:
-  /**
-   * @brief Builds multi-dimensional quadrature from 1D quadrature via tensor product
-   */
-  void
-  build_tensor_quadrature ()
-  {
-    if constexpr (DIM == 1) {
-      num_quad_points = num_quad_points_1d;
-      ref_quad_points = ref_quad_points_1d;
-      quad_weights = quad_weights_1d;
-    }
-    else if constexpr (DIM == 2) {
-      num_quad_points = num_quad_points_1d * num_quad_points_1d;
-      ref_quad_points.resize (2 * num_quad_points);
-      quad_weights.resize (num_quad_points);
-
-      size_t idx = 0;
-      for (int i = 0; i < num_quad_points_1d; ++i) {
-        for (int j = 0; j < num_quad_points_1d; ++j) {
-          ref_quad_points[2 * idx] = ref_quad_points_1d[i];
-          ref_quad_points[2 * idx + 1] = ref_quad_points_1d[j];
-          quad_weights[idx] = quad_weights_1d[i] * quad_weights_1d[j];
-          ++idx;
-        }
-      }
-    }
-    else if constexpr (DIM == 3) {
-      num_quad_points = num_quad_points_1d * num_quad_points_1d * num_quad_points_1d;
-      ref_quad_points.resize (3 * num_quad_points);
-      quad_weights.resize (num_quad_points);
-
-      size_t idx = 0;
-      for (int i = 0; i < num_quad_points_1d; ++i) {
-        for (int j = 0; j < num_quad_points_1d; ++j) {
-          for (int k = 0; k < num_quad_points_1d; ++k) {
-            ref_quad_points[3 * idx] = ref_quad_points_1d[i];
-            ref_quad_points[3 * idx + 1] = ref_quad_points_1d[j];
-            ref_quad_points[3 * idx + 2] = ref_quad_points_1d[k];
-            quad_weights[idx] = quad_weights_1d[i] * quad_weights_1d[j] * quad_weights_1d[k];
-            ++idx;
-          }
-        }
-      }
-    }
-  }
-
- public:
   /**
    * @brief Computes Jacobian determinant for the physical element
    *
@@ -132,7 +71,7 @@ struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
     std::array<double, DIM> vertices_min, vertices_max;
     extract_cartesian_vertices<DIM> (physical_vertices, vertices_min, vertices_max);
 
-    return transform_quad_points<DIM> (ref_quad_points, num_quad_points, vertices_min, vertices_max);
+    return transform_quad_points<DIM> (quad.points, quad.num_points, vertices_min, vertices_max);
   }
 
   /**
@@ -195,19 +134,12 @@ struct dg_basis_base<T8_ECLASS_TRIANGLE>
   static constexpr unsigned int DIM = 2;
   static constexpr t8_eclass Shape = T8_ECLASS_TRIANGLE;
 
-  size_t num_quad_points;
-  int dunavant_rule;
-
-  std::vector<double> ref_quad_points;
-  std::vector<double> quad_weights;
+  quadrature<T8_ECLASS_TRIANGLE> quad;
 
   dg_basis_base () = default;
 
-  dg_basis_base (int _num_quad_points, int _dunavant_rule)
-    : num_quad_points (t8_mra::dunavant_order_num (_dunavant_rule)), dunavant_rule (_dunavant_rule),
-      ref_quad_points (2u * num_quad_points, 0.0), quad_weights (num_quad_points, 0.0)
+  dg_basis_base (int, int _dunavant_rule): quad (_dunavant_rule)
   {
-    t8_mra::dunavant_rule (dunavant_rule, num_quad_points, ref_quad_points.data (), quad_weights.data ());
   }
 
   std::pair<t8_mra::mat, std::vector<size_t>>
@@ -228,12 +160,12 @@ struct dg_basis_base<T8_ECLASS_TRIANGLE>
   std::vector<double>
   deref_quad_points (const double physical_vertices[3][3])
   {
-    std::vector<double> deref_quad_points (ref_quad_points.size (), 0.0);
+    std::vector<double> deref_quad_points (quad.points.size (), 0.0);
 
     std::array<double, 6> corners { physical_vertices[0][0], physical_vertices[0][1], physical_vertices[1][0],
                                     physical_vertices[1][1], physical_vertices[2][0], physical_vertices[2][1] };
 
-    t8_mra::reference_to_physical_t3 (corners.data (), num_quad_points, ref_quad_points.data (),
+    t8_mra::reference_to_physical_t3 (corners.data (), quad.num_points, quad.points.data (),
                                       deref_quad_points.data ());
 
     return deref_quad_points;

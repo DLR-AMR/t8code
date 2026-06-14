@@ -128,7 +128,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     for (auto i = 0u; i < Base::DOF; ++i) {
       std::array<double, Base::U_DIM> sum = {};
 
-      for (auto j = 0u; j < Base::basis.num_quad_points; ++j) {
+      for (auto j = 0u; j < Base::basis.quad.num_points; ++j) {
         const auto x_deref = deref_quad_points[2 * j];
         const auto y_deref = deref_quad_points[1 + 2 * j];
 
@@ -143,7 +143,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
 
         // Accumulate: ∫ f(x) φᵢ(x) dx ≈ Σ w_j f(x_j) φᵢ(x_j) * scaling
         for (auto k = 0u; k < Base::U_DIM; ++k)
-          sum[k] += Base::basis.quad_weights[j] * f_val[k] * scaling_factor * basis_val[i];
+          sum[k] += Base::basis.quad.weights[j] * f_val[k] * scaling_factor * basis_val[i];
       }
 
       for (auto k = 0u; k < Base::U_DIM; ++k)
