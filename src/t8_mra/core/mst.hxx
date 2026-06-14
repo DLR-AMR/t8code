@@ -153,12 +153,13 @@ struct mst_scaling_policy<T8_ECLASS_TRIANGLE>
  * Works for triangular and cartesian elements; element-specific behaviour is
  * routed through the ordering and scaling policies.
  */
-template <typename TElement, typename ordering_policy_t = ordering_policy<TElement::Shape>,
+template <typename TElement, typename TDetail = detail_data<TElement::Shape, TElement::U_DIM, TElement::P_DIM>,
+          typename ordering_policy_t = ordering_policy<TElement::Shape>,
           typename scaling_policy_t = mst_scaling_policy<TElement::Shape>>
-class mst
-{
+class mst {
  public:
-  using element_t = TElement;
+  using element_t = TElement;  // leaf data (lmi_map)
+  using detail_t = TDetail;    // leaf data + details (d_map)
   using levelmultiindex = t8_mra::levelmultiindex<TElement::Shape>;
   using index_set = ankerl::unordered_dense::set<levelmultiindex>;
 
@@ -179,7 +180,7 @@ class mst
    */
   static void
   two_scale_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
-                    element_t &data_on_coarse, const std::vector<t8_mra::mat> &mask_coefficients)
+                    detail_t &data_on_coarse, const std::vector<t8_mra::mat> &mask_coefficients)
   {
     const double scaling_factor = scaling_policy_t::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
 
@@ -202,7 +203,7 @@ class mst
           for (auto j = 0u; j < DOF; ++j)
             sum += mask_coefficients[k](i, j) * data_on_coarse.u_coeffs[element_t::dg_idx (u, j)];
 
-          data_on_coarse.d_coeffs[element_t::wavelet_idx (k, u, i)]
+          data_on_coarse.d_coeffs[detail_t::wavelet_idx (k, u, i)]
             = data_on_siblings[k].u_coeffs[element_t::dg_idx (u, i)] - sum;
         }
       }
@@ -224,12 +225,12 @@ class mst
    */
   static void
   multiscale_transformation (unsigned int l_min, unsigned int l_max,
-                            levelindex_map<levelmultiindex, element_t> *lmi_map,
-                            levelindex_map<levelmultiindex, element_t> &d_map,
-                            const std::vector<t8_mra::mat> &mask_coefficients)
+                             levelindex_map<levelmultiindex, element_t> *lmi_map,
+                             levelindex_map<levelmultiindex, detail_t> &d_map,
+                             const std::vector<t8_mra::mat> &mask_coefficients)
   {
     index_set I_set;
-    element_t data_on_coarse;
+    detail_t data_on_coarse;
     std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
 
     for (auto l = l_max; l > l_min; --l) {
@@ -268,13 +269,12 @@ class mst
    * non-destructive analysis used during adaptation is multiscale_transformation.
    */
   static void
-  multiscale_decomposition (unsigned int l_min, unsigned int l_max,
-                            levelindex_map<levelmultiindex, element_t> *lmi_map,
-                            levelindex_map<levelmultiindex, element_t> &d_map,
+  multiscale_decomposition (unsigned int l_min, unsigned int l_max, levelindex_map<levelmultiindex, element_t> *lmi_map,
+                            levelindex_map<levelmultiindex, detail_t> &d_map,
                             const std::vector<t8_mra::mat> &mask_coefficients)
   {
     index_set I_set;
-    element_t data_on_coarse;
+    detail_t data_on_coarse;
     std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
 
     for (auto l = l_max; l > l_min; --l) {
@@ -302,9 +302,8 @@ class mst
 
         two_scale_family (data_on_siblings, data_on_coarse, mask_coefficients);
 
-        lmi_map->insert (lmi, data_on_coarse);
-        // insert (assignment) rather than emplace: a stale entry under this
-        // key must be overwritten, never silently kept
+        // The lmi_map leaf keeps only single-scale data (slice off d_coeffs).
+        lmi_map->insert (lmi, static_cast<const element_t &> (data_on_coarse));
         d_map.insert (lmi, data_on_coarse);
 
         // Consume only this family's children; members of skipped (incomplete)
@@ -331,9 +330,9 @@ class mst
    */
   static void
   inverse_multiscale_transformation (unsigned int l_min, unsigned int l_max,
-                                    levelindex_map<levelmultiindex, element_t> *lmi_map,
-                                    levelindex_map<levelmultiindex, element_t> &d_map,
-                                    const std::vector<t8_mra::mat> &mask_coefficients)
+                                     levelindex_map<levelmultiindex, element_t> *lmi_map,
+                                     levelindex_map<levelmultiindex, detail_t> &d_map,
+                                     const std::vector<t8_mra::mat> &mask_coefficients)
   {
     element_t new_data;
     const double inv_scaling_factor = scaling_policy_t::inverse_scaling_factor ();
@@ -356,7 +355,7 @@ class mst
                 sum += lmi_data.u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](i, j);
 
               new_data.u_coeffs[element_t::dg_idx (u, i)]
-                = details[element_t::wavelet_idx (k, u, i)] + sum * inv_scaling_factor;
+                = details[detail_t::wavelet_idx (k, u, i)] + sum * inv_scaling_factor;
             }
           }
 

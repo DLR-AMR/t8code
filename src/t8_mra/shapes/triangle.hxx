@@ -80,7 +80,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
       double norm_sq = 0.0;
       for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
         for (auto i = 0u; i < Base::DOF; ++i) {
-          const auto d = details[element_t::wavelet_idx (k, u, i)];
+          const auto d = details[Base::detail_t::wavelet_idx (k, u, i)];
           norm_sq += d * d;
         }
       }

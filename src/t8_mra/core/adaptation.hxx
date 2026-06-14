@@ -678,7 +678,7 @@ class multiscale_adaptation {
     derived ().d_map.erase_all ();
     for (auto l = min_level; l < max_level; ++l)
       for (const auto &lmi : derived ().refinement_set[l])
-        derived ().d_map.insert (lmi, element_t {});
+        derived ().d_map.insert (lmi, typename Derived::detail_t {});
 
     derived ().inverse_multiscale_transformation (min_level, max_level);
 
@@ -781,7 +781,7 @@ class multiscale_adaptation {
 
     for (auto l = 0; l < derived ().maximum_level; ++l)
       for (const auto &lmi : derived ().refinement_set[l])
-        derived ().d_map.insert (lmi, element_t {});
+        derived ().d_map.insert (lmi, typename Derived::detail_t {});
 
     derived ().inverse_multiscale_transformation (0, derived ().maximum_level);
 

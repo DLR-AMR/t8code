@@ -45,6 +45,7 @@ template <t8_eclass TShape, unsigned short U, unsigned short P>
 class multiscale_base: public multiscale_data<TShape> {
  public:
   using element_t = element_data<TShape, U, P>;
+  using detail_t = detail_data<TShape, U, P>;
   using levelmultiindex = t8_mra::levelmultiindex<TShape>;
   using index_set = ankerl::unordered_dense::set<levelmultiindex>;
   using MST = mst<element_t>;
@@ -74,7 +75,7 @@ class multiscale_base: public multiscale_data<TShape> {
   t8_mra::dg_basis<element_t> basis;
 
   /// Detail coefficient storage
-  levelindex_map<levelmultiindex, element_t> d_map;
+  levelindex_map<levelmultiindex, detail_t> d_map;
 
   /// Set of significant details (thresholding)
   levelindex_set<levelmultiindex> td_set;
