@@ -117,8 +117,8 @@ class multiscale_base: public multiscale_data<TShape> {
   multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires is_cartesian<TShape>
     : maximum_level (_max_level), basis (default_num_quad_points_1d, P_DIM), d_map (maximum_level),
-      td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level),
-      ghost_map (maximum_level), comm (_comm)
+      td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level), ghost_map (maximum_level),
+      comm (_comm)
   {
     c_scaling.fill (1.0);
   }
@@ -179,6 +179,9 @@ class multiscale_base: public multiscale_data<TShape> {
   /// Iterate the local leaves in SFC order. f receives (local tree index,
   /// element, forest-local leaf index, global tree id); the leaf index matches
   /// the lmi_idx array layout.
+  ///
+  /// f: (t8_locidx_t tree_idx, const t8_element_t *element,
+  ///     unsigned int local_idx, t8_gloidx_t global_tree) -> void
   template <typename F>
   void
   for_each_local_leaf (F &&f)
@@ -196,7 +199,9 @@ class multiscale_base: public multiscale_data<TShape> {
   }
 
   /// Build lmi_map + lmi_idx for the committed forest and attach as user data.
-  /// projector(tree_idx, element) -> element_t supplies the per-leaf data.
+  /// projector supplies the per-leaf data.
+  ///
+  /// projector: (int tree_idx, const t8_element_t *element) -> element_t
   template <typename Projector>
   void
   build_lmi_map (const t8_scheme *scheme, Projector &&projector)
@@ -212,12 +217,12 @@ class multiscale_base: public multiscale_data<TShape> {
     user_data->mra_instance = this;
     t8_forest_set_user_data (forest, user_data);
 
-    for_each_local_leaf ([&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int local_idx,
-                              t8_gloidx_t global_tree) {
-      const auto lmi = levelmultiindex (global_tree, element, scheme);
-      user_data->lmi_map->insert (lmi, projector (tree_idx, element));
-      t8_mra::set_lmi_forest_data (user_data, local_idx, lmi);
-    });
+    for_each_local_leaf (
+      [&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int local_idx, t8_gloidx_t global_tree) {
+        const auto lmi = levelmultiindex (global_tree, element, scheme);
+        user_data->lmi_map->insert (lmi, projector (tree_idx, element));
+        t8_mra::set_lmi_forest_data (user_data, local_idx, lmi);
+      });
   }
 
   //=============================================================================
