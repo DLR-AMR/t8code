@@ -64,8 +64,6 @@ void
 dunavant_subrule_19 (int suborder_num, double suborder_xyz[], double suborder_w[]);
 void
 dunavant_subrule_20 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-file_name_inc (char *file_name);
 int
 i4_max (int i1, int i2);
 int
@@ -80,17 +78,6 @@ int
 r8_nint (double x);
 void
 reference_to_physical_t3 (double t[], int n, double ref[], double phy[]);
-int
-s_len_trim (char *s);
-void
-timestamp (void);
-char *
-timestring (void);
-double
-triangle_area (double t[2 * 3]);
-void
-triangle_points_plot (char *file_name, double node_xy[], int node_show, int point_num, double point_xy[],
-                      int point_show);
 }  // namespace t8_mra
 
 #endif
