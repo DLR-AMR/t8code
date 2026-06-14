@@ -173,6 +173,30 @@ class multiscale_base: public multiscale_data<TShape> {
   }
 
   //=============================================================================
+  // Local leaf iteration / data construction
+  //=============================================================================
+
+  /// Iterate the local leaves in SFC order. f receives (local tree index,
+  /// element, forest-local leaf index, global tree id); the leaf index matches
+  /// the lmi_idx array layout.
+  template <typename F>
+  void
+  for_each_local_leaf (F &&f)
+  {
+    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+    auto local_idx = 0u;
+    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+      const auto num_elems = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+      const auto global_tree = t8_forest_global_tree_id (forest, tree_idx);
+      for (t8_locidx_t ele_idx = 0; ele_idx < num_elems; ++ele_idx, ++local_idx) {
+        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+        f (tree_idx, element, local_idx, global_tree);
+      }
+    }
+  }
+
+  /// Build lmi_map + lmi_idx for the committed forest and attach as user data.
+  //=============================================================================
   // Multiscale Transformation
   //=============================================================================
 
