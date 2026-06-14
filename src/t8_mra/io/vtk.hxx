@@ -15,9 +15,6 @@
 #include "t8_forest/t8_forest_geometrical.h"
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/data/element_data.hxx"
-#include "t8_mra/num/basis_functions.hxx"
-#include "t8_mra/num/legendre_basis.hxx"
-#include "t8_mra/num/multiindex.hxx"
 
 namespace t8_mra
 {
@@ -203,6 +200,71 @@ get_hex_lagrange_nodes (int order)
   return nodes;
 }
 
+/// Reference Lagrange-node layout for a shape, in VTK ordering. Each entry is
+/// a point in [0,1]^DIM. Dispatches to the per-shape layout above.
+template <t8_eclass TShape>
+auto
+get_lagrange_nodes (int order)
+{
+  if constexpr (TShape == T8_ECLASS_LINE)
+    return get_line_lagrange_nodes (order);
+  else if constexpr (TShape == T8_ECLASS_TRIANGLE)
+    return get_triangle_lagrange_nodes (order);
+  else if constexpr (TShape == T8_ECLASS_QUAD)
+    return get_quad_lagrange_nodes (order);
+  else  // HEX
+    return get_hex_lagrange_nodes (order);
+}
+
+/// t8code-vertex -> VTK-slot permutation for cartesian shapes (triangle vertex
+/// order is data-driven, handled at the call site).
+template <t8_eclass TShape>
+constexpr auto
+vtk_vertex_permutation ()
+{
+  if constexpr (TShape == T8_ECLASS_LINE)
+    return std::array<int, 2> { 0, 1 };
+  else if constexpr (TShape == T8_ECLASS_QUAD)
+    return std::array<int, 4> { 0, 1, 3, 2 };
+  else  // HEX
+    return std::array<int, 8> { 0, 1, 3, 2, 4, 5, 7, 6 };
+}
+
+/// Reference coords of each VTK-ordered corner, for the multilinear geometry map.
+template <t8_eclass TShape>
+constexpr auto
+vtk_corner_coords ()
+{
+  if constexpr (TShape == T8_ECLASS_LINE)
+    return std::array<std::array<double, 1>, 2> { { { 0 }, { 1 } } };
+  else if constexpr (TShape == T8_ECLASS_QUAD)
+    return std::array<std::array<double, 2>, 4> { { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } } };
+  else  // HEX
+    return std::array<std::array<double, 3>, 8> {
+      { { 0, 0, 0 }, { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, { 1, 0, 1 }, { 1, 1, 1 }, { 0, 1, 1 } }
+    };
+}
+
+/// Multilinear map of a reference node to physical coords, over VTK-ordered
+/// vertices (tensor of (1-x_d)/x_d weights per corner).
+template <t8_eclass TShape>
+std::array<double, 3>
+map_cartesian (const std::array<double, shape_traits<TShape>::DIM> &x, const double vertices[][3])
+{
+  constexpr int DIM = shape_traits<TShape>::DIM;
+  constexpr auto corners = vtk_corner_coords<TShape> ();
+
+  std::array<double, 3> p = { 0, 0, 0 };
+  for (size_t v = 0; v < corners.size (); ++v) {
+    double w = 1.0;
+    for (int d = 0; d < DIM; ++d)
+      w *= corners[v][d] == 1.0 ? x[d] : 1.0 - x[d];
+    for (int d = 0; d < 3; ++d)
+      p[d] += w * vertices[v][d];
+  }
+  return p;
+}
+
 /**
  * @brief Write VTK file header for Lagrange elements
  */
@@ -287,34 +349,10 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
   const auto num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
 
-  // Determine element-specific parameters
-  int num_nodes_per_elem;
-  int vtk_cell_type;
-  int num_vertices;
-
-  if constexpr (TShape == T8_ECLASS_LINE) {
-    num_nodes_per_elem = lagrange_order + 1;
-    vtk_cell_type = 68;  // VTK_LAGRANGE_CURVE
-    num_vertices = 2;
-  }
-  else if constexpr (TShape == T8_ECLASS_TRIANGLE) {
-    num_nodes_per_elem = (lagrange_order + 1) * (lagrange_order + 2) / 2;
-    vtk_cell_type = 69;  // VTK_LAGRANGE_TRIANGLE
-    num_vertices = 3;
-  }
-  else if constexpr (TShape == T8_ECLASS_QUAD) {
-    num_nodes_per_elem = (lagrange_order + 1) * (lagrange_order + 1);
-    vtk_cell_type = 70;  // VTK_LAGRANGE_QUADRILATERAL
-    num_vertices = 4;
-  }
-  else if constexpr (TShape == T8_ECLASS_HEX) {
-    num_nodes_per_elem = (lagrange_order + 1) * (lagrange_order + 1) * (lagrange_order + 1);
-    vtk_cell_type = 72;  // VTK_LAGRANGE_HEXAHEDRON
-    num_vertices = 8;
-  }
-  else {
-    T8_ASSERT (false && "Unsupported element type for VTK output");
-  }
+  // Lagrange order P-1 has P=lagrange_order+1 nodes per dim; node count is the
+  // P-basis DOF count of the shape.
+  constexpr int vtk_cell_type = shape_traits<TShape>::VTK_CELL_TYPE;
+  const int num_nodes_per_elem = shape_traits<TShape>::dof (lagrange_order + 1);
 
   const int total_points = num_local_elements * num_nodes_per_elem;
 
@@ -354,113 +392,39 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
       const auto base_tree = t8_forest_global_tree_id (forest, tree_idx);
       const auto lmi = typename MRA::levelmultiindex (base_tree, element, scheme);
 
-      // Get element vertices with proper ordering
+      // Vertices in VTK order: triangle order is data-driven (point_order from
+      // the element data), cartesian shapes use a fixed permutation.
       double vertices[8][3] = {};
 
-      if constexpr (TShape == T8_ECLASS_LINE) {
-        // LINE: just 2 endpoints
-        for (int i = 0; i < 2; ++i)
-          t8_forest_element_coordinate (forest, tree_idx, element, i, vertices[i]);
-      }
-      else if constexpr (TShape == T8_ECLASS_TRIANGLE) {
-        // Apply triangle vertex ordering from element data
-        if (const auto *elem_data = lmi_map->find (lmi)) {
-          const auto &point_order = elem_data->order;
-
-          // Apply permutation: t8code vertex v goes to position order[v]
-          for (int v = 0; v < 3; ++v) {
-            double coords[3];
-            t8_forest_element_coordinate (forest, tree_idx, element, v, coords);
-            const int ref_v = point_order[v];
-            vertices[ref_v][0] = coords[0];
-            vertices[ref_v][1] = coords[1];
-            vertices[ref_v][2] = coords[2];
-          }
-        }
-        else {
-          // Fallback: no permutation if element not in map
-          for (int i = 0; i < 3; ++i)
-            t8_forest_element_coordinate (forest, tree_idx, element, i, vertices[i]);
-        }
-      }
-      else if constexpr (TShape == T8_ECLASS_QUAD) {
-        // Reorder quad vertices for standard ordering
-        const int vertex_perm[4] = { 0, 1, 3, 2 };
-        for (int i = 0; i < 4; ++i)
-          t8_forest_element_coordinate (forest, tree_idx, element, vertex_perm[i], vertices[i]);
-      }
-      else if constexpr (TShape == T8_ECLASS_HEX) {
-        // HEX: Apply z-order permutation like QUAD
-        // t8code (z-order): 0:(0,0,0), 1:(1,0,0), 2:(0,1,0), 3:(1,1,0), 4:(0,0,1), 5:(1,0,1), 6:(0,1,1), 7:(1,1,1)
-        // VTK:              0:(0,0,0), 1:(1,0,0), 2:(1,1,0), 3:(0,1,0), 4:(0,0,1), 5:(1,0,1), 6:(1,1,1), 7:(0,1,1)
-        const int vertex_perm[8] = { 0, 1, 3, 2, 4, 5, 7, 6 };
-        for (int i = 0; i < 8; ++i)
-          t8_forest_element_coordinate (forest, tree_idx, element, vertex_perm[i], vertices[i]);
-      }
-
-      // Map reference nodes to physical coordinates (element-specific)
-      if constexpr (TShape == T8_ECLASS_LINE) {
-        const auto lagrange_nodes = get_line_lagrange_nodes (lagrange_order);
-        for (const auto &ref_node : lagrange_nodes) {
-          std::array<double, 3> phys_point = { 0, 0, 0 };
-          const double xi = ref_node[0];
+      if constexpr (TShape == T8_ECLASS_TRIANGLE) {
+        const auto *elem_data = lmi_map->find (lmi);
+        for (int v = 0; v < 3; ++v) {
+          double coords[3];
+          t8_forest_element_coordinate (forest, tree_idx, element, v, coords);
+          const int slot = elem_data ? elem_data->order[v] : v;
           for (int d = 0; d < 3; ++d)
-            phys_point[d] = (1.0 - xi) * vertices[0][d] + xi * vertices[1][d];
-          all_points.push_back (phys_point);
-          file << "          " << phys_point[0] << " " << phys_point[1] << " " << phys_point[2] << "\n";
+            vertices[slot][d] = coords[d];
         }
       }
-      else if constexpr (TShape == T8_ECLASS_TRIANGLE) {
-        const auto lagrange_nodes = get_triangle_lagrange_nodes (lagrange_order);
-        for (const auto &ref_node : lagrange_nodes) {
-          std::array<double, 3> phys_point = { 0, 0, 0 };
-          const double w0 = 1.0 - ref_node[0] - ref_node[1];
-          const double w1 = ref_node[0];
-          const double w2 = ref_node[1];
+      else {
+        constexpr auto perm = vtk_vertex_permutation<TShape> ();
+        for (size_t i = 0; i < perm.size (); ++i)
+          t8_forest_element_coordinate (forest, tree_idx, element, perm[i], vertices[i]);
+      }
+
+      const auto lagrange_nodes = get_lagrange_nodes<TShape> (lagrange_order);
+      for (const auto &ref_node : lagrange_nodes) {
+        std::array<double, 3> phys_point;
+        if constexpr (TShape == T8_ECLASS_TRIANGLE) {
+          const double w0 = 1.0 - ref_node[0] - ref_node[1], w1 = ref_node[0], w2 = ref_node[1];
           for (int d = 0; d < 3; ++d)
             phys_point[d] = w0 * vertices[0][d] + w1 * vertices[1][d] + w2 * vertices[2][d];
-          all_points.push_back (phys_point);
-          file << "          " << phys_point[0] << " " << phys_point[1] << " " << phys_point[2] << "\n";
         }
-      }
-      else if constexpr (TShape == T8_ECLASS_QUAD) {
-        const auto lagrange_nodes = get_quad_lagrange_nodes (lagrange_order);
-        for (const auto &ref_node : lagrange_nodes) {
-          std::array<double, 3> phys_point = { 0, 0, 0 };
-          const double xi = ref_node[0];
-          const double eta = ref_node[1];
-          for (int d = 0; d < 3; ++d) {
-            phys_point[d] = (1 - xi) * (1 - eta) * vertices[0][d] + xi * (1 - eta) * vertices[1][d]
-                            + xi * eta * vertices[2][d] + (1 - xi) * eta * vertices[3][d];
-          }
-          all_points.push_back (phys_point);
-          file << "          " << phys_point[0] << " " << phys_point[1] << " " << phys_point[2] << "\n";
+        else {
+          phys_point = map_cartesian<TShape> (ref_node, vertices);
         }
-      }
-      else if constexpr (TShape == T8_ECLASS_HEX) {
-        const auto lagrange_nodes = get_hex_lagrange_nodes (lagrange_order);
-        for (const auto &ref_node : lagrange_nodes) {
-          std::array<double, 3> phys_point = { 0, 0, 0 };
-          const double xi = ref_node[0];
-          const double eta = ref_node[1];
-          const double zeta = ref_node[2];
-          // Trilinear mapping for VTK hex vertex ordering (after permutation):
-          // v0:(0,0,0), v1:(1,0,0), v2:(1,1,0), v3:(0,1,0),
-          // v4:(0,0,1), v5:(1,0,1), v6:(1,1,1), v7:(0,1,1)
-          for (int d = 0; d < 3; ++d) {
-            phys_point[d] = (1 - xi) * (1 - eta) * (1 - zeta) * vertices[0][d]  // v0: (0,0,0)
-                            + xi * (1 - eta) * (1 - zeta) * vertices[1][d]      // v1: (1,0,0)
-                            + xi * eta * (1 - zeta) * vertices[2][d]            // v2: (1,1,0)
-                            + (1 - xi) * eta * (1 - zeta) * vertices[3][d]      // v3: (0,1,0)
-                            + (1 - xi) * (1 - eta) * zeta * vertices[4][d]      // v4: (0,0,1)
-                            + xi * (1 - eta) * zeta * vertices[5][d]            // v5: (1,0,1)
-                            + xi * eta * zeta * vertices[6][d]                  // v6: (1,1,1)
-                            + (1 - xi) * eta * zeta * vertices[7][d];           // v7: (0,1,1)
-          }
-
-          all_points.push_back (phys_point);
-          file << "          " << phys_point[0] << " " << phys_point[1] << " " << phys_point[2] << "\n";
-        }
+        all_points.push_back (phys_point);
+        file << "          " << phys_point[0] << " " << phys_point[1] << " " << phys_point[2] << "\n";
       }
     }
   }
@@ -499,15 +463,11 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
   file << "      <CellData>\n";
   file << "        <DataArray type=\"Int32\" Name=\"HigherOrderDegrees\" NumberOfComponents=\"3\" format=\"ascii\">\n";
 
+  // Per-axis degree: the shape's DIM axes carry lagrange_order, the rest 1.
   for (t8_locidx_t elem_idx = 0; elem_idx < num_local_elements; ++elem_idx) {
-    if constexpr (TShape == T8_ECLASS_LINE)
-      file << "          " << lagrange_order << " 1 1\n";
-    else if constexpr (TShape == T8_ECLASS_TRIANGLE)
-      file << "          " << lagrange_order << " " << lagrange_order << " 1\n";
-    else if constexpr (TShape == T8_ECLASS_QUAD)
-      file << "          " << lagrange_order << " " << lagrange_order << " 1\n";
-    else if constexpr (TShape == T8_ECLASS_HEX)
-      file << "          " << lagrange_order << " " << lagrange_order << " " << lagrange_order << "\n";
+    file << "          ";
+    for (int d = 0; d < 3; ++d)
+      file << (d < shape_traits<TShape>::DIM ? lagrange_order : 1) << (d < 2 ? " " : "\n");
   }
 
   file << "        </DataArray>\n";
@@ -555,60 +515,26 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 
         const auto &u_coeffs = data->u_coeffs;
 
-        // Get element volume for scaling factor (element-specific)
-        const auto volume = t8_forest_element_volume (forest, tree_idx, element);
-        double scaling;
+        // Triangles carry the sqrt(1/(2*vol)) normalization of the Dubiner
+        // basis; cartesian Legendre is already orthonormal on the reference.
+        double scaling = 1.0;
         if constexpr (TShape == T8_ECLASS_TRIANGLE) {
-          // Triangles use sqrt(1/(2*volume)) scaling
+          const auto volume = t8_forest_element_volume (forest, tree_idx, element);
           scaling = std::sqrt (1.0 / (2.0 * volume));
         }
-        else {
-          // Cartesian elements (LINE, QUAD, HEX) use orthonormal Legendre basis - no volume scaling
-          scaling = 1.0;
-        }
 
-        // Evaluate solution at Lagrange nodes (element-specific)
-        if constexpr (TShape == T8_ECLASS_LINE) {
-          const auto lagrange_nodes = get_line_lagrange_nodes (lagrange_order);
-          for (const auto &ref_node : lagrange_nodes) {
-            const auto basis_vals = eval_basis<T8_ECLASS_LINE, P_DIM, DOF> (ref_node);
-            double u_val = 0.0;
-            for (int i = 0; i < DOF; ++i)
-              u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;
-            file << "          " << u_val << "\n";
-          }
-        }
-        else if constexpr (TShape == T8_ECLASS_TRIANGLE) {
-          const auto lagrange_nodes = get_triangle_lagrange_nodes (lagrange_order);
-          for (const auto &ref_node : lagrange_nodes) {
-            // scaling_function expects barycentric coords (lambda0, lambda1)
-            const std::array<double, 2> bary = { 1.0 - ref_node[0] - ref_node[1], ref_node[0] };
-            const auto basis_vals = eval_basis<T8_ECLASS_TRIANGLE, P_DIM, DOF> (bary);
-            double u_val = 0.0;
-            for (int i = 0; i < DOF; ++i)
-              u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;
-            file << "          " << u_val << "\n";
-          }
-        }
-        else if constexpr (TShape == T8_ECLASS_QUAD) {
-          const auto lagrange_nodes = get_quad_lagrange_nodes (lagrange_order);
-          for (const auto &ref_node : lagrange_nodes) {
-            const auto basis_vals = eval_basis<T8_ECLASS_QUAD, P_DIM, DOF> (ref_node);
-            double u_val = 0.0;
-            for (int i = 0; i < DOF; ++i)
-              u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;
-            file << "          " << u_val << "\n";
-          }
-        }
-        else if constexpr (TShape == T8_ECLASS_HEX) {
-          const auto lagrange_nodes = get_hex_lagrange_nodes (lagrange_order);
-          for (const auto &ref_node : lagrange_nodes) {
-            const auto basis_vals = eval_basis<T8_ECLASS_HEX, P_DIM, DOF> (ref_node);
-            double u_val = 0.0;
-            for (int i = 0; i < DOF; ++i)
-              u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;
-            file << "          " << u_val << "\n";
-          }
+        const auto lagrange_nodes = get_lagrange_nodes<TShape> (lagrange_order);
+        for (const auto &ref_node : lagrange_nodes) {
+          // eval_basis takes reference coords; triangle uses barycentric (lambda0, lambda1).
+          std::array<double, shape_traits<TShape>::DIM> x = ref_node;
+          if constexpr (TShape == T8_ECLASS_TRIANGLE)
+            x = { 1.0 - ref_node[0] - ref_node[1], ref_node[0] };
+
+          const auto basis_vals = eval_basis<TShape, P_DIM, DOF> (x);
+          double u_val = 0.0;
+          for (int i = 0; i < DOF; ++i)
+            u_val += u_coeffs[MRA::element_t::dg_idx (u, i)] * basis_vals[i] * scaling;
+          file << "          " << u_val << "\n";
         }
       }
     }
