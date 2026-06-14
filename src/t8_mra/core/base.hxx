@@ -196,6 +196,30 @@ class multiscale_base: public multiscale_data<TShape> {
   }
 
   /// Build lmi_map + lmi_idx for the committed forest and attach as user data.
+  /// projector(tree_idx, element) -> element_t supplies the per-leaf data.
+  template <typename Projector>
+  void
+  build_lmi_map (const t8_scheme *scheme, Projector &&projector)
+  {
+    T8_ASSERT (t8_forest_is_committed (forest));
+
+    auto *user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
+    const auto num_local = t8_forest_get_local_num_leaf_elements (forest);
+    const auto num_ghost = t8_forest_get_num_ghosts (forest);
+
+    user_data->lmi_map = new levelindex_map<levelmultiindex, element_t> (maximum_level);
+    user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local + num_ghost);
+    user_data->mra_instance = this;
+    t8_forest_set_user_data (forest, user_data);
+
+    for_each_local_leaf ([&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int local_idx,
+                              t8_gloidx_t global_tree) {
+      const auto lmi = levelmultiindex (global_tree, element, scheme);
+      user_data->lmi_map->insert (lmi, projector (tree_idx, element));
+      t8_mra::set_lmi_forest_data (user_data, local_idx, lmi);
+    });
+  }
+
   //=============================================================================
   // Multiscale Transformation
   //=============================================================================
