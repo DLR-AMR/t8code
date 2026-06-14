@@ -186,6 +186,7 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/num/quadrature/quadrature.hxx
     t8_mra/num/quadrature/gauss_legendre.hxx
     t8_mra/num/quadrature/dunavant.hxx
+    t8_mra/num/quadrature/dunavant_table.hxx
     DESTINATION include/t8_mra/num/quadrature )
 endif()
 
