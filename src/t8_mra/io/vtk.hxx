@@ -515,13 +515,9 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 
         const auto &u_coeffs = data->u_coeffs;
 
-        // Triangles carry the sqrt(1/(2*vol)) normalization of the Dubiner
-        // basis; cartesian Legendre is already orthonormal on the reference.
-        double scaling = 1.0;
-        if constexpr (TShape == T8_ECLASS_TRIANGLE) {
-          const auto volume = t8_forest_element_volume (forest, tree_idx, element);
-          scaling = std::sqrt (1.0 / (2.0 * volume));
-        }
+        // Same basis normalization the projection used (see shape_traits::basis_scale).
+        const auto volume = t8_forest_element_volume (forest, tree_idx, element);
+        const double scaling = shape_traits<TShape>::basis_scale (volume);
 
         const auto lagrange_nodes = get_lagrange_nodes<TShape> (lagrange_order);
         for (const auto &ref_node : lagrange_nodes) {

@@ -8,6 +8,7 @@
 #include "t8_mra/num/legendre_basis.hxx"
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 
 namespace t8_mra
@@ -52,6 +53,12 @@ struct shape_traits
   {
     return 0;
   }
+
+  static double
+  basis_scale (double)
+  {
+    return 1.0;
+  }
 };
 
 template <>
@@ -66,6 +73,14 @@ struct shape_traits<T8_ECLASS_LINE>
   dof (unsigned short P)
   {
     return P;
+  }
+
+  // Cartesian Legendre is orthonormal on the reference cell; coefficients are
+  // stored in that convention, so evaluation needs no volume normalization.
+  static double
+  basis_scale (double)
+  {
+    return 1.0;
   }
 };
 
@@ -82,6 +97,15 @@ struct shape_traits<T8_ECLASS_TRIANGLE>
   {
     return binom (DIM + P - 1, DIM);
   }
+
+  // The Dubiner basis is orthonormal on the unit reference triangle (area 1/2);
+  // the physical-orthonormal basis used for the stored coefficients scales by
+  // sqrt(1/(2*vol)). Projection and evaluation must apply the same factor.
+  static double
+  basis_scale (double vol)
+  {
+    return std::sqrt (1.0 / (2.0 * vol));
+  }
 };
 
 template <>
@@ -97,6 +121,12 @@ struct shape_traits<T8_ECLASS_QUAD>
   {
     return P * P;
   }
+
+  static double
+  basis_scale (double)
+  {
+    return 1.0;
+  }
 };
 
 template <>
@@ -111,6 +141,12 @@ struct shape_traits<T8_ECLASS_HEX>
   dof (unsigned short P)
   {
     return P * P * P;
+  }
+
+  static double
+  basis_scale (double)
+  {
+    return 1.0;
   }
 };
 

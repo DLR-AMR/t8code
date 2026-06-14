@@ -122,8 +122,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     const auto deref_quad_points = Base::basis.deref_quad_points (vertices);
     const auto volume = t8_forest_element_volume (Base::forest, tree_idx, element);
 
-    // Triangle-specific scaling factor
-    const auto scaling_factor = std::sqrt (1.0 / (2.0 * volume));
+    const auto scaling_factor = shape_traits<element_t::Shape>::basis_scale (volume);
 
     // Project function onto DG basis using Dunavant quadrature
     for (auto i = 0u; i < Base::DOF; ++i) {
