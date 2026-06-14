@@ -9,8 +9,8 @@
 #include <t8.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_mra/num/mat.hxx>
-#include <t8_mra/num/legendre_basis.hxx>
-#include <t8_mra/num/quadrature.hxx>
+#include <t8_mra/num/basis/legendre.hxx>
+#include <t8_mra/num/quadrature/gauss_legendre.hxx>
 
 namespace t8_mra
 {

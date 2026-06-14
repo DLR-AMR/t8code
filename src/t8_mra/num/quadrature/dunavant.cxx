@@ -6,7 +6,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstring>
-#include "t8_mra/num/dunavant.hxx"
+#include "t8_mra/num/quadrature/dunavant.hxx"
 
 //T8_EXTERN_C_BEGIN ();
 using namespace std;

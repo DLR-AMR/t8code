@@ -1,7 +1,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <cmath>
-#include "t8_mra/num/basis_functions.hxx"
+#include "t8_mra/num/basis/dubiner.hxx"
 
 /* Note from Veli Ünlü about rights: These are the basis functions from
  * the bachelor thesis in mathematics of Florian Sieglar, "Konstruktion von Multiwavelets auf Dreiecksgittern"

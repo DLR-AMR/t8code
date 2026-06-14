@@ -14,7 +14,7 @@
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
 #include "t8_mra/core/shape_traits.hxx"
-#include "t8_mra/num/basis.hxx"
+#include "t8_mra/num/basis/basis.hxx"
 #include "t8_mra/data/element_data.hxx"
 
 namespace t8_mra

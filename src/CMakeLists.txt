@@ -131,8 +131,8 @@ if( T8CODE_ENABLE_MRA )
   )
 
   target_sources( T8 PRIVATE
-    t8_mra/num/basis_functions.cxx
-    t8_mra/num/dunavant.cxx
+    t8_mra/num/basis/dubiner.cxx
+    t8_mra/num/quadrature/dunavant.cxx
   )
 
   install( FILES
@@ -168,17 +168,24 @@ if( T8CODE_ENABLE_MRA )
     DESTINATION include/t8_mra/data )
 
   install( FILES
-    t8_mra/num/basis_functions.hxx
     t8_mra/num/dg_basis.hxx
-    t8_mra/num/dunavant.hxx
     t8_mra/num/geometry.hxx
-    t8_mra/num/legendre_basis.hxx
     t8_mra/num/mask_coefficients.hxx
     t8_mra/num/mask_coefficients_compute.hxx
     t8_mra/num/mask_coefficients_triangle.hxx
     t8_mra/num/mat.hxx
-    t8_mra/num/quadrature.hxx
     DESTINATION include/t8_mra/num )
+
+  install( FILES
+    t8_mra/num/basis/basis.hxx
+    t8_mra/num/basis/legendre.hxx
+    t8_mra/num/basis/dubiner.hxx
+    DESTINATION include/t8_mra/num/basis )
+
+  install( FILES
+    t8_mra/num/quadrature/gauss_legendre.hxx
+    t8_mra/num/quadrature/dunavant.hxx
+    DESTINATION include/t8_mra/num/quadrature )
 endif()
 
 if( T8CODE_BUILD_PEDANTIC )

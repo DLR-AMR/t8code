@@ -14,7 +14,7 @@ namespace t8_mra
 // ============================================================================
 // Specialize shape_traits<Shape> below with the shape's compile-time mesh facts
 // (dimension, child count, vertex count, VTK cell type, DOF count). The basis
-// function space lives in basis<Shape, P> (num/basis.hxx); the lmi bit layout
+// function space lives in basis<Shape, P> (num/basis/basis.hxx); the lmi bit layout
 // in lmi_properties (data/levelmultiindex.hxx); projection and mask
 // coefficients in the per-shape multiscale<> specialization (shapes/).
 

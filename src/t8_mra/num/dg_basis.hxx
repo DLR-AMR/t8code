@@ -8,10 +8,10 @@
 
 #include "t8_eclass/t8_eclass.h"
 #include "t8_mra/core/shape_traits.hxx"
-#include "t8_mra/num/basis.hxx"
-#include "t8_mra/num/dunavant.hxx"
+#include "t8_mra/num/basis/basis.hxx"
+#include "t8_mra/num/quadrature/dunavant.hxx"
 #include "t8_mra/num/mat.hxx"
-#include "t8_mra/num/quadrature.hxx"
+#include "t8_mra/num/quadrature/gauss_legendre.hxx"
 #include "t8_mra/num/geometry.hxx"
 
 namespace t8_mra
