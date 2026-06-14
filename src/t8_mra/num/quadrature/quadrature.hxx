@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <cstddef>
+#include <utility>
 #include <vector>
 
 #include <t8_eclass/t8_eclass.h>
@@ -92,10 +93,12 @@ struct quadrature<T8_ECLASS_TRIANGLE>
 
   quadrature () = default;
 
-  explicit quadrature (int dunavant_rule_num)
-    : num_points (dunavant_order_num (dunavant_rule_num)), points (2 * num_points, 0.0), weights (num_points, 0.0)
+  explicit quadrature (int rule)
   {
-    dunavant_rule (dunavant_rule_num, num_points, points.data (), weights.data ());
+    auto rule_data = dunavant_rule (rule);
+    num_points = rule_data.weights.size ();
+    points = std::move (rule_data.points);
+    weights = std::move (rule_data.weights);
   }
 };
 

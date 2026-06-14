@@ -138,7 +138,7 @@ struct dg_basis_base<T8_ECLASS_TRIANGLE>
 
   dg_basis_base () = default;
 
-  dg_basis_base (int, int _dunavant_rule): quad (_dunavant_rule)
+  explicit dg_basis_base (int dunavant_rule): quad (dunavant_rule)
   {
   }
 
@@ -160,15 +160,10 @@ struct dg_basis_base<T8_ECLASS_TRIANGLE>
   std::vector<double>
   deref_quad_points (const double physical_vertices[3][3])
   {
-    std::vector<double> deref_quad_points (quad.points.size (), 0.0);
+    const std::array<double, 6> corners { physical_vertices[0][0], physical_vertices[0][1], physical_vertices[1][0],
+                                          physical_vertices[1][1], physical_vertices[2][0], physical_vertices[2][1] };
 
-    std::array<double, 6> corners { physical_vertices[0][0], physical_vertices[0][1], physical_vertices[1][0],
-                                    physical_vertices[1][1], physical_vertices[2][0], physical_vertices[2][1] };
-
-    t8_mra::reference_to_physical_t3 (corners.data (), quad.num_points, quad.points.data (),
-                                      deref_quad_points.data ());
-
-    return deref_quad_points;
+    return reference_to_physical_t3 (corners, quad.points);
   }
 
   std::vector<double>
@@ -200,9 +195,9 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
   dg_basis () = default;
 
   // Constructor for triangular elements
-  dg_basis (int _num_quad_points, int _dunavant_rule)
+  explicit dg_basis (int _dunavant_rule)
     requires (Shape == T8_ECLASS_TRIANGLE)
-    : Base (_num_quad_points, _dunavant_rule)
+    : Base (_dunavant_rule)
   {
   }
 

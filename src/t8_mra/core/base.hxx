@@ -132,9 +132,8 @@ class multiscale_base: public multiscale_data<TShape> {
    */
   multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires (TShape == T8_ECLASS_TRIANGLE)
-    : maximum_level (_max_level), basis (t8_mra::dunavant_order_num (default_dunavant_rule), default_dunavant_rule),
-      d_map (maximum_level), td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level),
-      ghost_map (maximum_level), comm (_comm)
+    : maximum_level (_max_level), basis (default_dunavant_rule), d_map (maximum_level), td_set (maximum_level),
+      refinement_set (maximum_level), coarsening_set (maximum_level), ghost_map (maximum_level), comm (_comm)
   {
     c_scaling.fill (1.0);
   }
