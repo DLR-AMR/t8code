@@ -3,7 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <gsl/gsl_sf_legendre.h>
-#include <vector>
+#include <array>
 #include <cmath>
 
 namespace t8_mra
@@ -38,36 +38,29 @@ phi_1d (double x, int p)
 }
 
 /**
- * @brief Evaluates the derivative of the p-th Legendre polynomial at point x on [0,1]
+ * @brief Derivative of the p-th normalized Legendre polynomial at x on [0,1].
  *
- * Computes d/dx of the p-th Legendre polynomial, taking into account the
- * transformation from [0,1] to [-1,1] and the L2-normalization.
+ * @tparam P number of 1D modes (degrees 0..P-1); sizes the GSL scratch exactly.
+ * @param p Polynomial degree in [0, P).
  *
- * @param x Point in [0,1] where to evaluate the derivative
- * @param p Polynomial degree (0, 1, 2, ...)
- * @return double Value of the derivative at x
+ * GSL writes degrees 0..p; the chain-rule factor 2 (from x_std = 2x-1) and the
+ * sqrt(2p+1) normalization are applied to the requested degree.
  */
+template <int P>
 inline double
 phi_prime_1d (double x, int p)
 {
-  // Transform x from [0,1] to [-1,1]
   const auto x_std = 2.0 * x - 1.0;
 
-  // Derivative of constant polynomial is zero
+  // Derivative of the constant mode is zero (and keeps p+1 <= P for p > 0).
   if (p == 0)
     return 0.0;
 
-  std::vector<double> leg_array (p + 1);
-  std::vector<double> deriv_array (p + 1);
-
-  // Compute all Legendre polynomials and derivatives up to order p
+  std::array<double, P> leg_array;
+  std::array<double, P> deriv_array;
   gsl_sf_legendre_Pl_deriv_array (p, x_std, leg_array.data (), deriv_array.data ());
-  const auto deriv_std = deriv_array[p];
 
-  // Apply chain rule: d/dx_01 = d/dx_std * dx_std/dx_01
-  // dx_std/dx_01 = 2.0 (from x_std = 2*x - 1)
-  // Also apply L2-normalization factor sqrt(2*p + 1) for [0,1]
-  return 2.0 * deriv_std * std::sqrt (2.0 * p + 1.0);
+  return 2.0 * deriv_array[p] * std::sqrt (2.0 * p + 1.0);
 }
 
 }  // namespace t8_mra

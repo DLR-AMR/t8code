@@ -44,14 +44,15 @@ generate_tensor_pset (int P)
   return pset;
 }
 
-/// dir-th partial of tensor basis function p (product rule, 1D Legendre factors).
-template <unsigned int DIM>
+/// dir-th partial of tensor basis function p (product rule, 1D Legendre
+/// factors). P is the number of 1D modes (degrees 0..P-1).
+template <unsigned int DIM, int P>
 inline double
 eval_tensor_basis_gradient (const std::array<double, DIM> &x, int p, int dir, const std::vector<tensor_index<DIM>> &pset)
 {
   double result = 1.0;
   for (unsigned int d = 0; d < DIM; ++d)
-    result *= (d == static_cast<unsigned int> (dir)) ? phi_prime_1d (x[d], pset[p][d]) : phi_1d (x[d], pset[p][d]);
+    result *= (d == static_cast<unsigned int> (dir)) ? phi_prime_1d<P> (x[d], pset[p][d]) : phi_1d (x[d], pset[p][d]);
 
   return result;
 }
@@ -357,7 +358,7 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
 
     for (unsigned int dir = 0; dir < DIM; ++dir) {
       for (auto i = 0u; i < DOF; ++i) {
-        grad[dir][i] = eval_tensor_basis_gradient<DIM> (x_array, i, dir, pset);
+        grad[dir][i] = eval_tensor_basis_gradient<DIM, P_DIM> (x_array, i, dir, pset);
       }
     }
 
