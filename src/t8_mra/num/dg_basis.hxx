@@ -13,11 +13,48 @@
 #include "t8_mra/num/mat.hxx"
 #include "t8_mra/num/quadrature.hxx"
 #include "t8_mra/num/legendre_basis.hxx"
-#include "t8_mra/num/multiindex.hxx"
 #include "t8_mra/num/geometry.hxx"
 
 namespace t8_mra
 {
+
+/// Tensor index: the per-axis 1D Legendre degrees of one tensor-product basis
+/// function. pset[p] = (i_0, ..., i_{DIM-1}) so phi_p = prod_d phi_1d(., i_d).
+template <unsigned int DIM>
+using tensor_index = std::array<int, DIM>;
+
+/// Enumerate the P^DIM tensor indices, first axis varying fastest.
+template <unsigned int DIM>
+std::vector<tensor_index<DIM>>
+generate_tensor_pset (int P)
+{
+  int num_basis = 1;
+  for (unsigned int d = 0; d < DIM; ++d)
+    num_basis *= P;
+
+  std::vector<tensor_index<DIM>> pset (num_basis);
+  for (int idx = 0; idx < num_basis; ++idx) {
+    int rest = idx;
+    for (unsigned int d = 0; d < DIM; ++d) {
+      pset[idx][d] = rest % P;
+      rest /= P;
+    }
+  }
+
+  return pset;
+}
+
+/// dir-th partial of tensor basis function p (product rule, 1D Legendre factors).
+template <unsigned int DIM>
+inline double
+eval_tensor_basis_gradient (const std::array<double, DIM> &x, int p, int dir, const std::vector<tensor_index<DIM>> &pset)
+{
+  double result = 1.0;
+  for (unsigned int d = 0; d < DIM; ++d)
+    result *= (d == static_cast<unsigned int> (dir)) ? phi_prime_1d (x[d], pset[p][d]) : phi_1d (x[d], pset[p][d]);
+
+  return result;
+}
 
 template <t8_eclass TShape, typename = void>
 struct dg_basis_base
@@ -272,7 +309,7 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
   // Multiindex set for tensor basis (cartesian elements only)
 
  public:
-  std::vector<multiindex<DIM>> pset;
+  std::vector<tensor_index<DIM>> pset;
   dg_basis () = default;
 
   // Constructor for triangular elements

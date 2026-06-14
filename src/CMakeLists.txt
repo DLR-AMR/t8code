@@ -177,9 +177,7 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/num/mask_coefficients_compute.hxx
     t8_mra/num/mask_coefficients_triangle.hxx
     t8_mra/num/mat.hxx
-    t8_mra/num/multiindex.hxx
     t8_mra/num/quadrature.hxx
-    t8_mra/num/vec.hxx
     DESTINATION include/t8_mra/num )
 endif()
 
