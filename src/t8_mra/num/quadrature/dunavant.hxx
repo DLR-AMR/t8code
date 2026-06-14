@@ -1,83 +1,39 @@
 /**
  * @file
- * @brief Dunavant quadrature rule over the interior of a triangle in 2D 
- * See https://people.sc.fsu.edu/~jburkardt/m_src/triangle_dunavant_rule/triangle_dunavant_rule.html
+ * @brief Dunavant quadrature rules over the reference triangle.
+ * Coefficients from David Dunavant, "High Degree Efficient Symmetrical
+ * Gaussian Quadrature Rules for the Triangle", IJNME 21 (1985), 1129-1148.
+ * Original C tables by John Burkardt; the data lives in dunavant_table.hxx.
  */
 
 #pragma once
 
 #ifdef T8_ENABLE_MRA
 
+#include <span>
+#include <vector>
+
 namespace t8_mra
 {
-int
-dunavant_degree (int rule);
-int
-dunavant_order_num (int rule);
-void
-dunavant_rule (int rule, int order_num, double xy[], double w[]);
-int
-dunavant_rule_num (void);
-int *
-dunavant_suborder (int rule, int suborder_num);
-int
-dunavant_suborder_num (int rule);
-void
-dunavant_subrule (int rule, int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_01 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_02 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_03 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_04 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_05 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_06 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_07 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_08 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_09 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_10 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_11 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_12 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_13 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_14 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_15 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_16 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_17 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_18 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_19 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-void
-dunavant_subrule_20 (int suborder_num, double suborder_xyz[], double suborder_w[]);
-int
-i4_max (int i1, int i2);
-int
-i4_min (int i1, int i2);
-int
-i4_modp (int i, int j);
-int
-i4_wrap (int ival, int ilo, int ihi);
-double
-r8_huge (void);
-int
-r8_nint (double x);
-void
-reference_to_physical_t3 (double t[], int n, double ref[], double phy[]);
+
+/// A reference-triangle quadrature rule: points flattened as [x0,y0, x1,y1, ...]
+/// with one weight per point.
+struct dunavant_quadrature
+{
+  std::vector<double> points;
+  std::vector<double> weights;
+};
+
+/// Expand Dunavant rule `rule` (1..20) into its full point/weight set.
+dunavant_quadrature
+dunavant_rule (int rule);
+
+/// Map reference-triangle points to physical space. tri holds the three
+/// vertices [x0,y0, x1,y1, x2,y2]; ref holds points [x0,y0, ...]; the returned
+/// vector holds the physical points in the same flattened layout.
+std::vector<double>
+reference_to_physical_t3 (std::span<const double> tri, std::span<const double> ref);
+
 }  // namespace t8_mra
 
 #endif
