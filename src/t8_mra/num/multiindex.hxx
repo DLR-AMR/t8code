@@ -5,6 +5,8 @@
 #include <array>
 #include <vector>
 
+#include "t8_mra/num/legendre_basis.hxx"
+
 namespace t8_mra
 {
 
@@ -99,61 +101,19 @@ generate_tensor_pset (int P)
 }
 
 /**
- * @brief Evaluates a single tensor basis function at a point
+ * @brief Evaluates the dir-th partial derivative of a tensor basis function.
  *
- * Computes phi_p(x) = product_{d=0}^{DIM-1} phi_1d(x[d], pset[p][d])
- * where phi_1d is the 1D Legendre basis function.
- *
- * @tparam DIM Spatial dimension
- * @param x Point in [0,1]^DIM where to evaluate
- * @param p Basis function index
- * @param pset Multiindex set mapping p to 1D indices
- * @param phi_1d Function pointer to 1D basis evaluation
- * @return double Value of the p-th basis function at x
+ * Product rule: d/dx_dir phi_p = phi_1d'(x_dir) * prod_{d!=dir} phi_1d(x_d),
+ * with the 1D Legendre factors taken from pset[p].
  */
 template <unsigned int DIM>
 inline double
-eval_tensor_basis (const std::array<double, DIM> &x, int p, const std::vector<multiindex<DIM>> &pset,
-                   double (*phi_1d) (double, int))
+eval_tensor_basis_gradient (const std::array<double, DIM> &x, int p, int dir, const std::vector<multiindex<DIM>> &pset)
 {
   double result = 1.0;
   for (unsigned int d = 0; d < DIM; ++d)
-    result *= phi_1d (x[d], pset[p][d]);
+    result *= (d == static_cast<unsigned int> (dir)) ? phi_prime_1d (x[d], pset[p][d]) : phi_1d (x[d], pset[p][d]);
 
-  return result;
-}
-
-/**
- * @brief Evaluates the gradient of a tensor basis function at a point
- *
- * Computes grad_phi_p(x)[dir] using the product rule:
- * d/dx_dir [phi_p(x)] = phi_1d'(x[dir], pset[p][dir]) * product_{d!=dir} phi_1d(x[d], pset[p][d])
- *
- * @tparam DIM Spatial dimension
- * @param x Point in [0,1]^DIM where to evaluate
- * @param p Basis function index
- * @param dir Derivative direction (0, 1, ..., DIM-1)
- * @param pset Multiindex set mapping p to 1D indices
- * @param phi_1d Function pointer to 1D basis evaluation
- * @param phi_prime_1d Function pointer to 1D basis derivative evaluation
- * @return double Value of the dir-th partial derivative of phi_p at x
- */
-template <unsigned int DIM>
-inline double
-eval_tensor_basis_gradient (const std::array<double, DIM> &x, int p, int dir, const std::vector<multiindex<DIM>> &pset,
-                            double (*phi_1d) (double, int), double (*phi_prime_1d) (double, int))
-{
-  double result = 1.0;
-  for (unsigned int d = 0; d < DIM; ++d) {
-    if (d == static_cast<unsigned int> (dir)) {
-      // Use derivative in this direction
-      result *= phi_prime_1d (x[d], pset[p][d]);
-    }
-    else {
-      // Use function value in other directions
-      result *= phi_1d (x[d], pset[p][d]);
-    }
-  }
   return result;
 }
 

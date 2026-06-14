@@ -320,7 +320,7 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
 
     for (unsigned int dir = 0; dir < DIM; ++dir) {
       for (auto i = 0u; i < DOF; ++i) {
-        grad[dir][i] = eval_tensor_basis_gradient<DIM> (x_array, i, dir, pset, phi_1d, phi_prime_1d);
+        grad[dir][i] = eval_tensor_basis_gradient<DIM> (x_array, i, dir, pset);
       }
     }
 
