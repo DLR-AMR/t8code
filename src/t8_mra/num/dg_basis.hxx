@@ -44,27 +44,7 @@ struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
   {
   }
 
-  /**
-   * @brief Computes Jacobian determinant for the physical element
-   *
-   * @param physical_vertices Vertex coordinates of the physical element
-   * @return double Absolute value of Jacobian determinant
-   */
-  double
-  jacobian_det (const double physical_vertices[][3])
-  {
-    std::array<double, DIM> vertices_min, vertices_max;
-    extract_cartesian_vertices<DIM> (physical_vertices, vertices_min, vertices_max);
-
-    return jacobian_determinant<DIM> (vertices_min, vertices_max);
-  }
-
-  /**
-   * @brief Maps quadrature points from reference element to physical element
-   *
-   * @param physical_vertices Vertex coordinates of the physical element
-   * @return std::vector<double> Physical quadrature points (flattened)
-   */
+  /// Maps the reference quadrature points to the physical element (flattened).
   std::vector<double>
   deref_quad_points (const double physical_vertices[][3])
   {
@@ -72,59 +52,6 @@ struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
     extract_cartesian_vertices<DIM> (physical_vertices, vertices_min, vertices_max);
 
     return transform_quad_points<DIM> (quad.points, quad.num_points, vertices_min, vertices_max);
-  }
-
-  /**
-   * @brief Maps a point from physical element to reference element [0,1]^DIM
-   *
-   * @param physical_vertices Vertex coordinates of the physical element
-   * @param grid_point Point in physical element (must have at least DIM coordinates)
-   * @return std::vector<double> Point in reference element [0,1]^DIM
-   */
-  std::vector<double>
-  ref_point (const double physical_vertices[][3], const std::vector<double> &grid_point)
-  {
-    std::array<double, DIM> vertices_min, vertices_max;
-    extract_cartesian_vertices<DIM> (physical_vertices, vertices_min, vertices_max);
-
-    std::array<double, DIM> x_phys;
-    for (unsigned int d = 0; d < DIM; ++d)
-      x_phys[d] = grid_point[d];
-
-    std::array<double, DIM> x_ref = ref<DIM> (x_phys, vertices_min, vertices_max);
-
-    std::vector<double> result (DIM);
-    for (unsigned int d = 0; d < DIM; ++d)
-      result[d] = x_ref[d];
-
-    return result;
-  }
-
-  /**
-   * @brief Maps a point from reference element to physical element
-   *
-   * @param physical_vertices Vertex coordinates of the physical element
-   * @param ref_point_coords Point in reference element [0,1]^DIM
-   * @return std::vector<double> Point in physical element
-   */
-  std::vector<double>
-  deref_point (const double physical_vertices[][3], const std::vector<double> &ref_point_coords)
-  {
-    std::array<double, DIM> vertices_min, vertices_max;
-    extract_cartesian_vertices<DIM> (physical_vertices, vertices_min, vertices_max);
-
-    std::array<double, DIM> x_ref;
-    for (unsigned int d = 0; d < DIM; ++d) {
-      x_ref[d] = ref_point_coords[d];
-    }
-
-    std::array<double, DIM> x_phys = deref<DIM> (x_ref, vertices_min, vertices_max);
-
-    std::vector<double> result (DIM);
-    for (unsigned int d = 0; d < DIM; ++d) {
-      result[d] = x_phys[d];
-    }
-    return result;
   }
 };
 
