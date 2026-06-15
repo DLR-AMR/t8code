@@ -525,11 +525,14 @@ struct t8_subelement_scheme_common:
    * \param [in,out] nca  The storage for this element must exist and match the element class of the child.
    *                      On output the unique nearest common ancestor of \b elem1 and \b elem2.
    */
-  static void
+  void
   element_get_nca ([[maybe_unused]] const t8_element_t *elem1, [[maybe_unused]] const t8_element_t *elem2,
-                   [[maybe_unused]] t8_element_t *nca) noexcept
+                   [[maybe_unused]] t8_element_t *nca) const noexcept
   {
-    SC_ABORT ("element_get_nca not implemented yet.\n");
+    SC_CHECK_ABORT ((!element_is_subelement (elem1)) && (!element_is_subelement (elem2)),
+                    "element_get_nca is not implemented for subelements yet.\n");
+    derived ().underlying_scheme.element_get_nca (element_to_standalone (elem1), element_to_standalone (elem2),
+                                                  element_to_standalone (nca));
   }
 
   /** Compute the first descendant of a given element.

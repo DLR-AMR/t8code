@@ -94,7 +94,8 @@ add_t8_example( NAME t8_example_spheres                 SOURCES remove/t8_exampl
 add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_example_gauss_blob.cxx )
 add_t8_example( NAME t8_example_empty_trees             SOURCES remove/t8_example_empty_trees.cxx )
 
-add_t8_example( NAME t8_example_hanging_nodes           SOURCES subelements/t8_quads_hanging_nodes.cxx )
+add_t8_example( NAME t8_hanging_nodes_shock           SOURCES subelements/t8_hanging_nodes_shock.cxx )
+add_t8_example( NAME    t8_example_hanging_nodes         SOURCES subelements/t8_quads_hanging_nodes.cxx )
 
 add_t8_example( NAME t8_version                         SOURCES version/t8_version.cxx )
 

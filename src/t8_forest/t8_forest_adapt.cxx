@@ -31,6 +31,7 @@
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #include <t8_data/t8_containers.h>
+#include "t8_forest_subelement.hxx"
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
@@ -433,8 +434,10 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
 
   if (forest->set_adapt_recursive) {
-    SC_CHECK_ABORT (!t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from)),
-                    "Recursive adaptation is currently not implemented for subelement schemes.");
+    if (t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from))) {
+      SC_CHECK_ABORT (!t8_forest_has_subelements (forest_from),
+                      "Recursive adaptation is currently not implemented for subelement schemes.");
+    }
     refine_list = sc_list_new (nullptr);
   }
   forest->local_num_leaf_elements = 0;
