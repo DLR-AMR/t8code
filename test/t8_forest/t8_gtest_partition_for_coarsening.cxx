@@ -133,7 +133,7 @@ coarsen_all_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
 /**
  * Class to test the partition-for-coarsening functionality.
 */
-struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *, int>>
+struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>>
 {
 
  protected:
@@ -145,12 +145,12 @@ struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std:
     const int scheme_id = std::get<0> (GetParam ());
     scheme = create_from_scheme_id (scheme_id);
 
-    // Construct cmesh and store name.
-    cmesh = std::get<1> (GetParam ())->cmesh_create ();
-    cmesh_name = std::get<1> (GetParam ())->name;
-
     // Get the initial uniform refinement level.
-    level = std::get<2> (GetParam ());
+    level = std::get<1> (GetParam ());
+
+    // Construct cmesh and store name.
+    cmesh = std::get<2> (GetParam ())->cmesh_create ();
+    cmesh_name = std::get<2> (GetParam ())->name;
 
     // Skip empty meshes.
     if (t8_cmesh_is_empty (cmesh)) {
@@ -203,8 +203,8 @@ struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std:
 
   // Member variables: The currently tested scheme and eclass.
   const t8_scheme *scheme; /**< The currently tested scheme. */
-  t8_cmesh_t cmesh;        /**< The currently tested cmesh. */
   int level;               /**< The currently initial uniform refinement level. */
+  t8_cmesh_t cmesh;        /**< The currently tested cmesh. */
   std::string cmesh_name;  /**< Name of the currently tested cmesh.*/
 };
 
@@ -342,5 +342,5 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
 
 // Instantiate parameterized test to be run for all schemes.
 INSTANTIATE_TEST_SUITE_P (t8_gtest_partition_for_coarsening, t8_test_partition_for_coarsening_test,
-                          testing::Combine (AllSchemeCollections, AllCmeshsParam, testing::Values (0, 2)),
-                          pretty_print_base_example_scheme);
+                          testing::Combine (AllSchemeCollections, testing::Values (0, 2), AllCmeshsParam),
+                          pretty_print_level_and_cmesh_params);
