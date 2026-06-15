@@ -16,17 +16,10 @@
 namespace t8_mra
 {
 
+/// Primary template left undefined: only cartesian shapes and the triangle are
+/// supported (specializations below). Any other shape is a compile error.
 template <t8_eclass TShape, typename = void>
-struct dg_basis_base
-{
-  static constexpr unsigned int DIM = 0;
-  static constexpr t8_eclass Shape = TShape;
-
-  size_t num_quad_points;
-  std::vector<double> ref_quad_points;
-  std::vector<double> quad_weights;
-  /// TODO error message
-};
+struct dg_basis_base;
 
 template <t8_eclass T>
 struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
@@ -34,13 +27,12 @@ struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
   static constexpr unsigned int DIM = T == T8_ECLASS_LINE ? 1 : (T == T8_ECLASS_QUAD ? 2 : 3);
   static constexpr t8_eclass Shape = T;
 
-  // Reference Gauss-Legendre rule; the second ctor argument (polynomial order)
-  // is kept for a uniform constructor signature across shapes.
+  // Reference Gauss-Legendre tensor rule.
   quadrature<T> quad;
 
   dg_basis_base () = default;
 
-  dg_basis_base (int num_quad_points_1d, int): quad (num_quad_points_1d)
+  explicit dg_basis_base (int num_quad_points_1d): quad (num_quad_points_1d)
   {
   }
 
@@ -129,9 +121,9 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
   }
 
   // Constructor for cartesian elements (LINE, QUAD, HEX)
-  dg_basis (int _num_quad_points_1d, int _P)
+  explicit dg_basis (int _num_quad_points_1d)
     requires is_cartesian<Shape>
-    : Base (_num_quad_points_1d, _P)
+    : Base (_num_quad_points_1d)
   {
   }
 

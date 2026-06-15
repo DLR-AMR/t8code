@@ -115,7 +115,7 @@ class multiscale_base: public multiscale_data<TShape> {
    */
   multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires is_cartesian<TShape>
-    : maximum_level (_max_level), basis (default_num_quad_points_1d, P_DIM), d_map (maximum_level),
+    : maximum_level (_max_level), basis (default_num_quad_points_1d), d_map (maximum_level),
       td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level), ghost_map (maximum_level),
       comm (_comm)
   {
