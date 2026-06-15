@@ -4,7 +4,7 @@
 
 #include "t8_mra/core/base.hxx"
 #include "t8_mra/core/adaptation.hxx"
-#include "t8_mra/num/mask_coefficients_compute.hxx"
+#include "t8_mra/num/mask_coefficients.hxx"
 
 #include <span>
 
@@ -56,8 +56,8 @@ class multiscale<TShape, U, P>:
    */
   multiscale (int _max_level, sc_MPI_Comm _comm): Base (_max_level, _comm)
   {
-    // Initialize mask coefficients via computation
-    t8_mra::initialize_mask_coefficients_computed<TShape> (Base::P_DIM, Base::DOF, Base::mask_coefficients);
+    // Compute two-scale mask coefficients (reference basis + quadrature).
+    t8_mra::compute_mask<TShape, Base::P_DIM> (Base::mask_coefficients);
   }
 
   //=============================================================================
