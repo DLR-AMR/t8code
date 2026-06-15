@@ -54,8 +54,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    */
   multiscale (int _max_level, sc_MPI_Comm _comm): Base (_max_level, _comm)
   {
-    // Initialize mask coefficients from hardcoded values
-    t8_mra::initialize_mask_coefficients<TShape> (Base::P_DIM, Base::DOF, Base::mask_coefficients);
+    // Compute two-scale mask coefficients (Dubiner basis + Dunavant quadrature).
+    t8_mra::initialize_triangle_mask<Base::P_DIM> (Base::mask_coefficients);
   }
 
   //=============================================================================
