@@ -2,641 +2,75 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <cmath>
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <vector>
 
 #include <t8_eclass/t8_eclass.h>
 #include <t8_mra/num/mat.hxx>
+#include <t8_mra/num/basis/basis.hxx>
+#include <t8_mra/num/quadrature/quadrature.hxx>
 
 namespace t8_mra
 {
 
-template <>
+/// Two-scale low-pass masks for the triangle (4 children, dof x dof each):
+///   M_k(i, j) = 1/2 * ∫_T φ_j(Φ_k ξ) φ_i(ξ) dξ
+/// with φ the orthonormal Dubiner basis and Φ_k the affine map from the
+/// reference triangle T onto child k of a red refinement. M_k is the parent ->
+/// child-k two-scale relation consumed by the multiscale transform (mst.hxx).
+template <int P>
 void
-initialize_mask_coefficients<T8_ECLASS_TRIANGLE> (size_t order, size_t dof, std::vector<t8_mra::mat> &mask_coeffs)
+initialize_triangle_mask (std::vector<t8_mra::mat> &mask_coeffs)
 {
-  mask_coeffs.resize (4, t8_mra::mat { dof, dof });
+  using basis_t = basis<T8_ECLASS_TRIANGLE, P>;
+  constexpr int dof = basis_t::DOF;
 
-  switch (order) {
-  case 1:
-    mask_coeffs[0] = { 1. / 2. };
-    mask_coeffs[1] = { 1. / 2. };
-    mask_coeffs[2] = { 1. / 2. };
-    mask_coeffs[3] = { 1. / 2. };
+  mask_coeffs.assign (4, t8_mra::mat { dof, dof });
 
-    break;
+  // Child vertices in parent reference coords (red refinement); per-child vertex
+  // order fixes the canonical two-scale convention.
+  constexpr std::array<std::array<std::array<double, 2>, 3>, 4> child { {
+    { { { 0.5, 0.0 }, { 0.5, 0.5 }, { 0.0, 0.5 } } },  // center (inverted)
+    { { { 0.5, 0.0 }, { 1.0, 0.0 }, { 0.5, 0.5 } } },
+    { { { 0.5, 0.5 }, { 0.0, 1.0 }, { 0.0, 0.5 } } },
+    { { { 0.0, 0.5 }, { 0.0, 0.0 }, { 0.5, 0.0 } } },
+  } };
 
-  case 2:
-    /// TODO Fix that (is transpose)
-    // mask_coeffs[0](0, 0) = 1. / 2.;
-    // mask_coeffs[0](0, 1) = 0.;
-    // mask_coeffs[0](0, 2) = 0.;
-    // mask_coeffs[0](1, 0) = 0.;
-    // mask_coeffs[0](1, 1) = 1. / 8.;
-    // mask_coeffs[0](1, 2) = -1. / 8. * std::sqrt (3.);
-    // mask_coeffs[0](2, 0) = 0.;
-    // mask_coeffs[0](2, 1) = 1. / 8. * std::sqrt (3.);
-    // mask_coeffs[0](2, 2) = 1. / 8.;
-    //
-    // mask_coeffs[1](0, 0) = 1. / 2.;
-    // mask_coeffs[1](0, 1) = 0.;
-    // mask_coeffs[1](0, 2) = 0.;
-    // mask_coeffs[1](1, 0) = -1. / 4. * std::sqrt (2.);
-    // mask_coeffs[1](1, 1) = 1. / 4.;
-    // mask_coeffs[1](1, 2) = 0.;
-    // mask_coeffs[1](2, 0) = -1. / 4. * std::sqrt (2.) * sqrt (3.);
-    // mask_coeffs[1](2, 1) = 0.;
-    // mask_coeffs[1](2, 2) = 1. / 4.;
-    //
-    // mask_coeffs[2](0, 0) = 1. / 2.;
-    // mask_coeffs[2](0, 1) = 0.;
-    // mask_coeffs[2](0, 2) = 0.;
-    // mask_coeffs[2](1, 0) = 1. / 2. * std::sqrt (2.);
-    // mask_coeffs[2](1, 1) = -1. / 8.;
-    // mask_coeffs[2](1, 2) = -1. / 8. * std::sqrt (3.);
-    // mask_coeffs[2](2, 0) = 0.;
-    // mask_coeffs[2](2, 1) = 1. / 8. * std::sqrt (3.);
-    // mask_coeffs[2](2, 2) = -1. / 8.;
-    //
-    // mask_coeffs[3](0, 0) = 1. / 2.;
-    // mask_coeffs[3](0, 1) = 0.;
-    // mask_coeffs[3](0, 2) = 0.;
-    // mask_coeffs[3](1, 0) = -1. / 4. * std::sqrt (2.);
-    // mask_coeffs[3](1, 1) = -1. / 8.;
-    // mask_coeffs[3](1, 2) = 1. / 8. * std::sqrt (3.);
-    // mask_coeffs[3](2, 0) = 1. / 4. * std::sqrt (2.) * sqrt (3.);
-    // mask_coeffs[3](2, 1) = -1. / 8. * std::sqrt (3.);
-    // mask_coeffs[3](2, 2) = -1. / 8.;
-    mask_coeffs[0] = { 1. / 2., 0., 0., 0., 1. / 8., -1. / 8. * std::sqrt (3.), 0., 1. / 8. * std::sqrt (3.), 1. / 8. };
-    mask_coeffs[1]
-      = { 1. / 2., 0.,     0., -1. / 4. * std::sqrt (2.), 1. / 4., 0., -1. / 4. * std::sqrt (2.) * std::sqrt (3.),
-          0.,      1. / 4. };
-    mask_coeffs[2]
-      = { 1. / 2., 0., 0., 1. / 2. * std::sqrt (2.), -1. / 8., -1. / 8. * std::sqrt (3.), 0., 1. / 8. * std::sqrt (3.),
-          -1. / 8. };
-    mask_coeffs[3] = { 1. / 2.,
-                       0.,
-                       0.,
-                       -1. / 4. * std::sqrt (2.),
-                       -1. / 8.,
-                       1. / 8. * std::sqrt (3.),
-                       1. / 4. * std::sqrt (2.) * std::sqrt (3.),
-                       -1. / 8. * std::sqrt (3.),
-                       -1. / 8. };
-    break;
+  // Reference-triangle rule exact to degree 2(P-1) (product of two basis funcs).
+  const quadrature<T8_ECLASS_TRIANGLE> quad (std::min (20, 2 * P));
 
-  case 3:
-    mask_coeffs[0] = { 1. / 2.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 8.,
-                       -1. / 8. * std::sqrt (3.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 8. * std::sqrt (3.),
-                       1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       -5. / 24. * std::sqrt (3.),
-                       -1. / 24. * std::sqrt (6.),
-                       1. / 8. * std::sqrt (2.),
-                       1. / 24.,
-                       -1. / 24. * std::sqrt (3.),
-                       1. / 24. * std::sqrt (5.),
-                       0.,
-                       3. / 16. * std::sqrt (2.),
-                       1. / 16. * std::sqrt (2.) * std::sqrt (3.),
-                       1. / 24. * std::sqrt (3.),
-                       -1. / 16.,
-                       -1. / 48. * std::sqrt (15.),
-                       -1. / 12. * std::sqrt (15.),
-                       1. / 48. * std::sqrt (30.),
-                       -1. / 16. * std::sqrt (10.),
-                       1. / 24. * std::sqrt (5.),
-                       1. / 48. * std::sqrt (15.),
-                       1. / 48. };
-    mask_coeffs[1] = { 1. / 2.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -1. / 4. * std::sqrt (2.),
-                       1. / 4.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -1. / 4. * std::sqrt (2.) * std::sqrt (3.),
-                       0.,
-                       1. / 4.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 24. * std::sqrt (3.),
-                       -1. / 6. * std::sqrt (6.),
-                       0.,
-                       1. / 8.,
-                       0.,
-                       0.,
-                       1. / 8.,
-                       -5. / 16. * std::sqrt (2.),
-                       -1. / 16. * std::sqrt (2.) * std::sqrt (3.),
-                       0.,
-                       1. / 8.,
-                       0.,
-                       1. / 24. * std::sqrt (15.),
-                       1. / 48. * std::sqrt (30.),
-                       -3. / 16. * std::sqrt (10.),
-                       0.,
-                       0.,
-                       1. / 8. };
-    mask_coeffs[2] = { 1. / 2.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 2. * std::sqrt (2.),
-                       -1. / 8.,
-                       -1. / 8. * std::sqrt (3.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 8. * std::sqrt (3.),
-                       -1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 8. * std::sqrt (3.),
-                       -1. / 8. * std::sqrt (6.),
-                       -3. / 8. * std::sqrt (2.),
-                       1. / 24.,
-                       1. / 24. * std::sqrt (3.),
-                       1. / 24. * std::sqrt (5.),
-                       0.,
-                       3. / 8. * std::sqrt (2.),
-                       -1. / 8. * std::sqrt (2.) * std::sqrt (3.),
-                       -1. / 24. * std::sqrt (3.),
-                       -1. / 16.,
-                       1. / 48. * std::sqrt (15.),
-                       0.,
-                       0.,
-                       0.,
-                       1. / 24. * std::sqrt (5.),
-                       -1. / 48. * std::sqrt (15.),
-                       1. / 48. };
-    mask_coeffs[3] = { 1. / 2.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -1. / 4. * std::sqrt (2.),
-                       -1. / 8.,
-                       1. / 8. * std::sqrt (3.),
-                       0.,
-                       0.,
-                       0.,
-                       1. / 4. * std::sqrt (2.) * std::sqrt (3.),
-                       -1. / 8. * std::sqrt (3.),
-                       -1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 24. * std::sqrt (3.),
-                       1. / 12. * std::sqrt (6.),
-                       -1. / 4. * std::sqrt (2.),
-                       1. / 24.,
-                       -1. / 24. * std::sqrt (3.),
-                       1. / 24. * std::sqrt (5.),
-                       -1. / 8.,
-                       -1. / 16. * std::sqrt (2.),
-                       3. / 16. * std::sqrt (2.) * std::sqrt (3.),
-                       1. / 24. * std::sqrt (3.),
-                       -1. / 16.,
-                       -1. / 48. * std::sqrt (15.),
-                       1. / 24. * std::sqrt (15.),
-                       -5. / 48. * std::sqrt (30.),
-                       -1. / 16. * std::sqrt (10.),
-                       1. / 24. * std::sqrt (5.),
-                       1. / 48. * std::sqrt (15.),
-                       1. / 48. };
-    break;
+  double wsum = 0.0;
+  for (std::size_t j = 0; j < quad.num_points; ++j)
+    wsum += quad.weights[j];
+  // 1/2 (definition) * area(T)=1/2 / wsum, independent of the rule's weight scale.
+  const double factor = 1.0 / (4.0 * wsum);
 
-  case 4:
-    mask_coeffs[0] = { 1. / 2.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 8.,
-                       -(1. / 8.) * std::sqrt (3.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 8.) * std::sqrt (3.),
-                       1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -(5. / 24.) * std::sqrt (3.),
-                       -(1. / 24.) * std::sqrt (6.),
-                       (1. / 8.) * std::sqrt (2.),
-                       1. / 24.,
-                       -(1. / 24.) * std::sqrt (3.),
-                       (1. / 24.) * std::sqrt (5.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (3. / 16.) * std::sqrt (2.),
-                       (1. / 16.) * std::sqrt (2.) * std::sqrt (3.),
-                       (1. / 24.) * std::sqrt (3.),
-                       -1. / 16.,
-                       -(1. / 48.) * std::sqrt (15.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -(1. / 12.) * std::sqrt (15.),
-                       (1. / 48.) * std::sqrt (30.),
-                       -(1. / 16.) * std::sqrt (10.),
-                       (1. / 24.) * std::sqrt (5.),
-                       (1. / 48.) * std::sqrt (15.),
-                       1. / 48.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 8.,
-                       -(1. / 16.) * std::sqrt (2.),
-                       (1. / 16.) * std::sqrt (2.) * std::sqrt (3.),
-                       -(1. / 24.) * std::sqrt (3.),
-                       1. / 8.,
-                       -(1. / 24.) * std::sqrt (15.),
-                       1. / 64.,
-                       -(1. / 64.) * std::sqrt (3.),
-                       (1. / 64.) * std::sqrt (5.),
-                       -(1. / 64.) * std::sqrt (7.),
-                       0.,
-                       -(3. / 80.) * std::sqrt (6.),
-                       -(3. / 80.) * std::sqrt (2.),
-                       1. / 20.,
-                       -(1. / 40.) * std::sqrt (3.),
-                       -(1. / 40.) * std::sqrt (5.),
-                       (1. / 64.) * std::sqrt (3.),
-                       -11. / 320.,
-                       (1. / 320.) * std::sqrt (5.) * std::sqrt (3.),
-                       (3. / 320.) * std::sqrt (7.) * std::sqrt (3.),
-                       -(1. / 8.) * std::sqrt (5.),
-                       -(1. / 80.) * std::sqrt (10.),
-                       (1. / 80.) * std::sqrt (3.) * std::sqrt (10.),
-                       (3. / 40.) * std::sqrt (5.) * std::sqrt (3.),
-                       (1. / 40.) * std::sqrt (5.),
-                       (1. / 8.) * std::sqrt (3.),
-                       (1. / 64.) * std::sqrt (5.),
-                       -(1. / 320.) * std::sqrt (5.) * std::sqrt (3.),
-                       -3. / 64.,
-                       -(1. / 320.) * std::sqrt (7.) * std::sqrt (5.),
-                       0.,
-                       -(3. / 80.) * std::sqrt (14.),
-                       -(1. / 80.) * std::sqrt (3.) * std::sqrt (14.),
-                       (1. / 60.) * std::sqrt (7.) * std::sqrt (3.),
-                       -(1. / 40.) * std::sqrt (7.),
-                       -(1. / 120.) * std::sqrt (15.) * std::sqrt (7.),
-                       (1. / 64.) * std::sqrt (7.),
-                       (3. / 320.) * std::sqrt (7.) * std::sqrt (3.),
-                       (1. / 320.) * std::sqrt (7.) * std::sqrt (5.),
-                       1. / 320. };
-    mask_coeffs[1] = { 1. / 2.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -(1. / 4.) * std::sqrt (2.),
-                       1. / 4.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -(1. / 4.) * std::sqrt (2.) * std::sqrt (3.),
-                       0.,
-                       1. / 4.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 24.) * std::sqrt (3.),
-                       -(1. / 6.) * std::sqrt (6.),
-                       0.,
-                       1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 8.,
-                       -(5. / 16.) * std::sqrt (2.),
-                       -(1. / 16.) * std::sqrt (2.) * std::sqrt (3.),
-                       0.,
-                       1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 24.) * std::sqrt (15.),
-                       (1. / 48.) * std::sqrt (30.),
-                       -(3. / 16.) * std::sqrt (10.),
-                       0.,
-                       0.,
-                       1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 16.,
-                       (3. / 16.) * std::sqrt (2.),
-                       0.,
-                       -(3. / 16.) * std::sqrt (3.),
-                       0.,
-                       0.,
-                       1. / 16.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 16.) * std::sqrt (3.),
-                       (3. / 20.) * std::sqrt (6.),
-                       (3. / 80.) * std::sqrt (2.),
-                       -21. / 80.,
-                       -(1. / 10.) * std::sqrt (3.),
-                       0.,
-                       0.,
-                       1. / 16.,
-                       0.,
-                       0.,
-                       (1. / 16.) * std::sqrt (5.),
-                       (3. / 40.) * std::sqrt (10.),
-                       (3. / 80.) * std::sqrt (3.) * std::sqrt (10.),
-                       (7. / 240.) * std::sqrt (5.) * std::sqrt (3.),
-                       -(7. / 40.) * std::sqrt (5.),
-                       -(1. / 24.) * std::sqrt (3.),
-                       0.,
-                       0.,
-                       1. / 16.,
-                       0.,
-                       (1. / 16.) * std::sqrt (7.),
-                       -(3. / 80.) * std::sqrt (14.),
-                       (3. / 40.) * std::sqrt (3.) * std::sqrt (14.),
-                       -(1. / 240.) * std::sqrt (7.) * std::sqrt (3.),
-                       (1. / 40.) * std::sqrt (7.),
-                       -(1. / 24.) * std::sqrt (15.) * std::sqrt (7.),
-                       0.,
-                       0.,
-                       0.,
-                       1. / 16. };
-    mask_coeffs[2] = { 1. / 2.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 2.) * std::sqrt (2.),
-                       -1. / 8.,
-                       -(1. / 8.) * std::sqrt (3.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 8.) * std::sqrt (3.),
-                       -1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 8.) * std::sqrt (3.),
-                       -(1. / 8.) * std::sqrt (6.),
-                       -(3. / 8.) * std::sqrt (2.),
-                       1. / 24.,
-                       (1. / 24.) * std::sqrt (3.),
-                       (1. / 24.) * std::sqrt (5.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (3. / 8.) * std::sqrt (2.),
-                       -(1. / 8.) * std::sqrt (2.) * std::sqrt (3.),
-                       -(1. / 24.) * std::sqrt (3.),
-                       -1. / 16.,
-                       (1. / 48.) * std::sqrt (15.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 24.) * std::sqrt (5.),
-                       -(1. / 48.) * std::sqrt (15.),
-                       1. / 48.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -1. / 4.,
-                       -(3. / 16.) * std::sqrt (2.),
-                       -(3. / 16.) * std::sqrt (2.) * std::sqrt (3.),
-                       (1. / 12.) * std::sqrt (3.),
-                       1. / 4.,
-                       (1. / 12.) * std::sqrt (15.),
-                       -1. / 64.,
-                       -(1. / 64.) * std::sqrt (3.),
-                       -(1. / 64.) * std::sqrt (5.),
-                       -(1. / 64.) * std::sqrt (7.),
-                       0.,
-                       (3. / 16.) * std::sqrt (6.),
-                       -(3. / 16.) * std::sqrt (2.),
-                       -1. / 4.,
-                       -(1. / 8.) * std::sqrt (3.),
-                       (1. / 8.) * std::sqrt (5.),
-                       (1. / 64.) * std::sqrt (3.),
-                       11. / 320.,
-                       (1. / 320.) * std::sqrt (5.) * std::sqrt (3.),
-                       -(3. / 320.) * std::sqrt (7.) * std::sqrt (3.),
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 12.) * std::sqrt (5.) * std::sqrt (3.),
-                       -(1. / 8.) * std::sqrt (5.),
-                       (1. / 24.) * std::sqrt (3.),
-                       -(1. / 64.) * std::sqrt (5.),
-                       -(1. / 320.) * std::sqrt (5.) * std::sqrt (3.),
-                       3. / 64.,
-                       -(1. / 320.) * std::sqrt (7.) * std::sqrt (5.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 64.) * std::sqrt (7.),
-                       -(3. / 320.) * std::sqrt (7.) * std::sqrt (3.),
-                       (1. / 320.) * std::sqrt (7.) * std::sqrt (5.),
-                       -1. / 320. };
-    mask_coeffs[3] = { 1. / 2.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -(1. / 4.) * std::sqrt (2.),
-                       -1. / 8.,
-                       (1. / 8.) * std::sqrt (3.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 4.) * std::sqrt (2.) * std::sqrt (3.),
-                       -(1. / 8.) * std::sqrt (3.),
-                       -1. / 8.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 24.) * std::sqrt (3.),
-                       (1. / 12.) * std::sqrt (6.),
-                       -(1. / 4.) * std::sqrt (2.),
-                       1. / 24.,
-                       -(1. / 24.) * std::sqrt (3.),
-                       (1. / 24.) * std::sqrt (5.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       -1. / 8.,
-                       -(1. / 16.) * std::sqrt (2.),
-                       (3. / 16.) * std::sqrt (2.) * std::sqrt (3.),
-                       (1. / 24.) * std::sqrt (3.),
-                       -1. / 16.,
-                       -(1. / 48.) * std::sqrt (15.),
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       (1. / 24.) * std::sqrt (15.),
-                       -(5. / 48.) * std::sqrt (30.),
-                       -(1. / 16.) * std::sqrt (10.),
-                       (1. / 24.) * std::sqrt (5.),
-                       (1. / 48.) * std::sqrt (15.),
-                       1. / 48.,
-                       0.,
-                       0.,
-                       0.,
-                       0.,
-                       1. / 16.,
-                       -(3. / 32.) * std::sqrt (2.),
-                       (3. / 32.) * std::sqrt (2.) * std::sqrt (3.),
-                       -(1. / 16.) * std::sqrt (3.),
-                       3. / 16.,
-                       -(1. / 16.) * std::sqrt (15.),
-                       -1. / 64.,
-                       (1. / 64.) * std::sqrt (3.),
-                       -(1. / 64.) * std::sqrt (5.),
-                       (1. / 64.) * std::sqrt (7.),
-                       -(1. / 16.) * std::sqrt (3.),
-                       (9. / 160.) * std::sqrt (6.),
-                       -(39. / 160.) * std::sqrt (2.),
-                       -1. / 80.,
-                       -(3. / 80.) * std::sqrt (3.),
-                       (11. / 80.) * std::sqrt (5.),
-                       -(1. / 64.) * std::sqrt (3.),
-                       11. / 320.,
-                       -(1. / 320.) * std::sqrt (5.) * std::sqrt (3.),
-                       -(3. / 320.) * std::sqrt (7.) * std::sqrt (3.),
-                       (1. / 16.) * std::sqrt (5.),
-                       (3. / 160.) * std::sqrt (10.),
-                       (9. / 160.) * std::sqrt (3.) * std::sqrt (10.),
-                       (13. / 240.) * std::sqrt (5.) * std::sqrt (3.),
-                       -(11. / 80.) * std::sqrt (5.),
-                       -(5. / 48.) * std::sqrt (3.),
-                       -(1. / 64.) * std::sqrt (5.),
-                       (1. / 320.) * std::sqrt (5.) * std::sqrt (3.),
-                       3. / 64.,
-                       (1. / 320.) * std::sqrt (7.) * std::sqrt (5.),
-                       -(1. / 16.) * std::sqrt (7.),
-                       -(21. / 160.) * std::sqrt (14.),
-                       -(3. / 160.) * std::sqrt (3.) * std::sqrt (14.),
-                       (19. / 240.) * std::sqrt (7.) * std::sqrt (3.),
-                       (7. / 80.) * std::sqrt (7.),
-                       (1. / 240.) * std::sqrt (15.) * std::sqrt (7.),
-                       -(1. / 64.) * std::sqrt (7.),
-                       -(3. / 320.) * std::sqrt (7.) * std::sqrt (3.),
-                       -(1. / 320.) * std::sqrt (7.) * std::sqrt (5.),
-                       -1. / 320. };
+  for (int k = 0; k < 4; ++k) {
+    const auto &v = child[k];
+    for (std::size_t j = 0; j < quad.num_points; ++j) {
+      const double x = quad.points[2 * j];
+      const double y = quad.points[2 * j + 1];
+      const double l0 = 1.0 - x - y;
 
-    break;
+      const std::array<double, 2> mapped { l0 * v[0][0] + x * v[1][0] + y * v[2][0],
+                                           l0 * v[0][1] + x * v[1][1] + y * v[2][1] };
+      const auto phi_parent = basis_t::eval (mapped);
+      const auto phi_child = basis_t::eval ({ x, y });
+      const double w = quad.weights[j];
+
+      for (int i = 0; i < dof; ++i)
+        for (int jj = 0; jj < dof; ++jj)
+          mask_coeffs[k](i, jj) += w * phi_parent[jj] * phi_child[i];
+    }
+
+    for (int i = 0; i < dof; ++i)
+      for (int jj = 0; jj < dof; ++jj)
+        mask_coeffs[k](i, jj) *= factor;
   }
 }
+
 }  // namespace t8_mra
 
-#endif
+#endif  // T8_ENABLE_MRA
