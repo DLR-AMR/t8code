@@ -8,6 +8,8 @@
 #include "t8_mra/num/mask_coefficients.hxx"
 
 #include <span>
+#include <array>
+#include <vector>
 
 namespace t8_mra
 {
@@ -124,27 +126,28 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
 
     const auto scaling_factor = basis<element_t::Shape, Base::P_DIM>::normalization (volume);
 
-    // Project function onto DG basis using Dunavant quadrature
+    // Precompute per quad point (independent of basis index i): all DOF basis
+    // values and the function value.
+    const auto num_q = Base::basis.quad.num_points;
+    std::vector<std::array<double, Base::DOF>> basis_at_quad (num_q);
+    std::vector<std::array<double, Base::U_DIM>> f_at_quad (num_q);
+    for (auto j = 0u; j < num_q; ++j) {
+      const auto x_deref = deref_quad_points[2 * j];
+      const auto y_deref = deref_quad_points[1 + 2 * j];
+
+      const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_deref, y_deref, 1.0 });
+      basis_at_quad[j] = Base::basis.basis_value (ref);
+      f_at_quad[j] = func (x_deref, y_deref);
+    }
+
+    // Project function onto DG basis using Dunavant quadrature:
+    // ∫ f(x) φᵢ(x) dx ≈ Σ w_j f(x_j) φᵢ(x_j) * scaling
     for (auto i = 0u; i < Base::DOF; ++i) {
       std::array<double, Base::U_DIM> sum = {};
 
-      for (auto j = 0u; j < Base::basis.quad.num_points; ++j) {
-        const auto x_deref = deref_quad_points[2 * j];
-        const auto y_deref = deref_quad_points[1 + 2 * j];
-
-        // Transform to reference coordinates
-        const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_deref, y_deref, 1.0 });
-
-        // Evaluate function at physical point
-        const auto f_val = func (x_deref, y_deref);
-
-        // Evaluate basis at reference point
-        const auto basis_val = Base::basis.basis_value (ref);
-
-        // Accumulate: ∫ f(x) φᵢ(x) dx ≈ Σ w_j f(x_j) φᵢ(x_j) * scaling
+      for (auto j = 0u; j < num_q; ++j)
         for (auto k = 0u; k < Base::U_DIM; ++k)
-          sum[k] += Base::basis.quad.weights[j] * f_val[k] * scaling_factor * basis_val[i];
-      }
+          sum[k] += Base::basis.quad.weights[j] * f_at_quad[j][k] * scaling_factor * basis_at_quad[j][i];
 
       for (auto k = 0u; k < Base::U_DIM; ++k)
         dg_coeffs[element_t::dg_idx (k, i)] = sum[k] * volume;

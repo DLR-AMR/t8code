@@ -4,6 +4,7 @@
 
 #include <array>
 #include <concepts>
+#include <utility>
 
 #include <t8_eclass/t8_eclass.h>
 
@@ -100,10 +101,9 @@ struct basis<T8_ECLASS_TRIANGLE, P>
   static std::array<double, DOF>
   eval (const std::array<double, DIM> &x)
   {
-    std::array<double, DOF> res = {};
-    for (int i = 0; i < DOF; ++i)
-      res[i] = scaling_function (i, x[0], x[1]);
-    return res;
+    return [&]<std::size_t... I> (std::index_sequence<I...>) {
+      return std::array<double, DOF> { scaling_function<static_cast<int> (I)> (x[0], x[1])... };
+    }(std::make_index_sequence<DOF> {});
   }
 
   static double
