@@ -126,7 +126,7 @@ coarsen_all_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
                       const int is_family, [[maybe_unused]] const int num_elements,
                       [[maybe_unused]] t8_element_t *elements[])
 {
-  // Coarsen revery family.
+  // Coarsen every family.
   return (is_family ? -1 : 0);
 }
 
