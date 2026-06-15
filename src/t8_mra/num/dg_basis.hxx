@@ -138,10 +138,9 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
     return basis_t::eval (x);
   }
 
-  /// grad[dir][i] = d(phi_i)/dx_dir at a reference point (cartesian only).
+  /// grad[dir][i] = d(phi_i)/dx_dir at a reference point.
   std::array<std::array<double, DOF>, DIM>
   basis_gradient (const std::vector<double> &x_ref)
-    requires is_cartesian<Shape>
   {
     std::array<double, DIM> x;
     for (unsigned int d = 0; d < DIM; ++d)

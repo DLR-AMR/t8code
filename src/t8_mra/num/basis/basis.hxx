@@ -106,6 +106,24 @@ struct basis<T8_ECLASS_TRIANGLE, P>
     }(std::make_index_sequence<DOF> {});
   }
 
+  /// grad[dir][i] = d(phi_i)/dx_dir on the reference triangle (the geometric
+  /// Jacobian to physical coordinates is applied by the caller).
+  static std::array<std::array<double, DOF>, DIM>
+  eval_gradient (const std::array<double, DIM> &x)
+  {
+    std::array<std::array<double, DOF>, DIM> grad = {};
+    [&]<std::size_t... I> (std::index_sequence<I...>) {
+      (
+        [&] {
+          const auto g = scaling_function_gradient<static_cast<int> (I)> (x[0], x[1]);
+          grad[0][I] = g[0];
+          grad[1][I] = g[1];
+        }(),
+        ...);
+    }(std::make_index_sequence<DOF> {});
+    return grad;
+  }
+
   static double
   normalization (double vol)
   {
