@@ -220,11 +220,6 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_set_tree_class (bbox_cmesh, 0, T8_ECLASS_HEX);
   t8_cmesh_set_tree_vertices (bbox_cmesh, 0, vertices.data (), 8);
 
-  /*
-   * If bounding_box is process-local, SC_MPI_COMM_SELF is usually safer.
-   * If you intentionally want this bbox cmesh on the same communicator,
-   * keep bbox_comm = comm.
-   */
   sc_MPI_Comm bbox_comm = comm;
 
   t8_cmesh_commit (bbox_cmesh, bbox_comm);
@@ -320,7 +315,7 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   /*
    * 7. Create the refined bbox forest.
    *
-   * This forest is only used to get the t8code/SFC order of the bbox leaves.
+   * This forest is only used to get the SFC order of the bbox leaves.
    * t8_forest_new_uniform takes ownership of bbox_cmesh and the scheme.
    */
   t8_forest_t bbox_forest = t8_forest_new_uniform (bbox_cmesh, t8_scheme_new_default (), required_level, 0, bbox_comm);
@@ -379,3 +374,11 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   return tree_reindex;
 }
+
+//void
+//t8_perform_reindex (t8_cmesh_t cmesh, std::map<t8_locidx_t, t8_locidx_t> tree_reindex_map)
+//{
+//  int num_trees = cmesh->num_trees;
+//  for (t8_locidx_t itree = 0; itree < num_trees; itree++) {
+//  }
+//}
