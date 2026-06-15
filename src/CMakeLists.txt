@@ -171,8 +171,6 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/num/dg_basis.hxx
     t8_mra/num/geometry.hxx
     t8_mra/num/mask_coefficients.hxx
-    t8_mra/num/mask_coefficients_compute.hxx
-    t8_mra/num/mask_coefficients_triangle.hxx
     t8_mra/num/mat.hxx
     DESTINATION include/t8_mra/num )
 
