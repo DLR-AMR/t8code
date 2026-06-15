@@ -204,24 +204,9 @@ compute_mask_coefficients (size_t order, size_t dof, std::vector<t8_mra::mat> &m
  */
 template <t8_eclass_t ECLASS>
 void
-initialize_mask_coefficients_computed (size_t order, size_t dof, std::vector<t8_mra::mat> &mask_coeffs,
-                                       std::vector<t8_mra::mat> &inv_mask_coeffs)
+initialize_mask_coefficients_computed (size_t order, size_t dof, std::vector<t8_mra::mat> &mask_coeffs)
 {
-  // Compute mask coefficients
   compute_mask_coefficients<ECLASS> (order, dof, mask_coeffs);
-
-  // Note: inv_mask_coeffs are for wavelets (e ≠ 0)
-  // For now, we only compute scaling function masks
-  // Wavelet masks would require computing the wavelet basis functions
-  // and their integrals, which is more complex
-
-  // Initialize inv_mask_coeffs to appropriate size (but leave empty for now)
-  constexpr int DIM = (ECLASS == T8_ECLASS_LINE)   ? 1
-                      : (ECLASS == T8_ECLASS_QUAD) ? 2
-                      : (ECLASS == T8_ECLASS_HEX)  ? 3
-                                                   : -1;
-  constexpr int NUM_CHILDREN = (1 << DIM);
-  inv_mask_coeffs.resize (NUM_CHILDREN, t8_mra::mat { dof, dof });
 }
 
 }  // namespace t8_mra
