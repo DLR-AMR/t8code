@@ -21,10 +21,10 @@ dubiner_degree (int i)
   return d;
 }
 
-/// c^N for small compile-time N (unrolled, no std::pow).
+/// c^N for small compile-time N
 template <int N>
 constexpr double
-ipow (double c)
+power (double c)
 {
   double r = 1.0;
   for (int k = 0; k < N; ++k)
@@ -44,13 +44,13 @@ scaling_function (double tau1, double tau2)
   constexpr int q = d - p;
 
   // Collapsed coordinates. At the apex (tau2 -> 1) the c^p factor kills every
-  // p>=1 term, so any finite a works there.
+  // p>=1 term.
   const double c = 1.0 - tau2;
   const double a = c < 1e-12 ? -1.0 : 1.0 - 2.0 * tau1 / c;
   const double b = 2.0 * tau2 - 1.0;
   const double norm = std::sqrt (2.0 * (2 * p + 1) * (p + q + 1));
 
-  return norm * jacobi (p, 0.0, 0.0, a) * detail::ipow<p> (c) * jacobi (q, 2.0 * p + 1.0, 0.0, b);
+  return norm * jacobi (p, 0.0, 0.0, a) * detail::power<p> (c) * jacobi (q, 2.0 * p + 1.0, 0.0, b);
 }
 
 }  // namespace t8_mra
