@@ -30,7 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competences.hxx>
+#include <mesh_handle/competences/cache_element_competences.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_cmesh/t8_cmesh.h>
@@ -59,7 +59,7 @@ struct t8_mesh_ghost_test: public testing::TestWithParam<std::tuple<t8_eclass_t,
 /** Check the implementation of ghosts and all functions accessible by ghosts. */
 TEST_P (t8_mesh_ghost_test, check_ghosts)
 {
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (eclass, level, sc_MPI_COMM_WORLD, true,
                                                                             false, false);
 
@@ -102,6 +102,8 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     for (const auto& coordinate : (*mesh)[ighost].get_face_normal (0)) {
       EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
     }
+    EXPECT_LT (0, (*mesh)[ighost].get_num_vertices_of_face (0));
+    EXPECT_LE (0, (*mesh)[ighost].face_vertex_to_element_vertex (0, 0));
     // Check exemplary that caches work for ghost elements.
     EXPECT_TRUE ((*mesh)[ighost].volume_cache_filled ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
@@ -135,14 +137,13 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
       EXPECT_EQ (mesh_iterator->get_num_faces (), num_faces);
       for (int iface = 0; iface < num_faces; iface++) {
         // --- Get neighbors from forest. ---
-        t8_element_t** neighbors;
+        const t8_element_t** neighbors;
         int num_neighbors;
-        const int forest_is_balanced = t8_forest_is_balanced (forest);
         t8_eclass_t neigh_eclass;
         int* dual_faces;
         t8_locidx_t* neigh_ids;
         t8_forest_leaf_face_neighbors (forest, itree, elem, &neighbors, iface, &dual_faces, &num_neighbors, &neigh_ids,
-                                       &neigh_eclass, forest_is_balanced);
+                                       &neigh_eclass);
         // --- Get neighbors from mesh element. ---
         std::vector<int> dual_faces_handle;
         auto neighbors_handle = mesh_iterator->get_face_neighbors (iface, dual_faces_handle);
@@ -158,7 +159,6 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
         }
         // Free memory.
         if (num_neighbors > 0) {
-          scheme->element_destroy (neigh_eclass, num_neighbors, neighbors);
           T8_FREE (neigh_ids);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
@@ -194,7 +194,7 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)
 {
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<cache_neighbors_overwrite>>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::element_competence_pack<cache_neighbors_overwrite>>;
   using element_class = typename mesh_class::element_class;
   const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
     eclass, level, sc_MPI_COMM_WORLD, true, true, false);

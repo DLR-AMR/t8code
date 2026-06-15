@@ -31,6 +31,7 @@
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <mesh_handle/mesh_io.hxx>
+#include <mesh_handle/concepts.hxx>
 #include <t8_types/t8_vec.hxx>
 #include <memory>
 #include <span>
@@ -61,7 +62,7 @@ struct user_data
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 int
 adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typename TMeshClass::element_class> elements,
                 const user_data &user_data)
@@ -85,7 +86,7 @@ adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typenam
  * \param [in] level Initial refinement level.
  * \return Unique pointer to the mesh created.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 std::unique_ptr<TMeshClass>
 build_mesh (sc_MPI_Comm comm, int level)
 {
@@ -109,12 +110,13 @@ build_mesh (sc_MPI_Comm comm, int level)
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh  The mesh handle.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 void
 set_element_data_mesh (TMeshClass &mesh)
 {
   for (auto &elem : mesh) {
-    elem.set_element_data ({ elem.get_level (), elem.get_volume () });
+    const data_per_element_type data ({ elem.get_level (), elem.get_volume () });
+    elem.set_element_data (data);
   }
 }
 
@@ -122,7 +124,7 @@ set_element_data_mesh (TMeshClass &mesh)
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh  The mesh handle.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 void
 exchange_ghost_data_mesh (TMeshClass &mesh)
 {
@@ -140,7 +142,7 @@ exchange_ghost_data_mesh (TMeshClass &mesh)
  * \param [in] fileprefix The prefix of the files where the vtk will be stored.
  *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 static void
 output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
 {
@@ -202,7 +204,8 @@ main (int argc, char **argv)
   { /* We put the mesh in its own scope so that it is automatically destroyed at the end of the scope. 
      * This is only necessary because sc_finalize checks if there are leftover references. 
      * This unique pointer would have been destroyed automatically at the end of the programme. */
-    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::competence_pack<>, data_per_element_type>;
+    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
+                                            t8_mesh_handle::data_mesh_competences<data_per_element_type>>;
     auto mesh = build_mesh<mesh_class> (comm, level);
 
     t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_mesh);
