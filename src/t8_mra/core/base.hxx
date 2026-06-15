@@ -26,7 +26,6 @@ struct multiscale_data
 {
   static constexpr unsigned short DIM = 0;
   std::vector<t8_mra::mat> mask_coefficients;
-  std::vector<t8_mra::mat> inverse_mask_coefficients;
 };
 
 /// Primary template; specialized per shape in shapes/.
@@ -59,7 +58,6 @@ class multiscale_base: public multiscale_data<TShape> {
 
   // Bring mask coefficients into scope
   using multiscale_data<TShape>::mask_coefficients;
-  using multiscale_data<TShape>::inverse_mask_coefficients;
 
   //=============================================================================
   // Member Variables (Common to all element types)
