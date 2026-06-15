@@ -27,7 +27,7 @@ struct element_data
 
   // Fixed-size storage: keeps the struct trivially copyable, so element
   // data can be shipped between ranks as raw bytes (repartitioning, ghost
-  // exchange) and lives inline in the dense maps.
+  // exchange).
   std::array<double, U_DIM * DOF> u_coeffs = {};  // Single-scale coefficients
   double vol = 0.0;
 
@@ -39,9 +39,7 @@ struct element_data
   }
 };
 
-/// Leaf data plus detail (wavelet) coefficients. Only d_map entries carry
-/// details; the leaves in lmi_map stay lean (no d_coeffs), which keeps the
-/// data shipped between ranks small.
+/// Leaf data plus detail (wavelet) coefficients.
 template <t8_eclass TShape, unsigned short U, unsigned short P>
 struct detail_data: element_data<TShape, U, P>
 {
