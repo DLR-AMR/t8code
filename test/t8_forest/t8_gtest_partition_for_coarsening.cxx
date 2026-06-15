@@ -133,7 +133,7 @@ coarsen_all_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_f
 /**
  * Class to test the partition-for-coarsening functionality.
 */
-struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std::tuple<int, cmesh_example_base *, int>>
 {
 
  protected:
@@ -148,6 +148,9 @@ struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std:
     // Construct cmesh and store name.
     cmesh = std::get<1> (GetParam ())->cmesh_create ();
     cmesh_name = std::get<1> (GetParam ())->name;
+
+    // Get the initial uniform refinement level.
+    level = std::get<2> (GetParam ());
 
     // Skip empty meshes.
     if (t8_cmesh_is_empty (cmesh)) {
@@ -201,6 +204,7 @@ struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std:
   // Member variables: The currently tested scheme and eclass.
   const t8_scheme *scheme; /**< The currently tested scheme. */
   t8_cmesh_t cmesh;        /**< The currently tested cmesh. */
+  int level;               /**< The currently initial uniform refinement level. */
   std::string cmesh_name;  /**< Name of the currently tested cmesh.*/
 };
 
@@ -212,9 +216,6 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // ----- (1.) Create uniform base forest -----
   // -------------------------------------------
   t8_global_productionf ("Create uniform forest.\n");
-
-  // Initial uniform refinement level
-  const int level = 2;
 
   // Increase reference counters of cmesh and scheme to avoid reaching zero.
   t8_cmesh_ref (cmesh);
@@ -233,8 +234,18 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
   // -----------------------------------------------------------
   t8_global_productionf ("Adapt uniform forest.\n");
 
-  // Create adapted base forest.
-  t8_forest_t adapted_base_forest = t8_forest_new_adapt (uniform_forest, refine_some_callback, 0, 0, nullptr);
+  // In some cases, we will adapt the uniform base forest.
+  t8_forest_t adapted_base_forest;
+
+  /* Ensure that in case of the root level test there is no adaptation, such that the partition bound will 
+  * definitely fall upon a root level element and the corresponding code section is covered. */
+  if (level != 0) {
+    // In any other case, we perform some adaptation.
+    adapted_base_forest = t8_forest_new_adapt (uniform_forest, refine_some_callback, 0, 0, nullptr);
+  }
+  else {
+    adapted_base_forest = uniform_forest;
+  }
 
 #if T8_ENABLE_DEBUG
   // If debug mode and an additional manual flag are set, write forest to vtk.
@@ -331,4 +342,5 @@ TEST_P (t8_test_partition_for_coarsening_test, test_partition_for_coarsening)
 
 // Instantiate parameterized test to be run for all schemes.
 INSTANTIATE_TEST_SUITE_P (t8_gtest_partition_for_coarsening, t8_test_partition_for_coarsening_test,
-                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam, testing::Values (0, 2)),
+                          pretty_print_base_example_scheme);
