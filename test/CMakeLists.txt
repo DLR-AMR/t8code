@@ -228,6 +228,8 @@ add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_fu
 if( T8CODE_ENABLE_MRA )
   add_t8_cpp_test( NAME t8_gtest_mra_adaptation_serial      SOURCES t8_mra/t8_gtest_mra_adaptation.cxx )
   add_t8_cpp_test( NAME t8_gtest_mra_data_serial            SOURCES t8_mra/t8_gtest_mra_data.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mra_num_serial             SOURCES t8_mra/t8_gtest_mra_num.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mra_dg_basis_serial        SOURCES t8_mra/t8_gtest_mra_dg_basis.cxx )
 endif()
 
 if( T8CODE_BUILD_MESH_HANDLE )
