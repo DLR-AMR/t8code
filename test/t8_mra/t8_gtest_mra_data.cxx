@@ -4,10 +4,12 @@
 
 #include <t8.h>
 #include <t8_eclass/t8_eclass.h>
+
 #include <t8_mra/data/levelmultiindex.hxx>
 #include <t8_mra/data/levelindex_map.hxx>
 #include <t8_mra/data/levelindex_set.hxx>
 #include <t8_mra/data/element_data.hxx>
+
 #include <array>
 #include <type_traits>
 
@@ -246,6 +248,128 @@ TEST (mra_levelindex_set, level_view_and_level_key_overloads)
   EXPECT_FALSE (set.contains (a));
 }
 
+/* ---- element_data ---- */
+
+TEST (mra_element_data, dg_idx_is_a_bijection)
+{
+  using elem = t8_mra::element_data<T8_ECLASS_QUAD, 3, 4>;  // U=3, DOF = 4*4 = 16
+  constexpr auto U = elem::U_DIM;
+  constexpr auto DOF = elem::DOF;
+
+  std::array<bool, U * DOF> seen {};
+  for (size_t u = 0; u < U; ++u)
+    for (size_t p = 0; p < DOF; ++p) {
+      const auto idx = elem::dg_idx (u, p);
+      ASSERT_LT (idx, U * DOF);
+      EXPECT_FALSE (seen[idx]) << "dg_idx collision at (" << u << "," << p << ")";
+      seen[idx] = true;
+    }
+}
+
+TEST (mra_element_data, wavelet_idx_is_a_bijection)
+{
+  using det = t8_mra::detail_data<T8_ECLASS_TRIANGLE, 2, 3>;
+  constexpr auto U = det::U_DIM;
+  constexpr auto DOF = det::DOF;
+  constexpr auto NC = det::NUM_CHILDREN;
+
+  std::array<bool, NC * U * DOF> seen {};
+  for (size_t k = 0; k < NC; ++k)
+    for (size_t u = 0; u < U; ++u)
+      for (size_t p = 0; p < DOF; ++p) {
+        const auto idx = det::wavelet_idx (k, u, p);
+        ASSERT_LT (idx, NC * U * DOF);
+        EXPECT_FALSE (seen[idx]) << "wavelet_idx collision at (" << k << "," << u << "," << p << ")";
+        seen[idx] = true;
+      }
+}
+
+/* The repartition/ghost wire ships element_data as raw bytes. */
+TEST (mra_element_data, is_trivially_copyable)
+{
+  EXPECT_TRUE ((std::is_trivially_copyable_v<t8_mra::element_data<T8_ECLASS_HEX, 2, 2>>) );
+  EXPECT_TRUE ((std::is_trivially_copyable_v<t8_mra::detail_data<T8_ECLASS_QUAD, 1, 3>>) );
+}
+
+/* triangle_order: TRIANGLE-specific Bey vertex-order tables (pure) */
+
+/* The six permutations of three vertices. */
+const std::array<std::array<int, 3>, 6> all_orders
+  = { { { 0, 1, 2 }, { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } } };
+
+template <std::size_t N>
+bool
+is_permutation (const std::array<int, N> &p)
+{
+  std::array<bool, N> seen {};
+  for (int v : p) {
+    if (v < 0 || v >= static_cast<int> (N) || seen[v])
+      return false;
+    seen[v] = true;
+  }
+  return true;
+}
+
+/* invert_order produces the true inverse permutation q (q[p[i]] = i). */
+TEST (mra_triangle_order, invert_order_is_the_permutation_inverse)
+{
+  for (const auto &order : all_orders) {
+    std::array<int, 3> expected {};
+    for (int i = 0; i < 3; ++i)
+      expected[order[i]] = i;
+
+    auto tmp_order = order;
+    t8_mra::triangle_order::invert_order (tmp_order);
+    EXPECT_EQ (tmp_order, expected) << "wrong inverse for {" << order[0] << order[1] << order[2] << "}";
+  }
+}
+
+/* Inverting twice is the identity. */
+TEST (mra_triangle_order, invert_order_is_an_involution)
+{
+  for (const auto &order : all_orders) {
+    auto tmp_order = order;
+    t8_mra::triangle_order::invert_order (tmp_order);
+    t8_mra::triangle_order::invert_order (tmp_order);
+    EXPECT_EQ (tmp_order, order);
+  }
+}
+
+/* get_point_order and get_parent_order map a permutation to a permutation; the
+ * identity order with child 0 stays the identity. */
+TEST (mra_triangle_order, order_maps_stay_permutations)
+{
+  for (const auto &order : all_orders)
+    for (int bey = 0; bey < 4; ++bey) {
+      auto tmp_order = order;
+      t8_mra::triangle_order::get_point_order (tmp_order, bey);
+      EXPECT_TRUE (is_permutation<3> (tmp_order)) << "get_point_order broke the permutation";
+    }
+
+  std::array<int, 3> id { 0, 1, 2 };
+  t8_mra::triangle_order::get_point_order (id, 0);
+  EXPECT_EQ ((std::array<int, 3> { 0, 1, 2 }), id);
+
+  for (const auto &order : all_orders) {
+    auto tmp_order = order;
+    t8_mra::triangle_order::get_parent_order (tmp_order);
+    EXPECT_TRUE (is_permutation<3> (tmp_order)) << "get_parent_order broke the permutation";
+  }
+}
+
+/* For a fixed parent order and Bey type, child_id -> reference index is a
+ * bijection over {0,1,2,3} (the four children land on four distinct slots). */
+TEST (mra_triangle_order, reference_children_order_is_a_bijection)
+{
+  for (int type = 1; type <= 2; ++type)
+    for (const auto &order : all_orders) {
+      std::array<int, 4> ref {};
+      for (int child = 0; child < 4; ++child)
+        ref[child] = t8_mra::triangle_order::get_reference_children_order (type, child, order);
+      EXPECT_TRUE (is_permutation<4> (ref))
+        << "type " << type << " order {" << order[0] << order[1] << order[2] << "} not a bijection";
+    }
+}
 
 }  // namespace
 
