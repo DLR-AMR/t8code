@@ -9,6 +9,7 @@
 #include <t8_mra/num/basis/basis.hxx>
 #include <t8_mra/num/geometry.hxx>
 #include <t8_mra/num/mask_coefficients.hxx>
+#include <t8_mra/num/mat.hxx>
 #include <t8_mra/num/quadrature/quadrature.hxx>
 
 #include <array>
@@ -332,6 +333,48 @@ TEST (mra_geometry, transform_quad_points_maps_onto_box)
 }
 
 /* ---- mat: dense matrix and its LU solver ---- */
+
+TEST (mra_mat, element_access_and_resize)
+{
+  t8_mra::mat A (2, 3);
+  EXPECT_EQ (A.rows (), 2u);
+  EXPECT_EQ (A.cols (), 3u);
+
+  A (1, 2) = 7.0;
+  A (0, 0) = -1.0;
+  EXPECT_EQ (A (1, 2), 7.0);
+  EXPECT_EQ (A (0, 0), -1.0);
+  EXPECT_EQ (A (0, 1), 0.0);  // value-initialized
+  EXPECT_THROW (A (2, 0), std::out_of_range);
+
+  A.resize (4, 4);
+  EXPECT_EQ (A.rows (), 4u);
+  EXPECT_EQ (A.cols (), 4u);
+  EXPECT_EQ (A (3, 3), 0.0);  // resize clears
+}
+
+/* LU factor + solve recovers the known solution of A x = b (with pivoting). */
+TEST (mra_mat, lu_solve_recovers_known_solution)
+{
+  constexpr auto eps = 1e-15;
+  // Non-symmetric, well-conditioned 3x3; row order forces a pivot.
+  t8_mra::mat A (3, 3, { 0.0, 2.0, 1.0, 1.0, 3.0, -1.0, 2.0, 1.0, 4.0 });
+  const std::vector<double> x_true { 1.0, -2.0, 3.0 };
+
+  std::vector<double> b (3, 0.0);
+  for (size_t i = 0; i < 3; ++i)
+    for (size_t j = 0; j < 3; ++j)
+      b[i] += A (i, j) * x_true[j];
+
+  std::vector<size_t> p;
+  std::vector<double> x = b;
+  t8_mra::lu_factors (A, p);  // A becomes its LU factors, p the pivot order
+  t8_mra::lu_solve (A, p, x);
+
+  for (size_t i = 0; i < 3; ++i)
+    EXPECT_NEAR (x[i], x_true[i], eps) << "component " << i;
+}
+
 }  // namespace
 
 #endif  // T8_ENABLE_MRA
