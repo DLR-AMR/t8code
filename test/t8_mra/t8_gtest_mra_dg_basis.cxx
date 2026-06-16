@@ -176,3 +176,32 @@ TEST (mra_dg_basis_triangle, deref_then_ref_point_round_trip)
   }
 }
 
+// ===========================================================================
+// basis_value / basis_gradient forward to the reference basis
+// ===========================================================================
+
+TEST (mra_dg_basis, value_and_gradient_forward_to_reference_basis)
+{
+  using elem = t8_mra::element_data<T8_ECLASS_QUAD, 1, 3>;
+  using basis_t = t8_mra::basis<T8_ECLASS_QUAD, 3>;
+  t8_mra::dg_basis<elem> dg_basis (3);
+
+  const std::vector<double> x_ref { 0.3, 0.7 };
+  const std::array<double, 2> x { 0.3, 0.7 };
+
+  const auto val = dg_basis.basis_value (x_ref);
+  const auto ref_val = basis_t::eval (x);
+
+  for (std::size_t i = 0; i < val.size (); ++i)
+    EXPECT_NEAR (val[i], ref_val[i], eps);
+
+  const auto grad = dg_basis.basis_gradient (x_ref);
+  const auto ref_grad = basis_t::eval_gradient (x);
+  for (int dir = 0; dir < 2; ++dir)
+    for (std::size_t i = 0; i < grad[dir].size (); ++i)
+      EXPECT_NEAR (grad[dir][i], ref_grad[dir][i], eps);
+}
+
+}  // namespace
+
+#endif  // T8_ENABLE_MRA
