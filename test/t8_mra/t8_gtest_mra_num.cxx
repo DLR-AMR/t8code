@@ -7,6 +7,11 @@
 
 #include <t8_mra/core/shape_traits.hxx>
 #include <t8_mra/num/quadrature/quadrature.hxx>
+
+#include <array>
+#include <cmath>
+#include <vector>
+
 namespace
 {
 
