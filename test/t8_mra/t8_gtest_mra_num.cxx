@@ -77,6 +77,116 @@ class mra_num: public ::testing::Test {
 };
 TYPED_TEST_SUITE (mra_num, NumConfigs);
 
+/* Weights are positive, sum to one (normalized rule) */
+TYPED_TEST (mra_num, quadrature_weights_and_points)
+{
+  constexpr auto Shape = TestFixture::Shape;
+  constexpr int DIM = TestFixture::DIM;
+  constexpr auto eps = TestFixture::eps;
+  const auto &quad = this->quad;
+
+  double wsum = 0.0;
+  for (std::size_t i = 0; i < quad.num_points; ++i) {
+    EXPECT_GT (quad.weights[i], 0.0);
+    wsum += quad.weights[i];
+
+    if constexpr (t8_mra::is_cartesian<Shape>) {
+      for (int d = 0; d < DIM; ++d) {
+        EXPECT_GE (quad.points[DIM * i + d], 0.0);
+        EXPECT_LE (quad.points[DIM * i + d], 1.0);
+      }
+    }
+    else {
+      const double x = quad.points[2 * i + 0];
+      const double y = quad.points[2 * i + 1];
+      EXPECT_GE (x, 0.0);
+      EXPECT_GE (y, 0.0);
+      EXPECT_LE (x + y, 1.0 + eps);
+    }
+  }
+  EXPECT_NEAR (wsum, 1.0, eps);
+}
+
+/* Polynomial exactness: cartesian integrates x0^(2n-1) = 1/(2n) exactly;
+ * triangle integrates x^a y^b = a! b! / (a+b+2)! exactly up to the rule degree. */
+TYPED_TEST (mra_num, quadrature_is_exact)
+{
+  constexpr auto Shape = TestFixture::Shape;
+  constexpr int DIM = TestFixture::DIM;
+  constexpr int P = TestFixture::P;
+  constexpr auto eps = TestFixture::eps;
+  const auto &quad = this->quad;
+
+  if constexpr (t8_mra::is_cartesian<Shape>) {
+    const int n = t8_mra::mask_quad_param<Shape, P>;  // points per axis
+    const int m = 2 * n - 1;                          // highest exactly integrable degree
+
+    // Single-axis monomial x0^m.
+    double axis = 0.0;
+    for (std::size_t i = 0; i < quad.num_points; ++i)
+      axis += quad.weights[i] * std::pow (quad.points[DIM * i + 0], m);
+    EXPECT_NEAR (axis, 1.0 / (m + 1), eps);
+
+    // Full-dimensional monomial prod_d x_d^m: exercises the tensor weight
+    // product across every axis. Exact value (1/(m+1))^DIM.
+    double mixed = 0.0;
+    for (std::size_t i = 0; i < quad.num_points; ++i) {
+      double f = quad.weights[i];
+      for (int d = 0; d < DIM; ++d)
+        f *= std::pow (quad.points[DIM * i + d], m);
+      mixed += f;
+    }
+    EXPECT_NEAR (mixed, std::pow (1.0 / (m + 1), DIM), eps);
+  }
+  else {
+    const auto mono = [&] (int a, int b) {
+      double s = 0.0;
+      for (std::size_t i = 0; i < quad.num_points; ++i)
+        s += quad.weights[i] * std::pow (quad.points[2 * i + 0], a) * std::pow (quad.points[2 * i + 1], b);
+      return s;
+    };
+    const auto fact = [] (int k) {
+      double f = 1.0;
+      for (int i = 2; i <= k; ++i)
+        f *= i;
+      return f;
+    };
+    const auto exact = [&] (int a, int b) { return fact (a) * fact (b) / fact (a + b + 2); };
+
+    // integral over the reference triangle = ref_volume * sum_q w_q f(x_q)
+    EXPECT_NEAR (ref_volume<Shape> * mono (0, 0), exact (0, 0), eps);  // area = 1/2
+    EXPECT_NEAR (ref_volume<Shape> * mono (1, 0), exact (1, 0), eps);  // 1/6
+    EXPECT_NEAR (ref_volume<Shape> * mono (1, 1), exact (1, 1), eps);  // 1/24
+  }
+}
+
+/* The reference basis is orthonormal */
+TYPED_TEST (mra_num, basis_is_orthonormal)
+{
+  constexpr auto Shape = TestFixture::Shape;
+  constexpr int DIM = TestFixture::DIM;
+  constexpr int DOF = TestFixture::DOF;
+  constexpr auto eps = TestFixture::eps;
+  using basis_t = typename TestFixture::basis_t;
+  const auto &quad = this->quad;
+
+  for (int i = 0; i < DOF; ++i)
+    for (int j = 0; j < DOF; ++j) {
+      double mij = 0.0;
+
+      for (std::size_t k = 0; k < quad.num_points; ++k) {
+        std::array<double, DIM> x {};
+        for (int d = 0; d < DIM; ++d)
+          x[d] = quad.points[DIM * k + d];
+        const auto phi = basis_t::eval (x);
+        mij += quad.weights[k] * phi[i] * phi[j];
+      }
+
+      mij *= ref_volume<Shape>;  // integral over the reference cell
+      EXPECT_NEAR (mij, (i == j) ? 1.0 : 0.0, eps) << "mass(" << i << "," << j << ")";
+    }
+}
+
 }  // namespace
 
 #endif  // T8_ENABLE_MRA
