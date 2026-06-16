@@ -279,6 +279,58 @@ TYPED_TEST (mra_num, mask_satisfies_refinement_equation)
 }
 
 /* ---- geometry: reference -> physical cartesian map ---- */
+
+TEST (mra_geometry, deref_1d_maps_endpoints_and_midpoint)
+{
+  constexpr auto eps = 1e-15;
+  EXPECT_NEAR (t8_mra::deref_1d (0.0, 2.0, 5.0), 2.0, eps);
+  EXPECT_NEAR (t8_mra::deref_1d (1.0, 2.0, 5.0), 5.0, eps);
+  EXPECT_NEAR (t8_mra::deref_1d (0.5, 2.0, 5.0), 3.5, eps);
+}
+
+TEST (mra_geometry, deref_maps_box_corners)
+{
+  constexpr auto eps = 1e-15;
+
+  const std::array<double, 2> lo { -1.0, 3.0 }, hi { 1.0, 4.0 };
+  EXPECT_EQ (t8_mra::deref<2> ({ 0.0, 0.0 }, lo, hi), lo);
+  EXPECT_EQ (t8_mra::deref<2> ({ 1.0, 1.0 }, lo, hi), hi);
+  const auto mid = t8_mra::deref<2> ({ 0.5, 0.5 }, lo, hi);
+  EXPECT_NEAR (mid[0], 0.0, eps);
+  EXPECT_NEAR (mid[1], 3.5, eps);
+}
+
+/* extract_cartesian_vertices picks the lower corner (index 0) and the upper
+ * corner (index 2 for a 2D cell) out of the t8code vertex layout. */
+TEST (mra_geometry, extract_cartesian_vertices_picks_min_max)
+{
+  // QUAD physical vertices
+  const double verts[4][3] = { { 1.0, 2.0, 0.0 }, { 3.0, 2.0, 0.0 }, { 4.0, 5.0, 0.0 }, { 3.0, 5.0, 0.0 } };
+  std::array<double, 2> lo {}, hi {};
+
+  t8_mra::extract_cartesian_vertices<2> (verts, lo, hi);
+  EXPECT_EQ (lo, (std::array<double, 2> { 1.0, 2.0 }));
+  EXPECT_EQ (hi, (std::array<double, 2> { 4.0, 5.0 }));
+}
+
+/* transform_quad_points maps flattened reference points onto the physical box. */
+TEST (mra_geometry, transform_quad_points_maps_onto_box)
+{
+  constexpr auto eps = 1e-15;
+  const std::array<double, 2> lo { 1.0, 2.0 }, hi { 4.0, 5.0 };
+  const std::vector<double> ref { 0.0, 0.0, 1.0, 1.0, 0.5, 0.5 };  // 3 points
+  const auto phys = t8_mra::transform_quad_points<2> (ref, 3, lo, hi);
+
+  ASSERT_EQ (phys.size (), 6u);
+  EXPECT_NEAR (phys[0], 1.0, eps);  // (0,0) -> lo
+  EXPECT_NEAR (phys[1], 2.0, eps);
+  EXPECT_NEAR (phys[2], 4.0, eps);  // (1,1) -> hi
+  EXPECT_NEAR (phys[3], 5.0, eps);
+  EXPECT_NEAR (phys[4], 2.5, eps);  // (0.5,0.5) -> centre
+  EXPECT_NEAR (phys[5], 3.5, eps);
+}
+
+/* ---- mat: dense matrix and its LU solver ---- */
 }  // namespace
 
 #endif  // T8_ENABLE_MRA
