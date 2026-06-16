@@ -6,6 +6,8 @@
 #include <t8_eclass/t8_eclass.h>
 
 #include <t8_mra/core/shape_traits.hxx>
+#include <t8_mra/num/basis/basis.hxx>
+#include <t8_mra/num/mask_coefficients.hxx>
 #include <t8_mra/num/quadrature/quadrature.hxx>
 
 #include <array>
@@ -244,6 +246,39 @@ TYPED_TEST (mra_num, gradient_matches_exact_polynomial)
   }
 }
 
+/* Two-scale refinement equation: the parent basis evaluated at the child-mapped
+ * point equals a mask-weighted sum of child basis functions,
+ *   phi_j(Phi_k xi) = (ref_vol / mask_norm) * sum_i mask_k(i,j) phi_i(xi).
+ */
+TYPED_TEST (mra_num, mask_satisfies_refinement_equation)
+{
+  constexpr auto Shape = TestFixture::Shape;
+  constexpr int P = TestFixture::P;
+  constexpr int DIM = TestFixture::DIM;
+  constexpr int DOF = TestFixture::DOF;
+  constexpr auto eps = TestFixture::eps;
+  using basis_t = typename TestFixture::basis_t;
+
+  std::vector<t8_mra::mat> mask;
+  t8_mra::compute_mask<Shape, P> (mask);
+
+  const auto children = t8_mra::child_maps<Shape> ();
+  const double factor = ref_volume<Shape> / t8_mra::mask_norm<Shape>;
+
+  for (std::size_t k = 0; k < children.size (); ++k)
+    for (const auto &xi : interior_points<Shape, DIM> ()) {
+      const auto phi_child = basis_t::eval (xi);
+      const auto phi_parent = basis_t::eval (children[k](xi));
+      for (int j = 0; j < DOF; ++j) {
+        double rhs = 0.0;
+        for (int i = 0; i < DOF; ++i)
+          rhs += mask[k](i, j) * phi_child[i];
+        EXPECT_NEAR (phi_parent[j], factor * rhs, eps) << "child " << k << " parent dof " << j;
+      }
+    }
+}
+
+/* ---- geometry: reference -> physical cartesian map ---- */
 }  // namespace
 
 #endif  // T8_ENABLE_MRA
