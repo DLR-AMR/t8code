@@ -194,6 +194,56 @@ TYPED_TEST (mra_num, basis_is_orthonormal)
     }
 }
 
+/* eval_gradient matches the analytic gradient of a known polynomial.
+ *
+ * The basis spans every polynomial of degree <= P-1, so the monomial sum
+ *   u(x) = sum_d x_d^(P-1)
+ * is represented exactly by its projection coefficients c_i = integral u phi_i.
+ */
+TYPED_TEST (mra_num, gradient_matches_exact_polynomial)
+{
+  constexpr auto Shape = TestFixture::Shape;
+  constexpr int DIM = TestFixture::DIM;
+  constexpr int DOF = TestFixture::DOF;
+  constexpr int P = TestFixture::P;
+  constexpr auto eps = TestFixture::eps;
+  using basis_t = typename TestFixture::basis_t;
+  const auto &quad = this->quad;
+
+  const auto u = [] (const std::array<double, DIM> &x) {
+    double s = 0.0;
+    for (int d = 0; d < DIM; ++d)
+      s += std::pow (x[d], P - 1);
+    return s;
+  };
+  const auto grad_u
+    = [] (const std::array<double, DIM> &x, int dir) { return (P >= 2) ? (P - 1) * std::pow (x[dir], P - 2) : 0.0; };
+
+  std::array<double, DOF> c {};
+  for (std::size_t q = 0; q < quad.num_points; ++q) {
+    std::array<double, DIM> xq {};
+
+    for (int d = 0; d < DIM; ++d)
+      xq[d] = quad.points[DIM * q + d];
+
+    const auto phi = basis_t::eval (xq);
+    const double uw = ref_volume<Shape> * quad.weights[q] * u (xq);
+
+    for (int i = 0; i < DOF; ++i)
+      c[i] += uw * phi[i];
+  }
+
+  for (const auto &x : interior_points<Shape, DIM> ()) {
+    const auto grad = basis_t::eval_gradient (x);
+    for (int dir = 0; dir < DIM; ++dir) {
+      double recon = 0.0;
+      for (int i = 0; i < DOF; ++i)
+        recon += c[i] * grad[dir][i];
+      EXPECT_NEAR (recon, grad_u (x, dir), eps) << "dir " << dir;
+    }
+  }
+}
+
 }  // namespace
 
 #endif  // T8_ENABLE_MRA
