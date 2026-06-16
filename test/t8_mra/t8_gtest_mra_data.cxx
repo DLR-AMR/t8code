@@ -5,6 +5,9 @@
 #include <t8.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_mra/data/levelmultiindex.hxx>
+#include <t8_mra/data/levelindex_map.hxx>
+#include <t8_mra/data/levelindex_set.hxx>
+#include <t8_mra/data/element_data.hxx>
 #include <array>
 #include <type_traits>
 
@@ -98,6 +101,149 @@ TYPED_TEST (mra_lmi, equality_compares_the_index)
 
   EXPECT_TRUE (a == same);
   EXPECT_FALSE (a == other);
+}
+
+/* ---- containers: shape-independent, one representative shape ---- */
+
+using lmi_q = t8_mra::levelmultiindex<T8_ECLASS_QUAD>;
+
+TEST (mra_levelindex_map, insert_get_contains_erase)
+{
+  t8_mra::levelindex_map<lmi_q, int> map (6);
+
+  const auto a = lmi_q::jth_child (lmi_q (2), 0);  // level 1
+  const auto b = lmi_q::jth_child (a, 3);          // level 2
+
+  EXPECT_FALSE (map.contains (a));
+  EXPECT_EQ (map.find (a), nullptr);
+
+  map.insert (a, 11);
+  map.insert (b, 22);
+
+  EXPECT_TRUE (map.contains (a));
+  EXPECT_EQ (map.get (a), 11);
+  EXPECT_EQ (*map.find (b), 22);
+  EXPECT_EQ (map.size (), 2u);
+  EXPECT_EQ (map.size (a.level ()), 1u);
+  EXPECT_EQ (map.size (b.level ()), 1u);
+
+  // in-place mutation through find
+  *map.find (a) = 99;
+  EXPECT_EQ (map.get (a), 99);
+
+  // overwrite via insert
+  map.insert (a, 5);
+  EXPECT_EQ (map.get (a), 5);
+  EXPECT_EQ (map.size (), 2u);
+
+  map.erase (a);
+  EXPECT_FALSE (map.contains (a));
+  EXPECT_EQ (map.size (), 1u);
+
+  map.erase_all ();
+  EXPECT_EQ (map.size (), 0u);
+}
+
+TEST (mra_levelindex_map, erase_level_clears_only_that_level)
+{
+  t8_mra::levelindex_map<lmi_q, int> map (6);
+  const auto l1a = lmi_q::jth_child (lmi_q (0), 0);
+  const auto l1b = lmi_q::jth_child (lmi_q (0), 1);
+  const auto l2 = lmi_q::jth_child (l1a, 0);
+
+  map.insert (l1a, 1);
+  map.insert (l1b, 2);
+  map.insert (l2, 3);
+
+  map.erase (l1a.level ());
+  EXPECT_EQ (map.size (l1a.level ()), 0u);
+  EXPECT_EQ (map.size (l2.level ()), 1u);
+  EXPECT_TRUE (map.contains (l2));
+}
+
+/* iterating through a refinement level */
+TEST (mra_levelindex_map, level_view_iterates_that_level)
+{
+  t8_mra::levelindex_map<lmi_q, int> map (6);
+
+  const auto root = lmi_q (3);
+  const auto kids = lmi_q::children (root);
+
+  for (size_t i = 0; i < kids.size (); ++i)
+    map.insert (kids[i], static_cast<int> (10 + i));
+
+  map.insert (lmi_q::jth_child (kids[0], 0), 99);  // a level-2 cell
+
+  const unsigned int level = 1;
+  EXPECT_EQ (map[level].size (), kids.size ());
+
+  size_t counted = 0;
+  for (auto it = map.begin (level); it != map.end (level); ++it) {
+    EXPECT_EQ (it->first.level (), level);
+    EXPECT_TRUE (map.contains (it->first));
+    ++counted;
+  }
+  EXPECT_EQ (counted, kids.size ());
+}
+
+/* The (level, key) overloads agree with the lmi overloads. */
+TEST (mra_levelindex_map, level_key_overloads_match_lmi_overloads)
+{
+  t8_mra::levelindex_map<lmi_q, int> map (6);
+  const auto a = lmi_q::jth_child (lmi_q (4), 2);
+
+  map.insert (a.level (), a.index, 7);
+  EXPECT_TRUE (map.contains (a.level (), a.index));
+  EXPECT_TRUE (map.contains (a));
+  EXPECT_EQ (map.get (a.level (), a.index), 7);
+  EXPECT_EQ (map.get (a), 7);
+
+  map.erase (a.level (), a.index);
+  EXPECT_FALSE (map.contains (a));
+}
+
+TEST (mra_levelindex_set, insert_contains_erase_sizes)
+{
+  t8_mra::levelindex_set<lmi_q> set (6);
+  const auto a = lmi_q::jth_child (lmi_q (1), 2);
+  const auto b = lmi_q::jth_child (a, 1);
+
+  set.insert (a);
+  set.insert (b);
+  set.insert (a);  // idempotent
+
+  EXPECT_TRUE (set.contains (a));
+  EXPECT_TRUE (set.contains (b));
+  EXPECT_EQ (set.size (), 2u);
+  EXPECT_EQ (set.size (a.level ()), 1u);
+
+  set.erase (b);
+  EXPECT_FALSE (set.contains (b));
+  EXPECT_EQ (set.size (), 1u);
+
+  set.erase_all ();
+  EXPECT_EQ (set.size (), 0u);
+}
+
+TEST (mra_levelindex_set, level_view_and_level_key_overloads)
+{
+  t8_mra::levelindex_set<lmi_q> set (6);
+  const auto kids = lmi_q::children (lmi_q (2));
+  for (const auto &k : kids)
+    set.insert (k);
+
+  const unsigned int level = 1;
+  EXPECT_EQ (set[level].size (), kids.size ());
+
+  size_t counted = 0;
+  for (auto it = set.begin (level); it != set.end (level); ++it)
+    ++counted;
+  EXPECT_EQ (counted, kids.size ());
+
+  const auto a = kids[0];
+  EXPECT_TRUE (set.contains (a.level (), a.index));
+  set.erase (a.level (), a.index);
+  EXPECT_FALSE (set.contains (a));
 }
 
 
