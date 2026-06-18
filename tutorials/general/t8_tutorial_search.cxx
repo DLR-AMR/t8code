@@ -404,7 +404,8 @@ main (int argc, char **argv)
    */
 
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, comm, 0);
   /* Build a uniform forest on it. */
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 

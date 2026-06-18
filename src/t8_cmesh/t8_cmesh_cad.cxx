@@ -47,13 +47,11 @@
 #include <Geom_Surface.hxx>
 #endif
 
-t8_cmesh_t
-t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int num_axial_trees, int num_radial_trees,
-                              int with_cad_geometry)
+void
+t8_cmesh_new_hollow_cylinder (t8_cmesh_t cmesh, sc_MPI_Comm comm, int num_tangential_trees, int num_axial_trees,
+                              int num_radial_trees, int with_cad_geometry)
 {
-  /* Create the cmesh and the geometry */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
+  /* Create the geometry */
   t8_cmesh_set_profiling (cmesh, 1);
 
   if (with_cad_geometry) {
@@ -289,5 +287,4 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
 #if T8_ENABLE_OCC
   T8_FREE (parameters);
 #endif /* T8_ENABLE_OCC */
-  return cmesh;
 }

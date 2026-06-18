@@ -842,7 +842,8 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type, const char *mshfile, in
     t8_cmesh_t cmesh, cmesh_partition;
     T8_ASSERT (mshfile != NULL);
 
-    cmesh = t8_cmesh_from_msh_file (mshfile, 0, comm, dim, 0, use_cad_geometry);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, mshfile, 0, comm, dim, 0, use_cad_geometry);
     /* The partitioning of the cad geometry is not yet available */
     if (use_cad_geometry) {
       t8_productionf ("cmesh was not partitioned. Partitioning is not yet "
@@ -857,18 +858,27 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, int cube_type, const char *mshfile, in
     return cmesh_partition;
   }
   else {
+    t8_cmesh_t cmesh;
     if (cube_type == 7) {
-      return t8_cmesh_new_periodic_hybrid (comm);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_periodic_hybrid (cmesh, comm);
+      return cmesh;
     }
     else if (cube_type == 8) {
-      return t8_cmesh_new_hypercube_hybrid (comm, 0, 1);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube_hybrid (cmesh, comm, 1);
+      return cmesh;
     }
     else if (cube_type == 9) {
-      return t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, comm, 0, 0, 0);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_PYRAMID, comm, 0, 0, 0);
+      return cmesh;
     }
     else {
       T8_ASSERT (T8_ECLASS_ZERO <= cube_type && cube_type < T8_ECLASS_COUNT);
-      return t8_cmesh_new_hypercube ((t8_eclass_t) cube_type, comm, 0, 0, 1);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube (&cmesh, (t8_eclass_t) cube_type, comm, 0, 0, 1);
+      return cmesh;
     }
   }
 }

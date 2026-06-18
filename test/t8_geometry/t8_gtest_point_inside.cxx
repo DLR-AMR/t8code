@@ -141,10 +141,12 @@ struct geometry_point_inside: public testing::TestWithParam<std::tuple<t8_eclass
         1, 1, 1 
       };
       /* clang-format on */
-      cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, boundaries, 1, 1, 1, use_axis_aligned_geom);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube_pad (cmesh, eclass, sc_MPI_COMM_WORLD, boundaries, 1, 1, 1, use_axis_aligned_geom);
     }
     else {
-      cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
     }
   }
   void

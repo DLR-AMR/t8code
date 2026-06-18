@@ -87,10 +87,13 @@ handle_new_uniform_default (const t8_cmesh_t cmesh, const int level, const sc_MP
 */
 template <T8MeshType TMeshClass>
 std::unique_ptr<TMeshClass>
-handle_hypercube_hybrid_uniform_default (const int level, const sc_MPI_Comm comm, const bool do_partition = false,
+handle_hypercube_hybrid_uniform_default (const int level, const sc_MPI_Comm comm,
+                                         [[maybe_unused]] const bool do_partition = false,
                                          const bool do_face_ghost = false, const bool periodic = false)
 {
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (comm, do_partition, periodic);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, comm, periodic);
   return handle_new_uniform_default<TMeshClass> (cmesh, level, comm, do_face_ghost);
 }
 
@@ -111,7 +114,9 @@ handle_hypercube_uniform_default (t8_eclass_t eclass, const int level, const sc_
                                   const bool periodic = false)
 {
   // Broadcast option is hidden from the user.
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, do_partition, periodic);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, eclass, comm, 0, do_partition, periodic);
   return handle_new_uniform_default<TMeshClass> (cmesh, level, comm, do_face_ghost);
 }
 
