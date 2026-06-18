@@ -39,9 +39,9 @@
  * adaptation callback. */
 struct t8_adapt_data
 {
-  double midpoint[3];               /* The midpoint of our sphere. */
-  double refine_if_inside_radius;   /* if an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /* if an element's center is larger this value, we coarsen its family. */
+  double midpoint[3]; /* The midpoint of our sphere. */
+  double radius;      /* Refined close to radius with midpoint midpoint. */
+  double delta;       /* How close to refine. */
   int minlevel;
   int maxlevel;
 };
@@ -76,7 +76,6 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
    * they are inside a sphere around a given midpoint we refine, if they are outside, we coarsen. */
   double centroid[3]; /* Will hold the element midpoint. */
   const auto *adapt_data = (const struct t8_adapt_data *) t8_forest_get_user_data (forest);
-  double dist; /* Will store the distance of the element's midpoint and the sphere midpoint. */
 
   T8_ASSERT (adapt_data != NULL);
 
@@ -84,13 +83,19 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
 
   /* Compute the distance to our sphere midpoint. */
-  dist = t8_dist (centroid, adapt_data->midpoint);
+  double radius = t8_dist (centroid, adapt_data->midpoint);
+  double abs_to_radius = fabs (radius - adapt_data->radius);
   const int level = scheme->element_get_level (tree_class, elements[0]);
-  if ((dist < adapt_data->refine_if_inside_radius) && (level < adapt_data->maxlevel)) {
+
+  double alpha = std::min (abs_to_radius / adapt_data->delta, 1.0);
+  int target_level
+    = adapt_data->maxlevel - static_cast<int> (std::round (alpha * (adapt_data->maxlevel - adapt_data->minlevel)));
+
+  if ((level < target_level) && (level < adapt_data->maxlevel)) {
     /* Refine this element. */
     return 1;
   }
-  else if ((is_family && dist > adapt_data->coarsen_if_outside_radius) && (level > adapt_data->minlevel)) {
+  else if ((is_family && level > target_level) && (level > adapt_data->minlevel)) {
     /* Coarsen this family. Note that we check for is_family before, since returning < 0
      * if we do not have a family as input is illegal. */
     return -1;
@@ -105,10 +110,10 @@ t8_adapt_forest (t8_forest_t forest)
 {
   struct t8_adapt_data adapt_data = {
     { 0, 1, 0 }, /* Midpoints of the sphere. */
-    0.25,        /* Refine if inside this radius. */
-    0.3,         /* Coarsen if outside this radius. */
-    3,           /* minlevel*/
-    7            /*maxlevel*/
+    0.45,        /* Refine if inside this radius. */
+    0.1,         /* Coarsen if outside this radius. */
+    2,           /* minlevel*/
+    6            /*maxlevel*/
   };
 
   t8_forest_t forest_adapt;
@@ -122,10 +127,10 @@ t8_adapt_forest_2and (t8_forest_t forest)
 {
   struct t8_adapt_data adapt_data = {
     { 0, 1, 0 }, /* Midpoints of the sphere. */
-    0.45,        /* Refine if inside this radius. */
-    0.5,         /* Coarsen if outside this radius. */
-    3,           /* minlevel*/
-    7            /*maxlevel*/
+    0.6,         /* Refine if inside this radius. */
+    0.1,         /* Coarsen if outside this radius. */
+    2,           /* minlevel*/
+    6            /*maxlevel*/
   };
 
   t8_forest_t forest_adapt;
@@ -171,13 +176,13 @@ main (int argc, char **argv)
   /* --- Adapt the forest. ---   */
   forest = t8_adapt_forest (forest);
   std::cout << "Subelements before removing: " << t8_forest_has_subelements (forest) << std::endl;
-  prefix = "t8_adapted1_";
+  prefix = "t8_adapted1";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n", prefix);
 
   // --- Balance the forest. ---
   forest = t8_forest_balance (forest);
-  prefix = "t8_balanced1_";
+  prefix = "t8_balanced1";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Balanced and wrote to file: %s*\n", prefix);
 
@@ -185,7 +190,7 @@ main (int argc, char **argv)
   forest = t8_forest_remove_hanging_nodes (forest);
   std::cout << "Subelements after removing: " << t8_forest_has_subelements (forest) << std::endl;
   // Now output to vtk.
-  const char *prefix_without_hanging_nodes = "t8_resolved_hanging_nodes1_";
+  const char *prefix_without_hanging_nodes = "t8_resolved_hanging_nodes1";
   t8_forest_write_vtk (forest, prefix_without_hanging_nodes);
   t8_global_productionf (" [subelements] Wrote adapted forest with resolved hanging nodes to vtu files: %s*\n",
                          prefix_without_hanging_nodes);
@@ -194,26 +199,26 @@ main (int argc, char **argv)
   forest = t8_forest_discard_subelements (forest);
   std::cout << "Subelements removed: " << t8_forest_has_subelements (forest) << std::endl;
   // Output to vtk.
-  const char *prefix_removed_sub = "t8_discarded_subelements1_";
+  const char *prefix_removed_sub = "t8_discarded_subelements1";
   t8_forest_write_vtk (forest, prefix_removed_sub);
   t8_global_productionf (" [subelements] Wrote adapted forest with discarded subelements to vtu files: %s*\n",
                          prefix_removed_sub);
 
   /* --- Adapt the forest again. ---   */
   forest = t8_adapt_forest_2and (forest);
-  prefix = "t8_adapted2_";
+  prefix = "t8_adapted2";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Adapted again and wrote to file: %s*\n", prefix);
 
   // --- Balance again. ---
   forest = t8_forest_balance (forest);
-  prefix = "t8_balanced2_";
+  prefix = "t8_balanced2";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Balanced again and wrote to file: %s*\n", prefix);
 
   // --- Add subelements to remove hanging nodes. ---
   forest = t8_forest_remove_hanging_nodes (forest);
-  prefix = "t8_resolved_hanging_nodes2_";
+  prefix = "t8_resolved_hanging_nodes2";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Removed hanging nodes after second adaptation and wrote to : %s*\n", prefix);
 
