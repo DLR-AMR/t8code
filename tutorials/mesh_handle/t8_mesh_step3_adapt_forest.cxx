@@ -66,7 +66,7 @@ std::unique_ptr<TMeshClass> build_mesh(sc_MPI_Comm comm, int level) {
     mesh->set_adapt(
         TMeshClass::template mesh_adapt_callback_wrapper<adapt_data>(
             adapt_callback<TMeshClass>, 
-            adapt_params
+adapt_params
         )
     );
     mesh->set_ghost();
