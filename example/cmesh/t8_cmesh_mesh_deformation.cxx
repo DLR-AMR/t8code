@@ -31,7 +31,7 @@
 #if T8CODE_ENABLE_OCC
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
-#endif
+#endif /* T8CODE_ENABLE_OCC */
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
 
@@ -78,8 +78,8 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
 
-  /* Initialize t8code with log level SC_LP_ESSENTIAL. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_ESSENTIAL);
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
+  t8_init (SC_LP_PRODUCTION);
 
   int helpme = 0;
   const char *msh_file = NULL;
@@ -101,15 +101,15 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (msh_file == NULL || brep_file == NULL || dim == 0) {
-    t8_global_errorf ("ERROR: Missing required arguments: -m, -b, and -d are mandatory.\n\n");
+  else if (msh_file == NULL || brep_file == NULL || dim == 0 || parsed < 0) {
+    t8_global_errorf ("\n\t ERROR: Wrong usage\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (dim < 1 || dim > 3) {
     t8_global_errorf ("ERROR: Invalid mesh dimension: dim=%d. Dimension must be 1, 2 or 3.\n\n", dim);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0) {
+  else {
 
     /* We will use MPI_COMM_WORLD as a communicator. */
     sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
@@ -148,9 +148,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-#else
-  t8_global_errorf ("ERROR: This example requires OpenCASCADE support to be enabled in t8code.\n\n");
-#endif
+#else  /* T8CODE_ENABLE_OCC */
+  t8_global_errorf ("ERROR: This example requires OpenCASCADE support to be enabled in t8code.\n");
+#endif /* T8CODE_ENABLE_OCC */
 
   return 0;
 }

@@ -47,11 +47,11 @@ on:
         required: true
         description: 'Token needed to publish coverage report on Codecov'
 
-jobs:  
+jobs:
   generate-codecov:
     timeout-minutes: 20
     runs-on: ubuntu-latest
-    container: dlramr/t8code-ubuntu:t8-dependencies
+    container: dlramr/t8code-dependencies:t8-dependencies-ubuntu-gcc
     steps:
 #
 # Setup
@@ -62,8 +62,6 @@ jobs:
         name: SC_P4EST_MPI_${{ inputs.MPI }}
     - name: untar artifact
       run: tar -xf artifact.tar && rm artifact.tar
-    - name: Update packages
-      run: sudo apt-get update && sudo apt-get upgrade -y
       # This seems to be necessary because of the docker container.
     - name: disable ownership checks
       run: git config --global --add safe.directory '*'
@@ -78,9 +76,6 @@ jobs:
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
         && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
         && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
-    ## Install lcov.
-    - name: Install lcov
-      run: sudo apt-get install -y lcov
     - name: Print lcov version
       run: lcov --version
 #
@@ -91,14 +86,14 @@ jobs:
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
            && echo TEST_LEVEL_FLAG="$TEST_LEVEL_FLAG" >> $GITHUB_ENV
     - name: build config variables
-      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -DCMAKE_Fortran_COMPILER=mpifort -DT8CODE_CODE_COVERAGE=ON -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake -DT8CODE_BUILD_BENCHMARKS=OFF -DT8CODE_BUILD_DOCUMENTATION=OFF -DT8CODE_BUILD_EXAMPLES=OFF -DT8CODE_BUILD_TUTORIALS=OFF"
+      run: export CONFIG_OPTIONS="${TEST_LEVEL_FLAG} -DCMAKE_Fortran_COMPILER=mpifort -DT8CODE_CODE_COVERAGE=ON -DT8CODE_USE_SYSTEM_SC=ON -DT8CODE_USE_SYSTEM_P4EST=ON -DT8CODE_BUILD_PEDANTIC=ON -DT8CODE_BUILD_WALL=ON -DT8CODE_BUILD_WERROR=ON -DT8CODE_ENABLE_MPI=$MPI -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DT8CODE_BUILD_FORTRAN_INTERFACE=ON -DT8CODE_BUILD_MESH_HANDLE=ON -DT8CODE_ENABLE_VTK=ON -DT8CODE_ENABLE_OCC=ON -DSC_DIR=$SC_PATH/install/cmake -DP4EST_DIR=$P4EST_PATH/install/cmake -DT8CODE_BUILD_BENCHMARKS=OFF -DT8CODE_BUILD_DOCUMENTATION=OFF -DT8CODE_BUILD_EXAMPLES=OFF -DT8CODE_BUILD_TUTORIALS=OFF"
         && echo CONFIG_OPTIONS="$CONFIG_OPTIONS" >> $GITHUB_ENV
     # cmake
     - name: echo cmake line
-      run: echo cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage" 
+      run: echo cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage"
     # Note: Adding DCMAKE_Fortran_FLAGS here is a workaround because the blank space between the compiler flags causes trouble otherwise.
     - name: cmake
-      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage" 
+      run: mkdir build && cd build && cmake ../ $CONFIG_OPTIONS -DCMAKE_Fortran_FLAGS="-fprofile-arcs -ftest-coverage"
     - name: OnFailUploadLog
       if: failure()
       uses: actions/upload-artifact@v7
@@ -112,10 +107,10 @@ jobs:
       run: cd build && cmake --build . --target coverage
     # Upload coverage report to Codecov.
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v7
       with:
         files: ./build/coverage.info
         fail_ci_if_error: true
         disable_search: true
         token: ${{ secrets.CODE_COV }}
-    
+

@@ -61,12 +61,13 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
       t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree_id);
-      SC_ABORTF ("Geometry attribute is missing.");
+      SC_ABORTF ("Geometry attribute is missing.\n");
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
     const int first_tree_entity_tag = first_tree_geom_attribute[2 * tree_list[0].second + 1];
 
+    /* Check if all trees sharing this vertex have consistent geometry attributes. */
 #if T8_ENABLE_DEBUG
     /* Iterate over all trees and compare to the reference tree. */
     for (const auto &[tree_id, local_corner_index] : tree_list) {
@@ -85,7 +86,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
         SC_ABORTF ("Inconsistency in vertex info.\n");
       }
     }
-#endif /*T8_ENABLE_DEBUG */
+#endif /* T8_ENABLE_DEBUG */
 
     /* Check if this vertex is a boundary node. */
     if (first_tree_entity_dim < mesh_dimension && first_tree_entity_dim >= 0) {
@@ -97,7 +98,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
         t8_errorf ("Error: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
-        SC_ABORT ("(u,v)-parameters are missing.");
+        SC_ABORT ("(u,v)-parameters are missing.\n");
       }
       /* Get the (u,v)-parameter of the vertex. */
       const double *uv_parameter = &uv_attribute[2 * local_corner_index];
@@ -109,7 +110,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Check if the coordinates are available. */
       if (old_coords == nullptr) {
         t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
-        SC_ABORTF ("Vertex coordinates are missing.");
+        SC_ABORTF ("Vertex coordinates are missing.\n");
       }
 
       gp_Pnt new_coords;

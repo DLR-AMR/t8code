@@ -90,6 +90,10 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
         t8_forest_element_face_normal (forest, itree, elem, iface, normal.data ());
         EXPECT_EQ (mesh_iterator->get_face_normal (iface), normal);
         EXPECT_EQ (mesh_iterator->get_face_shape (iface), scheme->element_get_face_shape (tree_class, elem, iface));
+        for (int ivertex = 0; ivertex < mesh_iterator->get_num_vertices_of_face (iface); ++ivertex) {
+          EXPECT_EQ (mesh_iterator->face_vertex_to_element_vertex (iface, ivertex),
+                     scheme->element_get_face_corner (tree_class, elem, iface, ivertex));
+        }
       }
       // --- Evolve mesh iterator. ---
       mesh_iterator++;

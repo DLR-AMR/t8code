@@ -74,7 +74,8 @@ template <T8InputRange TVec>
 static inline double
 t8_norm (const TVec &vec)
 {
-  return std::sqrt (std::inner_product (vec.begin (), vec.end (), vec.begin (), 0.0));
+  return std::sqrt (
+    std::inner_product (std::ranges::begin (vec), std::ranges::end (vec), std::ranges::begin (vec), 0.0));
 }
 
 /** Normalize a vector.
@@ -86,7 +87,7 @@ t8_normalize (TVec &vec)
 {
   const double norm = t8_norm (vec);
   T8_ASSERT (norm != 0);
-  std::ranges::transform (vec, vec.begin (), [norm] (double v) { return v / norm; });
+  std::ranges::transform (vec, std::ranges::begin (vec), [norm] (double v) { return v / norm; });
 }
 
 /** Copy a dimensional object.
@@ -97,7 +98,7 @@ template <T8InputRange TVec1, T8InputRange TVec2>
 constexpr void
 t8_copy (const TVec1 &src, TVec2 &dest)
 {
-  std::ranges::copy (src, dest.begin ());
+  std::ranges::copy (src, std::ranges::begin (dest));
 }
 
 /** Euclidean distance of X and Y.
@@ -110,8 +111,9 @@ template <T8InputRange TPointX, T8InputRange TPointY>
 constexpr double
 t8_dist (const TPointX &point_x, const TPointY &point_y)
 {
-  double dist = std::inner_product (point_x.begin (), point_x.end (), point_y.begin (), 0.0, std::plus<double> (),
-                                    [] (double x, double y) { return (x - y) * (x - y); });
+  double dist
+    = std::inner_product (std::ranges::begin (point_x), std::ranges::end (point_x), std::ranges::begin (point_y), 0.0,
+                          std::plus<double> (), [] (double x, double y) { return (x - y) * (x - y); });
   return std::sqrt (dist);
 }
 
@@ -123,7 +125,7 @@ template <T8InputRange TVec>
 constexpr void
 t8_ax (TVec &vec_x, const double alpha)
 {
-  std::ranges::transform (vec_x, vec_x.begin (), [alpha] (double v) { return v * alpha; });
+  std::ranges::transform (vec_x, std::ranges::begin (vec_x), [alpha] (double v) { return v * alpha; });
 }
 
 /** Compute Y = alpha * X
@@ -135,7 +137,7 @@ template <T8InputRange TVecX, T8InputRange TVecY>
 constexpr void
 t8_axy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
 {
-  std::ranges::transform (vec_x, vec_y.begin (), [alpha] (double v) { return v * alpha; });
+  std::ranges::transform (vec_x, std::ranges::begin (vec_y), [alpha] (double v) { return v * alpha; });
 }
 
 /** Y = alpha * X + b
@@ -149,7 +151,7 @@ template <T8InputRange TVecX, T8InputRange TVecY>
 constexpr void
 t8_axb (const TVecX &vec_x, TVecY &vec_y, const double alpha, const double b)
 {
-  std::ranges::transform (vec_x, vec_y.begin (), [alpha, b] (double v) { return alpha * v + b; });
+  std::ranges::transform (vec_x, std::ranges::begin (vec_y), [alpha, b] (double v) { return alpha * v + b; });
 }
 
 /** Y = Y + alpha * X
@@ -162,7 +164,8 @@ template <T8InputRange TVecX, T8InputRange TVecY>
 constexpr void
 t8_axpy (const TVecX &vec_x, TVecY &vec_y, const double alpha)
 {
-  std::ranges::transform (vec_x, vec_y, vec_y.begin (), [alpha] (double x, double y) { return y + alpha * x; });
+  std::ranges::transform (vec_x, vec_y, std::ranges::begin (vec_y),
+                          [alpha] (double x, double y) { return y + alpha * x; });
 }
 
 /** Z = Y + alpha * X
@@ -175,7 +178,8 @@ template <T8InputRange TVecX, T8InputRange TVecY, T8InputRange TVecZ>
 constexpr void
 t8_axpyz (const TVecX &vec_x, const TVecY &vec_y, TVecZ &vec_z, const double alpha)
 {
-  std::ranges::transform (vec_x, vec_y, vec_z.begin (), [alpha] (double x, double y) { return y + alpha * x; });
+  std::ranges::transform (vec_x, vec_y, std::ranges::begin (vec_z),
+                          [alpha] (double x, double y) { return y + alpha * x; });
 }
 
 /** Dot product of X and Y.
@@ -187,7 +191,7 @@ template <T8InputRange TVecX, T8InputRange TVecY>
 constexpr double
 t8_dot (const TVecX &vec_x, const TVecY &vec_y)
 {
-  return std::inner_product (vec_x.begin (), vec_x.end (), vec_y.begin (), 0.0);
+  return std::inner_product (std::ranges::begin (vec_x), std::ranges::end (vec_x), std::ranges::begin (vec_y), 0.0);
 }
 
 /** Cross product of X and Y
@@ -229,7 +233,7 @@ constexpr void
 t8_diff (const TVecX &vec_x, const TVecY &vec_y, TVecDiff &diff)
 {
   T8_ASSERT (std::ranges::distance (vec_x) == std::ranges::distance (vec_y));
-  std::ranges::transform (vec_x, vec_y, diff.begin (), std::minus {});
+  std::ranges::transform (vec_x, vec_y, std::ranges::begin (diff), std::minus {});
 }
 
 /**
@@ -274,8 +278,8 @@ t8_normal_of_tri (const TVecP1 &p1, const TVecP2 &p2, const TVecP3 &p3, TVecNorm
   t8_3D_vec a;
   t8_3D_vec b;
 
-  std::ranges::transform (p2, p1, a.begin (), std::minus {});
-  std::ranges::transform (p3, p1, b.begin (), std::minus {});
+  std::ranges::transform (p2, p1, std::ranges::begin (a), std::minus {});
+  std::ranges::transform (p3, p1, std::ranges::begin (b), std::minus {});
 
   t8_cross_3D (a, b, normal);
 }
@@ -291,15 +295,72 @@ t8_orthogonal_tripod (const TVecV1 &v1, TVecV2 &v2, TVecV3 &v3)
 {
   T8_ASSERT ((std::ranges::distance (v1) >= 3) && (std::ranges::distance (v2) >= 3)
              && (std::ranges::distance (v3) >= 3));
+  T8_ASSERT (t8_dot (v1, v1) != 0);
+
   v2[0] = v1[1];
   v2[1] = v1[2];
   v2[2] = -v1[0];
 
-  t8_axpy (v1, v2, -t8_dot (v1, v2));
+  t8_axpy (v1, v2, -t8_dot (v1, v2) / t8_dot (v1, v1));
   t8_cross_3D (v1, v2, v3);
 
   t8_normalize (v2);
   t8_normalize (v3);
+}
+
+/**
+ * Test whether four given points in 3D are coplanar up to a given tolerance.
+ * \param [in]  p_0         First point to check.
+ * \param [in]  p_1         Second point to check.
+ * \param [in]  p_2         Third point to check.
+ * \param [in]  p_3         Fourth point to check.
+ * \param [in]  tolerance   The tolerance
+ * \return true if points are coplanar.
+ */
+template <T8RandomAccessRange TVecV0, T8RandomAccessRange TVecV1, T8RandomAccessRange TVecV2,
+          T8RandomAccessRange TVecV3>
+constexpr int
+t8_four_points_coplanar (const TVecV0 p_0, const TVecV1 p_1, const TVecV2 p_2, const TVecV3 p_3, const double tolerance)
+{
+  /* Let p0, p1, p2, p3 be the four points.
+   * The four points are coplanar if the normal vectors to the triangles
+   * p0, p1, p2 and p0, p2, p3 are pointing in the same direction.
+   *
+   * We build the vectors A = p1 - p0, B = p2 - p0 and C = p3 - p0.
+   * The normal vectors to the triangles are n1 = A x B and n2 = A x C.
+   * These are pointing in the same direction if their cross product is 0.
+   * Hence we check if || n1 x n2 || < tolerance. */
+
+  T8_ASSERT ((std::ranges::distance (p_0) == 3) && (std::ranges::distance (p_1) == 3)
+             && (std::ranges::distance (p_2) == 3) && (std::ranges::distance (p_3) == 3));
+
+  /* A = p1 - p0 */
+  t8_3D_vec A;
+  t8_axpyz (p_0, p_1, A, -1);
+
+  /* B = p2 - p0 */
+  t8_3D_vec B;
+  t8_axpyz (p_0, p_2, B, -1);
+
+  /* C = p3 - p0 */
+  t8_3D_vec C;
+  t8_axpyz (p_0, p_3, C, -1);
+
+  /* n1 = A x B */
+  t8_3D_vec A_cross_B;
+  t8_cross_3D (A, B, A_cross_B);
+
+  /* n2 = A x C */
+  t8_3D_vec A_cross_C;
+  t8_cross_3D (A, C, A_cross_C);
+
+  /* n1 x n2 */
+  t8_3D_vec n1_cross_n2;
+  t8_cross_3D (A_cross_B, A_cross_C, n1_cross_n2);
+
+  /* || n1 x n2 || */
+  const double norm = t8_norm (n1_cross_n2);
+  return norm < tolerance;
 }
 
 #endif /* !T8_VEC_HXX */
