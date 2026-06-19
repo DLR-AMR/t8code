@@ -71,26 +71,22 @@ Eigen::MatrixXd
 t8_rbf::solve_compactly_supported_rbf (const Eigen::MatrixXd &displacements, const size_t num_boundary_nodes) const
 {
   /** The RBF used is compactly supported so we can use a sparse matrix. The conjugate gradient method can be used for solving the linear equation system. */
-  double estimation_of_entries
+  size_t estimation_of_entries
     = 50;  // brauchen noch gute Schätzung für die Anzahl der nicht-Null Element in der Matrix A für compactly supported RBFs
   typedef Eigen::Triplet<double> triplet;
   std::vector<triplet> coefficients;
   coefficients.reserve (num_boundary_nodes * estimation_of_entries);
   /** Fill the matrix A with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
   for (size_t row = 0; row < num_boundary_nodes; ++row) {
-    /** Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part of the matrix 
-       * and can mirror the values to the lower triangular part. */
-    for (size_t col = row; col < num_boundary_nodes; ++col) {
+
+    for (size_t col = 0; col < num_boundary_nodes; ++col) {
       /** Calculate the distance between the current pair of boundary nodes. */
       const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
       /** Evaluate the radial basis function for the current distance. */
-      const double psi = rbf_function->evaluate (distance);
+      const double psi = rbf_function->evaluate (distance, boundary_nodes[col].local_support_radius);
       /** Check if the basis function value (the influence factor) is not equal to zero with a numerical tolerance of 1e-12. */
       if (std::abs (psi) > 1e-12) {
         coefficients.emplace_back (row, col, psi);
-        if (row != col) {
-          coefficients.emplace_back (col, row, psi);
-        }
       }
     }
   }
@@ -98,7 +94,8 @@ t8_rbf::solve_compactly_supported_rbf (const Eigen::MatrixXd &displacements, con
   Eigen::SparseMatrix<double> A (num_boundary_nodes, num_boundary_nodes);
   A.setFromTriplets (coefficients.begin (), coefficients.end ());
   /** Solve the linear system using the conjugate gradient method. */
-  Eigen::ConjugateGradient<Eigen::SparseMatrix<double>, Eigen::Lower | Eigen::Upper> solver;
+  Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
+  solver.setTolerance (1e-10);
   solver.compute (A);
 
   if (solver.info () != Eigen::Success) {
@@ -124,7 +121,7 @@ t8_rbf::solve_globally_supported_rbf (const Eigen::MatrixXd &displacements, cons
       /** Calculate the distance between the current pair of boundary nodes. */
       const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
       /** Evaluate the radial basis function for the current distance. */
-      const double psi = rbf_function->evaluate (distance);
+      const double psi = rbf_function->evaluate (distance, 0.0);
       /** Write the value to the matrix A. */
       A (row, col) = psi;
       /** Mirror the value to the lower triangular part of the matrix if it's not on the diagonal. */

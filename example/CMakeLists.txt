@@ -71,7 +71,6 @@ add_t8_example( NAME t8_cmesh_set_join_by_vertices      SOURCES cmesh/t8_cmesh_s
 add_t8_example( NAME t8_cmesh_geometry_examples         SOURCES cmesh/t8_cmesh_geometry_examples.cxx )
 add_t8_example( NAME t8_cmesh_create_partitioned        SOURCES cmesh/t8_cmesh_create_partitioned.cxx )
 add_t8_example( NAME t8_cmesh_hypercube_pad             SOURCES cmesh/t8_cmesh_hypercube_pad.cxx )
-add_t8_example( NAME t8_cmesh_mesh_deformation          SOURCES cmesh/t8_cmesh_mesh_deformation.cxx )
 
 add_t8_example( NAME t8_test_ghost                      SOURCES forest/t8_test_ghost.cxx )
 add_t8_example( NAME t8_test_face_iterate               SOURCES forest/t8_test_face_iterate.cxx )
@@ -89,9 +88,11 @@ if(T8CODE_ENABLE_VTK)
 endif()
 
 if (T8CODE_ENABLE_EIGEN)
-    add_t8_example( NAME t8_rbf_test  SOURCES cmesh/t8_rbf.cxx )
+    add_t8_example( NAME t8_rbf_test                        SOURCES cmesh/t8_rbf.cxx )
+    target_link_libraries( t8_rbf_test                      PRIVATE Eigen3::Eigen )
+    add_t8_example( NAME t8_cmesh_mesh_deformation          SOURCES cmesh/t8_cmesh_mesh_deformation.cxx )
+    target_link_libraries( t8_cmesh_mesh_deformation        PRIVATE Eigen3::Eigen )
     
-    target_link_libraries( t8_rbf_test PRIVATE Eigen3::Eigen )
 endif ()
 
 add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t8_gmsh_to_vtk.cxx )

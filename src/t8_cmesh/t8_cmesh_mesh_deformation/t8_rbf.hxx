@@ -48,6 +48,8 @@ struct t8_rbf_node
    * For boundary nodes this is known and calculated from the different coordinates of the CAD geometries. 
    * For inner nodes this is the result of the interpolation. */
   t8_3D_vec displacement;
+  /** The local support radius for the node. */
+  double local_support_radius;
 };
 
 /**
@@ -56,7 +58,8 @@ struct t8_rbf_node
  */
 struct t8_rbf_boundary_node: public t8_rbf_node
 {
-  /* The calculated RBF coefficient alpha. This is needed for the interpolation to distribute the influence of the boundary nodes. */
+  /** The calculated RBF coefficient alpha. This is needed for the interpolation to distribute the influence of the boundary nodes. 
+  * This weight represents the fixed influence assigned to each boundary node. */
   t8_3D_vec weight;
 };
 
@@ -65,7 +68,7 @@ struct t8_rbf_function
   /** Destructor. */
   virtual ~t8_rbf_function () {};
   virtual double
-  evaluate (double distance) const
+  evaluate (double distance, double radius) const
     = 0;
   virtual bool
   is_compactly_supported () const
@@ -78,10 +81,8 @@ struct t8_rbf_function
  */
 struct t8_rbf_cpc2: public t8_rbf_function
 {
-  /** Constructor. 
-   * \param[in] r   The support radius. Beyond the radius the function is zero and so there is no impact from this node movement.
-   */
-  t8_rbf_cpc2 (double r): radius (r)
+  /** Constructor. */
+  t8_rbf_cpc2 ()
   {
   }
   /** Destructor. */
@@ -94,11 +95,9 @@ struct t8_rbf_cpc2: public t8_rbf_function
    * \return The function value psi. It returns 0.0 if the node is out of the chosen radius and so has no impact.   
    */
   double
-  evaluate (double distance) const override
+  evaluate (double distance, double radius) const override
   {
-    double r
-      = distance
-        / radius;  //guten radius finden und zeit darein verschwenden ;) inspo von molekulardynamik, schranken erarbeiten und shcon schreiben,
+    double r = distance / radius;
     if (r < 1.0) {
       double d = 1.0 - r;
       return (d * d * d * d) * (4.0 * r + 1.0);
@@ -115,10 +114,6 @@ struct t8_rbf_cpc2: public t8_rbf_function
   {
     return true;
   }
-
- private:
-  /** The chosen support radius. */
-  double radius;
 };
 
 /**
@@ -141,7 +136,7 @@ struct t8_rbf_tps: public t8_rbf_function
    * \return The function value psi.  
    */
   double
-  evaluate (double distance) const override
+  evaluate (double distance, [[maybe_unused]] double radius) const override
   {
     if (distance < 1e-12) {
       return 0.0;
@@ -168,22 +163,19 @@ struct t8_rbf
 {
  public:
   /** Constructor. 
-   * \param[in] support_radius  The radius of the compact local support for the Wendland CP C2 function.
-   *                            If the TPS RBF is used, we will not use the support_radius due to its global support.
    * \param[in] rbf_type        The RBF type to be used.
   */
-  t8_rbf (double support_radius, t8_rbf_function_type rbf_type)
+  t8_rbf (t8_rbf_function_type rbf_type)
   {
 
     if (rbf_type == T8_RBF_CP_C2) {
-      rbf_function = std::make_unique<t8_rbf_cpc2> (support_radius);
+      rbf_function = std::make_unique<t8_rbf_cpc2> ();
     }
     else if (rbf_type == T8_RBF_TPS) {
       rbf_function = std::make_unique<t8_rbf_tps> ();
     }
     else {
-      t8_errorf ("ERROR: RBF attribute missing or not correct\n.");
-      SC_ABORTF ("Unsupported RBF type.");
+      SC_ABORTF ("ERROR: RBF attribute missing or not correct. Unsupported RBF type.\n");
     }
   };
 
@@ -206,6 +198,22 @@ struct t8_rbf
     }
   }
 
+  /** 
+   * Search for the displacement of a specific boundary node with its associated global ID. 
+   */
+  t8_3D_vec
+  get_boundary_displacement (const t8_gloidx_t global_id) const
+  {
+    for (const auto& node : boundary_nodes) {
+      if (node.global_id == global_id) {
+        return node.displacement;
+      }
+    }
+    /* If the boundary node can not be found in the list of boundary nodes.*/
+    t8_errorf ("ERROR: The boundary node %ld is missing in the boundary node list.\n", global_id);
+    SC_ABORTF ("A boundary node is not recognized as one.");
+  }
+
   /**
    * Solves the linear system A * alpha = displacements to find the weight. 
    * This step is mandatory to later be able to interpolate the inner nodes.
@@ -226,11 +234,13 @@ struct t8_rbf
     for (const auto& boundary_node : boundary_nodes) {
 
       double distance = t8_dist (inner_node.position, boundary_node.position);
-      const double psi = rbf_function->evaluate (distance);
+
+      const double psi = rbf_function->evaluate (distance, boundary_node.local_support_radius);
       /** Check if the basis function value (the influence factor) is not equal to zero with a numerical tolerance of 1e-12. */
       if (std::abs (psi) > 1e-12) {
 
         for (int coordinate = 0; coordinate < 3; ++coordinate) {
+          /** Update the displacement for each coordinate with the weighted influence of the boundary node. */
           inner_node.displacement[coordinate] += boundary_node.weight[coordinate] * psi;
         }
       }

@@ -28,7 +28,7 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#if T8CODE_ENABLE_OCC
+#if T8_ENABLE_OCC
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
 #endif /* T8CODE_ENABLE_OCC */
@@ -43,7 +43,7 @@
 int
 main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
-#if T8CODE_ENABLE_OCC
+#if T8_ENABLE_OCC
 
   char usage[BUFSIZ];
   /* Brief help message. */
@@ -85,6 +85,8 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   const char *msh_file = NULL;
   const char *brep_file = NULL;
   int dim, level;
+  int rbf_type_int = 0;
+  double scale_factor_support_radius = 1.5;
 
   /* Initialize command line argument parser. */
   sc_options_t *opt = sc_options_new (argv[0]);
@@ -94,6 +96,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
                          "File prefix of the deformation geometry file (without .brep)");
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
+  sc_options_add_int (opt, 't', "rbftype", &rbf_type_int, 0, "RBF type (0 for CP_C2, 1 for TPS). Default: 0");
+  sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
+                         "Scale factor for the support radius. Default: 1.5");
 
   int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -124,14 +129,18 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     /* Initialize the deformation object for the given mesh. */
     t8_cmesh_mesh_deformation deformation (cmesh);
 
+    /** Save the input RBF type. */
+    t8_rbf_function_type rbf_type = static_cast<t8_rbf_function_type> (rbf_type_int);
+
     /* Calculate displacements. */
-    auto displacements = deformation.calculate_displacement_surface_vertices (cad.get ());
+    auto displacements
+      = deformation.calculate_displacement_surface_vertices (cad.get (), rbf_type, scale_factor_support_radius);
 
     /* Write output. */
     t8_forest_vtk_write_file (forest, "input_forest", 1, 1, 1, 1, 0, 0, NULL);
 
     /* Apply displacements. */
-    deformation.apply_vertex_displacements (displacements, cad);
+    deformation.apply_vertex_displacements (displacements, cad, rbf_type);
 
     /* Write output. */
     t8_forest_vtk_write_file (forest, "deformed_forest", 1, 1, 1, 1, 0, 0, NULL);
