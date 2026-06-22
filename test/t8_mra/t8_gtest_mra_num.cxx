@@ -19,6 +19,8 @@
 namespace
 {
 
+constexpr double eps = 1e-12;
+
 template <t8_eclass TShape, int P_>
 struct NumConfig
 {
@@ -33,15 +35,13 @@ using NumConfigs
                      NumConfig<T8_ECLASS_TRIANGLE, 2>, NumConfig<T8_ECLASS_TRIANGLE, 3>,
                      NumConfig<T8_ECLASS_TRIANGLE, 4>>;
 
-/// Volume of the reference cell: 1 for the cartesian [0,1]^DIM, 1/2 for the
-/// reference triangle. The quadrature weights are normalized to sum to 1 on
-/// every shape, so the integral of f over the reference cell is
-/// ref_volume * sum_q w_q f(x_q).
+/// Volume of the reference cell:
+///   1 for the cartesian [0,1]^DIM
+///   1/2 for the reference triangle
 template <t8_eclass Shape>
 inline constexpr double ref_volume = t8_mra::is_cartesian<Shape> ? 1.0 : 0.5;
 
-/// A handful of points strictly inside the reference cell (away from edges so
-/// finite differences stay valid).
+/// Points strictly inside the reference cell
 template <t8_eclass Shape, int DIM>
 std::vector<std::array<double, DIM>>
 interior_points ()
@@ -57,7 +57,7 @@ interior_points ()
     if constexpr (DIM >= 2)
       pts.push_back ([] {
         std::array<double, DIM> c;
-        c.fill (0.4);  // all dims interior; FD steps must stay inside [0,1]
+        c.fill (0.4);
         c[0] = 0.2;
         c[1] = 0.7;
         return c;
@@ -81,9 +81,7 @@ class mra_num: public ::testing::Test {
 
   using basis_t = t8_mra::basis<Shape, P>;
 
-  static constexpr double eps = 1e-12;
-
-  // Exact to degree >= 2(P-1) on every shape, enough for the mass matrix.
+  /// Exact to degree >= 2(P-1) on every shape
   t8_mra::quadrature<Shape> quad { t8_mra::mask_quad_param<Shape, P> };
 };
 TYPED_TEST_SUITE (mra_num, NumConfigs);
@@ -93,7 +91,6 @@ TYPED_TEST (mra_num, quadrature_weights_and_points)
 {
   constexpr auto Shape = TestFixture::Shape;
   constexpr int DIM = TestFixture::DIM;
-  constexpr auto eps = TestFixture::eps;
   const auto &quad = this->quad;
 
   double wsum = 0.0;
@@ -125,21 +122,20 @@ TYPED_TEST (mra_num, quadrature_is_exact)
   constexpr auto Shape = TestFixture::Shape;
   constexpr int DIM = TestFixture::DIM;
   constexpr int P = TestFixture::P;
-  constexpr auto eps = TestFixture::eps;
   const auto &quad = this->quad;
 
   if constexpr (t8_mra::is_cartesian<Shape>) {
     const int n = t8_mra::mask_quad_param<Shape, P>;  // points per axis
     const int m = 2 * n - 1;                          // highest exactly integrable degree
 
-    // Single-axis monomial x0^m.
+    /// Single-axis monomial x0^m.
     double axis = 0.0;
     for (std::size_t i = 0; i < quad.num_points; ++i)
       axis += quad.weights[i] * std::pow (quad.points[DIM * i + 0], m);
     EXPECT_NEAR (axis, 1.0 / (m + 1), eps);
 
-    // Full-dimensional monomial prod_d x_d^m: exercises the tensor weight
-    // product across every axis. Exact value (1/(m+1))^DIM.
+    /// Full-dimensional monomial prod_d x_d^m: exercises the tensor weight
+    /// product across every axis. Exact value (1/(m+1))^DIM.
     double mixed = 0.0;
     for (std::size_t i = 0; i < quad.num_points; ++i) {
       double f = quad.weights[i];
@@ -164,7 +160,7 @@ TYPED_TEST (mra_num, quadrature_is_exact)
     };
     const auto exact = [&] (int a, int b) { return fact (a) * fact (b) / fact (a + b + 2); };
 
-    // integral over the reference triangle = ref_volume * sum_q w_q f(x_q)
+    /// integral over the reference triangle = ref_volume * sum_q w_q f(x_q)
     EXPECT_NEAR (ref_volume<Shape> * mono (0, 0), exact (0, 0), eps);  // area = 1/2
     EXPECT_NEAR (ref_volume<Shape> * mono (1, 0), exact (1, 0), eps);  // 1/6
     EXPECT_NEAR (ref_volume<Shape> * mono (1, 1), exact (1, 1), eps);  // 1/24
@@ -177,7 +173,6 @@ TYPED_TEST (mra_num, basis_is_orthonormal)
   constexpr auto Shape = TestFixture::Shape;
   constexpr int DIM = TestFixture::DIM;
   constexpr int DOF = TestFixture::DOF;
-  constexpr auto eps = TestFixture::eps;
   using basis_t = typename TestFixture::basis_t;
   const auto &quad = this->quad;
 
@@ -210,7 +205,6 @@ TYPED_TEST (mra_num, gradient_matches_exact_polynomial)
   constexpr int DIM = TestFixture::DIM;
   constexpr int DOF = TestFixture::DOF;
   constexpr int P = TestFixture::P;
-  constexpr auto eps = TestFixture::eps;
   using basis_t = typename TestFixture::basis_t;
   const auto &quad = this->quad;
 
@@ -258,7 +252,6 @@ TYPED_TEST (mra_num, mask_satisfies_refinement_equation)
   constexpr int P = TestFixture::P;
   constexpr int DIM = TestFixture::DIM;
   constexpr int DOF = TestFixture::DOF;
-  constexpr auto eps = TestFixture::eps;
   using basis_t = typename TestFixture::basis_t;
 
   std::vector<t8_mra::mat> mask;
@@ -281,10 +274,8 @@ TYPED_TEST (mra_num, mask_satisfies_refinement_equation)
 }
 
 /* ---- geometry: reference -> physical cartesian map ---- */
-
 TEST (mra_geometry, deref_1d_maps_endpoints_and_midpoint)
 {
-  constexpr auto eps = 1e-15;
   EXPECT_NEAR (t8_mra::deref_1d (0.0, 2.0, 5.0), 2.0, eps);
   EXPECT_NEAR (t8_mra::deref_1d (1.0, 2.0, 5.0), 5.0, eps);
   EXPECT_NEAR (t8_mra::deref_1d (0.5, 2.0, 5.0), 3.5, eps);
@@ -292,8 +283,6 @@ TEST (mra_geometry, deref_1d_maps_endpoints_and_midpoint)
 
 TEST (mra_geometry, deref_maps_box_corners)
 {
-  constexpr auto eps = 1e-15;
-
   const std::array<double, 2> lo { -1.0, 3.0 }, hi { 1.0, 4.0 };
   EXPECT_EQ (t8_mra::deref<2> ({ 0.0, 0.0 }, lo, hi), lo);
   EXPECT_EQ (t8_mra::deref<2> ({ 1.0, 1.0 }, lo, hi), hi);
@@ -306,7 +295,7 @@ TEST (mra_geometry, deref_maps_box_corners)
  * corner (index 2 for a 2D cell) out of the t8code vertex layout. */
 TEST (mra_geometry, extract_cartesian_vertices_picks_min_max)
 {
-  // QUAD physical vertices
+  /// QUAD physical vertices
   const double verts[4][3] = { { 1.0, 2.0, 0.0 }, { 3.0, 2.0, 0.0 }, { 4.0, 5.0, 0.0 }, { 3.0, 5.0, 0.0 } };
   std::array<double, 2> lo {}, hi {};
 
@@ -318,7 +307,6 @@ TEST (mra_geometry, extract_cartesian_vertices_picks_min_max)
 /* transform_quad_points maps flattened reference points onto the physical box. */
 TEST (mra_geometry, transform_quad_points_maps_onto_box)
 {
-  constexpr auto eps = 1e-15;
   const std::array<double, 2> lo { 1.0, 2.0 }, hi { 4.0, 5.0 };
   const std::vector<double> ref { 0.0, 0.0, 1.0, 1.0, 0.5, 0.5 };  // 3 points
   const auto phys = t8_mra::transform_quad_points<2> (ref, 3, lo, hi);
@@ -333,7 +321,6 @@ TEST (mra_geometry, transform_quad_points_maps_onto_box)
 }
 
 /* ---- mat: dense matrix and its LU solver ---- */
-
 TEST (mra_mat, element_access_and_resize)
 {
   t8_mra::mat A (2, 3);
@@ -356,8 +343,7 @@ TEST (mra_mat, element_access_and_resize)
 /* LU factor + solve recovers the known solution of A x = b (with pivoting). */
 TEST (mra_mat, lu_solve_recovers_known_solution)
 {
-  constexpr auto eps = 1e-15;
-  // Non-symmetric, well-conditioned 3x3; row order forces a pivot.
+  /// Non-symmetric, well-conditioned 3x3; row order forces a pivot.
   t8_mra::mat A (3, 3, { 0.0, 2.0, 1.0, 1.0, 3.0, -1.0, 2.0, 1.0, 4.0 });
   const std::vector<double> x_true { 1.0, -2.0, 3.0 };
 

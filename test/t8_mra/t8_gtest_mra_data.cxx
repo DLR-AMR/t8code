@@ -129,11 +129,11 @@ TEST (mra_levelindex_map, insert_get_contains_erase)
   EXPECT_EQ (map.size (a.level ()), 1u);
   EXPECT_EQ (map.size (b.level ()), 1u);
 
-  // in-place mutation through find
+  /// in-place mutation through find
   *map.find (a) = 99;
   EXPECT_EQ (map.get (a), 99);
 
-  // overwrite via insert
+  /// overwrite via insert
   map.insert (a, 5);
   EXPECT_EQ (map.get (a), 5);
   EXPECT_EQ (map.size (), 2u);
