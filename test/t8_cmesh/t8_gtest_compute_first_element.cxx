@@ -95,7 +95,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
   }
 }
 
-constexpr uint64_t
+static constexpr uint64_t
 my_get_first_element_of_process (const uint32_t process, const uint32_t mpisize, const uint64_t global_num_elements)
 {
   t8_productionf ("Calling my_get_first_element_of_process\n");
