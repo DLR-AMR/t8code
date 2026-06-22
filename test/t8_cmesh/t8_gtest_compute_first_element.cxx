@@ -95,6 +95,34 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, small_numbers)
   }
 }
 
+constexpr uint64_t
+my_get_first_element_of_process (const uint32_t process, const uint32_t mpisize, const uint64_t global_num_elements)
+{
+  t8_productionf ("Calling my_get_first_element_of_process\n");
+
+  T8_ASSERT (mpisize > 0);
+  T8_ASSERT (process <= mpisize);
+
+  // /* Cast everything into uint64_t */
+  // const uint64_t process_64 = static_cast<uint64_t> (process);
+  // const uint64_t mpisize_64 = static_cast<uint64_t> (mpisize);
+
+  // /* Split the uint64_t */
+  // const uint64_t elem_over_size = global_num_elements / mpisize_64;
+  // const uint64_t remainder_0 = global_num_elements % mpisize_64;
+
+  // const uint64_t proc_over_size = process_64 / mpisize_64;
+  // const uint64_t remainder_1 = process_64 % mpisize_64;
+
+  // const uint64_t sum_0 = (elem_over_size * proc_over_size) * mpisize_64;
+  // const uint64_t sum_1 = elem_over_size * (process_64 % mpisize_64);
+  // const uint64_t sum_2 = proc_over_size * (global_num_elements % mpisize_64);
+  // const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize_64;
+
+  // return (sum_0 + sum_1 + sum_2 + sum_3);
+  return 0;
+}
+
 TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 {
   /**
@@ -151,9 +179,9 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       uint64_t check_result = check_result_elem;
       /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
-      t8_productionf ("rank_iter = %li \n", rank_iter);
+      t8_productionf ("rank_iter = %i \n", rank_iter);
       // for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
-      const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
+      const uint64_t computed_result = my_get_first_element_of_process (rank, size, num_elems);
       // check_result = (rank == size) ? num_elems : check_result;
 
       // ASSERT_EQ (computed_result, check_result) << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
