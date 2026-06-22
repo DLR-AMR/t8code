@@ -32,10 +32,9 @@
 /* Setter functions */
 
 void
-t8_cmesh_set_vertex_conn (t8_cmesh_t cmesh)
+t8_cmesh_enable_vertex_conn (t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (!t8_cmesh_is_committed (cmesh));
   if (cmesh->vertex_connectivity == nullptr)
     cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
 }
@@ -43,7 +42,7 @@ t8_cmesh_set_vertex_conn (t8_cmesh_t cmesh)
 int
 t8_cmesh_get_vertex_conn_status (t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh, 0));
   if (cmesh->vertex_connectivity == nullptr)
     return 0;
   if (cmesh->committed) {
@@ -58,10 +57,12 @@ t8_cmesh_set_global_vertices_of_tree (const t8_cmesh_t cmesh, const t8_gloidx_t 
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (!t8_cmesh_is_committed (cmesh));
-  if (cmesh->vertex_connectivity == nullptr)
-    cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
-  cmesh->vertex_connectivity->set_global_vertex_ids_of_tree_vertices (cmesh, global_tree, global_tree_vertices,
-                                                                      num_vertices);
+  T8_ASSERT (t8_cmesh_get_vertex_conn_status (cmesh));
+  if (cmesh->vertex_connectivity != nullptr)
+    cmesh->vertex_connectivity->set_global_vertex_ids_of_tree_vertices (cmesh, global_tree, global_tree_vertices,
+                                                                        num_vertices);
+  else
+    SC_ABORTF ("ERROR: Called t8_cmesh_set_global_vertices_of_tree on a cmesh with deactivated vertex connectivity.\n");
 }
 
 t8_gloidx_t
@@ -114,11 +115,4 @@ t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_ver
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
 
   return cmesh->vertex_connectivity->get_tree_list_of_vertex (global_vertex).size ();
-}
-
-int
-t8_cmesh_uses_vertex_connectivity (const t8_cmesh_t cmesh)
-{
-  return (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID)
-         || (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::VALID);
 }

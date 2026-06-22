@@ -38,12 +38,12 @@ T8_EXTERN_C_BEGIN ();
 typedef struct t8_cmesh_vertex_connectivity *t8_cmesh_vertex_connectivity_c;
 
 /**
- * Compute the vertex connectivity of the cmesh during commit. Vertices can either get a user-assigned global index via
- * \ref t8_cmesh_set_global_vertices_of_tree or they get automatically assigned during commit.
+ * Compute the vertex connectivity of the cmesh during commit. This can only happen if the global vertices
+ * are set via \ref t8_cmesh_set_global_vertices_of_tree.
  * \param [in] cmesh         An uncommitted cmesh to enable the vertex connectivity.
  */
 void
-t8_cmesh_set_vertex_conn (t8_cmesh_t cmesh);
+t8_cmesh_enable_vertex_conn (t8_cmesh_t cmesh);
 
 /**
  * Returns if the vertex connectivity of the \a cmesh will be built during commit or was build during commit.
@@ -108,13 +108,6 @@ t8_cmesh_get_global_vertex_of_tree (const t8_cmesh_t cmesh, const t8_locidx_t lo
  */
 int
 t8_cmesh_get_num_trees_at_vertex (const t8_cmesh_t cmesh, t8_gloidx_t global_vertex);
-
-/** Check whether a given cmesh uses the vertex connectivity feature.
- * \param [in] cmesh A committed cmesh.
- * \return Nonzero if the \a cmesh uses the vertex connectivity feature, zero if not.
- */
-int
-t8_cmesh_uses_vertex_connectivity (const t8_cmesh_t cmesh);
 
 T8_EXTERN_C_END ();
 
