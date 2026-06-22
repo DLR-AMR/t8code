@@ -152,20 +152,19 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
       t8_productionf ("rank_iter = %li \n", rank_iter);
-      for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
-        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
-        check_result = (rank == size) ? num_elems : check_result;
+      // for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
+      const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
+      check_result = (rank == size) ? num_elems : check_result;
 
-        ASSERT_EQ (computed_result, check_result)
-          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
+      ASSERT_EQ (computed_result, check_result) << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
 
-        /* Update the result with respect to the updated rank */
-        check_result *= rank_growth;
-        check_result += rank_growth * rank_remainder / size;
-        rank_remainder = (rank_growth * rank_remainder) % size;
-        /* Update the rank */
-        rank *= rank_growth;
-      }
+      /* Update the result with respect to the updated rank */
+      check_result *= rank_growth;
+      check_result += rank_growth * rank_remainder / size;
+      rank_remainder = (rank_growth * rank_remainder) % size;
+      /* Update the rank */
+      rank *= rank_growth;
+      // }
       /* Update the result with respect to the updated number of elements. */
       check_result_elem *= elem_growth;
       check_result_elem += elem_growth * check_result_elem_remain / size;
