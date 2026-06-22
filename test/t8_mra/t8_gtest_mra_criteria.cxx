@@ -157,6 +157,31 @@ TYPED_TEST (mra_criteria, hard_thresholding_significant_set_shrinks_with_thresho
   EXPECT_GT (number_low, 0u) << "the jump must make some family significant at a low threshold";
 }
 
+/* The Harten steep-gradient refinement test is 2^(P+1) times stricter than the
+ * neighbour-grading test. */
+TYPED_TEST (mra_criteria, harten_refine_implies_refine_neighbours)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+
+  mra_example<Shape, U, P> example (max_level);
+  example.init (jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+
+  t8_mra::harten_prediction crit { 1.0, 2 };
+  crit.prepare (mra);
+
+  mra.multiscale_decomposition (0, max_level);
+
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+    for (const auto &[lmi, detail] : mra.d_map[l])
+      if (crit.refine (mra, lmi))
+        EXPECT_TRUE (crit.refine_neighbours (mra, lmi)) << "refine must imply grading, level " << l;
+}
 
 }  // namespace
 
