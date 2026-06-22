@@ -50,6 +50,8 @@
 namespace
 {
 
+constexpr double eps = 1e-12;
+
 template <t8_eclass TShape, int U_, int P_>
 struct Config
 {
@@ -81,27 +83,35 @@ smooth_func ()
     };
 }
 
-/* Discontinuous test function: jump along a circle/sphere segment.
- * Guarantees significant details at the jump, hence coarsening keeps a fine
- * band there and refinement must trigger via the neighbour prediction. */
-template <int U, int DIM>
+/* Discontinuous test function: jump along a circle/sphere segment. Each side is
+ * a polynomial of total degree P-1, hence exactly representable at order P: the
+ * smooth regions carry zero detail and coarsen down to the base, while the two
+ * sides differ across the interface and keep a refined band there. Built per P
+ * so the coarsen/refine round-trip is a genuine invariant for every order,
+ * including P = 1 (piecewise constant). */
+template <int U, int P, int DIM>
 auto
 jump_func ()
 {
+  constexpr int d = P - 1;
   if constexpr (DIM == 2)
     return [] (double x, double y) {
       std::array<double, U> res;
       const double r = x * x + y * y;
+      const double in = std::pow (0.5 + x + y, d);
+      const double out = std::pow (0.3 + x - y, d);
       for (auto u = 0; u < U; ++u)
-        res[u] = (u + 1) * ((r < 0.25) ? (x * y + x + 3.0) : (x * x * y - 2.0 * x * y * y + 3.0 * x));
+        res[u] = (u + 1) * ((r < 0.25) ? (3.0 + in) : out);
       return res;
     };
   else
     return [] (double x, double y, double z) {
       std::array<double, U> res;
       const double r = x * x + y * y + z * z;
+      const double in = std::pow (0.5 + x + y + z, d);
+      const double out = std::pow (0.3 + x - y + z, d);
       for (auto u = 0; u < U; ++u)
-        res[u] = (u + 1) * ((r < 0.25) ? (x * y + z + 3.0) : (x * x * y - 2.0 * y * z + 3.0 * x));
+        res[u] = (u + 1) * ((r < 0.25) ? (3.0 + in) : out);
       return res;
     };
 }
@@ -183,8 +193,7 @@ constant_func ()
 }
 
 /* Custom coarsening criterion without prepare(): nothing is significant
- * -> coarsening must collapse the grid completely. Exercises the
- * coarsening_criterion extension point. */
+ * -> coarsening must collapse the grid completely. */
 struct collapse_criterion
 {
   template <typename MRA>
@@ -196,8 +205,7 @@ struct collapse_criterion
 };
 
 template <typename Cfg>
-class mra_adaptation: public ::testing::Test {
-};
+class mra_adaptation: public ::testing::Test {};
 
 using Configs = ::testing::Types<
   /* Triangle: hardcoded masks, P = 1..4 */
@@ -249,7 +257,7 @@ TYPED_TEST (mra_adaptation, mst_roundtrip)
   EXPECT_EQ (mra.get_lmi_map ()->size (), mra.get_lmi_map ()->size (0));
 
   mra.inverse_multiscale_transformation (0, max_level);
-  expect_maps_equal (snapshot, *mra.get_lmi_map (), max_level, 1e-9);
+  expect_maps_equal (snapshot, *mra.get_lmi_map (), max_level, eps);
 
   mra.cleanup ();
   t8_cmesh_destroy (&cmesh);
@@ -266,47 +274,39 @@ TYPED_TEST (mra_adaptation, coarsen_refine_roundtrip)
   constexpr auto P = TypeParam::P;
   constexpr auto DIM = TypeParam::DIM;
 
-  if constexpr (P == 1) {
-    /* With piecewise constants the approximation error of the smooth pieces
-     * dominates the details on all levels; whether coarsening triggers is a
-     * threshold tuning question, not an algorithmic invariant. */
-    GTEST_SKIP () << "coarsening behaviour for P=1 is threshold-dependent";
-  }
-  else {
-    const int max_level = (DIM == 3) ? 4 : 5;
-    auto mra = make_mra<Shape, U, P> (max_level);
+  const int max_level = (DIM == 3) ? 4 : 5;
+  auto mra = make_mra<Shape, U, P> (max_level);
 
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
-    auto *scheme = t8_scheme_new_default ();
-    t8_cmesh_ref (cmesh);
-    t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
+  auto *scheme = t8_scheme_new_default ();
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
-    mra.initialize_data (cmesh, scheme, max_level, jump_func<U, DIM> ());
-    const auto num_uniform = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  mra.initialize_data (cmesh, scheme, max_level, jump_func<U, P, DIM> ());
+  const auto num_uniform = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
 
-    mra.coarsen (0, max_level);
-    expect_forest_map_consistent (mra);
-    const auto num_coarse = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    EXPECT_LT (num_coarse, num_uniform) << "smooth regions must coarsen";
+  mra.coarsen (0, max_level);
+  expect_forest_map_consistent (mra);
+  const auto num_coarse = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  EXPECT_LT (num_coarse, num_uniform) << "smooth regions must coarsen";
 
-    const auto snapshot = *mra.get_lmi_map ();
+  const auto snapshot = *mra.get_lmi_map ();
 
-    mra.refine (0, max_level);
-    expect_forest_map_consistent (mra);
-    const auto num_refined = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    EXPECT_GT (num_refined, num_coarse) << "neighbour prediction must refine around the jump";
+  mra.refine (0, max_level);
+  expect_forest_map_consistent (mra);
+  const auto num_refined = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  EXPECT_GT (num_refined, num_coarse) << "neighbour prediction must refine around the jump";
 
-    mra.coarsen (0, max_level);
-    expect_forest_map_consistent (mra);
-    const auto num_recoarse = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    EXPECT_EQ (num_recoarse, num_coarse) << "zero-detail children must coarsen away again";
+  mra.coarsen (0, max_level);
+  expect_forest_map_consistent (mra);
+  const auto num_recoarse = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  EXPECT_EQ (num_recoarse, num_coarse) << "zero-detail children must coarsen away again";
 
-    expect_maps_equal (snapshot, *mra.get_lmi_map (), max_level, 1e-8);
+  expect_maps_equal (snapshot, *mra.get_lmi_map (), max_level, eps);
 
-    mra.cleanup ();
-    t8_cmesh_destroy (&cmesh);
-    t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
-  }
+  mra.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
 }
 
 /* A criterion that finds nothing significant must collapse the grid to the
@@ -326,7 +326,7 @@ TYPED_TEST (mra_adaptation, custom_criterion_collapse)
   t8_cmesh_ref (cmesh);
   t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
-  mra.initialize_data (cmesh, scheme, max_level, jump_func<U, DIM> ());
+  mra.initialize_data (cmesh, scheme, max_level, jump_func<U, P, DIM> ());
 
   mra.coarsen (0, max_level, collapse_criterion {});
   expect_forest_map_consistent (mra);
@@ -368,7 +368,7 @@ TYPED_TEST (mra_adaptation, bottom_up_constant_collapses)
 
   EXPECT_EQ (t8_forest_get_global_num_leaf_elements (mra.get_forest ()),
              t8_forest_get_global_num_leaf_elements (reference.get_forest ()));
-  expect_maps_equal (*reference.get_lmi_map (), *mra.get_lmi_map (), max_level, 1e-9);
+  expect_maps_equal (*reference.get_lmi_map (), *mra.get_lmi_map (), max_level, eps);
 
   mra.cleanup ();
   reference.cleanup ();
@@ -386,41 +386,35 @@ TYPED_TEST (mra_adaptation, bottom_up_adaptive_grid)
   constexpr auto P = TypeParam::P;
   constexpr auto DIM = TypeParam::DIM;
 
-  if constexpr (P == 1) {
-    GTEST_SKIP () << "coarsening behaviour for P=1 is threshold-dependent";
-  }
-  else {
-    using levelmultiindex = typename t8_mra::multiscale<Shape, U, P>::levelmultiindex;
+  using levelmultiindex = typename t8_mra::multiscale<Shape, U, P>::levelmultiindex;
 
-    const int max_level = (DIM == 3) ? 4 : 5;
-    auto mra = make_mra<Shape, U, P> (max_level);
+  const int max_level = (DIM == 3) ? 4 : 5;
+  auto mra = make_mra<Shape, U, P> (max_level);
 
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
-    auto *scheme = t8_scheme_new_default ();
-    t8_cmesh_ref (cmesh);
-    t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (Shape, sc_MPI_COMM_WORLD, 0, 0, 0);
+  auto *scheme = t8_scheme_new_default ();
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
-    mra.initialize_data_adaptive (cmesh, scheme, max_level, jump_func<U, DIM> ());
-    expect_forest_map_consistent (mra);
+  mra.initialize_data_adaptive (cmesh, scheme, max_level, jump_func<U, P, DIM> ());
+  expect_forest_map_consistent (mra);
 
-    const auto num_adaptive = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
-    const auto num_trees = t8_forest_get_num_global_trees (mra.get_forest ());
-    const auto num_uniform
-      = num_trees * static_cast<t8_gloidx_t> (std::pow (levelmultiindex::NUM_CHILDREN, max_level));
+  const auto num_adaptive = t8_forest_get_global_num_leaf_elements (mra.get_forest ());
+  const auto num_trees = t8_forest_get_num_global_trees (mra.get_forest ());
+  const auto num_uniform = num_trees * static_cast<t8_gloidx_t> (std::pow (levelmultiindex::NUM_CHILDREN, max_level));
 
-    EXPECT_LT (num_adaptive, num_uniform) << "smooth regions must stay coarse";
-    EXPECT_GT (mra.get_lmi_map ()->size (max_level), 0u) << "the jump must reach max_level";
-    EXPECT_EQ (mra.get_lmi_map ()->size (0), 0u) << "level 1 is the minimum level";
+  EXPECT_LT (num_adaptive, num_uniform) << "smooth regions must stay coarse";
+  EXPECT_GT (mra.get_lmi_map ()->size (max_level), 0u) << "the jump must reach max_level";
+  EXPECT_EQ (mra.get_lmi_map ()->size (0), 0u) << "level 1 is the minimum level";
 
-    /* The result must be a valid input for the regular adaptation cycle */
-    mra.coarsen (1, max_level);
-    expect_forest_map_consistent (mra);
-    EXPECT_LE (t8_forest_get_global_num_leaf_elements (mra.get_forest ()), num_adaptive);
+  /* The result must be a valid input for the regular adaptation cycle */
+  mra.coarsen (1, max_level);
+  expect_forest_map_consistent (mra);
+  EXPECT_LE (t8_forest_get_global_num_leaf_elements (mra.get_forest ()), num_adaptive);
 
-    mra.cleanup ();
-    t8_cmesh_destroy (&cmesh);
-    t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
-  }
+  mra.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
 }
 
 }  // namespace
