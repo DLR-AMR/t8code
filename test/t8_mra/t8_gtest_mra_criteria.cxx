@@ -91,6 +91,35 @@ TYPED_TEST (mra_criteria, local_threshold_value_scales_as_sqrt_num_children)
   EXPECT_GT (pairs, 0u) << "decomposition must leave parent/child detail pairs to compare";
 }
 
+/* scaled_detail_norm divides the raw detail norm by c_scaling componentwise */
+TYPED_TEST (mra_criteria, scaled_detail_norm_respects_c_scaling)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+
+  mra_example<Shape, U, P> example (max_level);
+  init_and_decompose (example, jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+
+  bool has_nonzero = false;
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+    for (const auto &[lmi, detail] : mra.d_map[l]) {
+      mra.c_scaling.fill (1.0);
+      const double base = mra.scaled_detail_norm (lmi);
+      if (base <= eps)
+        continue;
+      has_nonzero = true;
+
+      mra.c_scaling.fill (4.0);
+      EXPECT_NEAR (mra.scaled_detail_norm (lmi), base / 4.0, eps * base) << "level " << l;
+    }
+  EXPECT_TRUE (has_nonzero) << "the jump must leave at least one nonzero detail";
+}
+
 
 }  // namespace
 
