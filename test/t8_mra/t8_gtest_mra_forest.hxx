@@ -118,6 +118,52 @@ constant_func (double amplitude = 3.0)
 }
 
 /* Every forest leaf must have its lmi stored with the element's level, and
+ * exactly the leaves must be present in lmi_map. */
+template <typename MRA>
+void
+expect_forest_map_consistent (MRA &mra)
+{
+  auto *forest = mra.get_forest ();
+  auto *user_data = mra.get_user_data ();
+  auto *lmi_map = mra.get_lmi_map ();
+  const auto *scheme = t8_forest_get_scheme (forest);
+
+  ASSERT_EQ (static_cast<size_t> (t8_forest_get_local_num_leaf_elements (forest)), lmi_map->size ());
+
+  auto current_idx = t8_locidx_t { 0 };
+  const auto num_trees = t8_forest_get_num_local_trees (forest);
+  for (t8_locidx_t tree_idx = 0; tree_idx < num_trees; ++tree_idx) {
+    const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
+    const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+
+    for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+      const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+      const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
+
+      EXPECT_EQ (lmi.level (), static_cast<unsigned int> (scheme->element_get_level (tree_class, element)));
+      EXPECT_TRUE (lmi_map->contains (lmi));
+    }
+  }
+}
+
+template <typename MapT>
+void
+expect_maps_equal (const MapT &expected, const MapT &actual, unsigned int max_level, double tol)
+{
+  for (auto l = 0u; l <= max_level; ++l) {
+    ASSERT_EQ (expected[l].size (), actual[l].size ()) << "entry count differs on level " << l;
+
+    for (const auto &[lmi, data] : expected[l]) {
+      ASSERT_TRUE (actual.contains (lmi)) << "missing lmi on level " << l;
+
+      const auto &other = actual.get (lmi);
+      ASSERT_EQ (data.u_coeffs.size (), other.u_coeffs.size ());
+      for (auto i = 0u; i < data.u_coeffs.size (); ++i)
+        EXPECT_NEAR (data.u_coeffs[i], other.u_coeffs[i], tol) << "coeff " << i << " on level " << l;
+    }
+  }
+}
+
 /* (cmesh, scheme, multiscale) triple on a unit hypercube */
 template <t8_eclass TShape, int U, int P>
 class mra_example {
