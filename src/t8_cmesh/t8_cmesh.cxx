@@ -92,9 +92,14 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 #endif
 
 int
-t8_cmesh_is_committed (const t8_cmesh_t cmesh)
+t8_cmesh_is_committed (const t8_cmesh_t cmesh, int validate_cmesh)
 {
-  static int is_checking = 0;
+  if (!validate_cmesh) {
+    /* Skip the full consistency validation below and only check the
+     * committed flag itself. Used where a cheap, recursion-free check
+     * suffices, e.g. at the start of a cmesh generator. */
+    return cmesh != nullptr && cmesh->committed;
+  }
 
   /* We run into a stackoverflow if routines that we call here,
    * also call t8_cmesh_is_committed.
@@ -104,6 +109,8 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
    */
   /* TODO: This is_checking is not thread safe. If two threads call cmesh routines
    *       that call t8_cmesh_is_committed, only one of them will correctly check the cmesh. */
+  static int is_checking = 0;
+
   if (!is_checking) {
     is_checking = 1;
 
@@ -126,6 +133,15 @@ t8_cmesh_is_committed (const t8_cmesh_t cmesh)
     is_checking = 0;
   }
   return 1;
+}
+
+int
+t8_cmesh_stash_is_empty (const t8_cmesh_t cmesh)
+{
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  return t8_stash_is_empty (cmesh->stash);
 }
 
 void
@@ -407,7 +423,7 @@ t8_cmesh_get_next_tree (const t8_cmesh_t cmesh, const t8_ctree_t tree)
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (tree != NULL);
   T8_ASSERT (t8_cmesh_treeid_is_local_tree (cmesh, tree->treeid));
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   return tree->treeid < cmesh->num_local_trees - 1 ? t8_cmesh_get_tree (cmesh, tree->treeid + 1) : nullptr;
 }
 
@@ -543,7 +559,7 @@ t8_cmesh_set_tree_vertices (t8_cmesh_t cmesh, const t8_gloidx_t gtree_id, const 
 {
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (vertices != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
 
   const size_t data_size = 3 * num_vertices * sizeof (double);
 
@@ -611,11 +627,11 @@ t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b)
     return 1;
   }
   /* check entries that are numbers */
-  is_equal = cmesh_a->committed != cmesh_b->committed || cmesh_a->dimension != cmesh_b->dimension
-             || cmesh_a->set_partition != cmesh_b->set_partition || cmesh_a->mpirank != cmesh_b->mpirank
-             || cmesh_a->mpisize != cmesh_b->mpisize || cmesh_a->num_trees != cmesh_b->num_trees
-             || cmesh_a->num_local_trees != cmesh_b->num_local_trees || cmesh_a->num_ghosts != cmesh_b->num_ghosts
-             || cmesh_a->first_tree != cmesh_b->first_tree;
+  is_equal = t8_cmesh_is_committed (cmesh_a, 0) != t8_cmesh_is_committed (cmesh_b, 0)
+             || cmesh_a->dimension != cmesh_b->dimension || cmesh_a->set_partition != cmesh_b->set_partition
+             || cmesh_a->mpirank != cmesh_b->mpirank || cmesh_a->mpisize != cmesh_b->mpisize
+             || cmesh_a->num_trees != cmesh_b->num_trees || cmesh_a->num_local_trees != cmesh_b->num_local_trees
+             || cmesh_a->num_ghosts != cmesh_b->num_ghosts || cmesh_a->first_tree != cmesh_b->first_tree;
   if (is_equal != 0) {
     return 0;
   }
@@ -639,12 +655,12 @@ t8_cmesh_is_equal (const t8_cmesh_t cmesh_a, const t8_cmesh_t cmesh_b)
     return 0;
   }
   /* check trees */
-  if (cmesh_a->committed && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees)) {
+  if (t8_cmesh_is_committed (cmesh_a, 0) && !t8_cmesh_trees_is_equal (cmesh_a, cmesh_a->trees, cmesh_b->trees)) {
     /* if we have committed check tree arrays */
     return 0;
   }
   else {
-    if (!cmesh_a->committed && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
+    if (!t8_cmesh_is_committed (cmesh_a, 0) && !t8_stash_is_equal (cmesh_a->stash, cmesh_b->stash)) {
       /* if we have not committed check stash arrays */
       return 0;
     }
@@ -811,7 +827,7 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_ctree_t tree;
 
   /* cmesh must be committed and not partitioned */
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (!cmesh->set_partition);
 
   mpiret = sc_MPI_Comm_size (comm, &mpisize);
@@ -911,7 +927,7 @@ t8_gloidx_t
 t8_cmesh_get_num_trees (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   return cmesh->num_trees;
 }
@@ -988,7 +1004,7 @@ t8_cmesh_get_ghost_class (const t8_cmesh_t cmesh, const t8_locidx_t lghost_id)
   t8_cghost_t ghost;
 
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (0 <= lghost_id && lghost_id < cmesh->num_ghosts);
 
   ghost = t8_cmesh_trees_get_ghost (cmesh->trees, lghost_id);
@@ -1199,7 +1215,7 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     t8_shmem_array_destroy (&cmesh->tree_offsets);
   }
   /*TODO: write this */
-  if (!cmesh->committed) {
+  if (!t8_cmesh_is_committed (cmesh, 0)) {
     t8_stash_destroy (&cmesh->stash);
     if (cmesh->set_from != nullptr) {
       /* We unref our reference of set_from */
@@ -1463,7 +1479,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
   int is_empty;
 
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (level >= 0);
   T8_ASSERT (tree_scheme != NULL);
 

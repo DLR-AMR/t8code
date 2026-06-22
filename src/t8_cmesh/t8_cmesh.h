@@ -90,15 +90,40 @@ int
 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 
 /** Check whether a cmesh is not NULL, initialized and committed.
- * In addition, it asserts that the cmesh is consistent as much as possible.
  * \param [in] cmesh            This cmesh is examined.  May be NULL.
+ * \param [in] validate_cmesh   If true (the default), in addition to checking the
+ *                              committed flag, checks that the cmesh is consistent
+ *                              as much as possible.
+ *                              If false, only \a cmesh being non-NULL and its internal
+ *                              committed flag are checked; no recursive validation is
+ *                              performed. Useful for cheap checks, e.g. at the start of
+ *                              a cmesh generator, where the full validation is neither
+ *                              needed nor (since the cmesh is not yet committed) meaningful.
  * \return                      True if cmesh is not NULL and
  *                              \ref t8_cmesh_init has been called on it
- *                              as well as \ref t8_cmesh_commit.
+ *                              as well as \ref t8_cmesh_commit (and the validation is
+ *                              successful).
  *                              False otherwise.
  */
 int
-t8_cmesh_is_committed (const t8_cmesh_t cmesh);
+t8_cmesh_is_committed (const t8_cmesh_t cmesh
+#ifdef __cplusplus
+                       ,
+                       int validate_cmesh = 1
+#else
+                       ,
+                       int validate_cmesh
+#endif
+);
+
+/** Check whether a cmesh holds no trees, face-connections or attributes yet.
+ * Useful at the start of a cmesh generator to ensure the caller has not
+ * already added trees to \a cmesh before passing it on.
+ * \param [in] cmesh            This cmesh is examined. Must be initialized, but not committed.
+ * \return                      True if \a cmesh holds no entries at all, false otherwise.
+ */
+int
+t8_cmesh_stash_is_empty (const t8_cmesh_t cmesh);
 
 /** Disable the debug check for negative volumes in trees during \ref t8_cmesh_commit.
  *  Does nothing outside of debug mode.
@@ -432,13 +457,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  * \param[in] cmesh The cmesh to save.
  * \param[in] fileprefix The prefix of the file to save the cmesh to.
  *
-<<<<<<< HEAD:src/t8_cmesh.h
- * \note Currently, it is only legal to save cmeshes that use the linear geometry.
-=======
  * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
  *                  Calling it will thus result in an error.
  * \note So far, it was only legal to save cmeshes that use the linear geometry.
->>>>>>> main:src/t8_cmesh/t8_cmesh.h
  */
 int
 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
@@ -799,7 +820,10 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
  * and each process computes its number of elements on the given \a level, communicates the number to other processes,
  * and the correct section is computed based on this information.
  *
+<<<<<<< HEAD
 >>>>>>> main:src/t8_cmesh/t8_cmesh.h
+=======
+>>>>>>> enhancement-refactor_cmesh_options
  * \param [in] cmesh        The cmesh to be considered.
  * \param [in] level        The uniform refinement level to be created.
  * \param [in] scheme       The element scheme for which to compute the bounds.

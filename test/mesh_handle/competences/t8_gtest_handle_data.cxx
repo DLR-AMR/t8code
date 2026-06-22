@@ -31,7 +31,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
-#include <mesh_handle/data_handler.hxx>
+#include <mesh_handle/competences/element_data_competences.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
@@ -50,7 +50,7 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
                                           t8_mesh_handle::data_mesh_competences<data_per_element>>;
   auto mesh
-    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
+    = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
 
   if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
     // Ensure that we actually test with ghost elements.
@@ -110,9 +110,9 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
   }
 }
 
-/** Check that the unique union of multiple mesh competence packs works as intended. 
- * This is done in this file because there is only one mesh competence at the moment, where we need a data class. 
- * We use the data class defined here. 
+/** Check that the unique union of multiple mesh competence packs works as intended.
+ * This is done in this file because there is only one mesh competence at the moment, where we need a data class.
+ * We use the data class defined here.
  */
 TEST (t8_gtest_handle_data, test_union_mesh_competence_pack)
 {

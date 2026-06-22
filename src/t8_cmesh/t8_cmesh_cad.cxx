@@ -47,14 +47,14 @@
 #include <Geom_Surface.hxx>
 #endif
 
-t8_cmesh_t
-t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int num_axial_trees, int num_radial_trees,
-                              int with_cad_geometry)
+void
+t8_cmesh_new_hollow_cylinder (t8_cmesh_t cmesh, sc_MPI_Comm comm, int num_tangential_trees, int num_axial_trees,
+                              int num_radial_trees, int with_cad_geometry)
 {
-  /* Create the cmesh and the geometry */
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_set_profiling (cmesh, 1);
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
 
   if (with_cad_geometry) {
 #if T8_ENABLE_OCC
@@ -92,7 +92,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
   }
 
 #if T8_ENABLE_OCC
-  /* Save the indices of the cylinders inside the shape for later usage. 
+  /* Save the indices of the cylinders inside the shape for later usage.
    * The indices start with 1 and are in the same order as we put in the cylinders. */
   int cylinder_outer_index = 1, cylinder_inner_index = 2;
 #endif /* T8_ENABLE_OCC */
@@ -103,7 +103,7 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
   const double dr = (radius_outer - radius_inner) / num_radial_trees;
   const double dphi = 2.0 * M_PI / num_tangential_trees;
   const double dh = 1.0 / num_axial_trees;
-  /* Allocate memory for saving the node coordinates 
+  /* Allocate memory for saving the node coordinates
    * and in case of usage of the cad geometry, the node parameters */
   double *vertices;
   vertices = T8_ALLOC (double, num_tangential_trees *num_axial_trees *num_radial_trees * 24);
@@ -289,5 +289,4 @@ t8_cmesh_new_hollow_cylinder (sc_MPI_Comm comm, int num_tangential_trees, int nu
 #if T8_ENABLE_OCC
   T8_FREE (parameters);
 #endif /* T8_ENABLE_OCC */
-  return cmesh;
 }
