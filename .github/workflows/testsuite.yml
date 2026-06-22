@@ -254,7 +254,7 @@ jobs:
       fail-fast: false
       matrix:
         MPI: [ON]
-        BUILD_TYPE: [Release]
+        BUILD_TYPE: [Debug]
         include:
           - MAKEFLAGS: -j4
     with:
