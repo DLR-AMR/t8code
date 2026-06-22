@@ -45,13 +45,8 @@ T8_EXTERN_C_BEGIN ();
 /* put declarations here */
 
 /** Read a .msh file and create a cmesh from it.
- * \param [in,out] pcmesh            Pointer to an initialized, but not committed cmesh handle, as created by
- *                                   \ref t8_cmesh_init. Unlike most cmesh generators, this function takes a
- *                                   pointer *to* the cmesh handle, not the handle itself: on failure (e.g. an
- *                                   unsupported file format, or a missing OCC dependency for a cad-parametric
- *                                   file) the cmesh that was passed in is destroyed and `*pcmesh` is set to
- *                                   NULL, which only this pointer-to-pointer signature can communicate back
- *                                   to the caller. Check `*pcmesh != NULL` after the call to detect failure.
+ * \param [in,out] pcmesh           Pointer to an initialized, but not committed cmesh handle, as created by
+ *                                  \ref t8_cmesh_init. Check `*pcmesh != NULL` after the call to detect failure.
  * \param [in]    fileprefix        The prefix of the mesh file.
  *                                  The file fileprefix.msh is read.
  * \param [in]    partition         If true the file is only opened on one process
