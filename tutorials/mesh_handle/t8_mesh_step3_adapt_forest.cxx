@@ -118,7 +118,7 @@ main (int argc, char **argv)
 
   using mesh_type = t8_mesh_handle::mesh<>;
 
-  t8_global productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] \n");
   t8_global_productionf (" [tutorial] Creating an adapted mesh.\n");
   t8_global_productionf (" [tutorial] \n");
   /* The initial uniform refinement level. */
@@ -132,5 +132,7 @@ main (int argc, char **argv)
   t8_mesh_handle::write_mesh_to_vtk (*mesh, "adapted_mesh.vtu");
 
   sc_finalize ();
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
   return 0;
 }
