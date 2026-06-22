@@ -135,7 +135,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
    * We use integer division, therefore we store the remainder of each update to
    * prevent rounding errors.
   */
-  uint64_t size = 1;
+  uint32_t size = 1;
   for (uint32_t isize = 1; isize < size_iter; ++isize) {
     /* The very first result is 1 * 1 / size */
     uint64_t check_result_elem = 1 / size;
