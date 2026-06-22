@@ -120,6 +120,43 @@ TYPED_TEST (mra_criteria, scaled_detail_norm_respects_c_scaling)
   EXPECT_TRUE (has_nonzero) << "the jump must leave at least one nonzero detail";
 }
 
+/* Raising the threshold constant can only remove leaves from the significant
+ * set. */
+TYPED_TEST (mra_criteria, hard_thresholding_significant_set_shrinks_with_threshold)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+
+  mra_example<Shape, U, P> example (max_level);
+  example.init (jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+
+  t8_mra::hard_thresholding low { 0.1, 2 };
+  t8_mra::hard_thresholding high { 10.0, 2 };
+  low.prepare (mra);
+  high.prepare (mra);
+
+  mra.multiscale_decomposition (0, max_level);
+
+  std::size_t number_low = 0, number_high = 0;
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+    for (const auto &[lmi, detail] : mra.d_map[l]) {
+      const bool significant_low = low.significant (mra, lmi);
+      const bool significant_high = high.significant (mra, lmi);
+
+      number_low += significant_low;
+      number_high += significant_high;
+      EXPECT_TRUE (!significant_high || significant_low)
+        << "a higher threshold must not gain significance, level " << l;
+    }
+  EXPECT_LE (number_high, number_low);
+  EXPECT_GT (number_low, 0u) << "the jump must make some family significant at a low threshold";
+}
+
 
 }  // namespace
 
