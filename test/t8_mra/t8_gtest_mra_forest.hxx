@@ -47,6 +47,77 @@ struct ConfigNames
 };
 
 /* Smooth test function */
+template <int U, int DIM>
+auto
+smooth_func ()
+{
+  if constexpr (DIM == 2)
+    return [] (double x, double y) {
+      std::array<double, U> res;
+      for (auto u = 0; u < U; ++u)
+        res[u] = std::sin (2.0 * M_PI * (u + 1) * x) * std::sin (2.0 * M_PI * y);
+      return res;
+    };
+  else
+    return [] (double x, double y, double z) {
+      std::array<double, U> res;
+      for (auto u = 0; u < U; ++u)
+        res[u] = std::sin (2.0 * M_PI * (u + 1) * x) * std::sin (2.0 * M_PI * y) * std::sin (2.0 * M_PI * z);
+      return res;
+    };
+}
+
+/* Discontinuous test function: jump along a circle/sphere segment. Each side is
+ * a polynomial of total degree P-1, hence exactly representable at order P */
+template <int U, int P, int DIM>
+auto
+jump_func ()
+{
+  constexpr int d = P - 1;
+  if constexpr (DIM == 2)
+    return [] (double x, double y) {
+      std::array<double, U> res;
+      const double r = x * x + y * y;
+      const double in = std::pow (0.5 + x + y, d);
+      const double out = std::pow (0.3 + x - y, d);
+      for (auto u = 0; u < U; ++u)
+        res[u] = (u + 1) * ((r < 0.25) ? (3.0 + in) : out);
+      return res;
+    };
+  else
+    return [] (double x, double y, double z) {
+      std::array<double, U> res;
+      const double r = x * x + y * y + z * z;
+      const double in = std::pow (0.5 + x + y + z, d);
+      const double out = std::pow (0.3 + x - y + z, d);
+      for (auto u = 0; u < U; ++u)
+        res[u] = (u + 1) * ((r < 0.25) ? (3.0 + in) : out);
+      return res;
+    };
+}
+
+/* Constant initial data: all details vanish exactly. */
+template <int U, int DIM>
+auto
+constant_func (double amplitude = 3.0)
+{
+  if constexpr (DIM == 2)
+    return [amplitude] (double, double) {
+      std::array<double, U> res;
+      for (auto u = 0; u < U; ++u)
+        res[u] = amplitude * (u + 1);
+      return res;
+    };
+  else
+    return [amplitude] (double, double, double) {
+      std::array<double, U> res;
+      for (auto u = 0; u < U; ++u)
+        res[u] = amplitude * (u + 1);
+      return res;
+    };
+}
+
+/* Every forest leaf must have its lmi stored with the element's level, and
 /* (cmesh, scheme, multiscale) triple on a unit hypercube */
 template <t8_eclass TShape, int U, int P>
 class mra_example {
