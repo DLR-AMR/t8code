@@ -1696,6 +1696,10 @@ t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, const int pa
    * the cmesh and clearing the caller's handle, so it operates on a local copy of
    * *pcmesh and writes the final handle (cmesh, or NULL on failure) back at the end. */
   t8_cmesh_t cmesh = *pcmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
   int mpirank, mpisize, mpiret;
   char current_file[BUFSIZ];
   FILE *file;

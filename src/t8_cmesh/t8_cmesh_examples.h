@@ -32,6 +32,10 @@
  * itself a pointer, the caller's handle already refers to the finished mesh once the
  * function returns, so none of these functions return a value.
  *
+ * Likewise, \a cmesh must not yet hold any trees or attributes (i.e. its stash must be
+ * empty, see \ref t8_cmesh_stash_is_empty) when it is passed in; every generator asserts
+ * this at its start.
+ *
  * The one exception is \ref t8_cmesh_new_hypercube, which takes \a pcmesh as a pointer
  * to the cmesh handle (`t8_cmesh_t *`, like \ref t8_cmesh_init itself) rather than the
  * handle directly. See its documentation for why.
