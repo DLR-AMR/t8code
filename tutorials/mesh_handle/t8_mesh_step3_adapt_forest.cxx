@@ -56,21 +56,21 @@ struct adapt_data
 */
 template <t8_mesh_handle::T8MeshType TMeshClass>
 int
-adapt_callback ([[maybe_unused]]const TMeshClass &mesh, std::span<const typename TMeshClass::element_class> elements,
+adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typename TMeshClass::element_class> elements,
                 const adapt_data &adapt_data)
 {
   auto element_centroid = elements[0].get_centroid ();
   double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_data.midpoint);
   if (dist < adapt_data.refine_radius) {
     return 1;  // refine
-  } //first check if there is a family, and only if yes check if we should coarsen.
+  }            //first check if there is a family, and only if yes check if we should coarsen.
   else if ((elements.size () > 1) && (dist > adapt_data.coarsen_radius)) {
     return -1;  // coarsen
   }
   return 0;  // do nothing
 }
 
-/** Build our adapted mesh by transfering the adaption parameters and adapting once with our adapt_callback function.
+/** Build our adapted mesh by transferring the adaption parameters and adapting once with our adapt_callback function.
  * \tparam TMeshClass    The mesh handle class.
  * \param sc_MPI_Comm    The MPI Communicator.
  * \param level          The initial uniform refinement level.
@@ -83,7 +83,7 @@ build_mesh (sc_MPI_Comm comm, int level)
   /*Generate a hybrid hypercube, made out of cubes, prisms etc. */
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
   /*Defining the adaption parameters. */
-  struct adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 }; 
+  struct adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
   mesh->set_balance ();
   mesh->set_partition ();
   /*Adapting once with our adapt_callback function. */
@@ -112,8 +112,8 @@ main (int argc, char **argv)
   /* Print a starting message. */
   t8_global_productionf (" [tutorial] \n");
   t8_global_productionf (" [tutorial] Hello, this is the mesh adaptation example of t8code using the mesh handle.\n");
-  t8_global_productionf (
-    " [tutorial] In this example we will adapt a mesh in a spherical shape around a given point and write the adapted mesh to a vtu file.\n");
+  t8_global_productionf (" [tutorial] In this example we will adapt a mesh in a spherical shape around a given point "
+                         "and write the adapted mesh to a vtu file.\n");
   t8_global_productionf (" [tutorial] \n");
 
   using mesh_type = t8_mesh_handle::mesh<>;
