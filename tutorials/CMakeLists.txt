@@ -89,3 +89,7 @@ if( T8CODE_BUILD_MESH_HANDLE )
     add_mesh_handle_tutorial( NAME t8_mesh_step3_adapt_forest SOURCES mesh_handle/t8_mesh_step3_adapt_forest.cxx )
 endif()
 
+if( T8CODE_BUILD_MESH_HANDLE )
+    add_mesh_handle_tutorial( NAME t8_mesh_step4_partition_balance_ghost SOURCES mesh_handle/t8_mesh_step4_partition_balance_ghost.cxx )
+endif()
+
