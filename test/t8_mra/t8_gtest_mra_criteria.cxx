@@ -16,6 +16,16 @@ class mra_criteria: public ::testing::Test {};
 
 TYPED_TEST_SUITE (mra_criteria, Configs, ConfigNames);
 
+/* Uniform max-level grid with computed details: the common starting point for
+ * every threshold check. */
+template <typename Case, typename F>
+void
+init_and_decompose (Case &c, F &&f)
+{
+  c.init (std::forward<F> (f));
+  c->multiscale_decomposition (0, c.max_level);
+}
+
 /* threshold_scaling_factor is a domain integral clamped to >= 1, and the DG
  * projection is linear, so doubling the data doubles the (unclamped) factor. */
 TYPED_TEST (mra_criteria, threshold_scaling_factor_is_clamped_and_linear)
