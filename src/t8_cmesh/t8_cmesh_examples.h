@@ -36,7 +36,7 @@
  * empty, see \ref t8_cmesh_stash_is_empty) when it is passed in; every generator asserts
  * this at its start.
  *
- * The one exception is \ref t8_cmesh_new_hypercube, which takes pcmesh as a pointer
+ * The one exception is t8_cmesh_new_hypercube, which takes pcmesh as a pointer
  * to the cmesh handle (`t8_cmesh_t *`, like \ref t8_cmesh_init itself) rather than the
  * handle directly. See its documentation for why.
  */
