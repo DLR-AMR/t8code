@@ -71,6 +71,7 @@ add_t8_example( NAME t8_cmesh_set_join_by_vertices      SOURCES cmesh/t8_cmesh_s
 add_t8_example( NAME t8_cmesh_geometry_examples         SOURCES cmesh/t8_cmesh_geometry_examples.cxx )
 add_t8_example( NAME t8_cmesh_create_partitioned        SOURCES cmesh/t8_cmesh_create_partitioned.cxx )
 add_t8_example( NAME t8_cmesh_hypercube_pad             SOURCES cmesh/t8_cmesh_hypercube_pad.cxx )
+add_t8_example( NAME t8_cmesh_mesh_deformation          SOURCES cmesh/t8_cmesh_mesh_deformation.cxx )
 
 add_t8_example( NAME t8_test_ghost                      SOURCES forest/t8_test_ghost.cxx )
 add_t8_example( NAME t8_test_face_iterate               SOURCES forest/t8_test_face_iterate.cxx )
@@ -78,13 +79,8 @@ add_t8_example( NAME t8_test_ghost_large_level_diff     SOURCES forest/t8_test_g
 
 add_t8_example( NAME t8_example_geometries              SOURCES geometry/t8_example_geometries.cxx )
 
-add_t8_example( NAME t8_cmesh_load_save                 SOURCES IO/cmesh/t8_cmesh_load_save.cxx )
 add_t8_example( NAME t8_read_msh_file                   SOURCES IO/cmesh/gmsh/t8_read_msh_file.cxx )
 add_t8_example( NAME t8_load_and_refine_square_w_hole   SOURCES IO/cmesh/gmsh/t8_load_and_refine_square_w_hole.cxx )
-add_t8_example( NAME t8_read_tetgen                     SOURCES IO/cmesh/tetgen/t8_read_tetgen_file.cxx )
-add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/t8_time_tetgen_file.cxx )
-add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
-add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )
 add_t8_example( NAME t8_read_openfoam_case              SOURCES IO/cmesh/OpenFOAM/t8_read_openfoam_case.cxx )
 
 copy_example_file (IO/cmesh/gmsh/circlesquare_hybrid_hole.msh)
@@ -100,3 +96,10 @@ add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_exampl
 add_t8_example( NAME t8_example_empty_trees             SOURCES remove/t8_example_empty_trees.cxx )
 
 add_t8_example( NAME t8_version                         SOURCES version/t8_version.cxx )
+
+# NOTE: The following examples are (currently) deprecated and no longer compiled.
+# add_t8_example( NAME t8_cmesh_load_save                 SOURCES IO/cmesh/t8_cmesh_load_save.cxx )
+# add_t8_example( NAME t8_read_tetgen                     SOURCES IO/cmesh/tetgen/t8_read_tetgen_file.cxx )
+# add_t8_example( NAME t8_time_tetgen                     SOURCES IO/cmesh/tetgen/t8_time_tetgen_file.cxx )
+# add_t8_example( NAME t8_forest_tetgen                   SOURCES IO/cmesh/tetgen/t8_forest_from_tetgen.cxx )
+# add_t8_example( NAME t8_read_triangle                   SOURCES IO/cmesh/triangle/t8_read_triangle_file.cxx )

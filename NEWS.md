@@ -1,3 +1,11 @@
+# Updated dependencies
+
+We have switched from a submodules approach to a FetchContent approach for our dependencies p4est and sc. If you use p4est and sc shipped with t8code, calling cmake will pull and add the right commit from github. You can also still link against your local installations. Either way you do not need to update your workflow. The submodules of p4est and sc should be removed with this update. Instead they will be downloaded and installed in the _deps folder in your build folder.
+If you use a separate installation of p4est and sc it is important to set the boolean CMake Options "T8CODE_USE_SYSTEM_P4EST" and "T8CODE_USE_SYSTEM_SC" as before. It prevents the triggering of the automatic installation of the libraries.
+For further information have a look at our [Installation Guide](https://github.com/DLR-AMR/t8code/wiki/Installation).
+For devs: Further dependencies can be managed in our dependencies.json.
+
+
 # Updated contribution workflow.
 
 The team of main-developers of t8code and contributors to t8code is getting bigger and we needed an improved workflow to manage all of our contributions.
@@ -19,7 +27,25 @@ Please execute the steps in this order to ensure that your issue has the correct
 No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no issues are referenced using the Closes-keyword, an issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
 
 
-# User Updates for the upcoming t8code release (February 2026 - version format unclear)
+# User Updates for the upcoming t8code release (February 2026 - v4.0.0-26.02)
+
+## Updates to t8_forest_leaf_face_neighbors
+
+The t8_forest_leaf_face_neighbors and t8_forest_leaf_face_neighbors_ext functions (see t8_forest_general.h) have undergone a major update.
+
+- The forest does not need to be balanced anymore to compute the leaf face neighbors. Thus, there can be any arbitrary number of leaf face neighbors for a given element.
+The last argument (forest_is_balanced) was removed.
+
+- The allocation behaviour changed. element_destroy should not be called anymore.
+The function now returns pointers to t8code internal elements in the neighbor_leaves array.
+To free the memory use
+```C++
+if (num_neighbors > 0) {
+   T8_FREE (pneighbor_leaves);
+   T8_FREE (pelement_indices);
+   T8_FREE (dual_faces);
+}
+```
 
 ## Using structs instead of classes
 
@@ -219,7 +245,7 @@ Similarly, the following member variables have been renamed:
 
 # Renaming of macros T8_WITH_ to T8_ENABLE_
 We renamed the macros T8_WITH_... to T8_ENABLE_... for consistency reasons with the related cmake options (T8CODE_ENABLE...) and other macros. We are currently working on an automatized way to check for wrong usages.
-Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script. 
+Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script.
 
 
 # Update to MPI 3.0
@@ -253,4 +279,4 @@ For more details, see the pull request https://github.com/DLR-AMR/t8code/pull/19
 
 # Documentation on readthedocs
 
-To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster. 
+To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster.

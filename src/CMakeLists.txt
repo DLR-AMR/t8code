@@ -97,6 +97,7 @@ if( T8CODE_ENABLE_OCC )
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
       t8_cad/t8_cad_handle.cxx
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
@@ -106,6 +107,10 @@ if( T8CODE_ENABLE_OCC )
     install( FILES
       t8_cad/t8_cad_handle.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cad
+    )
+    install( FILES
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
     )
 endif()
 
@@ -151,8 +156,8 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx
     t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_save.cxx
-    t8_cmesh/t8_cmesh_io/t8_cmesh_triangle.cxx
+    t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.cxx
+    t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_triangle.cxx
     t8_data/t8_shmem.c
     t8_data/t8_containers.cxx
     t8_eclass/t8_eclass.c
@@ -207,6 +212,7 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
+    t8_openfoam/t8_openfoam_reader.cxx
 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
