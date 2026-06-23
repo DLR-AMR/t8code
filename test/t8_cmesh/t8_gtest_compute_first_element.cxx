@@ -163,7 +163,8 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
    * We use integer division, therefore we store the remainder of each update to
    * prevent rounding errors.
   */
-  uint32_t size = 1;
+  //uint32_t size = 1;
+  uint64_t size = 1;
   for (uint32_t isize = 1; isize < size_iter; ++isize) {
     /* The very first result is 1 * 1 / size */
     uint64_t check_result_elem = 1 / size;
@@ -179,7 +180,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       uint64_t check_result = check_result_elem;
       /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
-      t8_productionf ("rank_iter = %i \n", rank_iter);
+      //t8_productionf ("rank_iter = %i \n", rank_iter);
       // for (uint32_t irank = 1; irank < 2 && rank <= size; ++irank) {
       // const uint64_t computed_result = my_get_first_element_of_process (rank, size, num_elems);
 
