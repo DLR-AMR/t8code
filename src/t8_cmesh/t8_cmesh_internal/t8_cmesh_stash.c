@@ -41,7 +41,7 @@ t8_stash_init (t8_stash_t *pstash)
 }
 
 int
-t8_stash_is_empty (t8_stash_t stash)
+t8_stash_is_empty (const t8_stash_t stash)
 {
   T8_ASSERT (stash != NULL);
 

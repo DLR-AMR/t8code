@@ -92,7 +92,7 @@ t8_cmesh_check_trees_per_eclass (t8_cmesh_t cmesh)
 #endif
 
 int
-t8_cmesh_is_committed (const t8_cmesh_t cmesh, int validate_cmesh)
+t8_cmesh_is_committed (const t8_cmesh_t cmesh, const int validate_cmesh)
 {
   if (!validate_cmesh) {
     /* Skip the full consistency validation below and only check the

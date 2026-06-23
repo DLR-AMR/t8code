@@ -92,7 +92,7 @@ t8_cmesh_new_empty (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  * \param [in]      comm       mpi communicator to be used with the new cmesh.
  */
 void
-t8_cmesh_new_from_class (t8_cmesh_t cmesh, t8_eclass_t eclass, sc_MPI_Comm comm);
+t8_cmesh_new_from_class (t8_cmesh_t cmesh, const t8_eclass_t eclass, sc_MPI_Comm comm);
 
 /** Construct a hypercube cmesh from one primitive tree class.
  * \param [in,out] pcmesh   Pointer to an initialized, but not committed cmesh handle, as created by
@@ -115,7 +115,7 @@ t8_cmesh_new_from_class (t8_cmesh_t cmesh, t8_eclass_t eclass, sc_MPI_Comm comm)
  *                          Not possible with \a eclass pyramid.
  */
 void
-t8_cmesh_new_hypercube (t8_cmesh_t *pcmesh, t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition,
+t8_cmesh_new_hypercube (t8_cmesh_t *pcmesh, const t8_eclass_t eclass, sc_MPI_Comm comm, const int do_bcast, const int do_partition,
                         int periodic);
 
 /** Construct a hypercube cmesh from one primitive tree class.
