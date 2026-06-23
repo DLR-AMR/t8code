@@ -201,7 +201,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       // const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize_64;
 
       // const uint64_t computed_result = (sum_0 + sum_1 + sum_2 + sum_3);
-      const uint64_t computed_result = 0;
+      // const uint64_t computed_result = 0;
 
       // ------------------------------------------
 
