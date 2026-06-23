@@ -202,13 +202,13 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
         const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize_64;
 
         const uint64_t computed_result = (sum_0 + sum_1 + sum_2 + sum_3);
-        // const uint64_t computed_result = 0;
 
         // ------------------------------------------
 
         check_result = (rank == size) ? num_elems : check_result;
 
-        // ASSERT_EQ (computed_result, check_result) << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
+        ASSERT_EQ (computed_result, check_result)
+          << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
 
         /* Update the result with respect to the updated rank */
         check_result *= rank_growth;
