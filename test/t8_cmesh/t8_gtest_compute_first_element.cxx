@@ -216,12 +216,12 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       // /* Update the rank */
       // rank *= rank_growth;
       // // }
-      // /* Update the result with respect to the updated number of elements. */
-      // check_result_elem *= elem_growth;
-      // check_result_elem += elem_growth * check_result_elem_remain / size;
-      // check_result_elem_remain = (elem_growth * check_result_elem_remain) % size;
-      // /* Update the number of elements */
-      // num_elems *= elem_growth;
+      /* Update the result with respect to the updated number of elements. */
+      check_result_elem *= elem_growth;
+      check_result_elem += elem_growth * check_result_elem_remain / size;
+      check_result_elem_remain = (elem_growth * check_result_elem_remain) % size;
+      /* Update the number of elements */
+      num_elems *= elem_growth;
     }
     /* Update mpisize */
     size *= size_growth;
