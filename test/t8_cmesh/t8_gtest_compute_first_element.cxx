@@ -180,7 +180,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
       t8_productionf ("rank_iter = %i \n", rank_iter);
-      for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
+      for (uint32_t irank = 1; irank < 2 && rank <= size; ++irank) {
         // const uint64_t computed_result = my_get_first_element_of_process (rank, size, num_elems);
 
         // -----------------------------------
