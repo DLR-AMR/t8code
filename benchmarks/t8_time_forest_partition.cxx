@@ -287,7 +287,6 @@ main (int argc, char *argv[])
   int dim, num_files;
   int test_tet;
   int stride;
-  int cmesh_level;
   double T, delta_t, cfl;
   sc_options_t *opt;
   t8_cmesh_t cmesh;
