@@ -210,7 +210,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
         // ASSERT_EQ (computed_result, check_result) << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
 
         /* Update the result with respect to the updated rank */
-        check_result *= rank_growth;
+        // check_result *= rank_growth;
         // check_result += rank_growth * rank_remainder / size;
         // rank_remainder = (rank_growth * rank_remainder) % size;
         /* Update the rank */
