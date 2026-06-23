@@ -184,10 +184,9 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
         // const uint64_t computed_result = my_get_first_element_of_process (rank, size, num_elems);
 
-        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-                                                           /* Cast everything into uint64_t */
-                                                           const uint64_t process_64
-          = static_cast<uint64_t> (rank);
+        // -----------------------------------
+        /* Cast everything into uint64_t */
+        const uint64_t process_64 = static_cast<uint64_t> (rank);
         const uint64_t mpisize_64 = static_cast<uint64_t> (size);
 
         /* Split the uint64_t */
