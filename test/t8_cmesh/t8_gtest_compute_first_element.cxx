@@ -206,7 +206,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 
         check_result = (rank == size) ? num_elems : check_result;
 
-        ASSERT_EQ (computed_result, check_result)
+        ASSERT_EQ (computed_result, check_result);
         // << "rank: " << rank << " num_elems: " << num_elems << " size: " << size;
 
         /* Update the result with respect to the updated rank */
