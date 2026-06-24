@@ -1385,7 +1385,10 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp, const t8_msh_node_tab
           global_id_of_node[i_node] = tree_nodes[i_node].index % vertices.size ();
         }
         t8_cmesh_set_tree_vertices (cmesh, tree_count, tree_vertices.data (), num_nodes);
-        t8_cmesh_set_global_vertices_of_tree (cmesh, tree_count, global_id_of_node, num_nodes);
+
+        /* Add global vertex id only if vertex conn is activated. */
+        if (t8_cmesh_get_vertex_conn_status (cmesh))
+          t8_cmesh_set_global_vertices_of_tree (cmesh, tree_count, global_id_of_node, num_nodes);
 
         /* Add two arrays if store_node_data is true. One with the dimension and indices of the nodes and one with the coordinates. */
         if (store_node_data) {

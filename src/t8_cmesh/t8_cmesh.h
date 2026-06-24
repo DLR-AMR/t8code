@@ -811,7 +811,6 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
  * meshes where not all elements refine into 1:2^dim manner. The section is calculated without assuming such refinement
  * and each process computes its number of elements on the given \a level, communicates the number to other processes,
  * and the correct section is computed based on this information.
- *
  * \param [in] cmesh        The cmesh to be considered.
  * \param [in] level        The uniform refinement level to be created.
  * \param [in] scheme       The element scheme for which to compute the bounds.

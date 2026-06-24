@@ -278,6 +278,7 @@ struct cmesh_vertex_conn_ttv_with_cmesh_functions: public testing::TestWithParam
     const t8_cmesh_t committed_cmesh = GetParam ()->cmesh_create ();
     T8_ASSERT (t8_cmesh_is_committed (committed_cmesh));
     t8_cmesh_init (&cmesh);
+    t8_cmesh_enable_vertex_conn (cmesh);
     t8_cmesh_set_derive (cmesh, committed_cmesh);
     const t8_scheme *scheme = t8_scheme_new_default ();
     t8_cmesh_set_partition_uniform (cmesh, 0, scheme);
@@ -354,6 +355,7 @@ struct cmesh_vertex_conn_ttv_with_cmesh_functions_temp:
     num_trees = std::get<0> (GetParam ());
     const t8_eclass_t tree_class = std::get<1> (GetParam ());
     t8_cmesh_init (&cmesh);
+    t8_cmesh_enable_vertex_conn (cmesh);
 
     t8_debugf ("Testing cmesh with %" T8_GLOIDX_FORMAT " trees of class %s\n", num_trees,
                t8_eclass_to_string[tree_class]);

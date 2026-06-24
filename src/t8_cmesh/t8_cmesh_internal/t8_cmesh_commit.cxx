@@ -576,6 +576,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       cmesh->geometry_handler->ref ();
     }
 
+    if (cmesh->set_from->vertex_connectivity != NULL)
+      cmesh->vertex_connectivity = new t8_cmesh_vertex_connectivity ();
+
 #if T8_ENABLE_DEBUG
     /* Copy negative volume check from set_from */
     cmesh->negative_volume_check = cmesh->set_from->negative_volume_check;
@@ -606,8 +609,13 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * but only if the vertex_to_tree instance is not yet committed
    * and if the tree_to_vertex instance is not empty.
    */
-  if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
-    cmesh->vertex_connectivity->build_vertex_to_tree ();
+  if (cmesh->vertex_connectivity != nullptr) {
+    if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
+      cmesh->vertex_connectivity->build_vertex_to_tree ();
+    }
+    else {
+      SC_ABORTF ("Vertex connectivity was requested, but no global vertex ids were provided.\n");
+    }
   }
 
 #if T8_ENABLE_DEBUG
@@ -615,7 +623,7 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (cmesh->set_partition) {
     t8_cmesh_offset_print (cmesh, comm);
   }
-  //t8_cmesh_trees_print (cmesh, cmesh->trees);
+//t8_cmesh_trees_print (cmesh, cmesh->trees);
 #endif
 
   if (cmesh->set_from != nullptr) {

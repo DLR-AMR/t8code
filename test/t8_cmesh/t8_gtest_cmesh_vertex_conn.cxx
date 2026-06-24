@@ -64,6 +64,7 @@ struct t8_test_cmesh_vertex_conn: public testing::Test
   SetUp () override
   {
     t8_cmesh_init (&cmesh);
+    t8_cmesh_enable_vertex_conn (cmesh);
 
     /*
 
@@ -249,6 +250,7 @@ struct t8_test_cmesh_vertex_conn_partitioned: public testing::Test
     std::fill_n (global_vertices_of_tree, testcase_num_vertices_per_tree, global_vertex_id);
 
     t8_cmesh_init (&cmesh);
+    t8_cmesh_enable_vertex_conn (cmesh);
     for (t8_gloidx_t itree = 0; itree < num_trees; ++itree) {
       t8_cmesh_set_tree_class (cmesh, itree, tree_class);
       const t8_gloidx_t join_with_tree = (itree + 1) % num_trees;
