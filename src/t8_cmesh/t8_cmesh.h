@@ -485,11 +485,8 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
  * \param[in] mode The load mode to use, see \ref t8_load_mode_t.
  * \param[in] procs_per_node The number of processes per node, only relevant in JUQUEEN mode.
  *
-<<<<<<< HEAD:src/t8_cmesh.h
-=======
  * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
  *                  Calling it will thus result in an error.
->>>>>>> main:src/t8_cmesh/t8_cmesh.h
  * \note \a procs_per_node is only relevant in mode==JUQUEEN. If \a num_files = 1 a replicated cmesh is constructed.
  */
 t8_cmesh_t
@@ -812,18 +809,8 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
 /**
  * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially
  * meshes where not all elements refine into 1:2^dim manner. The section is calculated without assuming such refinement
-<<<<<<< HEAD:src/t8_cmesh.h
- * and each process computes its number of elements on the given \var level, communicates the number to other processes,
- * and the correct section is computed based on this information.
- *
-=======
  * and each process computes its number of elements on the given \a level, communicates the number to other processes,
  * and the correct section is computed based on this information.
- *
-<<<<<<< HEAD
->>>>>>> main:src/t8_cmesh/t8_cmesh.h
-=======
->>>>>>> enhancement-refactor_cmesh_options
  * \param [in] cmesh        The cmesh to be considered.
  * \param [in] level        The uniform refinement level to be created.
  * \param [in] scheme       The element scheme for which to compute the bounds.
