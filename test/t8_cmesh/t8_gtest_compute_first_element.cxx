@@ -206,7 +206,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 
         // check_result = (rank == size) ? num_elems : check_result;
 
-        t8_productionf ("Computed result = %li \n", computed_result);
+        // t8_productionf ("Computed result = %li \n", computed_result);
         // ASSERT_EQ (computed_result, check_result);
 
         // if (not computed_result == check_result)
