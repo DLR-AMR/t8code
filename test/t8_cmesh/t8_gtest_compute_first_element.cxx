@@ -205,12 +205,11 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
         t8_productionf ("sum_2 = %li \n", sum_2);
         t8_productionf ("sum_3 = %li \n", sum_3);
 
-        const uint64_t computed_result = (sum_0 + sum_1)  //+ sum_2 + sum_3);
+        const uint64_t computed_result = (sum_0 + sum_1);  //+ sum_2 + sum_3);
 
           // ------------------------------------------
 
-          check_result
-          = (rank == size) ? num_elems : check_result;
+          check_result = (rank == size) ? num_elems : check_result;
 
         // t8_productionf ("Computed result = %li \n", computed_result);
         // ASSERT_EQ (computed_result, check_result);
