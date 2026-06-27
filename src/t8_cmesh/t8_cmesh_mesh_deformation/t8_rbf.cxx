@@ -71,8 +71,7 @@ Eigen::MatrixXd
 t8_rbf::solve_compactly_supported_rbf (const Eigen::MatrixXd &displacements, const size_t num_boundary_nodes) const
 {
   /** The RBF used is compactly supported so we can use a sparse matrix. The conjugate gradient method can be used for solving the linear equation system. */
-  size_t estimation_of_entries
-    = 50;  // brauchen noch gute Schätzung für die Anzahl der nicht-Null Element in der Matrix A für compactly supported RBFs
+  size_t estimation_of_entries = 50;
   typedef Eigen::Triplet<double> triplet;
   std::vector<triplet> coefficients;
   coefficients.reserve (num_boundary_nodes * estimation_of_entries);
@@ -103,7 +102,6 @@ t8_rbf::solve_compactly_supported_rbf (const Eigen::MatrixXd &displacements, con
   }
 
   return solver.solve (displacements);
-  ;
 }
 
 Eigen::MatrixXd
@@ -117,23 +115,17 @@ t8_rbf::solve_globally_supported_rbf (const Eigen::MatrixXd &displacements, cons
   for (size_t row = 0; row < num_boundary_nodes; ++row) {
     /** Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part of the matrix 
        * and can mirror the values to the lower triangular part. */
-    for (size_t col = row; col < num_boundary_nodes; ++col) {
+    for (size_t col = 0; col < num_boundary_nodes; ++col) {
       /** Calculate the distance between the current pair of boundary nodes. */
       const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
-      /** Evaluate the radial basis function for the current distance. */
-      const double psi = rbf_function->evaluate (distance, 0.0);
-      /** Write the value to the matrix A. */
-      A (row, col) = psi;
-      /** Mirror the value to the lower triangular part of the matrix if it's not on the diagonal. */
-      if (col != row) {
-        A (col, row) = psi;
-      }
+      /** Evaluate the radial basis function for the current distance and write the value to the matrix A. */
+      A (row, col) = rbf_function->evaluate (distance, 0.0);
     }
   }
-  Eigen::LDLT<Eigen::MatrixXd> solver (A);
+  Eigen::PartialPivLU<Eigen::MatrixXd> solver (A);
 
   if (solver.info () != Eigen::Success) {
-    t8_errorf ("ERROR: The global RBF system could not be solved with LDLT.\n");
+    t8_errorf ("ERROR: The global RBF system could not be solved with LU-Decomposition.\n");
   }
 
   return solver.solve (displacements);

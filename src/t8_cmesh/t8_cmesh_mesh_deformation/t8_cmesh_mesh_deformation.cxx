@@ -37,10 +37,12 @@
 
 static double
 calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8_locidx_t, int>> &tree_list,
-                                int current_global_vertex_id)
+                                int current_global_vertex_id, const t8_3D_vec &displacements)
 {
   double total_distance = 0.0;
 
+  double displacement_magnitude = std::sqrt (displacements[0] * displacements[0] + displacements[1] * displacements[1]
+                                             + displacements[2] * displacements[2]);
   /** Get the first tree where this vertex exists. */
   const auto &first_tree = tree_list.front ();
   const t8_locidx_t first_tree_id = first_tree.first;
@@ -104,8 +106,11 @@ calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8
 
     total_distance += std::sqrt (distance_x * distance_x + distance_y * distance_y + distance_z * distance_z);
   }
-  /** To get the average, we divide through the amount of neighbor nodes. */
-  return (total_distance / static_cast<double> (unique_neighbors.size ()));
+
+  double grading_factor = 2.0;
+
+  return (total_distance / static_cast<double> (unique_neighbors.size ()))
+         * (1.0 + grading_factor * displacement_magnitude);
 }
 
 std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>
@@ -175,7 +180,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
         t8_errorf ("Error: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
-        SC_ABORT ("(u,v)-parameters are missing.\n");
+        SC_ABORTF ("(u,v)-parameters are missing.\n");
       }
       /* Get the (u,v)-parameter of the vertex. */
       const double *uv_parameter = &uv_attribute[2 * local_corner_index];
@@ -227,8 +232,9 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       node.weight.fill (0.0);
 
       if (rbf_type == T8_RBF_CP_C2) {
-        node.local_support_radius = scale_factor_support_radius
-                                    * calculate_local_support_radius (associated_cmesh, tree_list, global_vertex_id);
+        node.local_support_radius
+          = scale_factor_support_radius
+            * calculate_local_support_radius (associated_cmesh, tree_list, global_vertex_id, node.displacement);
       }
       boundary_node_data[global_vertex_id] = node;
     }
@@ -275,7 +281,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 
     const int mesh_dimension = t8_cmesh_get_dimension (associated_cmesh);
 
-    /** Contains the displacement whether its a boundary node or a inner node. */
+    /** Contains the displacement whether its a boundary node or an inner node. */
     t8_3D_vec final_displacement;
 
     /* Check if this vertex is a boundary node. 
@@ -284,11 +290,11 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 
       final_displacement = rbf_handler.get_boundary_displacement (global_vertex_id);
     }
-    /** If it is a inner node we don not know the displacement right away and need to interpolate to get the new coordinates. */
+    /** If it is an inner node, we do not know the displacement right away and need to interpolate to get the new coordinates. */
     else {
 
-      double *vertex_coords = (double *) t8_cmesh_get_attribute (associated_cmesh, t8_get_package_id (),
-                                                                 T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree.first);
+      const double *vertex_coords = static_cast<const double *> (t8_cmesh_get_attribute (
+        associated_cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree.first));
       /** Check if the coordinates are available. */
       if (vertex_coords == nullptr) {
         t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree.first);

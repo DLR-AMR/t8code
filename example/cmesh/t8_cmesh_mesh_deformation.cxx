@@ -98,7 +98,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
   sc_options_add_int (opt, 't', "rbftype", &rbf_type_int, 0, "RBF type (0 for CP_C2, 1 for TPS). Default: 0");
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
-                         "Scale factor for the support radius. Default: 1.5");
+                         "Scale factor for the support radius. Default: 5");
 
   int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
@@ -111,7 +111,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else if (dim < 1 || dim > 3) {
-    t8_global_errorf ("ERROR: Invalid mesh dimension: dim=%d. Dimension must be 1, 2 or 3.\n\n", dim);
+    t8_global_errorf ("ERROR: Invalid mesh dimension: dim=%d. Dimension must be 1, 2 or 3.\n", dim);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
   else {
@@ -132,6 +132,28 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     /** Save the input RBF type. */
     t8_rbf_function_type rbf_type = static_cast<t8_rbf_function_type> (rbf_type_int);
 
+    /* Write output. */
+    t8_forest_vtk_write_file (forest, "deformed_forest_step_0", 1, 1, 1, 1, 0, 0, NULL);
+
+    int num_steps = 50;
+    for (int num = 1; num <= num_steps; ++num) {
+
+      char brep_buf[256];
+      snprintf (brep_buf, sizeof (brep_buf), "%s%d", brep_file, num);
+
+      std::string current_brep (brep_buf);
+
+      auto cad_deformed = std::make_shared<t8_cad_handle> (current_brep);
+
+      auto displacements = deformation.calculate_displacement_surface_vertices (cad_deformed.get (), rbf_type,
+                                                                                scale_factor_support_radius);
+
+      deformation.apply_vertex_displacements (displacements, cad_deformed, rbf_type);
+
+      std::string output_name = "deformed_forest_step_" + std::to_string (num);
+      t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
+    }
+#if 0
     /* Calculate displacements. */
     auto displacements
       = deformation.calculate_displacement_surface_vertices (cad.get (), rbf_type, scale_factor_support_radius);
@@ -144,11 +166,11 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
     /* Write output. */
     t8_forest_vtk_write_file (forest, "deformed_forest", 1, 1, 1, 1, 0, 0, NULL);
-
+#endif
     /* Cleanup. */
     t8_forest_unref (&forest);
 
-    t8_global_productionf ("Mesh deformation completed.");
+    t8_global_productionf ("Mesh deformation completed.\n");
   }
 
   sc_options_destroy (opt);

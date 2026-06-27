@@ -48,8 +48,6 @@ struct t8_rbf_node
    * For boundary nodes this is known and calculated from the different coordinates of the CAD geometries. 
    * For inner nodes this is the result of the interpolation. */
   t8_3D_vec displacement;
-  /** The local support radius for the node. */
-  double local_support_radius;
 };
 
 /**
@@ -61,6 +59,8 @@ struct t8_rbf_boundary_node: public t8_rbf_node
   /** The calculated RBF coefficient alpha. This is needed for the interpolation to distribute the influence of the boundary nodes. 
   * This weight represents the fixed influence assigned to each boundary node. */
   t8_3D_vec weight;
+  /** The local support radius for the  boundary node. */
+  double local_support_radius;
 };
 
 struct t8_rbf_function
