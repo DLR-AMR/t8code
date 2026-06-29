@@ -91,7 +91,7 @@ jobs:
         echo SC_URL=$url >> $GITHUB_ENV
     - name: Check cache for previous sc installation
       id: sc_cmake_cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: |
           ${{ env.SC_SOURCE }}
@@ -150,7 +150,7 @@ jobs:
         echo P4EST_URL=$url >> $GITHUB_ENV
     - name: Check cache for previous p4est installation
       id: p4est_cmake_cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: |
           ${{ env.P4EST_SOURCE }}
