@@ -110,10 +110,10 @@ t8_adapt_forest (t8_forest_t forest)
 {
   struct t8_adapt_data adapt_data = {
     { 0, 1, 0 }, /* Midpoints of the sphere. */
-    0.45,        /* Refine if inside this radius. */
-    0.1,         /* Coarsen if outside this radius. */
-    2,           /* minlevel*/
-    6            /*maxlevel*/
+    0.45,
+    0.1,
+    2, /* minlevel*/
+    6  /*maxlevel*/
   };
 
   t8_forest_t forest_adapt;
@@ -127,10 +127,10 @@ t8_adapt_forest_2and (t8_forest_t forest)
 {
   struct t8_adapt_data adapt_data = {
     { 0, 1, 0 }, /* Midpoints of the sphere. */
-    0.6,         /* Refine if inside this radius. */
-    0.1,         /* Coarsen if outside this radius. */
-    2,           /* minlevel*/
-    6            /*maxlevel*/
+    0.6,
+    0.1,
+    2, /* minlevel*/
+    6  /*maxlevel*/
   };
 
   t8_forest_t forest_adapt;
@@ -154,7 +154,7 @@ int
 main (int argc, char **argv)
 {
   /* The uniform refinement level of the forest. */
-  const int level = 3;
+  const int level = 0;
 
   int mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
