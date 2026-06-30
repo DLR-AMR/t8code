@@ -211,6 +211,7 @@ target_sources( T8 PRIVATE
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
     t8_vtk/t8_vtk_writer_helper.cxx
+    t8_openfoam/t8_openfoam_reader.cxx
 )
 
 target_compile_definitions( T8 PUBLIC T8_CMAKE_BUILD )
@@ -243,7 +244,7 @@ install( FILES
 # See https://gitlab.kitware.com/cmake/cmake/-/issues/19189
 
 install( DIRECTORY t8_helper_functions
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  DESTINATION PRIVATE_HEADER
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
@@ -320,6 +321,13 @@ install( DIRECTORY t8_vtk
     PATTERN "t8_vtk/t8_with_vtk/t8_vtk_unstructured.hxx"  EXCLUDE
     PATTERN "t8_vtk/t8_vtk_write_ASCII.hxx"   EXCLUDE
     PATTERN "t8_vtk/t8_vtk_writer_helper.hxx" EXCLUDE
+)
+
+install( DIRECTORY t8_openfoam
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.hxx"
+    PATTERN "*.h"
 )
 
 install( TARGETS T8
