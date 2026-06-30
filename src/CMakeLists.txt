@@ -142,7 +142,6 @@ endif()
 target_sources( T8 PRIVATE
     t8.c
     t8_cmesh/t8_cmesh.cxx
-    t8_cmesh/t8_cmesh_cad.cxx
     t8_cmesh/t8_cmesh_geometry.cxx
     t8_cmesh/t8_cmesh_examples.cxx
     t8_cmesh/t8_cmesh_helpers.cxx
