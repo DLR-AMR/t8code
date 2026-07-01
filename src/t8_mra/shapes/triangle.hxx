@@ -206,15 +206,10 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
 
     auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
     const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1], 1.0 });
-    const auto phi = Base::basis.basis_value (ref);
-    const auto scaling_factor = basis<element_t::Shape, Base::P_DIM>::normalization (data.vol);
 
-    std::array<double, Base::U_DIM> res = {};
-    for (auto u = 0u; u < Base::U_DIM; ++u)
-      for (auto i = 0u; i < Base::DOF; ++i)
-        res[u] += data.u_coeffs[element_t::dg_idx (u, i)] * scaling_factor * phi[i];
-
-    return res;
+    // ref is barycentric {lambda0, lambda1, lambda2}; the reference triangle
+    // coordinates are (tau1, tau2) = (lambda1, lambda2).
+    return Base::evaluate_reference (data, { ref[1], ref[2] });
   }
 
   //=============================================================================

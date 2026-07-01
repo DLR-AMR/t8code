@@ -264,14 +264,7 @@ class multiscale<TShape, U, P>:
     for (auto d = 0u; d < Base::DIM; ++d)
       x_ref[d] = (x_phys[d] - vertices_min[d]) / (vertices_max[d] - vertices_min[d]);
 
-    const auto phi = Base::basis.basis_value (x_ref);
-
-    std::array<double, Base::U_DIM> res = {};
-    for (auto u = 0u; u < Base::U_DIM; ++u)
-      for (auto i = 0u; i < Base::DOF; ++i)
-        res[u] += data.u_coeffs[element_t::dg_idx (u, i)] * phi[i];
-
-    return res;
+    return Base::evaluate_reference (data, x_ref);
   }
 
   //=============================================================================
