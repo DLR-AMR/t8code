@@ -232,6 +232,7 @@ if( T8CODE_ENABLE_MRA )
   add_t8_cpp_test( NAME t8_gtest_mra_dg_basis_serial        SOURCES t8_mra/t8_gtest_mra_dg_basis.cxx )
   add_t8_cpp_test( NAME t8_gtest_mra_mst_serial             SOURCES t8_mra/t8_gtest_mra_mst.cxx )
   add_t8_cpp_test( NAME t8_gtest_mra_criteria_serial        SOURCES t8_mra/t8_gtest_mra_criteria.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mra_projection_serial      SOURCES t8_mra/t8_gtest_mra_projection.cxx )
 endif()
 
 if( T8CODE_BUILD_MESH_HANDLE )
