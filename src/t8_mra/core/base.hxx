@@ -396,6 +396,17 @@ class multiscale_base: public multiscale_data<TShape> {
   evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, DIM> &x_phys)
     = 0;
 
+  /**
+   * @brief Evaluate the solution gradient at a physical point of a known leaf
+   *
+   * grad[u][d] = d(u_u)/d(x_d). Element-specific (applies the reference ->
+   * physical Jacobian); supplied by the derived multiscale<>.
+   */
+  virtual std::array<std::array<double, DIM>, U_DIM>
+  evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
+                     const std::array<double, DIM> &x_phys)
+    = 0;
+
   /// A point-location query for t8_forest_search, filled with the value at the
   /// owning leaf. Trivially copyable to live in the search's sc_array.
   struct point_query

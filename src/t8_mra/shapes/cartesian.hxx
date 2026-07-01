@@ -267,6 +267,49 @@ class multiscale<TShape, U, P>:
     return Base::evaluate_reference (data, x_ref);
   }
 
+  /**
+   * @brief Evaluate the solution gradient at a physical point
+   *
+   * grad[u][d] = d(u_u)/d(x_d). The box map has a diagonal Jacobian, so the
+   * reference gradient is scaled by 1/(x_max - x_min) per axis.
+   */
+  std::array<std::array<double, Base::DIM>, Base::U_DIM>
+  evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
+                     const std::array<double, Base::DIM> &x_phys) override
+  {
+    constexpr int num_vertices = (Base::DIM == 1 ? 2 : (Base::DIM == 2 ? 4 : 8));
+    double vertices[8][3] = {};
+    if constexpr (Base::DIM == 2 && TShape == T8_ECLASS_QUAD) {
+      const int vertex_perm[4] = { 0, 1, 3, 2 };
+      for (int i = 0; i < num_vertices; ++i)
+        t8_forest_element_coordinate (Base::forest, tree_idx, element, vertex_perm[i], vertices[i]);
+    }
+    else {
+      for (int i = 0; i < num_vertices; ++i)
+        t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[i]);
+    }
+
+    std::array<double, Base::DIM> vertices_min, vertices_max;
+    extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
+
+    std::vector<double> x_ref (Base::DIM);
+    for (auto d = 0u; d < Base::DIM; ++d)
+      x_ref[d] = (x_phys[d] - vertices_min[d]) / (vertices_max[d] - vertices_min[d]);
+
+    const auto ref_grad = Base::basis.basis_gradient (x_ref);
+
+    std::array<std::array<double, Base::DIM>, Base::U_DIM> grad = {};
+    for (auto u = 0u; u < Base::U_DIM; ++u)
+      for (auto d = 0u; d < Base::DIM; ++d) {
+        double g = 0.0;
+        for (auto i = 0u; i < Base::DOF; ++i)
+          g += data.u_coeffs[element_t::dg_idx (u, i)] * ref_grad[d][i];
+        grad[u][d] = g / (vertices_max[d] - vertices_min[d]);
+      }
+
+    return grad;
+  }
+
   //=============================================================================
   // Initialization
   //=============================================================================

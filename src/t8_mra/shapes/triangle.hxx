@@ -213,6 +213,45 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     return Base::evaluate_reference (data, { ref[1], ref[2] });
   }
 
+  /**
+   * @brief Evaluate the solution gradient at a physical point
+   *
+   * grad[u][d] = d(u_u)/d(x_d). The basis lives in barycentric coordinates
+   * (lambda0, lambda1); the chain rule uses dlambda/dx from the same transform
+   * that maps a physical point to reference.
+   */
+  std::array<std::array<double, Base::DIM>, Base::U_DIM>
+  evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
+                     const std::array<double, Base::DIM> &x_phys) override
+  {
+    double vertices[3][3];
+    for (auto i = 0; i < 3; ++i)
+      t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[data.order[i]]);
+
+    auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
+    const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1], 1.0 });
+    const auto ref_grad = Base::basis.basis_gradient ({ ref[0], ref[1] });
+    const auto scaling = basis<element_t::Shape, Base::P_DIM>::normalization (data.vol);
+
+    // dlambda/dx and dlambda/dy solve trafo * dlambda = e_x / e_y.
+    std::vector<double> dlambda_dx = { 1.0, 0.0, 0.0 };
+    std::vector<double> dlambda_dy = { 0.0, 1.0, 0.0 };
+    lu_solve (trafo_mat, perm, dlambda_dx);
+    lu_solve (trafo_mat, perm, dlambda_dy);
+
+    std::array<std::array<double, Base::DIM>, Base::U_DIM> grad = {};
+    for (auto u = 0u; u < Base::U_DIM; ++u)
+      for (auto i = 0u; i < Base::DOF; ++i) {
+        const double c = data.u_coeffs[element_t::dg_idx (u, i)] * scaling;
+        const double dphi_dl0 = ref_grad[0][i];
+        const double dphi_dl1 = ref_grad[1][i];
+        grad[u][0] += c * (dphi_dl0 * dlambda_dx[0] + dphi_dl1 * dlambda_dx[1]);
+        grad[u][1] += c * (dphi_dl0 * dlambda_dy[0] + dphi_dl1 * dlambda_dy[1]);
+      }
+
+    return grad;
+  }
+
   //=============================================================================
   // Initialization
   //=============================================================================
