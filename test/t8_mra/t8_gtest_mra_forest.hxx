@@ -118,6 +118,33 @@ constant_func (double amplitude = 3.0)
     };
 }
 
+/* Single-piece polynomial of total degree P-1, hence exactly representable in
+ * the order-P space on every shape (Dubiner: total degree <= P-1; tensor
+ * Legendre: per-variable degree <= P-1). No jump, so a correct projection
+ * leaves zero details. */
+template <int U, int P, int DIM>
+auto
+poly_func ()
+{
+  constexpr int d = P - 1;
+  if constexpr (DIM == 2)
+    return [] (double x, double y) {
+      std::array<double, U> res;
+      const double base = std::pow (0.5 + 0.3 * x + 0.4 * y, d);
+      for (auto u = 0; u < U; ++u)
+        res[u] = (u + 1) * base;
+      return res;
+    };
+  else
+    return [] (double x, double y, double z) {
+      std::array<double, U> res;
+      const double base = std::pow (0.5 + 0.3 * x + 0.4 * y + 0.2 * z, d);
+      for (auto u = 0; u < U; ++u)
+        res[u] = (u + 1) * base;
+      return res;
+    };
+}
+
 /* Every forest leaf must have its lmi stored with the element's level, and
  * exactly the leaves must be present in lmi_map. */
 template <typename MRA>
