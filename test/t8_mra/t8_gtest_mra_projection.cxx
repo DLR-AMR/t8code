@@ -369,6 +369,65 @@ TYPED_TEST (mra_projection, mean_val_equals_constant_data)
     }
 }
 
+/* evaluate_gradient reproduces the exact, constant gradient of a linear field
+ * (representable for P >= 2). */
+TYPED_TEST (mra_projection, gradient_matches_linear_field)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  if constexpr (P == 1) {
+    GTEST_SKIP () << "a linear field is not representable at P = 1";
+  }
+  else {
+    const int max_level = (DIM == 3) ? 2 : 3;
+    const int num_vertices = t8_eclass_num_vertices[Shape];
+
+    std::array<double, DIM> slope;
+    if constexpr (DIM == 2)
+      slope = { 0.3, 0.4 };
+    else
+      slope = { 0.3, 0.4, 0.2 };
+
+    auto f = [slope] (auto... coords) {
+      const std::array<double, DIM> x { coords... };
+      std::array<double, U> res = {};
+      for (auto u = 0u; u < U; ++u) {
+        double v = 0.0;
+        for (auto d = 0u; d < DIM; ++d)
+          v += slope[d] * x[d];
+        res[u] = (u + 1) * v;
+      }
+      return res;
+    };
+
+    mra_example<Shape, U, P> example (max_level);
+    example.init (f);
+    auto &mra = example.mra;
+
+    auto *forest = mra.get_forest ();
+    auto *user_data = mra.get_user_data ();
+    auto *lmi_map = mra.get_lmi_map ();
+
+    std::size_t checked = 0;
+    mra.for_each_local_leaf (
+      [&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int local_idx, t8_gloidx_t) {
+        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_idx);
+        const auto &data = lmi_map->get (lmi);
+        const auto centroid = leaf_sample_points<DIM> (forest, tree_idx, element, num_vertices).back ();
+
+        const auto grad = mra.evaluate_gradient (tree_idx, element, data, centroid);
+        for (auto u = 0u; u < U; ++u)
+          for (auto dir = 0u; dir < DIM; ++dir)
+            EXPECT_NEAR (grad[u][dir], (u + 1) * slope[dir], eps) << "gradient component " << u << " dir " << dir;
+        ++checked;
+      });
+    EXPECT_GT (checked, 0u) << "must check at least one leaf";
+  }
+}
+
 }  // namespace
 
 #endif /* T8_ENABLE_MRA */
