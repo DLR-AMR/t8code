@@ -344,6 +344,31 @@ TYPED_TEST (mra_projection, evaluate_point_reconstructs_field)
   EXPECT_FALSE (mra.evaluate_point (outside).has_value ()) << "a point outside the domain must not be owned";
 }
 
+/* mean_val returns the cell average: for constant data it is the amplitude on
+ * every leaf. */
+TYPED_TEST (mra_projection, mean_val_equals_constant_data)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 2 : 3;
+  constexpr double amplitude = 2.5;
+
+  mra_example<Shape, U, P> example (max_level);
+  example.init (constant_func<U, DIM> (amplitude));
+  auto &mra = example.mra;
+
+  auto *lmi_map = mra.get_lmi_map ();
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+    for (const auto &[lmi, data] : (*lmi_map)[l]) {
+      const auto mean = mra.mean_val (data);
+      for (auto u = 0u; u < U; ++u)
+        EXPECT_NEAR (mean[u], amplitude * (u + 1), eps) << "component " << u;
+    }
+}
+
 }  // namespace
 
 #endif /* T8_ENABLE_MRA */
