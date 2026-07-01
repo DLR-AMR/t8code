@@ -72,6 +72,90 @@ TYPED_TEST (mra_projection, representable_polynomial_has_no_details)
   EXPECT_GT (families, 0u) << "decomposition must produce families to check";
 }
 
+/* The constant DG mode carries the cell integral: exactly vol*u0 on cartesian
+ * cells and sqrt(vol)*u0 on triangles (the orthonormal Dubiner basis scales by
+ * sqrt(1/(2*vol)), so u0 = mean*sqrt(vol)). */
+template <t8_eclass Shape>
+double
+cell_integral_factor (double vol)
+{
+  return (Shape == T8_ECLASS_TRIANGLE) ? std::sqrt (vol) : vol;
+}
+
+/* Summing the constant modes recovers the exact domain integral: for constant
+ * data c the reconstructed mass is c times the total volume. Also pins the
+ * shape-dependent constant-mode normalization (a wrong triangle factor fails
+ * here). */
+TYPED_TEST (mra_projection, constant_mode_reconstructs_domain_mass)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+  using element_t = typename t8_mra::multiscale<Shape, U, P>::element_t;
+
+  const int max_level = (DIM == 3) ? 2 : 3;
+  constexpr double amplitude = 2.5;
+
+  mra_example<Shape, U, P> example (max_level);
+  example.init (constant_func<U, DIM> (amplitude));
+  auto &mra = example.mra;
+
+  std::array<double, U> mass = {};
+  double total_vol = 0.0;
+  auto *lmi_map = mra.get_lmi_map ();
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+    for (const auto &[lmi, data] : (*lmi_map)[l]) {
+      total_vol += data.vol;
+      const auto factor = cell_integral_factor<Shape> (data.vol);
+      for (auto u = 0u; u < U; ++u)
+        mass[u] += factor * data.u_coeffs[element_t::dg_idx (u, 0)];
+    }
+
+  for (auto u = 0u; u < U; ++u) {
+    const double expected = amplitude * (u + 1) * total_vol;
+    EXPECT_NEAR (mass[u], expected, eps) << "component " << u;
+  }
+}
+
+/* Projection conserves the domain integral independent of resolution: a
+ * representable field projected on level L and on level L+1 reconstructs the
+ * same total mass (conservation of a varying field, no analytic integral
+ * needed). */
+TYPED_TEST (mra_projection, projection_conserves_mass_across_levels)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+  using element_t = typename t8_mra::multiscale<Shape, U, P>::element_t;
+
+  const int coarse_level = (DIM == 3) ? 2 : 3;
+
+  auto reconstructed_mass = [] (auto &mra, int max_level) {
+    std::array<double, U> mass = {};
+    auto *lmi_map = mra.get_lmi_map ();
+    for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+      for (const auto &[lmi, data] : (*lmi_map)[l]) {
+        const auto factor = cell_integral_factor<Shape> (data.vol);
+        for (auto u = 0u; u < U; ++u)
+          mass[u] += factor * data.u_coeffs[element_t::dg_idx (u, 0)];
+      }
+    return mass;
+  };
+
+  auto f = poly_func<U, P, DIM> ();
+  mra_example<Shape, U, P> coarse (coarse_level);
+  mra_example<Shape, U, P> fine (coarse_level + 1);
+  coarse.init (f);
+  fine.init (f);
+
+  const auto mass_coarse = reconstructed_mass (coarse.mra, coarse_level);
+  const auto mass_fine = reconstructed_mass (fine.mra, coarse_level + 1);
+  for (auto u = 0u; u < U; ++u)
+    EXPECT_NEAR (mass_fine[u], mass_coarse[u], 1e-9 * std::abs (mass_coarse[u]) + 1e-12) << "component " << u;
+}
+
 /* The DG projection is a linear operator, so projecting the scaled data yields
  * the scaled coefficients on every leaf. */
 TYPED_TEST (mra_projection, projection_is_linear)
