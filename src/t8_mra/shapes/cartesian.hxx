@@ -6,7 +6,6 @@
 #include "t8_mra/core/adaptation.hxx"
 #include "t8_mra/num/mask_coefficients.hxx"
 
-#include <algorithm>
 #include <span>
 
 namespace t8_mra
@@ -261,11 +260,9 @@ class multiscale<TShape, U, P>:
     std::array<double, Base::DIM> vertices_min, vertices_max;
     extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
 
-    // Clamp to the closed reference cell: a point on the cell boundary can land
-    // a rounding step outside [0,1], which the Legendre evaluation rejects.
-    std::vector<double> x_ref (Base::DIM);
+    std::array<double, Base::DIM> x_ref;
     for (auto d = 0u; d < Base::DIM; ++d)
-      x_ref[d] = std::clamp ((x_phys[d] - vertices_min[d]) / (vertices_max[d] - vertices_min[d]), 0.0, 1.0);
+      x_ref[d] = (x_phys[d] - vertices_min[d]) / (vertices_max[d] - vertices_min[d]);
 
     const auto phi = Base::basis.basis_value (x_ref);
 
