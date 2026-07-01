@@ -393,6 +393,16 @@ class multiscale_base: public multiscale_data<TShape> {
   virtual std::array<double, U_DIM>
   evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, DIM> &x_phys)
     = 0;
+
+  /// A point-location query for t8_forest_search, filled with the value at the
+  /// owning leaf. Trivially copyable to live in the search's sc_array.
+  struct point_query
+  {
+    double point[3];
+    double tolerance;
+    int found;
+    std::array<double, U_DIM> value;
+  };
   //=============================================================================
   // Projection (Element-specific, must be implemented by derived classes)
   //=============================================================================
