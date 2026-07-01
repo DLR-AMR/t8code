@@ -112,24 +112,14 @@ TYPED_TEST (mra_projection, representable_polynomial_has_no_details)
   EXPECT_GT (families, 0u) << "decomposition must produce families to check";
 }
 
-/* Cell integral from the constant mode: vol*u0 (cartesian), sqrt(vol)*u0
- * (triangle: Dubiner scales by sqrt(1/(2*vol))). */
-template <t8_eclass Shape>
-double
-cell_integral_factor (double vol)
-{
-  return (Shape == T8_ECLASS_TRIANGLE) ? std::sqrt (vol) : vol;
-}
-
-/* Constant modes sum to the exact domain integral (c * total volume); pins the
- * shape-dependent constant-mode factor. */
+/* Cell mass (mean * volume) sums to the exact domain integral (c * total
+ * volume); pins the shape-dependent constant-mode factor via mean_val. */
 TYPED_TEST (mra_projection, constant_mode_reconstructs_domain_mass)
 {
   constexpr auto Shape = TypeParam::Shape;
   constexpr auto U = TypeParam::U;
   constexpr auto P = TypeParam::P;
   constexpr auto DIM = TypeParam::DIM;
-  using element_t = typename t8_mra::multiscale<Shape, U, P>::element_t;
 
   const int max_level = (DIM == 3) ? 2 : 3;
   constexpr double amplitude = 2.5;
@@ -144,9 +134,9 @@ TYPED_TEST (mra_projection, constant_mode_reconstructs_domain_mass)
   for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
     for (const auto &[lmi, data] : (*lmi_map)[l]) {
       total_vol += data.vol;
-      const auto factor = cell_integral_factor<Shape> (data.vol);
+      const auto mean = mra.mean_val (data);
       for (auto u = 0u; u < U; ++u)
-        mass[u] += factor * data.u_coeffs[element_t::dg_idx (u, 0)];
+        mass[u] += mean[u] * data.vol;
     }
 
   for (auto u = 0u; u < U; ++u) {
@@ -162,7 +152,6 @@ TYPED_TEST (mra_projection, projection_conserves_mass_across_levels)
   constexpr auto U = TypeParam::U;
   constexpr auto P = TypeParam::P;
   constexpr auto DIM = TypeParam::DIM;
-  using element_t = typename t8_mra::multiscale<Shape, U, P>::element_t;
 
   const int coarse_level = (DIM == 3) ? 2 : 3;
 
@@ -171,9 +160,9 @@ TYPED_TEST (mra_projection, projection_conserves_mass_across_levels)
     auto *lmi_map = mra.get_lmi_map ();
     for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
       for (const auto &[lmi, data] : (*lmi_map)[l]) {
-        const auto factor = cell_integral_factor<Shape> (data.vol);
+        const auto mean = mra.mean_val (data);
         for (auto u = 0u; u < U; ++u)
-          mass[u] += factor * data.u_coeffs[element_t::dg_idx (u, 0)];
+          mass[u] += mean[u] * data.vol;
       }
     return mass;
   };
