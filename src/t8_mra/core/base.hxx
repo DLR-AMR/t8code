@@ -475,6 +475,26 @@ class multiscale_base: public multiscale_data<TShape> {
     return std::nullopt;
   }
 
+  /// Cell average per component.
+  std::array<double, U_DIM>
+  mean_val (const element_t &data)
+  {
+    const double scale = ((Shape == T8_ECLASS_TRIANGLE) ? std::sqrt (data.vol) : data.vol) / data.vol;
+
+    std::array<double, U_DIM> mean;
+    for (auto u = 0u; u < U_DIM; ++u)
+      mean[u] = data.u_coeffs[element_t::dg_idx (u, 0)] * scale;
+
+    return mean;
+  }
+
+  /// Cell average of the leaf lmi.
+  std::array<double, U_DIM>
+  mean_val (const levelmultiindex &lmi)
+  {
+    return mean_val (get_lmi_map ()->get (lmi));
+  }
+
   //=============================================================================
   // Projection (Element-specific, must be implemented by derived classes)
   //=============================================================================
