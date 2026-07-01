@@ -46,7 +46,9 @@ template <int DIM, typename F>
 auto
 eval_func (F &&f, const std::array<double, DIM> &x)
 {
-  if constexpr (DIM == 2)
+  if constexpr (DIM == 1)
+    return f (x[0]);
+  else if constexpr (DIM == 2)
     return f (x[0], x[1]);
   else
     return f (x[0], x[1], x[2]);
@@ -325,7 +327,9 @@ TYPED_TEST (mra_projection, evaluate_point_reconstructs_field)
   auto &mra = example.mra;
 
   std::vector<std::array<double, DIM>> points;
-  if constexpr (DIM == 2)
+  if constexpr (DIM == 1)
+    points = { { 0.3 }, { 0.6 }, { 0.15 } };
+  else if constexpr (DIM == 2)
     points = { { 0.3, 0.2 }, { 0.15, 0.8 }, { 0.7, 0.25 } };
   else
     points = { { 0.3, 0.2, 0.4 }, { 0.15, 0.6, 0.7 }, { 0.6, 0.25, 0.1 } };
@@ -386,7 +390,9 @@ TYPED_TEST (mra_projection, gradient_matches_linear_field)
     const int num_vertices = t8_eclass_num_vertices[Shape];
 
     std::array<double, DIM> slope;
-    if constexpr (DIM == 2)
+    if constexpr (DIM == 1)
+      slope = { 0.3 };
+    else if constexpr (DIM == 2)
       slope = { 0.3, 0.4 };
     else
       slope = { 0.3, 0.4, 0.2 };
