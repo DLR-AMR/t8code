@@ -31,7 +31,9 @@ struct Config
 };
 
 using Configs
-  = ::testing::Types<Config<T8_ECLASS_TRIANGLE, 1, 1>, Config<T8_ECLASS_TRIANGLE, 1, 2>,
+  = ::testing::Types<Config<T8_ECLASS_LINE, 1, 1>, Config<T8_ECLASS_LINE, 1, 2>, Config<T8_ECLASS_LINE, 1, 3>,
+                     Config<T8_ECLASS_LINE, 1, 4>, Config<T8_ECLASS_LINE, 2, 2>, Config<T8_ECLASS_TRIANGLE, 1, 1>,
+                     Config<T8_ECLASS_TRIANGLE, 1, 2>,
                      Config<T8_ECLASS_TRIANGLE, 1, 3>, Config<T8_ECLASS_TRIANGLE, 1, 4>,
                      Config<T8_ECLASS_TRIANGLE, 2, 2>, Config<T8_ECLASS_QUAD, 1, 1>, Config<T8_ECLASS_QUAD, 1, 2>,
                      Config<T8_ECLASS_QUAD, 1, 3>, Config<T8_ECLASS_QUAD, 1, 4>, Config<T8_ECLASS_QUAD, 2, 2>,
@@ -52,7 +54,14 @@ template <int U, int DIM>
 auto
 smooth_func ()
 {
-  if constexpr (DIM == 2)
+  if constexpr (DIM == 1)
+    return [] (double x) {
+      std::array<double, U> res;
+      for (auto u = 0; u < U; ++u)
+        res[u] = std::sin (2.0 * M_PI * (u + 1) * x);
+      return res;
+    };
+  else if constexpr (DIM == 2)
     return [] (double x, double y) {
       std::array<double, U> res;
       for (auto u = 0; u < U; ++u)
@@ -75,7 +84,17 @@ auto
 jump_func ()
 {
   constexpr int d = P - 1;
-  if constexpr (DIM == 2)
+  if constexpr (DIM == 1)
+    return [] (double x) {
+      std::array<double, U> res;
+      const double r = x * x;
+      const double in = std::pow (0.5 + x, d);
+      const double out = std::pow (0.3 + x, d);
+      for (auto u = 0; u < U; ++u)
+        res[u] = (u + 1) * ((r < 0.25) ? (3.0 + in) : out);
+      return res;
+    };
+  else if constexpr (DIM == 2)
     return [] (double x, double y) {
       std::array<double, U> res;
       const double r = x * x + y * y;
@@ -102,7 +121,14 @@ template <int U, int DIM>
 auto
 constant_func (double amplitude = 3.0)
 {
-  if constexpr (DIM == 2)
+  if constexpr (DIM == 1)
+    return [amplitude] (double) {
+      std::array<double, U> res;
+      for (auto u = 0; u < U; ++u)
+        res[u] = amplitude * (u + 1);
+      return res;
+    };
+  else if constexpr (DIM == 2)
     return [amplitude] (double, double) {
       std::array<double, U> res;
       for (auto u = 0; u < U; ++u)
@@ -127,7 +153,15 @@ auto
 poly_func ()
 {
   constexpr int d = P - 1;
-  if constexpr (DIM == 2)
+  if constexpr (DIM == 1)
+    return [] (double x) {
+      std::array<double, U> res;
+      const double base = std::pow (0.5 + 0.3 * x, d);
+      for (auto u = 0; u < U; ++u)
+        res[u] = (u + 1) * base;
+      return res;
+    };
+  else if constexpr (DIM == 2)
     return [] (double x, double y) {
       std::array<double, U> res;
       const double base = std::pow (0.5 + 0.3 * x + 0.4 * y, d);
