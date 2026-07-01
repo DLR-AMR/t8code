@@ -384,6 +384,15 @@ class multiscale_base: public multiscale_data<TShape> {
     return res;
   }
 
+  /**
+   * @brief Evaluate the solution at a physical point of a known leaf
+   *
+   * Element-specific (maps the physical point into the reference cell); supplied
+   * by the derived multiscale<>.
+   */
+  virtual std::array<double, U_DIM>
+  evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, DIM> &x_phys)
+    = 0;
   //=============================================================================
   // Projection (Element-specific, must be implemented by derived classes)
   //=============================================================================
