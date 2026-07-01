@@ -356,6 +356,35 @@ class multiscale_base: public multiscale_data<TShape> {
   }
 
   //=============================================================================
+  // Evaluation
+  //=============================================================================
+
+  /**
+   * @brief Evaluate the solution at a reference-cell point
+   *
+   * x_ref is [0,1]^DIM (cartesian) or (tau1, tau2) on the reference triangle;
+   * the triangle -> basis {lambda0, lambda1} conversion is handled here.
+   */
+  std::array<double, U_DIM>
+  evaluate_reference (const element_t &data, const std::array<double, DIM> &x_ref)
+  {
+    std::array<double, DIM> x_basis = x_ref;
+    if constexpr (Shape == T8_ECLASS_TRIANGLE)
+      x_basis = { 1.0 - x_ref[0] - x_ref[1], x_ref[0] };  // (tau1, tau2) -> (lambda0, lambda1)
+
+    const std::vector<double> x (x_basis.begin (), x_basis.end ());
+    const auto phi = basis.basis_value (x);
+    const auto scaling = t8_mra::basis<Shape, P_DIM>::normalization (data.vol);
+
+    std::array<double, U_DIM> res = {};
+    for (auto u = 0u; u < U_DIM; ++u)
+      for (auto i = 0u; i < DOF; ++i)
+        res[u] += data.u_coeffs[element_t::dg_idx (u, i)] * scaling * phi[i];
+
+    return res;
+  }
+
+  //=============================================================================
   // Projection (Element-specific, must be implemented by derived classes)
   //=============================================================================
 
