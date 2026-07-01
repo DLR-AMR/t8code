@@ -403,6 +403,49 @@ class multiscale_base: public multiscale_data<TShape> {
     int found;
     std::array<double, U_DIM> value;
   };
+
+  /// Search criterion: descend everywhere, the queries do the pruning.
+  static int
+  search_descend_fn (t8_forest_t, const t8_locidx_t, const t8_element_t *, const int, const t8_element_array_t *,
+                     const t8_locidx_t)
+  {
+    return 1;
+  }
+
+  /// Per-element query: stay active while the point is inside (so the search
+  /// recurses to the owner), evaluate at the owning leaf. MRA via forest user
+  /// data.
+  static void
+  search_point_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
+                   const t8_element_array_t *, const t8_locidx_t, sc_array_t *queries, sc_array_t *query_indices,
+                   int *query_matches, const size_t num_active_queries)
+  {
+    auto *user_data = reinterpret_cast<forest_data<element_t> *> (t8_forest_get_user_data (forest));
+    auto *mra = reinterpret_cast<multiscale_base *> (user_data->mra_instance);
+    const auto *scheme = t8_forest_get_scheme (forest);
+
+    for (size_t i = 0; i < num_active_queries; ++i) {
+      const size_t query_idx = *static_cast<size_t *> (sc_array_index (query_indices, i));
+      auto *query = static_cast<point_query *> (sc_array_index (queries, query_idx));
+
+      int inside = 0;
+      t8_forest_element_points_inside (forest, ltreeid, element, query->point, 1, &inside, query->tolerance);
+      query_matches[i] = inside;
+
+      if (inside && is_leaf && !query->found) {
+        const auto gtree = t8_forest_global_tree_id (forest, ltreeid);
+        const auto lmi = levelmultiindex (gtree, element, scheme);
+
+        std::array<double, DIM> x;
+        for (auto d = 0u; d < DIM; ++d)
+          x[d] = query->point[d];
+
+        query->value = mra->evaluate (ltreeid, element, mra->get_lmi_map ()->get (lmi), x);
+        query->found = 1;
+      }
+    }
+  }
+
   //=============================================================================
   // Projection (Element-specific, must be implemented by derived classes)
   //=============================================================================
