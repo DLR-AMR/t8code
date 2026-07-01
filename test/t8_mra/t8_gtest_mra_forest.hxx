@@ -9,6 +9,7 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 #include <t8_mra/t8_mra.hxx>
@@ -223,6 +224,52 @@ class mra_example {
   const t8_scheme *scheme;
   int max_level;
 };
+
+/* Grading invariant: across every face the leaf levels differ by at most
+ * `slack` (slack 1 = the 2:1 graded grid). Domain-boundary faces carry no
+ * neighbour and are skipped. Serial only -- a process boundary without a ghost
+ * layer would also report zero neighbours. */
+template <typename MRA>
+void
+expect_grid_graded (MRA &mra, int slack = 1)
+{
+  auto *forest = mra.get_forest ();
+  const auto *scheme = t8_forest_get_scheme (forest);
+  const auto num_trees = t8_forest_get_num_local_trees (forest);
+
+  for (t8_locidx_t tree = 0; tree < num_trees; ++tree) {
+    const auto tree_class = t8_forest_get_tree_class (forest, tree);
+    const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree);
+
+    for (t8_locidx_t e = 0; e < num_elements; ++e) {
+      const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree, e);
+      const int level = scheme->element_get_level (tree_class, element);
+      const int num_faces = scheme->element_get_num_faces (tree_class, element);
+
+      for (int face = 0; face < num_faces; ++face) {
+        const t8_element_t **neighbors = nullptr;
+        int *dual_faces = nullptr;
+        t8_locidx_t *element_indices = nullptr;
+        int num_neighbors = 0;
+        t8_eclass_t neigh_class;
+
+        t8_forest_leaf_face_neighbors (forest, tree, element, &neighbors, face, &dual_faces, &num_neighbors,
+                                       &element_indices, &neigh_class);
+
+        for (int n = 0; n < num_neighbors; ++n) {
+          const int neigh_level = scheme->element_get_level (neigh_class, neighbors[n]);
+          EXPECT_LE (std::abs (level - neigh_level), slack) << "ungraded face neighbour at level " << level;
+        }
+
+        if (num_neighbors > 0) {
+          T8_FREE (neighbors);
+          T8_FREE (element_indices);
+          T8_FREE (dual_faces);
+        }
+      }
+    }
+  }
+}
 
 }  // namespace mra_test
 
