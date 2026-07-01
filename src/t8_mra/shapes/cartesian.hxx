@@ -240,7 +240,7 @@ class multiscale<TShape, U, P>:
    */
   std::array<double, Base::U_DIM>
   evaluate (int tree_idx, const t8_element_t *element, const element_t &data,
-            const std::array<double, Base::DIM> &x_phys)
+            const std::array<double, Base::DIM> &x_phys) override
   {
     // Same vertex permutation as project_impl: extract_cartesian_vertices reads
     // the lower corner at index 0 and the upper corner at the last index, which

@@ -198,7 +198,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    * @return Solution value per component
    */
   std::array<double, Base::U_DIM>
-  evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, 2> &x_phys)
+  evaluate (int tree_idx, const t8_element_t *element, const element_t &data,
+            const std::array<double, Base::DIM> &x_phys) override
   {
     double vertices[3][3];
     for (auto i = 0; i < 3; ++i)
