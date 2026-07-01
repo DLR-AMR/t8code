@@ -57,8 +57,7 @@ class mra_projection: public ::testing::Test {};
 
 TYPED_TEST_SUITE (mra_projection, Configs, ConfigNames);
 
-/* Constant data has no variation, so every non-constant DG mode must vanish on
- * every leaf. */
+/* Constant data: only the constant mode survives on every leaf. */
 TYPED_TEST (mra_projection, constant_projects_to_pure_constant_mode)
 {
   constexpr auto Shape = TypeParam::Shape;
@@ -82,11 +81,9 @@ TYPED_TEST (mra_projection, constant_projects_to_pure_constant_mode)
             << "non-constant mode " << i << " must vanish for constant data, component " << u;
 }
 
-/* A polynomial of total degree <= P-1 lives in the coarse space, so projecting
- * it on a uniform grid and running a full multiscale decomposition leaves zero
- * details -- the end-to-end projection exactness statement (mirrors
- * multilaepsch's project / cancellation, but through the production forest
- * projection path and, on triangles, the derived vertex ordering). */
+/* Degree <= P-1 polynomial lives in the coarse space: a full decomposition
+ * leaves zero details (projection exactness through the forest path; on
+ * triangles also the derived vertex ordering). */
 TYPED_TEST (mra_projection, representable_polynomial_has_no_details)
 {
   constexpr auto Shape = TypeParam::Shape;
@@ -113,9 +110,8 @@ TYPED_TEST (mra_projection, representable_polynomial_has_no_details)
   EXPECT_GT (families, 0u) << "decomposition must produce families to check";
 }
 
-/* The constant DG mode carries the cell integral: exactly vol*u0 on cartesian
- * cells and sqrt(vol)*u0 on triangles (the orthonormal Dubiner basis scales by
- * sqrt(1/(2*vol)), so u0 = mean*sqrt(vol)). */
+/* Cell integral from the constant mode: vol*u0 (cartesian), sqrt(vol)*u0
+ * (triangle: Dubiner scales by sqrt(1/(2*vol))). */
 template <t8_eclass Shape>
 double
 cell_integral_factor (double vol)
@@ -123,10 +119,8 @@ cell_integral_factor (double vol)
   return (Shape == T8_ECLASS_TRIANGLE) ? std::sqrt (vol) : vol;
 }
 
-/* Summing the constant modes recovers the exact domain integral: for constant
- * data c the reconstructed mass is c times the total volume. Also pins the
- * shape-dependent constant-mode normalization (a wrong triangle factor fails
- * here). */
+/* Constant modes sum to the exact domain integral (c * total volume); pins the
+ * shape-dependent constant-mode factor. */
 TYPED_TEST (mra_projection, constant_mode_reconstructs_domain_mass)
 {
   constexpr auto Shape = TypeParam::Shape;
@@ -159,10 +153,7 @@ TYPED_TEST (mra_projection, constant_mode_reconstructs_domain_mass)
   }
 }
 
-/* Projection conserves the domain integral independent of resolution: a
- * representable field projected on level L and on level L+1 reconstructs the
- * same total mass (conservation of a varying field, no analytic integral
- * needed). */
+/* Reconstructed mass is resolution-independent: same total on level L and L+1. */
 TYPED_TEST (mra_projection, projection_conserves_mass_across_levels)
 {
   constexpr auto Shape = TypeParam::Shape;
@@ -197,8 +188,7 @@ TYPED_TEST (mra_projection, projection_conserves_mass_across_levels)
     EXPECT_NEAR (mass_fine[u], mass_coarse[u], eps) << "component " << u;
 }
 
-/* The DG projection is a linear operator, so projecting the scaled data yields
- * the scaled coefficients on every leaf. */
+/* Projection is linear: scaling the data scales every coefficient. */
 TYPED_TEST (mra_projection, projection_is_linear)
 {
   constexpr auto Shape = TypeParam::Shape;
@@ -237,10 +227,8 @@ TYPED_TEST (mra_projection, projection_is_linear)
     }
 }
 
-/* End-to-end projection exactness, pointwise: a polynomial of total degree
- * <= P-1 is reconstructed exactly by evaluate() at every leaf vertex and
- * centroid (mirrors multilaepsch's project/val, now that a solution-evaluation
- * API exists). */
+/* Degree <= P-1 polynomial reconstructs exactly at every leaf vertex and
+ * centroid. */
 TYPED_TEST (mra_projection, projection_reconstructs_field_pointwise)
 {
   constexpr auto Shape = TypeParam::Shape;
@@ -277,9 +265,8 @@ TYPED_TEST (mra_projection, projection_reconstructs_field_pointwise)
   EXPECT_GT (checked, 0u) << "must reconstruct at least one leaf";
 }
 
-/* The triangle projection is independent of the derived vertex ordering: a
- * refined grid carries several distinct orders (ancestor.type driven), yet
- * evaluate() reproduces a representable polynomial exactly on every leaf. */
+/* Triangle projection is independent of the derived vertex order: a refined grid
+ * carries several orders, each reconstructs the polynomial exactly. */
 TYPED_TEST (mra_projection, triangle_projection_is_vertex_order_invariant)
 {
   constexpr auto Shape = TypeParam::Shape;
@@ -319,6 +306,42 @@ TYPED_TEST (mra_projection, triangle_projection_is_vertex_order_invariant)
       });
     EXPECT_GT (orders.size (), 1u) << "the refined grid must exercise more than one vertex order";
   }
+}
+
+/* evaluate_point finds the owning leaf: exact at interior points, nullopt
+ * outside the domain. */
+TYPED_TEST (mra_projection, evaluate_point_reconstructs_field)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 2 : 3;
+
+  auto f = poly_func<U, P, DIM> ();
+  mra_example<Shape, U, P> example (max_level);
+  example.init (f);
+  auto &mra = example.mra;
+
+  std::vector<std::array<double, DIM>> points;
+  if constexpr (DIM == 2)
+    points = { { 0.3, 0.2 }, { 0.15, 0.8 }, { 0.7, 0.25 } };
+  else
+    points = { { 0.3, 0.2, 0.4 }, { 0.15, 0.6, 0.7 }, { 0.6, 0.25, 0.1 } };
+
+  for (const auto &point : points) {
+    const auto got = mra.evaluate_point (point);
+    ASSERT_TRUE (got.has_value ()) << "a point inside the domain must be owned by a leaf";
+    const auto exact = eval_func<DIM> (f, point);
+    for (auto u = 0u; u < U; ++u)
+      EXPECT_NEAR ((*got)[u], exact[u], eps) << "reconstruction must match, component " << u;
+  }
+
+  std::array<double, DIM> outside;
+  outside.fill (0.5);
+  outside[0] = 1.5;
+  EXPECT_FALSE (mra.evaluate_point (outside).has_value ()) << "a point outside the domain must not be owned";
 }
 
 }  // namespace
