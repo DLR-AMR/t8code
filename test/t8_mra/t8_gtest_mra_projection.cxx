@@ -4,12 +4,53 @@
 
 #include "t8_gtest_mra_forest.hxx"
 
+#include <t8_forest/t8_forest_geometrical.h>
+
+#include <set>
+#include <vector>
+
 namespace
 {
 
 using namespace mra_test;
 
 constexpr double eps = 1e-12;
+
+/* Sample points guaranteed inside (or on) a leaf: every vertex plus the
+ * centroid. A degree <= P-1 polynomial is reproduced exactly at all of them. */
+template <int DIM>
+std::vector<std::array<double, DIM>>
+leaf_sample_points (t8_forest_t forest, t8_locidx_t tree_idx, const t8_element_t *element, int num_vertices)
+{
+  std::vector<std::array<double, DIM>> samples;
+  std::array<double, DIM> centroid = {};
+
+  for (int v = 0; v < num_vertices; ++v) {
+    double coord[3] = {};
+    t8_forest_element_coordinate (forest, tree_idx, element, v, coord);
+
+    std::array<double, DIM> point;
+    for (auto d = 0; d < DIM; ++d) {
+      point[d] = coord[d];
+      centroid[d] += coord[d] / num_vertices;
+    }
+    samples.push_back (point);
+  }
+  samples.push_back (centroid);
+
+  return samples;
+}
+
+/* Call an (x,y[,z]) test function with a point stored as an array. */
+template <int DIM, typename F>
+auto
+eval_func (F &&f, const std::array<double, DIM> &x)
+{
+  if constexpr (DIM == 2)
+    return f (x[0], x[1]);
+  else
+    return f (x[0], x[1], x[2]);
+}
 
 template <typename Cfg>
 class mra_projection: public ::testing::Test {};
@@ -153,7 +194,7 @@ TYPED_TEST (mra_projection, projection_conserves_mass_across_levels)
   const auto mass_coarse = reconstructed_mass (coarse.mra, coarse_level);
   const auto mass_fine = reconstructed_mass (fine.mra, coarse_level + 1);
   for (auto u = 0u; u < U; ++u)
-    EXPECT_NEAR (mass_fine[u], mass_coarse[u], 1e-9 * std::abs (mass_coarse[u]) + 1e-12) << "component " << u;
+    EXPECT_NEAR (mass_fine[u], mass_coarse[u], eps) << "component " << u;
 }
 
 /* The DG projection is a linear operator, so projecting the scaled data yields
@@ -190,10 +231,94 @@ TYPED_TEST (mra_projection, projection_is_linear)
       for (auto u = 0u; u < U; ++u)
         for (auto i = 0u; i < element_t::DOF; ++i) {
           const auto idx = element_t::dg_idx (u, i);
-          EXPECT_NEAR (other.u_coeffs[idx], scale * data.u_coeffs[idx], eps + eps * std::abs (data.u_coeffs[idx]))
+          EXPECT_NEAR (other.u_coeffs[idx], scale * data.u_coeffs[idx], eps)
             << "coeff " << i << " component " << u << " level " << l;
         }
     }
+}
+
+/* End-to-end projection exactness, pointwise: a polynomial of total degree
+ * <= P-1 is reconstructed exactly by evaluate() at every leaf vertex and
+ * centroid (mirrors multilaepsch's project/val, now that a solution-evaluation
+ * API exists). */
+TYPED_TEST (mra_projection, projection_reconstructs_field_pointwise)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 2 : 3;
+  const int num_vertices = t8_eclass_num_vertices[Shape];
+
+  auto f = poly_func<U, P, DIM> ();
+  mra_example<Shape, U, P> example (max_level);
+  example.init (f);
+  auto &mra = example.mra;
+
+  auto *forest = mra.get_forest ();
+  auto *user_data = mra.get_user_data ();
+  auto *lmi_map = mra.get_lmi_map ();
+
+  std::size_t checked = 0;
+  mra.for_each_local_leaf (
+    [&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int local_idx, t8_gloidx_t) {
+      const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_idx);
+      const auto &data = lmi_map->get (lmi);
+
+      for (const auto &point : leaf_sample_points<DIM> (forest, tree_idx, element, num_vertices)) {
+        const auto got = mra.evaluate (tree_idx, element, data, point);
+        const auto exact = eval_func<DIM> (f, point);
+        for (auto u = 0u; u < U; ++u)
+          EXPECT_NEAR (got[u], exact[u], eps) << "reconstruction must match, component " << u;
+      }
+      ++checked;
+    });
+  EXPECT_GT (checked, 0u) << "must reconstruct at least one leaf";
+}
+
+/* The triangle projection is independent of the derived vertex ordering: a
+ * refined grid carries several distinct orders (ancestor.type driven), yet
+ * evaluate() reproduces a representable polynomial exactly on every leaf. */
+TYPED_TEST (mra_projection, triangle_projection_is_vertex_order_invariant)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  if constexpr (Shape != T8_ECLASS_TRIANGLE) {
+    GTEST_SKIP () << "vertex ordering is triangle-specific";
+  }
+  else {
+    const int max_level = 3;
+
+    auto f = poly_func<U, P, DIM> ();
+    mra_example<Shape, U, P> example (max_level);
+    example.init (f);
+    auto &mra = example.mra;
+
+    auto *forest = mra.get_forest ();
+    auto *user_data = mra.get_user_data ();
+    auto *lmi_map = mra.get_lmi_map ();
+    const int num_vertices = t8_eclass_num_vertices[Shape];
+
+    std::set<std::array<int, 3>> orders;
+    mra.for_each_local_leaf (
+      [&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int local_idx, t8_gloidx_t) {
+        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_idx);
+        const auto &data = lmi_map->get (lmi);
+        orders.insert (data.order);
+
+        for (const auto &point : leaf_sample_points<DIM> (forest, tree_idx, element, num_vertices)) {
+          const auto got = mra.evaluate (tree_idx, element, data, point);
+          const auto exact = eval_func<DIM> (f, point);
+          for (auto u = 0u; u < U; ++u)
+            EXPECT_NEAR (got[u], exact[u], eps) << "reconstruction must match under every order, component " << u;
+        }
+      });
+    EXPECT_GT (orders.size (), 1u) << "the refined grid must exercise more than one vertex order";
+  }
 }
 
 }  // namespace
