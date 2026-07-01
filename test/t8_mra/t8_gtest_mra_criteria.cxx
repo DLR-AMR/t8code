@@ -220,6 +220,30 @@ TYPED_TEST (mra_criteria, hard_thresholding_boundary_is_sharp)
   EXPECT_TRUE (checked) << "the jump must leave a nonzero detail to straddle";
 }
 
+/* coarsen/refine only grade around fresh refinement marks, so an adaptive grid
+ * can carry larger level jumps; balance() restores the 2:1 face balance, after
+ * which no leaf borders a neighbour more than one level apart (mirrors
+ * multilaepsch's grading test). */
+TYPED_TEST (mra_criteria, balance_produces_graded_grid)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 4 : 5;
+
+  mra_example<Shape, U, P> example (max_level);
+  example.init (jump_func<U, P, DIM> ());
+
+  example->coarsen (0, max_level);
+  example->refine (0, max_level);
+  example->balance ();
+
+  expect_grid_graded (example.mra, /*slack=*/1);
+  expect_forest_map_consistent (example.mra);
+}
+
 }  // namespace
 
 #endif /* T8_ENABLE_MRA */
