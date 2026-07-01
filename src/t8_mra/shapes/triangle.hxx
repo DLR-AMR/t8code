@@ -181,6 +181,43 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   }
 
   //=============================================================================
+  // Reconstruction (inverse of projection)
+  //=============================================================================
+
+  /**
+   * @brief Evaluate the reconstructed DG solution at a physical point
+   *
+   * Inverse of project_impl: reorders the vertices (data.order), maps the
+   * physical point to the reference triangle and sums the orthonormal Dubiner
+   * modes scaled by normalization(vol).
+   *
+   * @param tree_idx Tree index in forest
+   * @param element Pointer to element (supplies the cell geometry)
+   * @param data Leaf data holding the DG coefficients, vertex order and volume
+   * @param x_phys Physical evaluation point
+   * @return Solution value per component
+   */
+  std::array<double, Base::U_DIM>
+  evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, 2> &x_phys)
+  {
+    double vertices[3][3];
+    for (auto i = 0; i < 3; ++i)
+      t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[data.order[i]]);
+
+    auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
+    const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1], 1.0 });
+    const auto phi = Base::basis.basis_value (ref);
+    const auto scaling_factor = basis<element_t::Shape, Base::P_DIM>::normalization (data.vol);
+
+    std::array<double, Base::U_DIM> res = {};
+    for (auto u = 0u; u < Base::U_DIM; ++u)
+      for (auto i = 0u; i < Base::DOF; ++i)
+        res[u] += data.u_coeffs[element_t::dg_idx (u, i)] * scaling_factor * phi[i];
+
+    return res;
+  }
+
+  //=============================================================================
   // Initialization
   //=============================================================================
 
