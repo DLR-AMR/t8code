@@ -12,9 +12,11 @@
 #include "t8_cmesh/t8_cmesh.h"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
+#include "t8_forest/t8_forest_iterate.h"
 
 #include <algorithm>
 #include <array>
+#include <optional>
 #include <vector>
 
 namespace t8_mra
@@ -444,6 +446,33 @@ class multiscale_base: public multiscale_data<TShape> {
         query->found = 1;
       }
     }
+  }
+
+  /**
+   * @brief Evaluate the solution at an arbitrary physical point of the domain
+   *
+   * Locates the owning local leaf via t8_forest_search; nullopt if no local leaf
+   * owns the point (outside the domain, or on another rank).
+   */
+  std::optional<std::array<double, U_DIM>>
+  evaluate_point (const std::array<double, DIM> &x, double tolerance = 1e-8)
+  {
+    point_query query = {};
+    for (auto d = 0u; d < DIM; ++d)
+      query.point[d] = x[d];
+    query.tolerance = tolerance;
+
+    sc_array_t *queries = sc_array_new_count (sizeof (point_query), 1);
+    *static_cast<point_query *> (sc_array_index (queries, 0)) = query;
+
+    t8_forest_search (forest, search_descend_fn, search_point_fn, queries);
+
+    const point_query result = *static_cast<point_query *> (sc_array_index (queries, 0));
+    sc_array_destroy (queries);
+
+    if (result.found)
+      return result.value;
+    return std::nullopt;
   }
 
   //=============================================================================
