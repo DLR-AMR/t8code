@@ -976,7 +976,6 @@ class multiscale_adaptation {
   auto
   detect_jumps (int level, double c_thresh)
   {
-    using element_t = typename Derived::element_t;
     using levelmultiindex = typename Derived::levelmultiindex;
 
     typename Derived::index_set jumps;
@@ -986,21 +985,10 @@ class multiscale_adaptation {
     const auto *scheme = t8_forest_get_scheme (forest);
     auto *lmi_map = derived ().get_lmi_map ();
 
-    const auto mean = [&] (const levelmultiindex &lmi) {
-      const auto &data = lmi_map->get (lmi);
-      std::array<double, Derived::U_DIM> m;
-      for (auto u = 0u; u < Derived::U_DIM; ++u)
-        m[u] = data.u_coeffs[element_t::dg_idx (u, 0)];
-      if constexpr (Derived::Shape == T8_ECLASS_TRIANGLE)
-        for (auto u = 0u; u < Derived::U_DIM; ++u)
-          m[u] /= std::sqrt (data.vol);
-      return m;
-    };
-
     std::array<double, Derived::U_DIM> v_max;
     v_max.fill (1.0);
     for (const auto &[lmi, _] : (*lmi_map)[level]) {
-      const auto m = mean (lmi);
+      const auto m = derived ().mean_val (lmi);
       for (auto u = 0u; u < Derived::U_DIM; ++u)
         v_max[u] = std::max (v_max[u], std::abs (m[u]));
     }
@@ -1023,7 +1011,7 @@ class multiscale_adaptation {
         if (lmi.level () != static_cast<unsigned int> (level))
           continue;
 
-        const auto mean_inner = mean (lmi);
+        const auto mean_inner = derived ().mean_val (lmi);
         const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
         const auto num_faces = scheme->element_get_num_faces (tree_class, element);
 
@@ -1042,7 +1030,7 @@ class multiscale_adaptation {
           if (!lmi_map->contains (neigh_lmi))
             continue;
 
-          const auto mean_neigh = mean (neigh_lmi);
+          const auto mean_neigh = derived ().mean_val (neigh_lmi);
           for (auto u = 0u; u < Derived::U_DIM; ++u)
             max_diff = std::max (max_diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
         }
