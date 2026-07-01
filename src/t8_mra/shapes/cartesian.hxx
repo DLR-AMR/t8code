@@ -6,6 +6,7 @@
 #include "t8_mra/core/adaptation.hxx"
 #include "t8_mra/num/mask_coefficients.hxx"
 
+#include <algorithm>
 #include <span>
 
 namespace t8_mra
@@ -219,6 +220,61 @@ class multiscale<TShape, U, P>:
     project_impl (data.u_coeffs, tree_idx, element, func);
 
     return data;
+  }
+
+  //=============================================================================
+  // Reconstruction (inverse of projection)
+  //=============================================================================
+
+  /**
+   * @brief Evaluate the reconstructed DG solution at a physical point
+   *
+   * Inverse of project_impl: maps the physical point into the reference cell
+   * (axis-aligned box) and sums the orthonormal Legendre modes. No volume
+   * scaling (cartesian normalization is 1).
+   *
+   * @param tree_idx Tree index in forest
+   * @param element Pointer to element (supplies the cell geometry)
+   * @param data Leaf data holding the DG coefficients
+   * @param x_phys Physical evaluation point
+   * @return Solution value per component
+   */
+  std::array<double, Base::U_DIM>
+  evaluate (int tree_idx, const t8_element_t *element, const element_t &data,
+            const std::array<double, Base::DIM> &x_phys)
+  {
+    // Same vertex permutation as project_impl: extract_cartesian_vertices reads
+    // the lower corner at index 0 and the upper corner at the last index, which
+    // for QUAD requires swapping t8code vertices 2 and 3.
+    constexpr int num_vertices = (Base::DIM == 1 ? 2 : (Base::DIM == 2 ? 4 : 8));
+    double vertices[8][3] = {};
+    if constexpr (Base::DIM == 2 && TShape == T8_ECLASS_QUAD) {
+      const int vertex_perm[4] = { 0, 1, 3, 2 };
+      for (int i = 0; i < num_vertices; ++i)
+        t8_forest_element_coordinate (Base::forest, tree_idx, element, vertex_perm[i], vertices[i]);
+    }
+    else {
+      for (int i = 0; i < num_vertices; ++i)
+        t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[i]);
+    }
+
+    std::array<double, Base::DIM> vertices_min, vertices_max;
+    extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
+
+    // Clamp to the closed reference cell: a point on the cell boundary can land
+    // a rounding step outside [0,1], which the Legendre evaluation rejects.
+    std::vector<double> x_ref (Base::DIM);
+    for (auto d = 0u; d < Base::DIM; ++d)
+      x_ref[d] = std::clamp ((x_phys[d] - vertices_min[d]) / (vertices_max[d] - vertices_min[d]), 0.0, 1.0);
+
+    const auto phi = Base::basis.basis_value (x_ref);
+
+    std::array<double, Base::U_DIM> res = {};
+    for (auto u = 0u; u < Base::U_DIM; ++u)
+      for (auto i = 0u; i < Base::DOF; ++i)
+        res[u] += data.u_coeffs[element_t::dg_idx (u, i)] * phi[i];
+
+    return res;
   }
 
   //=============================================================================
