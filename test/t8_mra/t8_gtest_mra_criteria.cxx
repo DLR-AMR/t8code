@@ -183,6 +183,43 @@ TYPED_TEST (mra_criteria, harten_refine_implies_refine_neighbours)
         EXPECT_TRUE (crit.refine_neighbours (mra, lmi)) << "refine must imply grading, level " << l;
 }
 
+/* The hard threshold is sharp: with c_scaling = 1 a family with detail norm N
+ * is significant iff N > c_thresh * local_threshold_value, so a c_thresh placed
+ * just below N/ltv keeps it and just above drops it (mirrors multilaepsch's
+ * eps +/- 1e-10 boundary case). */
+TYPED_TEST (mra_criteria, hard_thresholding_boundary_is_sharp)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+  constexpr int gamma = 2;
+
+  mra_example<Shape, U, P> example (max_level);
+  init_and_decompose (example, jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+  mra.c_scaling.fill (1.0);
+
+  bool checked = false;
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level) && !checked; ++l)
+    for (const auto &[lmi, detail] : mra.d_map[l]) {
+      const double norm = mra.scaled_detail_norm (lmi);
+      const double ltv = mra.local_threshold_value (lmi, gamma);
+      if (norm <= eps || ltv <= 0.0)
+        continue;
+
+      t8_mra::hard_thresholding below { (norm / ltv) * (1.0 - 1e-6), gamma };
+      t8_mra::hard_thresholding above { (norm / ltv) * (1.0 + 1e-6), gamma };
+      EXPECT_TRUE (below.significant (mra, lmi)) << "detail above threshold must stay";
+      EXPECT_FALSE (above.significant (mra, lmi)) << "detail below threshold must drop";
+      checked = true;
+      break;
+    }
+  EXPECT_TRUE (checked) << "the jump must leave a nonzero detail to straddle";
+}
+
 }  // namespace
 
 #endif /* T8_ENABLE_MRA */
