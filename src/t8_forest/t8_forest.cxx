@@ -1578,6 +1578,14 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest, t8_locidx_t ltreeid, 
   return neighbor_tree;
 }
 
+/** Compute the orientation of a leaf face with respect to its neighbor tree.
+ * \param forest The forest to which the leaf belongs.
+ * \param ltreeid The local tree id of the leaf.
+ * \param scheme The scheme of the forest.
+ * \param leaf The leaf element.
+ * \param face The face of the leaf element.
+ * \return The orientation of the leaf face with respect to its neighbor tree. Returns 0 if the leaf face is not a boundary face.
+*/
 int
 t8_forest_leaf_face_orientation (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_scheme *scheme,
                                  const t8_element_t *leaf, int face)

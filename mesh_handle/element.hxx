@@ -583,6 +583,45 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     return m_is_ghost_element;
   }
 
+  // get_reference_coordinates
+  /** Function to convert points in reference space of an element to points of the 
+   *  reference space of the tree.
+   * \param [in] ref_coords     Pointer to the reference coordinates of the element.
+   * \param [in] num_coords     Number of reference coordinates to convert.
+   * \param [out] tree_ref_coords Pointer to the reference coordinates of the tree.
+  */
+  void
+  get_reference_coordinates (const double* ref_coords, std::size_t num_coords, double* tree_ref_coords) const
+  {
+    t8_forest_get_scheme (m_mesh->m_forest)
+      ->element_get_reference_coords (get_tree_class (), m_element, ref_coords, num_coords, tree_ref_coords);
+  }
+
+  // element_is_equal
+  /** Check if two elements are equal.
+   * \param [in] elem1 The first element.
+   * \param [in] elem2 The second element.
+   * \return           true if the elements are equal, false if they are not equal.
+  */
+  bool
+  is_equal (const SelfType& elem1, const SelfType& elem2) const
+  {
+    return t8_forest_get_scheme (m_mesh->m_forest)
+      ->element_is_equal (get_tree_class (), elem1.get_forest_element (), elem2.get_forest_element ());
+  }
+
+  //t8_forest_leaf_face_orientation
+  /** Compute the orientation of a face of an element with respect to its neighbor.
+   *  \param [in] face The index of the face for which the orientation should be computed.
+   *  \return The orientation of the face with respect to its neighbor. Returns 0 if the face has no neighbor.
+  */
+  int
+  get_face_orientation (int face) const
+  {
+    return t8_forest_leaf_face_orientation (m_mesh->m_forest, m_tree_id, t8_forest_get_scheme (m_mesh->m_forest),
+                                            m_element, face);
+  }
+
  private:
   // --- Private member variables. ---
   TMeshClass* m_mesh;             /**< Pointer to the mesh the element is defined for. */
