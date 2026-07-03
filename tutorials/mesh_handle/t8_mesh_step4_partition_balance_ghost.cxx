@@ -60,14 +60,14 @@ struct adapt_data
 */
 template <t8_mesh_handle::T8MeshType mesh_type>
 int
-adapt_callback ([[maybe_unused]]const mesh_type &mesh, std::span<const typename mesh_type::element_class> elements,
+adapt_callback ([[maybe_unused]] const mesh_type &mesh, std::span<const typename mesh_type::element_class> elements,
                 const adapt_data &adapt_data)
 {
   auto element_centroid = elements[0].get_centroid ();
   double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_data.midpoint);
   if (dist < adapt_data.refine_radius) {
     return 1;  // refine
-  } //first check if there is a family, and only if yes check if we should coarsen.
+  }            //first check if there is a family, and only if yes check if we should coarsen.
   else if ((elements.size () > 1) && (dist > adapt_data.coarsen_radius)) {
     return -1;  // coarsen
   }
@@ -79,150 +79,153 @@ adapt_callback ([[maybe_unused]]const mesh_type &mesh, std::span<const typename 
  *  \param stage The stage of the mesh (e.g. "Initial mesh", "Adapted mesh", etc.) to print in the output.
  *  \param comm  The MPI communicator to use for the reduction and printing.
 */
-void print_mesh_stats(const std::unique_ptr<t8_mesh_handle::mesh<>> &mesh, const char *stage, sc_MPI_Comm comm) {
-    int local_elements = mesh->get_num_local_elements();
-    int global_elements = 0;
-    MPI_Allreduce(&local_elements, &global_elements, 1, MPI_INT, MPI_SUM, comm);
+void
+print_mesh_stats (const std::unique_ptr<t8_mesh_handle::mesh<>> &mesh, const char *stage, sc_MPI_Comm comm)
+{
+  int local_elements = mesh->get_num_local_elements ();
+  int global_elements = 0;
+  MPI_Allreduce (&local_elements, &global_elements, 1, MPI_INT, MPI_SUM, comm);
 
-    int rank = 0;
-    MPI_Comm_rank(comm, &rank);
-    if (rank == 0) {
-        std::cout << "=== " << stage << " ===" << std::endl;
-        std::cout << "Total elements: " << global_elements << std::endl;
-    }
+  int rank = 0;
+  MPI_Comm_rank (comm, &rank);
+  if (rank == 0) {
+    std::cout << "=== " << stage << " ===" << std::endl;
+    std::cout << "Total elements: " << global_elements << std::endl;
+  }
 }
 
 /** Entry point of the program. */
-int main(int argc, char **argv) {
+int
+main (int argc, char **argv)
+{
 
-    /* Initialize MPI. This has to happen before we initialize sc or t8code. */
-    int mpiret = sc_MPI_Init(&argc, &argv);
-    /* Error check the MPI return value. */
-    SC_CHECK_MPI(mpiret);
-    /* Initialize the sc library, has to happen before we initialize t8code. */
-    sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-    /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-    t8_init (SC_LP_PRODUCTION);
-    /* We will use MPI_COMM_WORLD as a communicator. */
-    sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  /* Initialize MPI. This has to happen before we initialize sc or t8code. */
+  int mpiret = sc_MPI_Init (&argc, &argv);
+  /* Error check the MPI return value. */
+  SC_CHECK_MPI (mpiret);
+  /* Initialize the sc library, has to happen before we initialize t8code. */
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
+  t8_init (SC_LP_PRODUCTION);
+  /* We will use MPI_COMM_WORLD as a communicator. */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
-    /* Print a starting message. */
-    t8_global_productionf (" [tutorial] \n");
-    t8_global_productionf (" [tutorial] Hello, this is the mesh adaptation example of t8code using the mesh handle.\n");
-    t8_global_productionf (
-    " [tutorial] In this example we will Us\n");
-    t8_global_productionf (" [tutorial] \n");
+  /* Print a starting message. */
+  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] Hello, this is the mesh adaptation example of t8code using the mesh handle.\n");
+  t8_global_productionf (" [tutorial] In this example we will Us\n");
+  t8_global_productionf (" [tutorial] \n");
 
-    /* The initial uniform refinement level. */
-    int uniform_level = 3;
+  /* The initial uniform refinement level. */
+  int uniform_level = 3;
 
-    /* Parameters for the adaption step. */
-    struct adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
+  /* Parameters for the adaption step. */
+  struct adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
 
-    using mesh_type = t8_mesh_handle::mesh<>;
+  using mesh_type = t8_mesh_handle::mesh<>;
 
-    /**
+  /**
      * INITIAL MESH
     */
 
-    t8_global_productionf (" [tutorial] \n");
-    t8_global_productionf (" [tutorial] Creating initial mesh.\n");
-    t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] Creating initial mesh.\n");
+  t8_global_productionf (" [tutorial] \n");
 
-    /* Creating the initial mesh with uniform refinement. */
-    auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
+  /* Creating the initial mesh with uniform refinement. */
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
 
-    /* Commiting the initial mesh. */
-    mesh->commit();
+  /* Committing the initial mesh. */
+  mesh->commit ();
 
-    /* Printing the mesh information. */
-    print_mesh_stats(mesh, "Initial mesh", comm);
-    
-    /* Writing the Mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
-    t8_mesh_handle::write_mesh_to_vtk_ext(*mesh, "initial_mesh.vtu", 0, nullptr, true, true, true, true, true, false, false);
+  /* Printing the mesh information. */
+  print_mesh_stats (mesh, "Initial mesh", comm);
 
-    /** 
+  /* Writing the Mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
+  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "initial_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
+                                         false);
+
+  /** 
      * ADAPTED MESH
     */
 
-    t8_global_productionf (" [tutorial] \n");
-    t8_global_productionf (" [tutorial] Creating adapted mesh.\n");
-    t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] Creating adapted mesh.\n");
+  t8_global_productionf (" [tutorial] \n");
 
-    /* Creating the adapted mesh as a copy of the initial mesh (Initial mesh can't be refined because it is already commited.) */
-    auto mesh_adapt = std::make_unique<mesh_type>(*mesh);
+  /* Creating the adapted mesh as a copy of the initial mesh (Initial mesh can't be refined because it is already committed.) */
+  auto mesh_adapt = std::make_unique<mesh_type> (*mesh);
 
-    /* Adapting the mesh once with our adapt_callback function from step 3 and the parameters defined above. */
-    mesh_adapt->set_adapt(
-        mesh_type::template mesh_adapt_callback_wrapper<adapt_data> (
-            &adapt_callback<mesh_type>, 
-            adapt_params)
-    );
-    /* Commiting the adapted mesh. */
-    mesh_adapt->commit();
+  /* Adapting the mesh once with our adapt_callback function from step 3 and the parameters defined above. */
+  mesh_adapt->set_adapt (
+    mesh_type::template mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback<mesh_type>, adapt_params));
+  /* Committing the adapted mesh. */
+  mesh_adapt->commit ();
 
-    /* Printing the mesh information. */
-    print_mesh_stats(mesh_adapt, "Adapted mesh", comm);
-    
-    /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
-    t8_mesh_handle::write_mesh_to_vtk_ext(*mesh_adapt, "adapted_mesh.vtu", 0, nullptr, true, true, true, true, true, false, false);
+  /* Printing the mesh information. */
+  print_mesh_stats (mesh_adapt, "Adapted mesh", comm);
 
-    /**
+  /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
+  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh_adapt, "adapted_mesh.vtu", 0, nullptr, true, true, true, true, true,
+                                         false, false);
+
+  /**
      * PARTITIONED, BALANCED MESH
     */
 
-    t8_global_productionf (" [tutorial] \n");
-    t8_global_productionf (" [tutorial] Creating partitioned and balanced mesh.\n");
-    t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] Creating partitioned and balanced mesh.\n");
+  t8_global_productionf (" [tutorial] \n");
 
-    /* Creating the partition and balance mesh as a copy of the adapted mesh. */
-    auto mesh_partition_balance = std::make_unique<mesh_type>(*mesh_adapt);
+  /* Creating the partition and balance mesh as a copy of the adapted mesh. */
+  auto mesh_partition_balance = std::make_unique<mesh_type> (*mesh_adapt);
 
-    /* Partitioning the mesh.*/
-    mesh_partition_balance->set_partition();
+  /* Partitioning the mesh.*/
+  mesh_partition_balance->set_partition ();
 
-    /* Balancing the mesh. */
-    mesh_partition_balance->set_balance();
+  /* Balancing the mesh. */
+  mesh_partition_balance->set_balance ();
 
-    /* Commiting the partitioned and balanced mesh. */
-    mesh_partition_balance->commit();
+  /* Committing the partitioned and balanced mesh. */
+  mesh_partition_balance->commit ();
 
-    /* Printing the mesh information. */
-    print_mesh_stats(mesh_partition_balance, "Partitioned and Balanced mesh", comm);
-    
-    /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
-    t8_mesh_handle::write_mesh_to_vtk_ext(*mesh_partition_balance, "partition_balance_mesh.vtu", 0, nullptr, true, true, true, true, true, false, false);
+  /* Printing the mesh information. */
+  print_mesh_stats (mesh_partition_balance, "Partitioned and Balanced mesh", comm);
 
-    /**
+  /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
+  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh_partition_balance, "partition_balance_mesh.vtu", 0, nullptr, true, true,
+                                         true, true, true, false, false);
+
+  /**
      * GHOST MESH
     */
 
-    t8_global_productionf (" [tutorial] \n");
-    t8_global_productionf (" [tutorial] Creating ghost mesh.\n");
-    t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] Creating ghost mesh.\n");
+  t8_global_productionf (" [tutorial] \n");
 
-    /* Creating the ghost mesh as a copy of the partitioned and balanced mesh. */
-    auto mesh_ghost = std::make_unique<mesh_type>(*mesh_partition_balance);
+  /* Creating the ghost mesh as a copy of the partitioned and balanced mesh. */
+  auto mesh_ghost = std::make_unique<mesh_type> (*mesh_partition_balance);
 
-    /* Creating the ghost layers. */
-    mesh_ghost->set_ghost();
-    
-    /* Commiting the ghost mesh. */
-    mesh_ghost->commit();
+  /* Creating the ghost layers. */
+  mesh_ghost->set_ghost ();
 
-    /* Printing the mesh information*/
-    print_mesh_stats(mesh_ghost, "Ghost mesh", comm);
-    
-    /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
-    t8_mesh_handle::write_mesh_to_vtk_ext(*mesh_ghost, "ghost_mesh.vtu", 0, nullptr, true, true, true, true, true, false, false);
+  /* Committing the ghost mesh. */
+  mesh_ghost->commit ();
 
-    t8_global_productionf (" [tutorial] \n");
-    t8_global_productionf (" [tutorial] Finished all steps successfully.\n");
-    t8_global_productionf (" [tutorial] \n");
+  /* Printing the mesh information*/
+  print_mesh_stats (mesh_ghost, "Ghost mesh", comm);
 
+  /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
+  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh_ghost, "ghost_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
+                                         false);
 
-    sc_finalize();
-    mpiret = sc_MPI_Finalize();
-    SC_CHECK_MPI(mpiret);
-    return 0;
+  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [tutorial] Finished all steps successfully.\n");
+  t8_global_productionf (" [tutorial] \n");
+
+  sc_finalize ();
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
+  return 0;
 }
