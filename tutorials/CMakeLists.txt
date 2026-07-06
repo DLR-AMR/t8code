@@ -46,6 +46,7 @@ function( add_t8_tutorial )
     endif( T8CODE_EXPORT_COMPILE_COMMANDS )
 
     install( TARGETS ${ADD_T8_TUTORIAL_NAME} RUNTIME )
+    install( FILES ${ADD_T8_TUTORIAL_SOURCES} DESTINATION ${CMAKE_INSTALL_DOCDIR}/tutorials/general/ )
 endfunction()
 
 function( add_mesh_handle_tutorial )
@@ -80,6 +81,15 @@ copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_hex.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_quad.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tet.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tri.geo)
+
+# notice that in the following, we install files from doc/ and tutorials/ together:
+file(GLOB T8CODE_CMAKE_EXAMPLES RELATIVE "${PROJECT_SOURCE_DIR}/doc/cmake_examples/" "${PROJECT_SOURCE_DIR}/doc/cmake_examples/?") # for each single-character directory; notice there's no explicit listing here
+configure_file( ${PROJECT_SOURCE_DIR}/doc/cmake_examples/CMakeLists.txt.in ${CMAKE_BINARY_DIR}/doc/cmake_examples/CMakeLists.txt @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/doc/cmake_examples/CMakeLists.txt DESTINATION ${CMAKE_INSTALL_DOCDIR}/cmake_examples/ RENAME CMakeLists.txt) # reminder that we may want to name this differently (yet, no necessity for .in)
+foreach(_dir IN LISTS T8CODE_CMAKE_EXAMPLES)
+     install(DIRECTORY ${PROJECT_SOURCE_DIR}/doc/cmake_examples/${_dir} DESTINATION ${CMAKE_INSTALL_DOCDIR}/cmake_examples/) # notice we take directories from doc...
+     install(FILES ${PROJECT_SOURCE_DIR}/tutorials/general/t8_step0_helloworld.cxx DESTINATION ${CMAKE_INSTALL_DOCDIR}/cmake_examples/${_dir}/ RENAME test.cxx) #... and add the same sample tutorial program as a test
+endforeach()
 
 if( T8CODE_BUILD_MESH_HANDLE )
     add_mesh_handle_tutorial( NAME t8_mesh_element_data SOURCES mesh_handle/t8_mesh_element_data.cxx )
