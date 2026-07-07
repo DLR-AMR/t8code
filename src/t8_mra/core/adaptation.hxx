@@ -11,6 +11,7 @@
 #include "t8_forest/t8_forest_types.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numeric>
 #include <type_traits>
@@ -263,6 +264,72 @@ class multiscale_adaptation {
     derived ().post_adaptation_hook ();
   }
 
+  /**
+   * @brief Destructive fine->coarse sweep collapsing non-significant families
+   *
+   * Each non-significant complete family is replaced by its parent in lmi_map
+   * (children erased and marked in coarsening_set). Collapsing before the sweep
+   * descends makes the parent a leaf for the next level, so one traversal
+   * captures the whole cascade.
+   *
+   * @return Number of families collapsed on this rank
+   */
+  template <typename Criterion>
+  unsigned int
+  coarsen_sweep (int min_level, int max_level, Criterion &criterion)
+  {
+    using element_t = typename Derived::element_t;
+    using detail_t = typename Derived::detail_t;
+    using levelmultiindex = typename Derived::levelmultiindex;
+    using MST = typename Derived::MST;
+
+    auto *lmi_map = derived ().get_lmi_map ();
+    auto num_marked = 0u;
+
+    for (auto l = max_level; l > min_level; --l) {
+      typename Derived::index_set candidates;
+      candidates.reserve (lmi_map->size (l));
+      for (const auto &[lmi, _] : (*lmi_map)[l])
+        candidates.insert (t8_mra::parent_lmi (lmi));
+
+      for (const auto &parent : candidates) {
+        const auto siblings = t8_mra::children_lmi (parent);
+
+        std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
+        auto family_complete = true;
+
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          const auto *sibling = lmi_map->find (siblings[k]);
+          if (sibling == nullptr) {
+            family_complete = false;
+            break;
+          }
+          data_on_siblings[k] = *sibling;
+        }
+
+        if (!family_complete)
+          continue;
+
+        detail_t data_on_coarse;
+        MST::two_scale_family (data_on_siblings, data_on_coarse, derived ().mask_coefficients);
+        derived ().d_map.insert (parent, data_on_coarse);
+
+        if (criterion.significant (derived (), parent))
+          continue;
+
+        lmi_map->insert (parent, static_cast<const element_t &> (data_on_coarse));
+        for (const auto &child : siblings) {
+          lmi_map->erase (child);
+          derived ().coarsening_set.insert (child);
+        }
+
+        ++num_marked;
+      }
+    }
+
+    return num_marked;
+  }
+
  public:
   //=============================================================================
   // Adaptation Callbacks
@@ -358,15 +425,14 @@ class multiscale_adaptation {
   /**
    * @brief Perform adaptive coarsening from max_level down to min_level
    *
-   * Analysis is a map-side cascade to the fixpoint (forest untouched): the
-   * non-destructive transform computes the details of every complete leaf
-   * family in [min_level, max_level); the children of a non-significant
-   * family are marked and its parent, taking the parent data from the
-   * analysis, replaces them in lmi_map. That new parent can complete a
-   * coarser family, which the next round analyses (lmi_map IS the virtual
-   * leaf set), so the cascade resolves on the maps in at most
-   * max_level - min_level rounds. One recursive forest adapt then realizes
-   * all marks in a single rebuild.
+   * Analysis is a single destructive fine->coarse sweep on the maps (forest
+   * untouched, coarsen_sweep): each complete leaf family in
+   * [min_level, max_level) is two-scale transformed, and a non-significant
+   * family is collapsed in place — its parent replaces the children in
+   * lmi_map, which are marked. The parent is a leaf before the sweep reaches
+   * the next coarser level, so one traversal captures the whole cascade
+   * (lmi_map IS the virtual leaf set). One recursive forest adapt then
+   * realizes all marks in a single rebuild.
    *
    * Across ranks this is an outer fixpoint: a family split across a rank seam
    * is incomplete, so each pass adapts and repartitions (set_for_coarsening)
@@ -389,40 +455,10 @@ class multiscale_adaptation {
     for (auto pass = 0;; ++pass) {
       clear_multiscale_state ();
 
-      auto num_marked = 0u;
-      auto *lmi_map = derived ().get_lmi_map ();
+      const auto num_marked = coarsen_sweep (min_level, max_level, criterion);
 
-      for (auto round = 0; round < max_level - min_level; ++round) {
-        derived ().d_map.erase_all ();
-
-        derived ().multiscale_transformation (min_level, max_level);
-
-        typename Derived::index_set coarsen_parents;
-        for (auto L = min_level; L < max_level; ++L) {
-          for (const auto &[lmi, _] : derived ().d_map[L]) {
-            if (criterion.significant (derived (), lmi))
-              continue;
-
-            coarsen_parents.insert (lmi);
-            for (const auto &child : t8_mra::children_lmi (lmi))
-              derived ().coarsening_set.insert (child);
-          }
-        }
-
-        t8_debugf ("MRA coarsen pass %d round %d: %zu families marked\n", pass, round, coarsen_parents.size ());
-        if (coarsen_parents.empty ())
-          break;
-
-        num_marked += coarsen_parents.size ();
-
-        for (const auto &lmi : coarsen_parents) {
-          lmi_map->insert (lmi, derived ().d_map.get (lmi));
-          for (const auto &child : t8_mra::children_lmi (lmi))
-            lmi_map->erase (child);
-        }
-      }
-
-      t8_debugf ("MRA coarsen pass %d: %u families marked, %zu leaves remain\n", pass, num_marked, lmi_map->size ());
+      t8_debugf ("MRA coarsen pass %d: %u families marked, %zu leaves remain\n", pass, num_marked,
+                 derived ().get_lmi_map ()->size ());
 
       if (global_num_marks (num_marked) == 0)
         break;
