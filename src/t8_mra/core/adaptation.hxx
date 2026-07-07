@@ -904,6 +904,24 @@ class multiscale_adaptation {
   // Bottom-up Initialization
   //=============================================================================
 
+  /// Per-component max mean magnitude over a level's leaves, reduced across
+  /// ranks (floored at 1) so every rank normalizes jump detection identically.
+  auto
+  global_v_max (int level)
+  {
+    std::array<double, Derived::U_DIM> local;
+    local.fill (1.0);
+    for (const auto &[lmi, _] : (*derived ().get_lmi_map ())[level]) {
+      const auto m = derived ().mean_val (lmi);
+      for (auto u = 0u; u < Derived::U_DIM; ++u)
+        local[u] = std::max (local[u], std::abs (m[u]));
+    }
+
+    std::array<double, Derived::U_DIM> global;
+    sc_MPI_Allreduce (local.data (), global.data (), Derived::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, derived ().comm);
+    return global;
+  }
+
   /**
    * @brief Mean-value jump detection on the leaves of one level
    *
