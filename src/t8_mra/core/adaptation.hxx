@@ -139,16 +139,18 @@ class multiscale_adaptation {
   //=============================================================================
 
   /**
-   * @brief Iterate over every (leaf, same-level face neighbour) pair on this rank
+   * @brief Iterate the same-level face neighbours of every accepted leaf
    *
-   * Domain-boundary faces are skipped. The visitor receives the source leaf
-   * lmi, the neighbour's tree class, global tree id and element, and the
-   * neighbour lmi. The neighbour element is scratch reused across a tree's
-   * faces — the visitor must not retain it.
+   * accept_leaf(lmi) gates each leaf before any neighbour is built, so leaves
+   * the caller would skip cost no face-neighbour construction. Domain-boundary
+   * faces are skipped. The visitor receives the source leaf lmi, the
+   * neighbour's tree class, global tree id and element, and the neighbour lmi.
+   * The neighbour element is scratch reused across a tree's faces — the visitor
+   * must not retain it.
    */
-  template <typename Func>
+  template <typename LeafFilter, typename Func>
   void
-  for_each_face_neigh (Func &&func)
+  for_each_face_neigh (LeafFilter &&accept_leaf, Func &&func)
   {
     using levelmultiindex = typename Derived::levelmultiindex;
 
@@ -168,6 +170,9 @@ class multiscale_adaptation {
 
       for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
         const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
+        if (!accept_leaf (lmi))
+          continue;
+
         const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
         const auto num_faces = scheme->element_get_num_faces (tree_class, element);
 
@@ -620,20 +625,19 @@ class multiscale_adaptation {
     std::vector<std::vector<size_t>> outgoing (mpisize);
     auto num_new_marks = 0u;
 
-    for_each_face_neigh ([&] (const auto &lmi, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid,
-                              t8_element_t *neigh_element, const auto &neigh_lmi) {
-      if (lmi.level () == 0 || !derived ().td_set.contains (t8_mra::parent_lmi (lmi)))
-        return;
-
-      const auto res = refine_covering_leaf (neigh_lmi, min_level, 0u, prior_refinements);
-      if (res > 0)
-        ++num_new_marks;
-      else if (res < 0 && mpisize > 1) {
-        const auto owner = t8_forest_element_find_owner (derived ().forest, neigh_gtreeid, neigh_element, tree_class);
-        if (owner != mpirank)
-          outgoing[owner].push_back (neigh_lmi.index);
-      }
-    });
+    for_each_face_neigh (
+      [&] (const auto &lmi) { return lmi.level () != 0 && derived ().td_set.contains (t8_mra::parent_lmi (lmi)); },
+      [&] (const auto &, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid, t8_element_t *neigh_element,
+           const auto &neigh_lmi) {
+        const auto res = refine_covering_leaf (neigh_lmi, min_level, 0u, prior_refinements);
+        if (res > 0)
+          ++num_new_marks;
+        else if (res < 0 && mpisize > 1) {
+          const auto owner = t8_forest_element_find_owner (derived ().forest, neigh_gtreeid, neigh_element, tree_class);
+          if (owner != mpirank)
+            outgoing[owner].push_back (neigh_lmi.index);
+        }
+      });
 
     if (mpisize > 1)
       num_new_marks += exchange_refine_requests (outgoing, min_level, 0u, prior_refinements);
@@ -758,17 +762,16 @@ class multiscale_adaptation {
     sc_MPI_Comm_size (derived ().comm, &mpisize);
     std::vector<std::vector<size_t>> outgoing (mpisize);
 
-    for_each_face_neigh ([&] (const auto &lmi, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid,
+    for_each_face_neigh ([] (const auto &lmi) { return lmi.level () >= 2; },
+                         [&] (const auto &, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid,
                               t8_element_t *neigh_element, const auto &neigh_lmi) {
-      if (lmi.level () < 2)
-        return;
-
-      if (refine_covering_leaf (neigh_lmi, 0, 1u, no_prior_marks {}) < 0 && mpisize > 1) {
-        const auto owner = t8_forest_element_find_owner (derived ().forest, neigh_gtreeid, neigh_element, tree_class);
-        if (owner != mpirank)
-          outgoing[owner].push_back (neigh_lmi.index);
-      }
-    });
+                           if (refine_covering_leaf (neigh_lmi, 0, 1u, no_prior_marks {}) < 0 && mpisize > 1) {
+                             const auto owner = t8_forest_element_find_owner (derived ().forest, neigh_gtreeid,
+                                                                              neigh_element, tree_class);
+                             if (owner != mpirank)
+                               outgoing[owner].push_back (neigh_lmi.index);
+                           }
+                         });
 
     if (mpisize > 1)
       exchange_refine_requests (outgoing, 0, 1u, no_prior_marks {});
@@ -999,22 +1002,20 @@ class multiscale_adaptation {
     const auto v_max = global_v_max (level);
 
     std::unordered_map<size_t, double> face_jump;
-    for_each_face_neigh ([&] (const auto &lmi, t8_eclass_t, t8_gloidx_t, t8_element_t *, const auto &neigh_lmi) {
-      if (lmi.level () != static_cast<unsigned int> (level))
-        return;
+    for_each_face_neigh ([&] (const auto &lmi) { return lmi.level () == static_cast<unsigned int> (level); },
+                         [&] (const auto &lmi, t8_eclass_t, t8_gloidx_t, t8_element_t *, const auto &neigh_lmi) {
+                           const auto *neigh_data = lmi_map->contains (neigh_lmi)    ? &lmi_map->get (neigh_lmi)
+                                                    : ghost_map.contains (neigh_lmi) ? &ghost_map.get (neigh_lmi)
+                                                                                     : nullptr;
+                           if (neigh_data == nullptr)
+                             return;
 
-      const auto *neigh_data = lmi_map->contains (neigh_lmi)    ? &lmi_map->get (neigh_lmi)
-                               : ghost_map.contains (neigh_lmi) ? &ghost_map.get (neigh_lmi)
-                                                                : nullptr;
-      if (neigh_data == nullptr)
-        return;
-
-      const auto mean_inner = derived ().mean_val (lmi);
-      const auto mean_neigh = derived ().mean_val (*neigh_data);
-      auto &diff = face_jump[lmi.index];
-      for (auto u = 0u; u < Derived::U_DIM; ++u)
-        diff = std::max (diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
-    });
+                           const auto mean_inner = derived ().mean_val (lmi);
+                           const auto mean_neigh = derived ().mean_val (*neigh_data);
+                           auto &diff = face_jump[lmi.index];
+                           for (auto u = 0u; u < Derived::U_DIM; ++u)
+                             diff = std::max (diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
+                         });
 
     typename Derived::index_set jumps;
     for (const auto &[index, diff] : face_jump) {
