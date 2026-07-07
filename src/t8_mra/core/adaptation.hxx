@@ -867,18 +867,25 @@ class multiscale_adaptation {
 
     auto *forest = derived ().forest;
 
-    if (t8_forest_get_num_ghosts (forest) == 0)
-      t8_forest_ghost_create (forest);
+    derived ().ghost_map.erase_all ();
+
+    int mpisize = 1;
+    sc_MPI_Comm_size (derived ().comm, &mpisize);
+    if (mpisize == 1)
+      return;
+
+    if (forest->ghosts == nullptr) {
+      forest->ghost_type = T8_GHOST_FACES;
+      t8_forest_ghost_create_topdown (forest);
+    }
 
     const auto num_local = t8_forest_get_local_num_leaf_elements (forest);
     const auto num_ghosts = t8_forest_get_num_ghosts (forest);
 
-    // lmi_idx was allocated before the ghost layer existed
     auto *user_data = derived ().get_user_data ();
     sc_array_resize (user_data->lmi_idx, num_local + num_ghosts);
     t8_forest_ghost_exchange_data (forest, user_data->lmi_idx);
 
-    // Leaf data in leaf order; the exchange fills the ghost slots
     auto *data = sc_array_new_count (sizeof (element_t), num_local + num_ghosts);
     auto *lmi_map = derived ().get_lmi_map ();
     for (t8_locidx_t i = 0; i < num_local; ++i)
@@ -887,7 +894,6 @@ class multiscale_adaptation {
 
     t8_forest_ghost_exchange_data (forest, data);
 
-    derived ().ghost_map.erase_all ();
     for (auto i = num_local; i < num_local + num_ghosts; ++i)
       derived ().ghost_map.insert (t8_mra::get_lmi_from_forest_data (user_data, i),
                                    *reinterpret_cast<element_t *> (sc_array_index (data, i)));
