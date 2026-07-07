@@ -352,15 +352,17 @@ class mst {
         const auto children_lmi = t8_mra::children_lmi (lmi);
         const auto lmi_data = lmi_map->get (lmi);
         const auto &details = d.d_coeffs;
+        const auto &u_parent = lmi_data.u_coeffs;
 
         // Inverse MST: Reconstruct children u_child[k][i] = d[k][i] + Σ_j M[k](i,j) * u_parent[j]
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          const auto &Mk = mask_coefficients[k];
           for (auto u = 0u; u < U_DIM; ++u) {
             for (auto i = 0u; i < DOF; ++i) {
               auto sum = 0.0;
 
               for (auto j = 0u; j < DOF; ++j)
-                sum += lmi_data.u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](i, j);
+                sum += u_parent[element_t::dg_idx (u, j)] * Mk (i, j);
 
               new_data.u_coeffs[element_t::dg_idx (u, i)]
                 = details[detail_t::wavelet_idx (k, u, i)] + sum * inv_scaling_factor;
