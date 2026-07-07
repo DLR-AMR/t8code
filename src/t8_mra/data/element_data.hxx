@@ -33,7 +33,7 @@ struct element_data
 
   std::array<int, 3> order = {};  // Point order
 
-  size_t static dg_idx (size_t u, size_t p) noexcept
+  static size_t dg_idx (size_t u, size_t p) noexcept
   {
     return u * DOF + p;
   }
@@ -47,7 +47,7 @@ struct detail_data: element_data<TShape, U, P>
 
   std::array<double, base::U_DIM * base::W_DOF> d_coeffs = {};
 
-  size_t static wavelet_idx (size_t k, size_t u, size_t p) noexcept
+  static size_t wavelet_idx (size_t k, size_t u, size_t p) noexcept
   {
     return k * base::U_DIM * base::DOF + u * base::DOF + p;
   }
