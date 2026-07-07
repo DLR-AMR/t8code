@@ -603,56 +603,41 @@ class multiscale_adaptation {
   void
   refine (int min_level, int max_level, Criterion criterion = {})
   {
-    using element_t = typename Derived::element_t;
-
     if constexpr (criterion_has_prepare<Criterion, Derived>)
       criterion.prepare (derived ());
 
     clear_multiscale_state ();
 
-    //--------------------------------------------------------------------------
-    // Analysis phase
-    //--------------------------------------------------------------------------
-
-    // 1. Details of all complete leaf families; lmi_map stays untouched.
     derived ().multiscale_transformation (0, max_level);
 
-    // 2. Apply the criterion to every family detail
     auto num_families = 0u;
-
     for (auto L = 0; L < max_level; ++L) {
       for (const auto &[lmi, _] : derived ().d_map[L]) {
         ++num_families;
 
-        // Remember families whose neighbourhood must be graded
         if (criterion.refine_neighbours (derived (), lmi))
           derived ().td_set.insert (lmi);
 
-        // Refine the family's children (leaves at L+1).
-        // Guard keeps the result within max_level.
         if (L < max_level - 1 && criterion.refine (derived (), lmi))
           for (const auto &child : t8_mra::children_lmi (lmi))
             derived ().refinement_set.insert (child);
       }
     }
 
-    // Marks below min_level are outside the requested range
     for (auto l = 0; l < min_level; ++l)
       derived ().refinement_set.erase (l);
 
-    // 3. Grading fixpoint
-    auto realized = derived ().refinement_set;
-    realized.erase_all ();
+    auto prior_refinements = derived ().refinement_set;
+    prior_refinements.erase_all ();
 
     for (auto round = 0;; ++round) {
-      const auto new_marks = neighbour_prediction (min_level, realized);
+      const auto new_marks = neighbour_prediction (min_level, prior_refinements);
       t8_debugf ("MRA refine grading round %d: %u new marks\n", round, new_marks);
       if (new_marks == 0)
         break;
 
-      realized = derived ().refinement_set;
+      prior_refinements = derived ().refinement_set;
 
-      // Families with a marked child stop grading
       typename Derived::index_set stopped;
       for (auto L = 0; L < max_level; ++L)
         for (const auto &lmi : derived ().td_set[L]) {
@@ -665,9 +650,7 @@ class multiscale_adaptation {
         derived ().td_set.erase (lmi);
     }
 
-    auto num_marked = 0u;
-    for (auto l = min_level; l < max_level; ++l)
-      num_marked += derived ().refinement_set[l].size ();
+    const auto num_marked = num_refinement_marks (min_level, max_level);
     t8_debugf ("MRA refine analysis: %u leaf families, %u leaves marked\n", num_families, num_marked);
 
     if (global_num_marks (num_marked) == 0) {
