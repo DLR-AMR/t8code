@@ -95,6 +95,16 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   // Element-Specific Implementation: Projection
   //=============================================================================
 
+  /// Corner coordinates in reference order: t8code vertex i goes to position
+  /// order[i].
+  void
+  element_vertex_coords (int tree_idx, const t8_element_t *element, const std::array<int, 3> &order,
+                         double vertices[3][3])
+  {
+    for (auto i = 0; i < 3; ++i)
+      t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[order[i]]);
+  }
+
   /**
    * @brief Project a function onto the DG basis for a triangle
    *
@@ -111,13 +121,9 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   project_impl (std::span<double> dg_coeffs, int tree_idx, const t8_element_t *element,
                 const std::array<int, 3> &point_order, Func &&func)
   {
-    // Reorder t8code vertices into reference order: t8code vertex i goes to
-    // position point_order[i].
     double vertices[3][3];
-    for (auto i = 0; i < 3; ++i)
-      t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[point_order[i]]);
+    element_vertex_coords (tree_idx, element, point_order, vertices);
 
-    // Compute transformation to reference element
     auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
     const auto deref_quad_points = Base::basis.deref_quad_points (vertices);
     const auto volume = t8_forest_element_volume (Base::forest, tree_idx, element);
@@ -201,8 +207,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
             const std::array<double, Base::DIM> &x_phys) override
   {
     double vertices[3][3];
-    for (auto i = 0; i < 3; ++i)
-      t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[data.order[i]]);
+    element_vertex_coords (tree_idx, element, data.order, vertices);
 
     auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
     const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1], 1.0 });
@@ -224,8 +229,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
                      const std::array<double, Base::DIM> &x_phys) override
   {
     double vertices[3][3];
-    for (auto i = 0; i < 3; ++i)
-      t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[data.order[i]]);
+    element_vertex_coords (tree_idx, element, data.order, vertices);
 
     auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
     const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1], 1.0 });
