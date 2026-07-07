@@ -697,86 +697,35 @@ class multiscale_adaptation {
   unsigned int
   balance_round ()
   {
-    using element_t = typename Derived::element_t;
-    using levelmultiindex = typename Derived::levelmultiindex;
-
     clear_multiscale_state ();
-
-    auto *user_data = derived ().get_user_data ();
-    auto *forest = derived ().forest;
-    const auto *scheme = t8_forest_get_scheme (forest);
 
     int mpirank, mpisize;
     sc_MPI_Comm_rank (derived ().comm, &mpirank);
     sc_MPI_Comm_size (derived ().comm, &mpisize);
     std::vector<std::vector<size_t>> outgoing (mpisize);
 
-    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
-    auto current_idx = t8_locidx_t { 0 };
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
-      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+    for_each_face_neigh ([&] (const auto &lmi, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid,
+                              t8_element_t *neigh_element, const auto &neigh_lmi) {
+      if (lmi.level () < 2)
+        return;
 
-      t8_element_t *neigh_element;
-      scheme->element_new (tree_class, 1, &neigh_element);
-
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
-        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
-        if (lmi.level () < 2)
-          continue;
-
-        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
-        const auto num_faces = scheme->element_get_num_faces (tree_class, element);
-
-        for (auto face = 0; face < num_faces; ++face) {
-          int neigh_face;
-          const auto neigh_gtreeid
-            = t8_forest_element_face_neighbor (forest, tree_idx, element, neigh_element, tree_class, face, &neigh_face);
-
-          // Domain boundary
-          if (neigh_gtreeid < 0)
-            continue;
-
-          // Marks are realized by this round's adapt, no virtual descent
-          const auto neigh_lmi = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
-          const auto res = resolve_pull_up (neigh_lmi, 0, 1u, no_marks {});
-
-          // No local covering leaf: refined finer (it checks back itself)
-          // or remote — ship the request to the owner
-          if (res < 0 && mpisize > 1) {
-            const auto owner = t8_forest_element_find_owner (forest, neigh_gtreeid, neigh_element, tree_class);
-            if (owner != mpirank)
-              outgoing[owner].push_back (neigh_lmi.index);
-          }
-        }
+      if (refine_covering_leaf (neigh_lmi, 0, 1u, no_prior_marks {}) < 0 && mpisize > 1) {
+        const auto owner = t8_forest_element_find_owner (derived ().forest, neigh_gtreeid, neigh_element, tree_class);
+        if (owner != mpirank)
+          outgoing[owner].push_back (neigh_lmi.index);
       }
-
-      scheme->element_destroy (tree_class, 1, &neigh_element);
-    }
+    });
 
     if (mpisize > 1)
-      exchange_pull_up_requests (outgoing, 0, 1u, no_marks {});
+      exchange_refine_requests (outgoing, 0, 1u, no_prior_marks {});
 
-    auto num_marked = 0u;
-    for (auto l = 0; l < derived ().maximum_level; ++l)
-      num_marked += derived ().refinement_set[l].size ();
-
-    // Global count: all ranks must agree on another round vs. done
-    num_marked = global_num_marks (num_marked);
-
+    const auto num_marked = global_num_marks (num_refinement_marks (0, derived ().maximum_level));
     if (num_marked == 0) {
       clear_multiscale_state ();
       return 0;
     }
 
-    for (auto l = 0; l < derived ().maximum_level; ++l)
-      for (const auto &lmi : derived ().refinement_set[l])
-        derived ().d_map.insert (lmi, typename Derived::detail_t {});
-
-    derived ().inverse_multiscale_transformation (0, derived ().maximum_level);
-
-    adapt_forest (static_refinement_callback);
-
+    apply_refinement (0, derived ().maximum_level, 0);
     clear_multiscale_state ();
 
     return num_marked;
