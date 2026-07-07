@@ -31,7 +31,6 @@ struct ordering_policy
   static void
   adjust_parent_order (T &data)
   {
-    // No ordering adjustment needed for cartesian elements
   }
 
   /**
@@ -41,7 +40,6 @@ struct ordering_policy
   static void
   adjust_child_order (T &child_data, int child_id, const T &parent_data)
   {
-    // No ordering adjustment needed for cartesian elements
   }
 };
 

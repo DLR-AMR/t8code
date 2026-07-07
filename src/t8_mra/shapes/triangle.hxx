@@ -19,7 +19,7 @@ namespace t8_mra
  *
  * Inherits all common MRA functionality from multiscale_base and
  * implements triangle-specific:
- *   - Detail norm computation (uses sqrt(2*volume) scaling)
+ *   - Detail norm computation (1/sqrt(volume) scaling)
  *   - Projection (uses Dunavant quadrature + transformation matrix)
  *   - Vertex ordering (via triangle_order)
  */
@@ -65,7 +65,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   /**
    * @brief Compute local detail norm for triangles
    *
-   * Triangles use sqrt(2*volume) scaling factor in the detail norm computation.
+   * Detail 2-norm over children scaled by 1/sqrt(volume).
    *
    * @param lmi Level multi-index
    * @return Array of detail norms (one per solution component)
@@ -85,7 +85,6 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
           norm_sq += d * d;
         }
       }
-      // Match old implementation: sqrt(sum / vol)
       detail_norm[u] = std::sqrt (norm_sq / vol);
     }
 

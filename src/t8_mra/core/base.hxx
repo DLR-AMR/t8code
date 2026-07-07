@@ -117,9 +117,8 @@ class multiscale_base: public multiscale_data<TShape> {
    */
   multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires is_cartesian<TShape>
-    : maximum_level (_max_level), basis (default_num_quad_points_1d), d_map (maximum_level),
-      td_set (maximum_level), refinement_set (maximum_level), coarsening_set (maximum_level), ghost_map (maximum_level),
-      comm (_comm)
+    : maximum_level (_max_level), basis (default_num_quad_points_1d), d_map (maximum_level), td_set (maximum_level),
+      refinement_set (maximum_level), coarsening_set (maximum_level), ghost_map (maximum_level), comm (_comm)
   {
     c_scaling.fill (1.0);
   }
@@ -233,8 +232,9 @@ class multiscale_base: public multiscale_data<TShape> {
    * @brief Forward multiscale transformation (analysis), non-destructive.
    *
    * Fills d_map with parent coeffs + details of complete families in
-   * (l_min, l_max]; lmi_map keeps its single-scale leaves. The decomposition
-   * step coarsen and refine run before deciding on details.
+   * (l_min, l_max]; lmi_map keeps its single-scale leaves. This is the
+   * analysis coarsen and refine run to obtain the details their criteria
+   * act on.
    */
   void
   multiscale_transformation (unsigned int l_min, unsigned int l_max)
@@ -402,8 +402,7 @@ class multiscale_base: public multiscale_data<TShape> {
    */
   virtual std::array<std::array<double, DIM>, U_DIM>
   evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
-                     const std::array<double, DIM> &x_phys)
-    = 0;
+                     const std::array<double, DIM> &x_phys) = 0;
 
   /// A point-location query for t8_forest_search, filled with the value at the
   /// owning leaf. Trivially copyable to live in the search's sc_array.
@@ -514,8 +513,7 @@ class multiscale_base: public multiscale_data<TShape> {
    * This function must be implemented by derived classes as projection
    * is element-specific (different quadrature, coordinate mappings, etc.)
    *
-   * NOTE: This is a template method in derived classes and cannot be virtual.
-   * Templates cannot be virtual in C++.
+   * A template method in the derived class
    *
    * Derived classes should implement:
    *   template <typename Func>
@@ -538,7 +536,6 @@ class multiscale_base: public multiscale_data<TShape> {
   virtual void
   post_adaptation_hook ()
   {
-    // Default: no-op
   }
 
   //=============================================================================

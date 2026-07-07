@@ -58,7 +58,7 @@ class levelindex_map {
   insert (unsigned int level, size_t key, const T &data);
 
   /**
-   * @brief Insert levelmuliindex -> data to map
+   * @brief Insert levelmultiindex -> data to map
    *
    * @param lmi levelmultiindex
    * @param data Given data

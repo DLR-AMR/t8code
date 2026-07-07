@@ -135,14 +135,10 @@ class multiscale<TShape, U, P>:
     // Get physical quadrature points via direct mapping
     const auto phys_quad_points = Base::basis.deref_quad_points (vertices);
 
-    
-    // Note: For orthonormal Legendre basis, NO volume/Jacobian scaling in projection!
-    // The basis functions are normalized on reference element [0,1]^DIM
-
-    // Precompute basis values at all quadrature points
+    // Orthonormal Legendre basis on the reference cell [0,1]^DIM: no
+    // volume/Jacobian scaling in the projection.
     std::vector<std::array<double, Base::DOF>> basis_at_quad (Base::basis.quad.num_points);
     for (auto q = 0u; q < Base::basis.quad.num_points; ++q) {
-      // Extract reference quadrature point
       std::vector<double> x_ref (Base::DIM);
       for (unsigned int d = 0; d < Base::DIM; ++d)
         x_ref[d] = Base::basis.quad.points[Base::DIM * q + d];
@@ -157,15 +153,13 @@ class multiscale<TShape, U, P>:
       std::array<double, Base::U_DIM> sum = {};
 
       for (auto q = 0u; q < Base::basis.quad.num_points; ++q) {
-        // Extract physical coordinates
         std::array<double, Base::DIM> x_phys;
         for (unsigned int d = 0; d < Base::DIM; ++d)
           x_phys[d] = phys_quad_points[Base::DIM * q + d];
 
-        // Evaluate function at physical point
-        // Supports two calling conventions:
-        //   func(x, y, z) -> std::array<double, U>  (return value)
-        //   func(x, y, z, double* out)               (output pointer)
+        // Two supported func conventions:
+        //   func(x, y, z) -> std::array<double, U>
+        //   func(x, y, z, double* out)
         std::array<double, Base::U_DIM> f_val;
         if constexpr (Base::DIM == 1) {
           if constexpr (std::is_invocable_v<decltype (func), double>)
@@ -186,13 +180,10 @@ class multiscale<TShape, U, P>:
             func (x_phys[0], x_phys[1], x_phys[2], f_val.data ());
         }
 
-        // Accumulate quadrature sum: integral(f * phi_i)
-        // Note: For orthonormal basis, the volume scaling cancels out
         for (auto u = 0u; u < Base::U_DIM; ++u)
           sum[u] += Base::basis.quad.weights[q] * f_val[u] * basis_at_quad[q][i];
       }
 
-      // Store coefficients directly (already includes volume scaling from quadrature)
       for (auto u = 0u; u < Base::U_DIM; ++u)
         dg_coeffs[element_t::dg_idx (u, i)] = sum[u];
     }

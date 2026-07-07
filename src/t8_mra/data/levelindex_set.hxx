@@ -54,7 +54,7 @@ class levelindex_set {
   insert (unsigned int level, size_t key);
 
   /**
-   * @brief Insert levelmuliindex -> data to set
+   * @brief Insert a levelmultiindex
    *
    * @param lmi levelmultiindex
    */
