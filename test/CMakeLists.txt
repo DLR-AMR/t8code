@@ -233,6 +233,19 @@ if( T8CODE_ENABLE_MRA )
   add_t8_cpp_test( NAME t8_gtest_mra_mst_serial             SOURCES t8_mra/t8_gtest_mra_mst.cxx )
   add_t8_cpp_test( NAME t8_gtest_mra_criteria_serial        SOURCES t8_mra/t8_gtest_mra_criteria.cxx )
   add_t8_cpp_test( NAME t8_gtest_mra_projection_serial      SOURCES t8_mra/t8_gtest_mra_projection.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mra_mpi_serial             SOURCES t8_mra/t8_gtest_mra_mpi.cxx )
+  add_t8_cpp_test( NAME t8_gtest_mra_mpi_parallel           SOURCES t8_mra/t8_gtest_mra_mpi.cxx )
+  set_tests_properties( t8_gtest_mra_mpi_serial   PROPERTIES FIXTURES_SETUP    mra_mpi_ref )
+  set_tests_properties( t8_gtest_mra_mpi_parallel PROPERTIES FIXTURES_REQUIRED mra_mpi_ref )
+  # Partition-independence must hold at non-power-of-2 rank counts too; reuse the
+  # parallel binary and the same reference the serial run writes.
+  if( T8CODE_ENABLE_MPI )
+    foreach( np 2 3 )
+      add_test( NAME t8_gtest_mra_mpi_np${np}
+                COMMAND mpirun -np ${np} $<TARGET_FILE:t8_gtest_mra_mpi_parallel> )
+      set_tests_properties( t8_gtest_mra_mpi_np${np} PROPERTIES FIXTURES_REQUIRED mra_mpi_ref )
+    endforeach()
+  endif()
 endif()
 
 if( T8CODE_BUILD_MESH_HANDLE )
