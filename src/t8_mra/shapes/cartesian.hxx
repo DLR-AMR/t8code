@@ -100,6 +100,23 @@ class multiscale<TShape, U, P>:
   // Element-Specific Implementation: Projection
   //=============================================================================
 
+  /// Corner coordinates of the element. QUAD corners are permuted (t8code swaps
+  /// 2 and 3) so index 0 is the lower and the last the upper corner, as
+  /// extract_cartesian_vertices expects.
+  void
+  element_vertex_coords (int tree_idx, const t8_element_t *element, double vertices[8][3])
+  {
+    constexpr int num_vertices = (Base::DIM == 1 ? 2 : (Base::DIM == 2 ? 4 : 8));
+    for (int i = 0; i < num_vertices; ++i) {
+      int v = i;
+      if constexpr (Base::DIM == 2 && TShape == T8_ECLASS_QUAD) {
+        constexpr int vertex_perm[4] = { 0, 1, 3, 2 };
+        v = vertex_perm[i];
+      }
+      t8_forest_element_coordinate (Base::forest, tree_idx, element, v, vertices[i]);
+    }
+  }
+
   /**
    * @brief Project a function onto the DG basis for a cartesian element
    *
@@ -115,24 +132,9 @@ class multiscale<TShape, U, P>:
   void
   project_impl (std::span<double> dg_coeffs, int tree_idx, const t8_element_t *element, Func &&func)
   {
-    // Extract element vertices (cartesian: axis-aligned box)
-    constexpr int num_vertices = (Base::DIM == 1 ? 2 : (Base::DIM == 2 ? 4 : 8));
     double vertices[8][3] = {};
+    element_vertex_coords (tree_idx, element, vertices);
 
-    if constexpr (Base::DIM == 2 && TShape == T8_ECLASS_QUAD) {
-      // t8code QUAD vertex ordering: 0-1-2-3 as (0,0)-(1,0)-(0,1)-(1,1)
-      // We need: 0-1-2-3 as (0,0)-(1,0)-(1,1)-(0,1) for standard quad
-      // So we swap vertices 2 and 3
-      const int vertex_perm[4] = { 0, 1, 3, 2 };
-      for (int i = 0; i < num_vertices; ++i)
-        t8_forest_element_coordinate (Base::forest, tree_idx, element, vertex_perm[i], vertices[i]);
-    }
-    else {
-      for (int i = 0; i < num_vertices; ++i)
-        t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[i]);
-    }
-
-    // Get physical quadrature points via direct mapping
     const auto phys_quad_points = Base::basis.deref_quad_points (vertices);
 
     // Orthonormal Legendre basis on the reference cell [0,1]^DIM: no
@@ -233,20 +235,8 @@ class multiscale<TShape, U, P>:
   evaluate (int tree_idx, const t8_element_t *element, const element_t &data,
             const std::array<double, Base::DIM> &x_phys) override
   {
-    // Same vertex permutation as project_impl: extract_cartesian_vertices reads
-    // the lower corner at index 0 and the upper corner at the last index, which
-    // for QUAD requires swapping t8code vertices 2 and 3.
-    constexpr int num_vertices = (Base::DIM == 1 ? 2 : (Base::DIM == 2 ? 4 : 8));
     double vertices[8][3] = {};
-    if constexpr (Base::DIM == 2 && TShape == T8_ECLASS_QUAD) {
-      const int vertex_perm[4] = { 0, 1, 3, 2 };
-      for (int i = 0; i < num_vertices; ++i)
-        t8_forest_element_coordinate (Base::forest, tree_idx, element, vertex_perm[i], vertices[i]);
-    }
-    else {
-      for (int i = 0; i < num_vertices; ++i)
-        t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[i]);
-    }
+    element_vertex_coords (tree_idx, element, vertices);
 
     std::array<double, Base::DIM> vertices_min, vertices_max;
     extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
@@ -268,17 +258,8 @@ class multiscale<TShape, U, P>:
   evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
                      const std::array<double, Base::DIM> &x_phys) override
   {
-    constexpr int num_vertices = (Base::DIM == 1 ? 2 : (Base::DIM == 2 ? 4 : 8));
     double vertices[8][3] = {};
-    if constexpr (Base::DIM == 2 && TShape == T8_ECLASS_QUAD) {
-      const int vertex_perm[4] = { 0, 1, 3, 2 };
-      for (int i = 0; i < num_vertices; ++i)
-        t8_forest_element_coordinate (Base::forest, tree_idx, element, vertex_perm[i], vertices[i]);
-    }
-    else {
-      for (int i = 0; i < num_vertices; ++i)
-        t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[i]);
-    }
+    element_vertex_coords (tree_idx, element, vertices);
 
     std::array<double, Base::DIM> vertices_min, vertices_max;
     extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
