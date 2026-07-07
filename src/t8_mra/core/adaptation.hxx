@@ -941,69 +941,36 @@ class multiscale_adaptation {
   {
     using levelmultiindex = typename Derived::levelmultiindex;
 
-    typename Derived::index_set jumps;
+    derived ().ghost_exchange ();
 
-    auto *user_data = derived ().get_user_data ();
-    auto *forest = derived ().forest;
-    const auto *scheme = t8_forest_get_scheme (forest);
     auto *lmi_map = derived ().get_lmi_map ();
+    auto &ghost_map = derived ().ghost_map;
+    const auto v_max = global_v_max (level);
 
-    std::array<double, Derived::U_DIM> v_max;
-    v_max.fill (1.0);
-    for (const auto &[lmi, _] : (*lmi_map)[level]) {
-      const auto m = derived ().mean_val (lmi);
+    std::unordered_map<size_t, double> face_jump;
+    for_each_face_neigh ([&] (const auto &lmi, t8_eclass_t, t8_gloidx_t, t8_element_t *, const auto &neigh_lmi) {
+      if (lmi.level () != static_cast<unsigned int> (level))
+        return;
+
+      const auto *neigh_data = lmi_map->contains (neigh_lmi)    ? &lmi_map->get (neigh_lmi)
+                               : ghost_map.contains (neigh_lmi) ? &ghost_map.get (neigh_lmi)
+                                                                : nullptr;
+      if (neigh_data == nullptr)
+        return;
+
+      const auto mean_inner = derived ().mean_val (lmi);
+      const auto mean_neigh = derived ().mean_val (*neigh_data);
+      auto &diff = face_jump[lmi.index];
       for (auto u = 0u; u < Derived::U_DIM; ++u)
-        v_max[u] = std::max (v_max[u], std::abs (m[u]));
-    }
+        diff = std::max (diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
+    });
 
-    // All ranks must normalize identically
-    auto v_max_local = v_max;
-    sc_MPI_Allreduce (v_max_local.data (), v_max.data (), Derived::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, derived ().comm);
-
-    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
-    auto current_idx = t8_locidx_t { 0 };
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
-      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
-
-      t8_element_t *neigh_element;
-      scheme->element_new (tree_class, 1, &neigh_element);
-
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
-        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
-        if (lmi.level () != static_cast<unsigned int> (level))
-          continue;
-
-        const auto mean_inner = derived ().mean_val (lmi);
-        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
-        const auto num_faces = scheme->element_get_num_faces (tree_class, element);
-
-        auto max_diff = 0.0;
-        for (auto face = 0; face < num_faces; ++face) {
-          int neigh_face;
-          const auto neigh_gtreeid
-            = t8_forest_element_face_neighbor (forest, tree_idx, element, neigh_element, tree_class, face, &neigh_face);
-
-          // Domain boundary
-          if (neigh_gtreeid < 0)
-            continue;
-
-          // Same-level neighbour only; coarser neighbours are skipped
-          const auto neigh_lmi = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
-          if (!lmi_map->contains (neigh_lmi))
-            continue;
-
-          const auto mean_neigh = derived ().mean_val (neigh_lmi);
-          for (auto u = 0u; u < Derived::U_DIM; ++u)
-            max_diff = std::max (max_diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
-        }
-
-        const auto h = std::pow (lmi_map->get (lmi).vol, 1.0 / Derived::DIM);
-        if (max_diff > c_thresh * std::sqrt (h))
-          jumps.insert (t8_mra::parent_lmi (lmi));
-      }
-
-      scheme->element_destroy (tree_class, 1, &neigh_element);
+    typename Derived::index_set jumps;
+    for (const auto &[index, diff] : face_jump) {
+      const auto lmi = levelmultiindex (index);
+      const auto h = std::pow (lmi_map->get (lmi).vol, 1.0 / Derived::DIM);
+      if (diff > c_thresh * std::sqrt (h))
+        jumps.insert (t8_mra::parent_lmi (lmi));
     }
 
     return jumps;
