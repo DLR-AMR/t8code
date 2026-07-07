@@ -74,8 +74,9 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   local_detail_norm (const levelmultiindex &lmi) override
   {
     std::array<double, Base::U_DIM> detail_norm = {};
-    const auto vol = Base::d_map.get (lmi).vol;
-    const auto &details = Base::d_map.get (lmi).d_coeffs;
+    const auto &data = Base::d_map.get (lmi);
+    const auto vol = data.vol;
+    const auto &details = data.d_coeffs;
 
     for (auto u = 0u; u < Base::U_DIM; ++u) {
       double norm_sq = 0.0;

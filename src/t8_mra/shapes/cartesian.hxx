@@ -76,11 +76,11 @@ class multiscale<TShape, U, P>:
   local_detail_norm (const levelmultiindex &lmi) override
   {
     std::array<double, Base::U_DIM> detail_norm = {};
-    const auto vol = Base::d_map.get (lmi).vol;
-    const auto &details = Base::d_map.get (lmi).d_coeffs;
+    const auto &data = Base::d_map.get (lmi);
+    const auto &details = data.d_coeffs;
 
     // Cartesian-specific scaling: sqrt(volume) without factor of 2
-    const auto scaling_factor = std::sqrt (vol);
+    const auto scaling_factor = std::sqrt (data.vol);
 
     for (auto u = 0u; u < Base::U_DIM; ++u) {
       double norm_sq = 0.0;
