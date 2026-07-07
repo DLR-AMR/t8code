@@ -183,26 +183,33 @@ class mst {
     const double scaling_factor = scaling_policy_t::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
 
     for (auto u = 0u; u < U_DIM; ++u) {
+      std::array<double, DOF> u_parent;
+
       // Parent coefficients: u_parent[i] = scaling * Σ_k Σ_j u_child[k][j] * M[k](j,i)
       for (auto i = 0u; i < DOF; ++i) {
         auto sum = 0.0;
 
-        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          const auto &Mk = mask_coefficients[k];
+          const auto &uk = data_on_siblings[k].u_coeffs;
           for (auto j = 0u; j < DOF; ++j)
-            sum += data_on_siblings[k].u_coeffs[element_t::dg_idx (u, j)] * mask_coefficients[k](j, i);
+            sum += uk[element_t::dg_idx (u, j)] * Mk (j, i);
+        }
 
-        data_on_coarse.u_coeffs[element_t::dg_idx (u, i)] = sum * scaling_factor;
+        u_parent[i] = sum * scaling_factor;
+        data_on_coarse.u_coeffs[element_t::dg_idx (u, i)] = u_parent[i];
       }
 
       // Detail coefficients: d[k][i] = u_child[k][i] - Σ_j M[k](i,j) * u_parent[j]
-      for (auto i = 0u; i < DOF; ++i) {
-        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+      for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+        const auto &Mk = mask_coefficients[k];
+        const auto &uk = data_on_siblings[k].u_coeffs;
+        for (auto i = 0u; i < DOF; ++i) {
           auto sum = 0.0;
           for (auto j = 0u; j < DOF; ++j)
-            sum += mask_coefficients[k](i, j) * data_on_coarse.u_coeffs[element_t::dg_idx (u, j)];
+            sum += Mk (i, j) * u_parent[j];
 
-          data_on_coarse.d_coeffs[detail_t::wavelet_idx (k, u, i)]
-            = data_on_siblings[k].u_coeffs[element_t::dg_idx (u, i)] - sum;
+          data_on_coarse.d_coeffs[detail_t::wavelet_idx (k, u, i)] = uk[element_t::dg_idx (u, i)] - sum;
         }
       }
     }
