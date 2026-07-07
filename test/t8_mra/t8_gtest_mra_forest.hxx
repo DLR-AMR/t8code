@@ -33,11 +33,11 @@ struct Config
 using Configs
   = ::testing::Types<Config<T8_ECLASS_LINE, 1, 1>, Config<T8_ECLASS_LINE, 1, 2>, Config<T8_ECLASS_LINE, 1, 3>,
                      Config<T8_ECLASS_LINE, 1, 4>, Config<T8_ECLASS_LINE, 2, 2>, Config<T8_ECLASS_TRIANGLE, 1, 1>,
-                     Config<T8_ECLASS_TRIANGLE, 1, 2>,
-                     Config<T8_ECLASS_TRIANGLE, 1, 3>, Config<T8_ECLASS_TRIANGLE, 1, 4>,
-                     Config<T8_ECLASS_TRIANGLE, 2, 2>, Config<T8_ECLASS_QUAD, 1, 1>, Config<T8_ECLASS_QUAD, 1, 2>,
-                     Config<T8_ECLASS_QUAD, 1, 3>, Config<T8_ECLASS_QUAD, 1, 4>, Config<T8_ECLASS_QUAD, 2, 2>,
-                     Config<T8_ECLASS_HEX, 1, 2>, Config<T8_ECLASS_HEX, 1, 3>, Config<T8_ECLASS_HEX, 2, 2>>;
+                     Config<T8_ECLASS_TRIANGLE, 1, 2>, Config<T8_ECLASS_TRIANGLE, 1, 3>,
+                     Config<T8_ECLASS_TRIANGLE, 1, 4>, Config<T8_ECLASS_TRIANGLE, 2, 2>, Config<T8_ECLASS_QUAD, 1, 1>,
+                     Config<T8_ECLASS_QUAD, 1, 2>, Config<T8_ECLASS_QUAD, 1, 3>, Config<T8_ECLASS_QUAD, 1, 4>,
+                     Config<T8_ECLASS_QUAD, 2, 2>, Config<T8_ECLASS_HEX, 1, 2>, Config<T8_ECLASS_HEX, 1, 3>,
+                     Config<T8_ECLASS_HEX, 2, 2>>;
 
 struct ConfigNames
 {
@@ -234,9 +234,10 @@ class mra_example {
   using levelmultiindex = typename multiscale::levelmultiindex;
   static constexpr int DIM = t8_mra::shape_traits<TShape>::DIM;
 
-  explicit mra_example (int max_level): mra (max_level, sc_MPI_COMM_WORLD), max_level (max_level)
+  explicit mra_example (int max_level, sc_MPI_Comm comm = sc_MPI_COMM_WORLD)
+    : mra (max_level, comm), max_level (max_level)
   {
-    cmesh = t8_cmesh_new_hypercube (TShape, sc_MPI_COMM_WORLD, 0, 0, 0);
+    cmesh = t8_cmesh_new_hypercube (TShape, comm, 0, 0, 0);
     scheme = t8_scheme_new_default ();
     t8_cmesh_ref (cmesh);
     t8_scheme_ref (const_cast<t8_scheme *> (scheme));
