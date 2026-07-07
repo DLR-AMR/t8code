@@ -25,12 +25,12 @@ namespace t8_mra
  */
 template <int U, int P>
 class multiscale<T8_ECLASS_TRIANGLE, U, P>:
-  public multiscale_base<T8_ECLASS_TRIANGLE, U, P>,
+  public multiscale_base<multiscale<T8_ECLASS_TRIANGLE, U, P>, T8_ECLASS_TRIANGLE, U, P>,
   public multiscale_adaptation<multiscale<T8_ECLASS_TRIANGLE, U, P>> {
 
  public:
   static constexpr t8_eclass TShape = T8_ECLASS_TRIANGLE;
-  using Base = multiscale_base<TShape, U, P>;
+  using Base = multiscale_base<multiscale<TShape, U, P>, TShape, U, P>;
   using Adaptation = multiscale_adaptation<multiscale<TShape, U, P>>;
   using element_t = typename Base::element_t;
   using levelmultiindex = typename Base::levelmultiindex;
@@ -71,7 +71,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    * @return Array of detail norms (one per solution component)
    */
   std::array<double, Base::U_DIM>
-  local_detail_norm (const levelmultiindex &lmi) override
+  local_detail_norm (const levelmultiindex &lmi)
   {
     std::array<double, Base::U_DIM> detail_norm = {};
     const auto &data = Base::d_map.get (lmi);
@@ -205,7 +205,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    */
   std::array<double, Base::U_DIM>
   evaluate (int tree_idx, const t8_element_t *element, const element_t &data,
-            const std::array<double, Base::DIM> &x_phys) override
+            const std::array<double, Base::DIM> &x_phys)
   {
     double vertices[3][3];
     element_vertex_coords (tree_idx, element, data.order, vertices);
@@ -227,7 +227,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    */
   std::array<std::array<double, Base::DIM>, Base::U_DIM>
   evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
-                     const std::array<double, Base::DIM> &x_phys) override
+                     const std::array<double, Base::DIM> &x_phys)
   {
     double vertices[3][3];
     element_vertex_coords (tree_idx, element, data.order, vertices);
@@ -290,7 +290,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
    * t8code elements after adaptation.
    */
   void
-  post_adaptation_hook () override
+  post_adaptation_hook ()
   {
     if (Base::forest == nullptr)
       return;

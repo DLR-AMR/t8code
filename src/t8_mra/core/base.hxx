@@ -37,14 +37,28 @@ class multiscale;
 /**
  * @brief Common MRA functionality for all element shapes: the multiscale
  * transformations, thresholding, projection, and forest/data management.
- * Shape-specific behaviour is supplied by the derived multiscale<> via
- * virtual hooks (local_detail_norm, post_adaptation_hook) and project_impl.
+ * Shape-specific behaviour is supplied by the derived multiscale<> through
+ * CRTP hooks (local_detail_norm, evaluate, evaluate_gradient, project_impl,
+ * post_adaptation_hook), resolved statically via derived().
  *
+ * @tparam Derived the multiscale<> specialization (CRTP)
  * @tparam TShape element shape, @tparam U solution components, @tparam P order
  */
-template <t8_eclass TShape, unsigned short U, unsigned short P>
+template <typename Derived, t8_eclass TShape, unsigned short U, unsigned short P>
 class multiscale_base: public multiscale_data<TShape> {
  public:
+  Derived &
+  derived ()
+  {
+    return static_cast<Derived &> (*this);
+  }
+
+  const Derived &
+  derived () const
+  {
+    return static_cast<const Derived &> (*this);
+  }
+
   using element_t = element_data<TShape, U, P>;
   using detail_t = detail_data<TShape, U, P>;
   using levelmultiindex = t8_mra::levelmultiindex<TShape>;
@@ -137,7 +151,7 @@ class multiscale_base: public multiscale_data<TShape> {
     c_scaling.fill (1.0);
   }
 
-  virtual ~multiscale_base () = default;
+  ~multiscale_base () = default;
 
  public:
   //=============================================================================
@@ -213,7 +227,7 @@ class multiscale_base: public multiscale_data<TShape> {
 
     user_data->lmi_map = new levelindex_map<levelmultiindex, element_t> (maximum_level);
     user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local + num_ghost);
-    user_data->mra_instance = this;
+    user_data->mra_instance = &derived ();
     t8_forest_set_user_data (forest, user_data);
 
     for_each_local_leaf (
@@ -268,20 +282,8 @@ class multiscale_base: public multiscale_data<TShape> {
   }
 
   //=============================================================================
-  // Thresholding (Element-specific via virtual function)
+  // Thresholding
   //=============================================================================
-
-  /**
-   * @brief Compute local detail norm for a given element
-   *
-   * This function must be implemented by derived classes as the
-   * detail norm computation may be element-specific.
-   *
-   * @param lmi Level multi-index
-   * @return Array of detail norms (one per solution component)
-   */
-  virtual std::array<double, U_DIM>
-  local_detail_norm (const levelmultiindex &lmi) = 0;
 
   /**
    * @brief Maximum detail norm over all components, scaled by c_scaling
@@ -294,7 +296,7 @@ class multiscale_base: public multiscale_data<TShape> {
   double
   scaled_detail_norm (const levelmultiindex &lmi)
   {
-    auto detail_norm = local_detail_norm (lmi);
+    auto detail_norm = derived ().local_detail_norm (lmi);
     for (auto u = 0u; u < U_DIM; ++u)
       detail_norm[u] /= c_scaling[u];
 
@@ -384,26 +386,6 @@ class multiscale_base: public multiscale_data<TShape> {
     return res;
   }
 
-  /**
-   * @brief Evaluate the solution at a physical point of a known leaf
-   *
-   * Element-specific (maps the physical point into the reference cell); supplied
-   * by the derived multiscale<>.
-   */
-  virtual std::array<double, U_DIM>
-  evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, DIM> &x_phys)
-    = 0;
-
-  /**
-   * @brief Evaluate the solution gradient at a physical point of a known leaf
-   *
-   * grad[u][d] = d(u_u)/d(x_d). Element-specific (applies the reference ->
-   * physical Jacobian); supplied by the derived multiscale<>.
-   */
-  virtual std::array<std::array<double, DIM>, U_DIM>
-  evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
-                     const std::array<double, DIM> &x_phys) = 0;
-
   /// A point-location query for t8_forest_search, filled with the value at the
   /// owning leaf. Trivially copyable to live in the search's sc_array.
   struct point_query
@@ -431,7 +413,7 @@ class multiscale_base: public multiscale_data<TShape> {
                    int *query_matches, const size_t num_active_queries)
   {
     auto *user_data = reinterpret_cast<forest_data<element_t> *> (t8_forest_get_user_data (forest));
-    auto *mra = reinterpret_cast<multiscale_base *> (user_data->mra_instance);
+    auto *mra = static_cast<Derived *> (user_data->mra_instance);
     const auto *scheme = t8_forest_get_scheme (forest);
 
     for (size_t i = 0; i < num_active_queries; ++i) {
@@ -526,14 +508,13 @@ class multiscale_base: public multiscale_data<TShape> {
   //=============================================================================
 
   /**
-   * @brief Post-adaptation hook (for element-specific operations)
+   * @brief Post-adaptation hook
    *
-   * Override this in derived classes to perform element-specific operations
-   * after forest adaptation (e.g., update vertex orders for triangles).
-   *
-   * Default implementation does nothing (for cartesian elements).
+   * Runs after every forest adaptation. The derived shape shadows this to do
+   * element-specific work (triangle updates vertex orders); the default is a
+   * no-op (cartesian).
    */
-  virtual void
+  void
   post_adaptation_hook ()
   {
   }
