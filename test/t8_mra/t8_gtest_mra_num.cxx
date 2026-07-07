@@ -332,7 +332,9 @@ TEST (mra_mat, element_access_and_resize)
   EXPECT_EQ (A (1, 2), 7.0);
   EXPECT_EQ (A (0, 0), -1.0);
   EXPECT_EQ (A (0, 1), 0.0);  // value-initialized
-  EXPECT_THROW (A (2, 0), std::out_of_range);
+#if T8_ENABLE_DEBUG
+  EXPECT_THROW (A (2, 0), std::out_of_range);  // bounds check is debug-only
+#endif
 
   A.resize (4, 4);
   EXPECT_EQ (A.rows (), 4u);
