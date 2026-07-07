@@ -84,6 +84,47 @@ class multiscale_adaptation {
   }
 
   /**
+   * @brief Replace a rank-local index set with its union over all ranks
+   *
+   * The lmi index encodes the whole key, so a gathered index rebuilds the
+   * lmi. Coarsen repartitions between passes, so a jump-protected family can
+   * migrate to a rank whose local set never held it; the global union keeps
+   * the protection wherever the family lands. Collective.
+   */
+  template <typename IndexSet>
+  void
+  globalize (IndexSet &set)
+  {
+    using levelmultiindex = typename Derived::levelmultiindex;
+
+    int mpisize = 1;
+    sc_MPI_Comm_size (derived ().comm, &mpisize);
+    if (mpisize == 1)
+      return;
+
+    std::vector<t8_gloidx_t> local;
+    local.reserve (set.size ());
+    for (const auto &lmi : set)
+      local.push_back (static_cast<t8_gloidx_t> (lmi.index));
+
+    int n_local = static_cast<int> (local.size ());
+    std::vector<int> counts (mpisize), displs (mpisize);
+
+    sc_MPI_Allgather (&n_local, 1, sc_MPI_INT, counts.data (), 1, sc_MPI_INT, derived ().comm);
+
+    std::exclusive_scan (counts.begin (), counts.end (), displs.begin (), 0);
+    const int total = displs.back () + counts.back ();
+
+    std::vector<t8_gloidx_t> all (total);
+
+    sc_MPI_Allgatherv (local.data (), n_local, T8_MPI_GLOIDX, all.data (), counts.data (), displs.data (),
+                       T8_MPI_GLOIDX, derived ().comm);
+
+    for (const auto idx : all)
+      set.insert (levelmultiindex (static_cast<size_t> (idx)));
+  }
+
+  /**
    * @brief Iterate over every (leaf, same-level face neighbour) pair on this rank
    *
    * Domain-boundary faces are skipped. The visitor receives the source leaf
@@ -973,6 +1014,7 @@ class multiscale_adaptation {
         jumps.insert (t8_mra::parent_lmi (lmi));
     }
 
+    globalize (jumps);
     return jumps;
   }
 
