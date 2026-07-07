@@ -84,6 +84,55 @@ class multiscale_adaptation {
   }
 
   /**
+   * @brief Iterate over every (leaf, same-level face neighbour) pair on this rank
+   *
+   * Domain-boundary faces are skipped. The visitor receives the source leaf
+   * lmi, the neighbour's tree class, global tree id and element, and the
+   * neighbour lmi. The neighbour element is scratch reused across a tree's
+   * faces — the visitor must not retain it.
+   */
+  template <typename Func>
+  void
+  for_each_face_neigh (Func &&func)
+  {
+    using levelmultiindex = typename Derived::levelmultiindex;
+
+    auto *user_data = derived ().get_user_data ();
+    auto *forest = derived ().forest;
+    const auto *scheme = t8_forest_get_scheme (forest);
+
+    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
+    auto current_idx = 0u;
+
+    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+      const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
+      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+
+      t8_element_t *neigh_element;
+      scheme->element_new (tree_class, 1, &neigh_element);
+
+      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
+        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
+        const auto num_faces = scheme->element_get_num_faces (tree_class, element);
+
+        for (auto face = 0; face < num_faces; ++face) {
+          int neigh_face;
+          const auto neigh_gtreeid
+            = t8_forest_element_face_neighbor (forest, tree_idx, element, neigh_element, tree_class, face, &neigh_face);
+
+          if (neigh_gtreeid < 0)
+            continue;
+
+          func (lmi, tree_class, neigh_gtreeid, neigh_element, levelmultiindex (neigh_gtreeid, neigh_element, scheme));
+        }
+      }
+
+      scheme->element_destroy (tree_class, 1, &neigh_element);
+    }
+  }
+
+  /**
    * @brief Adapt the forest with the given callback and rebuild the lmi index
    *
    * Performs one t8_forest_new_adapt pass, moves the lmi_map (already
