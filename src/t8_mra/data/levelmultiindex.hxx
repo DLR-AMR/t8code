@@ -124,9 +124,9 @@ struct levelmultiindex
   [[nodiscard]] static levelmultiindex
   jth_child (levelmultiindex lmi, size_t j) noexcept
   {
-    const size_t basecell = lmi.index & ((1u << BASECELL_BITS) - 1);
+    const size_t basecell = lmi.index & ((1ULL << BASECELL_BITS) - 1);
     lmi.index >>= BASECELL_BITS;
-    const size_t level = lmi.index & ((1u << LEVEL_BITS) - 1);
+    const size_t level = lmi.index & ((1ULL << LEVEL_BITS) - 1);
     lmi.index >>= LEVEL_BITS;
 
     const auto jth_path = (lmi.index << PATH_BITS) | j;
@@ -143,9 +143,9 @@ struct levelmultiindex
     if (lmi.level () == 0)
       SC_ABORTF ("levelmultiindices on level 0 do not have a parent %zu", lmi.index);
 #endif
-    const auto basecell = lmi.index & ((1u << BASECELL_BITS) - 1);
+    const auto basecell = lmi.index & ((1ULL << BASECELL_BITS) - 1);
     lmi.index >>= BASECELL_BITS;
-    const auto level = lmi.index & ((1u << LEVEL_BITS) - 1);
+    const auto level = lmi.index & ((1ULL << LEVEL_BITS) - 1);
     lmi.index >>= LEVEL_BITS;
     lmi.index >>= PATH_BITS;
 
