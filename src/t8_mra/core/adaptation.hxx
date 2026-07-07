@@ -609,12 +609,12 @@ class multiscale_adaptation {
    * @brief Perform adaptive refinement from min_level up to max_level
    *
    * Analysis (whole grid, forest untouched): the non-destructive transform
-   * computes the details of every complete leaf family, then per family
-   * (level L) the criterion decides
-   *   - refine_neighbours: the neighbourhood is graded to the family's leaf
+   * computes the details of every complete leaf family, then the criterion
+   * returns per family (level L):
+   *   - grade_neighbours: the neighbourhood is graded to the family's leaf
    *     level (family -> td_set),
-   *   - refine (L < max_level-1): the family's children are refined one
-   *     further level.
+   *   - refine_children (L < max_level-1): the family's children are refined
+   *     one further level.
    * One pass suffices: children created by refinement carry zero details and
    * trigger no further marks. A grading fixpoint then pulls covering leaves
    * up one level per round against the marks of earlier rounds; a family
@@ -647,10 +647,12 @@ class multiscale_adaptation {
       for (const auto &[lmi, _] : derived ().d_map[L]) {
         ++num_families;
 
-        if (criterion.refine_neighbours (derived (), lmi))
+        const auto flags = criterion (derived (), lmi);
+
+        if (flags.grade_neighbours)
           derived ().td_set.insert (lmi);
 
-        if (L < max_level - 1 && criterion.refine (derived (), lmi))
+        if (L < max_level - 1 && flags.refine_children)
           for (const auto &child : t8_mra::children_lmi (lmi))
             derived ().refinement_set.insert (child);
       }

@@ -4,6 +4,8 @@
 
 #include "t8_gtest_mra_forest.hxx"
 
+#include <cmath>
+
 namespace
 {
 
@@ -157,9 +159,10 @@ TYPED_TEST (mra_criteria, hard_thresholding_significant_set_shrinks_with_thresho
   EXPECT_GT (number_low, 0u) << "the jump must make some family significant at a low threshold";
 }
 
-/* The Harten steep-gradient refinement test is 2^(P+1) times stricter than the
- * neighbour-grading test. */
-TYPED_TEST (mra_criteria, harten_refine_implies_refine_neighbours)
+/* harten_prediction partitions families by the two thresholds: refine_children
+ * above 2^(P+1)*c_thresh*eps, grade_neighbours above c_thresh*eps, none below.
+ * refine_children thus always implies grading. */
+TYPED_TEST (mra_criteria, harten_classify_matches_thresholds)
 {
   constexpr auto Shape = TypeParam::Shape;
   constexpr auto U = TypeParam::U;
@@ -177,10 +180,16 @@ TYPED_TEST (mra_criteria, harten_refine_implies_refine_neighbours)
 
   mra.multiscale_decomposition (0, max_level);
 
+  const auto steep = std::pow (2.0, static_cast<int> (P) + 1);
   for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
-    for (const auto &[lmi, detail] : mra.d_map[l])
-      if (crit.refine (mra, lmi))
-        EXPECT_TRUE (crit.refine_neighbours (mra, lmi)) << "refine must imply grading, level " << l;
+    for (const auto &[lmi, detail] : mra.d_map[l]) {
+      const auto norm = mra.scaled_detail_norm (lmi);
+      const auto eps = mra.local_threshold_value (lmi, 2);  // c_thresh = 1.0
+      const auto flags = crit (mra, lmi);
+
+      EXPECT_EQ (flags.grade_neighbours, norm > eps) << "level " << l;
+      EXPECT_EQ (flags.refine_children, norm > steep * eps) << "level " << l;
+    }
 }
 
 /* The hard threshold is sharp: with c_scaling = 1 a family with detail norm N
