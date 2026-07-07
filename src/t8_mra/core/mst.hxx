@@ -248,15 +248,19 @@ class mst {
       for (const auto &lmi : I_set) {
         const auto siblings_lmi = t8_mra::children_lmi (lmi);
 
-        // Incomplete families (siblings on finer levels) carry no detail information
-        const auto family_complete
-          = std::all_of (siblings_lmi.begin (), siblings_lmi.end (),
-                         [&] (const levelmultiindex &sibling) { return lmi_map->contains (sibling); });
+        // Incomplete families (siblings on finer levels) carry no detail
+        // information.
+        auto family_complete = true;
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          const auto *sibling = lmi_map->find (siblings_lmi[k]);
+          if (sibling == nullptr) {
+            family_complete = false;
+            break;
+          }
+          data_on_siblings[k] = *sibling;
+        }
         if (!family_complete)
           continue;
-
-        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
-          data_on_siblings[k] = lmi_map->get (siblings_lmi[k]);
 
         two_scale_family (data_on_siblings, data_on_coarse, mask_coefficients);
         d_map.insert (lmi, data_on_coarse);
@@ -298,15 +302,17 @@ class mst {
         // On an adaptive grid a family may be incomplete: some siblings stayed
         // refined on finer levels. Such families cannot be two-scale transformed;
         // their members remain leaves at level l.
-        const auto family_complete
-          = std::all_of (siblings_lmi.begin (), siblings_lmi.end (),
-                         [&] (const levelmultiindex &sibling) { return lmi_map->contains (sibling); });
+        auto family_complete = true;
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+          const auto *sibling = lmi_map->find (siblings_lmi[k]);
+          if (sibling == nullptr) {
+            family_complete = false;
+            break;
+          }
+          data_on_siblings[k] = *sibling;
+        }
         if (!family_complete)
           continue;
-
-        // Load children - LMI structure encodes the ordering
-        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
-          data_on_siblings[k] = lmi_map->get (siblings_lmi[k]);
 
         two_scale_family (data_on_siblings, data_on_coarse, mask_coefficients);
 
