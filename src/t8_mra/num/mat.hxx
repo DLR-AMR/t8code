@@ -68,18 +68,20 @@ class mat {
 inline double &
 mat::operator() (size_t i, size_t j)
 {
+#if T8_ENABLE_DEBUG
   if (i >= num_rows || j >= num_cols)
     throw std::out_of_range ("indices in t8_mra::util::mat::operator() is out of range");
-
+#endif
   return data[num_cols * i + j];
 }
 
 inline double
 mat::operator() (size_t i, size_t j) const
 {
+#if T8_ENABLE_DEBUG
   if (i >= num_rows || j >= num_cols)
     throw std::out_of_range ("indices in t8_mra::util::mat::operator() is out of range");
-
+#endif
   return data[num_cols * i + j];
 }
 
