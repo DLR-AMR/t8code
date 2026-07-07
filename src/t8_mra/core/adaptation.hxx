@@ -534,76 +534,34 @@ class multiscale_adaptation {
    */
   // RealizedSet deduced (= levelindex_set): naming Derived's nested types in
   // the signature would require the still-incomplete Derived (CRTP).
-  template <typename RealizedSet>
+  template <typename PriorRefinements>
   unsigned int
-  neighbour_prediction (int min_level, const RealizedSet &realized)
+  neighbour_prediction (int min_level, const PriorRefinements &prior_refinements)
   {
-    using levelmultiindex = typename Derived::levelmultiindex;
-
-    auto *user_data = derived ().get_user_data ();
-    auto *forest = derived ().forest;
-    const auto *scheme = t8_forest_get_scheme (forest);
-
     int mpirank, mpisize;
     sc_MPI_Comm_rank (derived ().comm, &mpirank);
     sc_MPI_Comm_size (derived ().comm, &mpisize);
-    std::vector<std::vector<size_t>> outgoing (mpisize);
 
+    std::vector<std::vector<size_t>> outgoing (mpisize);
     auto num_new_marks = 0u;
 
-    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
-    auto current_idx = t8_locidx_t { 0 };
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
-      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+    for_each_face_neigh ([&] (const auto &lmi, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid,
+                              t8_element_t *neigh_element, const auto &neigh_lmi) {
+      if (lmi.level () == 0 || !derived ().td_set.contains (t8_mra::parent_lmi (lmi)))
+        return;
 
-      // Scratch element for the constructed neighbours, one per tree
-      t8_element_t *neigh_element;
-      scheme->element_new (tree_class, 1, &neigh_element);
-
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
-        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
-        if (lmi.level () == 0)
-          continue;
-
-        // Only leaves of marked families (refine_neighbours) grade their neighbourhood
-        if (!derived ().td_set.contains (t8_mra::parent_lmi (lmi)))
-          continue;
-
-        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
-        const auto num_faces = scheme->element_get_num_faces (tree_class, element);
-
-        for (auto face = 0; face < num_faces; ++face) {
-          int neigh_face;
-          const auto neigh_gtreeid
-            = t8_forest_element_face_neighbor (forest, tree_idx, element, neigh_element, tree_class, face, &neigh_face);
-
-          // Domain boundary
-          if (neigh_gtreeid < 0)
-            continue;
-
-          const auto neigh_lmi = levelmultiindex (neigh_gtreeid, neigh_element, scheme);
-          const auto res = resolve_pull_up (neigh_lmi, min_level, 0u, realized);
-
-          // No local covering leaf: refined finer (children handle
-          // themselves) or remote — ship the request to the owner
-          if (res < 0 && mpisize > 1) {
-            const auto owner = t8_forest_element_find_owner (forest, neigh_gtreeid, neigh_element, tree_class);
-            if (owner != mpirank)
-              outgoing[owner].push_back (neigh_lmi.index);
-            continue;
-          }
-
-          if (res > 0)
-            ++num_new_marks;
-        }
+      const auto res = refine_covering_leaf (neigh_lmi, min_level, 0u, prior_refinements);
+      if (res > 0)
+        ++num_new_marks;
+      else if (res < 0 && mpisize > 1) {
+        const auto owner = t8_forest_element_find_owner (derived ().forest, neigh_gtreeid, neigh_element, tree_class);
+        if (owner != mpirank)
+          outgoing[owner].push_back (neigh_lmi.index);
       }
-
-      scheme->element_destroy (tree_class, 1, &neigh_element);
-    }
+    });
 
     if (mpisize > 1)
-      num_new_marks += exchange_pull_up_requests (outgoing, min_level, 0u, realized);
+      num_new_marks += exchange_refine_requests (outgoing, min_level, 0u, prior_refinements);
 
     return global_num_marks (num_new_marks);
   }
