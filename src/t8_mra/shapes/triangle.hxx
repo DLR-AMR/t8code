@@ -140,8 +140,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
       const auto x_deref = deref_quad_points[2 * j];
       const auto y_deref = deref_quad_points[1 + 2 * j];
 
-      const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_deref, y_deref, 1.0 });
-      basis_at_quad[j] = Base::basis.basis_value (ref);
+      const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_deref, y_deref });
+      basis_at_quad[j] = Base::basis.basis_value ({ ref[0], ref[1] });
       f_at_quad[j] = func (x_deref, y_deref);
     }
 
@@ -211,7 +211,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     element_vertex_coords (tree_idx, element, data.order, vertices);
 
     auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
-    const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1], 1.0 });
+    const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1] });
 
     // ref is barycentric {lambda0, lambda1, lambda2}; the reference triangle
     // coordinates are (tau1, tau2) = (lambda1, lambda2).
@@ -233,7 +233,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     element_vertex_coords (tree_idx, element, data.order, vertices);
 
     auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
-    const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1], 1.0 });
+    const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1] });
     const auto ref_grad = Base::basis.basis_gradient ({ ref[0], ref[1] });
     const auto scaling = basis<element_t::Shape, Base::P_DIM>::normalization (data.vol);
 

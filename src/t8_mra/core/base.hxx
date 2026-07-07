@@ -374,8 +374,7 @@ class multiscale_base: public multiscale_data<TShape> {
     if constexpr (Shape == T8_ECLASS_TRIANGLE)
       x_basis = { 1.0 - x_ref[0] - x_ref[1], x_ref[0] };  // (tau1, tau2) -> (lambda0, lambda1)
 
-    const std::vector<double> x (x_basis.begin (), x_basis.end ());
-    const auto phi = basis.basis_value (x);
+    const auto phi = basis.basis_value (x_basis);
     const auto scaling = t8_mra::basis<Shape, P_DIM>::normalization (data.vol);
 
     std::array<double, U_DIM> res = {};

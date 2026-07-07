@@ -196,12 +196,12 @@ check_basis_forward (int quad_param, const std::vector<double> &x_ref)
   for (int d = 0; d < DIM; ++d)
     x[d] = x_ref[d];
 
-  const auto val = dg_basis.basis_value (x_ref);
+  const auto val = dg_basis.basis_value (x);
   const auto ref_val = basis_t::eval (x);
   for (std::size_t i = 0; i < val.size (); ++i)
     EXPECT_NEAR (val[i], ref_val[i], eps);
 
-  const auto grad = dg_basis.basis_gradient (x_ref);
+  const auto grad = dg_basis.basis_gradient (x);
   const auto ref_grad = basis_t::eval_gradient (x);
   for (int dir = 0; dir < DIM; ++dir)
     for (std::size_t i = 0; i < grad[dir].size (); ++i)

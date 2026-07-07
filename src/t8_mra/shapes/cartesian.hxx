@@ -140,7 +140,7 @@ class multiscale<TShape, U, P>:
     // Orthonormal Legendre basis on the reference cell [0,1]^DIM: no
     // volume/Jacobian scaling in the projection.
     std::vector<std::array<double, Base::DOF>> basis_at_quad (Base::basis.quad.num_points);
-    std::vector<double> x_ref (Base::DIM);
+    std::array<double, Base::DIM> x_ref;
     for (auto q = 0u; q < Base::basis.quad.num_points; ++q) {
       for (unsigned int d = 0; d < Base::DIM; ++d)
         x_ref[d] = Base::basis.quad.points[Base::DIM * q + d];
@@ -264,7 +264,7 @@ class multiscale<TShape, U, P>:
     std::array<double, Base::DIM> vertices_min, vertices_max;
     extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
 
-    std::vector<double> x_ref (Base::DIM);
+    std::array<double, Base::DIM> x_ref;
     for (auto d = 0u; d < Base::DIM; ++d)
       x_ref[d] = (x_phys[d] - vertices_min[d]) / (vertices_max[d] - vertices_min[d]);
 

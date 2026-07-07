@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <algorithm>
+#include <span>
 #include <stdexcept>
 #include <vector>
 
@@ -149,7 +150,7 @@ lu_factors (mat &A, std::vector<size_t> &p)
 }
 
 inline void
-lu_solve (const mat &A, const std::vector<size_t> &p, std::vector<double> &x)
+lu_solve (const mat &A, const std::vector<size_t> &p, std::span<double> x)
 {
   if (A.rows () != A.cols ())
     throw std::logic_error ("Matrix in t8_mra::util::lr_solve is not a square matrix");
@@ -160,7 +161,7 @@ lu_solve (const mat &A, const std::vector<size_t> &p, std::vector<double> &x)
 
   const auto n = A.rows ();
 
-  const auto b = x;
+  const std::vector<double> b (x.begin (), x.end ());
   for (auto i = 0u; i < n; ++i) {
     x[i] = b[p[i]];
     for (auto k = 0u; k < i; ++k)

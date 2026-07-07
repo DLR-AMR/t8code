@@ -85,11 +85,11 @@ struct dg_basis_base<T8_ECLASS_TRIANGLE>
     return reference_to_physical_t3 (corners, quad.points);
   }
 
-  std::vector<double>
+  std::array<double, 3>
   ref_point (const t8_mra::mat &trafo_mat, const std::vector<size_t> &permuation_vec,
-             const std::vector<double> &grid_point)
+             const std::array<double, 2> &grid_point)
   {
-    std::vector<double> ret = { grid_point[0], grid_point[1], 1.0 };
+    std::array<double, 3> ret = { grid_point[0], grid_point[1], 1.0 };
     t8_mra::lu_solve (trafo_mat, permuation_vec, ret);
 
     return ret;
@@ -129,24 +129,16 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
 
   /// All basis function values at a reference point.
   std::array<double, DOF>
-  basis_value (const std::vector<double> &x_ref)
+  basis_value (const std::array<double, DIM> &x_ref)
   {
-    std::array<double, DIM> x;
-    for (unsigned int d = 0; d < DIM; ++d)
-      x[d] = x_ref[d];
-
-    return basis_t::eval (x);
+    return basis_t::eval (x_ref);
   }
 
   /// grad[dir][i] = d(phi_i)/dx_dir at a reference point.
   std::array<std::array<double, DOF>, DIM>
-  basis_gradient (const std::vector<double> &x_ref)
+  basis_gradient (const std::array<double, DIM> &x_ref)
   {
-    std::array<double, DIM> x;
-    for (unsigned int d = 0; d < DIM; ++d)
-      x[d] = x_ref[d];
-
-    return basis_t::eval_gradient (x);
+    return basis_t::eval_gradient (x_ref);
   }
 };
 
