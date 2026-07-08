@@ -172,6 +172,7 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/num/geometry.hxx
     t8_mra/num/mask_coefficients.hxx
     t8_mra/num/mat.hxx
+    t8_mra/num/nodal_to_modal.hxx
     DESTINATION include/t8_mra/num )
 
   install( FILES
