@@ -278,6 +278,24 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     });
   }
 
+  /// Nodal <-> modal conversion needs a nodal-point layout and Vandermonde that
+  /// only the cartesian shapes define; not implemented for triangles.
+  template <typename CellNodalValues>
+  void
+  initialize_data_nodal (t8_forest_t, const std::array<std::array<double, Base::DIM>, Base::DOF> &, CellNodalValues &&)
+  {
+    static_assert (sizeof (CellNodalValues) == 0,
+                   "nodal <-> modal is only implemented for cartesian shapes (LINE/QUAD/HEX)");
+  }
+
+  template <typename WriteCellNodalValues>
+  void
+  export_data_nodal (const std::array<std::array<double, Base::DIM>, Base::DOF> &, WriteCellNodalValues &&)
+  {
+    static_assert (sizeof (WriteCellNodalValues) == 0,
+                   "nodal <-> modal is only implemented for cartesian shapes (LINE/QUAD/HEX)");
+  }
+
   //=============================================================================
   // Post-Adaptation Hook
   //=============================================================================
