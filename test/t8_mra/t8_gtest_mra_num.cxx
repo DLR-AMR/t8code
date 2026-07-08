@@ -396,6 +396,29 @@ class mra_nodal_modal: public ::testing::Test {
 };
 TYPED_TEST_SUITE (mra_nodal_modal, ConvConfigs);
 
+/* modal -> nodal -> modal is the identity (square Vandermonde interpolation),
+ * exercised with two components to cover the component-major layout. */
+TYPED_TEST (mra_nodal_modal, roundtrip_recovers_modal_coefficients)
+{
+  constexpr auto Shape = TestFixture::Shape;
+  constexpr int P = TestFixture::P;
+  constexpr int DOF = TestFixture::DOF;
+  constexpr unsigned int U = 2;
+
+  const t8_mra::nodal_to_modal<Shape, U, P> to_modal (this->nodes);
+  const t8_mra::modal_to_nodal<Shape, U, P> to_nodal (this->nodes);
+
+  std::array<double, U * DOF> modal {};
+  for (unsigned int i = 0; i < U * DOF; ++i)
+    modal[i] = std::sin (0.7 * i + 0.3) + 0.5;
+
+  const auto nodal = to_nodal (std::span<const double> (modal.data (), modal.size ()));
+  const auto back = to_modal (std::span<const double> (nodal.data (), nodal.size ()));
+
+  for (unsigned int i = 0; i < U * DOF; ++i)
+    EXPECT_NEAR (back[i], modal[i], eps) << "coeff " << i;
+}
+
 }  // namespace
 
 #endif  // T8_ENABLE_MRA
