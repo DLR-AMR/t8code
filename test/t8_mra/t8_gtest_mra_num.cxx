@@ -419,6 +419,40 @@ TYPED_TEST (mra_nodal_modal, roundtrip_recovers_modal_coefficients)
     EXPECT_NEAR (back[i], modal[i], eps) << "coeff " << i;
 }
 
+/* Nodal interpolation is exact for polynomials in the basis span: sampling
+ * u(x) = sum_d x_d^(P-1) at the nodes and converting to modal reconstructs u
+ * everywhere. */
+TYPED_TEST (mra_nodal_modal, interpolation_is_exact_for_polynomials)
+{
+  constexpr auto Shape = TestFixture::Shape;
+  constexpr int P = TestFixture::P;
+  constexpr int DIM = TestFixture::DIM;
+  constexpr int DOF = TestFixture::DOF;
+  using basis_t = typename TestFixture::basis_t;
+
+  const auto u = [] (const std::array<double, DIM> &x) {
+    double s = 0.0;
+    for (int d = 0; d < DIM; ++d)
+      s += std::pow (x[d], P - 1);
+    return s;
+  };
+
+  std::array<double, DOF> nodal {};
+  for (int j = 0; j < DOF; ++j)
+    nodal[j] = u (this->nodes[j]);
+
+  const t8_mra::nodal_to_modal<Shape, 1, P> to_modal (this->nodes);
+  const auto modal = to_modal (std::span<const double> (nodal.data (), nodal.size ()));
+
+  for (const auto &x : interior_points<Shape, DIM> ()) {
+    const auto phi = basis_t::eval (x);
+    double recon = 0.0;
+    for (int i = 0; i < DOF; ++i)
+      recon += modal[i] * phi[i];  // cartesian normalization is 1
+    EXPECT_NEAR (recon, u (x), eps);
+  }
+}
+
 }  // namespace
 
 #endif  // T8_ENABLE_MRA
