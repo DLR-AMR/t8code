@@ -332,6 +332,31 @@ class multiscale<TShape, U, P>:
     });
   }
 
+  /**
+   * @brief Reconstruct per-cell nodal DG values from the current forest.
+   *
+   * Inverse of initialize_data_nodal: walks the (adapted) forest in SFC order
+   * and hands each leaf's nodal values at reference `nodes` to
+   * write_cell_nodal_values (tree_idx, element, span<const double> of U*DOF,
+   * component-major u*DOF + j).
+   */
+  template <typename WriteCellNodalValues>
+  void
+  export_data_nodal (const std::array<std::array<double, Base::DIM>, Base::DOF> &nodes,
+                     WriteCellNodalValues &&write_cell_nodal_values)
+  {
+    const modal_to_nodal<TShape, U, P> to_nodal (nodes);
+    const auto *scheme = t8_forest_get_scheme (Base::forest);
+    auto *lmi_map = Base::get_lmi_map ();
+
+    Base::for_each_local_leaf (
+      [&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int, t8_gloidx_t global_tree) {
+        const levelmultiindex lmi (global_tree, element, scheme);
+        const auto *data = lmi_map->find (lmi);
+        const auto nodal = to_nodal (std::span<const double> (data->u_coeffs.data (), data->u_coeffs.size ()));
+        write_cell_nodal_values (tree_idx, element, std::span<const double> (nodal.data (), nodal.size ()));
+      });
+  }
 };
 
 }  // namespace t8_mra
