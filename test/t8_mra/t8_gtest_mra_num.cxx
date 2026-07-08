@@ -10,10 +10,12 @@
 #include <t8_mra/num/geometry.hxx>
 #include <t8_mra/num/mask_coefficients.hxx>
 #include <t8_mra/num/mat.hxx>
+#include <t8_mra/num/nodal_to_modal.hxx>
 #include <t8_mra/num/quadrature/quadrature.hxx>
 
 #include <array>
 #include <cmath>
+#include <span>
 #include <vector>
 
 namespace
@@ -362,6 +364,37 @@ TEST (mra_mat, lu_solve_recovers_known_solution)
   for (size_t i = 0; i < 3; ++i)
     EXPECT_NEAR (x[i], x_true[i], eps) << "component " << i;
 }
+
+/* ---- nodal <-> modal converters ---- */
+using ConvConfigs
+  = ::testing::Types<NumConfig<T8_ECLASS_LINE, 2>, NumConfig<T8_ECLASS_LINE, 3>, NumConfig<T8_ECLASS_QUAD, 2>,
+                     NumConfig<T8_ECLASS_QUAD, 3>, NumConfig<T8_ECLASS_HEX, 2>>;
+
+template <typename Config>
+class mra_nodal_modal: public ::testing::Test {
+ public:
+  static constexpr t8_eclass Shape = Config::Shape;
+  static constexpr int P = Config::P;
+  static constexpr int DIM = Config::DIM;
+  static constexpr int DOF = t8_mra::shape_traits<Shape>::dof (P);
+
+  using basis_t = t8_mra::basis<Shape, P>;
+
+  /// Tensor of P equispaced nodes per axis; distinct, so the Vandermonde is
+  /// nonsingular (basis-index decomposition, first coordinate fastest).
+  std::array<std::array<double, DIM>, DOF> nodes = [] {
+    std::array<std::array<double, DIM>, DOF> nd {};
+    for (int p = 0; p < DOF; ++p) {
+      int idx = p;
+      for (int d = 0; d < DIM; ++d) {
+        nd[p][d] = (idx % P) / static_cast<double> (P - 1);
+        idx /= P;
+      }
+    }
+    return nd;
+  }();
+};
+TYPED_TEST_SUITE (mra_nodal_modal, ConvConfigs);
 
 }  // namespace
 
