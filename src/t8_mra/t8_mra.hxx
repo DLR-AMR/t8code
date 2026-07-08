@@ -50,5 +50,6 @@
 #include <t8_mra/criteria/coarsening_criterion.hxx>
 #include <t8_mra/criteria/refinement_criterion.hxx>
 #include <t8_mra/io/vtk.hxx>
+#include <t8_mra/num/nodal_to_modal.hxx>
 
 #endif  // T8_ENABLE_MRA
