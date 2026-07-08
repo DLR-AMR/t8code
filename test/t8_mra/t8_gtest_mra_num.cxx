@@ -379,25 +379,46 @@ class mra_nodal_modal: public ::testing::Test {
   static constexpr int DOF = t8_mra::shape_traits<Shape>::dof (P);
 
   using basis_t = t8_mra::basis<Shape, P>;
+  using node_set = std::array<std::array<double, DIM>, DOF>;
 
-  /// Tensor of P equispaced nodes per axis; distinct, so the Vandermonde is
-  /// nonsingular (basis-index decomposition, first coordinate fastest).
-  std::array<std::array<double, DIM>, DOF> nodes = [] {
-    std::array<std::array<double, DIM>, DOF> nd {};
+  /// Tensor P distinct 1D nodes onto DOF cell nodes (basis-index decomposition,
+  /// first coordinate fastest); any distinct set makes the Vandermonde
+  /// nonsingular.
+  static node_set
+  tensor_nodes (const std::array<double, P> &x1d)
+  {
+    node_set nd {};
     for (int p = 0; p < DOF; ++p) {
       int idx = p;
       for (int d = 0; d < DIM; ++d) {
-        nd[p][d] = (idx % P) / static_cast<double> (P - 1);
+        nd[p][d] = x1d[idx % P];
         idx /= P;
       }
     }
     return nd;
-  }();
+  }
+
+  /// Uniform (equispaced) and nonuniform (Chebyshev-Lobatto, clustered at the
+  /// ends) node grids: the converters must handle both.
+  std::vector<node_set> node_sets = {
+    tensor_nodes ([] {
+      std::array<double, P> x {};
+      for (int i = 0; i < P; ++i)
+        x[i] = i / static_cast<double> (P - 1);
+      return x;
+    }()),
+    tensor_nodes ([] {
+      std::array<double, P> x {};
+      for (int i = 0; i < P; ++i)
+        x[i] = 0.5 * (1.0 - std::cos (M_PI * i / (P - 1)));
+      return x;
+    }()),
+  };
 };
 TYPED_TEST_SUITE (mra_nodal_modal, ConvConfigs);
 
 /* modal -> nodal -> modal is the identity (square Vandermonde interpolation),
- * exercised with two components to cover the component-major layout. */
+ * with two components to cover the component-major layout. */
 TYPED_TEST (mra_nodal_modal, roundtrip_recovers_modal_coefficients)
 {
   constexpr auto Shape = TestFixture::Shape;
@@ -405,18 +426,20 @@ TYPED_TEST (mra_nodal_modal, roundtrip_recovers_modal_coefficients)
   constexpr int DOF = TestFixture::DOF;
   constexpr unsigned int U = 2;
 
-  const t8_mra::nodal_to_modal<Shape, U, P> to_modal (this->nodes);
-  const t8_mra::modal_to_nodal<Shape, U, P> to_nodal (this->nodes);
+  for (const auto &nodes : this->node_sets) {
+    const t8_mra::nodal_to_modal<Shape, U, P> to_modal (nodes);
+    const t8_mra::modal_to_nodal<Shape, U, P> to_nodal (nodes);
 
-  std::array<double, U * DOF> modal {};
-  for (unsigned int i = 0; i < U * DOF; ++i)
-    modal[i] = std::sin (0.7 * i + 0.3) + 0.5;
+    std::array<double, U * DOF> modal {};
+    for (unsigned int i = 0; i < U * DOF; ++i)
+      modal[i] = std::sin (0.7 * i + 0.3) + 0.5;
 
-  const auto nodal = to_nodal (std::span<const double> (modal.data (), modal.size ()));
-  const auto back = to_modal (std::span<const double> (nodal.data (), nodal.size ()));
+    const auto nodal = to_nodal (std::span<const double> (modal.data (), modal.size ()));
+    const auto back = to_modal (std::span<const double> (nodal.data (), nodal.size ()));
 
-  for (unsigned int i = 0; i < U * DOF; ++i)
-    EXPECT_NEAR (back[i], modal[i], eps) << "coeff " << i;
+    for (unsigned int i = 0; i < U * DOF; ++i)
+      EXPECT_NEAR (back[i], modal[i], eps) << "coeff " << i;
+  }
 }
 
 /* Nodal interpolation is exact for polynomials in the basis span: sampling
@@ -437,19 +460,21 @@ TYPED_TEST (mra_nodal_modal, interpolation_is_exact_for_polynomials)
     return s;
   };
 
-  std::array<double, DOF> nodal {};
-  for (int j = 0; j < DOF; ++j)
-    nodal[j] = u (this->nodes[j]);
+  for (const auto &nodes : this->node_sets) {
+    std::array<double, DOF> nodal {};
+    for (int j = 0; j < DOF; ++j)
+      nodal[j] = u (nodes[j]);
 
-  const t8_mra::nodal_to_modal<Shape, 1, P> to_modal (this->nodes);
-  const auto modal = to_modal (std::span<const double> (nodal.data (), nodal.size ()));
+    const t8_mra::nodal_to_modal<Shape, 1, P> to_modal (nodes);
+    const auto modal = to_modal (std::span<const double> (nodal.data (), nodal.size ()));
 
-  for (const auto &x : interior_points<Shape, DIM> ()) {
-    const auto phi = basis_t::eval (x);
-    double recon = 0.0;
-    for (int i = 0; i < DOF; ++i)
-      recon += modal[i] * phi[i];  // cartesian normalization is 1
-    EXPECT_NEAR (recon, u (x), eps);
+    for (const auto &x : interior_points<Shape, DIM> ()) {
+      const auto phi = basis_t::eval (x);
+      double recon = 0.0;
+      for (int i = 0; i < DOF; ++i)
+        recon += modal[i] * phi[i];  // cartesian normalization is 1
+      EXPECT_NEAR (recon, u (x), eps);
+    }
   }
 }
 
