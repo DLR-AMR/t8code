@@ -98,6 +98,7 @@ if( T8CODE_ENABLE_OCC )
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
       t8_cad/t8_cad_handle.cxx
       t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.cxx
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation_all_in_one.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
@@ -110,6 +111,7 @@ if( T8CODE_ENABLE_OCC )
     )
     install( FILES
       t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation_all_in_one.h
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
     )
 endif()
