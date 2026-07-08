@@ -5,7 +5,9 @@
 #include "t8_mra/core/base.hxx"
 #include "t8_mra/core/adaptation.hxx"
 #include "t8_mra/num/mask_coefficients.hxx"
+#include "t8_mra/num/nodal_to_modal.hxx"
 
+#include <array>
 #include <span>
 
 namespace t8_mra
@@ -299,10 +301,37 @@ class multiscale<TShape, U, P>:
   initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, Func &&func)
   {
     Base::forest = t8_forest_new_uniform (mesh, scheme, level, 0, Base::comm);
+    Base::build_lmi_map (
+      scheme, [&] (int tree_idx, const t8_element_t *element) { return project_leaf (tree_idx, element, func); });
+  }
+
+  /**
+   * @brief Load per-cell nodal DG values onto an existing forest as modal coeffs.
+   *
+   * Refs the committed forest (cleanup releases it); cell_nodal_values returns a
+   * cell's U*DOF nodal values (component-major u*DOF + j) at reference `nodes`.
+   */
+  template <typename CellNodalValues>
+  void
+  initialize_data_nodal (t8_forest_t forest, const std::array<std::array<double, Base::DIM>, Base::DOF> &nodes,
+                         CellNodalValues &&cell_nodal_values)
+  {
+    const nodal_to_modal<TShape, U, P> to_modal (nodes);
+
+    t8_forest_ref (forest);
+    Base::forest = forest;
+    const auto *scheme = t8_forest_get_scheme (forest);
+
     Base::build_lmi_map (scheme, [&] (int tree_idx, const t8_element_t *element) {
-      return project_leaf (tree_idx, element, func);
+      element_t data;
+      data.vol = t8_forest_element_volume (Base::forest, tree_idx, element);
+      const auto nodal = cell_nodal_values (tree_idx, element);
+      to_modal (std::span<const double> (nodal.data (), nodal.size ()), data.u_coeffs);
+
+      return data;
     });
   }
+
 };
 
 }  // namespace t8_mra
