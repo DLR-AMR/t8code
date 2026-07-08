@@ -23,6 +23,7 @@
 #include "t8_cmesh/t8_cmesh_examples.h"
 #include "t8_forest/t8_forest.h"
 #include "t8_forest/t8_forest_ghost.h"
+#include "t8_forest/t8_forest_geometrical.h"
 
 #include <algorithm>
 #include <array>
@@ -98,6 +99,33 @@ sample_nodal (t8_forest_t forest, const node_set &nodes)
   }
 
   return data;
+}
+
+/// Refine cells the solution actually needs: a tight ball on the bump and a
+/// band along the jump ring. Leaves the original nodal forest nonuniform but
+/// resolving the features (the loader accepts any committed forest).
+static int
+refine_near_features (t8_forest_t, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t tree_class, t8_locidx_t,
+                      const t8_scheme_c *scheme, int, int, t8_element_t *elements[])
+{
+  constexpr int feature_level = 7;
+  if (scheme->element_get_level (tree_class, elements[0]) >= feature_level)
+    return 0;
+
+  double c[3];
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], c);
+  const bool on_bump = std::hypot (c[0] - 0.35, c[1] - 0.35) < 0.12;
+  const bool on_ring = std::abs (std::hypot (c[0] - 0.7, c[1] - 0.7) - 0.2) < 0.06;
+  return (on_bump || on_ring) ? 1 : 0;
+}
+
+/// A nonuniform original forest: a uniform grid refined toward the features.
+/// Consumes one ref of cmesh and scheme (like t8_forest_new_uniform).
+static t8_forest_t
+feature_refined_forest (t8_cmesh_t cmesh, const t8_scheme *scheme, sc_MPI_Comm comm)
+{
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 4, 0, comm);
+  return t8_forest_new_adapt (forest, refine_near_features, 1, 0, nullptr);
 }
 
 /**
@@ -194,10 +222,10 @@ main (int argc, char **argv)
     for (int jx = 0; jx < P; ++jx)
       nodes[jy * P + jx] = { jx / static_cast<double> (P - 1), jy / static_cast<double> (P - 1) };
 
-  // The caller's nodal DG state: a forest plus one nodal_cell per leaf.
+  // The caller's nodal DG state: a nonuniform forest plus one nodal_cell per leaf.
   t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
   auto *scheme = t8_scheme_new_default ();
-  t8_forest_t forest_in = t8_forest_new_uniform (cmesh, scheme, max_level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest_in = feature_refined_forest (cmesh, scheme, sc_MPI_COMM_WORLD);
   const auto nodal_in = sample_nodal (forest_in, nodes);
   root_print ("  Input nodal forest:  " + std::to_string (nodal_in.size ()) + " local cells (plotted: nodal_before)\n");
 
