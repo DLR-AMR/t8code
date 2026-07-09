@@ -2628,6 +2628,8 @@ t8_cmesh_new_full_hybrid (sc_MPI_Comm comm)
 
   t8_cmesh_set_tree_vertices (cmesh, 3, vertices, 6);
 
+  t8_cmesh_examples_compute_and_set_partition_range (cmesh, 4, 3, comm);
+
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
 }
