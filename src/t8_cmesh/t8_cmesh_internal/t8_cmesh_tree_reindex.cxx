@@ -385,7 +385,6 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * The bbox cmesh contains one helper tree.
    */
   t8_cmesh_commit (bbox_cmesh, comm);
-  t8_cmesh_vtk_write_file (bbox_cmesh, "debug_bbox_cmesh");
 
   t8_productionf ("Committed auxiliary bbox cmesh\n");
 
@@ -489,13 +488,6 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     ++refinement_pass;
   }
-  t8_forest_vtk_write_file (bbox_forest, "debug_bbox_forest", 1, /* write_treeid */
-                            1,                                   /* write_mpirank */
-                            1,                                   /* write_level */
-                            1,                                   /* write_element_id */
-                            0,                                   /* write_ghosts */
-                            0,                                   /* num_data */
-                            nullptr);                            /* data */
 
   t8_productionf ("adaptive refinement finished after %i pass(es)\n", refinement_pass + 1);
 
