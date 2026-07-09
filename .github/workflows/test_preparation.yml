@@ -60,7 +60,7 @@ jobs:
 #
 # Setup
 #
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
       # This seems to be necessary because of the docker container
@@ -110,7 +110,7 @@ jobs:
     - name: install sc
       run: echo "Install sc"
       if: ${{ steps.sc_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         repository: cburstedde/libsc
         ref: ${{ env.SC_COMMIT }}
@@ -169,7 +169,7 @@ jobs:
     - name: install p4est
       run: echo "Install p4est"
       if: ${{ steps.p4est_cmake_cache.outputs.cache-hit != 'true' || inputs.IGNORE_CACHE == 1 }}
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         repository: cburstedde/p4est
         ref: ${{ env.P4EST_COMMIT }}
