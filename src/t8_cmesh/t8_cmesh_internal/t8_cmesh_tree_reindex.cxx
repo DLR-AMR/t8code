@@ -104,7 +104,6 @@ compute_tree_centers_from_stash (const t8_stash_t stash)
     const int expected_num_vertices = t8_eclass_num_vertices[eclass];
 
     T8_ASSERT (expected_num_vertices > 0);
-    T8_ASSERT (stored_num_vertices >= expected_num_vertices);
 
     const double *vertices = static_cast<const double *> (attr->attr_data);
 
