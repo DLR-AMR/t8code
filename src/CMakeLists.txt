@@ -248,7 +248,14 @@ install( DIRECTORY t8_helper_functions
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
+    PATTERN "t8_helper_functions/t8_refcount.h" EXCLUDE
 )
+
+install( FILES
+    t8_helper_functions/t8_refcount.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_helper_functions
+)
+
 install( DIRECTORY t8_cmesh
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
