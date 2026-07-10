@@ -69,32 +69,24 @@ class multiscale<TShape, U, P>:
   //=============================================================================
 
   /**
-   * @brief Compute local detail norm for cartesian elements
-   *
-   * Cartesian elements use sqrt(volume) scaling factor (no factor of 2).
-   *
-   * @param lmi Level multi-index
-   * @return Array of detail norms (one per solution component)
+   * @brief Detail 2-norm per component. Cartesian modes are reference-orthonormal
+   *        (M = vol*I), so the raw coefficient 2-norm is already the volume-scaled
+   *        detail measure the threshold expects (matches the triangle's).
    */
   std::array<double, Base::U_DIM>
   local_detail_norm (const levelmultiindex &lmi)
   {
     std::array<double, Base::U_DIM> detail_norm = {};
-    const auto &data = Base::d_map.get (lmi);
-    const auto &details = data.d_coeffs;
-
-    // Cartesian-specific scaling: sqrt(volume) without factor of 2
-    const auto scaling_factor = std::sqrt (data.vol);
+    const auto &details = Base::d_map.get (lmi).d_coeffs;
 
     for (auto u = 0u; u < Base::U_DIM; ++u) {
       double norm_sq = 0.0;
-      for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+      for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
         for (auto i = 0u; i < Base::DOF; ++i) {
           const auto d = details[Base::detail_t::wavelet_idx (k, u, i)];
           norm_sq += d * d;
         }
-      }
-      detail_norm[u] = std::sqrt (norm_sq) / scaling_factor;
+      detail_norm[u] = std::sqrt (norm_sq);
     }
 
     return detail_norm;
