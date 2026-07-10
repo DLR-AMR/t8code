@@ -313,6 +313,7 @@ write_vtk_master (const char *prefix, int mpisize, int u_dim)
   file << "    <PCellData>\n";
   file << "      <PDataArray type=\"Int32\" Name=\"HigherOrderDegrees\" NumberOfComponents=\"3\"/>\n";
   file << "      <PDataArray type=\"Int32\" Name=\"Level\"/>\n";
+  file << "      <PDataArray type=\"Int32\" Name=\"MpiRank\"/>\n";
   file << "    </PCellData>\n";
   file << "    <PPointData>\n";
   for (auto u = 0; u < u_dim; ++u)
@@ -486,6 +487,13 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
   }
 
   file << "        </DataArray>\n";
+
+  // Write the owning MPI rank for each element (partition visualization)
+  file << "        <DataArray type=\"Int32\" Name=\"MpiRank\" format=\"ascii\">\n";
+  for (t8_locidx_t e = 0; e < num_local_elements; ++e)
+    file << "          " << mpirank << "\n";
+  file << "        </DataArray>\n";
+
   file << "      </CellData>\n";
 
   // Write point data (solution values)
