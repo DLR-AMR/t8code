@@ -4,6 +4,7 @@
 
 #include "t8_mra/core/base.hxx"
 #include "t8_mra/core/adaptation.hxx"
+#include "t8_mra/core/cell_geometry.hxx"
 #include "t8_mra/data/triangle_order.hxx"
 #include "t8_mra/num/mask_coefficients.hxx"
 
@@ -125,24 +126,21 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     double vertices[3][3];
     element_vertex_coords (tree_idx, element, point_order, vertices);
 
-    auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
-    const auto deref_quad_points = Base::basis.deref_quad_points (vertices);
     const auto volume = t8_forest_element_volume (Base::forest, tree_idx, element);
+    const auto geom = cell_geometry<T8_ECLASS_TRIANGLE, Base::P_DIM>::from_triangle (
+      { vertices[0][0], vertices[0][1] }, { vertices[1][0], vertices[1][1] }, { vertices[2][0], vertices[2][1] },
+      volume);
 
-    const auto scaling_factor = basis<element_t::Shape, Base::P_DIM>::normalization (volume);
-
-    // Precompute per quad point (independent of basis index i): all DOF basis
-    // values and the function value.
+    // Precompute per quad point (independent of basis index i): all DOF basis values
+    // and the function value. Reference quad points are mapped to physical by geom.
     const auto num_q = Base::basis.quad.num_points;
     std::vector<std::array<double, Base::DOF>> basis_at_quad (num_q);
     std::vector<std::array<double, Base::U_DIM>> f_at_quad (num_q);
     for (auto j = 0u; j < num_q; ++j) {
-      const auto x_deref = deref_quad_points[2 * j];
-      const auto y_deref = deref_quad_points[1 + 2 * j];
-
-      const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_deref, y_deref });
-      basis_at_quad[j] = Base::basis.basis_value ({ ref[0], ref[1] });
-      f_at_quad[j] = func (x_deref, y_deref);
+      const std::array<double, 2> ref { Base::basis.quad.points[2 * j], Base::basis.quad.points[2 * j + 1] };
+      const auto phys = geom.to_physical (ref);
+      basis_at_quad[j] = Base::basis.basis_value (geom.basis_coord (ref));
+      f_at_quad[j] = func (phys[0], phys[1]);
     }
 
     // Project function onto DG basis using Dunavant quadrature:
@@ -152,7 +150,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
 
       for (auto j = 0u; j < num_q; ++j)
         for (auto k = 0u; k < Base::U_DIM; ++k)
-          sum[k] += Base::basis.quad.weights[j] * f_at_quad[j][k] * scaling_factor * basis_at_quad[j][i];
+          sum[k] += Base::basis.quad.weights[j] * f_at_quad[j][k] * geom.basis_scale * basis_at_quad[j][i];
 
       for (auto k = 0u; k < Base::U_DIM; ++k)
         dg_coeffs[element_t::dg_idx (k, i)] = sum[k] * volume;
@@ -210,12 +208,10 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     double vertices[3][3];
     element_vertex_coords (tree_idx, element, data.order, vertices);
 
-    auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
-    const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1] });
-
-    // ref is barycentric {lambda0, lambda1, lambda2}; the reference triangle
-    // coordinates are (tau1, tau2) = (lambda1, lambda2).
-    return Base::evaluate_reference (data, { ref[1], ref[2] });
+    const auto geom = cell_geometry<T8_ECLASS_TRIANGLE, Base::P_DIM>::from_triangle (
+      { vertices[0][0], vertices[0][1] }, { vertices[1][0], vertices[1][1] }, { vertices[2][0], vertices[2][1] },
+      data.vol);
+    return Base::evaluate_reference (data, geom.to_reference (x_phys));
   }
 
   /**
@@ -232,26 +228,14 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     double vertices[3][3];
     element_vertex_coords (tree_idx, element, data.order, vertices);
 
-    auto [trafo_mat, perm] = Base::basis.trafo_matrix_to_ref_element (vertices);
-    const auto ref = Base::basis.ref_point (trafo_mat, perm, { x_phys[0], x_phys[1] });
-    const auto ref_grad = Base::basis.basis_gradient ({ ref[0], ref[1] });
-    const auto scaling = basis<element_t::Shape, Base::P_DIM>::normalization (data.vol);
-
-    // dlambda/dx and dlambda/dy solve trafo * dlambda = e_x / e_y.
-    std::vector<double> dlambda_dx = { 1.0, 0.0, 0.0 };
-    std::vector<double> dlambda_dy = { 0.0, 1.0, 0.0 };
-    lu_solve (trafo_mat, perm, dlambda_dx);
-    lu_solve (trafo_mat, perm, dlambda_dy);
+    const auto geom = cell_geometry<T8_ECLASS_TRIANGLE, Base::P_DIM>::from_triangle (
+      { vertices[0][0], vertices[0][1] }, { vertices[1][0], vertices[1][1] }, { vertices[2][0], vertices[2][1] },
+      data.vol);
+    const auto x_ref = geom.to_reference (x_phys);
 
     std::array<std::array<double, Base::DIM>, Base::U_DIM> grad = {};
     for (auto u = 0u; u < Base::U_DIM; ++u)
-      for (auto i = 0u; i < Base::DOF; ++i) {
-        const double c = data.u_coeffs[element_t::dg_idx (u, i)] * scaling;
-        const double dphi_dl0 = ref_grad[0][i];
-        const double dphi_dl1 = ref_grad[1][i];
-        grad[u][0] += c * (dphi_dl0 * dlambda_dx[0] + dphi_dl1 * dlambda_dx[1]);
-        grad[u][1] += c * (dphi_dl0 * dlambda_dy[0] + dphi_dl1 * dlambda_dy[1]);
-      }
+      grad[u] = geom.gradient (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], Base::DOF), x_ref);
 
     return grad;
   }

@@ -4,6 +4,8 @@
 
 #include "t8_mra/core/base.hxx"
 #include "t8_mra/core/adaptation.hxx"
+#include "t8_mra/core/cell_geometry.hxx"
+#include "t8_mra/num/geometry.hxx"
 #include "t8_mra/num/mask_coefficients.hxx"
 #include "t8_mra/num/nodal_to_modal.hxx"
 
@@ -136,30 +138,30 @@ class multiscale<TShape, U, P>:
   {
     double vertices[8][3] = {};
     element_vertex_coords (tree_idx, element, vertices);
+    std::array<double, Base::DIM> vertices_min, vertices_max;
+    extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
+    const auto geom = cell_geometry<TShape, Base::P_DIM>::from_box (
+      vertices_min, vertices_max, t8_forest_element_volume (Base::forest, tree_idx, element));
 
-    const auto phys_quad_points = Base::basis.deref_quad_points (vertices);
-
-    // Orthonormal Legendre basis on the reference cell [0,1]^DIM: no
-    // volume/Jacobian scaling in the projection.
-    std::vector<std::array<double, Base::DOF>> basis_at_quad (Base::basis.quad.num_points);
+    // Orthonormal Legendre basis on the reference cell [0,1]^DIM: no volume/Jacobian
+    // scaling in the projection. Reference quad points are mapped to physical by geom.
+    const auto num_q = Base::basis.quad.num_points;
+    std::vector<std::array<double, Base::DOF>> basis_at_quad (num_q);
+    std::vector<std::array<double, Base::DIM>> phys_at_quad (num_q);
     std::array<double, Base::DIM> x_ref;
-    for (auto q = 0u; q < Base::basis.quad.num_points; ++q) {
+    for (auto q = 0u; q < num_q; ++q) {
       for (unsigned int d = 0; d < Base::DIM; ++d)
         x_ref[d] = Base::basis.quad.points[Base::DIM * q + d];
-
-      const auto basis_vals = Base::basis.basis_value (x_ref);
-      for (auto i = 0u; i < Base::DOF; ++i)
-        basis_at_quad[q][i] = basis_vals[i];
+      basis_at_quad[q] = Base::basis.basis_value (x_ref);
+      phys_at_quad[q] = geom.to_physical (x_ref);
     }
 
     // Project onto each basis function
     for (auto i = 0u; i < Base::DOF; ++i) {
       std::array<double, Base::U_DIM> sum = {};
 
-      for (auto q = 0u; q < Base::basis.quad.num_points; ++q) {
-        std::array<double, Base::DIM> x_phys;
-        for (unsigned int d = 0; d < Base::DIM; ++d)
-          x_phys[d] = phys_quad_points[Base::DIM * q + d];
+      for (auto q = 0u; q < num_q; ++q) {
+        const auto &x_phys = phys_at_quad[q];
 
         // Two supported func conventions:
         //   func(x, y, z) -> std::array<double, U>
@@ -243,11 +245,8 @@ class multiscale<TShape, U, P>:
     std::array<double, Base::DIM> vertices_min, vertices_max;
     extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
 
-    std::array<double, Base::DIM> x_ref;
-    for (auto d = 0u; d < Base::DIM; ++d)
-      x_ref[d] = (x_phys[d] - vertices_min[d]) / (vertices_max[d] - vertices_min[d]);
-
-    return Base::evaluate_reference (data, x_ref);
+    const auto geom = cell_geometry<TShape, Base::P_DIM>::from_box (vertices_min, vertices_max, data.vol);
+    return Base::evaluate_reference (data, geom.to_reference (x_phys));
   }
 
   /**
@@ -266,20 +265,12 @@ class multiscale<TShape, U, P>:
     std::array<double, Base::DIM> vertices_min, vertices_max;
     extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
 
-    std::array<double, Base::DIM> x_ref;
-    for (auto d = 0u; d < Base::DIM; ++d)
-      x_ref[d] = (x_phys[d] - vertices_min[d]) / (vertices_max[d] - vertices_min[d]);
-
-    const auto ref_grad = Base::basis.basis_gradient (x_ref);
+    const auto geom = cell_geometry<TShape, Base::P_DIM>::from_box (vertices_min, vertices_max, data.vol);
+    const auto x_ref = geom.to_reference (x_phys);
 
     std::array<std::array<double, Base::DIM>, Base::U_DIM> grad = {};
     for (auto u = 0u; u < Base::U_DIM; ++u)
-      for (auto d = 0u; d < Base::DIM; ++d) {
-        double g = 0.0;
-        for (auto i = 0u; i < Base::DOF; ++i)
-          g += data.u_coeffs[element_t::dg_idx (u, i)] * ref_grad[d][i];
-        grad[u][d] = g / (vertices_max[d] - vertices_min[d]);
-      }
+      grad[u] = geom.gradient (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], Base::DOF), x_ref);
 
     return grad;
   }
