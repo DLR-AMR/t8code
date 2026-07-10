@@ -143,6 +143,7 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/core/base.hxx
     t8_mra/core/adaptation.hxx
     t8_mra/core/mst.hxx
+    t8_mra/core/face_neighbor.hxx
     DESTINATION include/t8_mra/core )
 
   install( FILES
