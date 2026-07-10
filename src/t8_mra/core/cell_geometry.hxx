@@ -13,24 +13,14 @@
 namespace t8_mra
 {
 
-/// Containment slack in reference coordinates (which are O(1)): a face/boundary
-/// point maps to a reference coordinate on the cell edge, and the affine
-/// round-trip round-off can push it just outside [0,1] -- this admits it.
+/// Reference-coordinate containment slack (boundary points, affine round-off).
 inline constexpr double reference_cell_tol = 1e-9;
 
-/**
- * @brief Cached affine geometry of one leaf: reference<->physical maps and the
- *        modal evaluation scalars, built once and reused.
- *
- * One partial specialization per shape family (cartesian box map, triangle
- * edge-Jacobian), both exposing the same interface. Trivially copyable.
- */
+/// Cached affine geometry of one leaf. One specialization per shape; trivially copyable.
 template <t8_eclass Shape, int P>
 struct cell_geometry;
 
-/**
- * @brief Cartesian leaf geometry: axis-aligned box, diagonal Jacobian.
- */
+/** @brief Cartesian leaf geometry: axis-aligned box, diagonal Jacobian. */
 template <t8_eclass Shape, int P>
   requires is_cartesian<Shape>
 struct cell_geometry<Shape, P>
@@ -158,9 +148,7 @@ struct cell_geometry<Shape, P>
   }
 };
 
-/**
- * @brief Triangle leaf geometry: general affine map from three ordered vertices.
- */
+/** @brief Triangle leaf geometry: general affine map from three ordered vertices. */
 template <int P>
 struct cell_geometry<T8_ECLASS_TRIANGLE, P>
 {
