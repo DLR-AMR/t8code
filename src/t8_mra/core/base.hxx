@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <optional>
+#include <span>
 #include <vector>
 
 namespace t8_mra
@@ -468,11 +469,10 @@ class multiscale_base: public multiscale_data<TShape> {
   std::array<double, U_DIM>
   mean_val (const element_t &data)
   {
-    const double scale = ((Shape == T8_ECLASS_TRIANGLE) ? std::sqrt (data.vol) : data.vol) / data.vol;
-
     std::array<double, U_DIM> mean;
     for (auto u = 0u; u < U_DIM; ++u)
-      mean[u] = data.u_coeffs[element_t::dg_idx (u, 0)] * scale;
+      mean[u] = t8_mra::cell_mean<Shape, P_DIM> (
+        std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], element_t::DOF), data.vol);
 
     return mean;
   }
