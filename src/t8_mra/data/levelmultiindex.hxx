@@ -243,7 +243,6 @@ template <t8_mra::lmi_type TLmi>
 struct hash<TLmi>
 {
   using is_transparent = void;
-  using is_avalanching = void;
 
   size_t
   operator() (const TLmi &lmi) const
