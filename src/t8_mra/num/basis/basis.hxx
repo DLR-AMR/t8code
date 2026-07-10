@@ -4,6 +4,7 @@
 
 #include <array>
 #include <concepts>
+#include <span>
 #include <utility>
 
 #include <t8_eclass/t8_eclass.h>
@@ -130,6 +131,16 @@ struct basis<T8_ECLASS_TRIANGLE, P>
     return std::sqrt (1.0 / (2.0 * vol));
   }
 };
+
+/// Physical cell mean of a modal field (only the zeroth mode survives).
+template <t8_eclass Shape, int P>
+inline double
+cell_mean (std::span<const double> coeffs, double vol)
+{
+  using basis_t = basis<Shape, P>;
+  static const double phi0 = basis_t::eval ({})[0];
+  return basis_t::normalization (vol) * phi0 * coeffs[0];
+}
 
 }  // namespace t8_mra
 
