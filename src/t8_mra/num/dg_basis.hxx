@@ -35,16 +35,6 @@ struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
   explicit dg_basis_base (int num_quad_points_1d): quad (num_quad_points_1d)
   {
   }
-
-  /// Maps the reference quadrature points to the physical element (flattened).
-  std::vector<double>
-  deref_quad_points (const double physical_vertices[][3])
-  {
-    std::array<double, DIM> vertices_min, vertices_max;
-    extract_cartesian_vertices<DIM> (physical_vertices, vertices_min, vertices_max);
-
-    return transform_quad_points<DIM> (quad.points, quad.num_points, vertices_min, vertices_max);
-  }
 };
 
 template <>
@@ -59,40 +49,6 @@ struct dg_basis_base<T8_ECLASS_TRIANGLE>
 
   explicit dg_basis_base (int dunavant_rule): quad (dunavant_rule)
   {
-  }
-
-  std::pair<t8_mra::mat, std::vector<size_t>>
-  trafo_matrix_to_ref_element (const double physical_vertices[3][3])
-  {
-    t8_mra::mat transform_to_ref (3, 3);
-    std::vector<size_t> permuation_vec (3, 0u);
-
-    for (auto i = 0; i < 3; ++i)
-      for (auto j = 0; j < 3; ++j)
-        transform_to_ref (i, j) = i == 2 ? 1.0 : physical_vertices[j][i];
-    t8_mra::lu_factors (transform_to_ref, permuation_vec);
-
-    return { transform_to_ref, permuation_vec };
-  }
-
-  /// returns list of dereferenced quad points [x_0, y_0, x_1, y_1, ...]
-  std::vector<double>
-  deref_quad_points (const double physical_vertices[3][3])
-  {
-    const std::array<double, 6> corners { physical_vertices[0][0], physical_vertices[0][1], physical_vertices[1][0],
-                                          physical_vertices[1][1], physical_vertices[2][0], physical_vertices[2][1] };
-
-    return reference_to_physical_t3 (corners, quad.points);
-  }
-
-  std::array<double, 3>
-  ref_point (const t8_mra::mat &trafo_mat, const std::vector<size_t> &permuation_vec,
-             const std::array<double, 2> &grid_point)
-  {
-    std::array<double, 3> ret = { grid_point[0], grid_point[1], 1.0 };
-    t8_mra::lu_solve (trafo_mat, permuation_vec, ret);
-
-    return ret;
   }
 };
 
