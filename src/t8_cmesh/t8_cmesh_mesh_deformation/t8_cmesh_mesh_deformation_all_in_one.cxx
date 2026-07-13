@@ -61,8 +61,6 @@ t8_forest_hacky_deformation ([[maybe_unused]] t8_forest_t forest, [[maybe_unused
 
   auto files = findBrepFiles (brep_folder);
 
-  std::sort (files.begin (), files.end ());
-
   t8_productionf ("num_files = %li\n", files.size ());
   if (ifile == files.size ()) {
     return 0;
