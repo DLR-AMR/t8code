@@ -1019,9 +1019,9 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
     {
       t8_3D_vec points[4];
       /* Compute the vertex coordinates of the quad */
-      for (int i = 0; i < 4; i++) {
-        const int corner = scheme->element_get_face_corner (tree_class, element, face, i);
-        t8_forest_element_coordinate (forest, ltreeid, element, corner, points[i].data ());
+      for (int ipoint = 0; ipoint < 4; ipoint++) {
+        const int corner = scheme->element_get_face_corner (tree_class, element, face, ipoint);
+        t8_forest_element_coordinate (forest, ltreeid, element, corner, points[ipoint].data ());
       }
       if (!t8_four_points_coplanar (points[0], points[1], points[2], points[3], T8_PRECISION_SQRT_EPS)) {
         t8_debugf ("WARNING: Computing normal to a quad that is not coplanar. This computation will be inaccurate.\n");
