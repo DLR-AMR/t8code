@@ -146,7 +146,7 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_examples.cxx
     t8_cmesh/t8_cmesh_helpers.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_commit.cxx
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c
     t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c
