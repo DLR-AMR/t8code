@@ -31,7 +31,7 @@ install( TARGETS t8example LIBRARY )
 
 function( add_t8_example )
     set( options "" )
-    set( oneValueArgs "NAME" )  
+    set( oneValueArgs "NAME" )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
@@ -81,6 +81,7 @@ add_t8_example( NAME t8_example_geometries              SOURCES geometry/t8_exam
 
 add_t8_example( NAME t8_read_msh_file                   SOURCES IO/cmesh/gmsh/t8_read_msh_file.cxx )
 add_t8_example( NAME t8_load_and_refine_square_w_hole   SOURCES IO/cmesh/gmsh/t8_load_and_refine_square_w_hole.cxx )
+add_t8_example( NAME t8_read_openfoam_case              SOURCES IO/cmesh/OpenFOAM/t8_read_openfoam_case.cxx )
 
 copy_example_file (IO/cmesh/gmsh/circlesquare_hybrid_hole.msh)
 

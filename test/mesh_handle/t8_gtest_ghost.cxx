@@ -30,7 +30,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competences.hxx>
+#include <mesh_handle/competences/cache_element_competences.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <t8_cmesh/t8_cmesh.h>
@@ -102,6 +102,8 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     for (const auto& coordinate : (*mesh)[ighost].get_face_normal (0)) {
       EXPECT_TRUE (coordinate >= -1 && coordinate <= 1);
     }
+    EXPECT_LT (0, (*mesh)[ighost].get_num_vertices_of_face (0));
+    EXPECT_LE (0, (*mesh)[ighost].face_vertex_to_element_vertex (0, 0));
     // Check exemplary that caches work for ghost elements.
     EXPECT_TRUE ((*mesh)[ighost].volume_cache_filled ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
@@ -112,8 +114,10 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
 TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 {
   const t8_scheme* scheme = t8_scheme_new_default ();
-  t8_forest_t forest = t8_forest_new_uniform (t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 1, 0), scheme,
-                                              level, 1, sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
 
   const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
