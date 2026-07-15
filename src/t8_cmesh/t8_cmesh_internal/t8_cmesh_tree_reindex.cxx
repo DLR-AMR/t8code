@@ -43,21 +43,6 @@
 #include <vector>
 #include <limits>
 
-//std::array<double, 3>
-//compute_tree_midpoint_with_geometry1 (t8_forest_t forest, t8_locidx_t local_tree_id)
-//{
-//  std::array<double, 3> physical_midpoint = { 0.0, 0.0, 0.0 };
-//
-//  const t8_element_t *element = t8_forest_get_leaf_element (forest, local_tree_id, 0);
-//
-//  t8_forest_element_centroid (forest, local_tree_id, element, physical_midpoint.data ());
-//
-//  t8_productionf ("Computed centroid for local tree %u: %.17g, %.17g, %.17g\n", static_cast<unsigned> (local_tree_id),
-//                  physical_midpoint[0], physical_midpoint[1], physical_midpoint[2]);
-//
-//  return physical_midpoint;
-//}
-
 static t8_eclass_t
 get_tree_eclass_from_stash (const t8_stash_t stash, const t8_gloidx_t global_tree_id)
 {
@@ -75,85 +60,14 @@ get_tree_eclass_from_stash (const t8_stash_t stash, const t8_gloidx_t global_tre
   SC_ABORTF ("Could not find eclass for global tree %lli in stash.\n", static_cast<long long> (global_tree_id));
 }
 
-static std::map<t8_gloidx_t, std::array<double, 3>>
-compute_tree_centers_from_stash (const t8_stash_t stash)
-{
-  T8_ASSERT (stash != nullptr);
-
-  std::map<t8_gloidx_t, std::array<double, 3>> tree_to_center;
-
-  for (size_t iattr = 0; iattr < stash->attributes.elem_count; ++iattr) {
-    const t8_stash_attribute_struct_t *attr
-      = static_cast<const t8_stash_attribute_struct_t *> (sc_array_index (&stash->attributes, iattr));
-
-    if (attr->package_id != t8_get_package_id ()) {
-      continue;
-    }
-
-    if (attr->key != T8_CMESH_VERTICES_ATTRIBUTE_KEY) {
-      continue;
-    }
-
-    T8_ASSERT (attr->attr_data != nullptr);
-    T8_ASSERT (attr->attr_size % (3 * sizeof (double)) == 0);
-
-    const t8_gloidx_t global_tree_id = attr->id;
-
-    const t8_eclass_t eclass = get_tree_eclass_from_stash (stash, global_tree_id);
-
-    const int expected_num_vertices = t8_eclass_num_vertices[eclass];
-
-    T8_ASSERT (expected_num_vertices > 0);
-
-    const double *vertices = static_cast<const double *> (attr->attr_data);
-
-    std::array<double, 3> center = { 0.0, 0.0, 0.0 };
-
-    for (int ivert = 0; ivert < expected_num_vertices; ++ivert) {
-      center[0] += vertices[3 * ivert + 0];
-      center[1] += vertices[3 * ivert + 1];
-      center[2] += vertices[3 * ivert + 2];
-    }
-
-    center[0] /= expected_num_vertices;
-    center[1] /= expected_num_vertices;
-    center[2] /= expected_num_vertices;
-
-    tree_to_center.emplace (global_tree_id, center);
-
-    t8_productionf ("Computed center for global tree %lli: %.17g, %.17g, %.17g\n",
-                    static_cast<long long> (global_tree_id), center[0], center[1], center[2]);
-  }
-
-  return tree_to_center;
-}
-/*
- * Data passed to the adapt callback.
- *
- * points_flat stores all original tree centers in physical coordinates:
- *
- *   x0, y0, z0, x1, y1, z1, ...
- *
- * The point index is equal to the original local tree id.
- */
 struct bbox_adapt_data
 {
-  double *points_flat;
+  double *center_points_flat;
   int num_points;
   double tolerance;
-
-  /*
-   * Set to 1 by the callback whenever at least one leaf is refined.
-   */
   int refined_any;
 };
 
-/*
- * Count how many original tree centers are inside a given bbox leaf.
- *
- * If contained_tree_id is not nullptr and exactly one point is inside,
- * contained_tree_id is set to the corresponding original local tree id.
- */
 static int
 count_tree_centers_inside_leaf (t8_forest_t forest, t8_locidx_t which_tree, const t8_element_t *element, int num_points,
                                 double *points_flat, double tolerance, t8_locidx_t *contained_tree_id)
@@ -180,11 +94,6 @@ count_tree_centers_inside_leaf (t8_forest_t forest, t8_locidx_t which_tree, cons
   return count;
 }
 
-/*
- * Adapt callback.
- *
- * Refine a bbox leaf if it contains more than one original tree center.
- */
 static int
 t8_adapt_refine ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t which_tree,
                  const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id, const t8_scheme *scheme,
@@ -198,18 +107,12 @@ t8_adapt_refine ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, c
   }
 
   T8_ASSERT (data != nullptr);
-
-  /*
-   * Important:
-   * Use the element passed by the callback.
-   * This element belongs to forest_from.
-   */
   const t8_element_t *element = elements[0];
 
   const int level = scheme->element_get_level (tree_class, element);
 
   const int num_centers_inside = count_tree_centers_inside_leaf (forest_from, which_tree, element, data->num_points,
-                                                                 data->points_flat, data->tolerance, nullptr);
+                                                                 data->center_points_flat, data->tolerance, nullptr);
 
   const int should_refine = num_centers_inside > 1;
 
@@ -225,22 +128,28 @@ t8_adapt_refine ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, c
   return 0;
 }
 
-// Helper Function to get an array with all vertices
-struct t8_stash_vertex
+std::map<t8_gloidx_t, t8_gloidx_t>
+t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  t8_gloidx_t tree_id;
-  int local_vertex_id;
-  std::array<double, 3> coords;
-};
-
-// Get flat vertices in the form x0, y0, z0, x1, y1, z1, ... xn, yn, zn of every tree
-static std::vector<double>
-get_flat_vertices_from_stash (t8_stash_t stash)
-{
+  std::map<t8_gloidx_t, t8_gloidx_t> tree_reindex;
   std::vector<double> flat_vertices;
-  for (size_t iattr = 0; iattr < stash->attributes.elem_count; ++iattr) {
+
+  t8_productionf ("starting tree reindexing\n");
+  t8_stash_t original_cmesh_stash = cmesh->stash;
+  /**
+   * Iterating through all vertices of the cmesh in each tree. Store global maximum and minimum coordinates to later create the bbox cmesh, and also store tree centers all in one iteration.
+   */
+  std::array<double, 3> min_coords
+    = { std::numeric_limits<double>::max (), std::numeric_limits<double>::max (), std::numeric_limits<double>::max () };
+
+  std::array<double, 3> max_coords = { std::numeric_limits<double>::lowest (), std::numeric_limits<double>::lowest (),
+                                       std::numeric_limits<double>::lowest () };
+
+  std::map<t8_gloidx_t, std::array<double, 3>> tree_to_center;
+
+  for (size_t iattr = 0; iattr < original_cmesh_stash->attributes.elem_count; ++iattr) {
     const t8_stash_attribute_struct_t *attr
-      = static_cast<const t8_stash_attribute_struct_t *> (sc_array_index (&stash->attributes, iattr));
+      = static_cast<const t8_stash_attribute_struct_t *> (sc_array_index (&original_cmesh_stash->attributes, iattr));
 
     if (attr->package_id != t8_get_package_id ()) {
       continue;
@@ -254,94 +163,56 @@ get_flat_vertices_from_stash (t8_stash_t stash)
     T8_ASSERT (attr->attr_size % sizeof (double) == 0);
     T8_ASSERT (attr->attr_size % (3 * sizeof (double)) == 0);
 
+    const t8_gloidx_t global_tree_id = attr->id;
+
+    const t8_eclass_t eclass = get_tree_eclass_from_stash (original_cmesh_stash, global_tree_id);
+
+    const int expected_num_vertices = t8_eclass_num_vertices[eclass];
+
+    T8_ASSERT (expected_num_vertices > 0);
+
     const double *vertices = static_cast<const double *> (attr->attr_data);
 
-    const size_t num_doubles = attr->attr_size / sizeof (double);
+    std::array<double, 3> center = { 0.0, 0.0, 0.0 };
 
-    flat_vertices.insert (flat_vertices.end (), vertices, vertices + num_doubles);
-  }
-  return flat_vertices;
-}
+    for (int ivert = 0; ivert < expected_num_vertices; ++ivert) {
+      const double x = vertices[3 * ivert + 0];
+      const double y = vertices[3 * ivert + 1];
+      const double z = vertices[3 * ivert + 2];
 
-/**
- * Get min or max bound coordinates from a vertex list in the form of in the form x0, y0, z0, x1, y1, z1, ... xn, yn, zn, if which_bound == 0, then it returns the min bounds, so x_min, y_min, z_min
- */
-static std::array<double, 3>
-get_bounds_from_vertices (std::vector<double> &vertices, int which_bound = 0)
-{
-  std::array<double, 3> return_coords;
-  if (!which_bound) {
-    std::array<double, 3> min_coords = { std::numeric_limits<double>::max (), std::numeric_limits<double>::max (),
-                                         std::numeric_limits<double>::max () };
+      t8_productionf ("Coordinates are (%f, %f, %f)\n", x, y, z);
 
-    for (size_t i = 0; i < vertices.size (); i += 3) {
-      const double x = vertices[i + 0];
-      const double y = vertices[i + 1];
-      const double z = vertices[i + 2];
+      flat_vertices.push_back (x);
+      flat_vertices.push_back (y);
+      flat_vertices.push_back (z);
 
       min_coords[0] = std::min (min_coords[0], x);
       min_coords[1] = std::min (min_coords[1], y);
       min_coords[2] = std::min (min_coords[2], z);
-      return_coords = min_coords;
-    }
-  }
-  else {
-    std::array<double, 3> max_coords = { std::numeric_limits<double>::min (), std::numeric_limits<double>::min (),
-                                         std::numeric_limits<double>::min () };
-
-    for (size_t i = 0; i < vertices.size (); i += 3) {
-      const double x = vertices[i + 0];
-      const double y = vertices[i + 1];
-      const double z = vertices[i + 2];
 
       max_coords[0] = std::max (max_coords[0], x);
       max_coords[1] = std::max (max_coords[1], y);
       max_coords[2] = std::max (max_coords[2], z);
-      return_coords = max_coords;
+
+      center[0] += x;
+      center[1] += y;
+      center[2] += z;
     }
+
+    center[0] /= expected_num_vertices;
+    center[1] /= expected_num_vertices;
+    center[2] /= expected_num_vertices;
+
+    tree_to_center.emplace (static_cast<t8_gloidx_t> (global_tree_id), center);
+
+    t8_productionf ("Computed center for global tree %li: %f, %f, %.f\n", global_tree_id, center[0], center[1],
+                    center[2]);
   }
-
-  return return_coords;
-}
-
-std::map<t8_gloidx_t, t8_gloidx_t>
-t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
-{
-  std::map<t8_gloidx_t, t8_gloidx_t> tree_reindex;
-
-  t8_productionf ("starting tree reindexing\n");
-
-  /**
-   * Iterating through all vertices of the cmesh in each tree. Store global maximum and minimum coordinates to later create the bbox cmesh, and also store tree centers all in one iteration.
-   */
-
-  t8_stash_t original_cmesh_stash = cmesh->stash;
-
-  //vector with all vertices, flattened out, remapping to its original trees will be done later
-  std::vector<double> flat_vertices = get_flat_vertices_from_stash (original_cmesh_stash);
-
-  //Min and Max Bounds for later bounding box cmesh
-  std::array<double, 3> max_coords = get_bounds_from_vertices (flat_vertices, 1);
-  std::array<double, 3> min_coords = get_bounds_from_vertices (flat_vertices);
-
-  /*
-   * 1. Get local bounding box of the original cmesh.
-   */
-  double bounding_box[6];
-  t8_cmesh_get_local_bounding_box (cmesh, bounding_box);
 
   t8_productionf ("received local cmesh bounding box\n");
   t8_productionf ("physical bbox bounds: x=[%.17g, %.17g], y=[%.17g, %.17g], z=[%.17g, %.17g]\n", min_coords[0],
                   max_coords[0], min_coords[1], max_coords[1], min_coords[2], max_coords[2]);
 
-  /*
-   * 2. Build auxiliary bbox cmesh.
-   *
-   * t8_geometry_linear_axis_aligned uses two vertices:
-   *
-   *   min corner: x_min, y_min, z_min
-   *   max corner: x_max, y_max, z_max
-   */
   t8_cmesh_t bbox_cmesh;
   t8_cmesh_init (&bbox_cmesh);
 
@@ -380,40 +251,14 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_set_tree_vertices (bbox_cmesh, 0, vertices.data (), 2);
   t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (bbox_cmesh);
 
-  /*
-   * The bbox cmesh contains one helper tree.
-   */
   t8_cmesh_commit (bbox_cmesh, comm);
 
   t8_productionf ("Committed auxiliary bbox cmesh\n");
 
-  /*
-   * 3. Build a level-0 forest from the original cmesh to compute
-   *    one centroid per original tree.
-   *
-   * t8_forest_new_uniform takes ownership of a cmesh reference.
-   * Since cmesh belongs to the caller, increase the refcount first.
-   */
-
-  /*
-   * 4. Store all tree centers.
-   */
-  std::map<t8_gloidx_t, std::array<double, 3>> tree_to_center = compute_tree_centers_from_stash (original_cmesh_stash);
-
   const t8_locidx_t num_cmesh_trees = static_cast<t8_locidx_t> (tree_to_center.size ());
 
-  /*
-   * 5. Flatten tree centers for t8_forest_element_points_inside.
-   *
-   * Format:
-   *
-   *   x0, y0, z0, x1, y1, z1, ...
-   *
-   * Since we fill the array in local tree-id order, the point index is also
-   * the original local tree id.
-   */
-  std::vector<double> points_flat;
-  points_flat.reserve (3 * tree_to_center.size ());
+  std::vector<double> center_points_flat;
+  center_points_flat.reserve (3 * tree_to_center.size ());
 
   std::vector<t8_gloidx_t> point_index_to_global_tree_id;
   point_index_to_global_tree_id.reserve (tree_to_center.size ());
@@ -424,12 +269,12 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     point_index_to_global_tree_id.push_back (global_tree_id);
 
-    points_flat.push_back (point[0]);
-    points_flat.push_back (point[1]);
-    points_flat.push_back (point[2]);
+    center_points_flat.push_back (point[0]);
+    center_points_flat.push_back (point[1]);
+    center_points_flat.push_back (point[2]);
 
-    t8_productionf ("points_flat for global tree %lli = %.17g, %.17g, %.17g\n", static_cast<long long> (global_tree_id),
-                    point[0], point[1], point[2]);
+    t8_productionf ("center_points_flat for global tree %lli = %.17g, %.17g, %.17g\n",
+                    static_cast<long long> (global_tree_id), point[0], point[1], point[2]);
   }
 
   t8_productionf ("flattened %u tree center point(s)\n", static_cast<unsigned> (num_cmesh_trees));
@@ -449,7 +294,7 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * A bbox leaf is refined iff it contains more than one tree center.
    */
   bbox_adapt_data adapt_data;
-  adapt_data.points_flat = points_flat.data ();
+  adapt_data.center_points_flat = center_points_flat.data ();
   adapt_data.num_points = static_cast<int> (num_cmesh_trees);
   adapt_data.tolerance = T8_PRECISION_SQRT_EPS;
   adapt_data.refined_any = 0;
@@ -511,7 +356,7 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
       const int num_centers_inside
         = count_tree_centers_inside_leaf (bbox_forest, bbox_itree, element, static_cast<int> (num_cmesh_trees),
-                                          adapt_data.points_flat, adapt_data.tolerance, &contained_tree);
+                                          adapt_data.center_points_flat, adapt_data.tolerance, &contained_tree);
 
       if (num_centers_inside == 0) {
         continue;
