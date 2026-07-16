@@ -36,6 +36,7 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
+#include <t8_forest/t8_forest_io.h>
 
 #include <array>
 #include <map>
@@ -279,20 +280,13 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   t8_productionf ("flattened %u tree center point(s)\n", static_cast<unsigned> (num_cmesh_trees));
 
-  /*
-   * 6. Create initial bbox forest at level 0.
-   *
-   * t8_forest_new_uniform takes ownership of bbox_cmesh and the scheme.
-   */
   t8_forest_t bbox_forest = t8_forest_new_uniform (bbox_cmesh, t8_scheme_new_default (), 0, 0, comm);
 
   t8_productionf ("created initial level-0 bbox forest\n");
+  if (!t8_forest_write_vtk (bbox_forest, "bounding_box")) {
+    t8_productionf ("Could not write VTK file for forest");
+  };
 
-  /*
-   * 7. Adaptively refine the bbox forest.
-   *
-   * A bbox leaf is refined iff it contains more than one tree center.
-   */
   bbox_adapt_data adapt_data;
   adapt_data.center_points_flat = center_points_flat.data ();
   adapt_data.num_points = static_cast<int> (num_cmesh_trees);
@@ -313,10 +307,6 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
                                                       0,  // no face ghosts
                                                       &adapt_data);
 
-    /*
-     * Do not unref bbox_forest here.
-     * t8_forest_new_adapt takes ownership of the source forest.
-     */
     bbox_forest = adapted_forest;
 
     const t8_locidx_t leaf_count_after = t8_forest_get_local_num_leaf_elements (bbox_forest);
@@ -334,14 +324,10 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
 
   t8_productionf ("adaptive refinement finished after %i pass(es)\n", refinement_pass + 1);
+  if (!t8_forest_write_vtk (bbox_forest, "bounding_box_adapted")) {
+    t8_productionf ("Could not write VTK file for forest");
+  };
 
-  /*
-   * 8. Iterate over the final adapted bbox forest in t8code/SFC order.
-   *
-   * Every final bbox leaf should contain at most one original tree center.
-   * If a leaf contains exactly one center, we assign the next SFC index to
-   * that original tree.
-   */
   t8_locidx_t new_tree_index = 0;
 
   std::vector<int> tree_was_mapped (static_cast<std::size_t> (num_cmesh_trees), 0);
@@ -393,9 +379,6 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
-  /*
-   * 9. Sanity check.
-   */
   if (tree_reindex.size () != static_cast<size_t> (num_cmesh_trees)) {
     t8_productionf ("Warning: only mapped %u of %u local trees.\n", static_cast<unsigned> (tree_reindex.size ()),
                     static_cast<unsigned> (num_cmesh_trees));
@@ -403,12 +386,6 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   else {
     t8_productionf ("successfully mapped all %u local tree(s)\n", static_cast<unsigned> (num_cmesh_trees));
   }
-
-  /*
-   * 10. Cleanup.
-   */
-  t8_productionf ("cleaning up bbox\n");
-
   t8_forest_unref (&bbox_forest);
 
   t8_productionf ("tree reindexing finished\n");
