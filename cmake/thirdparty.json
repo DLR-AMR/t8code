@@ -17,7 +17,7 @@
                 "type": "git",
                 "url": "https://github.com/cburstedde/libsc.git",
                 "ref": "359f5fe542b7877fc7a71b59a77e5abf0df793d5",
-                "shallow": "TRUE"
+                "shallow": "FALSE"
             }
         },
         {
