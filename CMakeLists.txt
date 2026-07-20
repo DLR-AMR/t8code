@@ -221,7 +221,7 @@ endif( T8CODE_ENABLE_VTK )
 if( T8CODE_ENABLE_OCC )
     find_package( OpenCASCADE REQUIRED COMPONENTS
     TKBO TKPrim TKTopAlgo
-    TKGeomAlgo TKBRep
+    TKGeomAlgo TKBRep TKShHealing
     TKG3d TKG2d TKMath TKernel )
     if(OpenCASCADE_FOUND)
         message("Found OpenCASCADE")

@@ -1,3 +1,18 @@
+# cmesh generators
+
+In this update we pulled the cmesh initialization out of every cmesh generator function like t8_cmesh_from_msh_file or t8_cmesh_new_hypercube. This is a future proofing step for coming cmesh features like mesh deformation or curved cmeshes from every mesh reader. This also allows you to deactivate the negative volume check of the cmesh (t8_cmesh_disable_negative_volume_check, if you know what you are doing) or to activate profiling via t8_cmesh_set_profiling.
+Note, that the cmesh you pass to a generator needs to be empty. There should not be any trees in the cmesh, this is also asserted in debug mode. Furthermore, t8_cmesh_new_hypercube and t8_cmesh_from_msh_file take a reference to the cmesh, because they either destroy it if something goes wrong or need to reassign the pointer during broadcasting.
+In most of your cases you just need to change lines as following:
+```diff
++ t8_cmesh cmesh;
++ t8_cmesh_init (cmesh);
+
++ t8_cmesh_set_profiling (cmesh, 1); //<optional>
+
+- t8_cmesh cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
++ t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+```
+
 # Updated dependencies
 
 We have switched from a submodules approach to a FetchContent approach for our dependencies p4est and sc. If you use p4est and sc shipped with t8code, calling cmake will pull and add the right commit from github. You can also still link against your local installations. Either way you do not need to update your workflow. The submodules of p4est and sc should be removed with this update. Instead they will be downloaded and installed in the _deps folder in your build folder.
