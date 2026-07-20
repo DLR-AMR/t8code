@@ -124,13 +124,14 @@ main (int argc, char **argv)
   /* The initial uniform refinement level. */
   int uniform_level = 3;
   /* Building the mesh. */
-  auto mesh = build_mesh<mesh_type> (comm, uniform_level);
-  /* Write the mesh to a vtu file. */
-  t8_global_productionf (" [tutorial] \n");
-  t8_global_productionf (" [tutorial] Writing adapted mesh to vtu file: step3_adapted_mesh.vtu\n");
-  t8_global_productionf (" [tutorial] \n");
-  t8_mesh_handle::write_mesh_to_vtk (*mesh, "step3_adapted_mesh.vtu");
-
+  { /** Scope to ensure mesh is deleted properly. */
+    auto mesh = build_mesh<mesh_type> (comm, uniform_level);
+    /* Write the mesh to a vtu file. */
+    t8_global_productionf (" [tutorial] \n");
+    t8_global_productionf (" [tutorial] Writing adapted mesh to vtu file: step3_adapted_mesh.vtu\n");
+    t8_global_productionf (" [tutorial] \n");
+    t8_mesh_handle::write_mesh_to_vtk (*mesh, "step3_adapted_mesh.vtu");
+  }
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);

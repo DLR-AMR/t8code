@@ -86,7 +86,7 @@ if( T8CODE_BUILD_MESH_HANDLE )
 endif()
 
 if( T8CODE_BUILD_MESH_HANDLE )
-    add_mesh_handle_tutorial( NAME t8_mesh_step3_adapt_forest SOURCES mesh_handle/t8_mesh_step3_adapt_forest.cxx )
+    add_mesh_handle_tutorial( NAME t8_mesh_step3_adapt_mesh SOURCES mesh_handle/t8_mesh_step3_adapt_mesh.cxx )
 endif()
 
 if( T8CODE_BUILD_MESH_HANDLE )
