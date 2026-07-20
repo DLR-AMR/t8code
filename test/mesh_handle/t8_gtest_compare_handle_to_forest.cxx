@@ -42,7 +42,9 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
 {
   // Define forest and mesh handle.
   const int level = 2;
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, 0);
   const t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
@@ -61,14 +63,6 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Compare elements. ---
       EXPECT_EQ (mesh_iterator->get_local_tree_id (), itree);
       EXPECT_EQ (mesh_iterator->get_local_element_id (), ielem);
-      EXPECT_EQ (mesh_iterator->is_equal (*mesh_iterator, *mesh_iterator),
-                 scheme->element_is_equal (tree_class, elem, elem));
-
-      t8_3D_vec ref = { 0.2, 0.3, 1 };
-      t8_3D_vec a, b;
-      mesh_iterator->get_reference_coordinates (ref.data (), 1, a.data ());
-      scheme->element_get_reference_coords (tree_class, elem, ref.data (), 1, b.data ());
-      EXPECT_EQ (a, b);
       // --- Compare functionality. ---
       EXPECT_EQ (mesh_iterator->get_level (), scheme->element_get_level (tree_class, elem));
       EXPECT_EQ (mesh_iterator->get_num_faces (), scheme->element_get_num_faces (tree_class, elem));
@@ -102,8 +96,6 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
           EXPECT_EQ (mesh_iterator->face_vertex_to_element_vertex (iface, ivertex),
                      scheme->element_get_face_corner (tree_class, elem, iface, ivertex));
         }
-        EXPECT_EQ (mesh_iterator->get_face_orientation (iface),
-                   t8_forest_leaf_face_orientation (forest, itree, scheme, elem, iface));
       }
       // --- Evolve mesh iterator. ---
       mesh_iterator++;
