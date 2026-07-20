@@ -39,8 +39,8 @@
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx>
-#include <t8_types/t8_vec.hxx>        /** t8 vector dataclass. */
-#include "default_adapt_callback.hxx" /** Default adaption function. */
+#include <t8_types/t8_vec.hxx>          /** t8 vector dataclass. */
+#include "t8_mesh_tutorials_common.hxx" /** Default adaption function. */
 #include <memory>
 #include <span>
 

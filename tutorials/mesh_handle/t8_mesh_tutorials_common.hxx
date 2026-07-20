@@ -25,17 +25,15 @@
  * It is used in step 3, 4 and 5 in the mesh_handle tutorials.
  */
 
-#ifndef DEFAULT_ADAPT_CALLBACK_HXX
-#define DEFAULT_ADAPT_CALLBACK_HXX
+#pragma once
 
 #include <t8.h> /** General t8code header. Always include this. */
 
-#include <mesh_handle/mesh.hxx> /** General Mesh header. Always needed for mesh_handle code. */
-#include <t8_types/t8_vec.hxx>  /** t8 vector dataclass. */
+#include <mesh_handle/concepts.hxx> /** Mesh concepts header. */
+#include <t8_types/t8_vec.hxx>      /** t8 vector dataclass. */
 #include <span>
-#include <memory>
 
-/* The data that determines the adaptation characteristics of our algorithm.
+/** The data that determines the adaptation characteristics of our algorithm.
  * In this example we want to adapt in a spherical shape around a given point. */
 struct adapt_data
 {
@@ -45,7 +43,7 @@ struct adapt_data
 };
 
 /**
- * The default adaptation callback function.
+ * Exemplary adaption callback function for the mesh handle.
  *
  * This will refine elements inside of a given sphere and coarsen elements
  * outside of a given sphere.
@@ -68,12 +66,9 @@ default_adapt_callback ([[maybe_unused]] const mesh_type& mesh,
   auto element_centroid = elements[0].get_centroid ();
 
   double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_data.midpoint);
-
-  if (
-    dist
-    < adapt_data
-        .refine_radius) { /**< When this if Statement returns true, we are inside the set radius of our "refinement Sphere" of our point and therefor need to refine. */
-    return 1;             /**< Refine. */
+  /**< When this if Statement returns true, we are inside the set radius of our "refinement Sphere" of our point and therefor need to refine. */
+  if (dist < adapt_data.refine_radius) {
+    return 1; /**< Refine. */
   }
 
   /** Only coarsen if we actually have a complete family. */
@@ -83,5 +78,3 @@ default_adapt_callback ([[maybe_unused]] const mesh_type& mesh,
 
   return 0; /**< Do nothing. */
 }
-
-#endif  // DEFAULT_ADAPT_CALLBACK_HXX
