@@ -17,14 +17,17 @@ Initialize t8code and print a welcome message. (This links leads to the original
 [step1](https://github.com/DLR-AMR/t8code/wiki/Step-1---Creating-a-coarse-mesh) - 
 Create a coarse mesh, output it to vtu and destroy it. (This links leads to the original t8code tutorials, come back after this step to use the mesh handle tutorials instead.)
 
-[step3]
+[step2] -  
+Create a uniform mesh, get its number of local and global elements, output it to vtu and destroy it.
+
+[step3] - 
 Adapt a mesh according to a user defined criterion. 
 
-[step4]
+[step4] - 
 Partitioning, balancing and creating a ghost layer for a mesh. Explains the mesh creation process in more detail.
 
-[step5]
+[step5](mesh_handle/t8_mesh_element_data.cxx) - 
 Associating user data with the elements of a mesh. Exchanging ghost values for element user data. Writing element user data to vtu.
 
-[step6]
+[step6] - 
 Going into more detail about mesh handle competence packs. Explaining element data competences and caching. Creating a custom competence. 

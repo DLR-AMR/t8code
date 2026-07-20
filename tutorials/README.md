@@ -42,7 +42,10 @@ Creating a user defined mesh in two- and three dimensions.
 A tutorial about the generation of curved adaptive meshes.
 
 ## Mesh handle
-[mesh_handle_element_data](mesh_handle/t8_mesh_element_data.cxx) Recreating [step5](./general/t8_step5_element_data.cxx) of the general tutorials but using the mesh handle.
+[Mesh Handle Tutorials](../tutorials/mesh_handle/README.md)
+These tutorials can be followed instead of the original t8code tutorials. They explain working with t8code with the help of the 
+[mesh_handle](../mesh_handle/README.md) interface. 
+Please note, that the mesh handle tutorials start at step 2, because the first 2 steps are the same as in the original tutorials. Please complete these first and then come back to the [Mesh Handle Tutorial Overview](../tutorials/mesh_handle/README.md)
 
 ## To be implemented in the future
 
