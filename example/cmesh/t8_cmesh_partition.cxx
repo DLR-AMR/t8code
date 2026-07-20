@@ -44,7 +44,8 @@ t8_random_partition ([[maybe_unused]] int level)
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  cmesh = t8_cmesh_new_brick_3d (2, 2, 2, 0, 0, 0, sc_MPI_COMM_WORLD);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_brick_3d (cmesh, 2, 2, 2, 0, 0, 0, sc_MPI_COMM_WORLD);
 
   snprintf (file, BUFSIZ, "t8_brick_random");
   t8_cmesh_vtk_write_file (cmesh, file);
@@ -99,7 +100,8 @@ t8_partition (int level, [[maybe_unused]] int partition_from)
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
 
-  cmesh = t8_cmesh_new_brick_2d (3, 2, 0, 0, sc_MPI_COMM_WORLD);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_brick_2d (cmesh, 3, 2, 0, 0, sc_MPI_COMM_WORLD);
 
   snprintf (file, BUFSIZ, "t8_brick");
   t8_cmesh_vtk_write_file (cmesh, file);

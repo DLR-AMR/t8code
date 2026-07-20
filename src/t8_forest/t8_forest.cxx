@@ -1017,13 +1017,13 @@ t8_forest_element_face_normal (t8_forest_t forest, t8_locidx_t ltreeid, const t8
 #if T8_ENABLE_DEBUG
     /* Issue a warning if the points of the quad do not lie in the same plane */
     {
-      t8_3D_vec p_0, p_1, p_2, p_3;
+      t8_3D_vec points[4];
       /* Compute the vertex coordinates of the quad */
-      t8_forest_element_coordinate (forest, ltreeid, element, 0, p_0.data ());
-      t8_forest_element_coordinate (forest, ltreeid, element, 1, p_1.data ());
-      t8_forest_element_coordinate (forest, ltreeid, element, 2, p_2.data ());
-      t8_forest_element_coordinate (forest, ltreeid, element, 3, p_3.data ());
-      if (!t8_four_points_coplanar (p_0, p_1, p_2, p_3, T8_PRECISION_SQRT_EPS)) {
+      for (int ipoint = 0; ipoint < 4; ipoint++) {
+        const int corner = scheme->element_get_face_corner (tree_class, element, face, ipoint);
+        t8_forest_element_coordinate (forest, ltreeid, element, corner, points[ipoint].data ());
+      }
+      if (!t8_four_points_coplanar (points[0], points[1], points[2], points[3], T8_PRECISION_SQRT_EPS)) {
         t8_debugf ("WARNING: Computing normal to a quad that is not coplanar. This computation will be inaccurate.\n");
       }
     }
