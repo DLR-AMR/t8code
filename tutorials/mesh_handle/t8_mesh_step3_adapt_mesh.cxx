@@ -21,54 +21,31 @@
 */
 
 /** \file t8_mesh_step3_adapt_mesh.cxx
- * This is the same as general/t8_step3_adapt_forest.cxx but using the mesh handle interface instead of the forest
+ * This is step3 of the t8code mesh handle tutorials.
+ * Therefore, this is the same as general/t8_step3_adapt_forest.cxx but using the mesh handle interface instead of the forest
  * interface.
+ * After generating a coarse mesh (step1) and building a uniform mesh
+ * on it (step2), we will now adapt (= refine and coarsen) the mesh
+ * according to our own criterion.
+ *
+ * The geometry (coarse mesh) is again a cube, this time modelled with
+ * 6 tetrahedra, 6 prisms and 4 cubes.
+ * We refine an element if its midpoint is within a sphere of given radius
+ * around the point (0.5, 0.5, 1) and we coarsen outside of a given radius.
+ * We will use non-recursive refinement, that means that the refinement level
+ * of any element will change by at most +-1.
 */
 
-#include <t8.h>
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competence_pack.hxx>
-#include <mesh_handle/constructor_wrappers.hxx>
-#include <mesh_handle/mesh_io.hxx>
+#include <t8.h>                            /** General t8code header. Always include this. */
+#include <mesh_handle/mesh.hxx>            /** General Mesh header. Always needed for mesh_handle code. */
+#include <mesh_handle/competence_pack.hxx> /** Competence Pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
+#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
+#include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_types/t8_vec.hxx>        /** t8 vector dataclass. */
+#include "default_adapt_callback.hxx" /** Default adaption function. */
 #include <memory>
 #include <span>
-
-/* The data that determines the adaptation characteristics of our algorithm.
- * In this example we want to adapt in a spherical shape around a given point. */
-struct adapt_data
-{
-  t8_3D_vec midpoint;    /**< midpoint of our sphere. */
-  double refine_radius;  /**< We refine inside this radius of our sphere.*/
-  double coarsen_radius; /**< We coarsen outside this radius of our sphere. */
-};
-
-/** The adaption callback function. This will refine elements inside of a given sphere and coarsen the elements 
- * outside of a given sphere.
- * \tparam TMeshClass    The mesh handle class.
- * \param [in] mesh      The mesh that should be adapted.
- * \param [in] elements  One element or a family of elements to consider for adaptation.
- * \param [in] adapt_data The user data to be used during the adaptation process.
- * \returns 1 if the first entry in \a elements should be refined, 
- *         -1 if the family of elements should be coarsened,
- *          0 else.
-*/
-template <t8_mesh_handle::T8MeshType TMeshClass>
-int
-adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typename TMeshClass::element_class> elements,
-                const adapt_data &adapt_data)
-{
-  auto element_centroid = elements[0].get_centroid ();
-  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_data.midpoint);
-  if (dist < adapt_data.refine_radius) {
-    return 1; /**< Refine. */
-  }           /** First check if there is a family, and only if yes coarsen. */
-  else if ((elements.size () > 1) && (dist > adapt_data.coarsen_radius)) {
-    return -1; /**< Coarsen. */
-  }
-  return 0; /**< Do Nothing. */
-}
 
 /** Build our adapted mesh by transferring the adaption parameters and adapting once with our \ref adapt_callback function.
  * \tparam TMeshClass    The mesh handle class.
@@ -80,15 +57,15 @@ template <t8_mesh_handle::T8MeshType TMeshClass>
 std::unique_ptr<TMeshClass>
 build_mesh (sc_MPI_Comm comm, int level)
 {
-  /*Generate a hybrid hypercube, made out of cubes, prisms etc. */
+  /* Generate a hybrid hypercube, made out of cubes, prisms etc. */
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
-  /*Defining the adaption parameters. */
+  /* Defining the adaption parameters. */
   struct adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
   mesh->set_balance ();
   mesh->set_partition ();
-  /*Adapting once with our adapt_callback function. */
+  /* Adapting once with our adapt_callback function. */
   mesh->set_adapt (
-    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (adapt_callback<TMeshClass>, adapt_params));
+    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (default_adapt_callback<TMeshClass>, adapt_params));
   mesh->set_ghost ();
   mesh->commit ();
   return mesh;

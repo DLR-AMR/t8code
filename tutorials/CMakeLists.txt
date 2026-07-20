@@ -83,13 +83,7 @@ copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tri.geo)
 
 if( T8CODE_BUILD_MESH_HANDLE )
     add_mesh_handle_tutorial( NAME t8_mesh_element_data SOURCES mesh_handle/t8_mesh_element_data.cxx )
-endif()
-
-if( T8CODE_BUILD_MESH_HANDLE )
     add_mesh_handle_tutorial( NAME t8_mesh_step3_adapt_mesh SOURCES mesh_handle/t8_mesh_step3_adapt_mesh.cxx )
-endif()
-
-if( T8CODE_BUILD_MESH_HANDLE )
     add_mesh_handle_tutorial( NAME t8_mesh_step4_partition_balance_ghost SOURCES mesh_handle/t8_mesh_step4_partition_balance_ghost.cxx )
 endif()
 

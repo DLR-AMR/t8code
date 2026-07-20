@@ -21,58 +21,24 @@
 */
 
 /** \file t8_mesh_element_data.cxx
- * This is the same as general/t8_step4_partition_balance_ghost.cxx but using the mesh handle interface instead of the forest 
+ * This is step4 of the t8code mesh handle tutorials.
+ * Therefor, this is the same as general/t8_step4_partition_balance_ghost.cxx but using the mesh handle interface instead of the forest 
  * interface.
+ * After generating a coarse mesh (step1), building a uniform mesh
+ * on it (step2) and adapting this mesh (step3)
+ * we will now learn how to control the mesh creation in more detail,
+ * how to partition and balance a mesh and how to generate a layer of ghost elements.
  */
 
-#include <t8.h>
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/mesh_io.hxx>
-#include <mesh_handle/constructor_wrappers.hxx>
+#include <t8.h>                                 /** General t8code header. Always include this. */
+#include <mesh_handle/mesh.hxx>                 /** General Mesh header. Always needed for mesh_handle code. */
+#include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
+#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
 #include <mesh_handle/concepts.hxx>
-#include <t8_types/t8_vec.hxx>
-#include <sc.h>
-#include <sc_mpi.h>
+#include <t8_types/t8_vec.hxx>        /** t8 vector dataclass. */
+#include "default_adapt_callback.hxx" /** Default adaption function. */
 #include <memory>
 #include <iostream>
-
-/** (This is the same as in tutorial step 3)
- * The data that determines the adaptation characteristics of our algorithm.
- * In this example we want to adapt in a spherical shape around a given point. 
-*/
-struct adapt_data
-{
-  std::array<double, 3> midpoint; /**< midpoint of our sphere. */
-  double refine_radius;           /**< We refine inside this radius of our sphere.*/
-  double coarsen_radius;          /**< We coarsen outside this radius of our sphere. */
-};
-
-/** (This is the same as in tutorial step 3)
- * The adaption callback function. This will refine elements inside of a given sphere and coarsen the elements 
- * outside of a given sphere.
- * \tparam TMeshClass    The mesh handle class.
- * \param [in] mesh      The mesh that should be adapted.
- * \param [in] elements  One element or a family of elements to consider for adaptation.
- * \param [in] adapt_data The user data to be used during the adaptation process.
- * \returns 1 if the first entry in \a elements should be refined, 
- *         -1 if the family of elements should be coarsened,
- *          0 else.
-*/
-template <t8_mesh_handle::T8MeshType mesh_type>
-int
-adapt_callback ([[maybe_unused]] const mesh_type &mesh, std::span<const typename mesh_type::element_class> elements,
-                const adapt_data &adapt_data)
-{
-  auto element_centroid = elements[0].get_centroid ();
-  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_data.midpoint);
-  if (dist < adapt_data.refine_radius) {
-    return 1;  // refine
-  }            //first check if there is a family, and only if yes check if we should coarsen.
-  else if ((elements.size () > 1) && (dist > adapt_data.coarsen_radius)) {
-    return -1;  // coarsen
-  }
-  return 0;  // do nothing
-}
 
 /** Helper function to print the total number of elements in the mesh after each step.
  *  \param mesh  The mesh handle to get the number of elements from.
@@ -158,7 +124,7 @@ main (int argc, char **argv)
 
   /* Adapting the mesh once with our adapt_callback function from step 3 and the parameters defined above. */
   mesh_adapt->set_adapt (
-    mesh_type::template mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback<mesh_type>, adapt_params));
+    mesh_type::template mesh_adapt_callback_wrapper<adapt_data> (&default_adapt_callback<mesh_type>, adapt_params));
   /* Committing the adapted mesh. */
   mesh_adapt->commit ();
 
