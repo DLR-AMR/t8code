@@ -21,18 +21,26 @@
 */
 
 /** \file t8_mesh_element_data.cxx
- * This is the same as general/t8_step5_element_data.cxx but using the mesh handle interface instead of the forest
+ * This is step5 of the t8code tutorials.
+ * Therefor, this is the same as general/t8_step5_element_data.cxx but using the mesh handle interface instead of the forest
  * interface.
+ * In the following we will store data in the individual elements of our mesh.
+ * To do this, we will again create a uniform mesh, which will get adapted as in step4,
+ * with the difference that we partition, balance and create ghost elements all in the same step.
+ * After adapting the mesh we will learn how to build a data array and gather data for
+ * the local elements. Furthermore, we exchange the data values of the ghost elements and
+ * output the volume data to vtu.
  */
 
-#include <t8.h>
+#include <t8.h> /** General t8code header. Always include this. */
 
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competence_pack.hxx>
-#include <mesh_handle/constructor_wrappers.hxx>
-#include <mesh_handle/mesh_io.hxx>
+#include <mesh_handle/mesh.hxx>            /** General Mesh header. Always needed for mesh_handle code. */
+#include <mesh_handle/competence_pack.hxx> /** Competence Pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
+#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
+#include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_types/t8_vec.hxx>          /** t8 vector dataclass. */
+#include "t8_mesh_tutorials_common.hxx" /** Default adaption function. */
 #include <memory>
 #include <span>
 
@@ -43,41 +51,6 @@ struct data_per_element_type
   int level;     /**< Level of the element. */
   double volume; /**< Volume of the element. */
 };
-
-/** User data type we will pass to the adapt callback. */
-struct user_data
-{
-  t8_3D_vec midpoint;               /**< The midpoint of our sphere. */
-  double refine_if_inside_radius;   /**< If an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /**< If an element's center is larger this value, we coarsen its family. */
-};
-
-/** The adaptation callback function. This will refine elements inside of a given sphere and coarsen the elements
- * outside of a given sphere.
- * \tparam TMeshClass    The mesh handle class.
- * \param [in] mesh      The mesh that should be adapted.
- * \param [in] elements  One element or a family of elements to consider for adaptation.
- * \param [in] user_data The user data to be used during the adaptation process.
- * \return 1 if the first entry in \a elements should be refined,
- *        -1 if the family \a elements shall be coarsened,
- *         0 else.
- */
-template <t8_mesh_handle::T8MeshType TMeshClass>
-int
-adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typename TMeshClass::element_class> elements,
-                const user_data &user_data)
-{
-  auto element_centroid = elements[0].get_centroid ();
-  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, user_data.midpoint);
-  if (dist < user_data.refine_if_inside_radius) {
-    return 1;
-  }
-  // Check if we got a family and if yes, if we should coarsen.
-  if ((elements.size () > 1) && (dist > user_data.coarsen_if_outside_radius)) {
-    return -1;
-  }
-  return 0;
-}
 
 /** Build a mesh with initial uniform refinement level \a level which is adapted according to \ref adapt_callback,
  * partitioned and balanced afterwards, and ghost elements are set.
@@ -91,7 +64,7 @@ std::unique_ptr<TMeshClass>
 build_mesh (sc_MPI_Comm comm, int level)
 {
   auto mesh_handle = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
-  struct user_data adapt_data = {
+  struct adapt_data adapt_params = {
     { 0.5, 0.5, 1 }, /* Midpoint of the sphere. */
     0.2,             /* Refine if inside this radius. */
     0.4              /* Coarsen if outside this radius. */
@@ -100,7 +73,7 @@ build_mesh (sc_MPI_Comm comm, int level)
   mesh_handle->set_balance ();
   mesh_handle->set_partition ();
   mesh_handle->set_adapt (
-    TMeshClass::template mesh_adapt_callback_wrapper<user_data> (adapt_callback<TMeshClass>, adapt_data));
+    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (&default_adapt_callback<TMeshClass>, adapt_params));
   mesh_handle->set_ghost ();
   mesh_handle->commit ();
   return mesh_handle;
