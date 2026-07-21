@@ -393,18 +393,8 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   return tree_reindex;
 }
 
-static t8_gloidx_t
-t8_cmesh_tree_reindex_lookup (const std::map<t8_gloidx_t, t8_gloidx_t> &tree_reindex, const t8_gloidx_t old_id)
-{
-  const auto it = tree_reindex.find (old_id);
-
-  T8_ASSERT (it != tree_reindex.end ());
-
-  return it->second;
-}
-
 void
-t8_cmesh_tree_perform_reindex_inplace (t8_stash_t stash, const std::map<t8_gloidx_t, t8_gloidx_t> &tree_reindex)
+t8_cmesh_tree_perform_reindex_inplace (t8_stash_t &stash, const std::map<t8_gloidx_t, t8_gloidx_t> &tree_reindex)
 {
   T8_ASSERT (stash != nullptr);
 
@@ -412,7 +402,7 @@ t8_cmesh_tree_perform_reindex_inplace (t8_stash_t stash, const std::map<t8_gloid
   for (size_t iclass = 0; iclass < stash->classes.elem_count; ++iclass) {
     t8_stash_class_struct_t *sclass = static_cast<t8_stash_class_struct_t *> (sc_array_index (&stash->classes, iclass));
 
-    sclass->id = t8_cmesh_tree_reindex_lookup (tree_reindex, sclass->id);
+    sclass->id = tree_reindex.at (sclass->id);
   }
 
   /* Reindex tree attributes. */
@@ -420,7 +410,7 @@ t8_cmesh_tree_perform_reindex_inplace (t8_stash_t stash, const std::map<t8_gloid
     t8_stash_attribute_struct_t *attr
       = static_cast<t8_stash_attribute_struct_t *> (sc_array_index (&stash->attributes, iattr));
 
-    attr->id = t8_cmesh_tree_reindex_lookup (tree_reindex, attr->id);
+    attr->id = tree_reindex.at (attr->id);
   }
 
   /* Reindex face connections. */
@@ -431,9 +421,9 @@ t8_cmesh_tree_perform_reindex_inplace (t8_stash_t stash, const std::map<t8_gloid
     const t8_gloidx_t old_id1 = join->id1;
     const t8_gloidx_t old_id2 = join->id2;
 
-    const t8_gloidx_t new_id1 = t8_cmesh_tree_reindex_lookup (tree_reindex, old_id1);
+    const t8_gloidx_t new_id1 = tree_reindex.at (old_id1);
 
-    const t8_gloidx_t new_id2 = t8_cmesh_tree_reindex_lookup (tree_reindex, old_id2);
+    const t8_gloidx_t new_id2 = tree_reindex.at (old_id2);
 
     const int old_face1 = join->face1;
     const int old_face2 = join->face2;

@@ -26,4 +26,7 @@
 #include <map>
 
 std::map<t8_gloidx_t, t8_gloidx_t>
-t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm = sc_MPI_COMM_SELF);
+
+void
+t8_cmesh_tree_perform_reindex_inplace (t8_stash_t &stash, const std::map<t8_gloidx_t, t8_gloidx_t> &tree_reindex);
