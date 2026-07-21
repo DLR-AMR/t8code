@@ -150,7 +150,6 @@ jobs:
       run: |
         cd build
         ctest -R _parallel
-
       env:
         # Note: These openmpi options are required to ensure stable runs in github workflows and avoid stalling.
         #       In particular, they activate oversubscription and define the communication channels, here tcp (and self).
