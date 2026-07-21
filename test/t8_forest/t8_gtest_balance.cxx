@@ -71,7 +71,9 @@ TEST_P (gtest_balance, confirm_is_balanced_check_for_uniform_forests)
     scheme->unref ();
     GTEST_SKIP_ ("The pyramid cube mesh cannot be periodic.");
   }
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, ilevel, 0, sc_MPI_COMM_WORLD);
 
   EXPECT_EQ (t8_forest_is_balanced (forest), 1);
@@ -133,7 +135,9 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
 {
   const double boundary_coords[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };
 
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, 2, 2, 1, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_pad (cmesh, T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, 2, 2, 1, 0);
 
   t8_forest_t forest;
   t8_forest_init (&forest);

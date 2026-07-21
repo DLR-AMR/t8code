@@ -59,7 +59,7 @@ mesh_adapt_callback_test_refine_second ([[maybe_unused]] const TMeshClass& mesh,
   return 0;
 }
 
-/** Check the competence remote_ranks_mesh_competence for correctness. The ranks are set as data first, exchanged for 
+/** Check the competence remote_ranks_mesh_competence for correctness. The ranks are set as data first, exchanged for
  * ghost elements and then checked against the competence functionality.
  */
 TEST (t8_gtest_dg_competences, remote_ranks)
@@ -69,7 +69,7 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   using mesh_class
     = mesh<data_element_competences, union_competence_packs_type<mesh_competence_pack<remote_ranks_mesh_competence>,
                                                                  data_mesh_competences<data_per_element>>>;
-  auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
+  auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
   mesh->set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
   mesh->set_partition ();
   mesh->set_ghost ();
@@ -101,8 +101,8 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   }
 }
 
-/** Check the competence face_vector_mesh_competence for correctness. 
- * The test checks that the face vector and the element-face vector are consistent with each other and with the 
+/** Check the competence face_vector_mesh_competence for correctness.
+ * The test checks that the face vector and the element-face vector are consistent with each other and with the
  * neighbors of the elements.
  */
 TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
@@ -110,7 +110,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
   const int level = 2;
   using namespace t8_mesh_handle;
   using mesh_class = mesh<element_competence_pack<cache_neighbors>, dg_mesh_competences>;
-  auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
+  auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
   mesh->set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
   mesh->set_partition ();
   mesh->set_ghost ();

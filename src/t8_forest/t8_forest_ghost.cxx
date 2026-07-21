@@ -642,7 +642,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
                                  const t8_locidx_t tree_leaf_index)
 {
-  t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) t8_forest_get_user_data (forest);
+  t8_forest_ghost_boundary_data_t *data = (t8_forest_ghost_boundary_data_t *) forest->t8code_data;
   int num_faces, iface, faces_totally_owned, level;
   int parent_face;
   int lower, upper, *bounds, *new_bounds, parent_lower, parent_upper;
@@ -775,7 +775,7 @@ static void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 {
   t8_forest_ghost_boundary_data_t data;
-  void *store_user_data = nullptr;
+  void *store_t8code_data = nullptr;
 
   /* Start with invalid entries in the user data.
    * These are set in t8_forest_ghost_search_boundary each time a new tree is entered */
@@ -789,21 +789,19 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   /* This is a dummy init, since we call sc_array_reset in ghost_search_boundary
    * and we should not call sc_array_reset on a non-initialized array */
   sc_array_init (&data.bounds_per_level, 1);
-  /* Store any user data that may reside on the forest */
-  store_user_data = t8_forest_get_user_data (forest);
-  /* Set the user data for the search routine */
-  t8_forest_set_user_data (forest, &data);
+  /* Store any previous internal data that may reside on the forest. */
+  store_t8code_data = forest->t8code_data;
+  /* Set the internal data for the search routine. */
+  forest->t8code_data = &data;
   /* Loop over the trees of the forest */
   t8_forest_search (forest, t8_forest_ghost_search_boundary, nullptr, nullptr);
 
-  /* Reset the user data from before search */
-  t8_forest_set_user_data (forest, store_user_data);
+  /* Reset the internal data from before the search. */
+  forest->t8code_data = store_t8code_data;
 
   /* Reset the data arrays */
   sc_array_reset (&data.face_owners);
   sc_array_reset (&data.bounds_per_level);
-#if T8_ENABLE_DEBUG
-#endif
 }
 
 /** 

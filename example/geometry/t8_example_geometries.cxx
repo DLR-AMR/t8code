@@ -679,7 +679,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_global_productionf ("Creating uniform level %i forest with a moebius geometry.\n", level);
     {
       /* Moebius geometry on hybrid unit square. */
-      t8_cmesh_t hybrid_square = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
+      t8_cmesh_t hybrid_square;
+      t8_cmesh_init (&hybrid_square);
+      t8_cmesh_new_periodic_hybrid (hybrid_square, sc_MPI_COMM_WORLD);
       t8_cmesh_set_derive (cmesh, hybrid_square);
       t8_cmesh_register_geometry<t8_geometry_moebius> (cmesh);
       snprintf (vtuname, BUFSIZ, "forest_moebius_lvl_%i", level);
@@ -705,7 +707,9 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     t8_global_productionf ("This forest will get refined at the boundary to level %i.\n", level);
     {
       /* Circle geometry on triangulated unit square. */
-      t8_cmesh_t tri_square = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
+      t8_cmesh_t tri_square;
+      t8_cmesh_init (&tri_square);
+      t8_cmesh_new_hypercube (&tri_square, T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, 0, 0, 0);
       t8_cmesh_set_derive (cmesh, tri_square);
       t8_cmesh_register_geometry<t8_geometry_circle> (cmesh);
       snprintf (vtuname, BUFSIZ, "forest_circle_lvl_%i", level);
