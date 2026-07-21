@@ -3510,8 +3510,9 @@ t8_forest_get_num_ghosts (const t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   /* Return the number of ghost elements, or 0 if no ghost structure exists. */
-  if (forest->ghosts == NULL) {
-    return 0;
+  if (forest->ghosts == nullptr) {
+    SC_ABORTF ("Ghost not set!\n");
+    // return 0;
   }
   return forest->ghosts->num_ghosts_elements;
 }
