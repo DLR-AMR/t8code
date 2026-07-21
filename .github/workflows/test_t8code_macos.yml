@@ -92,6 +92,8 @@ jobs:
     #   run: clang --version
     - name: Show mpicc version
       run: $OPENMPI_BIN/mpicc --version
+    - name: Show mpiexec version
+      run: $OPENMPI_BIN/mpiexec --version
     - name: init submodules
       run: git submodule init
     - name: update submodules
@@ -149,7 +151,7 @@ jobs:
     - name: parallel tests (if MPI is enabled)
       run: |
         cd build
-        ctest -R _parallel
+        ctest -V -R _parallel
       env:
         # Note: These openmpi options are required to ensure stable runs in github workflows and avoid stalling.
         #       In particular, they activate oversubscription and define the communication channels, here tcp (and self).
