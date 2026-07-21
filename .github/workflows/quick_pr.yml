@@ -42,21 +42,18 @@ jobs:
         outputs:
             ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
         steps:
-        - uses: actions/checkout@v7
-          with:
-                fetch-depth: 0
-
         - name: "Set up environment"
           run: echo "GH_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
 
         - name: "Create Issue"
           id: create_issue_and_output_number
+          env:
+            TITLE: ${{ github.event.pull_request.title }}
+            AUTHOR: ${{ github.event.pull_request.user.login }}
+            DRAFT: ${{ github.event.pull_request.draft }}
+            DEFAULT_PROJECT: ${{ inputs.DEFAULT_PROJECT }}
           run: |
-                # Get the title of the triggering PR
-                TITLE="${{ github.event.pull_request.title }}"
-                AUTHOR="${{ github.event.pull_request.user.login }}"
                 ISSUE_BODY=""
-                DRAFT=$([[ "${{ github.event.pull_request.draft }}" == "true" ]] && echo "true" || echo "false")
                 if [[ "$DRAFT" == "true" ]]; then
                   ISSUE_BODY="This Issue was created because the draft PR did not reference an Issue. Please @${AUTHOR} describe the Issue that you are solving."
                 else
@@ -72,15 +69,18 @@ jobs:
                   new_issue_url=$(gh issue create \
                   --title "$TITLE" \
                   --body "$ISSUE_BODY" \
-                  --project "${{ inputs.DEFAULT_PROJECT }}"
+                  --project "$DEFAULT_PROJECT"
                   )
-                else
-                  new_issue_url=$(gh issue create \
+                elif ! new_issue_url=$(gh issue create \
                   --title "$TITLE" \
                   --assignee "$AUTHOR" \
                   --body "$ISSUE_BODY" \
-                  --project "${{ inputs.DEFAULT_PROJECT }}"
-                  )
+                  --project "$DEFAULT_PROJECT" 2>/dev/null); then
+                  # Assignment failed (e.g. outside contributor without repo access).
+                  new_issue_url=$(gh issue create \
+                  --title "$TITLE" \
+                  --body "$ISSUE_BODY" \
+                  --project "$DEFAULT_PROJECT")
                 fi
                 echo "new_issue_url=$new_issue_url"
                 # Extract the issue number from the URL. 
@@ -91,10 +91,11 @@ jobs:
 
         - name: "Link Issue to PR"
           id: link_issue
+          env:
+            PR_NUMBER: ${{ github.event.pull_request.number }}
           run: |
                 # Add "Closes #ISSUE_NUMBER" to the PR body
                 ISSUE_NUMBER="${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}"
-                PR_NUMBER="${{ github.event.pull_request.number }}"
                 echo "ISSUE_NUMBER=$ISSUE_NUMBER"
                 echo "PR_NUMBER=$PR_NUMBER"
                 # Get the PR body

@@ -23,8 +23,12 @@ name: "Move the Issue after workload and urgency is evaluated"
 on:
   issues:
     types: [labeled, assigned, unassigned, unlabeled, opened]
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, ready_for_review, review_requested, review_request_removed, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   evaluate_issues:
@@ -118,7 +122,7 @@ jobs:
       NUMBER_IS_SET: ${{ steps.get_pr_issue_link.outputs.NUMBER_IS_SET }}
       CLEAN_ISSUE_NUMBER: ${{ steps.get_pr_issue_link.outputs.CLEAN_ISSUE_NUMBER }}
       REPO_NODE_ID: ${{ steps.get_pr_issue_link.outputs.REPO_NODE_ID }}
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request_target' }}
     steps:
       - name: "Get link between PR and Issue"
         id: get_pr_issue_link
@@ -264,7 +268,7 @@ jobs:
   # For a PR event where no issue is linked, open a new issue and add "Closes #ISSUE_NUMBER" to the PR body
   open_issue_for_quick_pr:
     needs: [evaluate_pr]
-    if: ${{ github.event_name == 'pull_request' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
+    if: ${{ github.event_name == 'pull_request_target' && needs.evaluate_pr.outputs.NUMBER_IS_SET == 'false' }}
     uses: ./.github/workflows/quick_pr.yml
     with:
         DEFAULT_PROJECT: "t8code's Issue Landing page"
