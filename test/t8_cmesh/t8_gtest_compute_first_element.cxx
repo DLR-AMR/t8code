@@ -153,7 +153,30 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
       /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
       for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
-        const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
+        // const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
+
+        /* Cast everything into uint64_t */
+        const uint64_t process_64 = static_cast<uint64_t> (rank);
+        const uint64_t mpisize_64 = static_cast<uint64_t> (size);
+
+        /* Split the uint64_t */
+        const uint64_t elem_over_size = num_elems / mpisize_64;
+        const uint64_t remainder_0 = num_elems % mpisize_64;
+
+        const uint64_t proc_over_size = process_64 / mpisize_64;
+        const uint64_t remainder_1 = process_64 % mpisize_64;
+
+        const uint64_t sum_0 = (elem_over_size * proc_over_size) * mpisize_64;
+        const uint64_t sum_1 = elem_over_size * (process_64 % mpisize_64);
+        const uint64_t sum_2 = proc_over_size * (num_elems % mpisize_64);
+        const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize_64;
+
+        // t8_productionf ("sum_0 = %li \n", sum_0);
+        // t8_productionf ("sum_1 = %li \n", sum_1);
+        // t8_productionf ("sum_2 = %li \n", sum_2);
+        // t8_productionf ("sum_3 = %li \n", sum_3);
+
+        const uint64_t computed_result = sum_1 + sum_2 + sum_3;
         check_result = (rank == size) ? num_elems : check_result;
 
         ASSERT_EQ (computed_result, check_result)
