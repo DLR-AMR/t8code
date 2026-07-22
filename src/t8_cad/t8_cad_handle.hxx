@@ -40,9 +40,10 @@
 #include <string_view>
 #include <t8_cmesh/t8_cmesh.h>
 /**
- * This class manages OpenCASCADE shapes and implements helper functions for working with the shapes.
+ * This struct manages OpenCASCADE shapes and implements helper functions for working with the shapes.
 */
-class t8_cad_handle {
+struct t8_cad_handle
+{
  public:
   /**
     * Constructor of the cad shape handle.
