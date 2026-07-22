@@ -1627,11 +1627,11 @@ t8_cmesh_determine_partition (const t8_gloidx_t element_index, const t8_gloidx_t
     T8_ASSERT (0 <= first_proc_rank && first_proc_rank < num_procs);
     //T8_ASSERT (0 <= first_proc_adjusted);
     /* Check that the element lies in the partition of the computed proc. */
-    T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank, (uint32_t) num_procs,
+    T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank, (uint64_t) num_procs,
                                                       (uint64_t) global_num_elements)
                <= (uint64_t) element_index);
     if ((int) first_proc_rank != num_procs - 1) {
-      T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank + 1, (uint32_t) num_procs,
+      T8_ASSERT (t8_cmesh_get_first_element_of_process ((uint32_t) first_proc_rank + 1, (uint64_t) num_procs,
                                                         (uint64_t) global_num_elements)
                  > (uint64_t) element_index);
     }
@@ -1656,9 +1656,9 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
   /* Since the full cmesh is available on each process, the computation of local_num_children equals the global number of children*/
   uint64_t const global_num_children = (uint64_t) local_num_children;
   const t8_gloidx_t first_child
-    = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, global_num_children);
+    = t8_cmesh_get_first_element_of_process ((uint32_t) cmesh->mpirank, (uint64_t) cmesh->mpisize, global_num_children);
   const t8_gloidx_t last_child = t8_cmesh_get_first_element_of_process (
-    (uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
+    (uint32_t) cmesh->mpirank + 1, (uint64_t) cmesh->mpisize, (uint64_t) local_num_children);
   /* Can't we optimize this linear loop by using a binary search?
      * -> No, we cannot. Since in any case we have to compute the t8_element_count_leaves_from_root
      *    for each tree.
@@ -1674,16 +1674,16 @@ t8_cmesh_uniform_bounds_from_unpartioned (const t8_cmesh_t cmesh, const t8_gloid
       first_child_next_non_empty = t8_cmesh_get_first_element_of_process (
         (uint32_t) next_non_empty, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
       last_child_next_non_empty = t8_cmesh_get_first_element_of_process (
-        (uint32_t) next_non_empty + 1, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
+        (uint32_t) next_non_empty + 1, (uint64_t) cmesh->mpisize, (uint64_t) local_num_children);
       next_non_empty++;
     } while (last_child_next_non_empty <= first_child_next_non_empty && next_non_empty < cmesh->mpisize - 1);
 
     if (next_non_empty >= cmesh->mpisize - 1) {
       next_non_empty = cmesh->mpisize - 1;
       first_child_next_non_empty = t8_cmesh_get_first_element_of_process (
-        (uint32_t) cmesh->mpisize - 1, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
+        (uint32_t) cmesh->mpisize - 1, (uint64_t) cmesh->mpisize, (uint64_t) local_num_children);
       last_child_next_non_empty = t8_cmesh_get_first_element_of_process (
-        (uint32_t) cmesh->mpisize, (uint32_t) cmesh->mpisize, (uint64_t) local_num_children);
+        (uint32_t) cmesh->mpisize, (uint64_t) cmesh->mpisize, (uint64_t) local_num_children);
     }
     T8_ASSERT (first_child_next_non_empty < last_child_next_non_empty);
     // Loop over trees to find the one containing first_child_next_non_empty, which gives us the first and last local tree.
@@ -1929,9 +1929,9 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
                    "Overflow in number of elements.\n");
 
   const t8_gloidx_t first_element = t8_cmesh_get_first_element_of_process (
-    (uint32_t) cmesh->mpirank, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+    (uint32_t) cmesh->mpirank, (uint64_t) cmesh->mpisize, (uint64_t) global_num_elements);
   const t8_gloidx_t last_element = t8_cmesh_get_first_element_of_process (
-    (uint32_t) cmesh->mpirank + 1, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+    (uint32_t) cmesh->mpirank + 1, (uint64_t) cmesh->mpisize, (uint64_t) global_num_elements);
   const bool this_proc_is_empty = last_element <= first_element;
   if (cmesh->mpirank == 0) {
     *first_local_tree = 0;
@@ -1996,9 +1996,9 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
     while (low <= high) {
       const t8_gloidx_t mid = low + (high - low) / 2;
       const t8_gloidx_t first_element_of_process = t8_cmesh_get_first_element_of_process (
-        (uint32_t) mid, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+        (uint32_t) mid, (uint64_t) cmesh->mpisize, (uint64_t) global_num_elements);
       const t8_gloidx_t last_element_of_process = t8_cmesh_get_first_element_of_process (
-        (uint32_t) mid + 1, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+        (uint32_t) mid + 1, (uint64_t) cmesh->mpisize, (uint64_t) global_num_elements);
       if (last_element_of_process <= first_element_of_process && first_element_of_process == first_element_tree[0]) {
         /* This process is empty. */
         send_first = mid;
@@ -2184,9 +2184,9 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
         /* compute the next non empty process we send to. */
         do {
           first_child_next_non_empty = t8_cmesh_get_first_element_of_process (
-            (uint32_t) next_non_empty_proc, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+            (uint32_t) next_non_empty_proc, (uint64_t) cmesh->mpisize, (uint64_t) global_num_elements);
           last_child_next_non_empty = t8_cmesh_get_first_element_of_process (
-            (uint32_t) next_non_empty_proc + 1, (uint32_t) cmesh->mpisize, (uint64_t) global_num_elements);
+            (uint32_t) next_non_empty_proc + 1, (uint64_t) cmesh->mpisize, (uint64_t) global_num_elements);
           next_non_empty_proc++;
           /* check if the proc is in our send-range && the proc is empty && we have information about this process. */
         } while (next_non_empty_proc < send_last && last_child_next_non_empty <= first_child_next_non_empty
