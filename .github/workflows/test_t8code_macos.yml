@@ -94,6 +94,8 @@ jobs:
       run: $OPENMPI_BIN/mpicc --version
     - name: Show mpiexec version
       run: $OPENMPI_BIN/mpiexec --version
+    - name: MPI sanity check (4x hostname)
+      run: $OPENMPI_BIN/mpiexec -n 4 hostname
     - name: init submodules
       run: git submodule init
     - name: update submodules
