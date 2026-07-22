@@ -72,7 +72,7 @@ function( add_t8_test )
             separate_arguments(T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_SERIAL_TEST_COMMAND})
         elseif ( T8CODE_CUSTOM_PARALLEL_TEST_COMMAND STREQUAL "" )
             separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND "mpirun -np 4")
-        else
+        else ()
             separate_arguments (T8CODE_TEST_COMMAND_LIST NATIVE_COMMAND ${T8CODE_CUSTOM_PARALLEL_TEST_COMMAND})
         endif ()
     else( T8CODE_ENABLE_MPI )
