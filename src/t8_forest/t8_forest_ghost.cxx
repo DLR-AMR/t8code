@@ -230,6 +230,9 @@ struct t8_ghost_data_exchange_t
 void
 t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
 {
+
+  t8_productionf ("Calling t8_forest_ghost_init\n");
+
   t8_forest_ghost_t ghost;
 
   /* We currently only support face-neighbor ghosts */

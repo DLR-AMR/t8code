@@ -69,7 +69,7 @@
  * Otherwise the result of process * global_num_elements / mpisize can exceed the range of uint64_t.
  */
 constexpr uint64_t
-t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mpisize,
+t8_cmesh_get_first_element_of_process (const uint32_t process, const uint64_t mpisize,
                                        const uint64_t global_num_elements)
 {
   T8_ASSERT (mpisize > 0);
@@ -77,19 +77,18 @@ t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mp
 
   /* Cast everything into uint64_t */
   const uint64_t process_64 = static_cast<uint64_t> (process);
-  const uint64_t mpisize_64 = static_cast<uint64_t> (mpisize);
 
   /* Split the uint64_t */
-  const uint64_t elem_over_size = global_num_elements / mpisize_64;
-  const uint64_t remainder_0 = global_num_elements % mpisize_64;
+  const uint64_t elem_over_size = global_num_elements / mpisize;
+  const uint64_t remainder_0 = global_num_elements % mpisize;
 
-  const uint64_t proc_over_size = process_64 / mpisize_64;
-  const uint64_t remainder_1 = process_64 % mpisize_64;
+  const uint64_t proc_over_size = process_64 / mpisize;
+  const uint64_t remainder_1 = process_64 % mpisize;
 
-  const uint64_t sum_0 = (elem_over_size * proc_over_size) * mpisize_64;
-  const uint64_t sum_1 = elem_over_size * (process_64 % mpisize_64);
-  const uint64_t sum_2 = proc_over_size * (global_num_elements % mpisize_64);
-  const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize_64;
+  const uint64_t sum_0 = (elem_over_size * proc_over_size) * mpisize;
+  const uint64_t sum_1 = elem_over_size * (process_64 % mpisize);
+  const uint64_t sum_2 = proc_over_size * (global_num_elements % mpisize);
+  const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize;
 
   return (sum_0 + sum_1 + sum_2 + sum_3);
 }
