@@ -60,13 +60,13 @@ struct t8_gtest_rank_times_global_num_elems_over_size: public testing::TestWithP
   uint32_t rank_growth;
   uint32_t elem_growth;
   uint32_t size_growth;
-#if T8_TEST_LEVEL_INT == 0
-  const uint32_t max_iter = 100;
-#elif T8_TEST_LEVEL_INT == 1
-  const uint32_t max_iter = 50;
-#else
+  // #if T8_TEST_LEVEL_INT == 0
+  //   const uint32_t max_iter = 100;
+  // #elif T8_TEST_LEVEL_INT == 1
+  //   const uint32_t max_iter = 50;
+  // #else
   const uint32_t max_iter = 10;
-#endif
+  // #endif
   uint32_t rank_iter;
   uint32_t elem_iter;
   uint32_t size_iter;
@@ -135,8 +135,8 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
    * We use integer division, therefore we store the remainder of each update to
    * prevent rounding errors.
   */
-  //uint32_t size = 1;
-  uint64_t size = 1;
+  uint32_t size = 1;
+  // uint64_t size = 1;
   for (uint32_t isize = 1; isize < size_iter; ++isize) {
     /* The very first result is 1 * 1 / size */
     uint64_t check_result_elem = 1 / size;
