@@ -4,6 +4,7 @@
 
 #include "t8_mra/core/mst.hxx"
 #include "t8_mra/core/forest_backend.hxx"
+#include "t8_mra/num/cell_geometry.hxx"
 #include "t8_mra/data/element_data.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
 #include "t8_mra/data/levelindex_map.hxx"
@@ -164,6 +165,12 @@ class multiscale_base: public multiscale_data<TShape> {
   get_comm () const
   {
     return grid.comm;
+  }
+
+  unsigned int
+  maximum_level () const
+  {
+    return grid.maximum_level;
   }
 
   /**
@@ -336,25 +343,17 @@ class multiscale_base: public multiscale_data<TShape> {
   //=============================================================================
 
   /**
-   * @brief Evaluate the solution at a reference-cell point
+   * @brief Solution value per component at a reference-cell point
    *
-   * x_ref is [0,1]^DIM (cartesian) or (tau1, tau2) on the reference triangle;
-   * the triangle -> basis {lambda0, lambda1} conversion is handled here.
+   * x_ref is [0,1]^DIM (cartesian) or (tau1, tau2) on the reference triangle.
    */
   std::array<double, U_DIM>
   evaluate_reference (const element_t &data, const std::array<double, DIM> &x_ref)
   {
-    std::array<double, DIM> x_basis = x_ref;
-    if constexpr (Shape == T8_ECLASS_TRIANGLE)
-      x_basis = { 1.0 - x_ref[0] - x_ref[1], x_ref[0] };  // (tau1, tau2) -> (lambda0, lambda1)
-
-    const auto phi = basis.basis_value (x_basis);
-    const auto scaling = t8_mra::basis<Shape, P_DIM>::normalization (data.vol);
-
     std::array<double, U_DIM> res = {};
     for (auto u = 0u; u < U_DIM; ++u)
-      for (auto i = 0u; i < DOF; ++i)
-        res[u] += data.u_coeffs[element_t::dg_idx (u, i)] * scaling * phi[i];
+      res[u] = cell_geometry<Shape, P_DIM>::reference_value (
+        std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref, data.vol);
 
     return res;
   }
