@@ -1,0 +1,258 @@
+#include <gtest/gtest.h>
+
+#ifdef T8_ENABLE_MRA
+
+#include "t8_gtest_mra_forest.hxx"
+
+#include <cmath>
+
+namespace
+{
+
+using namespace mra_test;
+
+constexpr double eps = 1e-12;
+
+template <typename Cfg>
+class mra_criteria: public ::testing::Test {};
+
+TYPED_TEST_SUITE (mra_criteria, Configs, ConfigNames);
+
+/* Uniform max-level grid with computed details: the common starting point for
+ * every threshold check. */
+template <typename Case, typename F>
+void
+init_and_decompose (Case &c, F &&f)
+{
+  c.init (std::forward<F> (f));
+  c->multiscale_decomposition (0, c.max_level);
+}
+
+/* threshold_scaling_factor is a domain integral clamped to >= 1, and the DG
+ * projection is linear, so doubling the data doubles the (unclamped) factor. */
+TYPED_TEST (mra_criteria, threshold_scaling_factor_is_clamped_and_linear)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 2 : 3;
+
+  /* Vanishing data -> the clamp pins every component at 1. */
+  {
+    mra_example<Shape, U, P> example (max_level);
+    example.init (constant_func<U, DIM> (1e-9));
+    const auto factor = example->threshold_scaling_factor ();
+    for (auto u = 0u; u < U; ++u)
+      EXPECT_NEAR (factor[u], 1.0, eps) << "tiny data must clamp to 1, component " << u;
+  }
+
+  /* Large data -> unclamped, and linear in the amplitude. */
+  mra_example<Shape, U, P> c1 (max_level);
+  mra_example<Shape, U, P> c2 (max_level);
+  c1.init (constant_func<U, DIM> (100.0));
+  c2.init (constant_func<U, DIM> (200.0));
+
+  const auto f1 = c1->threshold_scaling_factor ();
+  const auto f2 = c2->threshold_scaling_factor ();
+  for (auto u = 0u; u < U; ++u) {
+    ASSERT_GT (f1[u], 1.0) << "amplitude 100 should exceed the clamp, component " << u;
+    EXPECT_NEAR (f2[u] / f1[u], 2.0, eps) << "factor must scale linearly, component " << u;
+  }
+}
+
+/* local_threshold_value depends only on (vol, level). */
+TYPED_TEST (mra_criteria, local_threshold_value_scales_as_sqrt_num_children)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+  using LMI = typename t8_mra::multiscale<Shape, U, P>::levelmultiindex;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+  const double ratio = std::sqrt (static_cast<double> (LMI::NUM_CHILDREN));
+
+  mra_example<Shape, U, P> example (max_level);
+  init_and_decompose (example, jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+
+  std::size_t pairs = 0;
+  for (const int gamma : { 1, 2, 3 })
+    for (auto l = 2u; l <= static_cast<unsigned int> (max_level); ++l)
+      for (const auto &[lmi, detail] : mra.d_map[l]) {
+        const auto par = LMI::parent (lmi);
+        if (!mra.d_map.contains (par))
+          continue;
+        ++pairs;
+        EXPECT_NEAR (mra.local_threshold_value (lmi, gamma), ratio * mra.local_threshold_value (par, gamma),
+                     eps * mra.local_threshold_value (par, gamma))
+          << "level " << l << " gamma " << gamma;
+      }
+  EXPECT_GT (pairs, 0u) << "decomposition must leave parent/child detail pairs to compare";
+}
+
+/* scaled_detail_norm divides the raw detail norm by c_scaling componentwise */
+TYPED_TEST (mra_criteria, scaled_detail_norm_respects_c_scaling)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+
+  mra_example<Shape, U, P> example (max_level);
+  init_and_decompose (example, jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+
+  bool has_nonzero = false;
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+    for (const auto &[lmi, detail] : mra.d_map[l]) {
+      mra.c_scaling.fill (1.0);
+      const double base = mra.scaled_detail_norm (lmi);
+      if (base <= eps)
+        continue;
+      has_nonzero = true;
+
+      mra.c_scaling.fill (4.0);
+      EXPECT_NEAR (mra.scaled_detail_norm (lmi), base / 4.0, eps * base) << "level " << l;
+    }
+  EXPECT_TRUE (has_nonzero) << "the jump must leave at least one nonzero detail";
+}
+
+/* Raising the threshold constant can only remove leaves from the significant
+ * set. */
+TYPED_TEST (mra_criteria, hard_thresholding_significant_set_shrinks_with_threshold)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+
+  mra_example<Shape, U, P> example (max_level);
+  example.init (jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+
+  t8_mra::hard_thresholding low { 0.1, 2 };
+  t8_mra::hard_thresholding high { 10.0, 2 };
+  low.prepare (mra);
+  high.prepare (mra);
+
+  mra.multiscale_decomposition (0, max_level);
+
+  std::size_t number_low = 0, number_high = 0;
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+    for (const auto &[lmi, detail] : mra.d_map[l]) {
+      const bool significant_low = low.significant (mra, lmi);
+      const bool significant_high = high.significant (mra, lmi);
+
+      number_low += significant_low;
+      number_high += significant_high;
+      EXPECT_TRUE (!significant_high || significant_low)
+        << "a higher threshold must not gain significance, level " << l;
+    }
+  EXPECT_LE (number_high, number_low);
+  EXPECT_GT (number_low, 0u) << "the jump must make some family significant at a low threshold";
+}
+
+/* harten_prediction partitions families by the two thresholds: refine_children
+ * above 2^(P+1)*c_thresh*eps, grade_neighbours above c_thresh*eps, none below.
+ * refine_children thus always implies grading. */
+TYPED_TEST (mra_criteria, harten_classify_matches_thresholds)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+
+  mra_example<Shape, U, P> example (max_level);
+  example.init (jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+
+  t8_mra::harten_prediction crit { 1.0, 2 };
+  crit.prepare (mra);
+
+  mra.multiscale_decomposition (0, max_level);
+
+  const auto steep = std::pow (2.0, static_cast<int> (P) + 1);
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
+    for (const auto &[lmi, detail] : mra.d_map[l]) {
+      const auto norm = mra.scaled_detail_norm (lmi);
+      const auto eps = mra.local_threshold_value (lmi, 2);  // c_thresh = 1.0
+      const auto flags = crit (mra, lmi);
+
+      EXPECT_EQ (flags.grade_neighbours, norm > eps) << "level " << l;
+      EXPECT_EQ (flags.refine_children, norm > steep * eps) << "level " << l;
+    }
+}
+
+/* The hard threshold is sharp: with c_scaling = 1 a family with detail norm N
+ * is significant iff N > c_thresh * local_threshold_value, so a c_thresh placed
+ * just below N/ltv keeps it and just above drops it (mirrors multilaepsch's
+ * eps +/- 1e-10 boundary case). */
+TYPED_TEST (mra_criteria, hard_thresholding_boundary_is_sharp)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 3 : 4;
+  constexpr int gamma = 2;
+
+  mra_example<Shape, U, P> example (max_level);
+  init_and_decompose (example, jump_func<U, P, DIM> ());
+  auto &mra = example.mra;
+  mra.c_scaling.fill (1.0);
+
+  bool checked = false;
+  for (auto l = 0u; l <= static_cast<unsigned int> (max_level) && !checked; ++l)
+    for (const auto &[lmi, detail] : mra.d_map[l]) {
+      const double norm = mra.scaled_detail_norm (lmi);
+      const double ltv = mra.local_threshold_value (lmi, gamma);
+      if (norm <= eps || ltv <= 0.0)
+        continue;
+
+      t8_mra::hard_thresholding below { (norm / ltv) * (1.0 - 1e-6), gamma };
+      t8_mra::hard_thresholding above { (norm / ltv) * (1.0 + 1e-6), gamma };
+      EXPECT_TRUE (below.significant (mra, lmi)) << "detail above threshold must stay";
+      EXPECT_FALSE (above.significant (mra, lmi)) << "detail below threshold must drop";
+      checked = true;
+      break;
+    }
+  EXPECT_TRUE (checked) << "the jump must leave a nonzero detail to straddle";
+}
+
+/* coarsen/refine only grade around fresh refinement marks, so an adaptive grid
+ * can carry larger level jumps; balance() restores the 2:1 face balance, after
+ * which no leaf borders a neighbour more than one level apart (mirrors
+ * multilaepsch's grading test). */
+TYPED_TEST (mra_criteria, balance_produces_graded_grid)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 4 : 5;
+
+  mra_example<Shape, U, P> example (max_level);
+  example.init (jump_func<U, P, DIM> ());
+
+  example->coarsen (0, max_level);
+  example->refine (0, max_level);
+  example->balance ();
+
+  expect_grid_graded (example.mra, /*slack=*/1);
+  expect_forest_map_consistent (example.mra);
+}
+
+}  // namespace
+
+#endif /* T8_ENABLE_MRA */

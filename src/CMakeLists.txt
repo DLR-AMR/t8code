@@ -114,6 +114,108 @@ if( T8CODE_ENABLE_OCC )
     )
 endif()
 
+if( T8CODE_ENABLE_MRA )
+  target_compile_definitions( T8 PUBLIC T8_ENABLE_MRA )
+
+  # Add GSL library 
+  target_link_libraries( T8 PUBLIC GSL::gsl GSL::gslcblas )
+
+  # Add unordered_dense library https://github.com/martinus/unordered_dense
+  # Fetched via cmake/thirdparty.json; unordered_dense_SOURCE_DIR is set by FetchContent.
+  set( UNORDERED_DENSE_DIR "${unordered_dense_SOURCE_DIR}/include" )
+
+  target_include_directories(T8 PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${UNORDERED_DENSE_DIR}>
+    $<INSTALL_INTERFACE:include>
+  )
+
+  target_sources( T8 PRIVATE
+    t8_mra/num/basis/dubiner.cxx
+    t8_mra/num/quadrature/dunavant.cxx
+  )
+
+  install( FILES
+    t8_mra/t8_mra.hxx
+    DESTINATION include/t8_mra )
+
+  install( FILES
+    t8_mra/core/multiscale.hxx
+    t8_mra/core/forest_backend.hxx
+    t8_mra/core/mst.hxx
+    t8_mra/core/shape_traits.hxx
+    t8_mra/core/face_neighbor.hxx
+    DESTINATION include/t8_mra/core )
+
+  install( FILES
+    t8_mra/core/shape/mst_policy.hxx
+    t8_mra/core/shape/cartesian.hxx
+    t8_mra/core/shape/triangle.hxx
+    DESTINATION include/t8_mra/core/shape )
+
+  install( FILES
+    t8_mra/core/adapt/grading.hxx
+    t8_mra/core/adapt/coarsen.hxx
+    t8_mra/core/adapt/refine.hxx
+    t8_mra/core/adapt/balance.hxx
+    DESTINATION include/t8_mra/core/adapt )
+
+  install( FILES
+    t8_mra/io/vtk.hxx
+    DESTINATION include/t8_mra/io )
+
+  install( FILES
+    t8_mra/dg/dg_base.hxx
+    t8_mra/dg/cartesian.hxx
+    t8_mra/dg/triangle.hxx
+    DESTINATION include/t8_mra/dg )
+
+  install( FILES
+    t8_mra/criteria/coarsening_criterion.hxx
+    t8_mra/criteria/refinement_criterion.hxx
+    DESTINATION include/t8_mra/criteria )
+
+  install( FILES
+    t8_mra/data/element_data.hxx
+    t8_mra/data/levelindex_map.hxx
+    t8_mra/data/levelindex_set.hxx
+    t8_mra/data/levelmultiindex.hxx
+    t8_mra/data/triangle_order.hxx
+    DESTINATION include/t8_mra/data )
+
+  install( FILES
+    t8_mra/data/shape/cartesian.hxx
+    t8_mra/data/shape/triangle.hxx
+    DESTINATION include/t8_mra/data/shape )
+
+  install( FILES
+    t8_mra/num/cell_geometry.hxx
+    t8_mra/num/dg_basis.hxx
+    t8_mra/num/geometry.hxx
+    t8_mra/num/mask_coefficients.hxx
+    t8_mra/num/mat.hxx
+    t8_mra/num/nodal_to_modal.hxx
+    DESTINATION include/t8_mra/num )
+
+  install( FILES
+    t8_mra/num/shape/cartesian.hxx
+    t8_mra/num/shape/triangle.hxx
+    DESTINATION include/t8_mra/num/shape )
+
+  install( FILES
+    t8_mra/num/basis/basis.hxx
+    t8_mra/num/basis/legendre.hxx
+    t8_mra/num/basis/dubiner.hxx
+    DESTINATION include/t8_mra/num/basis )
+
+  install( FILES
+    t8_mra/num/quadrature/quadrature.hxx
+    t8_mra/num/quadrature/gauss_legendre.hxx
+    t8_mra/num/quadrature/dunavant.hxx
+    t8_mra/num/quadrature/dunavant_table.hxx
+    DESTINATION include/t8_mra/num/quadrature )
+endif()
+
 if( T8CODE_BUILD_PEDANTIC )
   target_compile_options( T8 PUBLIC -pedantic )
   set (T8_CXXFLAGS "${T8_CXXFLAGS} -Wpedantic")
