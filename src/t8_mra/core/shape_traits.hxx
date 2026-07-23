@@ -12,11 +12,10 @@ namespace t8_mra
 // ============================================================================
 // Adding a new element shape
 // ============================================================================
-// Specialize shape_traits<Shape> below with the shape's compile-time mesh facts
-// (dimension, child count, vertex count, VTK cell type, DOF count). The basis
-// function space lives in basis<Shape, P> (num/basis/basis.hxx); the lmi bit layout
-// in lmi_properties (data/levelmultiindex.hxx); projection and mask
-// coefficients in the per-shape multiscale<> specialization (shapes/).
+// Every per-shape specialization lives in one file per shape: shape_traits +
+// mst policies in core/shape/, lmi layout in data/shape/, basis + cell_geometry
+// in num/shape/, DG numerics in dg/. This header holds only the primary
+// template and pulls the specializations in at the bottom.
 
 template <t8_eclass TShape>
 concept is_cartesian = (TShape == T8_ECLASS_LINE || TShape == T8_ECLASS_QUAD || TShape == T8_ECLASS_HEX);
@@ -49,66 +48,10 @@ struct shape_traits
   }
 };
 
-template <>
-struct shape_traits<T8_ECLASS_LINE>
-{
-  static constexpr unsigned short DIM = 1;
-  static constexpr unsigned short NUM_CHILDREN = 2;
-  static constexpr int NUM_VERTICES = 2;
-  static constexpr int VTK_CELL_TYPE = 68;  // VTK_LAGRANGE_CURVE
-
-  static constexpr unsigned short
-  dof (unsigned short P)
-  {
-    return P;
-  }
-};
-
-template <>
-struct shape_traits<T8_ECLASS_TRIANGLE>
-{
-  static constexpr unsigned short DIM = 2;
-  static constexpr unsigned short NUM_CHILDREN = 4;
-  static constexpr int NUM_VERTICES = 3;
-  static constexpr int VTK_CELL_TYPE = 69;  // VTK_LAGRANGE_TRIANGLE
-
-  static constexpr unsigned short
-  dof (unsigned short P)
-  {
-    return binom (DIM + P - 1, DIM);
-  }
-};
-
-template <>
-struct shape_traits<T8_ECLASS_QUAD>
-{
-  static constexpr unsigned short DIM = 2;
-  static constexpr unsigned short NUM_CHILDREN = 4;
-  static constexpr int NUM_VERTICES = 4;
-  static constexpr int VTK_CELL_TYPE = 70;  // VTK_LAGRANGE_QUADRILATERAL
-
-  static constexpr unsigned short
-  dof (unsigned short P)
-  {
-    return P * P;
-  }
-};
-
-template <>
-struct shape_traits<T8_ECLASS_HEX>
-{
-  static constexpr unsigned short DIM = 3;
-  static constexpr unsigned short NUM_CHILDREN = 8;
-  static constexpr int NUM_VERTICES = 8;
-  static constexpr int VTK_CELL_TYPE = 72;  // VTK_LAGRANGE_HEXAHEDRON
-
-  static constexpr unsigned short
-  dof (unsigned short P)
-  {
-    return P * P * P;
-  }
-};
-
 }  // namespace t8_mra
+
+// Per-shape specializations (defined after the primary template).
+#include "t8_mra/core/shape/cartesian.hxx"
+#include "t8_mra/core/shape/triangle.hxx"
 
 #endif  // T8_ENABLE_MRA
