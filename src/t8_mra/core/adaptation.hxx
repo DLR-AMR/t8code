@@ -32,7 +32,7 @@ namespace t8_mra
  * Every operation decides on the maps (non-destructive detail analysis,
  * marks, data moves, iterated to the cascade/grading fixpoint), then one
  * recursive forest adapt realizes all marks in a single rebuild while
- * adapt_forest keeps lmi_idx and lmi_map in sync with the new leaves.
+ * grid.adapt keeps lmi_idx and lmi_map in sync with the new leaves.
  *
  * Significance and refinement are decided by exchangeable criteria: a
  * coarsening_criterion (default hard_thresholding) and a refinement_criterion
@@ -75,122 +75,8 @@ class multiscale_adaptation {
   }
 
   //=============================================================================
-  // MPI collectives
-  //=============================================================================
-
-  /**
-   * @brief Global mark count across all ranks
-   *
-   * t8_forest_new_adapt is collective: the decision to adapt or skip must
-   * be unanimous. Adapting with an empty local set is a no-op, so ranks
-   * without local marks simply participate.
-   */
-  unsigned int
-  global_num_marks (unsigned int local_marks)
-  {
-    auto global_marks = local_marks;
-    sc_MPI_Allreduce (&local_marks, &global_marks, 1, sc_MPI_UNSIGNED, sc_MPI_MAX, derived ().comm);
-    return global_marks;
-  }
-
-  /**
-   * @brief Replace a rank-local index set with its union over all ranks
-   *
-   * The lmi index encodes the whole key, so a gathered index rebuilds the
-   * lmi. Coarsen repartitions between passes, so a jump-protected family can
-   * migrate to a rank whose local set never held it; the global union keeps
-   * the protection wherever the family lands. Collective.
-   */
-  template <typename IndexSet>
-  void
-  globalize (IndexSet &set)
-  {
-    using levelmultiindex = typename Derived::levelmultiindex;
-
-    int mpisize = 1;
-    sc_MPI_Comm_size (derived ().comm, &mpisize);
-    if (mpisize == 1)
-      return;
-
-    std::vector<t8_gloidx_t> local;
-    local.reserve (set.size ());
-    for (const auto &lmi : set)
-      local.push_back (static_cast<t8_gloidx_t> (lmi.index));
-
-    int n_local = static_cast<int> (local.size ());
-    std::vector<int> counts (mpisize), displs (mpisize);
-
-    sc_MPI_Allgather (&n_local, 1, sc_MPI_INT, counts.data (), 1, sc_MPI_INT, derived ().comm);
-
-    std::exclusive_scan (counts.begin (), counts.end (), displs.begin (), 0);
-    const int total = displs.back () + counts.back ();
-
-    std::vector<t8_gloidx_t> all (total);
-
-    sc_MPI_Allgatherv (local.data (), n_local, T8_MPI_GLOIDX, all.data (), counts.data (), displs.data (),
-                       T8_MPI_GLOIDX, derived ().comm);
-
-    for (const auto idx : all)
-      set.insert (levelmultiindex (static_cast<size_t> (idx)));
-  }
-
-  //=============================================================================
   // Forest adaptation primitives
   //=============================================================================
-
-  /**
-   * @brief Iterate the same-level face neighbours of every accepted leaf
-   *
-   * accept_leaf(lmi) gates each leaf before any neighbour is built, so leaves
-   * the caller would skip cost no face-neighbour construction. Domain-boundary
-   * faces are skipped. The visitor receives the source leaf lmi, the
-   * neighbour's tree class, global tree id and element, and the neighbour lmi.
-   * The neighbour element is scratch reused across a tree's faces — the visitor
-   * must not retain it.
-   */
-  template <typename LeafFilter, typename Func>
-  void
-  for_each_face_neigh (LeafFilter &&accept_leaf, Func &&func)
-  {
-    using levelmultiindex = typename Derived::levelmultiindex;
-
-    auto *user_data = derived ().get_user_data ();
-    auto *forest = derived ().forest;
-    const auto *scheme = t8_forest_get_scheme (forest);
-
-    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
-    auto current_idx = 0u;
-
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
-      const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
-
-      t8_element_t *neigh_element;
-      scheme->element_new (tree_class, 1, &neigh_element);
-
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
-        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
-        if (!accept_leaf (lmi))
-          continue;
-
-        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
-        const auto num_faces = scheme->element_get_num_faces (tree_class, element);
-
-        for (auto face = 0; face < num_faces; ++face) {
-          int neigh_face;
-          const auto neigh_gtreeid
-            = t8_forest_element_face_neighbor (forest, tree_idx, element, neigh_element, tree_class, face, &neigh_face);
-
-          if (neigh_gtreeid < 0)
-            continue;
-
-          func (lmi, tree_class, neigh_gtreeid, neigh_element, levelmultiindex (neigh_gtreeid, neigh_element, scheme));
-        }
-      }
-
-      scheme->element_destroy (tree_class, 1, &neigh_element);
-    }
-  }
 
   /// Reconstruct children data (inverse two-scale, zero details) for the marks
   /// in refinement_set, then realize them with one forest adapt.
@@ -203,7 +89,7 @@ class multiscale_adaptation {
         derived ().d_map.insert (lmi, typename Derived::detail_t {});
 
     derived ().inverse_multiscale_transformation (min_level, max_level);
-    adapt_forest (static_refinement_callback, recursive);
+    derived ().grid.adapt (static_refinement_callback, recursive);
   }
 
   /// Number of leaves marked for refinement in [min_level, max_level).
@@ -214,59 +100,6 @@ class multiscale_adaptation {
     for (auto l = min_level; l < max_level; ++l)
       num += derived ().refinement_set[l].size ();
     return num;
-  }
-
-  /**
-   * @brief Adapt the forest with the given callback and rebuild the lmi index
-   *
-   * Performs one t8_forest_new_adapt pass, moves the lmi_map (already
-   * updated by the MST operations) into fresh user data of the new forest,
-   * recomputes the per-leaf lmi index directly from the new leaves, releases
-   * the old forest and runs the element-specific post-adaptation hook.
-   */
-  void
-  adapt_forest (t8_forest_adapt_t adapt_callback, int recursive = 0)
-  {
-    using element_t = typename Derived::element_t;
-    using levelmultiindex = typename Derived::levelmultiindex;
-
-    t8_forest_ref (derived ().forest);
-    t8_forest_t new_forest
-      = t8_forest_new_adapt (derived ().forest, adapt_callback, recursive, 0, derived ().get_user_data ());
-
-    t8_mra::forest_data<element_t> *new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
-    new_user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (derived ().maximum_level);
-
-    std::swap (new_user_data->lmi_map, derived ().get_user_data ()->lmi_map);
-
-    const auto num_local_elements = t8_forest_get_local_num_leaf_elements (new_forest);
-    const auto num_ghost_elements = t8_forest_get_num_ghosts (new_forest);
-    new_user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local_elements + num_ghost_elements);
-    new_user_data->mra_instance = &derived ();
-
-    t8_forest_set_user_data (new_forest, new_user_data);
-
-    const auto *scheme = t8_forest_get_scheme (new_forest);
-    const auto num_local_trees = t8_forest_get_num_local_trees (new_forest);
-    auto current_idx = 0u;
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto gtreeid = t8_forest_global_tree_id (new_forest, tree_idx);
-      const auto num_elements = t8_forest_get_tree_num_leaf_elements (new_forest, tree_idx);
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
-        const auto *element = t8_forest_get_leaf_element_in_tree (new_forest, tree_idx, ele_idx);
-        t8_mra::set_lmi_forest_data (new_user_data, current_idx, levelmultiindex (gtreeid, element, scheme));
-      }
-    }
-
-    auto *old_user_data = derived ().get_user_data ();
-    delete old_user_data->lmi_map;
-    sc_array_destroy (old_user_data->lmi_idx);
-    T8_FREE (old_user_data);
-    t8_forest_unref (&derived ().forest);
-
-    derived ().forest = new_forest;
-    derived ().ghost_map.erase_all ();
-    derived ().post_adaptation_hook ();
   }
 
   /**
@@ -465,11 +298,11 @@ class multiscale_adaptation {
       t8_debugf ("MRA coarsen pass %d: %u families marked, %zu leaves remain\n", pass, num_marked,
                  derived ().get_lmi_map ()->size ());
 
-      if (global_num_marks (num_marked) == 0)
+      if (derived ().grid.global_num_marks (num_marked) == 0)
         break;
 
-      adapt_forest (static_coarsening_callback, 1);
-      repartition ();
+      derived ().grid.adapt (static_coarsening_callback, 1);
+      derived ().grid.repartition ();
     }
 
     clear_multiscale_state ();
@@ -559,14 +392,14 @@ class multiscale_adaptation {
     using levelmultiindex = typename Derived::levelmultiindex;
 
     int mpisize;
-    sc_MPI_Comm_size (derived ().comm, &mpisize);
+    sc_MPI_Comm_size (derived ().grid.comm, &mpisize);
 
     std::vector<int> send_counts (mpisize);
     std::transform (outgoing.begin (), outgoing.end (), send_counts.begin (),
                     [] (const auto &list) { return static_cast<int> (list.size ()); });
 
     std::vector<int> recv_counts (mpisize, 0);
-    sc_MPI_Alltoall (send_counts.data (), 1, sc_MPI_INT, recv_counts.data (), 1, sc_MPI_INT, derived ().comm);
+    sc_MPI_Alltoall (send_counts.data (), 1, sc_MPI_INT, recv_counts.data (), 1, sc_MPI_INT, derived ().grid.comm);
 
     std::vector<std::vector<size_t>> incoming (mpisize);
     std::vector<sc_MPI_Request> requests;
@@ -577,12 +410,12 @@ class multiscale_adaptation {
         incoming[rank].resize (recv_counts[rank]);
         requests.emplace_back ();
         sc_MPI_Irecv (incoming[rank].data (), recv_counts[rank] * sizeof (size_t), sc_MPI_BYTE, rank, 0,
-                      derived ().comm, &requests.back ());
+                      derived ().grid.comm, &requests.back ());
       }
       if (send_counts[rank] > 0) {
         requests.emplace_back ();
         sc_MPI_Isend (const_cast<size_t *> (outgoing[rank].data ()), send_counts[rank] * sizeof (size_t), sc_MPI_BYTE,
-                      rank, 0, derived ().comm, &requests.back ());
+                      rank, 0, derived ().grid.comm, &requests.back ());
       }
     }
     sc_MPI_Waitall (static_cast<int> (requests.size ()), requests.data (), sc_MPI_STATUSES_IGNORE);
@@ -619,13 +452,13 @@ class multiscale_adaptation {
   neighbour_prediction (int min_level, const PriorRefinements &prior_refinements)
   {
     int mpirank, mpisize;
-    sc_MPI_Comm_rank (derived ().comm, &mpirank);
-    sc_MPI_Comm_size (derived ().comm, &mpisize);
+    sc_MPI_Comm_rank (derived ().grid.comm, &mpirank);
+    sc_MPI_Comm_size (derived ().grid.comm, &mpisize);
 
     std::vector<std::vector<size_t>> outgoing (mpisize);
     auto num_new_marks = 0u;
 
-    for_each_face_neigh (
+    derived ().grid.for_each_face_neigh (
       [&] (const auto &lmi) { return lmi.level () != 0 && derived ().td_set.contains (t8_mra::parent_lmi (lmi)); },
       [&] (const auto &, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid, t8_element_t *neigh_element,
            const auto &neigh_lmi) {
@@ -633,7 +466,7 @@ class multiscale_adaptation {
         if (res > 0)
           ++num_new_marks;
         else if (res < 0 && mpisize > 1) {
-          const auto owner = t8_forest_element_find_owner (derived ().forest, neigh_gtreeid, neigh_element, tree_class);
+          const auto owner = derived ().grid.find_owner (neigh_gtreeid, neigh_element, tree_class);
           if (owner != mpirank)
             outgoing[owner].push_back (neigh_lmi.index);
         }
@@ -642,7 +475,7 @@ class multiscale_adaptation {
     if (mpisize > 1)
       num_new_marks += exchange_refine_requests (outgoing, min_level, 0u, prior_refinements);
 
-    return global_num_marks (num_new_marks);
+    return derived ().grid.global_num_marks (num_new_marks);
   }
 
   /**
@@ -727,13 +560,13 @@ class multiscale_adaptation {
     const auto num_marked = num_refinement_marks (min_level, max_level);
     t8_debugf ("MRA refine analysis: %u leaf families, %u leaves marked\n", num_families, num_marked);
 
-    if (global_num_marks (num_marked) == 0) {
+    if (derived ().grid.global_num_marks (num_marked) == 0) {
       clear_multiscale_state ();
       return;
     }
 
     apply_refinement (min_level, max_level, 1);
-    repartition ();
+    derived ().grid.repartition ();
 
     clear_multiscale_state ();
   }
@@ -758,16 +591,15 @@ class multiscale_adaptation {
     clear_multiscale_state ();
 
     int mpirank, mpisize;
-    sc_MPI_Comm_rank (derived ().comm, &mpirank);
-    sc_MPI_Comm_size (derived ().comm, &mpisize);
+    sc_MPI_Comm_rank (derived ().grid.comm, &mpirank);
+    sc_MPI_Comm_size (derived ().grid.comm, &mpisize);
     std::vector<std::vector<size_t>> outgoing (mpisize);
 
-    for_each_face_neigh ([] (const auto &lmi) { return lmi.level () >= 2; },
+    derived ().grid.for_each_face_neigh ([] (const auto &lmi) { return lmi.level () >= 2; },
                          [&] (const auto &, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid,
                               t8_element_t *neigh_element, const auto &neigh_lmi) {
                            if (refine_covering_leaf (neigh_lmi, 0, 1u, no_prior_marks {}) < 0 && mpisize > 1) {
-                             const auto owner = t8_forest_element_find_owner (derived ().forest, neigh_gtreeid,
-                                                                              neigh_element, tree_class);
+                             const auto owner = derived ().grid.find_owner (neigh_gtreeid, neigh_element, tree_class);
                              if (owner != mpirank)
                                outgoing[owner].push_back (neigh_lmi.index);
                            }
@@ -776,13 +608,13 @@ class multiscale_adaptation {
     if (mpisize > 1)
       exchange_refine_requests (outgoing, 0, 1u, no_prior_marks {});
 
-    const auto num_marked = global_num_marks (num_refinement_marks (0, derived ().maximum_level));
+    const auto num_marked = derived ().grid.global_num_marks (num_refinement_marks (0, derived ().grid.maximum_level));
     if (num_marked == 0) {
       clear_multiscale_state ();
       return 0;
     }
 
-    apply_refinement (0, derived ().maximum_level, 0);
+    apply_refinement (0, derived ().grid.maximum_level, 0);
     clear_multiscale_state ();
 
     return num_marked;
@@ -806,146 +638,7 @@ class multiscale_adaptation {
       t8_debugf ("MRA balance round %d\n", rounds++);
 
     if (rounds > 0)
-      repartition ();
-  }
-
-  //=============================================================================
-  // Repartitioning
-  //=============================================================================
-
-  /**
-   * @brief Repartition the forest along the SFC and migrate the leaf data
-   *
-   * Adaptive passes unbalance the per-rank load. Builds the partitioned
-   * forest, ships each leaf's element_data along the partition
-   * (t8_forest_partition_data, SFC leaf order), then rebuilds lmi_map and
-   * lmi_idx from the new local leaves. Requires the standing invariant
-   * (forest leaves <-> lmi_map keys 1:1); collective.
-   *
-   * Partitions with set_for_coarsening = 1 (t8code PFC): boundaries are
-   * rounded so no family of same-level siblings is split across ranks, so
-   * the next coarsen pass can merge a family that was a seam family before.
-   */
-  void
-  repartition ()
-  {
-    using element_t = typename Derived::element_t;
-    using levelmultiindex = typename Derived::levelmultiindex;
-
-    static_assert (std::is_trivially_copyable_v<element_t>, "element data is shipped as raw bytes");
-
-    int mpisize;
-    sc_MPI_Comm_size (derived ().comm, &mpisize);
-    if (mpisize == 1)
-      return;
-
-    auto *forest = derived ().forest;
-    auto *user_data = derived ().get_user_data ();
-    auto *lmi_map = derived ().get_lmi_map ();
-
-    const auto num_old = t8_forest_get_local_num_leaf_elements (forest);
-    auto *data_in = sc_array_new_count (sizeof (element_t), num_old);
-    for (t8_locidx_t i = 0; i < num_old; ++i) {
-      const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, i);
-
-      *reinterpret_cast<element_t *> (sc_array_index (data_in, i)) = lmi_map->get (lmi);
-    }
-
-    t8_forest_ref (forest);
-    t8_forest_t new_forest;
-    t8_forest_init (&new_forest);
-    t8_forest_set_partition (new_forest, forest, 1);
-    t8_forest_commit (new_forest);
-
-    const auto num_new = t8_forest_get_local_num_leaf_elements (new_forest);
-    auto *data_out = sc_array_new_count (sizeof (element_t), num_new);
-    t8_forest_partition_data (forest, new_forest, data_in, data_out);
-    sc_array_destroy (data_in);
-
-    auto *new_user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
-    new_user_data->lmi_map = new t8_mra::levelindex_map<levelmultiindex, element_t> (derived ().maximum_level);
-    new_user_data->lmi_idx
-      = sc_array_new_count (sizeof (levelmultiindex), num_new + t8_forest_get_num_ghosts (new_forest));
-    new_user_data->mra_instance = &derived ();
-    t8_forest_set_user_data (new_forest, new_user_data);
-
-    const auto *scheme = t8_forest_get_scheme (new_forest);
-    const auto num_local_trees = t8_forest_get_num_local_trees (new_forest);
-    t8_locidx_t current_idx = 0;
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto gtreeid = t8_forest_global_tree_id (new_forest, tree_idx);
-      const auto num_elements = t8_forest_get_tree_num_leaf_elements (new_forest, tree_idx);
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
-        const auto *element = t8_forest_get_leaf_element_in_tree (new_forest, tree_idx, ele_idx);
-        const auto lmi = levelmultiindex (gtreeid, element, scheme);
-        t8_mra::set_lmi_forest_data (new_user_data, current_idx, lmi);
-        new_user_data->lmi_map->insert (lmi, *reinterpret_cast<element_t *> (sc_array_index (data_out, current_idx)));
-      }
-    }
-    sc_array_destroy (data_out);
-
-    delete user_data->lmi_map;
-    sc_array_destroy (user_data->lmi_idx);
-    T8_FREE (user_data);
-    t8_forest_unref (&derived ().forest);
-
-    derived ().forest = new_forest;
-    derived ().ghost_map.erase_all ();
-    derived ().post_adaptation_hook ();
-  }
-
-  //=============================================================================
-  // Ghost Exchange
-  //=============================================================================
-
-  /**
-   * @brief Fill ghost_map with the remote leaves touching the local partition
-   *
-   * Builds the face-ghost layer on demand, extends lmi_idx by the ghost
-   * slots, exchanges the lmi index and the leaf data, and ships every remote
-   * leaf into ghost_map.
-   *
-   * The ghost data is a read-only snapshot: every adapt/repartition rebuilds
-   * the forest and clears ghost_map — call again after adapting. Collective.
-   */
-  void
-  ghost_exchange ()
-  {
-    using element_t = typename Derived::element_t;
-
-    auto *forest = derived ().forest;
-
-    derived ().ghost_map.erase_all ();
-
-    int mpisize = 1;
-    sc_MPI_Comm_size (derived ().comm, &mpisize);
-    if (mpisize == 1)
-      return;
-
-    if (forest->ghosts == nullptr) {
-      forest->ghost_type = T8_GHOST_FACES;
-      t8_forest_ghost_create_topdown (forest);
-    }
-
-    const auto num_local = t8_forest_get_local_num_leaf_elements (forest);
-    const auto num_ghosts = t8_forest_get_num_ghosts (forest);
-
-    auto *user_data = derived ().get_user_data ();
-    sc_array_resize (user_data->lmi_idx, num_local + num_ghosts);
-    t8_forest_ghost_exchange_data (forest, user_data->lmi_idx);
-
-    auto *data = sc_array_new_count (sizeof (element_t), num_local + num_ghosts);
-    auto *lmi_map = derived ().get_lmi_map ();
-    for (t8_locidx_t i = 0; i < num_local; ++i)
-      *reinterpret_cast<element_t *> (sc_array_index (data, i))
-        = lmi_map->get (t8_mra::get_lmi_from_forest_data (user_data, i));
-
-    t8_forest_ghost_exchange_data (forest, data);
-
-    for (auto i = num_local; i < num_local + num_ghosts; ++i)
-      derived ().ghost_map.insert (t8_mra::get_lmi_from_forest_data (user_data, i),
-                                   *reinterpret_cast<element_t *> (sc_array_index (data, i)));
-    sc_array_destroy (data);
+      derived ().grid.repartition ();
   }
 
   //=============================================================================
@@ -966,7 +659,7 @@ class multiscale_adaptation {
     }
 
     std::array<double, Derived::U_DIM> global;
-    sc_MPI_Allreduce (local.data (), global.data (), Derived::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, derived ().comm);
+    sc_MPI_Allreduce (local.data (), global.data (), Derived::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, derived ().grid.comm);
     return global;
   }
 
@@ -995,14 +688,14 @@ class multiscale_adaptation {
   {
     using levelmultiindex = typename Derived::levelmultiindex;
 
-    derived ().ghost_exchange ();
+    derived ().grid.ghost_exchange ();
 
     auto *lmi_map = derived ().get_lmi_map ();
-    auto &ghost_map = derived ().ghost_map;
+    auto &ghost_map = derived ().grid.ghost_map;
     const auto v_max = global_v_max (level);
 
     std::unordered_map<size_t, double> face_jump;
-    for_each_face_neigh ([&] (const auto &lmi) { return lmi.level () == static_cast<unsigned int> (level); },
+    derived ().grid.for_each_face_neigh ([&] (const auto &lmi) { return lmi.level () == static_cast<unsigned int> (level); },
                          [&] (const auto &lmi, t8_eclass_t, t8_gloidx_t, t8_element_t *, const auto &neigh_lmi) {
                            const auto *neigh_data = lmi_map->contains (neigh_lmi)    ? &lmi_map->get (neigh_lmi)
                                                     : ghost_map.contains (neigh_lmi) ? &ghost_map.get (neigh_lmi)
@@ -1025,7 +718,7 @@ class multiscale_adaptation {
         jumps.insert (t8_mra::parent_lmi (lmi));
     }
 
-    globalize (jumps);
+    derived ().grid.globalize (jumps);
     return jumps;
   }
 
@@ -1075,24 +768,24 @@ class multiscale_adaptation {
       derived ().refinement_set.insert (lmi);
 
     const auto num_marked = derived ().refinement_set[level].size ();
-    if (global_num_marks (num_marked) == 0)
+    if (derived ().grid.global_num_marks (num_marked) == 0)
       return 0;
 
-    adapt_forest (static_refinement_callback);
+    derived ().grid.adapt (static_refinement_callback);
 
     auto *lmi_map = derived ().get_lmi_map ();
     auto *user_data = derived ().get_user_data ();
 
-    const auto num_local_trees = t8_forest_get_num_local_trees (derived ().forest);
+    const auto num_local_trees = t8_forest_get_num_local_trees (derived ().grid.get_forest ());
     t8_locidx_t current_idx = 0;
     for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto num_elements = t8_forest_get_tree_num_leaf_elements (derived ().forest, tree_idx);
+      const auto num_elements = t8_forest_get_tree_num_leaf_elements (derived ().grid.get_forest (), tree_idx);
       for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
         const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
         if (lmi_map->contains (lmi))
           continue;
 
-        const auto *element = t8_forest_get_leaf_element_in_tree (derived ().forest, tree_idx, ele_idx);
+        const auto *element = t8_forest_get_leaf_element_in_tree (derived ().grid.get_forest (), tree_idx, ele_idx);
         lmi_map->insert (lmi, derived ().project_leaf (tree_idx, element, func));
       }
     }

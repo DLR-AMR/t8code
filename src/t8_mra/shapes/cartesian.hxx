@@ -109,7 +109,7 @@ class multiscale<TShape, U, P>:
         constexpr int vertex_perm[4] = { 0, 1, 3, 2 };
         v = vertex_perm[i];
       }
-      t8_forest_element_coordinate (Base::forest, tree_idx, element, v, vertices[i]);
+      t8_forest_element_coordinate (Base::get_forest (), tree_idx, element, v, vertices[i]);
     }
   }
 
@@ -133,7 +133,7 @@ class multiscale<TShape, U, P>:
     std::array<double, Base::DIM> vertices_min, vertices_max;
     extract_cartesian_vertices<Base::DIM> (vertices, vertices_min, vertices_max);
     const auto geom = cell_geometry<TShape, Base::P_DIM>::from_box (
-      vertices_min, vertices_max, t8_forest_element_volume (Base::forest, tree_idx, element));
+      vertices_min, vertices_max, t8_forest_element_volume (Base::get_forest (), tree_idx, element));
 
     // Orthonormal Legendre basis on the reference cell [0,1]^DIM: no volume/Jacobian
     // scaling in the projection. Reference quad points are mapped to physical by geom.
@@ -204,7 +204,7 @@ class multiscale<TShape, U, P>:
   {
     element_t data;
 
-    data.vol = t8_forest_element_volume (Base::forest, tree_idx, element);
+    data.vol = t8_forest_element_volume (Base::get_forest (), tree_idx, element);
     project_impl (data.u_coeffs, tree_idx, element, func);
 
     return data;
@@ -283,9 +283,9 @@ class multiscale<TShape, U, P>:
   void
   initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, Func &&func)
   {
-    Base::forest = t8_forest_new_uniform (mesh, scheme, level, 0, Base::comm);
+    Base::grid.forest = t8_forest_new_uniform (mesh, scheme, level, 0, Base::get_comm ());
     Base::build_lmi_map (
-      scheme, [&] (int tree_idx, const t8_element_t *element) { return project_leaf (tree_idx, element, func); });
+      [&] (int tree_idx, const t8_element_t *element) { return project_leaf (tree_idx, element, func); });
   }
 
   /**
@@ -302,12 +302,11 @@ class multiscale<TShape, U, P>:
     const nodal_to_modal<TShape, U, P> to_modal (nodes);
 
     t8_forest_ref (forest);
-    Base::forest = forest;
-    const auto *scheme = t8_forest_get_scheme (forest);
+    Base::grid.forest = forest;
 
-    Base::build_lmi_map (scheme, [&] (int tree_idx, const t8_element_t *element) {
+    Base::build_lmi_map ([&] (int tree_idx, const t8_element_t *element) {
       element_t data;
-      data.vol = t8_forest_element_volume (Base::forest, tree_idx, element);
+      data.vol = t8_forest_element_volume (Base::get_forest (), tree_idx, element);
       const auto nodal = cell_nodal_values (tree_idx, element);
       to_modal (std::span<const double> (nodal.data (), nodal.size ()), data.u_coeffs);
 
@@ -329,7 +328,7 @@ class multiscale<TShape, U, P>:
                      WriteCellNodalValues &&write_cell_nodal_values)
   {
     const modal_to_nodal<TShape, U, P> to_nodal (nodes);
-    const auto *scheme = t8_forest_get_scheme (Base::forest);
+    const auto *scheme = t8_forest_get_scheme (Base::get_forest ());
     auto *lmi_map = Base::get_lmi_map ();
 
     Base::for_each_local_leaf (

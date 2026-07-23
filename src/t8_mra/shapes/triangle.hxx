@@ -104,7 +104,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
                          double vertices[3][3])
   {
     for (auto i = 0; i < 3; ++i)
-      t8_forest_element_coordinate (Base::forest, tree_idx, element, i, vertices[order[i]]);
+      t8_forest_element_coordinate (Base::get_forest (), tree_idx, element, i, vertices[order[i]]);
   }
 
   /**
@@ -126,7 +126,7 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
     double vertices[3][3];
     element_vertex_coords (tree_idx, element, point_order, vertices);
 
-    const auto volume = t8_forest_element_volume (Base::forest, tree_idx, element);
+    const auto volume = t8_forest_element_volume (Base::get_forest (), tree_idx, element);
     const auto geom = cell_geometry<T8_ECLASS_TRIANGLE, Base::P_DIM>::from_triangle (
       { vertices[0][0], vertices[0][1] }, { vertices[1][0], vertices[1][1] }, { vertices[2][0], vertices[2][1] },
       volume);
@@ -174,11 +174,11 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   {
     element_t data;
 
-    const auto gtreeid = t8_forest_global_tree_id (Base::forest, tree_idx);
-    const auto *scheme = t8_forest_get_scheme (Base::forest);
+    const auto gtreeid = t8_forest_global_tree_id (Base::get_forest (), tree_idx);
+    const auto *scheme = t8_forest_get_scheme (Base::get_forest ());
     triangle_order::get_point_order_at_level (gtreeid, element, scheme, data.order);
 
-    data.vol = t8_forest_element_volume (Base::forest, tree_idx, element);
+    data.vol = t8_forest_element_volume (Base::get_forest (), tree_idx, element);
     project_impl (data.u_coeffs, tree_idx, element, data.order, func);
 
     return data;
@@ -256,8 +256,8 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   void
   initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, Func &&func)
   {
-    Base::forest = t8_forest_new_uniform (mesh, scheme, level, 0, Base::comm);
-    Base::build_lmi_map (scheme, [&] (int tree_idx, const t8_element_t *element) {
+    Base::grid.forest = t8_forest_new_uniform (mesh, scheme, level, 0, Base::get_comm ());
+    Base::build_lmi_map ([&] (int tree_idx, const t8_element_t *element) {
       return project_leaf (tree_idx, element, func);
     });
   }
@@ -294,11 +294,11 @@ class multiscale<T8_ECLASS_TRIANGLE, U, P>:
   void
   post_adaptation_hook ()
   {
-    if (Base::forest == nullptr)
+    if (Base::get_forest () == nullptr)
       return;
 
     auto *forest_data = Base::get_user_data ();
-    const auto *forest_scheme = t8_forest_get_scheme (Base::forest);
+    const auto *forest_scheme = t8_forest_get_scheme (Base::get_forest ());
 
     Base::for_each_local_leaf (
       [&] (t8_locidx_t tree_idx, const t8_element_t *elem, unsigned int local_idx, t8_gloidx_t) {

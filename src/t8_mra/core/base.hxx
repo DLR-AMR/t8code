@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include "t8_mra/core/mst.hxx"
+#include "t8_mra/core/forest_backend.hxx"
 #include "t8_mra/data/element_data.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
 #include "t8_mra/data/levelindex_map.hxx"
@@ -18,6 +19,7 @@
 #include <array>
 #include <optional>
 #include <span>
+#include <utility>
 #include <vector>
 
 namespace t8_mra
@@ -80,8 +82,8 @@ class multiscale_base: public multiscale_data<TShape> {
   // Member Variables (Common to all element types)
   //=============================================================================
 
-  /// Maximum refinement level
-  unsigned int maximum_level;
+  /// t8code + MPI side: forest, user data, ghost snapshot
+  forest_backend<TShape, U, P> grid;
 
   /// Scaling factors for each solution component (set by criteria via prepare)
   std::array<double, U> c_scaling;
@@ -100,18 +102,6 @@ class multiscale_base: public multiscale_data<TShape> {
 
   /// Set of elements marked for coarsening
   levelindex_set<levelmultiindex> coarsening_set;
-
-  /// Ghost element data, keyed by lmi. Read-only snapshot filled by
-  /// ghost_exchange; invalidated by every adaptation/repartition. Kept
-  /// separate from lmi_map, where ghost entries would masquerade as local
-  /// leaves in the family analysis.
-  levelindex_map<levelmultiindex, element_t> ghost_map;
-
-  /// t8code forest
-  t8_forest_t forest;
-
-  /// MPI communicator
-  sc_MPI_Comm comm;
 
   /// Default quadrature accuracy, derived from the polynomial order: exact
   /// for products of two basis functions (degree 2(P-1)), with margin for
@@ -132,10 +122,11 @@ class multiscale_base: public multiscale_data<TShape> {
    */
   multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires is_cartesian<TShape>
-    : maximum_level (_max_level), basis (default_num_quad_points_1d), d_map (maximum_level), td_set (maximum_level),
-      refinement_set (maximum_level), coarsening_set (maximum_level), ghost_map (maximum_level), comm (_comm)
+    : grid (_max_level, _comm), basis (default_num_quad_points_1d), d_map (grid.maximum_level),
+      td_set (grid.maximum_level), refinement_set (grid.maximum_level), coarsening_set (grid.maximum_level)
   {
     c_scaling.fill (1.0);
+    grid.bind (&derived (), [this] () { derived ().post_adaptation_hook (); });
   }
 
   /**
@@ -146,10 +137,11 @@ class multiscale_base: public multiscale_data<TShape> {
    */
   multiscale_base (int _max_level, sc_MPI_Comm _comm)
     requires (TShape == T8_ECLASS_TRIANGLE)
-    : maximum_level (_max_level), basis (default_dunavant_rule), d_map (maximum_level), td_set (maximum_level),
-      refinement_set (maximum_level), coarsening_set (maximum_level), ghost_map (maximum_level), comm (_comm)
+    : grid (_max_level, _comm), basis (default_dunavant_rule), d_map (grid.maximum_level),
+      td_set (grid.maximum_level), refinement_set (grid.maximum_level), coarsening_set (grid.maximum_level)
   {
     c_scaling.fill (1.0);
+    grid.bind (&derived (), [this] () { derived ().post_adaptation_hook (); });
   }
 
   ~multiscale_base () = default;
@@ -165,7 +157,13 @@ class multiscale_base: public multiscale_data<TShape> {
   t8_forest_t
   get_forest ()
   {
-    return forest;
+    return grid.get_forest ();
+  }
+
+  sc_MPI_Comm
+  get_comm () const
+  {
+    return grid.comm;
   }
 
   /**
@@ -174,7 +172,7 @@ class multiscale_base: public multiscale_data<TShape> {
   t8_mra::forest_data<element_t> *
   get_user_data ()
   {
-    return reinterpret_cast<t8_mra::forest_data<element_t> *> (t8_forest_get_user_data (forest));
+    return grid.get_user_data ();
   }
 
   /**
@@ -183,7 +181,7 @@ class multiscale_base: public multiscale_data<TShape> {
   t8_mra::levelindex_map<levelmultiindex, element_t> *
   get_lmi_map ()
   {
-    return get_user_data ()->lmi_map;
+    return grid.get_lmi_map ();
   }
 
   //=============================================================================
@@ -200,16 +198,7 @@ class multiscale_base: public multiscale_data<TShape> {
   void
   for_each_local_leaf (F &&f)
   {
-    const auto num_local_trees = t8_forest_get_num_local_trees (forest);
-    auto local_idx = 0u;
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto num_elems = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
-      const auto global_tree = t8_forest_global_tree_id (forest, tree_idx);
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elems; ++ele_idx, ++local_idx) {
-        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
-        f (tree_idx, element, local_idx, global_tree);
-      }
-    }
+    grid.for_each_local_leaf (std::forward<F> (f));
   }
 
   /// Build lmi_map + lmi_idx for the committed forest and attach as user data.
@@ -218,25 +207,9 @@ class multiscale_base: public multiscale_data<TShape> {
   /// projector: (int tree_idx, const t8_element_t *element) -> element_t
   template <typename Projector>
   void
-  build_lmi_map (const t8_scheme *scheme, Projector &&projector)
+  build_lmi_map (Projector &&projector)
   {
-    T8_ASSERT (t8_forest_is_committed (forest));
-
-    auto *user_data = T8_ALLOC (t8_mra::forest_data<element_t>, 1);
-    const auto num_local = t8_forest_get_local_num_leaf_elements (forest);
-    const auto num_ghost = t8_forest_get_num_ghosts (forest);
-
-    user_data->lmi_map = new levelindex_map<levelmultiindex, element_t> (maximum_level);
-    user_data->lmi_idx = sc_array_new_count (sizeof (levelmultiindex), num_local + num_ghost);
-    user_data->mra_instance = &derived ();
-    t8_forest_set_user_data (forest, user_data);
-
-    for_each_local_leaf (
-      [&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int local_idx, t8_gloidx_t global_tree) {
-        const auto lmi = levelmultiindex (global_tree, element, scheme);
-        user_data->lmi_map->insert (lmi, projector (tree_idx, element));
-        t8_mra::set_lmi_forest_data (user_data, local_idx, lmi);
-      });
+    grid.build (std::forward<Projector> (projector));
   }
 
   //=============================================================================
@@ -318,7 +291,7 @@ class multiscale_base: public multiscale_data<TShape> {
   {
     const auto vol = d_map.get (lmi).vol;
 
-    const auto level_diff = maximum_level - lmi.level ();
+    const auto level_diff = grid.maximum_level - lmi.level ();
     const auto h_lambda = std::sqrt (vol);
     const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
 
@@ -350,7 +323,7 @@ class multiscale_base: public multiscale_data<TShape> {
     // The scaling is a domain integral (eq. 2.39): sum the per-rank
     // partials so all ranks threshold consistently.
     std::array<double, U_DIM> global_res = {};
-    sc_MPI_Allreduce (res.data (), global_res.data (), U_DIM, sc_MPI_DOUBLE, sc_MPI_SUM, comm);
+    sc_MPI_Allreduce (res.data (), global_res.data (), U_DIM, sc_MPI_DOUBLE, sc_MPI_SUM, grid.comm);
 
     for (auto u = 0u; u < U_DIM; ++u)
       res[u] = std::max (1.0, global_res[u]);
@@ -455,7 +428,7 @@ class multiscale_base: public multiscale_data<TShape> {
     sc_array_t *queries = sc_array_new_count (sizeof (point_query), 1);
     *static_cast<point_query *> (sc_array_index (queries, 0)) = query;
 
-    t8_forest_search (forest, search_descend_fn, search_point_fn, queries);
+    t8_forest_search (grid.get_forest (), search_descend_fn, search_point_fn, queries);
 
     const point_query result = *static_cast<point_query *> (sc_array_index (queries, 0));
     sc_array_destroy (queries);
@@ -514,17 +487,7 @@ class multiscale_base: public multiscale_data<TShape> {
     td_set.erase_all ();
     refinement_set.erase_all ();
     coarsening_set.erase_all ();
-    ghost_map.erase_all ();
-
-    if (forest != nullptr) {
-      if (auto *user_data = get_user_data ()) {
-        delete user_data->lmi_map;
-        if (user_data->lmi_idx)
-          sc_array_destroy (user_data->lmi_idx);
-        T8_FREE (user_data);
-      }
-      t8_forest_unref (&forest);
-    }
+    grid.cleanup ();
   }
 };
 
