@@ -6,7 +6,7 @@
 #include <t8.h>
 #include <t8_eclass/t8_eclass.h>
 
-#include <t8_mra/core/cell_geometry.hxx>
+#include <t8_mra/num/cell_geometry.hxx>
 #include <t8_mra/data/element_data.hxx>
 #include <t8_mra/num/basis/basis.hxx>
 #include <t8_mra/num/dg_basis.hxx>
