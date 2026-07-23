@@ -92,7 +92,7 @@ class multiscale_base: public multiscale_data<TShape> {
   /// Detail coefficient storage
   levelindex_map<levelmultiindex, detail_t> d_map;
 
-  /// Set of significant details (thresholding)
+  /// Set of significant details
   levelindex_set<levelmultiindex> td_set;
 
   /// Set of elements marked for refinement
@@ -483,24 +483,6 @@ class multiscale_base: public multiscale_data<TShape> {
   {
     return mean_val (get_lmi_map ()->get (lmi));
   }
-
-  //=============================================================================
-  // Projection (Element-specific, must be implemented by derived classes)
-  //=============================================================================
-
-  /**
-   * @brief Project a function onto the DG basis for an element
-   *
-   * This function must be implemented by derived classes as projection
-   * is element-specific (different quadrature, coordinate mappings, etc.)
-   *
-   * A template method in the derived class
-   *
-   * Derived classes should implement:
-   *   template <typename Func>
-   *   void project_impl(std::span<double> dg_coeffs, int tree_idx,
-   *                     const t8_element_t *element, Func &&func)
-   */
 
   //=============================================================================
   // Post-Adaptation Hook
