@@ -144,6 +144,21 @@ class forest_backend {
     return t8_forest_element_find_owner (forest, neigh_gtreeid, neigh_element, tree_class);
   }
 
+  /** @brief Corner coordinates of a leaf in t8code vertex order. */
+  void
+  element_corner_coords (t8_locidx_t tree_idx, const t8_element_t *element, double corners[T8_ECLASS_MAX_CORNERS][3]) const
+  {
+    const int num_corners = t8_eclass_num_vertices[TShape];
+    for (int corner = 0; corner < num_corners; ++corner)
+      t8_forest_element_coordinate (forest, tree_idx, element, corner, corners[corner]);
+  }
+
+  double
+  element_volume (t8_locidx_t tree_idx, const t8_element_t *element) const
+  {
+    return t8_forest_element_volume (forest, tree_idx, element);
+  }
+
   /** @brief Fresh user data wrapping map, lmi_idx sized to local+ghost, owner stamped. */
   user_data_t *
   attach_user_data (t8_forest_t f, lmi_map_t *map)
