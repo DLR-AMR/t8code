@@ -114,7 +114,7 @@ domain_integral (MRA &mra)
   });
 
   std::array<double, U> global = {};
-  sc_MPI_Allreduce (local.data (), global.data (), U, sc_MPI_DOUBLE, sc_MPI_SUM, mra.comm);
+  sc_MPI_Allreduce (local.data (), global.data (), U, sc_MPI_DOUBLE, sc_MPI_SUM, mra.get_comm ());
   return global;
 }
 
