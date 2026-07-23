@@ -47,7 +47,7 @@
 
 #include <t8_mra/shapes/triangle.hxx>
 #include <t8_mra/shapes/cartesian.hxx>
-#include <t8_mra/core/cell_geometry.hxx>
+#include <t8_mra/num/cell_geometry.hxx>
 #include <t8_mra/core/face_neighbor.hxx>
 #include <t8_mra/criteria/coarsening_criterion.hxx>
 #include <t8_mra/criteria/refinement_criterion.hxx>
