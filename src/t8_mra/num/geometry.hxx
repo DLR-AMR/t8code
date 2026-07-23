@@ -28,7 +28,7 @@ deref (const std::array<double, DIM> &x_ref, const std::array<double, DIM> &vert
 }
 
 /// Min/max corners of an axis-aligned cartesian cell from t8code vertices. The
-/// vertex permutation applied in shapes/cartesian.hxx puts the lower corner at
+/// vertex permutation applied in dg/cartesian.hxx puts the lower corner at
 /// index 0 and the upper corner at the last index (2/3/7 for LINE/QUAD/HEX).
 template <unsigned int DIM>
 inline void
