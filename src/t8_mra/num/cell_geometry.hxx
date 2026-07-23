@@ -64,6 +64,14 @@ struct cell_geometry<Shape, P>
     return ref;
   }
 
+  /** @brief Pin a shared-face point's normal reference component exactly (t8 face: axis=f>>1, side=f&1). */
+  static point
+  on_face (point ref, int face)
+  {
+    ref[face >> 1] = (face & 1) ? 1.0 : 0.0;
+    return ref;
+  }
+
   /** @brief Whether a reference point lies in the unit box. */
   static bool
   in_ref_cell (const point &ref)
@@ -104,17 +112,30 @@ struct cell_geometry<Shape, P>
     return in_ref_cell (to_reference (phys));
   }
 
-  /** @brief Physical value basis_scale * sum_i coeffs_i * phi_i(ref). */
-  double
-  value (std::span<const double> coeffs, const point &ref) const
+  /** @brief basis_scale * sum_i coeffs_i * phi_i(basis_coord(ref)). */
+  static double
+  eval_modal (std::span<const double> coeffs, const point &ref, double basis_scale)
   {
-    const auto phi = basis_t::eval (ref);
+    const auto phi = basis_t::eval (basis_coord (ref));
     double sum = 0.0;
-
     for (int i = 0; i < DOF; ++i)
       sum += coeffs[i] * phi[i];
 
     return basis_scale * sum;
+  }
+
+  /** @brief Physical value at a reference point from the cell volume alone (no cell map). */
+  static double
+  reference_value (std::span<const double> coeffs, const point &ref, double volume)
+  {
+    return eval_modal (coeffs, ref, basis_t::normalization (volume));
+  }
+
+  /** @brief Physical value at a reference point using the cached basis scale. */
+  double
+  value (std::span<const double> coeffs, const point &ref) const
+  {
+    return eval_modal (coeffs, ref, basis_scale);
   }
 
   /** @brief Physical gradient d(u_h)/d(x_d) at a reference point. */
@@ -223,9 +244,9 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
     return in_ref_cell (to_reference (phys));
   }
 
-  /** @brief Physical value basis_scale * sum_i coeffs_i * phi_i(ref). */
-  double
-  value (std::span<const double> coeffs, const point &ref) const
+  /** @brief basis_scale * sum_i coeffs_i * phi_i(basis_coord(ref)). */
+  static double
+  eval_modal (std::span<const double> coeffs, const point &ref, double basis_scale)
   {
     const auto phi = basis_t::eval (basis_coord (ref));
     double sum = 0.0;
@@ -233,6 +254,20 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
       sum += coeffs[i] * phi[i];
 
     return basis_scale * sum;
+  }
+
+  /** @brief Physical value at a reference point from the cell volume alone (no cell map). */
+  static double
+  reference_value (std::span<const double> coeffs, const point &ref, double volume)
+  {
+    return eval_modal (coeffs, ref, basis_t::normalization (volume));
+  }
+
+  /** @brief Physical value at a reference point using the cached basis scale. */
+  double
+  value (std::span<const double> coeffs, const point &ref) const
+  {
+    return eval_modal (coeffs, ref, basis_scale);
   }
 
   /** @brief Physical gradient d(u_h)/d(x_d) at a reference point. */
