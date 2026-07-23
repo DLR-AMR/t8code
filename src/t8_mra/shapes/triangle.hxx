@@ -4,7 +4,7 @@
 
 #include "t8_mra/core/base.hxx"
 #include "t8_mra/core/adaptation.hxx"
-#include "t8_mra/core/cell_geometry.hxx"
+#include "t8_mra/num/cell_geometry.hxx"
 #include "t8_mra/data/triangle_order.hxx"
 #include "t8_mra/num/mask_coefficients.hxx"
 
