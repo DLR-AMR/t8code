@@ -140,20 +140,35 @@ if( T8CODE_ENABLE_MRA )
     DESTINATION include/t8_mra )
 
   install( FILES
-    t8_mra/core/base.hxx
-    t8_mra/core/adaptation.hxx
+    t8_mra/core/multiscale.hxx
+    t8_mra/core/forest_backend.hxx
     t8_mra/core/mst.hxx
+    t8_mra/core/shape_traits.hxx
     t8_mra/core/face_neighbor.hxx
     DESTINATION include/t8_mra/core )
+
+  install( FILES
+    t8_mra/core/shape/mst_policy.hxx
+    t8_mra/core/shape/cartesian.hxx
+    t8_mra/core/shape/triangle.hxx
+    DESTINATION include/t8_mra/core/shape )
+
+  install( FILES
+    t8_mra/core/adapt/grading.hxx
+    t8_mra/core/adapt/coarsen.hxx
+    t8_mra/core/adapt/refine.hxx
+    t8_mra/core/adapt/balance.hxx
+    DESTINATION include/t8_mra/core/adapt )
 
   install( FILES
     t8_mra/io/vtk.hxx
     DESTINATION include/t8_mra/io )
 
   install( FILES
-    t8_mra/shapes/triangle.hxx
-    t8_mra/shapes/cartesian.hxx
-    DESTINATION include/t8_mra/shapes )
+    t8_mra/dg/dg_base.hxx
+    t8_mra/dg/cartesian.hxx
+    t8_mra/dg/triangle.hxx
+    DESTINATION include/t8_mra/dg )
 
   install( FILES
     t8_mra/criteria/coarsening_criterion.hxx
@@ -169,12 +184,23 @@ if( T8CODE_ENABLE_MRA )
     DESTINATION include/t8_mra/data )
 
   install( FILES
+    t8_mra/data/shape/cartesian.hxx
+    t8_mra/data/shape/triangle.hxx
+    DESTINATION include/t8_mra/data/shape )
+
+  install( FILES
+    t8_mra/num/cell_geometry.hxx
     t8_mra/num/dg_basis.hxx
     t8_mra/num/geometry.hxx
     t8_mra/num/mask_coefficients.hxx
     t8_mra/num/mat.hxx
     t8_mra/num/nodal_to_modal.hxx
     DESTINATION include/t8_mra/num )
+
+  install( FILES
+    t8_mra/num/shape/cartesian.hxx
+    t8_mra/num/shape/triangle.hxx
+    DESTINATION include/t8_mra/num/shape )
 
   install( FILES
     t8_mra/num/basis/basis.hxx
