@@ -42,7 +42,7 @@ concept refinement_criterion = requires (C c, MRA &mra, const typename MRA::leve
  *   grade_neighbours:  N >            c_thresh * eps
  *   refine_children:   N >  2^(P+1) * c_thresh * eps
  *
- * prepare() computes the global scaling factors c_scaling (eq. 2.39).
+ * prepare() computes the global scaling factors c_scaling 
  */
 struct harten_prediction
 {
@@ -55,7 +55,6 @@ struct harten_prediction
   void
   prepare (MRA &mra)
   {
-    /// Scaling due to (2.39)
     mra.c_scaling = mra.threshold_scaling_factor ();
   }
 

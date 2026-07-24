@@ -48,14 +48,13 @@ struct hard_thresholding
 {
   /// Threshold constant
   double c_thresh = 1.0;
-  /// Expected order of convergence (enters the level-dependent threshold)
+  /// Expected order of convergence
   int gamma = 1;
 
   template <typename MRA>
   void
   prepare (MRA &mra)
   {
-    /// Scaling due to (2.39)
     mra.c_scaling = mra.threshold_scaling_factor ();
   }
 
