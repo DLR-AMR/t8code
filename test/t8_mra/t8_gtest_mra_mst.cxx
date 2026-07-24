@@ -95,11 +95,11 @@ TYPED_TEST (mra_mst, round_trip_identity_one_level)
     lmi_map.insert (kids[k], orig[k]);
   }
 
-  mst_t::multiscale_decomposition (0, 1, &lmi_map, d_map, this->mask);
+  mst_t::multiscale_decomposition (0, 1, lmi_map, d_map, this->mask);
   ASSERT_EQ (lmi_map.size (1), 0u) << "family not collapsed";
   ASSERT_TRUE (lmi_map.contains (base));
 
-  mst_t::inverse_multiscale_transformation (0, 1, &lmi_map, d_map, this->mask);
+  mst_t::inverse_multiscale_transformation (0, 1, lmi_map, d_map, this->mask);
   ASSERT_EQ (lmi_map.size (1), NUM_CHILDREN);
 
   for (unsigned int k = 0; k < NUM_CHILDREN; ++k) {
@@ -140,12 +140,12 @@ TYPED_TEST (mra_mst, round_trip_identity_two_levels)
       orig.push_back (e);
     }
 
-  mst_t::multiscale_decomposition (0, 2, &lmi_map, d_map, this->mask);
+  mst_t::multiscale_decomposition (0, 2, lmi_map, d_map, this->mask);
   ASSERT_EQ (lmi_map.size (2), 0u);
   ASSERT_EQ (lmi_map.size (1), 0u);
   ASSERT_TRUE (lmi_map.contains (base));
 
-  mst_t::inverse_multiscale_transformation (0, 2, &lmi_map, d_map, this->mask);
+  mst_t::inverse_multiscale_transformation (0, 2, lmi_map, d_map, this->mask);
   ASSERT_EQ (lmi_map.size (2), leaves.size ());
 
   for (std::size_t n = 0; n < leaves.size (); ++n) {
@@ -220,11 +220,11 @@ TYPED_TEST (mra_mst, details_vanish_on_coarse_representable_data)
   d_map.insert (base, parent);  // d_coeffs default to zero
 
   /// Prolong to the children: they now represent a pure coarse function.
-  mst_t::inverse_multiscale_transformation (0, 1, &lmi_map, d_map, this->mask);
+  mst_t::inverse_multiscale_transformation (0, 1, lmi_map, d_map, this->mask);
   ASSERT_EQ (lmi_map.size (1), NUM_CHILDREN);
 
   /// Re-analyse: details must vanish, parent scaling coefficients recovered.
-  mst_t::multiscale_decomposition (0, 1, &lmi_map, d_map, this->mask);
+  mst_t::multiscale_decomposition (0, 1, lmi_map, d_map, this->mask);
   ASSERT_TRUE (lmi_map.contains (base));
 
   const auto &re = d_map.get (base);
@@ -403,11 +403,11 @@ TYPED_TEST (mra_mst, round_trip_identity_graded_grid)
     orig.push_back (e);
   }
 
-  mst_t::multiscale_decomposition (0, 2, &lmi_map, d_map, this->mask);
+  mst_t::multiscale_decomposition (0, 2, lmi_map, d_map, this->mask);
   ASSERT_TRUE (lmi_map.contains (base));
   ASSERT_EQ (lmi_map.size (), 1u) << "graded grid not fully collapsed to the base";
 
-  mst_t::inverse_multiscale_transformation (0, 2, &lmi_map, d_map, this->mask);
+  mst_t::inverse_multiscale_transformation (0, 2, lmi_map, d_map, this->mask);
   ASSERT_EQ (lmi_map.size (), leaves.size ());
 
   for (std::size_t n = 0; n < leaves.size (); ++n) {
@@ -471,7 +471,7 @@ TYPED_TEST (mra_mst, multiscale_transformation_is_non_destructive)
     lmi_map.insert (kids[k], sib[k]);
   }
 
-  mst_t::multiscale_transformation (0, 1, &lmi_map, d_map, this->mask);
+  mst_t::multiscale_transformation (0, 1, lmi_map, d_map, this->mask);
 
   /// Leaves untouched, parent not inserted.
   EXPECT_EQ (lmi_map.size (1), NUM_CHILDREN);
@@ -516,7 +516,7 @@ TYPED_TEST (mra_mst, incomplete_family_is_skipped)
     t8_mra::levelindex_map<lmi_t, element_t> lmi_map (3);
     t8_mra::levelindex_map<lmi_t, detail_t> d_map (3);
     build (lmi_map);
-    mst_t::multiscale_transformation (0, 1, &lmi_map, d_map, this->mask);
+    mst_t::multiscale_transformation (0, 1, lmi_map, d_map, this->mask);
     EXPECT_FALSE (d_map.contains (base)) << "incomplete family produced a detail";
     EXPECT_EQ (lmi_map.size (1), NUM_CHILDREN - 1);
   }
@@ -524,7 +524,7 @@ TYPED_TEST (mra_mst, incomplete_family_is_skipped)
     t8_mra::levelindex_map<lmi_t, element_t> lmi_map (3);
     t8_mra::levelindex_map<lmi_t, detail_t> d_map (3);
     build (lmi_map);
-    mst_t::multiscale_decomposition (0, 1, &lmi_map, d_map, this->mask);
+    mst_t::multiscale_decomposition (0, 1, lmi_map, d_map, this->mask);
     EXPECT_FALSE (lmi_map.contains (base)) << "incomplete family collapsed";
     EXPECT_EQ (lmi_map.size (1), NUM_CHILDREN - 1) << "present leaves must remain";
   }

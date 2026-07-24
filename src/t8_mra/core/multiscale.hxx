@@ -157,19 +157,19 @@ class multiscale {
   void
   multiscale_transformation (unsigned int l_min, unsigned int l_max)
   {
-    transform.multiscale_transformation (l_min, l_max, get_lmi_map (), d_map);
+    transform.multiscale_transformation (l_min, l_max, *get_lmi_map (), d_map);
   }
 
   void
   inverse_multiscale_transformation (unsigned int l_min, unsigned int l_max)
   {
-    transform.inverse_multiscale_transformation (l_min, l_max, get_lmi_map (), d_map);
+    transform.inverse_multiscale_transformation (l_min, l_max, *get_lmi_map (), d_map);
   }
 
   void
   multiscale_decomposition (unsigned int l_min, unsigned int l_max)
   {
-    transform.multiscale_decomposition (l_min, l_max, get_lmi_map (), d_map);
+    transform.multiscale_decomposition (l_min, l_max, *get_lmi_map (), d_map);
   }
 
   //=============================================================================
