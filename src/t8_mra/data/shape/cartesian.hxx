@@ -2,6 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include "t8_eclass/t8_eclass.h"
 #include "t8_mra/data/levelmultiindex.hxx"
 
 namespace t8_mra
