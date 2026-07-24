@@ -4,6 +4,7 @@
 
 #include <array>
 #include "t8_eclass/t8_eclass.h"
+#include "sc_containers.h"
 
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/data/levelindex_map.hxx"
@@ -33,7 +34,8 @@ struct element_data
 
   std::array<int, 3> order = {};  // Point order
 
-  static size_t dg_idx (size_t u, size_t p) noexcept
+  static size_t
+  dg_idx (size_t u, size_t p) noexcept
   {
     return u * DOF + p;
   }
@@ -47,7 +49,8 @@ struct detail_data: element_data<TShape, U, P>
 
   std::array<double, base::U_DIM * base::W_DOF> d_coeffs = {};
 
-  static size_t wavelet_idx (size_t k, size_t u, size_t p) noexcept
+  static size_t
+  wavelet_idx (size_t k, size_t u, size_t p) noexcept
   {
     return k * base::U_DIM * base::DOF + u * base::DOF + p;
   }

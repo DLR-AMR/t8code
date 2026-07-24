@@ -1,12 +1,13 @@
 #pragma once
 
+#ifdef T8_ENABLE_MRA
+
 #include <t8_eclass/t8_eclass.h>
 #include <t8_element/t8_element.h>
+#include <functional>
 #include <t8_schemes/t8_scheme.hxx>
 
 #include <array>
-
-#ifdef T8_ENABLE_MRA
 
 namespace t8_mra
 {
@@ -66,7 +67,7 @@ struct levelmultiindex
   levelmultiindex (size_t basecell, const t8_element_t *elem, const t8_scheme *scheme) noexcept: index (basecell)
   {
     const auto level = scheme->element_get_level (ECLASS, elem);
-    for (auto l = 0u; l < level; ++l)
+    for (auto l = 0; l < level; ++l)
       *this = jth_child (*this, scheme->element_get_ancestor_id (ECLASS, elem, l + 1));
   }
 
@@ -86,9 +87,9 @@ struct levelmultiindex
   [[nodiscard]] static levelmultiindex
   jth_child (levelmultiindex lmi, size_t j) noexcept
   {
-    const size_t basecell = lmi.index & ((1ULL << BASECELL_BITS) - 1);
+    const auto basecell = lmi.index & ((1ULL << BASECELL_BITS) - 1);
     lmi.index >>= BASECELL_BITS;
-    const size_t level = lmi.index & ((1ULL << LEVEL_BITS) - 1);
+    const auto level = lmi.index & ((1ULL << LEVEL_BITS) - 1);
     lmi.index >>= LEVEL_BITS;
 
     const auto jth_path = (lmi.index << PATH_BITS) | j;
@@ -120,7 +121,7 @@ struct levelmultiindex
   children (levelmultiindex lmi) noexcept
   {
     std::array<levelmultiindex, NUM_CHILDREN> child_vec;
-    for (size_t j = 0u; j < NUM_CHILDREN; ++j)
+    for (auto j = 0u; j < NUM_CHILDREN; ++j)
       child_vec[j] = jth_child (lmi, j);
 
     return child_vec;
@@ -129,7 +130,7 @@ struct levelmultiindex
   /// Reference vertex order at the element's level. Cartesian elements need no
   /// reordering (identity); TRIANGLE specializes.
   static std::array<int, 3>
-  point_order_at_level (const t8_element_t * /*elem*/, const t8_scheme * /*scheme*/) noexcept
+  point_order_at_level (const t8_element_t * /*unused*/, const t8_scheme * /*unused*/) noexcept
   {
     return { 0, 1, 2 };
   }

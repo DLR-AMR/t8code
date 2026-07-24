@@ -41,11 +41,9 @@ class levelindex_map {
   levelindex_map (const levelindex_map &other) = default;
   levelindex_map (levelindex_map &&other) noexcept = default;
   levelindex_map &
-  operator= (const levelindex_map &other)
-    = default;
+  operator= (const levelindex_map &other) = default;
   levelindex_map &
-  operator= (levelindex_map &&other) noexcept
-    = default;
+  operator= (levelindex_map &&other) noexcept = default;
 
   /**
    * @brief Insert (level, key) -> data to map
@@ -298,6 +296,7 @@ levelindex_map<TLmi, T>::find (const TLmi &lmi)
 
   auto &m = level_map[lmi.level ()];
   const auto it = m.find (lmi);
+
   return it == m.end () ? nullptr : &it->second;
 }
 
@@ -309,6 +308,7 @@ levelindex_map<TLmi, T>::find (const TLmi &lmi) const
 
   const auto &m = level_map[lmi.level ()];
   const auto it = m.find (lmi);
+
   return it == m.end () ? nullptr : &it->second;
 }
 
@@ -320,6 +320,7 @@ levelindex_map<TLmi, T>::contains (unsigned int level, size_t key) const
 
   TLmi lmi;
   lmi.index = key;
+
   return level_map[level].contains (lmi);
 }
 
