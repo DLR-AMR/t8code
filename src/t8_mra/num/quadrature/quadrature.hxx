@@ -2,8 +2,11 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
+#include <concepts>
 #include <cstddef>
 #include <utility>
+#include <type_traits>
 #include <vector>
 
 #include <t8_eclass/t8_eclass.h>
@@ -48,18 +51,26 @@ struct quadrature<TShape, std::enable_if_t<is_cartesian<TShape>>>
   static constexpr int DIM = shape_traits<TShape>::DIM;
 
   std::size_t num_points = 0;
-  std::vector<double> points;   // flattened: point q coord d at points[DIM*q + d]
+  std::vector<double> points;  // flattened: point q coord d at points[DIM*q + d]
   std::vector<double> weights;
+
+  /// 1D point count for a rule exact to the given polynomial degree (2n-1 >= degree).
+  static constexpr int
+  rule_for_degree (int degree)
+  {
+    return degree / 2 + 1;
+  }
 
   quadrature () = default;
 
   explicit quadrature (int num_points_1d)
   {
-    std::vector<double> p1d, w1d;
+    std::vector<double> p1d;
+    std::vector<double> w1d;
     gauss_legendre_1d (num_points_1d, p1d, w1d);
 
     num_points = 1;
-    for (int d = 0; d < DIM; ++d)
+    for (auto d = 0; d < DIM; ++d)
       num_points *= num_points_1d;
 
     points.resize (DIM * num_points);
@@ -67,15 +78,17 @@ struct quadrature<TShape, std::enable_if_t<is_cartesian<TShape>>>
 
     // Odometer over the DIM axes (first axis fastest); order is irrelevant to
     // the integration sum, so any consistent enumeration works.
-    for (std::size_t q = 0; q < num_points; ++q) {
-      std::size_t rest = q;
+    for (auto q = 0; q < num_points; ++q) {
+      auto rest = q;
       double w = 1.0;
-      for (int d = 0; d < DIM; ++d) {
-        const int id = rest % num_points_1d;
+
+      for (auto d = 0; d < DIM; ++d) {
+        const auto id = rest % num_points_1d;
         rest /= num_points_1d;
         points[DIM * q + d] = p1d[id];
         w *= w1d[id];
       }
+
       weights[q] = w;
     }
   }
@@ -88,8 +101,15 @@ struct quadrature<T8_ECLASS_TRIANGLE>
   static constexpr int DIM = 2;
 
   std::size_t num_points = 0;
-  std::vector<double> points;   // flattened: [x0, y0, x1, y1, ...]
+  std::vector<double> points;  // flattened: [x0, y0, x1, y1, ...]
   std::vector<double> weights;
+
+  /// Dunavant rule (accuracy degree) for the given polynomial degree, capped at the table maximum.
+  static constexpr int
+  rule_for_degree (int degree)
+  {
+    return std::min (20, degree);
+  }
 
   quadrature () = default;
 

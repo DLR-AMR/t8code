@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <algorithm>
+#include <initializer_list>
 #include <span>
 #include <stdexcept>
 #include <vector>
@@ -30,12 +31,10 @@ class mat {
 
   mat (const mat &) = default;
   mat &
-  operator= (const mat &)
-    = default;
+  operator= (const mat &) = default;
   mat (mat &&) = default;
   mat &
-  operator= (mat &&)
-    = default;
+  operator= (mat &&) = default;
 
   mat &
   operator= (const std::initializer_list<double> &l)

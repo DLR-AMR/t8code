@@ -2,7 +2,6 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <vector>
 #include <array>
 #include <type_traits>
 
@@ -10,8 +9,6 @@
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/num/basis/basis.hxx"
 #include "t8_mra/num/quadrature/quadrature.hxx"
-#include "t8_mra/num/mat.hxx"
-#include "t8_mra/num/geometry.hxx"
 
 namespace t8_mra
 {

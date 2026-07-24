@@ -52,9 +52,12 @@ class nodal_to_modal {
     std::array<double, DOF> rhs;
     for (auto u = 0u; u < U; ++u) {
       const auto off = u * DOF;
+
       for (auto j = 0u; j < DOF; ++j)
         rhs[j] = nodal[off + j];
+
       lu_solve (vandermonde, perm, rhs);
+
       for (auto i = 0u; i < DOF; ++i)
         modal[off + i] = rhs[i];
     }
@@ -100,10 +103,12 @@ class modal_to_nodal {
   {
     for (auto u = 0u; u < U; ++u) {
       const auto off = u * DOF;
+
       for (auto j = 0u; j < DOF; ++j) {
-        double v = 0.0;
+        auto v = 0.0;
         for (auto i = 0u; i < DOF; ++i)
           v += modal[off + i] * phi_at_node[j][i];
+
         nodal[off + j] = v;
       }
     }
@@ -112,7 +117,7 @@ class modal_to_nodal {
   std::array<double, U * DOF>
   operator() (std::span<const double> modal) const
   {
-    std::array<double, U * DOF> nodal;
+    std::array<double, U * DOF> nodal = {};
     (*this) (modal, nodal);
 
     return nodal;
