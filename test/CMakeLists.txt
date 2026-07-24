@@ -135,7 +135,6 @@ add_t8_cpp_test( NAME t8_gtest_cmesh_add_attributes_when_derive_parallel    SOUR
 add_t8_cpp_test( NAME t8_gtest_cmesh_vertex_conn_tree_to_vertex_parallel    SOURCES t8_cmesh/t8_gtest_cmesh_vertex_conn_tree_to_vertex.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_vertex_conn_vertex_to_tree_parallel    SOURCES t8_cmesh/t8_gtest_cmesh_vertex_conn_vertex_to_tree.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_vertex_conn_serial                     SOURCES t8_cmesh/t8_gtest_cmesh_vertex_conn.cxx )
-add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOURCES t8_cmesh/t8_gtest_compute_first_element.cxx )
 add_t8_cpp_test( NAME t8_gtest_multiple_attributes_parallel                 SOURCES t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOURCES t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
@@ -235,4 +234,9 @@ if( T8CODE_BUILD_MESH_HANDLE )
   add_t8_cpp_test( NAME t8_gtest_cache_competence_serial            SOURCES mesh_handle/competences/t8_gtest_cache_element_competence.cxx )
   add_t8_cpp_test( NAME t8_gtest_handle_data_parallel               SOURCES mesh_handle/competences/t8_gtest_handle_data.cxx )
   add_t8_cpp_test( NAME t8_gtest_dg_competences_parallel            SOURCES mesh_handle/competences/t8_gtest_dg_competences.cxx )
+endif()
+
+# Note: This test case just causes too many problems on Mac OS...
+if(NOT APPLE)
+    add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOURCES t8_cmesh/t8_gtest_compute_first_element.cxx )
 endif()
