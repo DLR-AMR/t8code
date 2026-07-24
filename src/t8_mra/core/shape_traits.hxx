@@ -4,6 +4,7 @@
 
 #include <t8_eclass/t8_eclass.h>
 
+#include <algorithm>
 #include <cstddef>
 
 namespace t8_mra
@@ -22,13 +23,17 @@ concept is_cartesian = (TShape == T8_ECLASS_LINE || TShape == T8_ECLASS_QUAD || 
 
 /// Binomial coefficient (compile-time), for simplex DOF counts.
 constexpr size_t
-binom (int n, int k) noexcept
+binom (size_t n, size_t k) noexcept
 {
-  return (k > n)                  ? 0
-         : (k == 0 || k == n)     ? 1
-         : (k == 1 || k == n - 1) ? n
-         : (2 * k < n)            ? binom (n - 1, k - 1) * n / k
-                                  : binom (n - 1, k) * n / (n - k);
+  if (k > n)
+    return 0;
+  k = std::min (n - k, k);
+
+  auto result = 1u;
+  for (size_t i = 0; i < k; ++i)
+    result = result * (n - i) / (i + 1);
+
+  return result;
 }
 
 /// Per-shape compile-time facts. Primary template left undefined-ish (DIM 0)
@@ -42,7 +47,7 @@ struct shape_traits
   static constexpr int VTK_CELL_TYPE = 0;
 
   static constexpr unsigned short
-  dof (unsigned short)
+  dof (unsigned short /*unused*/)
   {
     return 0;
   }
