@@ -254,7 +254,7 @@ TYPED_TEST (mra_mst, details_vanish_for_projected_polynomial)
   constexpr unsigned int DIM = element_t::DIM;
 
   using basis_t = t8_mra::basis<Shape, P>;
-  const t8_mra::quadrature<Shape> quad (t8_mra::mask_quad_param<Shape, P>);
+  const t8_mra::quadrature<Shape> quad (t8_mra::quadrature<Shape>::rule_for_degree (2 * P));
   const auto children = t8_mra::child_maps<Shape> ();
   constexpr double ref_volume = t8_mra::is_cartesian<Shape> ? 1.0 : 0.5;
 
@@ -311,7 +311,7 @@ TYPED_TEST (mra_mst, details_scale_as_h_to_the_P)
   constexpr unsigned int DIM = element_t::DIM;
 
   using basis_t = t8_mra::basis<Shape, P>;
-  const t8_mra::quadrature<Shape> quad (t8_mra::mask_quad_param<Shape, P>);
+  const t8_mra::quadrature<Shape> quad (t8_mra::quadrature<Shape>::rule_for_degree (2 * P));
   const auto children = t8_mra::child_maps<Shape> ();
   constexpr double ref_volume = t8_mra::is_cartesian<Shape> ? 1.0 : 0.5;
 

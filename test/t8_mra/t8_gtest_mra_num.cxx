@@ -84,7 +84,7 @@ class mra_num: public ::testing::Test {
   using basis_t = t8_mra::basis<Shape, P>;
 
   /// Exact to degree >= 2(P-1) on every shape
-  t8_mra::quadrature<Shape> quad { t8_mra::mask_quad_param<Shape, P> };
+  t8_mra::quadrature<Shape> quad { t8_mra::quadrature<Shape>::rule_for_degree (2 * P) };
 };
 TYPED_TEST_SUITE (mra_num, NumConfigs);
 
@@ -127,7 +127,7 @@ TYPED_TEST (mra_num, quadrature_is_exact)
   const auto &quad = this->quad;
 
   if constexpr (t8_mra::is_cartesian<Shape>) {
-    const int n = t8_mra::mask_quad_param<Shape, P>;  // points per axis
+    const int n = t8_mra::quadrature<Shape>::rule_for_degree (2 * P);  // points per axis
     const int m = 2 * n - 1;                          // highest exactly integrable degree
 
     /// Single-axis monomial x0^m.
@@ -260,7 +260,7 @@ TYPED_TEST (mra_num, mask_satisfies_refinement_equation)
   t8_mra::compute_mask<Shape, P> (mask);
 
   const auto children = t8_mra::child_maps<Shape> ();
-  const double factor = ref_volume<Shape> / t8_mra::mask_norm<Shape>;
+  const double factor = ref_volume<Shape> / t8_mra::mask_policy<Shape>::norm;
 
   for (std::size_t k = 0; k < children.size (); ++k)
     for (const auto &xi : interior_points<Shape, DIM> ()) {
@@ -298,7 +298,8 @@ TEST (mra_geometry, deref_maps_box_corners)
 TEST (mra_geometry, extract_cartesian_vertices_picks_min_max)
 {
   /// QUAD physical vertices
-  const double verts[4][3] = { { 1.0, 2.0, 0.0 }, { 3.0, 2.0, 0.0 }, { 4.0, 5.0, 0.0 }, { 3.0, 5.0, 0.0 } };
+  const std::array<std::array<double, 3>, 4> verts
+    = { { { 1.0, 2.0, 0.0 }, { 3.0, 2.0, 0.0 }, { 4.0, 5.0, 0.0 }, { 3.0, 5.0, 0.0 } } };
   std::array<double, 2> lo {}, hi {};
 
   t8_mra::extract_cartesian_vertices<2> (verts, lo, hi);
