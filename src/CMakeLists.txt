@@ -162,6 +162,7 @@ if( T8CODE_ENABLE_MRA )
 
   install( FILES
     t8_mra/io/vtk.hxx
+    t8_mra/io/dataset.hxx
     DESTINATION include/t8_mra/io )
 
   install( FILES
