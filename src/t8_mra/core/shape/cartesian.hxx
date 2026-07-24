@@ -2,6 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include "t8_eclass/t8_eclass.h"
 #include "t8_mra/core/shape/mst_policy.hxx"
 #include "t8_mra/core/shape_traits.hxx"
 
@@ -53,26 +54,25 @@ struct shape_traits<T8_ECLASS_HEX>
   }
 };
 
-/// Cartesian shapes carry no vertex-order information: no-op.
+/// Cartesian shapes carry no vertex-order information.
 template <t8_eclass Shape>
   requires is_cartesian<Shape>
 struct ordering_policy<Shape>
 {
   template <typename T>
   static void
-  adjust_parent_order (T &)
+  adjust_parent_order (T & /*unused*/)
   {
   }
 
   template <typename T>
   static void
-  adjust_child_order (T &, int, const T &)
+  adjust_child_order (T & /*unused*/, int /*unused*/, const T & /*unused*/)
   {
   }
 };
 
-/// Cartesian MST scaling: L2-orthonormal reference basis, so the forward
-/// transform averages over children and the detail norm needs no scaling.
+/// Cartesian MST scaling: L2-orthonormal reference basis
 template <t8_eclass Shape>
   requires is_cartesian<Shape>
 struct mst_scaling_policy<Shape>
@@ -90,7 +90,7 @@ struct mst_scaling_policy<Shape>
   }
 
   static constexpr double
-  detail_norm_scale (double /*vol*/)
+  detail_norm_scale (double /*unused*/)
   {
     return 1.0;
   }

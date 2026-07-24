@@ -2,6 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include "t8_eclass/t8_eclass.h"
 #include "t8_mra/core/shape/mst_policy.hxx"
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/data/triangle_order.hxx"
@@ -44,13 +45,12 @@ struct ordering_policy<T8_ECLASS_TRIANGLE>
   }
 };
 
-/// Triangle MST scaling: no child averaging in the forward transform; the
-/// detail norm scales by 1/vol.
+/// Triangle MST scaling: no child averaging in the forward transform
 template <>
 struct mst_scaling_policy<T8_ECLASS_TRIANGLE>
 {
   static constexpr double
-  forward_scaling_factor (unsigned int /*num_children*/)
+  forward_scaling_factor (unsigned int /*unused*/)
   {
     return 1.0;
   }
