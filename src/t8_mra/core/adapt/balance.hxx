@@ -1,5 +1,9 @@
 #pragma once
 
+#include "sc_mpi.h"
+#include "t8_eclass/t8_eclass.h"
+#include "t8_element/t8_element.h"
+#include <cstddef>
 #ifdef T8_ENABLE_MRA
 
 #include "t8_mra/core/adapt/grading.hxx"
@@ -25,7 +29,8 @@ balance_round (MS &mra)
 {
   clear_state (mra);
 
-  int mpirank, mpisize;
+  int mpirank;
+  int mpisize;
   sc_MPI_Comm_rank (mra.grid.comm, &mpirank);
   sc_MPI_Comm_size (mra.grid.comm, &mpisize);
   std::vector<std::vector<size_t>> outgoing (mpisize);
@@ -36,6 +41,7 @@ balance_round (MS &mra)
          const auto &neigh_lmi) {
       if (refine_covering_leaf (mra, neigh_lmi, 0, 1u, no_prior_marks {}) < 0 && mpisize > 1) {
         const auto owner = mra.grid.find_owner (neigh_gtreeid, neigh_element, tree_class);
+
         if (owner != mpirank)
           outgoing[owner].push_back (neigh_lmi.index);
       }
@@ -45,6 +51,7 @@ balance_round (MS &mra)
     exchange_refine_requests (mra, outgoing, 0, 1u, no_prior_marks {});
 
   const auto num_marked = mra.grid.global_num_marks (num_refinement_marks (mra, 0, mra.grid.maximum_level));
+
   if (num_marked == 0) {
     clear_state (mra);
     return 0;
@@ -68,6 +75,7 @@ void
 balance (MS &mra)
 {
   auto rounds = 0;
+
   while (balance_round (mra) > 0)
     t8_debugf ("MRA balance round %d\n", rounds++);
 

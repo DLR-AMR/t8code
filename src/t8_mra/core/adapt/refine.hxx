@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include "t8_mra/core/adapt/grading.hxx"
+#include "t8_mra/criteria/coarsening_criterion.hxx"
 #include "t8_mra/criteria/refinement_criterion.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
 #include <t8.h>
@@ -34,8 +35,8 @@ refine (MS &mra, int min_level, int max_level, Criterion criterion = {})
   mra.multiscale_transformation (0, max_level);
 
   auto num_families = 0u;
-  for (auto L = 0; L < max_level; ++L) {
-    for (const auto &[lmi, _] : mra.d_map[L]) {
+  for (auto l = 0; l < max_level; ++l) {
+    for (const auto &[lmi, _] : mra.d_map[l]) {
       ++num_families;
 
       const auto flags = criterion (mra, lmi);
@@ -43,7 +44,7 @@ refine (MS &mra, int min_level, int max_level, Criterion criterion = {})
       if (flags.grade_neighbours)
         mra.td_set.insert (lmi);
 
-      if (L < max_level - 1 && flags.refine_children)
+      if (l < max_level - 1 && flags.refine_children)
         for (const auto &child : t8_mra::children_lmi (lmi))
           mra.refinement_set.insert (child);
     }
@@ -57,6 +58,7 @@ refine (MS &mra, int min_level, int max_level, Criterion criterion = {})
 
   for (auto round = 0;; ++round) {
     const auto new_marks = neighbour_prediction (mra, min_level, prior_refinements);
+
     t8_debugf ("MRA refine grading round %d: %u new marks\n", round, new_marks);
     if (new_marks == 0)
       break;
@@ -64,13 +66,15 @@ refine (MS &mra, int min_level, int max_level, Criterion criterion = {})
     prior_refinements = mra.refinement_set;
 
     typename MS::index_set stopped;
-    for (auto L = 0; L < max_level; ++L)
-      for (const auto &lmi : mra.td_set[L]) {
+    for (auto l = 0; l < max_level; ++l)
+      for (const auto &lmi : mra.td_set[l]) {
         const auto children = t8_mra::children_lmi (lmi);
+
         if (std::any_of (children.begin (), children.end (),
                          [&] (const auto &child) { return mra.refinement_set.contains (child); }))
           stopped.insert (lmi);
       }
+
     for (const auto &lmi : stopped)
       mra.td_set.erase (lmi);
   }

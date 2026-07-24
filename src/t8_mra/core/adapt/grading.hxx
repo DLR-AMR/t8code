@@ -1,5 +1,9 @@
 #pragma once
 
+#include <iterator>
+#include "sc_mpi.h"
+#include "t8_eclass/t8_eclass.h"
+#include "t8_element/t8_element.h"
 #ifdef T8_ENABLE_MRA
 
 #include "t8_mra/data/levelmultiindex.hxx"
@@ -29,8 +33,10 @@ unsigned int
 num_refinement_marks (MS &mra, int min_level, int max_level)
 {
   auto num = 0u;
+
   for (auto l = min_level; l < max_level; ++l)
     num += mra.refinement_set[l].size ();
+
   return num;
 }
 
@@ -55,7 +61,7 @@ struct no_prior_marks
 {
   template <typename Lmi>
   bool
-  contains (const Lmi &) const
+  contains (const Lmi & /*unused*/) const
   {
     return false;
   }
@@ -87,6 +93,7 @@ refine_covering_leaf (MS &mra, const Lmi &neigh_lmi, int min_level, unsigned int
 
   while (walk.level () + max_level_gap < neigh_lmi.level () && prior_refinements.contains (walk)) {
     auto down = neigh_lmi;
+
     while (down.level () > walk.level () + 1)
       down = t8_mra::parent_lmi (down);
     walk = down;
@@ -95,6 +102,7 @@ refine_covering_leaf (MS &mra, const Lmi &neigh_lmi, int min_level, unsigned int
   if (walk.level () + max_level_gap < neigh_lmi.level () && static_cast<int> (walk.level ()) >= min_level
       && !mra.refinement_set.contains (walk)) {
     mra.refinement_set.insert (walk);
+
     return 1;
   }
 
@@ -120,9 +128,11 @@ exchange_refine_requests (MS &mra, const std::vector<std::vector<size_t>> &outgo
   int mpisize;
   sc_MPI_Comm_size (mra.grid.comm, &mpisize);
 
-  std::vector<int> send_counts (mpisize);
-  std::transform (outgoing.begin (), outgoing.end (), send_counts.begin (),
-                  [] (const auto &list) { return static_cast<int> (list.size ()); });
+  std::vector<int> send_counts;
+  send_counts.reserve (mpisize);
+
+  std::ranges::transform (outgoing, std::back_inserter (send_counts),
+                          [] (const auto &list) { return static_cast<int> (list.size ()); });
 
   std::vector<int> recv_counts (mpisize, 0);
   sc_MPI_Alltoall (send_counts.data (), 1, sc_MPI_INT, recv_counts.data (), 1, sc_MPI_INT, mra.grid.comm);
@@ -135,9 +145,11 @@ exchange_refine_requests (MS &mra, const std::vector<std::vector<size_t>> &outgo
     if (recv_counts[rank] > 0) {
       incoming[rank].resize (recv_counts[rank]);
       requests.emplace_back ();
+
       sc_MPI_Irecv (incoming[rank].data (), recv_counts[rank] * sizeof (size_t), sc_MPI_BYTE, rank, 0, mra.grid.comm,
                     &requests.back ());
     }
+
     if (send_counts[rank] > 0) {
       requests.emplace_back ();
       sc_MPI_Isend (const_cast<size_t *> (outgoing[rank].data ()), send_counts[rank] * sizeof (size_t), sc_MPI_BYTE,
@@ -148,9 +160,9 @@ exchange_refine_requests (MS &mra, const std::vector<std::vector<size_t>> &outgo
 
   auto num_new_marks = 0u;
   for (const auto &batch : incoming)
-    for (const auto index : batch)
-      if (refine_covering_leaf (mra, levelmultiindex (index), min_level, max_level_gap, prior_refinements) > 0)
-        ++num_new_marks;
+    num_new_marks += static_cast<unsigned int> (std::ranges::count_if (batch, [&] (const auto &idx) {
+      return refine_covering_leaf (mra, levelmultiindex (idx), min_level, max_level_gap, prior_refinements) > 0;
+    }));
 
   return num_new_marks;
 }
@@ -169,7 +181,8 @@ template <typename MS, typename PriorRefinements>
 unsigned int
 neighbour_prediction (MS &mra, int min_level, const PriorRefinements &prior_refinements)
 {
-  int mpirank, mpisize;
+  int mpirank;
+  int mpisize;
   sc_MPI_Comm_rank (mra.grid.comm, &mpirank);
   sc_MPI_Comm_size (mra.grid.comm, &mpisize);
 
@@ -185,6 +198,7 @@ neighbour_prediction (MS &mra, int min_level, const PriorRefinements &prior_refi
         ++num_new_marks;
       else if (res < 0 && mpisize > 1) {
         const auto owner = mra.grid.find_owner (neigh_gtreeid, neigh_element, tree_class);
+
         if (owner != mpirank)
           outgoing[owner].push_back (neigh_lmi.index);
       }

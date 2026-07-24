@@ -2,6 +2,12 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include "sc_mpi.h"
+#include "t8_eclass/t8_eclass.h"
+#include "t8_element/t8_element.h"
+#include "t8_schemes/t8_scheme.hxx"
+#include <cstddef>
+
 #include "t8_mra/core/adapt/grading.hxx"
 #include "t8_mra/criteria/coarsening_criterion.hxx"
 #include "t8_mra/data/element_data.hxx"
@@ -14,7 +20,6 @@
 #include <array>
 #include <cmath>
 #include <unordered_map>
-#include <vector>
 
 namespace t8_mra::adapt
 {
@@ -43,6 +48,7 @@ coarsen_sweep (MS &mra, int min_level, int max_level, Criterion &criterion)
   for (auto l = max_level; l > min_level; --l) {
     typename MS::index_set candidates;
     candidates.reserve (lmi_map->size (l));
+
     for (const auto &[lmi, _] : (*lmi_map)[l])
       candidates.insert (t8_mra::parent_lmi (lmi));
 
@@ -124,14 +130,17 @@ global_v_max (MS &mra, int level)
 {
   std::array<double, MS::U_DIM> local;
   local.fill (1.0);
+
   for (const auto &[lmi, _] : (*mra.get_lmi_map ())[level]) {
     const auto m = mra.mean_val (lmi);
+
     for (auto u = 0u; u < MS::U_DIM; ++u)
       local[u] = std::max (local[u], std::abs (m[u]));
   }
 
   std::array<double, MS::U_DIM> global;
   sc_MPI_Allreduce (local.data (), global.data (), MS::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, mra.grid.comm);
+
   return global;
 }
 
@@ -158,36 +167,38 @@ detect_jumps (MS &mra, int level, double c_thresh)
   const auto v_max = global_v_max (mra, level);
 
   std::unordered_map<size_t, double> face_jump;
-  mra.grid.for_each_face_neigh (
-    [&] (const auto &lmi) { return lmi.level () == static_cast<unsigned int> (level); },
-    [&] (const auto &lmi, t8_eclass_t, t8_gloidx_t, t8_element_t *, const auto &neigh_lmi) {
-      const auto *neigh_data = lmi_map->contains (neigh_lmi)    ? &lmi_map->get (neigh_lmi)
-                               : ghost_map.contains (neigh_lmi) ? &ghost_map.get (neigh_lmi)
-                                                                : nullptr;
-      if (neigh_data == nullptr)
-        return;
+  mra.grid.for_each_face_neigh ([&] (const auto &lmi) { return lmi.level () == static_cast<unsigned int> (level); },
+                                [&] (const auto &lmi, t8_eclass_t, t8_gloidx_t, t8_element_t *, const auto &neigh_lmi) {
+                                  const auto *neigh_data = lmi_map->contains (neigh_lmi)    ? &lmi_map->get (neigh_lmi)
+                                                           : ghost_map.contains (neigh_lmi) ? &ghost_map.get (neigh_lmi)
+                                                                                            : nullptr;
+                                  if (neigh_data == nullptr)
+                                    return;
 
-      const auto mean_inner = mra.mean_val (lmi);
-      const auto mean_neigh = mra.mean_val (*neigh_data);
-      auto &diff = face_jump[lmi.index];
-      for (auto u = 0u; u < MS::U_DIM; ++u)
-        diff = std::max (diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
-    });
+                                  const auto mean_inner = mra.mean_val (lmi_map->get (lmi));
+                                  const auto mean_neigh = mra.mean_val (*neigh_data);
+                                  auto &diff = face_jump[lmi.index];
+
+                                  for (auto u = 0u; u < MS::U_DIM; ++u)
+                                    diff = std::max (diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
+                                });
 
   typename MS::index_set jumps;
   for (const auto &[index, diff] : face_jump) {
     const auto lmi = levelmultiindex (index);
     const auto h = std::pow (lmi_map->get (lmi).vol, 1.0 / MS::DIM);
+
     if (diff > c_thresh * std::sqrt (h))
       jumps.insert (t8_mra::parent_lmi (lmi));
   }
 
   mra.grid.globalize (jumps);
+
   return jumps;
 }
 
 /// Coarsening criterion wrapper: families with a detected jump are always
-/// significant. Only used by the bottom-up initialization.
+/// significant.
 template <typename Criterion, typename MS>
 struct jump_guarded
 {
@@ -212,8 +223,7 @@ struct jump_guarded
  * @brief Refine every leaf at the given level and project the initial data
  *
  * Unlike refine(), the children data is projected directly from the initial
- * data (exact up to quadrature), not predicted. Building block of the bottom-up
- * initialization.
+ * data (exact up to quadrature), not predicted. 
  *
  * @return Number of leaves refined
  */
@@ -236,11 +246,14 @@ project_onto_children (MS &mra, int level, Func &&func)
   auto *user_data = mra.get_user_data ();
 
   const auto num_local_trees = t8_forest_get_num_local_trees (mra.grid.get_forest ());
-  t8_locidx_t current_idx = 0;
-  for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+  auto current_idx = 0;
+
+  for (auto tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
     const auto num_elements = t8_forest_get_tree_num_leaf_elements (mra.grid.get_forest (), tree_idx);
-    for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+
+    for (auto ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
       const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
+
       if (lmi_map->contains (lmi))
         continue;
 
@@ -279,6 +292,7 @@ initialize_data_adaptive (MS &mra, t8_cmesh_t mesh, const t8_scheme *scheme, int
 
   for (auto l = 1; l < max_level; ++l) {
     const auto jumps = detect_jumps (mra, l, c_thresh);
+
     coarsen (mra, std::max (l - 1, 1), l, jump_guarded<Criterion, MS> { criterion, jumps });
     project_onto_children (mra, l, func);
   }
