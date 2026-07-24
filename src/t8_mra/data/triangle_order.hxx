@@ -1,81 +1,56 @@
 #pragma once
 
+#ifdef T8_ENABLE_MRA
+
+#include <algorithm>
 #include <array>
 
+#include "t8_eclass/t8_eclass.h"
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
-#ifdef T8_ENABLE_MRA
 namespace t8_mra
 {
-/// TODO write more general with templates
+
 struct triangle_order
 {
-
   static constexpr t8_eclass ECLASS = T8_ECLASS_TRIANGLE;
 
+  using perm = std::array<int, 3>;
+
   static void
-  get_point_order (std::array<int, 3> &order, int cube_id)
+  get_point_order (perm &order, int cube_id)
   {
-
-    const auto idx = (order == std::array { 0, 1, 2 })   ? 0
-                     : (order == std::array { 2, 0, 1 }) ? 1
-                     : (order == std::array { 1, 2, 0 }) ? 2
-                     : (order == std::array { 0, 2, 1 }) ? 3
-                     : (order == std::array { 1, 0, 2 }) ? 4
-                     : (order == std::array { 2, 1, 0 }) ? 5
-                                                         : -1;
-
+    const auto idx = permutation_index (order, point_perms);
     if (idx != -1)
-      order = { lookup[idx][cube_id][0], lookup[idx][cube_id][1], lookup[idx][cube_id][2] };
+      order = point_lookup[idx][cube_id];
   }
 
   static void
-  invert_order (std::array<int, 3> &order)
+  invert_order (perm &order)
   {
-    const auto idx = (order == std::array { 0, 1, 2 })   ? 0
-                     : (order == std::array { 0, 2, 1 }) ? 1
-                     : (order == std::array { 1, 2, 0 }) ? 2
-                     : (order == std::array { 1, 0, 2 }) ? 3
-                     : (order == std::array { 2, 0, 1 }) ? 4
-                     : (order == std::array { 2, 1, 0 }) ? 5
-                                                         : -1;
-
+    const auto idx = permutation_index (order, invert_perms);
     if (idx != -1)
-      order = { inverse_lookup[idx][0], inverse_lookup[idx][1], inverse_lookup[idx][2] };
+      order = inverse_lookup[idx];
   }
 
   static void
-  get_parent_order (std::array<int, 3> &order)
+  get_parent_order (perm &order)
   {
-    const auto idx = (order == std::array { 0, 1, 2 })   ? 0
-                     : (order == std::array { 2, 0, 1 }) ? 1
-                     : (order == std::array { 1, 2, 0 }) ? 2
-                     : (order == std::array { 0, 2, 1 }) ? 3
-                     : (order == std::array { 1, 0, 2 }) ? 4
-                                                         : 5;
-
-    order = { parent_lookup[idx][0], parent_lookup[idx][1], parent_lookup[idx][2] };
+    order = parent_lookup[row_of (order)];
   }
 
   static int
-  get_reference_children_order (int type, int child_id, const std::array<int, 3> &order)
+  get_reference_children_order (int type, int child_id, const perm &order)
   {
-    const auto idx = (order == std::array { 0, 1, 2 })   ? 0
-                     : (order == std::array { 2, 0, 1 }) ? 1
-                     : (order == std::array { 1, 2, 0 }) ? 2
-                     : (order == std::array { 0, 2, 1 }) ? 3
-                     : (order == std::array { 1, 0, 2 }) ? 4
-                                                         : 5;
-
-    return (type == 1) ? lookup_type_1[idx][child_id] : lookup_type_2[idx][child_id];
+    const auto &table = (type == 1) ? child_lookup_type_1 : child_lookup_type_2;
+    return table[row_of (order)][child_id];
   }
 
   static void
-  get_point_order_at_level (size_t basecell, const t8_element_t *elem, const t8_scheme *scheme,
-                            std::array<int, 3> &order)
+  get_point_order_at_level (size_t basecell, const t8_element_t *elem, const t8_scheme *scheme, perm &order)
   {
     order = { 0, 1, 2 };
     const auto elem_level = scheme->element_get_level (ECLASS, elem);
@@ -89,52 +64,49 @@ struct triangle_order
   }
 
  private:
-  static constexpr int inverse_lookup[6][3]
-    = { { 0, 1, 2 }, { 0, 2, 1 }, { 2, 0, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 1, 0 } };
+  /// Position of a permutation in the table, or -1 if absent.
+  template <size_t N>
+  static int
+  permutation_index (const perm &order, const std::array<perm, N> &table)
+  {
+    const auto pos = std::ranges::find (table, order);
+    return pos == table.end () ? -1 : static_cast<int> (pos - table.begin ());
+  }
 
-  static constexpr int lookup[6][4][3] = {
-    // For permutation (0,1,2)
-    { { 0, 1, 2 }, { 2, 0, 1 }, { 1, 2, 0 }, { 0, 2, 1 } },
-    // For permutation (0,2,1)
-    { { 0, 1, 2 }, { 2, 0, 1 }, { 1, 2, 0 }, { 2, 1, 0 } },
-    // For permutation (1,2,0)
-    { { 0, 1, 2 }, { 2, 0, 1 }, { 1, 2, 0 }, { 1, 0, 2 } },
-    // For permutation (0,2,1)
-    { { 0, 2, 1 }, { 1, 0, 2 }, { 2, 1, 0 }, { 2, 0, 1 } },
-    // For permutation (2,0,1)
-    { { 0, 2, 1 }, { 1, 0, 2 }, { 2, 1, 0 }, { 0, 1, 2 } },
-    // For permutation (2,1,0)
-    { { 0, 2, 1 }, { 1, 0, 2 }, { 2, 1, 0 }, { 1, 2, 0 } }
-  };
+  /// Row index for the parent/children tables; unknown orders fall back to the last row.
+  static int
+  row_of (const perm &order)
+  {
+    const auto idx = permutation_index (order, point_perms);
+    return idx < 0 ? 5 : idx;
+  }
 
-  // Lookup tables for the two types (type == 1 or type == 2)
-  static constexpr int lookup_type_1[6][4] = {
-    { 1, 0, 2, 3 },  // order = {0, 1, 2}
-    { 2, 0, 3, 1 },  // order = {2, 0, 1}
-    { 3, 0, 1, 2 },  // order = {1, 2, 0}
-    { 1, 0, 3, 2 },  // order = {0, 2, 1}
-    { 2, 0, 1, 3 },  // order = {1, 0, 2}
-    { 3, 0, 2, 1 }   // order = {2, 1, 0}
-  };
-  static constexpr int lookup_type_2[6][4] = {
-    { 1, 2, 0, 3 },  // order = {0, 1, 2}
-    { 2, 3, 0, 1 },  // order = {2, 0, 1}
-    { 3, 1, 0, 2 },  // order = {1, 2, 0}
-    { 1, 3, 0, 2 },  // order = {0, 2, 1}
-    { 2, 1, 0, 3 },  // order = {1, 0, 2}
-    { 3, 2, 0, 1 }   // order = {2, 1, 0}
-  };
+  static constexpr std::array<perm, 6> point_perms
+    = { { { 0, 1, 2 }, { 2, 0, 1 }, { 1, 2, 0 }, { 0, 2, 1 }, { 1, 0, 2 }, { 2, 1, 0 } } };
 
-  // Lookup table with the 6 possible permutations of (first, second, third)
-  // Each row corresponds to the transformed triple (first, second, third)
-  static constexpr int parent_lookup[6][3] = {
-    { 1, 0, 2 },  // (0,1,2) -> (1,0,2)
-    { 0, 2, 1 },  // (2,0,1) -> (0,2,1)
-    { 2, 1, 0 },  // (1,2,0) -> (2,1,0)
-    { 0, 1, 2 },  // (0,2,1) -> (0,1,2)
-    { 1, 2, 0 },  // (1,0,2) -> (1,2,0)
-    { 2, 0, 1 }   // (2,1,0) -> (2,0,1)
-  };
+  static constexpr std::array<perm, 6> invert_perms
+    = { { { 0, 1, 2 }, { 0, 2, 1 }, { 1, 2, 0 }, { 1, 0, 2 }, { 2, 0, 1 }, { 2, 1, 0 } } };
+
+  static constexpr std::array<perm, 6> inverse_lookup
+    = { { { 0, 1, 2 }, { 0, 2, 1 }, { 2, 0, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 1, 0 } } };
+
+  static constexpr std::array<std::array<perm, 4>, 6> point_lookup = { {
+    { { { 0, 1, 2 }, { 2, 0, 1 }, { 1, 2, 0 }, { 0, 2, 1 } } },
+    { { { 0, 1, 2 }, { 2, 0, 1 }, { 1, 2, 0 }, { 2, 1, 0 } } },
+    { { { 0, 1, 2 }, { 2, 0, 1 }, { 1, 2, 0 }, { 1, 0, 2 } } },
+    { { { 0, 2, 1 }, { 1, 0, 2 }, { 2, 1, 0 }, { 2, 0, 1 } } },
+    { { { 0, 2, 1 }, { 1, 0, 2 }, { 2, 1, 0 }, { 0, 1, 2 } } },
+    { { { 0, 2, 1 }, { 1, 0, 2 }, { 2, 1, 0 }, { 1, 2, 0 } } },
+  } };
+
+  static constexpr std::array<std::array<int, 4>, 6> child_lookup_type_1
+    = { { { 1, 0, 2, 3 }, { 2, 0, 3, 1 }, { 3, 0, 1, 2 }, { 1, 0, 3, 2 }, { 2, 0, 1, 3 }, { 3, 0, 2, 1 } } };
+
+  static constexpr std::array<std::array<int, 4>, 6> child_lookup_type_2
+    = { { { 1, 2, 0, 3 }, { 2, 3, 0, 1 }, { 3, 1, 0, 2 }, { 1, 3, 0, 2 }, { 2, 1, 0, 3 }, { 3, 2, 0, 1 } } };
+
+  static constexpr std::array<perm, 6> parent_lookup
+    = { { { 1, 0, 2 }, { 0, 2, 1 }, { 2, 1, 0 }, { 0, 1, 2 }, { 1, 2, 0 }, { 2, 0, 1 } } };
 };
 
 }  // namespace t8_mra
