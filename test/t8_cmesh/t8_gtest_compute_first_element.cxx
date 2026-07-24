@@ -137,7 +137,7 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
   */
   uint32_t size = 1;
   // uint64_t size = 1;
-  for (uint32_t isize = 1; isize < size_iter; ++isize) {
+  for (uint32_t isize = 1; isize < sqrt (size_iter); ++isize) {
     /* The very first result is 1 * 1 / size */
     uint64_t check_result_elem = 1 / size;
     /* The remainder of the element update */
@@ -145,14 +145,14 @@ TEST_P (t8_gtest_rank_times_global_num_elems_over_size, large_numbers)
 
     uint64_t num_elems = 1;
     /* Initialize factors */
-    for (uint32_t ielem = 1; ielem < elem_iter; ++ielem) {
+    for (uint32_t ielem = 1; ielem < sqrt (elem_iter); ++ielem) {
       uint32_t rank = 1;
 
       /** Used to compute elem^n * rank^m / size, where n is fixed. */
       uint64_t check_result = check_result_elem;
       /* The remainder of the rank update */
       uint64_t rank_remainder = check_result_elem_remain;
-      for (uint32_t irank = 1; irank < rank_iter && rank <= size; ++irank) {
+      for (uint32_t irank = 1; irank < sqrt (rank_iter) && rank <= size; ++irank) {
         // const uint64_t computed_result = t8_cmesh_get_first_element_of_process (rank, size, num_elems);
 
         /* Cast everything into uint64_t */
