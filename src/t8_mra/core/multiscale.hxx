@@ -2,30 +2,42 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/core/forest_backend.hxx"
-#include "t8_mra/core/mst.hxx"
-#include "t8_mra/core/adapt/coarsen.hxx"
-#include "t8_mra/core/adapt/refine.hxx"
-#include "t8_mra/core/adapt/balance.hxx"
-#include "t8_mra/dg/cartesian.hxx"
-#include "t8_mra/dg/triangle.hxx"
-#include "t8_mra/data/element_data.hxx"
-#include "t8_mra/data/levelmultiindex.hxx"
-#include "t8_mra/data/levelindex_map.hxx"
-#include "t8_mra/data/levelindex_set.hxx"
-#include "t8_mra/criteria/coarsening_criterion.hxx"
-#include "t8_mra/criteria/refinement_criterion.hxx"
-#include "t8_mra/num/cell_geometry.hxx"
-#include "t8_mra/num/basis/basis.hxx"
-#include "t8_mra/num/nodal_to_modal.hxx"
-#include "t8_cmesh/t8_cmesh.h"
-#include "t8_forest/t8_forest_general.h"
-#include "t8_forest/t8_forest_iterate.h"
-
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <optional>
 #include <span>
+
+#include "ankerl/unordered_dense.h"
+
+#include "sc_containers.h"
+#include "sc_mpi.h"
+
+#include "t8.h"
+#include "t8_cmesh/t8_cmesh.h"
+#include "t8_data/t8_containers.h"
+#include "t8_eclass/t8_eclass.h"
+#include "t8_element/t8_element.h"
+#include "t8_forest/t8_forest_general.h"
+#include "t8_forest/t8_forest_iterate.h"
+#include "t8_schemes/t8_scheme.h"
+#include "t8_schemes/t8_scheme.hxx"
+
+#include "t8_mra/core/adapt/balance.hxx"
+#include "t8_mra/core/adapt/coarsen.hxx"
+#include "t8_mra/core/adapt/refine.hxx"
+#include "t8_mra/core/forest_backend.hxx"
+#include "t8_mra/core/mst.hxx"
+#include "t8_mra/criteria/coarsening_criterion.hxx"
+#include "t8_mra/criteria/refinement_criterion.hxx"
+#include "t8_mra/data/element_data.hxx"
+#include "t8_mra/data/levelindex_map.hxx"
+#include "t8_mra/data/levelindex_set.hxx"
+#include "t8_mra/data/levelmultiindex.hxx"
+#include "t8_mra/dg/dg_base.hxx"
+#include "t8_mra/num/basis/basis.hxx"
+#include "t8_mra/num/cell_geometry.hxx"
+#include "t8_mra/num/nodal_to_modal.hxx"
 
 namespace t8_mra
 {
@@ -125,7 +137,7 @@ class multiscale {
     return grid.get_lmi_map ();
   }
 
-  unsigned int
+  [[nodiscard]] unsigned int
   maximum_level () const
   {
     return grid.maximum_level;
@@ -233,9 +245,10 @@ class multiscale {
   evaluate_reference (const element_t &data, const std::array<double, DIM> &x_ref)
   {
     std::array<double, U_DIM> res = {};
+
     for (auto u = 0u; u < U_DIM; ++u)
-      res[u] = geometry_t::reference_value (
-        std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref, data.vol);
+      res[u] = geometry_t::reference_value (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF),
+                                            x_ref, data.vol);
 
     return res;
   }
@@ -244,10 +257,11 @@ class multiscale {
   std::array<double, U_DIM>
   mean_val (const element_t &data)
   {
-    std::array<double, U_DIM> mean;
+    std::array<double, U_DIM> mean = {};
+
     for (auto u = 0u; u < U_DIM; ++u)
-      mean[u] = t8_mra::cell_mean<TShape, P> (
-        std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), data.vol);
+      mean[u] = t8_mra::cell_mean<TShape, P> (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF),
+                                              data.vol);
 
     return mean;
   }
@@ -263,8 +277,10 @@ class multiscale {
   evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, DIM> &x_phys)
   {
     std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> corners;
+
     grid.element_corner_coords (tree_idx, element, corners);
     const auto geom = discretization.geometry (corners, data.vol, data.order);
+
     return discretization.evaluate (geom, data, x_phys);
   }
 
@@ -274,49 +290,52 @@ class multiscale {
                      const std::array<double, DIM> &x_phys)
   {
     std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> corners;
+
     grid.element_corner_coords (tree_idx, element, corners);
     const auto geom = discretization.geometry (corners, data.vol, data.order);
+
     return discretization.evaluate_gradient (geom, data, x_phys);
   }
 
   /// Point-location query for t8_forest_search, filled with the owning leaf value.
   struct point_query
   {
-    double point[3];
+    std::array<double, 3> point;
     double tolerance;
     int found;
     std::array<double, U_DIM> value;
   };
 
   static int
-  search_descend_fn (t8_forest_t, const t8_locidx_t, const t8_element_t *, const int, const t8_element_array_t *,
-                     const t8_locidx_t)
+  search_descend_fn (t8_forest_t /*unused*/, const t8_locidx_t /*unused*/, const t8_element_t * /*unused*/,
+                     const int /*unused*/, const t8_element_array_t * /*unused*/, const t8_locidx_t /*unused*/)
   {
     return 1;
   }
 
   static void
   search_point_fn (t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element, const int is_leaf,
-                   const t8_element_array_t *, const t8_locidx_t, sc_array_t *queries, sc_array_t *query_indices,
-                   int *query_matches, const size_t num_active_queries)
+                   const t8_element_array_t * /*unused*/, const t8_locidx_t /*unused*/, sc_array_t *queries,
+                   sc_array_t *query_indices, int *query_matches, const size_t num_active_queries)
   {
     auto *user_data = reinterpret_cast<forest_data<element_t> *> (t8_forest_get_user_data (forest));
     auto *mra = static_cast<multiscale *> (user_data->mra_instance);
     const auto *scheme = t8_forest_get_scheme (forest);
 
-    for (size_t i = 0; i < num_active_queries; ++i) {
+    for (auto i = 0u; i < num_active_queries; ++i) {
       const size_t query_idx = *static_cast<size_t *> (sc_array_index (query_indices, i));
       auto *query = static_cast<point_query *> (sc_array_index (queries, query_idx));
 
-      int inside = 0;
-      t8_forest_element_points_inside (forest, ltreeid, element, query->point, 1, &inside, query->tolerance);
+      auto inside = 0;
+      t8_forest_element_points_inside (forest, ltreeid, element, query->point.data (), 1, &inside, query->tolerance);
       query_matches[i] = inside;
 
-      if (inside && is_leaf && !query->found) {
+      if ((inside != 0) && (is_leaf != 0) && !query->found) {
         const auto gtree = t8_forest_global_tree_id (forest, ltreeid);
         const auto lmi = levelmultiindex (gtree, element, scheme);
 
         std::array<double, DIM> x;
+
         for (auto d = 0u; d < DIM; ++d)
           x[d] = query->point[d];
 
@@ -345,6 +364,7 @@ class multiscale {
 
     if (result.found)
       return result.value;
+
     return std::nullopt;
   }
 
@@ -364,6 +384,7 @@ class multiscale {
     data.order = levelmultiindex::point_order_at_level (element, scheme);
 
     std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> corners;
+
     grid.element_corner_coords (tree_idx, element, corners);
     const auto geom = discretization.geometry (corners, data.vol, data.order);
     discretization.project (data.u_coeffs, geom, func);
@@ -406,18 +427,20 @@ class multiscale {
   /** @brief Reconstruct per-cell nodal DG values from the current forest. */
   template <typename WriteCellNodalValues>
   void
-  export_data_nodal (const std::array<std::array<double, DIM>, DOF> &nodes, WriteCellNodalValues &&write_cell_nodal_values)
+  export_data_nodal (const std::array<std::array<double, DIM>, DOF> &nodes,
+                     WriteCellNodalValues &&write_cell_nodal_values)
   {
     const modal_to_nodal<TShape, U, P> to_nodal (nodes);
     const auto *scheme = t8_forest_get_scheme (grid.get_forest ());
     auto *lmi_map = get_lmi_map ();
 
-    for_each_local_leaf ([&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int, t8_gloidx_t global_tree) {
-      const levelmultiindex lmi (global_tree, element, scheme);
-      const auto *data = lmi_map->find (lmi);
-      const auto nodal = to_nodal (std::span<const double> (data->u_coeffs.data (), data->u_coeffs.size ()));
-      write_cell_nodal_values (tree_idx, element, std::span<const double> (nodal.data (), nodal.size ()));
-    });
+    for_each_local_leaf (
+      [&] (t8_locidx_t tree_idx, const t8_element_t *element, unsigned int, t8_gloidx_t global_tree) {
+        const levelmultiindex lmi (global_tree, element, scheme);
+        const auto *data = lmi_map->find (lmi);
+        const auto nodal = to_nodal (std::span<const double> (data->u_coeffs.data (), data->u_coeffs.size ()));
+        write_cell_nodal_values (tree_idx, element, std::span<const double> (nodal.data (), nodal.size ()));
+      });
   }
 
   //=============================================================================
@@ -449,7 +472,8 @@ class multiscale {
   template <typename Func, typename Criterion = hard_thresholding>
     requires coarsening_criterion<Criterion, multiscale>
   void
-  initialize_data_adaptive (t8_cmesh_t mesh, const t8_scheme *scheme, int max_level, Func &&func, Criterion criterion = {})
+  initialize_data_adaptive (t8_cmesh_t mesh, const t8_scheme *scheme, int max_level, Func &&func,
+                            Criterion criterion = {})
   {
     adapt::initialize_data_adaptive (*this, mesh, scheme, max_level, func, criterion);
   }
@@ -459,10 +483,11 @@ class multiscale {
   //=============================================================================
 
   int
-  coarsening_callback (t8_forest_t, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t, t8_locidx_t,
-                       const t8_scheme_c *scheme, int is_family, int, t8_element_t *elements[])
+  coarsening_callback (t8_forest_t /*unused*/, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t /*unused*/,
+                       t8_locidx_t /*unused*/, const t8_scheme_c *scheme, int is_family, int /*unused*/,
+                       std::span<t8_element_t *> elements)
   {
-    if (!is_family)
+    if (is_family == 0)
       return 0;
 
     const auto gtreeid = t8_forest_global_tree_id (forest_from, which_tree);
@@ -473,7 +498,7 @@ class multiscale {
 
   int
   refinement_callback (t8_forest_t, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t, t8_locidx_t,
-                       const t8_scheme_c *scheme, int, int, t8_element_t *elements[])
+                       const t8_scheme_c *scheme, int, int, std::span<t8_element_t *> elements)
   {
     const auto gtreeid = t8_forest_global_tree_id (forest_from, which_tree);
     const auto lmi = levelmultiindex (gtreeid, elements[0], scheme);
@@ -487,9 +512,10 @@ class multiscale {
                               int is_family, int num_elements, t8_element_t *elements[])
   {
     auto *user_data = reinterpret_cast<forest_data<element_t> *> (t8_forest_get_user_data (forest_from));
+
     return static_cast<multiscale *> (user_data->mra_instance)
       ->coarsening_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
-                             num_elements, elements);
+                             num_elements, { elements, static_cast<size_t> (num_elements) });
   }
 
   static int
@@ -498,9 +524,10 @@ class multiscale {
                               int is_family, int num_elements, t8_element_t *elements[])
   {
     auto *user_data = reinterpret_cast<forest_data<element_t> *> (t8_forest_get_user_data (forest_from));
+
     return static_cast<multiscale *> (user_data->mra_instance)
       ->refinement_callback (forest, forest_from, which_tree, tree_class, local_ele_idx, scheme, is_family,
-                             num_elements, elements);
+                             num_elements, { elements, static_cast<size_t> (num_elements) });
   }
 
   //=============================================================================

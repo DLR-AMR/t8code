@@ -15,4 +15,8 @@ class dg;
 
 }  // namespace t8_mra
 
+// Per-shape specializations (defined after the primary template).
+#include "t8_mra/dg/cartesian.hxx"
+#include "t8_mra/dg/triangle.hxx"
+
 #endif  // T8_ENABLE_MRA
