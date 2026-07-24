@@ -2,6 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include "t8_eclass/t8_eclass.h"
 #include "t8_mra/dg/dg_base.hxx"
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/data/element_data.hxx"
@@ -44,23 +45,26 @@ class dg<Shape, U, P> {
   /** @brief Cell geometry from the leaf's t8code-order corner coords and volume. */
   geometry_t
   geometry (const std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> &corners, double volume,
-            const std::array<int, 3> & = {}) const
+            const std::array<int, 3> & /*unused*/ = {}) const
   {
     // QUAD corners are permuted (t8code swaps 2 and 3) so index 0 is the lower
     // and the last the upper corner, as extract_cartesian_vertices expects.
-    double ordered[T8_ECLASS_MAX_CORNERS][3] = {};
-    for (int corner = 0; corner < shape_traits<Shape>::NUM_VERTICES; ++corner) {
-      int source = corner;
+    std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> ordered = {};
+    for (auto corner = 0; corner < shape_traits<Shape>::NUM_VERTICES; ++corner) {
+      auto source = corner;
+
       if constexpr (DIM == 2 && Shape == T8_ECLASS_QUAD) {
-        constexpr int quad_corner_order[4] = { 0, 1, 3, 2 };
+        constexpr std::array<int, 4> quad_corner_order = { 0, 1, 3, 2 };
         source = quad_corner_order[corner];
       }
-      for (int d = 0; d < 3; ++d)
-        ordered[corner][d] = corners[source][d];
+      ordered[corner] = corners[source];
     }
 
-    std::array<double, DIM> lower, upper;
+    std::array<double, DIM> lower;
+    std::array<double, DIM> upper;
+
     extract_cartesian_vertices<DIM> (ordered, lower, upper);
+
     return geometry_t::from_box (lower, upper, volume);
   }
 
@@ -73,9 +77,11 @@ class dg<Shape, U, P> {
     std::vector<std::array<double, DOF>> basis_at_quad (num_q);
     std::vector<std::array<double, DIM>> phys_at_quad (num_q);
     std::array<double, DIM> x_ref;
+
     for (auto q = 0u; q < num_q; ++q) {
       for (unsigned int d = 0; d < DIM; ++d)
         x_ref[d] = basis.quad.points[DIM * q + d];
+
       basis_at_quad[q] = basis.basis_value (x_ref);
       phys_at_quad[q] = geom.to_physical (x_ref);
     }
@@ -87,6 +93,7 @@ class dg<Shape, U, P> {
         for (auto u = 0u; u < U_DIM; ++u)
           sum[u] += basis.quad.weights[q] * f_val[u] * basis_at_quad[q][i];
       }
+
       for (auto u = 0u; u < U_DIM; ++u)
         coeffs[element_t::dg_idx (u, i)] = sum[u];
     }
@@ -98,6 +105,7 @@ class dg<Shape, U, P> {
   {
     const auto x_ref = geom.to_reference (x_phys);
     std::array<double, U_DIM> res = {};
+
     for (auto u = 0u; u < U_DIM; ++u)
       res[u] = geom.value (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref);
 
@@ -110,6 +118,7 @@ class dg<Shape, U, P> {
   {
     const auto x_ref = geom.to_reference (x_phys);
     std::array<std::array<double, DIM>, U_DIM> grad = {};
+
     for (auto u = 0u; u < U_DIM; ++u)
       grad[u] = geom.gradient (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref);
 

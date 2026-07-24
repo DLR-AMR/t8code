@@ -2,6 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include "t8_eclass/t8_eclass.h"
 #include "t8_mra/dg/dg_base.hxx"
 #include "t8_mra/data/element_data.hxx"
 #include "t8_mra/num/cell_geometry.hxx"
@@ -59,6 +60,7 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
     const auto num_q = basis.quad.num_points;
     std::vector<std::array<double, DOF>> basis_at_quad (num_q);
     std::vector<std::array<double, U_DIM>> f_at_quad (num_q);
+
     for (auto j = 0u; j < num_q; ++j) {
       const std::array<double, 2> ref { basis.quad.points[2 * j], basis.quad.points[2 * j + 1] };
       const auto phys = geom.to_physical (ref);
@@ -68,6 +70,7 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
 
     for (auto i = 0u; i < DOF; ++i) {
       std::array<double, U_DIM> sum = {};
+
       for (auto j = 0u; j < num_q; ++j)
         for (auto u = 0u; u < U_DIM; ++u)
           sum[u] += basis.quad.weights[j] * f_at_quad[j][u] * geom.basis_scale * basis_at_quad[j][i];
@@ -83,6 +86,7 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
   {
     const auto x_ref = geom.to_reference (x_phys);
     std::array<double, U_DIM> res = {};
+
     for (auto u = 0u; u < U_DIM; ++u)
       res[u] = geom.value (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref);
 
@@ -95,6 +99,7 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
   {
     const auto x_ref = geom.to_reference (x_phys);
     std::array<std::array<double, DIM>, U_DIM> grad = {};
+
     for (auto u = 0u; u < U_DIM; ++u)
       grad[u] = geom.gradient (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref);
 
