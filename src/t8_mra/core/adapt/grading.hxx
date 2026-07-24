@@ -1,25 +1,27 @@
 #pragma once
 
-#include <iterator>
-#include "sc_mpi.h"
-#include "t8_eclass/t8_eclass.h"
-#include "t8_element/t8_element.h"
 #ifdef T8_ENABLE_MRA
-
-#include "t8_mra/data/levelmultiindex.hxx"
-#include <t8.h>
 
 #include <algorithm>
 #include <cstddef>
+#include <iterator>
 #include <vector>
+
+#include "sc_mpi.h"
+
+#include "t8.h"
+#include "t8_eclass/t8_eclass.h"
+#include "t8_element/t8_element.h"
+
+#include "t8_mra/data/levelmultiindex.hxx"
 
 namespace t8_mra::adapt
 {
 
 /// Reset all per-pass multiscale state.
-template <typename MS>
+template <typename TMultiscale>
 void
-clear_state (MS &mra)
+clear_state (TMultiscale &mra)
 {
   mra.d_map.erase_all ();
   mra.td_set.erase_all ();
@@ -28,9 +30,9 @@ clear_state (MS &mra)
 }
 
 /// Number of leaves marked for refinement in [min_level, max_level).
-template <typename MS>
-unsigned int
-num_refinement_marks (MS &mra, int min_level, int max_level)
+template <typename TMultiscale>
+[[nodiscard]] unsigned int
+num_refinement_marks (TMultiscale &mra, int min_level, int max_level)
 {
   auto num = 0u;
 
@@ -42,26 +44,26 @@ num_refinement_marks (MS &mra, int min_level, int max_level)
 
 /// Reconstruct children data (inverse two-scale, zero details) for the marks in
 /// refinement_set, then realize them with one forest adapt.
-template <typename MS>
+template <typename TMultiscale>
 void
-apply_refinement (MS &mra, int min_level, int max_level, int recursive)
+apply_refinement (TMultiscale &mra, int min_level, int max_level, int recursive)
 {
   mra.d_map.erase_all ();
   for (auto l = min_level; l < max_level; ++l)
     for (const auto &lmi : mra.refinement_set[l])
-      mra.d_map.insert (lmi, typename MS::detail_t {});
+      mra.d_map.insert (lmi, typename TMultiscale::detail_t {});
 
   mra.inverse_multiscale_transformation (min_level, max_level);
-  mra.grid.adapt (MS::static_refinement_callback, recursive);
+  mra.grid.adapt (TMultiscale::static_refinement_callback, recursive);
 }
 
 /// Stand-in for callers that realize their marks each round (balance) and never
 /// descend a prior-refinements path.
 struct no_prior_marks
 {
-  template <typename Lmi>
+  template <typename TLmi>
   bool
-  contains (const Lmi & /*unused*/) const
+  contains (const TLmi & /*unused*/) const
   {
     return false;
   }
@@ -77,10 +79,10 @@ struct no_prior_marks
  *
  * @return 1 on a new mark, 0 if nothing to do, -1 if no covering leaf is local
  */
-template <typename MS, typename Lmi, typename PriorRefinements>
-int
-refine_covering_leaf (MS &mra, const Lmi &neigh_lmi, int min_level, unsigned int max_level_gap,
-                      const PriorRefinements &prior_refinements)
+template <typename TMultiscale, typename TLmi, typename TPriorRefinements>
+[[nodiscard]] int
+refine_covering_leaf (TMultiscale &mra, const TLmi &neigh_lmi, int min_level, unsigned int max_level_gap,
+                      const TPriorRefinements &prior_refinements)
 {
   auto *lmi_map = mra.get_lmi_map ();
 
@@ -118,12 +120,12 @@ refine_covering_leaf (MS &mra, const Lmi &neigh_lmi, int min_level, unsigned int
  *
  * @return Number of new LOCAL marks created by received requests
  */
-template <typename MS, typename PriorRefinements>
+template <typename TMultiscale, typename TPriorRefinements>
 unsigned int
-exchange_refine_requests (MS &mra, const std::vector<std::vector<size_t>> &outgoing, int min_level,
-                          unsigned int max_level_gap, const PriorRefinements &prior_refinements)
+exchange_refine_requests (TMultiscale &mra, const std::vector<std::vector<size_t>> &outgoing, int min_level,
+                          unsigned int max_level_gap, const TPriorRefinements &prior_refinements)
 {
-  using levelmultiindex = typename MS::levelmultiindex;
+  using levelmultiindex = typename TMultiscale::levelmultiindex;
 
   int mpisize;
   sc_MPI_Comm_size (mra.grid.comm, &mpisize);
@@ -177,9 +179,9 @@ exchange_refine_requests (MS &mra, const std::vector<std::vector<size_t>> &outgo
  *
  * @return Global number of new marks in this round
  */
-template <typename MS, typename PriorRefinements>
-unsigned int
-neighbour_prediction (MS &mra, int min_level, const PriorRefinements &prior_refinements)
+template <typename TMultiscale, typename TPriorRefinements>
+[[nodiscard]] unsigned int
+neighbour_prediction (TMultiscale &mra, int min_level, const TPriorRefinements &prior_refinements)
 {
   int mpirank;
   int mpisize;

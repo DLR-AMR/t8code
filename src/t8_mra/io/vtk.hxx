@@ -25,7 +25,7 @@ namespace t8_mra
  * @brief Barycentric index of the node at a given position in VTK's Lagrange
  * triangle ordering (port of vtkHigherOrderTriangle::BarycentricIndex)
  */
-static std::array<int, 3>
+[[nodiscard]] static std::array<int, 3>
 vtk_triangle_barycentric_index (int index, int order)
 {
   int max = order;
@@ -61,7 +61,7 @@ vtk_triangle_barycentric_index (int index, int order)
  * @brief Lagrange node positions for a triangle of given order in reference
  * coordinates, in VTK's Lagrange triangle ordering
  */
-static std::vector<std::array<double, 2>>
+[[nodiscard]] static std::vector<std::array<double, 2>>
 get_triangle_lagrange_nodes (int order)
 {
   const int num_nodes = (order + 1) * (order + 2) / 2;
@@ -82,7 +82,7 @@ get_triangle_lagrange_nodes (int order)
  * - First 2 nodes: endpoints
  * - Remaining nodes: interior nodes
  */
-static std::vector<std::array<double, 1>>
+[[nodiscard]] static std::vector<std::array<double, 1>>
 get_line_lagrange_nodes (int order)
 {
   std::vector<std::array<double, 1>> nodes;
@@ -105,7 +105,7 @@ get_line_lagrange_nodes (int order)
  * @brief Index of the grid node (i, j) in VTK's Lagrange quad ordering
  * (port of vtkHigherOrderQuadrilateral::PointIndexFromIJK, uniform order)
  */
-static int
+[[nodiscard]] static int
 vtk_quad_point_index (int i, int j, int order)
 {
   const bool ibdy = (i == 0 || i == order);
@@ -129,7 +129,7 @@ vtk_quad_point_index (int i, int j, int order)
  * @brief Lagrange node positions for a quad of given order in reference
  * coordinates, in VTK's Lagrange quad ordering
  */
-static std::vector<std::array<double, 2>>
+[[nodiscard]] static std::vector<std::array<double, 2>>
 get_quad_lagrange_nodes (int order)
 {
   const int num_nodes = (order + 1) * (order + 1);
@@ -146,7 +146,7 @@ get_quad_lagrange_nodes (int order)
  * @brief Index of the grid node (i, j, k) in VTK's Lagrange hex ordering
  * (port of vtkHigherOrderHexahedron::PointIndexFromIJK, uniform order)
  */
-static int
+[[nodiscard]] static int
 vtk_hex_point_index (int i, int j, int k, int order)
 {
   const bool ibdy = (i == 0 || i == order);
@@ -188,7 +188,7 @@ vtk_hex_point_index (int i, int j, int k, int order)
  * @brief Lagrange node positions for a hex of given order in reference
  * coordinates [0,1]^3, in VTK's Lagrange hex ordering
  */
-static std::vector<std::array<double, 3>>
+[[nodiscard]] static std::vector<std::array<double, 3>>
 get_hex_lagrange_nodes (int order)
 {
   const int num_nodes = (order + 1) * (order + 1) * (order + 1);
@@ -206,7 +206,7 @@ get_hex_lagrange_nodes (int order)
 /// Reference Lagrange-node layout for a shape, in VTK ordering. Each entry is
 /// a point in [0,1]^DIM. Dispatches to the per-shape layout above.
 template <t8_eclass TShape>
-auto
+[[nodiscard]] auto
 get_lagrange_nodes (int order)
 {
   if constexpr (TShape == T8_ECLASS_LINE)
@@ -251,7 +251,7 @@ vtk_corner_coords ()
 /// Multilinear map of a reference node to physical coords, over VTK-ordered
 /// vertices (tensor of (1-x_d)/x_d weights per corner).
 template <t8_eclass TShape>
-std::array<double, 3>
+[[nodiscard]] std::array<double, 3>
 map_cartesian (const std::array<double, shape_traits<TShape>::DIM> &x, std::span<const std::array<double, 3>> vertices)
 {
   constexpr int DIM = shape_traits<TShape>::DIM;
@@ -332,19 +332,19 @@ write_vtk_master (const char *prefix, int mpisize, int u_dim)
 }
 
 /**
- * @brief Write a VTK Lagrange file for any MRA implementation
+ * @brief Write a VTK Lagrange file for any TMultiscale implementation
  *
- * @tparam MRA The multiscale class type (triangle, quad, line, or hex specialization)
+ * @tparam TMultiscale The multiscale class type (triangle, quad, line, or hex specialization)
  * @param mra The multiscale object
  * @param prefix Output file prefix
  * @param lagrange_order Polynomial order for Lagrange interpolation (P-1)
  */
-template <typename MRA>
+template <typename TMultiscale>
 void
-write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
+write_forest_lagrange_vtk (TMultiscale &mra, const char *prefix, int lagrange_order)
 {
-  static constexpr auto TShape = MRA::Shape;
-  static constexpr int U_DIM = MRA::U_DIM;
+  static constexpr auto TShape = TMultiscale::Shape;
+  static constexpr int U_DIM = TMultiscale::U_DIM;
 
   t8_forest_t forest = mra.get_forest ();
   auto *lmi_map = mra.get_lmi_map ();
@@ -390,7 +390,7 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
 
       // Get LMI to look up vertex ordering (for triangles)
       const auto base_tree = t8_forest_global_tree_id (forest, tree_idx);
-      const auto lmi = typename MRA::levelmultiindex (base_tree, element, scheme);
+      const auto lmi = typename TMultiscale::levelmultiindex (base_tree, element, scheme);
 
       // Vertices in VTK order: triangle order is data-driven (point_order from
       // the element data), cartesian shapes use a fixed permutation.
@@ -515,7 +515,7 @@ write_forest_lagrange_vtk (MRA &mra, const char *prefix, int lagrange_order)
         const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, elem_in_tree);
 
         // Get LMI for this element
-        const auto lmi = typename MRA::levelmultiindex (base_tree, element, scheme);
+        const auto lmi = typename TMultiscale::levelmultiindex (base_tree, element, scheme);
 
         const auto *data = lmi_map->find (lmi);
         if (!data) {

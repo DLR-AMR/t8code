@@ -6,6 +6,7 @@
 #include <type_traits>
 
 #include "t8_eclass/t8_eclass.h"
+
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/num/basis/basis.hxx"
 #include "t8_mra/num/quadrature/quadrature.hxx"
@@ -18,14 +19,14 @@ namespace t8_mra
 template <t8_eclass TShape, typename = void>
 struct dg_basis_base;
 
-template <t8_eclass T>
-struct dg_basis_base<T, std::enable_if_t<is_cartesian<T>>>
+template <t8_eclass TShape>
+struct dg_basis_base<TShape, std::enable_if_t<is_cartesian<TShape>>>
 {
-  static constexpr unsigned int DIM = T == T8_ECLASS_LINE ? 1 : (T == T8_ECLASS_QUAD ? 2 : 3);
-  static constexpr t8_eclass Shape = T;
+  static constexpr unsigned int DIM = TShape == T8_ECLASS_LINE ? 1 : (TShape == T8_ECLASS_QUAD ? 2 : 3);
+  static constexpr t8_eclass Shape = TShape;
 
   // Reference Gauss-Legendre tensor rule.
-  quadrature<T> quad;
+  quadrature<TShape> quad;
 
   dg_basis_base () = default;
 
@@ -81,15 +82,15 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
   }
 
   /// All basis function values at a reference point.
-  std::array<double, DOF>
-  basis_value (const std::array<double, DIM> &x_ref)
+  [[nodiscard]] std::array<double, DOF>
+  basis_value (const std::array<double, DIM> &x_ref) const
   {
     return basis_t::eval (x_ref);
   }
 
   /// grad[dir][i] = d(phi_i)/dx_dir at a reference point.
-  std::array<std::array<double, DOF>, DIM>
-  basis_gradient (const std::array<double, DIM> &x_ref)
+  [[nodiscard]] std::array<std::array<double, DOF>, DIM>
+  basis_gradient (const std::array<double, DIM> &x_ref) const
   {
     return basis_t::eval_gradient (x_ref);
   }

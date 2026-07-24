@@ -10,7 +10,7 @@ namespace t8_mra
 /// Per-shape DG numerics of a leaf: projection, evaluation and cell geometry.
 /// t8code-free (operates on corner coordinates + volume). Specialized per shape
 /// in dg/.
-template <t8_eclass Shape, int U, int P>
+template <t8_eclass TShape, int U, int P>
 class dg;
 
 }  // namespace t8_mra

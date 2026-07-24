@@ -2,15 +2,15 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/core/shape_traits.hxx"
-#include "t8_mra/num/basis/basis.hxx"
-#include "t8_mra/num/basis/dubiner.hxx"
-#include "t8_mra/num/cell_geometry.hxx"
-
 #include <array>
 #include <cmath>
 #include <span>
 #include <utility>
+
+#include "t8_mra/core/shape_traits.hxx"
+#include "t8_mra/num/basis/basis.hxx"
+#include "t8_mra/num/basis/dubiner.hxx"
+#include "t8_mra/num/cell_geometry.hxx"
 
 namespace t8_mra
 {
@@ -24,7 +24,7 @@ struct basis<T8_ECLASS_TRIANGLE, P>
   static constexpr int DIM = 2;
   static constexpr int DOF = shape_traits<T8_ECLASS_TRIANGLE>::dof (P);
 
-  static std::array<double, DOF>
+  [[nodiscard]] static std::array<double, DOF>
   eval (const std::array<double, DIM> &x)
   {
     return [&]<std::size_t... I> (std::index_sequence<I...>) {
@@ -34,7 +34,7 @@ struct basis<T8_ECLASS_TRIANGLE, P>
 
   /// grad[dir][i] = d(phi_i)/dx_dir on the reference triangle (the geometric
   /// Jacobian to physical coordinates is applied by the caller).
-  static std::array<std::array<double, DOF>, DIM>
+  [[nodiscard]] static std::array<std::array<double, DOF>, DIM>
   eval_gradient (const std::array<double, DIM> &x)
   {
     std::array<std::array<double, DOF>, DIM> grad = {};
@@ -50,7 +50,7 @@ struct basis<T8_ECLASS_TRIANGLE, P>
     return grad;
   }
 
-  static double
+  [[nodiscard]] static double
   normalization (double vol)
   {
     return std::sqrt (1.0 / (2.0 * vol));
@@ -75,7 +75,7 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
   int level = 0;
 
   /** @brief Build from the ordered vertices (origin, r0 edge, r1 edge). */
-  static cell_geometry
+  [[nodiscard]] static cell_geometry
   from_triangle (const point &v0, const point &v1, const point &v2, double vol)
   {
     cell_geometry geom;
@@ -94,14 +94,14 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
   }
 
   /** @brief Reference (r0, r1) -> Dubiner coordinate {lambda0, lambda1}. */
-  static point
+  [[nodiscard]] static point
   basis_coord (const point &ref)
   {
     return { 1.0 - ref[0] - ref[1], ref[0] };
   }
 
   /** @brief Whether a reference point lies in the unit triangle. */
-  static bool
+  [[nodiscard]] static bool
   in_ref_cell (const point &ref)
   {
     return ref[0] >= -reference_cell_tol && ref[1] >= -reference_cell_tol
@@ -109,7 +109,7 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
   }
 
   /** @brief Physical -> reference coordinate. */
-  point
+  [[nodiscard]] point
   to_reference (const point &phys) const
   {
     const double dx = phys[0] - origin[0], dy = phys[1] - origin[1];
@@ -118,7 +118,7 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
   }
 
   /** @brief Reference -> physical coordinate. */
-  point
+  [[nodiscard]] point
   to_physical (const point &ref) const
   {
     return { origin[0] + edges[0][0] * ref[0] + edges[0][1] * ref[1],
@@ -126,14 +126,14 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
   }
 
   /** @brief Whether a physical point lies in the cell. */
-  bool
+  [[nodiscard]] bool
   contains (const point &phys) const
   {
     return in_ref_cell (to_reference (phys));
   }
 
   /** @brief basis_scale * sum_i coeffs_i * phi_i(basis_coord(ref)). */
-  static double
+  [[nodiscard]] static double
   eval_modal (std::span<const double> coeffs, const point &ref, double basis_scale)
   {
     const auto phi = basis_t::eval (basis_coord (ref));
@@ -145,21 +145,21 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
   }
 
   /** @brief Physical value at a reference point from the cell volume alone (no cell map). */
-  static double
+  [[nodiscard]] static double
   reference_value (std::span<const double> coeffs, const point &ref, double volume)
   {
     return eval_modal (coeffs, ref, basis_t::normalization (volume));
   }
 
   /** @brief Physical value at a reference point using the cached basis scale. */
-  double
+  [[nodiscard]] double
   value (std::span<const double> coeffs, const point &ref) const
   {
     return eval_modal (coeffs, ref, basis_scale);
   }
 
   /** @brief Physical gradient d(u_h)/d(x_d) at a reference point. */
-  point
+  [[nodiscard]] point
   gradient (std::span<const double> coeffs, const point &ref) const
   {
     const auto ref_grad = to_ref_grad (basis_t::eval_gradient (basis_coord (ref)));
@@ -175,7 +175,7 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
   }
 
   /** @brief inv_jac * phys_dir: weights w with (phys_dir . grad_x phi) = w . grad_r phi. */
-  point
+  [[nodiscard]] point
   reference_direction (const point &phys_dir) const
   {
     return { inv_jac[0][0] * phys_dir[0] + inv_jac[0][1] * phys_dir[1],
@@ -184,7 +184,7 @@ struct cell_geometry<T8_ECLASS_TRIANGLE, P>
 
  private:
   /** @brief Basis gradient d/dlambda -> reference d/dr (r0=lambda1, r1=lambda2). */
-  static std::array<std::array<double, DOF>, 2>
+  [[nodiscard]] static std::array<std::array<double, DOF>, 2>
   to_ref_grad (const std::array<std::array<double, DOF>, 2> &basis_grad)
   {
     std::array<std::array<double, DOF>, 2> ref_grad {};

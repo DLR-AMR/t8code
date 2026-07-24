@@ -45,12 +45,12 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <t8_mra/core/multiscale.hxx>
-#include <t8_mra/num/cell_geometry.hxx>
 #include <t8_mra/core/face_neighbor.hxx>
+#include <t8_mra/core/multiscale.hxx>
 #include <t8_mra/criteria/coarsening_criterion.hxx>
 #include <t8_mra/criteria/refinement_criterion.hxx>
 #include <t8_mra/io/vtk.hxx>
+#include <t8_mra/num/cell_geometry.hxx>
 #include <t8_mra/num/nodal_to_modal.hxx>
 
 #endif  // T8_ENABLE_MRA

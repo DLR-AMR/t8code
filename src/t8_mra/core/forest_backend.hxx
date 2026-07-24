@@ -2,29 +2,30 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <iterator>
+#include <numeric>
+#include <utility>
+#include <vector>
+
 #include "sc_containers.h"
 #include "sc_mpi.h"
+
 #include "t8.h"
 #include "t8_eclass/t8_eclass.h"
 #include "t8_element/t8_element.h"
-
-#include "t8_mra/data/element_data.hxx"
-#include "t8_mra/data/levelmultiindex.hxx"
-#include "t8_mra/data/levelindex_map.hxx"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
 #include "t8_forest/t8_forest_ghost.h"
 #include "t8_forest/t8_forest_partition.h"
 #include "t8_forest/t8_forest_types.h"
 
-#include <algorithm>
-#include <array>
-#include <cstddef>
-#include <iterator>
-#include <functional>
-#include <numeric>
-#include <utility>
-#include <vector>
+#include "t8_mra/data/element_data.hxx"
+#include "t8_mra/data/levelindex_map.hxx"
+#include "t8_mra/data/levelmultiindex.hxx"
 
 namespace t8_mra
 {
@@ -69,22 +70,22 @@ class forest_backend {
     return forest;
   }
 
-  user_data_t *
+  [[nodiscard]] user_data_t *
   get_user_data () const
   {
     return reinterpret_cast<user_data_t *> (t8_forest_get_user_data (forest));
   }
 
-  lmi_map_t *
+  [[nodiscard]] lmi_map_t *
   get_lmi_map () const
   {
     return get_user_data ()->lmi_map;
   }
 
   /** @brief Local leaves in SFC order. func: (tree_idx, element, local leaf idx, global tree id). */
-  template <typename F>
+  template <typename TFunc>
   void
-  for_each_local_leaf (F &&func) const
+  for_each_local_leaf (TFunc &&func) const
   {
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
     auto local_idx = 0u;
@@ -106,9 +107,9 @@ class forest_backend {
    * @param leaf_filter gate on the source leaf lmi
    * @param func (source lmi, neigh tree class, neigh gtree, neigh element scratch, neigh lmi)
    */
-  template <typename LeafFilter, typename Func>
+  template <typename TLeafFilter, typename TFunc>
   void
-  for_each_face_neigh (LeafFilter &&leaf_filter, Func &&func) const
+  for_each_face_neigh (TLeafFilter &&leaf_filter, TFunc &&func) const
   {
     auto *user_data = get_user_data ();
     const auto *scheme = t8_forest_get_scheme (forest);
@@ -147,7 +148,7 @@ class forest_backend {
     }
   }
 
-  int
+  [[nodiscard]] int
   find_owner (t8_gloidx_t neigh_gtreeid, t8_element_t *neigh_element, t8_eclass_t tree_class) const
   {
     return t8_forest_element_find_owner (forest, neigh_gtreeid, neigh_element, tree_class);
@@ -163,14 +164,14 @@ class forest_backend {
       t8_forest_element_coordinate (forest, tree_idx, element, corner, corners[corner].data ());
   }
 
-  double
+  [[nodiscard]] double
   element_volume (t8_locidx_t tree_idx, const t8_element_t *element) const
   {
     return t8_forest_element_volume (forest, tree_idx, element);
   }
 
   /** @brief Fresh user data wrapping map, lmi_idx sized to local+ghost. */
-  user_data_t *
+  [[nodiscard]] user_data_t *
   attach_user_data (t8_forest_t f, lmi_map_t *lmi_map)
   {
     auto *user_data = T8_ALLOC (user_data_t, 1);
@@ -202,9 +203,9 @@ class forest_backend {
    *
    * @param per_leaf (tree_idx, element, lmi, leaf idx) per leaf in SFC order
    */
-  template <typename PerLeaf>
+  template <typename TPerLeaf>
   void
-  rebuild_leaf_index (t8_forest_t f, user_data_t *user_data, PerLeaf &&per_leaf)
+  rebuild_leaf_index (t8_forest_t f, user_data_t *user_data, TPerLeaf &&per_leaf)
   {
     const auto *scheme = t8_forest_get_scheme (f);
     const auto num_local_trees = t8_forest_get_num_local_trees (f);
@@ -225,9 +226,9 @@ class forest_backend {
   }
 
   /** @brief Build lmi_map + lmi_idx from projector: (tree_idx, element) -> element_t. */
-  template <typename Projector>
+  template <typename TProjector>
   void
-  build (Projector &&projector)
+  build (TProjector &&projector)
   {
     T8_ASSERT (t8_forest_is_committed (forest));
 
@@ -368,9 +369,9 @@ class forest_backend {
   }
 
   /** @brief Replace a rank-local index set with its union over all ranks. Collective. */
-  template <typename IndexSet>
+  template <typename TIndexSet>
   void
-  globalize (IndexSet &set) const
+  globalize (TIndexSet &set) const
   {
     int mpisize = 1;
     sc_MPI_Comm_size (comm, &mpisize);

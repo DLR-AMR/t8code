@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
-#include <utility>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <t8_eclass/t8_eclass.h>
@@ -32,9 +32,9 @@ namespace t8_mra
 /// Common interface every quadrature specialization provides: a flat list of
 /// num_points reference points (DIM coords each, point q at points[DIM*q + d])
 /// and matching weights.
-template <typename Q>
-concept quadrature_rule = requires (const Q q) {
-  { Q::DIM } -> std::convertible_to<int>;
+template <typename TQuadrature>
+concept quadrature_rule = requires (const TQuadrature q) {
+  { TQuadrature::DIM } -> std::convertible_to<int>;
   { q.num_points } -> std::convertible_to<std::size_t>;
   { q.points.data () } -> std::convertible_to<const double *>;
   { q.weights.data () } -> std::convertible_to<const double *>;
@@ -55,7 +55,7 @@ struct quadrature<TShape, std::enable_if_t<is_cartesian<TShape>>>
   std::vector<double> weights;
 
   /// 1D point count for a rule exact to the given polynomial degree (2n-1 >= degree).
-  static constexpr int
+  [[nodiscard]] static constexpr int
   rule_for_degree (int degree)
   {
     return degree / 2 + 1;
@@ -105,7 +105,7 @@ struct quadrature<T8_ECLASS_TRIANGLE>
   std::vector<double> weights;
 
   /// Dunavant rule (accuracy degree) for the given polynomial degree, capped at the table maximum.
-  static constexpr int
+  [[nodiscard]] static constexpr int
   rule_for_degree (int degree)
   {
     return std::min (20, degree);

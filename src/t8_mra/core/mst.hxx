@@ -2,17 +2,18 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "ankerl/unordered_dense.h"
-#include "t8_mra/core/shape/mst_policy.hxx"
-#include "t8_mra/data/element_data.hxx"
-#include "t8_mra/data/levelmultiindex.hxx"
-#include "t8_mra/data/levelindex_map.hxx"
-#include "t8_mra/num/mat.hxx"
-#include "t8_mra/num/mask_coefficients.hxx"
-
 #include <array>
 #include <cmath>
 #include <vector>
+
+#include "ankerl/unordered_dense.h"
+
+#include "t8_mra/core/shape/mst_policy.hxx"
+#include "t8_mra/data/element_data.hxx"
+#include "t8_mra/data/levelindex_map.hxx"
+#include "t8_mra/data/levelmultiindex.hxx"
+#include "t8_mra/num/mask_coefficients.hxx"
+#include "t8_mra/num/mat.hxx"
 
 namespace t8_mra
 {
@@ -28,8 +29,8 @@ namespace t8_mra
  * Element-specific behaviour is routed through the ordering and scaling policies.
  */
 template <typename TElement, typename TDetail = detail_data<TElement::Shape, TElement::U_DIM, TElement::P_DIM>,
-          typename ordering_policy_t = ordering_policy<TElement::Shape>,
-          typename scaling_policy_t = mst_scaling_policy<TElement::Shape>>
+          typename TOrderingPolicy = ordering_policy<TElement::Shape>,
+          typename TScalingPolicy = mst_scaling_policy<TElement::Shape>>
 class mst {
  public:
   using element_t = TElement;
@@ -93,7 +94,7 @@ class mst {
   two_scale_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
                     detail_t &data_on_coarse, const std::vector<t8_mra::mat> &mask_coefficients)
   {
-    const double scaling_factor = scaling_policy_t::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
+    const double scaling_factor = TScalingPolicy::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
 
     for (auto u = 0u; u < U_DIM; ++u) {
       std::array<double, DOF> u_parent;
@@ -132,7 +133,7 @@ class mst {
     data_on_coarse.vol = data_on_siblings[0].vol * levelmultiindex::NUM_CHILDREN;
     data_on_coarse.order = data_on_siblings[0].order;
 
-    ordering_policy_t::adjust_parent_order (data_on_coarse);
+    TOrderingPolicy::adjust_parent_order (data_on_coarse);
   }
 
   /**
@@ -141,7 +142,7 @@ class mst {
    * @param  detail A family's detail coefficients and volume.
    * @return Per-component detail norm.
    */
-  static std::array<double, U_DIM>
+  [[nodiscard]] static std::array<double, U_DIM>
   detail_norm (const detail_t &detail)
   {
     std::array<double, U_DIM> norm = {};
@@ -156,7 +157,7 @@ class mst {
           norm_sq += d * d;
         }
 
-      norm[u] = std::sqrt (norm_sq * scaling_policy_t::detail_norm_scale (detail.vol));
+      norm[u] = std::sqrt (norm_sq * TScalingPolicy::detail_norm_scale (detail.vol));
     }
 
     return norm;
@@ -295,7 +296,7 @@ class mst {
                                      const std::vector<t8_mra::mat> &mask_coefficients)
   {
     element_t new_data;
-    const double inv_scaling_factor = scaling_policy_t::inverse_scaling_factor ();
+    const double inv_scaling_factor = TScalingPolicy::inverse_scaling_factor ();
 
     for (auto l = l_min; l < l_max; ++l) {
       lmi_map[l + 1].reserve (d_map[l].size ());
@@ -322,7 +323,7 @@ class mst {
           }
 
           new_data.vol = lmi_data.vol / levelmultiindex::NUM_CHILDREN;
-          ordering_policy_t::adjust_child_order (new_data, k, lmi_data);
+          TOrderingPolicy::adjust_child_order (new_data, k, lmi_data);
 
           lmi_map.insert (children_lmi[k], new_data);
         }

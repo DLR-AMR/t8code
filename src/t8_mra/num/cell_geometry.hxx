@@ -12,7 +12,7 @@ inline constexpr double reference_cell_tol = 1e-9;
 
 /// Cached affine geometry of one leaf. One specialization per shape (num/shape/);
 /// trivially copyable.
-template <t8_eclass Shape, int P>
+template <t8_eclass TShape, int P>
 struct cell_geometry;
 
 }  // namespace t8_mra

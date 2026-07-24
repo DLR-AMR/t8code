@@ -2,24 +2,25 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <unordered_map>
+
 #include "sc_mpi.h"
+
+#include "t8.h"
+#include "t8_cmesh/t8_cmesh.h"
 #include "t8_eclass/t8_eclass.h"
 #include "t8_element/t8_element.h"
+#include "t8_forest/t8_forest_general.h"
 #include "t8_schemes/t8_scheme.hxx"
-#include <cstddef>
 
 #include "t8_mra/core/adapt/grading.hxx"
 #include "t8_mra/criteria/coarsening_criterion.hxx"
 #include "t8_mra/data/element_data.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
-#include "t8_cmesh/t8_cmesh.h"
-#include "t8_forest/t8_forest_general.h"
-#include <t8.h>
-
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <unordered_map>
 
 namespace t8_mra::adapt
 {
@@ -34,19 +35,19 @@ namespace t8_mra::adapt
  *
  * @return Number of families collapsed on this rank
  */
-template <typename MS, typename Criterion>
-unsigned int
-coarsen_sweep (MS &mra, int min_level, int max_level, Criterion &criterion)
+template <typename TMultiscale, typename TCriterion>
+[[nodiscard]] unsigned int
+coarsen_sweep (TMultiscale &mra, int min_level, int max_level, TCriterion &criterion)
 {
-  using element_t = typename MS::element_t;
-  using detail_t = typename MS::detail_t;
-  using levelmultiindex = typename MS::levelmultiindex;
+  using element_t = typename TMultiscale::element_t;
+  using detail_t = typename TMultiscale::detail_t;
+  using levelmultiindex = typename TMultiscale::levelmultiindex;
 
   auto *lmi_map = mra.get_lmi_map ();
   auto num_marked = 0u;
 
   for (auto l = max_level; l > min_level; --l) {
-    typename MS::index_set candidates;
+    typename TMultiscale::index_set candidates;
     candidates.reserve (lmi_map->size (l));
 
     for (const auto &[lmi, _] : (*lmi_map)[l])
@@ -96,12 +97,12 @@ coarsen_sweep (MS &mra, int min_level, int max_level, Criterion &criterion)
  * One destructive fine->coarse sweep on the maps per pass; across ranks an outer
  * fixpoint (adapt + repartition make seam families whole) until no rank marks.
  */
-template <typename MS, typename Criterion = hard_thresholding>
-  requires coarsening_criterion<Criterion, MS>
+template <typename TMultiscale, typename TCriterion = hard_thresholding>
+  requires coarsening_criterion<TCriterion, TMultiscale>
 void
-coarsen (MS &mra, int min_level, int max_level, Criterion criterion = {})
+coarsen (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = {})
 {
-  if constexpr (criterion_has_prepare<Criterion, MS>)
+  if constexpr (criterion_has_prepare<TCriterion, TMultiscale>)
     criterion.prepare (mra);
 
   for (auto pass = 0;; ++pass) {
@@ -115,7 +116,7 @@ coarsen (MS &mra, int min_level, int max_level, Criterion criterion = {})
     if (mra.grid.global_num_marks (num_marked) == 0)
       break;
 
-    mra.grid.adapt (MS::static_coarsening_callback, 1);
+    mra.grid.adapt (TMultiscale::static_coarsening_callback, 1);
     mra.grid.repartition ();
   }
 
@@ -124,22 +125,22 @@ coarsen (MS &mra, int min_level, int max_level, Criterion criterion = {})
 
 /// Per-component max mean magnitude over a level's leaves, reduced across ranks
 /// (floored at 1) so every rank normalizes jump detection identically.
-template <typename MS>
-auto
-global_v_max (MS &mra, int level)
+template <typename TMultiscale>
+[[nodiscard]] auto
+global_v_max (TMultiscale &mra, int level)
 {
-  std::array<double, MS::U_DIM> local;
+  std::array<double, TMultiscale::U_DIM> local;
   local.fill (1.0);
 
   for (const auto &[lmi, _] : (*mra.get_lmi_map ())[level]) {
     const auto m = mra.mean_val (lmi);
 
-    for (auto u = 0u; u < MS::U_DIM; ++u)
+    for (auto u = 0u; u < TMultiscale::U_DIM; ++u)
       local[u] = std::max (local[u], std::abs (m[u]));
   }
 
-  std::array<double, MS::U_DIM> global;
-  sc_MPI_Allreduce (local.data (), global.data (), MS::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, mra.grid.comm);
+  std::array<double, TMultiscale::U_DIM> global;
+  sc_MPI_Allreduce (local.data (), global.data (), TMultiscale::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, mra.grid.comm);
 
   return global;
 }
@@ -154,11 +155,11 @@ global_v_max (MS &mra, int level)
  *
  * @return Parent lmis of the jumping families
  */
-template <typename MS>
-auto
-detect_jumps (MS &mra, int level, double c_thresh)
+template <typename TMultiscale>
+[[nodiscard]] auto
+detect_jumps (TMultiscale &mra, int level, double c_thresh)
 {
-  using levelmultiindex = typename MS::levelmultiindex;
+  using levelmultiindex = typename TMultiscale::levelmultiindex;
 
   mra.grid.ghost_exchange ();
 
@@ -179,14 +180,14 @@ detect_jumps (MS &mra, int level, double c_thresh)
                                   const auto mean_neigh = mra.mean_val (*neigh_data);
                                   auto &diff = face_jump[lmi.index];
 
-                                  for (auto u = 0u; u < MS::U_DIM; ++u)
+                                  for (auto u = 0u; u < TMultiscale::U_DIM; ++u)
                                     diff = std::max (diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
                                 });
 
-  typename MS::index_set jumps;
+  typename TMultiscale::index_set jumps;
   for (const auto &[index, diff] : face_jump) {
     const auto lmi = levelmultiindex (index);
-    const auto h = std::pow (lmi_map->get (lmi).vol, 1.0 / MS::DIM);
+    const auto h = std::pow (lmi_map->get (lmi).vol, 1.0 / TMultiscale::DIM);
 
     if (diff > c_thresh * std::sqrt (h))
       jumps.insert (t8_mra::parent_lmi (lmi));
@@ -199,21 +200,21 @@ detect_jumps (MS &mra, int level, double c_thresh)
 
 /// Coarsening criterion wrapper: families with a detected jump are always
 /// significant.
-template <typename Criterion, typename MS>
+template <typename TCriterion, typename TMultiscale>
 struct jump_guarded
 {
-  Criterion &criterion;
-  const typename MS::index_set &jumps;
+  TCriterion &criterion;
+  const typename TMultiscale::index_set &jumps;
 
   void
-  prepare (MS &mra)
+  prepare (TMultiscale &mra)
   {
-    if constexpr (criterion_has_prepare<Criterion, MS>)
+    if constexpr (criterion_has_prepare<TCriterion, TMultiscale>)
       criterion.prepare (mra);
   }
 
   bool
-  significant (MS &mra, const typename MS::levelmultiindex &lmi)
+  significant (TMultiscale &mra, const typename TMultiscale::levelmultiindex &lmi)
   {
     return jumps.contains (lmi) || criterion.significant (mra, lmi);
   }
@@ -227,9 +228,9 @@ struct jump_guarded
  *
  * @return Number of leaves refined
  */
-template <typename MS, typename Func>
+template <typename TMultiscale, typename TFunc>
 unsigned int
-project_onto_children (MS &mra, int level, Func &&func)
+project_onto_children (TMultiscale &mra, int level, TFunc &&func)
 {
   clear_state (mra);
 
@@ -240,7 +241,7 @@ project_onto_children (MS &mra, int level, Func &&func)
   if (mra.grid.global_num_marks (num_marked) == 0)
     return 0;
 
-  mra.grid.adapt (MS::static_refinement_callback);
+  mra.grid.adapt (TMultiscale::static_refinement_callback);
 
   auto *lmi_map = mra.get_lmi_map ();
   auto *user_data = mra.get_user_data ();
@@ -278,11 +279,11 @@ project_onto_children (MS &mra, int level, Func &&func)
  * projection; jumping families are kept regardless. Never builds the uniform
  * max_level grid.
  */
-template <typename MS, typename Func, typename Criterion = hard_thresholding>
-  requires coarsening_criterion<Criterion, MS>
+template <typename TMultiscale, typename TFunc, typename TCriterion = hard_thresholding>
+  requires coarsening_criterion<TCriterion, TMultiscale>
 void
-initialize_data_adaptive (MS &mra, t8_cmesh_t mesh, const t8_scheme *scheme, int max_level, Func &&func,
-                          Criterion criterion = {})
+initialize_data_adaptive (TMultiscale &mra, t8_cmesh_t mesh, const t8_scheme *scheme, int max_level, TFunc &&func,
+                          TCriterion criterion = {})
 {
   auto c_thresh = 1.0;
   if constexpr (requires { criterion.c_thresh; })
@@ -293,7 +294,7 @@ initialize_data_adaptive (MS &mra, t8_cmesh_t mesh, const t8_scheme *scheme, int
   for (auto l = 1; l < max_level; ++l) {
     const auto jumps = detect_jumps (mra, l, c_thresh);
 
-    coarsen (mra, std::max (l - 1, 1), l, jump_guarded<Criterion, MS> { criterion, jumps });
+    coarsen (mra, std::max (l - 1, 1), l, jump_guarded<TCriterion, TMultiscale> { criterion, jumps });
     project_onto_children (mra, l, func);
   }
 }

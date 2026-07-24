@@ -2,10 +2,11 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <gsl/gsl_integration.h>
 #include <memory>
-#include <vector>
 #include <stdexcept>
+#include <vector>
+
+#include <gsl/gsl_integration.h>
 
 namespace t8_mra
 {

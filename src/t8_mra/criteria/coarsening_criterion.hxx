@@ -23,16 +23,17 @@ namespace t8_mra
  * the beginning of every coarsen() call (e.g. to compute global
  * normalization factors).
  */
-template <typename C, typename MRA>
-concept coarsening_criterion = requires (C c, MRA &mra, const typename MRA::levelmultiindex &lmi) {
-  { c.significant (mra, lmi) } -> std::convertible_to<bool>;
-};
+template <typename TCriterion, typename TMultiscale>
+concept coarsening_criterion
+  = requires (TCriterion criterion, TMultiscale &mra, const typename TMultiscale::levelmultiindex &lmi) {
+      { criterion.significant (mra, lmi) } -> std::convertible_to<bool>;
+    };
 
 /**
  * @brief Detect optional prepare() hook of a criterion
  */
-template <typename C, typename MRA>
-concept criterion_has_prepare = requires (C c, MRA &mra) { c.prepare (mra); };
+template <typename TCriterion, typename TMultiscale>
+concept criterion_has_prepare = requires (TCriterion criterion, TMultiscale &mra) { criterion.prepare (mra); };
 
 /**
  * @brief Default coarsening criterion: hard thresholding
@@ -51,16 +52,16 @@ struct hard_thresholding
   /// Expected order of convergence
   int gamma = 1;
 
-  template <typename MRA>
+  template <typename TMultiscale>
   void
-  prepare (MRA &mra)
+  prepare (TMultiscale &mra)
   {
     mra.c_scaling = mra.threshold_scaling_factor ();
   }
 
-  template <typename MRA>
-  bool
-  significant (MRA &mra, const typename MRA::levelmultiindex &lmi)
+  template <typename TMultiscale>
+  [[nodiscard]] bool
+  significant (TMultiscale &mra, const typename TMultiscale::levelmultiindex &lmi)
   {
     return mra.scaled_detail_norm (lmi) > c_thresh * mra.local_threshold_value (lmi, gamma);
   }

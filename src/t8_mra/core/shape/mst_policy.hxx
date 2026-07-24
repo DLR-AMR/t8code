@@ -9,12 +9,12 @@ namespace t8_mra
 
 /// Per-shape vertex-order handling under refinement. Specialized per shape in
 /// core/shape/.
-template <t8_eclass Shape>
+template <t8_eclass TShape>
 struct ordering_policy;
 
 /// Per-shape MST normalization and detail-norm scaling. Specialized per shape in
 /// core/shape/.
-template <t8_eclass Shape>
+template <t8_eclass TShape>
 struct mst_scaling_policy;
 
 }  // namespace t8_mra

@@ -7,11 +7,11 @@
 namespace t8_mra
 {
 /// Jacobi polynomial P_n^{(alpha,beta)}(x) by three-term recurrence.
-double
+[[nodiscard]] double
 jacobi (int n, double alpha, double beta, double x);
 
 /// Derivative d/dx P_n^{(alpha,beta)}(x) = (n+alpha+beta+1)/2 P_{n-1}^{(alpha+1,beta+1)}(x).
-inline double
+[[nodiscard]] inline double
 jacobi_deriv (int n, double alpha, double beta, double x)
 {
   if (n == 0)
@@ -22,7 +22,7 @@ jacobi_deriv (int n, double alpha, double beta, double x)
 namespace detail
 {
 /// Total degree d of linear basis index i (smallest d with (d+1)(d+2)/2 > i).
-constexpr int
+[[nodiscard]] constexpr int
 dubiner_degree (int i)
 {
   int d = 0;
@@ -33,7 +33,7 @@ dubiner_degree (int i)
 
 /// c^N for small compile-time N
 template <int N>
-constexpr double
+[[nodiscard]] constexpr double
 power (double c)
 {
   double r = 1.0;
@@ -46,7 +46,7 @@ power (double c)
 /// I-th orthonormal Dubiner scaling function on the reference triangle (area
 /// 1/2), via Jacobi recurrence; valid for any I. tau1, tau2 in [0,1].
 template <int I>
-double
+[[nodiscard]] double
 scaling_function (double tau1, double tau2)
 {
   constexpr int d = detail::dubiner_degree (I);
@@ -67,7 +67,7 @@ scaling_function (double tau1, double tau2)
 /// Evaluated at interior (Dunavant) points; the collapsed-coordinate gradient
 /// is singular only at the apex (c -> 0, p == 1), guarded by clamping c.
 template <int I>
-std::array<double, 2>
+[[nodiscard]] std::array<double, 2>
 scaling_function_gradient (double tau1, double tau2)
 {
   constexpr int d = detail::dubiner_degree (I);

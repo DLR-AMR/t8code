@@ -11,6 +11,7 @@
 namespace t8_mra
 {
 
+/// Dense row-major matrix; see lu_factors / lu_solve for the pivoted LU solve.
 class mat {
   std::vector<double> data;
   size_t num_rows = 0u;
@@ -50,7 +51,7 @@ class mat {
 
   double &
   operator() (size_t i, size_t j);
-  double
+  [[nodiscard]] double
   operator() (size_t i, size_t j) const;
 
   mat &
@@ -59,9 +60,9 @@ class mat {
   void
   resize (size_t _m, size_t _n);
 
-  size_t
+  [[nodiscard]] size_t
   rows () const noexcept;
-  size_t
+  [[nodiscard]] size_t
   cols () const noexcept;
 };
 

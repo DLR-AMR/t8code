@@ -1,15 +1,17 @@
 #pragma once
 
-#include "sc_mpi.h"
-#include "t8_eclass/t8_eclass.h"
-#include "t8_element/t8_element.h"
-#include <cstddef>
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/core/adapt/grading.hxx"
-#include <t8.h>
-
+#include <cstddef>
 #include <vector>
+
+#include "sc_mpi.h"
+
+#include "t8.h"
+#include "t8_eclass/t8_eclass.h"
+#include "t8_element/t8_element.h"
+
+#include "t8_mra/core/adapt/grading.hxx"
 
 namespace t8_mra::adapt
 {
@@ -23,9 +25,9 @@ namespace t8_mra::adapt
  *
  * @return Number of leaves marked in this round
  */
-template <typename MS>
-unsigned int
-balance_round (MS &mra)
+template <typename TMultiscale>
+[[nodiscard]] unsigned int
+balance_round (TMultiscale &mra)
 {
   clear_state (mra);
 
@@ -70,9 +72,9 @@ balance_round (MS &mra)
  * a jump of k levels resolves in k-1 rounds. Terminates: every round refines at
  * least one leaf and levels are bounded by max_level.
  */
-template <typename MS>
+template <typename TMultiscale>
 void
-balance (MS &mra)
+balance (TMultiscale &mra)
 {
   auto rounds = 0;
 

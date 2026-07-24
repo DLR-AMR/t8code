@@ -2,18 +2,19 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_eclass/t8_eclass.h"
-#include "t8_mra/dg/dg_base.hxx"
-#include "t8_mra/core/shape_traits.hxx"
-#include "t8_mra/data/element_data.hxx"
-#include "t8_mra/num/cell_geometry.hxx"
-#include "t8_mra/num/dg_basis.hxx"
-#include "t8_mra/num/geometry.hxx"
-
 #include <array>
 #include <span>
 #include <type_traits>
 #include <vector>
+
+#include "t8_eclass/t8_eclass.h"
+
+#include "t8_mra/core/shape_traits.hxx"
+#include "t8_mra/data/element_data.hxx"
+#include "t8_mra/dg/dg_base.hxx"
+#include "t8_mra/num/cell_geometry.hxx"
+#include "t8_mra/num/dg_basis.hxx"
+#include "t8_mra/num/geometry.hxx"
 
 namespace t8_mra
 {
@@ -22,12 +23,12 @@ namespace t8_mra
  * @brief Cartesian DG numerics (LINE, QUAD, HEX): tensor Legendre basis,
  * Gauss-Legendre projection, axis-aligned box geometry. t8code-free.
  */
-template <t8_eclass Shape, int U, int P>
-  requires is_cartesian<Shape>
-class dg<Shape, U, P> {
+template <t8_eclass TShape, int U, int P>
+  requires is_cartesian<TShape>
+class dg<TShape, U, P> {
  public:
-  using element_t = element_data<Shape, U, P>;
-  using geometry_t = cell_geometry<Shape, P>;
+  using element_t = element_data<TShape, U, P>;
+  using geometry_t = cell_geometry<TShape, P>;
 
   static constexpr unsigned int DIM = element_t::DIM;
   static constexpr unsigned int U_DIM = U;
@@ -43,17 +44,17 @@ class dg<Shape, U, P> {
   }
 
   /** @brief Cell geometry from the leaf's t8code-order corner coords and volume. */
-  geometry_t
+  [[nodiscard]] geometry_t
   geometry (const std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> &corners, double volume,
             const std::array<int, 3> & /*unused*/ = {}) const
   {
     // QUAD corners are permuted (t8code swaps 2 and 3) so index 0 is the lower
     // and the last the upper corner, as extract_cartesian_vertices expects.
     std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> ordered = {};
-    for (auto corner = 0; corner < shape_traits<Shape>::NUM_VERTICES; ++corner) {
+    for (auto corner = 0; corner < shape_traits<TShape>::NUM_VERTICES; ++corner) {
       auto source = corner;
 
-      if constexpr (DIM == 2 && Shape == T8_ECLASS_QUAD) {
+      if constexpr (DIM == 2 && TShape == T8_ECLASS_QUAD) {
         constexpr std::array<int, 4> quad_corner_order = { 0, 1, 3, 2 };
         source = quad_corner_order[corner];
       }
@@ -100,7 +101,7 @@ class dg<Shape, U, P> {
   }
 
   /** @brief Solution value per component at a physical point. */
-  std::array<double, U_DIM>
+  [[nodiscard]] std::array<double, U_DIM>
   evaluate (const geometry_t &geom, const element_t &data, const std::array<double, DIM> &x_phys) const
   {
     const auto x_ref = geom.to_reference (x_phys);
@@ -113,7 +114,7 @@ class dg<Shape, U, P> {
   }
 
   /** @brief Solution gradient grad[u][d] = d(u_u)/d(x_d) at a physical point. */
-  std::array<std::array<double, DIM>, U_DIM>
+  [[nodiscard]] std::array<std::array<double, DIM>, U_DIM>
   evaluate_gradient (const geometry_t &geom, const element_t &data, const std::array<double, DIM> &x_phys) const
   {
     const auto x_ref = geom.to_reference (x_phys);
@@ -129,7 +130,7 @@ class dg<Shape, U, P> {
   /// Evaluate func at a physical point; supports func(x{,y,z}) returning an
   /// array or writing into an out pointer.
   template <typename Func>
-  static std::array<double, U_DIM>
+  [[nodiscard]] static std::array<double, U_DIM>
   eval_func (Func &&func, const std::array<double, DIM> &x)
   {
     std::array<double, U_DIM> f_val;

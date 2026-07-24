@@ -23,23 +23,23 @@ namespace t8_mra
 // interface.
 
 /// Minimal interface every basis specialization provides.
-template <typename B>
-concept reference_basis = requires (std::array<double, static_cast<std::size_t> (B::DIM)> x, double vol) {
-  { B::DIM } -> std::convertible_to<int>;
-  { B::DOF } -> std::convertible_to<int>;
-  { B::eval (x) } -> std::same_as<std::array<double, static_cast<std::size_t> (B::DOF)>>;
-  { B::normalization (vol) } -> std::convertible_to<double>;
+template <typename TBasis>
+concept reference_basis = requires (std::array<double, static_cast<std::size_t> (TBasis::DIM)> x, double vol) {
+  { TBasis::DIM } -> std::convertible_to<int>;
+  { TBasis::DOF } -> std::convertible_to<int>;
+  { TBasis::eval (x) } -> std::same_as<std::array<double, static_cast<std::size_t> (TBasis::DOF)>>;
+  { TBasis::normalization (vol) } -> std::convertible_to<double>;
 };
 
 template <t8_eclass TShape, int P>
 struct basis;
 
 /// Physical cell mean of a modal field (only the zeroth mode survives).
-template <t8_eclass Shape, int P>
-inline double
+template <t8_eclass TShape, int P>
+[[nodiscard]] inline double
 cell_mean (std::span<const double> coeffs, double vol)
 {
-  using basis_t = basis<Shape, P>;
+  using basis_t = basis<TShape, P>;
   static const double phi0 = basis_t::eval ({})[0];
   return basis_t::normalization (vol) * phi0 * coeffs[0];
 }

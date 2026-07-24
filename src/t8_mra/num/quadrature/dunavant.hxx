@@ -25,13 +25,13 @@ struct dunavant_quadrature
 };
 
 /// Expand Dunavant rule `rule` (1..20) into its full point/weight set.
-dunavant_quadrature
+[[nodiscard]] dunavant_quadrature
 dunavant_rule (int rule);
 
 /// Map reference-triangle points to physical space. tri holds the three
 /// vertices [x0,y0, x1,y1, x2,y2]; ref holds points [x0,y0, ...]; the returned
 /// vector holds the physical points in the same flattened layout.
-std::vector<double>
+[[nodiscard]] std::vector<double>
 reference_to_physical_t3 (std::span<const double> tri, std::span<const double> ref);
 
 }  // namespace t8_mra

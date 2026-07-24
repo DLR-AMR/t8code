@@ -2,23 +2,23 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <stdexcept>
 #include <vector>
 
 #include <ankerl/unordered_dense.h>
+
 #include "t8_mra/data/levelmultiindex.hxx"
 
 namespace t8_mra
 {
 
 /**
- * @brief Stores corresponding cells of an adaptive grid as a vector of hash_sets.
- * Guarantees O(1) search, insertion, deletion. For performance
- * reason we use a "dense hashset" provided by the unordered_dense-library 
- * (see https://github.com/martinus/unordered_dense)
+ * @brief Per-level hash sets of an adaptive grid's cells, keyed by lmi.
  *
- * The cell data is given as a levelmultiindex = (level, multiindex) describing
- * the index of a cell on a given level
+ * O(1) contains/insert/erase via the dense hash set of unordered_dense
+ * (https://github.com/martinus/unordered_dense); one set per refinement level.
  *
+ * @tparam TLmi levelmultiindex key type
  */
 template <lmi_type TLmi>
 class levelindex_set {
@@ -34,7 +34,6 @@ class levelindex_set {
   levelindex_set () = default;
   explicit levelindex_set (unsigned int _max_level);
 
-  // Constructors
   levelindex_set (const levelindex_set &other) = default;
   levelindex_set (levelindex_set &&other) noexcept = default;
   levelindex_set &
@@ -44,120 +43,64 @@ class levelindex_set {
   operator= (levelindex_set &&other) noexcept
     = default;
 
-  /**
-   * @brief Insert (level, key) 
-   *
-   * @param level Refinement level
-   * @param key Multiindex
-   */
+  /** @brief Insert (level, key). */
   void
   insert (unsigned int level, size_t key);
 
-  /**
-   * @brief Insert a levelmultiindex
-   *
-   * @param lmi levelmultiindex
-   */
+  /** @brief Insert a levelmultiindex. */
   void
   insert (const TLmi &lmi);
 
-  /**
-   * @brief Erase entry for given (level, key)
-   *
-   * @param level Refinement level
-   * @param key Multiindex 
-   */
+  /** @brief Erase the entry at (level, key). */
   void
   erase (unsigned int level, size_t key);
 
-  /**
-   * @brief Erase entry for given levelmultiindex
-   *
-   * @param lmi levelmultiindex
-   */
+  /** @brief Erase the entry at the given lmi. */
   void
   erase (const TLmi &lmi);
 
-  /**
-   * @brief Erase entries for a given refinement level 
-   *
-   * @param level Refinement level
-   */
+  /** @brief Erase all entries on a level. */
   void
   erase (unsigned int level);
 
-  /**
-   * @brief Erase whole set
-   */
+  /** @brief Erase all entries. */
   void
   erase_all ();
 
-  // Level-iterators
-  iterator
+  [[nodiscard]] iterator
   begin (unsigned int level);
 
-  iterator
+  [[nodiscard]] iterator
   end (unsigned int level);
 
-  const_iterator
+  [[nodiscard]] const_iterator
   begin (unsigned int level) const;
 
-  const_iterator
+  [[nodiscard]] const_iterator
   end (unsigned int level) const;
 
-  /**
-   * @brief Does the cell (level, multiindex) exists?
-   *
-   * @param level Refinement level
-   * @param key Multiindex
-   *
-   * @return Does cell exist?
-   */
-  bool
+  /** @brief Whether a cell exists at (level, key). */
+  [[nodiscard]] bool
   contains (unsigned int level, size_t key) const;
 
-  /**
-   * @brief Does the levelmultiindex exists?
-   *
-   * @param lmi levelmultiindex
-   *
-   * @return Does cell exist?
-   */
-  bool
+  /** @brief Whether the given lmi exists. */
+  [[nodiscard]] bool
   contains (const TLmi &lmi) const;
 
-  /**
-   * @brief Returns number elements stored in the set
-   *
-   * @return Number elements
-   */
-  size_t
+  /** @brief Total number of stored cells. */
+  [[nodiscard]] size_t
   size () const noexcept;
 
-  /**
-   * @brief Returns number elements stored in the set on a level
-   *
-   * @return Number elements
-   */
-  size_t
+  /** @brief Number of stored cells on a level. */
+  [[nodiscard]] size_t
   size (unsigned int level) const noexcept;
 
-  /**
-   * @brief Get all cells of a given refinement level
-   *
-   * @param level Refinement level
-   * @return index_set
-   */
-  set &
+  /** @brief All cells of a level. */
+  [[nodiscard]] set &
   operator[] (unsigned int level);
 
-  /**
-   * @brief Get all cells of a given refinement level
-   *
-   * @param level Refinement level
-   * @return index_set
-   */
-  const set &
+  /** @brief All cells of a level. */
+  [[nodiscard]] const set &
   operator[] (unsigned int level) const;
 
  private:

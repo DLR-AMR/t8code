@@ -2,17 +2,18 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_mra/data/levelmultiindex.hxx"
-#include "t8_mra/data/triangle_order.hxx"
-#include "t8_eclass/t8_eclass.h"
-#include "t8_element/t8_element.h"
-#include "t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h"
-#include "t8_schemes/t8_scheme.hxx"
 #include <array>
 #include <cstddef>
 
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
+#include "t8_eclass/t8_eclass.h"
+#include "t8_element/t8_element.h"
+#include "t8_schemes/t8_default/t8_default_tri/t8_dtri.h"
+#include "t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h"
+#include "t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h"
+#include "t8_schemes/t8_scheme.hxx"
+
+#include "t8_mra/data/levelmultiindex.hxx"
+#include "t8_mra/data/triangle_order.hxx"
 
 namespace t8_mra
 {

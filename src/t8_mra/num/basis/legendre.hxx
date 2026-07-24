@@ -2,29 +2,23 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <gsl/gsl_sf_legendre.h>
 #include <array>
 #include <cmath>
+
+#include <gsl/gsl_sf_legendre.h>
 
 namespace t8_mra
 {
 
 /**
- * @brief Evaluates the p-th Legendre polynomial at point x on [0,1]
+ * @brief The p-th Legendre polynomial at x, shifted to [0,1] and L2-normalized.
  *
- * The Legendre polynomials are shifted from the standard [-1,1] interval
- * to [0,1] and L2-normalized.
+ * Shift x_std = 2x-1 and multiply by sqrt(2p+1) for orthonormality on [0,1].
  *
- * For orthonormality on [0,1]:
- * - Legendre on [-1,1] with norm sqrt(2/(2p+1))
- * - Shift to [0,1]: x_std = 2x-1, dx = d(x_std)/2
- * - This gives normalization factor sqrt(2(2p+1)) for [0,1]
- *
- * @param x Point in [0,1] where to evaluate
- * @param p Polynomial degree (0, 1, 2, ...)
- * @return double Value of the p-th normalized Legendre polynomial at x
+ * @param x Point in [0,1].
+ * @param p Polynomial degree.
  */
-inline double
+[[nodiscard]] inline double
 phi_1d (double x, int p)
 {
   // Transform x from [0,1] to [-1,1] for standard Legendre polynomials
@@ -47,7 +41,7 @@ phi_1d (double x, int p)
  * sqrt(2p+1) normalization are applied to the requested degree.
  */
 template <int P>
-inline double
+[[nodiscard]] inline double
 phi_prime_1d (double x, int p)
 {
   const auto x_std = 2.0 * x - 1.0;

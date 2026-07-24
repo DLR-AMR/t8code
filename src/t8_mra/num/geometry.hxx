@@ -9,7 +9,7 @@ namespace t8_mra
 {
 
 /// Affine map from reference [0,1] to physical [xL, xR].
-constexpr double
+[[nodiscard]] constexpr double
 deref_1d (double x_ref, double xL, double xR) noexcept
 {
   return x_ref * (xR - xL) + xL;
@@ -17,12 +17,12 @@ deref_1d (double x_ref, double xL, double xR) noexcept
 
 /// Dimension-wise affine map [0,1]^DIM -> physical cartesian cell.
 template <unsigned int DIM>
-constexpr std::array<double, DIM>
+[[nodiscard]] constexpr std::array<double, DIM>
 deref (const std::array<double, DIM> &x_ref, const std::array<double, DIM> &vertices_min,
        const std::array<double, DIM> &vertices_max) noexcept
 {
   std::array<double, DIM> x = {};
-  for (auto d = 0; d < DIM; ++d)
+  for (auto d = 0u; d < DIM; ++d)
     x[d] = deref_1d (x_ref[d], vertices_min[d], vertices_max[d]);
 
   return x;
@@ -38,7 +38,7 @@ extract_cartesian_vertices (const std::array<std::array<double, 3>, N> &physical
 {
   constexpr int max_vertex = (DIM == 1) ? 1 : (DIM == 2) ? 2 : 7;
 
-  for (auto d = 0; d < DIM; ++d) {
+  for (auto d = 0u; d < DIM; ++d) {
     vertices_min[d] = physical_vertices[0][d];
     vertices_max[d] = physical_vertices[max_vertex][d];
   }
@@ -47,7 +47,7 @@ extract_cartesian_vertices (const std::array<std::array<double, 3>, N> &physical
 /// Maps the flattened reference quadrature points ([x0,y0,..., x1,y1,...]) to
 /// the physical cartesian cell.
 template <unsigned int DIM>
-inline std::vector<double>
+[[nodiscard]] inline std::vector<double>
 transform_quad_points (const std::vector<double> &ref_quad_points, size_t num_points,
                        const std::array<double, DIM> &vertices_min, const std::array<double, DIM> &vertices_max)
 {
@@ -55,12 +55,12 @@ transform_quad_points (const std::vector<double> &ref_quad_points, size_t num_po
 
   for (auto i = 0u; i < num_points; ++i) {
     std::array<double, DIM> x_ref;
-    for (auto d = 0; d < DIM; ++d)
+    for (auto d = 0u; d < DIM; ++d)
       x_ref[d] = ref_quad_points[DIM * i + d];
 
     const std::array<double, DIM> x_phys = deref<DIM> (x_ref, vertices_min, vertices_max);
 
-    for (auto d = 0; d < DIM; ++d)
+    for (auto d = 0u; d < DIM; ++d)
       phys_quad_points[DIM * i + d] = x_phys[d];
   }
 

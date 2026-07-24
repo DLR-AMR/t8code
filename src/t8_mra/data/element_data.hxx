@@ -3,8 +3,10 @@
 #ifdef T8_ENABLE_MRA
 
 #include <array>
-#include "t8_eclass/t8_eclass.h"
+
 #include "sc_containers.h"
+
+#include "t8_eclass/t8_eclass.h"
 
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/data/levelindex_map.hxx"
@@ -34,7 +36,7 @@ struct element_data
 
   std::array<int, 3> order = {};  // Point order
 
-  static size_t
+  [[nodiscard]] static size_t
   dg_idx (size_t u, size_t p) noexcept
   {
     return u * DOF + p;
@@ -49,36 +51,42 @@ struct detail_data: element_data<TShape, U, P>
 
   std::array<double, base::U_DIM * base::W_DOF> d_coeffs = {};
 
-  static size_t
+  [[nodiscard]] static size_t
   wavelet_idx (size_t k, size_t u, size_t p) noexcept
   {
     return k * base::U_DIM * base::DOF + u * base::DOF + p;
   }
 };
 
-template <typename T>
+/// Forest user data: the leaf-index array (lmi per leaf) and the lmi_map.
+template <typename TElement>
 struct forest_data
 {
-  using lmi_type = levelmultiindex<T::Shape>;
+  using lmi_type = levelmultiindex<TElement::Shape>;
 
   sc_array_t *lmi_idx;
-  t8_mra::levelindex_map<lmi_type, T> *lmi_map;
+  t8_mra::levelindex_map<lmi_type, TElement> *lmi_map;
 
   void *mra_instance;  // Pointer to multiscale object for callbacks
 };
 
-template <typename T>
-t8_mra::levelmultiindex<T::Shape>
-get_lmi_from_forest_data (const t8_mra::forest_data<T> *forest_data, size_t idx)
+/// The lmi of local leaf idx, read from the forest user data.
+template <typename TElement>
+[[nodiscard]] t8_mra::levelmultiindex<TElement::Shape>
+get_lmi_from_forest_data (const t8_mra::forest_data<TElement> *forest_data, size_t idx)
 {
-  return *reinterpret_cast<t8_mra::levelmultiindex<T::Shape> *> (t8_sc_array_index_locidx (forest_data->lmi_idx, idx));
+  return *reinterpret_cast<t8_mra::levelmultiindex<TElement::Shape> *> (
+    t8_sc_array_index_locidx (forest_data->lmi_idx, idx));
 }
 
-template <typename T>
+/// Store the lmi of local leaf idx into the forest user data.
+template <typename TElement>
 void
-set_lmi_forest_data (t8_mra::forest_data<T> *forest_data, size_t idx, const t8_mra::levelmultiindex<T::Shape> &lmi)
+set_lmi_forest_data (t8_mra::forest_data<TElement> *forest_data, size_t idx,
+                     const t8_mra::levelmultiindex<TElement::Shape> &lmi)
 {
-  *reinterpret_cast<t8_mra::levelmultiindex<T::Shape> *> (t8_sc_array_index_locidx (forest_data->lmi_idx, idx)) = lmi;
+  *reinterpret_cast<t8_mra::levelmultiindex<TElement::Shape> *> (t8_sc_array_index_locidx (forest_data->lmi_idx, idx))
+    = lmi;
 }
 
 }  // namespace t8_mra

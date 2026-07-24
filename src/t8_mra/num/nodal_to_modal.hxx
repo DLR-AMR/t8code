@@ -63,7 +63,7 @@ class nodal_to_modal {
     }
   }
 
-  std::array<double, U * DOF>
+  [[nodiscard]] std::array<double, U * DOF>
   operator() (std::span<const double> nodal) const
   {
     std::array<double, U * DOF> modal;
@@ -114,7 +114,7 @@ class modal_to_nodal {
     }
   }
 
-  std::array<double, U * DOF>
+  [[nodiscard]] std::array<double, U * DOF>
   operator() (std::span<const double> modal) const
   {
     std::array<double, U * DOF> nodal = {};

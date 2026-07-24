@@ -3,11 +3,11 @@
 #ifdef T8_ENABLE_MRA
 
 #include <t8.h>
+#include <t8_element/t8_element.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-#include "t8_element/t8_element.h"
 #include "t8_mra/data/element_data.hxx"
 #include "t8_mra/data/levelindex_map.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
@@ -16,15 +16,15 @@ namespace t8_mra
 {
 
 /// lmi -> forest-local leaf index, the reverse of forest_data::lmi_idx.
-template <typename T>
-using local_index_map = levelindex_map<levelmultiindex<T::Shape>, t8_locidx_t>;
+template <typename TElement>
+using local_index_map = levelindex_map<levelmultiindex<TElement::Shape>, t8_locidx_t>;
 
 /// Reverse of lmi_idx (lmi -> local index); rebuild on grid change.
-template <typename T>
-local_index_map<T>
-build_local_index_map (const forest_data<T> *forest_data, t8_locidx_t num_local, unsigned int max_level)
+template <typename TElement>
+[[nodiscard]] local_index_map<TElement>
+build_local_index_map (const forest_data<TElement> *forest_data, t8_locidx_t num_local, unsigned int max_level)
 {
-  local_index_map<T> reverse_map (max_level);
+  local_index_map<TElement> reverse_map (max_level);
 
   for (auto i = 0; i < num_local; ++i)
     reverse_map.insert (get_lmi_from_forest_data (forest_data, i), i);
@@ -35,7 +35,7 @@ build_local_index_map (const forest_data<T> *forest_data, t8_locidx_t num_local,
 /// Local index of the same-level leaf across `face`; -1 at a boundary or non-
 /// conforming face.
 template <lmi_type TLmi>
-t8_locidx_t
+[[nodiscard]] t8_locidx_t
 face_neighbor_index (t8_forest_t forest, t8_locidx_t tree_idx, const t8_element_t *element, int face,
                      t8_element_t *element_buffer, const t8_scheme *scheme,
                      const levelindex_map<TLmi, t8_locidx_t> &reverse_map, int *neigh_face)

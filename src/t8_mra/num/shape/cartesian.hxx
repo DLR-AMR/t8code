@@ -2,14 +2,14 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <array>
+#include <cmath>
+#include <span>
+
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/num/basis/basis.hxx"
 #include "t8_mra/num/basis/legendre.hxx"
 #include "t8_mra/num/cell_geometry.hxx"
-
-#include <array>
-#include <cmath>
-#include <span>
 
 namespace t8_mra
 {
@@ -24,7 +24,7 @@ struct basis<TShape, P>
   static constexpr int DIM = shape_traits<TShape>::DIM;
   static constexpr int DOF = shape_traits<TShape>::dof (P);
 
-  static std::array<double, DOF>
+  [[nodiscard]] static std::array<double, DOF>
   eval (const std::array<double, DIM> &x)
   {
     std::array<double, DOF> res = {};
@@ -40,7 +40,7 @@ struct basis<TShape, P>
     return res;
   }
 
-  static std::array<std::array<double, DOF>, DIM>
+  [[nodiscard]] static std::array<std::array<double, DOF>, DIM>
   eval_gradient (const std::array<double, DIM> &x)
   {
     std::array<std::array<double, DOF>, DIM> grad = {};
@@ -59,7 +59,7 @@ struct basis<TShape, P>
     return grad;
   }
 
-  static constexpr double
+  [[nodiscard]] static constexpr double
   normalization (double) noexcept
   {
     return 1.0;
@@ -67,13 +67,13 @@ struct basis<TShape, P>
 };
 
 /** @brief Cartesian leaf geometry: axis-aligned box, diagonal Jacobian. */
-template <t8_eclass Shape, int P>
-  requires is_cartesian<Shape>
-struct cell_geometry<Shape, P>
+template <t8_eclass TShape, int P>
+  requires is_cartesian<TShape>
+struct cell_geometry<TShape, P>
 {
-  static constexpr int DIM = shape_traits<Shape>::DIM;
-  static constexpr int DOF = shape_traits<Shape>::dof (P);
-  using basis_t = basis<Shape, P>;
+  static constexpr int DIM = shape_traits<TShape>::DIM;
+  static constexpr int DOF = shape_traits<TShape>::dof (P);
+  using basis_t = basis<TShape, P>;
   using point = std::array<double, DIM>;
 
   point origin {};
@@ -84,7 +84,7 @@ struct cell_geometry<Shape, P>
   int level = 0;
 
   /** @brief Build from the cell's min/max corners. */
-  static cell_geometry
+  [[nodiscard]] static cell_geometry
   from_box (const point &min_corner, const point &max_corner, double vol)
   {
     cell_geometry geom;
@@ -104,14 +104,14 @@ struct cell_geometry<Shape, P>
   }
 
   /** @brief Reference coordinate -> basis coordinate (identity). */
-  static point
+  [[nodiscard]] static point
   basis_coord (const point &ref)
   {
     return ref;
   }
 
   /** @brief Pin a shared-face point's normal reference component exactly (t8 face: axis=f>>1, side=f&1). */
-  static point
+  [[nodiscard]] static point
   on_face (point ref, int face)
   {
     ref[face >> 1] = (face & 1) ? 1.0 : 0.0;
@@ -119,7 +119,7 @@ struct cell_geometry<Shape, P>
   }
 
   /** @brief Whether a reference point lies in the unit box. */
-  static bool
+  [[nodiscard]] static bool
   in_ref_cell (const point &ref)
   {
     for (int d = 0; d < DIM; ++d)
@@ -130,7 +130,7 @@ struct cell_geometry<Shape, P>
   }
 
   /** @brief Physical -> reference coordinate. */
-  point
+  [[nodiscard]] point
   to_reference (const point &phys) const
   {
     point ref {};
@@ -141,7 +141,7 @@ struct cell_geometry<Shape, P>
   }
 
   /** @brief Reference -> physical coordinate. */
-  point
+  [[nodiscard]] point
   to_physical (const point &ref) const
   {
     point phys {};
@@ -152,14 +152,14 @@ struct cell_geometry<Shape, P>
   }
 
   /** @brief Whether a physical point lies in the cell. */
-  bool
+  [[nodiscard]] bool
   contains (const point &phys) const
   {
     return in_ref_cell (to_reference (phys));
   }
 
   /** @brief basis_scale * sum_i coeffs_i * phi_i(basis_coord(ref)). */
-  static double
+  [[nodiscard]] static double
   eval_modal (std::span<const double> coeffs, const point &ref, double basis_scale)
   {
     const auto phi = basis_t::eval (basis_coord (ref));
@@ -171,21 +171,21 @@ struct cell_geometry<Shape, P>
   }
 
   /** @brief Physical value at a reference point from the cell volume alone (no cell map). */
-  static double
+  [[nodiscard]] static double
   reference_value (std::span<const double> coeffs, const point &ref, double volume)
   {
     return eval_modal (coeffs, ref, basis_t::normalization (volume));
   }
 
   /** @brief Physical value at a reference point using the cached basis scale. */
-  double
+  [[nodiscard]] double
   value (std::span<const double> coeffs, const point &ref) const
   {
     return eval_modal (coeffs, ref, basis_scale);
   }
 
   /** @brief Physical gradient d(u_h)/d(x_d) at a reference point. */
-  point
+  [[nodiscard]] point
   gradient (std::span<const double> coeffs, const point &ref) const
   {
     const auto ref_grad = basis_t::eval_gradient (ref);
@@ -203,7 +203,7 @@ struct cell_geometry<Shape, P>
   }
 
   /** @brief inv_jac * phys_dir: weights w with (phys_dir . grad_x phi) = w . grad_r phi. */
-  point
+  [[nodiscard]] point
   reference_direction (const point &phys_dir) const
   {
     point ref_dir {};

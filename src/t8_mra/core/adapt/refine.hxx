@@ -2,13 +2,14 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
+
+#include <t8.h>
+
 #include "t8_mra/core/adapt/grading.hxx"
 #include "t8_mra/criteria/coarsening_criterion.hxx"
 #include "t8_mra/criteria/refinement_criterion.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
-#include <t8.h>
-
-#include <algorithm>
 
 namespace t8_mra::adapt
 {
@@ -22,12 +23,12 @@ namespace t8_mra::adapt
  * covering leaves up one level per round. All marks are realized by one recursive
  * forest adapt (children data = inverse two-scale with zero details).
  */
-template <typename MS, typename Criterion = harten_prediction>
-  requires refinement_criterion<Criterion, MS>
+template <typename TMultiscale, typename TCriterion = harten_prediction>
+  requires refinement_criterion<TCriterion, TMultiscale>
 void
-refine (MS &mra, int min_level, int max_level, Criterion criterion = {})
+refine (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = {})
 {
-  if constexpr (criterion_has_prepare<Criterion, MS>)
+  if constexpr (criterion_has_prepare<TCriterion, TMultiscale>)
     criterion.prepare (mra);
 
   clear_state (mra);
@@ -65,7 +66,7 @@ refine (MS &mra, int min_level, int max_level, Criterion criterion = {})
 
     prior_refinements = mra.refinement_set;
 
-    typename MS::index_set stopped;
+    typename TMultiscale::index_set stopped;
     for (auto l = 0; l < max_level; ++l)
       for (const auto &lmi : mra.td_set[l]) {
         const auto children = t8_mra::children_lmi (lmi);

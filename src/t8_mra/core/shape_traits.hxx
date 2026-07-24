@@ -2,10 +2,10 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <t8_eclass/t8_eclass.h>
-
 #include <algorithm>
 #include <cstddef>
+
+#include <t8_eclass/t8_eclass.h>
 
 namespace t8_mra
 {
@@ -22,7 +22,7 @@ template <t8_eclass TShape>
 concept is_cartesian = (TShape == T8_ECLASS_LINE || TShape == T8_ECLASS_QUAD || TShape == T8_ECLASS_HEX);
 
 /// Binomial coefficient (compile-time), for simplex DOF counts.
-constexpr size_t
+[[nodiscard]] constexpr size_t
 binom (size_t n, size_t k) noexcept
 {
   if (k > n)
@@ -46,7 +46,7 @@ struct shape_traits
   static constexpr int NUM_VERTICES = 0;
   static constexpr int VTK_CELL_TYPE = 0;
 
-  static constexpr unsigned short
+  [[nodiscard]] static constexpr unsigned short
   dof (unsigned short /*unused*/)
   {
     return 0;

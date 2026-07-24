@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include "t8_eclass/t8_eclass.h"
+
 #include "t8_mra/core/shape/mst_policy.hxx"
 #include "t8_mra/core/shape_traits.hxx"
 
@@ -17,7 +18,7 @@ struct shape_traits<T8_ECLASS_LINE>
   static constexpr int NUM_VERTICES = 2;
   static constexpr int VTK_CELL_TYPE = 68;  // VTK_LAGRANGE_CURVE
 
-  static constexpr unsigned short
+  [[nodiscard]] static constexpr unsigned short
   dof (unsigned short P)
   {
     return P;
@@ -32,7 +33,7 @@ struct shape_traits<T8_ECLASS_QUAD>
   static constexpr int NUM_VERTICES = 4;
   static constexpr int VTK_CELL_TYPE = 70;  // VTK_LAGRANGE_QUADRILATERAL
 
-  static constexpr unsigned short
+  [[nodiscard]] static constexpr unsigned short
   dof (unsigned short P)
   {
     return P * P;
@@ -47,7 +48,7 @@ struct shape_traits<T8_ECLASS_HEX>
   static constexpr int NUM_VERTICES = 8;
   static constexpr int VTK_CELL_TYPE = 72;  // VTK_LAGRANGE_HEXAHEDRON
 
-  static constexpr unsigned short
+  [[nodiscard]] static constexpr unsigned short
   dof (unsigned short P)
   {
     return P * P * P;
@@ -55,41 +56,41 @@ struct shape_traits<T8_ECLASS_HEX>
 };
 
 /// Cartesian shapes carry no vertex-order information.
-template <t8_eclass Shape>
-  requires is_cartesian<Shape>
-struct ordering_policy<Shape>
+template <t8_eclass TShape>
+  requires is_cartesian<TShape>
+struct ordering_policy<TShape>
 {
-  template <typename T>
+  template <typename TData>
   static void
-  adjust_parent_order (T & /*unused*/)
+  adjust_parent_order (TData & /*unused*/)
   {
   }
 
-  template <typename T>
+  template <typename TData>
   static void
-  adjust_child_order (T & /*unused*/, int /*unused*/, const T & /*unused*/)
+  adjust_child_order (TData & /*unused*/, int /*unused*/, const TData & /*unused*/)
   {
   }
 };
 
 /// Cartesian MST scaling: L2-orthonormal reference basis
-template <t8_eclass Shape>
-  requires is_cartesian<Shape>
-struct mst_scaling_policy<Shape>
+template <t8_eclass TShape>
+  requires is_cartesian<TShape>
+struct mst_scaling_policy<TShape>
 {
-  static constexpr double
+  [[nodiscard]] static constexpr double
   forward_scaling_factor (unsigned int num_children)
   {
     return 1.0 / static_cast<double> (num_children);
   }
 
-  static constexpr double
+  [[nodiscard]] static constexpr double
   inverse_scaling_factor ()
   {
     return 1.0;
   }
 
-  static constexpr double
+  [[nodiscard]] static constexpr double
   detail_norm_scale (double /*unused*/)
   {
     return 1.0;

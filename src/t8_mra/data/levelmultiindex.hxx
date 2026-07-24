@@ -2,12 +2,12 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <array>
+#include <functional>
+
 #include <t8_eclass/t8_eclass.h>
 #include <t8_element/t8_element.h>
-#include <functional>
 #include <t8_schemes/t8_scheme.hxx>
-
-#include <array>
 
 namespace t8_mra
 {
@@ -71,7 +71,7 @@ struct levelmultiindex
       *this = jth_child (*this, scheme->element_get_ancestor_id (ECLASS, elem, l + 1));
   }
 
-  bool
+  [[nodiscard]] bool
   operator== (const levelmultiindex &other) const noexcept
   {
     return index == other.index;
@@ -129,7 +129,7 @@ struct levelmultiindex
 
   /// Reference vertex order at the element's level. Cartesian elements need no
   /// reordering (identity); TRIANGLE specializes.
-  static std::array<int, 3>
+  [[nodiscard]] static std::array<int, 3>
   point_order_at_level (const t8_element_t * /*unused*/, const t8_scheme * /*unused*/) noexcept
   {
     return { 0, 1, 2 };
@@ -137,8 +137,8 @@ struct levelmultiindex
 };
 
 /// Concept: an lmi is a levelmultiindex of its own ECLASS.
-template <typename T>
-concept lmi_type = std::is_same_v<T, t8_mra::levelmultiindex<T::ECLASS>>;
+template <typename TLmi>
+concept lmi_type = std::is_same_v<TLmi, t8_mra::levelmultiindex<TLmi::ECLASS>>;
 
 template <lmi_type TLmi>
 [[nodiscard]] inline TLmi
@@ -164,8 +164,8 @@ struct hash<TLmi>
 {
   using is_transparent = void;
 
-  size_t
-  operator() (const TLmi &lmi) const
+  [[nodiscard]] size_t
+  operator() (const TLmi &lmi) const noexcept
   {
     return lmi.index;
   }

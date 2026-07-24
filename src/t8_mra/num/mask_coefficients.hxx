@@ -2,15 +2,15 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <vector>
 
 #include <t8_eclass/t8_eclass.h>
-#include <t8_mra/num/mat.hxx>
+
 #include <t8_mra/core/shape_traits.hxx>
 #include <t8_mra/num/basis/basis.hxx>
+#include <t8_mra/num/mat.hxx>
 #include <t8_mra/num/quadrature/quadrature.hxx>
 
 namespace t8_mra
@@ -32,7 +32,7 @@ struct affine_map
   std::array<std::array<double, DIM>, DIM> A {};
   std::array<double, DIM> b {};
 
-  std::array<double, DIM>
+  [[nodiscard]] std::array<double, DIM>
   operator() (const std::array<double, DIM> &xi) const
   {
     std::array<double, DIM> out {};
@@ -48,7 +48,7 @@ struct affine_map
 /// Cartesian children: 2^DIM axis-aligned half-cells, Φ_k(ξ) = (s_k + ξ)/2.
 template <t8_eclass TShape>
   requires is_cartesian<TShape>
-auto
+[[nodiscard]] auto
 child_maps ()
 {
   constexpr int DIM = shape_traits<TShape>::DIM;
@@ -68,7 +68,7 @@ child_maps ()
 /// centre; per-child vertex order fixes the two-scale convention.
 template <t8_eclass TShape>
   requires (TShape == T8_ECLASS_TRIANGLE)
-auto
+[[nodiscard]] auto
 child_maps ()
 {
   using vertex = std::array<double, 2>;

@@ -113,25 +113,25 @@ class multiscale {
   // Accessors (forward to grid)
   //=============================================================================
 
-  t8_forest_t
+  [[nodiscard]] t8_forest_t
   get_forest ()
   {
     return grid.get_forest ();
   }
 
-  sc_MPI_Comm
+  [[nodiscard]] sc_MPI_Comm
   get_comm () const
   {
     return grid.comm;
   }
 
-  t8_mra::forest_data<element_t> *
+  [[nodiscard]] t8_mra::forest_data<element_t> *
   get_user_data ()
   {
     return grid.get_user_data ();
   }
 
-  levelindex_map<levelmultiindex, element_t> *
+  [[nodiscard]] levelindex_map<levelmultiindex, element_t> *
   get_lmi_map ()
   {
     return grid.get_lmi_map ();
@@ -143,11 +143,11 @@ class multiscale {
     return grid.maximum_level;
   }
 
-  template <typename F>
+  template <typename TFunc>
   void
-  for_each_local_leaf (F &&f)
+  for_each_local_leaf (TFunc &&f)
   {
-    grid.for_each_local_leaf (std::forward<F> (f));
+    grid.for_each_local_leaf (std::forward<TFunc> (f));
   }
 
   void
@@ -189,7 +189,7 @@ class multiscale {
   //=============================================================================
 
   /** @brief max_u ||d_u|| / c_scaling_u. */
-  double
+  [[nodiscard]] double
   scaled_detail_norm (const levelmultiindex &lmi)
   {
     auto detail_norm = transform.detail_norm (d_map.get (lmi));
@@ -200,7 +200,7 @@ class multiscale {
   }
 
   /** @brief Level-dependent threshold (Veli eq. 2.44). */
-  double
+  [[nodiscard]] double
   local_threshold_value (const levelmultiindex &lmi, int gamma)
   {
     const auto vol = d_map.get (lmi).vol;
@@ -213,7 +213,7 @@ class multiscale {
   }
 
   /** @brief Per-component domain-integral scaling (eq. 2.39), reduced over ranks. */
-  std::array<double, U_DIM>
+  [[nodiscard]] std::array<double, U_DIM>
   threshold_scaling_factor ()
   {
     std::array<double, U_DIM> res = {};
@@ -241,7 +241,7 @@ class multiscale {
   //=============================================================================
 
   /** @brief Solution value per component at a reference-cell point. */
-  std::array<double, U_DIM>
+  [[nodiscard]] std::array<double, U_DIM>
   evaluate_reference (const element_t &data, const std::array<double, DIM> &x_ref)
   {
     std::array<double, U_DIM> res = {};
@@ -254,7 +254,7 @@ class multiscale {
   }
 
   /** @brief Cell average per component. */
-  std::array<double, U_DIM>
+  [[nodiscard]] std::array<double, U_DIM>
   mean_val (const element_t &data)
   {
     std::array<double, U_DIM> mean = {};
@@ -266,14 +266,14 @@ class multiscale {
     return mean;
   }
 
-  std::array<double, U_DIM>
+  [[nodiscard]] std::array<double, U_DIM>
   mean_val (const levelmultiindex &lmi)
   {
     return mean_val (get_lmi_map ()->get (lmi));
   }
 
   /** @brief Solution value per component at a physical point of the given leaf. */
-  std::array<double, U_DIM>
+  [[nodiscard]] std::array<double, U_DIM>
   evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, DIM> &x_phys)
   {
     std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> corners;
@@ -285,7 +285,7 @@ class multiscale {
   }
 
   /** @brief Solution gradient per component at a physical point of the given leaf. */
-  std::array<std::array<double, DIM>, U_DIM>
+  [[nodiscard]] std::array<std::array<double, DIM>, U_DIM>
   evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
                      const std::array<double, DIM> &x_phys)
   {
@@ -346,7 +346,7 @@ class multiscale {
   }
 
   /** @brief Solution value at a physical point; nullopt if no local leaf owns it. */
-  std::optional<std::array<double, U_DIM>>
+  [[nodiscard]] std::optional<std::array<double, U_DIM>>
   evaluate_point (const std::array<double, DIM> &x, double tolerance = 1e-8)
   {
     point_query query = {};
@@ -373,9 +373,9 @@ class multiscale {
   //=============================================================================
 
   /** @brief Project func onto a single leaf. */
-  template <typename Func>
+  template <typename TFunc>
   element_t
-  project_leaf (int tree_idx, const t8_element_t *element, Func &&func)
+  project_leaf (int tree_idx, const t8_element_t *element, TFunc &&func)
   {
     element_t data;
     data.vol = grid.element_volume (tree_idx, element);
@@ -393,9 +393,9 @@ class multiscale {
   }
 
   /** @brief Project func onto a uniform forest of the given level. */
-  template <typename Func>
+  template <typename TFunc>
   void
-  initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, Func &&func)
+  initialize_data (t8_cmesh_t mesh, const t8_scheme *scheme, int level, TFunc &&func)
   {
     grid.forest = t8_forest_new_uniform (mesh, scheme, level, 0, grid.comm);
     grid.build ([&] (int tree_idx, const t8_element_t *element) { return project_leaf (tree_idx, element, func); });
@@ -447,18 +447,18 @@ class multiscale {
   // Adaptation (forward to adapt::)
   //=============================================================================
 
-  template <typename Criterion = hard_thresholding>
-    requires coarsening_criterion<Criterion, multiscale>
+  template <typename TCriterion = hard_thresholding>
+    requires coarsening_criterion<TCriterion, multiscale>
   void
-  coarsen (int min_level, int max_level, Criterion criterion = {})
+  coarsen (int min_level, int max_level, TCriterion criterion = {})
   {
     adapt::coarsen (*this, min_level, max_level, criterion);
   }
 
-  template <typename Criterion = harten_prediction>
-    requires refinement_criterion<Criterion, multiscale>
+  template <typename TCriterion = harten_prediction>
+    requires refinement_criterion<TCriterion, multiscale>
   void
-  refine (int min_level, int max_level, Criterion criterion = {})
+  refine (int min_level, int max_level, TCriterion criterion = {})
   {
     adapt::refine (*this, min_level, max_level, criterion);
   }
@@ -469,11 +469,11 @@ class multiscale {
     adapt::balance (*this);
   }
 
-  template <typename Func, typename Criterion = hard_thresholding>
-    requires coarsening_criterion<Criterion, multiscale>
+  template <typename TFunc, typename TCriterion = hard_thresholding>
+    requires coarsening_criterion<TCriterion, multiscale>
   void
-  initialize_data_adaptive (t8_cmesh_t mesh, const t8_scheme *scheme, int max_level, Func &&func,
-                            Criterion criterion = {})
+  initialize_data_adaptive (t8_cmesh_t mesh, const t8_scheme *scheme, int max_level, TFunc &&func,
+                            TCriterion criterion = {})
   {
     adapt::initialize_data_adaptive (*this, mesh, scheme, max_level, func, criterion);
   }

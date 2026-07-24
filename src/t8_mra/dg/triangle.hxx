@@ -2,15 +2,16 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include "t8_eclass/t8_eclass.h"
-#include "t8_mra/dg/dg_base.hxx"
-#include "t8_mra/data/element_data.hxx"
-#include "t8_mra/num/cell_geometry.hxx"
-#include "t8_mra/num/dg_basis.hxx"
-
 #include <array>
 #include <span>
 #include <vector>
+
+#include "t8_eclass/t8_eclass.h"
+
+#include "t8_mra/data/element_data.hxx"
+#include "t8_mra/dg/dg_base.hxx"
+#include "t8_mra/num/cell_geometry.hxx"
+#include "t8_mra/num/dg_basis.hxx"
 
 namespace t8_mra
 {
@@ -41,7 +42,7 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
   }
 
   /** @brief Cell geometry from native corner coords, volume and reference vertex order. */
-  geometry_t
+  [[nodiscard]] geometry_t
   geometry (const std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> &corners, double volume,
             const std::array<int, 3> &order) const
   {
@@ -81,7 +82,7 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
   }
 
   /** @brief Solution value per component at a physical point. */
-  std::array<double, U_DIM>
+  [[nodiscard]] std::array<double, U_DIM>
   evaluate (const geometry_t &geom, const element_t &data, const std::array<double, DIM> &x_phys) const
   {
     const auto x_ref = geom.to_reference (x_phys);
@@ -94,7 +95,7 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
   }
 
   /** @brief Solution gradient grad[u][d] = d(u_u)/d(x_d) at a physical point. */
-  std::array<std::array<double, DIM>, U_DIM>
+  [[nodiscard]] std::array<std::array<double, DIM>, U_DIM>
   evaluate_gradient (const geometry_t &geom, const element_t &data, const std::array<double, DIM> &x_phys) const
   {
     const auto x_ref = geom.to_reference (x_phys);

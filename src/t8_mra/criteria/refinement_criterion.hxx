@@ -29,10 +29,11 @@ struct refinement_flags
  * (identified by the parent lmi, whose detail is in mra.d_map). Optionally a
  * criterion provides prepare(mra), called once at the start of every refine().
  */
-template <typename C, typename MRA>
-concept refinement_criterion = requires (C c, MRA &mra, const typename MRA::levelmultiindex &lmi) {
-  { c (mra, lmi) } -> std::convertible_to<refinement_flags>;
-};
+template <typename TCriterion, typename TMultiscale>
+concept refinement_criterion
+  = requires (TCriterion criterion, TMultiscale &mra, const typename TMultiscale::levelmultiindex &lmi) {
+      { criterion (mra, lmi) } -> std::convertible_to<refinement_flags>;
+    };
 
 /**
  * @brief Example refinement criterion: Harten's prediction
@@ -42,7 +43,7 @@ concept refinement_criterion = requires (C c, MRA &mra, const typename MRA::leve
  *   grade_neighbours:  N >            c_thresh * eps
  *   refine_children:   N >  2^(P+1) * c_thresh * eps
  *
- * prepare() computes the global scaling factors c_scaling 
+ * prepare() computes the global scaling factors c_scaling.
  */
 struct harten_prediction
 {
@@ -51,20 +52,20 @@ struct harten_prediction
   /// Expected order of convergence (enters the level-dependent threshold)
   int gamma = 1;
 
-  template <typename MRA>
+  template <typename TMultiscale>
   void
-  prepare (MRA &mra)
+  prepare (TMultiscale &mra)
   {
     mra.c_scaling = mra.threshold_scaling_factor ();
   }
 
-  template <typename MRA>
-  refinement_flags
-  operator() (MRA &mra, const typename MRA::levelmultiindex &lmi)
+  template <typename TMultiscale>
+  [[nodiscard]] refinement_flags
+  operator() (TMultiscale &mra, const typename TMultiscale::levelmultiindex &lmi)
   {
     const auto norm = mra.scaled_detail_norm (lmi);
     const auto threshold = c_thresh * mra.local_threshold_value (lmi, gamma);
-    const auto steep_factor = std::pow (2.0, static_cast<int> (MRA::P_DIM) + 1);
+    const auto steep_factor = std::pow (2.0, static_cast<int> (TMultiscale::P_DIM) + 1);
 
     return { norm > threshold, norm > steep_factor * threshold };
   }
