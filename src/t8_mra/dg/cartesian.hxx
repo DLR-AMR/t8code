@@ -43,7 +43,8 @@ class dg<Shape, U, P> {
 
   /** @brief Cell geometry from the leaf's t8code-order corner coords and volume. */
   geometry_t
-  geometry (const double corners[T8_ECLASS_MAX_CORNERS][3], double volume, const std::array<int, 3> & = {}) const
+  geometry (const std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> &corners, double volume,
+            const std::array<int, 3> & = {}) const
   {
     // QUAD corners are permuted (t8code swaps 2 and 3) so index 0 is the lower
     // and the last the upper corner, as extract_cartesian_vertices expects.

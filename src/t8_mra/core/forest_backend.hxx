@@ -2,20 +2,28 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include "sc_containers.h"
+#include "sc_mpi.h"
+#include "t8.h"
+#include "t8_eclass/t8_eclass.h"
+#include "t8_element/t8_element.h"
+
 #include "t8_mra/data/element_data.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
 #include "t8_mra/data/levelindex_map.hxx"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
-#include "t8_forest/t8_forest_iterate.h"
-#include "t8_forest/t8_forest_adapt.h"
 #include "t8_forest/t8_forest_ghost.h"
 #include "t8_forest/t8_forest_partition.h"
 #include "t8_forest/t8_forest_types.h"
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <iterator>
 #include <functional>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 namespace t8_mra
@@ -47,7 +55,7 @@ class forest_backend {
   {
   }
 
-  /** @brief Set the multiscale instance (routed to by the C callbacks) and the post-adaptation hook. */
+  /** @brief Set the multiscale instance and the post-adaptation hook. */
   void
   bind (void *instance, std::function<void ()> post_adapt_hook)
   {
@@ -55,7 +63,7 @@ class forest_backend {
     post_adapt = std::move (post_adapt_hook);
   }
 
-  t8_forest_t
+  [[nodiscard]] t8_forest_t
   get_forest () const
   {
     return forest;
@@ -73,20 +81,21 @@ class forest_backend {
     return get_user_data ()->lmi_map;
   }
 
-  /** @brief Local leaves in SFC order. f: (tree_idx, element, local leaf idx, global tree id). */
+  /** @brief Local leaves in SFC order. func: (tree_idx, element, local leaf idx, global tree id). */
   template <typename F>
   void
-  for_each_local_leaf (F &&f) const
+  for_each_local_leaf (F &&func) const
   {
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
     auto local_idx = 0u;
 
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+    for (auto tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
       const auto num_elems = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
       const auto global_tree = t8_forest_global_tree_id (forest, tree_idx);
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elems; ++ele_idx, ++local_idx) {
+
+      for (auto ele_idx = 0; ele_idx < num_elems; ++ele_idx, ++local_idx) {
         const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, ele_idx);
-        f (tree_idx, element, local_idx, global_tree);
+        func (tree_idx, element, local_idx, global_tree);
       }
     }
   }
@@ -107,14 +116,14 @@ class forest_backend {
     const auto num_local_trees = t8_forest_get_num_local_trees (forest);
     auto current_idx = 0u;
 
-    for (t8_locidx_t tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
+    for (auto tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
       const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
       const auto num_elements = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
 
       t8_element_t *neigh_element;
       scheme->element_new (tree_class, 1, &neigh_element);
 
-      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
+      for (auto ele_idx = 0; ele_idx < num_elements; ++ele_idx, ++current_idx) {
         const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, current_idx);
         if (!leaf_filter (lmi))
           continue;
@@ -146,11 +155,12 @@ class forest_backend {
 
   /** @brief Corner coordinates of a leaf in t8code vertex order. */
   void
-  element_corner_coords (t8_locidx_t tree_idx, const t8_element_t *element, double corners[T8_ECLASS_MAX_CORNERS][3]) const
+  element_corner_coords (t8_locidx_t tree_idx, const t8_element_t *element,
+                         std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> &corners) const
   {
-    const int num_corners = t8_eclass_num_vertices[TShape];
-    for (int corner = 0; corner < num_corners; ++corner)
-      t8_forest_element_coordinate (forest, tree_idx, element, corner, corners[corner]);
+    const auto num_corners = t8_eclass_num_vertices[TShape];
+    for (auto corner = 0; corner < num_corners; ++corner)
+      t8_forest_element_coordinate (forest, tree_idx, element, corner, corners[corner].data ());
   }
 
   double
@@ -159,12 +169,12 @@ class forest_backend {
     return t8_forest_element_volume (forest, tree_idx, element);
   }
 
-  /** @brief Fresh user data wrapping map, lmi_idx sized to local+ghost, owner stamped. */
+  /** @brief Fresh user data wrapping map, lmi_idx sized to local+ghost. */
   user_data_t *
-  attach_user_data (t8_forest_t f, lmi_map_t *map)
+  attach_user_data (t8_forest_t f, lmi_map_t *lmi_map)
   {
     auto *user_data = T8_ALLOC (user_data_t, 1);
-    user_data->lmi_map = map;
+    user_data->lmi_map = lmi_map;
 
     const auto num_local = t8_forest_get_local_num_leaf_elements (f);
     const auto num_ghost = t8_forest_get_num_ghosts (f);
@@ -180,8 +190,10 @@ class forest_backend {
   destroy_user_data (user_data_t *user_data)
   {
     delete user_data->lmi_map;
+
     if (user_data->lmi_idx)
       sc_array_destroy (user_data->lmi_idx);
+
     T8_FREE (user_data);
   }
 
@@ -206,6 +218,7 @@ class forest_backend {
         const auto *element = t8_forest_get_leaf_element_in_tree (f, tree_idx, ele_idx);
         const auto lmi = levelmultiindex (gtreeid, element, scheme);
         t8_mra::set_lmi_forest_data (user_data, current_idx, lmi);
+
         per_leaf (tree_idx, element, lmi, current_idx);
       }
     }
@@ -220,6 +233,7 @@ class forest_backend {
 
     auto *map = new lmi_map_t (maximum_level);
     auto *user_data = attach_user_data (forest, map);
+
     rebuild_leaf_index (forest, user_data,
                         [&] (t8_locidx_t tree_idx, const t8_element_t *element, const levelmultiindex &lmi,
                              t8_locidx_t) { map->insert (lmi, projector (tree_idx, element)); });
@@ -234,7 +248,7 @@ class forest_backend {
     t8_forest_t new_forest = t8_forest_new_adapt (forest, adapt_callback, recursive, 0, old_user_data);
 
     lmi_map_t *map = old_user_data->lmi_map;
-    old_user_data->lmi_map = new lmi_map_t (maximum_level);  // placeholder freed with old_ud
+    old_user_data->lmi_map = new lmi_map_t (maximum_level);  // placeholder freed with old_user_data
 
     auto *user_data = attach_user_data (new_forest, map);
     rebuild_leaf_index (new_forest, user_data,
@@ -242,6 +256,7 @@ class forest_backend {
 
     destroy_user_data (old_user_data);
     t8_forest_unref (&forest);
+
     forest = new_forest;
     ghost_map.erase_all ();
 
@@ -265,31 +280,37 @@ class forest_backend {
 
     const auto num_old = t8_forest_get_local_num_leaf_elements (forest);
     auto *data_in = sc_array_new_count (sizeof (element_t), num_old);
-    for (t8_locidx_t i = 0; i < num_old; ++i)
+
+    for (auto i = 0; i < num_old; ++i)
       *reinterpret_cast<element_t *> (sc_array_index (data_in, i))
         = old_map->get (t8_mra::get_lmi_from_forest_data (old_user_data, i));
 
     t8_forest_ref (forest);
     t8_forest_t new_forest;
+
     t8_forest_init (&new_forest);
     t8_forest_set_partition (new_forest, forest, 1);
     t8_forest_commit (new_forest);
 
     const auto num_new = t8_forest_get_local_num_leaf_elements (new_forest);
     auto *data_out = sc_array_new_count (sizeof (element_t), num_new);
+
     t8_forest_partition_data (forest, new_forest, data_in, data_out);
     sc_array_destroy (data_in);
 
     auto *map = new lmi_map_t (maximum_level);
     auto *user_data = attach_user_data (new_forest, map);
+
     rebuild_leaf_index (new_forest, user_data,
                         [&] (t8_locidx_t, const t8_element_t *, const levelmultiindex &lmi, t8_locidx_t idx) {
                           map->insert (lmi, *reinterpret_cast<element_t *> (sc_array_index (data_out, idx)));
                         });
+
     sc_array_destroy (data_out);
 
     destroy_user_data (old_user_data);
     t8_forest_unref (&forest);
+
     forest = new_forest;
     ghost_map.erase_all ();
 
@@ -322,7 +343,8 @@ class forest_backend {
 
     auto *data = sc_array_new_count (sizeof (element_t), num_local + num_ghosts);
     auto *lmi_map = get_lmi_map ();
-    for (t8_locidx_t i = 0; i < num_local; ++i)
+
+    for (auto i = 0; i < num_local; ++i)
       *reinterpret_cast<element_t *> (sc_array_index (data, i))
         = lmi_map->get (t8_mra::get_lmi_from_forest_data (user_data, i));
 
@@ -331,11 +353,12 @@ class forest_backend {
     for (auto i = num_local; i < num_local + num_ghosts; ++i)
       ghost_map.insert (t8_mra::get_lmi_from_forest_data (user_data, i),
                         *reinterpret_cast<element_t *> (sc_array_index (data, i)));
+
     sc_array_destroy (data);
   }
 
-  /** @brief Allreduce-MAX of the local mark count (new_adapt is collective). */
-  unsigned int
+  /** @brief Allreduce-MAX of the local mark count. */
+  [[nodiscard]] unsigned int
   global_num_marks (unsigned int local_marks) const
   {
     auto global_marks = local_marks;
@@ -356,16 +379,17 @@ class forest_backend {
 
     std::vector<t8_gloidx_t> local;
     local.reserve (set.size ());
-    for (const auto &lmi : set)
-      local.push_back (static_cast<t8_gloidx_t> (lmi.index));
+    std::ranges::transform (set, std::back_inserter (local),
+                            [] (const auto &lmi) { return static_cast<t8_gloidx_t> (lmi.index); });
 
     int num_local = static_cast<int> (local.size ());
-    std::vector<int> counts (mpisize), displs (mpisize);
+    std::vector<int> counts (mpisize);
+    std::vector<int> displs (mpisize);
 
     sc_MPI_Allgather (&num_local, 1, sc_MPI_INT, counts.data (), 1, sc_MPI_INT, comm);
 
     std::exclusive_scan (counts.begin (), counts.end (), displs.begin (), 0);
-    const int total = displs.back () + counts.back ();
+    const auto total = displs.back () + counts.back ();
 
     std::vector<t8_gloidx_t> all (total);
 
@@ -380,6 +404,7 @@ class forest_backend {
   cleanup ()
   {
     ghost_map.erase_all ();
+
     if (forest != nullptr) {
       if (auto *user_data = get_user_data ())
         destroy_user_data (user_data);

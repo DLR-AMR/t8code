@@ -41,7 +41,8 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
 
   /** @brief Cell geometry from native corner coords, volume and reference vertex order. */
   geometry_t
-  geometry (const double corners[T8_ECLASS_MAX_CORNERS][3], double volume, const std::array<int, 3> &order) const
+  geometry (const std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> &corners, double volume,
+            const std::array<int, 3> &order) const
   {
     std::array<std::array<double, 2>, 3> ordered;
     for (int i = 0; i < 3; ++i)

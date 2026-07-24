@@ -262,7 +262,7 @@ class multiscale {
   std::array<double, U_DIM>
   evaluate (int tree_idx, const t8_element_t *element, const element_t &data, const std::array<double, DIM> &x_phys)
   {
-    double corners[T8_ECLASS_MAX_CORNERS][3];
+    std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> corners;
     grid.element_corner_coords (tree_idx, element, corners);
     const auto geom = discretization.geometry (corners, data.vol, data.order);
     return discretization.evaluate (geom, data, x_phys);
@@ -273,7 +273,7 @@ class multiscale {
   evaluate_gradient (int tree_idx, const t8_element_t *element, const element_t &data,
                      const std::array<double, DIM> &x_phys)
   {
-    double corners[T8_ECLASS_MAX_CORNERS][3];
+    std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> corners;
     grid.element_corner_coords (tree_idx, element, corners);
     const auto geom = discretization.geometry (corners, data.vol, data.order);
     return discretization.evaluate_gradient (geom, data, x_phys);
@@ -363,7 +363,7 @@ class multiscale {
     const auto *scheme = t8_forest_get_scheme (grid.get_forest ());
     data.order = levelmultiindex::point_order_at_level (element, scheme);
 
-    double corners[T8_ECLASS_MAX_CORNERS][3];
+    std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> corners;
     grid.element_corner_coords (tree_idx, element, corners);
     const auto geom = discretization.geometry (corners, data.vol, data.order);
     discretization.project (data.u_coeffs, geom, func);
