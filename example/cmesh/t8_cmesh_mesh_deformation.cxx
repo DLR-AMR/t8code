@@ -39,6 +39,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <chrono>
 
 int
 main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
@@ -124,8 +125,10 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
     /* Load CAD geometry from .brep file. */
-    auto cad = std::make_shared<t8_cad_handle> (brep_file);
-
+    //auto cad = std::make_shared<t8_cad_handle> (brep_file);
+    char initial_brep_buf[512];
+    snprintf (initial_brep_buf, sizeof (initial_brep_buf), "%sairfoil_0000", brep_file);
+    auto cad = std::make_shared<t8_cad_handle> (initial_brep_buf);
     /* Initialize the deformation object for the given mesh. */
     t8_cmesh_mesh_deformation deformation (cmesh);
 
@@ -133,13 +136,13 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     t8_rbf_function_type rbf_type = static_cast<t8_rbf_function_type> (rbf_type_int);
 
     /* Write output. */
-    t8_forest_vtk_write_file (forest, "deformed_forest_step_0", 1, 1, 1, 1, 0, 0, NULL);
-
-    int num_steps = 50;
+    //t8_forest_vtk_write_file (forest, "deformed_forest_step_0", 1, 1, 1, 1, 0, 0, NULL);
+    auto start_time = std::chrono::high_resolution_clock::now ();
+    int num_steps = 24;
     for (int num = 1; num <= num_steps; ++num) {
 
       char brep_buf[256];
-      snprintf (brep_buf, sizeof (brep_buf), "%s%d", brep_file, num);
+      snprintf (brep_buf, sizeof (brep_buf), "%sairfoil_%04d", brep_file, num);
 
       std::string current_brep (brep_buf);
 
@@ -150,8 +153,8 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
       deformation.apply_vertex_displacements (displacements, cad_deformed, rbf_type);
 
-      std::string output_name = "deformed_forest_step_" + std::to_string (num);
-      t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
+      //std::string output_name = "deformed_forest_step_" + std::to_string (num);
+      //t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
     }
 #if 0
     /* Calculate displacements. */
@@ -167,6 +170,10 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     /* Write output. */
     t8_forest_vtk_write_file (forest, "deformed_forest", 1, 1, 1, 1, 0, 0, NULL);
 #endif
+    auto end_time = std::chrono::high_resolution_clock::now ();
+    std::chrono::duration<double> elapsed = end_time - start_time;
+    t8_global_productionf ("Deformation runtime for %d steps: %.4f seconds (Avg per step: %.4f s)\n", num_steps,
+                           elapsed.count (), elapsed.count () / num_steps);
     /* Cleanup. */
     t8_forest_unref (&forest);
 
