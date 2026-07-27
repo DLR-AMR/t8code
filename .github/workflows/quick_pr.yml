@@ -41,10 +41,10 @@ jobs:
         runs-on: ubuntu-latest
         outputs:
             ISSUE_NUMBER: ${{ steps.create_issue_and_output_number.outputs.ISSUE_NUMBER }}
+        env:
+            GH_TOKEN: ${{ secrets.PAT }}
+            GH_REPO: ${{ github.repository }}
         steps:
-        - name: "Set up environment"
-          run: echo "GH_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
-
         - name: "Create Issue"
           id: create_issue_and_output_number
           env:
