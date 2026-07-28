@@ -98,7 +98,7 @@ template <T8MPISafeType TElementDataType>
 using data_mesh_competences_basic = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type>;
 
 /** Predefined mesh competence pack with the functionality to work with element data and to interpolate element data after adaptation. 
- * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::new_data_element_competences.
+ * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences_basic.
  */
 template <T8MPISafeType TElementDataType>
 using interpolate_data_mesh_competence

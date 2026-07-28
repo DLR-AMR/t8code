@@ -32,7 +32,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
-#include <mesh_handle/data_handler.hxx>
+#include <mesh_handle/competences/element_data_competences.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
@@ -69,13 +69,12 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
   const int level = 2;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
                                           t8_mesh_handle::interpolate_data_mesh_competence<data_per_element>>;
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, false,
-                                                                                   false, false);
+  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
-  struct dummy_user_data user_data = {
-    t8_3D_vec ({ 0.5, 0.5, 1 }), /**< Midpoints of the sphere. */
-    0.2,                         /**< Refine if inside this radius. */
-    0.4                          /**< Coarsen if outside this radius. */
+  dummy_user_data user_data {
+    t8_3D_vec { 0.5, 0.5, 1 }, /**< Midpoints of the sphere. */
+    0.2,                       /**< Refine if inside this radius. */
+    0.4                        /**< Coarsen if outside this radius. */
   };
 
   // Create element data for all local mesh elements and set via mesh competence.
@@ -86,7 +85,7 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
   mesh->set_element_data (std::move (element_data));
 
   mesh->set_adapt (
-    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data), false);
+    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data));
   mesh->set_balance ();
   mesh->set_interpolate_callback (interpolate_callback<mesh_class>);
   mesh->commit ();

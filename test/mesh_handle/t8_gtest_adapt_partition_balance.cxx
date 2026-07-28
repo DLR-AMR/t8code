@@ -89,10 +89,10 @@ TEST (t8_gtest_handle_adapt, compare_with_forest)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
   using mesh_class = t8_mesh_handle::mesh<>;
   mesh_class mesh_handle = mesh_class (forest);
-  struct dummy_user_data user_data = {
-    t8_3D_vec ({ 0.5, 0.5, 1 }), /**< Midpoints of the sphere. */
-    0.2,                         /**< Refine if inside this radius. */
-    0.4                          /**< Coarsen if outside this radius. */
+  dummy_user_data user_data {
+    t8_3D_vec { 0.5, 0.5, 1 }, /**< Midpoints of the sphere. */
+    0.2,                       /**< Refine if inside this radius. */
+    0.4                        /**< Coarsen if outside this radius. */
   };
 
   // Ref the forest as we want to keep using it after the adapt call to compare results.

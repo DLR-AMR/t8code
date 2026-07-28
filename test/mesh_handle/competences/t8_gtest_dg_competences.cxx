@@ -33,7 +33,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/constructor_wrappers.hxx>
 
 /** Store the rank on each element. */
-struct data_per_element
+struct rank_data_per_element
 {
   int rank;  ///< Rank of the element.
 };
@@ -66,9 +66,9 @@ TEST (t8_gtest_dg_competences, remote_ranks)
 {
   const int level = 2;
   using namespace t8_mesh_handle;
-  using mesh_class
-    = mesh<data_element_competences, union_competence_packs_type<mesh_competence_pack<remote_ranks_mesh_competence>,
-                                                                 data_mesh_competences<data_per_element>>>;
+  using mesh_class = mesh<data_element_competences_basic,
+                          union_competence_packs_type<mesh_competence_pack<remote_ranks_mesh_competence>,
+                                                      data_mesh_competences_basic<rank_data_per_element>>>;
   auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
   mesh->set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
   mesh->set_partition ();
@@ -87,7 +87,7 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   SC_CHECK_MPI (mpiret);
 
   // Set local rank for all local mesh elements.
-  std::vector<data_per_element> element_data (num_local, { mpirank });
+  std::vector<rank_data_per_element> element_data (num_local, { mpirank });
   mesh->set_element_data (std::move (element_data));
   // Get element data and check that the remote ranks competence works as expected.
   mesh->exchange_ghost_data ();

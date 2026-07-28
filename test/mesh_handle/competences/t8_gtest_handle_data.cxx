@@ -27,7 +27,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#include "t8_gtest_common.hxx"
+#include <test/mesh_handle/t8_gtest_common.hxx>
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competence_pack.hxx>
@@ -112,10 +112,11 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
 TEST (t8_gtest_handle_data, test_union_mesh_competence_pack)
 {
   using namespace t8_mesh_handle;
-  using mesh_class = mesh<
-    union_competence_packs_type<all_cache_element_competences, data_element_competences, empty_element_competences>,
-    union_competence_packs_type<data_mesh_competences<data_per_element>, data_mesh_competences<data_per_element>,
-                                empty_mesh_competences>>;
+  using mesh_class
+    = mesh<union_competence_packs_type<all_cache_element_competences, data_element_competences_basic,
+                                       empty_element_competences>,
+           union_competence_packs_type<data_mesh_competences_basic<data_per_element>,
+                                       data_mesh_competences_basic<data_per_element>, empty_mesh_competences>>;
   EXPECT_TRUE (mesh_class::has_element_data_handler_competence ());
   using element_class = typename mesh_class::element_class;
 

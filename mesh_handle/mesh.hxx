@@ -276,24 +276,6 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     return const_cast<element_class&> (static_cast<const mesh*> (this)->operator[] (local_index));
   }
 
-  // --- Methods to check for mesh competences. ---
-  /** Function that checks if a competence for element data handling is given.
-   * \return true if mesh has a data handler, false otherwise.
-   */
-  static constexpr bool
-  has_element_data_handler_competence ()
-  {
-    return requires (SelfType& mesh) { mesh.get_element_data (); };
-  }
-
-  /** TODO
-   */
-  static constexpr bool
-  has_interpolate_data_competence ()
-  {
-    return requires (SelfType& mesh) { mesh.set_partition_called (); };
-  }
-
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
   /** Wrapper to convert an adapt callback with user data of type \ref adapt_callback_type_with_userdata
    * into a callback without user data of type \ref adapt_callback_type using the defined user data \a user_data.
@@ -436,7 +418,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             t8_forest_unref (&m_forest);
             if (this->set_partition_called ()) {
               t8_forest_init (&m_forest);
-              t8_forest_set_partition (m_forest, m_uncommitted_forest.value (), this->m_set_for_coarsening);
+              t8_forest_set_partition (m_forest, m_uncommitted_forest.value (), this->m_set_for_coarsening.value ());
               if (t8_forest_get_num_ghosts (m_uncommitted_forest.value ()) > 0) {
                 t8_forest_set_ghost (m_forest, true, T8_GHOST_FACES);
               }
@@ -452,7 +434,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             return;
           }
           else {
-            t8_global_infof ("No interpoaltion context set.\n");
+            t8_global_infof ("No interpolation context set.\n");
           }
         }
         else {
@@ -476,6 +458,14 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   has_element_data_handler_competence ()
   {
     return requires (SelfType& mesh) { mesh.get_element_data (); };
+  }
+
+  /** TODO
+   */
+  static constexpr bool
+  has_interpolate_data_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.set_partition_called (); };
   }
 
   /** Function that checks if a competence to determine the ranks of the elements is given.
