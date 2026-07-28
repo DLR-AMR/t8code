@@ -132,6 +132,13 @@ t8_cmesh_stash_is_empty (const t8_cmesh_t cmesh);
 void
 t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
 
+/**
+ * Enable localitly based indexing of trees during \ref t8_cmesh_commit.
+ * \param [in, out] cmesh 
+ */
+void
+t8_cmesh_enable_tree_reordering (t8_cmesh_t cmesh);
+
 #if T8_ENABLE_DEBUG
 /** Check the geometry of the mesh for validity, this means checking if trees and their geometries
  *  are compatible and if they have negative volume.
@@ -140,7 +147,6 @@ t8_cmesh_disable_negative_volume_check (t8_cmesh_t cmesh);
  * \return                                True if the geometry of the cmesh is valid.
  */
 int
-
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume);
 #endif
 

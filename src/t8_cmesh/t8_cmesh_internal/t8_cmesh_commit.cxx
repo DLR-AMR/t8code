@@ -37,6 +37,7 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_tree_reindex.hxx>
+#include <chrono>
 
 /**
  * A struct to hold the information about a ghost facejoin.
@@ -150,9 +151,13 @@ t8_cmesh_commit_replicated_new (t8_cmesh_t cmesh)
     t8_locidx_t num_trees = class_entries->elem_count, ltree;
 
     if (cmesh->reindex_trees) {
+      auto start = std::chrono::high_resolution_clock::now ();
       std::map<t8_gloidx_t, t8_gloidx_t> reindexing_map = t8_cmesh_reindex_tree (cmesh);
 
       t8_cmesh_tree_perform_reindex_inplace (stash, reindexing_map);
+      auto stop = std::chrono::high_resolution_clock::now ();
+      auto duration = duration_cast<std::chrono::microseconds> (stop - start);
+      t8_productionf ("Time taken: %lims\n", duration.count ());
     }
 
     t8_cmesh_trees_init (&cmesh->trees, 1, num_trees, 0);
