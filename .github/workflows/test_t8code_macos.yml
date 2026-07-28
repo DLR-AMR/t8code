@@ -26,7 +26,6 @@ name: CMake tests t8code on Mac OS
 #  apparrent only in Trixi and T8Code.jl, where they are very hard and
 #  cumbersome to debug. This workflow is intended to avoid that by catching
 #  such problems as early as possible, i.e., within t8code's CI.
-#  not just all of t8code's remaining CI workflows rely
 #  To reduce runtime, (for now) only one configuration is run, that is, Debug mode
 #  with MPI, mesh handle, and Fortran interface. The main reason the external
 #  libraries (VTK, OpenCASCADE) are deactivated is that github's Mac OS runners
@@ -65,7 +64,7 @@ jobs:
   # Container setup: To avoid unwanted side effects of gcc or mpich, an own Clang version of the
   #                  t8-dependencies Docker image is used. Aside from some basic packages, it contains a manually built
   #                  Clang version of OpenMPI.
-    timeout-minutes: 60
+    timeout-minutes: 25
     runs-on: macos-latest
     steps:
   #
@@ -93,10 +92,6 @@ jobs:
       run: $OPENMPI_BIN/mpiexec --version
     - name: MPI sanity check (should print hostname four times)
       run: $OPENMPI_BIN/mpiexec --oversubscribe -n 4 hostname
-    - name: init submodules
-      run: git submodule init
-    - name: update submodules
-      run: git submodule update
     - name: Get input vars
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
         && export MPI="${{ inputs.MPI }}"
