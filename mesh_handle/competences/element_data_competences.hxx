@@ -183,9 +183,9 @@ template <typename TUnderlying>
 class interpolate_element_data_mesh_competence:
   public t8_crtp_operator<TUnderlying, interpolate_element_data_mesh_competence> {
  public:
-  // TODO: has_interpolate function und den callback type
+  // TODO: has_interpolate function
 
-  /** Callback function prototype to replace the element data of one set of elements with another.
+  /** TODO Callback function prototype to replace the element data of one set of elements with another.
  * This is used to interpolate element data after adaptation. The callback allows the user to make changes to the 
  * elements that are either refined, coarsened or the same.
  * \param [in] forest_old      The forest that is adapted
@@ -221,11 +221,11 @@ class interpolate_element_data_mesh_competence:
   bool
   set_partition_called ()
   {
-    return m_set_for_coarsening.has_value ();
+    return m_partition_set_for_coarsening.has_value ();
   }
 
   interpolate_callback_type m_interpolate_callback;
-  std::optional<bool> m_set_for_coarsening;
+  std::optional<bool> m_partition_set_for_coarsening;
 };
 
 }  // namespace t8_mesh_handle

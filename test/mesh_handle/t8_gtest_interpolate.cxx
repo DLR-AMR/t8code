@@ -37,6 +37,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_vec.hxx>
 #include <vector>
 
+// TODO: Vector of elements instead of numbers?
 template <typename TMeshClass>
 void
 interpolate_callback (const TMeshClass& mesh_old, TMeshClass& mesh_new, const int refine, const int num_old,

@@ -332,7 +332,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   set_partition (bool set_for_coarsening = false)
   {
     if constexpr (has_interpolate_data_competence ()) {
-      this->m_set_for_coarsening = set_for_coarsening;
+      this->m_partition_set_for_coarsening = set_for_coarsening;
       return;
     }
     if (!m_uncommitted_forest.has_value ()) {
@@ -418,7 +418,8 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             t8_forest_unref (&m_forest);
             if (this->set_partition_called ()) {
               t8_forest_init (&m_forest);
-              t8_forest_set_partition (m_forest, m_uncommitted_forest.value (), this->m_set_for_coarsening.value ());
+              t8_forest_set_partition (m_forest, m_uncommitted_forest.value (),
+                                       this->m_partition_set_for_coarsening.value ());
               if (t8_forest_get_num_ghosts (m_uncommitted_forest.value ()) > 0) {
                 t8_forest_set_ghost (m_forest, true, T8_GHOST_FACES);
               }
