@@ -38,7 +38,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 //--- Second callback type for testing purpose: Refine every second element. ---
 /** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
  * The adaptation criterion is to refine every element with even id.
- * The function header fits the definition of \ref TMesh::adapt_callback_type_with_userdata.
+ * The function header fits the definition of \ref TMesh::adapt_callback_type.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.
  * \param [in] elements  One element or a family of elements to consider for adaptation.
@@ -46,7 +46,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *        -1 if the family \a elements shall be coarsened,
  *         0 else.
  */
-template <typename TMeshClass>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 int
 mesh_adapt_callback_test_refine_second ([[maybe_unused]] const TMeshClass &mesh,
                                         std::span<const typename TMeshClass::element_class> elements)
@@ -82,7 +82,9 @@ TEST (t8_gtest_handle_adapt, compare_with_forest)
 {
   // Define forest, a mesh handle and user data.
   const int level = 3;
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, 0);
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
   using mesh_class = t8_mesh_handle::mesh<>;

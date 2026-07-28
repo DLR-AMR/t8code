@@ -48,6 +48,17 @@ function( add_t8_tutorial )
     install( TARGETS ${ADD_T8_TUTORIAL_NAME} RUNTIME )
 endfunction()
 
+function( add_mesh_handle_tutorial )
+    set( options "" )
+    set( oneValueArgs "NAME" )  
+    set( multiValueArgs "SOURCES" )
+    cmake_parse_arguments( ADD_MESH_TUTORIAL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+    add_t8_tutorial( NAME ${ADD_MESH_TUTORIAL_NAME} SOURCES ${ADD_MESH_TUTORIAL_SOURCES} )
+
+    target_link_libraries(${ADD_MESH_TUTORIAL_NAME} PRIVATE T8_MESH_HANDLE )
+endfunction()
+
 #copy tutorial files to the exact same location in the builddir as they are in the source dir
 function( copy_tutorial_file TUTORIAL_FILE_NAME_SUBPATH )
     configure_file(${CMAKE_CURRENT_LIST_DIR}/${TUTORIAL_FILE_NAME_SUBPATH} ${CMAKE_CURRENT_BINARY_DIR}/${TUTORIAL_FILE_NAME_SUBPATH} COPYONLY)
@@ -69,3 +80,7 @@ copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_hex.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_quad.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tet.geo)
 copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tri.geo)
+
+if( T8CODE_BUILD_MESH_HANDLE )
+    add_mesh_handle_tutorial( NAME t8_mesh_element_data SOURCES mesh_handle/t8_mesh_element_data.cxx )
+endif()

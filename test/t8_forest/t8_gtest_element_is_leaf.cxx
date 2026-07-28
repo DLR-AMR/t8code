@@ -30,6 +30,7 @@
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_adapt_callbacks.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include <test/t8_gtest_adapt_callbacks.hxx>
 
 /* In this test we check the t8_forest_element_is_leaf function.
  * Iterating over all cmesh test cases, we creat a uniform and an adaptive forest.
@@ -45,7 +46,8 @@
 #define T8_IS_LEAF_MAX_LVL 3
 #endif
 
-class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>> {
+struct element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override
@@ -64,7 +66,6 @@ class element_is_leaf_or_ghost: public testing::TestWithParam<std::tuple<int, in
 
     forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
     t8_forest_ref (forest);
-    //const int maxlevel = t8_forest_get_maxlevel (forest);
     int maxlevel = level + 2;
     const int recursive_adapt = 1;
     forest_adapt = t8_forest_new_adapt (forest, t8_test_adapt_first_child, recursive_adapt, 0, &maxlevel);
@@ -179,19 +180,6 @@ TEST_P (element_is_leaf_or_ghost, element_is_ghost_adapt)
 {
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
-
-/* Define a lambda to beautify gtest output for tuples <scheme, level, cmesh>.
- * This will set the correct scheme, level and cmesh name as part of the test case name. */
-auto pretty_print_level_and_cmesh_params
-  = [] (const testing::TestParamInfo<std::tuple<int, int, cmesh_example_base *>> &info) {
-      std::string name = std::string ("Level_") + std::to_string (std::get<1> (info.param));
-      std::string cmesh_name;
-      std::get<2> (info.param)->param_to_string (cmesh_name);
-      name += std::string ("_") + cmesh_name;
-      name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
-      name += std::string ("_") + std::to_string (info.index);
-      return name;
-    };
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_or_ghost, element_is_leaf_or_ghost,
                           testing::Combine (AllSchemeCollections, testing::Range (0, T8_IS_LEAF_MAX_LVL),

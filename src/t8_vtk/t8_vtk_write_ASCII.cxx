@@ -918,7 +918,7 @@ t8_cmesh_get_num_vertices (const t8_cmesh_t cmesh, const int count_ghosts)
   t8_gloidx_t num_vertices = 0;
   t8_locidx_t ighost;
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   for (iclass = T8_ECLASS_ZERO; iclass < T8_ECLASS_COUNT; iclass++) {
     num_vertices += t8_eclass_num_vertices[iclass] * cmesh->num_local_trees_per_eclass[iclass];

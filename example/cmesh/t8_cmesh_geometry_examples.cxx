@@ -117,7 +117,9 @@ main (int argc, char **argv)
     const int uniform_level = 5;
     const double radius = 5.0;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_quadrangulated_disk (radius, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_quadrangulated_disk (cmesh, radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 
@@ -137,7 +139,9 @@ main (int argc, char **argv)
     const int uniform_level = 5;
     const double radius = 42.0;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_octahedron (radius, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_triangulated_spherical_surface_octahedron (cmesh, radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 
@@ -157,7 +161,9 @@ main (int argc, char **argv)
     const int uniform_level = 5;
     const double radius = 42.0;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_icosahedron (radius, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_triangulated_spherical_surface_icosahedron (cmesh, radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 
@@ -177,7 +183,9 @@ main (int argc, char **argv)
     const int uniform_level = 4;
     const double radius = 42.0;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_triangulated_spherical_surface_cube (radius, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_triangulated_spherical_surface_cube (cmesh, radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 
@@ -197,7 +205,9 @@ main (int argc, char **argv)
     const int uniform_level = 5;
     const double radius = 42.0;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_quadrangulated_spherical_surface (radius, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_quadrangulated_spherical_surface (cmesh, radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 
@@ -222,7 +232,9 @@ main (int argc, char **argv)
     const int num_levels = 3;
     const int num_layers = 2;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_cubed_spherical_shell (inner_radius, shell_thickness, num_levels, num_layers, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_cubed_spherical_shell (cmesh, inner_radius, shell_thickness, num_levels, num_layers, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 
@@ -245,8 +257,10 @@ main (int argc, char **argv)
     const int num_levels = 2;
     const int num_layers = 1;
 
-    t8_cmesh_t cmesh
-      = t8_cmesh_new_prismed_spherical_shell_octahedron (inner_radius, shell_thickness, num_levels, num_layers, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_prismed_spherical_shell_octahedron (cmesh, inner_radius, shell_thickness, num_levels, num_layers,
+                                                     comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 
@@ -269,8 +283,10 @@ main (int argc, char **argv)
     const int num_levels = 2;
     const int num_layers = 1;
 
-    t8_cmesh_t cmesh
-      = t8_cmesh_new_prismed_spherical_shell_icosahedron (inner_radius, shell_thickness, num_levels, num_layers, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_prismed_spherical_shell_icosahedron (cmesh, inner_radius, shell_thickness, num_levels, num_layers,
+                                                      comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 
@@ -290,7 +306,9 @@ main (int argc, char **argv)
     const int uniform_level = 2;
     const double radius = 5.0;
 
-    t8_cmesh_t cmesh = t8_cmesh_new_cubed_sphere (radius, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_cubed_sphere (cmesh, radius, comm);
 
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), uniform_level, 0, comm);
 

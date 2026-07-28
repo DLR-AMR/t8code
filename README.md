@@ -11,7 +11,7 @@
 
 t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive meshes with various element types.
 t8code uses a collection (a forest) of multiple connected adaptive space-trees in parallel and scales to at least one million MPI ranks and over 1 Trillion mesh elements.
-It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 2015 the developers.
+It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 2015-2026 the developers.
 
 t8code is intended to be used as a thirdparty library for numerical simulation codes or any other applications that require meshes.
 
@@ -190,7 +190,7 @@ to install the package on your system.
 
   ### Citing t8code
   
-  If you use t8code in any of your publications, please cite the [github repository](https://doi.org/10.5281/zenodo.7034838), [1] and [2]. For publications specifically related to 
+  If you use t8code in any of your publications, please cite the GitHub repository via the [Zenodo DOI](https://doi.org/10.5281/zenodo.7034838), as well as [1] and [2]. For publications specifically related to 
 - **the tetrahedral index**, please cite [3].
 - **coarse mesh partitioning**, please cite [4].
 - **construction and handling of the ghost layer**, please cite [5].

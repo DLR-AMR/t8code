@@ -53,7 +53,8 @@ struct recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
 
     /* Construct a cmesh such that each process will get one rooted tree */
-    cmesh = t8_cmesh_new_bigmesh (tree_class, MPI_size, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_bigmesh (cmesh, tree_class, MPI_size, sc_MPI_COMM_WORLD);
 
     scheme->ref ();
     t8_cmesh_ref (cmesh);

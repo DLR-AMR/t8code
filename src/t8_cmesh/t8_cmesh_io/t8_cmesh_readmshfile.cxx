@@ -1688,12 +1688,19 @@ t8_cmesh_from_msh_file_register_geometries (t8_cmesh_t cmesh, const int use_cad_
   return 1;
 }
 
-t8_cmesh_t
-t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm comm, const int dim,
-                        const int main_proc, const int use_cad_geometry)
+void
+t8_cmesh_from_msh_file (t8_cmesh_t *pcmesh, const char *fileprefix, const int partition, sc_MPI_Comm comm,
+                        const int dim, const int main_proc, const int use_cad_geometry)
 {
+  /* Unlike most generators, this function may need to signal failure by destroying
+   * the cmesh and clearing the caller's handle, so it operates on a local copy of
+   * *pcmesh and writes the final handle (cmesh, or NULL on failure) back at the end. */
+  t8_cmesh_t cmesh = *pcmesh;
+  T8_ASSERT (cmesh != NULL);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
+  T8_ASSERT (t8_cmesh_stash_is_empty (cmesh));
   int mpirank, mpisize, mpiret;
-  t8_cmesh_t cmesh;
   char current_file[BUFSIZ];
   FILE *file;
   t8_gloidx_t num_trees, first_tree, last_tree = -1;
@@ -1712,8 +1719,6 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
    * Or using a single file and computing the partition on the run. */
   T8_ASSERT (partition == 0 || (main_proc >= 0 && main_proc < mpisize));
 
-  /* initialize cmesh structure */
-  t8_cmesh_init (&cmesh);
   /* Setting the dimension by hand is necessary for partitioned
    * commit, since there are process without any trees. So the cmesh would
    * not know its dimension on these processes. */
@@ -1726,7 +1731,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     /* Registering failed */
     t8_errorf ("OCC is not linked. Cannot use cad geometry.\n");
     t8_cmesh_destroy (&cmesh);
-    return nullptr;
+    *pcmesh = nullptr;
+    return;
   }
 
   if (!partition || mpirank == main_proc) {
@@ -1743,7 +1749,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return nullptr;
+      *pcmesh = nullptr;
+      return;
     }
     /* Check if msh-file version is compatible. */
     msh_version = t8_cmesh_check_version_of_msh_file (file);
@@ -1758,7 +1765,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return nullptr;
+      *pcmesh = nullptr;
+      return;
     }
     /* read nodes from the file */
     std::optional<t8_msh_tree_vertex_indices> indices;
@@ -1773,7 +1781,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
           main_proc_read_successful = 0;
           sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
         }
-        return nullptr;
+        *pcmesh = nullptr;
+        return;
       }
       indices = t8_cmesh_msh_file_4_read_eles (cmesh, file, *vertices_opt, dim, linear_geometry, use_cad_geometry,
                                                cad_geometry, true);
@@ -1792,7 +1801,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
         main_proc_read_successful = 0;
         sc_MPI_Bcast (&main_proc_read_successful, 1, sc_MPI_INT, main_proc, comm);
       }
-      return nullptr;
+      *pcmesh = nullptr;
+      return;
     }
     else
       t8_cmesh_msh_file_find_neighbors (cmesh, *indices);
@@ -1808,7 +1818,8 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
     if (!main_proc_read_successful) {
       t8_debugf ("Main process could not read cmesh successfully.\n");
       t8_cmesh_destroy (&cmesh);
-      return nullptr;
+      *pcmesh = nullptr;
+      return;
     }
     /* The cmesh is not yet committed, since we set the partitioning before */
     if (mpirank == main_proc) {
@@ -1840,7 +1851,7 @@ t8_cmesh_from_msh_file (const char *fileprefix, const int partition, sc_MPI_Comm
   if (cmesh != nullptr) {
     t8_cmesh_commit (cmesh, comm);
   }
-  return cmesh;
+  *pcmesh = cmesh;
 }
 
 T8_EXTERN_C_END ();

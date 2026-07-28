@@ -48,7 +48,12 @@ make_param_string (const sc_MPI_Comm &comm, const int dim)
 std::function<std::string (const sc_MPI_Comm &, const int)> print_function = make_param_string;
 
 /** Wrapper function for t8_cmesh_new_periodic. */
-std::function<t8_cmesh_t (sc_MPI_Comm, int)> new_from_periodic_wrapper = t8_cmesh_new_periodic;
+std::function<t8_cmesh_t (sc_MPI_Comm, int)> new_from_periodic_wrapper = [] (sc_MPI_Comm comm, int dim) {
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_periodic (cmesh, comm, dim);
+  return cmesh;
+};
 
 /** Example cmesh set with different parameter combinations using the \ref new_periodic::new_from_periodic_wrapper function. */
 example_set *cmesh_example

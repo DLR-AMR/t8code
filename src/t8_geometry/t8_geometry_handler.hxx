@@ -273,6 +273,26 @@ struct t8_geometry_handler
     }
   }
 
+  /**
+   * Return an iterator to the beginning of the geometry handler.
+   * \return An iterator to the first geometry.
+   */
+  auto
+  begin ()
+  {
+    return registered_geometries.begin ();
+  }
+
+  /**
+   * Return an iterator to the end of the geometry handler.
+   * \return An iterator to the element following the last geometry.
+   */
+  auto
+  end ()
+  {
+    return registered_geometries.end ();
+  }
+
  private:
   /**
    * Add a geometry to the geometry handler.

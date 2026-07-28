@@ -56,8 +56,11 @@ t8_cmesh_new_hypercube_pad_ext_wrapper (const t8_eclass_t eclass, sc_MPI_Comm co
   const int set_partition = 0;
   const t8_gloidx_t offset = 0;
 
-  return t8_cmesh_new_hypercube_pad_ext (eclass, comm, boundary, polygons_x, polygons_y, polygons_z, periodic_x,
-                                         periodic_y, periodic_z, use_axis_aligned, set_partition, offset);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_pad_ext (cmesh, eclass, comm, boundary, polygons_x, polygons_y, polygons_z, periodic_x,
+                                  periodic_y, periodic_z, use_axis_aligned, set_partition, offset);
+  return cmesh;
 }
 
 /** Wrapper function for \ref t8_cmesh_new_hypercube_pad_ext_wrapper. */

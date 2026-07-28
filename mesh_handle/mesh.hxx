@@ -29,9 +29,10 @@
 #include <t8.h>
 #include "element.hxx"
 #include "competence_pack.hxx"
-#include "data_handler.hxx"
 #include "internal/adapt.hxx"
 #include "internal/interpolate.hxx"
+#include "competences/element_data_competences.hxx"
+#include "concepts.hxx"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
@@ -69,8 +70,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
  public:
   using SelfType = mesh<TElementCompetencePack, TMeshCompetencePack>; /**< Type of the current class. */
   using element_class = typename TElementCompetencePack::template apply<
-    SelfType, element>; /**< The element class of the mesh with given competences. */
-  friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
+    SelfType, element>;  /**< The element class of the mesh with given competences. */
+  friend element_class;  /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
+  using mesh_tag = void; /**< Mesh tag for identification in concept. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
   using mesh_iterator =
@@ -177,7 +179,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   * \return true if the local elements are balanced, false otherwise.
   */
   bool
-  is_balanced ()
+  is_balanced () const
   {
     return t8_forest_is_balanced (m_forest);
   }
@@ -221,6 +223,26 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   end ()
   {
     return m_elements.end ();
+  }
+
+  /**
+   * Returns a constant iterator to the first (local) mesh element.
+   * \return Constant iterator to the first (local) mesh element.
+   */
+  mesh_const_iterator
+  begin () const
+  {
+    return this->cbegin ();
+  }
+
+  /**
+   * Returns a constant iterator to a mesh element following the last (local) element of the mesh.
+   * \return Constant iterator to the mesh element following the last (local) element of the mesh.
+   */
+  mesh_const_iterator
+  end () const
+  {
+    return this->cend ();
   }
 
   /**
@@ -301,6 +323,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   void
   set_adapt (adapt_callback_type adapt_callback)
   {
+    SC_CHECK_ABORT (m_forest->incomplete_trees == 0, "The mesh handle can't adapt forests with incomplete trees.\n");
     if (!m_uncommitted_forest.has_value ()) {
       m_uncommitted_forest.emplace ();
       t8_forest_init (&*m_uncommitted_forest);
@@ -443,6 +466,34 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     m_forest = m_uncommitted_forest.value ();
     m_uncommitted_forest.reset ();
     update_elements ();
+  }
+
+  // --- Methods to check for mesh competences. ---
+  /** Function that checks if a competence for element data handling is given.
+   * \return true if mesh has a data handler, false otherwise.
+   */
+  static constexpr bool
+  has_element_data_handler_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.get_element_data (); };
+  }
+
+  /** Function that checks if a competence to determine the ranks of the elements is given.
+   * \return true if mesh has the competence, false otherwise.
+   */
+  static constexpr bool
+  has_remote_ranks_mesh_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.fill_rank_vector (); };
+  }
+
+  /** Function that checks if a competence to determine a unique vector of the faces is given.
+   * \return true if mesh has the competence, false otherwise.
+   */
+  static constexpr bool
+  has_face_vector_mesh_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.fill_unique_face_vector (); };
   }
 
  private:

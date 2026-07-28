@@ -65,6 +65,8 @@ exec 1>&2
 
 nocontinue=0
 
+echo "Pre-commit script is checking added files, this may take a moment."
+
 for file in `git diff --cached --name-only`
 do
   # only indent existing files, this is necessary since if we rename or delete
@@ -90,7 +92,6 @@ do
   FILE_ENDING="${file##*.}"
   if [ $FILE_ENDING = "c" -o $FILE_ENDING = "h" -o $FILE_ENDING = "cxx" -o $FILE_ENDING = "hxx" ]
   then
-    echo "Checking file $file"
     $CHECK_INDENT $file > /dev/null 2>&1
     status=$?
     if test $status -ne 0

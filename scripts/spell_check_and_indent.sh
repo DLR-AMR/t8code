@@ -29,7 +29,13 @@ then
   exit 1
 fi
 
-repo_main_dir=`git rev-parse --show-toplevel`
+repo_main_dir=$(git rev-parse --show-toplevel 2>/dev/null)
+
+if [ $? -ne 0 ]; then
+  echo "ERROR: spell_check_and_indent.sh was not called from inside the git repository."
+  exit 1
+fi
+
 (cd $repo_main_dir && typos)
 
 echo "This script will correct all previously listed typos."
