@@ -25,6 +25,7 @@
  * The file defines mesh and element competences for element data handling.
  * The mesh competences make it possible to manage element data and exchange it for ghost elements between processes. 
  * The element competences makes it possible to access these element data directly for each element of the mesh.
+ * A competence to interpolate data after adaptation using a user defined callback is provided.
  */
 #pragma once
 
@@ -37,9 +38,39 @@
 #include <vector>
 #include <functional>
 #include <optional>
+#include <span>
 
 namespace t8_mesh_handle
 {
+
+/** Namespace detail to hide implementation details from the user. */
+namespace detail
+{
+/** Helper function to wrap a span based interpolation callback (see \ref mesh::interpolate_callback_type) into
+ * the element-index based \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type.
+ * The returned wrapper receives the index/count pairs, builds the element spans, and forwards them to \a callback. 
+ * The spans are built here and not in \ref interpolate_mesh_competence because \a TMesh is complete, 
+ * so element_class is nameable — which it is not inside the competence (see note on 
+ * \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type).
+ * This is used in \ref interpolate_element_data_mesh_competence::set_interpolate_callback
+ * \tparam TMesh The (complete) mesh handle type.
+ * \param [in] callback The span based user callback of type \ref mesh::interpolate_callback_type. Taken by value and
+ *                      moved into the returned wrapper, which owns it.
+ * \return Callback of type \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type.
+ */
+template <T8MeshType TMesh>
+auto
+to_replace_callback (typename TMesh::interpolate_callback_type callback)
+{
+  return
+    [callback = std::move (callback)] (const TMesh& mesh_old, TMesh& mesh_new, const int refine, const int num_old,
+                                       const t8_locidx_t first_old, const int num_new, const t8_locidx_t first_new) {
+      callback (mesh_old, mesh_new, refine, std::span (&mesh_old[first_old], num_old),
+                std::span (&mesh_new[first_new], num_new));
+    };
+}
+}  // namespace detail
+
 // --- Mesh competence for element data management. ---
 /** Handler for the element data of a \ref mesh.
  * Use this competence if you want to manage element data for the elements of the mesh.
@@ -183,55 +214,90 @@ struct element_data_element_competence: public t8_crtp_operator<TUnderlying, ele
 };
 
 // --- Mesh competence to interpolate data. ---
-/** TODO
+/** Mesh competence to interpolate the element data after an adaptation step.
+ * The \ref element_data_mesh_competence stores a vector of element data, but that data has to be updated if
+ * the mesh is adapted, since the elements it refers to are refined, coarsened or reordered. This competence adds the
+ * ability to interpolate the data after the adaptation via a user defined callback set using \ref set_interpolate_callback.
+ * The next \ref mesh::commit applies it. 
+ * \note It therefore only makes sense in combination with the element data competence 
+ *       (see \ref interpolate_data_mesh_competence, which bundles the two).
+ * \tparam TUnderlying Use the \ref mesh class here.
  */
 template <typename TUnderlying>
 class interpolate_element_data_mesh_competence:
   public t8_crtp_operator<TUnderlying, interpolate_element_data_mesh_competence> {
  public:
-  // TODO: has_interpolate function
-
-  /** TODO Callback function prototype to replace the element data of one set of elements with another.
- * This is used to interpolate element data after adaptation. The callback allows the user to make changes to the 
- * elements that are either refined, coarsened or the same.
- * \param [in] forest_old      The forest that is adapted
- * \param [in, out] forest_new The forest that is newly constructed from \a forest_old
- * \param [in] refine          -1 if family in \a forest_old got coarsened, 0 if element
- *                             has not been touched, 1 if element got refined. See return of adapt_callback_type.
- * \param [in] num_old    The number of outgoing elements.
- * \param [in] first_old  The local handle index of the first outgoing element in the old mesh.
- * \param [in] num_new    The number of incoming elements.
- * \param [in] first_new  The tree local index of the first incoming element in the new mesh.
- *
- * If an element is being refined, \a refine and \a num_old will be 1 and
- * \a num_new will be the number of children.
- * If a family is being coarsened, \a refine will be -1, \a num_old will be
- * the number of family members and \a num_new will be 1.
- * Else \a refine will be 0 and \a num_old and \a num_new will both be 1.
- */
-  using interpolate_callback_type
+  /** Mesh internal, element-index based storage for the interpolation callback.
+   * Users should use the easier span based callback type \ref mesh::interpolate_callback_type.
+   * \see set_interpolate_callback for registering a callback.
+   * The span based callback is automatically wrapped in \ref set_interpolate_callback to match this type and stored as
+   * \ref m_interpolate_callback to be used in the next \ref mesh::commit.
+   * \note We can not store or the span based \ref mesh::interpolate_callback_type directly. This competence uses the 
+   *       CRTP pattern, so while the competence is instantiated, the mesh (\a TUnderlying) is still an incomplete type.
+   *       A data member of type \ref mesh::interpolate_callback_type, would require \c TUnderlying::element_class, 
+   *       which is not available for the incomplete type. Therefore we use this index based callback type for storage 
+   *       without the need for element_class. Using \ref set_interpolate_callback, we move the element_class lookup 
+   *       to the call site.
+   * \param [in]     mesh_old  The old mesh that is adapted from.
+   * \param [in,out] mesh_new  The new mesh constructed from \a mesh_old.
+   * \param [in]     refine    -1 if a family in the old mesh got coarsened, 0 if the element was not touched,
+   *                           1 if the element got refined.
+   * \param [in]     num_old   The number of outgoing elements.
+   * \param [in]     first_old The local mesh handle index of the first outgoing element in the old mesh.
+   * \param [in]     num_new   The number of incoming elements.
+   * \param [in]     first_new The local mesh handle index of the first incoming element in the new mesh.
+  
+   */
+  using internal_interpolate_callback_type
     = std::function<void (const TUnderlying& mesh_old, TUnderlying& mesh_new, const int refine, const int num_old,
                           const t8_locidx_t first_old, const int num_new, const t8_locidx_t first_new)>;
 
-  // TODO: with userdata
-
-  /** TODO
+  /** Register a user callback to interpolate the element data after adaptation.
+   * Note that data can only be interpolated for a level difference of at most one.
+   * Please use the type \ref mesh::interpolate_callback_type for the callback. 
+   * \see mesh::interpolate_callback_type for the expected callback shape and the meaning of its arguments.
+   * \note This function is templated on purpose: it is only instantiated at the call site, where the mesh is a
+   *       complete type and \ref mesh::element_class is nameable. The element class is needed in the definition 
+   *       of the interpolate_callback_type. You do not have to provide this template, it is normally auto deduced.
+   * \note This function is templated on purpose: it is only instantiated at the call site, where the mesh is a
+   *       complete type and \ref mesh::element_class (needed to name \ref mesh::interpolate_callback_type) is
+   *       nameable, which it is not inside this competence. 
+   *       The template parameter is deduced from the passed callback, so you do not have to provide it explicitly!
+   * \tparam TInterpolateCallback The user callback type \ref mesh::interpolate_callback_type.
+   * \param [in] interpolate_callback The span based interpolation callback.
+   * 
    */
+  template <typename TInterpolateCallback>
   void
-  set_interpolate_callback (interpolate_callback_type&& interpolate_callback)
+  set_interpolate_callback (TInterpolateCallback&& interpolate_callback)
   {
-    m_interpolate_callback = std::forward<interpolate_callback_type> (interpolate_callback);
+    /* We wrap the user defined, span based callback using \ref detail::to_replace_callback to the index based callback
+     * type \ref internal_interpolate_callback_type to be able to store the callback without the need of knowing 
+     * \ref mesh::element_class.*/
+    m_interpolate_callback
+      = detail::to_replace_callback<TUnderlying> (std::forward<TInterpolateCallback> (interpolate_callback));
   }
 
  protected:
+  /** Decide whether \ref mesh::set_partition has been requested for the upcoming \ref mesh::commit.
+   * With the interpolation competence the partition step is postponed so that it runs after the element data has been
+   * interpolated onto the new mesh; \ref mesh::set_partition therefore records its choice in
+   * \ref m_partition_for_coarsening instead of building the partitioned forest directly.
+   * \return true if \ref mesh::set_partition has been called (i.e. \ref m_partition_for_coarsening holds a value),
+   *         false otherwise.
+   */
   bool
   set_partition_called ()
   {
-    return m_partition_set_for_coarsening.has_value ();
+    return m_partition_for_coarsening.has_value ();
   }
 
-  interpolate_callback_type m_interpolate_callback;
-  std::optional<bool> m_partition_set_for_coarsening;
+  internal_interpolate_callback_type
+    m_interpolate_callback; /**< The wrapped element-index based interpolation callback, 
+                              * applied on the next \ref mesh::commit. */
+  std::optional<bool>
+    m_partition_for_coarsening; /**< Postponed \ref mesh::set_partition request: a value means partition on the next 
+                          * commit (with value passed to \ref mesh::set_partition); no value means do not partition. */
 };
 
 }  // namespace t8_mesh_handle

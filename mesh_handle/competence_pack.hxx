@@ -101,7 +101,7 @@ using data_mesh_competences_basic = mesh_competence_pack<element_data_mesh_compe
  * If you want to access the data also via the elements, combine this with \ref t8_mesh_handle::data_element_competences_basic.
  */
 template <T8MPISafeType TElementDataType>
-using interpolate_data_mesh_competence
+using interpolate_data_mesh_competence_pack
   = mesh_competence_pack<element_data_mesh_competence<TElementDataType>::template type,
                          interpolate_element_data_mesh_competence>;
 

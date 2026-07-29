@@ -21,8 +21,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 */
 
 /**
- * \file t8_gtest_handle_data.cxx
- * Tests to check that the element data functionality of the \ref t8_mesh_handle::mesh works as intended.
+ * \file t8_gtest_interpolate.cxx
+ * Tests to check that the data interpolation for the mesh handle works as intended.
  */
 
 #include <gtest/gtest.h>
@@ -36,32 +36,54 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
+#include <span>
 
-// TODO: Vector of elements instead of numbers?
+/** Dummy user data for the interpolation. */
+struct interpolate_user_data
+{
+  int level_step; /**< Levels added when refining and subtracted when coarsening (1 in the standard case). 
+                       This is to be applied to the level entry of the dummy user data. */
+};
+
+/** Interpolation callback for the mesh handle, using user data.
+ * The function header fits the definition of \ref TMesh::interpolate_callback_type_with_userdata.
+ * Copies the data of untouched elements, averages the parent volume over the children on refinement, and sums the
+ * children's volume onto the parent on coarsening. The level changes by \a user_data.level_step per step.
+ * \tparam TMeshClass The mesh handle class.
+ * \param [in]     mesh_old     The old mesh that is adapted from.
+ * \param [in,out] mesh_new     The new mesh constructed from \a mesh_old.
+ * \param [in]     refine       -1 if the family got coarsened, 0 if the element was not touched, 1 if it got refined.
+ * \param [in]     old_elements Span over the outgoing elements from \a mesh_old.
+ * \param [in,out] new_elements Span over the incoming elements to write the interpolated data to from \a mesh_new.
+ * \param [in]     user_data    The user data to be used during the interpolation.
+ */
 template <typename TMeshClass>
 void
-interpolate_callback (const TMeshClass& mesh_old, TMeshClass& mesh_new, const int refine, const int num_old,
-                      const t8_locidx_t first_old, const int num_new, const t8_locidx_t first_new)
+interpolate_callback ([[maybe_unused]] const TMeshClass& mesh_old, [[maybe_unused]] TMeshClass& mesh_new,
+                      const int refine, std::span<const typename TMeshClass::element_class> old_elements,
+                      std::span<typename TMeshClass::element_class> new_elements,
+                      const interpolate_user_data& user_data)
 {
-  /* Do not adapt or coarsen. */
+  /* Untouched: copy data. */
   if (refine == 0) {
-    mesh_new[first_new].set_element_data (mesh_old[first_old].get_element_data ());
+    new_elements[0].set_element_data (old_elements[0].get_element_data ());
   }
-  /* The old element is refined. Volume data is averaged for the children. */
+  /* Refined: children share the parent volume equally, level increases by user_data.level_step. */
   else if (refine == 1) {
-    for (t8_locidx_t i = 0; i < num_new; i++) {
-      mesh_new[first_new + i].set_element_data (data_per_element {
-        mesh_old[first_old].get_element_data ().level + 1, mesh_old[first_old].get_element_data ().volume / num_new });
+    const auto& parent_data = old_elements[0].get_element_data ();
+    for (auto& child : new_elements) {
+      child.set_element_data (
+        data_per_element { parent_data.level + user_data.level_step, parent_data.volume / new_elements.size () });
     }
   }
-  /* Old element is coarsened. */
+  /* Coarsened: parent volume is the sum of the children, level decreases by user_data.level_step. */
   else if (refine == -1) {
     double tmp_volume = 0;
-    for (t8_locidx_t i = 0; i < num_old; i++) {
-      tmp_volume += mesh_old[first_old + i].get_element_data ().volume;
+    for (const auto& child : old_elements) {
+      tmp_volume += child.get_element_data ().volume;
     }
-    mesh_new[first_new].set_element_data (
-      data_per_element { mesh_old[first_old].get_element_data ().level - 1, tmp_volume });
+    new_elements[0].set_element_data (
+      data_per_element { old_elements[0].get_element_data ().level - user_data.level_step, tmp_volume });
   }
 }
 
@@ -69,14 +91,15 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
 {
   const int level = 2;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
-                                          t8_mesh_handle::interpolate_data_mesh_competence<data_per_element>>;
+                                          t8_mesh_handle::interpolate_data_mesh_competence_pack<data_per_element>>;
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
 
-  dummy_user_data user_data {
+  dummy_user_data user_data_adapt {
     t8_3D_vec { 0.5, 0.5, 1 }, /**< Midpoints of the sphere. */
     0.2,                       /**< Refine if inside this radius. */
     0.4                        /**< Coarsen if outside this radius. */
   };
+  interpolate_user_data dummy_interpolate_user_data { 1 }; /**< Level changes by one per adaptation step. */
 
   // Create element data for all local mesh elements and set via mesh competence.
   std::vector<data_per_element> element_data;
@@ -85,11 +108,15 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
   }
   mesh->set_element_data (std::move (element_data));
 
+  // Adapt the mesh and set all options.
   mesh->set_adapt (
-    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data));
+    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data_adapt));
   mesh->set_balance ();
-  mesh->set_interpolate_callback (interpolate_callback<mesh_class>);
+  mesh->set_interpolate_callback (mesh_class::mesh_interpolate_callback_wrapper<interpolate_user_data> (
+    interpolate_callback<mesh_class>, dummy_interpolate_user_data));
   mesh->commit ();
+
+  // Test interpolation.
   bool tested_something = false;
   for (auto& elem : *mesh) {
     if (!tested_something && (elem.get_level () != level)) {
@@ -97,7 +124,7 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
     }
     EXPECT_EQ (elem.get_level (), elem.get_element_data ().level);
     if (!(elem.get_element_data ().level > level)) {
-      // For refined elements, the volume is averaged and thus not exact.
+      // For refined elements, the volume is averaged and thus not exact. Only test coarsening.
       EXPECT_EQ (elem.get_volume (), elem.get_element_data ().volume);
     }
   }

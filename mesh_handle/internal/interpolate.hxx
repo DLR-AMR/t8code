@@ -58,14 +58,14 @@ struct mesh_interpolate_context_base
   virtual ~mesh_interpolate_context_base () = default;
 
   /** Pure virtual callback to interpolate the element data of one set of old elements onto a set of new elements.
-   * The indices refer to the flat, process local element numbering of the mesh handle (across all local trees),
+   * The indices refer to the flat, process local element numbering of the mesh handle (mesh handle id),
    * not to the tree local numbering used by the forest. The conversion is done in \ref mesh_replace_callback_wrapper.
    * \param [in] refine    -1 if a family in the old mesh got coarsened, 0 if the element was not touched,
    *                        1 if the element got refined.
    * \param [in] num_old    The number of outgoing (old) elements.
-   * \param [in] first_old  The local flat element ID of the first outgoing element in the old mesh.
+   * \param [in] first_old  The local mesh handle id of the first outgoing element in the old mesh.
    * \param [in] num_new    The number of incoming (new) elements.
-   * \param [in] first_new  The local flat element ID of the first incoming element in the new mesh.
+   * \param [in] first_new  The local mesh handle id of the first incoming element in the new mesh.
    */
   virtual void
   interpolate (const int refine, const int num_old, const t8_locidx_t first_old, const int num_new,
@@ -83,7 +83,8 @@ struct mesh_interpolate_context_base
 template <typename TMesh>
 struct mesh_interpolate_context final: mesh_interpolate_context_base
 {
-  using callback_type = typename TMesh::interpolate_callback_type; /**< The user defined interpolate callback type. */
+  using callback_type =
+    typename TMesh::internal_interpolate_callback_type; /**< The user defined interpolate callback type. */
 
   /** Constructor of the context with the old and new mesh handle and the user defined callback.
    * \param [in] mesh_old             The old mesh that is being adapted. Only read from during interpolation.
@@ -99,9 +100,9 @@ struct mesh_interpolate_context final: mesh_interpolate_context_base
    * This function is called by \ref mesh_replace_callback_wrapper for each group.
    * \param [in] refine    -1 if a family got coarsened, 0 if the element was not touched, 1 if it got refined.
    * \param [in] num_old    The number of outgoing (old) elements.
-   * \param [in] first_old  The local flat element ID of the first outgoing element in the old mesh.
+   * \param [in] first_old  The local mesh handle id of the first outgoing element in the old mesh.
    * \param [in] num_new    The number of incoming (new) elements.
-   * \param [in] first_new  The local flat element ID of the first incoming element in the new mesh.
+   * \param [in] first_new  The local mesh handle id of the first incoming element in the new mesh.
    */
   void
   interpolate (const int refine, const int num_old, const t8_locidx_t first_old, const int num_new,
@@ -210,7 +211,8 @@ mesh_replace_callback_wrapper (t8_forest_t forest_old, t8_forest_t forest_new, t
     return;
   }
 
-  // Convert the tree local indices reported by the forest to the flat, process local indices used in the mesh handle.
+  // Convert the tree local indices reported by the forest to the flat, process local indices used in the mesh handle
+  // (the mesh handle id).
   const t8_locidx_t first_old_global = t8_forest_get_tree_element_offset (forest_old, which_tree) + first_outgoing;
   const t8_locidx_t first_new_global = t8_forest_get_tree_element_offset (forest_new, which_tree) + first_incoming;
   // Call the actual interpolate callback stored in the context.

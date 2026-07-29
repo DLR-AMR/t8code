@@ -204,7 +204,7 @@ TEST (t8_mesh_handle_test, test_union_mesh_competence_pack)
   using mesh_class
     = mesh<union_competence_packs_type<all_cache_element_competences, data_element_competences_basic,
                                        empty_element_competences>,
-           union_competence_packs_type<interpolate_data_mesh_competence<data_per_element>,
+           union_competence_packs_type<interpolate_data_mesh_competence_pack<data_per_element>,
                                        data_mesh_competences_basic<data_per_element>, empty_mesh_competences>>;
   EXPECT_TRUE (mesh_class::has_element_data_handler_competence ());
   using element_class = typename mesh_class::element_class;
