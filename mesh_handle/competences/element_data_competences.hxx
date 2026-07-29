@@ -83,6 +83,12 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
     return m_element_data;
   }
 
+  /** Get the element data vector by moving it out of the competence.
+   * In contrast to \ref get_element_data, this transfers ownership of the data instead of
+   * returning a reference. After this call the internal element data vector is left empty (moved-from),
+   * so \ref set_element_data should be used before accessing the data again.
+   * \return Element data vector with data of Type TElementDataType, moved out of the competence.
+   */
   std::vector<TElementDataType>
   take_element_data ()
   {

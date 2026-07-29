@@ -300,7 +300,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * \note The adaptation is carried out only when \ref commit is called.
    * \note We currently do not provide the functionality to delete elements.
    * \note This setting can be combined with set_partition and set_balance. The order in which
-   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
    */
   void
   set_adapt (adapt_callback_type adapt_callback)
@@ -324,13 +324,15 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * the same (maybe +1) number of elements.
    * \note The partition is carried out only when \ref commit is called.
    * \note This setting can be combined with \ref set_adapt and \ref set_balance. The order in which
-   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
    * \param [in] set_for_coarsening If true, the partitions are chosen such that coarsening 
    *        an element once is a process local operation. Default is false.
    */
   void
   set_partition (bool set_for_coarsening = false)
   {
+    // If the mesh has an interpolate callback, we partition the mesh after the interpolation step
+    // (and the first committing of the forest), such that we store the partition information for later.
     if constexpr (has_interpolate_data_competence ()) {
       this->m_partition_set_for_coarsening = set_for_coarsening;
       return;
@@ -352,7 +354,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    *       Set \a no_repartition to true if this behaviour is not desired.
    *       If \a no_repartition is false (default), an additional call of \ref set_partition is not necessary.
    * \note This setting can be combined with \ref set_adapt and \ref set_partition. The order in which
-   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
    */
   void
   set_balance (bool no_repartition = false)
@@ -386,6 +388,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * The forest used to define the mesh handle is replaced in this function.
    * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
    * Specialize the update with calls like \ref set_adapt first.
+   * The order of the calls is always 1) Adapt 2) Balance 3) Data Interpolation 4) Partition 5) Ghost, 
+   * where calls, that are not set beforehand, are skipped.
+   * The order of the calls does not matter, the operations are always executed in this order.
    */
   void
   commit ()
@@ -404,17 +409,24 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     // Check if we adapted and unregister the adapt context if so.
     if (detail::adapt_registry::get (m_forest) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
+
+      // If data are set for the mesh, we now try to interpolate them after adaptation.
       if constexpr (has_element_data_handler_competence ()) {
         if constexpr (has_interpolate_data_competence ()) {
           if (this->m_interpolate_callback) {
+            // Create new intermediate mesh to interpolate the data from the current mesh to the new mesh.
             SelfType new_mesh (m_uncommitted_forest.value ());
             t8_forest_ref (m_uncommitted_forest.value ());
+            // Register the interpolate context with the callback for the new mesh. With this, the standard
+            // iterate replace can be called.
             detail::interpolate_registry::register_context (
               m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (
                           *this, new_mesh, std::move (this->m_interpolate_callback)));
             t8_forest_iterate_replace (m_uncommitted_forest.value (), m_forest, detail::mesh_replace_callback_wrapper);
             detail::interpolate_registry::unregister_context (m_forest);
+            // Override the element data of the current mesh with the interpolated data from the "new mesh".
             this->m_element_data = new_mesh.take_element_data ();
+            // Now we update the forest of the current mesh with the new forest and partition it if required.
             t8_forest_unref (&m_forest);
             if (this->set_partition_called ()) {
               t8_forest_init (&m_forest);
@@ -427,9 +439,10 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
               // TODO: repartition data with t8_forest_partition_data.
             }
             else {
-              // Update underlying forest of the mesh.
+              // Update underlying forest of the mesh for the case where we do not repartition.
               m_forest = m_uncommitted_forest.value ();
             }
+            // Cleanup and update the elements of the mesh.
             m_uncommitted_forest.reset ();
             update_elements ();
             return;
