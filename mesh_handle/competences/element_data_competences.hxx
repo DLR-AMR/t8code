@@ -32,6 +32,7 @@
 #include <t8.h>
 #include <mesh_handle/concepts.hxx>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_partition.h>
 #include <t8_types/t8_crtp.hxx>
 #include <t8_types/t8_operators.hxx>
 #include <type_traits>
@@ -132,12 +133,12 @@ class element_data_mesh_competence_impl: public t8_crtp_basic<TUnderlying> {
   void
   exchange_ghost_data ()
   {
-    // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
-    sc_array* sc_array_wrapper;
+    // Extend element data array to hold also the ghost elements.
     const auto num_local_elements = this->underlying ().get_num_local_elements ();
     const auto num_ghosts = this->underlying ().get_num_ghosts ();
     m_element_data.resize (num_local_elements + num_ghosts);
-    sc_array_wrapper
+    // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
+    sc_array* sc_array_wrapper
       = sc_array_new_data (m_element_data.data (), sizeof (ElementDataType), num_local_elements + num_ghosts);
 
     // Data exchange: entries with indices > num_local_elements will get overwritten.
@@ -290,6 +291,37 @@ class interpolate_element_data_mesh_competence:
   set_partition_called ()
   {
     return m_partition_for_coarsening.has_value ();
+  }
+
+  /** Repartition the element data so it follows a newly partitioned forest.
+   * The element data currently belongs to \a forest_from; this moves it to the layout of \a forest_to, which must
+   * have been created by partitioning \a forest_from. Analogous to \ref exchange_ghost_data, but using
+   * \ref t8_forest_partition_data. This function is called from \ref mesh::commit after the interpolated data 
+   * has been produced and the partitioned forest has been committed.
+   * \param [in] forest_from The (committed) forest the current element data belongs to.
+   * \param [in] forest_to   The committed forest that was partitioned from \a forest_from.
+   * \note Both forests could also be accessed directly (by this->underlying()) but this requires that the function is
+   * called on the exact right states of m_forest and m_uncommitted_forest. 
+   * Providing the variables is the saver implementation.
+   */
+  void
+  repartition_element_data (t8_forest_t forest_from, t8_forest_t forest_to)
+  {
+    using element_data_type = typename TUnderlying::ElementDataType;
+    // Take ownership of old data and wrap into sc_array. This is because the forest functions expect an sc_array.
+    std::vector<element_data_type> old_data = this->underlying ().take_element_data ();
+    sc_array* data_in = sc_array_new_data (old_data.data (), sizeof (element_data_type), old_data.size ());
+    const t8_locidx_t num_new_local = t8_forest_get_local_num_leaf_elements (forest_to);
+    // Define vector for the new data and wrap it.
+    std::vector<element_data_type> partitioned_data (num_new_local);
+    sc_array* data_out = sc_array_new_data (partitioned_data.data (), sizeof (element_data_type), num_new_local);
+    // Partition magic using the forest function.
+    t8_forest_partition_data (forest_from, forest_to, data_in, data_out);
+    // Clean up.
+    sc_array_destroy (data_in);
+    sc_array_destroy (data_out);
+    // Set the partitioned element data to the mesh.
+    this->underlying ().set_element_data (std::move (partitioned_data));
   }
 
   internal_interpolate_callback_type

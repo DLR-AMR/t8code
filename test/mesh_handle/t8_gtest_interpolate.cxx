@@ -35,6 +35,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/competences/element_data_competences.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
+#include <t8_eclass/t8_eclass.h>
 #include <vector>
 #include <span>
 
@@ -89,15 +90,15 @@ interpolate_callback ([[maybe_unused]] const TMeshClass& mesh_old, [[maybe_unuse
 
 TEST (t8_gtest_handle_data, test_interpolate_data)
 {
-  const int level = 2;
+  const int level = 3;
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
                                           t8_mesh_handle::interpolate_data_mesh_competence_pack<data_per_element>>;
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD);
+  auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (T8_ECLASS_HEX, level, sc_MPI_COMM_WORLD);
 
   dummy_user_data user_data_adapt {
-    t8_3D_vec { 0.5, 0.5, 1 }, /**< Midpoints of the sphere. */
-    0.2,                       /**< Refine if inside this radius. */
-    0.4                        /**< Coarsen if outside this radius. */
+    t8_3D_vec { 0.5, 0.5, 0.5 }, /**< Midpoints of the sphere. */
+    0.2,                         /**< Refine if inside this radius. */
+    0.4                          /**< Coarsen if outside this radius. */
   };
   interpolate_user_data dummy_interpolate_user_data { 1 }; /**< Level changes by one per adaptation step. */
 
@@ -112,21 +113,28 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
   mesh->set_adapt (
     mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data_adapt));
   mesh->set_balance ();
+  mesh->set_partition ();
   mesh->set_interpolate_callback (mesh_class::mesh_interpolate_callback_wrapper<interpolate_user_data> (
     interpolate_callback<mesh_class>, dummy_interpolate_user_data));
   mesh->commit ();
 
   // Test interpolation.
-  bool tested_something = false;
+  // Variables to demonstrate that we tested interpolation for coarsening and for refinement.
+  bool found_refined = false;
+  bool found_coarsened = false;
   for (auto& elem : *mesh) {
-    if (!tested_something && (elem.get_level () != level)) {
-      tested_something = true;
+    if (!found_refined && (elem.get_level () > level)) {
+      found_refined = true;
     }
+    if (!found_coarsened && (elem.get_level () < level)) {
+      found_coarsened = true;
+    }
+
+    // Check that element data and actual geometric data match.
     EXPECT_EQ (elem.get_level (), elem.get_element_data ().level);
-    if (!(elem.get_element_data ().level > level)) {
-      // For refined elements, the volume is averaged and thus not exact. Only test coarsening.
-      EXPECT_EQ (elem.get_volume (), elem.get_element_data ().volume);
-    }
+    // For hexes, our interpolation method for volume is accurate.
+    EXPECT_NEAR (elem.get_volume (), elem.get_element_data ().volume, T8_PRECISION_SQRT_EPS);
   }
-  EXPECT_TRUE (tested_something);
+  EXPECT_TRUE (found_refined);
+  EXPECT_TRUE (found_coarsened);
 }

@@ -500,7 +500,10 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
                 t8_forest_set_ghost (m_forest, true, T8_GHOST_FACES);
               }
               t8_forest_commit (m_forest);
-              // TODO: repartition data with t8_forest_partition_data.
+
+              /* Now we repartition also the data: The interpolated data follows m_uncommitted_forest. 
+               * We align it now with the partitioned m_forest. */
+              this->repartition_element_data (m_uncommitted_forest.value (), m_forest);
             }
             else {
               // Update underlying forest of the mesh for the case where we do not repartition.
