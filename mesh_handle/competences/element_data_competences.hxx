@@ -50,7 +50,7 @@ namespace detail
 /** Helper function to wrap a span based interpolation callback (see \ref mesh::interpolate_callback_type) into
  * the element-index based \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type.
  * The returned wrapper receives the index/count pairs, builds the element spans, and forwards them to \a callback. 
- * The spans are built here and not in \ref interpolate_mesh_competence because \a TMesh is complete, 
+ * The spans are built here and not in \ref interpolate_element_data_mesh_competence because \a TMesh is complete, 
  * so element_class is nameable — which it is not inside the competence (see note on 
  * \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type).
  * This is used in \ref interpolate_element_data_mesh_competence::set_interpolate_callback
@@ -221,7 +221,7 @@ struct element_data_element_competence: public t8_crtp_operator<TUnderlying, ele
  * ability to interpolate the data after the adaptation via a user defined callback set using \ref set_interpolate_callback.
  * The next \ref mesh::commit applies it. 
  * \note It therefore only makes sense in combination with the element data competence 
- *       (see \ref interpolate_data_mesh_competence, which bundles the two).
+ *       (see \ref interpolate_data_mesh_competence_pack, which bundles the two).
  * \tparam TUnderlying Use the \ref mesh class here.
  */
 template <typename TUnderlying>
@@ -295,9 +295,10 @@ class interpolate_element_data_mesh_competence:
 
   /** Repartition the element data so it follows a newly partitioned forest.
    * The element data currently belongs to \a forest_from; this moves it to the layout of \a forest_to, which must
-   * have been created by partitioning \a forest_from. Analogous to \ref exchange_ghost_data, but using
-   * \ref t8_forest_partition_data. This function is called from \ref mesh::commit after the interpolated data 
-   * has been produced and the partitioned forest has been committed.
+   * have been created by partitioning \a forest_from. 
+   * Analogous to \ref element_data_mesh_competence_impl::exchange_ghost_data, but using \ref t8_forest_partition_data. 
+   * This function is called from \ref mesh::commit after the interpolated data has been produced and the partitioned 
+   * forest has been committed.
    * \param [in] forest_from The (committed) forest the current element data belongs to.
    * \param [in] forest_to   The committed forest that was partitioned from \a forest_from.
    * \note Both forests could also be accessed directly (by this->underlying()) but this requires that the function is

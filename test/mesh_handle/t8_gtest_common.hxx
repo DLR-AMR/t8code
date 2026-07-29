@@ -43,16 +43,17 @@ struct dummy_user_data
 /** Dummy element data taken from a tutorial for test purposes. */
 struct data_per_element
 {
-  int level;
-  double volume;
+  int level;     /**< The level of the element. */
+  double volume; /**< The volume of the element. */
 
+  /** Comparison operator to check if two data entries are the same. */
   bool
   operator== (const data_per_element &) const
     = default;
 };
 
 /** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
- * The function header fits the definition of \ref TMesh::adapt_callback_type_with_userdata.
+ * The function header fits the definition of \ref t8_mesh_handle::mesh::adapt_callback_type_with_userdata.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.
  * \param [in] elements  One element or a family of elements to consider for adaptation.
@@ -79,7 +80,7 @@ adapt_callback_test ([[maybe_unused]] const TMeshClass &mesh,
 }
 
 /** Adapt callback implementation for a forest.
- * This callback defines the same adaptation rules as \ref adapt_callback_test,
+ * This callback defines the same adaptation rules as adapt_callback_test defined above,
  * but it is used for the forest instead of the mesh handle.
  */
 int

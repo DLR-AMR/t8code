@@ -122,7 +122,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * \a old_elements and the incoming elements of the new mesh in \a new_elements; the callback reads the old data 
    * and writes the interpolated data onto the new elements. \a refine is the value \ref adapt_callback_type returned
    * for this group.
-   * \see set_interpolate_callback for the usage of this callback.
+   * \see interpolate_element_data_mesh_competence::set_interpolate_callback for the usage of this callback.
    * \param [in]     mesh_old     The old mesh that is adapted from.
    * \param [in,out] mesh_new     The new mesh constructed from \a mesh_old.
    * \param [in]     refine       -1 if the family \a old_elements got coarsened, 0 if the element was not touched,
@@ -140,7 +140,8 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * including user data.
    * See the version without user_data \ref interpolate_callback_type for more details!
    * Use \ref mesh_interpolate_callback_wrapper to convert this type into \ref interpolate_callback_type
-   * to be able to pass the callback to \ref set_interpolate_callback (see \ref element_data_competence.hxx).
+   * to be able to pass the callback to \ref interpolate_element_data_mesh_competence::set_interpolate_callback 
+   * (see \ref element_data_competences.hxx).
    * \tparam TUserDataType The type of the user data to be passed to the callback.
    * \param [in]     mesh_old     The old mesh that is adapted from.
    * \param [in,out] mesh_new     The new mesh constructed from \a mesh_old.
@@ -322,12 +323,13 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
   /** Wrapper to convert an interpolate callback with user data of type \ref interpolate_callback_type_with_userdata
    * into a callback without user data of type \ref interpolate_callback_type using the defined user data \a user_data.
-   * The returned callback can then be passed to \ref set_interpolate_callback.
+   * The returned callback can be passed to \ref interpolate_element_data_mesh_competence::set_interpolate_callback.
    * See also \ref element_data_competences.hxx for the interpolation competence.
    * \tparam TUserDataType The type of the user data to be passed to the callback.
    * \param [in] interpolate_callback_with_userdata The interpolate callback including user data.
    * \param [in] user_data The user data to be used during the interpolation process.
-   * \return An interpolate callback without user data parameter that can be passed to \ref set_interpolate_callback.
+   * \return An interpolate callback without user data parameter that can be passed to 
+   *          \ref interpolate_element_data_mesh_competence::set_interpolate_callback.
    */
   template <typename TUserDataType>
   static interpolate_callback_type
