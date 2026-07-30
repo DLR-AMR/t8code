@@ -2,6 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
 #include <array>
 #include <vector>
 #include <format>
@@ -345,6 +346,8 @@ write_forest_lagrange_vtk (TMultiscale &mra, const char *prefix, int lagrange_or
 {
   static constexpr auto TShape = TMultiscale::Shape;
   static constexpr int U_DIM = TMultiscale::U_DIM;
+
+  lagrange_order = std::max (lagrange_order, 1);  // degree-0 Lagrange cells are malformed in VTK
 
   t8_forest_t forest = mra.get_forest ();
   auto *lmi_map = mra.get_lmi_map ();
