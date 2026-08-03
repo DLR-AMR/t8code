@@ -151,11 +151,7 @@ t8_forest_ghost_definition_overlap::communicate_max_stretch_factor (t8_forest_t 
 }
 
 void
-t8_forest_ghost_definition_overlap::clean_up (t8_forest_t forest)
-{
-  /* Clear up the same part, as in the parents class. */
-  t8_forest_ghost_definition::clean_up (forest);
-
+t8_forest_ghost_definition_overlap::clean_up_build_covers (t8_forest_t forest){
   /* Clean up the build covers. */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
   const t8_scheme *eclass_scheme = t8_forest_get_scheme (forest);
@@ -168,6 +164,18 @@ t8_forest_ghost_definition_overlap::clean_up (t8_forest_t forest)
   if (_max_stretch_factors != NULL) {
     t8_shmem_array_destroy (&_max_stretch_factors);
   }
+  _list_of_covers.clear();
+}
+
+void
+t8_forest_ghost_definition_overlap::clean_up (t8_forest_t forest)
+{
+  /* Clear up the same part, as in the parents class. */
+  t8_forest_ghost_definition::clean_up (forest);
+
+  /* Clean up the build covers. */
+  clean_up_build_covers(forest);
+  
 }
 
 /**
@@ -380,7 +388,6 @@ t8_ghost_puma_recursion_last_descandance (t8_forest_t forest, const t8_eclass_t 
         // The current child is ancestors of the the last element
         if( eclass_scheme->element_get_linear_id(tree_class, children[child_index], max_level) != lin_id_last_element){
           // On max leven the lin id of the child an the last element differs.
-          t8_global_productionf("child %i on level %d has note the same max level id as first element. call recursion.\n", child_index, eclass_scheme->element_get_level(tree_class, children[child_index]));
           t8_ghost_puma_recursion_last_descandance(forest, tree_class, eclass_scheme, last_element, lin_id_last_element, children[child_index], cover);
         }
       }
@@ -471,6 +478,7 @@ build_cover_backward_iteration (t8_forest_t forest, t8_element_t **children, con
   int parent_of_last_element_and_child_of_nca = 0;
   for (int child_index = 3; child_index > -1; child_index--) {
     /* get nca of child[i] and last_element*/
+    eclass_scheme->element_get_nca (tree_class, last_element, children[child_index], child_last_nca);
     if (eclass_scheme->element_is_equal (tree_class, children[child_index], child_last_nca)) {
       /* Child is parent of last_element */
       if (eclass_scheme->element_get_linear_id (tree_class, children[child_index], max_level) != lin_id_last_element) {
