@@ -94,6 +94,20 @@ struct t8_forest_ghost_definition_overlap: public t8_forest_ghost_definition
   void
   communicate_max_stretch_factor (t8_forest_t forest);
 
+  
+  /** Build a cover for a given process.
+   * A set of elements is a cover of a process,
+   * if for each leaf element in the process, there is an element in the cover,
+   * that is equal to an ancestor of this leaf element or equal as the element it self.
+   * Moreover the leaves of every other process have no ancestor in the cover.
+   * \param [in] forest               The forest.
+   * \param [in] process              The process for which the cover is built.
+   * \return The cover of the leaves of the process elements.
+   * \note This function allocate memory for the cover. New elements are build here.
+   */
+  std::vector<t8_element_t *>
+  build_cover_of_process (t8_forest_t forest, const int process);
+
   /** Build a cover (coarsest possible grid of the local elements of a single process)
    * for each process.
    * \param [in]        forest     Committed forest with elements with uniform stretch factor
