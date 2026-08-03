@@ -103,10 +103,10 @@ main (int argc, char **argv)
   t8_init (SC_LP_PRODUCTION);
 
   /** Print a message on the root process. */
-  t8_global_productionf (" [tutorial] \n");
-  t8_global_productionf (" [tutorial] Hello, this is the step2 example of t8code using the mesh handle.\n");
-  t8_global_productionf (" [tutorial] In this example we build our first uniform mesh and output it to vtu files.\n");
-  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [t8_step2] \n");
+  t8_global_productionf (" [t8_step2] Hello, this is the step2 example of t8code using the mesh handle.\n");
+  t8_global_productionf (" [t8_step2] In this example we build our first uniform mesh and output it to vtu files.\n");
+  t8_global_productionf (" [t8_step2] \n");
 
   /** We will use MPI_COMM_WORLD as a communicator. */
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
@@ -126,17 +126,17 @@ main (int argc, char **argv)
     const t8_gloidx_t global_num_elements = mesh->get_num_global_elements ();
 
     /** Print information on the mesh. */
-    t8_global_productionf (" [tutorial] Created uniform mesh.\n");
-    t8_global_productionf (" [tutorial] Refinement level:\t\t\t%i\n", level);
-    t8_global_productionf (" [tutorial] Local number of elements:\t\t%i\n", local_num_elements);
-    t8_global_productionf (" [tutorial] Global number of elements:\t%" T8_GLOIDX_FORMAT "\n", global_num_elements);
+    t8_global_productionf (" [t8_step2] Created uniform mesh.\n");
+    t8_global_productionf (" [t8_step2] Refinement level:\t\t\t%i\n", level);
+    t8_global_productionf (" [t8_step2] Local number of elements:\t\t%i\n", local_num_elements);
+    t8_global_productionf (" [t8_step2] Global number of elements:\t%" T8_GLOIDX_FORMAT "\n", global_num_elements);
 
     /** Write mesh to vtu files. */
     t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix);
-    t8_global_productionf (" [tutorial] Wrote mesh to vtu files:\t%s*\n", prefix);
+    t8_global_productionf (" [t8_step2] Wrote mesh to vtu files:\t%s*\n", prefix);
 
   } /** End of Mesh scope. */
-  t8_global_productionf (" [tutorial] Mesh scope ended.\n");
+  t8_global_productionf (" [t8_step2] Mesh scope ended.\n");
 
   sc_finalize ();
 
