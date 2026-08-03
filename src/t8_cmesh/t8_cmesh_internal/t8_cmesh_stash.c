@@ -67,7 +67,7 @@ t8_stash_destroy (t8_stash_t *pstash)
   }
   sc_array_reset (&stash->attributes);
   T8_FREE (stash);
-  pstash = NULL;
+  *pstash = NULL;
 }
 
 void

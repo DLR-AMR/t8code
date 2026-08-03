@@ -1292,5 +1292,5 @@ t8_cmesh_trees_destroy (t8_cmesh_trees_t *ptrees)
   sc_mempool_destroy (trees->global_local_mempool);
 
   T8_FREE (trees);
-  ptrees = nullptr;
+  *ptrees = nullptr;
 }
