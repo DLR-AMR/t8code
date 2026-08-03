@@ -43,9 +43,9 @@ A tutorial about the generation of curved adaptive meshes.
 
 ## Mesh handle
 [Mesh Handle Tutorials](../tutorials/mesh_handle/README.md)
-These tutorials can be followed instead of the original t8code tutorials. They explain working with t8code with the help of the 
+These tutorials can be followed instead of the general t8code tutorials. They explain working with t8code with the help of the 
 [mesh_handle](../mesh_handle/README.md) interface. 
-Please note, that the mesh handle tutorials start at step 2, because the first 2 steps are the same as in the original tutorials. Please complete these first and then come back to the [Mesh Handle Tutorial Overview](../tutorials/mesh_handle/README.md)
+Please note, that the mesh handle tutorials start at step 2, because steps 0 and 1 are the same as in the general tutorials. Please complete these first and then come back to the [Mesh Handle Tutorial Overview](../tutorials/mesh_handle/README.md)
 
 ## To be implemented in the future
 
