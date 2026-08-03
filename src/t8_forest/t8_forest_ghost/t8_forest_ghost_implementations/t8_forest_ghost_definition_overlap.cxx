@@ -501,7 +501,7 @@ build_cover_backward_iteration (t8_forest_t forest, t8_element_t **children, con
  * \note This function allocate memory for the cover. New elements are build here.
  */
 std::vector<t8_element_t *>
-build_cover_of_process (t8_forest_t forest, const int process)
+t8_forest_ghost_definition_overlap::build_cover_of_process (t8_forest_t forest, const int process)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
