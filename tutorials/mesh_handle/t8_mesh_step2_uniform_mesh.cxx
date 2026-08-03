@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element types in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 /** \file t8_mesh_step2_uniform_mesh.cxx
  * This is step 2 of the t8code mesh handle tutorials.
- * Therefor, this is the same as general/t8_step2_uniform_forest.cxx but using the mesh handle interface instead of the forest
+ * Therefore, this is the same as general/t8_step2_uniform_forest.cxx but using the mesh handle interface instead of the forest
  * interface.
  * After we learned how to create a cmesh in step1, we will
  * now build our first partitioned mesh, get its local and global
@@ -32,10 +32,10 @@
  * uniform (every element has the same refinement level) and can then be adapted
  * later (see the following steps).
  * Together with the cmesh, we also need a refinement scheme. This scheme tells the
- * mesh how elements of each shape (t8_eclass_t) are refined, what their neighbor
+ * mesh how elements of each shape (t8_eclass_t) are refined, what their neighbors
  * are etc.
  * The default scheme in t8_schemes/t8_default/t8_default.hxx provides an implementation for
- * all element shapes that t8code supports (with pyramids currently under construction).
+ * all element shapes that t8code supports.
 */
 #include <t8.h>                                 /** General t8code header, always include this. */
 #include <mesh_handle/mesh.hxx>                 /** General Mesh Header, always needed for mesh_handle code. */
@@ -43,7 +43,7 @@
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <t8_schemes/t8_default/t8_default.hxx> /** default refinement scheme. */
-#include <string>
+#include <memory>
 
 /** Builds cmesh of 2 prisms that build up a unit cube.
  * See step1 for a detailed description.
@@ -70,16 +70,16 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
  * \return            A uniform mesh with the given refinement level that is
  *                    partitioned across the processes in \a comm.
  */
-static std::unique_ptr<t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>>
+template <typename MeshType>
+static std::unique_ptr<MeshType>
 t8_step2_build_uniform_mesh (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
   const t8_scheme *scheme = t8_scheme_new_default (); /** Default refinement scheme. */
 
   /* Build the uniform mesh, it is automatically partitioned among the processes. */
-  auto mesh = t8_mesh_handle::handle_new_uniform<t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>> (
-    cmesh, scheme, level, comm, false);
+  std::unique_ptr<MeshType> mesh = t8_mesh_handle::handle_new_uniform<MeshType> (cmesh, scheme, level, comm);
 
-  t8_global_productionf (" [tutorial] Constructed uniform mesh with %d elements per tree.\n", 1 << (3 * level));
+  t8_global_productionf (" [t8_step2] Constructed uniform mesh with refinement level %d.\n", level);
 
   return mesh;
 }
@@ -87,25 +87,20 @@ t8_step2_build_uniform_mesh (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 int
 main (int argc, char **argv)
 {
-  int mpiret;
-  sc_MPI_Comm comm;
-
   /** File prefix for our vtk files. */
   const char *prefix = "t8_step2_uniform_mesh";
   /** Uniform refinement level of the mesh. */
   const int level = 3;
-  t8_locidx_t local_num_elements;
-  t8_gloidx_t global_num_elements;
 
   /** Initialize MPI. This has to happen before we initialize sc or t8code. */
-  mpiret = sc_MPI_Init (&argc, &argv);
+  int mpiret = sc_MPI_Init (&argc, &argv);
   /** Error check the MPI return value. */
   SC_CHECK_MPI (mpiret);
 
   /** Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /** Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_PRODUCTION);
 
   /** Print a message on the root process. */
   t8_global_productionf (" [tutorial] \n");
@@ -114,30 +109,34 @@ main (int argc, char **argv)
   t8_global_productionf (" [tutorial] \n");
 
   /** We will use MPI_COMM_WORLD as a communicator. */
-  comm = sc_MPI_COMM_WORLD;
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+
   /** Create the cmesh. */
   t8_cmesh_t cmesh = t8_step2_build_prismcube_coarse_mesh (comm);
+  /**
+   * We will put the Mesh in a separate scope here, 
+   * because it will destroy itself completely on its own when reaching the end of this scope.
+  */
+  {
+    /** Build the uniform mesh. */
+    auto mesh = t8_step2_build_uniform_mesh < t8_mesh_handle::mesh<> (comm, cmesh, level);
+    /** Get the number of local elements. */
+    const t8_locidx_t local_num_elements = mesh->get_num_local_elements ();
+    /** Get the number of global elements. */
+    const t8_gloidx_t global_num_elements = mesh->get_num_global_elements ();
 
-  /** Build the uniform mesh. */
-  auto mesh = t8_step2_build_uniform_mesh (comm, cmesh, level);
-  /** Get the number of local elements. */
-  local_num_elements = mesh->get_num_local_elements ();
-  /** Get the number of global elements. */
-  global_num_elements = mesh->get_num_global_elements ();
+    /** Print information on the mesh. */
+    t8_global_productionf (" [tutorial] Created uniform mesh.\n");
+    t8_global_productionf (" [tutorial] Refinement level:\t\t\t%i\n", level);
+    t8_global_productionf (" [tutorial] Local number of elements:\t\t%i\n", local_num_elements);
+    t8_global_productionf (" [tutorial] Global number of elements:\t%" T8_GLOIDX_FORMAT "\n", global_num_elements);
 
-  /** Print information on the mesh. */
-  t8_global_productionf (" [tutorial] Created uniform mesh.\n");
-  t8_global_productionf (" [tutorial] Refinement level:\t\t\t%i\n", level);
-  t8_global_productionf (" [tutorial] Local number of elements:\t\t%i\n", local_num_elements);
-  t8_global_productionf (" [tutorial] Global number of elements:\t%" T8_GLOIDX_FORMAT "\n", global_num_elements);
+    /** Write mesh to vtu files. */
+    t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix);
+    t8_global_productionf (" [tutorial] Wrote mesh to vtu files:\t%s*\n", prefix);
 
-  /** Write mesh to vtu files. */
-  t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix);
-  t8_global_productionf (" [tutorial] Wrote mesh to vtu files:\t%s*\n", prefix);
-
-  /** Destroy the mesh. */
-  mesh.reset ();
-  t8_global_productionf (" [tutorial] Destroyed mesh.\n");
+  } /** End of Mesh scope. */
+  t8_global_productionf (" [tutorial] Mesh scope ended.\n");
 
   sc_finalize ();
 
