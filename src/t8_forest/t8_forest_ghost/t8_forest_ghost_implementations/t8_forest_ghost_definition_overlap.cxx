@@ -360,8 +360,8 @@ t8_ghost_puma_recursion_last_descandance (t8_forest_t forest, const t8_eclass_t 
   eclass_scheme->element_new (tree_class, 4, children);
   eclass_scheme->element_get_children (tree_class, ancestors, 4, children);
 
-  t8_element_t *child_first_nca;
-  eclass_scheme->element_new (tree_class, 1, &child_first_nca);
+  t8_element_t *child_last_nca;
+  eclass_scheme->element_new (tree_class, 1, &child_last_nca);
 
   bool child_found = false;
   for (int child_index = 4 - 1; child_index > -1; child_index--) {
@@ -373,8 +373,8 @@ t8_ghost_puma_recursion_last_descandance (t8_forest_t forest, const t8_eclass_t 
     }
     else {
       /* Get nca of last element and child[i] of ancestor. */
-      eclass_scheme->element_get_nca (tree_class, last_element, children[child_index], child_first_nca);
-      if (eclass_scheme->element_is_equal (tree_class, children[child_index], child_first_nca)) {
+      eclass_scheme->element_get_nca (tree_class, last_element, children[child_index], child_last_nca);
+      if (eclass_scheme->element_is_equal (tree_class, children[child_index], child_last_nca)) {
         child_found = true;
         int max_level = eclass_scheme->get_maxlevel(tree_class);
         // The current child is ancestors of the the last element
@@ -387,7 +387,7 @@ t8_ghost_puma_recursion_last_descandance (t8_forest_t forest, const t8_eclass_t 
     }
   }
 
-  eclass_scheme->element_destroy (tree_class, 1, &child_first_nca);
+  eclass_scheme->element_destroy (tree_class, 1, &child_last_nca);
   eclass_scheme->element_destroy (tree_class, 4, children);
   T8_FREE (children);
 
@@ -464,16 +464,14 @@ build_cover_backward_iteration (t8_forest_t forest, t8_element_t **children, con
                                 std::vector<t8_element_t *> &revers_last_cover_part)
 {
   /* To reduce memory use, create an element, and use it multiple times in the iterations. */
-  t8_element_t *child_first_nca;
-  eclass_scheme->element_new (tree_class, 1, &child_first_nca);
+  t8_element_t *child_last_nca;
+  eclass_scheme->element_new (tree_class, 1, &child_last_nca);
   const int max_level = t8_forest_get_maxlevel (forest);
   /* To fill the cover with the in between of the children witch war parent of first and last element. */
   int parent_of_last_element_and_child_of_nca = 0;
-
   for (int child_index = 3; child_index > -1; child_index--) {
     /* get nca of child[i] and last_element*/
-    eclass_scheme->element_get_nca (tree_class, last_element, children[child_index], child_first_nca);
-    if (eclass_scheme->element_is_equal (tree_class, children[child_index], child_first_nca)) {
+    if (eclass_scheme->element_is_equal (tree_class, children[child_index], child_last_nca)) {
       /* Child is parent of last_element */
       if (eclass_scheme->element_get_linear_id (tree_class, children[child_index], max_level) != lin_id_last_element) {
         /* If the child is not the last element, start a recursion on the child. */
@@ -486,7 +484,7 @@ build_cover_backward_iteration (t8_forest_t forest, t8_element_t **children, con
       break;
     }
   }
-  eclass_scheme->element_destroy (tree_class, 1, &child_first_nca);
+  eclass_scheme->element_destroy (tree_class, 1, &child_last_nca);
   return parent_of_last_element_and_child_of_nca;
 }
 
