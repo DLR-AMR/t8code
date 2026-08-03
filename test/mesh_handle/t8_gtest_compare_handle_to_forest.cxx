@@ -61,8 +61,11 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Compare elements. ---
       EXPECT_EQ (mesh_iterator->get_local_tree_id (), itree);
       EXPECT_EQ (mesh_iterator->get_local_element_id (), ielem);
-      EXPECT_EQ (mesh_iterator->is_equal (*mesh_iterator, *mesh_iterator),
-                 scheme->element_is_equal (tree_class, elem, elem));
+      EXPECT_TRUE (mesh_iterator->is_equal (*mesh_iterator), scheme->element_is_equal (tree_class, elem, elem));
+      auto mesh_iterator_copy = mesh_iterator;
+      mesh_iterator_copy++;
+      EXPECT_FALSE (mesh_iterator->is_equal (*mesh_iterator_copy),
+                    scheme->element_is_equal (tree_class, elem, mesh_iterator_copy->get_element ()));
 
       t8_3D_vec ref = { 0.2, 0.3, 1 };
       t8_3D_vec a, b;
