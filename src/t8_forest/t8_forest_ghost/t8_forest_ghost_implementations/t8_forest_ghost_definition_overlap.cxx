@@ -21,7 +21,7 @@
 */
 
 /** \file t8_forest_ghost_definition_overlap.cxx
- *  Implements a class of define ghost for PUMA.
+ *  Implements a class of a ghost definition based on overlapping.
  */
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_overlap.hxx>
@@ -376,6 +376,13 @@ t8_ghost_puma_recursion_last_descandance (t8_forest_t forest, const t8_eclass_t 
       eclass_scheme->element_get_nca (tree_class, last_element, children[child_index], child_first_nca);
       if (eclass_scheme->element_is_equal (tree_class, children[child_index], child_first_nca)) {
         child_found = true;
+        int max_level = eclass_scheme->get_maxlevel(tree_class);
+        // The current child is ancestors of the the last element
+        if( eclass_scheme->element_get_linear_id(tree_class, children[child_index], max_level) != lin_id_last_element){
+          // On max leven the lin id of the child an the last element differs.
+          t8_global_productionf("child %i on level %d has note the same max level id as first element. call recursion.\n", child_index, eclass_scheme->element_get_level(tree_class, children[child_index]));
+          t8_ghost_puma_recursion_last_descandance(forest, tree_class, eclass_scheme, last_element, lin_id_last_element, children[child_index], cover);
+        }
       }
     }
   }
@@ -487,10 +494,10 @@ build_cover_backward_iteration (t8_forest_t forest, t8_element_t **children, con
  * A set of elements is a cover of a process,
  * if for each leaf element in the process, there is an element in the cover,
  * that is equal to an ancestor of this leaf element or equal as the element it self.
- * Moreover the leafs of every other process have no ancestor in the cover.
+ * Moreover the leaves of every other process have no ancestor in the cover.
  * \param [in] forest               The forest.
  * \param [in] process              The process for which the cover is built.
- * \return The cover of the leafs of the process elements.
+ * \return The cover of the leaves of the process elements.
  * \note This function allocate memory for the cover. New elements are build here.
  */
 std::vector<t8_element_t *>
