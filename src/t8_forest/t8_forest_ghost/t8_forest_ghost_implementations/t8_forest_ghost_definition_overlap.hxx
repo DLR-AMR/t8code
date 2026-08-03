@@ -94,7 +94,6 @@ struct t8_forest_ghost_definition_overlap: public t8_forest_ghost_definition
   void
   communicate_max_stretch_factor (t8_forest_t forest);
 
-  
   /** Build a cover for a given process.
    * A set of elements is a cover of a process,
    * if for each leaf element in the process, there is an element in the cover,
@@ -122,6 +121,11 @@ struct t8_forest_ghost_definition_overlap: public t8_forest_ghost_definition
   virtual void
   search_for_ghost_elements (t8_forest_t forest);
 
+  /**
+   * Free/destroy the elements in the covers and clean the list of covers.
+   */
+  void
+  clean_up_build_covers (t8_forest_t forest);
   /**
    * If memory was allocated for the offset array in communicate_ownerships it is released here.
    * Use memory_flag for this.
