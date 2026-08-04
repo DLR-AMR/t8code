@@ -574,3 +574,253 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors_two_quad_mesh, AllSchemeCollections);
+
+/**
+ * Callback to perform some mesh refinement within the test suite. As an example, every third element is refined.
+ *
+ * Note: The argument list has to be the same as for \ref t8_forest_adapt_t, even
+ *       if most arguments are unused. For their meaning, please refer to \ref t8_forest_adapt_t.
+ *       (The following doxygen documentation is just to make sure it is technically documented.)
+ *
+ * \param[in] forest        "forest" argument of \ref t8_forest_adapt_t
+ * \param[in] forest_from   "forest_from" argument of \ref t8_forest_adapt_t
+ * \param[in] which_tree    "which_tree" argument of \ref t8_forest_adapt_t
+ * \param[in] tree_class    "tree_class" argument of \ref t8_forest_adapt_t
+ * \param[in] lelement_id   "lelement_id" argument of \ref t8_forest_adapt_t
+ * \param[in] scheme        "scheme" argument of \ref t8_forest_adapt_t
+ * \param[in] is_family     "is_family" argument of \ref t8_forest_adapt_t
+ * \param[in] num_elements  "num_elements" argument of \ref t8_forest_adapt_t
+ * \param[in] elements      "elements" argument of \ref t8_forest_adapt_t
+ *
+ * \return 1 if the element will be refined, 0 otherwise.
+*/
+int
+refine_some_elems_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                            [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                            [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                            [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                            [[maybe_unused]] t8_element_t *elements[])
+{
+  // Refine every third element.
+  return ( (lelement_id % 3 == 1)  ? 1 : 0);
+}
+
+/**
+ * \brief Class to test the functionaliy of \b t8_forest_leaf_neighbor_subface.
+ */
+class forest_face_neighbors_subface: public testing::TestWithParam<std::tuple<int, cmesh_example_base *> > {
+ protected:
+  /**
+   * \brief Set the Up test suite.
+   */
+  void
+  SetUp () override
+  {
+    // Read test parameters.
+    const int scheme_id = std::get<0> (GetParam ());
+    t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
+
+    // Skip empty cmeshes.
+    if (test_face_neighbors_skip_cmesh (cmesh)) {
+      t8_cmesh_unref (&cmesh);
+      GTEST_SKIP ();
+    }
+
+    // Create uniform base forest from cmesh.
+    const t8_scheme *scheme = create_from_scheme_id (scheme_id);
+    const bool do_ghost = true;
+    const bool do_recursive_adapt = false;
+    t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, base_level, do_ghost, sc_MPI_COMM_WORLD);
+
+    // Refine some elements of forest once (and store the resulting forest as member variable).
+    forest = t8_forest_new_adapt(base_forest, refine_some_elems_callback, do_recursive_adapt, do_ghost, nullptr);
+  }
+
+  /**
+   * \brief Tear down the test suite.
+   */
+  void
+  TearDown () override
+  {
+    // Unref the
+    if(forest != nullptr) t8_forest_unref (&forest);
+  }
+
+  // Member variables.
+  t8_forest_t forest = nullptr;   // The forest used within the tests.
+  const int base_level = 1;       // The coarse base level in the forest.
+};
+
+// Test the functionality of \ref t8_forest_leaf_neighbor_subface.
+// The testing is outlined as follows:
+// - Loop over all trees, all its elements and all its faces
+// - For each face, determine whether it has a one-level coarser neighbor
+// - If it does, determine the subface ID via the function t8_forest_leaf_neighbor_subface
+// - To validate its output, we ensure that the associated (virtual) child of the neighbor
+//   is in fact the corresponding neighbor of the original element.
+TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
+{
+
+  // ----------------------------------------------------------------------------------------------
+  // -------------------------------- (0.) Preparation --------------------------------------------
+  // ----------------------------------------------------------------------------------------------
+
+  // Explicitly store some forest information for readability.
+  const t8_scheme* scheme = t8_forest_get_scheme(forest);
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees(forest);
+  const t8_locidx_t num_local_elements = t8_forest_get_local_num_leaf_elements (forest);
+
+
+  // ----------------------------------------------------------
+  // -------- LOOP 1: Iterate over all local trees.
+  // ----------------------------------------------------------
+  for(int itree = 0; itree < num_local_trees; itree++)
+  {
+    // Get eclass and number of leaf elements in this tree.
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
+    t8_locidx_t num_elems_tree = t8_forest_get_tree_num_leaf_elements(forest, itree);
+
+
+    // ----------------------------------------------------------
+    // -------- LOOP 2: Iterate over all local elements in the tree.
+    // ----------------------------------------------------------
+    for(int ielem_tree = 0; ielem_tree < num_elems_tree; ielem_tree++)
+    {
+      // Get current element and its level.
+      const t8_element* element = t8_forest_get_leaf_element_in_tree(forest, itree, ielem_tree);
+      const int level = scheme->element_get_level (tree_class, element);
+
+      // Skip if it is on the base level, because it cannot not have a coarser neighbor.
+      if(level == base_level) continue;
+
+      // Get number of faces.
+      int num_faces = scheme->element_get_num_faces(tree_class, element);
+
+      // ----------------------------------------------------------
+      // -------- LOOP 3: Iterate over the element faces
+      // ----------------------------------------------------------
+      for(int iface=0; iface < num_faces; iface++)
+      {
+        // Compute face neighbor along that face
+        // -------------------------------------
+        // (i) Define variables
+        const t8_element_t **neighbor_leaves;
+        int *dual_faces;
+        int num_neighbors = 0;
+        t8_locidx_t *element_indices;
+        t8_eclass_t neigh_class;
+        t8_gloidx_t gneigh_tree;
+        int orientation;
+
+        // (ii) Actual computation of the face neighbors.
+        t8_forest_leaf_face_neighbors_ext (forest, itree, element, &neighbor_leaves, iface, &dual_faces,
+                                            &num_neighbors, &element_indices, &neigh_class, &gneigh_tree,
+                                            &orientation);
+
+        // Only investigate deeper if the face has exactly one neighbor, because otherwise it cannot be a coarser neighbor.
+        if(num_neighbors == 1)
+        {
+
+          // Compute level of neighbor.
+          const int neighbor_level = scheme->element_get_level (neigh_class, neighbor_leaves[0]);
+
+          // Is the neighbor one level coarser?
+          if(neighbor_level == level - 1)
+          {
+            // For code readabilty:
+            const t8_element_t* neigh = neighbor_leaves[0];
+            const int neigh_face = dual_faces[0];
+
+            // (iii.) Compute subface ID (via the function t8_forest_leaf_neighbor_subface this test is all about).
+            int neighbor_subface_id = t8_forest_leaf_neighbor_subface(forest, itree, element, iface, neigh_class, neigh, neigh_face);
+
+            // VALIDATION: Iterate over all the neighbor's children and check whether the one associated with neighbor_subface_id
+            //             has the original element as face neighbor.
+            // --------------------------------------------------------------------
+            //
+            // (0.) Determine local tree ID of neighbor.
+            const t8_locidx_t neigh_ltreeid
+              = element_indices[0] < num_local_elements
+                  ? gneigh_tree - t8_forest_get_first_local_tree_id (forest)
+                  : t8_forest_ghost_get_ghost_treeid (forest, gneigh_tree) + num_local_trees;
+
+            // (1.) Compute the neighbor's children.
+            const int num_children = scheme->element_get_num_children(neigh_class, neigh);
+            t8_element_t** neigh_children = T8_TESTSUITE_ALLOC (t8_element_t *, num_children);
+            scheme->element_new(neigh_class, num_children, neigh_children);
+            scheme->element_get_children(neigh_class, neigh, num_children, neigh_children);
+
+            // (2.) Iterate over children and check whether they touch the considered face.
+            //      NOTE: This could be done in a simpler way via \ref t8_element_get_children_at_face.
+            //            However, the tested function \ref t8_forest_leaf_neighbor_subface itself
+            //            already relies on \ref t8_element_get_children_at_face, so it seemed more
+            //            reasonable to at least use a slightly different way to get there.
+            int check_face=-1;
+            int neigh_child_to_check=-1;
+            int i_child_at_face=-1;;
+            for(int ichild=0; ichild<num_children; ichild++)
+            {
+
+              // (3.) Iterate over all faces of the child.
+              const int num_child_faces = scheme->element_get_num_faces(neigh_class, neigh_children[ichild]);
+              for(int ichildface=0; ichildface<num_child_faces; ichildface++)
+              {
+                // Get corresponding face of parent (if applicable).
+                int parent_face = scheme->element_face_get_parent_face (neigh_class, neigh_children[ichild], ichildface);
+
+                // (4.) If the parent face matches the face we are interested in, we know this child touches the face at its
+                // local face iface.
+                if(parent_face == neigh_face)
+                {
+                  i_child_at_face++;
+                  check_face = ichildface;
+                  break;
+                }
+              }
+              // (5.) If we have reached the (neighbor_subface_id)-th child touching neigh_face, we can leave the iteration
+              // and go on to the checks.
+              if(i_child_at_face == neighbor_subface_id)
+                {
+                  neigh_child_to_check = ichild;
+                  break;
+                }
+            }
+
+            // Assertions making sure we actually found the correct child and face to examine.
+            ASSERT_GE(check_face,0);
+            ASSERT_GE(neigh_child_to_check,0);
+
+            // (6.) Compute face neigbor of the neighbor's child.
+            t8_element_t* check_elem;
+            scheme->element_new(tree_class, 1, &check_elem);
+            int dual_dual_face;
+            t8_forest_element_face_neighbor(forest, neigh_ltreeid, neigh_children[neigh_child_to_check], check_elem, tree_class, check_face, &dual_dual_face);
+
+            // Make sure it matches the original element.
+            EXPECT_ELEM_EQ(scheme, tree_class, element, check_elem);
+
+            // Make sure the face relation is also correct.
+            EXPECT_EQ(iface, dual_dual_face);
+
+            // (7.) Free memory of neigh_children and checkelem
+            scheme->element_destroy(neigh_class, num_children, neigh_children);
+            scheme->element_destroy(tree_class, 1, &check_elem);
+             T8_TESTSUITE_FREE (neigh_children);
+
+          } // end if(neighbor_level == level - 1)
+        } // end if(num_neighbors == 1)
+
+        // Manually free memory allocated by t8code inside t8_forest_leaf_face_neighbors_ext.
+        if (num_neighbors > 0) {
+          T8_FREE (neighbor_leaves);
+          T8_FREE (element_indices);
+          T8_FREE (dual_faces);
+        }
+      } // end face loop
+    } // end element loop
+  } // end tree loop
+}
+
+// We check for all cmesh examples and scheme collections.
+INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors_subface,
+                          testing::Combine (AllSchemeCollections, AllCmeshsParam), pretty_print_base_example_scheme);
