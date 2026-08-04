@@ -41,11 +41,9 @@
 #include <mesh_handle/competence_pack.hxx> /** Competence Pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
-#include <mesh_handle/concepts.hxx>
-#include <t8_types/t8_vec.hxx>          /** t8 vector dataclass. */
-#include "t8_mesh_tutorials_common.hxx" /** Default adaption function. */
+#include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
+#include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
 #include <memory>
-#include <span>
 
 /** Build our adapted mesh by transferring the adaption parameters and adapting once with our \ref adapt_callback function.
  * \tparam TMeshClass    The mesh handle class.
@@ -60,13 +58,10 @@ build_mesh (sc_MPI_Comm comm, int level)
   /* Generate a hybrid hypercube, made out of cubes, prisms etc. */
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
   /* Defining the adaption parameters. */
-  struct adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
-  mesh->set_balance ();
-  mesh->set_partition ();
+  adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
   /* Adapting once with our adapt_callback function. */
   mesh->set_adapt (
     TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (default_adapt_callback<TMeshClass>, adapt_params));
-  mesh->set_ghost ();
   mesh->commit ();
   return mesh;
 }
@@ -87,26 +82,28 @@ main (int argc, char **argv)
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
   /* Print a starting message. */
-  t8_global_productionf (" [tutorial] \n");
-  t8_global_productionf (" [tutorial] Hello, this is the mesh adaptation example of t8code using the mesh handle.\n");
-  t8_global_productionf (" [tutorial] In this example we will adapt a mesh in a spherical shape around a given point "
-                         "and write the adapted mesh to a vtu file.\n");
-  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [t8 step 3 Mesh handle] \n");
+  t8_global_productionf (
+    " [t8 step 3 Mesh handle] Hello, this is the mesh adaptation example of t8code using the mesh handle.\n");
+  t8_global_productionf (
+    " [t8 step 3 Mesh handle] In this example we will adapt a mesh in a spherical shape around a given point "
+    "and write the adapted mesh to a vtu file.\n");
+  t8_global_productionf (" [t8 step 3 Mesh handle] \n");
 
   using mesh_type = t8_mesh_handle::mesh<>;
 
-  t8_global_productionf (" [tutorial] \n");
-  t8_global_productionf (" [tutorial] Creating an adapted mesh.\n");
-  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [t8 step 3 Mesh handle] \n");
+  t8_global_productionf (" [t8 step 3 Mesh handle] Creating an adapted mesh.\n");
+  t8_global_productionf (" [t8 step 3 Mesh handle] \n");
   /* The initial uniform refinement level. */
   int uniform_level = 3;
   /* Building the mesh. */
   { /** Scope to ensure mesh is deleted properly. */
     auto mesh = build_mesh<mesh_type> (comm, uniform_level);
     /* Write the mesh to a vtu file. */
-    t8_global_productionf (" [tutorial] \n");
-    t8_global_productionf (" [tutorial] Writing adapted mesh to vtu file: step3_adapted_mesh.vtu\n");
-    t8_global_productionf (" [tutorial] \n");
+    t8_global_productionf (" [t8 step 3 Mesh handle] \n");
+    t8_global_productionf (" [t8 step 3 Mesh handle] Writing adapted mesh to vtu file: step3_adapted_mesh.vtu\n");
+    t8_global_productionf (" [t8 step 3 Mesh handle] \n");
     t8_mesh_handle::write_mesh_to_vtk (*mesh, "step3_adapted_mesh.vtu");
   }
   sc_finalize ();
