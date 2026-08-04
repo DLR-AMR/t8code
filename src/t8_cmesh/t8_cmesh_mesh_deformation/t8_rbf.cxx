@@ -92,6 +92,11 @@ t8_rbf::solve_compactly_supported_rbf (const Eigen::MatrixXd &displacements, con
   /** Fill the sparse matrix A with the triplets. */
   Eigen::SparseMatrix<double> A (num_boundary_nodes, num_boundary_nodes);
   A.setFromTriplets (coefficients.begin (), coefficients.end ());
+#if 0
+  /** Calculate the density of the matrix */
+  double density = static_cast<double> (A.nonZeros ()) / static_cast<double> (num_boundary_nodes * num_boundary_nodes);
+  t8_productionf ("Matrix density: %f\n", density);
+#endif
   /** Solve the linear system using the conjugate gradient method. */
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
   solver.setTolerance (1e-10);

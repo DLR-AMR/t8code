@@ -71,7 +71,7 @@ const t8_eclass_t t8_msh_tree_type_to_eclass[T8_NUM_GMSH_ELEM_CLASSES + 1] = {
 const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0 },                      /* VERTEX */
   { 0, 1 },                   /* LINE */
-  { 0, 1, 3, 2 },             /* QUAD */
+  { 0, 2, 3, 1 },             /* QUAD */
   { 0, 1, 2 },                /* TRIANGLE */
   { 0, 1, 3, 2, 4, 5, 7, 6 }, /* HEX */
   { 0, 1, 3, 2 },             /* TET */
@@ -84,7 +84,7 @@ const int t8_msh_tree_vertex_to_t8_vertex_num[T8_ECLASS_COUNT][8] = {
 [[maybe_unused]] const int t8_vertex_to_msh_vertex_num[T8_ECLASS_COUNT][8] = {
   { 0 },                      /* VERTEX */
   { 0, 1 },                   /* LINE */
-  { 0, 1, 3, 2 },             /* QUAD */
+  { 0, 2, 3, 1 },             /* QUAD */
   { 0, 1, 2 },                /* TRIANGLE */
   { 0, 1, 3, 2, 4, 5, 7, 6 }, /* HEX */
   { 0, 1, 3, 2 },             /* TET */

@@ -57,14 +57,24 @@ int
 t8_forest_hacky_deformation ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] const char* brep_folder)
 {
   static size_t ifile = 0;
+  static size_t call_counter = 0;
   t8_productionf ("ifile = %li\n", ifile);
+  t8_productionf ("call_counter = %li\n", call_counter);
 
   auto files = findBrepFiles (brep_folder);
+
+  std::sort (files.begin (), files.end ());
 
   t8_productionf ("num_files = %li\n", files.size ());
   if (ifile == files.size ()) {
     return 0;
   }
+
+  if (call_counter < 300) {
+    call_counter++;
+    return 1;
+  }
+
   t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
 
   /* Load CAD geometry from .brep file. */

@@ -107,7 +107,7 @@ calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8
     total_distance += std::sqrt (distance_x * distance_x + distance_y * distance_y + distance_z * distance_z);
   }
 
-  double grading_factor = 2.0;
+  double grading_factor = 0.0;
 
   return (total_distance / static_cast<double> (unique_neighbors.size ()))
          * (1.0 + grading_factor * displacement_magnitude);
