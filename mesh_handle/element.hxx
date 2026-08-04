@@ -411,7 +411,8 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_reference_coordinates (const t8_3D_vec ref_coords, std::size_t num_coords, t8_3D_vec tree_ref_coords) const
   {
     t8_forest_get_scheme (m_mesh->m_forest)
-      ->element_get_reference_coords (get_tree_class (), m_element, ref_coords, num_coords, tree_ref_coords);
+      ->element_get_reference_coords (get_tree_class (), m_element, ref_coords.data (), num_coords,
+                                      tree_ref_coords.data ());
   }
 
   /** Compute the orientation of a face of an element with respect to its neighbor.

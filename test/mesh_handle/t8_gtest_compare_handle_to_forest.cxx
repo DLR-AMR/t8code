@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 
 #include <gtest/gtest.h>
+#include <test/t8_gtest_macros.hxx>
 #include <t8.h>
 
 #include <mesh_handle/mesh.hxx>
@@ -61,15 +62,14 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Compare elements. ---
       EXPECT_EQ (mesh_iterator->get_local_tree_id (), itree);
       EXPECT_EQ (mesh_iterator->get_local_element_id (), ielem);
-      EXPECT_TRUE (mesh_iterator->is_equal (*mesh_iterator), scheme->element_is_equal (tree_class, elem, elem));
+      EXPECT_TRUE (mesh_iterator->is_equal (*mesh_iterator));
       auto mesh_iterator_copy = mesh_iterator;
       mesh_iterator_copy++;
-      EXPECT_FALSE (mesh_iterator->is_equal (*mesh_iterator_copy),
-                    scheme->element_is_equal (tree_class, elem, mesh_iterator_copy->get_element ()));
+      EXPECT_FALSE (mesh_iterator->is_equal (*mesh_iterator_copy));
 
       t8_3D_vec ref = { 0.2, 0.3, 1 };
       t8_3D_vec a, b;
-      mesh_iterator->get_reference_coordinates (ref.data (), 1, a.data ());
+      mesh_iterator->get_reference_coordinates (ref, 1, a);
       scheme->element_get_reference_coords (tree_class, elem, ref.data (), 1, b.data ());
       EXPECT_EQ (a, b);
       // --- Compare functionality. ---

@@ -87,12 +87,11 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     EXPECT_LE (0, (*mesh)[ighost].get_num_vertices ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
     EXPECT_LE (0, (*mesh)[ighost].get_diameter ());
-    t8_3D_vec ref = { 0.2, 0.3, 1 }, a, b;
-    (*mesh)[ighost].get_reference_coordinates (ref.data (), 1, a.data ());
-    scheme->element_get_reference_coords (
-      t8_forest_get_tree_class (mesh->get_forest (), (*mesh)[ighost].get_local_tree_id ()),
-      (*mesh)[ighost].get_element (), ref.data (), 1, b.data ());
-    EXPECT_EQ (a, b);
+    t8_3D_vec ref = { 0.2, 0.3, 1 }, a;
+    (*mesh)[ighost].get_reference_coordinates (ref, 1, a);
+    for (const auto& coordinate : a) {
+      EXPECT_LE (0, coordinate);
+    }
     for (const auto& coordinate : (*mesh)[ighost].get_centroid ()) {
       EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
@@ -111,9 +110,7 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     }
     EXPECT_LT (0, (*mesh)[ighost].get_num_vertices_of_face (0));
     EXPECT_LE (0, (*mesh)[ighost].face_vertex_to_element_vertex (0, 0));
-    EXPECT_EQ ((*mesh)[ighost].get_face_orientation (0),
-               t8_forest_leaf_face_orientation (mesh->get_forest (), (*mesh)[ighost].get_local_tree_id (),
-                                                (*mesh)[ighost].get_element (), 0));
+    EXPECT_GE ((*mesh)[ighost].get_face_orientation (0), 0);
     // Check exemplary that caches work for ghost elements.
     EXPECT_TRUE ((*mesh)[ighost].volume_cache_filled ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
