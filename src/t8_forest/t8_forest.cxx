@@ -2065,10 +2065,11 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
 #if T8_ENABLE_DEBUG
   // Sanity check: Ensure neighbor leaf is one level coarser than leaf.
-  const t8_eclass_t tree_class = t8_forest_get_tree_class(forest, ltreeid);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
   const int leaf_level = scheme->element_get_level (tree_class, leaf);
   const int neighbor_leaf_level = scheme->element_get_level (neighbor_tree_class, neighbor_leaf);
-  T8_ASSERTF(leaf_level == neighbor_leaf_level + 1, "t8_forest_leaf_neighbor_subface requires leaf neighbor to be one level coarser!\n");
+  T8_ASSERTF (leaf_level == neighbor_leaf_level + 1,
+              "t8_forest_leaf_neighbor_subface requires leaf neighbor to be one level coarser!\n");
 #endif
 
   // Determine the virtual face neighbor of leaf along face.
@@ -2078,19 +2079,21 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
   t8_forest_element_face_neighbor (forest, ltreeid, leaf, target_virtual_face_neighbor, neighbor_tree_class, face,
                                    nullptr);
 
-  int const num_neighbor_face_children = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
+  int const num_neighbor_face_children
+    = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
 
   // Determine the neighbor_leaf's children at neighbor_face (i.e., at the dual face of face).
-  std::array<t8_element_t *, T8_ECLASS_MAX_FACE_CHILDREN> neigh_children_at_face;  // assumes the forest is (locally) 2:1 balanced
+  std::array<t8_element_t *, T8_ECLASS_MAX_FACE_CHILDREN>
+    neigh_children_at_face;  // assumes the forest is (locally) 2:1 balanced
   scheme->element_new (neighbor_tree_class, neigh_children_at_face.size (), neigh_children_at_face.begin ());
-  scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face, neigh_children_at_face.begin (),
-                                        num_neighbor_face_children, nullptr);
-
+  scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face,
+                                        neigh_children_at_face.begin (), num_neighbor_face_children, nullptr);
 
   // Find out which entry of neigh_children_at_face is equal to target_virtual_face_neighbor.
-  auto iter = std::find_if (neigh_children_at_face.begin (), neigh_children_at_face.end (), [&] (t8_element *candidate) -> bool {
-    return scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, candidate) == 0;
-  });
+  auto iter = std::find_if (
+    neigh_children_at_face.begin (), neigh_children_at_face.end (), [&] (t8_element *candidate) -> bool {
+      return scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, candidate) == 0;
+    });
   T8_ASSERT (iter != neigh_children_at_face.end ());  // make sure target_virtual_face_neighbor was found
 
   // Extract the neighbor leaf's subface ID, i.e., the local child index (at the face).
