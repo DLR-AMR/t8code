@@ -2097,7 +2097,7 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
   int neighbor_subface_index = iter - neigh_children_at_face.begin ();
 
   // Free memory and return subface index.
-  scheme->element_destroy (neighbor_tree_class, 4, neigh_children_at_face.begin ());
+  scheme->element_destroy (neighbor_tree_class, T8_ECLASS_MAX_FACE_CHILDREN, neigh_children_at_face.begin ());
   scheme->element_destroy (neighbor_tree_class, 1, &target_virtual_face_neighbor);
   return neighbor_subface_index;
 }
