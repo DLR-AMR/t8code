@@ -119,7 +119,7 @@ main (int argc, char **argv)
   */
   {
     /** Build the uniform mesh. */
-    auto mesh = t8_step2_build_uniform_mesh < t8_mesh_handle::mesh<> (comm, cmesh, level);
+    auto mesh = t8_step2_build_uniform_mesh<t8_mesh_handle::mesh<>> (comm, cmesh, level);
     /** Get the number of local elements. */
     const t8_locidx_t local_num_elements = mesh->get_num_local_elements ();
     /** Get the number of global elements. */
