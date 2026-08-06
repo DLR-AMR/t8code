@@ -188,6 +188,16 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   /**
+   * Getter for the number of global elements in the mesh.
+   * \return Number of global elements in the mesh.
+   */
+  t8_gloidx_t
+  get_num_global_elements () const
+  {
+    return t8_forest_get_global_num_leaf_elements (m_forest);
+  }
+
+  /**
    * Getter for the number of ghost elements.
    * \return Number of ghost elements in the mesh.
    */
@@ -498,8 +508,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
               t8_forest_init (&m_forest);
               t8_forest_set_partition (m_forest, m_uncommitted_forest.value (),
                                        this->m_partition_for_coarsening.value ());
-              if (t8_forest_get_num_ghosts (m_uncommitted_forest.value ()) > 0) {
-                t8_forest_set_ghost (m_forest, true, T8_GHOST_FACES);
+              const t8_ghost_type_t ghost_type = m_uncommitted_forest.value ()->ghost_type;
+              if (ghost_type != T8_GHOST_NONE) {
+                t8_forest_set_ghost (m_forest, true, ghost_type);
               }
               t8_forest_commit (m_forest);
 

@@ -88,19 +88,16 @@ interpolate_callback ([[maybe_unused]] const TMeshClass& mesh_old, [[maybe_unuse
   }
 }
 
-TEST (t8_gtest_handle_data, test_interpolate_data)
+/** Test for the data interpolation of the mesh handle using the interpolate_callback. */
+TEST (t8_gtest_handle_interpolate, test_interpolate_data)
 {
-  const int level = 3;
+  const int level
+    = 3;  ///< 3 is the minimum level to have each case of refine, coarsen, copy but still include balance.
   using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
                                           t8_mesh_handle::interpolate_data_mesh_competence_pack<data_per_element>>;
   auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<mesh_class> (T8_ECLASS_HEX, level, sc_MPI_COMM_WORLD);
 
-  dummy_user_data user_data_adapt {
-    t8_3D_vec { 0.5, 0.5, 0.5 }, /**< Midpoints of the sphere. */
-    0.2,                         /**< Refine if inside this radius. */
-    0.4                          /**< Coarsen if outside this radius. */
-  };
-  interpolate_user_data dummy_interpolate_user_data { 1 }; /**< Level changes by one per adaptation step. */
+  interpolate_user_data dummy_interpolate_user_data { 1 };  ///< Level changes by one per adaptation step.
 
   // Create element data for all local mesh elements and set via mesh competence.
   std::vector<data_per_element> element_data;
@@ -110,18 +107,29 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
   mesh->set_element_data (std::move (element_data));
 
   // Adapt the mesh and set all options.
-  mesh->set_adapt (
-    mesh_class::mesh_adapt_callback_wrapper<dummy_user_data> (adapt_callback_test<mesh_class>, user_data_adapt));
+  mesh->set_adapt (adapt_callback_coarsen_left_refine_middle<mesh_class>);
   mesh->set_balance ();
   mesh->set_partition ();
+  mesh->set_ghost ();
   mesh->set_interpolate_callback (mesh_class::mesh_interpolate_callback_wrapper<interpolate_user_data> (
     interpolate_callback<mesh_class>, dummy_interpolate_user_data));
   mesh->commit ();
 
+  // Check basics.
+  EXPECT_TRUE (mesh->is_balanced ());
+  EXPECT_TRUE (mesh->get_num_ghosts () > 0);
+  // Ensure partitioned.
+  int mpi_size = 0;
+  int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpi_size);
+  SC_CHECK_MPI (mpiret);
+  int num_global_elements_averaged = (int) (mesh->get_num_global_elements () / mpi_size);
+  EXPECT_LE (mesh->get_num_local_elements (), num_global_elements_averaged + 1);
+  EXPECT_GE (mesh->get_num_local_elements (), num_global_elements_averaged - 1);
+
   // Test interpolation.
   // Variables to demonstrate that we tested interpolation for coarsening and for refinement.
-  bool found_refined = false;
-  bool found_coarsened = false;
+  int found_refined = false;
+  int found_coarsened = false;
   for (auto& elem : *mesh) {
     if (!found_refined && (elem.get_level () > level)) {
       found_refined = true;
@@ -129,12 +137,14 @@ TEST (t8_gtest_handle_data, test_interpolate_data)
     if (!found_coarsened && (elem.get_level () < level)) {
       found_coarsened = true;
     }
-
     // Check that element data and actual geometric data match.
     EXPECT_EQ (elem.get_level (), elem.get_element_data ().level);
     // For hexes, our interpolation method for volume is accurate.
     EXPECT_NEAR (elem.get_volume (), elem.get_element_data ().volume, T8_PRECISION_SQRT_EPS);
   }
-  EXPECT_TRUE (found_refined);
-  EXPECT_TRUE (found_coarsened);
+  int global_refined = 0, global_coarsened = 0;
+  sc_MPI_Allreduce (&found_refined, &global_refined, 1, sc_MPI_INT, sc_MPI_LOR, sc_MPI_COMM_WORLD);
+  sc_MPI_Allreduce (&found_coarsened, &global_coarsened, 1, sc_MPI_INT, sc_MPI_LOR, sc_MPI_COMM_WORLD);
+  EXPECT_TRUE (global_refined);
+  EXPECT_TRUE (global_coarsened);
 }
