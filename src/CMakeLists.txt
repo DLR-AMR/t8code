@@ -259,10 +259,12 @@ install( DIRECTORY t8_cmesh
   FILES_MATCHING 
     PATTERN "*.h" 
     PATTERN "*.hxx"
-    PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
+#    PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
+
+
 install( DIRECTORY t8_data 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} 
   FILES_MATCHING 
