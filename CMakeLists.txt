@@ -64,6 +64,42 @@ cmake_dependent_option( T8CODE_BUILD_DOCUMENTATION_SPHINX "Build t8code's docume
 set(T8CODE_CUSTOM_PARALLEL_TEST_COMMAND "" CACHE STRING "Define a custom command for parallel tests , e.g.: mpirun -np 8 (overwrites standard mpirun -np 4 if build with mpi)")
 set(T8CODE_CUSTOM_SERIAL_TEST_COMMAND "" CACHE STRING "Define a custom command for serial tests.")
 
+set(T8CODE_POST_INSTALL_TEST_SOURCE_DIR ${CMAKE_INSTALL_FULL_DOCDIR}/cmake_examples/post_install_sanity)
+set(T8CODE_POST_INSTALL_TEST_BINARY_DIR ${PROJECT_BINARY_DIR}/post_install_tests)
+set(T8CODE_POST_INSTALL_TEST_CMAKE_ARGS
+  -DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX}
+)
+
+if(CMAKE_BUILD_TYPE)
+  list(APPEND T8CODE_POST_INSTALL_TEST_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+endif()
+
+if(DEFINED SC_DIR AND NOT "${SC_DIR}" STREQUAL "")
+  list(APPEND T8CODE_POST_INSTALL_TEST_CMAKE_ARGS -DSC_DIR=${SC_DIR})
+endif()
+
+if(DEFINED P4EST_DIR AND NOT "${P4EST_DIR}" STREQUAL "")
+  list(APPEND T8CODE_POST_INSTALL_TEST_CMAKE_ARGS -DP4EST_DIR=${P4EST_DIR})
+endif()
+
+install( DIRECTORY ${PROJECT_SOURCE_DIR}/doc/cmake_examples/post_install_sanity
+  DESTINATION ${CMAKE_INSTALL_DOCDIR}/cmake_examples
+)
+
+add_custom_target( post_install_tests
+  COMMAND ${CMAKE_COMMAND} -E rm -rf ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND}
+          -G ${CMAKE_GENERATOR}
+          -S ${T8CODE_POST_INSTALL_TEST_SOURCE_DIR}
+          -B ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
+          ${T8CODE_POST_INSTALL_TEST_CMAKE_ARGS}
+  COMMAND ${CMAKE_COMMAND} --build ${T8CODE_POST_INSTALL_TEST_BINARY_DIR}
+  COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${T8CODE_POST_INSTALL_TEST_BINARY_DIR} --output-on-failure
+  COMMENT "Build and run the installed t8code post-installation sanity example"
+  VERBATIM
+)
+
 # Reading the option T8CODE_TEST_LEVEL: Possible choices are T8_TEST_LEVEL_FULL, T8_TEST_LEVEL_MEDIUM, or T8_TEST_LEVEL_BASIC. Default is T8_TEST_LEVEL_FULL.
 set(T8CODE_TEST_LEVEL "T8_TEST_LEVEL_FULL" CACHE STRING "Test level: T8_TEST_LEVEL_FULL for full tests, T8_TEST_LEVEL_MEDIUM for less thorough tests, T8_TEST_LEVEL_BASIC for minimal tests. (WARNING: Use with care.)")
 set_property(CACHE T8CODE_TEST_LEVEL PROPERTY STRINGS "T8_TEST_LEVEL_FULL" "T8_TEST_LEVEL_MEDIUM" "T8_TEST_LEVEL_BASIC")
