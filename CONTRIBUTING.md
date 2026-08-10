@@ -18,8 +18,7 @@ contributions are in conformance with the *Developer Certificate of Origin
 (Version 1.1)*, which is reproduced below.
 
 ## Automated Contributions Policy
-The following text was adapted from from
-[scikit-learn](https://scikit-learn.org/dev/developers/contributing.html):
+The following text was taken from [scikit-learn](https://scikit-learn.org/dev/developers/contributing.html) and adapted for this repository.
 
 Contributing to t8code requires human judgment, contextual understanding, and familiarity with the project’s architecture, coding conventions, and goals. t8code is not intended to be a target for fully automated contributions by AI tools or autonomous AI agents.
 
