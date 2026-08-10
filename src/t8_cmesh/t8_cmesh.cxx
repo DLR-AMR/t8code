@@ -1620,11 +1620,15 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int bdy_dim, int bdy
     T8_ASSERT(cmesh->dimension==3);
     T8_ASSERT(bdy_dim==1);
     T8_ASSERT(t8_cmesh_uses_edge_connectivity(cmesh));
+
+    T8_ASSERT(t8_cmesh_get_num_trees(cmesh) == 1);
+    return result; // currently not implemented, cmesh must consist of one element
+
     //get cmesh connectivity structure
     t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, ltreeid);
     t8_gloidx_t gedgeid = cmesh->edge_connectivity->get_global_edge_of_tree (ltreeid, bdy_id);
     const auto tree_list = cmesh->edge_connectivity->get_tree_list_of_edge (gedgeid);
-    SC_ABORT("Line orientation in cmesh not yet available!");
+    SC_ABORTF("Line orientation in cmesh not yet available!");
     
     for (const auto &tree_connection : tree_list) {
       result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0 });
