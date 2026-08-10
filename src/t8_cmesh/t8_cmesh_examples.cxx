@@ -686,7 +686,7 @@ t8_cmesh_new_2D_hypercube_hybrid (sc_MPI_Comm comm)
 {
   {
     /* clang-format off */
-  double vertices[60] = {                                        /* Just all vertices of all trees. partly duplicated */
+  double vertices[60] = { /* All vertices of all trees. Partly duplicated */
     0, 0, 0,              /* tree 0, triangle */
     0.5, 0, 0,
     0.5, 0.5, 0,
@@ -745,17 +745,9 @@ t8_cmesh_new_2D_hypercube_hybrid (sc_MPI_Comm comm)
 
     t8_cmesh_set_join (cmesh, 0, 1, 1, 2, 0);
     t8_cmesh_set_join (cmesh, 0, 2, 0, 0, 0);
-    //t8_cmesh_set_join (cmesh, 0, 3, 2, 3, 0);
-
     t8_cmesh_set_join (cmesh, 1, 3, 0, 2, 1);
-    //t8_cmesh_set_join (cmesh, 1, 2, 1, 1, 0);
-
     t8_cmesh_set_join (cmesh, 2, 4, 3, 2, 0);
-    //t8_cmesh_set_join (cmesh, 2, 5, 2, 0, 1);
-
     t8_cmesh_set_join (cmesh, 3, 5, 1, 1, 0);
-    //t8_cmesh_set_join (cmesh, 3, 4, 0, 0, 0);
-
     t8_cmesh_set_join (cmesh, 4, 5, 1, 2, 0);
 
     t8_cmesh_commit (cmesh, comm);

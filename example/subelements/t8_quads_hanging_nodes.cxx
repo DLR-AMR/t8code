@@ -24,7 +24,6 @@
  * This is an example to demonstrate hanging node resolution for quads. 
  */
 
-#include "t8_eclass/t8_eclass.h"
 #include <t8.h>                                       /* General t8code header, always include this. */
 #include <t8_cmesh/t8_cmesh.h>                        /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>               /* A collection of exemplary cmeshes */
@@ -34,8 +33,9 @@
 #include <t8_forest/t8_forest_subelement.hxx>         /* Function for adding subelements. */
 #include <t8_schemes/t8_subelement/t8_subelement.hxx> /* Subelement refinement scheme. */
 #include <t8_types/t8_vec.h>                          /* Basic operations on 3D vectors. */
+#include <t8_eclass/t8_eclass.h>
 
-/** The adaptation callback function.
+/** The adaptation callback function. This refines every second element (with even global id).
  * \param [in] forest       The current forest that is in construction.
  * \param [in] forest_from  The forest from which we adapt the current forest (in our case, the uniform forest)
  * \param [in] which_tree   The process local id of the current tree.
@@ -82,31 +82,32 @@ main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
-  /* ---Setup.  Build cmesh and uniform forest.---   */
-  /* Build a cube cmesh with tet, hex, and prism trees. */
-  // t8_cmesh_t cmesh = t8_cmesh_new_hypercube (T8_ECLASS_TRIANGLE, comm, 0, 0, 0);
-  t8_cmesh_t cmesh = t8_cmesh_new_2D_hypercube_hybrid (comm);
+  /* --- Setup. Build cmesh and uniform forest.---   */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_QUAD, comm, 0, 0, 0);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, comm);
 
   /* --- Adapt the forest. ---   */
   forest = t8_adapt_forest (forest);
-  std::cout << "Subelements before removing: " << t8_forest_has_subelements (forest) << std::endl;
+  std::cout << "Subelements before removing: " << t8_forest_has_local_subelements (forest) << std::endl;
   const char *prefix_with_hanging_nodes = "t8_with_hanging_nodes";
   t8_forest_write_vtk (forest, prefix_with_hanging_nodes);
   t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n",
                          prefix_with_hanging_nodes);
 
-  // --- Remove hanging nodes via adapting again. ---
+  /* --- Remove hanging nodes. --- */
   forest = t8_forest_remove_hanging_nodes (forest);
-  std::cout << "Subelements after removing: " << t8_forest_has_subelements (forest) << std::endl;
-  // Now output to vtk.
+  std::cout << "Subelements after removing: " << t8_forest_has_local_subelements (forest) << std::endl;
+  // Output to vtk.
   const char *prefix_without_hanging_nodes = "t8_without_hanging_nodes";
   t8_forest_write_vtk (forest, prefix_without_hanging_nodes);
   t8_global_productionf (" [subelements] Wrote adapted forest without hanging nodes to vtu files: %s*\n",
                          prefix_without_hanging_nodes);
 
+  /* ---Discard subelements. --- */
   forest = t8_forest_discard_subelements (forest);
-  std::cout << "Subelements removed: " << t8_forest_has_subelements (forest) << std::endl;
+  std::cout << "Subelements removed: " << t8_forest_has_local_subelements (forest) << std::endl;
   // Now output to vtk.
   const char *prefix_removed_sub = "t8_removed_sub";
   t8_forest_write_vtk (forest, prefix_removed_sub);

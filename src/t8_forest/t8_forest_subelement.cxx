@@ -40,7 +40,17 @@ namespace detail
 {
 
 /** Adapt callback for \ref t8_forest_discard_subelements. All subelements are coarsened such that the mesh using only
- * recursive refinement is restored and the subelements are discarded. This is necessary for another adaption cycle. 
+ * recursive refinement is restored and the subelements are discarded. This is necessary for another adaption cycle. #
+ * \param [in] forest       The forest to which the new elements belong.
+ * \param [in] forest_from  The forest that is adapted.
+ * \param [in] which_tree   The local tree containing \a elements.
+ * \param [in] tree_class   The eclass of \a which_tree.
+ * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
+ * \param [in] scheme       The scheme of the forest.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements that are defined
+ * \param [in] elements     Pointers to a family or, if \a is_family is zero, pointer to one element.
+ * \return -1 for subelements, 0 else.
  */
 int
 discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
@@ -49,8 +59,8 @@ discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unuse
                               [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                               t8_element_t *elements[])
 {
-  // TODO
-  if (t8_element_is_subelement (scheme, tree_class, elements[0])) {
+  // Coarsen if the element is a subelement.
+  if (t8_element_is_subelement (scheme, tree_class, elements[0]) && is_family) {
     return -1;
   }
   return 0;
@@ -62,6 +72,15 @@ discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unuse
  * and to 0, if the level of the neighbour is at most the level of the element.   
  * If all faces are hanging, we use the normal 1:8 refinement and return 1.
  * Otherwise, we use subelements and add 1 to every type, to avoid refine = 1.
+ * \param [in] forest       The forest to which the new elements belong.
+ * \param [in] forest_from  The forest that is adapted.
+ * \param [in] which_tree   The local tree containing \a elements.
+ * \param [in] tree_class   The eclass of \a which_tree.
+ * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
+ * \param [in] scheme       The scheme of the forest.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements that are defined
+ * \param [in] elements     Pointers to a family or, if \a is_family is zero, pointer to one element.
  * \return The subelement type + 1 to be used for the transition cell, which is a binary encoding of the hanging faces.
  */
 int
@@ -70,6 +89,7 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
                                   const t8_scheme *scheme, [[maybe_unused]] const int is_family,
                                   [[maybe_unused]] const int num_elements, t8_element_t *elements[])
 {
+  // Determine the hanging faces of the element. This is stored in the subelement type.
   int subelement_type = 0;
   const int num_faces = scheme->element_get_num_faces (tree_class, elements[0]);
   for (int iface = 0; iface < num_faces; iface++) {
@@ -82,6 +102,7 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
     t8_forest_leaf_face_neighbors (forest_from, which_tree, elements[0], &neighbors, iface, &dual_faces_internal,
                                    &num_neighbors, &neighids, &neigh_class);
     if (num_neighbors > 1) {
+      // Store in correct cell of the binary format.
       subelement_type += 1 << ((num_faces - 1) - iface);
     }
 
@@ -94,7 +115,7 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
   }
 
   /* Returning the correct subelement type. */
-  if (subelement_type == 0) { /* In this case, there are no hanging nodes and we do not need to do anything. */
+  if (subelement_type == 0) { /* In this case, there are no hanging faces and we do nothing. */
     return 0;
   }
   else if (subelement_type == 15) { /* Normal 1:8 refinement. */
@@ -119,14 +140,14 @@ t8_forest_remove_hanging_nodes (t8_forest_t forest)
 t8_forest_t
 t8_forest_discard_subelements (t8_forest_t forest)
 {
-  if (!t8_forest_has_subelements (forest)) {
+  if (!t8_forest_has_local_subelements (forest)) {
     return forest;
   }
   return t8_forest_new_adapt (forest, detail::discard_subelements_callback, 0, 0, NULL);
 }
 
 bool
-t8_forest_has_subelements (const t8_forest_t forest)
+t8_forest_has_local_subelements (const t8_forest_t forest)
 {
   auto scheme = t8_forest_get_scheme (forest);
   if (!t8_scheme_has_subelement_scheme (scheme)) {
