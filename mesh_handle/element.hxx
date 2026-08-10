@@ -609,9 +609,8 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   }
 
   /** Check if two elements are equal.
-   * \param [in] elem1 The first element.
-   * \param [in] elem2 The second element.
-   * \return           true if the elements are equal, false if they are not equal.
+   * \param [in] other The other element, this element is compared with. 
+   * \return           True if the elements are equal, false if they are not equal.
   */
   bool
   is_equal (const SelfType& other) const
