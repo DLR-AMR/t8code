@@ -48,19 +48,34 @@ make_param_string (const sc_MPI_Comm &comm)
 /** Wrapper function for \ref make_param_string. */
 std::function<std::string (const sc_MPI_Comm)> print_function = make_param_string;
 
+/** Wraps a (cmesh, comm) -> t8_cmesh_t generator into a comm -> t8_cmesh_t function,
+ * creating and initializing the cmesh on every call. */
+template <typename Generator>
+std::function<t8_cmesh_t (sc_MPI_Comm)>
+wrap_with_init (Generator generator)
+{
+  return [generator] (sc_MPI_Comm comm) {
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    generator (cmesh, comm);
+    return cmesh;
+  };
+}
+
 /** Vector with functions to construct a cmesh from a communicator parameter. */
-std::vector<std::function<t8_cmesh_t (sc_MPI_Comm)>> cmesh_functions = { t8_cmesh_new_periodic_tri,
-                                                                         t8_cmesh_new_periodic_hybrid,
-                                                                         t8_cmesh_new_periodic_line_more_trees,
-                                                                         t8_cmesh_new_line_zigzag,
-                                                                         t8_cmesh_new_prism_deformed,
-                                                                         t8_cmesh_new_pyramid_deformed,
-                                                                         t8_cmesh_new_prism_cake_funny_oriented,
-                                                                         t8_cmesh_new_prism_geometry,
-                                                                         t8_cmesh_new_tet_orientation_test,
-                                                                         t8_cmesh_new_hybrid_gate,
-                                                                         t8_cmesh_new_hybrid_gate_deformed,
-                                                                         t8_cmesh_new_full_hybrid };
+std::vector<std::function<t8_cmesh_t (sc_MPI_Comm)>> cmesh_functions
+  = { wrap_with_init (t8_cmesh_new_periodic_tri),
+      wrap_with_init (t8_cmesh_new_periodic_hybrid),
+      wrap_with_init (t8_cmesh_new_periodic_line_more_trees),
+      wrap_with_init (t8_cmesh_new_line_zigzag),
+      wrap_with_init (t8_cmesh_new_prism_deformed),
+      wrap_with_init (t8_cmesh_new_pyramid_deformed),
+      wrap_with_init (t8_cmesh_new_prism_cake_funny_oriented),
+      wrap_with_init (t8_cmesh_new_prism_geometry),
+      wrap_with_init (t8_cmesh_new_tet_orientation_test),
+      wrap_with_init (t8_cmesh_new_hybrid_gate),
+      wrap_with_init (t8_cmesh_new_hybrid_gate_deformed),
+      wrap_with_init (t8_cmesh_new_full_hybrid) };
 /** Names of the example sets of constructed cmeshes.*/
 std::vector<std::string> names = { "t8_cmesh_new_periodic_tri",
                                    "t8_cmesh_new_periodic_hybrid",

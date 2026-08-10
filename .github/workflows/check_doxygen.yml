@@ -37,7 +37,7 @@ jobs:
     container: dlramr/t8code-dependencies:t8-dependencies-ubuntu-gcc
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         repository: ${{ github.event.pull_request.head.repo.full_name }}
         ref: ${{ github.event.pull_request.head.ref }}

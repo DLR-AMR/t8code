@@ -146,7 +146,7 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_examples.cxx
     t8_cmesh/t8_cmesh_helpers.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_commit.cxx
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c
     t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c
@@ -248,7 +248,14 @@ install( DIRECTORY t8_helper_functions
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
+    PATTERN "t8_helper_functions/t8_refcount.h" EXCLUDE
 )
+
+install( FILES
+    t8_helper_functions/t8_refcount.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_helper_functions
+)
+
 install( DIRECTORY t8_cmesh
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING

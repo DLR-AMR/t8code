@@ -437,8 +437,10 @@ class forest_face_neighbors_two_quad_mesh: public testing::TestWithParam<int> {
     const int mesh_dim = 2;
     const int main_proc = 0;
     const int use_cad = 0;
-    t8_cmesh_t cmesh = t8_cmesh_from_msh_file (meshfile_prefix.c_str (), partition_mesh, sc_MPI_COMM_WORLD, mesh_dim,
-                                               main_proc, use_cad);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, meshfile_prefix.c_str (), partition_mesh, sc_MPI_COMM_WORLD, mesh_dim, main_proc,
+                            use_cad);
     ASSERT_NE (cmesh, nullptr) << "Could not open mesh file.";
 
     /* Build a uniform forest on it. */

@@ -21,7 +21,7 @@
 */
 
 /** \file t8_mesh_element_data.cxx
- * This is the same as general/t8_step5_element_data.cxx but using the mesh handle interface instead of the forest 
+ * This is the same as general/t8_step5_element_data.cxx but using the mesh handle interface instead of the forest
  * interface.
  */
 
@@ -52,7 +52,7 @@ struct user_data
   double coarsen_if_outside_radius; /**< If an element's center is larger this value, we coarsen its family. */
 };
 
-/** The adaptation callback function. This will refine elements inside of a given sphere and coarsen the elements 
+/** The adaptation callback function. This will refine elements inside of a given sphere and coarsen the elements
  * outside of a given sphere.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.
@@ -79,7 +79,7 @@ adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typenam
   return 0;
 }
 
-/** Build a mesh with initial uniform refinement level \a level which is adapted according to \ref adapt_callback, 
+/** Build a mesh with initial uniform refinement level \a level which is adapted according to \ref adapt_callback,
  * partitioned and balanced afterwards, and ghost elements are set.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] comm     MPI communicator to use.
@@ -106,7 +106,7 @@ build_mesh (sc_MPI_Comm comm, int level)
   return mesh_handle;
 }
 
-/** Set element data to the mesh handle. 
+/** Set element data to the mesh handle.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh  The mesh handle.
  */
@@ -120,7 +120,7 @@ set_element_data_mesh (TMeshClass &mesh)
   }
 }
 
-/** Exchange element data set in \ref set_element_data_mesh for ghost elements. 
+/** Exchange element data set in \ref set_element_data_mesh for ghost elements.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in, out] mesh  The mesh handle.
  */
@@ -163,7 +163,7 @@ output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     element_volumes[ielem] = mesh[ielem].get_element_data ().volume;
   }
-  /* To write user defined data, we need the extended output function write_mesh_to_vtk_ext. 
+  /* To write user defined data, we need the extended output function write_mesh_to_vtk_ext.
    * Despite writing user data, it also offers more control over which properties to write. */
   t8_mesh_handle::write_mesh_to_vtk_ext (mesh, prefix, num_data, &vtk_data);
   T8_FREE (element_volumes);
@@ -201,8 +201,8 @@ main (int argc, char **argv)
   t8_global_productionf (" [tutorial] \n");
   t8_global_productionf (" [tutorial] Creating an adapted mesh.\n");
   t8_global_productionf (" [tutorial] \n");
-  { /* We put the mesh in its own scope so that it is automatically destroyed at the end of the scope. 
-     * This is only necessary because sc_finalize checks if there are leftover references. 
+  { /* We put the mesh in its own scope so that it is automatically destroyed at the end of the scope.
+     * This is only necessary because sc_finalize checks if there are leftover references.
      * This unique pointer would have been destroyed automatically at the end of the programme. */
     using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
                                             t8_mesh_handle::data_mesh_competences<data_per_element_type>>;

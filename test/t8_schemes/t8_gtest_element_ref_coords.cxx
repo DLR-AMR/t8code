@@ -232,7 +232,9 @@ struct class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, i
     const std::tuple<t8_eclass, int> params = GetParam ();
     const t8_eclass_t eclass = std::get<0> (params);
     const int level = std::get<1> (params);
-    t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
     t8_forest_init (&forest_partition);
     t8_forest_set_partition (forest_partition, forest, 0);

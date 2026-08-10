@@ -252,7 +252,8 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
       partition = 1;
     }
     /* Create a cmesh from the given mesh files */
-    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_cad);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, (char *) msh_file, partition, comm, mesh_dim, 0, use_cad);
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
@@ -375,10 +376,10 @@ main (int argc, char *argv[])
       vtu_prefix = mshfileprefix;
     }
     else if (test_tet) {
-      cmesh = t8_cmesh_new_tet_orientation_test (sc_MPI_COMM_WORLD);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_tet_orientation_test (cmesh, sc_MPI_COMM_WORLD);
       vtu_prefix = "test_tet";
     }
-
     else {
       T8_ASSERT (cmeshfileprefix != NULL);
       cmesh

@@ -144,7 +144,9 @@ TEST (t8_gtest_handle_adapt, compare_with_forest)
 {
   // Define forest, a mesh handle and user data.
   const int level = 3;
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, 0);
   const t8_scheme *init_scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, init_scheme, level, 0, sc_MPI_COMM_WORLD);
   using mesh_class = t8_mesh_handle::mesh<>;

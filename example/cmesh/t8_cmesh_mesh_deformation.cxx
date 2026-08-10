@@ -115,7 +115,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
     /* Create cmesh from msh. */
-    t8_cmesh_t cmesh = t8_cmesh_from_msh_file (msh_file, 0, comm, dim, 0, 1);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, msh_file, 0, comm, dim, 0, 1);
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
     /* Load CAD geometry from .brep file. */

@@ -46,7 +46,8 @@ struct forest_half_neighbors: public testing::TestWithParam<std::tuple<std::tupl
     eclass = std::get<1> (std::get<0> (GetParam ()));
     cmesh_type = std::get<1> (GetParam ());
     /* Construct a coarse mesh of one tree */
-    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
   }
 
   t8_eclass_t eclass;
