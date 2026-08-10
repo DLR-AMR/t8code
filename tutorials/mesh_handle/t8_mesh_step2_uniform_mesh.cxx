@@ -39,7 +39,7 @@
 */
 #include <t8.h>                                 /** General t8code header, always include this. */
 #include <mesh_handle/mesh.hxx>                 /** General Mesh Header, always needed for mesh_handle code. */
-#include <t8_cmesh/t8_cmesh.h>                  /** cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.h>                  /** Cmesh definition and basic interface. */
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <t8_schemes/t8_default/t8_default.hxx> /** Default refinement scheme. */
@@ -69,7 +69,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
  *  The mesh type is constrained by the \ref t8_mesh_handle::T8MeshType concept,
  *  which ensures that TMeshClass provides the required mesh handle interface. 
  * 
- * \tparam TMeshClass the mesh handle type to construct. It must satisfy the \ref t8_mesh_handle::T8MeshType concept. 
+ * \tparam TMeshClass The mesh class. 
  * \param [in] comm   MPI Communicator to use.
  * \param [in] cmesh  The coarse mesh to build the uniform mesh on.
  * \param [in] level  The initial uniform refinement level.
