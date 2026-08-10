@@ -40,13 +40,13 @@
 #include <t8.h>                                 /** General t8code header, always include this. */
 #include <mesh_handle/mesh.hxx>                 /** General Mesh Header, always needed for mesh_handle code. */
 #include <t8_cmesh/t8_cmesh.h>                  /** cmesh definition and basic interface. */
-#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
+#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
-#include <t8_schemes/t8_default/t8_default.hxx> /** default refinement scheme. */
+#include <t8_schemes/t8_default/t8_default.hxx> /** Default refinement scheme. */
 #include <memory>
 
 /** Builds cmesh of 2 prisms that build up a unit cube.
- * See step1 for a detailed description.
+ * See \ref tutorials/general/t8_step1_coarsemesh.cxx for a detailed description.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
@@ -104,8 +104,8 @@ main (int argc, char **argv)
 
   /** Print a message on the root process. */
   t8_global_productionf (" [t8_step2] \n");
-  t8_global_productionf (" [t8_step2] Hello, this is the step2 example of t8code using the mesh handle.\n");
-  t8_global_productionf (" [t8_step2] In this example we build our first uniform mesh and output it to vtu files.\n");
+  t8_global_productionf (" [t8_step2] Hello, this is step 2 of t8code's mesh handle tutorials.\n");
+  t8_global_productionf (" [t8_step2] In this tutorial we build our first uniform mesh and output it to vtu files.\n");
   t8_global_productionf (" [t8_step2] \n");
 
   /** We will use MPI_COMM_WORLD as a communicator. */
@@ -114,8 +114,8 @@ main (int argc, char **argv)
   /** Create the cmesh. */
   t8_cmesh_t cmesh = t8_step2_build_prismcube_coarse_mesh (comm);
   /**
-   * We will put the Mesh in a separate scope here, 
-   * because it will destroy itself completely on its own when reaching the end of this scope.
+   * We will put the mesh in a separate scope here, 
+   * because it will be destroyed automatically at the end of this scope. This is only needed because SC_CHECK_MPI checks for leftover references. Otherwise, it would be destroyed at the end of the main function.
   */
   {
     /** Build the uniform mesh. */
