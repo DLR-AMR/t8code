@@ -3,7 +3,8 @@
 This is the tutorial collection for the [mesh_handle](../../mesh_handle/README.md) interface of `t8code`. 
 
 The `mesh handle` interface acts as a bridge between the user and the tree-based t8code library. When using the mesh handle, t8code acts as if it is working with usual unstructured meshes. 
-Have a look at the [mesh handle README](../mesh_handle/README.md) for more information.   
+Have a look at the [mesh handle README](../../mesh_handle/README.md) for more information.   
+
 
 There are corresponding articles for every tutorial in this folder in the [Wiki](https://github.com/DLR-AMR/t8code/wiki/Tutorial---Overview). The article can be used as a step-by-step guide for each tutorial. 
 
