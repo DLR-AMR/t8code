@@ -67,8 +67,9 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       EXPECT_TRUE (mesh_iterator->is_equal (*mesh_iterator));
       auto mesh_iterator_copy = mesh_iterator;
       mesh_iterator_copy++;
-      EXPECT_FALSE (mesh_iterator->is_equal (*mesh_iterator_copy));
-
+      if (mesh_iterator_copy != mesh.cend ()) {
+        EXPECT_FALSE (mesh_iterator->is_equal (*mesh_iterator_copy));
+      }
       t8_3D_vec ref = { 0.2, 0.3, 1 };
       t8_3D_vec a, b;
       mesh_iterator->get_reference_coordinates (ref, 1, a);

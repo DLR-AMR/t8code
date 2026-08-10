@@ -408,7 +408,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
    * \param [out] tree_ref_coords Pointer to the reference coordinates of the tree.
    */
   void
-  get_reference_coordinates (const t8_3D_vec ref_coords, std::size_t num_coords, t8_3D_vec tree_ref_coords) const
+  get_reference_coordinates (const t8_3D_vec& ref_coords, std::size_t num_coords, t8_3D_vec& tree_ref_coords) const
   {
     t8_forest_get_scheme (m_mesh->m_forest)
       ->element_get_reference_coords (get_tree_class (), m_element, ref_coords.data (), num_coords,
