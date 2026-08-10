@@ -38,7 +38,7 @@
  * all element shapes that t8code supports.
 */
 #include <t8.h>                                 /** General t8code header, always include this. */
-#include <mesh_handle/mesh.hxx>                 /** General Mesh Header, always needed for mesh_handle code. */
+#include <mesh_handle/mesh.hxx>                 /** General mesh header, always needed for mesh_handle code. */
 #include <t8_cmesh/t8_cmesh.h>                  /** Cmesh definition and basic interface. */
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
@@ -69,7 +69,7 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
  *  The mesh type is constrained by the \ref t8_mesh_handle::T8MeshType concept,
  *  which ensures that TMeshClass provides the required mesh handle interface. 
  * 
- * \tparam TMeshClass The mesh class. 
+ * \tparam TMeshClass the mesh handle type to construct. It must satisfy the \ref t8_mesh_handle::T8MeshType concept. 
  * \param [in] comm   MPI Communicator to use.
  * \param [in] cmesh  The coarse mesh to build the uniform mesh on.
  * \param [in] level  The initial uniform refinement level.
@@ -122,7 +122,9 @@ main (int argc, char **argv)
   t8_cmesh_t cmesh = t8_step2_build_prismcube_coarse_mesh (comm);
   /**
    * We will put the mesh in a separate scope here, 
-   * because it will be destroyed automatically at the end of this scope. This is only needed because SC_CHECK_MPI checks for leftover references. Otherwise, it would be destroyed at the end of the main function.
+   * because it will be destroyed automatically at the end of this scope. 
+   * This is only needed because SC_CHECK_MPI checks for leftover references. 
+   * Otherwise, it would be destroyed at the end of the main function.
   */
   {
     /** Build the uniform mesh using a mesh type that satisfies the T8MeshType concept.
