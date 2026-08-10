@@ -119,12 +119,11 @@ main (int argc, char** argv)
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
   /* Print a starting message. */
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-  t8_global_productionf (
-    " [t8 step 4 Mesh handle] Hello, this is the mesh adaptation example of t8code using the mesh handle.\n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] In this example we will create a mesh, adapt, partition, balance "
+  t8_global_productionf (" [mesh_step4] \n");
+  t8_global_productionf (" [mesh_step4] Hello, this is the mesh adaptation example of t8code using the mesh handle.\n");
+  t8_global_productionf (" [mesh_step4] In this example we will create a mesh, adapt, partition, balance "
                          "and create a ghost layer on it. \n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+  t8_global_productionf (" [mesh_step4] \n");
 
   /* The initial uniform refinement level. */
   int uniform_level = 3;
@@ -136,9 +135,9 @@ main (int argc, char** argv)
    * INITIAL MESH
   */
 
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] Creating initial mesh.\n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+  t8_global_productionf (" [mesh_step4] \n");
+  t8_global_productionf (" [mesh_step4] Creating initial mesh.\n");
+  t8_global_productionf (" [mesh_step4] \n");
   { /** Mesh scope begin. */
     /* Creating the initial mesh with uniform refinement. */
     auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
@@ -154,9 +153,9 @@ main (int argc, char** argv)
    * ADAPTED MESH
   */
 
-    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-    t8_global_productionf (" [t8 step 4 Mesh handle] Creating adapted mesh.\n");
-    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    t8_global_productionf (" [mesh_step4] \n");
+    t8_global_productionf (" [mesh_step4] Creating adapted mesh.\n");
+    t8_global_productionf (" [mesh_step4] \n");
 
     /** Call adaption helper function. */
     create_adapted_mesh (mesh, adapt_params);
@@ -172,9 +171,9 @@ main (int argc, char** argv)
    * PARTITIONED, BALANCED MESH
   */
 
-    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-    t8_global_productionf (" [t8 step 4 Mesh handle] Creating partitioned and balanced mesh.\n");
-    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    t8_global_productionf (" [mesh_step4] \n");
+    t8_global_productionf (" [mesh_step4] Creating partitioned and balanced mesh.\n");
+    t8_global_productionf (" [mesh_step4] \n");
 
     /** Adapting the mesh from above a second time to see a difference when balancing. */
     create_adapted_mesh (mesh, adapt_params);
@@ -193,9 +192,9 @@ main (int argc, char** argv)
    * GHOST MESH
   */
 
-    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-    t8_global_productionf (" [t8 step 4 Mesh handle] Creating ghost layer for mesh.\n");
-    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    t8_global_productionf (" [mesh_step4] \n");
+    t8_global_productionf (" [mesh_step4] Creating ghost layer for mesh.\n");
+    t8_global_productionf (" [mesh_step4] \n");
 
     /** Call ghost helper function. */
     create_ghost_mesh (mesh);
@@ -207,9 +206,9 @@ main (int argc, char** argv)
     t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "ghost_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
                                            false);
 
-    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-    t8_global_productionf (" [t8 step 4 Mesh handle] Finished all steps successfully.\n");
-    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    t8_global_productionf (" [mesh_step4] \n");
+    t8_global_productionf (" [mesh_step4] Finished all steps successfully.\n");
+    t8_global_productionf (" [mesh_step4] \n");
   } /** Mesh scope end. */
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
