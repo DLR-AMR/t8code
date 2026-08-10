@@ -43,6 +43,7 @@
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <t8_schemes/t8_default/t8_default.hxx> /** Default refinement scheme. */
+#include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
 #include <memory>
 
 /** Builds cmesh of 2 prisms that build up a unit cube.
@@ -58,28 +59,33 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
   /* Build a coarse mesh of 2 prisms that form a cube. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_PRISM, comm, 0, 0, 0);
-  t8_global_productionf (" [tutorial] Constructed coarse mesh with 2 prisms.\n");
+  t8_global_productionf (" [mesh_step2] Constructed coarse mesh with 2 prisms.\n");
 
   return cmesh;
 }
 
-/** Build a uniform mesh on a cmesh using the default refinement scheme. 
+/** Build a uniform mesh on a cmesh using the default refinement scheme.
+ * 
+ *  The mesh type is constrained by the \ref t8_mesh_handle::T8MeshType concept,
+ *  which ensures that TMeshClass provides the required mesh handle interface. 
+ * 
+ * \tparam TMeshClass the mesh handle type to construct. It must satisfy the \ref t8_mesh_handle::T8MeshType concept. 
  * \param [in] comm   MPI Communicator to use.
  * \param [in] cmesh  The coarse mesh to build the uniform mesh on.
  * \param [in] level  The initial uniform refinement level.
  * \return            A uniform mesh with the given refinement level that is
  *                    partitioned across the processes in \a comm.
  */
-template <typename MeshType>
-static std::unique_ptr<MeshType>
+template <t8_mesh_handle::T8MeshType TMeshClass>
+static std::unique_ptr<TMeshClass>
 t8_step2_build_uniform_mesh (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
 {
   const t8_scheme *scheme = t8_scheme_new_default (); /** Default refinement scheme. */
 
   /* Build the uniform mesh, it is automatically partitioned among the processes. */
-  std::unique_ptr<MeshType> mesh = t8_mesh_handle::handle_new_uniform<MeshType> (cmesh, scheme, level, comm);
+  std::unique_ptr mesh = t8_mesh_handle::handle_new_uniform<TMeshClass> (cmesh, scheme, level, comm);
 
-  t8_global_productionf (" [t8_step2] Constructed uniform mesh with refinement level %d.\n", level);
+  t8_global_productionf (" [mesh_step2] Constructed uniform mesh with refinement level %d.\n", level);
 
   return mesh;
 }
@@ -103,10 +109,11 @@ main (int argc, char **argv)
   t8_init (SC_LP_PRODUCTION);
 
   /** Print a message on the root process. */
-  t8_global_productionf (" [t8_step2] \n");
-  t8_global_productionf (" [t8_step2] Hello, this is step 2 of t8code's mesh handle tutorials.\n");
-  t8_global_productionf (" [t8_step2] In this tutorial we build our first uniform mesh and output it to vtu files.\n");
-  t8_global_productionf (" [t8_step2] \n");
+  t8_global_productionf (" [mesh_step2] \n");
+  t8_global_productionf (" [mesh_step2] Hello, this is step 2 of t8code's mesh handle tutorials.\n");
+  t8_global_productionf (
+    " [mesh_step2] In this tutorial we build our first uniform mesh and output it to vtu files.\n");
+  t8_global_productionf (" [mesh_step2] \n");
 
   /** We will use MPI_COMM_WORLD as a communicator. */
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
@@ -118,25 +125,30 @@ main (int argc, char **argv)
    * because it will be destroyed automatically at the end of this scope. This is only needed because SC_CHECK_MPI checks for leftover references. Otherwise, it would be destroyed at the end of the main function.
   */
   {
-    /** Build the uniform mesh. */
-    auto mesh = t8_step2_build_uniform_mesh<t8_mesh_handle::mesh<>> (comm, cmesh, level);
+    /** Build the uniform mesh using a mesh type that satisfies the T8MeshType concept.
+     *  The mesh class is templated so that further capabilities and features that not needed by default can be added.
+     *  In this case, the default mesh class is sufficient. 
+     */
+    using mesh_class = t8_mesh_handle::mesh<>;
+
+    auto mesh = t8_step2_build_uniform_mesh<mesh_class> (comm, cmesh, level);
     /** Get the number of local elements. */
     const t8_locidx_t local_num_elements = mesh->get_num_local_elements ();
     /** Get the number of global elements. */
     const t8_gloidx_t global_num_elements = mesh->get_num_global_elements ();
 
     /** Print information on the mesh. */
-    t8_global_productionf (" [t8_step2] Created uniform mesh.\n");
-    t8_global_productionf (" [t8_step2] Refinement level:\t\t\t%i\n", level);
-    t8_global_productionf (" [t8_step2] Local number of elements:\t\t%i\n", local_num_elements);
-    t8_global_productionf (" [t8_step2] Global number of elements:\t%" T8_GLOIDX_FORMAT "\n", global_num_elements);
+    t8_global_productionf (" [mesh_step2] Created uniform mesh.\n");
+    t8_global_productionf (" [mesh_step2] Refinement level:\t\t\t%i\n", level);
+    t8_global_productionf (" [mesh_step2] Local number of elements:\t\t%i\n", local_num_elements);
+    t8_global_productionf (" [mesh_step2] Global number of elements:\t%" T8_GLOIDX_FORMAT "\n", global_num_elements);
 
     /** Write mesh to vtu files. */
     t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix);
-    t8_global_productionf (" [t8_step2] Wrote mesh to vtu files:\t%s*\n", prefix);
+    t8_global_productionf (" [mesh_step2] Wrote mesh to vtu files:\t%s*\n", prefix);
 
   } /** End of Mesh scope. */
-  t8_global_productionf (" [t8_step2] Mesh scope ended.\n");
+  t8_global_productionf (" [mesh_step2] Mesh scope ended.\n");
 
   sc_finalize ();
 
