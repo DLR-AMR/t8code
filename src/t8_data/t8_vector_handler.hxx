@@ -339,8 +339,8 @@ struct t8_vector_handler: public t8_abstract_vector_handler
       /* Compute sizes of outgoing and incoming messages */
       const int send_num_bytes = buffer_size (comm);
       int recv_num_bytes = 0;
-      int mpiret = MPI_Sendrecv (&send_num_bytes, 1, sc_MPI_INT, dest, tag, &recv_num_bytes, 1, sc_MPI_INT, source, tag,
-                                 comm, status);
+      int mpiret = sc_MPI_Sendrecv (&send_num_bytes, 1, sc_MPI_INT, dest, tag, &recv_num_bytes, 1, sc_MPI_INT, source,
+                                    tag, comm, status);
       SC_CHECK_MPI (mpiret);
 
       /* Prepare send buffer */
@@ -352,7 +352,7 @@ struct t8_vector_handler: public t8_abstract_vector_handler
       std::vector<char> recv_buffer (recv_num_bytes);
 
       /* Actual sendrecv of data */
-      mpiret = MPI_Sendrecv (
+      mpiret = sc_MPI_Sendrecv (
         /* send payload */
         send_buffer.data (), send_num_bytes, sc_MPI_PACKED, dest, tag,
         /* receive payload */

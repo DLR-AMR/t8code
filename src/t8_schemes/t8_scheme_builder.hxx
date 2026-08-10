@@ -21,7 +21,7 @@
 */
 
 /** \file t8_scheme_builder.hxx
- * This file defines a scheme builder, which buildy schemes by adding 
+ * This file defines a scheme builder, which builds schemes by adding 
  * element class schemes to a scheme.
  */
 
