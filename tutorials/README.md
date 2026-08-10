@@ -29,10 +29,13 @@ Associating user data with a forest's elements. Exchanging ghost values for elem
 [step6](https://github.com/DLR-AMR/t8code/wiki/Step-6-Computing-stencils) - 
 Gather data from element's face neighbors and collect stencils in, e.g., finite difference computations.
 
+
+[step7](https://github.com/DLR-AMR/t8code/wiki/Step-7-Interpolation) - Changing a mesh with element data on it: Partitioning element data and interpolating data after adaptation.
+
 [Search](https://github.com/DLR-AMR/t8code/wiki/Tutorial:-Search) - 
 A tutorial for the hierarchical search to identify elements matching a user defined criterion.
 
-[Cmesh](https://github.com/DLR-AMR/t8code/wiki/Build-Cmesh)
+[Cmesh](https://github.com/DLR-AMR/t8code/wiki/Building-a-Cmesh-by-hand)
 Creating a user defined mesh in two- and three dimensions.
 
 
