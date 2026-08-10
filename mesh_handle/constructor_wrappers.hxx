@@ -21,8 +21,8 @@
 */
 
 /** \file constructor_wrappers.hxx
- * Wrapper to construct a mesh handle instance from a cmesh. 
- * Additionally, a very small fraction of example coarse meshes is wrapped directly for easy access and 
+ * Wrapper to construct a mesh handle instance from a cmesh.
+ * Additionally, a very small fraction of example coarse meshes is wrapped directly for easy access and
  * for the use in tests.
  * See \ref t8_cmesh_examples.h for more exemplary cmeshes to be put into the wrapper constructors.
  */
@@ -78,7 +78,6 @@ handle_new_uniform_default (const t8_cmesh_t cmesh, const int level, const sc_MP
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex. Refined uniformly to given level using the default scheme.
  * \param [in] level         An initial uniform refinement level.
  * \param [in] comm          MPI communicator to use.
- * \param [in] do_partition  If non-zero create a partitioned cmesh.
  * \param [in] do_face_ghost If true, a layer of ghost elements is created.
  * \param [in] periodic      If non-zero create a periodic cmesh in each direction.
  * \tparam TMeshClass        The mesh handle class.
@@ -87,10 +86,12 @@ handle_new_uniform_default (const t8_cmesh_t cmesh, const int level, const sc_MP
 */
 template <T8MeshType TMeshClass>
 std::unique_ptr<TMeshClass>
-handle_hypercube_hybrid_uniform_default (const int level, const sc_MPI_Comm comm, const bool do_partition = false,
-                                         const bool do_face_ghost = false, const bool periodic = false)
+handle_hypercube_hybrid_uniform_default (const int level, const sc_MPI_Comm comm, const bool do_face_ghost = false,
+                                         const bool periodic = false)
 {
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (comm, do_partition, periodic);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, comm, periodic);
   return handle_new_uniform_default<TMeshClass> (cmesh, level, comm, do_face_ghost);
 }
 
@@ -111,7 +112,9 @@ handle_hypercube_uniform_default (t8_eclass_t eclass, const int level, const sc_
                                   const bool periodic = false)
 {
   // Broadcast option is hidden from the user.
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, do_partition, periodic);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, eclass, comm, 0, do_partition, periodic);
   return handle_new_uniform_default<TMeshClass> (cmesh, level, comm, do_face_ghost);
 }
 

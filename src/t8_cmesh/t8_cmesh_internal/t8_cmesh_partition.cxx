@@ -1472,10 +1472,10 @@ t8_cmesh_partition_given (const t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, c
    *       should be enough to receive all messages in a while loop. */
 
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (cmesh->set_partition);
   T8_ASSERT (cmesh_from != NULL);
-  T8_ASSERT (cmesh_from->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh_from, 0));
 
   /* determine send and receive range. temp_tree is last local tree of send_first in new partition */
   cmesh->first_tree = t8_offset_first (cmesh->mpirank, tree_offset);
@@ -1559,7 +1559,7 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   T8_ASSERT (t8_cmesh_is_committed (cmesh->set_from));
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (cmesh->set_partition);
 
   t8_global_productionf ("Enter cmesh partition\n");

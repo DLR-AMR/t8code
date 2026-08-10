@@ -43,22 +43,20 @@
 void
 t8_cad_handle::load (const std::string_view fileprefix)
 {
-  TopoDS_Shape loaded_cad_shape;
   BRep_Builder bob;
   const std::string filename = std::string (fileprefix) + ".brep";
   std::ifstream is (filename);
   if (is.is_open () == false) {
     SC_ABORTF ("Cannot find the file %s.\n", filename.c_str ());
   }
-  BRepTools::Read (loaded_cad_shape, is, bob);
+  BRepTools::Read (cad_shape, is, bob);
   is.close ();
   if (cad_shape.IsNull ()) {
     SC_ABORTF ("Could not read brep file or brep file contains no shape. "
-               "The cad file may be written with a newer cad version. "
-               "Linked cad version: %s",
+               "The cad file may be written with a newer OCC version. "
+               "Linked OCC version: %s",
                OCC_VERSION_COMPLETE);
   }
-  this->cad_shape = std::move (loaded_cad_shape);
   map ();
 }
 
@@ -68,7 +66,7 @@ t8_cad_handle::load (TopoDS_Shape cad_shape_in)
   if (cad_shape_in.IsNull ()) {
     SC_ABORTF ("Shape is null. \n");
   }
-  this->cad_shape = std::move (cad_shape_in);
+  cad_shape = std::move (cad_shape_in);
   map ();
 }
 
@@ -97,24 +95,22 @@ t8_cad_handle::map ()
 t8_cad_handle::t8_cad_handle (const std::string_view fileprefix)
 {
   t8_refcount_init (&rc);
-  t8_debugf ("Constructed the cad_handle from file.\n");
-
   load (fileprefix);
+  t8_debugf ("Constructed the cad_handle from file.\n");
 }
 
 t8_cad_handle::t8_cad_handle (TopoDS_Shape cad_shape_in)
 {
   t8_refcount_init (&rc);
-  t8_debugf ("Constructed the cad_handle from shape.\n");
-
   load (std::move (cad_shape_in));
+  t8_debugf ("Constructed the cad_handle from shape.\n");
 }
 
 t8_cad_handle::t8_cad_handle ()
 {
   t8_refcount_init (&rc);
-  t8_debugf ("Constructed the empty cad_handle.\n");
   cad_shape.Nullify ();
+  t8_debugf ("Constructed the empty cad_handle.\n");
 }
 
 t8_cad_handle::~t8_cad_handle ()

@@ -181,19 +181,6 @@ TEST_P (element_is_leaf_or_ghost, element_is_ghost_adapt)
   t8_test_element_is_leaf_for_forest (forest_adapt);
 }
 
-/* Define a lambda to beautify gtest output for tuples <scheme, level, cmesh>.
- * This will set the correct scheme, level and cmesh name as part of the test case name. */
-auto pretty_print_level_and_cmesh_params
-  = [] (const testing::TestParamInfo<std::tuple<int, int, cmesh_example_base *>> &info) {
-      std::string name = std::string ("Level_") + std::to_string (std::get<1> (info.param));
-      std::string cmesh_name;
-      std::get<2> (info.param)->param_to_string (cmesh_name);
-      name += std::string ("_") + cmesh_name;
-      name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
-      name += std::string ("_") + std::to_string (info.index);
-      return name;
-    };
-
 INSTANTIATE_TEST_SUITE_P (t8_gtest_element_is_leaf_or_ghost, element_is_leaf_or_ghost,
                           testing::Combine (AllSchemeCollections, testing::Range (0, T8_IS_LEAF_MAX_LVL),
                                             AllCmeshsParam),

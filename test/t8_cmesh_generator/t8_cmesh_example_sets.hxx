@@ -63,6 +63,20 @@ auto pretty_print_base_example_scheme = [] (const testing::TestParamInfo<std::tu
   return name;
 };
 
+/** Define a lambda to beautify gtest output for tuples <scheme, level, cmesh>.
+ * Intended as a lambda to pass to an INSTANTIATE_TEST_SUITE_P
+ * to print the current scheme, level and \ref cmesh_example_base. */
+auto pretty_print_level_and_cmesh_params
+  = [] (const testing::TestParamInfo<std::tuple<int, int, cmesh_example_base *>> &info) {
+      std::string name = std::string ("Level_") + std::to_string (std::get<1> (info.param));
+      std::string cmesh_name;
+      std::get<2> (info.param)->param_to_string (cmesh_name);
+      name += std::string ("_") + cmesh_name;
+      name += std::string ("scheme_") + std::to_string (std::get<0> (info.param));
+      name += std::string ("_") + std::to_string (info.index);
+      return name;
+    };
+
 namespace cmesh_list
 {
 /** Vector of all example cmesh sets. */

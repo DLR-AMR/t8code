@@ -81,7 +81,9 @@ struct data_per_element
 static t8_forest_t
 t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
-  t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_periodic (cmesh, comm, dim);
 
   const t8_scheme *scheme = t8_scheme_new_default ();
   struct t8_step3_adapt_data adapt_data = {

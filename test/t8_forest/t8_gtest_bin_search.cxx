@@ -59,7 +59,9 @@ class t8_bin_search_tester: public testing::TestWithParam<std::tuple<std::tuple<
     scheme = create_from_scheme_id (scheme_id);
     const t8_eclass_t tree_class = std::get<1> (std::get<0> (GetParam ()));
     const int level = std::get<1> (GetParam ());
-    t8_cmesh_t cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, tree_class, sc_MPI_COMM_WORLD);
 
     // Construct a uniform forest
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);

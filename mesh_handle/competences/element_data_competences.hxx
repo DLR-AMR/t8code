@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file data_handler.hxx
+/** \file element_data_competences.hxx
  * Handler for the element data of a \ref t8_mesh_handle::mesh.
  * The file defines a mesh and an element competence for element data handling.
  * Use both competences together if you want to manage element data for the elements of the mesh and access it directly for each element.
@@ -28,7 +28,7 @@
 #pragma once
 
 #include <t8.h>
-#include "concepts.hxx"
+#include <mesh_handle/concepts.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_crtp.hxx>
 #include <type_traits>
