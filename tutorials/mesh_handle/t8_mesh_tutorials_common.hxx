@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file default_adapt_callback.hxx
+/** \file t8_mesh_tutorials_common.hxx
  * This is the default adaptation callback function that can be used to refine and coarsen a mesh in a spherical shape around a given point.
  * It is used in step 3, 4 and 5 in the mesh_handle tutorials.
  */
@@ -37,7 +37,7 @@
  * In this example we want to adapt in a spherical shape around a given point. */
 struct adapt_data
 {
-  t8_3D_vec midpoint;    /**< midpoint of our sphere. */
+  t8_3D_vec midpoint;    /**< Midpoint of our sphere. */
   double refine_radius;  /**< We refine inside this radius of our sphere.*/
   double coarsen_radius; /**< We coarsen outside this radius of our sphere. */
 };
@@ -66,7 +66,7 @@ default_adapt_callback ([[maybe_unused]] const mesh_type& mesh,
   auto element_centroid = elements[0].get_centroid ();
 
   double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_data.midpoint);
-  /**< When this if Statement returns true, we are inside the set radius of our "refinement Sphere" of our point and therefor need to refine. */
+  /** When this if statement returns true, we are inside the set radius of our "refinement sphere" of our point and therefore need to refine. */
   if (dist < adapt_data.refine_radius) {
     return 1; /**< Refine. */
   }

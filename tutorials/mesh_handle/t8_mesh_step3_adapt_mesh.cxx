@@ -37,9 +37,9 @@
 */
 
 #include <t8.h>                            /** General t8code header. Always include this. */
-#include <mesh_handle/mesh.hxx>            /** General Mesh header. Always needed for mesh_handle code. */
-#include <mesh_handle/competence_pack.hxx> /** Competence Pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
-#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
+#include <mesh_handle/mesh.hxx>            /** General mesh header. Always needed for mesh_handle code. */
+#include <mesh_handle/competence_pack.hxx> /** Competence pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
+#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
 #include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
@@ -47,7 +47,7 @@
 
 /** Build our adapted mesh by transferring the adaption parameters and adapting once with our \ref adapt_callback function.
  * \tparam TMeshClass    The mesh handle class.
- * \param sc_MPI_Comm    The MPI Communicator.
+ * \param sc_MPI_Comm    The MPI communicator.
  * \param level          The initial uniform refinement level.
  * \returns Unique pointer to the adapted mesh.
  */
@@ -59,7 +59,7 @@ build_mesh (sc_MPI_Comm comm, int level)
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
   /* Defining the adaption parameters. */
   adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
-  /* Adapting once with our adapt_callback function. */
+  /* Adapting once using our adapt callback. */
   mesh->set_adapt (
     TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (default_adapt_callback<TMeshClass>, adapt_params));
   mesh->commit ();
@@ -70,9 +70,9 @@ build_mesh (sc_MPI_Comm comm, int level)
 int
 main (int argc, char **argv)
 {
-  /*Initialize MPI. This has to happen before we initialize sc or t8code. */
+  /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   int mpiret = sc_MPI_Init (&argc, &argv);
-  /*Error check the MPI return value. */
+  /* Error check the MPI return value. */
   SC_CHECK_MPI (mpiret);
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);

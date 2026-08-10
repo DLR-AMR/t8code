@@ -22,7 +22,7 @@
 
 /** \file t8_mesh_element_data.cxx
  * This is step4 of the t8code mesh handle tutorials.
- * Therefor, this is the same as general/t8_step4_partition_balance_ghost.cxx but using the mesh handle interface instead of the forest 
+ * Therefore, this is the same as general/t8_step4_partition_balance_ghost.cxx but using the mesh handle interface instead of the forest 
  * interface.
  * After generating a coarse mesh (step1), building a uniform mesh
  * on it (step2) and adapting this mesh (step3)
@@ -40,7 +40,7 @@
 #include <memory>
 #include <iostream>
 
-using mesh_type = t8_mesh_handle::mesh<>; /**< To simplify the Code. */
+using mesh_type = t8_mesh_handle::mesh<>; /**< Mesh class used in this tutorial. We define it globally to get rid of the function templates to simplify the code. */
 
 /** Helper function to print the total number of elements in the mesh after each step.
  *  \param mesh  The mesh handle to get the number of elements from.
@@ -84,7 +84,6 @@ create_adapted_mesh (const std::unique_ptr<mesh_type>& mesh, const adapt_data& a
 
 /** Helper function to create a partitioned and balanced mesh from an initial mesh.
  *  \param mesh  The initial mesh to adapt.
- *  \param adapt_params  The adaptation parameters to use for the adaptation.
  *  \return A unique pointer to the partitioned and balanced mesh.
 */
 std::unique_ptr<mesh_type>
@@ -105,9 +104,9 @@ create_partitioned_balanced_mesh (const std::unique_ptr<mesh_type>& mesh)
   return mesh_partition_balance;
 }
 
-/** Helper function to create a ghost mesh from an initial mesh.
+/** Helper function to create a mesh with ghosts from an initial mesh.
  *  \param mesh  The initial mesh to adapt.
- *  \return A unique pointer to the new mesh with ghost layers.
+ *  \return A unique pointer to the new mesh with a ghost layer.
 */
 std::unique_ptr<mesh_type>
 create_ghost_mesh (const std::unique_ptr<mesh_type>& mesh)
@@ -167,7 +166,7 @@ main (int argc, char** argv)
   /* Printing the mesh information. */
   print_mesh_stats (mesh, "Initial mesh", comm);
 
-  /* Writing the Mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
+  /* Writing the mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
   t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "initial_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
                                          false);
 
@@ -215,13 +214,13 @@ main (int argc, char** argv)
     */
 
   t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] Creating ghost mesh.\n");
+  t8_global_productionf (" [t8 step 4 Mesh handle] Creating ghost layer for mesh.\n");
   t8_global_productionf (" [t8 step 4 Mesh handle] \n");
 
   /** Call creation function. */
   auto mesh_ghost = create_ghost_mesh (mesh_partition_balance);
 
-  /* Printing the mesh information*/
+  /* Printing the mesh information. */
   print_mesh_stats (mesh_ghost, "Ghost mesh", comm);
 
   /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
