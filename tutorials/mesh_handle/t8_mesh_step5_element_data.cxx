@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_mesh_element_data.cxx
+/** \file t8_mesh_step5_element_data.cxx
  * This is step5 of the mesh handle tutorials.
  * Therefore, this is the same as general/t8_step5_element_data.cxx but using the mesh handle interface instead of the forest
  * interface.
@@ -73,7 +73,7 @@ build_mesh (sc_MPI_Comm comm, int level)
   mesh_handle->set_balance ();
   mesh_handle->set_partition ();
   mesh_handle->set_adapt (
-    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (&default_adapt_callback<TMeshClass>, adapt_params));
+    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback_sphere<TMeshClass>, adapt_params));
   mesh_handle->set_ghost ();
   mesh_handle->commit ();
   return mesh_handle;

@@ -48,7 +48,7 @@ struct adapt_data
  * This will refine elements inside of a given sphere and coarsen elements
  * outside of a given sphere.
  *
- * \tparam mesh_type The mesh handle class.
+ * \tparam TMeshClass The mesh handle class.
  * \param[in] mesh The mesh that should be adapted.
  * \param[in] elements One element or a family of elements to consider.
  * \param[in] adapt_data The user data used during adaptation.
@@ -58,10 +58,10 @@ struct adapt_data
  *  -1  if the family of elements should be coarsened,
  *   0  otherwise.
  */
-template <t8_mesh_handle::T8MeshType mesh_type>
+template <t8_mesh_handle::T8MeshType TMeshClass>
 int
-default_adapt_callback ([[maybe_unused]] const mesh_type& mesh,
-                        std::span<const typename mesh_type::element_class> elements, const adapt_data& adapt_data)
+adapt_callback_sphere ([[maybe_unused]] const TMeshClass& mesh,
+                       std::span<const typename TMeshClass::element_class> elements, const adapt_data& adapt_data)
 {
   auto element_centroid = elements[0].get_centroid ();
 

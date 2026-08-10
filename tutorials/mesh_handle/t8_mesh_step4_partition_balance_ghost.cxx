@@ -31,16 +31,17 @@
  */
 
 #include <t8.h>                                 /** General t8code header. Always include this. */
-#include <mesh_handle/mesh.hxx>                 /** General Mesh header. Always needed for mesh_handle code. */
+#include <mesh_handle/mesh.hxx>                 /** General mesh header. Always needed for mesh_handle code. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
-#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic Cmesh to mesh_handle conversions. */
+#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
 #include <t8_types/t8_vec.hxx>      /** t8 vector dataclass. */
 #include "t8_mesh_tutorials_common.hxx" /** Default adaption function. */
 #include <memory>
 #include <iostream>
 
-using mesh_type = t8_mesh_handle::mesh<>; /**< Mesh class used in this tutorial. We define it globally to get rid of the function templates to simplify the code. */
+using mesh_type = t8_mesh_handle::
+  mesh<>; /**< Mesh class used in this tutorial. We define it globally to get rid of the function templates to simplify the code. */
 
 /** Helper function to print the total number of elements in the mesh after each step.
  *  \param mesh  The mesh handle to get the number of elements from.
@@ -54,73 +55,51 @@ print_mesh_stats (const std::unique_ptr<mesh_type>& mesh, const char* stage, sc_
   int global_elements = 0;
   MPI_Allreduce (&local_elements, &global_elements, 1, MPI_INT, MPI_SUM, comm);
 
-  int rank = 0;
-  MPI_Comm_rank (comm, &rank);
-  if (rank == 0) {
-    std::cout << "=== " << stage << " ===" << std::endl;
-    std::cout << "Total elements: " << global_elements << std::endl;
-  }
+  t8_global_productionf (" [mesh_step4] === %s === \n", stage);
+  t8_global_productionf (" [mesh_step4] Total elements: %i \n", global_elements);
 }
 
 /** Helper function to create an adapted mesh from an initial mesh.
  *  \param mesh  The initial mesh to adapt.
  *  \param adapt_params  The adaptation parameters to use for the adaptation.
- *  \return A unique pointer to the adapted mesh.
 */
-std::unique_ptr<mesh_type>
-create_adapted_mesh (const std::unique_ptr<mesh_type>& mesh, const adapt_data& adapt_params)
+void
+create_adapted_mesh (std::unique_ptr<mesh_type>& mesh, const adapt_data& adapt_params)
 {
-  /* Creating the adapted mesh as a copy of the given mesh*/
-  auto mesh_adapt = std::make_unique<mesh_type> (*mesh);
-
-  /* Adapting the mesh once with our adapt_callback function from step 3 and the parameters defined above. */
-  mesh_adapt->set_adapt (
-    mesh_type::template mesh_adapt_callback_wrapper<adapt_data> (&default_adapt_callback<mesh_type>, adapt_params));
+  /* Adapting the mesh once with our adapt_callback_sphere function from step 3 and the adapt_params. Both can be found in the file \ref t8_mesh_tutorials_common.hxx. */
+  mesh->set_adapt (
+    mesh_type::template mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback_sphere<mesh_type>, adapt_params));
   /* Committing the adapted mesh. */
-  mesh_adapt->commit ();
-
-  return mesh_adapt;
+  mesh->commit ();
 }
 
 /** Helper function to create a partitioned and balanced mesh from an initial mesh.
  *  \param mesh  The initial mesh to adapt.
- *  \return A unique pointer to the partitioned and balanced mesh.
 */
-std::unique_ptr<mesh_type>
+void
 create_partitioned_balanced_mesh (const std::unique_ptr<mesh_type>& mesh)
 {
-  /* Creating the partition and balance mesh as a copy of the given mesh. */
-  auto mesh_partition_balance = std::make_unique<mesh_type> (*mesh);
+  /* Calculate partition information.*/
+  mesh->set_partition ();
 
-  /* Partitioning the mesh.*/
-  mesh_partition_balance->set_partition ();
+  /* Calculate balancing information. */
+  mesh->set_balance ();
 
-  /* Balancing the mesh. */
-  mesh_partition_balance->set_balance ();
-
-  /* Committing the partitioned and balanced mesh. */
-  mesh_partition_balance->commit ();
-
-  return mesh_partition_balance;
+  /* Committing the mesh --> modifying the mesh according to the precalculated information. */
+  mesh->commit ();
 }
 
 /** Helper function to create a mesh with ghosts from an initial mesh.
  *  \param mesh  The initial mesh to adapt.
- *  \return A unique pointer to the new mesh with a ghost layer.
 */
-std::unique_ptr<mesh_type>
+void
 create_ghost_mesh (const std::unique_ptr<mesh_type>& mesh)
 {
-  /* Creating the ghost mesh as a copy of the given mesh. */
-  auto mesh_ghost = std::make_unique<mesh_type> (*mesh);
-
   /* Creating the ghost layers. */
-  mesh_ghost->set_ghost ();
+  mesh->set_ghost ();
 
   /* Committing the ghost mesh. */
-  mesh_ghost->commit ();
-
-  return mesh_ghost;
+  mesh->commit ();
 }
 
 /** Entry point of the program. */
@@ -143,7 +122,8 @@ main (int argc, char** argv)
   t8_global_productionf (" [t8 step 4 Mesh handle] \n");
   t8_global_productionf (
     " [t8 step 4 Mesh handle] Hello, this is the mesh adaptation example of t8code using the mesh handle.\n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] In this example we will Us\n");
+  t8_global_productionf (" [t8 step 4 Mesh handle] In this example we will create a mesh, adapt, partition, balance "
+                         "and create a ghost layer on it. \n");
   t8_global_productionf (" [t8 step 4 Mesh handle] \n");
 
   /* The initial uniform refinement level. */
@@ -153,84 +133,84 @@ main (int argc, char** argv)
   struct adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
 
   /**
-     * INITIAL MESH
-    */
+   * INITIAL MESH
+  */
 
   t8_global_productionf (" [t8 step 4 Mesh handle] \n");
   t8_global_productionf (" [t8 step 4 Mesh handle] Creating initial mesh.\n");
   t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+  { /** Mesh scope begin. */
+    /* Creating the initial mesh with uniform refinement. */
+    auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
 
-  /* Creating the initial mesh with uniform refinement. */
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
+    /* Printing the mesh information. */
+    print_mesh_stats (mesh, "Initial mesh", comm);
 
-  /* Printing the mesh information. */
-  print_mesh_stats (mesh, "Initial mesh", comm);
+    /* Writing the mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
+    t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "initial_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
+                                           false);
 
-  /* Writing the mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
-  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "initial_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
-                                         false);
+    /** 
+   * ADAPTED MESH
+  */
 
-  /** 
-     * ADAPTED MESH
-    */
+    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    t8_global_productionf (" [t8 step 4 Mesh handle] Creating adapted mesh.\n");
+    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
 
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] Creating adapted mesh.\n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    /** Call adaption helper function. */
+    create_adapted_mesh (mesh, adapt_params);
 
-  /** Call creation function. */
-  auto mesh_adapt = create_adapted_mesh (mesh, adapt_params);
+    /* Printing the mesh information. */
+    print_mesh_stats (mesh, "Adapted mesh", comm);
 
-  /* Printing the mesh information. */
-  print_mesh_stats (mesh_adapt, "Adapted mesh", comm);
+    /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
+    t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "adapted_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
+                                           false);
 
-  /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
-  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh_adapt, "adapted_mesh.vtu", 0, nullptr, true, true, true, true, true,
-                                         false, false);
+    /**
+   * PARTITIONED, BALANCED MESH
+  */
 
-  /**
-     * PARTITIONED, BALANCED MESH
-    */
+    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    t8_global_productionf (" [t8 step 4 Mesh handle] Creating partitioned and balanced mesh.\n");
+    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
 
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] Creating partitioned and balanced mesh.\n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    /** Adapting the mesh from above a second time to see a difference when balancing. */
+    create_adapted_mesh (mesh, adapt_params);
 
-  /** Adapting the mesh from above a second time to see a difference when balancing. */
-  auto mesh_adapt_second = create_adapted_mesh (mesh_adapt, adapt_params);
+    /** Call partitioning and balancing helper function. */
+    create_partitioned_balanced_mesh (mesh);
 
-  /** Call creation function. */
-  auto mesh_partition_balance = create_partitioned_balanced_mesh (mesh_adapt_second);
+    /* Printing the mesh information. */
+    print_mesh_stats (mesh, "Partitioned and Balanced mesh", comm);
 
-  /* Printing the mesh information. */
-  print_mesh_stats (mesh_partition_balance, "Partitioned and Balanced mesh", comm);
+    /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
+    t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "partition_balance_mesh.vtu", 0, nullptr, true, true, true, true,
+                                           true, false, false);
 
-  /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
-  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh_partition_balance, "partition_balance_mesh.vtu", 0, nullptr, true, true,
-                                         true, true, true, false, false);
+    /**
+   * GHOST MESH
+  */
 
-  /**
-     * GHOST MESH
-    */
+    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    t8_global_productionf (" [t8 step 4 Mesh handle] Creating ghost layer for mesh.\n");
+    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
 
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] Creating ghost layer for mesh.\n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    /** Call ghost helper function. */
+    create_ghost_mesh (mesh);
 
-  /** Call creation function. */
-  auto mesh_ghost = create_ghost_mesh (mesh_partition_balance);
+    /* Printing the mesh information. */
+    print_mesh_stats (mesh, "Ghost mesh", comm);
 
-  /* Printing the mesh information. */
-  print_mesh_stats (mesh_ghost, "Ghost mesh", comm);
+    /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
+    t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "ghost_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
+                                           false);
 
-  /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
-  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh_ghost, "ghost_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
-                                         false);
-
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] Finished all steps successfully.\n");
-  t8_global_productionf (" [t8 step 4 Mesh handle] \n");
-
+    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+    t8_global_productionf (" [t8 step 4 Mesh handle] Finished all steps successfully.\n");
+    t8_global_productionf (" [t8 step 4 Mesh handle] \n");
+  } /** Mesh scope end. */
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
