@@ -24,12 +24,12 @@
  *  Implements functions declared in \ref t8_subelement.hxx.
  */
 
+#include <t8_schemes/t8_scheme_builder.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
+#include <t8_eclass/t8_eclass.h>
+#include "t8_subelement_scheme.hxx"
 #include "specializations/t8_scheme_quads.hxx"
 #include "specializations/t8_scheme_tri.hxx"
-#include "t8_eclass/t8_eclass.h"
-#include "t8_subelement_scheme.hxx"
-#include <t8_schemes/t8_scheme_builder.hxx>
 
 const t8_scheme *
 t8_scheme_new_subelement (void)

@@ -20,31 +20,36 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file TODO
+/** \file t8_subelement_scheme.hxx
+ * Common functionality for schemes that support subelements.
+ * Subelements are temporary elements used after common recursive adaptation and are discarded before the next
+ * adaptation cycle. 
+ * Scheme-specific subelement functionality is provided by the corresponding specialization in the specializations 
+ * folder and this file only implements functionality that is equal for all subelements.
  */
 #pragma once
 
 #include <t8.h>
-#include <t8_schemes/t8_scheme.hxx>
 #include <sc_functions.h>
+#include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
-#include <utility>
 #include "t8_subelement_traits.hxx"
+#include <utility>
 #include <algorithm>
 
 /** Scheme for the common functionality of all subelements. 
  * Subelements are discarded before the next adaptation cycle and do not have children.
  * \tparam TEclass The element class of the underlying elements which we want to define subelements for.
- *    The subelements themselves could have another eclass.
- * \tparam TSubelementSchemeSpecialization Specialization scheme for the subelements. Every time we need the subelement logic which 
- *    is not equal for all subelements, the scheme calls the functionality of this subelement scheme.
-
+ *         The subelements themselves could have another eclass.
+ * \tparam TSubelementSchemeSpecialization Specialization scheme for the subelements. Every time we need the subelement
+ *         logic which is not equal for all subelements, the scheme calls the functionality of this subelement scheme.
  */
 template <t8_eclass TEclass, typename TSubelementSchemeSpecialization>
 struct t8_subelement_scheme_common:
   public t8_scheme_helpers<TEclass, t8_subelement_scheme_common<TEclass, TSubelementSchemeSpecialization>>
 {
  public:
+  /** The subelement type used by this subelement scheme defined by a trait. */
   using TSubelementType = typename t8_subelement_traits<TSubelementSchemeSpecialization>::SubelementType;
 
   /** Constructor. */
@@ -223,7 +228,7 @@ struct t8_subelement_scheme_common:
   /** Compute the shape of the face of an element.
    * \param [in] elem     The element.
    * \param [in] face     A face of \a elem.
-   * \return              The element shape of the face. As we are in 2D, here always LINE.
+   * \return              The element shape of the face.
    */
   t8_element_shape_t
   element_get_face_shape (const t8_element_t *elem, const int face) const noexcept
@@ -462,8 +467,8 @@ struct t8_subelement_scheme_common:
   int
   elements_are_family (t8_element_t *const *fam) const noexcept
   {
-#if T8_ENABLE_DEBUG
     const int num_siblings = element_get_num_siblings (fam[0]);
+#if T8_ENABLE_DEBUG
     for (int isib = 0; isib < num_siblings; isib++) {
       T8_ASSERT (element_is_valid (fam[isib]));
     }
@@ -472,7 +477,7 @@ struct t8_subelement_scheme_common:
      * elements must be equal. */
     if (element_is_subelement (fam[0])) {
       auto element_0 = element_to_standalone (fam[0]);
-      for (int isib = 1; isib < element_get_num_siblings (fam[0]); ++isib) {
+      for (int isib = 1; isib < num_siblings; ++isib) {
         if (!element_is_subelement (fam[isib])
             || !derived ().underlying_scheme.element_is_equal (element_0, element_to_standalone (fam[isib]))) {
           return 0;
@@ -482,9 +487,10 @@ struct t8_subelement_scheme_common:
     }
     /* If the first element is no subelement, the remaining elements should not be subelements and 
      * they must form a family. */
-    t8_element_t **standalone_children_ptrs = T8_ALLOC (t8_element_t *, element_get_num_siblings (fam[0]));
-    for (int isib = 0; isib < element_get_num_siblings (fam[0]); ++isib) {
+    t8_element_t **standalone_children_ptrs = T8_ALLOC (t8_element_t *, num_siblings);
+    for (int isib = 0; isib < num_siblings; ++isib) {
       if (element_is_subelement (fam[isib])) {
+        T8_FREE (standalone_children_ptrs);
         return 0;
       }
       standalone_children_ptrs[isib] = element_to_standalone (fam[isib]);
@@ -548,7 +554,7 @@ struct t8_subelement_scheme_common:
   {
     derived ().underlying_scheme.element_get_first_descendant (element_to_standalone (elem),
                                                                element_to_standalone (desc), level);
-    reset_subelement_values ((TSubelementType *) desc);
+    reset_subelement_values (as_subelement (desc));
   }
 
   /** Compute the last descendant of a given element.
@@ -1118,7 +1124,7 @@ struct t8_subelement_scheme_common:
   }
 
   // ########################################____SUBELEMENTS____########################################################
-  /** Check if \ref elem is a subelement.
+  /** Check if \a elem is a subelement.
    * \param [in] elem The elem to be checked. 
    */
   static bool
@@ -1151,44 +1157,67 @@ struct t8_subelement_scheme_common:
 
  protected:
   // PRIVATE HELPER
+  /** Return the standalone element stored inside a subelement. 
+   * Const version.
+   * \param[in] subelement The subelement for which the standalone element should be extracted.
+   */
   static const t8_element_t *
   subelement_to_standalone (const TSubelementType *subelement) noexcept
   {
     return (const t8_element_t *) &subelement->element;
   }
 
+  /** Return the standalone element stored inside a subelement. 
+   * Non-const version.
+   * \param[in] subelement The subelement for which the standalone element should be extracted.
+   */
   static t8_element_t *
   subelement_to_standalone (TSubelementType *subelement) noexcept
   {
     return (t8_element_t *) &subelement->element;
   }
 
+  /** Same as \ref subelement_to_standalone but takes a general element type. 
+   * Const version.
+   * \param[in] element Element of class t8_element_t that can be interpreted as subelement. 
+   */
   static const t8_element_t *
   element_to_standalone (const t8_element_t *element) noexcept
   {
     return subelement_to_standalone (as_subelement (element));
   }
 
+  /** Same as \ref subelement_to_standalone but takes a general element type. 
+   * Non-const version.
+   * \param[in] element Element of class t8_element_t that can be interpreted as subelement. 
+   */
   static t8_element_t *
   element_to_standalone (t8_element_t *element) noexcept
   {
     return subelement_to_standalone (as_subelement (element));
   }
 
+  /** Interpret an element as a subelement. 
+  * Const version.
+  * \param[in] element Element of class t8_element_t that can be interpreted as subelement. 
+  */
   static const TSubelementType *
   as_subelement (const t8_element_t *element) noexcept
   {
     return reinterpret_cast<const TSubelementType *> (element);
   }
-
+  /** Interpret an element as a subelement. 
+   * Non-const version.
+   * \param[in] element Element of class t8_element_t that can be interpreted as subelement. 
+   */
   static TSubelementType *
   as_subelement (t8_element_t *element) noexcept
   {
     return reinterpret_cast<TSubelementType *> (element);
   }
 
-  /** create the root element
-   * \param [in,out] elem The element that is filled with the root
+  /** Reset the subelement-specific data.
+   * \param [in,out] subelement The element that is filled with the root of the subelement.
    */
   static void
   reset_subelement_values (TSubelementType *subelement) noexcept
@@ -1197,6 +1226,10 @@ struct t8_subelement_scheme_common:
     subelement->subelement_id = 0;
   }
 
+  /** Return the edge length of the parent standalone element.
+   * \param [in] subelement A subelement of the parent element.
+   * \return The length of the parent element in integer coordinates.
+   */
   t8_element_coord
   parent_element_get_len (const TSubelementType *subelement) const noexcept
   {
@@ -1204,21 +1237,21 @@ struct t8_subelement_scheme_common:
                  - (derived ().underlying_scheme.element_get_level (subelement_to_standalone (subelement))));
   }
 
-  TSubelementSchemeSpecialization &
-  derived () noexcept
-  {
-    return static_cast<TSubelementSchemeSpecialization &> (*this);
-  }
+  /** Return the derived subelement scheme. 
+   * Const Version.
+   */
   const TSubelementSchemeSpecialization &
   derived () const noexcept
   {
     return static_cast<const TSubelementSchemeSpecialization &> (*this);
   }
-};
 
-// At the very bottom of t8_subelement_scheme.hxx, AFTER the class definition:
-// These must come after the base class definition to break the circular dependency.
-// The specializations need the base class complete; the base needs the specializations
-// complete only when its methods are instantiated (not when the class is defined).
-#include "specializations/t8_scheme_quads.hxx"
-#include "specializations/t8_scheme_tri.hxx"
+  /** Return the derived subelement scheme. 
+   * Non-const Version.
+   */
+  TSubelementSchemeSpecialization &
+  derived () noexcept
+  {
+    return static_cast<TSubelementSchemeSpecialization &> (*this);
+  }
+};

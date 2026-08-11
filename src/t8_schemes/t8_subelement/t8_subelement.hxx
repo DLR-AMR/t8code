@@ -35,7 +35,7 @@ t8_scheme_new_subelement (void);
 /** Check whether a given eclass_scheme is one of the subelement schemes.
  * \param [in] scheme   A (pointer to a) scheme.
  * \param [in] eclass   The eclass to check.
- * \return              True if \a scheme is one of the subelement schemes, false otherwise.
+ * \return              True if \a scheme is one of the subelement schemes for the element class, false otherwise.
  */
 bool
 t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclass);

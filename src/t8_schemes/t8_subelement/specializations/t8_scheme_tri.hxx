@@ -25,6 +25,7 @@
 #pragma once
 
 #include <t8_eclass/t8_eclass.h>
+#include "../t8_subelement_scheme.hxx"
 #include <array>
 #include <bit>
 

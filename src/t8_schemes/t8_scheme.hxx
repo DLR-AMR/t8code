@@ -43,6 +43,8 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_quads.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_tri.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
