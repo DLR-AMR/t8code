@@ -90,6 +90,13 @@ template <t8_eclass TEclass>
 constexpr int8_t t8_type_vertex_dim_to_binary[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_CORNERS[TEclass]]
                                              [T8_ELEMENT_DIM[TEclass]];
 
+
+template <t8_eclass TEclass>
+constexpr int8_t t8_cube_vertex_to_num_adj[1 << T8_ELEMENT_DIM[TEclass]];
+
+template <t8_eclass TEclass>
+constexpr int8_t t8_cube_vertex_adj_to_type[1 << T8_ELEMENT_DIM[TEclass]][1 << T8_ELEMENT_DIM[TEclass]];//TODO: replace by factorial
+                                             
 /**FACE*/
 template <t8_eclass TEclass>
 constexpr int8_t t8_standalone_lut_face_internal[1 << T8_ELEMENT_NUM_EQUATIONS[TEclass]][T8_ELEMENT_NUM_FACES[TEclass]];

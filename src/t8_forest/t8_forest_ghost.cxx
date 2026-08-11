@@ -849,6 +849,7 @@ t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
                                               t8_forest_global_tree_id (forest, ltreeid), eclass, point);
     int bdy_dim, bdy_id;
     scheme->point_get_lowest_boundary (eclass, point, &bdy_dim, &bdy_id);
+    t8_debugf("lowest boundary dim: %i with id %i\n", bdy_dim, bdy_id);
     if (bdy_dim == -1) {
       continue;
     }
@@ -857,14 +858,15 @@ t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     scheme->point_new (bdy_class, &bdy_point);
     scheme->element_extract_boundary_point (eclass, element, point, bdy_dim, bdy_id, bdy_point);
     scheme->point_new (bdy_class, &neigh_bdy_point);
-    const auto cmesh_neighs = t8_cmesh_get_neighs (cmesh, ltreeid, bdy_dim, bdy_id);
+    const auto cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid(forest, ltreeid);
+    const auto cmesh_neighs = t8_cmesh_get_neighs (cmesh, cmesh_ltreeid, bdy_dim, bdy_id);
     t8_debugf ("$$$$$$$$$$$ num neighs: %i $$$$$$$$$$$$$\n", cmesh_neighs.size ());
     for (const auto &neigh : cmesh_neighs) {
       t8_debugf ("look at cmesh neighbor %li with neigh_bdy_id %i \n", neigh.neighid, neigh.neigh_bdy_id);
       if (neigh.neighid == t8_forest_global_tree_id (forest, ltreeid) && neigh.neigh_bdy_id == bdy_id) {
         continue;
       }
-      t8_eclass neigh_class = t8_cmesh_get_class (cmesh, neigh.neighid);
+      t8_eclass neigh_class = t8_cmesh_get_class (cmesh, neigh.neighid); //TODO: falsch, neigh.neighid is global index
       scheme->point_transform (bdy_class, bdy_point, neigh.orientation, neigh_bdy_point);
       scheme->point_new (neigh_class, &neigh_point);
       scheme->boundary_point_extrude (neigh_class, neigh_bdy_point, bdy_dim, neigh.neigh_bdy_id, neigh_point);

@@ -1474,52 +1474,52 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
      *  if positions equal, find out which inequality occurs earlier
      *  earlier position determines order
      */
-#if 1
+#if 0
     t8_standalone<TEclass> *el1 = (t8_standalone<TEclass> *)elem1;
     t8_standalone<TEclass> *el2 = (t8_standalone<TEclass> *)elem2;
 
 #if T8_ENABLE_DEBUG
-    t8_debugf("---------------\n");
-    t8_debugf("compare elements:\n");
-    element_debug_print(elem1);
-    t8_debugf("and:\n");
-    element_debug_print(elem2);
+    // t8_debugf("---------------\n");
+    // t8_debugf("compare elements:\n");
+    // element_debug_print(elem1);
+    // t8_debugf("and:\n");
+    // element_debug_print(elem2);
 #endif
     t8_element_coord greater = 0;
     t8_element_coord smaller = 0;
     for(int idim = 0; idim< T8_ELEMENT_DIM[TEclass]; idim++){
       greater |= el1->coords[idim] & (~el2->coords[idim]);     
       smaller |= (~el1->coords[idim]) & el2->coords[idim];
-      t8_debugf("idim: %i, greater: %i, smaller: %i\n", idim, greater, smaller);
+      // t8_debugf("idim: %i, greater: %i, smaller: %i\n", idim, greater, smaller);
     }
     std::array<t8_element_coord,T8_ELEMENT_NUM_EQUATIONS[TEclass]> type_ints1;
     std::array<t8_element_coord,T8_ELEMENT_NUM_EQUATIONS[TEclass]> type_ints2;
     for(int itype = 0; itype< T8_ELEMENT_NUM_EQUATIONS[TEclass]; itype++){
       type_ints1[itype] = determine_type_int(el1,itype);      
       type_ints2[itype] = determine_type_int(el2,itype);      
-      t8_debugf("itype: %i, type_ints1: %i, type_ints2: %i\n", itype, type_ints1, type_ints2);
+      // t8_debugf("itype: %i, type_ints1: %i, type_ints2: %i\n", itype, type_ints1, type_ints2);
       greater |= type_ints1[itype] & (~type_ints2[itype]);     
       smaller |= (~type_ints1[itype]) & type_ints2[itype];
-      t8_debugf("greater: %i, smaller: %i\n", greater, smaller);
+      // t8_debugf("greater: %i, smaller: %i\n", greater, smaller);
     }
     int greater_idx=number_of_leading_zeros(greater);
     int smaller_idx=number_of_leading_zeros(smaller);
 
-    t8_debugf("greater: %i, smaller: %i, gr_idx: %i, sm_idx: %i\n", greater, smaller, greater_idx, smaller_idx);
+    // t8_debugf("greater: %i, smaller: %i, gr_idx: %i, sm_idx: %i\n", greater, smaller, greater_idx, smaller_idx);
     if (greater_idx > smaller_idx) {
-      t8_debugf("idx_comp: elem1 < elem2\n");
+      // t8_debugf("idx_comp: elem1 < elem2\n");
       return -1;
     }
     if (greater_idx < smaller_idx) {
-      t8_debugf("idx_comp: elem1 > elem2\n");
+      // t8_debugf("idx_comp: elem1 > elem2\n");
       return 1;
     }
     T8_ASSERT(greater_idx==smaller_idx);
     if(greater_idx == get_maxlevel()){
-      t8_debugf("level determines order: %i\n",el1->level < el2->level ? -1 : el1->level > el2->level);
+      // t8_debugf("level determines order: %i\n",el1->level < el2->level ? -1 : el1->level > el2->level);
       return el1->level < el2->level ? -1 : el1->level > el2->level;
     }
-    t8_debugf("find out which ineq occurs first\n");    
+    // t8_debugf("find out which ineq occurs first\n");    
     //find out which inequality occurs first in the position
     // go backwards!
     int shift = get_maxlevel() - greater_idx - 1;
@@ -1528,11 +1528,11 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       int el2_val = el2->coords[idim] & (1<<shift);
       
       if (el1_val < el2_val) {
-        t8_debugf("idim %i cmp: elem1 < elem2\n", idim);
+        // t8_debugf("idim %i cmp: elem1 < elem2\n", idim);
         return -1;
       }
       if (el1_val > el2_val) {
-        t8_debugf("idim %i cmp: elem1 > elem2\n", idim);
+        // t8_debugf("idim %i cmp: elem1 > elem2\n", idim);
         return  1;
       }
     }
@@ -1542,17 +1542,17 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       int el2_val = type_ints2[itype] & (1<<shift);
       
       if (el1_val < el2_val){ 
-        t8_debugf("itype %i cmp: elem1 > elem2\n", itype);
+        // t8_debugf("itype %i cmp: elem1 > elem2\n", itype);
         return -1;
       }
       if (el1_val > el2_val){ 
-        t8_debugf("itype %i cmp: elem1 > elem2\n", itype);
+        // t8_debugf("itype %i cmp: elem1 > elem2\n", itype);
         return  1;
       }
     }
 
       
-    SC_ABORT("Not reachable, greater_idx and smaller_idx were equal but not maxlevel,"
+    SC_ABORTF("Not reachable, greater_idx and smaller_idx were equal but not maxlevel,"
               "therefore one type or coord must be unequal");
 
 
@@ -1962,7 +1962,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   get_max_num_descendants_at_point () const
   {
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORT("Not yet implemented\n");
+      SC_ABORTF("Not yet implemented\n");
     }else{
       return 1 << T8_ELEMENT_DIM[TEclass];  //correct only for hypercube
     }
@@ -1972,35 +1972,44 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   construct_descendants_at_point ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] t8_element_t **descs,
                                   [[maybe_unused]] int *num_neighbors) const
   {
-    t8_scheme_point_dim<3> *sp = (t8_scheme_point_dim<3> *) point;
+    t8_scheme_point_dim<T8_ELEMENT_DIM[TEclass]> *sp = (t8_scheme_point_dim<T8_ELEMENT_DIM[TEclass]> *) point;
     t8_standalone<TEclass> **descendants = (t8_standalone<TEclass> **) descs;
     t8_element_coord len = get_root_len();
     t8_debugf ("len = %i\n", len);
     *num_neighbors = 0;
     constexpr int dim = T8_ELEMENT_DIM[TEclass];
 
-    t8_debugf ("construct descendants around x= %i, y=%i\n", (*sp)[0], (*sp)[1]);
+//    t8_debugf ("construct descendants around x= %i, y=%i\n", (*sp)[0], (*sp)[1]);
 
     for (int icube = 0; icube < (1 << dim); icube++) {
       const int neigh_cube_vertex = (1 << dim) - 1 - icube;
+      int num_adj = 1; //hypercube
+      if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+        num_adj = t8_cube_vertex_to_num_adj<TEclass>[neigh_cube_vertex];
+      }
+ 
+      for (int i_adj = 0; i_adj < num_adj; i_adj++) {
 
-      for(int idim=0; idim<dim;idim++){
-        t8_element_coord shift = ((icube & (1 << idim))>>idim)-1;
-        descendants[*num_neighbors]->coords[idim] = (*sp)[idim] + shift;
+        for(int idim=0; idim<dim;idim++){
+          t8_element_coord shift = ((icube & (1 << idim))>>idim)-1;
+          descendants[*num_neighbors]->coords[idim] = (*sp)[idim] + shift;
+        }
+        if constexpr(T8_ELEMENT_NUM_EQUATIONS[TEclass]){
+          descendants[*num_neighbors]->type = t8_cube_vertex_adj_to_type<TEclass>[neigh_cube_vertex][i_adj]; 
+        }
+
+
+        descendants[*num_neighbors]->level = get_maxlevel ();
+        t8_debugf ("neighbor icube %i neighb_cube_vertex %i \n", icube, neigh_cube_vertex);
+  //              element_debug_print ((t8_element_t *) descendants[*num_neighbors]);
+        if (!element_is_inside_root (descendants[*num_neighbors])) {
+          t8_debugf ("neighbor not inside\n");
+          continue;
+        }
+        t8_debugf ("neighbor inside \n");
+        //        element_debug_print((const t8_element_t *) descendants[*num_neighbors]);
+        ++(*num_neighbors);
       }
-      if(T8_ELEMENT_NUM_EQUATIONS[TEclass]){
-        SC_ABORT("not implemented!\n");
-      }
-      descendants[*num_neighbors]->level = get_maxlevel ();
-      t8_debugf ("neighbor icube %i neighb_cube_vertex %i \n", icube, neigh_cube_vertex);
-//              element_debug_print ((t8_element_t *) descendants[*num_neighbors]);
-      if (!element_is_inside_root (descendants[*num_neighbors])) {
-        t8_debugf ("neighbor not inside\n");
-        continue;
-      }
-      t8_debugf ("neighbor inside \n");
-      //        element_debug_print((const t8_element_t *) descendants[*num_neighbors]);
-      ++(*num_neighbors);
     }
   }
 
@@ -2134,7 +2143,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       //hypercube
       constexpr int dim = T8_ELEMENT_DIM[TEclass];
       if (bdy_dim==0) {
-        SC_ABORT("vertices have no entries");
+        SC_ABORTF("vertices have no entries");
       }else if (bdy_dim == dim-1){
         //face
         //split in before and after, after is increased by one
@@ -2146,7 +2155,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
         if constexpr (TEclass!=T8_ECLASS_VERTEX) {
           return bdy_id / (1<<(T8_ELEMENT_DIM[TEclass]-1));
         }else{
-          SC_ABORT("Not reachable");
+          SC_ABORTF("Not reachable");
         }
       }
 
@@ -2170,7 +2179,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
         if constexpr (TEclass!=T8_ECLASS_VERTEX) {
           return (bdy_id / (1<<(T8_ELEMENT_DIM[TEclass]-1)))==idim ? 0 : -1; //TODO: How are edges enumerated?
         }else{
-          SC_ABORT("Not reachable");
+          SC_ABORTF("Not reachable");
         }
       }
 
@@ -2232,7 +2241,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   point_transform ([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
                    [[maybe_unused]] t8_scheme_point *neigh_point) const
   {
-    SC_ABORT("TODO");
+    SC_ABORTF("TODO");
     //Instantiations for vertex, line, quad, tri, similar to transform face
   }
 
@@ -2859,17 +2868,17 @@ friend class class_test_equal;
  * \note \a elem1 and \a elem2 may point to the same element.
  */
 
-template <>
-inline void
-t8_standalone_scheme<T8_ECLASS_VERTEX>::element_transform_face ([[maybe_unused]] const t8_element_t *elem1,
-                                                                [[maybe_unused]] t8_element_t *elem2,
-                                                                [[maybe_unused]] const int orientation,
-                                                                [[maybe_unused]] const int sign,
-                                                                [[maybe_unused]] const int is_smaller_face) noexcept
-{
-  T8_ASSERT (t8_standalone_scheme<T8_ECLASS_VERTEX>::element_is_valid (elem1));
-  return;
-};
+// template <>
+// inline void
+// t8_standalone_scheme<T8_ECLASS_VERTEX>::element_transform_face ([[maybe_unused]] const t8_element_t *elem1,
+//                                                                 [[maybe_unused]] t8_element_t *elem2,
+//                                                                 [[maybe_unused]] const int orientation,
+//                                                                 [[maybe_unused]] const int sign,
+//                                                                 [[maybe_unused]] const int is_smaller_face) noexcept
+// {
+//   T8_ASSERT (t8_standalone_scheme<T8_ECLASS_VERTEX>::element_is_valid (elem1));
+//   return;
+// };
 
 /** Implementation of \ref element_transform_face for lines
  *  \param [in] elem1     The face element.
@@ -3123,7 +3132,7 @@ inline void
 t8_standalone_scheme<T8_ECLASS_TRIANGLE>::point_transform([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
                    [[maybe_unused]] t8_scheme_point *neigh_point) const {
 
-  SC_ABORT("not implemented\n");
+  SC_ABORTF("not implemented\n");
 }
 
 

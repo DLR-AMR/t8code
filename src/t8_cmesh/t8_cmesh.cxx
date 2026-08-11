@@ -1587,13 +1587,14 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
 }
 
 std::vector<t8_neigh_info>
-t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int bdy_dim, int bdy_id)
+t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t cmesh_ltreeid, int bdy_dim, int bdy_id)
 {
+  t8_debugf("get neighs of cmesh_ltree %i  across bdy_dim %i and bdy_id\n", cmesh_ltreeid, bdy_dim, bdy_id);
   std::vector<t8_neigh_info> result;
   if (bdy_dim == 0) {
     //get cmesh connectivity structure
-    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, ltreeid);
-    t8_gloidx_t gvertexid = cmesh->vertex_connectivity->get_global_vertex_of_tree (ltreeid, bdy_id);
+    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, cmesh_ltreeid);
+    t8_gloidx_t gvertexid = cmesh->vertex_connectivity->get_global_vertex_of_tree (cmesh_ltreeid, bdy_id);
     const auto tree_list = cmesh->vertex_connectivity->get_tree_list_of_vertex (gvertexid);
     for (const auto &tree_connection : tree_list) {
       result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0, 0 });
@@ -1602,17 +1603,19 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int bdy_dim, int bdy
   else if (bdy_dim == cmesh->dimension - 1) {
     int8_t *ttf;
     t8_locidx_t *face_neighbor;
-    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, ltreeid, &face_neighbor, &ttf);
-    t8_locidx_t neigh_ltreeid = face_neighbor[bdy_id];
+    (void) t8_cmesh_trees_get_tree_ext (cmesh->trees, cmesh_ltreeid, &face_neighbor, &ttf);
+    t8_locidx_t neigh_cmesh_ltreeid = face_neighbor[bdy_id];
+
+    t8_debugf("found neigh_ltreeid %i  of local tree %i across face %i\n", neigh_cmesh_ltreeid, cmesh_ltreeid, bdy_id);
     int F = t8_eclass_max_num_faces[cmesh->dimension];
     /* compute the neighbor face */
     int tree_neigh_face = ttf[bdy_id] % F;
     int orientation = ttf[bdy_id] / F;
-    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, ltreeid);
-    t8_eclass_t neigh_eclass = t8_cmesh_treeid_is_local_tree (cmesh, ltreeid) ? t8_cmesh_get_tree_class(cmesh, ltreeid): t8_cmesh_get_ghost_class(cmesh, ltreeid-t8_cmesh_get_num_local_trees(cmesh));
+    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, cmesh_ltreeid);
+    t8_eclass_t neigh_eclass = t8_cmesh_treeid_is_local_tree (cmesh, cmesh_ltreeid) ? t8_cmesh_get_tree_class(cmesh, cmesh_ltreeid): t8_cmesh_get_ghost_class(cmesh, cmesh_ltreeid-t8_cmesh_get_num_local_trees(cmesh));
     int sign = t8_eclass_face_orientation[eclass][bdy_id] == t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
-    t8_neigh_info info { t8_cmesh_get_global_id (cmesh, neigh_ltreeid), tree_neigh_face, orientation, sign};
-    if (neigh_ltreeid != ltreeid || bdy_id != tree_neigh_face) {
+    t8_neigh_info info { t8_cmesh_get_global_id (cmesh, neigh_cmesh_ltreeid), tree_neigh_face, orientation, sign};
+    if (neigh_cmesh_ltreeid != cmesh_ltreeid || bdy_id != tree_neigh_face) {
       result.push_back (info);
     }
   }
@@ -1625,8 +1628,8 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int bdy_dim, int bdy
     return result; // currently not implemented, cmesh must consist of one element
 
     //get cmesh connectivity structure
-    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, ltreeid);
-    t8_gloidx_t gedgeid = cmesh->edge_connectivity->get_global_edge_of_tree (ltreeid, bdy_id);
+    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, cmesh_ltreeid);
+    t8_gloidx_t gedgeid = cmesh->edge_connectivity->get_global_edge_of_tree (cmesh_ltreeid, bdy_id);
     const auto tree_list = cmesh->edge_connectivity->get_tree_list_of_edge (gedgeid);
     SC_ABORTF("Line orientation in cmesh not yet available!");
     

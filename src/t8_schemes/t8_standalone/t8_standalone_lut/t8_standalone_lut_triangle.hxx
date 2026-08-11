@@ -303,5 +303,18 @@ template <>
 constexpr int t8_standalone_lut_num_boundaries<T8_ECLASS_TRIANGLE>[T8_ELEMENT_DIM[T8_ECLASS_TRIANGLE]]=
 {3,3};
 
+template <>
+constexpr int8_t t8_cube_vertex_to_num_adj<T8_ECLASS_TRIANGLE>[1 << T8_ELEMENT_DIM[T8_ECLASS_TRIANGLE]]=
+{2,1,1,2};
+
+template <>
+constexpr int8_t t8_cube_vertex_adj_to_type<T8_ECLASS_TRIANGLE>[1 << T8_ELEMENT_DIM[T8_ECLASS_TRIANGLE]][1 << T8_ELEMENT_DIM[T8_ECLASS_TRIANGLE]]=//TODO: replace by factorial
+{
+  {0,1},
+  {0},
+  {1},
+  {0,1}
+};
+
 // clang-format on
 #endif /* T8_SELE_LUT_TRIANGLE_HXX */

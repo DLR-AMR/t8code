@@ -401,5 +401,14 @@ constexpr int t8_standalone_lut_num_boundaries<T8_ECLASS_PRISM>[T8_ELEMENT_DIM[T
 {6,9,5};
 
 
+template <>
+constexpr int8_t t8_cube_vertex_to_num_adj<T8_ECLASS_PRISM>[1 << T8_ELEMENT_DIM[T8_ECLASS_PRISM]]=
+{};
+
+template <>
+constexpr int8_t t8_cube_vertex_adj_to_type<T8_ECLASS_PRISM>[1 << T8_ELEMENT_DIM[T8_ECLASS_PRISM]][1 << T8_ELEMENT_DIM[T8_ECLASS_PRISM]]=//TODO: replace by factorial
+{};
+
+
 // clang-format on
 #endif /* T8_SELE_LUT_PRISM_HXX */

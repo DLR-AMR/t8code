@@ -2025,13 +2025,13 @@ t8_forest_element_leaf_index_in_tree (const t8_forest_t forest, const t8_element
   /* An element was found but it may not be the candidate element. 
    * To identify whether the element was found, we compare these two. */
 
-  t8_debugf ("elem\n");
+  // t8_debugf ("elem\n");
   // scheme->element_debug_print (tree_class, element);
   if (search_result == -1) {
-    t8_debugf (" not found\n");
+    // t8_debugf (" not found\n");
     return -1;
   }
-  t8_debugf (" potentially found at %i with potential match\n", search_result);
+  // t8_debugf (" potentially found at %i with potential match\n", search_result);
 
   const t8_element_t *check_element = t8_element_array_index_locidx (elements, search_result);
   T8_ASSERT (check_element != NULL);
@@ -4100,7 +4100,7 @@ t8_forest_new_uniform (t8_cmesh_t cmesh, const t8_scheme *scheme, const int leve
   t8_forest_set_scheme (forest, scheme);
   t8_forest_set_level (forest, level);
   if (do_face_ghost) {
-    t8_forest_set_ghost (forest, 1, T8_GHOST_FACES);
+    t8_forest_set_ghost (forest, 1, T8_GHOST_VERTICES);
   }
   t8_debugf ("set for coarsening!\n");
   forest->set_for_coarsening = 1;
