@@ -776,11 +776,20 @@ constexpr int t8_standalone_lut_num_boundaries<T8_ECLASS_TET>[T8_ELEMENT_DIM[T8_
 
 template <>
 constexpr int8_t t8_cube_vertex_to_num_adj<T8_ECLASS_TET>[1 << T8_ELEMENT_DIM[T8_ECLASS_TET]]=
-{};
+{6,2,2,2,2,2,2,6};
 
 template <>
 constexpr int8_t t8_cube_vertex_adj_to_type<T8_ECLASS_TET>[1 << T8_ELEMENT_DIM[T8_ECLASS_TET]][1 << T8_ELEMENT_DIM[T8_ECLASS_TET]]=//TODO: replace by factorial
-{};
+{
+  {0,1,2,5,6,7},
+  {0,2},
+  {1,5},
+  {0,1},
+  {6,7},
+  {2,6},
+  {5,7},
+  {0,1,2,5,6,7}
+};
 
 
 // clang-format on

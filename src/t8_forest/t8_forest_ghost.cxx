@@ -857,6 +857,8 @@ t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
       = t8_forest_boundary_class (eclass, bdy_dim, bdy_id);  //should be scheme or cmesh functionality probably
     scheme->point_new (bdy_class, &bdy_point);
     scheme->element_extract_boundary_point (eclass, element, point, bdy_dim, bdy_id, bdy_point);
+//    t8_debugf ("extract point (%li, %li) on bdy_dim %i, bdy_id %i to point (%li)\n",  (*((t8_standalone_point<2> *) (point)))[0], (*((t8_standalone_point<2> *)(point)))[1], bdy_dim, bdy_id,  (*((t8_standalone_point<1> *)(bdy_point)))[0]);
+
     scheme->point_new (bdy_class, &neigh_bdy_point);
     const auto cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid(forest, ltreeid);
     const auto cmesh_neighs = t8_cmesh_get_neighs (cmesh, cmesh_ltreeid, bdy_dim, bdy_id);
@@ -864,14 +866,20 @@ t8_forest_ghost_search_vertex_boundary (t8_forest_t forest, t8_locidx_t ltreeid,
     for (const auto &neigh : cmesh_neighs) {
       t8_debugf ("look at cmesh neighbor %li with neigh_bdy_id %i \n", neigh.neighid, neigh.neigh_bdy_id);
       if (neigh.neighid == t8_forest_global_tree_id (forest, ltreeid) && neigh.neigh_bdy_id == bdy_id) {
+        t8_debugf("neighbor is self\n");
         continue;
       }
       t8_eclass neigh_class = t8_cmesh_get_class (cmesh, neigh.neighid); //TODO: falsch, neigh.neighid is global index
       scheme->point_transform (bdy_class, bdy_point, neigh.orientation, neigh_bdy_point);
+//      t8_debugf ("transform with orientation %i to point (%li)\n",  neigh.orientation,  (*((t8_standalone_point<1> *)(neigh_bdy_point)))[0]);
+
       scheme->point_new (neigh_class, &neigh_point);
       scheme->boundary_point_extrude (neigh_class, neigh_bdy_point, bdy_dim, neigh.neigh_bdy_id, neigh_point);
+      t8_debugf ("extrude on neigh bdy id %i to point (%li, %li)\n",  neigh.neigh_bdy_id,  (*((t8_standalone_point<2> *)(neigh_point)))[0], (*((t8_standalone_point<2> *)(neigh_point)))[1]);
+
+      t8_debugf ("send element to owners of point (%li, %li) on tree %li \n",  (*((t8_standalone_point<2> *) (neigh_point)))[0], (*((t8_standalone_point<2> *)(neigh_point)))[1], neigh.neighid);
       forest_element_add_owners_at_other_point (forest, ltreeid, element, tree_leaf_index, neigh.neighid, neigh_class,
-                                                neigh_point);
+                                               neigh_point);
       scheme->point_destroy (neigh_class, &neigh_point);
     }
     scheme->point_destroy (bdy_class, &bdy_point);

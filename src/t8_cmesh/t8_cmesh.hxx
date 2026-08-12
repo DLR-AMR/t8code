@@ -134,6 +134,7 @@ typedef class t8_neigh_info {
   int neigh_bdy_id;
   int orientation;
   int sign;
+  int is_smaller;
 } t8_neigh_info;
 
 std::vector<t8_neigh_info>

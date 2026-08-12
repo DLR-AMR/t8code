@@ -40,6 +40,7 @@
 #include "t8_element.h"
 #include "t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h"
 #include "t8_schemes/t8_standalone/t8_standalone_lut/t8_standalone_lut_pyra.hxx"
+#include "t8_standalone_elements.hxx"
 
 /** A templated implementation of the scheme interface based on cutting planes. */
 template <t8_eclass TEclass>
@@ -1271,6 +1272,64 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     }
   }
 
+  /** Construct the boundary point
+   */
+  static constexpr void
+  element_extract_boundary_point([[maybe_unused]] const t8_element_t *element,
+                                  [[maybe_unused]] const t8_scheme_point *el_point, [[maybe_unused]] int boundary_dim,
+                                  [[maybe_unused]] int boundary_id, [[maybe_unused]] t8_scheme_point *bdy_point) noexcept
+  {
+    const t8_eclass_t TBoundaryEclass = get_root_bdy_eclass(boundary_dim, boundary_id);
+
+    switch (TBoundaryEclass) {
+    case T8_ECLASS_VERTEX:
+      extract_boundary_point<T8_ECLASS_VERTEX> (element, (t8_standalone_point<TEclass> *)el_point, boundary_dim, boundary_id, (t8_standalone_point<T8_ECLASS_VERTEX> *)bdy_point);
+      return;
+    case T8_ECLASS_LINE:
+      extract_boundary_point<T8_ECLASS_LINE> (element, (t8_standalone_point<TEclass> *)el_point, boundary_dim, boundary_id, (t8_standalone_point<T8_ECLASS_LINE> *)bdy_point);
+      return;
+    case T8_ECLASS_QUAD:
+      extract_boundary_point<T8_ECLASS_QUAD> (element, (t8_standalone_point<TEclass> *)el_point, boundary_dim, boundary_id, (t8_standalone_point<T8_ECLASS_QUAD> *)bdy_point);
+      return;
+    case T8_ECLASS_TRIANGLE:
+      extract_boundary_point<T8_ECLASS_TRIANGLE> (element, (t8_standalone_point<TEclass> *)el_point, boundary_dim, boundary_id, (t8_standalone_point<T8_ECLASS_TRIANGLE> *)bdy_point);
+      return;
+    default:
+      SC_ABORT ("Only useful for two-dimensional eclasses.\n");
+      return;
+    }
+  }
+
+
+
+  /** Construct the boundary point
+   */
+  static constexpr void
+  boundary_point_extrude ([[maybe_unused]] const t8_scheme_point *bdy_point, [[maybe_unused]] int bdy_dim,
+                          [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_scheme_point *point) noexcept
+  {
+    const t8_eclass_t TBoundaryEclass = get_root_bdy_eclass(bdy_dim, bdy_id);
+
+    switch (TBoundaryEclass) {
+    case T8_ECLASS_VERTEX:
+      extrude_boundary_point<T8_ECLASS_VERTEX> ( (t8_standalone_point<T8_ECLASS_VERTEX> *)bdy_point, bdy_dim, bdy_id, (t8_standalone_point<TEclass> *)point);
+      return;
+    case T8_ECLASS_LINE:
+      extrude_boundary_point<T8_ECLASS_LINE> ( (t8_standalone_point<T8_ECLASS_LINE> *)bdy_point, bdy_dim, bdy_id, (t8_standalone_point<TEclass> *)point);
+      return;
+    case T8_ECLASS_QUAD:
+      extrude_boundary_point<T8_ECLASS_QUAD> ( (t8_standalone_point<T8_ECLASS_QUAD> *)bdy_point, bdy_dim, bdy_id, (t8_standalone_point<TEclass> *)point);
+      return;
+    case T8_ECLASS_TRIANGLE:
+      extrude_boundary_point<T8_ECLASS_TRIANGLE> ( (t8_standalone_point<T8_ECLASS_TRIANGLE> *)bdy_point, bdy_dim, bdy_id, (t8_standalone_point<TEclass> *)point);
+      return;
+    default:
+      SC_ABORT ("Only useful for two-dimensional eclasses.\n");
+      return;
+    }
+  }
+
+
   // ################################################____LINEAR ID____################################################
 
   /** Initialize the entries of an allocated element according to a
@@ -2070,7 +2129,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
             int typebit = t8_standalone_lut_type_face_to_typebit<TEclass>[T8_ELEMENT_ROOTTYPE][boundary_id];
             int idim0 = t8_type_edge_equations<TEclass>[typebit][0];            
             int idim1 = t8_type_edge_equations<TEclass>[typebit][1];            
-            // t8_debugf("internal face, dim0: %i, dim1: %i, value: %i\n", idim0, idim1);
+            t8_debugf("internal face %i, dim0: %i, dim1: %i, value: %i\n", boundary_id, idim0, idim1);
             return (*p)[idim0]==(*p)[idim1];            
             //internal: find out two neighbouring coordinates, check equality
           }else{
@@ -2078,7 +2137,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
             int normal_coord = t8_standalone_lut_type_face_to_facenormal_dim<TEclass>[T8_ELEMENT_ROOTTYPE][boundary_id];
             int is_1_bdy = t8_standalone_lut_type_face_to_is_1_boundary<TEclass>[T8_ELEMENT_ROOTTYPE][boundary_id];
             // return value similar to hypercube
-            // t8_debugf("external face, normal_coord: %i, value: %i\n", normal_coord, is_1_bdy);
+            t8_debugf("external face %i, normal_coord: %i, value: %i, is1_bdy: %i \n", boundary_id, normal_coord, (*p)[normal_coord] , is_1_bdy);
             return (*p)[normal_coord] == (is_1_bdy ? get_root_len() : 0);
           }
         }else{
@@ -2134,7 +2193,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       }
   }
 
-  inline int get_elem_coord(const int bdy_dim, const int bdy_id, const int idim)const{
+  static int get_elem_coord(const int bdy_dim, const int bdy_id, const int idim)noexcept{
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       int returnvalue= t8_standalone_lut_bdy_dim_id_idim_to_elem_idim<TEclass>[bdy_dim][bdy_id][idim];
       // t8_debugf("access lut for [%i][%i][%i]=%i\n",bdy_dim, bdy_id, idim, returnvalue);
@@ -2161,7 +2220,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
 
     }
   }
-  inline int get_bdy_coord(const int bdy_dim, const int bdy_id, const int idim)const{
+  static int get_bdy_coord(const int bdy_dim, const int bdy_id, const int idim)noexcept{
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       //lut
       return t8_standalone_lut_bdy_dim_id_elem_idim_to_bdy_idim<TEclass>[bdy_dim][bdy_id][idim];
@@ -2187,7 +2246,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   }
 
 
-  inline bool is_1_bdy_coord(const int bdy_dim, const int bdy_id, const int idim)const{
+  static bool is_1_bdy_coord(const int bdy_dim, const int bdy_id, const int idim)noexcept{
     const int dim = T8_ELEMENT_DIM[TEclass];
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
       return t8_standalone_lut_bdy_dim_id_elem_idim_to_1_bdy<TEclass>[bdy_dim][bdy_id][idim];
@@ -2221,19 +2280,25 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     }    
   }
 
-  inline void
-  element_extract_boundary_point ([[maybe_unused]] const t8_element_t *element,
-                                  [[maybe_unused]] const t8_scheme_point *el_point, [[maybe_unused]] int boundary_dim,
-                                  [[maybe_unused]] int boundary_id, [[maybe_unused]] t8_scheme_point *bdy_point) const
+
+  template <t8_eclass_t TBoundaryEclass>
+  static constexpr void
+  extract_boundary_point ([[maybe_unused]] const t8_element_t *element,
+                                  [[maybe_unused]] const t8_standalone_point<TEclass> *point, [[maybe_unused]] int boundary_dim,
+                                  [[maybe_unused]] int boundary_id, [[maybe_unused]] t8_standalone_point<TBoundaryEclass> *bdy_point) noexcept
   {
     //for each boundary coordinate, lookup one of the coordinates it comes from 
     // (we must have checked before that the point is on the boundary)
     // t8_debugf("extract point for bdy_dim: %i, bdy_id: %i\n", boundary_dim, boundary_id);
+    t8_debugf("boundary_eclass: %i\n", (int) TBoundaryEclass);
     for (int idim=0; idim< boundary_dim; idim++){
       int elem_coord = get_elem_coord(boundary_dim,boundary_id, idim);
-      // t8_debugf("idim: %i, elem_coord: %i, val: %i\n", idim, elem_coord, ((int *)el_point)[elem_coord]);
+      t8_debugf("exctract::: idim: %i, elem_coord: %i, val: %i\n", idim, elem_coord, ((int *)point)[elem_coord]);
       //TODO: getter and setter functions for points!!
-      ((int *)bdy_point)[idim] = ((int *)el_point)[elem_coord];
+      t8_debugf("exctract::: shift: %i\n",  (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] - T8_ELEMENT_MAXLEVEL[TEclass]));
+      (*bdy_point)[idim] = (*point)[elem_coord] << (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+      t8_debugf("exctract::: new_val: %i\n",  (*bdy_point)[idim]);
+      // ((int *)bdy_point)[idim] = ((int *)el_point)[elem_coord];
     }
   }
 
@@ -2245,18 +2310,21 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
     //Instantiations for vertex, line, quad, tri, similar to transform face
   }
 
-  inline void
-  boundary_point_extrude ([[maybe_unused]] const t8_scheme_point *bdy_point, [[maybe_unused]] int bdy_dim,
-                          [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_scheme_point *point) const
+  template <t8_eclass_t TBoundaryEclass>
+  static constexpr void
+  extrude_boundary_point ([[maybe_unused]] const t8_standalone_point<TBoundaryEclass> *bdy_point, [[maybe_unused]] int bdy_dim,
+                          [[maybe_unused]] int bdy_id, [[maybe_unused]] t8_standalone_point<TEclass> *point) noexcept
   {
     // for each coordinate, lookup if it is 0 or rootlen, or from which var it comes from
-    for (int idim; idim< T8_ELEMENT_DIM[TEclass]; idim++){
+    for (int idim=0; idim< T8_ELEMENT_DIM[TEclass]; idim++){
       int bdy_coord = get_bdy_coord(bdy_dim,bdy_id, idim);
       if(bdy_coord != -1 ){
-        ((int *)point)[idim] = ((int *)bdy_point)[bdy_coord];
+        (*point)[idim] = (*bdy_point)[bdy_coord] >> (T8_ELEMENT_MAXLEVEL[TBoundaryEclass] - T8_ELEMENT_MAXLEVEL[TEclass]);
+        // ((int *)point)[idim] = ((int *)bdy_point)[bdy_coord];
         // t8_debugf("coord %i comes from coord %i, val: %i\n", idim, bdy_coord, ((int *)point)[idim]);
       }else{
-        ((int *)point)[idim] = is_1_bdy_coord(bdy_dim,bdy_id, idim) ? get_root_len():0;
+        (*point)[idim] = is_1_bdy_coord(bdy_dim,bdy_id, idim) ? get_root_len():0;
+        // ((int *)point)[idim] = is_1_bdy_coord(bdy_dim,bdy_id, idim) ? get_root_len():0;
         // t8_debugf("coord %i comes from 0 or 1, val: %i\n", idim, ((int *)point)[idim]);
       }
     }
@@ -2634,6 +2702,29 @@ friend class class_test_equal;
       return T8_ECLASS_INVALID;
     }
   }
+
+
+  /** Get the eclass of the face for the element eclass
+   * \return The eclass of the face.
+   */
+  static constexpr t8_eclass_t
+  get_root_bdy_eclass (const int bdy_dim, const int bdy_id) noexcept
+  {
+
+    switch (bdy_dim) {
+      case 0:
+        return T8_ECLASS_VERTEX;
+      case 1:
+        return T8_ECLASS_LINE;
+      case 2:
+        return get_root_face_eclass(bdy_id);
+      default:
+        SC_ABORT_NOT_REACHED ();
+        return T8_ECLASS_VERTEX;
+    }
+  }
+
+
 
   /** Construct the boundary element at a specific face.
    * \param [in] elem           The input element.
@@ -3132,7 +3223,68 @@ inline void
 t8_standalone_scheme<T8_ECLASS_TRIANGLE>::point_transform([[maybe_unused]] const t8_scheme_point *point, [[maybe_unused]] int orientation,
                    [[maybe_unused]] t8_scheme_point *neigh_point) const {
 
-  SC_ABORTF("not implemented\n");
+  T8_ASSERT (0 <= orientation && orientation <= 2);
+  const t8_standalone_point<T8_ECLASS_TRIANGLE> *p = (const t8_standalone_point<T8_ECLASS_TRIANGLE> *) point;
+  t8_standalone_point<T8_ECLASS_TRIANGLE> *p_neigh = (t8_standalone_point<T8_ECLASS_TRIANGLE> *) neigh_point;
+
+  // copy elem1 in tmp so that results can directly be set in elem2
+  t8_standalone_point<T8_ECLASS_TRIANGLE> tmp;
+  for(int idim=0; idim < 2; ++idim){
+    tmp[idim] = (*p)[idim];
+  }
+
+  /*
+    * The corners of the triangle are enumerated like this
+    *        type 0                    type 1
+    *      also root tree
+    *         v_2                     v_1  v_2
+    *         x                         x--x
+    *        /|                         | /
+    *       / |                         |/
+    *      x--x                         x
+    *    v_0  v_1                      v_0
+    *
+    */
+
+  SC_ABORTF("NOT IMPLEMENTED");
+  int sign = 0;
+
+  if (sign) {
+    /* The tree faces have the same topological orientation, and
+      * thus we have to perform a coordinate switch. */
+    tmp[1] = (*p)[0] - (*p)[1];
+  }
+
+  SC_ABORTF("NOT IMPLEMENTED");
+  int is_smaller_face = 0;
+
+  if (!is_smaller_face && orientation != 0 && !sign) {
+    /* Translate orientation if triangle1 is not on the smaller face.
+      *  sign = 0  sign = 1
+      *  0 -> 0    0 -> 0
+      *  1 -> 2    1 -> 1
+      *  2 -> 1    2 -> 2
+      */
+    orientation = 3 - orientation;
+  }
+
+  switch (orientation) {
+  case 0:
+    (*p_neigh)[0] = tmp[0];
+    (*p_neigh)[1] = tmp[1];
+    break;
+  case 1:
+    (*p_neigh)[0] = get_root_len ()  - tmp[1];
+    (*p_neigh)[1] = tmp[0] - tmp[1];
+    break;
+  case 2:
+    (*p_neigh)[0] = get_root_len () + tmp[1] - tmp[0];
+    (*p_neigh)[1] = get_root_len () - tmp[0];
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+
 }
 
 

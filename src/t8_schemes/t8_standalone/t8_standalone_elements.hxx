@@ -44,8 +44,9 @@ constexpr uint8_t T8_ELEMENT_DIM[T8_ECLASS_COUNT] = { 0, 1, 2, 2, 3, 3, 3, 3 };
  * for (t8_element_level level = 0; level <= T8_ELEMENT_MAXLEVEL[T8_ECLASS_VERTEX]; ++level)
  * Otherwise, t8_element_level would overflow after 255 and we would have an infinite loop.
  */
-constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 254, 30, 30, 29, 21, 21, 21, 18 };
-// constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = {5,5,5,5,5,5,5,5};
+// constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 254, 30, 30, 29, 21, 21, 21, 18 };
+constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 30, 30, 30, 29, 21, 21, 21, 18 };
+//constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = {5,5,5,5,5,5,5,5};
 
 /** Maximum number of faces of the standalone element types */
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 6, 4, 5, 5 };

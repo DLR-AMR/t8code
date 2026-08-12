@@ -1597,7 +1597,7 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t cmesh_ltreeid, int bdy_dim, i
     t8_gloidx_t gvertexid = cmesh->vertex_connectivity->get_global_vertex_of_tree (cmesh_ltreeid, bdy_id);
     const auto tree_list = cmesh->vertex_connectivity->get_tree_list_of_vertex (gvertexid);
     for (const auto &tree_connection : tree_list) {
-      result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0, 0 });
+      result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0, 0, 0 });
     }
   }
   else if (bdy_dim == cmesh->dimension - 1) {
@@ -1614,7 +1614,25 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t cmesh_ltreeid, int bdy_dim, i
     t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, cmesh_ltreeid);
     t8_eclass_t neigh_eclass = t8_cmesh_treeid_is_local_tree (cmesh, cmesh_ltreeid) ? t8_cmesh_get_tree_class(cmesh, cmesh_ltreeid): t8_cmesh_get_ghost_class(cmesh, cmesh_ltreeid-t8_cmesh_get_num_local_trees(cmesh));
     int sign = t8_eclass_face_orientation[eclass][bdy_id] == t8_eclass_face_orientation[neigh_eclass][tree_neigh_face];
-    t8_neigh_info info { t8_cmesh_get_global_id (cmesh, neigh_cmesh_ltreeid), tree_neigh_face, orientation, sign};
+
+    int eclass_compare = t8_eclass_compare (eclass, neigh_eclass);
+    int is_smaller = 0;
+    if (eclass_compare == -1) {
+      /* The face in the current tree is the smaller one */
+      is_smaller = 1;
+    }
+    else if (eclass_compare == 1) {
+      /* The face in the other tree is the smaller one */
+      is_smaller = 0;
+    }
+    else {
+
+      T8_ASSERT (eclass_compare == 0);
+      /* Check if the face of the current tree has a smaller index then the face of the neighbor tree. */
+      is_smaller = bdy_id <= tree_neigh_face;
+    }
+
+    t8_neigh_info info { t8_cmesh_get_global_id (cmesh, neigh_cmesh_ltreeid), tree_neigh_face, orientation, sign, is_smaller};
     if (neigh_cmesh_ltreeid != cmesh_ltreeid || bdy_id != tree_neigh_face) {
       result.push_back (info);
     }
@@ -1634,7 +1652,7 @@ t8_cmesh_get_neighs (t8_cmesh_t cmesh, t8_locidx_t cmesh_ltreeid, int bdy_dim, i
     SC_ABORTF("Line orientation in cmesh not yet available!");
     
     for (const auto &tree_connection : tree_list) {
-      result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0 });
+      result.push_back (t8_neigh_info { tree_connection.first, tree_connection.second, 0, 0, 0 });
     }
   }
   return result;
