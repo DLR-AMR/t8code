@@ -1962,7 +1962,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
   get_max_num_descendants_at_point () const
   {
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
-      SC_ABORTF("Not yet implemented\n");
+      return 1 << (T8_ELEMENT_DIM[TEclass]+1);  //TODO, wrong, use factorial
     }else{
       return 1 << T8_ELEMENT_DIM[TEclass];  //correct only for hypercube
     }
