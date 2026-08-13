@@ -119,19 +119,25 @@ typedef uint64_t t8_linearidx_t;
 /** The MPI datatype of t8_linearidx_t */
 #define T8_MPI_LINEARIDX sc_MPI_UNSIGNED_LONG_LONG
 
+/** The padding size is the size of a void pointer*/
 #define T8_PADDING_SIZE (sizeof (void *))
 /** Compute the number of bytes that have to be added to a given byte_count
  * such that it is a multiple of the padding size */
 #define T8_ADD_PADDING(_x) ((T8_PADDING_SIZE - ((_x) % T8_PADDING_SIZE)) % T8_PADDING_SIZE)
 
-/** Define precisions for computations */
+/** Define machine precision for computations */
 #define T8_PRECISION_EPS SC_EPS
+/** Define square root of machine precision for computations */
 #define T8_PRECISION_SQRT_EPS sqrt (T8_PRECISION_EPS)
 
 /** Access multidimensional data on one-dimensional C arrays. */
+/** Access onedimensional data on one-dimensional C arrays. */
 #define T8_1D_TO_1D(nx, i) (i)
+/** Access twodimensional data on one-dimensional C arrays. */
 #define T8_2D_TO_1D(nx, ny, i, j) ((i) * (ny) + (j))
+/** Access threedimensional data on one-dimensional C arrays. */
 #define T8_3D_TO_1D(nx, ny, nz, i, j, k) (((i) * (ny) + (j)) * (nz) + (k))
+/** Access fourdimensional data on one-dimensional C arrays. */
 #define T8_4D_TO_1D(nx, ny, nz, nl, i, j, k, l) ((((i) * (ny) + (j)) * (nz) + (k)) * (nl) + (l))
 
 /** Communication tags used internal to t8code. */
@@ -283,11 +289,12 @@ void
 t8_init (int log_threshold);
 
 /** Return a pointer to an array element indexed by a t8_locidx_t.
+ * \param [in] array The array of elements.
  * \param [in] index needs to be in [0]..[elem_count-1].
- * \return           A void * pointing to entry \a it in \a array.
+ * \return           A void * pointing to entry \a index in \a array.
  */
 void *
-t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t it);
+t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t index);
 
 /** Return values for subroutines to indicate if they fail or success. */
 #define T8_SUBROUTINE_SUCCESS 1 /* true */

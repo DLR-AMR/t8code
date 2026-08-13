@@ -20,6 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_writer.hxx
+ * This file contains the function to write a forest in ASCII VTK format.
+ */
+
 #ifndef T8_VTK_WRITER_HXX
 #define T8_VTK_WRITER_HXX
 
@@ -94,6 +99,12 @@ class vtk_writer {
   }
 
 #if T8_ENABLE_VTK
+  /**
+   * Convert a grid to a vtkUnstructuredGrid.
+   *
+   * \param[in] grid The forest or cmesh that is translated.
+   * \param[out] unstructuredGrid The vtkUnstructuredGrid to fill with the data of \a grid.
+   */
   void
   grid_to_vtkUnstructuredGrid (const grid_t grid, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid)
   {

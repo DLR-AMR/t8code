@@ -31,10 +31,14 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
+/**
+ * Linear geometry. Performs a (tri-/bi-)linear interpolation between the
+ * vertices of the assigned tree. Produces linear trees and elements.
+ */
 struct t8_geometry_linear: public t8_geometry_with_vertices
 {
  public:
-  /** 
+  /**
    * Constructor of the linear geometry. The geometry
    * is viable with all tree types and uses as many vertices as the tree type has.
    * The vertices are saved via the \ref t8_cmesh_set_tree_vertices function.
@@ -42,7 +46,7 @@ struct t8_geometry_linear: public t8_geometry_with_vertices
    */
   t8_geometry_linear ();
 
-  /** The destructor. 
+  /** The destructor.
    * Clears the allocated memory.
    */
   virtual ~t8_geometry_linear ();

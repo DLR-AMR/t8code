@@ -114,7 +114,7 @@ t8_mat_mult_vec (const double mat[3][3], const double a[3], double b[3])
 /** Apply matrix-matrix multiplication: C = A*B.
  * \param [in]        A     3x3-matrix.
  * \param [in]        B     3x3-matrix.
- * \param [int,out]   C     3x3-matrix.
+ * \param [in,out]    C     3x3-matrix.
  */
 static inline void
 t8_mat_mult_mat (const double A[3][3], const double B[3][3], double C[3][3])

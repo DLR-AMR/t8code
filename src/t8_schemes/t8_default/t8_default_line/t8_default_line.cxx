@@ -401,9 +401,9 @@ t8_default_scheme_line::refines_irregular () const
 
 #if T8_ENABLE_DEBUG
 int
-t8_default_scheme_line::element_is_valid (const t8_element_t *elem) const
+t8_default_scheme_line::element_is_valid (const t8_element_t *element) const
 {
-  return t8_dline_is_valid ((const t8_dline_t *) elem);
+  return t8_dline_is_valid ((const t8_dline_t *) element);
 }
 
 void

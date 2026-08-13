@@ -60,6 +60,10 @@ typedef enum {
   T8_VTK_VECTOR  /* 3 double values per element */
 } t8_vtk_data_type_t;
 
+/** A data field for VTK output.
+ * This struct is used to store data that is written to the VTK files.
+ * It contains the type of the data, a description, and the actual data array.
+ */
 typedef struct
 {
   t8_vtk_data_type_t type;  /**< Describes of which type the data array is */

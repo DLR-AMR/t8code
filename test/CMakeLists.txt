@@ -143,6 +143,8 @@ add_t8_cpp_test( NAME t8_gtest_transform_serial             SOURCES t8_forest/t8
 add_t8_cpp_test( NAME t8_gtest_ghost_exchange_parallel      SOURCES t8_forest/t8_gtest_ghost_exchange.cxx )
 add_t8_cpp_test( NAME t8_gtest_ghost_delete_parallel        SOURCES t8_forest/t8_gtest_ghost_delete.cxx )
 add_t8_cpp_test( NAME t8_gtest_ghost_and_owner_parallel     SOURCES t8_forest/t8_gtest_ghost_and_owner.cxx )
+add_t8_cpp_test( NAME t8_gtest_ghost_overlap_serial         SOURCES t8_forest/t8_gtest_ghost_overlap.cxx )
+add_t8_cpp_test( NAME t8_gtest_ghost_overlap_parallel       SOURCES t8_forest/t8_gtest_ghost_overlap_parallel.cxx t8_forest/t8_forest_ghost_definition_overlap_for_testing.cxx)
 add_t8_cpp_test( NAME t8_gtest_balance_parallel             SOURCES t8_forest/t8_gtest_balance.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_commit_parallel       SOURCES t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_face_normal_serial    SOURCES t8_forest/t8_gtest_forest_face_normal.cxx )

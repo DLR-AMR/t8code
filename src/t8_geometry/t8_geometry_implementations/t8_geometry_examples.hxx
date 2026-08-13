@@ -66,7 +66,14 @@ struct t8_geometry_quadrangulated_disk: public t8_geometry_with_vertices
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                     double *out_coords) const;
 
-  /* Jacobian, not implemented. */
+  /**
+   * Jacobian, not implemented.
+   * \param[in] cmesh       The cmesh in which the point lies.
+   * \param[in] gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param[in] ref_coords  Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param[in] num_coords  The number of points to map.
+   * \param[in] jacobian    The Jacobian matrix to be filled.
+   */
   void
   t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
                              [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
@@ -136,7 +143,14 @@ struct t8_geometry_triangulated_spherical_surface: public t8_geometry_with_verti
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                     double *out_coords) const;
 
-  /* Jacobian, not implemented. */
+  /**
+   * Jacobian, not implemented.
+   * \param[in] cmesh       The cmesh in which the point lies.
+   * \param[in] gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param[in] ref_coords  Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param[in] num_coords  The number of points to map.
+   * \param[in] jacobian    The Jacobian matrix to be filled.
+   */
   void
   t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
                              [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
@@ -195,7 +209,14 @@ struct t8_geometry_tessellated_spherical_surface: public t8_geometry_with_vertic
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                     double *out_coords) const;
 
-  /* Jacobian, not implemented. */
+  /**
+   * Jacobian, not implemented.
+   * \param[in] cmesh       The cmesh in which the point lies.
+   * \param[in] gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param[in] ref_coords  Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param[in] num_coords  The number of points to map.
+   * \param[in] jacobian    The Jacobian matrix to be filled.
+   */
   void
   t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
                              [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
@@ -256,7 +277,14 @@ struct t8_geometry_cubed_spherical_shell: public t8_geometry_with_vertices
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                     double *out_coords) const;
 
-  /* Jacobian, not implemented. */
+  /**
+   * Jacobian, not implemented.
+   * \param[in] cmesh       The cmesh in which the point lies.
+   * \param[in] gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param[in] ref_coords  Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param[in] num_coords  The number of points to map.
+   * \param[in] jacobian    The Jacobian matrix to be filled.
+   */
   void
   t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
                              [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
@@ -315,7 +343,14 @@ struct t8_geometry_prismed_spherical_shell: public t8_geometry_with_vertices
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                     double *out_coords) const;
 
-  /* Jacobian, not implemented. */
+  /**
+   * Jacobian, not implemented.
+   * \param[in] cmesh       The cmesh in which the point lies.
+   * \param[in] gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param[in] ref_coords  Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param[in] num_coords  The number of points to map.
+   * \param[in] jacobian    The Jacobian matrix to be filled.
+   */
   void
   t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
                              [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,
@@ -374,7 +409,14 @@ struct t8_geometry_cubed_sphere: public t8_geometry_with_vertices
   t8_geom_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
                     double *out_coords) const;
 
-  /* Jacobian, not implemented. */
+  /**
+   * Jacobian, not implemented.
+   * \param[in] cmesh       The cmesh in which the point lies.
+   * \param[in] gtreeid     The global tree (of the cmesh) in which the reference point is.
+   * \param[in] ref_coords  Array of tree dimension x \a num_coords many entries, specifying a point in \f$ [0,1]^\mathrm{dim} \f$.
+   * \param[in] num_coords  The number of points to map.
+   * \param[in] jacobian    The Jacobian matrix to be filled.
+   */
   void
   t8_geom_evaluate_jacobian ([[maybe_unused]] t8_cmesh_t cmesh, [[maybe_unused]] t8_gloidx_t gtreeid,
                              [[maybe_unused]] const double *ref_coords, [[maybe_unused]] const size_t num_coords,

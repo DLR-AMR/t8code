@@ -47,39 +47,70 @@
 class t8_element_array_iterator {
 
  private:
-  const t8_scheme* scheme;         /*!< The scheme of the elements residing within the array. */
-  const sc_array_t* elements;      /*!< A pointer to the actual serialized array of element pointers. */
-  t8_locidx_t current_index { 0 }; /*!< The index the iterator currently points to. */
-  t8_eclass_t tree_class;          /*!< The tree class of the elements in the array. */
+  const t8_scheme* scheme;         /**< The scheme of the elements residing within the array. */
+  const sc_array_t* elements;      /**< A pointer to the actual serialized array of element pointers. */
+  t8_locidx_t current_index { 0 }; /**< The index the iterator currently points to. */
+  t8_eclass_t tree_class;          /**< The tree class of the elements in the array. */
 
  public:
-  using iterator_category = std::random_access_iterator_tag;
-  using difference_type = std::ptrdiff_t;
-  using pointer = t8_element_t**;
-  using value_type = t8_element_t*;
-  using reference = t8_element_t*&;
+  using iterator_category = std::random_access_iterator_tag; /**< The iterator category. */
+  using difference_type = std::ptrdiff_t;                    /**< The difference type for the iterator. */
+  using pointer = t8_element_t**;                            /**< The pointer type for the iterator. */
+  using value_type = t8_element_t*;                          /**< The value type for the iterator. */
+  using reference = t8_element_t*&;                          /**< The reference type for the iterator. */
 
   /* Constructors */
   t8_element_array_iterator () = delete;
+
+  /**
+   * Constructor for the iterator.
+   * \param [in] element_array The element array to iterate over.
+   * \param [in] position      The position in the array to start iterating from.
+   */
   t8_element_array_iterator (const t8_element_array_t* element_array, const t8_locidx_t position)
     : scheme { t8_element_array_get_scheme (element_array) }, elements { t8_element_array_get_array (element_array) },
       current_index { position }, tree_class (t8_element_array_get_tree_class (element_array)) {};
 
-  /* Copy/Move Constructors/Assignment-Operators */
+  /**
+   * Copy constructor for the iterator.
+   * \param [in] other The iterator to copy from.
+   */
   t8_element_array_iterator (const t8_element_array_iterator& other) = default;
+
+  /**
+   * Assignment operator for the iterator.
+   * \param [in] other The iterator to assign from.
+   * \return A reference to this iterator.
+   */
   t8_element_array_iterator&
   operator= (const t8_element_array_iterator& other)
     = default;
+  /**
+   * Move constructor for the iterator.
+   * \param [in] other The iterator to move from.
+   */
   t8_element_array_iterator (t8_element_array_iterator&& other) = default;
+
+  /**
+   * Move assignment operator for the iterator.
+   * \param [in] other The iterator to move from.
+   * \return A reference to this iterator.
+   */
   t8_element_array_iterator&
   operator= (t8_element_array_iterator&& other)
     = default;
 
-  /* Destructor */
+  /** Destructor for the iterator.
+   * The iterator does not own the elements it points to, so no cleanup is necessary.
+   */
   ~t8_element_array_iterator () = default;
 
   /* Dereferencing operator of the iterator wrapper returning a value_type (a t8_element_t-pointer
    * casted from the serialized char-bytes in the underlying sc_array_t). */
+  /**
+   * Dereference operator for the iterator.
+   * \return A pointer to the element at the current index in the array.
+   */
   value_type
   operator* ()
   {
@@ -87,6 +118,11 @@ class t8_element_array_iterator {
     return static_cast<t8_element_t*> (t8_sc_array_index_locidx (elements, current_index));
   };
 
+  /**
+   * Subscript operator for the iterator.
+   * \param [in] n The index to access.
+   * \return A pointer to the element at the given index in the array.
+   */
   value_type
   operator[] (const difference_type n) const
   {
@@ -95,12 +131,21 @@ class t8_element_array_iterator {
   };
 
   /* Pre- and Postfix increment */
+  /**
+   * Pre-increment operator for the iterator.
+   * \return A reference to this iterator after incrementing.
+   */
   t8_element_array_iterator&
   operator++ ()
   {
     ++current_index;
     return *this;
   };
+
+  /**
+   * Post-increment operator for the iterator.
+   * \return A copy of this iterator before incrementing.
+   */
   t8_element_array_iterator
   operator++ (int)
   {
@@ -110,12 +155,21 @@ class t8_element_array_iterator {
   };
 
   /* Pre- and Postfix decrement */
+  /**
+   * Pre-decrement operator for the iterator.
+   * \return A reference to this iterator after decrementing.
+   */
   t8_element_array_iterator&
   operator-- ()
   {
     --current_index;
     return *this;
   };
+
+  /**
+   * Post-decrement operator for the iterator.
+   * \return A copy of this iterator before decrementing.
+   */
   t8_element_array_iterator
   operator-- (int)
   {
@@ -125,12 +179,23 @@ class t8_element_array_iterator {
   };
 
   /* Arithmetic assignment operators */
+  /**
+   * Add a number to the current index of the iterator.
+   * \param [in] n The number to add.
+   * \return A reference to this iterator after adding.
+   */
   t8_element_array_iterator&
   operator+= (const difference_type n)
   {
     current_index += n;
     return *this;
   }
+
+  /**
+   * Subtract a number from the current index of the iterator.
+   * \param [in] n The number to subtract.
+   * \return A reference to this iterator after subtracting.
+   */
   t8_element_array_iterator&
   operator-= (const difference_type n)
   {
@@ -139,33 +204,79 @@ class t8_element_array_iterator {
     return *this;
   }
   /* Comparison operators */
+  /**
+   * Equality operator for the iterator.
+   * \param [in] iter1 The first iterator to compare.
+   * \param [in] iter2 The second iterator to compare.
+   * \return True if both iterators point to the same element in the same array, false otherwise.
+   */
   friend bool
   operator== (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
   {
     return (iter1.elements->array == iter2.elements->array && iter1.current_index == iter2.current_index);
   };
+
+  /**
+   * Inequality operator for the iterator.
+   * \param [in] iter1 The first iterator to compare.
+   * \param [in] iter2 The second iterator to compare.
+   * \return True if both iterators do not point to the same element in the same array, false otherwise.
+   */
   friend bool
   operator!= (const t8_element_array_iterator& iter1, const t8_element_array_iterator& iter2)
   {
     return (iter1.elements->array != iter2.elements->array || iter1.current_index != iter2.current_index);
   };
+
+  /**
+   * Comparison operators for the iterator.
+   * These operators allow comparing two iterators based on their current index within the same array.
+   * \param [in] lhs The left-hand side iterator.
+   * \param [in] rhs The right-hand side iterator.
+   * \return True if the left-hand side iterator points to an element with a lower index than the right-hand side iterator,
+   *         false otherwise.
+   */
   friend bool
   operator< (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
   {
     T8_ASSERT (lhs.elements->array == rhs.elements->array);
     return lhs.current_index < rhs.current_index;
   }
+
+  /**
+   * Greater-than operator for the iterator.
+   * \param [in] lhs The left-hand side iterator.
+   * \param [in] rhs The right-hand side iterator.
+   * \return True if the left-hand side iterator points to an element with a higher index than the right-hand side iterator,
+   *         false otherwise.
+   */
   friend bool
   operator> (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
   {
     T8_ASSERT (rhs.elements->array == lhs.elements->array);
     return rhs.current_index < lhs.current_index;
   }
+
+  /**
+   * Less-than-or-equal operator for the iterator.
+   * \param [in] lhs The left-hand side iterator.
+   * \param [in] rhs The right-hand side iterator.
+   * \return True if the left-hand side iterator points to an element with a lower or equal index than the right-hand side iterator,
+   *         false otherwise.
+   */
   friend bool
   operator<= (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
   {
     return !(rhs < lhs);
   }
+
+  /**
+   * Greater-than-or-equal operator for the iterator.
+   * \param [in] lhs The left-hand side iterator.
+   * \param [in] rhs The right-hand side iterator.
+   * \return True if the left-hand side iterator points to an element with a higher or equal index than the right-hand side iterator,
+   *         false otherwise.
+   */
   friend bool
   operator>= (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
   {
@@ -173,6 +284,12 @@ class t8_element_array_iterator {
   }
 
   /* Arithmetic operators */
+  /**
+   * Plus operator for the iterator.
+   * \param [in] iter The iterator to operate on.
+   * \param [in] n    The number to add.
+   * \return A new iterator with the updated index.
+   */
   friend t8_element_array_iterator
   operator+ (const t8_element_array_iterator& iter, const difference_type n)
   {
@@ -180,11 +297,25 @@ class t8_element_array_iterator {
     tmp_iterator += n;
     return tmp_iterator;
   }
+
+  /**
+   * Plus operator for the iterator.
+   * \param [in] n    The number to add.
+   * \param [in] iter The iterator to operate on.
+   * \return A new iterator with the updated index.
+   */
   friend t8_element_array_iterator
   operator+ (const difference_type n, const t8_element_array_iterator& iter)
   {
     return iter + n;
   }
+
+  /**
+   * Minus operator for the iterator.
+   * \param [in] iter The iterator to operate on.
+   * \param [in] n    The number to subtract.
+   * \return A new iterator with the updated index.
+   */
   friend t8_element_array_iterator
   operator- (const t8_element_array_iterator& iter, const difference_type n)
   {
@@ -192,6 +323,13 @@ class t8_element_array_iterator {
     tmp_iterator -= n;
     return tmp_iterator;
   }
+
+  /**
+   * Difference operator for the iterator.
+   * \param [in] lhs The left-hand side iterator.
+   * \param [in] rhs The right-hand side iterator.
+   * \return The difference in indices between the two iterators.
+   */
   friend difference_type
   operator- (const t8_element_array_iterator& lhs, const t8_element_array_iterator& rhs)
   {

@@ -51,9 +51,11 @@
 #include <t8_config.h>
 #endif
 
-/* In order to convert a macro to a string, we
+/** In order to convert a macro to a string, we
  * need to pass it through these two helper macros. */
 #define T8_STRINGIFY(arg) #arg
+/** In order to convert a macro to a string, we
+ * need to pass it through these two helper macros. */
 #define T8_STRINGIFY_MIDDLE(arg) T8_STRINGIFY (arg)
 
 /** The T8_VERSION_POINT macro as a string */

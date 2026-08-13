@@ -745,11 +745,11 @@ t8_default_scheme_quad::refines_irregular () const
 
 #if T8_ENABLE_DEBUG
 int
-t8_default_scheme_quad::element_is_valid (const t8_element_t *elem) const
+t8_default_scheme_quad::element_is_valid (const t8_element_t *element) const
 {
   /* TODO: additional checks? do we set pad8 or similar?
    */
-  return p4est_quadrant_is_extended ((const p4est_quadrant_t *) elem);
+  return p4est_quadrant_is_extended ((const p4est_quadrant_t *) element);
 }
 
 void

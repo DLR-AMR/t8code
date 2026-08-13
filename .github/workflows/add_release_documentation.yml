@@ -62,7 +62,7 @@ jobs:
     # This step is necessary to get the newest package data
     - name: checkout
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         path: t8code
         fetch-tags: true
@@ -116,7 +116,7 @@ jobs:
 # upload documentation
     - name: Checkout t8code-website repo
       if: ${{ env.MINOR_RELEASE == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         ref: ${{ github.head_ref }}
         repository: DLR-AMR/t8code-website

@@ -33,7 +33,7 @@
 #include <t8_schemes/t8_scheme.h>
 
 /** The t8_element_array_t is an array to store t8_element_t * of a given
- * eclass_scheme implementation. It is a wrapper around \ref sc_array_t.
+ * eclass_scheme implementation. It is a wrapper around  sc_array_t.
  * Each time, a new element is created by the functions for \ref t8_element_array_t,
  * the eclass function either \ref t8_element_new or \ref t8_element_init is called
  * for the element.
@@ -41,9 +41,12 @@
  */
 typedef struct
 {
-  const t8_scheme_c *scheme; /**< A scheme of which elements should be stored */
-  t8_eclass_t tree_class;    /**< The tree class of the elements stored in the array */
-  sc_array_t array;          /**< The array in which the elements are stored */
+  /** 
+   * The scheme of which elements should be stored.
+   */
+  const t8_scheme_c *scheme; /**!< A scheme of which elements should be stored */
+  t8_eclass_t tree_class;    /**!< The tree class of the elements stored in the array */
+  sc_array_t array;          /**!< The array in which the elements are stored */
 } t8_element_array_t;
 
 T8_EXTERN_C_BEGIN ();
@@ -151,7 +154,7 @@ void
 t8_element_array_copy (t8_element_array_t *dest, const t8_element_array_t *src);
 
 /** Enlarge an array by one element.
- * \param [in, ou] element_array Array structure to be modified.
+ * \param [in, out] element_array Array structure to be modified.
  * \return Returns a pointer to a newly added element for which \ref t8_element_init
  *         was called.
  */
@@ -159,7 +162,7 @@ t8_element_t *
 t8_element_array_push (t8_element_array_t *element_array);
 
 /** Enlarge an array by a number of elements.
- * \param [in, ou] element_array Array structure to be modified.
+ * \param [in, out] element_array Array structure to be modified.
  * \param [in]     count        The number of elements to add.
  * \return Returns a pointer to the newly added elements for which \ref t8_element_init
  *                was called.
