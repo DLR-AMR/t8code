@@ -54,3 +54,10 @@ t8_forest_discard_subelements (t8_forest_t forest);
  */
 bool
 t8_forest_has_local_subelements (const t8_forest_t forest);
+
+/** Check if a forest contains subelements globally.
+ * \param [in] forest The forest to be checked.
+ * \return true if there are subelements in the forest, false otherwise.
+ */
+bool
+t8_forest_has_global_subelements (const t8_forest_t forest);

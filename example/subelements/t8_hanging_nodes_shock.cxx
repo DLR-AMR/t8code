@@ -194,7 +194,7 @@ main (int argc, char **argv)
 
   /* --- Adapt the forest: refine near the first circle, creating hanging nodes. --- */
   forest = t8_adapt_forest (forest);
-  std::cout << "Subelements before removing: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements before removing: " << t8_forest_has_global_subelements (forest) << std::endl;
   prefix = "t8_adapted1";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n", prefix);
@@ -207,7 +207,7 @@ main (int argc, char **argv)
 
   /* --- Resolve hanging nodes by transitioning elements into subelements. --- */
   forest = t8_forest_remove_hanging_nodes (forest);
-  std::cout << "Subelements after removing: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements after removing: " << t8_forest_has_global_subelements (forest) << std::endl;
   const char *prefix_without_hanging_nodes = "t8_resolved_hanging_nodes1";
   t8_forest_write_vtk (forest, prefix_without_hanging_nodes);
   t8_global_productionf (" [subelements] Wrote adapted forest with resolved hanging nodes to vtu files: %s*\n",
@@ -216,7 +216,7 @@ main (int argc, char **argv)
   /* --- Discard the subelements to recover a plain, recursively refined forest. --- */
   /* This is the inverse of the previous step and is required before adapting again. */
   forest = t8_forest_discard_subelements (forest);
-  std::cout << "Subelements removed: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements removed: " << t8_forest_has_global_subelements (forest) << std::endl;
   const char *prefix_removed_sub = "t8_discarded_subelements1";
   t8_forest_write_vtk (forest, prefix_removed_sub);
   t8_global_productionf (" [subelements] Wrote adapted forest with discarded subelements to vtu files: %s*\n",
