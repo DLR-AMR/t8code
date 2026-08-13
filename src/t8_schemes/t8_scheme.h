@@ -860,7 +860,7 @@ void
 t8_element_MPI_Unpack (const t8_scheme_c *scheme, const t8_eclass_t tree_class, void *recvbuf, const int buffer_size,
                        int *position, t8_element_t **elements, const unsigned int count, sc_MPI_Comm comm);
 
-/** Check if \ref elem is a subelement.
+/** Check if \a elem is a subelement.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of the current tree.
  * \param [in] elem The elem to be checked. 
@@ -882,7 +882,7 @@ t8_element_get_number_of_subelements (const t8_scheme_c *scheme, const t8_eclass
  * \param [in] elem The element to be refined.
  * \param [in] type The subelement type to be used for refinement.
  * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
- *                  The number of subelements is determined by \ref element_get_number_of_subelements.
+ *                  The number of subelements is determined by \ref t8_element_get_number_of_subelements.
  */
 void
 t8_refine_element_in_subelements (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,

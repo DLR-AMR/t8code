@@ -51,14 +51,18 @@ struct t8_subelement_traits;
 template <>
 struct t8_subelement_traits<t8_subelementquad_scheme>
 {
-  using UnderlyingScheme = t8_standalone_scheme<T8_ECLASS_QUAD>;
+  /** Subelement class used for the quad scheme. See also \ref t8_subelement_type.hxx. */
   using SubelementType = t8_subelement_element<t8_standalone_element<T8_ECLASS_QUAD>>;
+  /** The standalone scheme for recursive refinement that gets extended by the hanging node resolution for quads. */
+  using UnderlyingScheme = t8_standalone_scheme<T8_ECLASS_QUAD>;
 };
 
 /** Traits specialization for triangular subelements. */
 template <>
 struct t8_subelement_traits<t8_subelementtri_scheme>
 {
-  using UnderlyingScheme = t8_default_scheme_tri;
+  /** Subelement class used for the triangle scheme. See also \ref t8_subelement_type.hxx. */
   using SubelementType = t8_subelement_element<t8_dtri>;
+  /** The scheme for recursive refinement that gets extended by the hanging node resolution for triangles. */
+  using UnderlyingScheme = t8_default_scheme_tri;
 };

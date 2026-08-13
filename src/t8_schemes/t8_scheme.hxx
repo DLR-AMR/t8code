@@ -1196,7 +1196,7 @@ struct t8_scheme
       eclass_schemes[tree_class]);
   };
 
-  /** Check if \ref elem is a subelement.
+  /** Check if \a elem is a subelement.
    * \param [in] tree_class    The eclass of the current tree.
    * \param [in] elem The elem to be checked. 
    */

@@ -48,7 +48,7 @@
  * is not a subelement and is just the underlying standalone triangle. Valid types are 1..6; the
  * all-faces-hanging code 7 is excluded, since that is a normal recursive refinement.
  *
- * Please have a look at \ref vertex_coords_of_subelement for the definition of the subelement ids for triangles.
+ * Please have a look at \a vertex_coords_of_subelement for the definition of the subelement ids for triangles.
  */
 struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRIANGLE, t8_subelementtri_scheme>
 {
@@ -276,7 +276,7 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
     const auto *subelement = this->as_subelement (elem);
     const unsigned type = static_cast<unsigned> (subelement->subelement_type);
     const unsigned id = static_cast<unsigned> (subelement->subelement_id);
-    const int num_hanging_faces = std::popcount (type);
+    [[maybe_unused]] const int num_hanging_faces = std::popcount (type);
     T8_ASSERT (num_hanging_faces == 1 || num_hanging_faces == 2);
 
     /* The corners of the parent triangle. */

@@ -58,7 +58,7 @@
          x - - - - - x              x - - - - - x      enumeration (here faces f0 and f3
               f2                          0            are hanging)
  * \endverbatim
- * Also have a look at \ref vertex_coords_of_subelement for the definition of the subelement ids for quads and the 
+ * Also have a look at \a vertex_coords_of_subelement for the definition of the subelement ids for quads and the 
  * order of vertices.
  */
 struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>
@@ -246,7 +246,7 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     return ((type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] - 1) - iface)) & 1u) != 0u;
   }
 
-  /** For each parent face, its two vertexs in clockwise order. */
+  /** For each parent face, its two vertices in clockwise order. */
   static constexpr int face_to_clockwise_vertex[4][2] = { { 0, 2 }, { 3, 1 }, { 1, 0 }, { 2, 3 } };
 
   /** Compute the integer coordinates of all three vertices of a triangular subelement.

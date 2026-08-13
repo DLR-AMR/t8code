@@ -176,7 +176,7 @@ t8_forest_has_global_subelements (const t8_forest_t forest)
   sc_MPI_Comm comm = t8_forest_get_mpicomm (forest);
 
   /* Convert boolean condition to MPI-compatible integer */
-  const int local = t8_forest_has_local_subelements (forest) ? 1 : 0;
+  int local = t8_forest_has_local_subelements (forest) ? 1 : 0;
   int global = 0;
 
   const int mpiret = sc_MPI_Allreduce (&local, &global, 1, sc_MPI_INT, sc_MPI_LOR, comm);
