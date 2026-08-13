@@ -215,11 +215,12 @@ void
 t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic);
 
 /** Construct a unit square of two quads and four triangles.
+ * \param [in,out] cmesh    An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
+ *                          Filled and committed in place.
  * \param [in] comm         The mpi communicator to use.
- * \return                  A valid cmesh, as if _init and _commit had been called.
  */
-t8_cmesh_t
-t8_cmesh_new_2D_hypercube_hybrid (sc_MPI_Comm comm);
+void
+t8_cmesh_new_2D_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?

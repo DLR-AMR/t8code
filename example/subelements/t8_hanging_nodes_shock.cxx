@@ -184,7 +184,9 @@ main (int argc, char **argv)
 
   /* --- Setup: build the cmesh and a uniform forest. --- */
   /* Hybrid 2D hypercube: a mesh containing both quad and triangle trees. */
-  t8_cmesh_t cmesh = t8_cmesh_new_2D_hypercube_hybrid (comm);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_2D_hypercube_hybrid (cmesh, comm);
   /* Uniform forest using the subelement scheme (required for hanging-node resolution). */
   const int level = 0;
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, comm);
