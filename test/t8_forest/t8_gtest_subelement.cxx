@@ -39,7 +39,7 @@
 * needed for visualization (so e.g. no connectivity). 
 */
 TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
-{ 
+{
   /* Setup: Build hypercube cmesh and uniform forest with the subelement scheme. */
   const int level = 3;
   t8_cmesh_t cmesh;
@@ -60,7 +60,7 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
 
   /* Remove hanging nodes by inserting subelements. The forest is already balanced as we only adapted once. */
   forest = t8_forest_remove_hanging_nodes (forest);
-  EXPECT_TRUE(t8_forest_is_committed (forest));
+  EXPECT_TRUE (t8_forest_is_committed (forest));
 
   /* Hanging node resolution must introduce subelements into the forest. */
   EXPECT_TRUE (t8_forest_has_global_subelements (forest));
@@ -76,13 +76,13 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   t8_forest_commit (forest_partitioned);
 
   /* Subelements and leaf count must remain consistent after repartitioning. */
-  EXPECT_TRUE (t8_forest_has_global_subelements  (forest_partitioned));
+  EXPECT_TRUE (t8_forest_has_global_subelements (forest_partitioned));
   EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest_partitioned), num_leaves_sub);
 
   /* Discard subelements from the partitioned forest. */
   forest = t8_forest_discard_subelements (forest_partitioned);
   /* Subelements should now be completely removed. */
-  EXPECT_FALSE (t8_forest_has_global_subelements  (forest));
+  EXPECT_FALSE (t8_forest_has_global_subelements (forest));
   /* Discarding subelements should restore the pre-resolution leaf count. */
   EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest), num_leaves_adapted);
 
