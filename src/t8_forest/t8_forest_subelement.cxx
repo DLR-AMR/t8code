@@ -102,7 +102,8 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
     t8_forest_leaf_face_neighbors (forest_from, which_tree, elements[0], &neighbors, iface, &dual_faces_internal,
                                    &num_neighbors, &neighids, &neigh_class);
     if (num_neighbors > 1) {
-      // Store in correct cell of the binary format. We encode it as f0 -> bit 0, ..., f_{n-1} -> bit (num_faces-1).
+      /* Store in correct cell of the binary format. We encode it as f0 -> bit (num_faces-1), ..., f_{n-1} -> bit 0.
+      * This means (f0 f1  ... f_{n-1}). */
       subelement_type += 1 << ((num_faces - 1) - iface);
     }
 
