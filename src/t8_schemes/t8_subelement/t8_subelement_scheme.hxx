@@ -935,14 +935,11 @@ struct t8_subelement_scheme_common:
     for (int i = 0; i < length; ++i) {
       elems[i] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) this->scheme_context);
     }
-/* In debug mode, set sensible default values. */
-#if T8_ENABLE_DEBUG
-    {
-      for (int i = 0; i < length; i++) {
-        element_init (1, elems[i]);
-      }
+    /* For other schemes, we only set sensible data in debug mode. For subelements, it is important that we always set
+     * the subelement id and type to zero for new elements. */
+    for (int i = 0; i < length; i++) {
+      element_init (1, elems[i]);
     }
-#endif
   }
 
   /** Initialize an array of allocated elements.
@@ -957,14 +954,12 @@ struct t8_subelement_scheme_common:
   void
   element_init ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elems) const noexcept
   {
-#if T8_ENABLE_DEBUG
     TSubelementType *subelement = (TSubelementType *) elems;
     for (int ielem = 0; ielem < length; ielem++) {
       reset_subelement_values (subelement + ielem);
       derived ().underlying_scheme.element_init (1, subelement_to_standalone (subelement + ielem));
       T8_ASSERT (element_is_valid ((t8_element_t *) (subelement + ielem)));
     }
-#endif
   }
 
   /** Deinitialize an array of allocated elements.
