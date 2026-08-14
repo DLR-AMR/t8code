@@ -62,6 +62,7 @@ class multiscale {
   using detail_t = detail_data<TShape, U, P>;
   using levelmultiindex = t8_mra::levelmultiindex<TShape>;
   using index_set = ankerl::unordered_dense::set<levelmultiindex>;
+  using level_set = levelindex_set<levelmultiindex>;
   using geometry_t = cell_geometry<TShape, P>;
   using dg_t = dg<TShape, U, P>;
   using MST = mst<element_t>;
@@ -93,13 +94,13 @@ class multiscale {
   levelindex_map<levelmultiindex, detail_t> d_map;
 
   /// Significant details
-  levelindex_set<levelmultiindex> td_set;
+  level_set td_set;
 
   /// Elements marked for refinement
-  levelindex_set<levelmultiindex> refinement_set;
+  level_set refinement_set;
 
   /// Elements marked for coarsening
-  levelindex_set<levelmultiindex> coarsening_set;
+  level_set coarsening_set;
 
   multiscale (int max_level, sc_MPI_Comm comm)
     : grid (max_level, comm), d_map (grid.maximum_level), td_set (grid.maximum_level),

@@ -45,17 +45,13 @@ refine (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = {
       if (flags.grade_neighbours)
         mra.td_set.insert (lmi);
 
-      if (l < max_level - 1 && flags.refine_children)
+      if (l + 1 >= min_level && l < max_level - 1 && flags.refine_children)
         for (const auto &child : t8_mra::children_lmi (lmi))
           mra.refinement_set.insert (child);
     }
   }
 
-  for (auto l = 0; l < min_level; ++l)
-    mra.refinement_set.erase (l);
-
-  auto prior_refinements = mra.refinement_set;
-  prior_refinements.erase_all ();
+  typename TMultiscale::level_set prior_refinements (mra.maximum_level ());
 
   for (auto round = 0;; ++round) {
     const auto new_marks = neighbour_prediction (mra, min_level, prior_refinements);
