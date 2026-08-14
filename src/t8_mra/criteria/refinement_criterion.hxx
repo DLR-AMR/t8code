@@ -2,7 +2,6 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <cmath>
 #include <concepts>
 
 namespace t8_mra
@@ -65,7 +64,7 @@ struct harten_prediction
   {
     const auto norm = mra.scaled_detail_norm (lmi);
     const auto threshold = c_thresh * mra.local_threshold_value (lmi, gamma);
-    const auto steep_factor = std::pow (2.0, static_cast<int> (TMultiscale::P_DIM) + 1);
+    constexpr auto steep_factor = static_cast<double> (1u << (TMultiscale::P_DIM + 1));
 
     return { norm > threshold, norm > steep_factor * threshold };
   }
