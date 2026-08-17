@@ -5,7 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <iterator>
+#include <numeric>
+#include <utility>
 #include <vector>
 
 #include "sc_mpi.h"
@@ -30,19 +31,6 @@ clear_state (TMultiscale &mra)
   mra.coarsening_set.erase_all ();
 }
 
-/// Number of leaves marked for refinement in [min_level, max_level).
-template <typename TMultiscale>
-[[nodiscard]] unsigned int
-num_refinement_marks (TMultiscale &mra, int min_level, int max_level)
-{
-  auto num = 0u;
-
-  for (auto l = min_level; l < max_level; ++l)
-    num += mra.refinement_set[l].size ();
-
-  return num;
-}
-
 /// Reconstruct children data (inverse two-scale, zero details) for the marks in
 /// refinement_set, then realize them with one forest adapt.
 template <typename TMultiscale>
@@ -57,18 +45,6 @@ apply_refinement (TMultiscale &mra, int min_level, int max_level, int recursive)
   mra.inverse_multiscale_transformation (min_level, max_level);
   mra.grid.adapt (TMultiscale::static_refinement_callback, recursive);
 }
-
-/// Stand-in for callers that realize their marks each round (balance) and never
-/// descend a prior-refinements path.
-struct no_prior_marks
-{
-  template <typename TLmi>
-  bool
-  contains (const TLmi & /*unused*/) const
-  {
-    return false;
-  }
-};
 
 /**
  * @brief Mark the refinement path from a neighbour's covering leaf to its level
