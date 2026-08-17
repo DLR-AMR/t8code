@@ -119,7 +119,7 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
   if (subelement_type == 0) { /* In this case, there are no hanging faces and we do nothing. */
     return 0;
   }
-  else if (subelement_type == 15) { /* Normal 1:8 refinement. */
+  else if (subelement_type == (1 << num_faces) - 1) { /* Regular refinement. */
     return 1;
   }
   else { /* Use subelements and add 1 to every type, to avoid refine = 1. */
