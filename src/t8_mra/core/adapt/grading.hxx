@@ -169,18 +169,17 @@ exchange_refine_requests (TMultiscale &mra, const std::vector<std::vector<size_t
 }
 
 /**
- * @brief One grading round: same-level neighbours of marked families
+ * @brief One grading pass over the faces of the filtered leaves
  *
- * Every leaf of a family in td_set refines its coarser covering leaves by one
- * level; larger jumps resolve over repeated rounds against prior_refinements. A
- * neighbour whose covering leaf is remote is shipped to its owner. Collective:
- * the returned count is global.
+ * Every leaf passing leaf_filter marks the refinement paths of its face
+ * neighbours' covering leaves that are more than max_level_gap levels coarser;
+ * a covering leaf owned by another rank is shipped to it. Collective.
  *
- * @return Global number of new marks in this round
+ * @return Number of new LOCAL marks
  */
-template <typename TMultiscale, typename TPriorRefinements>
-[[nodiscard]] unsigned int
-neighbour_prediction (TMultiscale &mra, int min_level, const TPriorRefinements &prior_refinements)
+template <typename TMultiscale, typename TLeafFilter>
+unsigned int
+grade_neighbours (TMultiscale &mra, int min_level, unsigned int max_level_gap, TLeafFilter &&leaf_filter)
 {
   int mpirank;
   int mpisize;
@@ -191,12 +190,12 @@ neighbour_prediction (TMultiscale &mra, int min_level, const TPriorRefinements &
   auto num_new_marks = 0u;
 
   mra.grid.for_each_face_neigh (
-    [&] (const auto &lmi) { return lmi.level () != 0 && mra.td_set.contains (t8_mra::parent_lmi (lmi)); },
+    std::forward<TLeafFilter> (leaf_filter),
     [&] (const auto &, t8_eclass_t tree_class, t8_gloidx_t neigh_gtreeid, t8_element_t *neigh_element,
          const auto &neigh_lmi) {
-      const auto res = refine_covering_leaf (mra, neigh_lmi, min_level, 0u, prior_refinements);
+      const auto res = mark_refinement_path (mra, neigh_lmi, min_level, max_level_gap);
       if (res > 0)
-        ++num_new_marks;
+        num_new_marks += res;
       else if (res < 0 && mpisize > 1) {
         const auto owner = mra.grid.find_owner (neigh_gtreeid, neigh_element, tree_class);
 
@@ -206,9 +205,9 @@ neighbour_prediction (TMultiscale &mra, int min_level, const TPriorRefinements &
     });
 
   if (mpisize > 1)
-    num_new_marks += exchange_refine_requests (mra, outgoing, min_level, 0u, prior_refinements);
+    num_new_marks += exchange_refine_requests (mra, outgoing, min_level, max_level_gap);
 
-  return mra.grid.global_num_marks (num_new_marks);
+  return num_new_marks;
 }
 
 }  // namespace t8_mra::adapt
