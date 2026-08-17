@@ -133,9 +133,9 @@ t8_forest_t
 t8_forest_remove_hanging_nodes (t8_forest_t forest)
 {
   t8_global_productionf ("Into t8_forest_remove_hanging_nodes.\n");
-  forest = t8_forest_new_adapt (forest, detail::t8_remove_hanging_nodes_callback, 0, 0, NULL);
+  t8_forest_t forest_new = t8_forest_new_adapt (forest, detail::t8_remove_hanging_nodes_callback, 0, 0, NULL);
   t8_global_productionf ("Done t8_forest_remove_hanging_nodes.\n");
-  return forest;
+  return forest_new;
 }
 
 t8_forest_t

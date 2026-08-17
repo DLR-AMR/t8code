@@ -36,6 +36,7 @@
  *        \a forest must be committed before calling this function. Please note that the scheme provided with the 
  *         forest has to be a fitting subelement scheme.
  * \return A new forest with the same number of trees and the same connectivity, but conformal without hanging nodes. 
+ * \note \a forest is unreferenced during this. 
  */
 t8_forest_t
 t8_forest_remove_hanging_nodes (t8_forest_t forest);
@@ -44,6 +45,7 @@ t8_forest_remove_hanging_nodes (t8_forest_t forest);
  *    and to be able to adapt again.
  * \param [in] forest The input forest which may contain subelements.
  * \return A new forest with the same number of trees and the same connectivity, but without subelements. 
+ * \note \a forest is unreferenced during this. 
  */
 t8_forest_t
 t8_forest_discard_subelements (t8_forest_t forest);

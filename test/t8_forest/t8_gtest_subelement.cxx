@@ -31,6 +31,7 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_subelement.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
@@ -58,6 +59,11 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   EXPECT_FALSE (t8_forest_has_global_subelements (forest));
   const t8_gloidx_t num_leaves_adapted = t8_forest_get_global_num_leaf_elements (forest);
 
+  // Check that discarding without subelements just does nothing.
+  forest = t8_forest_discard_subelements (forest);
+  EXPECT_FALSE (t8_forest_has_global_subelements (forest));
+  EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest), num_leaves_adapted);
+
   /* Remove hanging nodes by inserting subelements. The forest is already balanced as we only adapted once. */
   forest = t8_forest_remove_hanging_nodes (forest);
   EXPECT_TRUE (t8_forest_is_committed (forest));
@@ -79,6 +85,11 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   EXPECT_TRUE (t8_forest_has_global_subelements (forest_partitioned));
   EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest_partitioned), num_leaves_sub);
 
+#if T8_ENABLE_DEBUG
+  /* Write vtk file in debug mode. This checks that all functions are available that are required for visualization. */
+  t8_forest_write_vtk (forest_partitioned, "test_subelements");
+#endif
+
   /* Discard subelements from the partitioned forest. */
   forest = t8_forest_discard_subelements (forest_partitioned);
   /* Subelements should now be completely removed. */
@@ -86,6 +97,6 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   /* Discarding subelements should restore the pre-resolution leaf count. */
   EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest), num_leaves_adapted);
 
-  /* Clean up forest */
+  /* Clean up. */
   t8_forest_unref (&forest);
 }
