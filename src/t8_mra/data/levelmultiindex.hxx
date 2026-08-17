@@ -83,6 +83,21 @@ struct levelmultiindex
     return static_cast<unsigned int> ((index >> BASECELL_BITS) & ((1ULL << LEVEL_BITS) - 1));
   }
 
+  /// Base tree id (the constructor's basecell).
+  [[nodiscard]] size_t
+  basecell () const noexcept
+  {
+    return index & ((1ULL << BASECELL_BITS) - 1);
+  }
+
+  /// Child-id taken at level l in [1, level()], descending from the base tree.
+  [[nodiscard]] size_t
+  child_id (unsigned int l) const noexcept
+  {
+    const auto path = index >> (BASECELL_BITS + LEVEL_BITS);
+    return (path >> ((level () - l) * PATH_BITS)) & ((1ULL << PATH_BITS) - 1);
+  }
+
   /// Child j: append j to the path, increment the level.
   [[nodiscard]] static levelmultiindex
   jth_child (levelmultiindex lmi, size_t j) noexcept
