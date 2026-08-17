@@ -19,7 +19,6 @@
 
 #include "t8_mra/core/adapt/grading.hxx"
 #include "t8_mra/criteria/coarsening_criterion.hxx"
-#include "t8_mra/data/element_data.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
 
 namespace t8_mra::adapt
@@ -28,10 +27,8 @@ namespace t8_mra::adapt
 /**
  * @brief Destructive fine->coarse sweep collapsing non-significant families
  *
- * Each complete family is two-scale transformed; a non-significant one is
- * collapsed in place (parent replaces the children in lmi_map, children marked).
- * Collapsing before the sweep descends makes the parent a leaf for the next
- * level, so one traversal captures the whole cascade.
+ * Thresholded multiscale decomposition: a collapsed parent is a leaf for the
+ * next level, so one traversal captures the whole cascade.
  *
  * @return Number of families collapsed on this rank
  */
@@ -39,56 +36,18 @@ template <typename TMultiscale, typename TCriterion>
 [[nodiscard]] unsigned int
 coarsen_sweep (TMultiscale &mra, int min_level, int max_level, TCriterion &criterion)
 {
-  using element_t = typename TMultiscale::element_t;
-  using detail_t = typename TMultiscale::detail_t;
   using levelmultiindex = typename TMultiscale::levelmultiindex;
 
-  auto *lmi_map = mra.get_lmi_map ();
-  auto num_marked = 0u;
+  auto num_collapsed_children = 0u;
+  mra.transform.multiscale_decomposition (
+    min_level, max_level, *mra.get_lmi_map (), mra.d_map,
+    [&] (const auto &parent) { return criterion.significant (mra, parent); },
+    [&] (const auto &child) {
+      mra.coarsening_set.insert (child);
+      ++num_collapsed_children;
+    });
 
-  for (auto l = max_level; l > min_level; --l) {
-    typename TMultiscale::index_set candidates;
-    candidates.reserve (lmi_map->size (l));
-
-    for (const auto &[lmi, _] : (*lmi_map)[l])
-      candidates.insert (t8_mra::parent_lmi (lmi));
-
-    for (const auto &parent : candidates) {
-      const auto siblings = t8_mra::children_lmi (parent);
-
-      std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
-      auto family_complete = true;
-
-      for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-        const auto *sibling = lmi_map->find (siblings[k]);
-        if (sibling == nullptr) {
-          family_complete = false;
-          break;
-        }
-        data_on_siblings[k] = *sibling;
-      }
-
-      if (!family_complete)
-        continue;
-
-      detail_t data_on_coarse;
-      mra.transform.two_scale_family (data_on_siblings, data_on_coarse);
-      mra.d_map.insert (parent, data_on_coarse);
-
-      if (criterion.significant (mra, parent))
-        continue;
-
-      lmi_map->insert (parent, static_cast<const element_t &> (data_on_coarse));
-      for (const auto &child : siblings) {
-        lmi_map->erase (child);
-        mra.coarsening_set.insert (child);
-      }
-
-      ++num_marked;
-    }
-  }
-
-  return num_marked;
+  return num_collapsed_children / levelmultiindex::NUM_CHILDREN;
 }
 
 /**
