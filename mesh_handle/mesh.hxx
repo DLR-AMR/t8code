@@ -142,6 +142,16 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   /**
+   * Getter for the number of global elements in the mesh.
+   * \return Number of global elements in the mesh.
+   */
+  t8_gloidx_t
+  get_num_global_elements () const
+  {
+    return t8_forest_get_global_num_leaf_elements (m_forest);
+  }
+
+  /**
    * Getter for the number of ghost elements.
    * \return Number of ghost elements in the mesh.
    */
