@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <iterator>
 #include <vector>
@@ -70,45 +71,44 @@ struct no_prior_marks
 };
 
 /**
- * @brief Find the covering leaf of a same-level neighbour and refine it
+ * @brief Mark the refinement path from a neighbour's covering leaf to its level
  *
- * Walks up to the covering leaf, then descends towards the neighbour through
- * prior_refinements (marks treated as performed). A covering leaf more than
- * max_level_gap levels coarser than the neighbour is refined one level (0:
- * grading, exact match; 1: 2:1 balance).
+ * Walks up to the covering leaf, then marks every cell on the path back down,
+ * so the resulting leaf ends at most max_level_gap levels coarser than the
+ * neighbour (0: grading, exact match; 1: 2:1 balance). The path realizes in
+ * one recursive adapt.
  *
- * @return 1 on a new mark, 0 if nothing to do, -1 if no covering leaf is local
+ * @return Number of new marks, or -1 if no covering leaf is local
  */
-template <typename TMultiscale, typename TLmi, typename TPriorRefinements>
+template <typename TMultiscale, typename TLmi>
 [[nodiscard]] int
-refine_covering_leaf (TMultiscale &mra, const TLmi &neigh_lmi, int min_level, unsigned int max_level_gap,
-                      const TPriorRefinements &prior_refinements)
+mark_refinement_path (TMultiscale &mra, const TLmi &neigh_lmi, int min_level, unsigned int max_level_gap)
 {
   auto *lmi_map = mra.get_lmi_map ();
 
+  std::array<TLmi, 1u << TLmi::LEVEL_BITS> ancestor;
   auto walk = neigh_lmi;
-  while (walk.level () > 0 && !lmi_map->contains (walk))
+  ancestor[walk.level ()] = walk;
+
+  while (walk.level () > 0 && !lmi_map->contains (walk)) {
     walk = t8_mra::parent_lmi (walk);
+    ancestor[walk.level ()] = walk;
+  }
 
   if (!lmi_map->contains (walk))
     return -1;
 
-  while (walk.level () + max_level_gap < neigh_lmi.level () && prior_refinements.contains (walk)) {
-    auto down = neigh_lmi;
+  if (static_cast<int> (walk.level ()) < min_level)
+    return 0;
 
-    while (down.level () > walk.level () + 1)
-      down = t8_mra::parent_lmi (down);
-    walk = down;
-  }
+  auto num_marks = 0;
+  for (auto level = walk.level (); level + max_level_gap < neigh_lmi.level (); ++level)
+    if (!mra.refinement_set.contains (ancestor[level])) {
+      mra.refinement_set.insert (ancestor[level]);
+      ++num_marks;
+    }
 
-  if (walk.level () + max_level_gap < neigh_lmi.level () && static_cast<int> (walk.level ()) >= min_level
-      && !mra.refinement_set.contains (walk)) {
-    mra.refinement_set.insert (walk);
-
-    return 1;
-  }
-
-  return 0;
+  return num_marks;
 }
 
 /**
