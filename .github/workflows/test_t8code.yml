@@ -67,9 +67,13 @@ jobs:
       run: export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
         && export MPI="${{ inputs.MPI }}"
         && export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
+        && export SC_PATH=$PWD/sc/build/$BUILD_TYPE
+        && export P4EST_PATH=$PWD/p4est/build/$BUILD_TYPE
         && echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
         && echo MPI="$MPI" >> $GITHUB_ENV
         && echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
+        && echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
+        && echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
 #
 #  T8CODE
 #
