@@ -120,36 +120,33 @@ mark_refinement_path (TMultiscale &mra, const TLmi &neigh_lmi, int min_level, un
  *
  * @return Number of new LOCAL marks created by received requests
  */
-template <typename TMultiscale, typename TPriorRefinements>
+template <typename TMultiscale>
 unsigned int
 exchange_refine_requests (TMultiscale &mra, const std::vector<std::vector<size_t>> &outgoing, int min_level,
-                          unsigned int max_level_gap, const TPriorRefinements &prior_refinements)
+                          unsigned int max_level_gap)
 {
   using levelmultiindex = typename TMultiscale::levelmultiindex;
 
   int mpisize;
   sc_MPI_Comm_size (mra.grid.comm, &mpisize);
 
-  std::vector<int> send_counts;
-  send_counts.reserve (mpisize);
-
-  std::ranges::transform (outgoing, std::back_inserter (send_counts),
-                          [] (const auto &list) { return static_cast<int> (list.size ()); });
+  std::vector<int> send_counts (mpisize);
+  std::ranges::transform (outgoing, send_counts.begin (), [] (const auto &list) { return static_cast<int> (list.size ()); });
 
   std::vector<int> recv_counts (mpisize, 0);
   sc_MPI_Alltoall (send_counts.data (), 1, sc_MPI_INT, recv_counts.data (), 1, sc_MPI_INT, mra.grid.comm);
 
-  std::vector<std::vector<size_t>> incoming (mpisize);
+  std::vector<size_t> incoming (std::reduce (recv_counts.begin (), recv_counts.end (), 0));
   std::vector<sc_MPI_Request> requests;
   requests.reserve (2 * mpisize);
 
+  auto offset = 0;
   for (auto rank = 0; rank < mpisize; ++rank) {
     if (recv_counts[rank] > 0) {
-      incoming[rank].resize (recv_counts[rank]);
       requests.emplace_back ();
-
-      sc_MPI_Irecv (incoming[rank].data (), recv_counts[rank] * sizeof (size_t), sc_MPI_BYTE, rank, 0, mra.grid.comm,
+      sc_MPI_Irecv (incoming.data () + offset, recv_counts[rank] * sizeof (size_t), sc_MPI_BYTE, rank, 0, mra.grid.comm,
                     &requests.back ());
+      offset += recv_counts[rank];
     }
 
     if (send_counts[rank] > 0) {
@@ -161,10 +158,12 @@ exchange_refine_requests (TMultiscale &mra, const std::vector<std::vector<size_t
   sc_MPI_Waitall (static_cast<int> (requests.size ()), requests.data (), sc_MPI_STATUSES_IGNORE);
 
   auto num_new_marks = 0u;
-  for (const auto &batch : incoming)
-    num_new_marks += static_cast<unsigned int> (std::ranges::count_if (batch, [&] (const auto &idx) {
-      return refine_covering_leaf (mra, levelmultiindex (idx), min_level, max_level_gap, prior_refinements) > 0;
-    }));
+  for (const auto &idx : incoming) {
+    const auto res = mark_refinement_path (mra, levelmultiindex (idx), min_level, max_level_gap);
+
+    if (res > 0)
+      num_new_marks += res;
+  }
 
   return num_new_marks;
 }
