@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cmath>
+#include <utility>
 #include <vector>
 
 #include "ankerl/unordered_dense.h"
@@ -70,6 +71,15 @@ class mst {
                             levelindex_map<levelmultiindex, detail_t> &d_map) const
   {
     multiscale_decomposition (l_min, l_max, lmi_map, d_map, mask);
+  }
+
+  template <typename TKeep, typename TCollapsed>
+  void
+  multiscale_decomposition (unsigned int l_min, unsigned int l_max, levelindex_map<levelmultiindex, element_t> &lmi_map,
+                            levelindex_map<levelmultiindex, detail_t> &d_map, TKeep &&keep, TCollapsed &&collapsed) const
+  {
+    multiscale_decomposition (l_min, l_max, lmi_map, d_map, mask, std::forward<TKeep> (keep),
+                              std::forward<TCollapsed> (collapsed));
   }
 
   void
@@ -225,11 +235,15 @@ class mst {
    * @param lmi_map          Leaves; collapsed in place.
    * @param d_map            Output details per family.
    * @param mask_coefficients Two-scale mask matrices M[k].
+   * @param keep             keep(parent lmi) after its detail is in d_map: true
+   *                         leaves the family refined (thresholded coarsening).
+   * @param collapsed        collapsed(child lmi) per consumed child.
    */
+  template <typename TKeep, typename TCollapsed>
   static void
   multiscale_decomposition (unsigned int l_min, unsigned int l_max, levelindex_map<levelmultiindex, element_t> &lmi_map,
                             levelindex_map<levelmultiindex, detail_t> &d_map,
-                            const std::vector<t8_mra::mat> &mask_coefficients)
+                            const std::vector<t8_mra::mat> &mask_coefficients, TKeep &&keep, TCollapsed &&collapsed)
   {
     index_set I_set;
     detail_t data_on_coarse;
@@ -263,19 +277,35 @@ class mst {
           continue;
 
         two_scale_family (data_on_siblings, data_on_coarse, mask_coefficients);
+        d_map.insert (lmi, data_on_coarse);
+
+        if (keep (lmi))
+          continue;
 
         // The lmi_map leaf keeps only single-scale data (slice off d_coeffs).
         lmi_map.insert (lmi, static_cast<const element_t &> (data_on_coarse));
-        d_map.insert (lmi, data_on_coarse);
 
         // Consume only this family's children; members of skipped (incomplete)
         // families must stay in the map as leaves.
-        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
           lmi_map.erase (siblings_lmi[k]);
+          collapsed (siblings_lmi[k]);
+        }
       }
 
       I_set.clear ();
     }
+  }
+
+  /** @brief Unconditional decomposition: every complete family collapses. */
+  static void
+  multiscale_decomposition (unsigned int l_min, unsigned int l_max, levelindex_map<levelmultiindex, element_t> &lmi_map,
+                            levelindex_map<levelmultiindex, detail_t> &d_map,
+                            const std::vector<t8_mra::mat> &mask_coefficients)
+  {
+    multiscale_decomposition (
+      l_min, l_max, lmi_map, d_map, mask_coefficients, [] (const auto & /*unused*/) { return false; },
+      [] (const auto & /*unused*/) {});
   }
 
   /**
