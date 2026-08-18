@@ -59,6 +59,13 @@ class mst {
   }
 
   void
+  inverse_two_scale_family (const element_t &data_on_coarse, const detail_t &details,
+                            std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings) const
+  {
+    inverse_two_scale_family (data_on_coarse, details, data_on_siblings, mask);
+  }
+
+  void
   multiscale_transformation (unsigned int l_min, unsigned int l_max,
                              levelindex_map<levelmultiindex, element_t> &lmi_map,
                              levelindex_map<levelmultiindex, detail_t> &d_map) const
@@ -144,6 +151,45 @@ class mst {
     data_on_coarse.order = data_on_siblings[0].order;
 
     TOrderingPolicy::adjust_parent_order (data_on_coarse);
+  }
+
+  /**
+   * @brief Inverse two-scale transform of one family (parent + details -> children).
+   *
+   *   u_child[k][i] = d[k][i] + Σ_j M[k](i,j) * u_parent[j]
+   *
+   * @param data_on_coarse   The parent cell.
+   * @param details          The family's detail coefficients.
+   * @param data_on_siblings Output children.
+   * @param mask_coefficients Two-scale mask matrices M[k].
+   */
+  static void
+  inverse_two_scale_family (const element_t &data_on_coarse, const detail_t &details,
+                            std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
+                            const std::vector<t8_mra::mat> &mask_coefficients)
+  {
+    const double inv_scaling_factor = TScalingPolicy::inverse_scaling_factor ();
+    const auto &u_parent = data_on_coarse.u_coeffs;
+
+    for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
+      const auto &Mk = mask_coefficients[k];
+      auto &child = data_on_siblings[k];
+
+      for (auto u = 0u; u < U_DIM; ++u) {
+        for (auto i = 0u; i < DOF; ++i) {
+          auto sum = 0.0;
+
+          for (auto j = 0u; j < DOF; ++j)
+            sum += u_parent[element_t::dg_idx (u, j)] * Mk (i, j);
+
+          child.u_coeffs[element_t::dg_idx (u, i)]
+            = details.d_coeffs[detail_t::wavelet_idx (k, u, i)] + sum * inv_scaling_factor;
+        }
+      }
+
+      child.vol = data_on_coarse.vol / levelmultiindex::NUM_CHILDREN;
+      TOrderingPolicy::adjust_child_order (child, k, data_on_coarse);
+    }
   }
 
   /**
@@ -325,38 +371,18 @@ class mst {
                                      levelindex_map<levelmultiindex, detail_t> &d_map,
                                      const std::vector<t8_mra::mat> &mask_coefficients)
   {
-    element_t new_data;
-    const double inv_scaling_factor = TScalingPolicy::inverse_scaling_factor ();
+    std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
 
     for (auto l = l_min; l < l_max; ++l) {
       lmi_map[l + 1].reserve (d_map[l].size ());
 
       for (const auto &[lmi, d] : d_map[l]) {
         const auto children_lmi = t8_mra::children_lmi (lmi);
-        const auto lmi_data = lmi_map.get (lmi);
-        const auto &details = d.d_coeffs;
-        const auto &u_parent = lmi_data.u_coeffs;
 
-        // Inverse MST: Reconstruct children u_child[k][i] = d[k][i] + Σ_j M[k](i,j) * u_parent[j]
-        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-          const auto &Mk = mask_coefficients[k];
-          for (auto u = 0u; u < U_DIM; ++u) {
-            for (auto i = 0u; i < DOF; ++i) {
-              auto sum = 0.0;
+        inverse_two_scale_family (lmi_map.get (lmi), d, data_on_siblings, mask_coefficients);
 
-              for (auto j = 0u; j < DOF; ++j)
-                sum += u_parent[element_t::dg_idx (u, j)] * Mk (i, j);
-
-              new_data.u_coeffs[element_t::dg_idx (u, i)]
-                = details[detail_t::wavelet_idx (k, u, i)] + sum * inv_scaling_factor;
-            }
-          }
-
-          new_data.vol = lmi_data.vol / levelmultiindex::NUM_CHILDREN;
-          TOrderingPolicy::adjust_child_order (new_data, k, lmi_data);
-
-          lmi_map.insert (children_lmi[k], new_data);
-        }
+        for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+          lmi_map.insert (children_lmi[k], data_on_siblings[k]);
 
         lmi_map.erase (lmi);
       }
