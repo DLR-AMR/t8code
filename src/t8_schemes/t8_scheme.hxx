@@ -405,7 +405,7 @@ struct t8_scheme
         }
       },
       eclass_schemes[tree_class]);
-  };
+  }
 
   /** Return the max number of children of an eclass.
    * \param [in] tree_class    The eclass of tree the elements are part of.
@@ -495,6 +495,10 @@ struct t8_scheme
    *                      the number of children.
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
+   * \param [in] subelement_type    The subelement type used for refinement. If no type is given,
+   *                                normal refinement is assumed.
+   * \tparam TSubelementType        The type of the subelement type argument, deduced. At most one
+   *                                argument convertible to int is allowed.
    * It is valid to call this function with element = c[0].
    * \see element_get_num_children
    */
@@ -517,7 +521,7 @@ struct t8_scheme
         }
       },
       eclass_schemes[tree_class]);
-  };
+  }
 
   /** Compute the child id of an element.
    * \param [in] tree_class    The eclass of the current tree.
@@ -1223,25 +1227,6 @@ struct t8_scheme
   {
     return std::visit (
       [&] (auto &&scheme) { return scheme.element_MPI_Unpack (recvbuf, buffer_size, position, elements, count, comm); },
-      eclass_schemes[tree_class]);
-  };
-
-  /** Check if \a elem is a subelement.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem The elem to be checked. 
-   */
-  inline int
-  element_is_subelement (const t8_eclass_t tree_class, const t8_element_t *elem) const
-  {
-    return std::visit (
-      [&] (auto &&scheme) -> int {
-        if constexpr (requires { scheme.element_is_subelement (elem); }) {
-          return scheme.element_is_subelement (elem);
-        }
-        else {
-          SC_ABORT ("element_is_subelement not supported by this scheme");
-        }
-      },
       eclass_schemes[tree_class]);
   };
 };

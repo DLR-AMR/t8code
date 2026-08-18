@@ -437,11 +437,3 @@ t8_element_MPI_Unpack (const t8_scheme_c *scheme, const t8_eclass_t tree_class, 
 {
   return scheme->element_MPI_Unpack (tree_class, recvbuf, buffer_size, position, elements, count, comm);
 }
-
-int
-t8_element_is_subelement (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem)
-{
-  SC_CHECK_ABORT (t8_eclass_scheme_is_subelement (scheme, tree_class),
-                  "t8_element_is_subelement was called for a scheme or eclass that does not support subelements.\n");
-  return scheme->element_is_subelement (tree_class, elem);
-}

@@ -860,14 +860,6 @@ void
 t8_element_MPI_Unpack (const t8_scheme_c *scheme, const t8_eclass_t tree_class, void *recvbuf, const int buffer_size,
                        int *position, t8_element_t **elements, const unsigned int count, sc_MPI_Comm comm);
 
-/** Check if \a elem is a subelement.
- * \param [in] scheme        The scheme of the forest.
- * \param [in] tree_class    The eclass of the current tree.
- * \param [in] elem The elem to be checked. 
- */
-int
-t8_element_is_subelement (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_SCHEME_H */

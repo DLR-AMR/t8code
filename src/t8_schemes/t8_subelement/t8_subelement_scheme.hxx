@@ -1147,15 +1147,14 @@ struct t8_subelement_scheme_common:
     }
   }
 
-  // ########################################____SUBELEMENTS____########################################################
+  // ############################################____SUBELEMENT____#####################################################
   /** Check if \a elem is a subelement.
    * \param [in] elem The elem to be checked. 
    */
   static bool
   element_is_subelement (const t8_element_t *elem)
   {
-    const auto *subelement = as_subelement (elem);
-    return (subelement->subelement_type != 0);
+    return as_subelement (elem)->is_subelement ();
   }
 
  protected:

@@ -70,3 +70,15 @@ t8_scheme_has_subelement_scheme (const t8_scheme *scheme)
   }
   return false;
 }
+
+bool
+t8_element_is_subelement (const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_element_t *elem)
+{
+  if (scheme->check_eclass_scheme_type<t8_subelementquad_scheme> (tree_class)) {
+    return t8_subelementquad_scheme::element_is_subelement (elem);
+  }
+  if (scheme->check_eclass_scheme_type<t8_subelementtri_scheme> (tree_class)) {
+    return t8_subelementtri_scheme::element_is_subelement (elem);
+  }
+  return false;
+}

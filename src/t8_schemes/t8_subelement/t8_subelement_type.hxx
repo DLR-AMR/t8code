@@ -42,4 +42,13 @@ struct t8_subelement_element
   int subelement_type
     = 0; /**< Type of the transition cell a subelement is associated to (default is 0, meaning no subelement). */
   int subelement_id = 0; /**< Id of the children subelement the given element is (default is 0). */
+
+  /** Check whether this element is a subelement.
+   * \return True if the element is a subelement, false if it is just the underlying element.
+   */
+  bool
+  is_subelement () const noexcept
+  {
+    return subelement_type != 0;
+  }
 };

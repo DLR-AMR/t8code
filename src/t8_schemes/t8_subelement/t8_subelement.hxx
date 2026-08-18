@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "t8_subelement.hxx"
 #include <t8_schemes/t8_scheme.hxx>
 
 /** Return the subelement scheme implementation of t8code. */
@@ -47,3 +48,14 @@ t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclas
  */
 bool
 t8_scheme_has_subelement_scheme (const t8_scheme *scheme);
+
+/** Check whether a given element is a subelement.
+ * \note We have this function here as we did not want to add the function to the t8_scheme functionality.
+ * \param [in] scheme     The scheme of the forest.
+ * \param [in] tree_class The eclass of the current tree.
+ * \param [in] elem       The element to be checked.
+ * \return                True if the scheme of \a tree_class is a subelement scheme and \a elem is a
+ *                        subelement. False otherwise, in particular for all non-subelement schemes.
+ */
+bool
+t8_element_is_subelement (const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_element_t *elem);
