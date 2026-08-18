@@ -451,9 +451,9 @@ class multiscale {
   template <typename TCriterion = hard_thresholding>
     requires coarsening_criterion<TCriterion, multiscale>
   void
-  coarsen (int min_level, int max_level, TCriterion criterion = {})
+  coarsen (int min_level, int max_level, TCriterion criterion = {}, bool graded = false)
   {
-    adapt::coarsen (*this, min_level, max_level, criterion);
+    adapt::coarsen (*this, min_level, max_level, criterion, graded);
   }
 
   template <typename TCriterion = harten_prediction>
