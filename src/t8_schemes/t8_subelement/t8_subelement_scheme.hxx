@@ -337,7 +337,7 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_num_siblings (element_to_standalone (elem));
     }
-    return element_get_number_of_subelements (as_subelement (elem)->subelement_type);
+    return TSubelementSchemeSpecialization::subelement_get_num_children (elem, as_subelement (elem)->subelement_type);
   }
 
   /** Not implemented for this scheme
@@ -365,7 +365,8 @@ struct t8_subelement_scheme_common:
                                                     element_to_standalone (child));
   }
 
-  /** Return the number of children of an element when it is refined. Not for subelements as they do not have children.
+  /** Return the number of children of an element when it is refined. Non-subelement case, 
+   * where just the underlying scheme is used.
    * \param [in] elem   The element whose number of children is returned.
    * \return            The number of children of \a elem if it is to be refined.
    */
@@ -375,6 +376,19 @@ struct t8_subelement_scheme_common:
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_num_children: Cannot construct child of a subelement.\n");
     return derived ().underlying_scheme.element_get_num_children (element_to_standalone (elem));
+  }
+
+  /** The number of subelements an element is refined into for a specific type.
+   * \param [in] elem   The element whose number of children is returned.
+   * \param [in] subelement_type The subelement type used for refinement.
+   * \return                     The number of subelements of type \a subelement_type.
+   */
+  int
+  element_get_num_children (const t8_element_t *elem, int subelement_type) const noexcept
+  {
+    SC_CHECK_ABORT (!element_is_subelement (elem),
+                    "element_get_num_children: Cannot refine a subelement into subelements.\n");
+    return TSubelementSchemeSpecialization::subelement_get_num_children (elem, subelement_type);
   }
 
   /** Return the max number of children of an eclass. 
@@ -428,6 +442,21 @@ struct t8_subelement_scheme_common:
     derived ().underlying_scheme.element_get_children (subelement_to_standalone (subelement), length,
                                                        standalone_children_ptrs);
     T8_FREE (standalone_children_ptrs);
+  }
+
+  /** This defines how an element is refined in subelements using a specified subelement type. 
+   * \param [in] elem The element to be refined.
+   * \param [in] length   The length of the output array \a c must match the number of subelements.   
+   *                      See \ref element_get_num_children.
+   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
+   * \param [in] type The subelement type to be used for refinement.
+   */
+  void
+  element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[], int type) const noexcept
+  {
+    SC_CHECK_ABORT (length == TSubelementSchemeSpecialization::subelement_get_num_children (elem, type),
+                    "element_get_children: given length is not fitting the number of children.");
+    derived ().subelement_get_children (elem, length, c, type);
   }
 
   /** Compute the child id of an element.
@@ -1018,7 +1047,7 @@ struct t8_subelement_scheme_common:
          && subelement->subelement_type <= TSubelementSchemeSpecialization::subelement_get_number_of_valid_types ())
         && (subelement->subelement_id >= 0
             && subelement->subelement_id
-                 < TSubelementSchemeSpecialization::element_get_number_of_subelements (subelement->subelement_type));
+                 < TSubelementSchemeSpecialization::subelement_get_num_children (elem, subelement->subelement_type));
 
     return subelement_valid && element_valid;
   }
@@ -1127,27 +1156,6 @@ struct t8_subelement_scheme_common:
   {
     const auto *subelement = as_subelement (elem);
     return (subelement->subelement_type != 0);
-  }
-
-  /** Get the number of subelements an element is refined into for a specific type.
-   * \param [in] subelement_type The subelement type used for refinement.
-   */
-  static int
-  element_get_number_of_subelements (int subelement_type)
-  {
-    return TSubelementSchemeSpecialization::element_get_number_of_subelements (subelement_type);
-  }
-
-  /** This defines how an element is refined in subelements using a specified subelement type. 
-   * \param [in] elem The element to be refined.
-   * \param [in] type The subelement type to be used for refinement.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
-   *                  The number of subelements is determined by \ref element_get_number_of_subelements.
-   */
-  void
-  refine_element_in_subelements (const t8_element_t *elem, int type, t8_element_t *c[]) const noexcept
-  {
-    derived ().refine_element_in_subelements (elem, type, c);
   }
 
  protected:

@@ -633,12 +633,12 @@ t8_forest_adapt (t8_forest_t forest)
            */
           int subelement_type = refine - 1;
 
-          int num_subelements = t8_element_get_number_of_subelements (scheme, tree->eclass, subelement_type);
+          int num_subelements = scheme->element_get_num_children (tree->eclass, elements_from[0], subelement_type);
           (void) t8_element_array_push_count (telements, num_subelements);
           for (int zz = 0; zz < num_subelements; zz++) {
             elements[zz] = t8_element_array_index_locidx_mutable (telements, el_inserted + zz);
           }
-          t8_refine_element_in_subelements (scheme, tree->eclass, elements_from[0], subelement_type, elements);
+          scheme->element_get_children (tree->eclass, elements_from[0], num_subelements, elements, subelement_type);
           el_inserted += (t8_locidx_t) num_subelements;
           el_considered++;
         }

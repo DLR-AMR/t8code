@@ -131,11 +131,12 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
   }
 
   /** Get the number of subelements an element is refined into for a specific type.
+   * \param [in] elem   The element whose number of children is returned.
    * \param [in] subelement_type The subelement type used for refinement.
    * \return                     The number of subelements the triangle is split into (hanging faces + 1).
    */
   static int
-  element_get_number_of_subelements (int subelement_type)
+  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
   {
     int num_hanging_faces = 0;
     /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
@@ -147,16 +148,18 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
 
   /** This defines how an element is refined into subelements using a specified subelement type.
    * \param [in] elem The element to be refined.
+   * \param [in] length   The length of the output array \a c must match the number of subelements.   
+   *                      See \ref element_get_num_children.
+   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
    * \param [in] type The subelement type to be used for refinement. This is a binary encoding of the hanging faces.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem.
-   *                  The number of subelements is determined by \ref element_get_number_of_subelements.
    */
   void
-  refine_element_in_subelements (const t8_element_t *elem, int type, t8_element_t *c[]) const noexcept
+  subelement_get_children (const t8_element_t *elem, [[maybe_unused]] const int length, t8_element_t *c[],
+                           int type) const noexcept
   {
     const TSubelementType *element = this->as_subelement (elem);
     TSubelementType **subelements = reinterpret_cast<TSubelementType **> (c);
-    const int num_subelements = this->element_get_number_of_subelements (type);
+    const int num_subelements = this->subelement_get_num_children (elem, type);
 
     T8_ASSERT (type >= 1 && type <= T8_TRI_MAX_SUBELEMENT_TYPE);
     T8_ASSERT (!this->element_is_subelement (elem));
@@ -243,7 +246,7 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
    *      vertex 0 = \a m_c, vertex 1 = path[ \a i ], vertex 2 = path[ \a i+1 ].
    *
    * Since the path has (number of hanging faces + 2) points, there are (number of hanging faces + 1)
-   * subelements, which matches \ref element_get_number_of_subelements. No case distinction is needed:
+   * subelements, which matches \ref element_get_num_children. No case distinction is needed:
    * one hanging face yields a path of three points, two hanging faces a path of four.
    *
    * \verbatim

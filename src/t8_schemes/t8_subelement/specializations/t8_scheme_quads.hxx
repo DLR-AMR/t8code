@@ -142,11 +142,12 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
   }
 
   /** Get the number of subelements an element is refined into for a specific type.
+   * \param [in] elem   The element whose number of children is returned.
    * \param [in] subelement_type The subelement type used for refinement.
    * \return                     The number of subelements the quad is split into for \a subelement_type.
    */
   static int
-  element_get_number_of_subelements (int subelement_type)
+  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
   {
     int num_hanging_faces = 0;
     /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
@@ -158,9 +159,10 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
 
   /** This defines how an element is refined into subelements using a specified subelement type.
    * \param [in] elem The element to be refined.
+   * \param [in] length   The length of the output array \a c must match the number of subelements.   
+   *                      See \ref element_get_num_children.
+   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
    * \param [in] type The subelement type to be used for refinement. This is a binary encoding of the hanging faces.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem.
-   *                  The number of subelements is determined by \ref element_get_number_of_subelements.
    * \note The different subelement types (up to rotation) are:
    * \verbatim
         x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x
@@ -175,11 +177,12 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
    * Note that we do not change the underlying quadrant.
    */
   void
-  refine_element_in_subelements (const t8_element_t *elem, int type, t8_element_t *c[]) const noexcept
+  subelement_get_children (const t8_element_t *elem, [[maybe_unused]] const int length, t8_element_t *c[],
+                           int type) const noexcept
   {
     const TSubelementType *element = this->as_subelement (elem);
     TSubelementType **subelements = reinterpret_cast<TSubelementType **> (c);
-    const int num_subelements = this->element_get_number_of_subelements (type);
+    const int num_subelements = this->subelement_get_num_children (elem, type);
 
     T8_ASSERT (type >= 1 && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
     T8_ASSERT (!this->element_is_subelement (elem));
@@ -347,7 +350,7 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     const auto *subelement = this->as_subelement (elem);
     const unsigned type = static_cast<unsigned> (subelement->subelement_type);
     const int sub_id = subelement->subelement_id;
-    T8_ASSERT (sub_id < element_get_number_of_subelements (static_cast<int> (type)));
+    T8_ASSERT (sub_id < subelement_get_num_children (elem, static_cast<int> (type)));
     /** The parent face at each clockwise position, starting at the left face: left (f0), top (f3),
      * right (f1), bottom (f2). Subelement ids are assigned in this order. */
     const int clockwise_ordering_to_parent_face[4] = { 0, 3, 1, 2 };

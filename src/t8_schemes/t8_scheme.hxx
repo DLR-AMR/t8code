@@ -379,15 +379,32 @@ struct t8_scheme
   };
 
   /** Return the number of children of an element when it is refined.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] element   The element whose number of children is returned.
+   * \param [in] tree_class         The eclass of the current tree.
+   * \param [in] element            The element whose number of children is returned.
+   * \param [in] subelement_type    The subelement type used for refinement. If no type is given,
+   *                                normal refinement is assumed.
+   * \tparam TSubelementType        The type of the subelement type argument, deduced. At most one
+   *                                argument convertible to int is allowed.
    * \return            The number of children of \a element if it is to be refined.
    */
+  template <typename... TSubelementType>
+    requires (sizeof...(TSubelementType) <= 1 && (std::is_convertible_v<TSubelementType, int> && ...))
   inline int
-  element_get_num_children (const t8_eclass_t tree_class, const t8_element_t *element) const
+  element_get_num_children (const t8_eclass_t tree_class, const t8_element_t *element,
+                            TSubelementType &&...subelement_type) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_children (element); },
-                       eclass_schemes[tree_class]);
+    return std::visit (
+      [&] (auto &&scheme) -> int {
+        if constexpr (requires {
+                        scheme.element_get_num_children (element, std::forward<TSubelementType> (subelement_type)...);
+                      }) {
+          return scheme.element_get_num_children (element, std::forward<TSubelementType> (subelement_type)...);
+        }
+        else {
+          SC_ABORT ("element_get_num_children is not supported by this scheme for these arguments");
+        }
+      },
+      eclass_schemes[tree_class]);
   };
 
   /** Return the max number of children of an eclass.
@@ -481,12 +498,25 @@ struct t8_scheme
    * It is valid to call this function with element = c[0].
    * \see element_get_num_children
    */
+  template <typename... TSubelementType>
+    requires (sizeof...(TSubelementType) <= 1 && (std::is_convertible_v<TSubelementType, int> && ...))
   inline void
-  element_get_children (const t8_eclass_t tree_class, const t8_element_t *element, const int length,
-                        t8_element_t *c[]) const
+  element_get_children (const t8_eclass_t tree_class, const t8_element_t *element, const int length, t8_element_t *c[],
+                        TSubelementType &&...subelement_type) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_children (element, length, c); },
-                       eclass_schemes[tree_class]);
+    std::visit (
+      [&] (auto &&scheme) -> void {
+        if constexpr (requires {
+                        scheme.element_get_children (element, length, c,
+                                                     std::forward<TSubelementType> (subelement_type)...);
+                      }) {
+          scheme.element_get_children (element, length, c, std::forward<TSubelementType> (subelement_type)...);
+        }
+        else {
+          SC_ABORT ("element_get_children is not supported by this scheme for these arguments.");
+        }
+      },
+      eclass_schemes[tree_class]);
   };
 
   /** Compute the child id of an element.
@@ -1214,48 +1244,6 @@ struct t8_scheme
       },
       eclass_schemes[tree_class]);
   };
-
-  /** Get the number of subelements an element is refined into for a specific type.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] subelement_type The subelement type used for refinement.
-   */
-  inline int
-  element_get_number_of_subelements (const t8_eclass_t tree_class, int subelement_type) const
-  {
-    return std::visit (
-      [&] (auto &&scheme) -> int {
-        if constexpr (requires { scheme.element_get_number_of_subelements (subelement_type); }) {
-          return scheme.element_get_number_of_subelements (subelement_type);
-        }
-        else {
-          SC_ABORT ("element_get_number_of_subelements not supported by this scheme");
-        }
-      },
-      eclass_schemes[tree_class]);
-  }
-
-  /** This defines how an element is refined in subelements using a specified subelement type. 
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] elem The element to be refined.
-   * \param [in] type The subelement type to be used for refinement.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
-   *                  The number of subelements is determined by \ref element_get_number_of_subelements.
-   */
-  inline void
-  refine_element_in_subelements (const t8_eclass_t tree_class, const t8_element_t *elem, int type,
-                                 t8_element_t *c[]) const
-  {
-    std::visit (
-      [&] (auto &&scheme) -> void {
-        if constexpr (requires { scheme.refine_element_in_subelements (elem, type, c); }) {
-          scheme.refine_element_in_subelements (elem, type, c);
-        }
-        else {
-          SC_ABORT ("refine_element_in_subelements not supported by this scheme");
-        }
-      },
-      eclass_schemes[tree_class]);
-  }
 };
 
 #endif /* !T8_SCHEME_HXX */

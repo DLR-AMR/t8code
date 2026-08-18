@@ -868,26 +868,6 @@ t8_element_MPI_Unpack (const t8_scheme_c *scheme, const t8_eclass_t tree_class, 
 int
 t8_element_is_subelement (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem);
 
-/** Get the number of subelements an element is refined into for a specific type.
- * \param [in] scheme        The scheme of the forest.
- * \param [in] tree_class    The eclass of the current tree.
- * \param [in] subelement_type The subelement type used for refinement.
- */
-int
-t8_element_get_number_of_subelements (const t8_scheme_c *scheme, const t8_eclass_t tree_class, int subelement_type);
-
-/** This defines how an element is refined in subelements using a specified subelement type.
- * \param [in] scheme        The scheme of the forest. 
- * \param [in] tree_class    The eclass of the current tree.
- * \param [in] elem The element to be refined.
- * \param [in] type The subelement type to be used for refinement.
- * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
- *                  The number of subelements is determined by \ref t8_element_get_number_of_subelements.
- */
-void
-t8_refine_element_in_subelements (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem,
-                                  int type, t8_element_t *c[]);
-
 T8_EXTERN_C_END ();
 
 #endif /* !T8_SCHEME_H */
