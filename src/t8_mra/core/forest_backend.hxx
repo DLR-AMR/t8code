@@ -358,6 +358,13 @@ class forest_backend {
     sc_array_destroy (data);
   }
 
+  /** @brief Leaf count of the whole forest. */
+  [[nodiscard]] t8_gloidx_t
+  global_num_leaves () const
+  {
+    return t8_forest_get_global_num_leaf_elements (forest);
+  }
+
   /** @brief Allreduce-MAX of the local mark count. */
   [[nodiscard]] unsigned int
   global_num_marks (unsigned int local_marks) const
