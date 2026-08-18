@@ -19,6 +19,7 @@
 
 #include "t8_mra/core/adapt/grading.hxx"
 #include "t8_mra/criteria/coarsening_criterion.hxx"
+#include "t8_mra/data/levelindex_map.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
 
 namespace t8_mra::adapt
@@ -51,15 +52,65 @@ coarsen_sweep (TMultiscale &mra, int min_level, int max_level, TCriterion &crite
 }
 
 /**
+ * @brief Restore the leaves the sweep collapsed across a 2:1 violation
+ *
+ * Same rounds as balance(), but the children are reconstructed from the details
+ * the sweep left in d_map instead of a zero detail, so a restored leaf carries
+ * its exact data. Runs on the forest of its own pass, before any repartition can
+ * move a cell away from the rank holding its details.
+ *
+ * @return Number of cells restored on this rank
+ */
+template <typename TMultiscale>
+unsigned int
+restore_graded_leaves (TMultiscale &mra)
+{
+  using levelmultiindex = typename TMultiscale::levelmultiindex;
+  using detail_t = typename TMultiscale::detail_t;
+
+  const auto max_level = mra.grid.maximum_level;
+  auto num_restored = 0u;
+
+  for (;;) {
+    mra.refinement_set.erase_all ();
+
+    const auto num_marked
+      = mra.grid.global_num_marks (grade_neighbours (mra, 0, 1u, [] (const auto &lmi) { return lmi.level () >= 2; }));
+
+    if (num_marked == 0)
+      break;
+
+    levelindex_map<levelmultiindex, detail_t> marked_details (max_level);
+    for (auto l = 0u; l < max_level; ++l)
+      for (const auto &lmi : mra.refinement_set[l]) {
+        const auto *details = mra.d_map.find (lmi);
+        marked_details.insert (lmi, details != nullptr ? *details : detail_t {});
+      }
+
+    mra.transform.inverse_multiscale_transformation (0, max_level, *mra.get_lmi_map (), marked_details);
+    mra.grid.adapt (TMultiscale::static_refinement_callback, 1);
+
+    num_restored += num_marked;
+  }
+
+  mra.refinement_set.erase_all ();
+
+  return num_restored;
+}
+
+/**
  * @brief Adaptive coarsening from max_level down to min_level
  *
  * One destructive fine->coarse sweep on the maps per pass; across ranks an outer
  * fixpoint (adapt + repartition make seam families whole) until no rank marks.
+ * With graded set, every pass restores the leaves it collapsed across a 2:1
+ * violation from its own details, so they carry their exact data instead of a
+ * projection. A pass that collapses no more than it restores ends the fixpoint.
  */
 template <typename TMultiscale, typename TCriterion = hard_thresholding>
   requires coarsening_criterion<TCriterion, TMultiscale>
 void
-coarsen (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = {})
+coarsen (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = {}, bool graded = false)
 {
   if constexpr (criterion_has_prepare<TCriterion, TMultiscale>)
     criterion.prepare (mra);
@@ -67,6 +118,7 @@ coarsen (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = 
   for (auto pass = 0;; ++pass) {
     clear_state (mra);
 
+    const auto num_leaves = mra.grid.global_num_leaves ();
     const auto num_marked = coarsen_sweep (mra, min_level, max_level, criterion);
 
     t8_debugf ("MRA coarsen pass %d: %u families marked, %zu leaves remain\n", pass, num_marked,
@@ -76,7 +128,14 @@ coarsen (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = 
       break;
 
     mra.grid.adapt (TMultiscale::static_coarsening_callback, 1);
+
+    if (graded)
+      restore_graded_leaves (mra);
+
     mra.grid.repartition ();
+
+    if (graded && mra.grid.global_num_leaves () >= num_leaves)
+      break;
   }
 
   clear_state (mra);
