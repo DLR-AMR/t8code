@@ -4,6 +4,7 @@
 
 #include "t8_gtest_mra_forest.hxx"
 
+#include <algorithm>
 #include <cmath>
 
 namespace
@@ -251,6 +252,91 @@ TYPED_TEST (mra_criteria, balance_produces_graded_grid)
 
   expect_grid_graded (example.mra, /*slack=*/1);
   expect_forest_map_consistent (example.mra);
+}
+
+/* Discontinuity on an exponential background: the jump makes the sweep skip
+ * levels and leave a 2:1 violation, while no side is exactly representable, so
+ * every collapsed family carries a detail that a projection would lose. */
+template <int U, int DIM>
+auto
+rough_jump_func ()
+{
+  return [] (auto... x) {
+    std::array<double, U> res;
+    const double radius_sq = (((x - 0.5) * (x - 0.5)) + ...);
+    const double base = std::exp ((x + ...));
+
+    for (auto u = 0; u < U; ++u)
+      res[u] = (u + 1) * ((radius_sq < 0.0625) ? 3.0 + base : base);
+
+    return res;
+  };
+}
+
+/* Graded coarsening balances the grid from the details of its own sweeps. It
+ * must reach the grid of coarsen + balance and carry the exact two-scale data on
+ * every leaf, where balance leaves a zero-detail projection on the cells it
+ * refines back. */
+TYPED_TEST (mra_criteria, graded_coarsen_matches_balance_and_keeps_the_data)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const auto max_level = (DIM == 3) ? 4u : 5u;
+
+  mra_example<Shape, U, P> balanced (max_level);
+  mra_example<Shape, U, P> graded (max_level);
+  mra_example<Shape, U, P> reference (max_level);
+
+  balanced.init (rough_jump_func<U, DIM> ());
+  graded.init (rough_jump_func<U, DIM> ());
+  reference.init (rough_jump_func<U, DIM> ());
+
+  /* Exact two-scale data of the uniform grid: the finest level before the
+   * decomposition, every coarser level as a parent in d_map after it. */
+  const auto exact_fine = *reference->get_lmi_map ();
+  reference->multiscale_decomposition (0, max_level);
+
+  balanced->coarsen (0, max_level, t8_mra::hard_thresholding {});
+  const auto num_after_sweep = balanced->get_lmi_map ()->size ();
+  balanced->balance ();
+
+  /* A family only collapses when it is complete, so the sweep steps down one
+   * level per family layer and cannot open a gap wherever a face neighbour is a
+   * sibling or sits in the adjacent family. Then both paths coincide and there
+   * is no projection to catch. */
+  const auto balance_refined = balanced->get_lmi_map ()->size () > num_after_sweep;
+
+  graded->coarsen (0, max_level, t8_mra::hard_thresholding {}, /*graded=*/true);
+
+  expect_grid_graded (graded.mra, /*slack=*/1);
+  expect_forest_map_consistent (graded.mra);
+
+  auto *balanced_map = balanced->get_lmi_map ();
+  auto *graded_map = graded->get_lmi_map ();
+  ASSERT_EQ (balanced_map->size (), graded_map->size ()) << "graded coarsening must reach the balanced grid";
+
+  auto graded_error = 0.0;
+  auto projection_error = 0.0;
+  for (auto l = 0u; l <= max_level; ++l)
+    for (const auto &[lmi, data] : (*graded_map)[l]) {
+      ASSERT_TRUE (balanced_map->contains (lmi)) << "leaf missing from the balanced grid on level " << l;
+
+      const auto &exact = (l == max_level) ? exact_fine.get (lmi).u_coeffs : reference.mra.d_map.get (lmi).u_coeffs;
+      const auto &projected = balanced_map->get (lmi).u_coeffs;
+
+      for (auto i = 0u; i < exact.size (); ++i) {
+        graded_error = std::max (graded_error, std::abs (data.u_coeffs[i] - exact[i]));
+        projection_error = std::max (projection_error, std::abs (projected[i] - exact[i]));
+      }
+    }
+
+  EXPECT_LT (graded_error, eps) << "graded coarsening must keep the exact data";
+
+  if (balance_refined)
+    EXPECT_GT (projection_error, eps) << "the leaves balance refines back must carry a projection";
 }
 
 }  // namespace

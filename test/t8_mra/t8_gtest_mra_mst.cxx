@@ -190,6 +190,35 @@ TYPED_TEST (mra_mst, two_scale_conserves_mass)
   }
 }
 
+/* The family kernels invert each other without touching any map. */
+TYPED_TEST (mra_mst, inverse_two_scale_family_recovers_the_children)
+{
+  using element_t = typename TestFixture::element_t;
+  using detail_t = typename TestFixture::detail_t;
+  using mst_t = typename TestFixture::mst_t;
+  constexpr auto NUM_CHILDREN = TestFixture::NUM_CHILDREN;
+  constexpr auto DOF = TestFixture::DOF;
+  constexpr auto U = TestFixture::U;
+
+  std::array<element_t, NUM_CHILDREN> orig;
+  for (unsigned int k = 0; k < NUM_CHILDREN; ++k)
+    orig[k] = TestFixture::make_leaf (k);
+
+  detail_t parent;
+  mst_t::two_scale_family (orig, parent, this->mask);
+
+  std::array<element_t, NUM_CHILDREN> got;
+  mst_t::inverse_two_scale_family (parent, parent, got, this->mask);
+
+  for (unsigned int k = 0; k < NUM_CHILDREN; ++k) {
+    EXPECT_NEAR (got[k].vol, orig[k].vol, eps) << "child " << k;
+    for (unsigned int u = 0; u < U; ++u)
+      for (unsigned int i = 0; i < DOF; ++i)
+        EXPECT_NEAR (got[k].u_coeffs[element_t::dg_idx (u, i)], orig[k].u_coeffs[element_t::dg_idx (u, i)], eps)
+          << "child " << k << " component " << u << " coeff " << i;
+  }
+}
+
 /* Wavelet kernel: data that lives exactly on the coarse space (a parent with
  * zero details, prolonged to the children) produces zero details when
  * re-analysed, and the parent is recovered. */
