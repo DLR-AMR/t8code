@@ -29,6 +29,8 @@ project(
     VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}"
     )
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include( GNUInstallDirs)
 include( CTest )
 include( CMakeDependentOption )
@@ -53,6 +55,7 @@ option( T8CODE_BUILD_FORTRAN_INTERFACE "Build t8code's Fortran interface" OFF )
 
 option( T8CODE_ENABLE_MPI "Enable t8code's features which rely on MPI" ON )
 option( T8CODE_ENABLE_VTK "Enable t8code's features which rely on VTK" OFF )
+option( T8CODE_ENABLE_MRA "Enable t8code's features which rely on MRA" OFF )
 option( T8CODE_ENABLE_OCC "Enable t8code's features which rely on OpenCASCADE" OFF )
 
 option( T8CODE_USE_SYSTEM_SC "Use system-installed sc library" OFF )
@@ -217,6 +220,13 @@ if( T8CODE_ENABLE_VTK )
         message("Found VTK")
     endif (VTK_FOUND)
 endif( T8CODE_ENABLE_VTK )
+
+if( T8CODE_ENABLE_MRA )
+  find_package(GSL REQUIRED)
+  if(GSL_FOUND)
+    message("Found GSL")
+  endif(GSL_FOUND)
+endif( T8CODE_ENABLE_MRA )
 
 if( T8CODE_ENABLE_OCC )
     find_package( OpenCASCADE REQUIRED COMPONENTS

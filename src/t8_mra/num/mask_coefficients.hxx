@@ -1,0 +1,167 @@
+#pragma once
+
+#ifdef T8_ENABLE_MRA
+
+#include <array>
+#include <cstddef>
+#include <vector>
+
+#include <t8_eclass/t8_eclass.h>
+
+#include <t8_mra/core/shape_traits.hxx>
+#include <t8_mra/num/basis/basis.hxx>
+#include <t8_mra/num/mat.hxx>
+#include <t8_mra/num/quadrature/quadrature.hxx>
+
+namespace t8_mra
+{
+
+// ============================================================================
+// Two-scale low-pass mask coefficients
+// ============================================================================
+// One routine for every shape: the parent -> child-k prolongation matrix
+//   M_k(i, j) = norm * ∫_ref φ_i(ξ) φ_j(Φ_k ξ) dξ
+// with φ = basis<TShape, P> (the reference function space) and Φ_k the affine
+// map of the reference element onto child k of a uniform refinement. Row i is a
+// child dof, column j a parent dof.
+
+/// Affine map ξ -> A ξ + b on the reference element.
+template <int DIM>
+struct affine_map
+{
+  std::array<std::array<double, DIM>, DIM> A {};
+  std::array<double, DIM> b {};
+
+  [[nodiscard]] std::array<double, DIM>
+  operator() (const std::array<double, DIM> &xi) const
+  {
+    std::array<double, DIM> out {};
+    for (auto r = 0; r < DIM; ++r) {
+      out[r] = b[r];
+      for (auto c = 0; c < DIM; ++c)
+        out[r] += A[r][c] * xi[c];
+    }
+    return out;
+  }
+};
+
+/// Cartesian children: 2^DIM axis-aligned half-cells, Φ_k(ξ) = (s_k + ξ)/2.
+template <t8_eclass TShape>
+  requires is_cartesian<TShape>
+[[nodiscard]] auto
+child_maps ()
+{
+  constexpr int DIM = shape_traits<TShape>::DIM;
+  constexpr int NC = shape_traits<TShape>::NUM_CHILDREN;
+
+  std::array<affine_map<DIM>, NC> maps {};
+  for (auto k = 0; k < NC; ++k) {
+    for (auto r = 0; r < DIM; ++r) {
+      maps[k].A[r][r] = 0.5;
+      maps[k].b[r] = 0.5 * ((k >> r) & 1);
+    }
+  }
+  return maps;
+}
+
+/// Triangle children: red refinement into 3 corner triangles + 1 inverted
+/// centre; per-child vertex order fixes the two-scale convention.
+template <t8_eclass TShape>
+  requires (TShape == T8_ECLASS_TRIANGLE)
+[[nodiscard]] auto
+child_maps ()
+{
+  using vertex = std::array<double, 2>;
+  constexpr vertex p0 { 0.0, 0.0 };
+  constexpr vertex p1 { 1.0, 0.0 };
+  constexpr vertex p2 { 0.0, 1.0 };
+
+  constexpr vertex m01 { 0.5, 0.0 };
+  constexpr vertex m02 { 0.0, 0.5 };
+  constexpr vertex m12 { 0.5, 0.5 };
+
+  const std::array<std::array<vertex, 3>, 4> verts { {
+    { m01, m12, m02 },  // centre (inverted)
+    { m01, p1, m12 },
+    { m12, p2, m02 },
+    { m02, p0, m01 },
+  } };
+
+  std::array<affine_map<2>, 4> maps {};
+  for (auto k = 0; k < 4; ++k) {
+    const auto &v = verts[k];
+    maps[k].b = v[0];
+
+    for (auto r = 0; r < 2; ++r) {
+      maps[k].A[r][0] = v[1][r] - v[0][r];
+      maps[k].A[r][1] = v[2][r] - v[0][r];
+    }
+  }
+  return maps;
+}
+
+/// Per-shape mask normalization. Specialize for a new shape.
+template <t8_eclass TShape>
+struct mask_policy;
+
+/// Cartesian basis is orthonormal on the unit cell (vol 1).
+template <t8_eclass TShape>
+  requires is_cartesian<TShape>
+struct mask_policy<TShape>
+{
+  static constexpr double norm = 1.0;
+};
+
+/// Triangle factor 1/4 = 1/2 (two-scale definition) * 1/2 (reference area).
+template <>
+struct mask_policy<T8_ECLASS_TRIANGLE>
+{
+  static constexpr double norm = 0.25;
+};
+
+/// Compute the NUM_CHILDREN two-scale masks for shape TShape at order P.
+template <t8_eclass TShape, int P>
+void
+compute_mask (std::vector<t8_mra::mat> &mask)
+{
+  using basis_t = basis<TShape, P>;
+  constexpr int DIM = basis_t::DIM;
+  constexpr int DOF = basis_t::DOF;
+  constexpr int NC = shape_traits<TShape>::NUM_CHILDREN;
+
+  mask.assign (NC, t8_mra::mat { DOF, DOF });
+
+  const auto children = child_maps<TShape> ();
+  // Integrand child_val * parent_val has degree 2(P-1); 2P integrates it exactly.
+  const quadrature<TShape> quad (quadrature<TShape>::rule_for_degree (2 * P));
+
+  auto wsum = 0.0;
+  for (auto q = 0u; q < quad.num_points; ++q)
+    wsum += quad.weights[q];
+  const auto scale = mask_policy<TShape>::norm / wsum;
+
+  for (auto k = 0; k < NC; ++k) {
+    for (auto q = 0u; q < quad.num_points; ++q) {
+      std::array<double, DIM> xi {};
+
+      for (auto d = 0; d < DIM; ++d)
+        xi[d] = quad.points[DIM * q + d];
+
+      const auto child_val = basis_t::eval (xi);
+      const auto parent_val = basis_t::eval (children[k](xi));
+      const double w = quad.weights[q];
+
+      for (auto i = 0; i < DOF; ++i)
+        for (auto j = 0; j < DOF; ++j)
+          mask[k](i, j) += w * child_val[i] * parent_val[j];
+    }
+
+    for (auto i = 0; i < DOF; ++i)
+      for (auto j = 0; j < DOF; ++j)
+        mask[k](i, j) *= scale;
+  }
+}
+
+}  // namespace t8_mra
+
+#endif  // T8_ENABLE_MRA
