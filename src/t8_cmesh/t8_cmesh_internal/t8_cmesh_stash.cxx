@@ -20,13 +20,15 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_stash.c
+/** \file t8_cmesh_stash.cxx
  * We define the data structures and routines for temporary storage before commit
  */
 
 #include <t8.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
+
+T8_EXTERN_C_BEGIN ();
 
 void
 t8_stash_init (t8_stash_t *pstash)
@@ -338,4 +340,22 @@ t8_stash_is_equal (const t8_stash_t stash_a, const t8_stash_t stash_b)
   return (sc_array_is_equal (&stash_a->attributes, &stash_b->attributes)
           && sc_array_is_equal (&stash_a->classes, &stash_b->classes)
           && sc_array_is_equal (&stash_a->joinfaces, &stash_b->joinfaces));
+}
+
+T8_EXTERN_C_END ();
+
+std::vector<std::pair<t8_gloidx_t, t8_eclass_t>>
+t8_stash_extract_eclasses (const t8_stash_t &stash)
+{
+  const t8_gloidx_t ntrees = stash->classes.elem_count;
+  std::vector<std::pair<t8_gloidx_t, t8_eclass_t>> eclasses;
+  eclasses.reserve (ntrees);
+
+  for (t8_gloidx_t itree = 0; itree < ntrees; itree++) {
+    const t8_stash_class_struct_t *entry
+      = (const t8_stash_class_struct_t *) t8_sc_array_index_locidx (&stash->classes, itree);
+    eclasses.emplace_back (entry->id, entry->eclass);
+  }
+
+  return eclasses;
 }
