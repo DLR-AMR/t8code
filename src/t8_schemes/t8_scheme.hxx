@@ -105,8 +105,8 @@ struct t8_scheme
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
                                 t8_standalone_scheme<T8_ECLASS_HEX>,
                                 /* Subelement schemes */
-                               t8_subelementquad_scheme,
-                                 t8_subelementtri_scheme
+                                t8_subelementquad_scheme,
+                                t8_subelementtri_scheme
                                 >;
   /* clang-format on */
 
