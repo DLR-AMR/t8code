@@ -108,7 +108,6 @@ struct t8_cmesh_boundary_condition_handler
   /**
    * Retrieves the boundary conditions of a cmesh cell.
    *
-   * \param [in] cmesh    The cmesh the cell lives in.
    * \param [in] ltreeid  The local cmesh id of the cell.
    * \note The cmesh local cell id is a different one as the tree id inside the forest.
    * \return A container with the boundary conditions.
@@ -259,7 +258,7 @@ struct t8_cmesh_boundary_condition_handler
   /**
    * Retrieves the boundary condition name to a hash.
    * Crashes if the hash is not registered with a name.
-   * Faster than \ref get_boundary_condition_name_safe().
+   * Faster than \ref t8_cmesh_boundary_condition_handler::get_boundary_condition_name_safe().
    * \param [in] hash   The hash.
    * \return            The boundary condition name.
    */

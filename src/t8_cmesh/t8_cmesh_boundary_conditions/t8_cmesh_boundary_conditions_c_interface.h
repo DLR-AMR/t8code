@@ -21,7 +21,7 @@
 */
 
 /**
- * \file t8_cmesh_boundary_conditions.h
+ * \file t8_cmesh_boundary_conditions_c_interface.h:
  * Public interface for the definition and retrieval of boundary conditions.
  */
 

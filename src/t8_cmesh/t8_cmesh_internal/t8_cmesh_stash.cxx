@@ -344,6 +344,10 @@ t8_stash_is_equal (const t8_stash_t stash_a, const t8_stash_t stash_b)
 
 T8_EXTERN_C_END ();
 
+/** Reads the eclasses from a stash and returns them along with their global tree id.
+ * \param [in] stash    A stash.
+ * \return              Vector of pairs with [global tree id, eclass].
+ */
 std::vector<std::pair<t8_gloidx_t, t8_eclass_t>>
 t8_stash_extract_eclasses (const t8_stash_t &stash)
 {
