@@ -96,9 +96,9 @@ t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid,
 
 void
 t8_cmesh_get_boundary_condition (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face,
-                                 [[maybe_unused]] const char *boundary_condition)
+                                 [[maybe_unused]] const char **boundary_condition)
 {
-  boundary_condition = t8_cmesh_get_boundary_condition (cmesh, ltreeid, face).data ();
+  *boundary_condition = t8_cmesh_get_boundary_condition (cmesh, ltreeid, face).data ();
 };
 
 void
@@ -119,14 +119,14 @@ t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
 void
 t8_forest_get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                                  [[maybe_unused]] const char *boundary_condition)
+                                  [[maybe_unused]] const char **boundary_condition)
 {
   const auto boundary_condition_cpp = t8_forest_get_boundary_condition (forest, ltreeid, element, face);
   if (boundary_condition_cpp.has_value ()) {
-    boundary_condition = boundary_condition_cpp->data ();
+    *boundary_condition = boundary_condition_cpp->data ();
   }
   else {
-    boundary_condition = nullptr;
+    *boundary_condition = nullptr;
   }
 };
 
