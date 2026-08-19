@@ -66,7 +66,7 @@ t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid,
  * \note The cmesh local cell id is a different one as the tree id inside the forest.
  */
 void
-t8_cmesh_get_boundary_condition (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face, const char *boundary_condition);
+t8_cmesh_get_boundary_condition (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face, const char **boundary_condition);
 
 /**
  * Retrieves the boundary conditions of a forest element.
@@ -97,6 +97,6 @@ t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, cons
  */
 void
 t8_forest_get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                                  const char *boundary_condition);
+                                  const char **boundary_condition);
 
 T8_EXTERN_C_END ();
