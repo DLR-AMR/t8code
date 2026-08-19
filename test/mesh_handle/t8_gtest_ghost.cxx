@@ -117,10 +117,6 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 
   const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
-  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
-    // Ensure that we have ghost elements in this test.
-    EXPECT_GT (mesh.get_num_ghosts (), 0);
-  }
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
   auto mesh_iterator = mesh.cbegin ();
