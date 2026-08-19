@@ -36,7 +36,7 @@ struct t8_adapt_data
 };
 
 static double
-t8_gausss_blob (const t8_3D_vec &center_elem, const t8_3D_vec &center_cube, const double radius)
+t8_gauss_blob (const t8_3D_vec &center_elem, const t8_3D_vec &center_cube, const double radius)
 {
   double expo = 0;
   for (int i = 0; i < 3; i++) {
@@ -68,7 +68,7 @@ t8_create_element_data (t8_forest_t forest, const t8_3D_vec &sphere_center, cons
       element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       t8_3D_vec center;
       t8_forest_element_centroid (forest, itree, element, center.data ());
-      element_data[current_index] = t8_gausss_blob (center, sphere_center, sphere_radius);
+      element_data[current_index] = t8_gauss_blob (center, sphere_center, sphere_radius);
     }
   }
   return element_data;
