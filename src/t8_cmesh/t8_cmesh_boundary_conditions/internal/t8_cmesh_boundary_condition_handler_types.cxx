@@ -21,7 +21,7 @@
 */
 
 /**
- * \file t8_cmesh_boundary_condition_handler_type.cxx
+ * \file t8_cmesh_boundary_condition_handler_types.cxx
  * Implements functionality for working with private headers and c types.
  */
 

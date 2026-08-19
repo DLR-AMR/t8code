@@ -21,8 +21,8 @@
 */
 
 /**
- * \file t8_cmesh_boundary_condition_manager.cxx
- * Implementation context of \ref t8_cmesh_boundary_condition_manager.hxx
+ * \file t8_cmesh_boundary_condition_handler.cxx
+ * Implementation context of \ref t8_cmesh_boundary_condition_handler.hxx
  */
 
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>

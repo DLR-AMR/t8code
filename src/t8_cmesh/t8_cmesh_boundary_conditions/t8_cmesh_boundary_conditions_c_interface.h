@@ -57,7 +57,7 @@ t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid,
 
 /**
  * Retrieves the boundary condition of one face of a cmesh cell.
- * Retrieving all boundary conditions at once via \ref t8_cmesh_get_boundary_conditions will be faster.
+ * Retrieving all boundary conditions at once via \ref t8_cmesh_get_boundary_conditions() will be faster.
  *
  * \param [in]  cmesh               The cmesh the cell lives in.
  * \param [in]  ltreeid             The local cmesh id of the cell.
@@ -85,13 +85,13 @@ t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, cons
 
 /**
  * Retrieves the boundary condition of a face of a forest element.
- * Retrieving all boundary conditions at once via \ref t8_forest_get_boundary_conditions will be faster.
+ * Retrieving all boundary conditions at once via \ref t8_forest_get_boundary_conditions() will be faster.
  *
  * \param [in] forest               The forest the element lives in.
  * \param [in] ltreeid              The local id of the forest tree.
  * \param [in] element              The element.
  * \param [in] face                 The face id of the element.
- * \param [out] boundary_conditions The boundary condition of the element. Will be nullptr if the elements
+ * \param [out] boundary_condition  The boundary condition of the element. Will be nullptr if the elements
  *                                  face is internal; if it does not touch the trees face, since only the tree faces carry boundary
  *                                  conditions. All inner element faces have neighbors anyways.
  */
