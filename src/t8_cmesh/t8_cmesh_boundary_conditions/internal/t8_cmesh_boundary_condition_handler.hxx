@@ -81,6 +81,14 @@ struct t8_cmesh_boundary_condition_handler
   {
   }
 
+  /**
+   * Applies boundary conditions to the faces of a cmesh cell.
+   *
+   * \tparam TStringRange             An iterable container filled with string like values.
+   * \param [in] gtreeid              The global id of the tree the boundary conditions should be set for.
+   * \param [in] boundary_conditions  The boundary conditions to set. Container must have the same length
+   *                                  as the eclass of the cell has faces.
+   */
   template <std::ranges::input_range TStringRange>
     requires std::convertible_to<std::ranges::range_reference_t<TStringRange>, std::string_view>
   inline void
@@ -97,6 +105,14 @@ struct t8_cmesh_boundary_condition_handler
                             hashes.data (), sizeof (boundary_condition_hash) * hashes.size (), 0);
   }
 
+  /**
+   * Retrieves the boundary conditions of a cmesh cell.
+   *
+   * \param [in] cmesh    The cmesh the cell lives in.
+   * \param [in] ltreeid  The local cmesh id of the cell.
+   * \note The cmesh local cell id is a different one as the tree id inside the forest.
+   * \return A container with the boundary conditions.
+   */
   inline t8_boundary_conditions<std::string_view>
   get_boundary_conditions (t8_locidx_t ltreeid) const
   {
@@ -109,6 +125,15 @@ struct t8_cmesh_boundary_condition_handler
     return boundary_conditions;
   }
 
+  /**
+   * Retrieves the boundary condition of one face of a cmesh cell.
+   * Retrieving all boundary conditions at once via \ref get_boundary_condition() will be faster.
+   *
+   * \param [in] ltreeid  The local cmesh id of the cell.
+   * \param [in] face     The face id of the cell.
+   * \note The cmesh local cell id is a different one as the tree id inside the forest.
+   * \return The boundary condition of the tree face.
+   */
   inline std::string_view
   get_boundary_condition (t8_locidx_t ltreeid, int face) const
   {
@@ -119,6 +144,15 @@ struct t8_cmesh_boundary_condition_handler
     return get_boundary_condition_name (hashes[face]);
   }
 
+  /**
+   * Retrieves the boundary conditions of a forest element.
+   *
+   * \param [in] forest   The forest the element lives in.
+   * \param [in] ltreeid  The local id of the forest tree.
+   * \param [in] element  The element.
+   * \return A container with the boundary conditions. Note, that only elements faces at the boundary of a
+   * tree will have boundary conditions. Internal faces will return an empty optional.
+   */
   inline t8_boundary_conditions<std::optional<std::string_view>>
   get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element) const
   {
@@ -136,6 +170,16 @@ struct t8_cmesh_boundary_condition_handler
     return boundary_conditions;
   }
 
+  /**
+   * Retrieves the boundary condition of a face of a forest element.
+   * Retrieving all boundary conditions at once via \ref get_boundary_conditions() will be faster.
+   *
+   * \param [in] forest   The forest the element lives in.
+   * \param [in] ltreeid  The local id of the forest tree.
+   * \param [in] element  The element.
+   * \param [in] face     The face id of the element.
+   * \return The boundary condition. It will be empty if the element is not touching the boundary of the tree.
+   */
   inline std::optional<std::string_view>
   get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face) const
   {
@@ -170,6 +214,11 @@ struct t8_cmesh_boundary_condition_handler
   int
   get_boundary_condition_attribute_key () const;
 
+  /**
+   * Retrieves the boundary conditions hashes of a tree from the cmeshes attributes.
+   * \param [in] ltreeid  The local tree id.
+   * \return              The boundary condition hashes.
+   */
   inline std::span<const boundary_condition_hash>
   fetch_boundary_condition_hashes (t8_locidx_t ltreeid) const
   {
@@ -180,12 +229,23 @@ struct t8_cmesh_boundary_condition_handler
     return { static_cast<const boundary_condition_hash *> (hashes), static_cast<size_t> (num_faces) };
   }
 
+  /**
+   * Hashes a boundary condition name.
+   * \param [in] boundary_condition_name  The name.
+   * \return                              The hash of the name.
+   */
   inline boundary_condition_hash
   hash_boundary_condition_name (const std::string &boundary_condition_name) const
   {
     return boundary_condition_hash (std::hash<std::string> {}(boundary_condition_name));
   }
 
+  /**
+   * Retrieves the boundary condition name to a hash.
+   * If the hash is not registered with a name, nullopt is returned.
+   * \param [in] hash   The hash.
+   * \return            The boundary condition name on success. nullopt otherwise.
+   */
   inline std::optional<std::string_view>
   get_boundary_condition_name_safe (boundary_condition_hash hash) const
   {
@@ -196,6 +256,13 @@ struct t8_cmesh_boundary_condition_handler
     return position->second;
   }
 
+  /**
+   * Retrieves the boundary condition name to a hash.
+   * Crashes if the hash is not registered with a name.
+   * Faster than \ref get_boundary_condition_name_safe().
+   * \param [in] hash   The hash.
+   * \return            The boundary condition name.
+   */
   inline std::string_view
   get_boundary_condition_name (boundary_condition_hash hash) const
   {
