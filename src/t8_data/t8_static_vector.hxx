@@ -49,12 +49,11 @@
 template <typename TType, size_t TCapacity>
 class t8_static_vector {
  public:
+  /** The type of the stored values. */
   using value_type = TType;
 
   /**
    * Creates an empty static vector.
-   *
-   * \return  The constructed empty static vector.
    */
   constexpr t8_static_vector () noexcept = default;
 
