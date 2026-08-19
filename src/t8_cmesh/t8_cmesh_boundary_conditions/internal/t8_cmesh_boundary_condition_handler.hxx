@@ -74,7 +74,7 @@ struct t8_cmesh_boundary_condition_handler
 
  public:
   /**
-   * Standard constructor. Assotiates the handler with a cmesh
+   * Standard constructor. Associates the handler with a cmesh
    * \param [in] cmesh
    */
   t8_cmesh_boundary_condition_handler (t8_cmesh_t cmesh): m_cmesh (cmesh)
