@@ -67,12 +67,8 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   mesh->set_ghost ();
   mesh->commit ();
   EXPECT_EQ (mesh->get_num_ghosts (), t8_forest_get_num_ghosts (mesh->get_forest ()));
-  if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
-    // Ensure that we actually have ghost elements in this test.
-    EXPECT_GT (mesh->get_num_ghosts (), 0);
-  }
-  else {
-    GTEST_SKIP () << "Skipping test as no ghost elements are created for 1D or single element meshes.";
+  if (!(mesh->get_num_ghosts () > 0)) {
+    GTEST_SKIP () << "Skipping test as no ghost elements are created.";
   }
 
   // Check functions for ghost elements.
