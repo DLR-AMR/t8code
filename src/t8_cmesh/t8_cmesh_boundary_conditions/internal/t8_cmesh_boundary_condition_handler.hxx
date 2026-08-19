@@ -258,7 +258,6 @@ struct t8_cmesh_boundary_condition_handler
   /**
    * Retrieves the boundary condition name to a hash.
    * Crashes if the hash is not registered with a name.
-   * Faster than \ref detail::t8_cmesh_boundary_condition_handler::get_boundary_condition_name_safe().
    * \param [in] hash   The hash.
    * \return            The boundary condition name.
    */
