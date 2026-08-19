@@ -56,3 +56,15 @@ t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t fore
   }
   return 0;
 }
+
+int
+t8_test_adapt_even_global_id ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
+                              [[maybe_unused]] t8_eclass_t eclass, t8_locidx_t lelement_id,
+                              [[maybe_unused]] const t8_scheme *scheme, [[maybe_unused]] const int is_family,
+                              [[maybe_unused]] const int num_elements, [[maybe_unused]] t8_element_t *elements[])
+{
+  if ((t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id) % 2 == 0) {
+    return 1;
+  }
+  return 0;
+}

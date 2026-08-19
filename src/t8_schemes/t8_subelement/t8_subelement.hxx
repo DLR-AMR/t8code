@@ -1,0 +1,61 @@
+/*
+  This file is part of t8code.
+  t8code is a C library to manage a collection (a forest) of multiple
+  connected adaptive space-trees of general element classes in parallel.
+
+  Copyright (C) 2026 the developers
+
+  t8code is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  t8code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with t8code; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+*/
+
+/** \file t8_subelement.hxx
+ * Define the subelement scheme interface.
+ */
+
+#pragma once
+
+#include "t8_subelement.hxx"
+#include <t8_schemes/t8_scheme.hxx>
+
+/** Return the subelement scheme implementation of t8code. */
+const t8_scheme *
+t8_scheme_new_subelement (void);
+
+/** Check whether a given eclass_scheme is one of the subelement schemes.
+ * \param [in] scheme   A (pointer to a) scheme.
+ * \param [in] eclass   The eclass to check.
+ * \return              True if \a scheme is one of the subelement schemes for the element class, false otherwise.
+ */
+bool
+t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclass);
+
+/** Check if \a scheme uses a subelement scheme for any eclass. 
+ * This means that it checks if \ref t8_eclass_scheme_is_subelement is true for any eclass.
+ * \param [in] scheme   A (pointer to a) scheme.
+ * \return              True if \a scheme uses a subelement scheme for any eclass, false otherwise.
+ */
+bool
+t8_scheme_has_subelement_scheme (const t8_scheme *scheme);
+
+/** Check whether a given element is a subelement.
+ * \note We have this function here as we did not want to add the function to the t8_scheme functionality.
+ * \param [in] scheme     The scheme of the forest.
+ * \param [in] tree_class The eclass of the current tree.
+ * \param [in] elem       The element to be checked.
+ * \return                True if the scheme of \a tree_class is a subelement scheme and \a elem is a
+ *                        subelement. False otherwise, in particular for all non-subelement schemes.
+ */
+bool
+t8_element_is_subelement (const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_element_t *elem);

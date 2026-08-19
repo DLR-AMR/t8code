@@ -40,7 +40,7 @@
  * \param [in] forest       The forest to which the new elements belong.
  * \param [in] forest_from  The forest that is adapted.
  * \param [in] which_tree   The local tree containing \a elements.
- * \param [in] eclass   The eclass of \a which_tree.
+ * \param [in] eclass       The eclass of \a which_tree.
  * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
  * \param [in] scheme       The scheme of the forest.
  * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
@@ -52,5 +52,23 @@ int
 t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                            const t8_eclass_t eclass, t8_locidx_t lelement_id, const t8_scheme *scheme,
                            const int is_family, const int num_elements, t8_element_t *elements[]);
+
+/** Adapt callback for a forest to refine every second  element, so every element with an even global id.
+ * It is not intended to be used as a recursive adaption callback and does not check the level of an element.
+ * 
+ * \param [in] forest       The forest to which the new elements belong.
+ * \param [in] forest_from  The forest that is adapted.
+ * \param [in] which_tree   The local tree containing \a elements.
+ * \param [in] eclass       The eclass of \a which_tree.
+ * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
+ * \param [in] scheme       The scheme of the forest.
+ * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
+ * \param [in] num_elements The number of entries in \a elements that are defined
+ * \param [in] elements     Pointers to a family or, if \a is_family is zero, pointer to one element.
+ */
+int
+t8_test_adapt_even_global_id (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree, t8_eclass_t eclass,
+                              t8_locidx_t lelement_id, const t8_scheme *scheme, const int is_family,
+                              const int num_elements, t8_element_t *elements[]);
 
 #endif /* T8_GTEST_ADAPT_CALLBACKS */

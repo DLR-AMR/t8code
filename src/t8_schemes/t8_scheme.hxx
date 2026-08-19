@@ -43,6 +43,9 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_quads.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_tri.hxx>
+#include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
@@ -96,10 +99,14 @@ struct t8_scheme
                                 t8_default_scheme_tet,
                                 t8_default_scheme_prism,
                                 t8_default_scheme_pyramid,
+                                /* Standalone schemes */
                                 t8_standalone_scheme<T8_ECLASS_VERTEX>,
                                 t8_standalone_scheme<T8_ECLASS_LINE>,
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
-                                t8_standalone_scheme<T8_ECLASS_HEX>
+                                t8_standalone_scheme<T8_ECLASS_HEX>,
+                                /* Subelement schemes */
+                                t8_subelementquad_scheme,
+                                t8_subelementtri_scheme
                                 >;
   /* clang-format on */
 
@@ -372,16 +379,33 @@ struct t8_scheme
   };
 
   /** Return the number of children of an element when it is refined.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] element   The element whose number of children is returned.
+   * \param [in] tree_class         The eclass of the current tree.
+   * \param [in] element            The element whose number of children is returned.
+   * \param [in] subelement_type    The subelement type used for refinement. If no type is given,
+   *                                normal refinement is assumed.
+   * \tparam TSubelementType        The type of the subelement type argument, deduced. At most one
+   *                                argument convertible to int is allowed.
    * \return            The number of children of \a element if it is to be refined.
    */
+  template <typename... TSubelementType>
+    requires (sizeof...(TSubelementType) <= 1 && (std::is_convertible_v<TSubelementType, int> && ...))
   inline int
-  element_get_num_children (const t8_eclass_t tree_class, const t8_element_t *element) const
+  element_get_num_children (const t8_eclass_t tree_class, const t8_element_t *element,
+                            TSubelementType &&...subelement_type) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_num_children (element); },
-                       eclass_schemes[tree_class]);
-  };
+    return std::visit (
+      [&] (auto &&scheme) -> int {
+        if constexpr (requires {
+                        scheme.element_get_num_children (element, std::forward<TSubelementType> (subelement_type)...);
+                      }) {
+          return scheme.element_get_num_children (element, std::forward<TSubelementType> (subelement_type)...);
+        }
+        else {
+          SC_ABORT ("element_get_num_children is not supported by this scheme for these arguments");
+        }
+      },
+      eclass_schemes[tree_class]);
+  }
 
   /** Return the max number of children of an eclass.
    * \param [in] tree_class    The eclass of tree the elements are part of.
@@ -471,16 +495,33 @@ struct t8_scheme
    *                      the number of children.
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
+   * \param [in] subelement_type    The subelement type used for refinement. If no type is given,
+   *                                normal refinement is assumed.
+   * \tparam TSubelementType        The type of the subelement type argument, deduced. At most one
+   *                                argument convertible to int is allowed.
    * It is valid to call this function with element = c[0].
    * \see element_get_num_children
    */
+  template <typename... TSubelementType>
+    requires (sizeof...(TSubelementType) <= 1 && (std::is_convertible_v<TSubelementType, int> && ...))
   inline void
-  element_get_children (const t8_eclass_t tree_class, const t8_element_t *element, const int length,
-                        t8_element_t *c[]) const
+  element_get_children (const t8_eclass_t tree_class, const t8_element_t *element, const int length, t8_element_t *c[],
+                        TSubelementType &&...subelement_type) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_get_children (element, length, c); },
-                       eclass_schemes[tree_class]);
-  };
+    std::visit (
+      [&] (auto &&scheme) -> void {
+        if constexpr (requires {
+                        scheme.element_get_children (element, length, c,
+                                                     std::forward<TSubelementType> (subelement_type)...);
+                      }) {
+          scheme.element_get_children (element, length, c, std::forward<TSubelementType> (subelement_type)...);
+        }
+        else {
+          SC_ABORT ("element_get_children is not supported by this scheme for these arguments.");
+        }
+      },
+      eclass_schemes[tree_class]);
+  }
 
   /** Compute the child id of an element.
    * \param [in] tree_class    The eclass of the current tree.
