@@ -62,8 +62,9 @@ struct harten_prediction
   [[nodiscard]] refinement_flags
   operator() (TMultiscale &mra, const typename TMultiscale::levelmultiindex &lmi)
   {
-    const auto norm = mra.scaled_detail_norm (lmi);
-    const auto threshold = c_thresh * mra.local_threshold_value (lmi, gamma);
+    const auto &detail = mra.d_map.get (lmi);
+    const auto norm = mra.scaled_detail_norm (detail);
+    const auto threshold = c_thresh * mra.local_threshold_value (detail, lmi.level (), gamma);
     constexpr auto steep_factor = static_cast<double> (1u << (TMultiscale::P_DIM + 1));
 
     return { norm > threshold, norm > steep_factor * threshold };

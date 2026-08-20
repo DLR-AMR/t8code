@@ -63,7 +63,9 @@ struct hard_thresholding
   [[nodiscard]] bool
   significant (TMultiscale &mra, const typename TMultiscale::levelmultiindex &lmi)
   {
-    return mra.scaled_detail_norm (lmi) > c_thresh * mra.local_threshold_value (lmi, gamma);
+    const auto &detail = mra.d_map.get (lmi);
+
+    return mra.scaled_detail_norm (detail) > c_thresh * mra.local_threshold_value (detail, lmi.level (), gamma);
   }
 };
 
