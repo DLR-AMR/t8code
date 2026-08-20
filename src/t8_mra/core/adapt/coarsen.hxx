@@ -71,6 +71,7 @@ restore_graded_leaves (TMultiscale &mra)
 
   const auto max_level = mra.grid.maximum_level;
   auto num_restored = 0u;
+  levelindex_map<levelmultiindex, detail_t> marked_details (max_level);
 
   for (;;) {
     mra.refinement_set.erase_all ();
@@ -81,7 +82,7 @@ restore_graded_leaves (TMultiscale &mra)
     if (num_marked == 0)
       break;
 
-    levelindex_map<levelmultiindex, detail_t> marked_details (max_level);
+    marked_details.erase_all ();
     for (auto l = 0u; l < max_level; ++l)
       for (const auto &lmi : mra.refinement_set[l]) {
         const auto *details = mra.d_map.find (lmi);
