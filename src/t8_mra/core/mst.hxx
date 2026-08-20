@@ -240,7 +240,7 @@ class mst {
 
     for (auto l = l_max; l > l_min; --l) {
       I_set.reserve (lmi_map.size (l));
-      d_map[l - 1].reserve (lmi_map.size (l));
+      d_map[l - 1].reserve (lmi_map.size (l) / levelmultiindex::NUM_CHILDREN);
 
       for (const auto &[lmi, _] : lmi_map[l])
         I_set.emplace (t8_mra::parent_lmi (lmi));
@@ -300,7 +300,7 @@ class mst {
       for (const auto &[lmi, _] : lmi_map[l])
         I_set.emplace (t8_mra::parent_lmi (lmi));
 
-      d_map[l - 1].reserve (lmi_map.size (l));
+      d_map[l - 1].reserve (lmi_map.size (l) / levelmultiindex::NUM_CHILDREN);
 
       for (const auto &lmi : I_set) {
         const auto siblings_lmi = t8_mra::children_lmi (lmi);
