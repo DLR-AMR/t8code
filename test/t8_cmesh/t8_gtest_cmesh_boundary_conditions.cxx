@@ -95,9 +95,13 @@ struct t8_cmesh_single_tree_bc: public testing::TestWithParam<t8_eclass>
  */
 TEST_P (t8_cmesh_single_tree_bc, test_single_tree_boundary_conditions)
 {
-  const auto retrieved_boundary_conditions = t8_cmesh_get_boundary_conditions (cmesh, 0);
-  for (size_t i_boundary_condition = 0; i_boundary_condition < boundary_conditions.size (); ++i_boundary_condition) {
-    EXPECT_EQ (boundary_conditions[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+  /* Only check if the tree is local to our process. */
+  if (t8_cmesh_get_num_local_trees (cmesh)) {
+    /* Retrieve bcs and check that input == output. */
+    const auto retrieved_boundary_conditions = t8_cmesh_get_boundary_conditions (cmesh, 0);
+    for (size_t i_boundary_condition = 0; i_boundary_condition < boundary_conditions.size (); ++i_boundary_condition) {
+      EXPECT_EQ (boundary_conditions[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+    }
   }
 }
 
@@ -107,35 +111,38 @@ TEST_P (t8_cmesh_single_tree_bc, test_single_tree_boundary_conditions)
 TEST_P (t8_cmesh_single_tree_bc, test_single_tree_element_boundary_conditions)
 {
   t8_cmesh_ref (cmesh);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), 2, 0, sc_MPI_COMM_WORLD);
-  t8_locidx_t num_elements = t8_forest_get_tree_num_leaf_elements (forest, 0);
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 2, 1, sc_MPI_COMM_WORLD);
 
-  /* Some variables for t8_forest_leaf_face_neighbors */
-  int *dual_faces;
-  int num_neighbors = 0;
-  t8_locidx_t *element_indices;
-  t8_eclass_t neigh_class;
+  /* Only check if the tree is local to our process. */
+  if (t8_forest_get_num_local_trees (forest)) {
+    t8_locidx_t num_local_elements = t8_forest_get_tree_num_leaf_elements (forest, 0);
+    const t8_scheme *scheme = t8_forest_get_scheme (forest);
+    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
 
-  for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
-    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, 0, ielem);
-    const size_t num_faces = scheme->element_get_num_faces (tree_class, elem);
-    for (size_t iface = 0; iface < num_faces; ++iface) {
-      t8_forest_leaf_face_neighbors (forest, 0, elem, NULL, iface, &dual_faces, &num_neighbors, &element_indices,
-                                     &neigh_class);
-      T8_FREE (element_indices);
-      T8_FREE (dual_faces);
-      const auto boundary_condition = t8_forest_get_boundary_condition (forest, 0, elem, iface);
-      if (num_neighbors > 0) {
-        EXPECT_FALSE (boundary_condition.has_value ());
-      }
-      else {
-        EXPECT_TRUE (boundary_condition.has_value ());
+    /* Some variables for t8_forest_leaf_face_neighbors */
+    int *dual_faces;
+    int num_neighbors = 0;
+    t8_locidx_t *element_indices;
+    t8_eclass_t neigh_class;
+
+    for (t8_locidx_t ielem = 0; ielem < num_local_elements; ++ielem) {
+      const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, 0, ielem);
+      const size_t num_faces = scheme->element_get_num_faces (tree_class, elem);
+      for (size_t iface = 0; iface < num_faces; ++iface) {
+        t8_forest_leaf_face_neighbors (forest, 0, elem, NULL, iface, &dual_faces, &num_neighbors, &element_indices,
+                                       &neigh_class);
+        T8_FREE (element_indices);
+        T8_FREE (dual_faces);
+        const auto boundary_condition = t8_forest_get_boundary_condition (forest, 0, elem, iface);
+        if (num_neighbors > 0) {
+          EXPECT_FALSE (boundary_condition.has_value ());
+        }
+        else {
+          EXPECT_TRUE (boundary_condition.has_value ());
+        }
       }
     }
   }
-
   t8_forest_unref (&forest);
 }
 
@@ -147,76 +154,86 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_cmesh_boundary_conditions, t8_cmesh_single_tr
  */
 TEST (t8_gtest_cmesh_boundary_conditions, test_hybrid_hypercube_boundary_conditions)
 {
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, 0);
+  /* We test this with a non periodic, as well as a periodic hypercube. The periodic one should have only "internal" bcs. */
+  for (int periodic = 0; periodic < 2; ++periodic) {
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, periodic);
 
-  /* Test the boundary conditions of the trees. All faces with neighbors should have the bc "internal". All other faces are "boundary". */
-  const t8_locidx_t num_trees = t8_cmesh_get_num_local_trees (cmesh);
+    /* Test the boundary conditions of the trees. All faces with neighbors should have the bc "internal". All other faces are "boundary". */
+    const t8_locidx_t num_local_cmesh_trees = t8_cmesh_get_num_local_trees (cmesh);
 
-  /* Iterate over all trees. */
-  for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
-    const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, itree);
-    const int num_faces = t8_eclass_num_faces[tree_class];
+    /* Iterate over all cmesh trees. */
+    for (t8_locidx_t itree = 0; itree < num_local_cmesh_trees; ++itree) {
+      const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, itree);
+      const int num_faces = t8_eclass_num_faces[tree_class];
 
-    /* Iterate over all faces of the tree. */
-    for (int iface = 0; iface < num_faces; ++iface) {
-      /* Grab the neighbor eclass and the boundary condition. */
-      const t8_eclass neigh_class = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, itree, iface);
-      const auto boundary_condition = t8_cmesh_get_boundary_condition (cmesh, itree, iface);
-      /* If a face is internal, the boundary condition should be "internal". */
-      if (neigh_class == T8_ECLASS_INVALID) {
-        EXPECT_EQ (boundary_condition, "boundary");
-      }
-      else {
-        EXPECT_EQ (boundary_condition, "internal");
+      /* Iterate over all faces of the tree. */
+      for (int iface = 0; iface < num_faces; ++iface) {
+        /* Grab the neighbor eclass and the boundary condition. */
+        const t8_eclass neigh_class = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, itree, iface);
+        const auto boundary_condition = t8_cmesh_get_boundary_condition (cmesh, itree, iface);
+        /* If a face is internal, the boundary condition should be "internal". */
+        if (neigh_class == T8_ECLASS_INVALID) {
+          EXPECT_EQ (boundary_condition, "boundary");
+        }
+        else {
+          EXPECT_EQ (boundary_condition, "internal");
+        }
       }
     }
-  }
 
-  /* Do the same test with the forest interface. We set the refinement level to 0 so that there are no internal faces inside trees.
+    /* Do the same test with the forest interface. We set the refinement level to 0 so that there are no internal faces inside trees.
      This way every element face will carry a boundary condition. Internal element faces are checked in another test (test_single_tree_element_boundary_conditions). */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), 0, 0, sc_MPI_COMM_WORLD);
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+    t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 1, sc_MPI_COMM_WORLD);
+    const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
-  /* Some variables for t8_forest_leaf_face_neighbors */
-  int *dual_faces;
-  int num_neighbors = 0;
-  t8_locidx_t *element_indices;
-  t8_eclass_t neigh_class;
+    /* Some variables for t8_forest_leaf_face_neighbors */
+    int *dual_faces;
+    int num_neighbors = 0;
+    t8_locidx_t *element_indices;
+    t8_eclass_t neigh_class;
 
-  /* Iterate over all trees. */
-  for (t8_locidx_t itree = 0; itree < num_trees; ++itree) {
-    const t8_eclass_t tree_class = t8_cmesh_get_tree_class (cmesh, itree);
+    /* Iterate over all trees. */
+    const t8_locidx_t num_local_forest_trees = t8_forest_get_num_local_trees (forest);
+    for (t8_locidx_t itree = 0; itree < num_local_forest_trees; ++itree) {
+      const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
 
-    /* We will not iterate over the elements, because there is only one per tree. */
-    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, 0);
-    const size_t num_faces = scheme->element_get_num_faces (tree_class, elem);
+      const t8_locidx_t num_local_elements = t8_forest_get_tree_num_leaf_elements (forest, itree);
+      /* The forest is level 0, there should only be one element. */
+      T8_ASSERT (num_local_elements < 2);
 
-    /* Retrieve the boundary conditions. */
-    const auto boundary_conditions = t8_forest_get_boundary_conditions (forest, itree, elem);
+      /* Iterate over our one element. */
+      for (t8_locidx_t ielem = 0; ielem < num_local_elements; ++ielem) {
+        const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
+        const size_t num_faces = scheme->element_get_num_faces (tree_class, elem);
 
-    for (size_t iface = 0; iface < num_faces; ++iface) {
-      /* Since we have a level 0 forest every face should have a boundary condition. */
-      ASSERT_TRUE (boundary_conditions[iface].has_value ());
+        /* Retrieve the boundary conditions. */
+        const auto boundary_conditions = t8_forest_get_boundary_conditions (forest, itree, elem);
 
-      /* Find out if we have neighbors. */
-      t8_forest_leaf_face_neighbors (forest, itree, elem, NULL, iface, &dual_faces, &num_neighbors, &element_indices,
-                                     &neigh_class);
-      T8_FREE (element_indices);
-      T8_FREE (dual_faces);
+        for (size_t iface = 0; iface < num_faces; ++iface) {
+          /* Since we have a level 0 forest every face should have a boundary condition. */
+          ASSERT_TRUE (boundary_conditions[iface].has_value ());
 
-      /* If we have neighbors, the bc should be "internal". It should be "boundary" otherwise. */
-      if (num_neighbors > 0) {
-        EXPECT_EQ (boundary_conditions[iface].value (), "internal");
-      }
-      else {
-        EXPECT_EQ (boundary_conditions[iface].value (), "boundary");
+          /* Find out if we have neighbors. */
+          t8_forest_leaf_face_neighbors (forest, itree, elem, NULL, iface, &dual_faces, &num_neighbors,
+                                         &element_indices, &neigh_class);
+          T8_FREE (element_indices);
+          T8_FREE (dual_faces);
+
+          /* If we have neighbors, the bc should be "internal". It should be "boundary" otherwise. */
+          if (num_neighbors > 0) {
+            EXPECT_EQ (boundary_conditions[iface].value (), "internal");
+          }
+          else {
+            EXPECT_EQ (boundary_conditions[iface].value (), "boundary");
+          }
+        }
       }
     }
-  }
 
-  t8_forest_unref (&forest);
+    t8_forest_unref (&forest);
+  }
 }
 
 /**
@@ -233,60 +250,74 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
   t8_cmesh_set_boundary_conditions (cmesh, 0, boundary_conditions, 6);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  /* Retrieve boundary conditions via t8_cmesh_get_boundary_conditions and t8_cmesh_get_boundary_condition() and check them. */
-  const char *retrieved_boundary_conditions[6];
-  const char *retrieved_single_boundary_condition;
-  size_t length = 0;
-  t8_cmesh_get_boundary_conditions (cmesh, 0, retrieved_boundary_conditions, &length);
-  for (size_t i_boundary_condition = 0; i_boundary_condition < length; ++i_boundary_condition) {
-    /* Check t8_cmesh_get_boundary_conditions */
-    EXPECT_STREQ (boundary_conditions[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+  /* Only check if the cmesh tree is local to our process. */
+  if (t8_cmesh_get_num_local_trees (cmesh)) {
+    /* Some variables for retrieving and checking the boundary conditions. */
+    const char *retrieved_boundary_conditions[6];
+    const char *retrieved_single_boundary_condition;
+    size_t length = 0;
 
-    /* Check t8_cmesh_get_boundary_condition */
-    t8_cmesh_get_boundary_condition (cmesh, 0, i_boundary_condition, &retrieved_single_boundary_condition);
-    EXPECT_STREQ (boundary_conditions[i_boundary_condition], retrieved_single_boundary_condition);
+    /* Retrieve boundary conditions via t8_cmesh_get_boundary_conditions and t8_cmesh_get_boundary_condition() and check them. */
+    t8_cmesh_get_boundary_conditions (cmesh, 0, retrieved_boundary_conditions, &length);
+    for (size_t i_boundary_condition = 0; i_boundary_condition < length; ++i_boundary_condition) {
+      /* Check t8_cmesh_get_boundary_conditions */
+      EXPECT_STREQ (boundary_conditions[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+
+      /* Check t8_cmesh_get_boundary_condition */
+      t8_cmesh_get_boundary_condition (cmesh, 0, i_boundary_condition, &retrieved_single_boundary_condition);
+      EXPECT_STREQ (boundary_conditions[i_boundary_condition], retrieved_single_boundary_condition);
+    }
   }
 
   /* We now test the interface for a level 1 forest. This way we should get internal and external faces.
      We assume, that all hex elements inside the tree have the same orientation and face numeration. */
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), 1, 0, sc_MPI_COMM_WORLD);
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  t8_locidx_t num_elements = t8_forest_get_tree_num_leaf_elements (forest, 0);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 1, 1, sc_MPI_COMM_WORLD);
 
-  /* Some variables for t8_forest_leaf_face_neighbors */
-  int *dual_faces;
-  int num_neighbors = 0;
-  t8_locidx_t *element_indices;
-  t8_eclass_t neigh_class;
+  /* Only check if the forest tree is local to our process. */
+  if (t8_forest_get_num_local_trees (forest)) {
+    const t8_scheme *scheme = t8_forest_get_scheme (forest);
+    t8_locidx_t num_local_elements = t8_forest_get_tree_num_leaf_elements (forest, 0);
 
-  /* Iterate over all elements. */
-  for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
-    const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, 0, ielem);
-    const size_t num_faces = scheme->element_get_num_faces (T8_ECLASS_HEX, elem);
-    /* Fetch boundary conditions via t8_forest_get_boundary_conditions */
-    t8_forest_get_boundary_conditions (forest, 0, elem, retrieved_boundary_conditions, &length);
+    /* Some variables for t8_forest_leaf_face_neighbors */
+    int *dual_faces;
+    int num_neighbors = 0;
+    t8_locidx_t *element_indices;
+    t8_eclass_t neigh_class;
 
-    for (size_t iface = 0; iface < num_faces; ++iface) {
-      t8_forest_leaf_face_neighbors (forest, 0, elem, NULL, iface, &dual_faces, &num_neighbors, &element_indices,
-                                     &neigh_class);
-      T8_FREE (element_indices);
-      T8_FREE (dual_faces);
+    /* Some variables for retrieving and checking the boundary conditions. */
+    const char *retrieved_boundary_conditions[6];
+    const char *retrieved_single_boundary_condition;
+    size_t length = 0;
 
-      /* Fetch boundary conditions via t8_forest_get_boundary_condition */
-      t8_forest_get_boundary_condition (forest, 0, elem, iface, &retrieved_single_boundary_condition);
+    /* Iterate over all elements. */
+    for (t8_locidx_t ielem = 0; ielem < num_local_elements; ++ielem) {
+      const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, 0, ielem);
+      const size_t num_faces = scheme->element_get_num_faces (T8_ECLASS_HEX, elem);
+      /* Fetch boundary conditions via t8_forest_get_boundary_conditions */
+      t8_forest_get_boundary_conditions (forest, 0, elem, retrieved_boundary_conditions, &length);
 
-      /* The boundary conditions should be nullptr for internal faces */
-      if (num_neighbors > 0) {
-        EXPECT_EQ (retrieved_boundary_conditions[iface], nullptr);
-        EXPECT_EQ (retrieved_single_boundary_condition, nullptr);
-      }
-      /* For boundary faces, they should match the bcs of the cmesh cell. */
-      else {
-        ASSERT_TRUE (retrieved_boundary_conditions[iface] != nullptr);
-        ASSERT_TRUE (retrieved_single_boundary_condition != nullptr);
+      for (size_t iface = 0; iface < num_faces; ++iface) {
+        t8_forest_leaf_face_neighbors (forest, 0, elem, NULL, iface, &dual_faces, &num_neighbors, &element_indices,
+                                       &neigh_class);
+        T8_FREE (element_indices);
+        T8_FREE (dual_faces);
 
-        EXPECT_STREQ (retrieved_boundary_conditions[iface], boundary_conditions[iface]);
-        EXPECT_STREQ (retrieved_single_boundary_condition, boundary_conditions[iface]);
+        /* Fetch boundary conditions via t8_forest_get_boundary_condition */
+        t8_forest_get_boundary_condition (forest, 0, elem, iface, &retrieved_single_boundary_condition);
+
+        /* The boundary conditions should be nullptr for internal faces */
+        if (num_neighbors > 0) {
+          EXPECT_EQ (retrieved_boundary_conditions[iface], nullptr);
+          EXPECT_EQ (retrieved_single_boundary_condition, nullptr);
+        }
+        /* For boundary faces, they should match the bcs of the cmesh cell. */
+        else {
+          ASSERT_TRUE (retrieved_boundary_conditions[iface] != nullptr);
+          ASSERT_TRUE (retrieved_single_boundary_condition != nullptr);
+
+          EXPECT_STREQ (retrieved_boundary_conditions[iface], boundary_conditions[iface]);
+          EXPECT_STREQ (retrieved_single_boundary_condition, boundary_conditions[iface]);
+        }
       }
     }
   }
