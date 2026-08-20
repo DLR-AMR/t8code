@@ -155,12 +155,12 @@ TYPED_TEST (mra_projection, projection_conserves_mass_across_levels)
   const int coarse_level = (DIM == 3) ? 2 : 3;
 
   auto reconstructed_mass = [] (auto &mra, int max_level) {
-    std::array<double, U> mass = {};
+    std::array<double, TypeParam::U> mass = {};
     auto *lmi_map = mra.get_lmi_map ();
     for (auto l = 0u; l <= static_cast<unsigned int> (max_level); ++l)
       for (const auto &[lmi, data] : (*lmi_map)[l]) {
         const auto mean = mra.mean_val (data);
-        for (auto u = 0u; u < U; ++u)
+        for (auto u = 0u; u < TypeParam::U; ++u)
           mass[u] += mean[u] * data.vol;
       }
     return mass;
@@ -387,8 +387,8 @@ TYPED_TEST (mra_projection, gradient_matches_linear_field)
 
     auto f = [slope] (auto... coords) {
       const std::array<double, DIM> x { coords... };
-      std::array<double, U> res = {};
-      for (auto u = 0u; u < U; ++u) {
+      std::array<double, TypeParam::U> res = {};
+      for (auto u = 0u; u < TypeParam::U; ++u) {
         double v = 0.0;
         for (auto d = 0u; d < DIM; ++d)
           v += slope[d] * x[d];
