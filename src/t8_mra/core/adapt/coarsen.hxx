@@ -6,7 +6,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
-#include <unordered_map>
+#include <optional>
 
 #include "sc_mpi.h"
 
@@ -21,6 +21,7 @@
 #include "t8_mra/criteria/coarsening_criterion.hxx"
 #include "t8_mra/data/levelindex_map.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
+#include "t8_mra/num/geometry.hxx"
 
 namespace t8_mra::adapt
 {
@@ -185,31 +186,37 @@ detect_jumps (TMultiscale &mra, int level, double c_thresh)
   auto &ghost_map = mra.grid.ghost_map;
   const auto v_max = global_v_max (mra, level);
 
-  std::unordered_map<size_t, double> face_jump;
+  typename TMultiscale::index_set jumps;
+
+  // The face loop visits all faces of a leaf consecutively, so the inner mean and
+  // the threshold are computed once per leaf.
+  std::optional<levelmultiindex> current_leaf;
+  std::array<double, TMultiscale::U_DIM> mean_inner = {};
+  auto threshold = 0.0;
+
   mra.grid.for_each_face_neigh ([&] (const auto &lmi) { return lmi.level () == static_cast<unsigned int> (level); },
                                 [&] (const auto &lmi, t8_eclass_t, t8_gloidx_t, t8_element_t *, const auto &neigh_lmi) {
-                                  const auto *neigh_data = lmi_map->contains (neigh_lmi)    ? &lmi_map->get (neigh_lmi)
-                                                           : ghost_map.contains (neigh_lmi) ? &ghost_map.get (neigh_lmi)
-                                                                                            : nullptr;
+                                  const auto *neigh_data = lmi_map->find (neigh_lmi);
+                                  if (neigh_data == nullptr)
+                                    neigh_data = ghost_map.find (neigh_lmi);
                                   if (neigh_data == nullptr)
                                     return;
 
-                                  const auto mean_inner = mra.mean_val (lmi_map->get (lmi));
+                                  if (current_leaf != lmi) {
+                                    const auto &data = lmi_map->get (lmi);
+                                    mean_inner = mra.mean_val (data);
+                                    threshold = c_thresh * std::sqrt (t8_mra::cell_size<TMultiscale::DIM> (data.vol));
+                                    current_leaf = lmi;
+                                  }
+
                                   const auto mean_neigh = mra.mean_val (*neigh_data);
-                                  auto &diff = face_jump[lmi.index];
 
                                   for (auto u = 0u; u < TMultiscale::U_DIM; ++u)
-                                    diff = std::max (diff, std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u]);
+                                    if (std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u] > threshold) {
+                                      jumps.insert (t8_mra::parent_lmi (lmi));
+                                      return;
+                                    }
                                 });
-
-  typename TMultiscale::index_set jumps;
-  for (const auto &[index, diff] : face_jump) {
-    const auto lmi = levelmultiindex (index);
-    const auto h = std::pow (lmi_map->get (lmi).vol, 1.0 / TMultiscale::DIM);
-
-    if (diff > c_thresh * std::sqrt (h))
-      jumps.insert (t8_mra::parent_lmi (lmi));
-  }
 
   mra.grid.globalize (jumps);
 
