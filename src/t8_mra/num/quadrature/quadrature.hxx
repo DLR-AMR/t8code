@@ -76,9 +76,9 @@ struct quadrature<TShape, std::enable_if_t<is_cartesian<TShape>>>
     points.resize (DIM * num_points);
     weights.resize (num_points);
 
-    // Odometer over the DIM axes (first axis fastest); order is irrelevant to
+    // Iterating over the DIM axes (first axis fastest); order is irrelevant to
     // the integration sum, so any consistent enumeration works.
-    for (auto q = 0; q < num_points; ++q) {
+    for (auto q = 0u; q < num_points; ++q) {
       auto rest = q;
       double w = 1.0;
 

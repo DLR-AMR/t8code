@@ -259,7 +259,7 @@ map_cartesian (const std::array<double, shape_traits<TShape>::DIM> &x, std::span
   constexpr auto corners = vtk_corner_coords<TShape> ();
 
   std::array<double, 3> p = { 0, 0, 0 };
-  for (auto v = 0; v < corners.size (); ++v) {
+  for (auto v = 0u; v < corners.size (); ++v) {
     double w = 1.0;
     for (auto d = 0; d < DIM; ++d)
       w *= corners[v][d] == 1.0 ? x[d] : 1.0 - x[d];
