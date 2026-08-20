@@ -229,9 +229,12 @@ class multiscale {
   {
     std::array<double, U_DIM> res = {};
 
+    auto *user_data = get_user_data ();
+    auto *lmi_map = user_data->lmi_map;
+
     for_each_local_leaf ([&] (t8_locidx_t, const t8_element_t *, unsigned int local_idx, t8_gloidx_t) {
-      const auto lmi = t8_mra::get_lmi_from_forest_data (get_user_data (), local_idx);
-      const auto &data = get_lmi_map ()->get (lmi);
+      const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_idx);
+      const auto &data = lmi_map->get (lmi);
       const auto mean = mean_val (data);
 
       for (auto u = 0u; u < U_DIM; ++u)
