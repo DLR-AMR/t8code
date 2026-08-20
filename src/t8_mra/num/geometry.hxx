@@ -3,10 +3,24 @@
 #ifdef T8_ENABLE_MRA
 
 #include <array>
+#include <cmath>
 #include <vector>
 
 namespace t8_mra
 {
+
+/// Cell size h from the cell volume.
+template <unsigned int DIM>
+[[nodiscard]] inline double
+cell_size (double vol) noexcept
+{
+  if constexpr (DIM == 1)
+    return vol;
+  else if constexpr (DIM == 2)
+    return std::sqrt (vol);
+  else
+    return std::cbrt (vol);
+}
 
 /// Affine map from reference [0,1] to physical [xL, xR].
 [[nodiscard]] constexpr double
