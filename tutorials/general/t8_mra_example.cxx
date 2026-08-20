@@ -220,7 +220,7 @@ example_adaptation_cycle ()
               << (num_coarse == num_recoarse ? " (exact)\n" : "\n");
 
   mra.balance ();
-  const auto num_balanced = print_grid_stats (mra, "After balancing");
+  print_grid_stats (mra, "After balancing");
   write_vtk_output (mra, "mra_output/01_cycle_step4_balance");
 
   mra.cleanup ();
