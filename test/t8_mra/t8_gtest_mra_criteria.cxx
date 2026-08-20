@@ -335,8 +335,9 @@ TYPED_TEST (mra_criteria, graded_coarsen_matches_balance_and_keeps_the_data)
 
   EXPECT_LT (graded_error, eps) << "graded coarsening must keep the exact data";
 
-  if (balance_refined)
+  if (balance_refined) {
     EXPECT_GT (projection_error, eps) << "the leaves balance refines back must carry a projection";
+  }
 }
 
 }  // namespace

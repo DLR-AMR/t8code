@@ -92,7 +92,6 @@ TYPED_TEST (mra_projection, representable_polynomial_has_no_details)
   constexpr auto U = TypeParam::U;
   constexpr auto P = TypeParam::P;
   constexpr auto DIM = TypeParam::DIM;
-  using detail_t = typename t8_mra::multiscale<Shape, U, P>::detail_t;
 
   const int max_level = (DIM == 3) ? 3 : 4;
 
