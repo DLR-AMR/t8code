@@ -357,7 +357,7 @@ levelindex_map<TLmi, TData>::get (const TLmi &lmi) const
 
 template <lmi_type TLmi, typename TData>
 void
-levelindex_map<TLmi, TData>::check_level (unsigned int level) const
+levelindex_map<TLmi, TData>::check_level ([[maybe_unused]] unsigned int level) const
 {
 #if T8_ENABLE_DEBUG
   if (level >= level_map.size ()) {

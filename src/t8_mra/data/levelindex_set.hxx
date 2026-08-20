@@ -256,7 +256,7 @@ levelindex_set<TLmi>::operator[] (unsigned int level) const
 
 template <lmi_type TLmi>
 inline void
-levelindex_set<TLmi>::check_level (unsigned int level) const
+levelindex_set<TLmi>::check_level ([[maybe_unused]] unsigned int level) const
 {
 #if T8_ENABLE_DEBUG
   if (level >= level_set.size ()) {
