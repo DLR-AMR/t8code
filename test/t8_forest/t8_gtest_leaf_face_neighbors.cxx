@@ -40,6 +40,7 @@
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include "t8_test_data_dir.h"
 #include <test/t8_gtest_schemes.hxx>
+#include <test/t8_gtest_adapt_callbacks.hxx>
 
 bool
 test_face_neighbors_skip_cmesh (const t8_cmesh_t cmesh)
@@ -576,39 +577,10 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
 INSTANTIATE_TEST_SUITE_P (t8_gtest_face_neighbors, forest_face_neighbors_two_quad_mesh, AllSchemeCollections);
 
 /**
- * Callback to perform some mesh refinement within the test suite. As an example, every third element is refined.
- *
- * Note: The argument list has to be the same as for \ref t8_forest_adapt_t, even
- *       if most arguments are unused. For their meaning, please refer to \ref t8_forest_adapt_t.
- *       (The following doxygen documentation is just to make sure it is technically documented.)
- *
- * \param[in] forest        "forest" argument of \ref t8_forest_adapt_t
- * \param[in] forest_from   "forest_from" argument of \ref t8_forest_adapt_t
- * \param[in] which_tree    "which_tree" argument of \ref t8_forest_adapt_t
- * \param[in] tree_class    "tree_class" argument of \ref t8_forest_adapt_t
- * \param[in] lelement_id   "lelement_id" argument of \ref t8_forest_adapt_t
- * \param[in] scheme        "scheme" argument of \ref t8_forest_adapt_t
- * \param[in] is_family     "is_family" argument of \ref t8_forest_adapt_t
- * \param[in] num_elements  "num_elements" argument of \ref t8_forest_adapt_t
- * \param[in] elements      "elements" argument of \ref t8_forest_adapt_t
- *
- * \return 1 if the element will be refined, 0 otherwise.
-*/
-int
-refine_some_elems_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                            [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
-                            [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
-                            [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                            [[maybe_unused]] t8_element_t *elements[])
-{
-  // Refine every third element.
-  return ((lelement_id % 3 == 1) ? 1 : 0);
-}
-
-/**
  * \brief Class to test the functionality of \b t8_forest_leaf_neighbor_subface.
  */
-class forest_face_neighbors_subface: public testing::TestWithParam<std::tuple<int, cmesh_example_base *> > {
+struct forest_face_neighbors_subface: public testing::TestWithParam<std::tuple<int, cmesh_example_base *> >
+{
  protected:
   /**
    * \brief Set the Up test suite.
@@ -633,7 +605,8 @@ class forest_face_neighbors_subface: public testing::TestWithParam<std::tuple<in
     t8_forest_t base_forest = t8_forest_new_uniform (cmesh, scheme, base_level, do_ghost, sc_MPI_COMM_WORLD);
 
     // Refine some elements of forest once (and store the resulting forest as member variable).
-    forest = t8_forest_new_adapt (base_forest, refine_some_elems_callback, do_recursive_adapt, do_ghost, nullptr);
+    forest = t8_forest_new_adapt (base_forest, refine_every_nth_element_callback<3, 1>, do_recursive_adapt, do_ghost,
+                                  nullptr);
   }
 
   /**
@@ -642,7 +615,7 @@ class forest_face_neighbors_subface: public testing::TestWithParam<std::tuple<in
   void
   TearDown () override
   {
-    // Unref the
+    // Unref the forest.
     if (forest != nullptr)
       t8_forest_unref (&forest);
   }
@@ -674,7 +647,7 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
   // ----------------------------------------------------------
   // -------- LOOP 1: Iterate over all local trees.
   // ----------------------------------------------------------
-  for (int itree = 0; itree < num_local_trees; itree++) {
+  for (t8_locidx_t itree = 0; itree < num_local_trees; itree++) {
     // Get eclass and number of leaf elements in this tree.
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
     t8_locidx_t num_elems_tree = t8_forest_get_tree_num_leaf_elements (forest, itree);
@@ -682,7 +655,7 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
     // ----------------------------------------------------------
     // -------- LOOP 2: Iterate over all local elements in the tree.
     // ----------------------------------------------------------
-    for (int ielem_tree = 0; ielem_tree < num_elems_tree; ielem_tree++) {
+    for (t8_locidx_t ielem_tree = 0; ielem_tree < num_elems_tree; ielem_tree++) {
       // Get current element and its level.
       const t8_element *element = t8_forest_get_leaf_element_in_tree (forest, itree, ielem_tree);
       const int level = scheme->element_get_level (tree_class, element);
@@ -692,7 +665,7 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
         continue;
 
       // Get number of faces.
-      int num_faces = scheme->element_get_num_faces (tree_class, element);
+      const int num_faces = scheme->element_get_num_faces (tree_class, element);
 
       // ----------------------------------------------------------
       // -------- LOOP 3: Iterate over the element faces
@@ -753,7 +726,7 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
             int check_face = -1;
             int neigh_child_to_check = -1;
             int i_child_at_face = -1;
-            ;
+
             for (int ichild = 0; ichild < num_children; ichild++) {
 
               // (3.) Iterate over all faces of the child.
@@ -796,7 +769,7 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
             // Make sure the face relation is also correct.
             EXPECT_EQ (iface, dual_dual_face);
 
-            // (7.) Free memory of neigh_children and checkelem
+            // (7.) Free memory of neigh_children and check_elem
             scheme->element_destroy (neigh_class, num_children, neigh_children);
             scheme->element_destroy (tree_class, 1, &check_elem);
             T8_TESTSUITE_FREE (neigh_children);
