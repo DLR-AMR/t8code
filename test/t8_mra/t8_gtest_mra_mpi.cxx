@@ -17,10 +17,10 @@ namespace
 
 using namespace mra_test;
 
-using MpiConfigs = ::testing::Types<Config<T8_ECLASS_LINE, 1, 2>, Config<T8_ECLASS_QUAD, 1, 2>,
-                                    Config<T8_ECLASS_TRIANGLE, 1, 2>, Config<T8_ECLASS_HEX, 1, 2>,
-                                    Config<T8_ECLASS_LINE, 2, 2>, Config<T8_ECLASS_QUAD, 2, 2>,
-                                    Config<T8_ECLASS_TRIANGLE, 2, 2>, Config<T8_ECLASS_HEX, 2, 2>>;
+using MpiConfigs
+  = ::testing::Types<Config<T8_ECLASS_LINE, 1, 2>, Config<T8_ECLASS_QUAD, 1, 2>, Config<T8_ECLASS_TRIANGLE, 1, 2>,
+                     Config<T8_ECLASS_HEX, 1, 2>, Config<T8_ECLASS_LINE, 2, 2>, Config<T8_ECLASS_QUAD, 2, 2>,
+                     Config<T8_ECLASS_TRIANGLE, 2, 2>, Config<T8_ECLASS_HEX, 2, 2>>;
 
 template <typename Cfg>
 class mra_mpi: public ::testing::Test {};
@@ -231,6 +231,73 @@ TYPED_TEST (mra_mpi, partition_independent_static_adapt)
   world->balance ();
 
   expect_matches_serial_ref (world.mra, ConfigNames::GetName<TypeParam> (0) + "_static_adapt");
+}
+
+/* Number of sub-hypercubes per axis for the multi-tree cmesh: 2 trees on LINE,
+ * 4 on QUAD, 8 on TRIANGLE and HEX. */
+constexpr int kMultiTreePolygons = 2;
+
+/* Coarsening alone on a cmesh with interior tree-boundaries. The single
+ * hypercube of the other tests has at most the two triangle roots, so a rank
+ * boundary can never fall on a tree-boundary between four or more trees; here it can. */
+TYPED_TEST (mra_mpi, partition_independent_coarsen_multitree)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 2 : 3;
+
+  mra_example<Shape, U, P> world (max_level, kMultiTreePolygons);
+  world.init (jump_func<U, P, DIM> ());
+  world->coarsen (0, max_level);
+
+  expect_forest_map_consistent (world.mra);
+  expect_matches_serial_ref (world.mra, ConfigNames::GetName<TypeParam> (0) + "_multitree_coarsen");
+}
+
+/* The full static cycle on the multi-tree cmesh; every stage repartitions, so a
+ * tree-boundary that survives coarsening still has to survive refine and balance. */
+TYPED_TEST (mra_mpi, partition_independent_static_adapt_multitree)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 2 : 3;
+
+  mra_example<Shape, U, P> world (max_level, kMultiTreePolygons);
+  world.init (jump_func<U, P, DIM> ());
+  world->coarsen (0, max_level);
+  expect_forest_map_consistent (world.mra);
+
+  world->refine (0, max_level);
+  expect_forest_map_consistent (world.mra);
+
+  world->balance ();
+  expect_forest_map_consistent (world.mra);
+
+  expect_matches_serial_ref (world.mra, ConfigNames::GetName<TypeParam> (0) + "_multitree_static_adapt");
+}
+
+/* Bottom-up initialization on the multi-tree cmesh: unlike the tests above it
+ * runs detect_jumps, so the ghost layer has to resolve the tree-boundaries too. */
+TYPED_TEST (mra_mpi, partition_independent_adaptive_init_multitree)
+{
+  constexpr auto Shape = TypeParam::Shape;
+  constexpr auto U = TypeParam::U;
+  constexpr auto P = TypeParam::P;
+  constexpr auto DIM = TypeParam::DIM;
+
+  const int max_level = (DIM == 3) ? 2 : 3;
+
+  mra_example<Shape, U, P> world (max_level, kMultiTreePolygons);
+  world.init_adaptive (jump_func<U, P, DIM> ());
+
+  expect_forest_map_consistent (world.mra);
+  expect_matches_serial_ref (world.mra, ConfigNames::GetName<TypeParam> (0) + "_multitree_adaptive_init");
 }
 
 /* The domain integral survives a coarsen/refine/balance cycle and its
