@@ -535,21 +535,23 @@ class multiscale {
   // Post-adaptation hook + cleanup
   //=============================================================================
 
-  /** @brief Refresh the per-leaf vertex order (triangle Bey type); no-op values for cartesian. */
+  /** @brief Refresh the per-leaf vertex order; cartesian orders are constant, so skip the reordering. */
   void
   post_adapt ()
   {
-    if (grid.get_forest () == nullptr)
-      return;
+    if constexpr (!is_cartesian<TShape>) {
+      if (grid.get_forest () == nullptr)
+        return;
 
-    auto *user_data = grid.get_user_data ();
-    const auto *scheme = t8_forest_get_scheme (grid.get_forest ());
+      auto *user_data = grid.get_user_data ();
+      const auto *scheme = t8_forest_get_scheme (grid.get_forest ());
 
-    grid.for_each_local_leaf ([&] (t8_locidx_t, const t8_element_t *elem, unsigned int local_idx, t8_gloidx_t) {
-      const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_idx);
-      if (auto *data = user_data->lmi_map->find (lmi))
-        data->order = levelmultiindex::point_order_at_level (elem, scheme);
-    });
+      grid.for_each_local_leaf ([&] (t8_locidx_t, const t8_element_t *elem, unsigned int local_idx, t8_gloidx_t) {
+        const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_idx);
+        if (auto *data = user_data->lmi_map->find (lmi))
+          data->order = levelmultiindex::point_order_at_level (elem, scheme);
+      });
+    }
   }
 
   void
