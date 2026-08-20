@@ -227,6 +227,11 @@ expect_maps_equal (const MapT &expected, const MapT &actual, unsigned int max_le
 }
 
 /* (cmesh, scheme, multiscale) triple on a unit hypercube */
+/// Unit box corners in t8code hypercube order; the leading 2/4/8 points are the
+/// 1D/2D/3D boundary a padded cmesh expects.
+inline constexpr std::array<double, 24> unit_box_corners
+  = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+
 template <t8_eclass TShape, int U, int P>
 class mra_example {
  public:
@@ -234,10 +239,14 @@ class mra_example {
   using levelmultiindex = typename multiscale::levelmultiindex;
   static constexpr int DIM = t8_mra::shape_traits<TShape>::DIM;
 
-  explicit mra_example (int max_level, sc_MPI_Comm comm = sc_MPI_COMM_WORLD)
+  /// polygons > 1 pads the unit box into polygons^DIM sub-hypercubes, giving a
+  /// multi-tree cmesh instead of the single hypercube.
+  explicit mra_example (int max_level, int polygons = 1, sc_MPI_Comm comm = sc_MPI_COMM_WORLD)
     : mra (max_level, comm), max_level (max_level)
   {
-    cmesh = t8_cmesh_new_hypercube (TShape, comm, 0, 0, 0);
+    cmesh = (polygons == 1)
+              ? t8_cmesh_new_hypercube (TShape, comm, 0, 0, 0)
+              : t8_cmesh_new_hypercube_pad (TShape, comm, unit_box_corners.data (), polygons, polygons, polygons, 0);
     scheme = t8_scheme_new_default ();
     t8_cmesh_ref (cmesh);
     t8_scheme_ref (const_cast<t8_scheme *> (scheme));
