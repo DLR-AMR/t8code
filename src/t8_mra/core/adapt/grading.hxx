@@ -2,7 +2,6 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <numeric>
@@ -94,11 +93,12 @@ mark_refinement_path (TMultiscale &mra, const TLmi &neigh_lmi, int min_level, un
  * owning that region; the owner resolves it against its own lmi_map and marks
  * its own refinement_set. Collective.
  *
+ * @param outgoing (owner rank, neighbour lmi index) in discovery order
  * @return Number of new LOCAL marks created by received requests
  */
 template <typename TMultiscale>
 unsigned int
-exchange_refine_requests (TMultiscale &mra, const std::vector<std::vector<size_t>> &outgoing, int min_level,
+exchange_refine_requests (TMultiscale &mra, const std::vector<std::pair<int, size_t>> &outgoing, int min_level,
                           unsigned int max_level_gap)
 {
   using levelmultiindex = typename TMultiscale::levelmultiindex;
@@ -106,29 +106,39 @@ exchange_refine_requests (TMultiscale &mra, const std::vector<std::vector<size_t
   int mpisize;
   sc_MPI_Comm_size (mra.grid.comm, &mpisize);
 
-  std::vector<int> send_counts (mpisize);
-  std::ranges::transform (outgoing, send_counts.begin (), [] (const auto &list) { return static_cast<int> (list.size ()); });
+  std::vector<int> send_counts (mpisize, 0);
+  for (const auto &[owner, index] : outgoing)
+    ++send_counts[owner];
+
+  std::vector<int> send_displs (mpisize);
+  std::exclusive_scan (send_counts.begin (), send_counts.end (), send_displs.begin (), 0);
+
+  std::vector<size_t> send_buffer (outgoing.size ());
+  auto cursor = send_displs;
+  for (const auto &[owner, index] : outgoing)
+    send_buffer[cursor[owner]++] = index;
 
   std::vector<int> recv_counts (mpisize, 0);
   sc_MPI_Alltoall (send_counts.data (), 1, sc_MPI_INT, recv_counts.data (), 1, sc_MPI_INT, mra.grid.comm);
 
-  std::vector<size_t> incoming (std::reduce (recv_counts.begin (), recv_counts.end (), 0));
+  std::vector<int> recv_displs (mpisize);
+  std::exclusive_scan (recv_counts.begin (), recv_counts.end (), recv_displs.begin (), 0);
+
+  std::vector<size_t> incoming (recv_displs.back () + recv_counts.back ());
   std::vector<sc_MPI_Request> requests;
   requests.reserve (2 * mpisize);
 
-  auto offset = 0;
   for (auto rank = 0; rank < mpisize; ++rank) {
     if (recv_counts[rank] > 0) {
       requests.emplace_back ();
-      sc_MPI_Irecv (incoming.data () + offset, recv_counts[rank] * sizeof (size_t), sc_MPI_BYTE, rank, 0, mra.grid.comm,
-                    &requests.back ());
-      offset += recv_counts[rank];
+      sc_MPI_Irecv (incoming.data () + recv_displs[rank], recv_counts[rank] * sizeof (size_t), sc_MPI_BYTE, rank, 0,
+                    mra.grid.comm, &requests.back ());
     }
 
     if (send_counts[rank] > 0) {
       requests.emplace_back ();
-      sc_MPI_Isend (const_cast<size_t *> (outgoing[rank].data ()), send_counts[rank] * sizeof (size_t), sc_MPI_BYTE,
-                    rank, 0, mra.grid.comm, &requests.back ());
+      sc_MPI_Isend (send_buffer.data () + send_displs[rank], send_counts[rank] * sizeof (size_t), sc_MPI_BYTE, rank, 0,
+                    mra.grid.comm, &requests.back ());
     }
   }
   sc_MPI_Waitall (static_cast<int> (requests.size ()), requests.data (), sc_MPI_STATUSES_IGNORE);
@@ -163,7 +173,7 @@ grade_neighbours (TMultiscale &mra, int min_level, unsigned int max_level_gap, T
   sc_MPI_Comm_size (mra.grid.comm, &mpisize);
 
   const auto parallel = mpisize > 1;
-  std::vector<std::vector<size_t>> outgoing (parallel ? mpisize : 0);
+  std::vector<std::pair<int, size_t>> outgoing;
   auto num_new_marks = 0u;
 
   mra.grid.for_each_face_neigh (
@@ -177,7 +187,7 @@ grade_neighbours (TMultiscale &mra, int min_level, unsigned int max_level_gap, T
         const auto owner = mra.grid.find_owner (neigh_gtreeid, neigh_element, tree_class);
 
         if (owner != mpirank)
-          outgoing[owner].push_back (neigh_lmi.index);
+          outgoing.emplace_back (owner, neigh_lmi.index);
       }
     });
 
