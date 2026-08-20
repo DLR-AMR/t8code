@@ -66,13 +66,13 @@ mark_refinement_path (TMultiscale &mra, const TLmi &neigh_lmi, int min_level, un
   auto walk = neigh_lmi;
   ancestor[walk.level ()] = walk;
 
-  while (walk.level () > 0 && !lmi_map->contains (walk)) {
+  while (!lmi_map->contains (walk)) {
+    if (walk.level () == 0)
+      return -1;
+
     walk = t8_mra::parent_lmi (walk);
     ancestor[walk.level ()] = walk;
   }
-
-  if (!lmi_map->contains (walk))
-    return -1;
 
   if (static_cast<int> (walk.level ()) < min_level)
     return 0;
@@ -162,7 +162,8 @@ grade_neighbours (TMultiscale &mra, int min_level, unsigned int max_level_gap, T
   sc_MPI_Comm_rank (mra.grid.comm, &mpirank);
   sc_MPI_Comm_size (mra.grid.comm, &mpisize);
 
-  std::vector<std::vector<size_t>> outgoing (mpisize);
+  const auto parallel = mpisize > 1;
+  std::vector<std::vector<size_t>> outgoing (parallel ? mpisize : 0);
   auto num_new_marks = 0u;
 
   mra.grid.for_each_face_neigh (
@@ -172,7 +173,7 @@ grade_neighbours (TMultiscale &mra, int min_level, unsigned int max_level_gap, T
       const auto res = mark_refinement_path (mra, neigh_lmi, min_level, max_level_gap);
       if (res > 0)
         num_new_marks += res;
-      else if (res < 0 && mpisize > 1) {
+      else if (res < 0 && parallel) {
         const auto owner = mra.grid.find_owner (neigh_gtreeid, neigh_element, tree_class);
 
         if (owner != mpirank)
@@ -180,7 +181,7 @@ grade_neighbours (TMultiscale &mra, int min_level, unsigned int max_level_gap, T
       }
     });
 
-  if (mpisize > 1)
+  if (parallel)
     num_new_marks += exchange_refine_requests (mra, outgoing, min_level, max_level_gap);
 
   return num_new_marks;
