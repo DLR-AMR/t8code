@@ -152,8 +152,8 @@ global_v_max (TMultiscale &mra, int level)
   std::array<double, TMultiscale::U_DIM> local;
   local.fill (1.0);
 
-  for (const auto &[lmi, _] : (*mra.get_lmi_map ())[level]) {
-    const auto m = mra.mean_val (lmi);
+  for (const auto &[lmi, data] : (*mra.get_lmi_map ())[level]) {
+    const auto m = mra.mean_val (data);
 
     for (auto u = 0u; u < TMultiscale::U_DIM; ++u)
       local[u] = std::max (local[u], std::abs (m[u]));
