@@ -26,7 +26,7 @@ namespace t8_mra
  * @brief Barycentric index of the node at a given position in VTK's Lagrange
  * triangle ordering (port of vtkHigherOrderTriangle::BarycentricIndex)
  */
-[[nodiscard]] static std::array<int, 3>
+[[nodiscard]] inline std::array<int, 3>
 vtk_triangle_barycentric_index (int index, int order)
 {
   int max = order;
@@ -62,7 +62,7 @@ vtk_triangle_barycentric_index (int index, int order)
  * @brief Lagrange node positions for a triangle of given order in reference
  * coordinates, in VTK's Lagrange triangle ordering
  */
-[[nodiscard]] static std::vector<std::array<double, 2>>
+[[nodiscard]] inline std::vector<std::array<double, 2>>
 get_triangle_lagrange_nodes (int order)
 {
   const int num_nodes = (order + 1) * (order + 2) / 2;
@@ -83,7 +83,7 @@ get_triangle_lagrange_nodes (int order)
  * - First 2 nodes: endpoints
  * - Remaining nodes: interior nodes
  */
-[[nodiscard]] static std::vector<std::array<double, 1>>
+[[nodiscard]] inline std::vector<std::array<double, 1>>
 get_line_lagrange_nodes (int order)
 {
   std::vector<std::array<double, 1>> nodes;
@@ -106,7 +106,7 @@ get_line_lagrange_nodes (int order)
  * @brief Index of the grid node (i, j) in VTK's Lagrange quad ordering
  * (port of vtkHigherOrderQuadrilateral::PointIndexFromIJK, uniform order)
  */
-[[nodiscard]] static int
+[[nodiscard]] inline int
 vtk_quad_point_index (int i, int j, int order)
 {
   const bool ibdy = (i == 0 || i == order);
@@ -130,7 +130,7 @@ vtk_quad_point_index (int i, int j, int order)
  * @brief Lagrange node positions for a quad of given order in reference
  * coordinates, in VTK's Lagrange quad ordering
  */
-[[nodiscard]] static std::vector<std::array<double, 2>>
+[[nodiscard]] inline std::vector<std::array<double, 2>>
 get_quad_lagrange_nodes (int order)
 {
   const int num_nodes = (order + 1) * (order + 1);
@@ -147,7 +147,7 @@ get_quad_lagrange_nodes (int order)
  * @brief Index of the grid node (i, j, k) in VTK's Lagrange hex ordering
  * (port of vtkHigherOrderHexahedron::PointIndexFromIJK, uniform order)
  */
-[[nodiscard]] static int
+[[nodiscard]] inline int
 vtk_hex_point_index (int i, int j, int k, int order)
 {
   const bool ibdy = (i == 0 || i == order);
@@ -189,7 +189,7 @@ vtk_hex_point_index (int i, int j, int k, int order)
  * @brief Lagrange node positions for a hex of given order in reference
  * coordinates [0,1]^3, in VTK's Lagrange hex ordering
  */
-[[nodiscard]] static std::vector<std::array<double, 3>>
+[[nodiscard]] inline std::vector<std::array<double, 3>>
 get_hex_lagrange_nodes (int order)
 {
   const int num_nodes = (order + 1) * (order + 1) * (order + 1);
@@ -273,7 +273,7 @@ map_cartesian (const std::array<double, shape_traits<TShape>::DIM> &x, std::span
 /**
  * @brief Write VTK file header for Lagrange elements
  */
-static void
+inline void
 write_vtk_header (std::ofstream &file, int num_points, int num_cells)
 {
   file << "<?xml version=\"1.0\"?>\n";
@@ -287,7 +287,7 @@ write_vtk_header (std::ofstream &file, int num_points, int num_cells)
 /**
  * @brief Write VTK footer
  */
-static void
+inline void
 write_vtk_footer (std::ofstream &file)
 {
   file << "    </Piece>\n";
@@ -298,7 +298,7 @@ write_vtk_footer (std::ofstream &file)
 /**
  * @brief Write the .pvtu master referencing the per-rank .vtu pieces
  */
-static void
+inline void
 write_vtk_master (const char *prefix, int mpisize, int u_dim)
 {
   std::ofstream file (std::string (prefix) + ".pvtu");
