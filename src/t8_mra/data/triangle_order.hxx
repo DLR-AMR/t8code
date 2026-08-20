@@ -6,10 +6,6 @@
 #include <array>
 
 #include "t8_eclass/t8_eclass.h"
-#include <t8_element/t8_element.h>
-#include <t8_schemes/t8_scheme.hxx>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 
 namespace t8_mra
 {
@@ -47,20 +43,6 @@ struct triangle_order
   {
     const auto &table = (type == 1) ? child_lookup_type_1 : child_lookup_type_2;
     return table[row_of (order)][child_id];
-  }
-
-  static void
-  get_point_order_at_level (const t8_element_t *elem, const t8_scheme *scheme, perm &order)
-  {
-    order = { 0, 1, 2 };
-    const auto elem_level = scheme->element_get_level (ECLASS, elem);
-    t8_dtri_t ancestor;
-
-    for (auto l = 0; l < elem_level; ++l) {
-      const auto ancestor_id = scheme->element_get_ancestor_id (ECLASS, elem, l + 1);
-      t8_dtri_ancestor ((t8_dtri_t *) elem, l, &ancestor);
-      get_point_order (order, t8_dtri_type_cid_to_beyid[ancestor.type][ancestor_id]);
-    }
   }
 
  private:
