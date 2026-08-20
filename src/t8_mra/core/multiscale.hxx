@@ -28,6 +28,7 @@
 #include "t8_mra/core/adapt/refine.hxx"
 #include "t8_mra/core/forest_backend.hxx"
 #include "t8_mra/core/mst.hxx"
+#include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/criteria/coarsening_criterion.hxx"
 #include "t8_mra/criteria/refinement_criterion.hxx"
 #include "t8_mra/data/element_data.hxx"
@@ -191,26 +192,35 @@ class multiscale {
 
   /** @brief max_u ||d_u|| / c_scaling_u. */
   [[nodiscard]] double
-  scaled_detail_norm (const levelmultiindex &lmi)
+  scaled_detail_norm (const detail_t &detail)
   {
-    auto detail_norm = transform.detail_norm (d_map.get (lmi));
+    auto detail_norm = transform.detail_norm (detail);
     for (auto u = 0u; u < U_DIM; ++u)
       detail_norm[u] /= c_scaling[u];
 
     return *std::max_element (detail_norm.begin (), detail_norm.end ());
   }
 
+  [[nodiscard]] double
+  scaled_detail_norm (const levelmultiindex &lmi)
+  {
+    return scaled_detail_norm (d_map.get (lmi));
+  }
+
   /** @brief Level-dependent threshold (Veli eq. 2.44). */
+  [[nodiscard]] double
+  local_threshold_value (const detail_t &detail, unsigned int level, int gamma)
+  {
+    const auto level_diff = grid.maximum_level - level;
+    const auto vol_max_level = detail.vol / static_cast<double> (1ULL << (levelmultiindex::PATH_BITS * level_diff));
+
+    return std::pow (vol_max_level, (gamma + 1.0) / 2.0) / std::sqrt (detail.vol);
+  }
+
   [[nodiscard]] double
   local_threshold_value (const levelmultiindex &lmi, int gamma)
   {
-    const auto vol = d_map.get (lmi).vol;
-
-    const auto level_diff = grid.maximum_level - lmi.level ();
-    const auto h_lambda = std::sqrt (vol);
-    const auto h_max_level = std::pow (vol / std::pow (levelmultiindex::NUM_CHILDREN, level_diff), (gamma + 1.0) / 2.0);
-
-    return h_max_level / h_lambda;
+    return local_threshold_value (d_map.get (lmi), lmi.level (), gamma);
   }
 
   /** @brief Per-component domain-integral scaling (eq. 2.39), reduced over ranks. */
