@@ -34,26 +34,27 @@
 // Output Helpers
 //=============================================================================
 
+const bool vtk_activated = true;
 
- const bool vtk_activated = true;
-
-void timing_start(sc_flopinfo_t& fi, sc_flopinfo_t& snapshot)
+void
+timing_start (sc_flopinfo_t &fi, sc_flopinfo_t &snapshot)
 {
   sc_flops_start (&fi);
   sc_flops_snap (&fi, &snapshot);
 }
 
-void timing_end(const std::string& name, sc_flopinfo_t& fi, sc_flopinfo_t& snapshot, sc_statinfo_t* stats)
+void
+timing_end (const std::string &name, sc_flopinfo_t &fi, sc_flopinfo_t &snapshot, sc_statinfo_t *stats)
 {
   sc_flops_shot (&fi, &snapshot);
-  sc_stats_set1 (&stats[0], snapshot.iwtime, name.c_str());
+  sc_stats_set1 (&stats[0], snapshot.iwtime, name.c_str ());
   sc_stats_compute (sc_MPI_COMM_WORLD, 1, stats);
 }
 
-void timing_print_all(sc_statinfo_t* stats, int nstats)
+void
+timing_print_all (sc_statinfo_t *stats, int nstats)
 {
-  for(int i=0; i<nstats; i++)
-  {
+  for (int i = 0; i < nstats; i++) {
     sc_stats_print (-1, SC_LP_INFO, 1, &(stats[i]), 1, 1);
   }
 }
@@ -184,7 +185,8 @@ void
 write_vtk_output (MRA &mra, const std::string &filename)
 {
 
-  if(not vtk_activated) return;
+  if (not vtk_activated)
+    return;
 
   root_out () << "  Writing VTK: " << filename << ".vtu\n";
 
@@ -229,13 +231,13 @@ example_adaptation_cycle ()
   constexpr int U = 1;
   constexpr int P = 3;
   const int min_level = 0;
-  const int max_level = 4;
+  const int max_level = 2;
   const double c_thresh = 1.0;
 
   int mpisize, mpirank;
   sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  int sqrt_mpisize = static_cast<int>(std::sqrt(mpisize));
+  int sqrt_mpisize = static_cast<int> (std::sqrt (mpisize));
 
   // t8_debugf("sqrt_mpisize = %i", sqrt_mpisize);
 
@@ -253,50 +255,49 @@ example_adaptation_cycle ()
   const int n_y = 2;
   const int num_global_trees = n_x * n_y * 2;
 
-
   // const t8_gloidx_t local_tree_offset = mpirank * num_global_trees / mpisize;
 
   const t8_gloidx_t local_tree_offset = 0;
 
-  t8_productionf("Local tree offset:%i\n", local_tree_offset );
-
+  t8_productionf ("Local tree offset:%i\n", local_tree_offset);
 
   root_out () << "\nCreate cmesh...\n";
 
   // t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, boundary_coords, 10, 10, 1, false);
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad_ext(T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, boundary_coords, n_x, n_y, 1, 0, 0, 0, false, false, local_tree_offset);
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad_ext (T8_ECLASS_TRIANGLE, sc_MPI_COMM_WORLD, boundary_coords, n_x, n_y,
+                                                     1, 0, 0, 0, false, false, local_tree_offset);
 
   root_out () << "\n... done!\n";
 
-  if(vtk_activated) t8_cmesh_vtk_write_file(cmesh, "mra_output/mra_cmesh");
+  if (vtk_activated)
+    t8_cmesh_vtk_write_file (cmesh, "mra_output/mra_cmesh");
 
   auto *scheme = t8_scheme_new_default ();
 
   sc_flopinfo_t fi, snapshot;
   sc_statinfo_t stats[5];
 
-  timing_start(fi, snapshot);
+  timing_start (fi, snapshot);
   // Step 0: Initialize on the uniform max_level grid.
   mra.initialize_data (cmesh, scheme, max_level, quarter_circle<U> ());
 
   // mra.initialize_data_adaptive (cmesh, scheme, max_level, quarter_circle<U> (),
   //                               t8_mra::hard_thresholding { .c_thresh = c_thresh });
 
-
-  timing_end("MRA Init", fi, snapshot, &(stats[0]));
+  timing_end ("MRA Init", fi, snapshot, &(stats[0]));
 
   print_grid_stats (mra, "Uniform level " + std::to_string (max_level));
   write_vtk_output (mra, "mra_output/01_cycle_step0_uniform");
   // write_vtk_output (mra, "mra_output/01_cycle_step0_bottom_up");
 
-  mra.repartition();
+  // mra.repartition ();
 
   write_vtk_output (mra, "mra_output/01_cycle_step0_uniform_repartitioned");
 
   // Step 1: Coarsen away the non-significant details.
-  timing_start(fi, snapshot);
+  timing_start (fi, snapshot);
   mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
-  timing_end("MRA Coarsen", fi, snapshot, &(stats[1]));
+  timing_end ("MRA Coarsen", fi, snapshot, &(stats[1]));
   const auto num_coarse = print_grid_stats (mra, "After coarsening");
   write_vtk_output (mra, "mra_output/01_cycle_step1_coarsened");
 
