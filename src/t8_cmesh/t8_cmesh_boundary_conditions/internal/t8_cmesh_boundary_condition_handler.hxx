@@ -136,7 +136,14 @@ struct t8_cmesh_boundary_condition_handler
     hashes.reserve (std::size (boundary_conditions));
     for (const auto &boundary_condition : boundary_conditions) {
       const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition);
-      m_boundary_conditions.try_emplace (hash, boundary_condition);
+      const auto inserted = m_boundary_conditions.try_emplace (hash, boundary_condition);
+#if T8_ENABLE_DEBUG
+      if (inserted.second) {
+        const std::string_view boundary_condition_view = boundary_condition;
+        t8_debugf ("Registered boundary condition %.*s\n", static_cast<int> (boundary_condition_view.size ()),
+                   boundary_condition_view.data ());
+      }
+#endif
       hashes.emplace_back (std::move (hash));
     }
     t8_cmesh_set_attribute (m_cmesh, gtreeid, t8_get_package_id (), get_boundary_condition_attribute_key (),
