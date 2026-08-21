@@ -150,6 +150,19 @@ struct t8_cmesh_boundary_condition_handler
                             hashes.data (), sizeof (boundary_condition_hash) * hashes.size (), 0);
   }
 
+  /**
+   * Updates the internal cmesh. The boundary condition handler can only be given to uncommitted cmeshes.
+   * \param [in] new_cmesh  The new cmesh.
+   */
+  inline void
+  set_cmesh (t8_cmesh_t new_cmesh)
+  {
+    T8_ASSERT (t8_cmesh_is_initialized (new_cmesh));
+    T8_ASSERTF (t8_cmesh_is_committed (new_cmesh, 0),
+                "The boundary condition handler can only be set for uncommitted cmeshes.\n");
+    m_cmesh = new_cmesh;
+  }
+
   /**************************************** BOUNDARY CONDITION RETRIEVAL ****************************************/
 
   /**
