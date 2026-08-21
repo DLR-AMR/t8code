@@ -1,0 +1,76 @@
+name: test t8code examples
+
+
+#  This file is part of t8code.
+#  t8code is a C library to manage a collection (a forest) of multiple
+#  connected adaptive space-trees of general element types in parallel.
+#
+#  Copyright (C) 2026 the developers
+#
+#  t8code is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  t8code is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with t8code; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+name: Test t8code Compilation
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        # Test various compiler flags and debug levels
+        flags:
+          - "-O2"
+          - "-O3 -Wall -Wextra"
+          - "-DT8_ENABLE_DEBUG=1"
+          - "-O2 -DT8_ENABLE_DEBUG=0"
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          build-essential \
+          gfortran \
+          libopenmpi-dev \
+          openmpi-bin \
+          clang
+
+    - name: Configure CMake
+      run: |
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          export CC=gcc CXX=g++
+        else
+          export CC=clang CXX=clang++
+        fi
+
+        cmake -B build -S . \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DEXTRA_FLAGS="${{ matrix.flags }}"
+
+    - name: Compile Executable
+      run: |
+        cmake --build build --target t8_advection -j $(nproc)
