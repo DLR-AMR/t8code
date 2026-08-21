@@ -583,7 +583,7 @@ struct forest_face_neighbors_subface: public testing::TestWithParam<std::tuple<i
 {
  protected:
   /**
-   * \brief Set the Up test suite.
+   * \brief Set up the test suite.
    */
   void
   SetUp () override
