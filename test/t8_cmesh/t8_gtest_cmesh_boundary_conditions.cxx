@@ -378,3 +378,50 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_broadcast)
   check_boundary_conditions (handler, testing_boundary_conditions);
 }
 
+/**
+ * This test creates boundary conditions for each rank.
+ * Then we synchronize all bcs and check that all boundary conditions are available
+ * on all ranks.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_synchronize)
+{
+  /* Get MPI info */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int rank, mpisize;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &mpisize);
+
+  /* Create the boundary conditions.
+   * For each rank, we create 6 bcs.
+   * The last rank gets no boundary conditions as a special testing case.
+   * Each rank gets his own 6 boundary conditions as well as 2 boundary conditions
+   * of the next rank. This way each rank (except the first, last and second to last)
+   * has 2 shared bcs with rank - 1, 2 unique bcs and 2 shared bcs with rank + 1.
+   * Rank 0 and mpisize - 2 have 4 unique bcs and 2 shared ones (if there are more than 2 ranks).
+   * Rank mpisize - 1 has no boundary conditions. */
+  std::vector<std::string> testing_boundary_conditions;
+  const size_t num_boundary_conditions_per_rank = 6;
+  /* Since the last rank gets no bcs we use mpisize - 1 and since every rank gets 2 additional bcs we also add 2. */
+  size_t num_boundary_conditions = (mpisize - 1) * num_boundary_conditions_per_rank + 2;
+  testing_boundary_conditions.reserve (num_boundary_conditions);
+  for (size_t i_bc = 0; i_bc < num_boundary_conditions; ++i_bc) {
+    testing_boundary_conditions.emplace_back ("testing_boundary_condition_" + std::to_string (i_bc));
+  }
+
+  /* Assign all bcs. */
+  detail::t8_cmesh_boundary_condition_handler handler (nullptr);
+  size_t bc_min = rank * num_boundary_conditions_per_rank;
+  size_t bc_max = (rank + 1) * num_boundary_conditions_per_rank + 2;
+  /* All ranks except the last one assign bcs. */
+  if (rank != mpisize - 1) {
+    for (size_t i_bc = bc_min; i_bc < bc_max; ++i_bc) {
+      handler.register_boundary_condition (testing_boundary_conditions[i_bc]);
+    }
+  }
+
+  /* Synchronize the conditions. */
+  handler.synchronize (comm);
+
+  /* Check if every rank has all conditions. */
+  check_boundary_conditions (handler, testing_boundary_conditions);
+}
