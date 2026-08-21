@@ -149,6 +149,32 @@ struct t8_cmesh_boundary_condition_handler
   }
 
   /**
+   * Adds a boundary condition name to this handler without registering it to a tree.
+   * Mostly needed for debugging and testing reasons.
+   * Boundary conditions added via \ref add_boundary_conditions do not need to be registered explicitly.
+   * \tparam TString                  A string-like object.
+   * \param [in]  boundary_condition  The name of the boundary condition.
+   */
+  template <typename TString>
+    requires std::convertible_to<TString, std::string_view>
+  inline void
+  register_boundary_condition (TString &&boundary_condition)
+  {
+    const std::string boundary_condition_string { boundary_condition };
+    const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition_string);
+
+    const auto inserted = m_boundary_conditions.try_emplace (hash, std::move (boundary_condition_string));
+
+#if T8_ENABLE_DEBUG
+    if (inserted.second) {
+      const std::string_view boundary_condition_view = boundary_condition;
+      t8_debugf ("Registered boundary condition %.*s\n", static_cast<int> (boundary_condition_view.size ()),
+                 boundary_condition_view.data ());
+    }
+#endif
+  }
+
+  /**
    * Updates the internal cmesh. The boundary condition handler can only be given to uncommitted cmeshes.
    * \param [in] new_cmesh  The new cmesh.
    */
@@ -200,6 +226,21 @@ struct t8_cmesh_boundary_condition_handler
     const std::span<const boundary_condition_hash> hashes = fetch_boundary_condition_hashes (ltreeid);
     T8_ASSERT (hashes.size () > static_cast<size_t> (face));
     return get_boundary_condition_name (hashes[face]);
+  }
+
+  /**
+   * Get all registered boundary condition names.
+   * \return A vector containing all registered boundary condition names.
+   */
+  inline std::vector<std::string_view>
+  get_registered_boundary_conditions () const
+  {
+    std::vector<std::string_view> boundary_conditions;
+    boundary_conditions.reserve (m_boundary_conditions.size ());
+    for (const auto &boundary_condition : m_boundary_conditions) {
+      boundary_conditions.push_back (boundary_condition.second);
+    }
+    return boundary_conditions;
   }
 
   /**************************************** HELPER FUNCTIONS ****************************************/
