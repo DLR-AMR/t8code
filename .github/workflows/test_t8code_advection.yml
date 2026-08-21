@@ -76,7 +76,5 @@ jobs:
           -DCMAKE_C_FLAGS="${{ matrix.flags }}" \
           -DCMAKE_CXX_FLAGS="${{ matrix.flags }}")
 
-    - name: Compile Executable
-      run: |
-        NPROC=$(nproc)
-        cmake --build build --target t8_advection -j $NPROC
+   - name: Compile Executable
+      run: cmake --build build --target t8_advection --parallel
