@@ -74,7 +74,7 @@ jobs:
           -DCMAKE_CXX_COMPILER=$CXX_COMP \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_FLAGS="${{ matrix.flags }}" \
-          -DCMAKE_CXX_FLAGS="${{ matrix.flags }}")
+          -DCMAKE_CXX_FLAGS="${{ matrix.flags }}"
 
     - name: Compile Executable
       run: cmake --build build --target t8_advection --parallel
