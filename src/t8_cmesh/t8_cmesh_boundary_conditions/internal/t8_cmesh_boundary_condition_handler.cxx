@@ -25,6 +25,7 @@
  * Implementation context of \ref t8_cmesh_boundary_condition_handler.hxx
  */
 
+#include <t8.h>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
@@ -123,6 +124,63 @@ t8_cmesh_boundary_condition_handler::unpack_map (std::vector<char> &serial_data,
     t8_cmesh_boundary_condition_handler::m_boundary_conditions.try_emplace (
       t8_cmesh_boundary_condition_handler::hash_boundary_condition_name (value), std::move (value));
   }
+}
+
+void
+t8_cmesh_boundary_condition_handler::synchronize (sc_MPI_Comm comm)
+{
+  /* Use a bottom-up binomial tree merge approach instead of an MPI_Allgatherv to secure O(log(p)) scaling.
+   * In every level of the merge tree each rank with rank = rank & ~mask merges all information of rank = rank | mask.
+   * The rank = rank && ~mask then drops out of the communication pattern.
+   * The receiving rank also checks if there is a sender in the first place (src >= mpisize) for non-power of 2 mpisizes.
+   *
+   * After all data is collected, rank 0 broadcasts the collected data.
+   */
+
+  T8_ASSERT (comm != sc_MPI_COMM_NULL);
+
+  int rank, mpisize;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &mpisize);
+
+  if (mpisize == 1) {
+    /* Nothing to do. */
+    return;
+  }
+
+  /* Iterate over all levels of the merge tree. */
+  for (int mask = 1; mask < mpisize; mask <<= 1) {
+    /* This rank receives a message. */
+    if ((rank & mask) == 0) {
+      const int src = rank | mask;
+      if (src >= mpisize) {
+        /* There is no sender, so we have nothing to do on this level. */
+        continue;
+      }
+      /* Probe the size of the incoming message. */
+      sc_MPI_Status status;
+      sc_MPI_Probe (src, T8_MPI_BOUNDARY_CONDITION_SYNC_TAG, comm, &status);
+      int incoming_bytes;
+      sc_MPI_Get_count (&status, sc_MPI_BYTE, &incoming_bytes);
+
+      /* Prepare buffer and receive data. */
+      std::vector<char> incoming (incoming_bytes);
+      sc_MPI_Recv (incoming.data (), incoming_bytes, sc_MPI_BYTE, src, T8_MPI_BOUNDARY_CONDITION_SYNC_TAG, comm,
+                   sc_MPI_STATUS_IGNORE);
+      t8_cmesh_boundary_condition_handler::unpack_map (incoming, false);
+    }
+    /* This process sends a message and then drops out. */
+    else {
+      const int dst = rank & ~mask;
+      const std::vector<char> outgoing = serialize_map ();
+      sc_MPI_Send (const_cast<char *> (outgoing.data ()), static_cast<int> (outgoing.size ()), sc_MPI_BYTE, dst,
+                   T8_MPI_BOUNDARY_CONDITION_SYNC_TAG, comm);
+      /* Drop out. */
+      break;
+    }
+  }
+
+  t8_cmesh_boundary_condition_handler::bcast (0, comm);
 }
 
 void

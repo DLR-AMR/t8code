@@ -373,6 +373,12 @@ struct t8_cmesh_boundary_condition_handler
   /**************************************** MPI HELPER FUNCTIONS ****************************************/
 
  public:
+  /**
+   * Synchronizes the contents of the boundary condition handler across all processes.
+   * \param [in]  comm      The communicator to use.
+   */
+  void
+  synchronize (sc_MPI_Comm comm);
 
   /**
    * Broadcasts the boundary conditions from \a main_rank to all other ranks.
