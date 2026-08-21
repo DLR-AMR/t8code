@@ -60,16 +60,18 @@ jobs:
 
     - name: Configure CMake
       run: |
+        # Set compiler variables based on matrix selection
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
-          export CC=gcc CXX=g++
+          C_COMP="gcc"
+          CXX_COMP="g++"
         else
-          export CC=clang CXX=clang++
+          C_COMP="clang"
+          CXX_COMP="clang++"
         fi
 
         cmake -B build -S . \
+          -DCMAKE_C_COMPILER=$C_COMP \
+          -DCMAKE_CXX_COMPILER=$CXX_COMP \
           -DCMAKE_BUILD_TYPE=Release \
-          -DEXTRA_FLAGS="${{ matrix.flags }}"
-
-    - name: Compile Executable
-      run: |
-        cmake --build build --target t8_advection -j $(nproc)
+          -DCMAKE_C_FLAGS="${{ matrix.flags }}" \
+          -DCMAKE_CXX_FLAGS="${{ matrix.flags }}")
