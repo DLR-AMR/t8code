@@ -324,3 +324,57 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
 
   t8_forest_unref (&forest);
 }
+
+/**
+ * Checks if the registered boundary conditions of the \a handler match with some \a testing_conditions.
+ * \param [in]  handler             The handler to check.
+ * \param [in]  testing_conditions  The conditions which should be registered in \a handler.
+ */
+static void
+check_boundary_conditions (detail::t8_cmesh_boundary_condition_handler &handler,
+                           std::vector<std::string> testing_conditions)
+{
+  auto retrieved_conditions = handler.get_registered_boundary_conditions ();
+  ASSERT_EQ (retrieved_conditions.size (), testing_conditions.size ());
+
+  std::ranges::sort (retrieved_conditions);
+  std::ranges::sort (testing_conditions);
+  for (size_t i_bc = 0; i_bc < retrieved_conditions.size (); ++i_bc) {
+    EXPECT_EQ (retrieved_conditions[i_bc], testing_conditions[i_bc]);
+  }
+}
+
+/**
+ * This test registers boundary conditions on rank 0 and broadcasts them to the other ranks.
+ * In the end we check, if every rank hast the boundary conditions.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_broadcast)
+{
+  /* Get MPI info. */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int rank;
+  sc_MPI_Comm_rank (comm, &rank);
+
+  /* We create the same vector with 20 boundary conditions on each rank. */
+  std::vector<std::string> testing_boundary_conditions;
+  size_t num_boundary_conditions = 20;
+  testing_boundary_conditions.reserve (num_boundary_conditions);
+  for (size_t i_bc = 0; i_bc < num_boundary_conditions; ++i_bc) {
+    testing_boundary_conditions.emplace_back ("testing_boundary_condition_" + std::to_string (i_bc));
+  }
+
+  /* We create a handler and register the boundary conditions only on rank 0. */
+  detail::t8_cmesh_boundary_condition_handler handler (nullptr);
+  if (rank == 0) {
+    for (const auto &boundary_condition : testing_boundary_conditions) {
+      handler.register_boundary_condition (boundary_condition);
+    }
+  }
+
+  /* Broadcast the conditions. */
+  handler.bcast (0, comm);
+
+  /* Check if every rank has all conditions. */
+  check_boundary_conditions (handler, testing_boundary_conditions);
+}
+
