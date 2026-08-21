@@ -2095,12 +2095,11 @@ t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                         neigh_children_at_face.begin (), num_neighbor_face_children, nullptr);
 
   // Find out which entry of neigh_children_at_face is equal to target_virtual_face_neighbor.
-  auto iter = std::find_if (
-    neigh_children_at_face.begin (), neigh_children_at_face.begin () + num_neighbor_face_children,
-    [&] (t8_element *candidate) -> bool {
-      return scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, candidate) == 0;
-    });
-  T8_ASSERT (iter != neigh_children_at_face.end ());  // make sure target_virtual_face_neighbor was found
+  auto search_end_it = neigh_children_at_face.begin () + num_neighbor_face_children;
+  auto iter = std::find_if (neigh_children_at_face.begin (), search_end_it, [&] (t8_element *candidate) -> bool {
+    return scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, candidate) == 0;
+  });
+  T8_ASSERT (iter != search_end_it);  // make sure target_virtual_face_neighbor was found
 
   // Extract the neighbor leaf's subface ID, i.e., the local child index (at the face).
   int neighbor_subface_index = iter - neigh_children_at_face.begin ();
