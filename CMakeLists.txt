@@ -26,7 +26,7 @@ project(
     T8CODE
     DESCRIPTION "Parallel algorithms and data structures for tree-based AMR with arbitrary element shapes."
     LANGUAGES C CXX
-    VERSION "${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}"
+    VERSION "4.0.0"
     )
 
 include( GNUInstallDirs)

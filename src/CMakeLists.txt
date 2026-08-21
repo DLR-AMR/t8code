@@ -20,7 +20,7 @@
 
 if ( ${T8CODE_BUILD_AS_SHARED_LIBRARY} )
     add_library( T8 SHARED )
-    set_target_properties( T8 PROPERTIES VERSION ${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH} SOVERSION ${T8CODE_VERSION_RAW})
+    set_target_properties( T8 PROPERTIES VERSION "4.0.0" SOVERSION "4.0.0")
     set_target_properties( T8 PROPERTIES POSITION_INDEPENDENT_CODE ON )
 else()
     add_library( T8 STATIC )
