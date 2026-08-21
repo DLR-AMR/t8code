@@ -64,8 +64,8 @@ jobs:
       run: |
         # Set compiler variables based on matrix selection
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
-          C_COMP="gcc"
-          CXX_COMP="g++"
+          C_COMP="mpicc"
+          CXX_COMP="mpicxx"
         else
           C_COMP="clang"
           CXX_COMP="clang++"
