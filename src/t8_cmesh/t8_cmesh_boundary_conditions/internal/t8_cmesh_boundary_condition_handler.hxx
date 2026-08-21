@@ -67,6 +67,8 @@ struct t8_cmesh_boundary_condition_handler
   using boundary_condition_hash = T8Type<size_t, boundary_condition_hash_tag, EqualityComparable>;
 
  public:
+  /**************************************** CONSTRUCTORS & ASSIGNMENT OPERATORS ****************************************/
+
   /**
    * Standard constructor. Associates the handler with a cmesh
    * \param [in] cmesh  The cmesh the handler is associated with.
@@ -75,6 +77,42 @@ struct t8_cmesh_boundary_condition_handler
   {
   }
 
+  /**
+   * Copy constructor.
+   * \param [in]  other  The other.
+   */
+  t8_cmesh_boundary_condition_handler (const t8_cmesh_boundary_condition_handler &other) = default;
+
+  /**
+   * Move constructor.
+   * \param [in]  other  The other.
+   */
+  t8_cmesh_boundary_condition_handler (t8_cmesh_boundary_condition_handler &&other) noexcept = default;
+
+  /**
+   * Copy assignment operator.
+   * \param [in]  other  The other.
+   * \return      A copy of this.
+   */
+  t8_cmesh_boundary_condition_handler &
+  operator= (const t8_cmesh_boundary_condition_handler &other)
+    = default;
+
+  /**
+   * Move assignment operator.
+   * \param [in]  other  The other.
+   * \return      A reference to a moved version of this.
+   */
+  t8_cmesh_boundary_condition_handler &
+  operator= (t8_cmesh_boundary_condition_handler &&other) noexcept
+    = default;
+
+  /**
+   * The destructor.
+   */
+  ~t8_cmesh_boundary_condition_handler () = default;
+
+  /**************************************** BOUNDARY CONDITION SETUP ****************************************/
   /**
    * Applies boundary conditions to the faces of a cmesh cell.
    *
@@ -102,6 +140,8 @@ struct t8_cmesh_boundary_condition_handler
     t8_cmesh_set_attribute (m_cmesh, gtreeid, t8_get_package_id (), get_boundary_condition_attribute_key (),
                             hashes.data (), sizeof (boundary_condition_hash) * hashes.size (), 0);
   }
+
+  /**************************************** BOUNDARY CONDITION RETRIEVAL ****************************************/
 
   /**
    * Retrieves the boundary conditions of a cmesh cell.
@@ -141,6 +181,8 @@ struct t8_cmesh_boundary_condition_handler
     T8_ASSERT (hashes.size () > static_cast<size_t> (face));
     return get_boundary_condition_name (hashes[face]);
   }
+
+  /**************************************** HELPER FUNCTIONS ****************************************/
 
 #if T8_ENABLE_DEBUG
   /** Verifies the proper attribution of boundary conditions. Can only be called on a cmesh
@@ -213,6 +255,8 @@ struct t8_cmesh_boundary_condition_handler
   {
     return m_boundary_conditions.at (hash);
   }
+
+  /**************************************** MEMBERS ****************************************/
 
   /** The associated cmesh of this struct */
   t8_cmesh_t m_cmesh;
