@@ -135,6 +135,13 @@ struct t8_cmesh_boundary_condition_handler
       SC_CHECK_ABORTF (inserted || position->second == std::string_view (boundary_condition),
                        "ERROR: The boundary conditions \"%s\" and \"%s\" have the same hash.\n",
                        position->second.c_str (), std::string (boundary_condition).c_str ());
+#if T8_ENABLE_DEBUG
+      if (inserted) {
+        const std::string_view boundary_condition_view = boundary_condition;
+        t8_debugf ("Registered boundary condition %.*s\n", static_cast<int> (boundary_condition_view.size ()),
+                   boundary_condition_view.data ());
+      }
+#endif
       hashes.emplace_back (hash);
     }
     t8_cmesh_set_attribute (m_cmesh, gtreeid, t8_get_package_id (), get_boundary_condition_attribute_key (),
