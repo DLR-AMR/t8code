@@ -584,6 +584,15 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       cmesh->geometry_handler->ref ();
     }
 
+    /* Copy the boundary condition handler if available. */
+    T8_ASSERT (cmesh->boundary_condition_handler == nullptr);
+    if (cmesh->set_from->boundary_condition_handler != nullptr) {
+      cmesh->boundary_condition_handler
+        = new detail::t8_cmesh_boundary_condition_handler (*cmesh->set_from->boundary_condition_handler);
+      /* Assign handler to new cmesh. */
+      cmesh->boundary_condition_handler->set_cmesh (cmesh);
+    }
+
 #if T8_ENABLE_DEBUG
     /* Copy negative volume check from set_from */
     cmesh->negative_volume_check = cmesh->set_from->negative_volume_check;
