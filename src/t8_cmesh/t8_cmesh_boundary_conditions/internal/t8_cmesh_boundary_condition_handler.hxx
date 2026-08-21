@@ -370,8 +370,39 @@ struct t8_cmesh_boundary_condition_handler
     return m_boundary_conditions.at (hash);
   }
 
+  /**************************************** MPI HELPER FUNCTIONS ****************************************/
+
+ public:
+
+  /**
+   * Broadcasts the boundary conditions from \a main_rank to all other ranks.
+   * \param [in]  main_rank The main rank from which to broadcast.
+   * \param [in]  comm      The communicator to use.
+   */
+  void
+  bcast (int main_rank, sc_MPI_Comm comm);
+
+  /**
+   * Converts the contents of \ref m_boundary_conditions into a serial vector of chars.
+   * The keys are omitted and only the strings are serialized.
+   * In the serialized vector, the individual strings are null-terminated.
+   * \return The serialized map.
+   */
+  std::vector<char>
+  serialize_map () const;
+
+  /**
+   * Unpacks and integrates the \a serial_data into \ref m_boundary_conditions.
+   * It either merges the already existing data or overwrites the complete map if \a overwrite is set to true.
+   * \param [in]  serial_data   The data to unpack and integrate.
+   * \param [in]  overwrite     Overwrites the data in this handler if true. Merges the data with the existing data on false.
+   */
+  void
+  unpack_map (std::vector<char> &serial_data, bool overwrite);
+
   /**************************************** MEMBERS ****************************************/
 
+ private:
   /** The associated cmesh of this struct */
   t8_cmesh_t m_cmesh;
 
