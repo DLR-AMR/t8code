@@ -389,7 +389,7 @@ struct t8_cmesh_boundary_condition_handler
   bcast (int main_rank, sc_MPI_Comm comm);
 
   /**
-   * Converts the contents of \ref m_boundary_conditions into a serial vector of chars.
+   * Converts the contents of m_boundary_conditions into a serial vector of chars.
    * The keys are omitted and only the strings are serialized.
    * In the serialized vector, the individual strings are null-terminated.
    * \return The serialized map.
@@ -398,7 +398,7 @@ struct t8_cmesh_boundary_condition_handler
   serialize_map () const;
 
   /**
-   * Unpacks and integrates the \a serial_data into \ref m_boundary_conditions.
+   * Unpacks and integrates the \a serial_data into m_boundary_conditions.
    * It either merges the already existing data or overwrites the complete map if \a overwrite is set to true.
    * \param [in]  serial_data   The data to unpack and integrate.
    * \param [in]  overwrite     Overwrites the data in this handler if true. Merges the data with the existing data on false.
