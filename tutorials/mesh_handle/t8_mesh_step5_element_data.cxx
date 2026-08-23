@@ -44,7 +44,7 @@
 #include <memory>
 #include <span>
 
-/* The data that we want to store for each element.
+/** The data that we want to store for each element.
  * In this example we want to store the element's level and volume. */
 struct data_per_element_type
 {
@@ -112,8 +112,8 @@ exchange_ghost_data_mesh (TMeshClass &mesh)
  *                  and  T8_VTK_VECTOR - 3 doubles per element
  * \tparam TMeshClass     The mesh handle class.
  * \param [in] mesh       The mesh handle.
- * \param [in] fileprefix The prefix of the files where the vtk will be stored.
- *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu
+ * \param [in] prefix The prefix of the files where the vtk will be stored.
+ *             The master file is then prefix.pvtu and the process with rank r writes in the file prefix_r.vtu
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
 static void
