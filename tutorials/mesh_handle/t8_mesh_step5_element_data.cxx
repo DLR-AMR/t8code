@@ -64,7 +64,7 @@ std::unique_ptr<TMeshClass>
 build_mesh (sc_MPI_Comm comm, int level)
 {
   auto mesh_handle = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
-  struct adapt_data adapt_params = {
+  adapt_data adapt_params = {
     { 0.5, 0.5, 1 }, /* Midpoint of the sphere. */
     0.2,             /* Refine if inside this radius. */
     0.4              /* Coarsen if outside this radius. */

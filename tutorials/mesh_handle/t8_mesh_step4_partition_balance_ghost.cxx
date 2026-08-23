@@ -20,14 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_mesh_element_data.cxx
+/** \file t8_mesh_step4_partition_balance_ghost.cxx
  * This is step4 of the t8code mesh handle tutorials.
  * Therefore, this is the same as general/t8_step4_partition_balance_ghost.cxx but using the mesh handle interface instead of the forest 
  * interface.
  * After generating a coarse mesh (step1), building a uniform mesh
  * on it (step2) and adapting this mesh (step3)
- * we will now learn how to control the mesh creation in more detail,
- * how to partition and balance a mesh and how to generate a layer of ghost elements.
+ * we will now learn how to partition and balance a mesh and how to generate a layer of ghost elements. 
  */
 
 #include <t8.h>                                 /** General t8code header. Always include this. */
@@ -36,9 +35,8 @@
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
 #include <t8_types/t8_vec.hxx>      /** t8 vector dataclass. */
-#include "t8_mesh_tutorials_common.hxx" /** Default adaption function. */
+#include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
 #include <memory>
-#include <iostream>
 
 using mesh_type = t8_mesh_handle::
   mesh<>; /**< Mesh class used in this tutorial. We define it globally to get rid of the function templates to simplify the code. */
@@ -49,43 +47,43 @@ using mesh_type = t8_mesh_handle::
  *  \param comm  The MPI communicator to use for the reduction and printing.
 */
 void
-print_mesh_stats (const std::unique_ptr<mesh_type>& mesh, const char* stage, sc_MPI_Comm comm)
+print_mesh_stats (const std::unique_ptr<mesh_type>& mesh, const char* stage)
 {
   int local_elements = mesh->get_num_local_elements ();
-  int global_elements = 0;
-  MPI_Allreduce (&local_elements, &global_elements, 1, MPI_INT, MPI_SUM, comm);
+  int global_elements = mesh->get_num_global_elements ();
 
   t8_global_productionf (" [mesh_step4] === %s === \n", stage);
+  t8_global_productionf (" [mesh_step4] Local elements on this process: %i \n", local_elements);
   t8_global_productionf (" [mesh_step4] Total elements: %i \n", global_elements);
 }
 
-/** Helper function to create an adapted mesh from an initial mesh.
+/** Helper function to adapt a given mesh using the predefined adaption callback function.
  *  \param mesh  The initial mesh to adapt.
  *  \param adapt_params  The adaptation parameters to use for the adaptation.
 */
 void
 create_adapted_mesh (std::unique_ptr<mesh_type>& mesh, const adapt_data& adapt_params)
 {
-  /* Adapting the mesh once with our adapt_callback_sphere function from step 3 and the adapt_params. Both can be found in the file \ref t8_mesh_tutorials_common.hxx. */
+  /* Setting the adapt-flag with our adapt_callback_sphere function from step 3 and the adapt_params. Both can be found in the file \ref t8_mesh_tutorials_common.hxx. */
   mesh->set_adapt (
     mesh_type::template mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback_sphere<mesh_type>, adapt_params));
-  /* Committing the adapted mesh. */
+  /* Committing the mesh. */
   mesh->commit ();
 }
 
-/** Helper function to create a partitioned and balanced mesh from an initial mesh.
+/** Helper function to partition and balance a given mesh.
  *  \param mesh  The initial mesh to adapt.
 */
 void
 create_partitioned_balanced_mesh (const std::unique_ptr<mesh_type>& mesh)
 {
-  /* Calculate partition information.*/
+  /* Setting partition flag.*/
   mesh->set_partition ();
 
-  /* Calculate balancing information. */
+  /* Setting balancing flag. */
   mesh->set_balance ();
 
-  /* Committing the mesh --> modifying the mesh according to the precalculated information. */
+  /* Committing the mesh. */
   mesh->commit ();
 }
 
@@ -126,10 +124,10 @@ main (int argc, char** argv)
   t8_global_productionf (" [mesh_step4] \n");
 
   /* The initial uniform refinement level. */
-  int uniform_level = 3;
+  const int uniform_level = 3;
 
   /* Parameters for the adaption step. */
-  struct adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
+  adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
 
   /**
    * INITIAL MESH
@@ -143,15 +141,15 @@ main (int argc, char** argv)
     auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
 
     /* Printing the mesh information. */
-    print_mesh_stats (mesh, "Initial mesh", comm);
+    print_mesh_stats (mesh, "Initial mesh");
 
     /* Writing the mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
     t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "initial_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
                                            false);
 
     /** 
-   * ADAPTED MESH
-  */
+     * ADAPTED MESH
+    */
 
     t8_global_productionf (" [mesh_step4] \n");
     t8_global_productionf (" [mesh_step4] Creating adapted mesh.\n");
@@ -161,15 +159,15 @@ main (int argc, char** argv)
     create_adapted_mesh (mesh, adapt_params);
 
     /* Printing the mesh information. */
-    print_mesh_stats (mesh, "Adapted mesh", comm);
+    print_mesh_stats (mesh, "Adapted mesh");
 
     /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
     t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "adapted_mesh.vtu", 0, nullptr, true, true, true, true, true, false,
                                            false);
 
     /**
-   * PARTITIONED, BALANCED MESH
-  */
+     * PARTITIONED, BALANCED MESH
+    */
 
     t8_global_productionf (" [mesh_step4] \n");
     t8_global_productionf (" [mesh_step4] Creating partitioned and balanced mesh.\n");
@@ -182,15 +180,15 @@ main (int argc, char** argv)
     create_partitioned_balanced_mesh (mesh);
 
     /* Printing the mesh information. */
-    print_mesh_stats (mesh, "Partitioned and Balanced mesh", comm);
+    print_mesh_stats (mesh, "Partitioned and Balanced mesh");
 
     /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
     t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "partition_balance_mesh.vtu", 0, nullptr, true, true, true, true,
                                            true, false, false);
 
     /**
-   * GHOST MESH
-  */
+     * GHOST MESH
+    */
 
     t8_global_productionf (" [mesh_step4] \n");
     t8_global_productionf (" [mesh_step4] Creating ghost layer for mesh.\n");
@@ -200,7 +198,9 @@ main (int argc, char** argv)
     create_ghost_mesh (mesh);
 
     /* Printing the mesh information. */
-    print_mesh_stats (mesh, "Ghost mesh", comm);
+    print_mesh_stats (mesh, "Ghost mesh");
+    int ghost_elements = mesh->get_num_ghosts ();
+    t8_global_productionf (" [mesh_step4] Number of ghost elements: %i \n", ghost_elements);
 
     /* Writing the mesh to vtu and pvtu files using the extended version of the function. */
     t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, "ghost_mesh.vtu", 0, nullptr, true, true, true, true, true, false,

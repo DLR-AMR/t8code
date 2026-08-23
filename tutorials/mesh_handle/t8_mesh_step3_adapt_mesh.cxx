@@ -36,13 +36,15 @@
  * of any element will change by at most +-1.
 */
 
-#include <t8.h>                            /** General t8code header. Always include this. */
-#include <mesh_handle/mesh.hxx>            /** General mesh header. Always needed for mesh_handle code. */
-#include <mesh_handle/competence_pack.hxx> /** Competence pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
+#include <t8.h>                                 /** General t8code header. Always include this. */
+#include <mesh_handle/mesh.hxx>                 /** General mesh header. Always needed for mesh_handle code. */
+#include <mesh_handle/competence_pack.hxx>      /** Competence pack for basic mesh_handle features. 
+                                            *  Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
-#include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
-#include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
+#include <mesh_handle/concepts.hxx>             /** Include this to use c++ concepts related to the mesh handle. 
+                                     *  This can be used to constraint the template parameters to only allow mesh handle classes. */
+#include "t8_mesh_tutorials_common.hxx"         /** Adaption function definition used for this tutorial. */
 #include <memory>
 
 /** Build our adapted mesh by transferring the adaption parameters and adapting once with our \ref adapt_callback function.
@@ -57,6 +59,8 @@ build_mesh (sc_MPI_Comm comm, int level)
 {
   /* Generate a hybrid hypercube, made out of cubes, prisms etc. */
   auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
+  /* Saving the initial mesh to vtu files to compare them later. */
+  t8_mesh_handle::write_mesh_to_vtk (*mesh, "step3_initial_uniform_mesh.vtu");
   /* Defining the adaption parameters. */
   adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
   /** Adapting once using our adapt callback.
@@ -100,7 +104,7 @@ main (int argc, char **argv)
   t8_global_productionf (" [mesh_step3] Creating an adapted mesh.\n");
   t8_global_productionf (" [mesh_step3] \n");
   /* The initial uniform refinement level. */
-  int uniform_level = 3;
+  const int uniform_level = 3;
   /* Building the mesh. */
   { /** Scope to ensure mesh is deleted properly. */
     auto mesh = build_mesh<mesh_type> (comm, uniform_level);
