@@ -47,9 +47,9 @@
 #include "t8_mesh_tutorials_common.hxx"         /** Adaption function definition used for this tutorial. */
 #include <memory>
 
-/** Build our adapted mesh by transferring the adaption parameters and adapting once with our \ref adapt_callback function.
+/** Build our adapted mesh by transferring the adaption parameters and adapting once with our \ref adapt_callback_sphere function.
  * \tparam TMeshClass    The mesh handle class.
- * \param sc_MPI_Comm    The MPI communicator.
+ * \param comm           The MPI communicator.
  * \param level          The initial uniform refinement level.
  * \returns Unique pointer to the adapted mesh.
  */

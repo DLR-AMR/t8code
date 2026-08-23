@@ -44,7 +44,6 @@ using mesh_type = t8_mesh_handle::
 /** Helper function to print the total number of elements in the mesh after each step.
  *  \param mesh  The mesh handle to get the number of elements from.
  *  \param stage The stage of the mesh (e.g. "Initial mesh", "Adapted mesh", etc.) to print in the output.
- *  \param comm  The MPI communicator to use for the reduction and printing.
 */
 void
 print_mesh_stats (const std::unique_ptr<mesh_type>& mesh, const char* stage)
