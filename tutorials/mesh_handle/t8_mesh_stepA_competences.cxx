@@ -128,12 +128,12 @@ demonstrate_cache_competences (const TElementType& elem)
 
   t8_global_productionf (" [mesh_stepA] Vertex coordinates (first call):\n");
   for (const auto& v : vertices1) {
-    t8_global_productionf ("(%f, %f, %f)\n", v[0], v[1], v[2]);
+    t8_global_productionf ("[mesh_stepA] (%f, %f, %f)\n", v[0], v[1], v[2]);
   }
 
   t8_global_productionf (" [mesh_stepA] Vertex cache filled after first call: %d\n", elem.vertex_cache_filled ());
 
-  auto vertices2 = elem.get_vertex_coordinates (); /**< Compute the Vertex Coordinates for the second time. */
+  auto vertices2 = elem.get_vertex_coordinates (); /**< Compute the vertex coordinates for the second time. */
 
   if (vertices1 == vertices2) {
     t8_global_productionf (" [mesh_stepA] Vertex coordinates are the same for both calls.\n");
@@ -232,9 +232,9 @@ main (int argc, char** argv)
     t8_global_productionf (" [mesh_stepA] Creating a custom mesh for the custom competence with initial "
                            "refinement level of %d.\n",
                            level);
-    t8_global_productionf (" [t8 Step A Mesh handle] \n");
+    t8_global_productionf (" [mesh_stepA] \n");
 
-    /* Creating a mesh with the mesh_type including our custom competence pack. */
+    /* Creating a mesh with the custom_mesh_class including our custom competence pack. */
     auto custom_mesh = handle_hypercube_hybrid_uniform_default<custom_mesh_class> (level, comm);
 
     t8_global_productionf (" [mesh_stepA] \n");
