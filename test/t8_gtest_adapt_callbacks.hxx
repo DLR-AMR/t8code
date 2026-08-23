@@ -33,10 +33,10 @@
 /** Adapt a forest such that always the first child of a
  * family is refined and no other elements. This results in a highly
  * imbalanced forest.
- * 
+ *
  * This adapt callbacks requires an integer as forest user data.
  * This integer is the maximum refinement level.
- * 
+ *
  * \param [in] forest       The forest to which the new elements belong.
  * \param [in] forest_from  The forest that is adapted.
  * \param [in] which_tree   The local tree containing \a elements.
@@ -52,5 +52,42 @@ int
 t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tree,
                            const t8_eclass_t eclass, t8_locidx_t lelement_id, const t8_scheme *scheme,
                            const int is_family, const int num_elements, t8_element_t *elements[]);
+
+/**
+ * Adapt callback that refines every n-th local element, where \a n is given as template parameter.
+ *
+ * Optionally, an \a offset < \a n may be defined to not start with the first local leaf eleement.
+ *
+ * \tparam n      every n-th local leaf element will be refined
+ * \tparam offset local ID of the first element to refine
+ *
+ * Note: The argument list has to be the same as for \ref t8_forest_adapt_t, even
+ *       if most arguments are unused. For their meaning, please refer to \ref t8_forest_adapt_t.
+ *       (The following doxygen documentation is just to make sure it is technically documented.)
+ *
+ * \param[in] forest        "forest" argument of \ref t8_forest_adapt_t
+ * \param[in] forest_from   "forest_from" argument of \ref t8_forest_adapt_t
+ * \param[in] which_tree    "which_tree" argument of \ref t8_forest_adapt_t
+ * \param[in] tree_class    "tree_class" argument of \ref t8_forest_adapt_t
+ * \param[in] lelement_id   "lelement_id" argument of \ref t8_forest_adapt_t
+ * \param[in] scheme        "scheme" argument of \ref t8_forest_adapt_t
+ * \param[in] is_family     "is_family" argument of \ref t8_forest_adapt_t
+ * \param[in] num_elements  "num_elements" argument of \ref t8_forest_adapt_t
+ * \param[in] elements      "elements" argument of \ref t8_forest_adapt_t
+ *
+ * \return 1 if the element will be refined, 0 otherwise.
+*/
+template <int n, int offset = 0>
+  requires (n > offset)
+int
+refine_every_nth_element_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                                   [[maybe_unused]] t8_locidx_t which_tree, [[maybe_unused]] t8_eclass_t tree_class,
+                                   [[maybe_unused]] t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme *scheme,
+                                   [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                                   [[maybe_unused]] t8_element_t *elements[])
+{
+  // Refine every n-th element, starting from offset (default: zero).
+  return ((lelement_id % n == offset) ? 1 : 0);
+}
 
 #endif /* T8_GTEST_ADAPT_CALLBACKS */

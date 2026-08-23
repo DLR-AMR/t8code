@@ -47,7 +47,8 @@ namespace t8_mesh_handle
  * \param [in] comm          MPI communicator to use.
  * \param [in] do_face_ghost If true, a layer of ghost elements is created.
  * \tparam TMeshClass        The mesh handle class.
- * \return Unique pointer to a uniformly refined mesh handle with coarse mesh \a cmesh and refinement level \a level.
+ * \return                   Unique pointer to a uniformly refined mesh handle with coarse mesh \a cmesh and refinement level \a level, 
+ *                           partitioned across the processes in \a comm.
  */
 template <T8MeshType TMeshClass>
 std::unique_ptr<TMeshClass>
