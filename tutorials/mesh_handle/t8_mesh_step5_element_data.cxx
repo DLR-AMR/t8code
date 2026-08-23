@@ -52,7 +52,7 @@ struct data_per_element_type
   double volume; /**< Volume of the element. */
 };
 
-/** Build a mesh with initial uniform refinement level \a level which is adapted according to \ref adapt_callback,
+/** Build a mesh with initial uniform refinement level \a level which is adapted according to \ref t8_mesh_tutorials_common::adapt_callback_sphere,
  * partitioned and balanced afterwards, and ghost elements are set.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] comm     MPI communicator to use.
