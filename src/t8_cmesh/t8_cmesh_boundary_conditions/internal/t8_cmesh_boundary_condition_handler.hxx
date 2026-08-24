@@ -136,7 +136,7 @@ struct t8_cmesh_boundary_condition_handler
     hashes.reserve (std::size (boundary_conditions));
     for (const auto &boundary_condition : boundary_conditions) {
       const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition);
-      const auto inserted = m_boundary_conditions.try_emplace (hash, boundary_condition);
+      [[maybe_unused]] const auto inserted = m_boundary_conditions.try_emplace (hash, boundary_condition);
 #if T8_ENABLE_DEBUG
       if (inserted.second) {
         const std::string_view boundary_condition_view = boundary_condition;
