@@ -64,6 +64,13 @@
  * Test fixture for the cmesh boundary condition module. It applies boundary conditions
  * to single tree cmeshes in accordance to their face number.
  */
+
+/** Variable for setting hex boundary conditions. */
+constexpr std::array<std::string_view, 6> single_hex_bcs = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
+
+/** C Version of \ref single_hex_bcs. */
+const char *single_hex_bcs_c[6] = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
+
 struct t8_cmesh_single_tree_bc: public testing::TestWithParam<t8_eclass>
 {
  protected:
@@ -71,7 +78,7 @@ struct t8_cmesh_single_tree_bc: public testing::TestWithParam<t8_eclass>
   SetUp () override
   {
     eclass = GetParam ();
-    boundary_conditions = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
+    boundary_conditions = single_hex_bcs;
     boundary_conditions.resize (static_cast<size_t> (t8_eclass_num_faces[eclass]));
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
@@ -85,7 +92,7 @@ struct t8_cmesh_single_tree_bc: public testing::TestWithParam<t8_eclass>
     t8_cmesh_unref (&cmesh);
   }
 
-  t8_boundary_conditions<std::string> boundary_conditions;
+  t8_boundary_conditions<std::string_view> boundary_conditions;
   t8_cmesh_t cmesh;
   t8_eclass eclass;
 };
@@ -243,14 +250,30 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_hybrid_hypercube_boundary_conditi
 TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
 {
   /* Create a cmesh with one hex and apply boundary conditions */
-  const char *boundary_conditions[6] = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-  t8_cmesh_set_boundary_conditions (cmesh, 0, boundary_conditions, 6);
+  t8_cmesh_set_boundary_conditions (cmesh, 0, single_hex_bcs_c, 6);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  /* Only check if the cmesh tree is local to our process. */
+  /* Check if the cmesh tree is local to our process. */
+  ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), 1);
+  /* Some variables for retrieving and checking the boundary conditions. */
+  const char *retrieved_boundary_conditions[6];
+  const char *retrieved_single_boundary_condition;
+  size_t length = 0;
+
+  /* Retrieve boundary conditions via t8_cmesh_get_boundary_conditions and t8_cmesh_get_boundary_condition() and check them. */
+  t8_cmesh_get_boundary_conditions (cmesh, 0, retrieved_boundary_conditions, &length);
+  for (size_t i_boundary_condition = 0; i_boundary_condition < length; ++i_boundary_condition) {
+    /* Check t8_cmesh_get_boundary_conditions */
+    EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+
+    /* Check t8_cmesh_get_boundary_condition */
+    t8_cmesh_get_boundary_condition (cmesh, 0, i_boundary_condition, &retrieved_single_boundary_condition);
+    EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_single_boundary_condition);
+  }
+
   if (t8_cmesh_get_num_local_trees (cmesh)) {
     /* Some variables for retrieving and checking the boundary conditions. */
     const char *retrieved_boundary_conditions[6];
@@ -261,11 +284,11 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
     t8_cmesh_get_boundary_conditions (cmesh, 0, retrieved_boundary_conditions, &length);
     for (size_t i_boundary_condition = 0; i_boundary_condition < length; ++i_boundary_condition) {
       /* Check t8_cmesh_get_boundary_conditions */
-      EXPECT_STREQ (boundary_conditions[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+      EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
 
       /* Check t8_cmesh_get_boundary_condition */
       t8_cmesh_get_boundary_condition (cmesh, 0, i_boundary_condition, &retrieved_single_boundary_condition);
-      EXPECT_STREQ (boundary_conditions[i_boundary_condition], retrieved_single_boundary_condition);
+      EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_single_boundary_condition);
     }
   }
 
@@ -315,8 +338,8 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
           ASSERT_TRUE (retrieved_boundary_conditions[iface] != nullptr);
           ASSERT_TRUE (retrieved_single_boundary_condition != nullptr);
 
-          EXPECT_STREQ (retrieved_boundary_conditions[iface], boundary_conditions[iface]);
-          EXPECT_STREQ (retrieved_single_boundary_condition, boundary_conditions[iface]);
+          EXPECT_STREQ (retrieved_boundary_conditions[iface], single_hex_bcs_c[iface]);
+          EXPECT_STREQ (retrieved_single_boundary_condition, single_hex_bcs_c[iface]);
         }
       }
     }
@@ -403,6 +426,9 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_synchronize)
   const size_t num_boundary_conditions_per_rank = 6;
   /* Since the last rank gets no bcs we use mpisize - 1 and since every rank gets 2 additional bcs we also add 2. */
   size_t num_boundary_conditions = (mpisize - 1) * num_boundary_conditions_per_rank + 2;
+  /* If we are serial we just apply 6 boundary conditions. */
+  if (mpisize == 1)
+    num_boundary_conditions = num_boundary_conditions_per_rank;
   testing_boundary_conditions.reserve (num_boundary_conditions);
   for (size_t i_bc = 0; i_bc < num_boundary_conditions; ++i_bc) {
     testing_boundary_conditions.emplace_back ("testing_boundary_condition_" + std::to_string (i_bc));
@@ -412,8 +438,10 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_synchronize)
   detail::t8_cmesh_boundary_condition_handler handler (nullptr);
   size_t bc_min = rank * num_boundary_conditions_per_rank;
   size_t bc_max = (rank + 1) * num_boundary_conditions_per_rank + 2;
+  if (mpisize == 1)
+    bc_max = num_boundary_conditions_per_rank;
   /* All ranks except the last one assign bcs. */
-  if (rank != mpisize - 1) {
+  if (rank != mpisize - 1 || mpisize == 1) {
     for (size_t i_bc = bc_min; i_bc < bc_max; ++i_bc) {
       handler.register_boundary_condition (testing_boundary_conditions[i_bc]);
     }
