@@ -487,3 +487,77 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_broadcasted_cm
   t8_cmesh_destroy (&cmesh);
 }
 
+/**
+ * We create a distributed cmesh on multiple ranks. The bcs are distributed as well.
+ * After committing, the boundary conditions should be available on every rank.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_distributed_cmesh)
+{
+  /* Get MPI info */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int rank, mpisize;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &mpisize);
+
+  /* The three boundary conditions test three things:
+   * 1. test_boundary_condition is equal on every rank and should not be duplicated.
+   * 2. tree_id: gtreeid is unique to each process and tree and should be available everywhere afterwards.
+   * 3. rank: rank is unique to each rank an tests, that every rank contributed his part. */
+  const t8_boundary_conditions<std::string> boundary_conditions
+    = { "test_boundary_condition", "tree_id: ", "rank: " + std::to_string (rank) };
+
+  /* Every rank gets 5 trees except the last one, which gets 0.
+   * If there is only one rank, it still gets 5 trees. */
+  constexpr size_t num_trees_per_rank = 5;
+  t8_gloidx_t min_tree_id;
+  t8_gloidx_t max_tree_id;
+  if (mpisize == 1 || rank != mpisize - 1) {
+    min_tree_id = rank * num_trees_per_rank;
+    max_tree_id = (rank + 1) * num_trees_per_rank - 1;
+  }
+  else {
+    min_tree_id = 1; /* min tree id has to be bigger than max tree id for t8_cmesh_set_partition_range */
+    max_tree_id = 0;
+  }
+
+  /* Create the distributed cmesh. */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_dimension (cmesh, 2);
+  for (t8_gloidx_t itree = min_tree_id; itree <= max_tree_id; ++itree) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_TRIANGLE);
+    auto current_bcs = boundary_conditions;
+    current_bcs[1] += std::to_string (itree);
+    t8_cmesh_set_boundary_conditions (cmesh, itree, current_bcs);
+  }
+  t8_cmesh_set_partition_range (cmesh, 3, min_tree_id, max_tree_id);
+  t8_cmesh_commit (cmesh, comm);
+
+  /* Retrieve boundary conditions and compute how many there should be. */
+  auto registered_boundary_conditions
+    = t8_cmesh_get_boundary_condition_handler (cmesh)->get_registered_boundary_conditions ();
+  std::ranges::sort (registered_boundary_conditions);
+  const t8_gloidx_t num_trees_in_boundary_conditions
+    = mpisize == 1 ? num_trees_per_rank : (mpisize - 1) * num_trees_per_rank;
+  const t8_gloidx_t num_ranks_in_boundary_conditions = mpisize == 1 ? 1 : mpisize - 1;
+
+  /* Check the common boundary condition. */
+  ASSERT_FALSE (std::find (registered_boundary_conditions.begin (), registered_boundary_conditions.end (),
+                           "test_boundary_condition")
+                == registered_boundary_conditions.end ());
+
+  /* Check that all bcs from all ranks (except the last one) are there. */
+  for (int irank = 0; irank < num_ranks_in_boundary_conditions; ++irank) {
+    ASSERT_FALSE (std::find (registered_boundary_conditions.begin (), registered_boundary_conditions.end (),
+                             "rank: " + std::to_string (irank))
+                  == registered_boundary_conditions.end ());
+  }
+
+  /* Check that all tree id bcs are there. */
+  for (int itree = 0; itree < num_trees_in_boundary_conditions; ++itree) {
+    ASSERT_FALSE (std::find (registered_boundary_conditions.begin (), registered_boundary_conditions.end (),
+                             "tree_id: " + std::to_string (itree))
+                  == registered_boundary_conditions.end ());
+  }
+  t8_cmesh_destroy (&cmesh);
+}
