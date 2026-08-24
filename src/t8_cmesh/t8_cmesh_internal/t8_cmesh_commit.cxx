@@ -504,6 +504,18 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   }
   sc_MPI_Allreduce (&id1, &cmesh->num_trees, 1, T8_MPI_GLOIDX, sc_MPI_SUM, comm);
 
+  /* Communicate the boundary conditions.
+   * Since some processes can have no trees,
+   * we have to communicate if boundary conditions were applied first. */
+  int boundary_conditions_applied_locally = cmesh->boundary_condition_handler != nullptr;
+  int boundary_conditions_applied_globally = 0;
+  sc_MPI_Allreduce (&boundary_conditions_applied_locally, &boundary_conditions_applied_globally, 1, sc_MPI_INT,
+                    sc_MPI_MAX, comm);
+  if (boundary_conditions_applied_globally && cmesh->boundary_condition_handler == nullptr) {
+    t8_cmesh_add_boundary_condition_handler (cmesh);
+  }
+  cmesh->boundary_condition_handler->synchronize (comm);
+
 #if T8_ENABLE_DEBUG
   sc_flops_shot (&fi, &snapshot);
   sc_stats_set1 (&stats[2], snapshot.iwtime, "cmesh_commit_end");
