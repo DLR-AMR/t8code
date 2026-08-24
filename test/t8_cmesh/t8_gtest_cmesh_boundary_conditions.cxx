@@ -453,3 +453,37 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_synchronize)
   /* Check if every rank has all conditions. */
   check_boundary_conditions (handler, testing_boundary_conditions);
 }
+
+/**
+ * We create a cmesh on one rank and broadcast it. The bcs should be available on all ranks.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_broadcasted_cmesh)
+{
+  /* Get MPI info */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int rank, mpisize;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &mpisize);
+
+  /* Create cmesh and apply boundary conditions just on rank 0. */
+  const t8_boundary_conditions<std::string> boundary_conditions = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
+  t8_cmesh_t cmesh = NULL;
+  if (rank == 0) {
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+    t8_cmesh_set_boundary_conditions (cmesh, 0, boundary_conditions);
+  }
+  cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  t8_cmesh_commit (cmesh, comm);
+
+  ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), 1);
+  /* Retrieve and test boundary conditions on all ranks. */
+  const auto retrieved_boundary_conditions = t8_cmesh_get_boundary_conditions (cmesh, 0);
+  ASSERT_EQ (retrieved_boundary_conditions.size (), single_hex_bcs.size ());
+  for (size_t i_boundary_condition = 0; i_boundary_condition < single_hex_bcs.size (); ++i_boundary_condition) {
+    /* Check t8_cmesh_get_boundary_conditions */
+    EXPECT_EQ (single_hex_bcs[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+  }
+  t8_cmesh_destroy (&cmesh);
+}
+
