@@ -128,18 +128,18 @@ struct t8_cmesh_boundary_condition_handler
    *                                  as the eclass of the cell has faces.
    */
   template <std::ranges::input_range TStringRange>
-    requires std::convertible_to<std::ranges::range_reference_t<TStringRange>, std::string_view>
+    requires std::convertible_to<std::ranges::range_value_t<TStringRange>, std::string_view>
   inline void
   add_boundary_conditions (t8_gloidx_t gtreeid, TStringRange boundary_conditions)
   {
     std::vector<boundary_condition_hash> hashes;
     hashes.reserve (std::size (boundary_conditions));
     for (const auto &boundary_condition : boundary_conditions) {
-      const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition);
-      [[maybe_unused]] const auto inserted = m_boundary_conditions.try_emplace (hash, boundary_condition);
+      const std::string_view boundary_condition_view = boundary_condition;
+      const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition_view);
+      [[maybe_unused]] const auto inserted = m_boundary_conditions.try_emplace (hash, boundary_condition_view);
 #if T8_ENABLE_DEBUG
       if (inserted.second) {
-        const std::string_view boundary_condition_view = boundary_condition;
         t8_debugf ("Registered boundary condition %.*s\n", static_cast<int> (boundary_condition_view.size ()),
                    boundary_condition_view.data ());
       }
@@ -337,9 +337,9 @@ struct t8_cmesh_boundary_condition_handler
    * \return                              The hash of the name.
    */
   inline boundary_condition_hash
-  hash_boundary_condition_name (const std::string &boundary_condition_name) const
+  hash_boundary_condition_name (const std::string_view &boundary_condition_name) const
   {
-    return boundary_condition_hash (std::hash<std::string> {}(boundary_condition_name));
+    return boundary_condition_hash (std::hash<std::string_view> {}(boundary_condition_name));
   }
 
   /**
