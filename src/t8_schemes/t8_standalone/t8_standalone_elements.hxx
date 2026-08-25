@@ -52,6 +52,10 @@ constexpr uint8_t T8_ELEMENT_MAXLEVEL[T8_ECLASS_COUNT] = { 30, 30, 30, 29, 21, 2
 constexpr uint8_t T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_COUNT] = { 1, 2, 4, 3, 6, 4, 5, 5 };
 constexpr uint8_t T8_ELEMENT_MAX_BOUNDARIES[T8_ECLASS_COUNT] = { 0, 2, 4, 3, 12, 6, 9, 8 };
 
+
+/** Maximum number of internal neighbors to a point */
+constexpr uint8_t T8_ELEMENT_MAX_NUM_NEIGHBORS[T8_ECLASS_COUNT] = { 1, 2, 4, 6, 8, 24, 100, 100 }; //TODO
+
 /** Number of children of the standalone element types */
 constexpr uint8_t T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_COUNT] = { 1, 2, 4, 4, 8, 8, 8, 10 };
 
