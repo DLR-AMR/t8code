@@ -235,7 +235,7 @@ t8_default_scheme_quad::element_get_ancestor_id (const t8_element_t *elem, int l
 }
 
 int
-t8_default_scheme_quad::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_quad::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < P4EST_CHILDREN; i++) {

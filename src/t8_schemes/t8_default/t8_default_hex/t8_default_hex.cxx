@@ -197,7 +197,7 @@ t8_default_scheme_hex::element_get_ancestor_id (const t8_element_t *elem, const 
 }
 
 int
-t8_default_scheme_hex::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_hex::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   {
