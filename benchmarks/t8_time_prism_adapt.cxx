@@ -97,10 +97,16 @@ t8_time_refine (int start_level, int end_level, [[maybe_unused]] int create_fore
   t8_forest_init (&forest);
 
   if (cube == 0) {
-    t8_forest_set_cmesh (forest, t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD), sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_bigmesh (cmesh, eclass, 512, sc_MPI_COMM_WORLD);
+    t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   }
   else {
-    t8_forest_set_cmesh (forest, t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0), sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   }
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, start_level);
@@ -181,7 +187,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }

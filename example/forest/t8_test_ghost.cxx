@@ -22,13 +22,13 @@
 
 #include <sc_options.h>
 #include <sc_refcount.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_profiling.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <example/common/t8_example_common.hxx>
@@ -218,11 +218,13 @@ t8_test_ghost_brick (int dim, int x, int y, int z, int periodic_x, int periodic_
   t8_cmesh_t cmesh;
 
   if (dim == 2) {
-    cmesh = t8_cmesh_new_brick_2d (x, y, periodic_x, periodic_y, comm);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_brick_2d (cmesh, x, y, periodic_x, periodic_y, comm);
   }
   else {
     T8_ASSERT (dim == 3);
-    cmesh = t8_cmesh_new_brick_3d (x, y, z, periodic_x, periodic_y, periodic_z, comm);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_brick_3d (cmesh, x, y, z, periodic_x, periodic_y, periodic_z, comm);
   }
 
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version, max_level, no_vtk, refine_method);
@@ -240,11 +242,13 @@ t8_test_ghost_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm, int gh
 
   if (eclass < T8_ECLASS_COUNT) {
     // Build a hypercube out of the given eclass
-    cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, comm, 0, 0, 0);
   }
   else if (eclass == T8_ECLASS_COUNT) {
     // Build a 3D hybrid hypercube with tets, hexes and prisms
-    cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube_hybrid (cmesh, comm, 0);
   }
 
   if (eclass != T8_ECLASS_VERTEX && eclass != T8_ECLASS_PYRAMID) {
@@ -265,7 +269,8 @@ t8_test_ghost_msh_file (const char *fileprefix, int level, int dim, sc_MPI_Comm 
 {
   t8_cmesh_t cmesh;
 
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_from_msh_file (&cmesh, fileprefix, 0, comm, dim, 0, 0);
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version, max_level, no_vtk, refine_method);
 }
 
@@ -278,7 +283,8 @@ t8_test_ghost_tet_test (int level, sc_MPI_Comm comm, int ghost_version, int max_
 {
   t8_cmesh_t cmesh;
 
-  cmesh = t8_cmesh_new_tet_orientation_test (comm);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_tet_orientation_test (cmesh, comm);
   t8_test_ghost_refine_and_partition (cmesh, level, comm, 1, ghost_version, max_level, no_vtk, refine_method);
 }
 
@@ -303,7 +309,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }

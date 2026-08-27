@@ -22,7 +22,7 @@
 
 #include <sc_options.h>
 #include <t8.h>
-#include <t8_version.h>
+#include <t8_misc/t8_version.h>
 
 int
 main (int argc, char **argv)

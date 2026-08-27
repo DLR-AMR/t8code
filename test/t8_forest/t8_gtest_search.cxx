@@ -22,8 +22,8 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_custom_assertion.hxx>
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_search/t8_forest_search.hxx>
@@ -31,7 +31,8 @@
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
 
-class forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>> {
+struct forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass>, int>>
+{
  protected:
   void
   SetUp () override
@@ -42,7 +43,8 @@ class forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t8
     level = std::get<1> (GetParam ());
 
     /* Construct a cube coarse mesh */
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     /* Build a uniform forest */
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }

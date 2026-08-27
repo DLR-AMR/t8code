@@ -74,9 +74,9 @@ t8_geom_linear_interpolation (const double *coefficients, const double *corner_v
  * or the reference tet (interpolation_dim = 3) with points
  * (0,0,0) (1,0,0) (1,1,0) (1,1,1).
  * \param [in]    coefficients        An array of size \a interpolation_dim giving the coefficients in the reference triangle/tet used for the interpolation
- * \param [in]    corner_values       An array of size 
+ * \param [in]    corner_values       An array of size
                                                        3 * \a corner_value_dim for \a interpolation_dim == 2 or
-                                                       4 * \a corner_value_dim for \a interpolation_dim == 3, 
+                                                       4 * \a corner_value_dim for \a interpolation_dim == 3,
                                                        giving the function values of the triangle/tetrahedron for each corner (in zorder)
  * \param [in]    corner_value_dim    The dimension of the \a corner_values.
  * \param [in]    interpolation_dim   The dimension of the interpolation (2 for triangle, 3 for tetrahedron)
@@ -168,7 +168,7 @@ double
 t8_geom_get_scaling_factor_of_edge_on_face_prism (int edge_index, int face_index, const double *ref_coords);
 
 /** Calculates the scaling factor for the displacement of an face through the volume of a prism element.
- * \param [in]         face_index          Index of the displaced face.
+ * \param [in]         face                Index of the displaced face.
  * \param [in]         ref_coords          Array containing the coordinates of the reference point.
  * \return                                 The scaling factor of the face displacement
  *                                         at the point of the reference coordinates inside the prism volume.
@@ -177,11 +177,11 @@ double
 t8_geom_get_scaling_factor_face_through_volume_prism (const int face, const double *ref_coords);
 
 /** Check if a point lies inside a vertex
- * 
+ *
  * \param[in] vertex_coords The coordinates of the vertex
  * \param[in] point         The coordinates of the point to check
  * \param[in] tolerance     A double > 0 defining the tolerance
- * \return                  0 if the point is outside, 1 otherwise.  
+ * \return                  0 if the point is outside, 1 otherwise.
  */
 int
 t8_vertex_point_inside (const double vertex_coords[3], const double point[3], const double tolerance);
@@ -189,36 +189,36 @@ t8_vertex_point_inside (const double vertex_coords[3], const double point[3], co
 /**
  * Check if a point is inside a line that is defined by a starting point \a p_0
  * and a vector \a vec
- * 
+ *
  * \param[in] p_0         Starting point of the line
  * \param[in] vec         Direction of the line (not normalized)
  * \param[in] point       The coordinates of the point to check
  * \param[in] tolerance   A double > 0 defining the tolerance
- * \return                0 if the point is outside, 1 otherwise.  
+ * \return                0 if the point is outside, 1 otherwise.
  */
 int
 t8_line_point_inside (const double *p_0, const double *vec, const double *point, const double tolerance);
 
 /**
- * Check if a point is inside of a triangle described by a point \a p_0 and two vectors \a v and \a w. 
- * 
+ * Check if a point is inside of a triangle described by a point \a p_0 and two vectors \a v and \a w.
+ *
  * \param[in] p_0         The first vertex of a triangle
  * \param[in] v           The vector from p_0 to p_1 (second vertex in the triangle)
  * \param[in] w           The vector from p_0 to p_2 (third vertex in the triangle)
  * \param[in] point       The coordinates of the point to check
  * \param[in] tolerance   A double > 0 defining the tolerance
- * \return                0 if the point is outside, 1 otherwise.  
+ * \return                0 if the point is outside, 1 otherwise.
  */
 int
 t8_triangle_point_inside (const double p_0[3], const double v[3], const double w[3], const double point[3],
                           const double tolerance);
 
-/** Check if a point lays on the inner side of a plane of a bilinearly interpolated volume element. 
- * the plane is described by a point and the normal of the face. 
+/** Check if a point lays on the inner side of a plane of a bilinearly interpolated volume element.
+ * the plane is described by a point and the normal of the face.
  * \param[in] point_on_face   A point on the plane
  * \param[in] face_normal     The normal of the face
  * \param[in] point           The point to check
- * \return                    0 if the point is outside, 1 otherwise.                   
+ * \return                    0 if the point is outside, 1 otherwise.
  */
 int
 t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3]);

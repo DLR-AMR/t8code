@@ -29,8 +29,8 @@
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -41,7 +41,8 @@
 #include <vector>
 #include <algorithm>
 
-class gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>> {
+struct gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int, int>>
+{
  public:
   static const int kNumTrees = 4;
 
@@ -70,7 +71,9 @@ TEST_P (gtest_balance, confirm_is_balanced_check_for_uniform_forests)
     scheme->unref ();
     GTEST_SKIP_ ("The pyramid cube mesh cannot be periodic.");
   }
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, ilevel, 0, sc_MPI_COMM_WORLD);
 
   EXPECT_EQ (t8_forest_is_balanced (forest), 1);
@@ -132,7 +135,9 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
 {
   const double boundary_coords[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };
 
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, 2, 2, 1, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_pad (cmesh, T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, 2, 2, 1, 0);
 
   t8_forest_t forest;
   t8_forest_init (&forest);
@@ -150,7 +155,7 @@ t8_gtest_obtain_forest_for_balance_tests (const std::vector<t8_gloidx_t> &trees_
 /**
  * \brief This function checks whether each tree only holds elements that are on the refinement level given by \a expected_elem_level_per_tree
  * 
- * \param [in] balanced_forest A forest consinsting of gtest_balance::kNumTrees trees
+ * \param [in] balanced_forest A forest consisting of gtest_balance::kNumTrees trees
  * \param [in] expected_elem_level_per_tree An array holding a refinement level for each tree id
  * \return true If each element with a tree corresponds to the given refinement level supplied by the array \var expected_elem_level_per_tree
  * \return false If not every element complies to the given refinement level per tree

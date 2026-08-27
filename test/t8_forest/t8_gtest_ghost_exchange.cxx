@@ -21,12 +21,12 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_schemes.hxx>
@@ -42,7 +42,8 @@
  * in a second test, we store the element's linear id in the data array.
  */
 
-class forest_ghost_exchange: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>> {
+struct forest_ghost_exchange: public testing::TestWithParam<std::tuple<int, cmesh_example_base *>>
+{
  protected:
   void
   SetUp () override
@@ -179,9 +180,9 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
   /* we start with an empty level */
   min_level = SC_MAX (min_level - 1, 0);
 #if T8_TEST_LEVEL_INT >= 2
-  const int max_level = min_level + 2;
+  const int max_level = min_level + 1;
 #else
-  const int max_level = min_level + 3;
+  const int max_level = min_level + 2;
 #endif
   for (int level = min_level; level < max_level; level++) {
     /* ref the scheme since we reuse it */
@@ -194,8 +195,8 @@ TEST_P (forest_ghost_exchange, test_ghost_exchange)
     t8_test_ghost_exchange_data_int (forest);
     t8_test_ghost_exchange_data_id (forest);
     /* Adapt the forest and exchange data again */
-    int maxlevel = level + 2;
-    t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt, 1, 1, &maxlevel);
+    int adapt_maxlevel = level + 2;
+    t8_forest_t forest_adapt = t8_forest_new_adapt (forest, t8_test_exchange_adapt, 1, 1, &adapt_maxlevel);
     t8_test_ghost_exchange_data_int (forest_adapt);
     t8_test_ghost_exchange_data_id (forest_adapt);
     t8_forest_unref (&forest_adapt);

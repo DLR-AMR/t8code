@@ -29,8 +29,6 @@
 #include <sc_options.h>
 #include <string>
 
-T8_EXTERN_C_BEGIN ();
-
 /** Removes all elements of a local tree if they belong to the corresponding
  *  global trees which is given by the user_data. */
 static int
@@ -54,8 +52,10 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
   const double boundary_coords[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };
   const int use_axis_alined = 1;
 
-  t8_cmesh_t cmesh
-    = t8_cmesh_new_hypercube_pad (T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, num_trees, 1, 0, use_axis_alined);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_pad (cmesh, T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, boundary_coords, num_trees, 1, 0,
+                              use_axis_alined);
 
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 0, sc_MPI_COMM_WORLD);
 
@@ -76,21 +76,20 @@ t8_strip_of_quads (t8_gloidx_t num_trees, t8_gloidx_t empty_tree, const char **v
   t8_debugf ("Output to %s\n", vtuname_adapt.c_str ());
 
   t8_productionf ("The initial uniform forest:\n"
-                  "\tfirst_local_tree: %li\n"
-                  "\tlast_local_tree:  %li\n"
-                  "\tlocal_num_trees:  %i\n"
-                  "\tglobal_num_trees: %li\n",
-                  static_cast<long> (forest->first_local_tree), static_cast<long> (forest->last_local_tree),
-                  t8_forest_get_num_local_trees (forest), static_cast<long> (t8_forest_get_num_global_trees (forest)));
+                  "\tfirst_local_tree: %" T8_GLOIDX_FORMAT "\n"
+                  "\tlast_local_tree:  %" T8_GLOIDX_FORMAT "\n"
+                  "\tlocal_num_trees:  %" T8_LOCIDX_FORMAT "\n"
+                  "\tglobal_num_trees: %" T8_GLOIDX_FORMAT "\n",
+                  forest->first_local_tree, forest->last_local_tree, t8_forest_get_num_local_trees (forest),
+                  t8_forest_get_num_global_trees (forest));
 
   t8_productionf ("The adapted forest with one empty tree:\n"
-                  "\tfirst_local_tree: %li\n"
-                  "\tlast_local_tree:  %li\n"
-                  "\tlocal_num_trees:  %i\n"
-                  "\tglobal_num_trees: %li\n",
-                  static_cast<long> (forest_adapt->first_local_tree), static_cast<long> (forest_adapt->last_local_tree),
-                  t8_forest_get_num_local_trees (forest_adapt),
-                  static_cast<long> (t8_forest_get_num_global_trees (forest_adapt)));
+                  "\tfirst_local_tree: %" T8_GLOIDX_FORMAT "\n"
+                  "\tlast_local_tree:  %" T8_GLOIDX_FORMAT "\n"
+                  "\tlocal_num_trees:  %" T8_LOCIDX_FORMAT "\n"
+                  "\tglobal_num_trees: %" T8_GLOIDX_FORMAT "\n",
+                  forest_adapt->first_local_tree, forest_adapt->last_local_tree,
+                  t8_forest_get_num_local_trees (forest_adapt), t8_forest_get_num_global_trees (forest_adapt));
 
   t8_forest_unref (&forest_adapt);
   t8_forest_unref (&forest);
@@ -115,7 +114,7 @@ main (int argc, char **argv)
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }
@@ -163,5 +162,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-T8_EXTERN_C_END ();

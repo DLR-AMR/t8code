@@ -59,14 +59,18 @@ T8_EXTERN_C_BEGIN ();
  *  This is useful to convert boundary coordinates from tri to line. */
 #define T8_DLINE_ROOT_BY_DTRI_ROOT (1 << (T8_DLINE_MAXLEVEL - T8_DTRI_MAXLEVEL))
 
+/** Type for the (integer) type of a triangular element. */
 typedef int8_t t8_dtri_type_t;
+/** Type of an integer coordinate for a node of a triangular element. */
 typedef int32_t t8_dtri_coord_t;
 
+/** The data container describing a refined element in a refined tree for the triangular element class. */
 typedef struct t8_dtri
 {
-  int8_t level;
-  t8_dtri_type_t type;
-  t8_dtri_coord_t x, y;
+  int8_t level;        /**< The refinement level of the element relative to the root at level 0. */
+  t8_dtri_type_t type; /**< Type of the triangle (0 or 1). */
+  t8_dtri_coord_t x;   /**< The x integer coordinate of the anchor node. */
+  t8_dtri_coord_t y;   /**< The y integer coordinate of the anchor node. */
 } t8_dtri_t;
 
 T8_EXTERN_C_END ();

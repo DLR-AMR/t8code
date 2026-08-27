@@ -56,7 +56,8 @@ is_internal_data (const t8_data_handler_type type)
  * \tparam TType The type of data to be handled.
  */
 template <typename TType>
-class t8_data_handler {
+struct t8_data_handler
+{
  public:
   /**
    * Construct a t8_data_handler.

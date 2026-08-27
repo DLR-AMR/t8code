@@ -1,8 +1,7 @@
-:rotating_light: **Become part of our Conference on Adaptive Mesh Refinement and Applications (AMR25) on September 02-04, 2025!** Although the abstract submission phase is already over, you can still register as a participant! Visit the [AMR25 website](https://dlr.de/AMR25) for further information. :rotating_light:
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7034838.svg)](https://doi.org/10.5281/zenodo.7034838)
-[![t8code CI](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/tests_cmake_testsuite.yml)
+[![t8code CI](https://github.com/DLR-AMR/t8code/actions/workflows/testsuite.yml/badge.svg)](https://github.com/DLR-AMR/t8code/actions/workflows/testsuite.yml)
 [![codecov](https://codecov.io/gh/dlr-amr/t8code/branch/main/graph/badge.svg)](https://codecov.io/gh/dlr-amr/t8code)
+[![docs](https://app.readthedocs.org/projects/t8code/badge/?version=latest)](https://t8code.readthedocs.io/en/latest/)
 
 <p align="center">
   <img width="300px" src=t8code_logo.png>
@@ -12,7 +11,7 @@
 
 t8code (spoken as "tetcode") is a C/C++ library to manage parallel adaptive meshes with various element types.
 t8code uses a collection (a forest) of multiple connected adaptive space-trees in parallel and scales to at least one million MPI ranks and over 1 Trillion mesh elements.
-It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 2015 the developers.
+It is licensed under the GNU General Public License 2.0 or later. Copyright (c) 2015-2026 the developers.
 
 t8code is intended to be used as a thirdparty library for numerical simulation codes or any other applications that require meshes.
 
@@ -76,7 +75,7 @@ We provide a short guide to install t8code in our Wiki [Installation guide](http
 ### Documentation
 
 t8code uses [Doxygen](https://doxygen.nl/) to generate the code documentation. 
-You can find the documentation of our releases on the [t8code website](https://dlr-amr.github.io/t8code/pages/documentation.html).
+You can find the documentation on [readthedocs](https://t8code.readthedocs.io/en/latest/).
 Follow the steps described in our Wiki [Documentation](https://github.com/DLR-AMR/t8code/wiki/Documentation) to create the documentation locally.
 
 
@@ -187,11 +186,11 @@ to install the package on your system.
 
   [K] **Hanging node resolution 3D**:
   Tabea Leistikow (2024) *Derivation and implementation of a hanging nodes resolution scheme for hexahedral non-conforming meshes in t8code*. Master's thesis, Universität zu Köln.
-  Full text currently not available.
+  [Full text available](https://elib.dlr.de/204843/)
 
   ### Citing t8code
   
-  If you use t8code in any of your publications, please cite the [github repository](https://doi.org/10.5281/zenodo.7034838), [1] and [2]. For publications specifically related to 
+  If you use t8code in any of your publications, please cite the GitHub repository via the [Zenodo DOI](https://doi.org/10.5281/zenodo.7034838), as well as [1] and [2]. For publications specifically related to 
 - **the tetrahedral index**, please cite [3].
 - **coarse mesh partitioning**, please cite [4].
 - **construction and handling of the ghost layer**, please cite [5].

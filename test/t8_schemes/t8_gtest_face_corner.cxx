@@ -21,7 +21,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
@@ -31,8 +31,9 @@
  * The first test gets the corners of all faces of an element and checks if the reverse function can get the correct face of the corner.
  * The second test does the same but in reverse order.
  */
-class class_face_corner_test: public TestDFS {
-
+struct class_face_corner_test: public TestDFS
+{
+ private:
   void
   check_element () override
   {

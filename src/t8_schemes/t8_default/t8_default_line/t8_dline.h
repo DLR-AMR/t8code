@@ -47,12 +47,14 @@
 /** The length of a line at a given level in integer coordinates. */
 #define T8_DLINE_LEN(l) (1 << (T8_DLINE_MAXLEVEL - (l)))
 
+/** Type of an integer coordinate for a node of a line element. */
 typedef int32_t t8_dline_coord_t;
 
+/** The data container describing a refined element in a refined tree for the line element class. */
 typedef struct t8_dline
 {
-  t8_dline_coord_t x;
-  int8_t level;
+  t8_dline_coord_t x; /**< The integer coordinate of the anchor node. */
+  int8_t level;       /**< The refinement level of the element relative to the root at level 0. */
 } t8_dline_t;
 
 #endif /* T8_DLINE_H */

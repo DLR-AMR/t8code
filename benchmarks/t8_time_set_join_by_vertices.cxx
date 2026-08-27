@@ -25,9 +25,9 @@
 #include <sc_statistics.h>
 
 #include <t8.h>
-#include <t8_cmesh.h>
-#include <t8_eclass.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 
@@ -146,7 +146,8 @@ main (int argc, char **argv)
       sc_flops_start (&fi);
       sc_flops_snap (&fi, &snapshot);
 
-      cmesh = t8_cmesh_from_msh_file (meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_cad_geometry);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_from_msh_file (&cmesh, meshfile, partition, sc_MPI_COMM_WORLD, dim, main_proc, use_cad_geometry);
 
       /* Measure passed time. */
       sc_flops_shot (&fi, &snapshot);

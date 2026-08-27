@@ -22,7 +22,7 @@
 
 #include <t8.h>                                       /* General t8code header, always include this. */
 #include <sc_options.h>                               /* CLI parser */
-#include <t8_cmesh.hxx>                               /* cmesh definition and basic interface. */
+#include <t8_cmesh/t8_cmesh.hxx>                      /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h>               /* example cmeshes */
 #include <t8_forest/t8_forest_general.h>              /* forest definition and basic interface. */
 #include <t8_schemes/t8_standalone/t8_standalone.hxx> /* standalone refinement scheme. */
@@ -91,7 +91,9 @@ void
 t8_multilevel_tutorial (const t8_eclass_t eclass, const int level)
 {
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
-  t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, comm);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_from_class (cmesh, eclass, comm);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone_multilevel (), 0, 0, comm);
   for (int i_level = 0; i_level < level; ++i_level) {
     t8_forest_t forest_new;

@@ -21,13 +21,15 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_dfs_base.hxx"
 
-class class_test_equal: public TestDFS {
+struct class_test_equal: public TestDFS
+{
+ private:
   void
   check_element () override
   {

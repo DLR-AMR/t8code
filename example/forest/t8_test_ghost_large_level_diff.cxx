@@ -36,7 +36,7 @@
 #include <sc_flops.h>
 #include <sc_statistics.h>
 #include <sc_options.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
@@ -136,11 +136,13 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   sc_statinfo_t stats[1];
 
   if (prefix != NULL) {
-    cmesh = t8_cmesh_from_msh_file (prefix, 1, comm, dim, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, prefix, 1, comm, dim, 0, 0);
   }
   /* If no prefix given, create hypercube */
   else {
-    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_PRISM, comm, 0, 0, 0);
   }
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);
@@ -219,7 +221,7 @@ main (int argc, char *argv[])
 
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated help message to '%s'\n", help);
   }

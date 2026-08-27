@@ -22,14 +22,16 @@
 
 #include <gtest/gtest.h>
 #include <t8.h>
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_types.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <test/t8_gtest_macros.hxx>
+#include "t8_test_data_dir.h"
+#include <string>
 
 #include <p8est_geometry.h>
 
@@ -152,13 +154,15 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
   const int do_partition = 0;
 
-  /* 
+  /*
    * Tests from `t8code` that are not included in AllCmeshsParam.
    */
 
   {
     const int periodic = 0;
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, do_partition, periodic);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, periodic);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
@@ -168,19 +172,25 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
     t8_eclass_t eclass = T8_ECLASS_HEX;
     const int use_axis_aligned = 0;
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, comm, boundary_coords, 2, 2, 2, use_axis_aligned);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube_pad (cmesh, eclass, comm, boundary_coords, 2, 2, 2, use_axis_aligned);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
 
   {
-    t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (3, 4, 1, 1, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_brick_2d (cmesh, 3, 4, 1, 1, comm);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
 
   {
-    t8_cmesh_t cmesh = t8_cmesh_new_brick_3d (3, 4, 5, 1, 1, 1, comm);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_brick_3d (cmesh, 3, 4, 5, 1, 1, 1, comm);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
   }
@@ -198,7 +208,7 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
    * }
    */
 
-  /* 
+  /*
    * Tests with 2D and 3D example meshes from `p4est`.
    */
 
@@ -209,7 +219,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_disk_nonperiodic ();
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p4est (cmesh, p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
@@ -217,7 +229,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_brick (3, 3, 0, 1);
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p4est (cmesh, p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
@@ -225,7 +239,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_icosahedron ();
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p4est (cmesh, p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
@@ -233,7 +249,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_star ();
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p4est (cmesh, p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
@@ -241,7 +259,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_moebius ();
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p4est (cmesh, p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
@@ -249,7 +269,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_pillow ();
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p4est (cmesh, p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
@@ -257,7 +279,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     p4est_connectivity_t *p4_conn = p4est_connectivity_new_corner ();
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p4est (p4_conn, comm, do_partition);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p4est (cmesh, p4_conn, comm, do_partition);
     p4est_connectivity_destroy (p4_conn);
     test_with_cmesh (cmesh);
     t8_cmesh_destroy (&cmesh);
@@ -265,7 +289,9 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
 
   {
     p8est_connectivity_t *p8_conn = p8est_connectivity_new_brick (3, 3, 3, 0, 0, 0);
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p8est (cmesh, p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
     p8est_connectivity_destroy (p8_conn);
     t8_cmesh_destroy (&cmesh);
@@ -277,25 +303,30 @@ TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
   }
 
   {
-    const char *filename = "test/testfiles/test_cube_unstructured_1.inp";
-    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename);
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
+    auto testfile = t8_test_data_dir / "test_cube_unstructured_1.inp";
+    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (testfile.c_str ());
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p8est (cmesh, p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
     p8est_connectivity_destroy (p8_conn);
     t8_cmesh_destroy (&cmesh);
   }
 
   {
-    const char *filename = "test/testfiles/test_cube_unstructured_2.inp";
-    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (filename);
-    t8_cmesh_t cmesh = t8_cmesh_new_from_p8est (p8_conn, comm, do_partition);
+    auto testfile = t8_test_data_dir / "test_cube_unstructured_2.inp";
+    p8est_connectivity_t *p8_conn = p8est_connectivity_read_inp (testfile.c_str ());
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_p8est (cmesh, p8_conn, comm, do_partition);
     test_with_cmesh (cmesh);
     p8est_connectivity_destroy (p8_conn);
     t8_cmesh_destroy (&cmesh);
   }
 }
 
-class t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *> {
+struct t8_cmesh_set_join_by_vertices_class: public testing::TestWithParam<cmesh_example_base *>
+{
  protected:
   void
   SetUp () override

@@ -26,13 +26,12 @@
 #include <sc_statistics.h>
 #include <sc_options.h>
 #include <p4est_connectivity.h>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_vtk/t8_vtk_writer.h>
 
-#include <t8_cmesh/t8_cmesh_partition.h>
-#include <t8_cmesh/t8_cmesh_cad.hxx>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
@@ -51,7 +50,7 @@ typedef struct
 {
   double c_min, c_max; /* constants that define the thickness of the refinement region */
   t8_3D_vec normal;    /* normal vector to the plane E */
-  int base_level;      /* A given level that is not coarsend further, see -l argument */
+  int base_level;      /* A given level that is not coarsened further, see -l argument */
   int max_level;       /* A max level that is not refined further, see -L argument */
 } adapt_data_t;
 
@@ -128,7 +127,7 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
 
   t8_global_productionf ("Committed cmesh with %lli global trees.\n", (long long) t8_cmesh_get_num_trees (cmesh));
 
-  /* If the input cmesh is partitioned then we use a partitioned cmehs
+  /* If the input cmesh is partitioned then we use a partitioned cmesh
    * and also repartition it in each timestep (happens automatically in
    * t8_forest_commit). We have to initially start with a uniformly refined
    * cmesh in order to be able to construct the forest on it.
@@ -270,7 +269,8 @@ t8_time_forest_create_cmesh (const char *msh_file, int mesh_dim, const char *cme
       partition = 1;
     }
     /* Create a cmesh from the given mesh files */
-    cmesh = t8_cmesh_from_msh_file ((char *) msh_file, partition, comm, mesh_dim, 0, use_cad);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, (char *) msh_file, partition, comm, mesh_dim, 0, use_cad);
   }
   else {
     T8_ASSERT (cmesh_file != NULL);
@@ -303,10 +303,9 @@ main (int argc, char *argv[])
   int level, level_diff;
   int help = 0, no_vtk, do_ghost, do_balance, use_cad;
   int dim, num_files;
-  int test_tet, test_linear_cylinder, test_cad_cylinder, test_hybrid;
+  int test_tet, test_hybrid;
   int scheme;
   int stride;
-  int cmesh_level;
   double T, delta_t, cfl;
   sc_options_t *opt;
   t8_cmesh_t cmesh;
@@ -351,17 +350,9 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 'H', "test-hybrid", &test_hybrid,
                          "Use a hybrid hypercube cmesh consisting of 6 Tets, 6 Prism and 4 Hex."
                          "Not allowed with any other cmesh-defining option.");
-  sc_options_add_switch (opt, 'L', "test-linear-cylinder", &test_linear_cylinder,
-                         "Use a linear cmesh to compare linear and cad geometry performance."
-                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
-  sc_options_add_switch (opt, 'O', "test-cad-cylinder", &test_cad_cylinder,
-                         "Use a cad cmesh to compare linear and cad geometry performance."
-                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The initial uniform refinement level of the forest.");
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined from the initial level.");
-  sc_options_add_int (opt, '\0', "cmesh-level", &cmesh_level, -1,
-                      "Starting level of the linear or cad cmesh, default is 0. Only viable with -L or -O.");
   sc_options_add_double (opt, 'x', "xmin", x_min_max, 0, "The minimum x coordinate in the mesh.");
   sc_options_add_double (opt, 'X', "xmax", x_min_max + 1, 1, "The maximum x coordinate in the mesh.");
   sc_options_add_double (opt, 'T', "time", &T, 1,
@@ -387,13 +378,9 @@ main (int argc, char *argv[])
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
-      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_cad_cylinder == 0
-          && test_linear_cylinder == 0 && test_hybrid == 0)
-      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0
-      || test_tet + test_linear_cylinder + test_cad_cylinder + test_hybrid > 1
-      || (cmesh_level >= 0 && (!test_linear_cylinder && !test_cad_cylinder))
-      || ((mshfileprefix != NULL || cmeshfileprefix != NULL)
-          && (test_linear_cylinder || test_cad_cylinder || test_tet || test_hybrid))
+      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_hybrid == 0) || stride <= 0
+      || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0 || (test_tet && test_hybrid)
+      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_tet || test_hybrid))
       || (mshfileprefix == NULL && use_cad) || scheme < 0 || scheme > 4) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
@@ -417,19 +404,13 @@ main (int argc, char *argv[])
       vtu_prefix = mshfileprefix;
     }
     else if (test_tet) {
-      cmesh = t8_cmesh_new_tet_orientation_test (sc_MPI_COMM_WORLD);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_tet_orientation_test (cmesh, sc_MPI_COMM_WORLD);
       vtu_prefix = "test_tet";
     }
-    else if (test_linear_cylinder || test_cad_cylinder) {
-      if (cmesh_level < 0) {
-        cmesh_level = 0;
-      }
-      cmesh = t8_cmesh_new_hollow_cylinder (sc_MPI_COMM_WORLD, 4 * sc_intpow (2, cmesh_level),
-                                            sc_intpow (2, cmesh_level), sc_intpow (2, cmesh_level), test_cad_cylinder);
-      test_linear_cylinder ? vtu_prefix = "test_linear_cylinder" : vtu_prefix = "test_cad_cylinder";
-    }
     else if (test_hybrid) {
-      cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, 0);
       vtu_prefix = "test_hybrid";
     }
 
