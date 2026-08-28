@@ -143,6 +143,15 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
  public:
   // ################################################____GENERAL INFO____################################################
 
+  /** Return the tree dimension of this scheme.
+   * \return The tree dimension of this scheme.
+   */
+  inline size_t
+  get_dimension (void) const
+  {
+    return TUnderlyingEclassScheme::get_dimension ();
+  }
+
   /** Return the tree class of this scheme.
    * \return The tree class of this scheme.
    */
@@ -662,6 +671,44 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     TUnderlyingEclassScheme::element_destroy (num_underlying_siblings, siblings);
     T8_FREE (siblings);
     return is_fam;
+  }
+
+  /** Query whether \a elem1 is an ancestor of \a elem2.
+   * \a elem1 is ancestor of elem2 if e1 == e2 or if e2 can
+   * be obtained from e1 via successive refinement.
+   * \param [in] elem1 An element of class \a eclass in scheme \a scheme.
+   * \param [in] elem2 An element of class \a eclass in scheme \a scheme.
+   * \return     True if and only if \a elem1 is an ancestor of \a elem2.
+  */
+  bool
+  element_is_ancestor (const t8_element_t *elem1, const t8_element_t *elem2) const noexcept
+  {
+    T8_ASSERT (element_is_valid (elem1));
+    T8_ASSERT (element_is_valid (elem2));
+    const multilevel_element *elem_m1 = (multilevel_element *) elem1;
+    const multilevel_element *elem_m2 = (multilevel_element *) elem2;
+    return TUnderlyingEclassScheme::element_is_ancestor ((const t8_element_t *) &elem_m1->linear_element,
+                                                         (const t8_element_t *) &elem_m2->linear_element);
+  }
+
+  /** Given a face of an element and a level coarser than (or equal to)
+   * the element's level, return the face number
+   * of the ancestor of the element that matches the element's face. Or return -1 if
+   * no face of the ancestor matches the face.
+   * \param [in]  elem            The element.
+   * \param [in]  ancestor_level  A refinement level smaller than (or equal to) \a elem level.
+   * \param [in]  face            Then number of a face of \a element.
+   * \return                      If \a face of \a elem is a subface of a face of \a elem ancestor at level \a ancestor_level,
+   *                              the face number of this face. Otherwise -1.
+   * \note For the root element this function always returns \a face.
+   */
+  inline int
+  element_face_get_ancestor_face (const t8_element_t *elem, const int ancestor_level, const int face) const
+  {
+    T8_ASSERT (element_is_valid (elem));
+    const multilevel_element *elem_m = (multilevel_element *) elem;
+    return TUnderlyingEclassScheme::element_face_get_ancestor_face ((const t8_element_t *) &elem_m->linear_element,
+                                                                    ancestor_level, face);
   }
 
   /** Compute the nearest common ancestor of two elements. That is,
