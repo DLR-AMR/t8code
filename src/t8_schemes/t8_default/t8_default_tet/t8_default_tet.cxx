@@ -417,10 +417,12 @@ t8_default_scheme_tet::element_get_linear_id (const t8_element_t *elem, int leve
 }
 
 void
-t8_default_scheme_tet::element_construct_successor (const t8_element_t *elem1, t8_element_t *elem2) const
+t8_default_scheme_tet::element_construct_successor (const t8_element_t *elem1, [[maybe_unused]] const int uniform_level,
+                                                    t8_element_t *elem2) const
 {
   T8_ASSERT (element_is_valid (elem1));
   T8_ASSERT (element_is_valid (elem2));
+  T8_ASSERT (element_get_level (elem1) == uniform_level);
   T8_ASSERT (0 <= element_get_level (elem1) && element_get_level (elem1) <= T8_DTET_MAXLEVEL);
 
   t8_dtet_successor ((const t8_default_tet_t *) elem1, (t8_default_tet_t *) elem2, element_get_level (elem1));

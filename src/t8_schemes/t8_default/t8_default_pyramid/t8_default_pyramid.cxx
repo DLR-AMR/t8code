@@ -364,9 +364,11 @@ t8_default_scheme_pyramid::element_get_parent (const t8_element_t *elem, t8_elem
 }
 
 void
-t8_default_scheme_pyramid::element_construct_successor (const t8_element_t *elem, t8_element_t *s) const
+t8_default_scheme_pyramid::element_construct_successor (const t8_element_t *elem,
+                                                        [[maybe_unused]] const int uniform_level, t8_element_t *s) const
 {
   T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (element_get_level (elem) == uniform_level);
   t8_dpyramid_successor ((const t8_dpyramid_t *) elem, (t8_dpyramid_t *) s, element_get_level (elem));
   T8_ASSERT (element_is_valid (s));
 }

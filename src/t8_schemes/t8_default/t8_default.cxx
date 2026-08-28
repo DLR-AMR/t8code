@@ -21,6 +21,7 @@
 */
 
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_multilevel/t8_multilevel_implementation.hxx>
 #include <t8_schemes/t8_scheme_builder.hxx>
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -39,6 +40,21 @@ t8_scheme_new_default (void)
   builder.add_eclass_scheme<t8_default_scheme_tet> ();
   builder.add_eclass_scheme<t8_default_scheme_prism> ();
   builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
+  return builder.build_scheme ();
+}
+
+const t8_scheme *
+t8_scheme_new_default_multilevel (void)
+{
+  t8_scheme_builder builder;
+  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_vertex, t8_dvertex_t>> ();
+  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_line, t8_dline_t>> ();
+  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_quad, t8_pquad_t>> ();
+  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_tri, t8_dtri_t>> ();
+  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_hex, t8_phex_t>> ();
+  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_tet, t8_dtet_t>> ();
+  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_prism, t8_dprism_t>> ();
+  builder.add_eclass_scheme<t8_multilevel_scheme<t8_default_scheme_pyramid, t8_dpyramid_t>> ();
   return builder.build_scheme ();
 }
 

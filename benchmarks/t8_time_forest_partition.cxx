@@ -37,6 +37,7 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <example/common/t8_example_common.hxx>
 #include <t8_types/t8_vec.hxx>
 
@@ -112,7 +113,8 @@ t8_band_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t which_tr
  * partitioned. */
 static void
 t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_Comm comm, int init_level, int max_level,
-                              int no_vtk, double x_min_max[2], double T, double delta_t, int do_ghost, int do_balance)
+                              int no_vtk, double x_min_max[2], double T, double delta_t, int do_ghost, int do_balance,
+                              int scheme)
 {
   char forest_vtu[BUFSIZ], cmesh_vtu[BUFSIZ];
   adapt_data_t adapt_data;
@@ -144,7 +146,22 @@ t8_time_forest_cmesh_mshfile (t8_cmesh_t cmesh, const char *vtu_prefix, sc_MPI_C
   t8_forest_init (&forest);
   t8_forest_set_cmesh (forest, cmesh, comm);
   /* Set the element scheme */
-  t8_forest_set_scheme (forest, t8_scheme_new_default ());
+  switch (scheme) {
+  case 0:
+    t8_forest_set_scheme (forest, t8_scheme_new_default ());
+    break;
+  case 1:
+    t8_forest_set_scheme (forest, t8_scheme_new_standalone ());
+    break;
+  case 2:
+    t8_forest_set_scheme (forest, t8_scheme_new_default_multilevel ());
+    break;
+  case 3:
+    t8_forest_set_scheme (forest, t8_scheme_new_standalone_multilevel ());
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
   /* Set the initial refinement level */
   t8_forest_set_level (forest, init_level);
   /* Commit the forest */
@@ -286,7 +303,8 @@ main (int argc, char *argv[])
   int level, level_diff;
   int help = 0, no_vtk, do_ghost, do_balance, use_cad;
   int dim, num_files;
-  int test_tet;
+  int test_tet, test_hybrid;
+  int scheme;
   int stride;
   double T, delta_t, cfl;
   sc_options_t *opt;
@@ -329,6 +347,9 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 't', "test-tet", &test_tet,
                          "Use a cmesh that tests all tet face-to-face connections."
                          " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
+  sc_options_add_switch (opt, 'H', "test-hybrid", &test_hybrid,
+                         "Use a hybrid hypercube cmesh consisting of 6 Tets, 6 Prism and 4 Hex."
+                         "Not allowed with any other cmesh-defining option.");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The initial uniform refinement level of the forest.");
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined from the initial level.");
@@ -346,14 +367,21 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 'b', "balance", &do_balance, "Establish a 2:1 balance in the forest.");
   sc_options_add_switch (opt, 'z', "use_cad", &use_cad,
                          "If used, meshes will be curved to original geometries (msh- and brep-files necessary).");
+  sc_options_add_int (opt, 'S', "scheme", &scheme, 0,
+                      "Scheme which is assigned to the forest. Default: 0 - Default\n"
+                      "\t\t\t\t\t0 - Default\n"
+                      "\t\t\t\t\t1 - Standalone\n"
+                      "\t\t\t\t\t2 - Multilevel-Default\n"
+                      "\t\t\t\t\t3 - Multilevel-Standalone");
 
   /* parse command line options */
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
-      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0) || stride <= 0
-      || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0
-      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && test_tet) || (mshfileprefix == NULL && use_cad)) {
+      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_hybrid == 0) || stride <= 0
+      || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0 || (test_tet && test_hybrid)
+      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_tet || test_hybrid))
+      || (mshfileprefix == NULL && use_cad) || scheme < 0 || scheme > 4) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -380,6 +408,12 @@ main (int argc, char *argv[])
       t8_cmesh_new_tet_orientation_test (cmesh, sc_MPI_COMM_WORLD);
       vtu_prefix = "test_tet";
     }
+    else if (test_hybrid) {
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, 0);
+      vtu_prefix = "test_hybrid";
+    }
+
     else {
       T8_ASSERT (cmeshfileprefix != NULL);
       cmesh
@@ -387,7 +421,7 @@ main (int argc, char *argv[])
       vtu_prefix = cmeshfileprefix;
     }
     t8_time_forest_cmesh_mshfile (cmesh, vtu_prefix, sc_MPI_COMM_WORLD, level, level + level_diff, no_vtk, x_min_max, T,
-                                  delta_t, do_ghost, do_balance);
+                                  delta_t, do_ghost, do_balance, scheme);
   }
   sc_options_destroy (opt);
   sc_finalize ();
