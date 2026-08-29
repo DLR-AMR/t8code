@@ -658,16 +658,15 @@ t8_triangle_point_inside (const double p_0[3], const double v[3], const double w
 }
 
 int
-t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3])
+t8_plane_point_inside (const double point_on_face[3], const double face_normal[3], const double point[3],
+                       const double tolerance)
 {
+  T8_ASSERT (tolerance > 0); /* negative values and zero are not allowed */
   /* Set x = x - p */
   double pof[3] = { point_on_face[0], point_on_face[1], point_on_face[2] };
   t8_axpy (point, pof, -1);
   /* Compute <x-p,n> */
   const double dot_product = t8_dot (pof, face_normal);
-  if (dot_product < 0) {
-    /* The point is on the wrong side of the plane */
-    return 0;
-  }
-  return 1;
+  /* If the dot product is negative, the point is on the wrong side of the plane */
+  return (fabs (dot_product) < tolerance);
 }
