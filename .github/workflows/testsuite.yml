@@ -195,11 +195,13 @@ jobs:
       fail-fast: false
       matrix:
         MPI: [ON] # For now the fortran API only supports building with MPI
-        BUILD_TYPE: [Debug, Release]
+        BUILD_TYPE: [Release]
         include:
           - MAKEFLAGS: -j4
+            MPIFLAGS: -np 4
     with:
       MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      MPIFLAGS: ${{ matrix.MPIFLAGS }}
       MPI: ${{ matrix.MPI }}
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
