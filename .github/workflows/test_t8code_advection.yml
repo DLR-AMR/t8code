@@ -109,5 +109,5 @@ jobs:
         path: build/Testing/Temporary/LastTest.log
 
     - name: run advection test 1D Mesh
-          working-directory: build/example/advection
-          run: ./t8_advection -u 1 -e 1 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -v 1
+        working-directory: build/example/advection
+        run: ./t8_advection -u 1 -e 1 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -v 1
