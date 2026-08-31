@@ -21,62 +21,137 @@ name: test t8code advection examples
 #  along with t8code; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+env:
+  DEBUG_CONFIG: "-O1"
+
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      MAKEFLAGS:
+        required: true
+        type: string
+        description: 'Make flags to use for compilation (like -j4)'
+      MPI:
+        required: true
+        type: string
+        description: 'Use MPI for compilation (ON/OFF)'
+      BUILD_TYPE:
+        required: true
+        type: string
+        description: 'Build type (Release/Debug)'
+      TEST_LEVEL:
+        required: true
+        type: string
+        description: 'Test level used for configuring'
+        default: 'T8_TEST_LEVEL_FULL'
 
 jobs:
-  build:
+  fine_grained_trigger:
     runs-on: ubuntu-latest
+    outputs:
+      run_ci: ${{ steps.set_run_ci.outputs.RUN_CI }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: set the run_ci variable for the testsuite
+        id: set_run_ci
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" && "${{ github.repository }}" == "DLR-AMR/t8code" ]]; then
+            echo "RUN_CI=true" >> $GITHUB_OUTPUT
+            exit 0
+          elif [[ "${{ github.event_name }}" == "merge_group" ]]; then
+            echo "RUN_CI=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          latest_commit_message=$(git log -1 --pretty=%B)
+          if [[ "${{ github.event_name }}" != "schedule" ]]; then
+            if [[ "${{ github.event.pull_request.draft }}" == "false" ]]; then
+              echo "RUN_CI=true" >> $GITHUB_OUTPUT
+              exit 0
+            elif [[ "${{ github.event.pull_request.draft }}" == "true" && "$latest_commit_message" == *"[run ci]"* ]]; then
+              echo "RUN_CI=true" >> $GITHUB_OUTPUT
+              exit 0
+            elif [[ "${{ github.event.pull_request.ready_for_review }}" == "true" ]]; then
+              echo "RUN_CI=true" >> $GITHUB_OUTPUT
+              exit 0
+            else
+              echo "RUN_CI=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          else
+            echo "RUN_CI=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
+  preparation:
+    needs: [fine_grained_trigger]
+    secrets: inherit
+    if: needs.fine_grained_trigger.outputs.run_ci == 'true'
+    uses: ./.github/workflows/test_preparation.yml
     strategy:
       fail-fast: false
       matrix:
-        compiler: [gcc, clang]
-        # Test various compiler flags and debug levels
+        MPI: [OFF, ON]
+        include:
+          - MAKEFLAGS: -j4
+    with:
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      IGNORE_CACHE: false
+      CACHE_COUNTER: 9
+      MPI: ${{ matrix.MPI }}
+
+  t8code_cmake_tests:
+    needs: preparation
+    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    container: dlramr/t8code-dependencies:t8-dependencies-ubuntu-gcc
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: SC_P4EST_MPI_${{ inputs.MPI }}
+      - name: untar artifact
+        run: tar -xf artifact.tar && rm artifact.tar
+      - name: disable ownership checks
+        run: git config --global --add safe.directory '*'
+      - name: Get input vars
+        run: |
+          export MAKEFLAGS="${{ inputs.MAKEFLAGS }}"
+          export MPI="${{ inputs.MPI }}"
+          export BUILD_TYPE="${{ inputs.BUILD_TYPE }}"
+          export SC_PATH=$PWD/sc/build/$BUILD_TYPE
+          export P4EST_PATH=$PWD/p4est/build/$BUILD_TYPE
+          echo MAKEFLAGS="$MAKEFLAGS" >> $GITHUB_ENV
+          echo MPI="$MPI" >> $GITHUB_ENV
+          echo BUILD_TYPE="$BUILD_TYPE" >> $GITHUB_ENV
+          echo SC_PATH="$SC_PATH" >> $GITHUB_ENV
+          echo P4EST_PATH="$P4EST_PATH" >> $GITHUB_ENV
+
+  build_advection:
+    needs: preparation
+    runs-on: ubuntu-latest
+    container: dlramr/t8code-dependencies:t8-dependencies-ubuntu-gcc
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc]
         flags:
           - "-O2"
           - "-O3 -Wall -Wextra"
           - "-DT8_ENABLE_DEBUG=1"
           - "-O2 -DT8_ENABLE_DEBUG=0"
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Configure CMake
+        run: |
+          cmake -B build -S . \
+            -DCMAKE_C_COMPILER=mpicc \
+            -DCMAKE_CXX_COMPILER=mpiccxx \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS="${{ matrix.flags }}" \
+            -DCMAKE_CXX_FLAGS="${{ matrix.flags }}"
 
-    - name: Install System Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          cmake \
-          build-essential \
-          gfortran \
-          libopenmpi-dev \
-          openmpi-bin \
-          clang
-
-    - name: Configure CMake
-      run: |
-        # Set compiler variables based on matrix selection
-        if [ "${{ matrix.compiler }}" = "gcc" ]; then
-          C_COMP="mpicc"
-          CXX_COMP="mpicxx"
-        else
-          C_COMP="clang"
-          CXX_COMP="clang++"
-        fi
-
-        cmake -B build -S . \
-          -DCMAKE_C_COMPILER=$C_COMP \
-          -DCMAKE_CXX_COMPILER=$CXX_COMP \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_FLAGS="${{ matrix.flags }}" \
-          -DCMAKE_CXX_FLAGS="${{ matrix.flags }}"
-
-    - name: Compile Executable
-      run: cmake --build build --target t8_advection --parallel
+      - name: Compile Executable
+        run: cmake --build build --target t8_advection --parallel
