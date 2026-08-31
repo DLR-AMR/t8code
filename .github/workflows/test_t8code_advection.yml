@@ -80,6 +80,7 @@ jobs:
 #
 #
     # build config vars
+   - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
     - name: Set test level
       run: export TEST_LEVEL_FLAG="-DT8CODE_TEST_LEVEL=${{ inputs.TEST_LEVEL }}"
@@ -109,5 +110,5 @@ jobs:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_api.log
         path: build/Testing/Temporary/LastTest.log
     - name: run advection test 1D Mesh
-      run: ./t8_advection -u 1 -e 1 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -v 1
+      run: : cd build/example/advection && ./t8_advection -u 1 -e 1 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -v 1
 
