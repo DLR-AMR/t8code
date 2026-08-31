@@ -30,12 +30,14 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "internal/adapt.hxx"
+#include "internal/interpolate.hxx"
 #include "competences/element_data_competences.hxx"
 #include "concepts.hxx"
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_iterate.h>
 #include <vector>
 #include <functional>
 #include <memory>
@@ -77,6 +79,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     typename std::vector<element_class>::iterator;              /**< Non-const iterator type for the mesh elements. */
   friend struct element_data_element_competence<element_class>; /**< Friend struct to access its element data vector. */
 
+  // --- Definition of callback types. ---
   /** Callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle.
    * If \a elements contains more than one element, they must form a family and we decide whether this family should be
@@ -110,6 +113,49 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   using adapt_callback_type_with_userdata
     = std::function<int (const SelfType& mesh, std::span<const element_class> elements, TUserDataType user_data)>;
 
+  /** Callback function prototype to interpolate the element data after refining or coarsening.
+   * \note You need to include \ref interpolate_element_data_mesh_competence to you competences to be able to
+   * interpolate. The best way to do this is via the predefined pack \ref interpolate_data_mesh_competence_pack 
+   * defined in \ref competence_pack.hxx.
+   *
+   * For each group of elements that changed during adaption, the outgoing elements of the old mesh are passed in 
+   * \a old_elements and the incoming elements of the new mesh in \a new_elements; the callback reads the old data 
+   * and writes the interpolated data onto the new elements. \a refine is the value \ref adapt_callback_type returned
+   * for this group.
+   * \see interpolate_element_data_mesh_competence::set_interpolate_callback for the usage of this callback.
+   * \param [in]     mesh_old     The old mesh that is adapted from.
+   * \param [in,out] mesh_new     The new mesh constructed from \a mesh_old.
+   * \param [in]     refine       -1 if the family \a old_elements got coarsened, 0 if the element was not touched,
+   *                            1 if the element got refined. Same convention as the return of \ref adapt_callback_type.
+   * \param [in]     old_elements Span over the outgoing elements: the whole family on coarsening, 
+   *                              a single element if refined or untouched.
+   * \param [in,out] new_elements Span over the incoming elements to write the interpolated data to: the children on
+   *                              refinement, a single element if coarsened or untouched.
+   */
+  using interpolate_callback_type
+    = std::function<void (const SelfType& mesh_old, SelfType& mesh_new, const int refine,
+                          std::span<const element_class> old_elements, std::span<element_class> new_elements)>;
+
+  /** Templated callback function prototype to interpolate the element data after refining or coarsening, 
+   * including user data.
+   * See the version without user_data \ref interpolate_callback_type for more details!
+   * Use \ref mesh_interpolate_callback_wrapper to convert this type into \ref interpolate_callback_type
+   * to be able to pass the callback to \ref interpolate_element_data_mesh_competence::set_interpolate_callback 
+   * (see \ref element_data_competences.hxx).
+   * \tparam TUserDataType The type of the user data to be passed to the callback.
+   * \param [in]     mesh_old     The old mesh that is adapted from.
+   * \param [in,out] mesh_new     The new mesh constructed from \a mesh_old.
+   * \param [in]     refine       -1 if the family got coarsened, 0 if the element was not touched, 1 if it got refined.
+   * \param [in]     old_elements Span over the outgoing elements from \a mesh_old.
+   * \param [in,out] new_elements Span over the incoming elements to write the interpolated data to from \a mesh_new.
+   * \param [in]     user_data    The user data to be used during the interpolation.
+   */
+  template <typename TUserDataType>
+  using interpolate_callback_type_with_userdata = std::function<void (
+    const SelfType& mesh_old, SelfType& mesh_new, const int refine, std::span<const element_class> old_elements,
+    std::span<element_class> new_elements, TUserDataType user_data)>;
+
+  // --- Constructor and destructor. ---
   /** 
    * Constructor for a mesh of the handle. 
    * \param [in] forest The forest from which the mesh should be created. 
@@ -285,6 +331,28 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   // --- Methods to change the mesh, e.g. adapt, partition, balance, ... ---
+  /** Wrapper to convert an interpolate callback with user data of type \ref interpolate_callback_type_with_userdata
+   * into a callback without user data of type \ref interpolate_callback_type using the defined user data \a user_data.
+   * The returned callback can be passed to \ref interpolate_element_data_mesh_competence::set_interpolate_callback.
+   * See also \ref element_data_competences.hxx for the interpolation competence.
+   * \tparam TUserDataType The type of the user data to be passed to the callback.
+   * \param [in] interpolate_callback_with_userdata The interpolate callback including user data.
+   * \param [in] user_data The user data to be used during the interpolation process.
+   * \return An interpolate callback without user data parameter that can be passed to 
+   *          \ref interpolate_element_data_mesh_competence::set_interpolate_callback.
+   */
+  template <typename TUserDataType>
+  static interpolate_callback_type
+  mesh_interpolate_callback_wrapper (
+    interpolate_callback_type_with_userdata<TUserDataType> interpolate_callback_with_userdata,
+    const TUserDataType& user_data)
+  {
+    return [=] (const SelfType& mesh_old, SelfType& mesh_new, const int refine,
+                std::span<const element_class> old_elements, std::span<element_class> new_elements) {
+      return interpolate_callback_with_userdata (mesh_old, mesh_new, refine, old_elements, new_elements, user_data);
+    };
+  }
+
   /** Wrapper to convert an adapt callback with user data of type \ref adapt_callback_type_with_userdata
    * into a callback without user data of type \ref adapt_callback_type using the defined user data \a user_data.
    * This is required to pass an adapt callback with user data to \ref set_adapt.
@@ -308,7 +376,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * \note The adaptation is carried out only when \ref commit is called.
    * \note We currently do not provide the functionality to delete elements.
    * \note This setting can be combined with set_partition and set_balance. The order in which
-   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
    */
   void
   set_adapt (adapt_callback_type adapt_callback)
@@ -332,13 +400,19 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * the same (maybe +1) number of elements.
    * \note The partition is carried out only when \ref commit is called.
    * \note This setting can be combined with \ref set_adapt and \ref set_balance. The order in which
-   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
-   * \param [in] set_for_coarsening If true, the partitions are choose such that coarsening 
+   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
+   * \param [in] set_for_coarsening If true, the partitions are chosen such that coarsening 
    *        an element once is a process local operation. Default is false.
    */
   void
   set_partition (bool set_for_coarsening = false)
   {
+    // If the mesh has an interpolate callback, we partition the mesh after the interpolation step
+    // (and the first committing of the forest), such that we store the partition information for later.
+    if constexpr (has_interpolate_data_competence ()) {
+      this->m_partition_for_coarsening = set_for_coarsening;
+      return;
+    }
     if (!m_uncommitted_forest.has_value ()) {
       t8_forest_t new_forest;
       t8_forest_init (&new_forest);
@@ -348,7 +422,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   /** If this function is called, the mesh will be balanced on committing.
- * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
+   * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
    * \note The balance is carried out only when \ref commit is called.
    * \param [in] no_repartition Balance constructs several intermediate steps that
    *       are refined from each other. In order to maintain a balanced load, a repartitioning is performed in each 
@@ -356,7 +430,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    *       Set \a no_repartition to true if this behaviour is not desired.
    *       If \a no_repartition is false (default), an additional call of \ref set_partition is not necessary.
    * \note This setting can be combined with \ref set_adapt and \ref set_partition. The order in which
-   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
    */
   void
   set_balance (bool no_repartition = false)
@@ -390,6 +464,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * The forest used to define the mesh handle is replaced in this function.
    * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
    * Specialize the update with calls like \ref set_adapt first.
+   * The order of the calls is always 1) Adapt 2) Balance 3) Data Interpolation 4) Partition 5) Ghost, 
+   * where calls, that are not set beforehand, are skipped.
+   * The order of the calls does not matter, the operations are always executed in this order.
    */
   void
   commit ()
@@ -408,10 +485,56 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     // Check if we adapted and unregister the adapt context if so.
     if (detail::adapt_registry::get (m_forest) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
+
+      // If data are set for the mesh, we now try to interpolate them after adaptation.
       if constexpr (has_element_data_handler_competence ()) {
-        t8_global_infof (
-          "Please note that the element data is not interpolated automatically during adaptation. Use the "
-          "function set_element_data() to provide new adapted element data.\n");
+        if constexpr (has_interpolate_data_competence ()) {
+          if (this->m_interpolate_callback) {
+            // Create new intermediate mesh to interpolate the data from the current mesh to the new mesh.
+            SelfType new_mesh (m_uncommitted_forest.value ());
+            t8_forest_ref (m_uncommitted_forest.value ());
+            // Register the interpolate context with the callback for the new mesh. With this, the standard
+            // iterate replace can be called.
+            detail::interpolate_registry::register_context (
+              m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (
+                          *this, new_mesh, std::move (this->m_interpolate_callback)));
+            t8_forest_iterate_replace (m_uncommitted_forest.value (), m_forest, detail::mesh_replace_callback_wrapper);
+            detail::interpolate_registry::unregister_context (m_forest);
+            // Override the element data of the current mesh with the interpolated data from the "new mesh".
+            this->m_element_data = new_mesh.take_element_data ();
+            // Now we update the forest of the current mesh with the new forest and partition it if required.
+            t8_forest_unref (&m_forest);
+            if (this->set_partition_called ()) {
+              t8_forest_init (&m_forest);
+              t8_forest_set_partition (m_forest, m_uncommitted_forest.value (),
+                                       this->m_partition_for_coarsening.value ());
+              const t8_ghost_type_t ghost_type = m_uncommitted_forest.value ()->ghost_type;
+              if (ghost_type != T8_GHOST_NONE) {
+                t8_forest_set_ghost (m_forest, true, ghost_type);
+              }
+              t8_forest_commit (m_forest);
+
+              /* Now we repartition also the data: The interpolated data follows m_uncommitted_forest. 
+               * We align it now with the partitioned m_forest. */
+              this->repartition_element_data (m_uncommitted_forest.value (), m_forest);
+            }
+            else {
+              // Update underlying forest of the mesh for the case where we do not repartition.
+              m_forest = m_uncommitted_forest.value ();
+            }
+            // Cleanup and update the elements of the mesh.
+            m_uncommitted_forest.reset ();
+            update_elements ();
+            return;
+          }
+          else {
+            t8_global_infof ("No interpolation context set.\n");
+          }
+        }
+        else {
+          t8_global_infof ("The element data was not interpolated during adaptation. Use set_element_data() to provide "
+                           "new data or use the mesh competence interpolate_element_data_mesh_competence.\n");
+        }
       }
     }
     t8_forest_unref (&m_forest);
@@ -429,6 +552,15 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   has_element_data_handler_competence ()
   {
     return requires (SelfType& mesh) { mesh.get_element_data (); };
+  }
+
+  /** Function that checks if a competence for the interpolation of element data is given.
+   * \return true if mesh has the competence, false otherwise.
+   */
+  static constexpr bool
+  has_interpolate_data_competence ()
+  {
+    return requires (SelfType& mesh) { mesh.set_partition_called (); };
   }
 
   /** Function that checks if a competence to determine the ranks of the elements is given.

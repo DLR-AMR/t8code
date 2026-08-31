@@ -204,8 +204,8 @@ main (int argc, char **argv)
   { /* We put the mesh in its own scope so that it is automatically destroyed at the end of the scope.
      * This is only necessary because sc_finalize checks if there are leftover references.
      * This unique pointer would have been destroyed automatically at the end of the programme. */
-    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
-                                            t8_mesh_handle::data_mesh_competences<data_per_element_type>>;
+    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
+                                            t8_mesh_handle::data_mesh_competences_basic<data_per_element_type>>;
     auto mesh = build_mesh<mesh_class> (comm, level);
 
     t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_mesh);
