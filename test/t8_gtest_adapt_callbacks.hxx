@@ -87,7 +87,7 @@ refine_every_nth_element_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_
                                    [[maybe_unused]] t8_element_t *elements[])
 {
   // Refine every n-th element, starting from offset (default: zero).
-  return ((lelement_id % n == offset) ? 1 : 0);
+  return (((t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id) % n == offset) ? 1 : 0);
 }
 
 #endif /* T8_GTEST_ADAPT_CALLBACKS */
