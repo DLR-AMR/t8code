@@ -114,12 +114,12 @@ jobs:
         name: test-suite_${{ inputs.BUILD_TYPE }}_MPI_${{ inputs.MPI }}_api.log
         path: build/Testing/Temporary/LastTest.log
 
-    - name: run advection test 1D Mesh
+    - name: run advection test 1D Mesh Constant 1 in x-direction
       working-directory: build/example/advect
-      run: mpirun $MPIFLAGS ./t8_advection -u 1 -e 1 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -v 1
-    - name: run advection test 1D Mesh
+      run: mpirun $MPIFLAGS ./t8_advection -u 1 -e 1 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -o
+    - name: run advection test 2D Mesh Constant 1 in x,y, and z.
       working-directory: build/example/advect
-      run: mpirun $MPIFLAGS ./t8_advection -u 2 -e 7 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -v 1
-    - name: run advection test 3D Mesh
+      run: mpirun $MPIFLAGS ./t8_advection -u 2 -e 7 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -o
+    - name: run advection test 3D Mesh with turbulent flow
       working-directory: build/example/advect
-      run: mpirun $MPIFLAGS ./t8_advection -u 3 -e 7 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -v 1
+      run: mpirun $MPIFLAGS ./t8_advection -u 3 -e 8 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -o
