@@ -149,11 +149,14 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c
     t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_types.cxx
     t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.cxx
     t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.cxx
     t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_triangle.cxx
