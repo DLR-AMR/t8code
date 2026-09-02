@@ -25,10 +25,13 @@
  * Implementation context of \ref t8_cmesh_boundary_condition_handler.hxx
  */
 
+#include <t8.h>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
+
+#include <cstring>
 
 using namespace detail;
 
@@ -90,4 +93,104 @@ int
 t8_cmesh_boundary_condition_handler::get_boundary_condition_attribute_key () const
 {
   return T8_CMESH_BOUNDARY_CONDITION_ATTRIBUTE_KEY;
+}
+
+std::vector<char>
+t8_cmesh_boundary_condition_handler::serialize_map () const
+{
+  std::vector<char> serial_data;
+  /* Fill serial_data with strings only. The hashes can be re-generated locally. */
+  for (const auto &[key, string] : t8_cmesh_boundary_condition_handler::m_boundary_conditions) {
+    serial_data.insert (serial_data.end (), string.begin (), string.end ());
+    /* Null terminate strings to be able to split them again later. */
+    serial_data.push_back ('\0');
+  }
+  serial_data.shrink_to_fit ();
+  return serial_data;
+}
+
+void
+t8_cmesh_boundary_condition_handler::unpack_map (std::vector<char> &serial_data, bool overwrite)
+{
+  if (overwrite) {
+    m_boundary_conditions.clear ();
+  }
+
+  /* Iterate over stings. */
+  for (const char *string = serial_data.data (); string < serial_data.data () + serial_data.size ();
+       string += std::strlen (string) + 1) {
+    /* Interpret c string as std::string, rehash it and insert it. */
+    std::string value (string);
+    t8_cmesh_boundary_condition_handler::m_boundary_conditions.try_emplace (
+      t8_cmesh_boundary_condition_handler::hash_boundary_condition_name (value), std::move (value));
+  }
+}
+
+void
+t8_cmesh_boundary_condition_handler::synchronize (sc_MPI_Comm comm)
+{
+  T8_ASSERT (comm != sc_MPI_COMM_NULL);
+
+  int rank, mpisize;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &mpisize);
+
+  if (mpisize == 1) {
+    /* Nothing to do. */
+    return;
+  }
+
+  /* Prepare the sendbuffer. */
+  const std::vector<char> send_buffer = t8_cmesh_boundary_condition_handler::serialize_map ();
+
+  /* Communicate the local sizes */
+  const int local_size = static_cast<int> (send_buffer.size ());
+  std::vector<int> sizes (mpisize);
+  MPI_Allgather (&local_size, 1, sc_MPI_INT, sizes.data (), 1, sc_MPI_INT, comm);
+
+  /* Compute the offsets for the data and create receive buffer. */
+  std::vector<int> offsets (mpisize);
+  int total_size = 0;
+  for (int rank = 0; rank < mpisize; ++rank) {
+    offsets[rank] = total_size;
+    total_size += sizes[rank];
+  }
+  std::vector<char> recv_buffer (total_size);
+
+  /* Communicate. */
+  MPI_Allgatherv (send_buffer.data (), local_size, MPI_BYTE, recv_buffer.data (), sizes.data (), offsets.data (),
+                  MPI_BYTE, comm);
+
+  /* Unpack the data. */
+  t8_cmesh_boundary_condition_handler::unpack_map (recv_buffer, false);
+}
+
+void
+t8_cmesh_boundary_condition_handler::bcast (int main_rank, sc_MPI_Comm comm)
+{
+  int rank;
+  sc_MPI_Comm_rank (comm, &rank);
+
+  /* Buffer for sending and receiving */
+  std::vector<char> buffer;
+
+  /* Serialize data. */
+  if (rank == main_rank) {
+    buffer = t8_cmesh_boundary_condition_handler::serialize_map ();
+  }
+
+  /* Prepare buffer length. */
+  int size = static_cast<int> (buffer.size ());
+  sc_MPI_Bcast (&size, 1, sc_MPI_INT, main_rank, comm);
+  if (rank != main_rank) {
+    buffer.resize (size);
+  }
+
+  /* Broadcast data */
+  sc_MPI_Bcast (buffer.data (), size, sc_MPI_BYTE, main_rank, comm);
+
+  /* Add data to local map. */
+  if (rank != main_rank) {
+    t8_cmesh_boundary_condition_handler::unpack_map (buffer, true);
+  }
 }

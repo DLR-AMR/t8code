@@ -686,7 +686,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
     t8_cmesh_struct_t cmesh;
     t8_gloidx_t num_trees_per_eclass[T8_ECLASS_COUNT];
     size_t stash_elem_counts[3];
-    int pre_commit; /* True, if cmesh on root is not committed yet. */
+    int pre_commit; /** True if cmesh on root is not committed yet. */
 #if T8_ENABLE_DEBUG
     sc_MPI_Comm comm;
 #endif
@@ -768,6 +768,9 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
     if (meta_info.cmesh.profile != nullptr) {
       t8_cmesh_set_profiling (cmesh_in, 1);
     }
+    if (meta_info.cmesh.boundary_condition_handler != nullptr) {
+      t8_cmesh_add_boundary_condition_handler (cmesh_out);
+    }
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       cmesh_out->num_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
       cmesh_out->num_local_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];
@@ -793,6 +796,8 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       cmesh_out->committed = 1;
     }
   }
+  /* Broadcast boundary conditions */
+  cmesh_out->boundary_condition_handler->bcast (root, comm);
 
   cmesh_out->mpirank = mpirank;
   cmesh_out->mpisize = mpisize;

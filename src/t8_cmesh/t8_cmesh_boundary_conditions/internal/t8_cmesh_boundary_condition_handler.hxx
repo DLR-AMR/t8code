@@ -73,6 +73,8 @@ struct t8_cmesh_boundary_condition_handler
   using boundary_condition_hash = T8Type<size_t, boundary_condition_hash_tag, EqualityComparable>;
 
  public:
+  /**************************************** CONSTRUCTORS & ASSIGNMENT OPERATORS ****************************************/
+
   /**
    * Standard constructor. Associates the handler with a cmesh
    * \param [in] cmesh
@@ -82,6 +84,42 @@ struct t8_cmesh_boundary_condition_handler
   }
 
   /**
+   * Copy constructor.
+   * \param [in]  other  The other.
+   */
+  t8_cmesh_boundary_condition_handler (const t8_cmesh_boundary_condition_handler &other) = default;
+
+  /**
+   * Move constructor.
+   * \param [in]  other  The other.
+   */
+  t8_cmesh_boundary_condition_handler (t8_cmesh_boundary_condition_handler &&other) noexcept = default;
+
+  /**
+   * Copy assignment operator.
+   * \param [in]  other  The other.
+   * \return      A copy of this.
+   */
+  t8_cmesh_boundary_condition_handler &
+  operator= (const t8_cmesh_boundary_condition_handler &other)
+    = default;
+
+  /**
+   * Move assignment operator.
+   * \param [in]  other  The other.
+   * \return      A reference to a moved version of this.
+   */
+  t8_cmesh_boundary_condition_handler &
+  operator= (t8_cmesh_boundary_condition_handler &&other) noexcept
+    = default;
+
+  /**
+   * The destructor.
+   */
+  ~t8_cmesh_boundary_condition_handler () = default;
+
+  /**************************************** BOUNDARY CONDITION SETUP ****************************************/
+  /**
    * Applies boundary conditions to the faces of a cmesh cell.
    *
    * \tparam TStringRange             An iterable container filled with string like values.
@@ -90,20 +128,68 @@ struct t8_cmesh_boundary_condition_handler
    *                                  as the eclass of the cell has faces.
    */
   template <std::ranges::input_range TStringRange>
-    requires std::convertible_to<std::ranges::range_reference_t<TStringRange>, std::string_view>
+    requires std::convertible_to<std::ranges::range_value_t<TStringRange>, std::string_view>
   inline void
   add_boundary_conditions (t8_gloidx_t gtreeid, TStringRange boundary_conditions)
   {
     std::vector<boundary_condition_hash> hashes;
     hashes.reserve (std::size (boundary_conditions));
     for (const auto &boundary_condition : boundary_conditions) {
-      const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition);
-      m_boundary_conditions.try_emplace (hash, boundary_condition);
+      const std::string_view boundary_condition_view = boundary_condition;
+      const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition_view);
+      [[maybe_unused]] const auto inserted = m_boundary_conditions.try_emplace (hash, boundary_condition_view);
+#if T8_ENABLE_DEBUG
+      if (inserted.second) {
+        t8_debugf ("Registered boundary condition %.*s\n", static_cast<int> (boundary_condition_view.size ()),
+                   boundary_condition_view.data ());
+      }
+#endif
       hashes.emplace_back (std::move (hash));
     }
     t8_cmesh_set_attribute (m_cmesh, gtreeid, t8_get_package_id (), get_boundary_condition_attribute_key (),
                             hashes.data (), sizeof (boundary_condition_hash) * hashes.size (), 0);
   }
+
+  /**
+   * Adds a boundary condition name to this handler without registering it to a tree.
+   * Mostly needed for debugging and testing reasons.
+   * Boundary conditions added via \ref add_boundary_conditions do not need to be registered explicitly.
+   * \tparam TString                  A string-like object.
+   * \param [in]  boundary_condition  The name of the boundary condition.
+   */
+  template <typename TString>
+    requires std::convertible_to<TString, std::string_view>
+  inline void
+  register_boundary_condition (TString &&boundary_condition)
+  {
+    const std::string boundary_condition_string { boundary_condition };
+    const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition_string);
+
+    const auto inserted = m_boundary_conditions.try_emplace (hash, std::move (boundary_condition_string));
+
+#if T8_ENABLE_DEBUG
+    if (inserted.second) {
+      const std::string_view boundary_condition_view = boundary_condition;
+      t8_debugf ("Registered boundary condition %.*s\n", static_cast<int> (boundary_condition_view.size ()),
+                 boundary_condition_view.data ());
+    }
+#endif
+  }
+
+  /**
+   * Updates the internal cmesh. The boundary condition handler can only be given to uncommitted cmeshes.
+   * \param [in] new_cmesh  The new cmesh.
+   */
+  inline void
+  set_cmesh (t8_cmesh_t new_cmesh)
+  {
+    T8_ASSERT (t8_cmesh_is_initialized (new_cmesh));
+    T8_ASSERTF (t8_cmesh_is_committed (new_cmesh, 0),
+                "The boundary condition handler can only be set for uncommitted cmeshes.\n");
+    m_cmesh = new_cmesh;
+  }
+
+  /**************************************** BOUNDARY CONDITION RETRIEVAL ****************************************/
 
   /**
    * Retrieves the boundary conditions of a cmesh cell.
@@ -195,6 +281,23 @@ struct t8_cmesh_boundary_condition_handler
     return std::nullopt;
   }
 
+  /**
+   * Get all registered boundary condition names.
+   * \return A vector containing all registered boundary condition names.
+   */
+  inline std::vector<std::string_view>
+  get_registered_boundary_conditions () const
+  {
+    std::vector<std::string_view> boundary_conditions;
+    boundary_conditions.reserve (m_boundary_conditions.size ());
+    for (const auto &boundary_condition : m_boundary_conditions) {
+      boundary_conditions.push_back (boundary_condition.second);
+    }
+    return boundary_conditions;
+  }
+
+  /**************************************** HELPER FUNCTIONS ****************************************/
+
 #if T8_ENABLE_DEBUG
   /** Verifies the proper attribution of boundary conditions. Can only be called on a cmesh
    * during commit.
@@ -234,9 +337,9 @@ struct t8_cmesh_boundary_condition_handler
    * \return                              The hash of the name.
    */
   inline boundary_condition_hash
-  hash_boundary_condition_name (const std::string &boundary_condition_name) const
+  hash_boundary_condition_name (const std::string_view &boundary_condition_name) const
   {
-    return boundary_condition_hash (std::hash<std::string> {}(boundary_condition_name));
+    return boundary_condition_hash (std::hash<std::string_view> {}(boundary_condition_name));
   }
 
   /**
@@ -267,6 +370,45 @@ struct t8_cmesh_boundary_condition_handler
     return m_boundary_conditions.at (hash);
   }
 
+  /**************************************** MPI HELPER FUNCTIONS ****************************************/
+
+ public:
+  /**
+   * Synchronizes the contents of the boundary condition handler across all processes.
+   * \param [in]  comm      The communicator to use.
+   */
+  void
+  synchronize (sc_MPI_Comm comm);
+
+  /**
+   * Broadcasts the boundary conditions from \a main_rank to all other ranks.
+   * \param [in]  main_rank The main rank from which to broadcast.
+   * \param [in]  comm      The communicator to use.
+   */
+  void
+  bcast (int main_rank, sc_MPI_Comm comm);
+
+  /**
+   * Converts the contents of m_boundary_conditions into a serial vector of chars.
+   * The keys are omitted and only the strings are serialized.
+   * In the serialized vector, the individual strings are null-terminated.
+   * \return The serialized map.
+   */
+  std::vector<char>
+  serialize_map () const;
+
+  /**
+   * Unpacks and integrates the \a serial_data into m_boundary_conditions.
+   * It either merges the already existing data or overwrites the complete map if \a overwrite is set to true.
+   * \param [in]  serial_data   The data to unpack and integrate.
+   * \param [in]  overwrite     Overwrites the data in this handler if true. Merges the data with the existing data on false.
+   */
+  void
+  unpack_map (std::vector<char> &serial_data, bool overwrite);
+
+  /**************************************** MEMBERS ****************************************/
+
+ private:
   /** The associated cmesh of this struct */
   t8_cmesh_t m_cmesh;
 
