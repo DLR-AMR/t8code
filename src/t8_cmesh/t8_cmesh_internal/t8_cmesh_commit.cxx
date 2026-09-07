@@ -514,7 +514,9 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   if (boundary_conditions_applied_globally && cmesh->boundary_condition_handler == nullptr) {
     t8_cmesh_add_boundary_condition_handler (cmesh);
   }
-  cmesh->boundary_condition_handler->synchronize (comm);
+  if (cmesh->boundary_condition_handler != nullptr) {
+    cmesh->boundary_condition_handler->synchronize (comm);
+  }
 
 #if T8_ENABLE_DEBUG
   sc_flops_shot (&fi, &snapshot);
