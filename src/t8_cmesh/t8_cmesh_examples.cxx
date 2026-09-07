@@ -35,7 +35,8 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <t8_schemes/t8_default/t8_default_c_interface.h> /* default refinement scheme. */
+#include <t8_schemes/t8_default/t8_default_c_interface.h>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.hxx>
 
 /**
  * This function calculates an 'equal' partition for the cmesh based on the \a number_trees supplied
@@ -510,15 +511,22 @@ t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
   };
   /* clang-format on */
 
+  std::string internal = "internal";
+  std::string boundary = "boundary";
+  std::array<t8_boundary_conditions<std::string>, 16> boundary_conditions;
+
   /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
   for (i = 0; i < 6; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_TET);
+    boundary_conditions[i].assign (t8_eclass_num_faces[T8_ECLASS_TET], boundary);
   }
   for (i = 6; i < 12; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_PRISM);
+    boundary_conditions[i].assign (t8_eclass_num_faces[T8_ECLASS_PRISM], boundary);
   }
   for (i = 12; i < 16; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_HEX);
+    boundary_conditions[i].assign (t8_eclass_num_faces[T8_ECLASS_HEX], boundary);
   }
 
   /* We use standard linear geometry */
@@ -531,11 +539,24 @@ t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
    * They are essentially the tetrahedral hypercube scaled by 0.5 */
   t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5, null_vec);
   t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
+  boundary_conditions[0][2] = internal;
+  boundary_conditions[1][1] = internal;
   t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
+  boundary_conditions[1][2] = internal;
+  boundary_conditions[2][1] = internal;
   t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
+  boundary_conditions[2][2] = internal;
+  boundary_conditions[3][1] = internal;
   t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
+  boundary_conditions[3][2] = internal;
+  boundary_conditions[4][1] = internal;
   t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
+  boundary_conditions[4][2] = internal;
+  boundary_conditions[5][1] = internal;
   t8_cmesh_set_join (cmesh, 5, 0, 2, 1, 0);
+  boundary_conditions[5][2] = internal;
+  boundary_conditions[0][1] = internal;
+
   vertices[0] = 0;
   vertices[1] = 1;
   vertices[2] = 5;
@@ -587,6 +608,8 @@ t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
   t8_cmesh_set_tree_vertices (cmesh, 7, attr_vertices, 6);
 
   t8_cmesh_set_join (cmesh, 6, 7, 2, 1, 0);
+  boundary_conditions[6][2] = internal;
+  boundary_conditions[7][1] = internal;
   /* trees 8 and 9 */
   t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5, shift[1]);
   vertices[0] = 0;
@@ -604,6 +627,8 @@ t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
   t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords_temp, attr_vertices, 6);
   t8_cmesh_set_tree_vertices (cmesh, 9, attr_vertices, 6);
   t8_cmesh_set_join (cmesh, 8, 9, 2, 1, 0);
+  boundary_conditions[8][2] = internal;
+  boundary_conditions[9][1] = internal;
   /* trees 10 an 11 */
   t8_cmesh_coords_axb (vertices_coords, vertices_coords_temp, 8, 0.5, shift[2]);
   vertices[0] = 0;
@@ -621,14 +646,28 @@ t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
   t8_cmesh_new_translate_vertices_to_attributes (vertices, vertices_coords_temp, attr_vertices, 6);
   t8_cmesh_set_tree_vertices (cmesh, 11, attr_vertices, 6);
   t8_cmesh_set_join (cmesh, 10, 11, 1, 2, 0);
+  boundary_conditions[10][1] = internal;
+  boundary_conditions[11][2] = internal;
 
   /* Connect prisms and tets */
   t8_cmesh_set_join (cmesh, 0, 6, 0, 3, 0);
+  boundary_conditions[0][0] = internal;
+  boundary_conditions[6][3] = internal;
   t8_cmesh_set_join (cmesh, 1, 7, 0, 3, 1);
+  boundary_conditions[1][0] = internal;
+  boundary_conditions[7][3] = internal;
   t8_cmesh_set_join (cmesh, 2, 8, 0, 3, 0);
+  boundary_conditions[2][0] = internal;
+  boundary_conditions[8][3] = internal;
   t8_cmesh_set_join (cmesh, 3, 9, 0, 3, 1);
+  boundary_conditions[3][0] = internal;
+  boundary_conditions[9][3] = internal;
   t8_cmesh_set_join (cmesh, 4, 11, 0, 3, 0);
+  boundary_conditions[4][0] = internal;
+  boundary_conditions[11][3] = internal;
   t8_cmesh_set_join (cmesh, 5, 10, 0, 3, 1);
+  boundary_conditions[5][0] = internal;
+  boundary_conditions[10][3] = internal;
 
   /************************************/
   /*  The hexahedra                   */
@@ -645,37 +684,89 @@ t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
   }
   /* Join the hexes */
   t8_cmesh_set_join (cmesh, 12, 14, 5, 4, 0);
+  boundary_conditions[12][5] = internal;
+  boundary_conditions[14][4] = internal;
   t8_cmesh_set_join (cmesh, 13, 14, 3, 2, 0);
+  boundary_conditions[13][3] = internal;
+  boundary_conditions[14][2] = internal;
   t8_cmesh_set_join (cmesh, 14, 15, 0, 1, 0);
+  boundary_conditions[14][0] = internal;
+  boundary_conditions[15][1] = internal;
 
   /* Join the prisms and hexes */
   t8_cmesh_set_join (cmesh, 6, 13, 0, 4, 1);
+  boundary_conditions[6][0] = internal;
+  boundary_conditions[13][4] = internal;
   t8_cmesh_set_join (cmesh, 7, 12, 0, 2, 0);
+  boundary_conditions[7][0] = internal;
+  boundary_conditions[12][2] = internal;
   t8_cmesh_set_join (cmesh, 8, 12, 0, 0, 1);
+  boundary_conditions[8][0] = internal;
+  boundary_conditions[12][0] = internal;
   t8_cmesh_set_join (cmesh, 9, 15, 0, 4, 0);
+  boundary_conditions[9][0] = internal;
+  boundary_conditions[15][4] = internal;
   t8_cmesh_set_join (cmesh, 10, 13, 0, 0, 0);
+  boundary_conditions[10][0] = internal;
+  boundary_conditions[13][0] = internal;
   t8_cmesh_set_join (cmesh, 11, 15, 0, 2, 1);
+  boundary_conditions[11][0] = internal;
+  boundary_conditions[15][2] = internal;
 
   if (periodic) {
     /* Connect the sides of the cube to make it periodic */
     /* tets to prisms */
     t8_cmesh_set_join (cmesh, 0, 8, 3, 4, 0);
+    boundary_conditions[0][3] = internal;
+    boundary_conditions[8][4] = internal;
     t8_cmesh_set_join (cmesh, 5, 9, 3, 4, 0);
+    boundary_conditions[5][3] = internal;
+    boundary_conditions[9][4] = internal;
     t8_cmesh_set_join (cmesh, 3, 7, 3, 4, 0);
+    boundary_conditions[3][3] = internal;
+    boundary_conditions[7][4] = internal;
     t8_cmesh_set_join (cmesh, 4, 6, 3, 4, 0);
+    boundary_conditions[4][3] = internal;
+    boundary_conditions[6][4] = internal;
     t8_cmesh_set_join (cmesh, 1, 10, 3, 4, 0);
+    boundary_conditions[1][3] = internal;
+    boundary_conditions[10][4] = internal;
     t8_cmesh_set_join (cmesh, 2, 11, 3, 4, 0);
+    boundary_conditions[2][3] = internal;
+    boundary_conditions[11][4] = internal;
     /* prism to hex */
     t8_cmesh_set_join (cmesh, 6, 12, 1, 3, 0);
+    boundary_conditions[6][1] = internal;
+    boundary_conditions[12][3] = internal;
     t8_cmesh_set_join (cmesh, 9, 12, 2, 1, 0);
+    boundary_conditions[9][2] = internal;
+    boundary_conditions[12][1] = internal;
     t8_cmesh_set_join (cmesh, 7, 13, 2, 5, 0);
+    boundary_conditions[7][2] = internal;
+    boundary_conditions[13][5] = internal;
     t8_cmesh_set_join (cmesh, 11, 13, 1, 1, 0);
+    boundary_conditions[11][1] = internal;
+    boundary_conditions[13][1] = internal;
     t8_cmesh_set_join (cmesh, 8, 15, 1, 5, 0);
+    boundary_conditions[8][1] = internal;
+    boundary_conditions[15][5] = internal;
     t8_cmesh_set_join (cmesh, 10, 15, 2, 3, 0);
+    boundary_conditions[10][2] = internal;
+    boundary_conditions[15][3] = internal;
     /* hex to hex */
     t8_cmesh_set_join (cmesh, 12, 14, 4, 5, 0);
+    boundary_conditions[12][4] = internal;
+    boundary_conditions[14][5] = internal;
     t8_cmesh_set_join (cmesh, 13, 14, 2, 3, 0);
+    boundary_conditions[13][2] = internal;
+    boundary_conditions[14][3] = internal;
     t8_cmesh_set_join (cmesh, 14, 15, 1, 0, 0);
+    boundary_conditions[14][1] = internal;
+    boundary_conditions[15][0] = internal;
+  }
+
+  for (size_t itree = 0; itree < 16; ++itree) {
+    t8_cmesh_set_boundary_conditions (cmesh, itree, boundary_conditions[itree]);
   }
 
   t8_cmesh_commit (cmesh, comm);

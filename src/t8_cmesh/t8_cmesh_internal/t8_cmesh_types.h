@@ -31,6 +31,7 @@
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_data/t8_shmem.h>
 #include <t8_geometry/t8_geometry.h>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 #include <t8_element/t8_element.h>
@@ -58,10 +59,11 @@ typedef struct t8_cprofile t8_cprofile_t; /* Defined below */
 #define T8_CMESH_VERTICES_ATTRIBUTE_KEY             0 /**< Used to store vertex coordinates. */
 #define T8_CMESH_GLOBAL_VERTICES_ATTRIBUTE_KEY      1 /**< Used to store global vertex ids. */
 #define T8_CMESH_GEOMETRY_ATTRIBUTE_KEY             2 /**< Used to store the name of a tree's geometry. */
-#define T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY        3 /**< Used to store the geometry dimension and tag of the nodes of a tree. */
-#define T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY      4 /**< Used to store node parameters of a tree. Used in combination with T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY */
-#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY             5 /**< Used to store which edge is linked to which geometry */
-#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY  6 /**< Used to store edge parameters */
+#define T8_CMESH_BOUNDARY_CONDITION_ATTRIBUTE_KEY   3 /**< Used to store the boundary condition of each tree's face. */
+#define T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY        4 /**< Used to store the geometry dimension and tag of the nodes of a tree. */
+#define T8_CMESH_NODE_PARAMETERS_ATTRIBUTE_KEY      5 /**< Used to store node parameters of a tree. Used in combination with T8_CMESH_NODE_GEOMETRY_ATTRIBUTE_KEY */
+#define T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY             6 /**< Used to store which edge is linked to which geometry */
+#define T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY  7 /**< Used to store edge parameters */
 #define T8_CMESH_CAD_FACE_ATTRIBUTE_KEY             T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_EDGES  /**< Used to store which face is linked to which surface */
 #define T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY  T8_CMESH_CAD_FACE_ATTRIBUTE_KEY + 1                               /**< Used to store face parameters */
 #define T8_CMESH_LAGRANGE_POLY_DEGREE_KEY           T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + T8_ECLASS_MAX_FACES  /**< Used to store parameters of lagrangian polynomials */
@@ -139,6 +141,9 @@ typedef struct t8_cmesh
                                         Since this is very memory consuming we only fill it when needed. */
 
   t8_geometry_handler_c *geometry_handler; /**< Handles all geometries that are used by trees in this cmesh. */
+
+  t8_cmesh_boundary_condition_handler_c
+    *boundary_condition_handler; /**< Handles all boundary conditions that are used by trees in this cmesh. */
 
   struct t8_cmesh_vertex_connectivity
     *vertex_connectivity; /**< Structure that manages tree_to_vertex and vertex_to_tree connectivity. */
