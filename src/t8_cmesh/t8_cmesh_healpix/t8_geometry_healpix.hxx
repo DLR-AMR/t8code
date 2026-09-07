@@ -91,3 +91,5 @@ struct t8_geometry_healpix: public t8_geometry_with_vertices
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
+
+void t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord);

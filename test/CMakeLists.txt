@@ -29,7 +29,7 @@ function( add_t8_test )
     # Get the path of the first file listed in the SOURCES list and use it to determine the build directory.
     list (LENGTH ADD_T8_TEST_SOURCES TEST_SOURCES_LENGTH)
     list(GET ADD_T8_TEST_SOURCES 0 TEST_SOURCE)
-    
+
     get_filename_component(TEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/${TEST_SOURCE}" DIRECTORY)
     file(RELATIVE_PATH TEST_RELATIVE_DIR "${CMAKE_SOURCE_DIR}" "${TEST_SOURCE_DIR}")
     set(TEST_BUILD_DIR "${CMAKE_BINARY_DIR}/${TEST_RELATIVE_DIR}")
@@ -47,7 +47,7 @@ function( add_t8_test )
     string( FIND ${ADD_T8_TEST_NAME} "fortran" is_fortran_file )
     string( FIND ${TEST_BUILD_DIR} "mesh_handle" is_mesh_handle_file )
 
-    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI ) 
+    if ( (${is_fortran_file} GREATER_EQUAL 0) AND T8CODE_ENABLE_MPI )
         target_link_libraries( ${ADD_T8_TEST_NAME} PRIVATE MPI::MPI_Fortran )
     endif ()
     if ( (${is_mesh_handle_file} GREATER_EQUAL 0) )
@@ -139,6 +139,7 @@ add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOUR
 add_t8_cpp_test( NAME t8_gtest_multiple_attributes_parallel                 SOURCES t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOURCES t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
+add_t8_cpp_test( NAME t8_gtest_cmesh_healpix                                SOURCES t8_cmesh/t8_gtest_cmesh_healpix.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
 add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
@@ -216,7 +217,7 @@ if( T8CODE_BUILD_FORTRAN_INTERFACE AND T8CODE_ENABLE_MPI )
   add_t8_test( NAME t8_test_fortran_mpi_interface_cmesh_parallel   SOURCES api/t8_fortran_interface/t8_test_cmesh.f90 )
   add_t8_test( NAME t8_test_fortran_mpi_interface_forest_parallel  SOURCES api/t8_fortran_interface/t8_test_forest.f90 )
 endif()
- 
+
 add_t8_cpp_test( NAME t8_gtest_vector_split_serial          SOURCES t8_helper_functions/t8_gtest_vector_split.cxx )
 
 if( T8CODE_BUILD_MESH_HANDLE )
