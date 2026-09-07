@@ -796,8 +796,10 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       cmesh_out->committed = 1;
     }
   }
-  /* Broadcast boundary conditions */
-  cmesh_out->boundary_condition_handler->bcast (root, comm);
+  /* Broadcast boundary conditions if set */
+  if (cmesh_out->boundary_condition_handler != nullptr) {
+    cmesh_out->boundary_condition_handler->bcast (root, comm);
+  }
 
   cmesh_out->mpirank = mpirank;
   cmesh_out->mpisize = mpisize;
