@@ -45,7 +45,7 @@
  *                                  as the eclass of the cell has faces.
  */
 template <std::ranges::input_range TStringRange>
-  requires std::convertible_to<std::ranges::range_reference_t<TStringRange>, std::string_view>
+  requires std::convertible_to<std::ranges::range_value_t<TStringRange>, std::string_view>
 void
 t8_cmesh_set_boundary_conditions (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, TStringRange boundary_conditions)
 {
