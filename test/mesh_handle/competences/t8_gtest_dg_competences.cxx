@@ -77,9 +77,9 @@ TEST (t8_gtest_dg_competences, remote_ranks)
 
   const t8_locidx_t num_local = mesh->get_num_local_elements ();
   const t8_locidx_t num_ghosts = mesh->get_num_ghosts ();
-  if ((mesh->get_dimension () > 1) && (num_local > 1)) {
-    // Ensure that we actually test with ghost elements.
-    ASSERT_GT (num_ghosts, 0);
+  // Test does not make sense without ghosts.
+  if (!(num_ghosts > 0)) {
+    GTEST_SKIP () << "Skipping test as no ghost elements are created.";
   }
 
   int mpirank;

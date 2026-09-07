@@ -171,7 +171,7 @@ jobs:
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
-  # Run t8code linkage tests with and without MPI and in serial and debug mode
+  # Run t8code api tests only with MPI and in serial and debug mode
   t8code_api_tests:
     needs: preparation
     uses: ./.github/workflows/test_t8code_api.yml
