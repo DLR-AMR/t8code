@@ -141,10 +141,10 @@ t8_cmesh_boundary_condition_handler::synchronize (sc_MPI_Comm comm)
   }
 
   /* Prepare the sendbuffer. */
-  const std::vector<char> send_buffer = t8_cmesh_boundary_condition_handler::serialize_map ();
+  std::vector<char> send_buffer = t8_cmesh_boundary_condition_handler::serialize_map ();
 
   /* Communicate the local sizes */
-  const int local_size = static_cast<int> (send_buffer.size ());
+  int local_size = static_cast<int> (send_buffer.size ());
   std::vector<int> sizes (mpisize);
   sc_MPI_Allgather (&local_size, 1, sc_MPI_INT, sizes.data (), 1, sc_MPI_INT, comm);
 
