@@ -188,6 +188,25 @@ jobs:
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
 
+  t8code_advection_test:
+    needs: preparation
+    uses: ./.github/workflows/test_t8code_advection.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        MPI: [ON] # For now the fortran API only supports building with MPI
+        BUILD_TYPE: [Release]
+        include:
+          - MAKEFLAGS: -j4
+            MPIFLAGS: -np 4
+    with:
+      MAKEFLAGS: ${{ matrix.MAKEFLAGS }}
+      MPIFLAGS: ${{ matrix.MPIFLAGS }}
+      MPI: ${{ matrix.MPI }}
+      BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
+      TEST_LEVEL: ${{ github.event_name == 'pull_request' && 'T8_TEST_LEVEL_MEDIUM' || 'T8_TEST_LEVEL_FULL' }} # Set TEST_LEVEL to medium if the event is a PR, otherwise full.
+
+
   # Run Valgrind check for every t8code test binary.
   t8code_valgrind_tests:
     if: (github.event_name == 'schedule' && github.repository == 'DLR-AMR/t8code') # Only run the Valgrind check in the scheduled run.
