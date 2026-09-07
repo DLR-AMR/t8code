@@ -146,7 +146,7 @@ t8_cmesh_boundary_condition_handler::synchronize (sc_MPI_Comm comm)
   /* Communicate the local sizes */
   const int local_size = static_cast<int> (send_buffer.size ());
   std::vector<int> sizes (mpisize);
-  MPI_Allgather (&local_size, 1, sc_MPI_INT, sizes.data (), 1, sc_MPI_INT, comm);
+  sc_MPI_Allgather (&local_size, 1, sc_MPI_INT, sizes.data (), 1, sc_MPI_INT, comm);
 
   /* Compute the offsets for the data and create receive buffer. */
   std::vector<int> offsets (mpisize);
@@ -158,8 +158,8 @@ t8_cmesh_boundary_condition_handler::synchronize (sc_MPI_Comm comm)
   std::vector<char> recv_buffer (total_size);
 
   /* Communicate. */
-  MPI_Allgatherv (send_buffer.data (), local_size, MPI_BYTE, recv_buffer.data (), sizes.data (), offsets.data (),
-                  MPI_BYTE, comm);
+  sc_MPI_Allgatherv (send_buffer.data (), local_size, sc_MPI_BYTE, recv_buffer.data (), sizes.data (), offsets.data (),
+                     sc_MPI_BYTE, comm);
 
   /* Unpack the data. */
   t8_cmesh_boundary_condition_handler::unpack_map (recv_buffer, false);
