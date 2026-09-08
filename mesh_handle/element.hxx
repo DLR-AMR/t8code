@@ -401,6 +401,31 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
   }
 
+  /** Function to convert points in reference space of an element to points of the 
+   *  reference space of the tree.
+   * \param [in] ref_coords     Pointer to the reference coordinates of the element.
+   * \param [in] num_coords     Number of reference coordinates to convert.
+   * \param [out] tree_ref_coords Pointer to the reference coordinates of the tree.
+   */
+  void
+  get_reference_coordinates (const t8_3D_vec& ref_coords, std::size_t num_coords, t8_3D_vec& tree_ref_coords) const
+  {
+    t8_forest_get_scheme (m_mesh->m_forest)
+      ->element_get_reference_coords (get_tree_class (), m_element, ref_coords.data (), num_coords,
+                                      tree_ref_coords.data ());
+  }
+
+  /** Compute the orientation of a face of an element with respect to its neighbor.
+   *  \param [in] face The index of the face for which the orientation should be computed.
+   *  \return The orientation of the face with respect to its neighbor. Returns 0 if the face has no neighbor.
+   */
+  int
+  get_face_orientation (int face) const
+  {
+    return t8_forest_leaf_face_orientation (m_mesh->m_forest, m_tree_id, t8_forest_get_scheme (m_mesh->m_forest),
+                                            m_element, face);
+  }
+
   // --- Getter for face properties. ---
   /** The area of a face of the element.
    *  This is only an approximation.
@@ -581,6 +606,17 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   is_ghost_element () const
   {
     return m_is_ghost_element;
+  }
+
+  /** Check if two elements are equal.
+   * \param [in] other The other element, this element is compared with. 
+   * \return           True if the elements are equal, false if they are not equal.
+  */
+  bool
+  is_equal (const SelfType& other) const
+  {
+    return t8_forest_get_scheme (m_mesh->m_forest)
+      ->element_is_equal (get_tree_class (), get_forest_element (), other.get_forest_element ());
   }
 
  private:
