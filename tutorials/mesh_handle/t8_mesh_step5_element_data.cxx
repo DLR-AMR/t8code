@@ -20,19 +20,27 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_mesh_element_data.cxx
- * This is the same as general/t8_step5_element_data.cxx but using the mesh handle interface instead of the forest
+/** \file t8_mesh_step5_element_data.cxx
+ * This is step5 of the mesh handle tutorials.
+ * Therefore, this is the same as general/t8_step5_element_data.cxx but using the mesh handle interface instead of the forest
  * interface.
+ * In the following we will store data in the individual elements of our mesh.
+ * To do this, we will again create a uniform mesh, which will get adapted as in step4,
+ * with the difference that we partition, balance and create ghost elements all in the same step.
+ * After adapting the mesh we will learn how to build a data array and gather data for
+ * the local elements. Furthermore, we exchange the data values of the ghost elements and
+ * output the volume data to vtu.
  */
 
-#include <t8.h>
+#include <t8.h> /** General t8code header. Always include this. */
 
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competence_pack.hxx>
-#include <mesh_handle/constructor_wrappers.hxx>
-#include <mesh_handle/mesh_io.hxx>
-#include <mesh_handle/concepts.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <mesh_handle/mesh.hxx>            /** General mesh header. Always needed for mesh_handle code. */
+#include <mesh_handle/competence_pack.hxx> /** Competence pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
+#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
+#include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
+#include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
+#include <t8_types/t8_vec.hxx>      /** t8 vector dataclass. */
+#include "t8_mesh_tutorials_common.hxx" /** Default adaption function. */
 #include <memory>
 #include <span>
 
@@ -44,42 +52,7 @@ struct data_per_element_type
   double volume; /**< Volume of the element. */
 };
 
-/** User data type we will pass to the adapt callback. */
-struct user_data
-{
-  t8_3D_vec midpoint;               /**< The midpoint of our sphere. */
-  double refine_if_inside_radius;   /**< If an element's center is smaller than this value, we refine the element. */
-  double coarsen_if_outside_radius; /**< If an element's center is larger this value, we coarsen its family. */
-};
-
-/** The adaptation callback function. This will refine elements inside of a given sphere and coarsen the elements
- * outside of a given sphere.
- * \tparam TMeshClass    The mesh handle class.
- * \param [in] mesh      The mesh that should be adapted.
- * \param [in] elements  One element or a family of elements to consider for adaptation.
- * \param [in] user_data The user data to be used during the adaptation process.
- * \return 1 if the first entry in \a elements should be refined,
- *        -1 if the family \a elements shall be coarsened,
- *         0 else.
- */
-template <t8_mesh_handle::T8MeshType TMeshClass>
-int
-adapt_callback ([[maybe_unused]] const TMeshClass &mesh, std::span<const typename TMeshClass::element_class> elements,
-                const user_data &user_data)
-{
-  auto element_centroid = elements[0].get_centroid ();
-  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, user_data.midpoint);
-  if (dist < user_data.refine_if_inside_radius) {
-    return 1;
-  }
-  // Check if we got a family and if yes, if we should coarsen.
-  if ((elements.size () > 1) && (dist > user_data.coarsen_if_outside_radius)) {
-    return -1;
-  }
-  return 0;
-}
-
-/** Build a mesh with initial uniform refinement level \a level which is adapted according to \ref adapt_callback,
+/** Build a mesh with initial uniform refinement level \a level which is adapted according to the adapt_callback_sphere function,
  * partitioned and balanced afterwards, and ghost elements are set.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] comm     MPI communicator to use.
@@ -91,7 +64,7 @@ std::unique_ptr<TMeshClass>
 build_mesh (sc_MPI_Comm comm, int level)
 {
   auto mesh_handle = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
-  struct user_data adapt_data = {
+  adapt_data adapt_params = {
     { 0.5, 0.5, 1 }, /* Midpoint of the sphere. */
     0.2,             /* Refine if inside this radius. */
     0.4              /* Coarsen if outside this radius. */
@@ -100,7 +73,7 @@ build_mesh (sc_MPI_Comm comm, int level)
   mesh_handle->set_balance ();
   mesh_handle->set_partition ();
   mesh_handle->set_adapt (
-    TMeshClass::template mesh_adapt_callback_wrapper<user_data> (adapt_callback<TMeshClass>, adapt_data));
+    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback_sphere<TMeshClass>, adapt_params));
   mesh_handle->set_ghost ();
   mesh_handle->commit ();
   return mesh_handle;
@@ -191,16 +164,16 @@ main (int argc, char **argv)
   sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
   /* Print a message on the root process. */
-  t8_global_productionf (" [tutorial] \n");
-  t8_global_productionf (" [tutorial] Hello, this is the element data example of t8code using the mesh handle.\n");
-  t8_global_productionf (
-    " [tutorial] In this example we will store data on our elements and exchange the data of ghost elements.\n");
-  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [mesh_step5] \n");
+  t8_global_productionf (" [mesh_step5] Hello, this is the element data example of t8code using the mesh handle.\n");
+  t8_global_productionf (" [mesh_step5] In this example we will store data on our elements and exchange the "
+                         "data of ghost elements.\n");
+  t8_global_productionf (" [mesh_step5] \n");
 
   /* Setup: Build cmesh and adapt uniformly. */
-  t8_global_productionf (" [tutorial] \n");
-  t8_global_productionf (" [tutorial] Creating an adapted mesh.\n");
-  t8_global_productionf (" [tutorial] \n");
+  t8_global_productionf (" [mesh_step5] \n");
+  t8_global_productionf (" [mesh_step5] Creating an adapted mesh.\n");
+  t8_global_productionf (" [mesh_step5] \n");
   { /* We put the mesh in its own scope so that it is automatically destroyed at the end of the scope.
      * This is only necessary because sc_finalize checks if there are leftover references.
      * This unique pointer would have been destroyed automatically at the end of the programme. */
@@ -209,30 +182,30 @@ main (int argc, char **argv)
     auto mesh = build_mesh<mesh_class> (comm, level);
 
     t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_mesh);
-    t8_global_productionf (" [tutorial] Wrote mesh to vtu files: %s*\n", prefix_mesh);
+    t8_global_productionf (" [mesh_step5] Wrote mesh to vtu files: %s*\n", prefix_mesh);
 
     set_element_data_mesh (*mesh);
-    t8_global_productionf (" [tutorial] Computed level and volume data for local elements.\n");
+    t8_global_productionf (" [mesh_step5] Computed level and volume data for local elements.\n");
     if (mesh->get_num_local_elements () > 0) {
       /* Output the stored data of the first local element (if it exists). */
-      t8_global_productionf (" [tutorial] Element 0 has level %i and volume %e.\n",
+      t8_global_productionf (" [mesh_step5] Element 0 has level %i and volume %e.\n",
                              ((*mesh)[0]).get_element_data ().level, ((*mesh)[0]).get_element_data ().volume);
     }
 
     /* Exchange the data values of the ghost elements. */
     exchange_ghost_data_mesh (*mesh);
-    t8_global_productionf (" [tutorial] Exchanged ghost data.\n");
+    t8_global_productionf (" [mesh_step5] Exchanged ghost data.\n");
     if (mesh->get_num_ghosts () > 0) {
       /* Output the data of the first ghost element (if it exists). */
       t8_locidx_t first_ghost_index = mesh->get_num_local_elements ();
-      t8_global_productionf (" [tutorial] Ghost 0 has level %i and volume %e.\n",
+      t8_global_productionf (" [mesh_step5] Ghost 0 has level %i and volume %e.\n",
                              ((*mesh)[first_ghost_index]).get_element_data ().level,
                              ((*mesh)[first_ghost_index]).get_element_data ().volume);
     }
 
     /* Output the volume data to vtu. */
     output_data_to_vtu (*mesh, prefix_mesh_with_data);
-    t8_global_productionf (" [tutorial] Wrote mesh and volume data to %s*.\n", prefix_mesh_with_data);
+    t8_global_productionf (" [mesh_step5] Wrote mesh and volume data to %s*.\n", prefix_mesh_with_data);
 
     /* Cleanup. */
   }  // End scope of mesh
