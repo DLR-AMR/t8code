@@ -152,6 +152,12 @@ t8_cmesh_disable_negative_volume_check ([[maybe_unused]] t8_cmesh_t cmesh)
 #endif
 }
 
+void
+t8_cmesh_enable_tree_reordering (t8_cmesh_t cmesh)
+{
+  cmesh->reindex_trees = 1;
+}
+
 #if T8_ENABLE_DEBUG
 int
 t8_cmesh_validate_geometry (const t8_cmesh_t cmesh, const int check_for_negative_volume)
@@ -239,6 +245,7 @@ t8_cmesh_init (t8_cmesh_t *pcmesh)
 #if T8_ENABLE_DEBUG
   cmesh->negative_volume_check = 1;
 #endif /* T8_ENABLE_DEBUG */
+  cmesh->reindex_trees = 0;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 }
@@ -2254,8 +2261,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 #endif
 
       } /* End sending of end message */
-    }   /* End loop over processes */
-  }     /* if (num_pure_local_trees > 0) */
+    } /* End loop over processes */
+  } /* if (num_pure_local_trees > 0) */
 
   if (this_proc_is_empty) {
     /* If this proc is empty, we only expect a start message.
