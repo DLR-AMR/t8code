@@ -494,7 +494,7 @@ struct t8_subelement_scheme_common:
    * \note level 0 elements do not form a family.
    */
   int
-  elements_are_family (t8_element_t *const *fam) const noexcept
+  elements_are_family (const t8_element_t *const *fam) const noexcept
   {
     const int num_siblings = element_get_num_siblings (fam[0]);
 #if T8_ENABLE_DEBUG
@@ -516,7 +516,7 @@ struct t8_subelement_scheme_common:
     }
     /* If the first element is no subelement, the remaining elements should not be subelements and 
      * they must form a family. */
-    t8_element_t **standalone_children_ptrs = T8_ALLOC (t8_element_t *, num_siblings);
+    const t8_element_t **standalone_children_ptrs = T8_ALLOC (const t8_element_t *, num_siblings);
     for (int isib = 0; isib < num_siblings; ++isib) {
       if (element_is_subelement (fam[isib])) {
         T8_FREE (standalone_children_ptrs);

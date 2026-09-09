@@ -53,7 +53,7 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   EXPECT_FALSE (t8_forest_has_global_subelements (forest));
 
   /* Adapt the forest (refining every second element). */
-  forest = t8_forest_new_adapt (forest, t8_test_adapt_even_global_id, 0, 0, NULL);
+  forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<2>, 0, 0, NULL);
 
   /* Before resolving hanging nodes, subelements should not yet be introduced. */
   EXPECT_FALSE (t8_forest_has_global_subelements (forest));

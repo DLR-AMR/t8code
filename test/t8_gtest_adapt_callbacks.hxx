@@ -56,7 +56,7 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 /**
  * Adapt callback that refines every n-th global element, where \a n is given as template parameter.
  *
- * Optionally, an \a offset < \a n may be defined to not start with the first leaf eleement.
+ * Optionally, an \a offset < \a n may be defined to not start with the first leaf element.
  *
  * \tparam n      every n-th global leaf element will be refined
  * \tparam offset global ID of the first element to refine
