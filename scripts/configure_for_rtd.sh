@@ -44,7 +44,8 @@ if [ "$READTHEDOCS" = "True" ]; then
     fi
     echo "Configuring Doxygen for ReadTheDocs: Excluding source files."
     # Exclude source files from documentation
-    echo "EXCLUDE_PATTERNS += *.c *.cc *.cpp *.cxx" >> "$DOXYFILE_PATH"
+    echo "EXCLUDE_PATTERNS += */src/*.c */src/*.cc */src/*.cpp */src/*.cxx" >> "$DOXYFILE_PATH"
+    echo "EXCLUDE_PATTERNS += */test/*.c */test/*.cc */test/*.cpp */test/*.cxx" >> "$DOXYFILE_PATH"
 fi
 
 cmake .. -DT8CODE_BUILD_DOCUMENTATION=ON -DT8CODE_BUILD_DOCUMENTATION_SPHINX=ON -DT8CODE_ENABLE_MPI=OFF

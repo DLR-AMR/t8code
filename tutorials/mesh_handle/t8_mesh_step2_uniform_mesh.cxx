@@ -47,7 +47,7 @@
 #include <memory>
 
 /** Builds cmesh of 2 prisms that build up a unit cube.
- * See \ref tutorials/general/t8_step1_coarsemesh.cxx for a detailed description.
+ * See tutorials/general/t8_step1_coarsemesh.cxx for a detailed description.
  * \param [in] comm   MPI Communicator to use.
  * \return            The coarse mesh.
  */
