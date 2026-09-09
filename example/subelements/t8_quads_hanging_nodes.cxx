@@ -21,7 +21,7 @@
 */
 
 /** \file t8_quads_hanging_nodes.cxx
- * This is an example to demonstrate hanging node resolution for quads. 
+ * This is an example to demonstrate hanging node-resolution for quads. 
  */
 
 #include <t8.h>                                       /* General t8code header, always include this. */
@@ -33,7 +33,7 @@
 #include <t8_forest/t8_forest_subelement.hxx>         /* Function for adding subelements. */
 #include <t8_schemes/t8_subelement/t8_subelement.hxx> /* Subelement refinement scheme. */
 #include <t8_types/t8_vec.h>                          /* Basic operations on 3D vectors. */
-#include <t8_eclass/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>                      /* Element-class definitions. */
 
 /** The adaptation callback function. This refines every second element (with even global id).
  * \param [in] forest       The current forest that is in construction.

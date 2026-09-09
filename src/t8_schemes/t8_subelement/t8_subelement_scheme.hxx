@@ -252,12 +252,12 @@ struct t8_subelement_scheme_common:
     return derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
   }
 
-  // ################################################____GENERAL HELPER____#############################################
+  // ################################################____GENERAL HELPERS____#############################################
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
    *  element. No memory is allocated by this function.
    * \param [in] source The element whose entries will be copied to \b dest.
-   * \param [in,out] dest This element's entries will be overwrite with the entries of \b source.
+   * \param [in,out] dest This element's entries will be overwritten by the entries of \b source.
    * \note \a source and \a dest may point to the same element.
    */
   void
@@ -599,7 +599,7 @@ struct t8_subelement_scheme_common:
   {
     derived ().underlying_scheme.element_get_last_descendant (element_to_standalone (elem),
                                                               element_to_standalone (desc), level);
-    reset_subelement_values ((TSubelementType *) desc);
+    reset_subelement_values (as_subelement(desc));
   }
 
   // ################################################____FACE REFINEMENT____############################################

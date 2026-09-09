@@ -147,11 +147,11 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
   }
 
   /** This defines how an element is refined into subelements using a specified subelement type.
-   * \param [in] elem The element to be refined.
+   * \param [in] elem     The element to be refined.
    * \param [in] length   The length of the output array \a c must match the number of subelements.   
    *                      See \ref element_get_num_children.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
-   * \param [in] type The subelement type to be used for refinement. This is a binary encoding of the hanging faces.
+   * \param [in, out] c   An array of allocated elements that will be filled with the subelements of \a elem. 
+   * \param [in] type     The subelement type to be used for refinement. This is a binary encoding of the hanging faces.
    */
   void
   subelement_get_children (const t8_element_t *elem, [[maybe_unused]] const int length, t8_element_t *c[],
@@ -184,10 +184,10 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
 
   /** Convert points in the reference space of a (triangular) subelement to points in the reference
    * space of the tree.
-   * \param [in] elem       The subelement.
-   * \param [in] ref_coords The coordinates in \f$ [0,1]^2 \f$ of the points in the subelement's reference space.
-   * \param [in] num_coords The number of points to convert.
-   * \param [out] out_coords The coordinates of the points in the reference space of the tree.
+   * \param [in]  elem        The subelement.
+   * \param [in]  ref_coords  The coordinates in \f$ [0,1]^2 \f$ of the points in the subelement's reference space.
+   * \param [in]  num_coords  The number of points to convert.
+   * \param [out] out_coords  The coordinates of the points in the reference space of the tree.
    */
   void
   subelement_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
@@ -232,8 +232,8 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
   /** Compute the integer coordinates of the three vertices of a triangular subelement.
    *
    * For this, we first define the order of the subelements and the subelement vertices:
-   * All subelements of a transition cell share one common point, which we define as \a m_c, and each subelement is
-   * spanned by \a m_c together with two consecutive points of a \b path along the boundary of the
+   * All subelements of a transition cell share one common vertex, which we define as \a m_c, and each subelement is
+   * spanned by \a m_c together with two consecutive vertices of a \b path along the boundary of the
    * parent triangle. This defines the numbering completely:
    *   - The \a main \a face is the lowest-indexed hanging face \a fA.
    *   - The common point \a m_c is the midpoint of the main face. Every subelement contains it.

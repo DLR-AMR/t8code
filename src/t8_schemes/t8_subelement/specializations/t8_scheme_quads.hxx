@@ -154,6 +154,7 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++i) {
       num_hanging_faces += (subelement_type & (1 << i)) >> i;
     }
+    // Each original face "has" one triangular subelement, each split face two.
     return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
   }
 

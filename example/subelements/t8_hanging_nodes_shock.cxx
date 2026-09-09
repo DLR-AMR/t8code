@@ -136,7 +136,7 @@ t8_adapt_forest (t8_forest_t forest)
  * \param[in] forest Forest to be adapted.
  */
 t8_forest_t
-t8_adapt_forest_2and (t8_forest_t forest)
+t8_adapt_forest_2nd (t8_forest_t forest)
 {
   struct t8_adapt_data adapt_data = {
     { 0, 1, 0 }, /* Center of the circle. */
@@ -225,7 +225,7 @@ main (int argc, char **argv)
                          prefix_removed_sub);
 
   /* --- Second cycle: adapt around the larger circle. --- */
-  forest = t8_adapt_forest_2and (forest);
+  forest = t8_adapt_forest_2nd (forest);
   prefix = "t8_adapted2";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Adapted again and wrote to file: %s*\n", prefix);
