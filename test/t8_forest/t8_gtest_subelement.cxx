@@ -50,18 +50,19 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, sc_MPI_COMM_WORLD);
 
   /* Initial uniform forest should not have any subelements. */
-  EXPECT_FALSE (t8_forest_has_global_subelements (forest));
+  EXPECT_FALSE (t8_forest_has_subelements (forest));
 
   /* Adapt the forest (refining every second element). */
   forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<2>, 0, 0, NULL);
 
   /* Before resolving hanging nodes, subelements should not yet be introduced. */
-  EXPECT_FALSE (t8_forest_has_global_subelements (forest));
+  EXPECT_FALSE (t8_forest_has_subelements (forest));
+  EXPECT_FALSE (t8_forest_is_conforming (forest));
   const t8_gloidx_t num_leaves_adapted = t8_forest_get_global_num_leaf_elements (forest);
 
   // Check that discarding without subelements just does nothing.
   forest = t8_forest_discard_subelements (forest);
-  EXPECT_FALSE (t8_forest_has_global_subelements (forest));
+  EXPECT_FALSE (t8_forest_has_subelements (forest));
   EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest), num_leaves_adapted);
 
   /* Remove hanging nodes by inserting subelements. The forest is already balanced as we only adapted once. */
@@ -69,7 +70,7 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   EXPECT_TRUE (t8_forest_is_committed (forest));
 
   /* Hanging node resolution must introduce subelements into the forest. */
-  EXPECT_TRUE (t8_forest_has_global_subelements (forest));
+  EXPECT_TRUE (t8_forest_has_subelements (forest));
 
   /* Adding transition subelements must increase (or equal) the total leaf count. */
   const t8_gloidx_t num_leaves_sub = t8_forest_get_global_num_leaf_elements (forest);
@@ -82,7 +83,7 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   t8_forest_commit (forest_partitioned);
 
   /* Subelements and leaf count must remain consistent after repartitioning. */
-  EXPECT_TRUE (t8_forest_has_global_subelements (forest_partitioned));
+  EXPECT_TRUE (t8_forest_has_subelements (forest_partitioned));
   EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest_partitioned), num_leaves_sub);
 
 #if T8_ENABLE_DEBUG
@@ -93,7 +94,7 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   /* Discard subelements from the partitioned forest. */
   forest = t8_forest_discard_subelements (forest_partitioned);
   /* Subelements should now be completely removed. */
-  EXPECT_FALSE (t8_forest_has_global_subelements (forest));
+  EXPECT_FALSE (t8_forest_has_subelements (forest));
   /* Discarding subelements should restore the pre-resolution leaf count. */
   EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest), num_leaves_adapted);
 

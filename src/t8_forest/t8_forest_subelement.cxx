@@ -53,11 +53,11 @@ namespace detail
  * \return -1 for subelements, 0 else.
  */
 int
-discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
-                              [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
-                              [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
-                              [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
-                              t8_element_t *elements[])
+t8_discard_subelements_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t forest_from,
+                                 [[maybe_unused]] t8_locidx_t which_tree, t8_eclass_t tree_class,
+                                 [[maybe_unused]] t8_locidx_t lelement_id, const t8_scheme *scheme,
+                                 [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
+                                 t8_element_t *elements[])
 {
   // Coarsen if the element is a subelement.
   if (t8_element_is_subelement (scheme, tree_class, elements[0]) && is_family) {
@@ -127,33 +127,60 @@ t8_remove_hanging_nodes_callback ([[maybe_unused]] t8_forest_t forest, t8_forest
   }
 }
 
-}  // namespace detail
-
-t8_forest_t
-t8_forest_remove_hanging_nodes (t8_forest_t forest)
+/** Check whether the local part of a forest is conforming, i.e. no local leaf element has a face with more than one
+ * leaf face neighbor.
+ * \param [in] forest The forest to be checked. Must be committed.
+ * \return true if no hanging node was found, false otherwise.
+ */
+bool
+t8_forest_is_locally_conforming (t8_forest_t forest)
 {
-  t8_global_productionf ("Into t8_forest_remove_hanging_nodes.\n");
-  t8_forest_t forest_new = t8_forest_new_adapt (forest, detail::t8_remove_hanging_nodes_callback, 0, 0, NULL);
-  t8_global_productionf ("Done t8_forest_remove_hanging_nodes.\n");
-  return forest_new;
-}
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
-t8_forest_t
-t8_forest_discard_subelements (t8_forest_t forest)
-{
-  if (!t8_forest_has_local_subelements (forest)) {
-    return forest;
+  for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
+    const t8_eclass_t tree_class = t8_forest_get_eclass (forest, itree);
+    const t8_locidx_t num_leaves = t8_forest_get_tree_num_leaf_elements (forest, itree);
+
+    for (t8_locidx_t ielem = 0; ielem < num_leaves; ++ielem) {
+      const t8_element_t *elem = t8_forest_get_leaf_element_in_tree (forest, itree, ielem);
+      const int num_faces = scheme->element_get_num_faces (tree_class, elem);
+
+      for (int iface = 0; iface < num_faces; ++iface) {
+        const t8_element_t **neighbors; /**< Neighboring elements. */
+        int *dual_faces_internal;       /**< Face indices of the neighbor elements. */
+        int num_neighbors;              /**< Number of neighboring elements. */
+        t8_locidx_t *neighids;          /**< Neighboring elements ids. */
+        t8_eclass_t neigh_class;        /**< Neighboring elements tree class. */
+
+        t8_forest_leaf_face_neighbors (forest, itree, elem, &neighbors, iface, &dual_faces_internal, &num_neighbors,
+                                       &neighids, &neigh_class);
+
+        const bool face_is_hanging = (num_neighbors > 1);
+
+        // Free allocated memory before we possibly leave the loop.
+        if (num_neighbors > 0) {
+          T8_FREE (neighbors);
+          T8_FREE (dual_faces_internal);
+          T8_FREE (neighids);
+        }
+
+        if (face_is_hanging) {
+          return false;
+        }
+      }
+    }
   }
-  return t8_forest_new_adapt (forest, detail::discard_subelements_callback, 0, 0, NULL);
+  return true;
 }
 
+/** Check if a forest contains subelements locally.
+ * \param [in] forest The forest to be checked.
+ * \return true if there are subelements in the forest, false otherwise.
+ */
 bool
 t8_forest_has_local_subelements (const t8_forest_t forest)
 {
   auto scheme = t8_forest_get_scheme (forest);
-  if (!t8_scheme_has_subelement_scheme (scheme)) {
-    return false;
-  }
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
     auto eclass = t8_forest_get_eclass (forest, itree);
     if (!t8_eclass_scheme_is_subelement (scheme, eclass)) {
@@ -169,14 +196,58 @@ t8_forest_has_local_subelements (const t8_forest_t forest)
   return false;
 }
 
-bool
-t8_forest_has_global_subelements (const t8_forest_t forest)
+}  // namespace detail
+
+t8_forest_t
+t8_forest_remove_hanging_nodes (t8_forest_t forest)
 {
+  t8_global_productionf ("Into t8_forest_remove_hanging_nodes.\n");
+  t8_forest_t forest_new = t8_forest_new_adapt (forest, detail::t8_remove_hanging_nodes_callback, 0, 0, NULL);
+  t8_global_productionf ("Done t8_forest_remove_hanging_nodes.\n");
+  return forest_new;
+}
+
+bool
+t8_forest_is_conforming (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  SC_CHECK_ABORT (!t8_forest_has_subelements (forest),
+                  "At the moment the t8_forest_is_conforming check only works for forests without subelements.\n");
+
   /* Extract the MPI communicator from the forest */
   sc_MPI_Comm comm = t8_forest_get_mpicomm (forest);
 
   /* Convert boolean condition to MPI-compatible integer */
-  int local = t8_forest_has_local_subelements (forest) ? 1 : 0;
+  int local = detail::t8_forest_is_locally_conforming (forest) ? 1 : 0;
+  int global = 0;
+
+  const int mpiret = sc_MPI_Allreduce (&local, &global, 1, sc_MPI_INT, sc_MPI_LAND, comm);
+  SC_CHECK_MPI (mpiret);
+
+  return global != 0;
+}
+
+t8_forest_t
+t8_forest_discard_subelements (t8_forest_t forest)
+{
+  if (!t8_forest_has_subelements (forest)) {
+    return forest;
+  }
+  return t8_forest_new_adapt (forest, detail::t8_discard_subelements_callback, 0, 0, NULL);
+}
+
+bool
+t8_forest_has_subelements (const t8_forest_t forest)
+{
+  auto scheme = t8_forest_get_scheme (forest);
+  if (!t8_scheme_has_subelement_scheme (scheme)) {
+    return false;
+  }
+  /* Extract the MPI communicator from the forest */
+  sc_MPI_Comm comm = t8_forest_get_mpicomm (forest);
+
+  /* Convert boolean condition to MPI-compatible integer */
+  int local = detail::t8_forest_has_local_subelements (forest) ? 1 : 0;
   int global = 0;
 
   const int mpiret = sc_MPI_Allreduce (&local, &global, 1, sc_MPI_INT, sc_MPI_LOR, comm);

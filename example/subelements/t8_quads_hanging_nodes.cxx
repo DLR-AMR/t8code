@@ -81,7 +81,7 @@ main (int argc, char **argv)
 
   /* --- Adapt the forest. ---   */
   forest = t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, NULL);
-  std::cout << "Subelements before removing: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements before removing: " << t8_forest_has_subelements (forest) << std::endl;
   const char *prefix_with_hanging_nodes = "t8_with_hanging_nodes";
   t8_forest_write_vtk (forest, prefix_with_hanging_nodes);
   t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n",
@@ -89,7 +89,7 @@ main (int argc, char **argv)
 
   /* --- Remove hanging nodes. --- */
   forest = t8_forest_remove_hanging_nodes (forest);
-  std::cout << "Subelements after removing: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements after removing: " << t8_forest_has_subelements (forest) << std::endl;
   // Output to vtk.
   const char *prefix_without_hanging_nodes = "t8_without_hanging_nodes";
   t8_forest_write_vtk (forest, prefix_without_hanging_nodes);
@@ -98,7 +98,7 @@ main (int argc, char **argv)
 
   /* --- Discard subelements. --- */
   forest = t8_forest_discard_subelements (forest);
-  std::cout << "Subelements removed: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements removed: " << t8_forest_has_subelements (forest) << std::endl;
   // Now output to vtk.
   const char *prefix_removed_sub = "t8_removed_sub";
   t8_forest_write_vtk (forest, prefix_removed_sub);
