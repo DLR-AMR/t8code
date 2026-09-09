@@ -281,6 +281,17 @@ endif()
 
 if ( T8CODE_BUILD_TUTORIALS )
     add_subdirectory( ${CMAKE_CURRENT_LIST_DIR}/tutorials )
+    if ( CMAKE_SYSTEM_NAME MATCHES "Linux" ) # post-install tests currently limited to our main development OS
+        add_custom_target(post_install_tests # notice that add_test() would not be appropriate for this test
+            COMMAND rm -fR post_install_tests_dir # we perform the test out of this cmake tree
+            COMMAND mkdir post_install_tests_dir
+            COMMAND cd post_install_tests_dir && cmake ${CMAKE_INSTALL_PREFIX}/share/doc/T8CODE/cmake_examples/ && make VERBOSE=1 && make VERBOSE=1 tests
+            COMMAND rm -fR post_install_tests_dir
+            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+            VERBATIM
+            COMMENT "Post-install tests' target. It creates, uses, and deletes temporary directory 'post_install_tests_dir'. It assumes running under Linux."
+        )
+    endif()
 endif()
 
 if ( T8CODE_BUILD_EXAMPLES )
