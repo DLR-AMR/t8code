@@ -20,13 +20,18 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_stash.c
+/** \file t8_cmesh_stash.cxx
  * We define the data structures and routines for temporary storage before commit
  */
 
 #include <t8.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+
+#include <vector>
+
+T8_EXTERN_C_BEGIN ();
 
 void
 t8_stash_init (t8_stash_t *pstash)
@@ -338,4 +343,69 @@ t8_stash_is_equal (const t8_stash_t stash_a, const t8_stash_t stash_b)
   return (sc_array_is_equal (&stash_a->attributes, &stash_b->attributes)
           && sc_array_is_equal (&stash_a->classes, &stash_b->classes)
           && sc_array_is_equal (&stash_a->joinfaces, &stash_b->joinfaces));
+}
+
+T8_EXTERN_C_END ();
+
+std::vector<t8_eclass_t>
+t8_stash_extract_eclasses (const t8_stash_t stash)
+{
+  const t8_gloidx_t ntrees = stash->classes.elem_count;
+  std::vector<t8_eclass_t> eclasses (ntrees);
+
+#if T8_ENABLE_DEBUG
+  /* Sort the stash so that we can assert, that trees are consecutive and start at 0. */
+  t8_stash_class_sort (stash);
+#endif
+
+  for (t8_gloidx_t itree = 0; itree < ntrees; itree++) {
+    const t8_stash_class_struct_t *entry
+      = (const t8_stash_class_struct_t *) t8_sc_array_index_locidx (&stash->classes, itree);
+    eclasses[entry->id] = entry->eclass;
+    T8_ASSERTF (entry->id == itree, "Trees in cmesh are not consecutive or do not start with tree id 0.\n");
+  }
+
+  return eclasses;
+}
+
+std::vector<std::array<std::optional<std::tuple<t8_gloidx_t, int, int>>, T8_ECLASS_MAX_FACES>>
+t8_stash_extract_joined_faces (const t8_stash_t stash)
+{
+  const t8_gloidx_t ntrees = stash->classes.elem_count;
+  std::vector<std::array<std::optional<std::tuple<t8_gloidx_t, int, int>>, T8_ECLASS_MAX_FACES>> face_join (ntrees);
+
+  for (size_t ijoinface = 0; ijoinface < stash->joinfaces.elem_count; ijoinface++) {
+    const t8_stash_joinface_struct_t *entry
+      = (const t8_stash_joinface_struct_t *) t8_sc_array_index_locidx (&stash->joinfaces, ijoinface);
+    face_join[entry->id1][entry->face1].emplace (entry->id2, entry->face2, entry->orientation);
+    face_join[entry->id2][entry->face2].emplace (entry->id1, entry->face1, entry->orientation);
+  }
+
+  return face_join;
+}
+
+std::vector<std::vector<t8_3D_vec>>
+t8_stash_extract_vertices (const t8_stash_t stash)
+{
+  /* Reserve memory */
+  const t8_gloidx_t ntrees = stash->classes.elem_count;
+  std::vector<std::vector<t8_3D_vec>> vertices (ntrees);
+
+  /* Iterate over all attributes and filter by package id and attribute key */
+  for (size_t iattribute = 0; iattribute < stash->attributes.elem_count; iattribute++) {
+    const t8_stash_attribute_struct_t *entry
+      = (const t8_stash_attribute_struct_t *) t8_sc_array_index_locidx (&stash->attributes, iattribute);
+    if (entry->key == T8_CMESH_VERTICES_ATTRIBUTE_KEY && entry->package_id == t8_get_package_id ()) {
+      /* Make sure that vertices are 3D and copy them into output vector */
+      T8_ASSERT (entry->attr_size % (3 * sizeof (double)) == 0);
+      const size_t num_vertices = entry->attr_size / (3 * sizeof (double));
+      std::vector<t8_3D_vec> tree_vertices (num_vertices);
+      for (size_t ivertex = 0; ivertex < num_vertices; ++ivertex) {
+        memcpy (tree_vertices[ivertex].data (), entry->attr_data, entry->attr_size);
+      }
+      vertices[entry->id] = tree_vertices;
+    }
+  }
+
+  return vertices;
 }

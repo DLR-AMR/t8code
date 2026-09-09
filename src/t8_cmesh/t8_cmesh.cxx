@@ -576,6 +576,14 @@ t8_cmesh_set_join (t8_cmesh_t cmesh, const t8_gloidx_t gtree1, const t8_gloidx_t
   t8_stash_add_facejoin (cmesh->stash, gtree1, gtree2, face1, face2, orientation);
 }
 
+void
+t8_cmesh_activate_automatic_face_joining (t8_cmesh_t cmesh)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  cmesh->set_automatic_face_joining = 1;
+}
+
 /* Allocate a cmesh profile if not yet present and set default
  * values. */
 static void

@@ -27,12 +27,15 @@
 #include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_cmesh/t8_cmesh_helpers.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_helpers.hxx>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 
-/* This program tests the `t8_set_join_by_vertices` routine by reading in
- * a given mesh file, retrieving the vertices and building the face
- * connectivity. The results are then compared to the connectivity information from
- * `cmesh` object. If there a differences they are printed to stdout.
+/* This program tests the `t8_cmesh_join_by_vertices` routine by reading in a given
+ * mesh file, then building a second, fresh, uncommitted cmesh with the same tree classes and
+ * vertices but no explicit joins, and letting `t8_cmesh_join_by_vertices` derive its
+ * face connectivity from coordinates. The results are then compared to the connectivity
+ * information from the original `cmesh` object. If there are differences they are printed to
+ * stdout.
  */
 
 static void
@@ -42,41 +45,32 @@ test_with_cmesh (t8_cmesh_t cmesh)
 
   t8_global_productionf ("ntrees = %d.\n", ntrees);
 
-  /* Arrays for the face connectivity computations via vertices. */
-  double *all_verts = T8_ALLOC (double, ntrees *T8_ECLASS_MAX_CORNERS *T8_ECLASS_MAX_DIM);
-  t8_eclass_t *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
-
-  /* Retrieve all tree vertices and element classes and store them into arrays. */
+  /* Build a fresh, uncommitted cmesh with the same tree classes and vertices as `cmesh`, but
+   * no explicit joins. */
+  t8_cmesh_t cmesh2;
+  t8_cmesh_init (&cmesh2);
+  t8_cmesh_set_dimension (cmesh2, t8_cmesh_get_dimension (cmesh));
   for (t8_locidx_t itree = 0; itree < ntrees; itree++) {
-    t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, itree);
-    all_eclasses[itree] = eclass;
-
-    const double *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
-
-    const int nverts = t8_eclass_num_vertices[eclass];
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-          = vertices[T8_2D_TO_1D (nverts, T8_ECLASS_MAX_DIM, ivert, icoord)];
-      }
-    }
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, itree);
+    t8_cmesh_set_tree_class (cmesh2, itree, eclass);
+    t8_cmesh_set_tree_vertices (cmesh2, itree, t8_cmesh_get_tree_vertices (cmesh, itree),
+                                t8_eclass_num_vertices[eclass]);
   }
 
   /* Compute face connectivity. */
-  int *conn = NULL;
-  const int do_both_directions = 1;
-  t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts, &conn, do_both_directions);
+  t8_cmesh_join_by_vertices (cmesh2);
+  t8_cmesh_commit (cmesh2, sc_MPI_COMM_WORLD);
 
   /* Compare results with `t8_cmesh_get_face_neighbor`. */
   for (int this_itree = 0; this_itree < ntrees; this_itree++) {
-    const t8_eclass_t this_eclass = all_eclasses[this_itree];
+    const t8_eclass_t this_eclass = t8_cmesh_get_tree_class (cmesh, this_itree);
     const int this_nfaces = t8_eclass_num_faces[this_eclass];
 
     for (int this_iface = 0; this_iface < this_nfaces; this_iface++) {
-      const int conn_dual_itree = conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 0)];
-      const int conn_dual_iface = conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 1)];
-      const int conn_orientation = conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 2)];
+      int conn_dual_iface;
+      int conn_orientation;
+      const t8_locidx_t conn_dual_itree
+        = t8_cmesh_get_face_neighbor (cmesh2, this_itree, this_iface, &conn_dual_iface, &conn_orientation);
 
       int cmesh_dual_iface;
       int cmesh_orientation;
@@ -86,8 +80,7 @@ test_with_cmesh (t8_cmesh_t cmesh)
 
       /* If this is a connected domain boundary (e.g. periodic boundary) we skip particular test. */
       if (cmesh_dual_itree > -1) {
-        const t8_eclass_t this_eclass = all_eclasses[this_itree];
-        const t8_eclass_t dual_eclass = all_eclasses[cmesh_dual_itree];
+        const t8_eclass_t dual_eclass = t8_cmesh_get_tree_class (cmesh, cmesh_dual_itree);
 
         const int this_nface_verts = t8_eclass_num_vertices[t8_eclass_face_types[this_eclass][this_iface]];
         const int dual_nface_verts = t8_eclass_num_vertices[t8_eclass_face_types[dual_eclass][cmesh_dual_iface]];
@@ -147,11 +140,7 @@ test_with_cmesh (t8_cmesh_t cmesh)
     }
   }
 
-  if (conn != NULL) {
-    T8_FREE (conn);
-  }
-  T8_FREE (all_verts);
-  T8_FREE (all_eclasses);
+  t8_cmesh_destroy (&cmesh2);
 }
 
 int
@@ -164,12 +153,11 @@ main (int argc, char **argv)
 
   char help[BUFSIZ];
   /* long help message */
-  int sreturnB
-    = snprintf (help, BUFSIZ, "Validate `t8_cmesh_set_join_by_vertices` via given mesh file.\n\n%s\n", usage);
+  int sreturnB = snprintf (help, BUFSIZ, "Validate `t8_cmesh_join_by_vertices` via given mesh file.\n\n%s\n", usage);
 
   if (sreturnA > BUFSIZ || sreturnB > BUFSIZ) {
     /* The usage string or help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated usage string and help message to '%s' and '%s'\n", usage, help);
   }

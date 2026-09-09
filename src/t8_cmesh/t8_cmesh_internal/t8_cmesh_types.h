@@ -99,6 +99,10 @@ typedef struct t8_cmesh
   int face_knowledge; /**< If partitioned the level of face knowledge that is expected.
 */
 
+  int set_automatic_face_joining; /**< If nonzero, t8_cmesh_commit will automatically compute cmesh connectivity
+                                       based on vertex coordinates during commit. Only works on non-partitioned cmeshes.
+                                       \ref t8_cmesh_activate_automatic_face_joining */
+
   const t8_scheme_c *set_partition_scheme; /**< If the cmesh is to be partitioned according to a uniform level,
                                                 the scheme that describes the refinement pattern. */
   int8_t set_partition_level;  /**< Non-negative if the cmesh should be partitioned from an already existing cmesh

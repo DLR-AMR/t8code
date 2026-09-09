@@ -26,7 +26,9 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_cmesh/t8_cmesh_helpers.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_helpers.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
+#include <t8_geometry/t8_geometry_with_vertices.h>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <test/t8_gtest_macros.hxx>
@@ -35,11 +37,13 @@
 
 #include <p8est_geometry.h>
 
-/* In this file we test `t8_set_join_by_vertices` routine with a lot of example
- * meshes provided by t8code and p4est. The general idea is a follows: We first
- * retrieve all tree vertices from a given cmesh, construct the connectivity
- * array from these tree vertices with `t8_set_join_by_vertices` and then
- * compare the results again with the information given by `t8_cmesh_get_face_neighbor`.
+/* In this file we test `t8_cmesh_join_by_vertices` with a lot of example meshes
+ * provided by t8code and p4est. The general idea is as follows: We build a second, fresh,
+ * uncommitted cmesh with the same tree classes and vertices as a given (already committed)
+ * cmesh, but with no explicit joins, so that `t8_cmesh_join_by_vertices` has to
+ * derive all face connectivity itself (the coordinate-matching path, since no global vertex
+ * ids were ever set on the fresh cmesh). We then compare the result against the information
+ * given by `t8_cmesh_get_face_neighbor` on the original cmesh.
  */
 
 static void
@@ -47,41 +51,32 @@ test_with_cmesh (t8_cmesh_t cmesh)
 {
   const t8_locidx_t ntrees = t8_cmesh_get_num_local_trees (cmesh);
 
-  /* Arrays for the face connectivity computations via vertices. */
-  double *all_verts = T8_TESTSUITE_ALLOC (double, ntrees *T8_ECLASS_MAX_CORNERS *T8_ECLASS_MAX_DIM);
-  t8_eclass_t *all_eclasses = T8_TESTSUITE_ALLOC (t8_eclass_t, ntrees);
-
-  /* Retrieve all tree vertices and element classes and store them into arrays. */
+  /* Build a fresh, uncommitted cmesh with the same tree classes and vertices as `cmesh`, but
+   * no explicit joins. */
+  t8_cmesh_t cmesh2;
+  t8_cmesh_init (&cmesh2);
+  t8_cmesh_set_dimension (cmesh2, t8_cmesh_get_dimension (cmesh));
   for (t8_locidx_t itree = 0; itree < ntrees; itree++) {
     const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, itree);
-    all_eclasses[itree] = eclass;
-
-    const double *vertices = t8_cmesh_get_tree_vertices (cmesh, itree);
-
-    const int nverts = t8_eclass_num_vertices[eclass];
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-          = vertices[T8_2D_TO_1D (nverts, T8_ECLASS_MAX_DIM, ivert, icoord)];
-      }
-    }
+    t8_cmesh_set_tree_class (cmesh2, itree, eclass);
+    t8_cmesh_set_tree_vertices (cmesh2, itree, t8_cmesh_get_tree_vertices (cmesh, itree),
+                                t8_eclass_num_vertices[eclass]);
   }
 
   /* Compute face connectivity. */
-  int *conn = NULL;
-  const int do_both_directions = 1;
-  t8_cmesh_set_join_by_vertices (NULL, ntrees, all_eclasses, all_verts, &conn, do_both_directions);
+  t8_cmesh_join_by_vertices (cmesh2);
+  t8_cmesh_commit (cmesh2, sc_MPI_COMM_WORLD);
 
   /* Compare results with `t8_cmesh_get_face_neighbor`. */
   for (int this_itree = 0; this_itree < ntrees; this_itree++) {
-    const t8_eclass_t this_eclass = all_eclasses[this_itree];
+    const t8_eclass_t this_eclass = t8_cmesh_get_tree_class (cmesh, this_itree);
     const int this_nfaces = t8_eclass_num_faces[this_eclass];
 
     for (int this_iface = 0; this_iface < this_nfaces; this_iface++) {
-      const int conn_dual_itree = conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 0)];
-      const int conn_dual_iface = conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 1)];
-      const int conn_orientation = conn[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_FACES, 3, this_itree, this_iface, 2)];
+      int conn_dual_iface;
+      int conn_orientation;
+      const t8_locidx_t conn_dual_itree
+        = t8_cmesh_get_face_neighbor (cmesh2, this_itree, this_iface, &conn_dual_iface, &conn_orientation);
 
       int cmesh_dual_iface;
       int cmesh_orientation;
@@ -92,8 +87,7 @@ test_with_cmesh (t8_cmesh_t cmesh)
       /* Here we check for a connected domain boundary (e.g. periodic
        * boundary). In this case we skip the test. */
       if (cmesh_dual_itree > -1) {
-        const t8_eclass_t this_eclass = all_eclasses[this_itree];
-        const t8_eclass_t dual_eclass = all_eclasses[cmesh_dual_itree];
+        const t8_eclass_t dual_eclass = t8_cmesh_get_tree_class (cmesh, cmesh_dual_itree);
 
         const int this_nface_verts = t8_eclass_num_vertices[t8_eclass_face_types[this_eclass][this_iface]];
         const int dual_nface_verts = t8_eclass_num_vertices[t8_eclass_face_types[dual_eclass][cmesh_dual_iface]];
@@ -143,9 +137,7 @@ test_with_cmesh (t8_cmesh_t cmesh)
     }
   }
 
-  T8_FREE (conn);
-  T8_TESTSUITE_FREE (all_verts);
-  T8_TESTSUITE_FREE (all_eclasses);
+  t8_cmesh_destroy (&cmesh2);
 }
 
 TEST (t8_cmesh_set_join_by_vertices, test_cmesh_set_join_by_vertices)
@@ -364,3 +356,71 @@ TEST_P (t8_cmesh_set_join_by_vertices_class, test_cmesh_set_join_by_vertices_par
 /* Test all cmeshes over all different inputs we get through their id */
 INSTANTIATE_TEST_SUITE_P (t8_cmesh_set_join_by_vertices, t8_cmesh_set_join_by_vertices_class, AllCmeshsParam,
                           pretty_print_base_example);
+
+/* This test exercises the id-based fast path of `t8_cmesh_join_by_vertices`, which the tests
+ * above never reach (they always build a cmesh with no global vertex ids set, so the
+ * coordinate-fallback path is taken instead). Requesting vertex connectivity makes
+ * `t8_cmesh_commit` derive global vertex ids first; the subsequent automatic-face-joining step
+ * then finds those ids in the stash and matches faces by id instead of by coordinate. */
+TEST (t8_cmesh_set_join_by_vertices, test_automatic_face_joining_with_ids)
+{
+  /* Two quads sharing one edge: tree 0 spans [0,1]x[0,1], tree 1 spans [1,2]x[0,1]. */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
+
+  const double vertices0[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };
+  const double vertices1[12] = { 1, 0, 0, 2, 0, 0, 1, 1, 0, 2, 1, 0 };
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 4);
+
+  t8_cmesh_enable_vertex_conn (cmesh);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+
+  /* Tree 0's face 1 (x=1 side, vertices 1 and 3) connects to tree 1's face 0 (x=1 side, vertices 0 and 2). */
+  int dual_face, orientation;
+  const t8_locidx_t dual_tree = t8_cmesh_get_face_neighbor (cmesh, 0, 1, &dual_face, &orientation);
+  EXPECT_EQ (dual_tree, 1);
+  EXPECT_EQ (dual_face, 0);
+
+  /* Global vertex ids should have been derived automatically: 6 unique corners total. */
+  EXPECT_EQ (t8_cmesh_get_num_global_vertices (cmesh), 6);
+  EXPECT_EQ (t8_cmesh_get_global_vertex_of_tree (cmesh, 0, 1), t8_cmesh_get_global_vertex_of_tree (cmesh, 1, 0));
+  EXPECT_EQ (t8_cmesh_get_global_vertex_of_tree (cmesh, 0, 3), t8_cmesh_get_global_vertex_of_tree (cmesh, 1, 2));
+
+  t8_cmesh_destroy (&cmesh);
+}
+
+/* Activating only automatic face joining (without requesting vertex connectivity) must still
+ * join faces correctly via the coordinate fallback, but must not expose any global vertex ids on
+ * the committed cmesh: the two features are independent, and the id-based speedup taken
+ * internally by `t8_cmesh_join_by_vertices` is not a user-visible side effect. */
+TEST (t8_cmesh_set_join_by_vertices, test_automatic_face_joining_without_vertex_conn)
+{
+  /* Two quads sharing one edge: tree 0 spans [0,1]x[0,1], tree 1 spans [1,2]x[0,1]. */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+
+  t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
+  t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
+
+  const double vertices0[12] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0 };
+  const double vertices1[12] = { 1, 0, 0, 2, 0, 0, 1, 1, 0, 2, 1, 0 };
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices0, 4);
+  t8_cmesh_set_tree_vertices (cmesh, 1, vertices1, 4);
+
+  t8_cmesh_activate_automatic_face_joining (cmesh);
+  t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
+
+  int dual_face, orientation;
+  const t8_locidx_t dual_tree = t8_cmesh_get_face_neighbor (cmesh, 0, 1, &dual_face, &orientation);
+  EXPECT_EQ (dual_tree, 1);
+  EXPECT_EQ (dual_face, 0);
+
+  EXPECT_EQ (t8_cmesh_get_vertex_conn_status (cmesh), 0);
+
+  t8_cmesh_destroy (&cmesh);
+}

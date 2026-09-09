@@ -22,7 +22,6 @@
 
 #include <t8_fortran_interface.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_io.h>

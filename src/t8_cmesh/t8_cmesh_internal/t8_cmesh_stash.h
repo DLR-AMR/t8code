@@ -250,4 +250,35 @@ t8_stash_is_equal (t8_stash_t stash_a, t8_stash_t stash_b);
 
 T8_EXTERN_C_END ();
 
-#endif /* !T8_CMESH_STASH_H */
+#ifdef __cplusplus
+
+#include <vector>
+#include <tuple>
+#include <optional>
+#include <t8_types/t8_vec.hxx>
+
+/** Reads the eclasses from a stash and returns them as a vector in tree id order.
+ * \param [in] stash    A stash.
+ * \return              The eclasses.
+ */
+std::vector<t8_eclass_t>
+t8_stash_extract_eclasses (const t8_stash_t stash);
+
+/** Determine which (tree, face) pairs have an explicit join in a stash.
+ * \param [in] stash    A stash.
+ * \return              A 2D vector [global tree id][face] filled with a tuple [other tree id][other face][orientation].
+ *                      If the optional is empty, the face is not joined.
+ */
+std::vector<std::array<std::optional<std::tuple<t8_gloidx_t, int, int>>, T8_ECLASS_MAX_FACES>>
+t8_stash_extract_joined_faces (const t8_stash_t stash);
+
+/** Reads all vertices in the cmesh stash and returns them in a 2D vector in tree id order.
+ * \param [in] stash    A stash.
+ * \return              A 2D vector containing all vertices. May be empty if no vertices were set.
+ */
+std::vector<std::vector<t8_3D_vec>>
+t8_stash_extract_vertices (const t8_stash_t stash);
+
+#endif /* __cplusplus */
+
+#endif /* T8_CMESH_STASH_H */

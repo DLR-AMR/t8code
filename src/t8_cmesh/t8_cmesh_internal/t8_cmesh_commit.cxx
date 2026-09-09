@@ -36,6 +36,8 @@
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_helpers.hxx>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_helpers.hxx>
 
 /**
  * A struct to hold the information about a ghost facejoin.
@@ -593,6 +595,21 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   } /* End set_from != NULL */
   else {
+    /* Automatically compute global vertices if requested. */
+    if (cmesh->vertex_connectivity != nullptr
+        && cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::INITIALIZED) {
+      t8_debugf ("Vertex connectivity requested but no global vertices were set. Global vertices will be computed "
+                 "automatically.\n This can take some time on big cmeshes.\n");
+      t8_cmesh_vertex_conn_set_vertices_by_coordinates (cmesh);
+    }
+
+    /* If requested, automatically add face connectivity to stash before committing from it. */
+    if (cmesh->set_automatic_face_joining) {
+      t8_debugf ("Automatic face joining was requested. Connectivity will be computed "
+                 "automatically.\n This can take some time on big cmeshes.\n");
+      t8_cmesh_join_by_vertices (cmesh);
+    }
+
     t8_cmesh_commit_from_stash (cmesh, comm);
   }
   cmesh->committed = 1;
@@ -610,12 +627,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
    * and if the tree_to_vertex instance is not empty.
    */
   if (cmesh->vertex_connectivity != nullptr) {
-    if (cmesh->vertex_connectivity->get_state () == t8_cmesh_vertex_connectivity::state::TREE_TO_VERTEX_VALID) {
-      cmesh->vertex_connectivity->build_vertex_to_tree ();
-    }
-    else {
-      SC_ABORTF ("Vertex connectivity was requested, but no global vertex ids were provided.\n");
-    }
+    if (cmesh->set_partition)
+      SC_ABORTF ("ERROR: Vertex connectivity not available with partitioned cmeshes.\n");
+    cmesh->vertex_connectivity->build_vertex_to_tree ();
   }
 
 #if T8_ENABLE_DEBUG

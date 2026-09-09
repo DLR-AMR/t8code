@@ -355,8 +355,18 @@ t8_cmesh_set_attribute_gloidx_array (t8_cmesh_t cmesh, t8_gloidx_t gtree_id, int
 void
 t8_cmesh_set_join (t8_cmesh_t cmesh, t8_gloidx_t gtree1, t8_gloidx_t gtree2, int face1, int face2, int orientation);
 
+/** Activate automatic derivation of face connectivity
+ *  from tree corner coordinates during \ref t8_cmesh_commit.
+ *  Already set connectivity will be respected.
+ *  Will be slower than setting the connectivity explicitly and can take some
+ *  time on bigger cmeshes.
+ * \param [in,out] cmesh   The cmesh to be updated. Must not be committed.
+ */
+void
+t8_cmesh_activate_automatic_face_joining (t8_cmesh_t cmesh);
+
 /** Enable or disable profiling for a cmesh. If profiling is enabled, runtimes
- * and statistics are collected during cmesh_commit.
+ *  and statistics are collected during cmesh_commit.
  * \param [in,out] cmesh          The cmesh to be updated.
  * \param [in]     set_profiling  If true, profiling will be enabled, if false
  *                                disabled.
@@ -485,11 +495,8 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
  * \param[in] mode The load mode to use, see \ref t8_load_mode_t.
  * \param[in] procs_per_node The number of processes per node, only relevant in JUQUEEN mode.
  *
-<<<<<<< HEAD:src/t8_cmesh.h
-=======
  * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
  *                  Calling it will thus result in an error.
->>>>>>> main:src/t8_cmesh/t8_cmesh.h
  * \note \a procs_per_node is only relevant in mode==JUQUEEN. If \a num_files = 1 a replicated cmesh is constructed.
  */
 t8_cmesh_t

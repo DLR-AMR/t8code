@@ -23,7 +23,6 @@
 #include <cmath>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_cmesh/t8_cmesh_helpers.h>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
@@ -2937,16 +2936,11 @@ t8_cmesh_new_quadrangulated_disk (t8_cmesh_t cmesh, const double radius, sc_MPI_
    * element sizes. */
   const double center_square_tuning = 1.2;
 
-  /* Arrays for the face connectivity computations via vertices. */
-  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-  t8_eclass_t all_eclasses[ntrees];
-
   t8_cmesh_register_geometry<t8_geometry_quadrangulated_disk> (cmesh);
 
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
     t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
-    all_eclasses[itree] = T8_ECLASS_QUAD;
   }
 
   /* Vertices of upper right quarter of the disk. */
@@ -2980,17 +2974,6 @@ t8_cmesh_new_quadrangulated_disk (t8_cmesh_t cmesh, const double radius, sc_MPI_
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 0, ivert, icoord)]
-          = rot_vertices_mid[ivert][icoord];
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 1, ivert, icoord)]
-          = rot_vertices_top[ivert][icoord];
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 2, ivert, icoord)]
-          = rot_vertices_bot[ivert][icoord];
-      }
-    }
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
         rot_vertices_mid[ivert][icoord] = radius * rot_vertices_mid[ivert][icoord];
         rot_vertices_top[ivert][icoord] = radius * rot_vertices_top[ivert][icoord];
         rot_vertices_bot[ivert][icoord] = radius * rot_vertices_bot[ivert][icoord];
@@ -3005,7 +2988,7 @@ t8_cmesh_new_quadrangulated_disk (t8_cmesh_t cmesh, const double radius, sc_MPI_
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, nullptr, 0);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -3024,14 +3007,9 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (t8_cmesh_t cmesh, const 
   const int ntrees = 8; /* Number of cmesh elements resp. trees. */
   const int nverts = 3; /* Number of cmesh element vertices. */
 
-  /* Arrays for the face connectivity computations via vertices. */
-  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-  t8_eclass_t all_eclasses[ntrees];
-
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
     t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_TRIANGLE);
-    all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
   double const vertices_top[3][3] = { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } };
@@ -3053,13 +3031,6 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (t8_cmesh_t cmesh, const 
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-          = rot_vertices_top[ivert][icoord];
-      }
-    }
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
         rot_vertices_top[ivert][icoord] = radius * rot_vertices_top[ivert][icoord];
       }
     }
@@ -3067,13 +3038,6 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (t8_cmesh_t cmesh, const 
     t8_cmesh_set_tree_vertices (cmesh, itree, (double *) rot_vertices_top, nverts);
 
     ++itree;
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-          = rot_vertices_bot[ivert][icoord];
-      }
-    }
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
@@ -3085,7 +3049,7 @@ t8_cmesh_new_triangulated_spherical_surface_octahedron (t8_cmesh_t cmesh, const 
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, nullptr, 0);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -3104,14 +3068,9 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (t8_cmesh_t cmesh, const
   const int ntrees = 20; /* Number of cmesh elements resp. trees, i.e. number of triangles in an icosahedron. */
   const int nverts = 3;  /* Number of cmesh element vertices,. */
 
-  /* Arrays for the face connectivity computations via vertices. */
-  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-  t8_eclass_t all_eclasses[ntrees];
-
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
     t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_TRIANGLE);
-    all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
   const double alpha = 63.43494882292201 / 180.0 * M_PI; /* Icosahedral angle. */
@@ -3185,36 +3144,6 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (t8_cmesh_t cmesh, const
       belly_bot[6 + icoord] = rot_vertices_top[3 * 2 + icoord];
     }
 
-    // Set the tree vertices and gather all vertices, so that the facejoins can
-    // in the end be deduced from global vertices.
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 1, ivert, icoord)]
-          = rot_vertices_top[3 * ivert + icoord];
-      }
-    }
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 2, ivert, icoord)]
-          = belly_top[3 * ivert + icoord];
-      }
-    }
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 3, ivert, icoord)]
-          = belly_bot[3 * ivert + icoord];
-      }
-    }
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 4, ivert, icoord)]
-          = rot_vertices_bot[3 * ivert + icoord];
-      }
-    }
-
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
         rot_vertices_top[ivert * 3 + icoord] = radius * rot_vertices_top[ivert * 3 + icoord];
@@ -3231,7 +3160,7 @@ t8_cmesh_new_triangulated_spherical_surface_icosahedron (t8_cmesh_t cmesh, const
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, nullptr, 0);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -3253,14 +3182,9 @@ t8_cmesh_new_triangulated_spherical_surface_cube (t8_cmesh_t cmesh, const double
   const int ntrees = nface_rot * ncube_rot;  // Number of cmesh elements resp. trees.
   const int nverts = 3;                      // Number of cmesh element (triangle) vertices.
 
-  // Arrays for the face connectivity computations via vertices.
-  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-  t8_eclass_t all_eclasses[ntrees];
-
   // Defitition of the tree class.
   for (int itree = 0; itree < ntrees; itree++) {
     t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_TRIANGLE);
-    all_eclasses[itree] = T8_ECLASS_TRIANGLE;
   }
 
   const double r = 1.0 / std::sqrt (3.0);
@@ -3302,13 +3226,6 @@ t8_cmesh_new_triangulated_spherical_surface_cube (t8_cmesh_t cmesh, const double
 
       for (int ivert = 0; ivert < nverts; ivert++) {
         for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-            = cube_rot_vertices[ivert][icoord];
-        }
-      }
-
-      for (int ivert = 0; ivert < nverts; ivert++) {
-        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
           cube_rot_vertices[ivert][icoord] = radius * cube_rot_vertices[ivert][icoord];
         }
       }
@@ -3320,7 +3237,7 @@ t8_cmesh_new_triangulated_spherical_surface_cube (t8_cmesh_t cmesh, const double
   }
 
   // Face connectivity.
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, nullptr, 0);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
 
   // Commit the mesh.
   t8_cmesh_commit (cmesh, comm);
@@ -3339,14 +3256,9 @@ t8_cmesh_new_quadrangulated_spherical_surface (t8_cmesh_t cmesh, const double ra
   const int ntrees = 6; /* Number of cmesh elements resp. trees. */
   const int nverts = 4; /* Number of cmesh element vertices. */
 
-  /* Arrays for the face connectivity computations via vertices. */
-  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-  t8_eclass_t all_eclasses[ntrees];
-
   /* Defitition of the tree class. */
   for (int itree = 0; itree < 6; itree++) {
     t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
-    all_eclasses[itree] = T8_ECLASS_QUAD;
   }
 
   const double r = 1.0 / std::sqrt (3.0);
@@ -3374,13 +3286,6 @@ t8_cmesh_new_quadrangulated_spherical_surface (t8_cmesh_t cmesh, const double ra
 
     for (int ivert = 0; ivert < nverts; ivert++) {
       for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-        all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-          = rot_vertices[ivert][icoord];
-      }
-    }
-
-    for (int ivert = 0; ivert < nverts; ivert++) {
-      for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
         rot_vertices[ivert][icoord] = radius * rot_vertices[ivert][icoord];
       }
     }
@@ -3389,7 +3294,7 @@ t8_cmesh_new_quadrangulated_spherical_surface (t8_cmesh_t cmesh, const double ra
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, nullptr, 0);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -3431,16 +3336,11 @@ t8_cmesh_new_spherical_shell (t8_cmesh_t cmesh, t8_eclass_t eclass, t8_geometry_
   /* clang-format off */
   const int ntrees = t8_forest_get_local_num_leaf_elements (forest) * num_layers; /* Number of 3D cmesh elements resp. trees. */
   const int nverts = t8_eclass_num_vertices[eclass]; /* Number of vertices per cmesh element. */
-
-  /* Arrays for the face connectivity computations via vertices. */
-  double *all_verts = T8_ALLOC (double, ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM);
-  t8_eclass_t *all_eclasses = T8_ALLOC (t8_eclass_t, ntrees);
   /* clang-format on */
 
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
     t8_cmesh_set_tree_class (cmesh, itree, eclass);
-    all_eclasses[itree] = eclass;
   }
 
   /* Tree index of the to-be-created 3D cmesh. */
@@ -3480,27 +3380,6 @@ t8_cmesh_new_spherical_shell (t8_cmesh_t cmesh, t8_eclass_t eclass, t8_geometry_
       /* Transfer the coordinates from the 2D forest mesh to the cmesh via stacking 3D elements along radial direction. */
       for (int istack = 0; istack < num_layers; istack++) {
         {
-          const double iscale = 1.0 + istack / num_layers;
-          const double oscale = 1.0 + (istack + 1) / num_layers;
-
-          double elem_vertices_3d[T8_ECLASS_MAX_CORNERS * 3];
-          for (int ivert = 0; ivert < t8_eclass_num_vertices[eclass_2d]; ivert++) {
-            for (int i = 0; i < 3; i++) {
-              elem_vertices_3d[ivert * 3 + i] = iscale * elem_vertices_2d[ivert * 3 + i];
-              elem_vertices_3d[t8_eclass_num_vertices[eclass] / 2 * 3 + ivert * 3 + i]
-                = oscale * elem_vertices_2d[ivert * 3 + i];
-            }
-          }
-
-          for (int ivert = 0; ivert < nverts; ivert++) {
-            for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-              all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-                = elem_vertices_3d[ivert * 3 + icoord];
-            }
-          }
-        }
-
-        {
           const double iscale = inner_radius + istack * shell_thickness / num_layers;
           const double oscale = inner_radius + (istack + 1) * shell_thickness / num_layers;
 
@@ -3526,11 +3405,7 @@ t8_cmesh_new_spherical_shell (t8_cmesh_t cmesh, t8_eclass_t eclass, t8_geometry_
   sc_MPI_Comm_free (&local_comm);
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, nullptr, 0);
-
-  /* Cleanup. */
-  T8_FREE (all_verts);
-  T8_FREE (all_eclasses);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -3582,14 +3457,9 @@ t8_cmesh_new_cubed_spherical_shell (t8_cmesh_t cmesh, const double inner_radius,
   const int ntrees = nrotas * num_trees * num_trees * num_layers; /* Number of 3D cmesh elements resp. trees. */
   const int nverts = t8_eclass_num_vertices[T8_ECLASS_HEX]; /* Number of vertices per cmesh element. */
 
-  /* Arrays for the face connectivity computations via vertices. */
-  double *all_verts = T8_ALLOC(double, ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM);
-  t8_eclass_t *all_eclasses = T8_ALLOC(t8_eclass_t, ntrees);
-
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
     t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_HEX);
-    all_eclasses[itree] = T8_ECLASS_HEX;
   }
 
   const double outer_radius = inner_radius + shell_thickness;
@@ -3640,15 +3510,6 @@ t8_cmesh_new_cubed_spherical_shell (t8_cmesh_t cmesh, const double inner_radius,
             t8_mat_mult_vec (rot_mat, &(hex_vertices[ivert][0]), &(rot_vertices[ivert][0]));
           }
 
-          t8_geom_compute_linear_geometry (T8_ECLASS_HEX, (double *) rot_vertices, (double *) ref_coords, nverts, (double *) tile_vertices);
-
-          for (int ivert = 0; ivert < nverts; ivert++) {
-            for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-              all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree, ivert, icoord)]
-                = tile_vertices[ivert][icoord];
-            }
-          }
-
           for (int ivert = 0; ivert < nverts/2; ivert++) {
             for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
               rot_vertices[ivert][icoord] = inner_radius * rot_vertices[ivert][icoord];
@@ -3672,10 +3533,7 @@ t8_cmesh_new_cubed_spherical_shell (t8_cmesh_t cmesh, const double inner_radius,
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, nullptr, 0);
-
-  T8_FREE (all_verts);
-  T8_FREE (all_eclasses);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
@@ -3712,16 +3570,11 @@ t8_cmesh_new_cubed_sphere (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm co
    * element sizes. */
   const double center_hex_tuning = 1.2;
 
-  /* Arrays for the face connectivity computations via vertices. */
-  double all_verts[ntrees * T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-  t8_eclass_t all_eclasses[ntrees];
-
   t8_cmesh_register_geometry<t8_geometry_cubed_sphere> (cmesh);
 
   /* Defitition of the tree class. */
   for (int itree = 0; itree < ntrees; itree++) {
     t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_HEX);
-    all_eclasses[itree] = T8_ECLASS_HEX;
   }
 
   const double vertices_mid[8][3] = { { 0.0, 0.0, 0.0 },
@@ -3793,19 +3646,6 @@ t8_cmesh_new_cubed_sphere (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm co
 
       for (int ivert = 0; ivert < nverts; ivert++) {
         for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
-          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 0, ivert, icoord)]
-            = rot_vertices_mid[ivert][icoord];
-          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 1, ivert, icoord)]
-            = rot_vertices_top[ivert][icoord];
-          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 2, ivert, icoord)]
-            = rot_vertices_bot[ivert][icoord];
-          all_verts[T8_3D_TO_1D (ntrees, T8_ECLASS_MAX_CORNERS, T8_ECLASS_MAX_DIM, itree + 3, ivert, icoord)]
-            = rot_vertices_zen[ivert][icoord];
-        }
-      }
-
-      for (int ivert = 0; ivert < nverts; ivert++) {
-        for (int icoord = 0; icoord < T8_ECLASS_MAX_DIM; icoord++) {
           rot_vertices_mid[ivert][icoord] = radius * rot_vertices_mid[ivert][icoord];
           rot_vertices_top[ivert][icoord] = radius * rot_vertices_top[ivert][icoord];
           rot_vertices_bot[ivert][icoord] = radius * rot_vertices_bot[ivert][icoord];
@@ -3823,7 +3663,7 @@ t8_cmesh_new_cubed_sphere (t8_cmesh_t cmesh, const double radius, sc_MPI_Comm co
   }
 
   /* Face connectivity. */
-  t8_cmesh_set_join_by_vertices (cmesh, ntrees, all_eclasses, all_verts, nullptr, 0);
+  t8_cmesh_activate_automatic_face_joining (cmesh);
 
   /* Commit the mesh */
   t8_cmesh_commit (cmesh, comm);
