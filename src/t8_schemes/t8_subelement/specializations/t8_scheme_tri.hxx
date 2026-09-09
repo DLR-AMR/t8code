@@ -138,11 +138,7 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
   static int
   subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
   {
-    int num_hanging_faces = 0;
-    /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
-    for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE]; ++i) {
-      num_hanging_faces += (subelement_type & (1 << i)) >> i;
-    }
+    const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     return num_hanging_faces + 1;
   }
 
@@ -159,8 +155,9 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
                            int subelem_type) const noexcept
   {
     const TSubelementType *element = this->as_subelement (elem);
-    TSubelementType **subelements = reinterpret_cast<TSubelementType **> (c);
+    TSubelementType **c_as_subelements = reinterpret_cast<TSubelementType **> (c);
     const int num_subelements = this->subelement_get_num_children (elem, subelem_type);
+    T8_ASSERT (length == num_subelements);
 
     T8_ASSERT (subelem_type >= 1 && subelem_type <= T8_TRI_MAX_SUBELEMENT_TYPE);
     T8_ASSERT (!this->element_is_subelement (elem));
@@ -176,9 +173,9 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
     /* Setting the parameter values for different subelements. */
     for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
       underlying_scheme.element_copy (this->subelement_to_standalone (element),
-                                      this->subelement_to_standalone (subelements[sub_id_counter]));
-      subelements[sub_id_counter]->subelement_type = subelem_type;
-      subelements[sub_id_counter]->subelement_id = sub_id_counter;
+                                      this->subelement_to_standalone (c_as_subelements[sub_id_counter]));
+      c_as_subelements[sub_id_counter]->subelement_type = subelem_type;
+      c_as_subelements[sub_id_counter]->subelement_id = sub_id_counter;
       T8_ASSERT (this->element_is_valid (c[sub_id_counter]));
     }
   }
@@ -233,25 +230,24 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
   /** Compute the integer coordinates of the three vertices of a triangular subelement.
    *
    * For this, we first define the order of the subelements and the subelement vertices:
-   * All subelements of a transition cell share one common vertex, which we define as \a m_c, and each subelement is
-   * spanned by \a m_c together with two consecutive vertices of a \b path along the boundary of the
+   * All subelements of a transition cell share one common vertex, which we define as \c m_c, and each subelement is
+   * spanned by \c m_c together with two consecutive vertices of a \b path along the boundary of the
    * parent triangle. This defines the numbering completely:
-   *   - The \a main \a face is the lowest-indexed hanging face \a fA.
-   *   - The common point \a m_c is the midpoint of the main face. Every subelement contains it.
-   *   - Let \a v_a < \a v_b be the two end vertices of the main face fA. The \b path walks the parent
-   *      boundary from \a v_a to \a v_b the way that does not traverse the main face fA (so the other way around
-   *      such that we go over all other faces). That walk passes through exactly one other vertex, \a v_c, and 
-   *      traverses exactly two faces: the edge (\a v_a, \a v_c) and the edge (\a v_c, \a v_b). The midpoint of
+   *   - The \c main \c face is the lowest-indexed hanging face \c fA.
+   *   - The common point \c m_c is the midpoint of the main face. Every subelement contains it.
+   *   - Let \c v_a < \c v_b be the two end vertices of the main face fA. The \b path walks the parent
+   *      boundary from \c v_a to \c v_b the way that does not traverse the main face fA (so the other way around
+   *      such that we go over all other faces). That walk passes through exactly one other vertex, \c v_c, and 
+   *      traverses exactly two faces: the edge (\c v_a, \c v_c) and the edge (\c v_c, \c v_b). The midpoint of
    *      each traversed face that is hanging is inserted at its position on the walk.
-   *   - The subelement with id \a i is then defined through the vertices:
-   *      vertex 0 = \a m_c, vertex 1 = path[ \a i ], vertex 2 = path[ \a i+1 ].
+   *   - The subelement with id \c i is then defined through the vertices:
+   *      vertex 0 = \c m_c, vertex 1 = path[ \c i ], vertex 2 = path[ \c i+1 ].
    *
    * Since the path has (number of hanging faces + 2) points, there are (number of hanging faces + 1)
    * subelements, which matches \ref element_get_num_children. No case distinction is needed:
    * one hanging face yields a path of three points, two hanging faces a path of four.
    *
    * \verbatim
-        f2 hanging                                f2 hanging
         one hanging face (here f2)            two hanging faces (here f1 and f2) (not nicely displayed)
 
                   v2                                      v2
@@ -264,7 +260,7 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
           v0 ---- M2----- v1                      v0 ---- M2------ v1
                   f2                                      f2
 
-        main face = f2, \a m_c = M2            main face = f1 (lowest), \a m_c = M1
+        main face = f2, m_c = M2            main face = f1 (lowest), m_c = M1
         path: v0 -> v2 -> v1                   path: v0 -> M2 -> v1 -> v2
    * \endverbatim
    *

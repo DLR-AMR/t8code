@@ -33,6 +33,7 @@
 #include <t8_eclass/t8_eclass.h>
 #include "../t8_subelement_scheme.hxx"
 #include <array>
+#include <bit>
 
 /** Maximum subelement type. The subelement type ranges from 0 (=no subelement, normal standalone quad) to 14. 
 * The type 15 would mean in binary representation that all faces are hanging but in this case, the element just get
@@ -149,11 +150,7 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
   static int
   subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
   {
-    int num_hanging_faces = 0;
-    /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
-    for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++i) {
-      num_hanging_faces += (subelement_type & (1 << i)) >> i;
-    }
+    const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     // Each original face "has" one triangular subelement, each split face two.
     return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
   }
@@ -183,8 +180,9 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
                            int subelem_type) const noexcept
   {
     const TSubelementType *parent_subelement = this->as_subelement (elem);
-    TSubelementType **children_subelements = reinterpret_cast<TSubelementType **> (c);
+    TSubelementType **c_as_subelements = reinterpret_cast<TSubelementType **> (c);
     const int num_subelements = this->subelement_get_num_children (elem, subelem_type);
+    T8_ASSERT (length == num_subelements);
 
     T8_ASSERT (subelem_type >= 1 && subelem_type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
     T8_ASSERT (!this->element_is_subelement (elem));
@@ -200,9 +198,9 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     /* Setting the parameter values for different subelements. */
     for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
       TUnderlyingScheme::element_copy (this->subelement_to_standalone (parent_subelement),
-                                       this->subelement_to_standalone (children_subelements[sub_id_counter]));
-      children_subelements[sub_id_counter]->subelement_type = subelem_type;
-      children_subelements[sub_id_counter]->subelement_id = sub_id_counter;
+                                       this->subelement_to_standalone (c_as_subelements[sub_id_counter]));
+      c_as_subelements[sub_id_counter]->subelement_type = subelem_type;
+      c_as_subelements[sub_id_counter]->subelement_id = sub_id_counter;
       T8_ASSERT (this->element_is_valid (c[sub_id_counter]));
     }
   }
@@ -251,9 +249,6 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     return ((subelem_type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] - 1) - iface)) & 1u) != 0u;
   }
 
-  /** For each parent face, its two vertices in clockwise order. */
-  static constexpr int face_to_clockwise_vertex[4][2] = { { 0, 2 }, { 3, 1 }, { 1, 0 }, { 2, 3 } };
-
   /** Compute the integer coordinates of all three vertices of a triangular subelement.
    * We use the following order of subelements in a quad: 
    * Subelement ids are counted clockwise, starting with the (lower) left subelement with id 0.
@@ -286,6 +281,11 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     const int len = this->parent_element_get_len (subelement);
     const int origin[2] = { subelement->element.coords[0], subelement->element.coords[1] };
 
+    /** The vertex offsets of a quad (as multiples of its edge length). */
+    static constexpr int vertex_offset[4][2] = { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } };
+    /** For each parent face, its two vertices in clockwise order. */
+    static constexpr int face_to_clockwise_vertex[4][2] = { { 0, 2 }, { 3, 1 }, { 1, 0 }, { 2, 3 } };
+
     // Fill location information.
     const std::array<int, 3> location = element_get_location_of_subelement (elem);
     const int face_number = location[0];
@@ -295,8 +295,6 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     T8_ASSERT (face_number == 0 || face_number == 1 || face_number == 2 || face_number == 3);
     T8_ASSERT ((split == 0 && sub_face_id == 0) || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
 
-    /** The vertex offsets of a quad (as multiples of its edge length). */
-    static constexpr int vertex_offset[4][2] = { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } };
     /** Function lambda to get the vertex coordinates of the parent element. */
     const auto get_vertex_coords_parent = [&] (const int vertex) {
       return std::array<int, 2> { origin[0] + len * vertex_offset[vertex][0],

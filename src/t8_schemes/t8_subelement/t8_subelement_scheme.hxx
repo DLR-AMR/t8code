@@ -273,6 +273,8 @@ struct t8_subelement_scheme_common:
 
   /** Check if two elements are equal. 
   * \note For subelements, it is only checked that the type is equal and not the id!!
+  * (This is because the linear id is the same for all subelements and sometimes, the wrong subelement is found. 
+  * At the moment, this is not a problem.)
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            true if the elements are equal, false if they are not equal
