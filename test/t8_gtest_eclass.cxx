@@ -21,13 +21,14 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_types/t8_vec.h>
 #include <test/t8_gtest_macros.hxx>
 
-class gtest_eclass: public testing::TestWithParam<t8_eclass_t> {
+struct gtest_eclass: public testing::TestWithParam<t8_eclass_t>
+{
  protected:
   void
   SetUp () override
@@ -93,7 +94,9 @@ TEST_P (gtest_eclass, eclass_face_orientation)
     /* Compute the normal of each face and the signed distance between the normal and the vector
      * from vertex 0 to the centroid. If the sign is positive the face is 0 oriented, 
      * ow it is 1 oriented. */
-    t8_cmesh_t cmesh = t8_cmesh_new_from_class ((t8_eclass_t) ieclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, (t8_eclass_t) ieclass, sc_MPI_COMM_WORLD);
     const double *vertices = t8_cmesh_get_tree_vertices (cmesh, 0);
     for (int iface = 0; iface < num_faces; iface++) {
       /* clang-format off */

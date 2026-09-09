@@ -23,7 +23,7 @@
 /* In this test we create an occ gp_Pnt object.
  * The purpose of this test is to check whether t8code successfully links
  * against occ.
- * If t8code was not configured with --enable-occ then this test
+ * If t8code was not configured with -DT8CODE_ENABLE_OCC=ON then this test
  * does nothing and is always passed.
  */
 

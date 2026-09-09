@@ -21,14 +21,15 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <sc_functions.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
-class get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>> {
+struct get_linear_id: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
+{
  protected:
   void
   SetUp () override
@@ -83,7 +84,8 @@ TEST_P (get_linear_id, uniform_forest)
   const int maxlvl = 6;
 #endif
   /* Construct a forest with a single element of the current class*/
-  cmesh = t8_cmesh_new_from_class (eclass, comm);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_from_class (cmesh, eclass, comm);
   t8_cmesh_ref (cmesh);
   forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, comm);
   const t8_scheme *tc_scheme = t8_forest_get_scheme (forest);

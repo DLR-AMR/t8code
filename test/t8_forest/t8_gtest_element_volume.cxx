@@ -22,7 +22,7 @@
 
 #include <sc_functions.h>
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.h>
@@ -38,7 +38,8 @@
 /* Construct a forest of a hypercube with volume 1. If the element are refined uniformly
  * all elements have volume 1/global_num_elements. */
 
-class t8_forest_volume: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>> {
+struct t8_forest_volume: public testing::TestWithParam<std::tuple<std::tuple<int, t8_eclass_t>, int>>
+{
  protected:
   void
   SetUp () override
@@ -47,7 +48,9 @@ class t8_forest_volume: public testing::TestWithParam<std::tuple<std::tuple<int,
     scheme = create_from_scheme_id (scheme_id);
     eclass = std::get<1> (std::get<0> (GetParam ()));
     level = std::get<1> (GetParam ());
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }
   void

@@ -20,10 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/**
+ * \file t8_vtk_reader.hxx
+ * This file contains functions to read different VTK supported formats into
+ * t8code data structures.
+ */
+
 #ifndef T8_VTK_READER
 #define T8_VTK_READER
 
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_vtk/t8_vtk_types.h>
 
 #include <vtkSmartPointer.h>
@@ -40,7 +46,7 @@
  * \param[in] main_proc The main reading process
  * \param[in] distributed_grid Flag if the vtkGrid is distributed over several procs. 
  * \param[in] comm The communicator. 
- * \param[in] package_id The package id of the application. It is generated with the usage of \ref sc_package_register.
+ * \param[in] package_id The package id of the application. It is generated with the usage of sc_package_register.
  * \param[in] starting_key If the application already registered attributes, the starting key is used so that the existing attributes are not overwritten.
  * \return The committed cmesh 
  */
@@ -50,7 +56,7 @@ t8_vtkGrid_to_cmesh (vtkSmartPointer<vtkDataSet> vtkGrid, const int partition, c
 
 /**
  * Given a pointer to a vtkDataSet a vtkPointSet storing a set of points of
- * is constructed. The cell data of vtkDataSet is mapt on the points of vtkPointSet. 
+ * is constructed. The cell data of vtkDataSet is mapped on the points of vtkPointSet. 
  * 
  * \param[in] vtkGrid A pointer to a vtkDataSet
  * \return A pointer to a vtkPointSet 
@@ -112,7 +118,7 @@ t8_vtk_reader_pointSet (const char *filename, const int partition, const int mai
  * \param[in] main_proc     The main reading processor
  * \param[in] comm          An mpi-communicator
  * \param[in] vtk_file_type A vtk-filetype that is readable by t8code.
- * \param[in] package_id    The package id of the application. It is generated with the usage of \ref sc_package_register.  
+ * \param[in] package_id    The package id of the application. It is generated with the usage of sc_package_register.  
  * \param[in] starting_key  If the application already registered attributes, the starting key is used so that the existing attributes are not overwritten.
  * \return                  A committed cmesh.
  */

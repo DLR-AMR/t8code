@@ -33,14 +33,14 @@ const char *t8_ghost_type_to_string[T8_GHOST_COUNT]
 t8_ghost_type_t
 t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_definition)
 {
-  T8_ASSERT (ghost_definition != NULL);
+  T8_ASSERT (ghost_definition != nullptr);
   return ghost_definition->ghost_get_type ();
 }
 
 void
 t8_forest_ghost_definition_ref (t8_forest_ghost_definition_c *ghost_definition)
 {
-  T8_ASSERT (ghost_definition != NULL);
+  T8_ASSERT (ghost_definition != nullptr);
   ghost_definition->ref ();
 }
 
@@ -49,12 +49,12 @@ t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definiti
 {
   t8_forest_ghost_definition_c *ghost_definition;
 
-  T8_ASSERT (pghost_definition != NULL);
+  T8_ASSERT (pghost_definition != nullptr);
   ghost_definition = *pghost_definition;
-  T8_ASSERT (ghost_definition != NULL);
+  T8_ASSERT (ghost_definition != nullptr);
 
   if (ghost_definition->unref () == 0) {
-    ghost_definition = NULL;
+    ghost_definition = nullptr;
   }
 }
 

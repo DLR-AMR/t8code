@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_dpyramid_connectivity.h
+ * Definitions regarding the connectivity of Pyramids.
+ */
+
 #ifndef T8_DPYRAMID_CONNECTIVITY_H
 #define T8_DPYRAMID_CONNECTIVITY_H
 
@@ -70,7 +74,7 @@ extern const int t8_dpyramid_parenttype_iloc_pyra_w_lower_id[2][10];
  * neigh_face_number = A(type, face)*/
 extern const int t8_dpyramid_type_face_to_nface[2][5];
 
-/*TODO: Documentation*/
+/** TODO: Documentation*/
 extern const int t8_dpyramid_face_childid_to_is_inside[4][8];
 
 /** The child ids of children touching a given face of a pyramid

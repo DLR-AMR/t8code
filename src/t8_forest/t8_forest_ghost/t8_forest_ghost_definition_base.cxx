@@ -33,17 +33,17 @@
 void
 t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
 {
-  if (forest->element_offsets == NULL) {
+  if (forest->element_offsets == nullptr) {
     /* create element offset array if not done already */
     memory_flag = memory_flag | CREATE_ELEMENT_ARRAY;
     t8_forest_partition_create_offsets (forest);
   }
-  if (forest->tree_offsets == NULL) {
+  if (forest->tree_offsets == nullptr) {
     /* Create tree offset array if not done already */
     memory_flag = memory_flag | CREATE_TREE_ARRAY;
     t8_forest_partition_create_tree_offsets (forest);
   }
-  if (forest->global_first_desc == NULL) {
+  if (forest->global_first_desc == nullptr) {
     /* Create global first desc array if not done already */
     memory_flag = memory_flag | CREATE_GFIRST_DESC_ARRAY;
     t8_forest_partition_create_first_desc (forest);
@@ -70,7 +70,7 @@ t8_forest_ghost_definition::communicate_ghost_elements (t8_forest_t forest)
 void
 t8_forest_ghost_definition::clean_up (t8_forest_t forest)
 {
-  if (memory_flag & CREATE_GFIRST_DESC_ARRAY) {
+  if (memory_flag & CREATE_ELEMENT_ARRAY) {
     /* Free the offset memory, if allocated */
     t8_shmem_array_destroy (&forest->element_offsets);
   }

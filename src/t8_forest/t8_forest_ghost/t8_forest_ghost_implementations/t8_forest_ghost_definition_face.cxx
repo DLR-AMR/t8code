@@ -71,8 +71,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
                                  const t8_locidx_t tree_leaf_index)
 {
-  t8_forest_ghost_definition_face_data *data
-    = (t8_forest_ghost_definition_face_data *) t8_forest_get_user_data (forest);
+  t8_forest_ghost_definition_face_data *data = (t8_forest_ghost_definition_face_data *) forest->t8code_data;
   int num_faces, iface, faces_totally_owned, level;
   int parent_face;
   int lower, upper, *bounds, *new_bounds, parent_lower, parent_upper;
@@ -202,13 +201,13 @@ static void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 {
   t8_forest_ghost_definition_face_data data;
-  void *store_user_data = NULL;
+  void *store_t8code_data = nullptr;
 
   /* Start with invalid entries in the user data.
    * These are set in t8_forest_ghost_search_boundary each time a new tree is entered */
   data.eclass = T8_ECLASS_COUNT;
   data.gtreeid = -1;
-  data.scheme = NULL;
+  data.scheme = nullptr;
 #if T8_ENABLE_DEBUG
   data.left_out = 0;
 #endif
@@ -216,15 +215,15 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   /* This is a dummy init, since we call sc_array_reset in ghost_search_boundary
    * and we should not call sc_array_reset on a non-initialized array */
   sc_array_init (&data.bounds_per_level, 1);
-  /* Store any user data that may reside on the forest */
-  store_user_data = t8_forest_get_user_data (forest);
-  /* Set the user data for the search routine */
-  t8_forest_set_user_data (forest, &data);
+  /* Store any previous internal data that may reside on the forest. */
+  store_t8code_data = forest->t8code_data;
+  /* Set the internal data for the search routine. */
+  forest->t8code_data = &data;
   /* Loop over the trees of the forest */
-  t8_forest_search (forest, t8_forest_ghost_search_boundary, NULL, NULL);
+  t8_forest_search (forest, t8_forest_ghost_search_boundary, nullptr, nullptr);
 
-  /* Reset the user data from before search */
-  t8_forest_set_user_data (forest, store_user_data);
+  /* Reset the internal data from before the search. */
+  forest->t8code_data = store_t8code_data;
 
   /* Reset the data arrays */
   sc_array_reset (&data.face_owners);
@@ -243,16 +242,15 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
 static void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int ghost_method)
 {
-  t8_element_t **half_neighbors = NULL;
+  t8_element_t **half_neighbors = nullptr;
   t8_locidx_t num_local_trees, num_tree_elems;
   t8_locidx_t itree, ielem;
   t8_tree_t tree;
   t8_eclass_t last_class;
-  t8_gloidx_t neighbor_tree;
 
   int iface, num_faces;
   int num_face_children, max_num_face_children = 0;
-  int ichild, owner;
+  int owner;
   sc_array_t owners, tree_owners;
   int is_atom;
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
@@ -285,11 +283,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
         is_atom = 0;
       }
       for (iface = 0; iface < num_faces; iface++) {
-        /* TODO: Check whether the neighbor element is inside the forest,
-         *       if not then do not compute the half_neighbors.
-         *       This will save computing time. Needs an "element is in forest" function
-         *       Currently we perform this check in the half_neighbors function. */
-
         /* Get the element class of the neighbor tree */
         const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, itree, elem, iface);
         if (ghost_method == 0) {
@@ -308,52 +301,30 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
           }
           if (!is_atom) {
             /* Construct each half size neighbor */
-            neighbor_tree = t8_forest_element_half_face_neighbors (forest, itree, elem, half_neighbors, neigh_class,
-                                                                   iface, num_face_children, NULL);
+            (void) t8_forest_element_half_face_neighbors (forest, itree, elem, half_neighbors, neigh_class, iface,
+                                                          num_face_children, nullptr);
           }
           else {
-            int dummy_neigh_face;
-            /* This element has maximum level, we only construct its neighbor */
-            neighbor_tree = t8_forest_element_face_neighbor (forest, itree, elem, half_neighbors[0], neigh_class, iface,
-                                                             &dummy_neigh_face);
-          }
-          if (neighbor_tree >= 0) {
-            /* If there exist face neighbor elements (we are not at a domain boundary */
-            /* Find the owner process of each face_child */
-            for (ichild = 0; ichild < num_face_children; ichild++) {
-              /* find the owner */
-              owner = t8_forest_element_find_owner (forest, neighbor_tree, half_neighbors[ichild], neigh_class);
+            /* Construct the owners at the face of the neighbor element */
+            t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface, &owners);
+            /* Iterate over all owners and if any is not the current process,
+            * add this element as remote */
+            for (size_t iowner = 0; iowner < owners.elem_count; iowner++) {
+              owner = *(int *) sc_array_index (&owners, iowner);
               T8_ASSERT (0 <= owner && owner < forest->mpisize);
               if (owner != forest->mpirank) {
                 /* Add the element as a remote element */
                 t8_ghost_add_remote (forest, ghost, owner, itree, elem, ielem);
               }
             }
+            sc_array_truncate (&owners);
           }
-          scheme->element_destroy (neigh_class, num_face_children, half_neighbors);
-          T8_FREE (half_neighbors);
-        } /* end ghost_method 0 */
-        else {
-          size_t iowner;
-          /* Construct the owners at the face of the neighbor element */
-          t8_forest_element_owners_at_neigh_face (forest, itree, elem, iface, &owners);
-          /* Iterate over all owners and if any is not the current process,
-           * add this element as remote */
-          for (iowner = 0; iowner < owners.elem_count; iowner++) {
-            owner = *(int *) sc_array_index (&owners, iowner);
-            T8_ASSERT (0 <= owner && owner < forest->mpisize);
-            if (owner != forest->mpirank) {
-              /* Add the element as a remote element */
-              t8_ghost_add_remote (forest, ghost, owner, itree, elem, ielem);
-            }
-          }
-          sc_array_truncate (&owners);
         }
       } /* end face loop */
     }   /* end element loop */
   }     /* end tree loop */
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we count the number of remote processes. */
     forest->profile->ghosts_remotes = ghost->remote_processes->elem_count;
   }
@@ -375,7 +346,7 @@ t8_forest_ghost_definition_face::t8_forest_ghost_definition_face (const int vers
 void
 t8_forest_ghost_definition_face::search_for_ghost_elements (t8_forest_t forest)
 {
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
   t8_forest_ghost_t ghost = forest->ghosts;
   if (version == 3) {
     t8_forest_ghost_fill_remote_v3 (forest);
@@ -397,7 +368,7 @@ t8_forest_ghost_definition_face_new (const int version)
 int
 t8_forest_ghost_definition_face_get_version (const t8_forest_ghost_definition_c *ghost_definition)
 {
-  T8_ASSERT (ghost_definition != NULL);
+  T8_ASSERT (ghost_definition != nullptr);
   T8_ASSERT (ghost_definition->ghost_get_type () == T8_GHOST_FACES);
   const t8_forest_ghost_definition_face *ghost_definition_passed = (t8_forest_ghost_definition_face *) ghost_definition;
 

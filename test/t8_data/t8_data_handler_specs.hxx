@@ -43,7 +43,8 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  *
  */
 template <typename TType>
-class enlarged_data {
+struct enlarged_data
+{
  public:
   /**
    * Default constructor.
@@ -73,7 +74,8 @@ class enlarged_data {
  * \tparam TType The type of the data to be stored.
  */
 template <typename TType>
-class data_creator {
+struct data_creator
+{
  public:
   data_creator ()
   {
@@ -88,7 +90,7 @@ class data_creator {
   void
   create (const int num_data);
 
-  std::vector<TType> large_data;
+  std::vector<TType> large_data; /**< A vector to hold the created data items. */
 };
 
 #endif /* T8_DATA_HANDLER_SPECS_HXX */

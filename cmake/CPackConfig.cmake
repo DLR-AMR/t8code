@@ -39,7 +39,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E echo "Version ${T8CODE_VERSION_MAJOR}.${T8CODE_VERSION_MINOR}.${T8CODE_VERSION_PATCH}" > ${VERSION_FILE}
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt  # Change as needed
     )
-    
+
 # Create a custom target to ensure the version file is generated
 add_custom_target(GenerateVersionFile ALL DEPENDS ${VERSION_FILE})
 
@@ -48,18 +48,10 @@ set(CPACK_SOURCE_INCLUDE_FILES ${VERSION_FILE})
 set(CPACK_SOURCE_IGNORE_FILES .git/ .github/ .vscode/ _CPack_Packages/
 .gitmodules .gitignore
 ${PROJECT_BINARY_DIR}/
-Makefile.in
-aclocal.m4
-autom4te.cache/
-build/
 bin/
-configure
 DartConfiguration.tcl
 CMakeCache.txt
 build/
-build-aux/
-configure
-config.log
 compile_commands.json
 )
 

@@ -26,7 +26,7 @@
 */
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_types/t8_vec.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_forest/t8_forest.h>
@@ -223,7 +223,8 @@ t8_test_coords (const t8_forest_t forest, const t8_locidx_t ltree_id, const t8_e
     << t8_generate_additional_info_centroid (shape, centroid_by_vertices, centroid_by_element_ref_coords);
 }
 
-class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, int>> {
+struct class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, int>>
+{
  protected:
   void
   SetUp () override
@@ -231,7 +232,9 @@ class class_ref_coords: public testing::TestWithParam<std::tuple<t8_eclass_t, in
     const std::tuple<t8_eclass, int> params = GetParam ();
     const t8_eclass_t eclass = std::get<0> (params);
     const int level = std::get<1> (params);
-    t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
     t8_forest_init (&forest_partition);
     t8_forest_set_partition (forest_partition, forest, 0);

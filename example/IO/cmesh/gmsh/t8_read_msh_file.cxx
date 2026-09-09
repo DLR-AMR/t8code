@@ -23,8 +23,8 @@
 #include <sc_options.h>
 #include <t8.h>
 #include <t8_vtk/t8_vtk_writer.h>
-#include <t8_cmesh/t8_cmesh_partition.h>
-#include <t8_cmesh_readmshfile.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
+#include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 
 /* Output a cmesh in .vtk format. Process i writes to the file
@@ -84,7 +84,8 @@ t8_read_msh_file_build_cmesh (const char *prefix, int do_partition, int dim, int
   /* If the master argument is positive, then we read the cmesh
    * only on the master rank and is directly partitioned. */
   partitioned_read = master >= 0;
-  cmesh = t8_cmesh_from_msh_file ((char *) prefix, partitioned_read, sc_MPI_COMM_WORLD, dim, master, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_from_msh_file (&cmesh, (char *) prefix, partitioned_read, sc_MPI_COMM_WORLD, dim, master, 0);
   if (cmesh != NULL) {
     t8_global_productionf ("Successfully constructed cmesh from %s.msh file.\n", prefix);
     t8_global_productionf ("cmesh is of dimension %i and has %lli elements.\n", dim,

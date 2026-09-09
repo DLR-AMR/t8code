@@ -27,7 +27,7 @@
 #include <t8_forest/t8_forest_iterate.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_cmesh/t8_cmesh_trees.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_data/t8_containers.h>
 #include <sc_statistics.h>
 
@@ -37,6 +37,16 @@
 
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
+
+#if T8_ENABLE_DEBUG
+static bool
+t8_forest_tree_is_ghost (const t8_forest_t forest, const t8_locidx_t lghost_tree)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  return 0 <= lghost_tree && lghost_tree < t8_forest_get_num_ghost_trees (forest);
+}
+#endif
 
 /** This struct is used during a ghost data exchange.
  * Since we use asynchronous communication, we store the
@@ -58,14 +68,14 @@ typedef struct
 t8_locidx_t
 t8_forest_ghost_num_trees (const t8_forest_t forest)
 {
-  if (forest->ghosts == NULL) {
+  if (forest->ghosts == nullptr) {
     return 0;
   }
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
   if (forest->ghosts->num_ghosts_elements <= 0) {
     return 0;
   }
-  T8_ASSERT (forest->ghosts->ghost_trees != NULL);
+  T8_ASSERT (forest->ghosts->ghost_trees != nullptr);
 
   return forest->ghosts->ghost_trees->elem_count;
 }
@@ -79,9 +89,9 @@ t8_forest_ghost_get_tree (const t8_forest_t forest, const t8_locidx_t lghost_tre
 
   T8_ASSERT (t8_forest_is_committed (forest));
   ghost = forest->ghosts;
-  T8_ASSERT (ghost != NULL);
-  T8_ASSERT (ghost->ghost_trees != NULL);
-  T8_ASSERT (0 <= lghost_tree && lghost_tree < t8_forest_ghost_num_trees (forest));
+  T8_ASSERT (ghost != nullptr);
+  T8_ASSERT (ghost->ghost_trees != nullptr);
+  T8_ASSERT (t8_forest_tree_is_ghost (forest, lghost_tree));
 
   ghost_tree = (t8_ghost_tree_t *) t8_sc_array_index_locidx (ghost->ghost_trees, lghost_tree);
   return ghost_tree;
@@ -110,7 +120,7 @@ t8_element_array_t *
 t8_forest_ghost_get_tree_leaf_elements (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
 
   return &t8_forest_ghost_get_tree (forest, lghost_tree)->elements;
 }
@@ -121,7 +131,7 @@ t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid)
   t8_ghost_gtree_hash_t query, *found, **pfound;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
 
   query.global_id = gtreeid;
   if (sc_hash_lookup (forest->ghosts->global_tree_to_ghost_tree, &query, (void ***) &pfound)) {
@@ -172,6 +182,14 @@ t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t
   return t8_element_array_index_locidx_mutable (&ghost_tree->elements, lelement);
 }
 
+int
+t8_forest_element_is_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t lghost_tree)
+{
+  bool check_ghost = true;
+  T8_ASSERT (t8_forest_tree_is_ghost (forest, lghost_tree));
+  return t8_forest_element_is_leaf_or_ghost (forest, element, lghost_tree, check_ghost);
+}
+
 void
 t8_forest_ghost_create_ext (t8_forest_t forest)
 {
@@ -179,7 +197,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
   t8_forest_ghost_definition_c *ghost_definition;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghost_definition != NULL);
+  T8_ASSERT (forest->ghost_definition != nullptr);
 
   ghost_definition = forest->ghost_definition;
 
@@ -193,7 +211,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
     !forest->incomplete_trees || forest->mpisize == 1,
     "ERROR: Cannot compute ghost layer for forest with deleted elements (incomplete trees/holes in the mesh).\n");
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
     forest->profile->ghost_runtime = -sc_MPI_Wtime ();
     /* DO NOT DELETE THE FOLLOWING line.
@@ -207,11 +225,11 @@ t8_forest_ghost_create_ext (t8_forest_t forest)
 
   ghost = forest->ghosts;
 
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
     forest->profile->ghost_runtime += sc_MPI_Wtime ();
     /* We also store the number of ghosts and remotes */
-    if (ghost != NULL) {
+    if (ghost != nullptr) {
       forest->profile->ghosts_received = ghost->num_ghosts_elements;
       forest->profile->ghosts_shipped = ghost->num_remote_elements;
     }
@@ -234,7 +252,7 @@ void
 t8_forest_ghost_create_topdown (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghost_definition != NULL);
+  T8_ASSERT (forest->ghost_definition != nullptr);
   T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 3);
   t8_forest_ghost_create_ext (forest);
 }
@@ -248,11 +266,11 @@ int *
 t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  if (forest->ghosts == NULL) {
+  if (forest->ghosts == nullptr) {
     *num_remotes = 0;
-    return NULL;
+    return nullptr;
   }
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
 
   *num_remotes = forest->ghosts->remote_processes->elem_count;
   return (int *) forest->ghosts->remote_processes->array;
@@ -317,7 +335,7 @@ t8_forest_ghost_remote_first_tree (t8_forest_t forest, int remote)
   t8_ghost_process_hash_t *proc_entry;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
 
   proc_entry = t8_forest_ghost_get_proc_info (forest, remote);
   T8_ASSERT (proc_entry->mpirank == remote);
@@ -335,7 +353,7 @@ t8_forest_ghost_remote_first_elem (t8_forest_t forest, int remote)
   t8_ghost_process_hash_t *proc_entry;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
 
   proc_entry = t8_forest_ghost_get_proc_info (forest, remote);
   T8_ASSERT (proc_entry->mpirank == remote);
@@ -424,8 +442,8 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t *element_data)
   t8_locidx_t remote_offset, next_offset;
 
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (element_data != NULL);
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (element_data != nullptr);
+  T8_ASSERT (forest->ghosts != nullptr);
 
   ghost = forest->ghosts;
 
@@ -505,7 +523,7 @@ t8_forest_ghost_exchange_end (t8_ghost_data_exchange_t *data_exchange)
 {
   int iproc;
 
-  T8_ASSERT (data_exchange != NULL);
+  T8_ASSERT (data_exchange != nullptr);
   /* Wait for all communications to end */
   sc_MPI_Waitall (data_exchange->num_remotes, data_exchange->recv_requests, sc_MPI_STATUSES_IGNORE);
   sc_MPI_Waitall (data_exchange->num_remotes, data_exchange->send_requests, sc_MPI_STATUSES_IGNORE);
@@ -529,23 +547,23 @@ t8_forest_ghost_exchange_data (t8_forest_t forest, sc_array_t *element_data)
   t8_debugf ("Entering ghost_exchange_data\n");
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  if (forest->ghosts == NULL) {
+  if (forest->ghosts == nullptr) {
     /* This process has no ghosts */
     return;
   }
 
-  T8_ASSERT (forest->ghosts != NULL);
-  T8_ASSERT (element_data != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
+  T8_ASSERT (element_data != nullptr);
   T8_ASSERT ((t8_locidx_t) element_data->elem_count
              == t8_forest_get_local_num_leaf_elements (forest) + t8_forest_get_num_ghosts (forest));
 
   data_exchange = t8_forest_ghost_exchange_begin (forest, element_data);
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* Measure the time for ghost_exchange_end */
     forest->profile->ghost_waittime = -sc_MPI_Wtime ();
   }
   t8_forest_ghost_exchange_end (data_exchange);
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     /* Measure the time for ghost_exchange_end */
     forest->profile->ghost_waittime += sc_MPI_Wtime ();
   }
@@ -568,10 +586,10 @@ t8_forest_ghost_print (t8_forest_t forest)
   char remote_buffer[BUFSIZ] = "";
   char buffer[BUFSIZ] = "";
 
-  if (forest->ghosts == NULL) {
+  if (forest->ghosts == nullptr) {
     return;
   }
-  T8_ASSERT (forest->ghosts != NULL);
+  T8_ASSERT (forest->ghosts != nullptr);
   ghost = forest->ghosts;
   snprintf (remote_buffer + strlen (remote_buffer), BUFSIZ - strlen (remote_buffer), "\tRemotes:\n");
   snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), "\tReceived:\n");
@@ -622,9 +640,9 @@ t8_forest_ghost_reset (t8_forest_ghost_t *pghost)
   t8_ghost_remote_t *remote_entry;
   t8_ghost_remote_tree_t *remote_tree;
 
-  T8_ASSERT (pghost != NULL);
+  T8_ASSERT (pghost != nullptr);
   ghost = *pghost;
-  T8_ASSERT (ghost != NULL);
+  T8_ASSERT (ghost != nullptr);
   T8_ASSERT (ghost->rc.refcount == 0);
 
   /* Clean-up the arrays */
@@ -657,13 +675,13 @@ t8_forest_ghost_reset (t8_forest_ghost_t *pghost)
 
   /* Free the ghost */
   T8_FREE (ghost);
-  pghost = NULL;
+  pghost = nullptr;
 }
 
 void
 t8_forest_ghost_ref (t8_forest_ghost_t ghost)
 {
-  T8_ASSERT (ghost != NULL);
+  T8_ASSERT (ghost != nullptr);
 
   t8_refcount_ref (&ghost->rc);
 }
@@ -673,9 +691,9 @@ t8_forest_ghost_unref (t8_forest_ghost_t *pghost)
 {
   t8_forest_ghost_t ghost;
 
-  T8_ASSERT (pghost != NULL);
+  T8_ASSERT (pghost != nullptr);
   ghost = *pghost;
-  T8_ASSERT (ghost != NULL);
+  T8_ASSERT (ghost != nullptr);
 
   if (t8_refcount_unref (&ghost->rc)) {
     t8_forest_ghost_reset (pghost);
@@ -685,9 +703,9 @@ t8_forest_ghost_unref (t8_forest_ghost_t *pghost)
 void
 t8_forest_ghost_destroy (t8_forest_ghost_t *pghost)
 {
-  T8_ASSERT (pghost != NULL && *pghost != NULL && t8_refcount_is_last (&(*pghost)->rc));
+  T8_ASSERT (pghost != nullptr && *pghost != nullptr && t8_refcount_is_last (&(*pghost)->rc));
   t8_forest_ghost_unref (pghost);
-  T8_ASSERT (*pghost == NULL);
+  T8_ASSERT (*pghost == nullptr);
 }
 
 T8_EXTERN_C_END ();

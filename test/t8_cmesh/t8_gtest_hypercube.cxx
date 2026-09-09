@@ -24,13 +24,14 @@
  * the creation of the cmesh with or without broadcast/ partition. */
 
 #include <gtest/gtest.h>
-#include <t8_cmesh.h>
-#include "t8_cmesh/t8_cmesh_trees.h"
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <test/t8_gtest_macros.hxx>
 
 /* Create class for parameterized Test with multiple test parameters */
-class cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass, int, int>> {
+struct cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass, int, int>>
+{
  protected:
   /* SetUp the test parameters (eclass, bcast and partition) and define the test value cmesh. */
   void
@@ -40,7 +41,8 @@ class cmesh_hypercube_trees: public testing::TestWithParam<std::tuple<t8_eclass,
     bcast = std::get<1> (GetParam ());
     partition = std::get<2> (GetParam ());
 
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, bcast, partition, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, bcast, partition, 0);
   }
   void
   TearDown () override
