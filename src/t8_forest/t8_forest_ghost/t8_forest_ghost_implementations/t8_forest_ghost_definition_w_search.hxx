@@ -75,10 +75,10 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
 
   /** Create one layer of ghost elements for a forest.
    * \param [in,out]    forest     The forest.
-   * \return T8_SUBROUTINE_SUCCESS if successful, T8_SUBROUTINE_FAILURE if not.
+   * \return 1 if successful, 0 if not.
    * \a forest must be committed before calling this function.
    */
-  virtual bool
+  virtual int
   do_ghost (t8_forest_t forest) override;
 
  protected:

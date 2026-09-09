@@ -24,7 +24,7 @@
 
 /* Writes the pvtu header file that links to the processor local files.
  * This function should only be called by one process.
- * Return T8_SUBROUTINE_SUCCESS on success and T8_SUBROUTINE_FAILURE on failure. */
+ * Return 0 on success. */
 int
 t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_rank, int write_level, int write_id,
                int num_data, t8_vtk_data_field_t *data)
@@ -42,7 +42,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
   if (sreturn >= BUFSIZ) {
     /* The filename was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated vtk file name to '%s'\n", pvtufilename);
   }
@@ -50,7 +50,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
   pvtufile = fopen (pvtufilename, "wb");
   if (!pvtufile) {
     t8_global_errorf ("Could not open %s for output\n", pvtufilename);
-    return T8_SUBROUTINE_FAILURE;
+    return -1;
   }
 
   fprintf (pvtufile, "<?xml version=\"1.0\"?>\n");
@@ -80,7 +80,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
       if (sreturn >= BUFSIZ) {
         /* The output was truncated */
-        /* Note: gcc >= 7.1 prints a warning if we 
+        /* Note: gcc >= 7.1 prints a warning if we
          * do not check the return value of snprintf. */
         t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
       }
@@ -98,7 +98,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          /* Note: gcc >= 7.1 prints a warning if we 
+          /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
@@ -122,7 +122,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          /* Note: gcc >= 7.1 prints a warning if we 
+          /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
@@ -140,7 +140,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          /* Note: gcc >= 7.1 prints a warning if we 
+          /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
@@ -247,7 +247,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
   sreturn = snprintf (filename_copy, BUFSIZ, "%s", filename);
   if (sreturn >= BUFSIZ) {
     /* The Filename was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated vtk file name copy to '%s'\n", filename_copy);
   }
@@ -261,11 +261,11 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
   if (ferror (pvtufile)) {
     t8_global_errorf ("t8_vtk: Error writing parallel footer\n");
     fclose (pvtufile);
-    return T8_SUBROUTINE_FAILURE;
+    return -1;
   }
   if (fclose (pvtufile)) {
     t8_global_errorf ("t8_vtk: Error closing parallel footer\n");
-    return T8_SUBROUTINE_FAILURE;
+    return -1;
   }
-  return T8_SUBROUTINE_SUCCESS;
+  return 0;
 }

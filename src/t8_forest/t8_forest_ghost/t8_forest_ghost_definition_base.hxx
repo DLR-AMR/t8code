@@ -101,9 +101,10 @@ struct t8_forest_ghost_definition
 
   /** Create one layer of ghost elements for a forest.
    * \param [in,out]    forest     The forest.
+   * \return 1 on success, 0 on failure.
    * \a forest must be committed before calling this function.
    */
-  virtual bool
+  virtual int
   do_ghost (t8_forest_t forest)
     = 0;
 

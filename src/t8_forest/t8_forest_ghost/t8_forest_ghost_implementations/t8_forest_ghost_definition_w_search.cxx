@@ -27,7 +27,7 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
 
-bool
+int
 t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
 {
   communicate_ownerships (forest);
@@ -37,7 +37,7 @@ t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
     if (ghost_get_type () == T8_GHOST_NONE) {
       t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
                  "Ghost layer is not constructed.\n");
-      return T8_SUBROUTINE_FAILURE;
+      return 0;
     }
 
     /* Initialize the ghost structure */
@@ -49,7 +49,7 @@ t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
   }
   clean_up (forest);
 
-  return T8_SUBROUTINE_SUCCESS;
+  return 1;
 }
 
 void

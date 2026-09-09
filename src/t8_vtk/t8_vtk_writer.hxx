@@ -118,8 +118,8 @@ struct vtk_writer
    * A vtk-writer function that uses the vtk API.
    *
    * \param[in] grid The forest or cmesh that is translated.
-   * \return T8_SUBROUTINE_SUCCESS, if writing was successful.
-   * \return T8_SUBROUTINE_FAILURE if writing was not successful.
+   * \return true, if writing was successful.
+   * \return false if writing was not successful.
    */
   bool
   write_with_API (const grid_t grid)
@@ -480,8 +480,8 @@ struct vtk_writer
    * Write a vtk file given a forest or a cmesh.
    *
    * \param[in] grid a forest or a cmesh that will be translated into a vtk-file.
-   * \return T8_SUBROUTINE_SUCCESS if writing was successful.
-   * \return T8_SUBROUTINE_FAILURE if writing was not successful.
+   * \return true if writing was successful.
+   * \return false if writing was not successful.
    */
   bool
   write_vtk ([[maybe_unused]] const grid_t grid)
@@ -557,19 +557,19 @@ struct vtk_writer
     pwriterObj->SetInputData (unstructuredGrid);
     pwriterObj->Update ();
     if (pwriterObj->Write ()) {
-      return T8_SUBROUTINE_SUCCESS;
+      return true;
     }
     else {
       t8_errorf ("Error when writing vtk file.\n");
     }
 
     /* Return whether writing was successful */
-    return T8_SUBROUTINE_FAILURE;
+    return false;
 
 #else
     t8_global_errorf ("Warning: t8code is not linked against vtk library. Vtk output will not be generated.\n");
     t8_global_productionf ("Consider calling 't8_forest_write_vtk' or 't8_forest_vtk_write_file' instead.\n");
-    return T8_SUBROUTINE_FAILURE;
+    return false;
 #endif
   }
 
@@ -588,11 +588,11 @@ struct vtk_writer
 
 #if T8_ENABLE_VTK
 /**
- * Translate a forest into a vtkUnstructuredGrid with respect to the given flags. 
+ * Translate a forest into a vtkUnstructuredGrid with respect to the given flags.
  * This function uses the vtk library. t8code must be configured with
  * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
  * \param [in]  forest    The forest.
- * \param[in, out] unstructuredGrid 
+ * \param [in,out] unstructuredGrid
  * \param [in]  write_treeid If true, the global tree id is written for each element.
  * \param [in]  write_mpirank If true, the mpirank is written for each element.
  * \param [in]  write_level If true, the refinement level is written for each element.

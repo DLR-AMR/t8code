@@ -307,11 +307,6 @@ t8_init (int log_threshold);
 void *
 t8_sc_array_index_locidx (const sc_array_t *array, const t8_locidx_t index);
 
-/** Return value of a subroutine that succeeded. */
-#define T8_SUBROUTINE_SUCCESS 1
-/** Return value of a subroutine that failed. */
-#define T8_SUBROUTINE_FAILURE 0
-
 /** Call this at the end of a header file to match T8_EXTERN_C_BEGIN (). */
 T8_EXTERN_C_END ();
 
