@@ -61,6 +61,14 @@ struct t8_adapt_data
   int maxlevel;       /* Finest level, reached on the circle itself. */
 };
 
+t8_adapt_data adapt_data = {
+  { 0, 1, 0 }, /* Center of the circle. */
+  0.45,        /* Radius */
+  0.1,         /* Delta (transition band width) */
+  2,           /* Minlevel */
+  6            /* Maxlevel */
+};
+
 /** The adaptation callback function.
  * Adapts the mesh around a circle of radius \a radius centered at \a midpoint:
  * Elements on the circle are refined to \a maxlevel, relaxing linearly to \a minlevel over a band of width \a delta.
@@ -113,39 +121,11 @@ t8_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t whic
   return 0;
 }
 
-/** Adapt a forest around the circle of radius 0.45 (first adaptation cycle).
+/** Adapt a forest around a circle according to global adapt data.
  * \param[in] forest Forest to be adapted. */
 t8_forest_t
 t8_adapt_forest (t8_forest_t forest)
 {
-  struct t8_adapt_data adapt_data = {
-    { 0, 1, 0 }, /* Center of the circle. */
-    0.45,        /* Radius */
-    0.1,         /* Delta (transition band width) */
-    2,           /* Minlevel */
-    6            /* Maxlevel */
-  };
-
-  t8_forest_t forest_adapt;
-  forest_adapt = t8_forest_new_adapt (forest, t8_adapt_callback, 1, 0, &adapt_data);
-  return forest_adapt;
-}
-
-/** Adapt a forest around the circle of radius 0.6 (second adaptation cycle).
- * Same criterion as \ref t8_adapt_forest but with a larger radius. 
- * \param[in] forest Forest to be adapted.
- */
-t8_forest_t
-t8_adapt_forest_2nd (t8_forest_t forest)
-{
-  struct t8_adapt_data adapt_data = {
-    { 0, 1, 0 }, /* Center of the circle. */
-    0.6,         /* Radius */
-    0.1,         /* Delta (transition band width) */
-    2,           /* Minlevel */
-    6            /* Maxlevel */
-  };
-
   t8_forest_t forest_adapt;
   forest_adapt = t8_forest_new_adapt (forest, t8_adapt_callback, 1, 0, &adapt_data);
   return forest_adapt;
@@ -197,20 +177,20 @@ main (int argc, char **argv)
   /* --- Adapt the forest: refine near the first circle, creating hanging nodes. --- */
   forest = t8_adapt_forest (forest);
   std::cout << "Subelements before removing: " << t8_forest_has_global_subelements (forest) << std::endl;
-  prefix = "t8_adapted1";
+  prefix = "t8_adapted_first_cycle";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n", prefix);
 
   /* --- Balance the forest (2:1 balance between neighboring elements). --- */
   forest = t8_forest_balance (forest);
-  prefix = "t8_balanced1";
+  prefix = "t8_balanced_first_cycle";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Balanced and wrote to file: %s*\n", prefix);
 
   /* --- Resolve hanging nodes by transitioning elements into subelements. --- */
   forest = t8_forest_remove_hanging_nodes (forest);
   std::cout << "Subelements after removing: " << t8_forest_has_global_subelements (forest) << std::endl;
-  const char *prefix_without_hanging_nodes = "t8_resolved_hanging_nodes1";
+  const char *prefix_without_hanging_nodes = "t8_resolved_hanging_nodes_first_cycle";
   t8_forest_write_vtk (forest, prefix_without_hanging_nodes);
   t8_global_productionf (" [subelements] Wrote adapted forest with resolved hanging nodes to vtu files: %s*\n",
                          prefix_without_hanging_nodes);
@@ -219,26 +199,27 @@ main (int argc, char **argv)
   /* This is the inverse of the previous step and is required before adapting again. */
   forest = t8_forest_discard_subelements (forest);
   std::cout << "Subelements removed: " << t8_forest_has_global_subelements (forest) << std::endl;
-  const char *prefix_removed_sub = "t8_discarded_subelements1";
+  const char *prefix_removed_sub = "t8_discarded_subelements_first_cycle";
   t8_forest_write_vtk (forest, prefix_removed_sub);
   t8_global_productionf (" [subelements] Wrote adapted forest with discarded subelements to vtu files: %s*\n",
                          prefix_removed_sub);
 
   /* --- Second cycle: adapt around the larger circle. --- */
-  forest = t8_adapt_forest_2nd (forest);
-  prefix = "t8_adapted2";
+  adapt_data.radius = 0.6;
+  forest = t8_adapt_forest (forest);
+  prefix = "t8_adapted_second_cycle";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Adapted again and wrote to file: %s*\n", prefix);
 
   /* --- Balance again. --- */
   forest = t8_forest_balance (forest);
-  prefix = "t8_balanced2";
+  prefix = "t8_balanced_second_cycle";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Balanced again and wrote to file: %s*\n", prefix);
 
   /* --- Resolve hanging nodes again. --- */
   forest = t8_forest_remove_hanging_nodes (forest);
-  prefix = "t8_resolved_hanging_nodes2";
+  prefix = "t8_resolved_hanging_nodes_second_cycle";
   t8_forest_write_vtk (forest, prefix);
   t8_global_productionf (" [subelements] Removed hanging nodes after second adaptation and wrote to : %s*\n", prefix);
 

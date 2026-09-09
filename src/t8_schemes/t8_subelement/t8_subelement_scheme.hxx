@@ -52,16 +52,17 @@ struct t8_subelement_scheme_common:
   /** The subelement type used by this subelement scheme defined by a trait. */
   using TSubelementType = typename t8_subelement_traits<TSubelementSchemeSpecialization>::SubelementType;
 
-  /** Constructor. */
-  t8_subelement_scheme_common () noexcept
-    : element_size (sizeof (TSubelementType)), scheme_context (sc_mempool_new (element_size)) {};
-
  protected:
   size_t element_size;  /**< The size in bytes of an element. */
   void *scheme_context; /**< Anonymous implementation context. */
 
  public:
-  // #################################____Constructor & Destructor...____###############################################
+  // #################################____CONSTRUCTORS & DESTRUCTOR____#################################################
+
+  /** Constructor. */
+  t8_subelement_scheme_common () noexcept
+    : element_size (sizeof (TSubelementType)), scheme_context (sc_mempool_new (element_size)) {};
+
   /** Destructor. */
   ~t8_subelement_scheme_common ()
   {
@@ -120,7 +121,7 @@ struct t8_subelement_scheme_common:
    * \return The size of an element.
    */
   static constexpr size_t
-  get_element_size (void) noexcept
+  get_element_size () noexcept
   {
     return sizeof (TSubelementType);
   }
@@ -129,7 +130,7 @@ struct t8_subelement_scheme_common:
    * \return Always true as subelements may occur.
    */
   static constexpr int
-  refines_irregular (void) noexcept
+  refines_irregular () noexcept
   {
     return true;  // Potentially there are subelements.
   }
@@ -138,7 +139,7 @@ struct t8_subelement_scheme_common:
    * \return                      The maximum allowed level for elements of class \b ts.
    */
   constexpr int
-  get_maxlevel (void) const noexcept
+  get_maxlevel () const noexcept
   {
     return derived ().underlying_scheme.get_maxlevel () - 1;  // We need to reserve one level for the subelements.
   }
@@ -297,7 +298,7 @@ struct t8_subelement_scheme_common:
   set_to_root (t8_element_t *elem) const noexcept
   {
     auto *subelement = as_subelement (elem);
-    reset_subelement_values (subelement);
+    unset_subelement_values (subelement);
     derived ().underlying_scheme.set_to_root (subelement_to_standalone (subelement));
   }
 
@@ -314,7 +315,7 @@ struct t8_subelement_scheme_common:
     T8_ASSERT (element_is_valid (elem));
     const auto *subelement = as_subelement (elem);
     auto *parent_subelement = as_subelement (parent);
-    reset_subelement_values (parent_subelement);
+    unset_subelement_values (parent_subelement);
     if (element_is_subelement (elem)) {
       // For subelements, the parent is the element from which they are refined.
       derived ().underlying_scheme.element_copy (subelement_to_standalone (subelement),
@@ -437,7 +438,7 @@ struct t8_subelement_scheme_common:
     for (int ichild = 0; ichild < length; ++ichild) {
       auto *child = as_subelement (c[ichild]);
       standalone_children_ptrs[ichild] = subelement_to_standalone (child);
-      reset_subelement_values (child);
+      unset_subelement_values (child);
     }
     derived ().underlying_scheme.element_get_children (subelement_to_standalone (subelement), length,
                                                        standalone_children_ptrs);
@@ -449,14 +450,14 @@ struct t8_subelement_scheme_common:
    * \param [in] length   The length of the output array \a c must match the number of subelements.   
    *                      See \ref element_get_num_children.
    * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
-   * \param [in] type The subelement type to be used for refinement.
+   * \param [in] subelem_type The subelement type to be used for refinement.
    */
   void
-  element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[], int type) const noexcept
+  element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[], int subelem_type) const noexcept
   {
-    SC_CHECK_ABORT (length == TSubelementSchemeSpecialization::subelement_get_num_children (elem, type),
+    SC_CHECK_ABORT (length == TSubelementSchemeSpecialization::subelement_get_num_children (elem, subelem_type),
                     "element_get_children: given length is not fitting the number of children.");
-    derived ().subelement_get_children (elem, length, c, type);
+    derived ().subelement_get_children (elem, length, c, subelem_type);
   }
 
   /** Compute the child id of an element.
@@ -583,7 +584,7 @@ struct t8_subelement_scheme_common:
   {
     derived ().underlying_scheme.element_get_first_descendant (element_to_standalone (elem),
                                                                element_to_standalone (desc), level);
-    reset_subelement_values (as_subelement (desc));
+    unset_subelement_values (as_subelement (desc));
   }
 
   /** Compute the last descendant of a given element.
@@ -599,7 +600,7 @@ struct t8_subelement_scheme_common:
   {
     derived ().underlying_scheme.element_get_last_descendant (element_to_standalone (elem),
                                                               element_to_standalone (desc), level);
-    reset_subelement_values (as_subelement(desc));
+    unset_subelement_values (as_subelement (desc));
   }
 
   // ################################################____FACE REFINEMENT____############################################
@@ -641,7 +642,7 @@ struct t8_subelement_scheme_common:
     for (int ichild = 0; ichild < num_children; ++ichild) {
       auto *child = as_subelement (children[ichild]);
       standalone_children_ptrs[ichild] = subelement_to_standalone (child);
-      reset_subelement_values (child);
+      unset_subelement_values (child);
     }
     derived ().underlying_scheme.element_get_children_at_face (element_to_standalone (elem), face,
                                                                standalone_children_ptrs, num_children, child_indices);
@@ -985,7 +986,7 @@ struct t8_subelement_scheme_common:
   {
     TSubelementType *subelement = (TSubelementType *) elems;
     for (int ielem = 0; ielem < length; ielem++) {
-      reset_subelement_values (subelement + ielem);
+      unset_subelement_values (subelement + ielem);
       derived ().underlying_scheme.element_init (1, subelement_to_standalone (subelement + ielem));
       T8_ASSERT (element_is_valid ((t8_element_t *) (subelement + ielem)));
     }
@@ -998,9 +999,14 @@ struct t8_subelement_scheme_common:
    * \note Call this function if you called element_init on the element pointers.
    * \see element_init
    */
-  static constexpr void
-  element_deinit ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elems) noexcept
+  void
+  element_deinit ([[maybe_unused]] const int length, [[maybe_unused]] t8_element_t *elems) const noexcept
   {
+    TSubelementType *subelement = (TSubelementType *) elems;
+    for (int ielem = 0; ielem < length; ielem++) {
+      T8_ASSERT (element_is_valid ((t8_element_t *) (subelement + ielem)));
+      derived ().underlying_scheme.element_deinit (1, subelement_to_standalone (subelement + ielem));
+    }
   }
 
   /** Deallocate an array of elements.
@@ -1218,11 +1224,11 @@ struct t8_subelement_scheme_common:
     return reinterpret_cast<TSubelementType *> (element);
   }
 
-  /** Reset the subelement-specific data.
+  /** Reset the subelement-specific data to zero.
    * \param [in,out] subelement The element that is filled with the root of the subelement.
    */
   static void
-  reset_subelement_values (TSubelementType *subelement) noexcept
+  unset_subelement_values (TSubelementType *subelement) noexcept
   {
     subelement->subelement_type = 0;
     subelement->subelement_id = 0;

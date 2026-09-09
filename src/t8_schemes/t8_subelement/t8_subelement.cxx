@@ -32,7 +32,7 @@
 #include "specializations/t8_scheme_tri.hxx"
 
 const t8_scheme *
-t8_scheme_new_subelement (void)
+t8_scheme_new_subelement ()
 {
   t8_scheme_builder builder;
 
