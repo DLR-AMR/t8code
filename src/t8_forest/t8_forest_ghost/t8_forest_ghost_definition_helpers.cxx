@@ -35,7 +35,7 @@
 
 /** The hash function for the global tree hash. As hash value we just return the global tree id.
  * \param [in] ghost_gtree_hash   A \ref t8_ghost_gtree_hash_t.
- * \param [in] data               Unused but needed for usage with \ref sc_hash_new.
+ * \param [in] data               Unused but needed for usage with sc_hash_new.
  * \return                        The global tree id of \a ghost_gtree_hash.
  */
 static unsigned
@@ -50,7 +50,7 @@ t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, [[maybe_unused]] con
  * Two \ref t8_ghost_gtree_hash_t are considered equal if the global tree ids are the same.
  * \param [in] ghost_gtreea   A \ref t8_ghost_gtree_hash_t.
  * \param [in] ghost_gtreeb   A \ref t8_ghost_gtree_hash_t.
- * \param [in] user           Unused but needed for usage with \ref sc_hash_new.
+ * \param [in] user           Unused but needed for usage with sc_hash_new.
  * \return                    True if and only if \a ghost_gtreea and \a ghost_gtreeb have the same global tree id.
  */
 static int
@@ -65,7 +65,7 @@ t8_ghost_gtree_equal_function (const void *ghost_gtreea, const void *ghost_gtree
 
 /** The hash function for the process_offsets hash table. The hash value is the process' mpirank.
  * \param [in] process_data   A \ref t8_ghost_process_hash_t.
- * \param [in] user_data      Unused but needed for usage with \ref sc_hash_new.
+ * \param [in] user_data      Unused but needed for usage with sc_hash_new.
  * \return                    The mpirank of \a process_data.
  */
 static unsigned
@@ -80,7 +80,7 @@ t8_ghost_process_hash_function (const void *process_data, [[maybe_unused]] const
  * Two entries are the same if their mpiranks are equal.
  * \param [in] process_dataa   A \ref t8_ghost_process_hash_t.
  * \param [in] process_datab   A \ref t8_ghost_process_hash_t.
- * \param [in] user            Unused but needed for usage with \ref sc_hash_new.
+ * \param [in] user            Unused but needed for usage with sc_hash_new.
  * \return                     True if and only if \a process_dataa and \a process_datab have the same mpirank.
  */
 static int
@@ -95,7 +95,7 @@ t8_ghost_process_equal_function (const void *process_dataa, const void *process_
 
 /** The hash function for the remote_ghosts hash table. The hash value for an mpirank is just the rank.
  * \param [in] remote_data   A \ref t8_ghost_remote_t.
- * \param [in] user_data     Unused but needed for usage with \ref sc_hash_new.
+ * \param [in] user_data     Unused but needed for usage with sc_hash_new.
  * \return                   The remote rank of \a remote_data.
  */
 static unsigned
@@ -110,7 +110,7 @@ t8_ghost_remote_hash_function (const void *remote_data, [[maybe_unused]] const v
  * Two entries are the same if they have the same rank.
  * \param [in] remote_dataa   A \ref t8_ghost_remote_t.
  * \param [in] remote_datab   A \ref t8_ghost_remote_t.
- * \param [in] user           Unused but needed for usage with \ref sc_hash_new.
+ * \param [in] user           Unused but needed for usage with sc_hash_new.
  * \return                    True if and only if \a remote_dataa and \a remote_datab have the same remote rank.
  */
 static int
