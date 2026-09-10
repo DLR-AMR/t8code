@@ -33,8 +33,11 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 
-/* The hash function for the global tree hash.
- * As hash value we just return the global tree id. */
+/** The hash function for the global tree hash. As hash value we just return the global tree id.
+ * \param [in] ghost_gtree_hash   A \ref t8_ghost_gtree_hash_t.
+ * \param [in] data               Unused but needed for usage with \ref sc_hash_new.
+ * \return                        The global tree id of \a ghost_gtree_hash.
+ */
 static unsigned
 t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, [[maybe_unused]] const void *data)
 {
@@ -43,8 +46,12 @@ t8_ghost_gtree_hash_function (const void *ghost_gtree_hash, [[maybe_unused]] con
   return (unsigned) object->global_id;
 }
 
-/* The equal function for two global tree hash objects.
- * Two t8_ghost_gtree_hash_t are considered equal if the global tree ids are the same.
+/** The equal function for two global tree hash objects.
+ * Two \ref t8_ghost_gtree_hash_t are considered equal if the global tree ids are the same.
+ * \param [in] ghost_gtreea   A \ref t8_ghost_gtree_hash_t.
+ * \param [in] ghost_gtreeb   A \ref t8_ghost_gtree_hash_t.
+ * \param [in] user           Unused but needed for usage with \ref sc_hash_new.
+ * \return                    True if and only if \a ghost_gtreea and \a ghost_gtreeb have the same global tree id.
  */
 static int
 t8_ghost_gtree_equal_function (const void *ghost_gtreea, const void *ghost_gtreeb, [[maybe_unused]] const void *user)
@@ -56,7 +63,11 @@ t8_ghost_gtree_equal_function (const void *ghost_gtreea, const void *ghost_gtree
   return objecta->global_id == objectb->global_id;
 }
 
-/* The hash value for an entry of the process_offsets hash is the processes mpirank. */
+/** The hash function for the process_offsets hash table. The hash value is the process' mpirank.
+ * \param [in] process_data   A \ref t8_ghost_process_hash_t.
+ * \param [in] user_data      Unused but needed for usage with \ref sc_hash_new.
+ * \return                    The mpirank of \a process_data.
+ */
 static unsigned
 t8_ghost_process_hash_function (const void *process_data, [[maybe_unused]] const void *user_data)
 {
@@ -65,8 +76,13 @@ t8_ghost_process_hash_function (const void *process_data, [[maybe_unused]] const
   return process->mpirank;
 }
 
-/* The equal function for the process_offsets array.
- * Two entries are the same if their mpiranks are equal. */
+/** The equal function for the process_offsets hash table.
+ * Two entries are the same if their mpiranks are equal.
+ * \param [in] process_dataa   A \ref t8_ghost_process_hash_t.
+ * \param [in] process_datab   A \ref t8_ghost_process_hash_t.
+ * \param [in] user            Unused but needed for usage with \ref sc_hash_new.
+ * \return                     True if and only if \a process_dataa and \a process_datab have the same mpirank.
+ */
 static int
 t8_ghost_process_equal_function (const void *process_dataa, const void *process_datab,
                                  [[maybe_unused]] const void *user)
@@ -77,8 +93,11 @@ t8_ghost_process_equal_function (const void *process_dataa, const void *process_
   return processa->mpirank == processb->mpirank;
 }
 
-/* The hash function for the remote_ghosts hash table.
- * The hash value for an mpirank is just the rank */
+/** The hash function for the remote_ghosts hash table. The hash value for an mpirank is just the rank.
+ * \param [in] remote_data   A \ref t8_ghost_remote_t.
+ * \param [in] user_data     Unused but needed for usage with \ref sc_hash_new.
+ * \return                   The remote rank of \a remote_data.
+ */
 static unsigned
 t8_ghost_remote_hash_function (const void *remote_data, [[maybe_unused]] const void *user_data)
 {
@@ -87,8 +106,13 @@ t8_ghost_remote_hash_function (const void *remote_data, [[maybe_unused]] const v
   return remote->remote_rank;
 }
 
-/* The equal function for the remote hash table.
- * Two entries are the same if they have the same rank. */
+/** The equal function for the remote_ghosts hash table.
+ * Two entries are the same if they have the same rank.
+ * \param [in] remote_dataa   A \ref t8_ghost_remote_t.
+ * \param [in] remote_datab   A \ref t8_ghost_remote_t.
+ * \param [in] user           Unused but needed for usage with \ref sc_hash_new.
+ * \return                    True if and only if \a remote_dataa and \a remote_datab have the same remote rank.
+ */
 static int
 t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_datab, [[maybe_unused]] const void *user)
 {
@@ -98,7 +122,13 @@ t8_ghost_remote_equal_function (const void *remote_dataa, const void *remote_dat
   return remotea->remote_rank == remoteb->remote_rank;
 }
 
-/* Initialize a t8_ghost_remote_tree_t */
+/** Initialize a \ref t8_ghost_remote_tree_t.
+ * \param [in] forest        A forest with constructed ghost layer.
+ * \param [in] gtreeid       The global tree id of the tree to initialize.
+ * \param [in] remote_rank   The remote rank that owns \a remote_tree.
+ * \param [in] tree_class    The element class of the tree.
+ * \param [out] remote_tree  On output, initialized to represent tree \a gtreeid of \a remote_rank.
+ */
 static void
 t8_ghost_init_remote_tree (t8_forest_t forest, t8_gloidx_t gtreeid, int remote_rank, t8_eclass_t tree_class,
                            t8_ghost_remote_tree_t *remote_tree)
@@ -392,8 +422,13 @@ t8_forest_ghost_send_end ([[maybe_unused]] t8_forest_t forest, t8_forest_ghost_t
   T8_FREE (requests);
 }
 
-/* Receive a single message from a remote process, after the message was successfully probed.
- * Returns the allocated receive buffer and the number of bytes received */
+/** Receive a single message from a remote process, after the message was successfully probed.
+ * \param [in] recv_rank    The rank the message is received from.
+ * \param [in] comm         The MPI communicator to receive with.
+ * \param [in] status       The status returned by the successful probe for the message.
+ * \param [out] recv_bytes  On output, the number of bytes received.
+ * \return                  The allocated receive buffer holding the message.
+ */
 static char *
 t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm, sc_MPI_Status status, int *recv_bytes)
 {
@@ -416,7 +451,7 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm, sc_MPI_Status 
   return recv_buffer;
 }
 
-/* Parse a message from a remote process and correctly include the received
+/** Parse a message from a remote process and correctly include the received
  * elements in the ghost structure.
  * The message looks like:
  * num_trees | pad | treeid 0 | pad | eclass 0 | pad | num_elems 0 | pad | elements | pad | treeid 1 | ...
@@ -424,11 +459,15 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm, sc_MPI_Status 
  *
  * pad is paddind, see T8_ADD_PADDING
  *
- * current_element_offset is updated in each step to store the element offset
- * of the next ghost tree to be inserted.
- * When called with the first message, current_element_offset must be set to 0.
+ * \note Currently we expect that the messages arrive in order of the sender's rank.
+ * \param [in] forest                       A forest with constructed ghost layer.
+ * \param [in,out] ghost                    The ghost structure to insert the received elements into.
+ * \param [in,out] current_element_offset   Updated in each step to store the element offset
+ *                                          of the next ghost tree to be inserted. Must be 0 when called with the first message.
+ * \param [in] recv_rank                    The rank the message was received from.
+ * \param [in] recv_buffer                  The received message. Freed by this function.
+ * \param [in] recv_bytes                   The number of bytes in \a recv_buffer.
  */
-/* Currently we expect that the messages arrive in order of the sender's rank. */
 static void
 t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t ghost,
                                         t8_locidx_t *current_element_offset, int recv_rank, char *recv_buffer,
