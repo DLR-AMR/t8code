@@ -159,7 +159,7 @@ double
 t8_forest_profile_get_balance_time (t8_forest_t forest, int *balance_rounds);
 
 /** 
- * Get the runtime of the last call to \ref t8_forest_ghost_create.
+ * Get the runtime of the last call to \ref t8_forest_ghost_create_ext.
  * \param [in]   forest         The forest.
  * \param [out]  ghosts_sent    On output the number of ghost elements sent to other processes
  *                              if profiling was activated.
