@@ -55,15 +55,13 @@ t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
 void
 t8_forest_ghost_definition_w_search::search_for_ghost_elements (t8_forest_t forest)
 {
-  void *store_user_data = nullptr;
-
-  /* Store any user data that may reside on the forest */
-  store_user_data = t8_forest_get_user_data (forest);
-  /* Set the user data for the search routine */
-  t8_forest_set_user_data (forest, &search_data);
+  /* Store any internal data that may reside on the forest */
+  void *const store_t8code_data = forest->t8code_data;
+  /* Set the internal data for the search routine */
+  forest->t8code_data = search_data;
   /* Loop over the trees of the forest */
   t8_forest_search (forest, search_fn, nullptr, nullptr);
 
-  /* Reset the user data from before search */
-  t8_forest_set_user_data (forest, store_user_data);
+  /* Reset the internal data from before the search */
+  forest->t8code_data = store_t8code_data;
 }
