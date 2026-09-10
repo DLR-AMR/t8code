@@ -49,16 +49,16 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
   }
 
   sc_array_t bounds_per_level; /**< For each level from the nca to the parent of the current element
-                                           we store for each face the lower and upper bounds of the owners at
-                                           this face. We also store bounds for the element's owners.
-                                           Each entry is an array of 2 * (max_num_faces + 1) integers,
-                                           | face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | */
+                                     we store for each face the lower and upper bounds of the owners at
+                                     this face. We also store bounds for the element's owners.
+                                     Each entry is an array of 2 * (max_num_faces + 1) integers,
+                                     | face_0 low | face_0 high | ... | face_n low | face_n high | owner low | owner high | */
   sc_array_t face_owners;      /**< Temporary storage for all owners at a leaf's face */
   const t8_scheme *scheme;     /**< The scheme of the forest. */
   t8_gloidx_t gtreeid;         /**< The global tree id of the tree currently searched. */
   int level_nca;               /**< The refinement level of the root element in the search.
-                                           At position element_level - level_nca in bounds_per_level are the bounds
-                                           for the parent of element. */
+                                     At position element_level - level_nca in bounds_per_level are the bounds
+                                     for the parent of element. */
   int max_num_faces;           /**< The maximum number of faces of any element in the forest. */
   t8_eclass_t eclass;          /**< The element class of the tree currently searched. */
 #if T8_ENABLE_DEBUG
@@ -74,7 +74,7 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
  * \param [in] is_leaf          True if \a element is a leaf of \a forest.
  * \param [in] leaves           Unused but needed for the usage with \ref t8_forest_search.
  * \param [in] tree_leaf_index  The index of \a element in its tree's leaf elements, if \a is_leaf, else negative.
- * \return                     0 if the search should not recurse into the children of \a element, 1 otherwise.
+ * \return                      0 if the search should not recurse into the children of \a element, 1 otherwise.
  */
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
