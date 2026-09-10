@@ -117,10 +117,12 @@ struct t8_forest_ghost_definition
   /**
    * Compute and collect ownerships to create the necessary offset
    * for elements, trees and first descendant.
-   * Use memory_flag to record the allocation of memory
+   * \param [in,out] forest   The forest.
+   * \return A bitmask of \ref t8_ghost_definition_memory_flag values recording which of the
+   * offset arrays were newly allocated by this call. Has to be passed to \ref clean_up afterwards.
    * \note this function could be used in do_ghost
    */
-  virtual void
+  virtual int
   communicate_ownerships (t8_forest_t forest);
 
   /**
@@ -132,10 +134,12 @@ struct t8_forest_ghost_definition
 
   /**
    * If memory was allocated for the offset array in communicate_ownerships it is released here.
-   * Use memory_flag for this.
+   * \param [in,out] forest       The forest.
+   * \param [in]     memory_flag  The bitmask returned by the matching \ref communicate_ownerships
+   * call for this \a forest.
    */
   virtual void
-  clean_up (t8_forest_t forest);
+  clean_up (t8_forest_t forest, int memory_flag);
 
   /**
    * Initialize the reference count.
@@ -160,8 +164,6 @@ struct t8_forest_ghost_definition
   t8_ghost_type_t ghost_type { T8_GHOST_NONE };
   /** The reference count of the ghost_definition. TODO: Replace by shared_ptr when forest becomes a class. */
   t8_refcount_t rc;
-  /** Record allocated memory in communicate_ownerships for release in clean_up */
-  int32_t memory_flag {};
 };
 
 T8_EXTERN_C_END ();

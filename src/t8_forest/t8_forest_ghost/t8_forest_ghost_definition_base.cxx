@@ -30,9 +30,11 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 
-void
+int
 t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
 {
+  int memory_flag = 0;
+
   if (forest->element_offsets == nullptr) {
     /* create element offset array if not done already */
     memory_flag = memory_flag | CREATE_ELEMENT_ARRAY;
@@ -48,6 +50,7 @@ t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
     memory_flag = memory_flag | CREATE_GFIRST_DESC_ARRAY;
     t8_forest_partition_create_first_desc (forest);
   }
+  return memory_flag;
 }
 
 void
@@ -68,7 +71,7 @@ t8_forest_ghost_definition::communicate_ghost_elements (t8_forest_t forest)
 }
 
 void
-t8_forest_ghost_definition::clean_up (t8_forest_t forest)
+t8_forest_ghost_definition::clean_up (t8_forest_t forest, int memory_flag)
 {
   if (memory_flag & CREATE_ELEMENT_ARRAY) {
     /* Free the offset memory, if allocated */

@@ -36,7 +36,7 @@ t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
     return 0;
   }
 
-  communicate_ownerships (forest);
+  const int memory_flag = communicate_ownerships (forest);
 
   if (t8_forest_get_local_num_leaf_elements (forest) > 0) {
 
@@ -47,7 +47,7 @@ t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
 
     communicate_ghost_elements (forest);
   }
-  clean_up (forest);
+  clean_up (forest, memory_flag);
 
   return 1;
 }
