@@ -101,7 +101,7 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
 
   /* The level of the current element */
   level = data->scheme->element_get_level (data->eclass, element);
-  /* Get a pointer to the owner at face bounds of this element, if there doesnt exist
+  /* Get a pointer to the owner at face bounds of this element, if there doesn't exist
    * an entry for this in the bounds_per_level array yet, we allocate it */
   T8_ASSERT (level >= data->level_nca);
   if (data->bounds_per_level.elem_count <= (size_t) level - data->level_nca + 1) {
