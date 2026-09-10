@@ -24,7 +24,6 @@
 #define T8_FOREST_GHOST_DEFINITION_C_INTERFACE_H
 
 #include <t8.h>
-#include <t8_forest/t8_forest_general.h>
 
 /** This typedef holds virtual functions for a particular ghost definition.
  * We need it so that we can use t8_ghost_definition_c pointers in .c files
