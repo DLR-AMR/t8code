@@ -220,7 +220,7 @@ t8_forest_ghost_create_ext (t8_forest_t forest);
  * experimental version using the ghost_v3 algorithm
  * \param [in,out]    forest     The forest.
  * \a forest must be committed before calling this function.
- * \a forest->ghost_definition must have the \a type FACE and the \a version 1
+ * \a forest->ghost_definition must have the \a type FACE and the \a version 3
  */
 void
 t8_forest_ghost_create_topdown (t8_forest_t forest);

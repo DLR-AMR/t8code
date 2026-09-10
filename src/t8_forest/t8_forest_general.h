@@ -370,8 +370,9 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type);
 
-/** Set a ghost_definition.
- * This should only be used if the application creates its own ghost_definition class (type = T8_GHOST_USER_DEFINED)
+/** Set an explicit ghost_definition for a forest.
+ * This is used both when the application defines its own ghost_definition class
+ * (type = T8_GHOST_USER_DEFINED) and to select a non-default face-neighbor ghost version.
  * \param [in]    forest          The forest.
  * \param [in]    do_ghost        If 0 no ghost layer will be computed.
  * \param [in]    ghost_definition Pointer to an object of the class ghost_definition or a derived class
@@ -539,7 +540,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
 
 /**
  * Query whether a given element or a ghost is a leaf of a local or ghost tree in a forest.
- * 
+ *
  * \param [in]  forest    The forest.
  * \param [in]  element   An element of a local tree in \a forest.
  * \param [in]  local_tree A local tree id of \a forest or a ghost tree id
@@ -648,7 +649,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
  * compute the index of the face neighbor of the element - provided that only one or no
  * face neighbors exists.
  * HANDLE WITH CARE. DO NOT CALL IF THE FOREST IS NOT UNIFORM.
- * 
+ *
  * \param[in] forest        The forest. Must be committed.
  * \param[in] element_index Index of an element in \a forest. Must have only one or no facen neighbors across the given face.
  *                          0 <= \a element_index < num_local_elements + num_ghosts
@@ -675,7 +676,7 @@ t8_forest_same_level_leaf_face_neighbor_index (const t8_forest_t forest, const t
  *      and \a neighbor_face for \a neighbor_leaf respectively. \a neighbor_leaf must be one level coarser than \a leaf.
  *      Otherwise the behavior is undefined.
  * \note This function is designed to be called after \ref t8_forest_leaf_face_neighbors_ext to complement its output.
- *       It is primarily intended for balanced forests, but can be used on any committed forest as long as the preconditions 
+ *       It is primarily intended for balanced forests, but can be used on any committed forest as long as the preconditions
  *       hold (i.e. the forest must be ''locally balanced'').
  */
 int
