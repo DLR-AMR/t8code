@@ -43,6 +43,11 @@
 T8_EXTERN_C_BEGIN ();
 
 #if T8_ENABLE_DEBUG
+/** Check whether a local ghost tree index is valid for a forest.
+ * \param [in] forest        A forest with constructed ghost layer.
+ * \param [in] lghost_tree   A local ghost tree index to check.
+ * \return                   True if \a lghost_tree is a valid ghost tree index of \a forest.
+ */
 static bool
 t8_forest_tree_is_ghost (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
@@ -80,7 +85,11 @@ t8_forest_ghost_num_trees (const t8_forest_t forest)
   return forest->ghosts->ghost_trees->elem_count;
 }
 
-/* Given an index into the ghost_trees array return the ghost tree */
+/** Given an index into the ghost_trees array return the ghost tree.
+ * \param [in] forest        A forest with constructed ghost layer.
+ * \param [in] lghost_tree   A local ghost tree index of \a forest.
+ * \return                   The ghost tree at index \a lghost_tree.
+ */
 static t8_ghost_tree_t *
 t8_forest_ghost_get_tree (const t8_forest_t forest, const t8_locidx_t lghost_tree)
 {
@@ -299,7 +308,11 @@ t8_forest_ghost_get_remote (t8_forest_t forest, int remote)
   return (t8_ghost_remote_t *) sc_array_index (&forest->ghosts->remote_ghosts->a, index);
 }
 
-/* Return a remote processes info about the stored ghost elements */
+/** Return a remote processes info about the stored ghost elements.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The process info entry of \a remote.
+ */
 static t8_ghost_process_hash_t *
 t8_forest_ghost_get_proc_info (t8_forest_t forest, int remote)
 {
@@ -361,8 +374,13 @@ t8_forest_ghost_remote_first_elem (t8_forest_t forest, int remote)
   return proc_entry->ghost_offset;
 }
 
-/* Fill the send buffer for a ghost data exchange for on remote rank.
- * returns the number of bytes in the buffer. */
+/** Fill the send buffer for a ghost data exchange for one remote rank.
+ * \param [in] forest        A forest with constructed ghost layer.
+ * \param [in] remote        A remote rank of the ghost layer in \a forest.
+ * \param [out] pbuffer      On output, allocated and filled with the data to send to \a remote.
+ * \param [in] element_data  An array of per-element data of the local and ghost elements of \a forest.
+ * \return                   The number of bytes in \a pbuffer.
+ */
 static size_t
 t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote, char **pbuffer, sc_array_t *element_data)
 {
@@ -426,6 +444,12 @@ t8_forest_ghost_exchange_fill_send_buffer (t8_forest_t forest, int remote, char 
   return byte_count;
 }
 
+/** Begin an asynchronous ghost data exchange by posting the sends and receives.
+ * t8_forest_ghost_exchange_end must be called to complete the exchange.
+ * \param [in] forest            A forest with constructed ghost layer.
+ * \param [in,out] element_data  An array of per-element data of the local and ghost elements of \a forest.
+ * \return                       A newly allocated exchange context to be passed to t8_forest_ghost_exchange_end.
+ */
 static t8_ghost_data_exchange_t *
 t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t *element_data)
 {
@@ -518,6 +542,9 @@ t8_forest_ghost_exchange_begin (t8_forest_t forest, sc_array_t *element_data)
   return data_exchange;
 }
 
+/** Wait for a ghost data exchange started with t8_forest_ghost_exchange_begin to finish and clean it up.
+ * \param [in,out] data_exchange   An exchange context created by t8_forest_ghost_exchange_begin.
+ */
 static void
 t8_forest_ghost_exchange_end (t8_ghost_data_exchange_t *data_exchange)
 {
@@ -630,7 +657,9 @@ t8_forest_ghost_print (t8_forest_t forest)
   t8_debugf ("Ghost structure:\n%s\n%s\n", remote_buffer, buffer);
 }
 
-/* Completely destroy a ghost structure */
+/** Completely destroy a ghost structure.
+ * \param [in,out] pghost   On input, a ghost structure whose reference count has reached zero. Set to NULL on output.
+ */
 static void
 t8_forest_ghost_reset (t8_forest_ghost_t *pghost)
 {
