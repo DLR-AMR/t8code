@@ -37,8 +37,13 @@ T8_EXTERN_C_BEGIN ();
  * Flags for communicate_ownerships
  * store in the flags which memory was allocated
  */
-enum t8_ghost_definition_memory_flag { CREATE_ELEMENT_ARRAY = 1, CREATE_TREE_ARRAY = 2, CREATE_GFIRST_DESC_ARRAY = 4 };
+enum t8_ghost_definition_memory_flag {
+  CREATE_ELEMENT_ARRAY = 1,    /**< The element offset array was allocated. */
+  CREATE_TREE_ARRAY = 2,       /**< The tree offset array was allocated. */
+  CREATE_GFIRST_DESC_ARRAY = 4 /**< The first descendant offset array was allocated. */
+};
 
+/** Base class for the different ghost definitions (faces, edges, user_defined, ...). */
 struct t8_forest_ghost_definition
 {
  public:
@@ -132,6 +137,9 @@ struct t8_forest_ghost_definition
   virtual void
   clean_up (t8_forest_t forest);
 
+  /**
+   * Initialize the reference count.
+   */
   void
   init ()
   {
