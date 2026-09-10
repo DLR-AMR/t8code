@@ -33,6 +33,15 @@
  * Face neighbor based ghost computation.
  * This class computes the ghosts of a process via a face neighbor based ghost definition.
  * It supports three different versions for this definition, but version 3 suffices for most applications.
+ *
+ * Version 1 (only for balanced forests) follows the algorithm in:
+ * p4est: Scalable Algorithms For Parallel Adaptive Mesh Refinement On Forests of Octrees
+ * - C. Burstedde, L. C. Wilcox, O. Ghattas
+ *
+ * Version 2 (also for unbalanced forests) follows the algorithm in:
+ * Recursive algorithms for distributed forests of octrees - T. Isaac, C. Burstedde, L. C. Wilcox and O. Ghattas
+ *
+ * Version 3 uses a top down search and is also available with unbalanced forests.
  */
 struct t8_forest_ghost_definition_face: public t8_forest_ghost_definition_w_search
 {
