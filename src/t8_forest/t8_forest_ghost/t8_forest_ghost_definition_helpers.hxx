@@ -29,39 +29,38 @@
 
 #include <t8_forest/t8_forest_general.h>
 
-/* The information stored for the ghost trees */
+/** The information stored for the ghost trees */
 typedef struct
 {
-  t8_gloidx_t global_id;       /* global id of the tree */
-  t8_locidx_t element_offset;  /* The count of all ghost elements in all smaller ghost trees */
-  t8_element_array_t elements; /* The ghost elements of that tree */
-  t8_eclass_t eclass;          /* The trees element class */
+  t8_gloidx_t global_id;       /**< global id of the tree */
+  t8_locidx_t element_offset;  /**< The count of all ghost elements in all smaller ghost trees */
+  t8_element_array_t elements; /**< The ghost elements of that tree */
+  t8_eclass_t eclass;          /**< The trees element class */
 } t8_ghost_tree_t;
 
-/* The data structure stored in the global_tree_to_ghost_tree hash table. */
+/** The data structure stored in the global_tree_to_ghost_tree hash table. */
 typedef struct
 {
-  t8_gloidx_t global_id; /* global tree id */
-  size_t index;          /* the index of that global tree in the ghost_trees array. */
+  t8_gloidx_t global_id; /**< global tree id */
+  size_t index;          /**< the index of that global tree in the ghost_trees array. */
 } t8_ghost_gtree_hash_t;
 
-/* The data structure stored in the process_offsets array. */
+/** The data structure stored in the process_offsets array. */
 typedef struct
 {
-  int mpirank;              /* rank of the process */
-  t8_locidx_t ghost_offset; /* The number of ghost elements for all previous ranks */
-  size_t tree_index;        /* index of first ghost tree of this process in ghost_trees */
-  size_t first_element;     /* the index of the first element in the elements array of the ghost tree. */
+  int mpirank;              /**< rank of the process */
+  t8_locidx_t ghost_offset; /**< The number of ghost elements for all previous ranks */
+  size_t tree_index;        /**< index of first ghost tree of this process in ghost_trees */
+  size_t first_element;     /**< the index of the first element in the elements array of the ghost tree. */
 } t8_ghost_process_hash_t;
 
-/* The information for a remote process, what data we have to send to them.
- */
+/** The information for a remote process, what data we have to send to them. */
 typedef struct
 {
-  int recv_rank;           /* The rank to which we send. */
-  size_t num_bytes;        /* The number of bytes that we send. */
-  sc_MPI_Request *request; /* Communication request, not owned by this struct. */
-  char *buffer;            /* The send buffer. */
+  int recv_rank;           /**< The rank to which we send. */
+  size_t num_bytes;        /**< The number of bytes that we send. */
+  sc_MPI_Request *request; /**< Communication request, not owned by this struct. */
+  char *buffer;            /**< The send buffer. */
 } t8_ghost_mpi_send_info_t;
 
 /**
@@ -87,16 +86,24 @@ void
 t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_rank, t8_locidx_t ltreeid,
                      const t8_element_t *elem, t8_locidx_t element_index);
 
-/* Begin sending the ghost elements from the remote ranks
- * using non-blocking communication.
- * Afterwards,
- *  t8_forest_ghost_send_end
- * must be called to end the communication.
- * Returns an array of mpi_send_info_t, one for each remote rank.
+/**
+ * Begin sending the ghost elements from the remote ranks using non-blocking communication.
+ * Afterwards, \ref t8_forest_ghost_send_end must be called to end the communication.
+ * \param [in]      forest    The forest.
+ * \param [in]      ghost     The ghosts of the forest.
+ * \param [out]     requests  On output, filled with one MPI request per remote rank.
+ * \return                    An array of \ref t8_ghost_mpi_send_info_t, one for each remote rank.
  */
 t8_ghost_mpi_send_info_t *
 t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_Request **requests);
 
+/**
+ * End the non-blocking communication started by \ref t8_forest_ghost_send_start.
+ * \param [in]      forest    The forest.
+ * \param [in]      ghost     The ghosts of the forest.
+ * \param [in]      send_info The array returned by \ref t8_forest_ghost_send_start.
+ * \param [in]      requests  The requests filled by \ref t8_forest_ghost_send_start.
+ */
 void
 t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost, t8_ghost_mpi_send_info_t *send_info,
                           sc_MPI_Request *requests);
