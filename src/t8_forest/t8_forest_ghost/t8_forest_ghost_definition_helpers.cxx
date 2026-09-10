@@ -457,7 +457,7 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm, sc_MPI_Status 
  * num_trees | pad | treeid 0 | pad | eclass 0 | pad | num_elems 0 | pad | elements | pad | treeid 1 | ...
  *  size_t   |     |t8_gloidx |     |t8_eclass |     | size_t      |     | t8_element_t |
  *
- * pad is paddind, see T8_ADD_PADDING
+ * pad is padding, see T8_ADD_PADDING
  *
  * \note Currently we expect that the messages arrive in order of the sender's rank.
  * \param [in] forest                       A forest with constructed ghost layer.
