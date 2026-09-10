@@ -30,15 +30,15 @@
 int
 t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
 {
+  if (ghost_get_type () == T8_GHOST_NONE) {
+    t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
+               "Ghost layer is not constructed.\n");
+    return 0;
+  }
+
   communicate_ownerships (forest);
 
   if (t8_forest_get_local_num_leaf_elements (forest) > 0) {
-
-    if (ghost_get_type () == T8_GHOST_NONE) {
-      t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
-                 "Ghost layer is not constructed.\n");
-      return 0;
-    }
 
     /* Initialize the ghost structure */
     t8_forest_ghost_init (&forest->ghosts, ghost_type);
