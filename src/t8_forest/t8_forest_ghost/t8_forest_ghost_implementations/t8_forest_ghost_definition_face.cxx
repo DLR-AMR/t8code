@@ -66,6 +66,16 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
 #endif
 };
 
+/** Search callback that computes owner bounds for elements and their face neighbors, adding
+ * leaf elements with remote face neighbors as remote ghosts.
+ * \param [in] forest           A forest with constructed ghost layer, used as the search callback.
+ * \param [in] ltreeid          The local tree id of the tree currently searched.
+ * \param [in] element          The element currently visited by the search.
+ * \param [in] is_leaf          True if \a element is a leaf of \a forest.
+ * \param [in] leaves           Unused but needed for the usage with \ref t8_forest_search.
+ * \param [in] tree_leaf_index  The index of \a element in its tree's leaf elements, if \a is_leaf, else negative.
+ * \return                     0 if the search should not recurse into the children of \a element, 1 otherwise.
+ */
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                  const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
@@ -191,11 +201,12 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
   return 1;
 }
 
-/* Fill the remote ghosts of a ghost structure.
+/** Fill the remote ghosts of a ghost structure via \ref t8_forest_search using t8_forest_ghost_search_boundary.
  * We iterate through all elements and check if their neighbors
  * lie on remote processes. If so, we add the element to the
  * remote_ghosts array of ghost.
  * We also fill the remote_processes here.
+ * \param [in] forest   A forest with constructed ghost layer.
  */
 static void
 t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
@@ -230,14 +241,16 @@ t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
   sc_array_reset (&data.bounds_per_level);
 }
 
-/* Fill the remote ghosts of a ghost structure.
+/** Fill the remote ghosts of a ghost structure.
  * We iterate through all elements and check if their neighbors
  * lie on remote processes. If so, we add the element to the
  * remote_ghosts array of ghost.
  * We also fill the remote_processes here.
- * If ghost_method is 0, then we assume a balanced forest and
- * construct the remote processes by looking at the half neighbors of an element.
- * Otherwise, we use the owners_at_face method.
+ * \param [in] forest        A forest with constructed ghost layer.
+ * \param [in,out] ghost     The ghost structure of \a forest to fill.
+ * \param [in] ghost_method  If 0, we assume a balanced forest and
+ *                           construct the remote processes by looking at the half neighbors of an element.
+ *                           Otherwise, we use the owners_at_face method.
  */
 static void
 t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int ghost_method)
