@@ -39,6 +39,7 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
     /* This is a dummy init, since we call sc_array_reset in ghost_search_boundary
      * and we should not call sc_array_reset on a non-initialized array */
     sc_array_init (&bounds_per_level, 1);
+    reset ();
   }
 
   ~t8_forest_ghost_definition_face_data () override
@@ -46,6 +47,20 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
     /* Reset the data arrays */
     sc_array_reset (&face_owners);
     sc_array_reset (&bounds_per_level);
+  }
+
+  /** Reset the per-search state to invalid starting values.
+   * Must be called before every search, since one ghost_definition (and thus
+   * one instance of this data) can be reused for several forests. */
+  void
+  reset ()
+  {
+    eclass = T8_ECLASS_COUNT;
+    gtreeid = -1;
+    scheme = nullptr;
+#if T8_ENABLE_DEBUG
+    left_out = 0;
+#endif
   }
 
   sc_array_t bounds_per_level; /**< For each level from the nca to the parent of the current element
@@ -201,46 +216,6 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
   return 1;
 }
 
-/** Fill the remote ghosts of a ghost structure via \ref t8_forest_search using t8_forest_ghost_search_boundary.
- * We iterate through all elements and check if their neighbors
- * lie on remote processes. If so, we add the element to the
- * remote_ghosts array of ghost.
- * We also fill the remote_processes here.
- * \param [in] forest   A forest with constructed ghost layer.
- */
-static void
-t8_forest_ghost_fill_remote_v3 (t8_forest_t forest)
-{
-  t8_forest_ghost_definition_face_data data;
-  void *store_t8code_data = nullptr;
-
-  /* Start with invalid entries in the user data.
-   * These are set in t8_forest_ghost_search_boundary each time a new tree is entered */
-  data.eclass = T8_ECLASS_COUNT;
-  data.gtreeid = -1;
-  data.scheme = nullptr;
-#if T8_ENABLE_DEBUG
-  data.left_out = 0;
-#endif
-  sc_array_init (&data.face_owners, sizeof (int));
-  /* This is a dummy init, since we call sc_array_reset in ghost_search_boundary
-   * and we should not call sc_array_reset on a non-initialized array */
-  sc_array_init (&data.bounds_per_level, 1);
-  /* Store any previous internal data that may reside on the forest. */
-  store_t8code_data = forest->t8code_data;
-  /* Set the internal data for the search routine. */
-  forest->t8code_data = &data;
-  /* Loop over the trees of the forest */
-  t8_forest_search (forest, t8_forest_ghost_search_boundary, nullptr, nullptr);
-
-  /* Reset the internal data from before the search. */
-  forest->t8code_data = store_t8code_data;
-
-  /* Reset the data arrays */
-  sc_array_reset (&data.face_owners);
-  sc_array_reset (&data.bounds_per_level);
-}
-
 /** Fill the remote ghosts of a ghost structure.
  * We iterate through all elements and check if their neighbors
  * lie on remote processes. If so, we add the element to the
@@ -349,8 +324,8 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
 }
 
 t8_forest_ghost_definition_face::t8_forest_ghost_definition_face (const int version)
-  : t8_forest_ghost_definition_w_search (T8_GHOST_FACES, t8_forest_ghost_search_boundary,
-                                         new t8_forest_ghost_definition_face_data),
+  : t8_forest_ghost_definition_w_search (T8_GHOST_FACES, version == 3 ? t8_forest_ghost_search_boundary : nullptr,
+                                         version == 3 ? new t8_forest_ghost_definition_face_data : nullptr),
     version (version)
 {
   T8_ASSERT (1 <= version && version <= 3);
@@ -360,13 +335,17 @@ void
 t8_forest_ghost_definition_face::search_for_ghost_elements (t8_forest_t forest)
 {
   T8_ASSERT (forest->ghosts != nullptr);
-  t8_forest_ghost_t ghost = forest->ghosts;
   if (version == 3) {
-    t8_forest_ghost_fill_remote_v3 (forest);
+    /* Version 3 is search-based: reset the persistent search data (this object,
+     * and thus its search_data, may be reused for several forests) and let the
+     * base class drive the search with our search_fn/search_data. */
+    static_cast<t8_forest_ghost_definition_face_data *> (search_data)->reset ();
+    t8_forest_ghost_definition_w_search::search_for_ghost_elements (forest);
   }
   else {
-    /* Construct the remote elements and processes. */
-    t8_forest_ghost_fill_remote (forest, ghost, version != 1);
+    /* Versions 1 and 2 are not search-based; construct the remote elements
+     * and processes directly. */
+    t8_forest_ghost_fill_remote (forest, forest->ghosts, version != 1);
   }
 }
 

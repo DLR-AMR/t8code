@@ -65,7 +65,9 @@ struct t8_forest_ghost_definition_face: public t8_forest_ghost_definition_w_sear
 
  protected:
   /**
-   * Fills the remote ghosts using a tree-based search.
+   * Fills the remote ghosts. Version 3 does so via the inherited tree-based
+   * search (using this class's search_fn/search_data); versions 1 and 2 are
+   * not search-based and compute the remote elements directly.
    * \param [in,out]    forest     The forest.
    */
   void
