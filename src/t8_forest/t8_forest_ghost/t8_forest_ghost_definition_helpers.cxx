@@ -556,17 +556,21 @@ t8_forest_ghost_parse_received_message (t8_forest_t forest, t8_forest_ghost_t gh
   T8_ASSERT (added_process);
 }
 
-/* In forest_ghost_receive we need a lookup table to give us the position
+/** In forest_ghost_receive we need a lookup table to give us the position
  * of a process in the ghost->remote_processes array, given the rank of a process.
  * We implement this via a hash table with the following struct as entry. */
 typedef struct t8_recv_list_entry_struct
 {
-  int rank;                    /* The rank of this process */
-  int pos_in_remote_processes; /* The position of this process in the remote_processes array */
+  int rank;                    /**< The rank of this process */
+  int pos_in_remote_processes; /**< The position of this process in the remote_processes array */
 } t8_recv_list_entry_t;
 
-/* We hash these entries by their rank */
-unsigned
+/** The hash function for the receive list hash table. We hash these entries by their rank.
+ * \param [in] v1   A \ref t8_recv_list_entry_t.
+ * \param [in] u    Unused.
+ * \return          The rank of \a v1.
+ */
+static unsigned
 t8_recv_list_entry_hash (const void *v1, [[maybe_unused]] const void *u)
 {
   const t8_recv_list_entry_t *e1 = (const t8_recv_list_entry_t *) v1;
@@ -574,8 +578,13 @@ t8_recv_list_entry_hash (const void *v1, [[maybe_unused]] const void *u)
   return e1->rank;
 }
 
-/* two entries are considered equal if they have the same rank. */
-int
+/** The equal function for the receive list hash table. Two entries are considered equal if they have the same rank.
+ * \param [in] v1   A \ref t8_recv_list_entry_t.
+ * \param [in] v2   A \ref t8_recv_list_entry_t.
+ * \param [in] u    Unused.
+ * \return          True if and only if \a v1 and \a v2 have the same rank.
+ */
+static int
 t8_recv_list_entry_equal (const void *v1, const void *v2, [[maybe_unused]] const void *u)
 {
   const t8_recv_list_entry_t *e1 = (const t8_recv_list_entry_t *) v1;
