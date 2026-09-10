@@ -225,7 +225,11 @@ t8_forest_ghost_create_ext (t8_forest_t forest);
 void
 t8_forest_ghost_create_topdown (t8_forest_t forest);
 
-/* Return the remote struct of a given remote rank */
+/** Return the remote struct of a given remote rank.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The \ref t8_ghost_remote_t of \a remote.
+ */
 t8_ghost_remote_t *
 t8_forest_ghost_get_remote (t8_forest_t forest, int remote);
 
