@@ -204,7 +204,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
    * compute a ghost layer for the set_from forest */
   if (forest->set_from->ghosts == nullptr) {
     /* Check if the forest has a ghost_definition and that it is supported. */
-    t8_forest_ghost_definition_c *temp_ghost_definition;
+    t8_forest_ghost_definition_c *temp_ghost_definition = nullptr;
     int create_ghost_definition = 0; /* flag if we need to create a temporary ghost definition for balance */
     if (forest->set_from->ghost_definition == nullptr) {
       t8_debugf ("Forest has ghosts but no ghost definition for balance.\n");
@@ -232,8 +232,8 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* compute ghost layer for set_from forest */
     t8_forest_ghost_create_topdown (forest->set_from);
     if (create_ghost_definition) {
-      /* if a ghost_definition has been created, it will be deleted here */
-      delete forest->set_from->ghost_definition;
+      /* if a ghost_definition has been created, it will be unreffed here */
+      t8_forest_ghost_definition_unref (&forest->set_from->ghost_definition);
       forest->set_from->ghost_definition = temp_ghost_definition;
       t8_debugf ("Deleted temporary face ghost definition.\n");
     }
