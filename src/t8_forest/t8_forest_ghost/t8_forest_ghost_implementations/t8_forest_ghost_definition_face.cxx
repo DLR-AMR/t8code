@@ -41,7 +41,7 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
     sc_array_init (&bounds_per_level, 1);
   }
 
-  virtual ~t8_forest_ghost_definition_face_data ()
+  ~t8_forest_ghost_definition_face_data () override
   {
     /* Reset the data arrays */
     sc_array_reset (&face_owners);
