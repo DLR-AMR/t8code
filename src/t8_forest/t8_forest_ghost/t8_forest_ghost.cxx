@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_ghost.cxx
+ * Implementation for t8_forest_ghost.h
+ */
+
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_types.h>
@@ -54,14 +58,10 @@ t8_forest_tree_is_ghost (const t8_forest_t forest, const t8_locidx_t lghost_tree
  */
 typedef struct
 {
-  int num_remotes;
-  /** The number of processes, we send to */
-  char **send_buffers;
-  /** For each remote the send buffer */
-  sc_MPI_Request *send_requests;
-  /** For each process we send to, the MPI request used */
-  sc_MPI_Request *recv_requests;
-  /** For each process we receive from, the MPI request used */
+  int num_remotes;               /**< The number of processes, we send to */
+  char **send_buffers;           /**< For each remote the send buffer */
+  sc_MPI_Request *send_requests; /**< For each process we send to, the MPI request used */
+  sc_MPI_Request *recv_requests; /**< For each process we receive from, the MPI request used */
 } t8_ghost_data_exchange_t;
 
 /* return the number of trees in a ghost */
