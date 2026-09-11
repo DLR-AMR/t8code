@@ -168,7 +168,12 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_pfc_helper.cxx
     t8_forest/t8_forest.cxx
     t8_forest/t8_forest_private.cxx
-    t8_forest/t8_forest_ghost.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.cxx
     t8_forest/t8_forest_iterate.cxx
     t8_forest/t8_forest_balance.cxx
     t8_forest/t8_forest_search/t8_forest_search.cxx
@@ -289,7 +294,7 @@ install( DIRECTORY t8_forest
     PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
-    PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
+    PATTERN "t8_forest/t8_forest_ghost/t8_forest_ghost.h "  EXCLUDE
     PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry

@@ -42,7 +42,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
   if (sreturn >= BUFSIZ) {
     /* The filename was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated vtk file name to '%s'\n", pvtufilename);
   }
@@ -80,7 +80,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
       if (sreturn >= BUFSIZ) {
         /* The output was truncated */
-        /* Note: gcc >= 7.1 prints a warning if we 
+        /* Note: gcc >= 7.1 prints a warning if we
          * do not check the return value of snprintf. */
         t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
       }
@@ -98,7 +98,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          /* Note: gcc >= 7.1 prints a warning if we 
+          /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
@@ -122,7 +122,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          /* Note: gcc >= 7.1 prints a warning if we 
+          /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
@@ -140,7 +140,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
 
         if (sreturn >= BUFSIZ) {
           /* The output was truncated */
-          /* Note: gcc >= 7.1 prints a warning if we 
+          /* Note: gcc >= 7.1 prints a warning if we
            * do not check the return value of snprintf. */
           t8_debugf ("Warning: Truncated vtk point data description to '%s'\n", description);
         }
@@ -247,7 +247,7 @@ t8_write_pvtu (const char *filename, int num_procs, int write_tree, int write_ra
   sreturn = snprintf (filename_copy, BUFSIZ, "%s", filename);
   if (sreturn >= BUFSIZ) {
     /* The Filename was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated vtk file name copy to '%s'\n", filename_copy);
   }

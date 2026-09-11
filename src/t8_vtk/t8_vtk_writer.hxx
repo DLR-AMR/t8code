@@ -31,7 +31,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8.h>
 #include "t8_forest/t8_forest_types.h"
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
@@ -588,11 +588,11 @@ struct vtk_writer
 
 #if T8_ENABLE_VTK
 /**
- * Translate a forest into a vtkUnstructuredGrid with respect to the given flags. 
+ * Translate a forest into a vtkUnstructuredGrid with respect to the given flags.
  * This function uses the vtk library. t8code must be configured with
  * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
  * \param [in]  forest    The forest.
- * \param[in, out] unstructuredGrid 
+ * \param [in,out] unstructuredGrid
  * \param [in]  write_treeid If true, the global tree id is written for each element.
  * \param [in]  write_mpirank If true, the mpirank is written for each element.
  * \param [in]  write_level If true, the refinement level is written for each element.

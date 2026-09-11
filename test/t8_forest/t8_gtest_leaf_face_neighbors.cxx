@@ -34,7 +34,7 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <test/t8_gtest_macros.hxx>
 #include <test/t8_gtest_adapt_callbacks.hxx>
 #include "test/t8_cmesh_generator/t8_cmesh_example_sets.hxx"
