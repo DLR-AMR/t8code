@@ -16,10 +16,10 @@
 <div align="center">
 
 [Overview](#overview) -
+[Gallery](#gallery) -
 [Features](#features) -
 [Getting Started](#getting-started) -
 [Documentation](#documentation) -
-[Gallery](#gallery) -
 [Get Help](#get-help) -
 [License and Contributing](#license-and-contributing) -
 [Funding](#funding) -
@@ -32,6 +32,34 @@
 ## Overview
 
 `t8code` (pronounced "tetcode") is a C/C++ library for managing parallel adaptive meshes, intended to be used as a third-party library inside numerical simulation codes or other applications that profit from meshes. Its main purpose is Adaptive Mesh Refinement (AMR): automatically refining a mesh wherever a simulation needs more detail (e.g. a shock front, a boundary layer, a chemical plume) while keeping it coarse everywhere else, so that the compute time and memory are used mostly for the regions of interest. Depending on the problem, this can speed up a simulation by orders of magnitude compared to a uniformly fine mesh. `t8code` keeps this refinement fast and scalable even when it has to happen simultaneously across thousands to millions of processor cores while the mesh keeps changing during the simulation, managing a collection (a forest) of multiple connected adaptive space-trees to do so efficiently - scaling to at least one million MPI ranks and over 1 trillion mesh elements. As a side effect of managing this distributed mesh, `t8code` also makes it comparatively easy to parallelize a simulation code built on top of it, gaining AMR along the way.
+
+## Gallery
+
+Some examples on usage scenarios for `t8code`. More detailed descriptions are below.
+
+<div align="center">
+<img src="doc/pictures/readme_gallery.gif" alt="t8code gallery slideshow">
+</div>
+
+<details>
+<summary>Descriptions</summary>
+
+- **Curved tetrahedral elements**
+  The curved geometry module uses original CAD data for the refinement and curvature of elements. The resulting geometrical accuracy is exact and the application can therefore use arbitrary high polynomial element degrees. [Fus23]
+- **Atmospheric simulations**
+  Todo
+- **2D Riemann on GPU**
+  A 2D Riemann simulation calculated on our experimental GPU solver [`t8gpu`](https://github.com/DLR-AMR/t8gpu) using `t8code` for mesh management.
+- **Curved hybrid meshes**
+  The curved geometry is implemented for different element shapes, which enables different curved element shapes in the same mesh. [Els22, Fus23]
+- **Simulation data visualization**
+  Todo
+- **NSU3D RANS over DLR-F6**
+  NSU3D computed pressure distribution on adaptively refined meshes for RANS simulation of flow over DLR-F6 wing-body, using `t8code` for dynamic AMR as described in [MK26].
+- **Mesh deformation**
+  DG Euler simulation on an adaptive t8code mesh with Radial Basis Function based mesh deformation. [Ric26]
+
+</details>
 
 ## Features
 
@@ -82,34 +110,6 @@ An example of a complete numerical simulation is our basic finite volume solver 
 `t8code` uses [Doxygen](https://doxygen.nl/) to generate the code documentation.
 You can find the documentation on [readthedocs](https://t8code.readthedocs.io/en/latest/).
 Follow the steps described in our Wiki [Documentation](https://github.com/DLR-AMR/t8code/wiki/Documentation) to create the documentation locally.
-
-## Gallery
-
-Some examples on usage scenarios for `t8code`. More detailed descriptions are below.
-
-<div align="center">
-<img src="doc/pictures/readme_gallery.gif" alt="t8code gallery slideshow">
-</div>
-
-<details>
-<summary>Descriptions</summary>
-
-- **Curved tetrahedral elements**
-  The curved geometry module uses original CAD data for the refinement and curvature of elements. The resulting geometrical accuracy is exact and the application can therefore use arbitrary high polynomial element degrees. [Fus23]
-- **Atmospheric simulations**
-  Todo
-- **2D Riemann on GPU**
-  A 2D Riemann simulation calculated on our experimental GPU solver [`t8gpu`](https://github.com/DLR-AMR/t8gpu) using `t8code` for mesh management.
-- **Curved hybrid meshes**
-  The curved geometry is implemented for different element shapes, which enables different curved element shapes in the same mesh. [Els22, Fus23]
-- **Simulation data visualization**
-  Todo
-- **NSU3D RANS over DLR-F6**
-  NSU3D computed pressure distribution on adaptively refined meshes for RANS simulation of flow over DLR-F6 wing-body, using `t8code` for dynamic AMR as described in [MK26].
-- **Mesh deformation**
-  DG Euler simulation on an adaptive t8code mesh with Radial Basis Function based mesh deformation. [Ric26]
-
-</details>
 
 ## Get Help
 
