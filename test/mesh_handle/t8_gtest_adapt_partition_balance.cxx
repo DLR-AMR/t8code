@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 #include <gtest/gtest.h>
 #include <t8.h>
+#include <test/t8_gtest_adapt_callbacks.hxx>
 #include "t8_gtest_common.hxx"
 
 #include <mesh_handle/mesh.hxx>
@@ -92,7 +93,7 @@ TEST (t8_gtest_handle_adapt, compare_with_forest)
 
   t8_forest_t forest_refine;
   t8_forest_init (&forest_refine);
-  t8_forest_set_adapt (forest_refine, forest_compare, forest_adapt_callback_refine_second, false);
+  t8_forest_set_adapt (forest_refine, forest_compare, refine_every_nth_element_callback<2>, false);
   t8_forest_commit (forest_refine);
 
   // Compare results.

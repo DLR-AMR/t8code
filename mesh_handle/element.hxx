@@ -526,7 +526,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
 #endif
 
   // --- Function to access mesh specific id. ---
-  /** Getter for the index of the element in the mesh to which the element belongs.
+  /** Getter for the local index of the element in the mesh to which the element belongs.
    * \return The local element id of the element in the mesh.
    */
   t8_locidx_t
@@ -539,6 +539,20 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
              + m_element_id;
     }
     return t8_forest_get_tree_element_offset (m_mesh->m_forest, m_tree_id) + m_element_id;
+  }
+
+  /** Getter for the global index of the element in the mesh to which the element belongs.
+   * \return The global element id of the element in the mesh.
+   */
+  t8_locidx_t
+  get_global_element_handle_id () const
+  {
+    if (m_is_ghost_element) {
+      t8_global_errorf ("ERROR: Ghost elements do not have a global handle id.\n");
+      return -1;  // Ghost elements do not have a global id.
+    }
+    return t8_forest_get_first_local_leaf_element_id (m_mesh->m_forest)
+           + t8_forest_get_tree_element_offset (m_mesh->m_forest, m_tree_id) + m_element_id;
   }
 
   //--- Getter for the member variables. ---
