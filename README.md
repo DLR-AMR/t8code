@@ -115,7 +115,7 @@ Follow the steps described in our Wiki [Documentation](https://github.com/DLR-AM
 
 - **Bug reports and feature requests:** please [open an issue](https://github.com/DLR-AMR/t8code/issues/new).
 - **Usage questions and general discussion:** please use [GitHub Discussions](https://github.com/DLR-AMR/t8code/discussions).
-- **Real-time chat:** we run a Matrix community space for more direct exchange with the developers. There is no public invite link yet, so just open an issue or a discussion asking to join and we will get you an invite.
+- **Matrix community:** we run a Matrix community space for more direct exchange with the developers. There is no public invite link, just open an issue or a discussion asking to join and we will get you an invite.
 - You are also welcome to write an email to one of the principal developers.
 
 ## License and Contributing
