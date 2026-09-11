@@ -56,12 +56,11 @@ t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
 void
 t8_forest_ghost_definition::communicate_ghost_elements (t8_forest_t forest)
 {
-  t8_forest_ghost_t ghost = forest->ghosts;
-  t8_ghost_mpi_send_info_t *send_info;
+  t8_forest_ghost_t const ghost = forest->ghosts;
   sc_MPI_Request *requests;
 
   /* Start sending the remote elements */
-  send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
+  t8_ghost_mpi_send_info_t *const send_info = t8_forest_ghost_send_start (forest, ghost, &requests);
 
   /* Receive the ghost elements from the remote processes */
   t8_forest_ghost_receive (forest, ghost);
@@ -71,7 +70,7 @@ t8_forest_ghost_definition::communicate_ghost_elements (t8_forest_t forest)
 }
 
 void
-t8_forest_ghost_definition::clean_up (t8_forest_t forest, int memory_flag)
+t8_forest_ghost_definition::clean_up (t8_forest_t forest, const int memory_flag)
 {
   if (memory_flag & CREATE_ELEMENT_ARRAY) {
     /* Free the offset memory, if allocated */

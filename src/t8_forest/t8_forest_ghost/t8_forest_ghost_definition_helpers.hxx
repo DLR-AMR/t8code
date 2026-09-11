@@ -108,10 +108,14 @@ void
 t8_forest_ghost_send_end (t8_forest_t forest, t8_forest_ghost_t ghost, t8_ghost_mpi_send_info_t *send_info,
                           sc_MPI_Request *requests);
 
-/* Probe for all incoming messages from the remote ranks and receive them.
+/**
+ * Probe for all incoming messages from the remote ranks and receive them.
  * We receive the message in the order in which they arrive. To achieve this,
- * we have to use polling. */
+ * we have to use polling.
+ * \param [in]      forest    The forest.
+ * \param [in, out] ghost     The ghosts of the forest, filled with the received elements.
+ */
 void
 t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost);
 
-#endif /* T8_FOREST_GHOST_DEFINITION_HELPERS_HXX */
+#endif /* !T8_FOREST_GHOST_DEFINITION_HELPERS_HXX */

@@ -162,7 +162,7 @@ struct t8_forest_ghost_definition
 
   /** type of the ghost_definition */
   t8_ghost_type_t ghost_type { T8_GHOST_NONE };
-  /** The reference count of the ghost_definition. TODO: Replace by shared_ptr when forest becomes a class. */
+  /** The reference count of the ghost_definition. */
   t8_refcount_t rc;
 };
 

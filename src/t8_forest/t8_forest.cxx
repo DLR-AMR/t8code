@@ -3104,9 +3104,9 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
   T8_ASSERT (t8_forest_is_initialized (forest));
 
   if (do_ghost != 0) {
-    if (ghost_definition == NULL) {
+    if (ghost_definition == nullptr) {
       /* If forest has a ghost_definition, activate ghost, otherwise abort. */
-      if (forest->ghost_definition != NULL) {
+      if (forest->ghost_definition != nullptr) {
         forest->do_ghost = 1;
       }
       else {
@@ -3115,7 +3115,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
     }
     else {
       /* Unref the old ghost_definition (if it exists) and set the new one. */
-      if (forest->ghost_definition != NULL) {
+      if (forest->ghost_definition != nullptr) {
         t8_forest_ghost_definition_unref (&(forest->ghost_definition));
       }
       forest->do_ghost = 1;
@@ -3356,7 +3356,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->scheme = forest->set_from->scheme;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
-    if (forest->ghost_definition == NULL && forest->set_from->ghost_definition != NULL) {
+    if (forest->ghost_definition == nullptr && forest->set_from->ghost_definition != nullptr) {
       forest->ghost_definition = forest->set_from->ghost_definition;
       forest->ghost_definition->ref ();
     }
@@ -4388,9 +4388,9 @@ t8_forest_reset (t8_forest_t *pforest)
     t8_forest_ghost_unref (&forest->ghosts);
   }
   /* Unref the ghost_definition class if it exist */
-  if (forest->ghost_definition != NULL) {
+  if (forest->ghost_definition != nullptr) {
     forest->ghost_definition->unref ();
-    forest->ghost_definition = NULL;
+    forest->ghost_definition = nullptr;
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme != nullptr) {
