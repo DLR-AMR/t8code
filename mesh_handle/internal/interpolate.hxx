@@ -49,7 +49,8 @@ namespace detail
  * We need this base class and not only \ref mesh_interpolate_context for the \ref interpolate_registry.
  * interpolate_registry should not be templated because we need to access registered contexts in
  * \ref mesh_replace_callback_wrapper, where we do not know the type of the mesh. Therefore, we work with a map of
- * forests to instances of this (type erased) base class to remain template free.
+ * forests to instances of this (type-erased) base class to remain template free.
+``
  */
 struct mesh_interpolate_context_base
 {
@@ -88,7 +89,7 @@ struct mesh_interpolate_context final: mesh_interpolate_context_base
 
   /** Constructor of the context with the old and new mesh handle and the user defined callback.
    * \param [in] mesh_old             The old mesh that is being adapted. Only read from during interpolation.
-   * \param [in, out] mesh_new             The new mesh constructed from \a mesh_old. Written to during interpolation.
+   * \param [in, out] mesh_new        The new mesh constructed from \a mesh_old. Written to during interpolation.
    * \param [in] interpolate_callback The interpolate callback. Moved into the context.
    */
   mesh_interpolate_context (const TMesh& mesh_old, TMesh& mesh_new, callback_type&& interpolate_callback)

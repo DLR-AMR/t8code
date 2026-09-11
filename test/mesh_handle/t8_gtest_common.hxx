@@ -75,7 +75,7 @@ adapt_callback_coarsen_left_refine_middle ([[maybe_unused]] const TMeshClass &me
 
 //--- Callback to refine every second element. ---
 /** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
- * The adaptation criterion is to refine every element with even id.
+ * The adaptation criterion is to refine every element with even (local) id.
  * The function header fits the definition of \ref t8_mesh_handle::mesh::adapt_callback_type.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.

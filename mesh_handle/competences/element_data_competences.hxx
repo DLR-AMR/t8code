@@ -24,8 +24,8 @@
  * Handler for the element data of a \ref t8_mesh_handle::mesh.
  * The file defines mesh and element competences for element data handling.
  * The mesh competences make it possible to manage element data and exchange it for ghost elements between processes. 
- * The element competences makes it possible to access these element data directly for each element of the mesh.
- * A competence to interpolate data after adaptation using a user defined callback is provided.
+ * The element competences makes it possible to access this element data directly for each element of the mesh.
+ * Also, a competence to interpolate data after adaptation using a user-defined callback is provided.
  */
 #pragma once
 
@@ -228,14 +228,14 @@ template <typename TUnderlying>
 class interpolate_element_data_mesh_competence:
   public t8_crtp_operator<TUnderlying, interpolate_element_data_mesh_competence> {
  public:
-  /** Mesh internal, element-index based storage for the interpolation callback.
+  /** Mesh-internal, element-index-based storage for the interpolation callback.
    * Users should use the easier span based callback type \ref mesh::interpolate_callback_type.
    * \see set_interpolate_callback for registering a callback.
    * The span based callback is automatically wrapped in \ref set_interpolate_callback to match this type and stored as
    * \ref m_interpolate_callback to be used in the next \ref mesh::commit.
-   * \note We can not store or the span based \ref mesh::interpolate_callback_type directly. This competence uses the 
+   * \note We cannot store the span-based \ref mesh::interpolate_callback_type directly: This competence uses the 
    *       CRTP pattern, so while the competence is instantiated, the mesh (\a TUnderlying) is still an incomplete type.
-   *       A data member of type \ref mesh::interpolate_callback_type, would require \c TUnderlying::element_class, 
+   *       A data member of type \ref mesh::interpolate_callback_type would require \c TUnderlying::element_class, 
    *       which is not available for the incomplete type. Therefore we use this index based callback type for storage 
    *       without the need for element_class. Using \ref set_interpolate_callback, we move the element_class lookup 
    *       to the call site.
@@ -247,7 +247,6 @@ class interpolate_element_data_mesh_competence:
    * \param [in]     first_old The local mesh handle index of the first outgoing element in the old mesh.
    * \param [in]     num_new   The number of incoming elements.
    * \param [in]     first_new The local mesh handle index of the first incoming element in the new mesh.
-  
    */
   using internal_interpolate_callback_type
     = std::function<void (const TUnderlying& mesh_old, TUnderlying& mesh_new, const int refine, const int num_old,
@@ -303,7 +302,7 @@ class interpolate_element_data_mesh_competence:
    * \param [in] forest_to   The committed forest that was partitioned from \a forest_from.
    * \note Both forests could also be accessed directly (by this->underlying()) but this requires that the function is
    * called on the exact right states of m_forest and m_uncommitted_forest. 
-   * Providing the variables is the saver implementation.
+   * Providing the variables is the safer implementation.
    */
   void
   repartition_element_data (t8_forest_t forest_from, t8_forest_t forest_to)

@@ -114,7 +114,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     = std::function<int (const SelfType& mesh, std::span<const element_class> elements, TUserDataType user_data)>;
 
   /** Callback function prototype to interpolate the element data after refining or coarsening.
-   * \note You need to include \ref interpolate_element_data_mesh_competence to you competences to be able to
+   * \note You need to include \ref interpolate_element_data_mesh_competence to your competences to be able to
    * interpolate. The best way to do this is via the predefined pack \ref interpolate_data_mesh_competence_pack 
    * defined in \ref competence_pack.hxx.
    *
@@ -138,7 +138,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
 
   /** Templated callback function prototype to interpolate the element data after refining or coarsening, 
    * including user data.
-   * See the version without user_data \ref interpolate_callback_type for more details!
+   * See the version without user_data \ref interpolate_callback_type for more details.
    * Use \ref mesh_interpolate_callback_wrapper to convert this type into \ref interpolate_callback_type
    * to be able to pass the callback to \ref interpolate_element_data_mesh_competence::set_interpolate_callback 
    * (see \ref element_data_competences.hxx).
@@ -465,7 +465,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
    * The previous forest is unreferenced. Call \ref t8_forest_ref before if you want to keep it alive.
    * Specialize the update with calls like \ref set_adapt first.
    * The order of the calls is always 1) Adapt 2) Balance 3) Data Interpolation 4) Partition 5) Ghost, 
-   * where calls, that are not set beforehand, are skipped.
+   * where calls not set beforehand are skipped.
    * The order of the calls does not matter, the operations are always executed in this order.
    */
   void
@@ -494,7 +494,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             SelfType new_mesh (m_uncommitted_forest.value ());
             t8_forest_ref (m_uncommitted_forest.value ());
             // Register the interpolate context with the callback for the new mesh. With this, the standard
-            // iterate replace can be called.
+            // iterate replace can be called, passing the mesh's callback.
             detail::interpolate_registry::register_context (
               m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (
                           *this, new_mesh, std::move (this->m_interpolate_callback)));
