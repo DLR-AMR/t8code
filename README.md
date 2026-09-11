@@ -44,19 +44,19 @@ Some examples on usage scenarios for `t8code`. More detailed descriptions are be
 <details>
 <summary>Descriptions</summary>
 
-- **Curved tetrahedral elements**
+- **Curved tetrahedral elements**<br>
   The curved geometry module uses original CAD data for the refinement and curvature of elements. The resulting geometrical accuracy is exact and the application can therefore use arbitrary high polynomial element degrees. [Fus23]
-- **Atmospheric simulations**
+- **Atmospheric simulations**<br>
   Todo
-- **2D Riemann on GPU**
+- **2D Riemann on GPU**<br>
   A 2D Riemann simulation calculated on our experimental GPU solver [`t8gpu`](https://github.com/DLR-AMR/t8gpu) using `t8code` for mesh management.
-- **Curved hybrid meshes**
+- **Curved hybrid meshes**<br>
   The curved geometry is implemented for different element shapes, which enables different curved element shapes in the same mesh. [Els22, Fus23]
-- **Simulation data visualization**
+- **Simulation data visualization**<br>
   Todo
-- **NSU3D RANS over DLR-F6**
+- **NSU3D RANS over DLR-F6**<br>
   NSU3D computed pressure distribution on adaptively refined meshes for RANS simulation of flow over DLR-F6 wing-body, using `t8code` for dynamic AMR as described in [MK26].
-- **Mesh deformation**
+- **Mesh deformation**<br>
   DG Euler simulation on an adaptive t8code mesh with Radial Basis Function based mesh deformation. [Ric26]
 
 </details>
