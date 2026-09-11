@@ -131,16 +131,16 @@ community and ask all members of our community to adhere to our
 
 Development of `t8code` has been funded by the following institutions:
 
-<table cellpadding="20" cellspacing="0" border="0" bgcolor="#ffffff">
+<table cellpadding="20" cellspacing="0" border="0">
   <tr>
-    <td align="center" valign="top" bgcolor="#ffffff"><img src="doc/pictures/funding/bmftr-logo.png" height="110" /></td>
-    <td align="center" valign="top" bgcolor="#ffffff"><img src="doc/pictures/funding/bmwe-logo.png" height="151" /></td>
-    <td align="center" valign="top" bgcolor="#ffffff"><img src="doc/pictures/funding/bigs-logo.png" height="110" /></td>
+    <td align="center" valign="top"><img src="doc/pictures/funding/bmftr-logo.png" height="110" /></td>
+    <td align="center" valign="top"><img src="doc/pictures/funding/bmwe-logo.png" height="151" /></td>
+    <td align="center" valign="top"><img src="doc/pictures/funding/bigs-logo.png" height="110" /></td>
   </tr>
   <tr>
-    <td align="center" valign="middle" bgcolor="#ffffff"><img src="doc/pictures/funding/dlr-logo.png" height="75" /></td>
-    <td align="center" valign="middle" bgcolor="#ffffff"><img src="doc/pictures/funding/dfg-logo.png" height="75" /></td>
-    <td align="center" valign="middle" bgcolor="#ffffff"><img src="doc/pictures/funding/hds-lee-logo.png" height="75" /></td>
+    <td align="center" valign="middle"><img src="doc/pictures/funding/dlr-logo.png" height="75" /></td>
+    <td align="center" valign="middle"><img src="doc/pictures/funding/dfg-logo.png" height="75" /></td>
+    <td align="center" valign="middle"><img src="doc/pictures/funding/hds-lee-logo.png" height="75" /></td>
   </tr>
 </table>
 
