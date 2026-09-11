@@ -82,7 +82,7 @@ struct mesh_interpolate_context_base
  * \tparam TMesh The mesh handle class.
  */
 template <typename TMesh>
-struct mesh_interpolate_context final: mesh_interpolate_context_base
+struct mesh_interpolate_context final: public mesh_interpolate_context_base
 {
   using callback_type =
     typename TMesh::internal_interpolate_callback_type; /**< The user defined interpolate callback type. */
@@ -125,7 +125,8 @@ struct mesh_interpolate_context final: mesh_interpolate_context_base
  * replace callback \ref mesh_replace_callback_wrapper, as the predefined \ref t8_forest_replace_t header does not
  * permit to pass these as function arguments. It uses the same idea as \ref adapt_registry.
  */
-class interpolate_registry {
+struct interpolate_registry
+{
  public:
   /** Static function to register \a context using \a forest as identifier.
    * This makes the context publicly available through the registry.
@@ -208,7 +209,7 @@ mesh_replace_callback_wrapper (t8_forest_t forest_old, t8_forest_t forest_new, t
   // Via this, we can access the old and new mesh handle and the user defined interpolate callback.
   auto* context = interpolate_registry::get (forest_old);
   if (!context) {
-    t8_global_productionf ("Interpolate context not found. Did you forget to register it?");
+    t8_global_errorf ("ERROR: Interpolate context not found. Did you forget to register it?");
     return;
   }
 

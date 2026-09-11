@@ -257,12 +257,9 @@ class interpolate_element_data_mesh_competence:
    * Please use the type \ref mesh::interpolate_callback_type for the callback. 
    * \see mesh::interpolate_callback_type for the expected callback shape and the meaning of its arguments.
    * \note This function is templated on purpose: it is only instantiated at the call site, where the mesh is a
-   *       complete type and \ref mesh::element_class is nameable. The element class is needed in the definition 
-   *       of the interpolate_callback_type. You do not have to provide this template, it is normally auto deduced.
-   * \note This function is templated on purpose: it is only instantiated at the call site, where the mesh is a
    *       complete type and \ref mesh::element_class (needed to name \ref mesh::interpolate_callback_type) is
    *       nameable, which it is not inside this competence. 
-   *       The template parameter is deduced from the passed callback, so you do not have to provide it explicitly!
+   *       The template parameter is deduced from the passed callback, so you do not have to provide it explicitly.
    * \tparam TInterpolateCallback The user callback type \ref mesh::interpolate_callback_type.
    * \param [in] interpolate_callback The span based interpolation callback.
    * 

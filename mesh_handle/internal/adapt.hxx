@@ -107,7 +107,8 @@ struct mesh_adapt_context final: mesh_adapt_context_base
  * This globally accessible static class is required to get the handle and the callback in the forest callback, 
  * as the predefined header permits to give these as function arguments. 
  */
-class adapt_registry {
+struct adapt_registry
+{
  public:
   /** Static function to register \a context using \a forest as identifier. 
    * This makes the context publicly available using the registry.

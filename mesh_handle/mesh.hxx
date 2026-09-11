@@ -42,6 +42,7 @@
 #include <functional>
 #include <memory>
 #include <span>
+#include <type_traits>
 
 namespace t8_mesh_handle
 {
@@ -528,7 +529,8 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             return;
           }
           else {
-            t8_global_infof ("No interpolation context set.\n");
+            t8_global_errorf ("ERROR: No interpolation callback set. Please provide a callback or do not use "
+                              "the competence interpolate_element_data_mesh_competence.\n");
           }
         }
         else {
@@ -551,6 +553,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   static constexpr bool
   has_element_data_handler_competence ()
   {
+    // Check via has_competence is not possible here because the class is templated.
     return requires (SelfType& mesh) { mesh.get_element_data (); };
   }
 
@@ -560,7 +563,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   static constexpr bool
   has_interpolate_data_competence ()
   {
-    return requires (SelfType& mesh) { mesh.set_partition_called (); };
+    return has_competence<interpolate_element_data_mesh_competence> ();
   }
 
   /** Function that checks if a competence to determine the ranks of the elements is given.
@@ -569,7 +572,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   static constexpr bool
   has_remote_ranks_mesh_competence ()
   {
-    return requires (SelfType& mesh) { mesh.fill_rank_vector (); };
+    return has_competence<remote_ranks_mesh_competence> ();
   }
 
   /** Function that checks if a competence to determine a unique vector of the faces is given.
@@ -578,7 +581,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   static constexpr bool
   has_face_vector_mesh_competence ()
   {
-    return requires (SelfType& mesh) { mesh.fill_unique_face_vector (); };
+    return has_competence<face_vector_mesh_competence> ();
   }
 
  private:
@@ -620,6 +623,17 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
         m_ghosts.push_back (element_class (this, num_loc_trees + itree, ielem, true));
       }
     }
+  }
+
+  /** Check whether the mesh was instantiated with a given competence.
+   * \tparam TCompetence The competence template, e.g. \ref interpolate_element_data_mesh_competence.
+   * \return true if TCompetence<SelfType> is a base class of the mesh, false otherwise.
+   */
+  template <template <typename> class TCompetence>
+  static constexpr bool
+  has_competence ()
+  {
+    return std::is_base_of_v<TCompetence<SelfType>, SelfType>;
   }
 
   t8_forest_t m_forest;                  /**< The forest the mesh should be defined for. */

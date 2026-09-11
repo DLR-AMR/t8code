@@ -67,10 +67,14 @@ interpolate_callback ([[maybe_unused]] const TMeshClass& mesh_old, [[maybe_unuse
 {
   /* Untouched: copy data. */
   if (refine == 0) {
+    EXPECT_EQ (new_elements.size (), 1);
+    EXPECT_EQ (old_elements.size (), 1);
     new_elements[0].set_element_data (old_elements[0].get_element_data ());
   }
   /* Refined: children share the parent volume equally, level increases by user_data.level_step. */
   else if (refine == 1) {
+    EXPECT_EQ (old_elements.size (), 1);
+    EXPECT_EQ (new_elements.size (), old_elements[0].get_num_children ());
     const auto& parent_data = old_elements[0].get_element_data ();
     for (auto& child : new_elements) {
       child.set_element_data (
@@ -79,6 +83,8 @@ interpolate_callback ([[maybe_unused]] const TMeshClass& mesh_old, [[maybe_unuse
   }
   /* Coarsened: parent volume is the sum of the children, level decreases by user_data.level_step. */
   else if (refine == -1) {
+    EXPECT_EQ (new_elements.size (), 1);
+    EXPECT_EQ (old_elements.size (), new_elements[0].get_num_children ());
     double tmp_volume = 0;
     for (const auto& child : old_elements) {
       tmp_volume += child.get_element_data ().volume;
