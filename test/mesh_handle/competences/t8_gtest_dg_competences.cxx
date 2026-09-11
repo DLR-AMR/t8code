@@ -26,6 +26,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  */
 #include <gtest/gtest.h>
 #include <t8.h>
+#include <test/mesh_handle/t8_gtest_common.hxx>
 
 #include <mesh_handle/mesh.hxx>
 #include <mesh_handle/competences/dg_competences.hxx>
@@ -33,31 +34,10 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/constructor_wrappers.hxx>
 
 /** Store the rank on each element. */
-struct data_per_element
+struct rank_data_per_element
 {
   int rank;  ///< Rank of the element.
 };
-
-/** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
- * The adaptation criterion is to refine every element with even id.
- * The function header fits the definition of \ref TMesh::adapt_callback_type.
- * \tparam TMeshClass    The mesh handle class.
- * \param [in] mesh      The mesh that should be adapted.
- * \param [in] elements  One element or a family of elements to consider for adaptation.
- * \return 1 if the first entry in \a elements should be refined,
- *        -1 if the family \a elements shall be coarsened,
- *         0 else.
- */
-template <typename TMeshClass>
-int
-mesh_adapt_callback_test_refine_second ([[maybe_unused]] const TMeshClass& mesh,
-                                        std::span<const typename TMeshClass::element_class> elements)
-{
-  if ((elements[0].get_element_handle_id ()) % 2 == 0) {
-    return 1;
-  }
-  return 0;
-}
 
 /** Check the competence remote_ranks_mesh_competence for correctness. The ranks are set as data first, exchanged for
  * ghost elements and then checked against the competence functionality.
@@ -66,11 +46,11 @@ TEST (t8_gtest_dg_competences, remote_ranks)
 {
   const int level = 2;
   using namespace t8_mesh_handle;
-  using mesh_class
-    = mesh<data_element_competences, union_competence_packs_type<mesh_competence_pack<remote_ranks_mesh_competence>,
-                                                                 data_mesh_competences<data_per_element>>>;
+  using mesh_class = mesh<data_element_competences_basic,
+                          union_competence_packs_type<mesh_competence_pack<remote_ranks_mesh_competence>,
+                                                      data_mesh_competences_basic<rank_data_per_element>>>;
   auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
-  mesh->set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
+  mesh->set_adapt (adapt_callback_refine_second<mesh_class>);
   mesh->set_partition ();
   mesh->set_ghost ();
   mesh->commit ();
@@ -87,7 +67,7 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   SC_CHECK_MPI (mpiret);
 
   // Set local rank for all local mesh elements.
-  std::vector<data_per_element> element_data (num_local, { mpirank });
+  std::vector<rank_data_per_element> element_data (num_local, { mpirank });
   mesh->set_element_data (std::move (element_data));
   // Get element data and check that the remote ranks competence works as expected.
   mesh->exchange_ghost_data ();
@@ -111,7 +91,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
   using namespace t8_mesh_handle;
   using mesh_class = mesh<element_competence_pack<cache_neighbors>, dg_mesh_competences>;
   auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
-  mesh->set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
+  mesh->set_adapt (adapt_callback_refine_second<mesh_class>);
   mesh->set_partition ();
   mesh->set_ghost ();
   mesh->commit ();

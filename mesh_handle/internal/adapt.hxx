@@ -30,6 +30,7 @@
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <mesh_handle/mesh.hxx>
+#include <mesh_handle/concepts.hxx>
 #include <memory>
 #include <span>
 
@@ -68,7 +69,7 @@ struct mesh_adapt_context_base
  * Struct inherits from \ref mesh_adapt_context_base and implements the virtual adapt callback using the mesh and the callback.
  * \tparam TMeshClass The mesh handle class.
  */
-template <typename TMeshClass>
+template <T8MeshType TMeshClass>
 struct mesh_adapt_context final: mesh_adapt_context_base
 {
   /** Constructor of the context with the mesh handle and the user defined callback.
@@ -98,15 +99,16 @@ struct mesh_adapt_context final: mesh_adapt_context_base
   }
 
  private:
-  TMeshClass& m_mesh_handle;                                 /**< The mesh handle to adapt. */
-  typename TMeshClass::adapt_callback_type m_adapt_callback; /**< The adapt callback. */
+  TMeshClass& m_mesh_handle;                                       /**< The mesh handle to adapt. */
+  const typename TMeshClass::adapt_callback_type m_adapt_callback; /**< The adapt callback. */
 };
 
 /** Registry pattern is used to register contexts, which provides access to the adapt callback and the mesh handle.
  * This globally accessible static class is required to get the handle and the callback in the forest callback, 
  * as the predefined header permits to give these as function arguments. 
  */
-class adapt_registry {
+struct adapt_registry
+{
  public:
   /** Static function to register \a context using \a forest as identifier. 
    * This makes the context publicly available using the registry.
