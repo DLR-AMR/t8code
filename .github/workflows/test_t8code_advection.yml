@@ -116,7 +116,7 @@ jobs:
 
     - name: run advection test 2D Mesh Constant 1 in x,y, and z.
       working-directory: build/example/advect
-      run: mpirun $MPIFLAGS ./t8_advection -u 2 -e 7 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -o
+      run: ./t8_advection -u 2 -e 7 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -o
     - name: run advection test 3D Mesh with turbulent flow
       working-directory: build/example/advect
       run: mpirun $MPIFLAGS ./t8_advection -u 3 -e 8 -l 2 -r 1 -T 0.5 -C 0.5 -a 1 -o
