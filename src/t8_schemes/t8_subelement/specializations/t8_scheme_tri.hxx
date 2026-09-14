@@ -138,30 +138,28 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
   static int
   subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
   {
-    int num_hanging_faces = 0;
-    /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
-    for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE]; ++i) {
-      num_hanging_faces += (subelement_type & (1 << i)) >> i;
-    }
+    const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     return num_hanging_faces + 1;
   }
 
   /** This defines how an element is refined into subelements using a specified subelement type.
-   * \param [in] elem The element to be refined.
-   * \param [in] length   The length of the output array \a c must match the number of subelements.   
-   *                      See \ref element_get_num_children.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
-   * \param [in] type The subelement type to be used for refinement. This is a binary encoding of the hanging faces.
+   * \param [in] elem          The element to be refined.
+   * \param [in] length        The length of the output array \a c must match the number of subelements.   
+   *                           See \ref element_get_num_children.
+   * \param [in, out] c        An array of allocated elements that will be filled with the subelements of \a elem. 
+   * \param [in] subelem_type  The subelement type to be used for refinement. This is a binary encoding of the
+   *                           hanging faces.
    */
   void
   subelement_get_children (const t8_element_t *elem, [[maybe_unused]] const int length, t8_element_t *c[],
-                           int type) const noexcept
+                           int subelem_type) const noexcept
   {
     const TSubelementType *element = this->as_subelement (elem);
-    TSubelementType **subelements = reinterpret_cast<TSubelementType **> (c);
-    const int num_subelements = this->subelement_get_num_children (elem, type);
+    TSubelementType **c_as_subelements = reinterpret_cast<TSubelementType **> (c);
+    const int num_subelements = this->subelement_get_num_children (elem, subelem_type);
+    T8_ASSERT (length == num_subelements);
 
-    T8_ASSERT (type >= 1 && type <= T8_TRI_MAX_SUBELEMENT_TYPE);
+    T8_ASSERT (subelem_type >= 1 && subelem_type <= T8_TRI_MAX_SUBELEMENT_TYPE);
     T8_ASSERT (!this->element_is_subelement (elem));
     T8_ASSERT (this->element_is_valid (elem));
 #if T8_ENABLE_DEBUG
@@ -175,19 +173,19 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
     /* Setting the parameter values for different subelements. */
     for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
       underlying_scheme.element_copy (this->subelement_to_standalone (element),
-                                      this->subelement_to_standalone (subelements[sub_id_counter]));
-      subelements[sub_id_counter]->subelement_type = type;
-      subelements[sub_id_counter]->subelement_id = sub_id_counter;
+                                      this->subelement_to_standalone (c_as_subelements[sub_id_counter]));
+      c_as_subelements[sub_id_counter]->subelement_type = subelem_type;
+      c_as_subelements[sub_id_counter]->subelement_id = sub_id_counter;
       T8_ASSERT (this->element_is_valid (c[sub_id_counter]));
     }
   }
 
   /** Convert points in the reference space of a (triangular) subelement to points in the reference
    * space of the tree.
-   * \param [in] elem       The subelement.
-   * \param [in] ref_coords The coordinates in \f$ [0,1]^2 \f$ of the points in the subelement's reference space.
-   * \param [in] num_coords The number of points to convert.
-   * \param [out] out_coords The coordinates of the points in the reference space of the tree.
+   * \param [in]  elem        The subelement.
+   * \param [in]  ref_coords  The coordinates in \f$ [0,1]^2 \f$ of the points in the subelement's reference space.
+   * \param [in]  num_coords  The number of points to convert.
+   * \param [out] out_coords  The coordinates of the points in the reference space of the tree.
    */
   void
   subelement_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
@@ -216,41 +214,40 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
 
  private:
   /** Check whether a given face of the parent triangle is hanging.
-   * \param [in] type  The subelement type (binary code over the faces, f0 is the most significant bit).
+   * \param [in] subelem_type  The subelement type (binary code over the faces, f0 is the most significant bit).
    * \param [in] iface The face to check.
    * \return           True if \a iface is hanging for \a type.
    */
   static bool
-  face_is_hanging (const unsigned type, const int iface) noexcept
+  face_is_hanging (const unsigned subelem_type, const int iface) noexcept
   {
     // Get the bit corresponding to iface.
     // If that bit is 1, the face is hanging.
     // 1u is for lowest bit extraction.
-    return ((type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE] - 1) - iface)) & 1u) != 0u;
+    return ((subelem_type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE] - 1) - iface)) & 1u) != 0u;
   }
 
   /** Compute the integer coordinates of the three vertices of a triangular subelement.
    *
    * For this, we first define the order of the subelements and the subelement vertices:
-   * All subelements of a transition cell share one common point, which we define as \a m_c, and each subelement is
-   * spanned by \a m_c together with two consecutive points of a \b path along the boundary of the
+   * All subelements of a transition cell share one common vertex, which we define as \c m_c, and each subelement is
+   * spanned by \c m_c together with two consecutive vertices of a \b path along the boundary of the
    * parent triangle. This defines the numbering completely:
-   *   - The \a main \a face is the lowest-indexed hanging face \a fA.
-   *   - The common point \a m_c is the midpoint of the main face. Every subelement contains it.
-   *   - Let \a v_a < \a v_b be the two end vertices of the main face fA. The \b path walks the parent
-   *      boundary from \a v_a to \a v_b the way that does not traverse the main face fA (so the other way around
-   *      such that we go over all other faces). That walk passes through exactly one other vertex, \a v_c, and 
-   *      traverses exactly two faces: the edge (\a v_a, \a v_c) and the edge (\a v_c, \a v_b). The midpoint of
+   *   - The \c main \c face is the lowest-indexed hanging face \c fA.
+   *   - The common point \c m_c is the midpoint of the main face. Every subelement contains it.
+   *   - Let \c v_a < \c v_b be the two end vertices of the main face fA. The \b path walks the parent
+   *      boundary from \c v_a to \c v_b the way that does not traverse the main face fA (so the other way around
+   *      such that we go over all other faces). That walk passes through exactly one other vertex, \c v_c, and 
+   *      traverses exactly two faces: the edge (\c v_a, \c v_c) and the edge (\c v_c, \c v_b). The midpoint of
    *      each traversed face that is hanging is inserted at its position on the walk.
-   *   - The subelement with id \a i is then defined through the vertices:
-   *      vertex 0 = \a m_c, vertex 1 = path[ \a i ], vertex 2 = path[ \a i+1 ].
+   *   - The subelement with id \c i is then defined through the vertices:
+   *      vertex 0 = \c m_c, vertex 1 = path[ \c i ], vertex 2 = path[ \c i+1 ].
    *
    * Since the path has (number of hanging faces + 2) points, there are (number of hanging faces + 1)
    * subelements, which matches \ref element_get_num_children. No case distinction is needed:
    * one hanging face yields a path of three points, two hanging faces a path of four.
    *
    * \verbatim
-        f2 hanging                                f2 hanging
         one hanging face (here f2)            two hanging faces (here f1 and f2) (not nicely displayed)
 
                   v2                                      v2
@@ -263,7 +260,7 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
           v0 ---- M2----- v1                      v0 ---- M2------ v1
                   f2                                      f2
 
-        main face = f2, \a m_c = M2            main face = f1 (lowest), \a m_c = M1
+        main face = f2, m_c = M2            main face = f1 (lowest), m_c = M1
         path: v0 -> v2 -> v1                   path: v0 -> M2 -> v1 -> v2
    * \endverbatim
    *
@@ -277,9 +274,9 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
     T8_ASSERT (this->element_is_valid (elem));
     T8_ASSERT (this->element_is_subelement (elem));
     const auto *subelement = this->as_subelement (elem);
-    const unsigned type = static_cast<unsigned> (subelement->subelement_type);
+    const unsigned subelem_type = static_cast<unsigned> (subelement->subelement_type);
     const unsigned id = static_cast<unsigned> (subelement->subelement_id);
-    [[maybe_unused]] const int num_hanging_faces = std::popcount (type);
+    [[maybe_unused]] const int num_hanging_faces = std::popcount (subelem_type);
     T8_ASSERT (num_hanging_faces == 1 || num_hanging_faces == 2);
 
     /* The corners of the parent triangle. */
@@ -290,7 +287,7 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
     }
 
     /* Lambda for the midpoints of a face of the parent triangle. */
-    const auto face_midpoint = [&parent_coords] (const int iface) {
+    const auto compute_face_midpoint = [&parent_coords] (const int iface) {
       const std::array<int, 2> &first = parent_coords[t8_face_vertex_to_tree_vertex[T8_ECLASS_TRIANGLE][iface][0]];
       const std::array<int, 2> &second = parent_coords[t8_face_vertex_to_tree_vertex[T8_ECLASS_TRIANGLE][iface][1]];
       return std::array<int, 2> { (first[0] + second[0]) / 2, (first[1] + second[1]) / 2 };
@@ -298,11 +295,11 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
 
     /* The main face is the lowest-indexed hanging face; m_c is its midpoint. */
     int main_face = 0;
-    while (!face_is_hanging (type, main_face)) {
+    while (!face_is_hanging (subelem_type, main_face)) {
       ++main_face;
     }
     T8_ASSERT (main_face < T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE]);
-    const std::array<int, 2> m_c = face_midpoint (main_face);
+    const std::array<int, 2> m_c = compute_face_midpoint (main_face);
 
     /* Build the path: Walk the parent edges from the first to the second end vertex of the main face, the way
      * that does not traverse the main face itself.
@@ -313,26 +310,26 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
     // The path has maximal length 4 for 2 hanging faces.
     // For the path we use the property of the triangle enumeration that the face has always the id of the opposite
     // vertex (so the only vertex it is not adjacent to). Therefore we can use the face ids to get the midpoints of the hanging faces.
-    std::array<std::array<int, 2>, 4> path;
+    std::array<std::array<int, 2>, 4> vertex_coords_on_path;
     int path_length = 0;
-    path[path_length++] = parent_coords[start_vertex];
+    vertex_coords_on_path[path_length++] = parent_coords[start_vertex];
     // The next face to traverse is the face opposite to the end vertex. Therefore it has the id "end_vertex".
-    if (face_is_hanging (type, end_vertex)) {
-      path[path_length++] = face_midpoint (end_vertex);
+    if (face_is_hanging (subelem_type, end_vertex)) {
+      vertex_coords_on_path[path_length++] = compute_face_midpoint (end_vertex);
     }
     // Next vertex has the id of the main face.
-    path[path_length++] = parent_coords[main_face];
-    if (face_is_hanging (type, start_vertex)) {
-      path[path_length++] = face_midpoint (start_vertex);
+    vertex_coords_on_path[path_length++] = parent_coords[main_face];
+    if (face_is_hanging (subelem_type, start_vertex)) {
+      vertex_coords_on_path[path_length++] = compute_face_midpoint (start_vertex);
     }
-    path[path_length++] = parent_coords[end_vertex];
+    vertex_coords_on_path[path_length++] = parent_coords[end_vertex];
 
     /* Path length should be 4 for 2 hanging faces and 3 for 1. */
     T8_ASSERT (path_length == num_hanging_faces + 2);
     T8_ASSERT (static_cast<int> (id) + 1 < path_length);
 
     vertex_coords[0] = m_c;
-    vertex_coords[1] = path[id];
-    vertex_coords[2] = path[id + 1];
+    vertex_coords[1] = vertex_coords_on_path[id];
+    vertex_coords[2] = vertex_coords_on_path[id + 1];
   }
 };

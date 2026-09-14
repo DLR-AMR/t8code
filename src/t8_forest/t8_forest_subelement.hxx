@@ -41,6 +41,17 @@
 t8_forest_t
 t8_forest_remove_hanging_nodes (t8_forest_t forest);
 
+/** Check if the forest is conforming (so it has no hanging nodes).
+ * \note Currently this only works for forests without subelements as the neighbor
+ * logic is not yet implemented for subelements.
+ * \param [in] forest The input forest, which may contain hanging nodes. 
+ *        \a forest must be committed before calling this function. It the forest is partitioned, 
+ *         a ghost layer is needed.
+ * \return true if the forest is conforming (no hanging nodes) and false if it contains hanging nodes.
+ */
+bool
+t8_forest_is_conforming (const t8_forest_t forest);
+
 /** Remove all subelements from a forest. This is required to restore the original mesh using only recursive refinement
  *    and to be able to adapt again.
  * \param [in] forest The input forest which may contain subelements.
@@ -50,16 +61,9 @@ t8_forest_remove_hanging_nodes (t8_forest_t forest);
 t8_forest_t
 t8_forest_discard_subelements (t8_forest_t forest);
 
-/** Check if a forest contains subelements locally.
- * \param [in] forest The forest to be checked.
- * \return true if there are subelements in the forest, false otherwise.
- */
-bool
-t8_forest_has_local_subelements (const t8_forest_t forest);
-
 /** Check if a forest contains subelements globally.
  * \param [in] forest The forest to be checked.
  * \return true if there are subelements in the forest, false otherwise.
  */
 bool
-t8_forest_has_global_subelements (const t8_forest_t forest);
+t8_forest_has_subelements (const t8_forest_t forest);

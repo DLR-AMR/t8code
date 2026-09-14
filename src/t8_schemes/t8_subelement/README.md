@@ -1,6 +1,6 @@
 # t8_subelement
 
-This folder provides **subelement schemes**. Subelements are inserted *after* the standard recursive refinement and enable one additional refinement level that uses a different scheme.
+This folder provides **subelement schemes**. Subelements are inserted *after* the standard recursive refinement and enable one additional refinement step that uses a different scheme.
 
 This is useful, for example, to resolve hanging nodes left behind by the recursive refinement, or to add a uniform subgrid to each mesh element after adaptation, which is beneficial on GPUs.
 

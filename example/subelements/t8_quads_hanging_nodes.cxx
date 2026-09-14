@@ -21,7 +21,7 @@
 */
 
 /** \file t8_quads_hanging_nodes.cxx
- * This is an example to demonstrate hanging node resolution for quads. 
+ * This is an example to demonstrate hanging node-resolution for quads. 
  */
 
 #include <t8.h>                                       /* General t8code header, always include this. */
@@ -33,7 +33,7 @@
 #include <t8_forest/t8_forest_subelement.hxx>         /* Function for adding subelements. */
 #include <t8_schemes/t8_subelement/t8_subelement.hxx> /* Subelement refinement scheme. */
 #include <t8_types/t8_vec.h>                          /* Basic operations on 3D vectors. */
-#include <t8_eclass/t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>                      /* Element-class definitions. */
 
 /** The adaptation callback function. This refines every second element (with even global id).
  * \param [in] forest       The current forest that is in construction.
@@ -81,7 +81,7 @@ main (int argc, char **argv)
 
   /* --- Adapt the forest. ---   */
   forest = t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, NULL);
-  std::cout << "Subelements before removing: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements before removing: " << t8_forest_has_subelements (forest) << std::endl;
   const char *prefix_with_hanging_nodes = "t8_with_hanging_nodes";
   t8_forest_write_vtk (forest, prefix_with_hanging_nodes);
   t8_global_productionf (" [subelements] Wrote adapted forest with hanging nodes to vtu files: %s*\n",
@@ -89,7 +89,7 @@ main (int argc, char **argv)
 
   /* --- Remove hanging nodes. --- */
   forest = t8_forest_remove_hanging_nodes (forest);
-  std::cout << "Subelements after removing: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements after removing: " << t8_forest_has_subelements (forest) << std::endl;
   // Output to vtk.
   const char *prefix_without_hanging_nodes = "t8_without_hanging_nodes";
   t8_forest_write_vtk (forest, prefix_without_hanging_nodes);
@@ -98,7 +98,7 @@ main (int argc, char **argv)
 
   /* --- Discard subelements. --- */
   forest = t8_forest_discard_subelements (forest);
-  std::cout << "Subelements removed: " << t8_forest_has_local_subelements (forest) << std::endl;
+  std::cout << "Subelements removed: " << t8_forest_has_subelements (forest) << std::endl;
   // Now output to vtk.
   const char *prefix_removed_sub = "t8_removed_sub";
   t8_forest_write_vtk (forest, prefix_removed_sub);

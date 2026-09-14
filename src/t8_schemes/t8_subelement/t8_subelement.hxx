@@ -31,7 +31,7 @@
 
 /** Return the subelement scheme implementation of t8code. */
 const t8_scheme *
-t8_scheme_new_subelement (void);
+t8_scheme_new_subelement ();
 
 /** Check whether a given eclass_scheme is one of the subelement schemes.
  * \param [in] scheme   A (pointer to a) scheme.

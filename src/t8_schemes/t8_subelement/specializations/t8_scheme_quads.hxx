@@ -33,6 +33,7 @@
 #include <t8_eclass/t8_eclass.h>
 #include "../t8_subelement_scheme.hxx"
 #include <array>
+#include <bit>
 
 /** Maximum subelement type. The subelement type ranges from 0 (=no subelement, normal standalone quad) to 14. 
 * The type 15 would mean in binary representation that all faces are hanging but in this case, the element just get
@@ -149,11 +150,8 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
   static int
   subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
   {
-    int num_hanging_faces = 0;
-    /* Count the number of ones of the binary subelement type. This number equals the number of hanging faces. */
-    for (int i = 0; i < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++i) {
-      num_hanging_faces += (subelement_type & (1 << i)) >> i;
-    }
+    const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
+    // Each original face "has" one triangular subelement, each split face two.
     return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
   }
 
@@ -162,7 +160,8 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
    * \param [in] length   The length of the output array \a c must match the number of subelements.   
    *                      See \ref element_get_num_children.
    * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
-   * \param [in] type The subelement type to be used for refinement. This is a binary encoding of the hanging faces.
+   * \param [in] subelem_type The subelement type to be used for refinement. This is a binary encoding of the 
+   *                          hanging faces.
    * \note The different subelement types (up to rotation) are:
    * \verbatim
         x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x
@@ -178,13 +177,14 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
    */
   void
   subelement_get_children (const t8_element_t *elem, [[maybe_unused]] const int length, t8_element_t *c[],
-                           int type) const noexcept
+                           int subelem_type) const noexcept
   {
-    const TSubelementType *element = this->as_subelement (elem);
-    TSubelementType **subelements = reinterpret_cast<TSubelementType **> (c);
-    const int num_subelements = this->subelement_get_num_children (elem, type);
+    const TSubelementType *parent_subelement = this->as_subelement (elem);
+    TSubelementType **c_as_subelements = reinterpret_cast<TSubelementType **> (c);
+    const int num_subelements = this->subelement_get_num_children (elem, subelem_type);
+    T8_ASSERT (length == num_subelements);
 
-    T8_ASSERT (type >= 1 && type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
+    T8_ASSERT (subelem_type >= 1 && subelem_type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
     T8_ASSERT (!this->element_is_subelement (elem));
     T8_ASSERT (this->element_is_valid (elem));
 #if T8_ENABLE_DEBUG
@@ -197,10 +197,10 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
 
     /* Setting the parameter values for different subelements. */
     for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
-      TUnderlyingScheme::element_copy (this->subelement_to_standalone (element),
-                                       this->subelement_to_standalone (subelements[sub_id_counter]));
-      subelements[sub_id_counter]->subelement_type = type;
-      subelements[sub_id_counter]->subelement_id = sub_id_counter;
+      TUnderlyingScheme::element_copy (this->subelement_to_standalone (parent_subelement),
+                                       this->subelement_to_standalone (c_as_subelements[sub_id_counter]));
+      c_as_subelements[sub_id_counter]->subelement_type = subelem_type;
+      c_as_subelements[sub_id_counter]->subelement_id = sub_id_counter;
       T8_ASSERT (this->element_is_valid (c[sub_id_counter]));
     }
   }
@@ -239,18 +239,15 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
 
  private:
   /** Check whether a given face of the parent quad is hanging (and therefore split in half).
-   * \param [in] type  The subelement type (binary code over the faces, order is (f0 ,..., f_{numfaces-1})).
+   * \param [in] subelem_type  The subelement type (binary code over the faces, order is (f0 ,..., f_{numfaces-1})).
    * \param [in] iface The face to check.
-   * \return           True if \a iface is hanging for \a type.
+   * \return           True if \a iface is hanging for \a subelem_type.
    */
   static bool
-  face_is_split (const unsigned type, const int iface) noexcept
+  face_is_hanging (const unsigned subelem_type, const int iface) noexcept
   {
-    return ((type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] - 1) - iface)) & 1u) != 0u;
+    return ((subelem_type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] - 1) - iface)) & 1u) != 0u;
   }
-
-  /** For each parent face, its two vertices in clockwise order. */
-  static constexpr int face_to_clockwise_vertex[4][2] = { { 0, 2 }, { 3, 1 }, { 1, 0 }, { 2, 3 } };
 
   /** Compute the integer coordinates of all three vertices of a triangular subelement.
    * We use the following order of subelements in a quad: 
@@ -284,6 +281,11 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     const int len = this->parent_element_get_len (subelement);
     const int origin[2] = { subelement->element.coords[0], subelement->element.coords[1] };
 
+    /** The vertex offsets of a quad (as multiples of its edge length). */
+    static constexpr int vertex_offset[4][2] = { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } };
+    /** For each parent face, its two vertices in clockwise order. */
+    static constexpr int face_to_clockwise_vertex[4][2] = { { 0, 2 }, { 3, 1 }, { 1, 0 }, { 2, 3 } };
+
     // Fill location information.
     const std::array<int, 3> location = element_get_location_of_subelement (elem);
     const int face_number = location[0];
@@ -293,15 +295,13 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     T8_ASSERT (face_number == 0 || face_number == 1 || face_number == 2 || face_number == 3);
     T8_ASSERT ((split == 0 && sub_face_id == 0) || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
 
-    /** The vertex offsets of a quad (as multiples of its edge length). */
-    static constexpr int vertex_offset[4][2] = { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } };
     /** Function lambda to get the vertex coordinates of the parent element. */
-    const auto vertex_coords_parent = [&] (const int vertex) {
+    const auto get_vertex_coords_parent = [&] (const int vertex) {
       return std::array<int, 2> { origin[0] + len * vertex_offset[vertex][0],
                                   origin[1] + len * vertex_offset[vertex][1] };
     };
     /** Function lambda to get the midpoint of a face of the parent element. */
-    const auto vertex_midpoint_coords_parent = [&] (const int face) {
+    const auto compute_vertex_midpoint_coords_parent = [&] (const int face) {
       const int face_vertex1 = face_to_clockwise_vertex[face][0];
       const int face_vertex2 = face_to_clockwise_vertex[face][1];
       return std::array<int, 2> {
@@ -314,12 +314,12 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     vertex_coords[0] = { origin[0] + len / 2, origin[1] + len / 2 };
     /* Vertices 1 and 2 are the face's two clockwise vertices, unless the face is split: then one of
      * them is replaced by the face midpoint. */
-    const std::array<int, 2> vertex_start = vertex_coords_parent (face_to_clockwise_vertex[face_number][0]);
-    const std::array<int, 2> vertex_end = vertex_coords_parent (face_to_clockwise_vertex[face_number][1]);
-    const std::array<int, 2> face_midpoint = vertex_midpoint_coords_parent (face_number);
+    const std::array<int, 2> vertex_start = get_vertex_coords_parent (face_to_clockwise_vertex[face_number][0]);
+    const std::array<int, 2> vertex_end = get_vertex_coords_parent (face_to_clockwise_vertex[face_number][1]);
+    const std::array<int, 2> face_midpoint = compute_vertex_midpoint_coords_parent (face_number);
 
-    vertex_coords[1] = (split && sub_face_id) ? face_midpoint : vertex_start;
-    vertex_coords[2] = (split && !sub_face_id) ? face_midpoint : vertex_end;
+    vertex_coords[1] = (split && (sub_face_id == 1)) ? face_midpoint : vertex_start;
+    vertex_coords[2] = (split && (sub_face_id == 0)) ? face_midpoint : vertex_end;
   }
 
   /** Determine the location of a subelement within its transition cell.  
@@ -348,9 +348,9 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     T8_ASSERT (this->element_is_subelement (elem));
     T8_ASSERT (this->element_is_valid (elem));
     const auto *subelement = this->as_subelement (elem);
-    const unsigned type = static_cast<unsigned> (subelement->subelement_type);
+    const unsigned subelem_type = static_cast<unsigned> (subelement->subelement_type);
     const int sub_id = subelement->subelement_id;
-    T8_ASSERT (sub_id < subelement_get_num_children (elem, static_cast<int> (type)));
+    T8_ASSERT (sub_id < subelement_get_num_children (elem, static_cast<int> (subelem_type)));
     /** The parent face at each clockwise position, starting at the left face: left (f0), top (f3),
      * right (f1), bottom (f2). Subelement ids are assigned in this order. */
     const int clockwise_ordering_to_parent_face[4] = { 0, 3, 1, 2 };
@@ -362,7 +362,7 @@ struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QU
     int split = 0;
     int subelements_up_to = 0;  // The current clockwise face iface contains subelements with ids < this number.
     for (clockwise_face = 0; clockwise_face < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++clockwise_face) {
-      split = face_is_split (type, clockwise_ordering_to_parent_face[clockwise_face]);
+      split = face_is_hanging (subelem_type, clockwise_ordering_to_parent_face[clockwise_face]);
       subelements_up_to += split + 1;
       if (sub_id < subelements_up_to) {
         break;

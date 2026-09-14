@@ -434,7 +434,7 @@ t8_forest_adapt (t8_forest_t forest)
 
   if (forest->set_adapt_recursive) {
     if (t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from))) {
-      SC_CHECK_ABORT (!t8_forest_has_local_subelements (forest_from),
+      SC_CHECK_ABORT (!t8_forest_has_subelements (forest_from),
                       "Recursive adaptation is currently not implemented for subelement schemes.");
     }
     refine_list = sc_list_new (nullptr);
