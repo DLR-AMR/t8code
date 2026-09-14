@@ -24,7 +24,8 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_cmesh/t8_cmesh_healpix/t8_geometry_healpix.hxx>
 
-void t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord)
+void
+t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord)
 {
   const double offset_y = static_cast<double> (layer) - 1.0;
   const double offset_x = 2.0 * face + ((layer + 1) % 2);

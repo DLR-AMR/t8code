@@ -42,11 +42,8 @@ TEST (T8GeometryHealpixTest, AllTreesAreOnUnitSphere)
 
   // A set of 2D reference coordinates within the element
   std::vector<double> ref_coords = {
-    0.0, 0.0,  // Corners
-    1.0, 0.0,
-    0.0, 1.0,
-    1.0, 1.0,
-    0.5, 0.5,  // Center
+    0.0, 0.0,                                // Corners
+    1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5,  // Center
   };
   int num_gen_coords = 0;
 // in addition to the basic test cases generate random coordinates to test out implementation

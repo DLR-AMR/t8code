@@ -38,18 +38,13 @@ t8_cmesh_new_healpix (sc_MPI_Comm comm)
   const int nverts = 4; /* Number of vertices per cmesh element. */
   t8_eclass_t all_eclasses[ntrees];
   std::vector<double> all_verts;
-  all_verts.reserve(ntrees * nverts * 3);
+  all_verts.reserve (ntrees * nverts * 3);
 
   /* Register geometry and retain the pointer */
   t8_geometry_c *geom = t8_cmesh_register_geometry<t8_geometry_healpix> (cmesh);
 
   /* Reference coordinates for the 4 corners of a quad element */
-  double ref_corners[4][2] = {
-    {0.0, 0.0},
-    {1.0, 0.0},
-    {1.0, 1.0},
-    {0.0, 1.0}
-  };
+  double ref_corners[4][2] = { { 0.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 1.0 }, { 0.0, 1.0 } };
 
   /* Build trees for all 3 layers (upper, middle, lower) */
   for (int itree = 0; itree < ntrees; itree++) {
@@ -76,12 +71,12 @@ t8_cmesh_new_healpix (sc_MPI_Comm comm)
       verts.push_back (coord[2]);
     }
 
-    all_verts.insert (all_verts.end(), verts.begin(), verts.end());
-    t8_cmesh_set_tree_vertices (cmesh, itree, verts.data(), nverts);
+    all_verts.insert (all_verts.end (), verts.begin (), verts.end ());
+    t8_cmesh_set_tree_vertices (cmesh, itree, verts.data (), nverts);
   }
 
   /* Compute face connectivity using topological vertices */
-  t8_cmesh_set_join_by_vertices (cmesh, 12, all_eclasses, all_verts.data(), nullptr, 0);
+  t8_cmesh_set_join_by_vertices (cmesh, 12, all_eclasses, all_verts.data (), nullptr, 0);
 
   t8_cmesh_commit (cmesh, comm);
   return cmesh;
