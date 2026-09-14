@@ -34,7 +34,13 @@
 namespace new_bigmesh
 {
 /** Wrapper function for t8_cmesh_new_bigmesh. */
-std::function<t8_cmesh_t (t8_eclass_t, int, sc_MPI_Comm)> bigmesh = t8_cmesh_new_bigmesh;
+std::function<t8_cmesh_t (t8_eclass_t, int, sc_MPI_Comm)> bigmesh
+  = [] (t8_eclass_t eclass, int num_trees, sc_MPI_Comm comm) {
+      t8_cmesh_t cmesh;
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_bigmesh (cmesh, eclass, num_trees, comm);
+      return cmesh;
+    };
 
 /** Function to convert parameter values to a string.
  * \param [in] eclass The eclass of the mesh.

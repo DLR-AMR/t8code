@@ -87,7 +87,12 @@ t8_timings_adapt (int start_l, int end_l, int runs, int dim)
   t8_forest_set_cmesh (forests[0],
                        t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0), 0);
 */
-  t8_forest_set_cmesh (forests[0], t8_cmesh_new_bigmesh (eclass, 512, sc_MPI_COMM_WORLD), sc_MPI_COMM_WORLD);
+  {
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_bigmesh (cmesh, eclass, 512, sc_MPI_COMM_WORLD);
+    t8_forest_set_cmesh (forests[0], cmesh, sc_MPI_COMM_WORLD);
+  }
   t8_forest_set_scheme (forests[0], t8_scheme_new_default ());
   t8_forest_set_level (forests[0], start_l);
   t8_forest_commit (forests[0]);
@@ -136,7 +141,12 @@ t8_timings_new (int level, int dim)
   sc_flops_snap (&fi, &snapshot);
 
   t8_forest_init (&forest);
-  t8_forest_set_cmesh (forest, t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0), sc_MPI_COMM_WORLD);
+  {
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+  }
   t8_forest_set_scheme (forest, t8_scheme_new_default ());
   t8_forest_set_level (forest, level);
   t8_forest_commit (forest);

@@ -532,7 +532,7 @@ struct t8_scheme
    * \note level 0 elements do not form a family.
    */
   inline bool
-  elements_are_family (const t8_eclass_t tree_class, t8_element_t *const *fam) const
+  elements_are_family (const t8_eclass_t tree_class, const t8_element_t *const *fam) const
   {
     return std::visit ([&] (auto &&scheme) { return scheme.elements_are_family (fam); }, eclass_schemes[tree_class]);
   };

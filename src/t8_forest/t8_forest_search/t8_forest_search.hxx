@@ -257,12 +257,12 @@ struct t8_search_base
    *
    * \param[in] ltreeid The local tree ID of the tree to be searched.
    * \param[in] element The element to be searched.
-   * \param[in] ts The element class scheme.
+   * \param[in] scheme The element class scheme.
    * \param[in] leaf_elements The array of leaf elements.
    * \param[in] tree_lindex_of_first_leaf The index of the first leaf in the tree.
    */
   void
-  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
+  search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *scheme,
                     t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf);
 
   /**  Checks if the search should stop due to empty queries.

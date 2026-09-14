@@ -40,6 +40,14 @@ t8_stash_init (t8_stash_t *pstash)
   sc_array_init (&stash->joinfaces, sizeof (t8_stash_joinface_struct_t));
 }
 
+int
+t8_stash_is_empty (const t8_stash_t stash)
+{
+  T8_ASSERT (stash != NULL);
+
+  return stash->classes.elem_count == 0 && stash->joinfaces.elem_count == 0 && stash->attributes.elem_count == 0;
+}
+
 void
 t8_stash_destroy (t8_stash_t *pstash)
 {

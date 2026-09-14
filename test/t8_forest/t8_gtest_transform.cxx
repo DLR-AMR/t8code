@@ -52,7 +52,8 @@ struct forest_transform: public testing::TestWithParam<std::tuple<std::tuple<int
 
     t8_debugf ("\n\n\nTesting eclass %s with level %i", t8_eclass_to_string[tree_class], level);
     /* Construct a coarse mesh of one tree */
-    cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, tree_class, sc_MPI_COMM_WORLD);
 
     /* Create a uniform forest */
     t8_forest_init (&forest);

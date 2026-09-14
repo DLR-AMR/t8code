@@ -23,8 +23,8 @@
 /* In this file we collect tests for the routines in t8_vec.hxx */
 
 #include <gtest/gtest.h>
-#include <t8_types/t8_vec.hxx>
 #include <t8_types/t8_vec.h>
+#include <t8_types/t8_vec.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_memory_macros.hxx>
 #include <t8_helper_functions/t8_unrolled_for.hxx>
@@ -44,6 +44,33 @@ TEST (t8_gtest_vec, norm)
   EXPECT_EQ (t8_norm (zero), 0);
   EXPECT_NEAR (t8_norm (onetwothree), normonetwothree, T8_PRECISION_SQRT_EPS);
   EXPECT_NEAR (t8_norm (arbitrary), normarbitrary, T8_PRECISION_SQRT_EPS);
+}
+
+/* Test the t8_normalize function and t8_copy. */
+TEST (t8_gtest_vec, normalize)
+{
+  double onetwothree[3] = { 1, 2, 3 };
+  t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
+
+  // Copy vectors for comparison later on.
+  double onetwothreecopy[3];
+  t8_copy (onetwothree, onetwothreecopy);
+  t8_3D_vec arbitrarycopy;
+  t8_copy (arbitrary, arbitrarycopy);
+
+  // Normalize and check if norm is one as expected.
+  t8_normalize (onetwothree);
+  t8_normalize (arbitrary);
+  EXPECT_NEAR (t8_norm (onetwothree), 1, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_norm (arbitrary), 1, T8_PRECISION_SQRT_EPS);
+
+  // Compare to vector that is normalized with the t8_ax function.
+  const double normonetwothree = sqrt (1 + 4 + 9);
+  t8_ax (onetwothreecopy, 1. / normonetwothree);
+  EXPECT_VEC_EQ (onetwothree, onetwothreecopy, T8_PRECISION_SQRT_EPS);
+  const double normarbitrary = 42.117360883;
+  t8_ax (arbitrarycopy, 1. / normarbitrary);
+  EXPECT_VEC_EQ (arbitrary, arbitrarycopy, T8_PRECISION_SQRT_EPS);
 }
 
 /* test the t8_dist function */
@@ -295,4 +322,79 @@ TEST (t8_gtest_vec, check_less_or_equal)
     { 1.0 - T8_PRECISION_SQRT_EPS, 1.0 - T8_PRECISION_SQRT_EPS, 1.0 - T8_PRECISION_SQRT_EPS });
 
   EXPECT_VEC_EQ (one, one_minus_eps, T8_PRECISION_SQRT_EPS);
+}
+
+/* Test the t8_rescale function. */
+TEST (t8_gtest_vec, rescale)
+{
+  t8_3D_vec onetwothree ({ 1, 2, 3 });
+  t8_3D_vec arbitrary ({ -.05, 3.14159, 42 });
+
+  const double normonetwothree = sqrt (1 + 4 + 9);
+  const double normarbitrary = 42.117360883;
+  const double newlength = 3.;
+
+  // Copy vectors for comparison later on.
+  t8_3D_vec onetwothreecopy;
+  t8_copy (onetwothree, onetwothreecopy);
+  t8_3D_vec arbitrarycopy;
+  t8_copy (arbitrary, arbitrarycopy);
+
+  // Compare rescaled vector with the one rescaled by hand.
+  t8_ax (onetwothree, newlength / normonetwothree);
+  t8_rescale (onetwothreecopy, newlength);
+  EXPECT_VEC_EQ (onetwothree, onetwothreecopy, T8_PRECISION_SQRT_EPS);
+  t8_ax (arbitrary, newlength / normarbitrary);
+  t8_rescale (arbitrarycopy, newlength);
+  EXPECT_VEC_EQ (arbitrary, arbitrarycopy, T8_PRECISION_SQRT_EPS);
+}
+
+/* Test the t8_normal_of_tri function. */
+TEST (t8_gtest_vec, normal_of_tri)
+{
+  // Define triangle points.
+  const t8_3D_vec p0 ({ 0, 0, 0 });
+  const t8_3D_vec p1 ({ 1, 0, 0 });
+  const t8_3D_vec p2 ({ 0, 1, 0 });
+  // Expected normal.
+  const t8_3D_vec expected_normal ({ 0, 0, 1 });
+
+  t8_3D_vec computed_normal;
+  t8_normal_of_tri (p0, p1, p2, computed_normal);
+  // Compare with expected.
+  EXPECT_VEC_EQ (expected_normal, computed_normal, T8_PRECISION_SQRT_EPS);
+}
+
+/* Test the t8_orthogonal_tripod function. */
+TEST (t8_gtest_vec, orthogonal_tripod)
+{
+  // Define triangle points.
+  t8_3D_vec onetwothree ({ 1, 2, 3 });
+  t8_3D_vec output1;
+  t8_3D_vec output2;
+
+  t8_orthogonal_tripod (onetwothree, output1, output2);
+  // Check if result is orthogonal and normalized.
+  EXPECT_NEAR (t8_dot (output1, onetwothree), 0, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_dot (output2, onetwothree), 0, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_dot (output1, output2), 0, T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_norm (output1), 1., T8_PRECISION_SQRT_EPS);
+  EXPECT_NEAR (t8_norm (output2), 1., T8_PRECISION_SQRT_EPS);
+}
+
+/* Test the t8_swap function. */
+TEST (t8_gtest_vec, swap)
+{
+  double onetwothree[3] = { 1, 2, 3 };
+  double arbitrary[3] = { -.05, 3.14159, 42 };
+
+  // Copy vectors for comparison later on.
+  double onetwothreecopy[3];
+  t8_copy (onetwothree, onetwothreecopy);
+  double arbitrarycopy[3];
+  t8_copy (arbitrary, arbitrarycopy);
+
+  t8_swap (onetwothree, arbitrary);
+  EXPECT_VEC_EQ (onetwothreecopy, arbitrary, T8_PRECISION_SQRT_EPS);
+  EXPECT_VEC_EQ (arbitrarycopy, onetwothree, T8_PRECISION_SQRT_EPS);
 }

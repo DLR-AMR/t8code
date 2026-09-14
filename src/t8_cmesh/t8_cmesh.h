@@ -29,12 +29,12 @@
 
 #include <t8.h>
 #include <t8_data/t8_shmem.h>
-#include <t8_cmesh/t8_cmesh_io/t8_cmesh_save.h>
+#include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.h>
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_scheme.h>
 
 /** Forward pointer reference to hidden cmesh implementation.
- * This reference needs to be known by t8_geometry, hence we 
+ * This reference needs to be known by t8_geometry, hence we
  * put it before the include. */
 typedef struct t8_cmesh *t8_cmesh_t;
 
@@ -90,15 +90,40 @@ int
 t8_cmesh_is_initialized (t8_cmesh_t cmesh);
 
 /** Check whether a cmesh is not NULL, initialized and committed.
- * In addition, it asserts that the cmesh is consistent as much as possible.
  * \param [in] cmesh            This cmesh is examined.  May be NULL.
+ * \param [in] validate_cmesh   If true (the default), in addition to checking the
+ *                              committed flag, checks that the cmesh is consistent
+ *                              as much as possible.
+ *                              If false, only \a cmesh being non-NULL and its internal
+ *                              committed flag are checked; no recursive validation is
+ *                              performed. Useful for cheap checks, e.g. at the start of
+ *                              a cmesh generator, where the full validation is neither
+ *                              needed nor (since the cmesh is not yet committed) meaningful.
  * \return                      True if cmesh is not NULL and
  *                              \ref t8_cmesh_init has been called on it
- *                              as well as \ref t8_cmesh_commit.
+ *                              as well as \ref t8_cmesh_commit (and the validation is
+ *                              successful).
  *                              False otherwise.
  */
 int
-t8_cmesh_is_committed (const t8_cmesh_t cmesh);
+t8_cmesh_is_committed (const t8_cmesh_t cmesh
+#ifdef __cplusplus
+                       ,
+                       int validate_cmesh = 1
+#else
+                       ,
+                       int validate_cmesh
+#endif
+);
+
+/** Check whether a cmesh holds no trees, face-connections or attributes yet.
+ * Useful at the start of a cmesh generator to ensure the caller has not
+ * already added trees to \a cmesh before passing it on.
+ * \param [in] cmesh            This cmesh is examined. Must be initialized, but not committed.
+ * \return                      True if \a cmesh holds no entries at all, false otherwise.
+ */
+int
+t8_cmesh_stash_is_empty (const t8_cmesh_t cmesh);
 
 /** Disable the debug check for negative volumes in trees during \ref t8_cmesh_commit.
  *  Does nothing outside of debug mode.
@@ -432,7 +457,9 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm);
  * \param[in] cmesh The cmesh to save.
  * \param[in] fileprefix The prefix of the file to save the cmesh to.
  *
- * \note Currently, it is only legal to save cmeshes that use the linear geometry.
+ * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
+ *                  Calling it will thus result in an error.
+ * \note So far, it was only legal to save cmeshes that use the linear geometry.
  */
 int
 t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
@@ -442,6 +469,9 @@ t8_cmesh_save (t8_cmesh_t cmesh, const char *fileprefix);
  *
  * \param[in] filename The name of the file to load the cmesh from.
  * \param[in] comm The MPI communicator to use.
+ *
+ * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
+ *                  Calling it will thus result in an error.
  */
 t8_cmesh_t
 t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
@@ -455,6 +485,8 @@ t8_cmesh_load (const char *filename, sc_MPI_Comm comm);
  * \param[in] mode The load mode to use, see \ref t8_load_mode_t.
  * \param[in] procs_per_node The number of processes per node, only relevant in JUQUEEN mode.
  *
+ * \note IMPORTANT: Currently, this functionality is deactivated, because it is outdated.
+ *                  Calling it will thus result in an error.
  * \note \a procs_per_node is only relevant in mode==JUQUEEN. If \a num_files = 1 a replicated cmesh is constructed.
  */
 t8_cmesh_t
@@ -678,9 +710,9 @@ t8_cmesh_get_face_neighbor (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, c
                             int *orientation);
 
 /**
- * Given a local tree id (of a local tree or ghost tree) and a face compute the eclass of the 
+ * Given a local tree id (of a local tree or ghost tree) and a face compute the eclass of the
  * tree's face neighbor.
- * 
+ *
  * \param [in]      cmesh   The cmesh to be considered.
  * \param [in]      ltreeid The local id of a tree or a ghost.
  * \param [in]      face    A face number of the tree/ghost.
@@ -766,7 +798,7 @@ t8_cmesh_get_partition_table (t8_cmesh_t cmesh);
  *                                  the calling processor anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the previous process.
- * \a cmesh must be committed before calling this function. 
+ * \a cmesh must be committed before calling this function.
  */
 void
 t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, const t8_scheme_c *tree_scheme,
@@ -775,11 +807,11 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
                                              int8_t *first_tree_shared);
 
 /**
- * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially 
+ * Calculate the section of a uniform hybrid forest for the current rank. Needed for hybrid meshes, especially
  * meshes where not all elements refine into 1:2^dim manner. The section is calculated without assuming such refinement
  * and each process computes its number of elements on the given \a level, communicates the number to other processes,
- * and the correct section is computed based on this information. 
- * 
+ * and the correct section is computed based on this information.
+ *
  * \param [in] cmesh        The cmesh to be considered.
  * \param [in] level        The uniform refinement level to be created.
  * \param [in] scheme       The element scheme for which to compute the bounds.
@@ -790,7 +822,7 @@ t8_cmesh_uniform_bounds_equal_element_count (t8_cmesh_t cmesh, const int level, 
  *                                  the calling process anymore. Not computed if NULL.
  * \param [out]   first_tree_shared If not NULL, 1 or 0 is stored here depending on whether \a first_local_tree is the
  *                                 same as \a last_local_tree on the previous process.
- * \param [in] comm         The communicator 
+ * \param [in] comm         The communicator
  */
 void
 t8_cmesh_uniform_bounds_for_irregular_refinement (const t8_cmesh_t cmesh, const int level, const t8_scheme_c *scheme,

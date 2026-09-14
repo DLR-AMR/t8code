@@ -42,7 +42,8 @@ struct t8_cmesh_bounding_box: public testing::TestWithParam<t8_eclass>
   SetUp () override
   {
     eclass = GetParam ();
-    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
   }
 
   void
@@ -111,8 +112,10 @@ TEST_P (t8_cmesh_bounding_box_multi_trees, hypercube)
     0, 1, 1,
     1, 1, 1 };
   /* clang-format on */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (eclass, sc_MPI_COMM_WORLD, cube_bounds, trees_per_dim, trees_per_dim,
-                                                 trees_per_dim, axis_aligned_geometry);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_pad (cmesh, eclass, sc_MPI_COMM_WORLD, cube_bounds, trees_per_dim, trees_per_dim,
+                              trees_per_dim, axis_aligned_geometry);
   compute_and_check_bounds (cmesh, eclass);
   t8_cmesh_unref (&cmesh);
 }

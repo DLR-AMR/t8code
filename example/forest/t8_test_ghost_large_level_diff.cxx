@@ -136,11 +136,13 @@ t8_ghost_large_level_diff (const char *prefix, int dim, int level, int refine, i
   sc_statinfo_t stats[1];
 
   if (prefix != NULL) {
-    cmesh = t8_cmesh_from_msh_file (prefix, 1, comm, dim, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, prefix, 1, comm, dim, 0, 0);
   }
   /* If no prefix given, create hypercube */
   else {
-    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_PRISM, comm, 0, 0, 0);
   }
   t8_cmesh_init (&cmesh_partition);
   t8_cmesh_set_derive (cmesh_partition, cmesh);

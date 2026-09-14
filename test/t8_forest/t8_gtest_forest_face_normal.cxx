@@ -44,7 +44,9 @@ struct class_forest_face_normal: public testing::TestWithParam<std::tuple<std::t
     scheme = create_from_scheme_id (scheme_id);
     eclass = std::get<1> (std::get<0> (GetParam ()));
     level = std::get<1> (GetParam ());
-    t8_cmesh_t cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     const int do_face_ghost = 1;
     forest = t8_forest_new_uniform (cmesh, scheme, level, do_face_ghost, sc_MPI_COMM_WORLD);
   }
@@ -82,16 +84,15 @@ TEST_P (class_forest_face_normal, back_and_forth)
 
         /* Get all face neighbors */
 
-        t8_element_t **neighbors;
+        const t8_element_t **neighbors;
         int num_neighbors;
-        const int forest_is_balanced = 1;
         t8_eclass_t neigh_eclass;
         int *dual_faces;
         t8_locidx_t *neigh_ids;
 
         t8_gloidx_t gneightree;
         t8_forest_leaf_face_neighbors_ext (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
-                                           &neigh_ids, &neigh_eclass, forest_is_balanced, &gneightree, NULL);
+                                           &neigh_ids, &neigh_eclass, &gneightree, NULL);
 
         /* Iterate and compute their facenormal */
         for (int ineigh = 0; ineigh < num_neighbors; ineigh++) {
@@ -104,7 +105,6 @@ TEST_P (class_forest_face_normal, back_and_forth)
         }
 
         if (num_neighbors > 0) {
-          scheme->element_destroy (neigh_eclass, num_neighbors, neighbors);
           T8_FREE (neigh_ids);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);

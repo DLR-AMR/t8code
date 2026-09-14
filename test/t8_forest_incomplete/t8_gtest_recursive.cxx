@@ -53,7 +53,8 @@ struct recursive_tree: public testing::TestWithParam<std::tuple<int, t8_eclass_t
     sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &MPI_size);
 
     /* Construct a cmesh such that each process will get one rooted tree */
-    cmesh = t8_cmesh_new_bigmesh (tree_class, MPI_size, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_bigmesh (cmesh, tree_class, MPI_size, sc_MPI_COMM_WORLD);
 
     scheme->ref ();
     t8_cmesh_ref (cmesh);
@@ -160,7 +161,7 @@ TEST_P (recursive_tree, test_recursive)
   forest = t8_adapt_forest (forest, t8_adapt_remove_but_last_first, 1);
   forest = t8_adapt_forest (forest, t8_adapt_coarse_all, 1);
 
-  /* The adaptet forest should only contain root elements as forest_base */
+  /* The adapted forest should only contain root elements as forest_base */
   ASSERT_TRUE (t8_forest_is_equal (forest, forest_base));
 }
 

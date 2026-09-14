@@ -94,84 +94,103 @@ t8_forest_split_array (const t8_element_t *element, const t8_element_array_t *le
 
 void
 t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
-                         const int face, const t8_element_array_t *leaf_elements, void *user_data,
-                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback)
+                         const int face, const t8_element_array_t *const leaf_elements,
+                         const t8_locidx_t tree_lindex_of_first_leaf, const t8_forest_iterate_face_fn callback,
+                         void *user_data)
 {
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  t8_eclass_t eclass;
-  t8_element_t **face_children;
-  int child_face, num_face_children, iface;
-  int *child_indices;
-  size_t *split_offsets, indexa, indexb, elem_count;
-  t8_element_array_t face_child_leaves;
-
+  t8_debugf ("Entering t8_forest_iterate_faces with leaf_index %i and %li total leaves.\n", tree_lindex_of_first_leaf,
+             t8_element_array_get_count (leaf_elements));
   T8_ASSERT (t8_forest_is_committed (forest));
-  T8_ASSERT (0 <= ltreeid && ltreeid < t8_forest_get_num_local_trees (forest));
+  const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
+#if T8_ENABLE_DEBUG
+  const t8_locidx_t num_ghost_trees = t8_forest_get_num_ghost_trees (forest);
+  const t8_locidx_t num_local_and_ghost_trees = num_local_trees + num_ghost_trees;
+  T8_ASSERT (0 <= ltreeid && ltreeid < num_local_and_ghost_trees);
+#endif
 
-  elem_count = t8_element_array_get_count (leaf_elements);
+  // Check whether we are in a local tree or ghost tree
+  const bool tree_is_local = t8_forest_tree_is_local (forest, ltreeid);
+  const bool tree_is_ghost = !tree_is_local;
+  const t8_locidx_t local_or_ghost_tree_id = tree_is_local ? ltreeid : ltreeid - num_local_trees;
+
+  const size_t elem_count = t8_element_array_get_count (leaf_elements);
   if (elem_count == 0) {
     /* There are no leaves left, so we have nothing to do */
     return;
   }
-  eclass = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_eclass_t eclass = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
-  if (elem_count == 1) {
-    /* There is only one leaf left, we check whether it is the same as element
-     * and if so call the callback function */
+  // TODO: This does a costly binary search. Is there a better criterion to check
+  //        whether element is a leaf or not?
+  //        We tried (elem_count == 1) but this does not work since we could
+  //        start the search with a full family and element being one sibling.
+  //        In that case, element is a leaf but elem_count is not 1.
+  bool is_leaf = t8_forest_element_is_leaf_or_ghost (forest, element, local_or_ghost_tree_id, tree_is_ghost);
+
+#if T8_ENABLE_DEBUG
+  if (!is_leaf) {
+    /* Check whether element has smaller level than the first leaf */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
-    T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
-    if (scheme->element_is_equal (eclass, element, leaf)) {
-      /* The element is the leaf, we are at the last stage of the recursion
-       * and can call the callback. */
-      (void) callback (forest, ltreeid, leaf, face, user_data, tree_lindex_of_first_leaf);
-      return;
+    T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, leaf, local_or_ghost_tree_id, tree_is_ghost));
+    T8_ASSERT (scheme->element_get_level (eclass, element) < scheme->element_get_level (eclass, leaf));
+
+    // Verify that all leaves in leaf_elements are descendants of element
+    for (t8_locidx_t ileaf_index = 0; (size_t) ileaf_index < elem_count; ++ileaf_index) {
+      const t8_element_t *ileaf = t8_element_array_index_locidx (leaf_elements, ileaf_index);
+      T8_ASSERT (scheme->element_is_ancestor (eclass, element, ileaf));
     }
   }
-#if T8_ENABLE_DEBUG
-  /* Check whether element has greater level than the first leaf */
-  const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
-  T8_ASSERT (t8_forest_element_is_leaf (forest, leaf, ltreeid));
-  T8_ASSERT (scheme->element_get_level (eclass, element) < scheme->element_get_level (eclass, leaf));
 #endif
 
-  /* Call the callback function element, we pass -index - 1 as index to indicate
-   * element is not a leaf, if it returns true, we continue with the top-down recursion */
-  if (callback (forest, ltreeid, element, face, user_data, -tree_lindex_of_first_leaf - 1)) {
-    /* Enter the recursion */
-    /* We compute all face children of E, compute their leaf arrays and call iterate_faces */
-    /* allocate the memory to store the face children */
-    num_face_children = scheme->element_get_num_face_children (eclass, element, face);
-    face_children = T8_ALLOC (t8_element_t *, num_face_children);
-    scheme->element_new (eclass, num_face_children, face_children);
-    /* Memory for the child indices of the face children */
-    child_indices = T8_ALLOC (int, num_face_children);
-    /* Memory for the indices that split the leaf_elements array */
-    split_offsets = T8_ALLOC (size_t, scheme->element_get_num_children (eclass, element) + 1);
-    /* Compute the face children */
-    scheme->element_get_children_at_face (eclass, element, face, face_children, num_face_children, child_indices);
-    /* Split the leaves array in portions belonging to the children of element */
-    t8_forest_split_array (element, leaf_elements, split_offsets);
-    for (iface = 0; iface < num_face_children; iface++) {
-      /* Check if there are any leaf elements for this face child */
-      indexa = split_offsets[child_indices[iface]];     /* first leaf of this face child */
-      indexb = split_offsets[child_indices[iface] + 1]; /* first leaf of next child */
-      if (indexa < indexb) {
-        /* There exist leaves of this face child in leaf_elements,
-         * we construct an array of these leaves */
-        t8_element_array_init_view (&face_child_leaves, leaf_elements, indexa, indexb - indexa);
-        /* Compute the corresponding face number of this face child */
-        child_face = scheme->element_face_get_child_face (eclass, element, face, iface);
-        /* Enter the recursion */
-        t8_forest_iterate_faces (forest, ltreeid, face_children[iface], child_face, &face_child_leaves, user_data,
-                                 indexa + tree_lindex_of_first_leaf, callback);
-      }
-    }
-    /* clean-up */
-    scheme->element_destroy (eclass, num_face_children, face_children);
-    T8_FREE (face_children);
-    T8_FREE (child_indices);
-    T8_FREE (split_offsets);
+  /* Call the callback function element, if it returns true, we continue with the top-down recursion */
+  const int ret
+    = callback (forest, ltreeid, element, face, is_leaf, leaf_elements, tree_lindex_of_first_leaf, user_data);
+  if (!ret || is_leaf) {
+    // The callback returned false or the element is a leaf.
+    // We abort the recursion.
+    return;
   }
+
+  /* Enter the recursion */
+  /* We compute all face children of E, compute their leaf arrays and call iterate_faces */
+  /* allocate the memory to store the face children */
+  const int num_face_children = scheme->element_get_num_face_children (eclass, element, face);
+  t8_element_t **face_children = T8_ALLOC (t8_element_t *, num_face_children);
+  scheme->element_new (eclass, num_face_children, face_children);
+  /* Memory for the child indices of the face children */
+  int *child_indices = T8_ALLOC (int, num_face_children);
+  /* Memory for the indices that split the leaf_elements array */
+  const int num_children = scheme->element_get_num_children (eclass, element);
+  size_t *split_offsets = T8_ALLOC (size_t, num_children + 1);
+  /* Compute the face children */
+  scheme->element_get_children_at_face (eclass, element, face, face_children, num_face_children, child_indices);
+  /* Split the leaves array in portions belonging to the children of element */
+  t8_forest_split_array (element, leaf_elements, split_offsets);
+  for (int iface = 0; iface < num_face_children; iface++) {
+    /* Check if there are any leaf elements for this face child */
+    T8_ASSERT (0 <= child_indices[iface]);
+    T8_ASSERT (child_indices[iface] < num_children + 1);
+    const size_t indexa = split_offsets[child_indices[iface]];     /* first leaf of this face child */
+    const size_t indexb = split_offsets[child_indices[iface] + 1]; /* first leaf of next child */
+    t8_debugf ("Computed indices for face child %i:  %zd %zd\n", iface, indexa, indexb);
+    if (indexa < indexb) {
+      /* There exist leaves of this face child in leaf_elements,
+          * we construct an array of these leaves */
+      t8_element_array_t face_child_leaves;
+      t8_element_array_init_view (&face_child_leaves, leaf_elements, indexa, indexb - indexa);
+      /* Compute the corresponding face number of this face child */
+      const int child_face = scheme->element_face_get_child_face (eclass, element, face, iface);
+      /* Enter the recursion */
+      t8_forest_iterate_faces (forest, ltreeid, face_children[iface], child_face, &face_child_leaves,
+                               indexa + tree_lindex_of_first_leaf, callback, user_data);
+    }
+  }
+  /* clean-up */
+  scheme->element_destroy (eclass, num_face_children, face_children);
+  T8_FREE (face_children);
+  T8_FREE (child_indices);
+  T8_FREE (split_offsets);
 }
 
 /**

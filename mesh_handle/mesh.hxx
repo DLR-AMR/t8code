@@ -30,10 +30,13 @@
 #include "element.hxx"
 #include "competence_pack.hxx"
 #include "internal/adapt.hxx"
+#include "competences/element_data_competences.hxx"
+#include "concepts.hxx"
+#include <t8_forest/t8_forest_balance.h>
+#include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost.h>
 #include <vector>
-#include <type_traits>
 #include <functional>
 #include <memory>
 #include <span>
@@ -41,35 +44,38 @@
 namespace t8_mesh_handle
 {
 
-/** Concept to ensure that a type is MPI safe.
+/** Concept to ensure that a type is an element competence pack.
  */
 template <typename TType>
-concept T8MPISafeType
-  = std::is_void_v<TType> || (std::is_trivially_copyable_v<TType> && std::is_standard_layout_v<TType>);
+concept ElementCompetencePack = requires { typename TType::is_element_competence_pack; };
+/** Concept to ensure that a type is a mesh competence pack.
+ */
+template <typename TType>
+concept MeshCompetencePack = requires { typename TType::is_mesh_competence_pack; };
 
 /**
  * Wrapper for a forest that enables it to be handled as a simple mesh object.
- * \tparam TCompetencePack The competences you want to add to the default functionality of the mesh.
+ * \tparam TElementCompetencePack The competences you want to add to the default functionality of the elements.
  *         \see element for more details on the choice of the template parameter.   
- *         \note Please pack your competences using the \ref competence_pack class.
- * \tparam TElementDataType The element data type you want to use for each element of the mesh. 
- *         The data type has to be MPI safe as the data for ghost elements will be exchanged via MPI.
- *         Use void (this is also the default) if you do not want to set element data.
+ *         \note Please pack your competences using the \ref element_competence_pack class.
+ * \tparam TMeshCompetences The competences you want to add to the default functionality of the mesh.  
+ *         \note Please pack your competences using the \ref t8_mesh_handle::mesh_competence_pack class.
+ *         One of the most important competences to add is \ref element_data_mesh_competence.
  */
-template <typename TCompetencePack = competence_pack<>, T8MPISafeType TElementDataType = void>
-class mesh {
+template <ElementCompetencePack TElementCompetencePack = element_competence_pack<>,
+          MeshCompetencePack TMeshCompetencePack = mesh_competence_pack<>>
+class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePack, TMeshCompetencePack>> {
  public:
-  using SelfType
-    = mesh<TCompetencePack, TElementDataType>; /**< Type of the current class with all template parameters specified. */
-  using ElementDataType = TElementDataType;    /**< Make Type of the element data accessible. */
-  using element_class =
-    typename TCompetencePack::template apply<SelfType,
-                                             element>; /**< The element class of the mesh with given competences. */
-  friend element_class; /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
+  using SelfType = mesh<TElementCompetencePack, TMeshCompetencePack>; /**< Type of the current class. */
+  using element_class = typename TElementCompetencePack::template apply<
+    SelfType, element>;  /**< The element class of the mesh with given competences. */
+  friend element_class;  /**< Element class as friend such that private members (e.g. the forest) can be accessed. */
+  using mesh_tag = void; /**< Mesh tag for identification in concept. */
   using mesh_const_iterator =
     typename std::vector<element_class>::const_iterator; /**< Constant iterator type for the mesh elements. */
   using mesh_iterator =
-    typename std::vector<element_class>::iterator; /**< Non-const iterator type for the mesh elements. */
+    typename std::vector<element_class>::iterator;              /**< Non-const iterator type for the mesh elements. */
+  friend struct element_data_element_competence<element_class>; /**< Friend struct to access its element data vector. */
 
   /** Callback function prototype to decide for refining and coarsening of a family of elements
    * or one element in a mesh handle.
@@ -110,7 +116,6 @@ class mesh {
    */
   mesh (t8_forest_t forest): m_forest (forest)
   {
-    T8_ASSERT ((std::is_same<typename TCompetencePack::is_competence_pack, void>::value));
     T8_ASSERT (t8_forest_is_committed (m_forest));
     update_elements ();
   }
@@ -134,6 +139,16 @@ class mesh {
   get_num_local_elements () const
   {
     return t8_forest_get_local_num_leaf_elements (m_forest);
+  }
+
+  /**
+   * Getter for the number of global elements in the mesh.
+   * \return Number of global elements in the mesh.
+   */
+  t8_gloidx_t
+  get_num_global_elements () const
+  {
+    return t8_forest_get_global_num_leaf_elements (m_forest);
   }
 
   /**
@@ -164,6 +179,17 @@ class mesh {
   get_forest () const
   {
     return m_forest;
+  }
+
+  /** Check if the local elements of the mesh are balanced. 
+  * The mesh is said to be balanced if the level difference between face neighbors is at most 1.
+  * at most +1 or -1 of the element's level.
+  * \return true if the local elements are balanced, false otherwise.
+  */
+  bool
+  is_balanced () const
+  {
+    return t8_forest_is_balanced (m_forest);
   }
 
   // --- Methods to access elements. ---
@@ -205,6 +231,26 @@ class mesh {
   end ()
   {
     return m_elements.end ();
+  }
+
+  /**
+   * Returns a constant iterator to the first (local) mesh element.
+   * \return Constant iterator to the first (local) mesh element.
+   */
+  mesh_const_iterator
+  begin () const
+  {
+    return this->cbegin ();
+  }
+
+  /**
+   * Returns a constant iterator to a mesh element following the last (local) element of the mesh.
+   * \return Constant iterator to the mesh element following the last (local) element of the mesh.
+   */
+  mesh_const_iterator
+  end () const
+  {
+    return this->cend ();
   }
 
   /**
@@ -267,6 +313,7 @@ class mesh {
   void
   set_adapt (adapt_callback_type adapt_callback)
   {
+    SC_CHECK_ABORT (m_forest->incomplete_trees == 0, "The mesh handle can't adapt forests with incomplete trees.\n");
     if (!m_uncommitted_forest.has_value ()) {
       m_uncommitted_forest.emplace ();
       t8_forest_init (&*m_uncommitted_forest);
@@ -278,6 +325,48 @@ class mesh {
     // Set up the forest for adaptation using the wrapper callback.
     // Recursive adaptation is currently not supported.
     t8_forest_set_adapt (m_uncommitted_forest.value (), m_forest, detail::mesh_adapt_callback_wrapper, false);
+  }
+
+  /** If this function is called, the mesh will be partitioned on committing.
+   * The partitioning is done according to the SFC and each rank is assigned
+   * the same (maybe +1) number of elements.
+   * \note The partition is carried out only when \ref commit is called.
+   * \note This setting can be combined with \ref set_adapt and \ref set_balance. The order in which
+   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   * \param [in] set_for_coarsening If true, the partitions are choose such that coarsening 
+   *        an element once is a process local operation. Default is false.
+   */
+  void
+  set_partition (bool set_for_coarsening = false)
+  {
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
+    }
+    t8_forest_set_partition (m_uncommitted_forest.value (), m_forest, set_for_coarsening);
+  }
+
+  /** If this function is called, the mesh will be balanced on committing.
+ * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
+   * \note The balance is carried out only when \ref commit is called.
+   * \param [in] no_repartition Balance constructs several intermediate steps that
+   *       are refined from each other. In order to maintain a balanced load, a repartitioning is performed in each 
+   *       round and the resulting mesh is load-balanced per default. 
+   *       Set \a no_repartition to true if this behaviour is not desired.
+   *       If \a no_repartition is false (default), an additional call of \ref set_partition is not necessary.
+   * \note This setting can be combined with \ref set_adapt and \ref set_partition. The order in which
+   * these operations are executed is always 1) Adapt 2) Partition 3) Balance.
+   */
+  void
+  set_balance (bool no_repartition = false)
+  {
+    if (!m_uncommitted_forest.has_value ()) {
+      t8_forest_t new_forest;
+      t8_forest_init (&new_forest);
+      m_uncommitted_forest = new_forest;
+    }
+    t8_forest_set_balance (m_uncommitted_forest.value (), m_forest, no_repartition);
   }
 
   /** Enable or disable the creation of a layer of ghost elements.
@@ -317,9 +406,9 @@ class mesh {
     t8_forest_ref (m_forest);
     t8_forest_commit (m_uncommitted_forest.value ());
     // Check if we adapted and unregister the adapt context if so.
-    if (detail::adapt_registry::get (m_uncommitted_forest.value ()) != nullptr) {
+    if (detail::adapt_registry::get (m_forest) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
-      if (!std::is_void<TElementDataType>::value) {
+      if constexpr (has_element_data_handler_competence ()) {
         t8_global_infof (
           "Please note that the element data is not interpolated automatically during adaptation. Use the "
           "function set_element_data() to provide new adapted element data.\n");
@@ -332,56 +421,32 @@ class mesh {
     update_elements ();
   }
 
-  // --- Methods to set and get user and element data and exchange data between processes. ---
-  /** 
-   * Set the element data vector. The vector should have the length of num_local_elements.
-   * \param [in] element_data The element data vector to set with one entry of class TElementDataType 
-   *            for each local mesh element (excluding ghosts).
+  // --- Methods to check for mesh competences. ---
+  /** Function that checks if a competence for element data handling is given.
+   * \return true if mesh has a data handler, false otherwise.
    */
-  template <typename ElementDataType = TElementDataType,
-            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
-  void
-  set_element_data (std::vector<ElementDataType> element_data)
+  static constexpr bool
+  has_element_data_handler_competence ()
   {
-    T8_ASSERT (element_data.size () == static_cast<size_t> (get_num_local_elements ()));
-    m_element_data = std::move (element_data);
-    m_element_data.reserve (get_num_local_elements () + get_num_ghosts ());
-    m_element_data.resize (get_num_local_elements ());
+    return requires (SelfType& mesh) { mesh.get_element_data (); };
   }
 
-  /** 
-   * Get the element data vector.
-   * The element data of the local mesh elements can be set using \ref set_element_data.
-   * If ghost entries should be filled, one should call \ref exchange_ghost_data on each process first.
-   * \return Element data vector with data of Type TElementDataType.
+  /** Function that checks if a competence to determine the ranks of the elements is given.
+   * \return true if mesh has the competence, false otherwise.
    */
-  template <typename ElementDataType = TElementDataType,
-            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
-  const std::vector<ElementDataType>&
-  get_element_data () const
+  static constexpr bool
+  has_remote_ranks_mesh_competence ()
   {
-    return m_element_data;
+    return requires (SelfType& mesh) { mesh.fill_rank_vector (); };
   }
 
-  /** 
-  * Exchange the element data for ghost elements between processes.
-  * This routine has to be called on each process after setting the element data for all local elements.
-  */
-  template <typename ElementDataType = TElementDataType,
-            typename = std::enable_if_t<!std::is_void<ElementDataType>::value>>
-  void
-  exchange_ghost_data ()
+  /** Function that checks if a competence to determine a unique vector of the faces is given.
+   * \return true if mesh has the competence, false otherwise.
+   */
+  static constexpr bool
+  has_face_vector_mesh_competence ()
   {
-    // t8_forest_ghost_exchange_data expects an sc_array, so we need to wrap our data array to one.
-    sc_array* sc_array_wrapper;
-    m_element_data.resize (get_num_local_elements () + get_num_ghosts ());
-    sc_array_wrapper = sc_array_new_data (m_element_data.data (), sizeof (ElementDataType),
-                                          get_num_local_elements () + get_num_ghosts ());
-
-    // Data exchange: entries with indices > num_local_elements will get overwritten.
-    t8_forest_ghost_exchange_data (m_forest, sc_array_wrapper);
-
-    sc_array_destroy (sc_array_wrapper);
+    return requires (SelfType& mesh) { mesh.fill_unique_face_vector (); };
   }
 
  private:
@@ -428,8 +493,6 @@ class mesh {
   t8_forest_t m_forest;                  /**< The forest the mesh should be defined for. */
   std::vector<element_class> m_elements; /**< Vector storing the (local) mesh elements. */
   std::vector<element_class> m_ghosts;   /**< Vector storing the (local) ghost elements. */
-  std::conditional_t<!std::is_void_v<TElementDataType>, std::vector<TElementDataType>, std::nullptr_t>
-    m_element_data; /**< Vector storing the (local) element data. */
   std::optional<t8_forest_t>
     m_uncommitted_forest; /**< Forest in which the set flags are set for a new forest before committing. */
 };

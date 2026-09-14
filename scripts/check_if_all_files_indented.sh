@@ -28,45 +28,56 @@
 #
 
 #
-# This script must be executed from the scripts/ folder.
+# This script must be executed from within the repository.
 #
-if [ `basename $PWD` != scripts ]
-then
-  if [ -d scripts ]
-  then
-    # The directory stack is automatically reset on script exit.
-    pushd scripts/ > /dev/null
-  else
-    echo ERROR: scripts/ directory not found.
-    exit 1
-  fi
+repo_main_dir=$(git rev-parse --show-toplevel 2>/dev/null)
+
+if [ $? -ne 0 ]; then
+  echo "ERROR: check_if_all_files_indented.sh was not called from inside the git repository."
+  exit 1
 fi
 
 # Find all files with the appropriate suffix.
-# Excluding the sc/ and p4est/ subfolders.
-files=`./internal/find_all_source_files.sh`
+files=$($repo_main_dir/scripts/internal/find_all_source_files.sh) || {
+  echo $files # return error message of find_all_source_files.sh
+  echo "ERROR: find_all_source_files.sh returned exit code 1"
+  exit 1
+}
+
+if [ -z "$files" ]; then
+  echo "ERROR: find_all_source_files.sh returned nothing."
+  exit 1
+fi
 
 notallindented=0
+file_found=0
 for file in $files
 do
-  # Find also gives us directories,
-  # so we ensure that $file is a proper
-  # file before checking for indentation.
-  if [ -f $file ]
+  if [ -f "$file" ]
   then
-    ./check_if_file_indented.sh $file > /dev/null 2>&1
+    file_found=1
+    $repo_main_dir/scripts/check_if_file_indented.sh "$file"
     status=$?
     if test $status -ne 0
     then
-      echo "File $file is not indented."
       notallindented=1
     fi
+  else
+    echo "ERROR: find_all_source_files.sh returned a file which does not exist."
+    exit 1
   fi
 done
+
+if test $file_found -eq 0
+then
+  echo Error: Could not find any source files.
+  exit 1
+fi
 
 if test $notallindented -eq 0
 then
   echo All files are indented.
+  exit 0
 fi
 
-exit $notallindented
+exit 1
