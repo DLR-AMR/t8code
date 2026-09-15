@@ -135,9 +135,12 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
    * \param [in] subelement_type The subelement type used for refinement.
    * \return                     The number of subelements the triangle is split into (hanging faces + 1).
    */
-  static int
-  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
+  int
+  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type) const noexcept
   {
+    if (subelement_type == 0) {
+      return underlying_scheme.element_get_num_children (this->element_to_standalone (elem));
+    }
     const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     return num_hanging_faces + 1;
   }

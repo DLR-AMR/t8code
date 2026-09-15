@@ -31,6 +31,7 @@
 #include <t8_forest/t8_forest_pfc_helper.hxx>
 #include <t8_schemes/t8_scheme.h>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #include <t8_element/t8_element.h>
 #include <algorithm>
 
@@ -51,15 +52,17 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, const t8_tree_t 
   const t8_element_t *start_element = t8_forest_get_tree_leaf_element (tree, start_element_id_in_tree);
 
   // If the start element is of level zero, i.e., the root, it does not have any siblings.
-  if (scheme->element_get_level (tree_class, start_element) == 0) {
+  // For subelement schemes, elements of level zero can still be subelements (and therefore have siblings).
+  if (scheme->element_get_level (tree_class, start_element) == 0
+      && !t8_element_is_subelement (scheme, tree_class, start_element)) {
     return start_element_id_in_tree;
   }
 
   // Get parent of start element.
   scheme->element_get_parent (tree_class, start_element, parent_start);
 
-  // Determine the parent's number of children.
-  const int num_children = scheme->element_get_num_children (tree_class, parent_start);
+  // Determine the number of siblings of the start element.
+  const int num_children = scheme->element_get_num_siblings (tree_class, start_element);
 
   // Determine bound to be used within element loop (and make sure to stay within tree element range);
   t8_locidx_t extreme_check_id_in_tree = start_element_id_in_tree + signed_increment * num_children;
