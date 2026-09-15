@@ -139,9 +139,14 @@ Development of `t8code` has been funded by the following institutions:
     <td align="center" valign="top"><img src="doc/pictures/funding/bigs-logo.png" height="110" /></td>
   </tr>
   <tr>
-    <td align="center" valign="middle"><img src="doc/pictures/funding/dlr-logo.png" height="75" /></td>
+    <td align="center" valign="middle"><img src="doc/pictures/funding/eu-logo.jpg" height="75" /></td>
     <td align="center" valign="middle"><img src="doc/pictures/funding/dfg-logo.png" height="75" /></td>
     <td align="center" valign="middle"><img src="doc/pictures/funding/hds-lee-logo.png" height="75" /></td>
+  </tr>
+  <tr>
+  <td></td>
+  <td align="center" valign="middle"><img src="doc/pictures/funding/dlr-logo.png" height="70" /></td>
+  <td></td>
   </tr>
 </table>
 
