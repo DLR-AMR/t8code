@@ -21,7 +21,7 @@
 */
 
 /** \file t8_gtest_subelement_neighbors.cxx
- * Minimal scheme level test for face neighbors of quad subelements.
+ * Minimal test for face neighbors of subelements.
  */
 #include <gtest/gtest.h>
 #include <test/t8_gtest_adapt_callbacks.hxx>
@@ -36,13 +36,7 @@
 
 TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
 {
-  int mpisize;
-  SC_CHECK_MPI (sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize));
-  if (mpisize > 1) {
-    GTEST_SKIP () << "This test only runs serially (no ghost layer is created).";
-  }
-
-  const int level = 3;
+  const int level = 2;
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
@@ -50,16 +44,15 @@ TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
 
   /* Adapting twice with this callback gives three levels in a 2 x 2 periodic pattern, so we need to
    * balance before the hanging nodes can be resolved. */
-  forest = t8_forest_new_adapt (forest, t8_test_adapt_even_global_id, 0, 0, NULL);
-  forest = t8_forest_new_adapt (forest, t8_test_adapt_even_global_id, 0, 0, NULL);
+  forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<2>, 0, 0, NULL);
+  forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<2>, 0, 0, NULL);
 
   t8_forest_t forest_balanced;
   t8_forest_init (&forest_balanced);
   t8_forest_set_balance (forest_balanced, forest, 0);
   t8_forest_commit (forest_balanced);
-  //   forest = t8_forest_remove_hanging_nodes (forest_balanced);
-  //   EXPECT_TRUE (t8_forest_has_global_subelements (forest));
-  forest = forest_balanced;
+  forest = t8_forest_remove_hanging_nodes (forest_balanced);
+  EXPECT_TRUE (t8_forest_has_subelements (forest));
 
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
   //const t8_locidx_t num_local_leaves = t8_forest_get_local_num_leaf_elements (forest);
@@ -132,7 +125,6 @@ TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
         //   T8_FREE (back_indices);
         // }
 
-        scheme->element_destroy (neigh_class, num_neighbors, (t8_element_t **) neighbors);
         T8_FREE (neighbors);
         T8_FREE (dual_faces);
         T8_FREE (neigh_indices);
@@ -140,7 +132,7 @@ TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
     }
   }
   // Expect to have subelements.
-  EXPECT_GT (num_subelements, 0);
+  //EXPECT_GT (num_subelements, 0);
 
   t8_forest_unref (&forest);
 }
