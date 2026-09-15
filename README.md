@@ -47,7 +47,7 @@ Some examples on usage scenarios for `t8code`. More detailed descriptions are be
 - **Curved tetrahedral elements**<br>
   The curved geometry module uses original CAD data for the refinement and curvature of elements. The resulting geometrical accuracy is exact and the application can therefore use arbitrary high polynomial element degrees. [Fus23]
 - **Atmospheric simulations**<br>
-  Todo
+  Earth atmosphere wind-speed (ERA-5) interpolated on an adaptive mesh and distributed with MPI.
 - **2D Riemann on GPU**<br>
   A 2D Riemann simulation calculated on our experimental GPU solver [`t8gpu`](https://github.com/DLR-AMR/t8gpu) using `t8code` for mesh management.
 - **Curved hybrid meshes**<br>
