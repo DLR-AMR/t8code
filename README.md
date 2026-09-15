@@ -58,7 +58,8 @@ Some examples on usage scenarios for `t8code`. More detailed descriptions are be
   NSU3D computed pressure distribution on adaptively refined meshes for RANS simulation of flow over DLR-F6 wing-body, using `t8code` for dynamic AMR as described in [MK26].
 - **Mesh deformation**<br>
   DG Euler simulation on an adaptive t8code mesh with Radial Basis Function based mesh deformation. [Ric26]
-
+- **WMLES flow over sphere**<br>
+  WMLES simulation of a flow past a sphere using `t8code` for dynamic AMR as described in [MK26].
 </details>
 
 ## Features
