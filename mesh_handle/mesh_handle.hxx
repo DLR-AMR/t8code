@@ -27,13 +27,13 @@
 
 #pragma once
 
-#include "concepts.hxx"
-#include "mesh.hxx"
-#include "element.hxx"
-#include "mesh_io.hxx"
-#include "constructor_wrappers.hxx"
+#include "concepts.hxx"             /* Concepts to constraint template parameters related to the mesh handle. */
+#include "mesh.hxx"                 /* The mesh class. */
+#include "element.hxx"              /* Class of the elements of the mesh. */
+#include "mesh_io.hxx"              /* In- and output of meshes. */
+#include "constructor_wrappers.hxx" /* Wrapper to construct a mesh handle instance from a cmesh instead of forest. */
 
-#include "competence_pack.hxx"
-#include "competences/element_data_competences.hxx"
-#include "competences/dg_competences.hxx"
-#include "competences/cache_element_competences.hxx"
+#include "competence_pack.hxx" /* Mesh and element competence packs to extend the functionality of the mesh. */
+#include "competences/element_data_competences.hxx" /* Competences to use element data with the mesh. */
+#include "competences/dg_competences.hxx"           /* Competences useful for discontinuous Galerkin methods. */
+#include "competences/cache_element_competences.hxx" /* Competences to cache element properties instead of recalculation. */
