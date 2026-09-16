@@ -103,6 +103,8 @@ jobs:
       run: cd build && ninja $MAKEFLAGS
     - name: ninja install
       run: cd build && ninja install $MAKEFLAGS
+    - name: post-installation sanity tests
+      run: cd build && ninja post_install_tests
     - name: serial tests (if MPI is enabled)
       run: cd build && ctest $MAKEFLAGS -R _serial
       if: ${{ inputs.MPI == 'ON' }}
