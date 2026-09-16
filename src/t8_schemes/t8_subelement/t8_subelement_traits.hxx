@@ -36,10 +36,10 @@
 #include <t8_schemes/t8_subelement/t8_subelement_type.hxx>
 
 /** Forward declaration of the quadrilateral subelement scheme. */
-struct t8_subelementquad_scheme;
+struct t8_subelem_scheme_hanging_nodes_quad;
 
 /** Forward declaration of the triangular subelement scheme. */
-struct t8_subelementtri_scheme;
+struct t8_subelem_scheme_hanging_nodes_tri;
 
 /** Traits associating a subelement scheme with its underlying scheme and subelement type.
  * \tparam TScheme The subelement scheme for which the traits are defined.
@@ -49,7 +49,7 @@ struct t8_subelement_traits;
 
 /** Traits specialization for quadrilateral subelements. */
 template <>
-struct t8_subelement_traits<t8_subelementquad_scheme>
+struct t8_subelement_traits<t8_subelem_scheme_hanging_nodes_quad>
 {
   /** Subelement class used for the quad scheme. See also \ref t8_subelement_type.hxx. */
   using SubelementType = t8_subelement_element<t8_standalone_element<T8_ECLASS_QUAD>>;
@@ -59,7 +59,7 @@ struct t8_subelement_traits<t8_subelementquad_scheme>
 
 /** Traits specialization for triangular subelements. */
 template <>
-struct t8_subelement_traits<t8_subelementtri_scheme>
+struct t8_subelement_traits<t8_subelem_scheme_hanging_nodes_tri>
 {
   /** Subelement class used for the triangle scheme. See also \ref t8_subelement_type.hxx. */
   using SubelementType = t8_subelement_element<t8_dtri>;

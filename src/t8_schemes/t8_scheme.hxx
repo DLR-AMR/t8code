@@ -43,8 +43,8 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
-#include <t8_schemes/t8_subelement/specializations/t8_scheme_quads.hxx>
-#include <t8_schemes/t8_subelement/specializations/t8_scheme_tri.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_hanging_nodes_quads.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_hanging_nodes_tri.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
@@ -105,8 +105,8 @@ struct t8_scheme
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
                                 t8_standalone_scheme<T8_ECLASS_HEX>,
                                 /* Subelement schemes */
-                                t8_subelementquad_scheme,
-                                t8_subelementtri_scheme
+                                t8_subelem_scheme_hanging_nodes_quad,
+                                t8_subelem_scheme_hanging_nodes_tri
                                 >;
   /* clang-format on */
 

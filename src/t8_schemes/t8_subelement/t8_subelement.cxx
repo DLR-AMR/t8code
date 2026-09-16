@@ -28,8 +28,8 @@
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_eclass/t8_eclass.h>
 #include "t8_subelement_scheme.hxx"
-#include "specializations/t8_scheme_quads.hxx"
-#include "specializations/t8_scheme_tri.hxx"
+#include "specializations/t8_scheme_hanging_nodes_quads.hxx"
+#include "specializations/t8_scheme_hanging_nodes_tri.hxx"
 
 const t8_scheme *
 t8_scheme_new_subelement ()
@@ -38,8 +38,8 @@ t8_scheme_new_subelement ()
 
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_LINE>> ();
-  builder.add_eclass_scheme<t8_subelementquad_scheme> ();
-  builder.add_eclass_scheme<t8_subelementtri_scheme> ();
+  builder.add_eclass_scheme<t8_subelem_scheme_hanging_nodes_quad> ();
+  builder.add_eclass_scheme<t8_subelem_scheme_hanging_nodes_tri> ();
   builder.add_eclass_scheme<t8_standalone_scheme<T8_ECLASS_HEX>> ();
   builder.add_eclass_scheme<t8_default_scheme_tet> ();
   builder.add_eclass_scheme<t8_default_scheme_prism> ();
@@ -52,9 +52,9 @@ t8_eclass_scheme_is_subelement (const t8_scheme *scheme, const t8_eclass_t eclas
 {
   switch (eclass) {
   case T8_ECLASS_QUAD:
-    return scheme->check_eclass_scheme_type<t8_subelementquad_scheme> (T8_ECLASS_QUAD);
+    return scheme->check_eclass_scheme_type<t8_subelem_scheme_hanging_nodes_quad> (T8_ECLASS_QUAD);
   case T8_ECLASS_TRIANGLE:
-    return scheme->check_eclass_scheme_type<t8_subelementtri_scheme> (T8_ECLASS_TRIANGLE);
+    return scheme->check_eclass_scheme_type<t8_subelem_scheme_hanging_nodes_tri> (T8_ECLASS_TRIANGLE);
   default:
     return 0; /* Default return value false. */
   }
@@ -74,11 +74,11 @@ t8_scheme_has_subelement_scheme (const t8_scheme *scheme)
 bool
 t8_element_is_subelement (const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_element_t *elem)
 {
-  if (scheme->check_eclass_scheme_type<t8_subelementquad_scheme> (tree_class)) {
-    return t8_subelementquad_scheme::element_is_subelement (elem);
+  if (scheme->check_eclass_scheme_type<t8_subelem_scheme_hanging_nodes_quad> (tree_class)) {
+    return t8_subelem_scheme_hanging_nodes_quad::element_is_subelement (elem);
   }
-  if (scheme->check_eclass_scheme_type<t8_subelementtri_scheme> (tree_class)) {
-    return t8_subelementtri_scheme::element_is_subelement (elem);
+  if (scheme->check_eclass_scheme_type<t8_subelem_scheme_hanging_nodes_tri> (tree_class)) {
+    return t8_subelem_scheme_hanging_nodes_tri::element_is_subelement (elem);
   }
   return false;
 }

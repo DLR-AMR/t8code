@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_scheme_quads.hxx
+/** \file t8_scheme_hanging_nodes_quads.hxx
  * Subelement scheme specialization for quadrilateral elements. A quad is transitioned into
  * triangular subelements (e.g. to resolve hanging nodes). The subelement type is a binary
  * code over the quad's four faces indicating which of them are hanging; type 0 means the
@@ -62,14 +62,15 @@
  * Also have a look at \a vertex_coords_of_subelement for the definition of the subelement ids for quads and the 
  * order of vertices.
  */
-struct t8_subelementquad_scheme: public t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelementquad_scheme>
+struct t8_subelem_scheme_hanging_nodes_quad:
+  public t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelem_scheme_hanging_nodes_quad>
 {
  public:
   /** The recursive scheme used for the underlying (standalone) quad elements. Whenever the
    * subelement logic is not needed, the scheme forwards to this underlying scheme. */
-  using TUnderlyingScheme = typename t8_subelement_traits<t8_subelementquad_scheme>::UnderlyingScheme;
+  using TUnderlyingScheme = typename t8_subelement_traits<t8_subelem_scheme_hanging_nodes_quad>::UnderlyingScheme;
   /** The subelement element type (an underlying element plus a subelement type and id). */
-  using TSubelementType = typename t8_subelement_traits<t8_subelementquad_scheme>::SubelementType;
+  using TSubelementType = typename t8_subelement_traits<t8_subelem_scheme_hanging_nodes_quad>::SubelementType;
 
   TUnderlyingScheme underlying_scheme {}; /**< Instance of the underlying standalone scheme. */
 
