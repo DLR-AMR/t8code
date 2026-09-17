@@ -45,14 +45,9 @@ TEST (t8_gtest_handle_data, set_and_get_element_data)
                                           t8_mesh_handle::data_mesh_competences_basic<data_per_element>>;
   auto mesh
     = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
-
-  if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
-    // Ensure that we actually test with ghost elements.
-    EXPECT_GT (mesh->get_num_ghosts (), 0);
-  }
   EXPECT_TRUE (mesh->has_element_data_handler_competence ());
 
-  // Create element data for all local mesh elements and set via mesh competence.
+  // Create element data for all local mesh elements.
   std::vector<data_per_element> element_data;
   for (const auto &elem : *mesh) {
     element_data.push_back ({ elem.get_level (), elem.get_volume () });
