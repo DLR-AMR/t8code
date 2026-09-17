@@ -130,11 +130,6 @@ if( T8CODE_ENABLE_MRA )
     $<INSTALL_INTERFACE:include>
   )
 
-  target_sources( T8 PRIVATE
-    t8_mra/num/basis/dubiner.cxx
-    t8_mra/num/quadrature/dunavant.cxx
-  )
-
   install( FILES
     t8_mra/t8_mra.hxx
     DESTINATION include/t8_mra )
