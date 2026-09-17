@@ -75,15 +75,20 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   mesh->set_ghost ();
   mesh->commit ();
 
+  // Test does not make sense without ghosts. Also ensure that we have at least one element per process.
+  int mpisize;
+  int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  if (!(mpisize > 1) || !(mesh->get_dimension () > 1) || (mesh->get_num_global_elements () < mpisize)) {
+    GTEST_SKIP () << "Skipping test as no ghost elements are created.";
+  }
+  // Ensure that we actually test with ghost elements.
   const t8_locidx_t num_local = mesh->get_num_local_elements ();
   const t8_locidx_t num_ghosts = mesh->get_num_ghosts ();
-  if ((mesh->get_dimension () > 1) && (num_local > 1)) {
-    // Ensure that we actually test with ghost elements.
-    ASSERT_GT (num_ghosts, 0);
-  }
+  ASSERT_GT (num_ghosts, 0);
 
   int mpirank;
-  int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   // Set local rank for all local mesh elements.
