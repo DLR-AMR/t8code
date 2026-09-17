@@ -38,7 +38,7 @@
 Some examples on usage scenarios for `t8code`. More detailed descriptions are below.
 
 <div align="center">
-<img src="doc/pictures/readme_gallery.gif" alt="t8code gallery slideshow">
+<img src="https://github.com/user-attachments/assets/ff86579f-0c64-497e-b4b5-457536c4d41e" alt="t8code gallery slideshow">
 </div>
 
 <details>
