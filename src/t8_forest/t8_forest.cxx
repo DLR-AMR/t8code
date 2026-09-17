@@ -3110,7 +3110,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
         forest->do_ghost = 1;
       }
       else {
-        SC_ABORT ("Want to activate ghost, without ghost_definition.\n");
+        SC_ABORT ("Tried to enable ghost, but no ghost definition was provided\n");
       }
     }
     else {
@@ -3125,6 +3125,11 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
   else {
     /* Deactivate ghost for the forest, but do not overwrite an old ghost_definition of the forest. */
     forest->do_ghost = 0;
+    /* The documentation states that the forest takes ownership of the definition. This also has to happen
+     * if do_ghost is 0. */
+    if (ghost_definition != nullptr) {
+      forest->ghost_definition = ghost_definition;
+    }
   }
 }
 
