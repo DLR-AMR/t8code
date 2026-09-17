@@ -150,9 +150,9 @@ output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_volumes = T8_ALLOC (double, num_elements);
-  /* The number of user defined data fields to write. */
+  /* The number of user-defined data fields to write. */
   int num_data = 1;
-  /* For each user defined data field we need one t8_vtk_data_field_t variable */
+  /* For each user-defined data field we need one t8_vtk_data_field_t variable */
   t8_vtk_data_field_t vtk_data;
   /* Set the type of this variable. Since we have one value per element, we pick T8_VTK_SCALAR. */
   vtk_data.type = T8_VTK_SCALAR;
@@ -163,7 +163,7 @@ output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     element_volumes[ielem] = mesh[ielem].get_element_data ().volume;
   }
-  /* To write user defined data, we need the extended output function write_mesh_to_vtk_ext.
+  /* To write user-defined data, we need the extended output function write_mesh_to_vtk_ext.
    * Despite writing user data, it also offers more control over which properties to write. */
   t8_mesh_handle::write_mesh_to_vtk_ext (mesh, prefix, num_data, &vtk_data);
   T8_FREE (element_volumes);

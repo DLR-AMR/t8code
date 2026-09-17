@@ -387,7 +387,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
       m_uncommitted_forest.emplace ();
       t8_forest_init (&*m_uncommitted_forest);
     }
-    // Create and register adaptation context holding the mesh handle and the user defined callback.
+    // Create and register adaptation context holding the mesh handle and the user-defined callback.
     detail::adapt_registry::register_context (
       m_forest, std::make_unique<detail::mesh_adapt_context<SelfType>> (*this, std::move (adapt_callback)));
 
@@ -547,7 +547,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   }
 
   // --- Methods to check for mesh competences. ---
-  /** Function that checks if a competence for element data handling is given.
+  /** Function that checks if a competence for element-data handling is given.
    * \return true if mesh has a data handler, false otherwise.
    */
   static constexpr bool

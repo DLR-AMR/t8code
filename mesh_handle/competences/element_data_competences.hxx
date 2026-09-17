@@ -22,7 +22,7 @@
 
 /** \file element_data_competences.hxx
  * Handler for the element data of a \ref t8_mesh_handle::mesh.
- * The file defines mesh and element competences for element data handling.
+ * The file defines mesh and element competences for element-data handling.
  * The mesh competences make it possible to manage element data and exchange it for ghost elements between processes. 
  * The element competences makes it possible to access this element data directly for each element of the mesh.
  * Also, a competence to interpolate data after adaptation using a user-defined callback is provided.
@@ -47,15 +47,15 @@ namespace t8_mesh_handle
 /** Namespace detail to hide implementation details from the user. */
 namespace detail
 {
-/** Helper function to wrap a span based interpolation callback (see \ref mesh::interpolate_callback_type) into
- * the element-index based \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type.
+/** Helper function to wrap a span-based interpolation callback (see \ref mesh::interpolate_callback_type) into
+ * the element-index-based \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type.
  * The returned wrapper receives the index/count pairs, builds the element spans, and forwards them to \a callback. 
  * The spans are built here and not in \ref interpolate_element_data_mesh_competence because \a TMesh is complete, 
  * so element_class is nameable — which it is not inside the competence (see note on 
  * \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type).
  * This is used in \ref interpolate_element_data_mesh_competence::set_interpolate_callback
  * \tparam TMesh The (complete) mesh handle type.
- * \param [in] callback The span based user callback of type \ref mesh::interpolate_callback_type. Taken by value and
+ * \param [in] callback The span-based user callback of type \ref mesh::interpolate_callback_type. Taken by value and
  *                      moved into the returned wrapper, which owns it.
  * \return Callback of type \ref interpolate_element_data_mesh_competence::internal_interpolate_callback_type.
  */
@@ -218,7 +218,7 @@ struct element_data_element_competence: public t8_crtp_operator<TUnderlying, ele
 /** Mesh competence to interpolate the element data after an adaptation step.
  * The \ref element_data_mesh_competence stores a vector of element data, but that data has to be updated if
  * the mesh is adapted, since the elements it refers to are refined, coarsened or reordered. This competence adds the
- * ability to interpolate the data after the adaptation via a user defined callback set using \ref set_interpolate_callback.
+ * ability to interpolate the data after the adaptation via a user-defined callback set using \ref set_interpolate_callback.
  * The next \ref mesh::commit applies it. 
  * \note It therefore only makes sense in combination with the element data competence 
  *       (see \ref interpolate_data_mesh_competence_pack, which bundles the two).
@@ -229,14 +229,14 @@ class interpolate_element_data_mesh_competence:
   public t8_crtp_operator<TUnderlying, interpolate_element_data_mesh_competence> {
  public:
   /** Mesh-internal, element-index-based storage for the interpolation callback.
-   * Users should use the easier span based callback type \ref mesh::interpolate_callback_type.
+   * Users should use the easier span-based callback type \ref mesh::interpolate_callback_type.
    * \see set_interpolate_callback for registering a callback.
-   * The span based callback is automatically wrapped in \ref set_interpolate_callback to match this type and stored as
+   * The span-based callback is automatically wrapped in \ref set_interpolate_callback to match this type and stored as
    * \ref m_interpolate_callback to be used in the next \ref mesh::commit.
    * \note We cannot store the span-based \ref mesh::interpolate_callback_type directly: This competence uses the 
    *       CRTP pattern, so while the competence is instantiated, the mesh (\a TUnderlying) is still an incomplete type.
    *       A data member of type \ref mesh::interpolate_callback_type would require \c TUnderlying::element_class, 
-   *       which is not available for the incomplete type. Therefore we use this index based callback type for storage 
+   *       which is not available for the incomplete type. Therefore we use this index-based callback type for storage 
    *       without the need for element_class. Using \ref set_interpolate_callback, we move the element_class lookup 
    *       to the call site.
    * \param [in]     mesh_old  The old mesh that is adapted from.
@@ -261,14 +261,14 @@ class interpolate_element_data_mesh_competence:
    *       nameable, which it is not inside this competence. 
    *       The template parameter is deduced from the passed callback, so you do not have to provide it explicitly.
    * \tparam TInterpolateCallback The user callback type \ref mesh::interpolate_callback_type.
-   * \param [in] interpolate_callback The span based interpolation callback.
+   * \param [in] interpolate_callback The span-based interpolation callback.
    * 
    */
   template <typename TInterpolateCallback>
   void
   set_interpolate_callback (TInterpolateCallback&& interpolate_callback)
   {
-    /* We wrap the user defined, span based callback using \ref detail::to_replace_callback to the index based callback
+    /* We wrap the user-defined, span-based callback using \ref detail::to_replace_callback to the index-based callback
      * type \ref internal_interpolate_callback_type to be able to store the callback without the need of knowing 
      * \ref mesh::element_class.*/
     m_interpolate_callback
@@ -323,7 +323,7 @@ class interpolate_element_data_mesh_competence:
   }
 
   internal_interpolate_callback_type
-    m_interpolate_callback; /**< The wrapped element-index based interpolation callback, 
+    m_interpolate_callback; /**< The wrapped element-index-based interpolation callback, 
                               * applied on the next \ref mesh::commit. */
   std::optional<bool>
     m_partition_for_coarsening; /**< Postponed \ref mesh::set_partition request: a value means partition on the next 

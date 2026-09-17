@@ -184,7 +184,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     return has_competence<cache_face_normals> ();
   }
 
-  /** Function that checks if a competence for element data handling is given to the element.
+  /** Function that checks if a competence for element-data handling is given to the element.
    * \return true if element has a data handler, false otherwise.
    */
   static constexpr bool

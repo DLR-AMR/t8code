@@ -22,7 +22,7 @@
 
 /** \file adapt.hxx
  * This file provides helper functionality to adapt a \ref t8_mesh_handle::mesh
- * according to a user defined callback.
+ * according to a user-defined callback.
  */
 
 #pragma once
@@ -65,14 +65,14 @@ struct mesh_adapt_context_base
     = 0;
 };
 
-/** Templated mesh adaptation context holding the mesh handle and the user defined callback.
+/** Templated mesh adaptation context holding the mesh handle and the user-defined callback.
  * Struct inherits from \ref mesh_adapt_context_base and implements the virtual adapt callback using the mesh and the callback.
  * \tparam TMeshClass The mesh handle class.
  */
 template <T8MeshType TMeshClass>
 struct mesh_adapt_context final: mesh_adapt_context_base
 {
-  /** Constructor of the context with the mesh handle and the user defined callback.
+  /** Constructor of the context with the mesh handle and the user-defined callback.
    * \param [in] mesh_handle      The mesh handle to adapt.
    * \param [in] adapt_callback   The adapt callback.
    */
@@ -81,7 +81,7 @@ struct mesh_adapt_context final: mesh_adapt_context_base
   {
   }
 
-  /** Callback for mesh adaptation using the user defined adapt callback.
+  /** Callback for mesh adaptation using the user-defined adapt callback.
    * \param [in] lelement_handle_id Local flat element ID in the mesh handle of the first element.
    * \param [in] num_elements       The number of elements that should be considered. 
    *              If >1, the elements are expected to form a family that can be coarsened.
@@ -188,7 +188,7 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
     return 0;  // No adaptation as default.
   }
   // Get static adapt context from the registry.
-  // Via this, we can access the mesh handle and the user defined adapt callback that uses mesh handle functionality.
+  // Via this, we can access the mesh handle and the user-defined adapt callback that uses mesh handle functionality.
   auto* context = adapt_registry::get (forest_from);
   if (!context) {
     t8_global_errorf (

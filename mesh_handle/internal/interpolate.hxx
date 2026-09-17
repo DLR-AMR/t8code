@@ -22,7 +22,7 @@
 
 /** \file interpolate.hxx
  * This file provides helper functionality to interpolate the element data of a \ref t8_mesh_handle::mesh
- * onto a newly adapted mesh according to a user defined callback.
+ * onto a newly adapted mesh according to a user-defined callback.
  * During adaptation the element data attached to the old elements has to be transferred to the new (refined,
  * coarsened or unchanged) elements. t8code reports this old-to-new correspondence through
  * \ref t8_forest_iterate_replace, which expects a plain C callback of type \ref t8_forest_replace_t.
@@ -74,7 +74,7 @@ struct mesh_interpolate_context_base
     = 0;
 };
 
-/** Templated mesh interpolation context holding the old and new mesh handle and the user defined callback.
+/** Templated mesh interpolation context holding the old and new mesh handle and the user-defined callback.
  * Struct inherits from \ref mesh_interpolate_context_base and implements the virtual interpolate callback using the
  * two mesh handles and the callback.
  * Type erasure via the base class lets \ref interpolate_registry store this context without being templated on the
@@ -85,9 +85,9 @@ template <typename TMesh>
 struct mesh_interpolate_context final: public mesh_interpolate_context_base
 {
   using callback_type =
-    typename TMesh::internal_interpolate_callback_type; /**< The user defined interpolate callback type. */
+    typename TMesh::internal_interpolate_callback_type; /**< The user-defined interpolate callback type. */
 
-  /** Constructor of the context with the old and new mesh handle and the user defined callback.
+  /** Constructor of the context with the old and new mesh handle and the user-defined callback.
    * \param [in] mesh_old             The old mesh that is being adapted. Only read from during interpolation.
    * \param [in, out] mesh_new        The new mesh constructed from \a mesh_old. Written to during interpolation.
    * \param [in] interpolate_callback The interpolate callback. Moved into the context.
@@ -97,7 +97,7 @@ struct mesh_interpolate_context final: public mesh_interpolate_context_base
   {
   }
 
-  /** Interpolation of one group of elements using the old and the new mesh and the user defined callback.
+  /** Interpolation of one group of elements using the old and the new mesh and the user-defined callback.
    * This function is called by \ref mesh_replace_callback_wrapper for each group.
    * \param [in] refine    -1 if a family got coarsened, 0 if the element was not touched, 1 if it got refined.
    * \param [in] num_old    The number of outgoing (old) elements.
@@ -117,7 +117,7 @@ struct mesh_interpolate_context final: public mesh_interpolate_context_base
  private:
   const TMesh& m_mesh_old;        /**< The old mesh to read the element data from. */
   TMesh& m_mesh_new;              /**< The new mesh to write the interpolated element data to. */
-  const callback_type m_callback; /**< The user defined interpolate callback. */
+  const callback_type m_callback; /**< The user-defined interpolate callback. */
 };
 
 /** Registry pattern is used to register contexts, which provide access to the interpolate callback and the mesh
@@ -206,7 +206,7 @@ mesh_replace_callback_wrapper (t8_forest_t forest_old, t8_forest_t forest_new, t
                                const t8_locidx_t first_incoming)
 {
   // Get the static interpolate context from the registry.
-  // Via this, we can access the old and new mesh handle and the user defined interpolate callback.
+  // Via this, we can access the old and new mesh handle and the user-defined interpolate callback.
   auto* context = interpolate_registry::get (forest_old);
   if (!context) {
     t8_global_errorf ("ERROR: Interpolate context not found. Did you forget to register it?");
