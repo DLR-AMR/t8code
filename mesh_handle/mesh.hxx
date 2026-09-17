@@ -529,8 +529,8 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             return;
           }
           else {
-            t8_global_errorf ("ERROR: No interpolation callback set. Please provide a callback or do not use "
-                              "the competence interpolate_element_data_mesh_competence.\n");
+            SC_ABORTF ("ERROR: No interpolation callback set. Please provide a callback or do not use "
+                       "the competence interpolate_element_data_mesh_competence.\n");
           }
         }
         else {

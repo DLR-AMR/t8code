@@ -140,9 +140,7 @@ struct interpolate_registry
   {
     auto& map = get_map ();
     auto [it, inserted] = map.emplace (forest, std::move (context));
-    if (!inserted) {
-      t8_global_errorf ("ERROR: Context already registered!");
-    }
+    SC_CHECK_ABORT (inserted, "ERROR: Context already registered!");
   }
 
   /** Static function to unregister a context using \a forest as identifier.
@@ -208,10 +206,7 @@ mesh_replace_callback_wrapper (t8_forest_t forest_old, t8_forest_t forest_new, t
   // Get the static interpolate context from the registry.
   // Via this, we can access the old and new mesh handle and the user-defined interpolate callback.
   auto* context = interpolate_registry::get (forest_old);
-  if (!context) {
-    t8_global_errorf ("ERROR: Interpolate context not found. Did you forget to register it?");
-    return;
-  }
+  SC_CHECK_ABORT (context, "ERROR: Interpolate context not found. Did you forget to register it?");
 
   // Convert the tree local indices reported by the forest to the flat, process local indices used in the mesh handle
   // (the mesh handle id).

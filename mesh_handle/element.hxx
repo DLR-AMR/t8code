@@ -547,10 +547,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   t8_locidx_t
   get_global_element_handle_id () const
   {
-    if (m_is_ghost_element) {
-      t8_global_errorf ("ERROR: Ghost elements do not have a global handle id.\n");
-      return -1;  // Ghost elements do not have a global id.
-    }
+    SC_CHECK_ABORT (!m_is_ghost_element, "ERROR: Ghost elements do not have a global handle id.\n");
     return t8_forest_get_first_local_leaf_element_id (m_mesh->m_forest)
            + t8_forest_get_tree_element_offset (m_mesh->m_forest, m_tree_id) + m_element_id;
   }

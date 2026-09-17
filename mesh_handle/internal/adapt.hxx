@@ -121,9 +121,7 @@ struct adapt_registry
   {
     auto& map = get_map ();
     auto [it, inserted] = map.emplace (forest, std::move (context));
-    if (!inserted) {
-      t8_global_errorf ("ERROR: Context already registered!");
-    }
+    SC_CHECK_ABORT (inserted, "ERROR: Context already registered!");
   }
 
   /** Static function to unregister a context using \a forest as identifier. 
@@ -183,18 +181,14 @@ mesh_adapt_callback_wrapper ([[maybe_unused]] t8_forest_t forest, t8_forest_t fo
                              t8_eclass_t tree_class, t8_locidx_t lelement_id, [[maybe_unused]] const t8_scheme* scheme,
                              const int is_family, const int num_elements, t8_element_t* elements[])
 {
-  if (is_family && !scheme->elements_are_family (tree_class, elements)) {
-    t8_global_errorf ("ERROR: The mesh handle does not support deleted elements.");
-    return 0;  // No adaptation as default.
-  }
+  SC_CHECK_ABORT ((!is_family || scheme->elements_are_family (tree_class, elements)),
+                  "ERROR: The mesh handle does not support deleted elements.");
   // Get static adapt context from the registry.
   // Via this, we can access the mesh handle and the user-defined adapt callback that uses mesh handle functionality.
   auto* context = adapt_registry::get (forest_from);
-  if (!context) {
-    t8_global_errorf (
-      "ERROR: Something went wrong while registering the adaptation callbacks. Please check your implementation.");
-    return 0;  // No adaptation as default.
-  }
+  SC_CHECK_ABORT (
+    context,
+    "ERROR: Something went wrong while registering the adaptation callbacks. Please check your implementation.");
   // Convert to index used in the mesh handle.
   const t8_locidx_t mesh_index = t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
   // Call the actual adapt callback stored in the context.
