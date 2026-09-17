@@ -291,7 +291,7 @@ install( DIRECTORY t8_forest
     PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
-    PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
+    PATTERN "t8_forest/t8_forest_ghost.h"   EXCLUDE
     PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry

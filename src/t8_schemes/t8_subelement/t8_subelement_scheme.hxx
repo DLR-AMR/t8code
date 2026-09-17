@@ -141,7 +141,7 @@ struct t8_subelement_scheme_common:
   constexpr int
   get_maxlevel () const noexcept
   {
-    return derived ().underlying_scheme.get_maxlevel () - 1;  // We need to reserve one level for the subelements.
+    return derived ().underlying_scheme.get_maxlevel ();
   }
 
   // ################################################____SHAPE INFORMATION____##########################################
@@ -242,7 +242,7 @@ struct t8_subelement_scheme_common:
     return TSubelementSchemeSpecialization::subelement_get_face_shape (as_subelement (elem), face);
   }
 
-  /** Return the level of a particular element. For subelements, the level is the same as the level of the parent.
+  /** Return the level of a particular element. For subelements, the level is the level of the parent + 1.
     * \param [in] elem    The element whose level should be returned.
     * \return             The level of \b elem.
     */
@@ -250,7 +250,12 @@ struct t8_subelement_scheme_common:
   element_get_level (const t8_element_t *elem) const noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    return derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
+    // Get level of the parent.
+    const int level = derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
+    if (!element_is_subelement (elem)) {
+      return level;
+    }
+    return level + 1;
   }
 
   // ################################################____GENERAL HELPERS____#############################################
