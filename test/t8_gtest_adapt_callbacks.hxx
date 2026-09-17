@@ -40,7 +40,7 @@
  * \param [in] forest       The forest to which the new elements belong.
  * \param [in] forest_from  The forest that is adapted.
  * \param [in] which_tree   The local tree containing \a elements.
- * \param [in] eclass   The eclass of \a which_tree.
+ * \param [in] eclass       The eclass of \a which_tree.
  * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
  * \param [in] scheme       The scheme of the forest.
  * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
@@ -56,7 +56,7 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
 /**
  * Adapt callback that refines every n-th global element, where \a n is given as template parameter.
  *
- * Optionally, an \a offset < \a n may be defined to not start with the first leaf eleement.
+ * Optionally, an \a offset < \a n may be defined to not start with the first leaf element.
  *
  * \tparam n      every n-th global leaf element will be refined
  * \tparam offset global ID of the first element to refine

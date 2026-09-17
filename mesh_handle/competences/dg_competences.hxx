@@ -114,6 +114,17 @@ struct remote_ranks_mesh_competence: public t8_crtp_operator<TUnderlying, remote
     return m_ranks[element_handle_id];
   }
 
+  /**
+   * Get the local rank.
+   * \return The local rank.
+   */
+  int
+  get_local_rank () const
+  {
+    const t8_forest_t forest = this->underlying ().get_forest ();
+    return forest->mpirank;
+  }
+
  protected:
   mutable std::vector<int> m_ranks;  ///< The rank of the owner for each element.
 };
