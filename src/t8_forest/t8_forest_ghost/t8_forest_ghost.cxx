@@ -704,7 +704,7 @@ t8_forest_ghost_reset (t8_forest_ghost_t *pghost)
 
   /* Free the ghost */
   T8_FREE (ghost);
-  pghost = nullptr;
+  *pghost = nullptr;
 }
 
 void
