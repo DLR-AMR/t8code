@@ -74,7 +74,7 @@ interpolate_callback ([[maybe_unused]] const TMeshClass& mesh_old, [[maybe_unuse
   /* Refined: children share the parent volume equally, level increases by user_data.level_step. */
   else if (refine == 1) {
     EXPECT_EQ (old_elements.size (), 1);
-    EXPECT_EQ (new_elements.size (), old_elements[0].get_num_children ());
+    EXPECT_EQ (new_elements.size (), old_elements[0].get_num_children_per_refinement ());
     const auto& parent_data = old_elements[0].get_element_data ();
     for (auto& child : new_elements) {
       child.set_element_data (
@@ -84,7 +84,7 @@ interpolate_callback ([[maybe_unused]] const TMeshClass& mesh_old, [[maybe_unuse
   /* Coarsened: parent volume is the sum of the children, level decreases by user_data.level_step. */
   else if (refine == -1) {
     EXPECT_EQ (new_elements.size (), 1);
-    EXPECT_EQ (old_elements.size (), new_elements[0].get_num_children ());
+    EXPECT_EQ (old_elements.size (), new_elements[0].get_num_children_per_refinement ());
     double tmp_volume = 0;
     for (const auto& child : old_elements) {
       tmp_volume += child.get_element_data ().volume;

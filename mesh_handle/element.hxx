@@ -237,7 +237,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   /** The number of children of the element when it is refined during adaption.
    */
   int
-  get_num_children () const
+  get_num_children_per_refinement () const
   {
     return t8_forest_get_scheme (m_mesh->m_forest)->element_get_num_children (get_tree_class (), m_element);
   }
