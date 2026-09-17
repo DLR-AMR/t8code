@@ -161,6 +161,10 @@ if( T8CODE_ENABLE_MRA )
     DESTINATION include/t8_mra/io )
 
   install( FILES
+    t8_mra/io/shape/cartesian.hxx
+    t8_mra/io/shape/triangle.hxx
+    DESTINATION include/t8_mra/io/shape )
+  install( FILES
     t8_mra/dg/dg_base.hxx
     t8_mra/dg/cartesian.hxx
     t8_mra/dg/triangle.hxx
