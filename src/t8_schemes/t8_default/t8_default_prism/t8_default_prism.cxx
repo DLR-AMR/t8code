@@ -251,7 +251,7 @@ t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_elem
 }
 
 int
-t8_default_scheme_prism::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_prism::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DPRISM_CHILDREN; i++) {

@@ -99,6 +99,7 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   mesh->fill_rank_vector ();
   for (const auto& elem : *mesh) {
     EXPECT_EQ (elem.get_element_data ().rank, mpirank);
+    EXPECT_EQ (mesh->get_local_rank (), mpirank);
     EXPECT_EQ (LOCAL_RANK, mesh->get_rank (elem.get_element_handle_id ()));
   }
   for (t8_locidx_t ighost = num_local; ighost < num_local + num_ghosts; ighost++) {

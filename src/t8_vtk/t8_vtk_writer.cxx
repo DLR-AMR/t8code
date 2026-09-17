@@ -156,6 +156,8 @@ t8_cmesh_vtk_write_file (const t8_cmesh_t cmesh, const char *fileprefix)
   return writer.write_ASCII (cmesh);
 }
 
+T8_EXTERN_C_END ();
+
 #if T8_ENABLE_VTK
 void
 t8_forest_to_vtkUnstructuredGrid (const t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
@@ -168,5 +170,3 @@ t8_forest_to_vtkUnstructuredGrid (const t8_forest_t forest, vtkSmartPointer<vtkU
   writer.grid_to_vtkUnstructuredGrid (forest, unstructuredGrid);
 }
 #endif
-
-T8_EXTERN_C_END ();
