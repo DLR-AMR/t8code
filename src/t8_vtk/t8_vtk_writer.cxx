@@ -21,7 +21,7 @@
 */
 
 /** \file t8_vtk_writer.cxx
- * Implements functions declared in \ref t8_vtk_writer.hxx 
+ * Implements functions declared in \ref t8_vtk_writer.hxx
  *  or the C interface \ref t8_vtk_writer.h.
  */
 

@@ -286,7 +286,7 @@ main (int argc, char *argv[])
   int level, level_diff;
   int help = 0, no_vtk, do_ghost, do_balance, use_cad;
   int dim, num_files;
-  int test_tet;
+  int test_tet, test_hybrid_cube, test_hex_cube;
   int stride;
   double T, delta_t, cfl;
   sc_options_t *opt;
@@ -329,6 +329,12 @@ main (int argc, char *argv[])
   sc_options_add_switch (opt, 't', "test-tet", &test_tet,
                          "Use a cmesh that tests all tet face-to-face connections."
                          " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
+  sc_options_add_switch (opt, 'C', "test-hybridcube", &test_hybrid_cube,
+                         "Use a hypercube with Tet, Prism and Hex elements as cmesh."
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
+  sc_options_add_switch (opt, 'H', "test-hexcube", &test_hex_cube,
+                         "Use a hypercube with Hex elements as cmesh."
+                         " If this option is used -o is enabled automatically. Not allowed with -f and -c.");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The initial uniform refinement level of the forest.");
   sc_options_add_int (opt, 'r', "rlevel", &level_diff, 1,
                       "The number of levels that the forest is refined from the initial level.");
@@ -351,9 +357,12 @@ main (int argc, char *argv[])
   first_argc = sc_options_parse (t8_get_package_id (), SC_LP_DEFAULT, opt, argc, argv);
   /* check for wrong usage of arguments */
   if (first_argc < 0 || first_argc != argc || dim < 2 || dim > 3
-      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0) || stride <= 0
-      || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0
-      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && test_tet) || (mshfileprefix == NULL && use_cad)) {
+      || (cmeshfileprefix == NULL && mshfileprefix == NULL && test_tet == 0 && test_hybrid_cube == 0
+          && test_hex_cube == 0)
+      || stride <= 0 || (num_files - 1) * stride >= mpisize || cfl < 0 || T <= 0
+      || test_tet + test_hybrid_cube + test_hex_cube > 1
+      || ((mshfileprefix != NULL || cmeshfileprefix != NULL) && (test_tet || test_hybrid_cube || test_hex_cube))
+      || (mshfileprefix == NULL && use_cad)) {
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
@@ -379,6 +388,15 @@ main (int argc, char *argv[])
       t8_cmesh_init (&cmesh);
       t8_cmesh_new_tet_orientation_test (cmesh, sc_MPI_COMM_WORLD);
       vtu_prefix = "test_tet";
+    }
+    else if (test_hybrid_cube) {
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, 0);
+      vtu_prefix = "test_hypercube_hybrid";
+    }
+    else if (test_hex_cube) {
+      t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
+      vtu_prefix = "test_hypercube_hex";
     }
     else {
       T8_ASSERT (cmeshfileprefix != NULL);
