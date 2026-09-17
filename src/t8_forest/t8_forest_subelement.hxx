@@ -54,6 +54,9 @@ t8_forest_is_conforming (const t8_forest_t forest);
 
 /** Remove all subelements from a forest. This is required to restore the original mesh using only recursive refinement
  *    and to be able to adapt again.
+ * \note If you partitioned the forest, you should make sure that all subelements of one parent element are on the
+ *    same rank. Otherwise, subelements at process boundaries cannot be discarded. 
+ *    You can achieve this by setting the flag set_for_coarsening of \ref t8_forest_set_partition to true. 
  * \param [in] forest The input forest which may contain subelements.
  * \return A new forest with the same number of trees and the same connectivity, but without subelements. 
  * \note \a forest is unreferenced during this. 
