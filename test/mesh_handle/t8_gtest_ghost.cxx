@@ -66,17 +66,17 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   EXPECT_EQ (mesh->get_num_ghosts (), 0);
   mesh->set_ghost ();
   mesh->commit ();
-  const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
-  const t8_locidx_t num_ghost_elements = mesh->get_num_ghosts ();
 
-  // Test does not make sense without ghosts.
+  // Test does not make sense without ghosts. Also ensure that we have at least one element per process.
   int mpisize;
   int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
-  if (!(mpisize > 1) || !(mesh->get_dimension () > 1) || (num_local_elements < mpisize)) {
+  if (!(mpisize > 1) || !(mesh->get_dimension () > 1) || (mesh->get_num_global_elements () < mpisize)) {
     GTEST_SKIP () << "Skipping test as no ghost elements are created.";
   }
   // Ensure that we actually test with ghost elements.
+  const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
+  const t8_locidx_t num_ghost_elements = mesh->get_num_ghosts ();
   ASSERT_GT (num_ghost_elements, 0);
   EXPECT_EQ (num_ghost_elements, t8_forest_get_num_ghosts (mesh->get_forest ()));
 
