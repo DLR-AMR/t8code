@@ -96,7 +96,8 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
                                  const int is_leaf, [[maybe_unused]] const t8_element_array_t *leaves,
                                  const t8_locidx_t tree_leaf_index)
 {
-  t8_forest_ghost_definition_face_data *data = (t8_forest_ghost_definition_face_data *) forest->t8code_data;
+  t8_forest_ghost_definition_face_data *data
+    = (t8_forest_ghost_definition_face_data *) t8_forest_ghost_get_search_data (forest);
   int num_faces, iface, faces_totally_owned, level;
   int parent_face;
   int lower, upper, *bounds, *new_bounds, parent_lower, parent_upper;

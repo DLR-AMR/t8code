@@ -60,6 +60,8 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
    * with \a search_function as callback function.
    * \param [in] search_function   The function used for the callback.
    * \param [in] search_data       Persistent data which can be used during the search. Ghost takes ownership of the data.
+   * \note \a search_data is reachable from within \a search_function via
+   * \ref t8_forest_ghost_get_search_data (forest).
    */
   explicit t8_forest_ghost_definition_w_search (t8_forest_search_fn search_function,
                                                 t8_forest_ghost_search_data *search_data)
@@ -95,6 +97,8 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
    * \param [in] ghost_type       The type (faces, edges, user defined, ...) of the ghost_definition
    * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in search_for_ghost_elements
    * \param [in] search_data      Persistent data which can be used during the search. Ghost takes ownership of the data.
+   * \note \a search_data is reachable from within \a search_function via
+   * \ref t8_forest_ghost_get_search_data (forest).
    */
   t8_forest_ghost_definition_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function,
                                        t8_forest_ghost_search_data *search_data)
@@ -104,7 +108,21 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
   }
 
   t8_forest_search_fn search_fn {}; /**< Callback function for t8_forest_search in search_for_ghost_elements */
-  t8_forest_ghost_search_data *search_data {}; /**< Persistent data which can be accessed during the search */
+  /** Persistent data which can be accessed during the search.
+   * \note Reachable from within \a search_fn via \ref t8_forest_ghost_get_search_data */
+  t8_forest_ghost_search_data *search_data {};
 };
+
+/** Retrieve the search data of the ghost definition that is currently driving a search on \a forest.
+ * Call this from within your \ref t8_forest_search_fn callback when your ghost definition derives from
+ * \ref t8_forest_ghost_definition_w_search.
+ * \param [in] forest  The forest passed to the search callback.
+ * \return             The \a search_data of the ghost definition driving the current search.
+ */
+inline t8_forest_ghost_search_data *
+t8_forest_ghost_get_search_data (const t8_forest_t forest)
+{
+  return (t8_forest_ghost_search_data *) forest->t8code_data;
+}
 
 #endif /* !T8_FOREST_GHOST_DEFINITION_W_SEARCH_HXX */
