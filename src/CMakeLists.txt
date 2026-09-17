@@ -171,6 +171,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_ghost.cxx
     t8_forest/t8_forest_iterate.cxx
     t8_forest/t8_forest_balance.cxx
+    t8_forest/t8_forest_subelement.cxx
     t8_forest/t8_forest_search/t8_forest_search.cxx
     t8_geometry/t8_geometry.cxx
     t8_geometry/t8_geometry_helpers.c
@@ -207,6 +208,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
+    t8_schemes/t8_subelement/t8_subelement.cxx
     t8_vtk/t8_vtk.c
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
