@@ -261,8 +261,7 @@ t8_forest_pfc_family_range_around_border (const t8_forest_t forest_from, const t
   const t8_eclass_t eclass = tree->eclass;
 
   // If the element is the root, return false because the root does not have any parent or siblings.
-  // For subelement schemes, elements of level zero can still be subelements (and therefore have siblings).
-  if (scheme->element_get_level (eclass, element) == 0 && !t8_element_is_subelement (scheme, tree->eclass, element)) {
+  if (scheme->element_get_level (eclass, element) == 0) {
     family_begin = border_element_id;
     family_end = border_element_id;
     return false;

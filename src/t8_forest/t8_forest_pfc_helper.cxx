@@ -52,9 +52,7 @@ t8_forest_pfc_extreme_local_sibling (const t8_scheme_c *scheme, const t8_tree_t 
   const t8_element_t *start_element = t8_forest_get_tree_leaf_element (tree, start_element_id_in_tree);
 
   // If the start element is of level zero, i.e., the root, it does not have any siblings.
-  // For subelement schemes, elements of level zero can still be subelements (and therefore have siblings).
-  if (scheme->element_get_level (tree_class, start_element) == 0
-      && !t8_element_is_subelement (scheme, tree_class, start_element)) {
+  if (scheme->element_get_level (tree_class, start_element) == 0) {
     return start_element_id_in_tree;
   }
 
