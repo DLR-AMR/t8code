@@ -48,12 +48,12 @@ Some examples on usage scenarios for `t8code`. More detailed descriptions are be
   The curved geometry module uses original CAD data for the refinement and curvature of elements. The resulting geometrical accuracy is exact and the application can therefore use arbitrary high polynomial element degrees. [Fus23]
 - **Atmospheric simulations**<br>
   Earth atmosphere wind-speed (ERA-5) interpolated on an adaptive mesh and distributed with MPI.
-- **2D Riemann on GPU**<br>
-  A 2D Riemann simulation calculated on our experimental GPU solver [`t8gpu`](https://github.com/DLR-AMR/t8gpu) using `t8code` for mesh management.
+- **Riemann on GPU**<br>
+  A Riemann simulation calculated on our experimental GPU solver [`t8gpu`](https://github.com/DLR-AMR/t8gpu) using `t8code` for mesh management.
 - **Curved hybrid meshes**<br>
   The curved geometry is implemented for different element shapes, which enables different curved element shapes in the same mesh. [Els22, Fus23]
 - **Simulation data visualization**<br>
-  Todo
+  `t8code` is used in a ParaView plugin to reduce the size of simulation data for postprocessing workflows. This is especially relevant for simulations where the data is too large to fit into the local memory.
 - **NSU3D RANS over DLR-F6**<br>
   NSU3D computed pressure distribution on adaptively refined meshes for RANS simulation of flow over DLR-F6 wing-body, using `t8code` for dynamic AMR as described in [MK26].
 - **Mesh deformation**<br>
