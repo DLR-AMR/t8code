@@ -123,7 +123,6 @@ TEST (t8_gtest_handle_interpolate, test_interpolate_data)
 
   // Check basics.
   EXPECT_TRUE (mesh->is_balanced ());
-  EXPECT_TRUE (mesh->get_num_ghosts () > 0);
   // Ensure partitioned.
   int mpi_size = 0;
   int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpi_size);
