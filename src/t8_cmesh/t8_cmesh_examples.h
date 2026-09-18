@@ -205,6 +205,8 @@ t8_cmesh_new_hypercube_pad_ext (t8_cmesh_t cmesh, const t8_eclass_t eclass, sc_M
                                 const int use_axis_aligned, const int set_partition, t8_gloidx_t offset);
 
 /** Hybercube with 6 Tets, 6 Prism, 4 Hex.
+ *  Also sets boundary conditions on internal tree faces to "internal" and boundary faces to "boundary".
+ *  For periodic meshes all tree faces are "internal".
  * \param [in,out] cmesh        An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
  *                              Filled and committed in place with 6 Tets, 6 prism and 4 hex, together
  *                              forming a cube.
