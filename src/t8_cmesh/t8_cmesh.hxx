@@ -106,11 +106,12 @@ template <typename geometry_type, typename... _args>
 inline geometry_type *
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
 {
-  if (cmesh->geometry_handler == NULL) {
+  t8_geometry_handler_c *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  if (geometry_handler == NULL) {
     /* The handler was not constructed, do it now. */
-    cmesh->geometry_handler = new t8_geometry_handler ();
+    geometry_handler = new t8_geometry_handler ();
   }
-  return cmesh->geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
+  return geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
 }
 
 /** Get the list of global trees and local vertex ids a global vertex is connected to.
