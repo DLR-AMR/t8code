@@ -1398,6 +1398,78 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
   }
 }
 
+/* Given a cmesh with registered CAD geometry and a local tree,
+ * return the geometry indices stored for this tree.
+ * \param [in] cmesh  A committed cmesh with CAD geometry.
+ * \param [in] cmesh_ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
+ * \return A list of all geometries that are linked to this tree.
+ */
+static const int *
+t8_geometry_cad::get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t cmesh_ltreeid) const
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  const int dim = t8_cmesh_get_dimension (cmesh);
+  /* We retrieve the geometry information of the tree.
+   * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
+  const int attribute_key = dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
+  const int *linked_geometries
+    = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), attribute_key, cmesh_ltreeid);
+
+  return linked_geometries;
+}
+
+/* Given a cmesh and a global tree for which CAD geometry shall be used,
+ * register the internal attributes.
+ * \param [in] cmesh  An initialized cmesh.
+ * \param [in] cmesh_gtreeid A global tree id of \a cmesh of a tree with CAD geometry.
+ * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
+ * \param [in] geometries List of integers that identify the geometries.
+ * \param [in] num_geometries Number of geometries to register for this tree.
+ * \note This function is usually only used explicitly by t8code examples.
+ */
+static const void
+t8_geometry_cad::set_tree_geometries (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid,
+                                      const int attribute_dimension, const int *geometries,
+                                      const int num_geometries) const
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
+
+  // Get the appropriate key, depending on attribute dimension.
+  const int attribute_key
+    = attribute_dimension == 2 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
+  const bool data_persists = false;  // Force copying of data in internal buffer
+  t8_cmesh_set_attribute (cmesh, cmesh_gtreeid, t8_get_package_id (), attribute_key, geometries,
+                          num_geometries * sizeof (*geometries), data_persists);
+}
+
+/* Given a cmesh and a global tree for which CAD tree geometry shall be used,
+ * register the internal attribute parameters.
+ * \param [in] cmesh  An initialized cmesh.
+ * \param [in] cmesh_gtreeid A global tree id of \a cmesh of a tree with CAD geometry.
+ * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
+ * \param [in] attribute_index The attribute index for which to register I.e. 0 for the first edge or first face.
+ * \param [in] parameters List of double parameters for the attribute.
+ * \param [in] num_geometries Number of parameters to register for this tree.
+ * \note This function is usually only used explicitly by t8code examples.
+ */
+static const void
+t8_geometry_cad::set_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid,
+                                               const int attribute_dimension, const int attribute_index,
+                                               const double *parameters, const double num_parameters) const
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
+  const int attribute_base_key = attribute_dimension == 2 ? T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY
+                                                          : T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY;
+  const int attribute_key = attribute_base_key + attribute_index;
+  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), attribute_key, parameters,
+                          num_parameters * sizeof (*parameters), 0);
+}
+
 /* This part should be callable from C */
 T8_EXTERN_C_BEGIN ();
 
