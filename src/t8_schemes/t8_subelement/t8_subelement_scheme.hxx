@@ -858,7 +858,15 @@ struct t8_subelement_scheme_common:
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) const noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
+    // if(!element_is_subelement (elem)){
+    //   return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
+    // }
+    const t8_linearidx_t parent_id
+      = derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level - 1);
+    const int max_children = get_max_num_children ();
+    return parent_id * max_children + as_subelement (elem)->subelement_id;
+    // T8_ASSERT (element_is_valid (elem));
+    // return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
   }
 
   /** Construct the successor in a uniform refinement of a given element.
