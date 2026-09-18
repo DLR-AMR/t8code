@@ -156,6 +156,17 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
                                       const double *points, const int num_points, int *is_inside,
                                       const double tolerance) const override;
 
+  /** Given a cmesh with registered CAD geometry and a local tree,
+   * return the geometry indices stored for this tree.
+   * \param [in] cmesh  A committed cmesh with CAD geometry.
+   * \param [in] cmesh_ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
+   * \return A list of all geometries that are linked to this tree. Might be NULL if no geometries exist.
+   * 
+   * \note If there are no CAD geometries at this tree, the return value is NULL.
+   */
+  const int *
+  t8_geom_cad_get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t cmesh_ltreeid) const;
+
   /**
    * Getter function for the CAD handle.
    *
