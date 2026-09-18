@@ -52,7 +52,6 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t
                           sizeof (t8_geometry_hash), 0);
 }
 
-
 /* Return the geometry handler of the cmesh.
  * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
  * \return                 The geometry handler of the cmesh.
