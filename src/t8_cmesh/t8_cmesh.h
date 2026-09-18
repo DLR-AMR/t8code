@@ -556,6 +556,14 @@ t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
 t8_gloidx_t
 t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
+/** Return the geometry handler of the cmesh.
+ * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
+ * \return                 The geometry handler of the cmesh.
+ * \note                   The return value might be NULL if no geometry handler exists.
+ */
+t8_geometry_handler_c *
+t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh);
+
 /** Get the geometry of a tree.
  * \param [in] cmesh   The cmesh.
  * \param [in] gtreeid The global tree id of the tree for which the geometry should be returned.
