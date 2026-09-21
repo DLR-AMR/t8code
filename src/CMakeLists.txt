@@ -158,19 +158,23 @@ if( T8CODE_ENABLE_MRA )
 
   install( FILES
     t8_mra/io/vtk.hxx
+    t8_mra/io/vtk_shape.hxx
     t8_mra/io/dataset.hxx
     DESTINATION include/t8_mra/io )
 
   install( FILES
     t8_mra/io/shape/cartesian.hxx
+    t8_mra/io/shape/prism.hxx
     t8_mra/io/shape/triangle.hxx
     DESTINATION include/t8_mra/io/shape )
+
   install( FILES
     t8_mra/dg/dg_base.hxx
     DESTINATION include/t8_mra/dg )
 
   install( FILES
     t8_mra/dg/shape/cartesian.hxx
+    t8_mra/dg/shape/prism.hxx
     t8_mra/dg/shape/triangle.hxx
     DESTINATION include/t8_mra/dg/shape )
 
@@ -189,6 +193,7 @@ if( T8CODE_ENABLE_MRA )
 
   install( FILES
     t8_mra/data/shape/cartesian.hxx
+    t8_mra/data/shape/prism.hxx
     t8_mra/data/shape/triangle.hxx
     DESTINATION include/t8_mra/data/shape )
 
@@ -203,6 +208,7 @@ if( T8CODE_ENABLE_MRA )
 
   install( FILES
     t8_mra/num/shape/cartesian.hxx
+    t8_mra/num/shape/prism.hxx
     t8_mra/num/shape/triangle.hxx
     DESTINATION include/t8_mra/num/shape )
 
@@ -210,6 +216,7 @@ if( T8CODE_ENABLE_MRA )
     t8_mra/num/basis/basis.hxx
     t8_mra/num/basis/legendre.hxx
     t8_mra/num/basis/dubiner.hxx
+    t8_mra/num/basis/prism.hxx
     DESTINATION include/t8_mra/num/basis )
 
   install( FILES
