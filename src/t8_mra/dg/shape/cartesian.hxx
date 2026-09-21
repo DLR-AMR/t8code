@@ -48,8 +48,8 @@ class dg<TShape, U, P> {
   geometry (const std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> &corners, double volume,
             const std::array<int, 3> & /*unused*/ = {}) const
   {
-    // QUAD corners are permuted (t8code swaps 2 and 3) so index 0 is the lower
-    // and the last the upper corner, as extract_cartesian_vertices expects.
+    /// QUAD corners are permuted (t8code swaps 2 and 3) so index 0 is the lower
+    /// and the last the upper corner, as extract_cartesian_vertices expects.
     std::array<std::array<double, 3>, T8_ECLASS_MAX_CORNERS> ordered = {};
     for (auto corner = 0; corner < shape_traits<TShape>::NUM_VERTICES; ++corner) {
       auto source = corner;
