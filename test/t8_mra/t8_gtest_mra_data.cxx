@@ -22,8 +22,9 @@ struct ShapeConfig
   static constexpr t8_eclass Shape = TShape;
 };
 
-using ShapeConfigs = ::testing::Types<ShapeConfig<T8_ECLASS_LINE>, ShapeConfig<T8_ECLASS_TRIANGLE>,
-                                      ShapeConfig<T8_ECLASS_QUAD>, ShapeConfig<T8_ECLASS_HEX>>;
+using ShapeConfigs
+  = ::testing::Types<ShapeConfig<T8_ECLASS_LINE>, ShapeConfig<T8_ECLASS_TRIANGLE>, ShapeConfig<T8_ECLASS_QUAD>,
+                     ShapeConfig<T8_ECLASS_HEX>, ShapeConfig<T8_ECLASS_PRISM>>;
 
 template <typename Config>
 class mra_lmi: public ::testing::Test {};
