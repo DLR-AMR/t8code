@@ -8,7 +8,7 @@
  * 3. Custom adaptation criteria
  * 4. Triangle vs quad comparison on the same data
  * 5. 3D (hex) adaptation
- * 6. Two state variables (U = 2) with different jump locations
+ * 6. 3D (prism) adaptation on an extruded mesh
  */
 
 #include "t8.h"
@@ -438,7 +438,53 @@ example_hex_3d ()
 }
 
 //=============================================================================
-// Example 6: Two State Variables
+// Example 6: Prism (3D, extruded)
+//=============================================================================
+
+/**
+ * A prism refines as triangle x line, so its vertex order comes from the
+ * triangle factor alone and the line factor contributes none. 
+ * The cmesh is an extruded brick
+ */
+void
+example_prism_3d ()
+{
+  root_out () << "\n=== 6. Prism: 3D adaptation on an extruded mesh ===\n";
+
+  constexpr int U = 1;
+  constexpr int P = 3;
+  const int min_level = 0;
+  const int max_level = 3;
+  const double c_thresh = 0.1;
+
+  t8_mra::multiscale<T8_ECLASS_PRISM, U, P> mra (max_level, sc_MPI_COMM_WORLD);
+
+  /// Unit cube corners in t8code order, split into 2x2x2 boxes of two prisms each.
+  const double unit_cube[24] = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1 };
+  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_pad (T8_ECLASS_PRISM, sc_MPI_COMM_WORLD, unit_cube, 2, 2, 2, 0);
+  auto *scheme = t8_scheme_new_default ();
+  t8_cmesh_ref (cmesh);
+  t8_scheme_ref (const_cast<t8_scheme *> (scheme));
+
+  mra.initialize_data (cmesh, scheme, max_level, gaussian_bump_3d<U> ());
+  print_grid_stats (mra, "Uniform level " + std::to_string (max_level));
+  write_vtk_output (mra, "mra_output/06_prism_step0_uniform");
+
+  mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
+  print_grid_stats (mra, "After coarsening");
+  write_vtk_output (mra, "mra_output/06_prism_step1_coarsened");
+
+  mra.refine (min_level, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
+  print_grid_stats (mra, "After refinement");
+  write_vtk_output (mra, "mra_output/06_prism_step2_refined");
+
+  mra.cleanup ();
+  t8_cmesh_destroy (&cmesh);
+  t8_scheme_unref (const_cast<t8_scheme **> (&scheme));
+}
+
+//=============================================================================
+// Example 7: Two State Variables
 //=============================================================================
 
 /**
@@ -510,6 +556,7 @@ main (int argc, char **argv)
   example_custom_criterion ();
   example_triangle_vs_quad ();
   example_hex_3d ();
+  example_prism_3d ();
   example_two_components ();
 
   root_out () << "\nAll examples completed. Output in mra_output/ (open in ParaView).\n";
