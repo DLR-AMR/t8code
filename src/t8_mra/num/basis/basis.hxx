@@ -41,6 +41,7 @@ cell_mean (std::span<const double> coeffs, double vol)
 {
   using basis_t = basis<TShape, P>;
   static const double phi0 = basis_t::eval ({})[0];
+
   return basis_t::normalization (vol) * phi0 * coeffs[0];
 }
 
@@ -48,6 +49,7 @@ cell_mean (std::span<const double> coeffs, double vol)
 
 // Per-shape specializations (defined after the primary template).
 #include "t8_mra/num/shape/cartesian.hxx"
+#include "t8_mra/num/shape/prism.hxx"
 #include "t8_mra/num/shape/triangle.hxx"
 
 #endif  // T8_ENABLE_MRA
