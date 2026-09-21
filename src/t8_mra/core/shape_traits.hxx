@@ -15,7 +15,7 @@ namespace t8_mra
 // ============================================================================
 // Every per-shape specialization lives in one file per shape: shape_traits +
 // mst policies in core/shape/, lmi layout in data/shape/, basis + cell_geometry
-// in num/shape/, DG numerics in dg/. This header holds only the primary
+// in num/shape/, DG numerics in dg/shape/. This header holds only the primary
 // template and pulls the specializations in at the bottom.
 
 template <t8_eclass TShape>
