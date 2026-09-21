@@ -190,6 +190,7 @@ struct hash<TLmi>
 
 // Per-shape specializations (defined after the primary template).
 #include "t8_mra/data/shape/cartesian.hxx"
+#include "t8_mra/data/shape/prism.hxx"
 #include "t8_mra/data/shape/triangle.hxx"
 
 #endif
