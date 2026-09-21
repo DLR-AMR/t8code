@@ -34,7 +34,8 @@ using MstConfigs
   = ::testing::Types<MstConfig<T8_ECLASS_LINE, 2>, MstConfig<T8_ECLASS_LINE, 3>, MstConfig<T8_ECLASS_QUAD, 2>,
                      MstConfig<T8_ECLASS_QUAD, 3>, MstConfig<T8_ECLASS_HEX, 2>, MstConfig<T8_ECLASS_TRIANGLE, 1>,
                      MstConfig<T8_ECLASS_TRIANGLE, 2>, MstConfig<T8_ECLASS_TRIANGLE, 3>,
-                     MstConfig<T8_ECLASS_TRIANGLE, 4>>;
+                     MstConfig<T8_ECLASS_TRIANGLE, 4>, MstConfig<T8_ECLASS_PRISM, 1>, MstConfig<T8_ECLASS_PRISM, 2>,
+                     MstConfig<T8_ECLASS_PRISM, 3>>;
 
 template <typename Config>
 class mra_mst: public ::testing::Test {
@@ -284,7 +285,7 @@ TYPED_TEST (mra_mst, details_vanish_for_projected_polynomial)
 
   using basis_t = t8_mra::basis<Shape, P>;
   const t8_mra::quadrature<Shape> quad (t8_mra::quadrature<Shape>::rule_for_degree (2 * P));
-  const auto children = t8_mra::child_maps<Shape> ();
+  const auto children = t8_mra::mask_policy<Shape>::child_maps ();
   constexpr double ref_volume = t8_mra::is_cartesian<Shape> ? 1.0 : 0.5;
 
   /// Affine form on the parent reference element, raised to P-1: total degree
@@ -341,7 +342,7 @@ TYPED_TEST (mra_mst, details_scale_as_h_to_the_P)
 
   using basis_t = t8_mra::basis<Shape, P>;
   const t8_mra::quadrature<Shape> quad (t8_mra::quadrature<Shape>::rule_for_degree (2 * P));
-  const auto children = t8_mra::child_maps<Shape> ();
+  const auto children = t8_mra::mask_policy<Shape>::child_maps ();
   constexpr double ref_volume = t8_mra::is_cartesian<Shape> ? 1.0 : 0.5;
 
   /// f(x) = (sum_d x_d)^P : degree exactly P.

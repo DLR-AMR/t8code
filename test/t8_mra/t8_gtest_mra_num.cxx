@@ -35,11 +35,12 @@ using NumConfigs
   = ::testing::Types<NumConfig<T8_ECLASS_LINE, 2>, NumConfig<T8_ECLASS_LINE, 4>, NumConfig<T8_ECLASS_QUAD, 2>,
                      NumConfig<T8_ECLASS_QUAD, 3>, NumConfig<T8_ECLASS_HEX, 2>, NumConfig<T8_ECLASS_TRIANGLE, 1>,
                      NumConfig<T8_ECLASS_TRIANGLE, 2>, NumConfig<T8_ECLASS_TRIANGLE, 3>,
-                     NumConfig<T8_ECLASS_TRIANGLE, 4>>;
+                     NumConfig<T8_ECLASS_TRIANGLE, 4>, NumConfig<T8_ECLASS_PRISM, 1>, NumConfig<T8_ECLASS_PRISM, 2>,
+                     NumConfig<T8_ECLASS_PRISM, 3>>;
 
 /// Volume of the reference cell:
 ///   1 for the cartesian [0,1]^DIM
-///   1/2 for the reference triangle
+///   1/2 for the reference triangle and the prism extruding it
 template <t8_eclass Shape>
 inline constexpr double ref_volume = t8_mra::is_cartesian<Shape> ? 1.0 : 0.5;
 
@@ -64,6 +65,11 @@ interior_points ()
         c[1] = 0.7;
         return c;
       }());
+  }
+  else if constexpr (Shape == T8_ECLASS_PRISM) {
+    pts.push_back ({ 0.25, 0.25, 0.3 });
+    pts.push_back ({ 0.5, 0.3, 0.65 });
+    pts.push_back ({ 0.2, 0.6, 0.45 });
   }
   else {
     pts.push_back ({ 0.25, 0.25 });
@@ -107,11 +113,16 @@ TYPED_TEST (mra_num, quadrature_weights_and_points)
       }
     }
     else {
-      const double x = quad.points[2 * i + 0];
-      const double y = quad.points[2 * i + 1];
+      const double x = quad.points[DIM * i + 0];
+      const double y = quad.points[DIM * i + 1];
       EXPECT_GE (x, 0.0);
       EXPECT_GE (y, 0.0);
       EXPECT_LE (x + y, 1.0 + eps);
+
+      if constexpr (DIM == 3) {  // the prism's extruded direction
+        EXPECT_GE (quad.points[DIM * i + 2], 0.0);
+        EXPECT_LE (quad.points[DIM * i + 2], 1.0);
+      }
     }
   }
   EXPECT_NEAR (wsum, 1.0, eps);
@@ -148,10 +159,15 @@ TYPED_TEST (mra_num, quadrature_is_exact)
     EXPECT_NEAR (mixed, std::pow (1.0 / (m + 1), DIM), eps);
   }
   else {
-    const auto mono = [&] (int a, int b) {
+    /// x^a y^b on the triangle factor times z^c on the prism's line factor.
+    const auto mono = [&] (int a, int b, int c) {
       double s = 0.0;
-      for (std::size_t i = 0; i < quad.num_points; ++i)
-        s += quad.weights[i] * std::pow (quad.points[2 * i + 0], a) * std::pow (quad.points[2 * i + 1], b);
+      for (std::size_t i = 0; i < quad.num_points; ++i) {
+        double f = quad.weights[i] * std::pow (quad.points[DIM * i + 0], a) * std::pow (quad.points[DIM * i + 1], b);
+        if constexpr (DIM == 3)
+          f *= std::pow (quad.points[DIM * i + 2], c);
+        s += f;
+      }
       return s;
     };
     const auto fact = [] (int k) {
@@ -160,12 +176,15 @@ TYPED_TEST (mra_num, quadrature_is_exact)
         f *= i;
       return f;
     };
-    const auto exact = [&] (int a, int b) { return fact (a) * fact (b) / fact (a + b + 2); };
+    const auto exact = [&] (int a, int b, int c) { return fact (a) * fact (b) / fact (a + b + 2) / (c + 1); };
 
-    /// integral over the reference triangle = ref_volume * sum_q w_q f(x_q)
-    EXPECT_NEAR (ref_volume<Shape> * mono (0, 0), exact (0, 0), eps);  // area = 1/2
-    EXPECT_NEAR (ref_volume<Shape> * mono (1, 0), exact (1, 0), eps);  // 1/6
-    EXPECT_NEAR (ref_volume<Shape> * mono (1, 1), exact (1, 1), eps);  // 1/24
+    /// integral over the reference cell = ref_volume * sum_q w_q f(x_q)
+    EXPECT_NEAR (ref_volume<Shape> * mono (0, 0, 0), exact (0, 0, 0), eps);  // area = 1/2
+    EXPECT_NEAR (ref_volume<Shape> * mono (1, 0, 0), exact (1, 0, 0), eps);  // 1/6
+    EXPECT_NEAR (ref_volume<Shape> * mono (1, 1, 0), exact (1, 1, 0), eps);  // 1/24
+
+    if constexpr (DIM == 3)
+      EXPECT_NEAR (ref_volume<Shape> * mono (1, 1, 1), exact (1, 1, 1), eps);  // 1/48
   }
 }
 
@@ -259,7 +278,7 @@ TYPED_TEST (mra_num, mask_satisfies_refinement_equation)
   std::vector<t8_mra::mat> mask;
   t8_mra::compute_mask<Shape, P> (mask);
 
-  const auto children = t8_mra::child_maps<Shape> ();
+  const auto children = t8_mra::mask_policy<Shape>::child_maps ();
   const double factor = ref_volume<Shape> / t8_mra::mask_policy<Shape>::norm;
 
   for (std::size_t k = 0; k < children.size (); ++k)
