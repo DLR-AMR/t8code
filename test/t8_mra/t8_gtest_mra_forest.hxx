@@ -37,7 +37,8 @@ using Configs
                      Config<T8_ECLASS_TRIANGLE, 1, 4>, Config<T8_ECLASS_TRIANGLE, 2, 2>, Config<T8_ECLASS_QUAD, 1, 1>,
                      Config<T8_ECLASS_QUAD, 1, 2>, Config<T8_ECLASS_QUAD, 1, 3>, Config<T8_ECLASS_QUAD, 1, 4>,
                      Config<T8_ECLASS_QUAD, 2, 2>, Config<T8_ECLASS_HEX, 1, 2>, Config<T8_ECLASS_HEX, 1, 3>,
-                     Config<T8_ECLASS_HEX, 2, 2>>;
+                     Config<T8_ECLASS_HEX, 2, 2>, Config<T8_ECLASS_PRISM, 1, 2>, Config<T8_ECLASS_PRISM, 1, 3>,
+                     Config<T8_ECLASS_PRISM, 2, 2>>;
 
 struct ConfigNames
 {
