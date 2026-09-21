@@ -9,6 +9,7 @@
  * 4. Triangle vs quad comparison on the same data
  * 5. 3D (hex) adaptation
  * 6. 3D (prism) adaptation on an extruded mesh
+ * 7. Two state variables (U = 2) with different jump locations
  */
 
 #include "t8.h"
@@ -21,7 +22,9 @@
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <span>
 #include <string>
+#include <vector>
 
 //=============================================================================
 // Output Helpers
@@ -147,14 +150,16 @@ gaussian_bump_3d ()
 
 /**
  * @brief Write high-order Lagrange VTK output (polynomial degree P-1)
+ *
+ * An empty layout writes one scalar per component, named u0..u{U-1}.
  */
 template <typename MRA>
 void
-write_vtk_output (MRA &mra, const std::string &filename)
+write_vtk_output (MRA &mra, const std::string &filename, std::span<const t8_mra::vtk_field> layout = {})
 {
   root_out () << "  Writing VTK: " << filename << ".vtu\n";
 
-  t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), MRA::P_DIM - 1);
+  t8_mra::write_forest_lagrange_vtk (mra, filename.c_str (), MRA::P_DIM - 1, layout);
 }
 
 /**
@@ -311,7 +316,7 @@ example_custom_criterion ()
   const int min_level = 0;
   const int max_level = 6;
   const double c_thresh = 1.0;
-  const unsigned int floor_level = 4;
+  const unsigned int floor_level = 2;
 
   t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra_plain (max_level, sc_MPI_COMM_WORLD);
   t8_mra::multiscale<T8_ECLASS_QUAD, U, P> mra_floor (max_level, sc_MPI_COMM_WORLD);
@@ -491,11 +496,15 @@ example_prism_3d ()
  * U = 2: each component carries its own quarter-circle jump (bottom-left vs
  * top-right corner). Significance is the maximum over the components, so
  * the grid refines along both arcs.
+ *
+ * Also shows the custom output layout: fields can be renamed, several
+ * components can be grouped into one VTK vector, and a field can be derived
+ * from the whole state through a transform instead of being stored.
  */
 void
 example_two_components ()
 {
-  root_out () << "\n=== 6. Triangle: two state variables ===\n";
+  root_out () << "\n=== 7. Triangle: two state variables ===\n";
 
   constexpr int U = 2;
   constexpr int P = 3;
@@ -510,19 +519,42 @@ example_two_components ()
   t8_cmesh_ref (cmesh);
   t8_scheme_ref (const_cast<t8_scheme *> (scheme));
 
+  /// Two raw components under their own names, the pair as a VTK vector, and a
+  /// derived field that is never stored.
+  const std::vector<t8_mra::vtk_field> layout = {
+    {
+      .name = "bottom_left",
+      .first = 0,
+      .num_components = 1,
+    },
+    {
+      .name = "top_right",
+      .first = 1,
+      .num_components = 1,
+    },
+    {
+      .name = "both",
+      .first = 0,
+      .num_components = 2,
+    },
+    { .name = "difference",
+      .num_components = 1,
+      .transform = [] (std::span<const double> u, std::span<double> out) { out[0] = u[0] - u[1]; } },
+  };
+
   mra.initialize_data_adaptive (cmesh, scheme, max_level, two_quarter_circles<U> ());
   print_grid_stats (mra, "Uniform level " + std::to_string (max_level));
-  write_vtk_output (mra, "mra_output/06_two_components_step0_initial");
+  write_vtk_output (mra, "mra_output/07_two_components_step0_initial", layout);
 
   mra.coarsen (min_level, max_level, t8_mra::hard_thresholding { .c_thresh = c_thresh });
   print_grid_stats (mra, "After coarsening");
-  write_vtk_output (mra, "mra_output/06_two_components_step1_coarsened");
+  write_vtk_output (mra, "mra_output/07_two_components_step1_coarsened", layout);
 
   mra.refine (min_level, max_level, t8_mra::harten_prediction { .c_thresh = c_thresh });
   print_grid_stats (mra, "After refinement");
-  write_vtk_output (mra, "mra_output/06_two_components_step2_refined");
+  write_vtk_output (mra, "mra_output/07_two_components_step2_refined", layout);
 
-  root_out () << "  Color by u0 / u1 in ParaView: the grid follows both jumps.\n";
+  root_out () << "  Fields written: bottom_left, top_right, both (vector), difference (derived).\n";
 
   mra.cleanup ();
   t8_cmesh_destroy (&cmesh);
