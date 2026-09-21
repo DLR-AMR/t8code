@@ -560,9 +560,18 @@ t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
  * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
  * \return                 The geometry handler of the cmesh.
  * \note                   The return value might be NULL if no geometry handler exists.
+ * \note                   Handle with care. This function should be used by t8code devs only.
  */
 t8_geometry_handler_c *
 t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh);
+
+/** Construct a new geometry_handler for a cmesh and add it to the cmesh.
+ * \param [in] cmesh      The cmesh to be considered. Does not need to be committed.
+ * \return                On success, the new geometry_handler. nullptr on failure (out of memory).
+ * \note                  Handle with care. This function should be used by t8code devs only.
+ */
+t8_geometry_handler_c *
+t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh);
 
 /** Get the geometry of a tree.
  * \param [in] cmesh   The cmesh.
