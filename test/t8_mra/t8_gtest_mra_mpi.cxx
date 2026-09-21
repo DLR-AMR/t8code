@@ -19,8 +19,9 @@ using namespace mra_test;
 
 using MpiConfigs
   = ::testing::Types<Config<T8_ECLASS_LINE, 1, 2>, Config<T8_ECLASS_QUAD, 1, 2>, Config<T8_ECLASS_TRIANGLE, 1, 2>,
-                     Config<T8_ECLASS_HEX, 1, 2>, Config<T8_ECLASS_LINE, 2, 2>, Config<T8_ECLASS_QUAD, 2, 2>,
-                     Config<T8_ECLASS_TRIANGLE, 2, 2>, Config<T8_ECLASS_HEX, 2, 2>>;
+                     Config<T8_ECLASS_HEX, 1, 2>, Config<T8_ECLASS_PRISM, 1, 2>, Config<T8_ECLASS_LINE, 2, 2>,
+                     Config<T8_ECLASS_QUAD, 2, 2>, Config<T8_ECLASS_TRIANGLE, 2, 2>, Config<T8_ECLASS_HEX, 2, 2>,
+                     Config<T8_ECLASS_PRISM, 2, 2>>;
 
 template <typename Cfg>
 class mra_mpi: public ::testing::Test {};
