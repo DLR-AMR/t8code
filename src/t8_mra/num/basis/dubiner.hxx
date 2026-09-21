@@ -13,16 +13,16 @@ jacobi (int n, double alpha, double beta, double x)
   if (n == 0)
     return 1.0;
 
-  double p_prev = 1.0;
-  double p = 0.5 * (alpha - beta) + 0.5 * (alpha + beta + 2.0) * x;
+  auto p_prev = 1.0;
+  auto p = 0.5 * (alpha - beta) + 0.5 * (alpha + beta + 2.0) * x;
 
   for (int k = 2; k <= n; ++k) {
-    const double c = 2.0 * k + alpha + beta;
-    const double a1 = 2.0 * k * (k + alpha + beta) * (c - 2.0);
-    const double a2 = (c - 1.0) * (alpha * alpha - beta * beta);
-    const double a3 = (c - 1.0) * c * (c - 2.0);
-    const double a4 = 2.0 * (k + alpha - 1.0) * (k + beta - 1.0) * c;
-    const double p_next = ((a2 + a3 * x) * p - a4 * p_prev) / a1;
+    const auto c = 2.0 * k + alpha + beta;
+    const auto a1 = 2.0 * k * (k + alpha + beta) * (c - 2.0);
+    const auto a2 = (c - 1.0) * (alpha * alpha - beta * beta);
+    const auto a3 = (c - 1.0) * c * (c - 2.0);
+    const auto a4 = 2.0 * (k + alpha - 1.0) * (k + beta - 1.0) * c;
+    const auto p_next = ((a2 + a3 * x) * p - a4 * p_prev) / a1;
 
     p_prev = p;
     p = p_next;
@@ -37,6 +37,7 @@ jacobi_deriv (int n, double alpha, double beta, double x)
 {
   if (n == 0)
     return 0.0;
+
   return 0.5 * (n + alpha + beta + 1.0) * jacobi (n - 1, alpha + 1.0, beta + 1.0, x);
 }
 
@@ -47,8 +48,10 @@ namespace detail
 dubiner_degree (int i)
 {
   int d = 0;
+
   while ((d + 1) * (d + 2) / 2 <= i)
     ++d;
+
   return d;
 }
 
@@ -91,34 +94,34 @@ template <int I>
 [[nodiscard]] std::array<double, 2>
 scaling_function_gradient (double tau1, double tau2)
 {
-  constexpr int d = detail::dubiner_degree (I);
-  constexpr int p = I - d * (d + 1) / 2;
-  constexpr int q = d - p;
+  constexpr auto d = detail::dubiner_degree (I);
+  constexpr auto p = I - d * (d + 1) / 2;
+  constexpr auto q = d - p;
 
-  const double norm = std::sqrt (2.0 * (2 * p + 1) * (p + q + 1));
-  const double c = 1.0 - tau2;
-  const double cc = c < 1e-12 ? 1e-12 : c;
-  const double a = 1.0 - 2.0 * tau1 / cc;
-  const double b = 2.0 * tau2 - 1.0;
+  const auto norm = std::sqrt (2.0 * (2 * p + 1) * (p + q + 1));
+  const auto c = 1.0 - tau2;
+  const auto cc = c < 1e-12 ? 1e-12 : c;
+  const auto a = 1.0 - 2.0 * tau1 / cc;
+  const auto b = 2.0 * tau2 - 1.0;
 
-  const double pa = jacobi (p, 0.0, 0.0, a);
-  const double pb = jacobi (q, 2.0 * p + 1.0, 0.0, b);
-  const double pad = jacobi_deriv (p, 0.0, 0.0, a);
-  const double pbd = jacobi_deriv (q, 2.0 * p + 1.0, 0.0, b);
+  const auto pa = jacobi (p, 0.0, 0.0, a);
+  const auto pb = jacobi (q, 2.0 * p + 1.0, 0.0, b);
+  const auto pad = jacobi_deriv (p, 0.0, 0.0, a);
+  const auto pbd = jacobi_deriv (q, 2.0 * p + 1.0, 0.0, b);
 
-  double dt1 = 0.0;
-  double dt2 = norm * 2.0 * pa * pbd * detail::power<p> (cc);  // term from d(P_q(b))/dtau2
+  auto dt1 = 0.0;
+  auto dt2 = norm * 2.0 * pa * pbd * detail::power<p> (cc);  /// term from d(P_q(b))/dtau2
 
-  // The d/dtau1 path and the c-power derivatives only contribute for p >= 1
-  // (for p == 0 the Jacobi-in-a derivative pad is zero anyway).
+  /// The d/dtau1 path and the c-power derivatives only contribute for p >= 1
   if constexpr (p >= 1) {
-    const double cpm1 = detail::power<p - 1> (cc);
-    dt1 = norm * pad * (-2.0) * cpm1 * pb;        // d a/d tau1 = -2/c
-    dt2 += norm * (-static_cast<double> (p)) * pa * pb * cpm1;  // d(c^p)/d tau2
+    const auto cpm1 = detail::power<p - 1> (cc);
+    dt1 = norm * pad * (-2.0) * cpm1 * pb;                      /// d a/d tau1 = -2/c
+    dt2 += norm * (-static_cast<double> (p)) * pa * pb * cpm1;  /// d(c^p)/d tau2
+
     if constexpr (p >= 2)
-      dt2 += norm * (-2.0) * tau1 * pad * pb * detail::power<p - 2> (cc);  // d a/d tau2 = -2 tau1/c^2
+      dt2 += norm * (-2.0) * tau1 * pad * pb * detail::power<p - 2> (cc);  /// d a/d tau2 = -2 tau1/c^2
     else
-      dt2 += norm * (-2.0) * tau1 * pad * pb / cc;  // p == 1: c^{p-2} = 1/c
+      dt2 += norm * (-2.0) * tau1 * pad * pb / cc;  /// p == 1: c^{p-2} = 1/c
   }
 
   return { dt1, dt2 };
