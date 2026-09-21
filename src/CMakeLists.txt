@@ -145,6 +145,7 @@ if( T8CODE_ENABLE_MRA )
   install( FILES
     t8_mra/core/shape/mst_policy.hxx
     t8_mra/core/shape/cartesian.hxx
+    t8_mra/core/shape/prism.hxx
     t8_mra/core/shape/triangle.hxx
     DESTINATION include/t8_mra/core/shape )
 
@@ -166,9 +167,12 @@ if( T8CODE_ENABLE_MRA )
     DESTINATION include/t8_mra/io/shape )
   install( FILES
     t8_mra/dg/dg_base.hxx
-    t8_mra/dg/cartesian.hxx
-    t8_mra/dg/triangle.hxx
     DESTINATION include/t8_mra/dg )
+
+  install( FILES
+    t8_mra/dg/shape/cartesian.hxx
+    t8_mra/dg/shape/triangle.hxx
+    DESTINATION include/t8_mra/dg/shape )
 
   install( FILES
     t8_mra/criteria/coarsening_criterion.hxx
