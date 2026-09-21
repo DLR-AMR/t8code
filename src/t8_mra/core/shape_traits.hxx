@@ -57,6 +57,7 @@ struct shape_traits
 
 // Per-shape specializations (defined after the primary template).
 #include "t8_mra/core/shape/cartesian.hxx"
+#include "t8_mra/core/shape/prism.hxx"
 #include "t8_mra/core/shape/triangle.hxx"
 
 #endif  // T8_ENABLE_MRA
