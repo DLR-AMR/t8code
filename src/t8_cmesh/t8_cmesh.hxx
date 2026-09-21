@@ -107,9 +107,10 @@ inline geometry_type *
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
 {
   t8_geometry_handler_c *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
-  if (geometry_handler == NULL) {
+  if (geometry_handler == nullptr) {
     /* The handler was not constructed, do it now. */
-    geometry_handler = new t8_geometry_handler ();
+    geometry_handler = t8_cmesh_add_geometry_handler (cmesh);
+    T8_ASSERT (geometry_handler != nullptr);
   }
   return geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
 }
