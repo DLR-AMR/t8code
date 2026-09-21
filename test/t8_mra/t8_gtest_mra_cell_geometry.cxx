@@ -12,6 +12,7 @@
 #include <t8_mra/num/dg_basis.hxx>
 
 #include <array>
+#include <cmath>
 #include <span>
 #include <vector>
 
@@ -104,10 +105,107 @@ check_triangle (const tri_point &v0, const tri_point &v1, const tri_point &v2)
 
 TEST (mra_cell_geometry_triangle, affine_map_over_many_triangles)
 {
-  check_triangle ({ 0.0, 0.0 }, { 1.0, 0.0 }, { 0.0, 1.0 });   // reference
-  check_triangle ({ 0.5, 1.0 }, { 2.0, 0.5 }, { 1.0, 3.0 });   // generic
-  check_triangle ({ 0.5, 1.0 }, { 1.0, 3.0 }, { 2.0, 0.5 });   // reversed winding
+  check_triangle ({ 0.0, 0.0 }, { 1.0, 0.0 }, { 0.0, 1.0 });     // reference
+  check_triangle ({ 0.5, 1.0 }, { 2.0, 0.5 }, { 1.0, 3.0 });     // generic
+  check_triangle ({ 0.5, 1.0 }, { 1.0, 3.0 }, { 2.0, 0.5 });     // reversed winding
   check_triangle ({ -1.0, -1.0 }, { 1.0, -2.0 }, { 0.0, 2.0 });  // negative coordinates
+}
+
+/* Prism: from_prism gives the affine map of a triangle swept along one common
+ * extrusion vector. Reference coords are (r0, r1) barycentric in the base plus
+ * r2 along the sweep, so the six vertices land on the reference corners. */
+
+using prism_point = t8_mra::cell_geometry<T8_ECLASS_PRISM, 2>::point;
+
+[[nodiscard]] prism_point
+operator+ (const prism_point &a, const prism_point &b)
+{
+  return { a[0] + b[0], a[1] + b[1], a[2] + b[2] };
+}
+
+[[nodiscard]] prism_point
+operator- (const prism_point &a, const prism_point &b)
+{
+  return { a[0] - b[0], a[1] - b[1], a[2] - b[2] };
+}
+
+/// Volume of the prism spanned by two base edges and the extrusion: |det| / 2.
+[[nodiscard]] double
+prism_volume (const prism_point &r1, const prism_point &r2, const prism_point &extrusion)
+{
+  const auto det = r1[0] * (r2[1] * extrusion[2] - r2[2] * extrusion[1])
+                   - r1[1] * (r2[0] * extrusion[2] - r2[2] * extrusion[0])
+                   + r1[2] * (r2[0] * extrusion[1] - r2[1] * extrusion[0]);
+
+  return std::abs (det) / 2.0;
+}
+
+void
+check_prism (const prism_point &v0, const prism_point &v1, const prism_point &v2, const prism_point &extrusion)
+{
+  using geom_t = t8_mra::cell_geometry<T8_ECLASS_PRISM, 2>;
+
+  const auto v3 = v0 + extrusion;
+  const auto v4 = v1 + extrusion;
+  const auto v5 = v2 + extrusion;
+  const auto volume = prism_volume (v1 - v0, v2 - v0, extrusion);
+  const auto geom = geom_t::from_prism (v0, v1, v2, v3, v4, v5, volume);
+
+  // The six vertices map to the reference corners.
+  const std::array<std::pair<prism_point, prism_point>, 6> vertex_ref { { { v0, { 0.0, 0.0, 0.0 } },
+                                                                          { v1, { 1.0, 0.0, 0.0 } },
+                                                                          { v2, { 0.0, 1.0, 0.0 } },
+                                                                          { v3, { 0.0, 0.0, 1.0 } },
+                                                                          { v4, { 1.0, 0.0, 1.0 } },
+                                                                          { v5, { 0.0, 1.0, 1.0 } } } };
+  for (const auto &[vertex, ref] : vertex_ref) {
+    const auto got = geom.to_reference (vertex);
+    for (int d = 0; d < 3; ++d)
+      EXPECT_NEAR (got[d], ref[d], eps);
+  }
+
+  // Barycentric weights in the base and a height z invert to (w1, w2, z).
+  const std::array<std::array<double, 3>, 3> weights { { { 0.5, 0.3, 0.2 }, { 0.1, 0.6, 0.3 }, { 0.2, 0.2, 0.6 } } };
+  for (const auto &w : weights)
+    for (const double z : { 0.0, 0.25, 1.0 }) {
+      prism_point phys {};
+      for (int d = 0; d < 3; ++d)
+        phys[d] = w[0] * v0[d] + w[1] * v1[d] + w[2] * v2[d] + z * extrusion[d];
+
+      const auto ref = geom.to_reference (phys);
+      EXPECT_NEAR (ref[0], w[1], eps);
+      EXPECT_NEAR (ref[1], w[2], eps);
+      EXPECT_NEAR (ref[2], z, eps);
+
+      const auto phys_back = geom.to_physical (ref);
+      for (int d = 0; d < 3; ++d)
+        EXPECT_NEAR (phys_back[d], phys[d], eps);
+
+      EXPECT_TRUE (geom.contains (phys));
+    }
+
+  // The simplex normalization makes the physical basis L2-orthonormal, so the
+  // cached mass is 1 for any cell.
+  EXPECT_NEAR (geom.mass, 1.0, eps);
+}
+
+TEST (mra_cell_geometry_prism, affine_map_over_many_prisms)
+{
+  check_prism ({ 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 });           // reference
+  check_prism ({ 0.5, 1, 0 }, { 2, 0.5, 0 }, { 1, 3, 0 }, { 0, 0, 2.5 });     // generic right prism
+  check_prism ({ 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, { 0.4, -0.3, 1.2 });    // oblique extrusion
+  check_prism ({ -1, -1, -2 }, { 1, -2, -2 }, { 0, 2, -2 }, { 0, 0, -1.5 });  // negative coordinates
+}
+
+TEST (mra_cell_geometry_prism, surface_to_volume_of_the_reference_prism)
+{
+  using geom_t = t8_mra::cell_geometry<T8_ECLASS_PRISM, 2>;
+  const auto geom
+    = geom_t::from_prism ({ 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }, { 1, 0, 1 }, { 0, 1, 1 }, 0.5);
+
+  // Two unit triangles (2 * 1/2) and three lateral faces of 1, 1 and sqrt(2),
+  // over a volume of 1/2.
+  EXPECT_NEAR (geom.surface_to_volume (), (1.0 + 2.0 + std::sqrt (2.0)) / 0.5, eps);
 }
 
 /* Constant mode -> constant field. */
@@ -163,8 +261,8 @@ check_reference_direction (const Geom &geom)
 TEST (mra_cell_geometry, value_gradient_reference_direction)
 {
   const auto quad = t8_mra::cell_geometry<T8_ECLASS_QUAD, 3>::from_box ({ 1.0, 2.0 }, { 4.0, 6.0 }, 12.0);
-  const auto tri = t8_mra::cell_geometry<T8_ECLASS_TRIANGLE, 3>::from_triangle ({ 0.5, 1.0 }, { 2.0, 0.5 }, { 1.0, 3.0 },
-                                                                                1.625);
+  const auto tri
+    = t8_mra::cell_geometry<T8_ECLASS_TRIANGLE, 3>::from_triangle ({ 0.5, 1.0 }, { 2.0, 0.5 }, { 1.0, 3.0 }, 1.625);
 
   check_value_constant_mode (quad);
   check_value_constant_mode (tri);
