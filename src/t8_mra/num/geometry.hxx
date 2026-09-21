@@ -36,6 +36,7 @@ deref (const std::array<double, DIM> &x_ref, const std::array<double, DIM> &vert
        const std::array<double, DIM> &vertices_max) noexcept
 {
   std::array<double, DIM> x = {};
+
   for (auto d = 0u; d < DIM; ++d)
     x[d] = deref_1d (x_ref[d], vertices_min[d], vertices_max[d]);
 
@@ -69,6 +70,7 @@ transform_quad_points (const std::vector<double> &ref_quad_points, size_t num_po
 
   for (auto i = 0u; i < num_points; ++i) {
     std::array<double, DIM> x_ref;
+
     for (auto d = 0u; d < DIM; ++d)
       x_ref[d] = ref_quad_points[DIM * i + d];
 

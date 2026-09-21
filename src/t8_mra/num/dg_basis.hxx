@@ -14,8 +14,7 @@
 namespace t8_mra
 {
 
-/// Primary template left undefined: only cartesian shapes and the triangle are
-/// supported (specializations below). Any other shape is a compile error.
+/// Primary template left undefined: only cartesian shapes
 template <t8_eclass TShape, typename = void>
 struct dg_basis_base;
 
@@ -25,7 +24,6 @@ struct dg_basis_base<TShape, std::enable_if_t<is_cartesian<TShape>>>
   static constexpr unsigned int DIM = TShape == T8_ECLASS_LINE ? 1 : (TShape == T8_ECLASS_QUAD ? 2 : 3);
   static constexpr t8_eclass Shape = TShape;
 
-  // Reference Gauss-Legendre tensor rule.
   quadrature<TShape> quad;
 
   dg_basis_base () = default;
@@ -35,17 +33,18 @@ struct dg_basis_base<TShape, std::enable_if_t<is_cartesian<TShape>>>
   }
 };
 
-template <>
-struct dg_basis_base<T8_ECLASS_TRIANGLE>
+/// Simplex-based shapes take an accuracy degree rather than a point count.
+template <t8_eclass TShape>
+struct dg_basis_base<TShape, std::enable_if_t<TShape == T8_ECLASS_TRIANGLE || TShape == T8_ECLASS_PRISM>>
 {
-  static constexpr unsigned int DIM = 2;
-  static constexpr t8_eclass Shape = T8_ECLASS_TRIANGLE;
+  static constexpr unsigned int DIM = shape_traits<TShape>::DIM;
+  static constexpr t8_eclass Shape = TShape;
 
-  quadrature<T8_ECLASS_TRIANGLE> quad;
+  quadrature<TShape> quad;
 
   dg_basis_base () = default;
 
-  explicit dg_basis_base (int dunavant_rule): quad (dunavant_rule)
+  explicit dg_basis_base (int quadrature_rule): quad (quadrature_rule)
   {
   }
 };
@@ -67,14 +66,14 @@ class dg_basis: public dg_basis_base<TElement::Shape> {
  public:
   dg_basis () = default;
 
-  // Constructor for triangular elements
-  explicit dg_basis (int _dunavant_rule)
-    requires (Shape == T8_ECLASS_TRIANGLE)
-    : Base (_dunavant_rule)
+  /// Constructor for simplex-based elements (TRIANGLE, PRISM)
+  explicit dg_basis (int _quadrature_rule)
+    requires (Shape == T8_ECLASS_TRIANGLE || Shape == T8_ECLASS_PRISM)
+    : Base (_quadrature_rule)
   {
   }
 
-  // Constructor for cartesian elements (LINE, QUAD, HEX)
+  /// Constructor for cartesian elements (LINE, QUAD, HEX)
   explicit dg_basis (int _num_quad_points_1d)
     requires is_cartesian<Shape>
     : Base (_num_quad_points_1d)

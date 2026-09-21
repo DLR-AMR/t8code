@@ -3,6 +3,7 @@
 #ifdef T8_ENABLE_MRA
 
 #include <algorithm>
+#include <cmath>
 #include <initializer_list>
 #include <span>
 #include <stdexcept>
@@ -11,7 +12,7 @@
 namespace t8_mra
 {
 
-/// Dense row-major matrix; see lu_factors / lu_solve for the pivoted LU solve.
+/// Dense row-major matrix with lu_factors / lu_solve for the pivoted LU solve.
 class mat {
   std::vector<double> data;
   size_t num_rows = 0u;
@@ -159,17 +160,17 @@ lu_solve (const mat &A, const std::vector<size_t> &p, std::span<double> x)
   if (A.rows () != x.size ())
     throw std::logic_error ("Solution vector in t8_mra::util::lr_solve does not fit");
 
-  const auto n = A.rows ();
+  const auto n = static_cast<int> (A.rows ());
 
   const std::vector<double> b (x.begin (), x.end ());
-  for (auto i = 0u; i < n; ++i) {
+  for (auto i = 0; i < n; ++i) {
     x[i] = b[p[i]];
-    for (auto k = 0u; k < i; ++k)
+    for (auto k = 0; k < i; ++k)
       x[i] -= A (i, k) * x[k];
   }
 
-  for (int i = n - 1; i >= 0; --i) {
-    for (auto k = static_cast<size_t> (i + 1); k < n; ++k)
+  for (auto i = n - 1; i >= 0; --i) {
+    for (auto k = i + 1; k < n; ++k)
       x[i] -= A (i, k) * x[k];
     x[i] /= A (i, i);
   }

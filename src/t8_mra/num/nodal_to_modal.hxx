@@ -19,10 +19,7 @@ namespace t8_mra
  * @brief Converts nodal DG data to the modal coefficients MRA stores.
  *
  * Given a nodal value n_j = u(x_j) at reference nodes x_j, the modal
- * coefficients solve V m = n with the Vandermonde V_ji = phi_i(x_j). The
- * cartesian basis is orthonormal with unit normalization on every cell, so V is
- * cell-independent: it is built and LU-factored once at construction, then each
- * per-cell conversion is a pair of triangular solves per component.
+ * coefficients solve V m = n with the Vandermonde V_ji = phi_i(x_j). 
  *
  * Nodes must be DOF distinct reference points making V nonsingular (e.g. a
  * tensor Gauss-Lobatto / equispaced nodal set of order P). Nodal and modal
@@ -51,15 +48,15 @@ class nodal_to_modal {
   {
     std::array<double, DOF> rhs;
     for (auto u = 0u; u < U; ++u) {
-      const auto off = u * DOF;
+      const auto offset = u * DOF;
 
       for (auto j = 0u; j < DOF; ++j)
-        rhs[j] = nodal[off + j];
+        rhs[j] = nodal[offset + j];
 
       lu_solve (vandermonde, perm, rhs);
 
       for (auto i = 0u; i < DOF; ++i)
-        modal[off + i] = rhs[i];
+        modal[offset + i] = rhs[i];
     }
   }
 
@@ -73,8 +70,8 @@ class nodal_to_modal {
   }
 
  private:
-  mat vandermonde;           // LU-factored Vandermonde phi_i(x_j)
-  std::vector<size_t> perm;  // pivot permutation
+  mat vandermonde;           /// LU-factored Vandermonde phi_i(x_j)
+  std::vector<size_t> perm;  /// pivot permutation
 };
 
 /**
@@ -82,8 +79,7 @@ class nodal_to_modal {
  * nodal_to_modal).
  *
  * n_j = sum_i m_i phi_i(x_j), a matvec against the Vandermonde built from the
- * reference `nodes`; phi_i(x_j) is evaluated once at construction. Cartesian
- * only, buffers component-major (index u*DOF + j).
+ * reference `nodes`
  */
 template <t8_eclass TShape, unsigned int U, unsigned int P>
   requires is_cartesian<TShape>
