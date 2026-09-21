@@ -43,6 +43,7 @@ vtk_triangle_barycentric_index (int index, int order)
   index -= 3;
   const int dim = index / (order - 1);
   const int offset = index - dim * (order - 1);
+
   bindex[dim] = min + 1 + offset;
   bindex[(dim + 1) % 3] = min;
   bindex[(dim + 2) % 3] = max - 1 - offset;
