@@ -27,9 +27,8 @@ struct lmi_properties<T8_ECLASS_TRIANGLE>
   static constexpr int NUM_CHILDREN = 4;
 };
 
-// The triangle vertex order changes with the Bey refinement type, so the element
-// constructor and point_order_at_level track it down the ancestor chain.
-
+/// The triangle vertex order changes with the Bey refinement type, so the element
+/// constructor and point_order_at_level track it down the ancestor chain.
 template <>
 inline levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t basecell, const t8_element_t *elem,
                                                              const t8_scheme *scheme) noexcept
@@ -43,7 +42,7 @@ inline levelmultiindex<T8_ECLASS_TRIANGLE>::levelmultiindex (size_t basecell, co
     auto tmp = order;
 
     const auto ancestor_id = scheme->element_get_ancestor_id (ECLASS, elem, l + 1);
-    t8_dtri_ancestor ((t8_dtri_t *) elem, l, &ancestor);
+    t8_dtri_ancestor (reinterpret_cast<const t8_dtri_t *> (elem), l, &ancestor);
     triangle_order::invert_order (tmp);
     const auto child_id = triangle_order::get_reference_children_order (ancestor.type, ancestor_id, tmp);
 
@@ -62,7 +61,7 @@ levelmultiindex<T8_ECLASS_TRIANGLE>::point_order_at_level (const t8_element_t *e
 
   for (auto l = 0; l < level; ++l) {
     const auto ancestor_id = scheme->element_get_ancestor_id (ECLASS, elem, l + 1);
-    t8_dtri_ancestor ((t8_dtri_t *) elem, l, &ancestor);
+    t8_dtri_ancestor (reinterpret_cast<const t8_dtri_t *> (elem), l, &ancestor);
     triangle_order::get_point_order (res, t8_dtri_type_cid_to_beyid[ancestor.type][ancestor_id]);
   }
 
