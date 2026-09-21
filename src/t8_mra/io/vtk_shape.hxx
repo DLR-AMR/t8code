@@ -25,6 +25,7 @@ struct vtk_shape;
 
 /// Per-shape specializations (defined after the primary template).
 #include "t8_mra/io/shape/cartesian.hxx"
+#include "t8_mra/io/shape/prism.hxx"
 #include "t8_mra/io/shape/triangle.hxx"
 
 #endif  // T8_ENABLE_MRA
