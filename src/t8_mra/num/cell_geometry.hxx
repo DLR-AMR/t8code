@@ -19,6 +19,7 @@ struct cell_geometry;
 
 // Per-shape specializations (defined after the primary template).
 #include "t8_mra/num/shape/cartesian.hxx"
+#include "t8_mra/num/shape/prism.hxx"
 #include "t8_mra/num/shape/triangle.hxx"
 
 #endif  // T8_ENABLE_MRA
