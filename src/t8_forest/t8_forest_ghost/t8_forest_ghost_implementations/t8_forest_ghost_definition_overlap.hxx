@@ -71,21 +71,23 @@ struct t8_forest_ghost_definition_overlap: public t8_forest_ghost_definition
 
   /** Create one layer of ghost elements for a forest.
    * \param [in,out]    forest     The forest.
-   * \return T8_SUBROUTINE_SUCCESS if successful, T8_SUBROUTINE_FAILURE if not.
+   * \return 1 on success, 0 on failure.
    * \a forest must be committed before calling this function.
    */
-  virtual bool
+  virtual int
   do_ghost (t8_forest_t forest) override;
 
  protected:
   /**
    * Compute and collect ownerships to create the necessary offset
    * for elements, trees and first descendant.
-   * Use memory_flag to record the allocation of memory.
    * If there is no uniform stretch factor, the maximum stretch factor for each process is communicated.
+   * \param [in,out] forest   The forest.
+   * \return A bitmask of \ref t8_ghost_definition_memory_flag values recording which of the
+   * offset arrays were newly allocated by this call. Has to be passed to \ref clean_up afterwards.
    * \note this function could be used in do_ghost
    */
-  void
+  int
   communicate_ownerships (t8_forest_t forest) override;
 
   /** 
@@ -128,10 +130,13 @@ struct t8_forest_ghost_definition_overlap: public t8_forest_ghost_definition
   clean_up_build_covers (t8_forest_t forest);
   /**
    * If memory was allocated for the offset array in communicate_ownerships it is released here.
-   * Use memory_flag for this.
+   * In addition the elements of the covers are destroyed.
+   * \param [in,out] forest       The forest.
+   * \param [in]     memory_flag  The bitmask returned by the matching \ref communicate_ownerships
+   * call for this \a forest.
    */
   virtual void
-  clean_up (t8_forest_t forest) override;
+  clean_up (t8_forest_t forest, int memory_flag) override;
 
   bool _has_uniform_stretch_factor = false;
 

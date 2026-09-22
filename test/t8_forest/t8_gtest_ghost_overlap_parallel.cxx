@@ -4,8 +4,8 @@
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_custom_assertion.hxx>
 
-#include <t8_eclass.h>
-#include <t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_overlap.hxx>
@@ -25,7 +25,8 @@ class forest_check_cover: public testing::TestWithParam<std::tuple<t8_eclass_t, 
     level = std::get<1> (GetParam ());
 
     /* Construct a cube coarse mesh */
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     /* Build a uniform forest */
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_standalone (), level, 0, sc_MPI_COMM_WORLD);
   }
@@ -33,7 +34,7 @@ class forest_check_cover: public testing::TestWithParam<std::tuple<t8_eclass_t, 
   TearDown () override
   {
     /** No unref of forest necessary, 
-     * becaus in the test a new forest based on this will be created */
+     * because in the test a new forest based on this will be created */
   }
 
   t8_eclass_t eclass;
@@ -94,8 +95,12 @@ TEST (gtest_ghost_overlap, overlap_ghost_supset_of_face_ghost)
   t8_eclass tree_class = T8_ECLASS_QUAD;
 
   /* Creat two identical meshes and forests. */
-  t8_cmesh_t cmesh_0 = t8_cmesh_new_hypercube (tree_class, comm, 0, 0, 0);
-  t8_cmesh_t cmesh_1 = t8_cmesh_new_hypercube (tree_class, comm, 0, 0, 0);
+  t8_cmesh_t cmesh_0;
+  t8_cmesh_t cmesh_1;
+  t8_cmesh_init (&cmesh_0);
+  t8_cmesh_init (&cmesh_1);
+  t8_cmesh_new_hypercube (&cmesh_0, tree_class, comm, 0, 0, 0);
+  t8_cmesh_new_hypercube (&cmesh_1, tree_class, comm, 0, 0, 0);
   t8_forest_t forest_overlap = t8_forest_new_uniform (cmesh_0, t8_scheme_new_standalone (), level, 0, comm);
   t8_forest_t forest_face = t8_forest_new_uniform (cmesh_1, t8_scheme_new_standalone (), level, 0, comm);
 
