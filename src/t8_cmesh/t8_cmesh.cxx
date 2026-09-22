@@ -2411,7 +2411,7 @@ t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6])
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   T8_ASSERT (num_local_trees > 0);
   double tree_bounds[6] = { 0.0 };
-  t8_geometry_handler *geom_handler = cmesh->geometry_handler;
+  detail::t8_geometry_handler *geom_handler = t8_cmesh_get_geometry_handler (cmesh);
   if (geom_handler == nullptr) {
     t8_errorf ("Error: Trying to compute bounding box for cmesh with no geometry.\n");
     return false;

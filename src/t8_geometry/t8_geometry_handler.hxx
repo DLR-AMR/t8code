@@ -345,6 +345,20 @@ struct t8_geometry_handler
   t8_refcount_t rc;
 };
 
+/** Conversion helpers to convert from C++ to C */
+inline t8_geometry_handler_c *
+t8_geom_handler_to_c (detail::t8_geometry_handler *handler)
+{
+  return reinterpret_cast<t8_geometry_handler_c *> (handler);
+}
+
+/** Conversion helpers to convert from C to C++ */
+inline detail::t8_geometry_handler *
+t8_geom_handler_from_c (t8_geometry_handler_c *handler)
+{
+  return reinterpret_cast<detail::t8_geometry_handler *> (handler);
+}
+
 }  // Namespace detail
 
 #endif /* !T8_GEOMETRY_HANDLER_HXX */
