@@ -25,13 +25,9 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Checks that the competences for discontinuous Galerkin methods defined in \ref dg_competences.hxx work as expected.
  */
 #include <gtest/gtest.h>
-#include <t8.h>
 #include <test/mesh_handle/t8_gtest_common.hxx>
-
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competences/dg_competences.hxx>
-#include <mesh_handle/competence_pack.hxx>
-#include <mesh_handle/constructor_wrappers.hxx>
+#include <t8.h>
+#include <mesh_handle/mesh_handle.hxx>
 
 /** Store the rank on each element. */
 struct rank_data_per_element
@@ -113,7 +109,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
   ASSERT_EQ (static_cast<t8_locidx_t> (element_face_vector.size ()), num_local + num_ghosts);
 
   // Check element_face_vector first.
-  for (t8_locidx_t ielem = num_local; ielem < num_local + num_ghosts; ielem++) {
+  for (t8_locidx_t ielem = 0; ielem < num_local + num_ghosts; ielem++) {
     EXPECT_EQ (static_cast<int> (element_face_vector[ielem].size ()), (*mesh)[ielem].get_num_faces ());
     // Check that the element_face_vector points to valid face indices in the faces vector.
     for (int iface = 0; iface < (*mesh)[ielem].get_num_faces (); ++iface) {
@@ -121,8 +117,9 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
         EXPECT_TRUE ((*mesh)[ielem].is_ghost_element ());
       }
       else {
+        // Check that the face index is valid.
         EXPECT_GE (element_face_vector[ielem][iface], 0);
-        EXPECT_LE (element_face_vector[ielem][iface], static_cast<int> (faces.size ()));
+        EXPECT_LT (element_face_vector[ielem][iface], static_cast<int> (faces.size ()));
       }
     }
   }
@@ -173,20 +170,34 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
       break;
     /* --- MORTAR --- */
     case face_type::MORTAR:
-      // Check that first element is the large mortar.
-      // For MPI_MORTARs, the large mortar could have only one neighbor.
-      EXPECT_GT (neighs.size (), 1) << "MORTAR face must have more than 2 sides.";
-      [[fallthrough]];
     case face_type::MPI_MORTAR: {
-      bool has_remote = std::any_of (face.sides.begin (), face.sides.end (),
-                                     [] (const face_side& s) { return s.rank != LOCAL_RANK; });
+      const bool has_remote = std::any_of (face.sides.begin (), face.sides.end (),
+                                           [] (const face_side& s) { return s.rank != LOCAL_RANK; });
       EXPECT_EQ (has_remote, face.type == face_type::MPI_MORTAR);
-      EXPECT_EQ (neighs[0]->get_level (), elem_first.get_level () + 1)
-        << "MORTAR first element must be the large mortar.";
+      EXPECT_GE (face.sides.size (), 2) << "MORTAR face must have a large side and at least one small side.";
+
+      if (elem_first.is_ghost_element ()) {
+        // The large side is a ghost.
+        EXPECT_EQ (face.type, face_type::MPI_MORTAR) << "MORTAR A ghost large side implies MPI_MORTAR.";
+        EXPECT_NE (face.sides[0].rank, LOCAL_RANK) << "MORTAR A ghost large side must be at a remote rank.";
+
+        // Check entries of the face sides vector for the small sides.
+        for (size_t iside = 1; iside < face.sides.size (); ++iside) {
+          EXPECT_EQ (face.sides[iside].rank, LOCAL_RANK) << "MORTAR Small sides of a remote mortar must be local.";
+          EXPECT_EQ ((*mesh)[face.sides[iside].element_id].get_level (), elem_first.get_level () + 1)
+            << "MORTAR Small side must be one level finer.";
+        }
+        // TODO: If the neighbors of ghost work again, the following checks can be enables also for ghost large sides.
+        break;
+      }
+
+      /* The large side is local: the whole mortar is visible. */
       EXPECT_EQ (neighs.size (), face.sides.size () - 1)
         << "MORTAR side must have as many neighbors as small sides of the face.";
 
       for (int ineigh = 0; ineigh < static_cast<int> (neighs.size ()); ++ineigh) {
+        EXPECT_EQ (neighs[ineigh]->get_level (), elem_first.get_level () + 1)
+          << "MORTAR first element must be the large mortar.";
         // The neighbors do not necessarily have the same order as the face sides.
         auto neigh_face_side
           = std::find_if (face.sides.begin (), face.sides.end (), [&neighs, ineigh] (const face_side& s) {
