@@ -49,6 +49,7 @@
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #endif
 #include <t8_data/t8_element_array_iterator.hxx>
 
@@ -3525,7 +3526,11 @@ t8_forest_commit (t8_forest_t forest)
     forest->do_ghost = 0;
   }
 #if T8_ENABLE_DEBUG
-  t8_forest_partition_test_boundary_element (forest);
+  if (!(t8_scheme_has_subelement_scheme (forest->scheme))) {
+    // This does not work for subelements as the linear id cannot be defined.
+    // It is just a test so it is fine to skip this for subelements.
+    t8_forest_partition_test_boundary_element (forest);
+  }
 #endif
 }
 
