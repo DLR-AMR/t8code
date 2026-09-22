@@ -174,7 +174,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
       const bool has_remote = std::any_of (face.sides.begin (), face.sides.end (),
                                            [] (const face_side& s) { return s.rank != LOCAL_RANK; });
       EXPECT_EQ (has_remote, face.type == face_type::MPI_MORTAR);
-      ASSERT_GE (face.sides.size (), 2) << "MORTAR face must have a large side and at least one small side.";
+      EXPECT_GE (face.sides.size (), 2) << "MORTAR face must have a large side and at least one small side.";
 
       if (elem_first.is_ghost_element ()) {
         // The large side is a ghost.
@@ -203,7 +203,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
           = std::find_if (face.sides.begin (), face.sides.end (), [&neighs, ineigh] (const face_side& s) {
               return (neighs[ineigh]->get_element_handle_id () == s.element_id);
             });
-        ASSERT_FALSE (neigh_face_side == face.sides.end ()) << "MORTAR side neighbor must be found in the face sides.";
+        EXPECT_FALSE (neigh_face_side == face.sides.end ()) << "MORTAR side neighbor must be found in the face sides.";
         EXPECT_EQ (neighs[ineigh]->get_face_neighbors (dual_faces[ineigh]).size (), 1)
           << "MORTAR side neighbor must have exactly one neighbor on this face.";
         EXPECT_EQ (dual_faces[ineigh], (*neigh_face_side).local_face_id)

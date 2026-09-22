@@ -164,7 +164,7 @@ struct face
    * - MORTAR / MPI_MORTAR: sides[0] = large side; 
    *                        sides[1..N] = small sides (in face-corner order of the large element)
    *                        For MPI_MORTAR with a remote large side, sides[1..N] are exactly the locally owned 
-   *                        small sides and N may be smaller than the number of children of the large element.
+   *                        small sides and N may be smaller than the number of face children of the large element.
    */
   std::vector<face_side> sides;
   int orientation = 0;  ///< Face orientation code for coordinate permutation.
