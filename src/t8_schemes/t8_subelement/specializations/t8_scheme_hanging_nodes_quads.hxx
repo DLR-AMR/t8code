@@ -148,9 +148,12 @@ struct t8_subelem_scheme_hanging_nodes_quad:
    * \param [in] subelement_type The subelement type used for refinement.
    * \return                     The number of subelements the quad is split into for \a subelement_type.
    */
-  static int
-  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
+  int
+  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type) const noexcept
   {
+    if (subelement_type == 0) {
+      return underlying_scheme.element_get_num_children (this->element_to_standalone (elem));
+    }
     const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     // Each original face "has" one triangular subelement, each split face two.
     return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;

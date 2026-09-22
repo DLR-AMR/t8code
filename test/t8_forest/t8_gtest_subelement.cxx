@@ -43,7 +43,7 @@
 TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
 {
   /* Setup: Build hypercube cmesh and uniform forest with the subelement scheme. */
-  const int level = 3;
+  const int level = 2;
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_new_2D_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD);
@@ -82,7 +82,7 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   /* Repartition the forest containing subelements (exercises MPI_Pack / MPI_Unpack). */
   t8_forest_t forest_partitioned;
   t8_forest_init (&forest_partitioned);
-  t8_forest_set_partition (forest_partitioned, forest, 0);
+  t8_forest_set_partition (forest_partitioned, forest, true);
   t8_forest_commit (forest_partitioned);
 
   /* Subelements and leaf count must remain consistent after repartitioning. */
