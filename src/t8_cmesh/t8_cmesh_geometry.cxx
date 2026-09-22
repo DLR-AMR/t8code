@@ -61,7 +61,7 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t
 t8_geometry_handler_c *
 t8_cmesh_get_geometry_handler_c (const t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
 
   return cmesh->geometry_handler;
 }
@@ -74,7 +74,7 @@ t8_cmesh_get_geometry_handler_c (const t8_cmesh_t cmesh)
 detail::t8_geometry_handler *
 t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
 
   return detail::t8_geom_handler_from_c (t8_cmesh_get_geometry_handler_c (cmesh));
 }
@@ -87,7 +87,7 @@ t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
 detail::t8_geometry_handler *
 t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_initialized);
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   // Check that we do not overwrite an existing handler.
   T8_ASSERT (t8_cmesh_get_geometry_handler (cmesh) == nullptr);
