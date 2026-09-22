@@ -945,6 +945,7 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
  */
 int
 t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */

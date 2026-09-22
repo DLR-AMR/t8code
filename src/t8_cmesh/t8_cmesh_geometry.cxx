@@ -27,6 +27,7 @@
 
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_internal.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_base.hxx>
@@ -87,13 +88,33 @@ t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
 detail::t8_geometry_handler *
 t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh)
 {
+  return t8_cmesh_set_geometry_handler (cmesh, nullptr);
+}
+
+
+/* Set a geometry handler or construct a new geometry_handler for a cmesh and add it to the cmesh.
+ * \param [in] cmesh      The cmesh to be considered. Does not need to be committed.
+ * \param [in] new_handler  The geometry handler to be set. If nullptr then a new handler will be allocated.
+ * \return                On success, the new geometry_handler. nullptr on failure (out of memory).
+ */
+detail::t8_geometry_handler *
+t8_cmesh_set_geometry_handler (t8_cmesh_t cmesh, detail::t8_geometry_handler *new_handler)
+{
+
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   // Check that we do not overwrite an existing handler.
   T8_ASSERT (t8_cmesh_get_geometry_handler (cmesh) == nullptr);
 
-  // Allocate a new handler, assign it, convert to C, add to cmesh and return it.
-  detail::t8_geometry_handler *new_handler = new detail::t8_geometry_handler ();
+  // If not present allocate a new handler
+  if (new_handler == nullptr) {
+    new_handler = new detail::t8_geometry_handler ();
+  }
+  else {
+    // Increase reference count of handler
+    new_handler->ref();
+  }
+  // Convert the handler to C pointer and add to cmesh
   t8_geometry_handler_c *new_handler_c = detail::t8_geom_handler_to_c (new_handler);
   return cmesh->geometry_handler = new_handler_c;
 }
