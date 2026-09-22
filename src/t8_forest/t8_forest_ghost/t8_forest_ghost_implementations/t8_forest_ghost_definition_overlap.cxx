@@ -66,15 +66,15 @@ t8_forest_ghost_definition_overlap::unable_uniform_stretch_factor ()
  * Algorithms for the pre-, postprocessing of the search and the search it self.
  */
 
-bool
+int
 t8_forest_ghost_definition_overlap::do_ghost (t8_forest_t forest)
 {
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
   if (tree_class != T8_ECLASS_QUAD && tree_class != T8_ECLASS_HEX) {
-    return T8_SUBROUTINE_FAILURE;
+    return 0;
   }
   /* communicate ownerships */
-  communicate_ownerships (forest);
+  const int memory_flag = communicate_ownerships (forest);
 
   /* build cover of all processes */
   build_all_cover (forest);
@@ -90,20 +90,21 @@ t8_forest_ghost_definition_overlap::do_ghost (t8_forest_t forest)
   communicate_ghost_elements (forest);
 
   /* clean up */
-  clean_up (forest);
+  clean_up (forest, memory_flag);
 
-  return T8_SUBROUTINE_SUCCESS;
+  return 1;
 }
 
-void
+int
 t8_forest_ghost_definition_overlap::communicate_ownerships (t8_forest_t forest)
 {
   /** Call the communicate ownership function of the base class. */
-  t8_forest_ghost_definition::communicate_ownerships (forest);
+  const int memory_flag = t8_forest_ghost_definition::communicate_ownerships (forest);
   if (!_has_uniform_stretch_factor) {
     /** Exchange also the max stretch factors of the processes, if no uniform factor is given. */
     communicate_max_stretch_factor (forest);
   }
+  return memory_flag;
 }
 
 void
@@ -151,7 +152,8 @@ t8_forest_ghost_definition_overlap::communicate_max_stretch_factor (t8_forest_t 
 }
 
 void
-t8_forest_ghost_definition_overlap::clean_up_build_covers (t8_forest_t forest){
+t8_forest_ghost_definition_overlap::clean_up_build_covers (t8_forest_t forest)
+{
   /* Clean up the build covers. */
   const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
   const t8_scheme *eclass_scheme = t8_forest_get_scheme (forest);
@@ -164,18 +166,17 @@ t8_forest_ghost_definition_overlap::clean_up_build_covers (t8_forest_t forest){
   if (_max_stretch_factors != NULL) {
     t8_shmem_array_destroy (&_max_stretch_factors);
   }
-  _list_of_covers.clear();
+  _list_of_covers.clear ();
 }
 
 void
-t8_forest_ghost_definition_overlap::clean_up (t8_forest_t forest)
+t8_forest_ghost_definition_overlap::clean_up (t8_forest_t forest, int memory_flag)
 {
   /* Clear up the same part, as in the parents class. */
-  t8_forest_ghost_definition::clean_up (forest);
+  t8_forest_ghost_definition::clean_up (forest, memory_flag);
 
   /* Clean up the build covers. */
-  clean_up_build_covers(forest);
-  
+  clean_up_build_covers (forest);
 }
 
 /**
@@ -384,11 +385,13 @@ t8_ghost_puma_recursion_last_descandance (t8_forest_t forest, const t8_eclass_t 
       eclass_scheme->element_get_nca (tree_class, last_element, children[child_index], child_last_nca);
       if (eclass_scheme->element_is_equal (tree_class, children[child_index], child_last_nca)) {
         child_found = true;
-        int max_level = eclass_scheme->get_maxlevel(tree_class);
+        int max_level = eclass_scheme->get_maxlevel (tree_class);
         // The current child is ancestors of the the last element
-        if( eclass_scheme->element_get_linear_id(tree_class, children[child_index], max_level) != lin_id_last_element){
+        if (eclass_scheme->element_get_linear_id (tree_class, children[child_index], max_level)
+            != lin_id_last_element) {
           // On max leven the lin id of the child an the last element differs.
-          t8_ghost_puma_recursion_last_descandance(forest, tree_class, eclass_scheme, last_element, lin_id_last_element, children[child_index], cover);
+          t8_ghost_puma_recursion_last_descandance (forest, tree_class, eclass_scheme, last_element,
+                                                    lin_id_last_element, children[child_index], cover);
         }
       }
     }
