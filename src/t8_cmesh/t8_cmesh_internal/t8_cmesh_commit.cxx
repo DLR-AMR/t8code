@@ -33,8 +33,8 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.h>
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_internal.hxx>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
-#include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 
 /**
@@ -571,9 +571,10 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     /* If present use the set geometry handler, otherwise take
      * over the handler from set_from. */
-    if (cmesh->geometry_handler == nullptr && cmesh->set_from->geometry_handler != nullptr) {
-      cmesh->geometry_handler = cmesh->set_from->geometry_handler;
-      cmesh->geometry_handler->ref ();
+    detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+    detail::t8_geometry_handler *geometry_handler_from = t8_cmesh_get_geometry_handler (cmesh->set_from);
+    if (geometry_handler == nullptr && geometry_handler_from != nullptr) {
+      t8_cmesh_set_geometry_handler (cmesh, geometry_handler_from);
     }
 
 #if T8_ENABLE_DEBUG

@@ -23,6 +23,7 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
+#include <t8_cmesh/t8_cmesh.hxx>
 
 void
 t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_coords, const size_t num_coords,
@@ -38,12 +39,13 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
     start_wtime = sc_MPI_Wtime ();
   }
 
-  if (cmesh->geometry_handler == nullptr) {
+  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  if (geometry_handler == nullptr) {
     SC_ABORT ("Error: Trying to evaluate non-existing geometry.\n");
   }
 
   /* Evaluate the geometry. */
-  cmesh->geometry_handler->evaluate_tree_geometry (cmesh, gtreeid, ref_coords, num_coords, out_coords);
+  geometry_handler->evaluate_tree_geometry (cmesh, gtreeid, ref_coords, num_coords, out_coords);
 
   if (cmesh->profile != nullptr) {
     /* If profiling is enabled, add the runtime to the profiling
@@ -58,21 +60,24 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
                       double *jacobian)
 {
   /* Evaluate the jacobian. */
-  cmesh->geometry_handler->evaluate_tree_geometry_jacobian (cmesh, gtreeid, ref_coords, num_coords, jacobian);
+  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  geometry_handler->evaluate_tree_geometry_jacobian (cmesh, gtreeid, ref_coords, num_coords, jacobian);
 }
 
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
-  if (cmesh->geometry_handler == nullptr) {
+  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  if (geometry_handler == nullptr) {
     return T8_GEOMETRY_TYPE_INVALID;
   }
   /* Return the type. */
-  return cmesh->geometry_handler->get_tree_geometry_type (cmesh, gtreeid);
+  return geometry_handler->get_tree_geometry_type (cmesh, gtreeid);
 }
 
 int
 t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
-  return cmesh->geometry_handler->tree_negative_volume (cmesh, gtreeid);
+  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  return geometry_handler->tree_negative_volume (cmesh, gtreeid);
 }

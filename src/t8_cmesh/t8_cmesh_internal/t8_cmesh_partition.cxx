@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
-#include <t8_geometry/t8_geometry_handler.hxx>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 
 /* Change the neighbor entry of a tree to match the new partition.
  * Input: A face_neighbor entry in cmesh_from and a process to which the corresponding tree will be send
@@ -1615,8 +1615,9 @@ t8_cmesh_partition (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   t8_cmesh_partition_given (cmesh, cmesh->set_from, tree_offsets, comm);
   /* Deactivate the active tree. Tree related data (such as vertices) might have been moved by the new partition and
    * has to be loaded again if needed. */
-  if (cmesh->geometry_handler != nullptr) {
-    cmesh->geometry_handler->deactivate_tree ();
+  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  if (geometry_handler != nullptr) {
+    geometry_handler->deactivate_tree ();
   }
   /* If profiling is enabled, we measure the runtime of this routine. */
   if (cmesh->profile) {

@@ -32,7 +32,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity_types.hxx>
-#include <t8_geometry/t8_geometry_handler.hxx>
+#include <t8_cmesh/t8_cmesh_geometry.hxx>
 
 /**
  * Compute the first element of a process in a partitioned mesh, via floor(process * global_num_elements / mpisize).
@@ -92,26 +92,6 @@ t8_cmesh_get_first_element_of_process (const uint32_t process, const uint32_t mp
   const uint64_t sum_3 = (remainder_0 * remainder_1) / mpisize_64;
 
   return (sum_0 + sum_1 + sum_2 + sum_3);
-}
-
-/**
- * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
- * @tparam geometry_type 
- * \param [in,out] cmesh The cmesh.
- * \param [in,out] args The constructor arguments of the geometry.
- * \return         A pointer to the geometry.
- */
-
-template <typename geometry_type, typename... _args>
-inline geometry_type *
-t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
-{
-  t8_geometry_handler_c *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
-  if (geometry_handler == NULL) {
-    /* The handler was not constructed, do it now. */
-    geometry_handler = new t8_geometry_handler ();
-  }
-  return geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
 }
 
 /** Get the list of global trees and local vertex ids a global vertex is connected to.

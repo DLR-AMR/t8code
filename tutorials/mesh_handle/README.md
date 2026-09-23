@@ -21,7 +21,7 @@ Create a coarse mesh, output it to vtu and destroy it. We need a coarse mesh to 
 Create a uniform mesh, get its number of local and global elements and output it to vtu.
 
 [step3] - 
-Adapt a mesh according to a user defined criterion. 
+Adapt a mesh according to a user-defined criterion. 
 
 [step4] - 
 Partitioning, balancing and creating a ghost layer for a mesh.

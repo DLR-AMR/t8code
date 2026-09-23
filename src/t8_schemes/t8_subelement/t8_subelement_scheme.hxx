@@ -345,7 +345,7 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_num_siblings (element_to_standalone (elem));
     }
-    return TSubelementSchemeSpecialization::subelement_get_num_children (elem, as_subelement (elem)->subelement_type);
+    return derived ().subelement_get_num_children (elem, as_subelement (elem)->subelement_type);
   }
 
   /** Not implemented for this scheme
@@ -396,7 +396,7 @@ struct t8_subelement_scheme_common:
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_num_children: Cannot refine a subelement into subelements.\n");
-    return TSubelementSchemeSpecialization::subelement_get_num_children (elem, subelement_type);
+    return derived ().subelement_get_num_children (elem, subelement_type);
   }
 
   /** Return the max number of children of an eclass. 
@@ -462,7 +462,7 @@ struct t8_subelement_scheme_common:
   void
   element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[], int subelem_type) const noexcept
   {
-    SC_CHECK_ABORT (length == TSubelementSchemeSpecialization::subelement_get_num_children (elem, subelem_type),
+    SC_CHECK_ABORT (length == derived ().subelement_get_num_children (elem, subelem_type),
                     "element_get_children: given length is not fitting the number of children.");
     derived ().subelement_get_children (elem, length, c, subelem_type);
   }
@@ -1059,8 +1059,7 @@ struct t8_subelement_scheme_common:
       = (subelement->subelement_type >= 1
          && subelement->subelement_type <= TSubelementSchemeSpecialization::subelement_get_number_of_valid_types ())
         && (subelement->subelement_id >= 0
-            && subelement->subelement_id
-                 < TSubelementSchemeSpecialization::subelement_get_num_children (elem, subelement->subelement_type));
+            && subelement->subelement_id < derived ().subelement_get_num_children (elem, subelement->subelement_type));
 
     return subelement_valid && element_valid;
   }

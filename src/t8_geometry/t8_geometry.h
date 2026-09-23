@@ -59,13 +59,6 @@ typedef enum t8_geometry_type {
  */
 typedef struct t8_geometry t8_geometry_c;
 
-/** This typedef holds virtual functions for the geometry handler.
- * We need it so that we can use t8_geometry_handler_c pointers in .c files
- * without them seeing the actual C++ code (and then not compiling)
- * TODO: Delete this when the cmesh is a proper cpp class.
- */
-typedef struct t8_geometry_handler t8_geometry_handler_c;
-
 /* The t8_geometry_c type must be know to cmesh.h, thus we
  * include it after the typedef. */
 #include <t8_cmesh/t8_cmesh.h>
