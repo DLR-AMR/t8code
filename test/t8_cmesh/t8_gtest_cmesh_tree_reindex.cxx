@@ -1,8 +1,6 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh.hxx>
-#include <t8_cmesh/t8_cmesh_geometry.hxx>
-#include <t8_geometry/t8_geometry_with_vertices.h>
-#include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
+#include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_tree_reindex.hxx>
 #include <t8_vtk/t8_vtk_writer.h>
 
@@ -15,82 +13,33 @@
 struct t8_test_cmesh_tree_reindex: public testing::Test
 {
  protected:
-  static constexpr std::size_t num_trees = 6;
+  static constexpr t8_gloidx_t num_trees = 6;
+  static constexpr int num_vertices = 4;
+  static constexpr int num_coords = 3 * num_vertices;
+  static constexpr int num_tet_faces = 4;
 
-  static void
-  add_tet_tree (t8_cmesh_t cmesh, const t8_gloidx_t global_tree_id, const std::array<double, 12> &vertices)
-  {
-    t8_cmesh_set_tree_class (cmesh, global_tree_id, T8_ECLASS_TET);
-    t8_cmesh_set_tree_vertices (cmesh, global_tree_id, vertices.data (), 4);
-  }
+  using vertex_array_t = std::array<double, num_coords>;
 
   void
   SetUp () override
   {
-    /*
-     * Same tetrahedral unit-cube decomposition as t8code's
-     * t8_cmesh_new_hypercube for T8_ECLASS_TET.
-     *
-     * Unit cube vertices:
-     *
-     *   0 = (0, 0, 0)
-     *   1 = (1, 0, 0)
-     *   2 = (0, 1, 0)
-     *   3 = (1, 1, 0)
-     *   4 = (0, 0, 1)
-     *   5 = (1, 0, 1)
-     *   6 = (0, 1, 1)
-     *   7 = (1, 1, 1)
-     */
-    original_vertices = { /*
-       * Tree 0: vertices 0, 1, 5, 7
-       */
-                          std::array<double, 12> { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0 },
-
-                          /*
-       * Tree 1: vertices 0, 3, 1, 7
-       */
-                          std::array<double, 12> { 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0 },
-
-                          /*
-       * Tree 2: vertices 0, 2, 3, 7
-       */
-                          std::array<double, 12> { 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0 },
-
-                          /*
-       * Tree 3: vertices 0, 6, 2, 7
-       */
-                          std::array<double, 12> { 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0 },
-
-                          /*
-       * Tree 4: vertices 0, 4, 6, 7
-       */
-                          std::array<double, 12> { 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0 },
-
-                          /*
-       * Tree 5: vertices 0, 5, 4, 7
-       */
-                          std::array<double, 12> { 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0 }
-    };
-
     t8_cmesh_init (&cmesh);
     ASSERT_NE (cmesh, nullptr);
 
-    t8_cmesh_register_geometry<t8_geometry_linear> (cmesh);
+    /*
+     * The reindex_trees flag is initialized to 1 by default.
+     * Therefore, the test cmesh will be reindexed automatically during commit.
+     */
+    ASSERT_EQ (cmesh->reindex_trees, 1);
 
-    for (t8_gloidx_t tree_id = 0; tree_id < static_cast<t8_gloidx_t> (num_trees); ++tree_id) {
-      add_tet_tree (cmesh, tree_id, original_vertices[static_cast<std::size_t> (tree_id)]);
-    }
+    t8_cmesh_init (&control_cmesh);
+    ASSERT_NE (control_cmesh, nullptr);
 
     /*
-     * Same internal face joins as t8code's tetrahedral hypercube.
+     * The control mesh uses the same hypercube example, but disables reindexing.
+     * It is used as the reference mesh with the original tree order.
      */
-    t8_cmesh_set_join (cmesh, 0, 1, 2, 1, 0);
-    t8_cmesh_set_join (cmesh, 1, 2, 2, 1, 0);
-    t8_cmesh_set_join (cmesh, 2, 3, 2, 1, 0);
-    t8_cmesh_set_join (cmesh, 3, 4, 2, 1, 0);
-    t8_cmesh_set_join (cmesh, 4, 5, 2, 1, 0);
-    t8_cmesh_set_join (cmesh, 5, 0, 2, 1, 0);
+    control_cmesh->reindex_trees = 0;
   }
 
   void
@@ -100,66 +49,117 @@ struct t8_test_cmesh_tree_reindex: public testing::Test
       t8_cmesh_unref (&cmesh);
       cmesh = nullptr;
     }
+
+    if (control_cmesh != nullptr) {
+      t8_cmesh_unref (&control_cmesh);
+      control_cmesh = nullptr;
+    }
+  }
+
+  static vertex_array_t
+  get_tree_vertices (t8_cmesh_t cmesh, const t8_locidx_t local_tree_id)
+  {
+    vertex_array_t vertices {};
+
+    double *tree_vertices = t8_cmesh_get_tree_vertices (cmesh, local_tree_id);
+    T8_ASSERT (tree_vertices != nullptr);
+
+    for (int icoord = 0; icoord < num_coords; ++icoord) {
+      vertices[icoord] = tree_vertices[icoord];
+    }
+
+    return vertices;
   }
 
   t8_cmesh_t cmesh = nullptr;
-  std::array<std::array<double, 12>, num_trees> original_vertices;
+  t8_cmesh_t control_cmesh = nullptr;
 };
 
-TEST_F (t8_test_cmesh_tree_reindex, commit_reindexes_trees_successfully_and_correctly)
+TEST_F (t8_test_cmesh_tree_reindex, hypercube_commit_reindexes_trees_successfully_and_correctly)
 {
   t8_productionf ("Test started\n");
 
   /*
-   * Build an identical uncommitted cmesh to compute the expected reindexing map.
-   * This cmesh is later committed without reindexing and written to VTK as a
-   * reference output.
+   * Construct the control cmesh from the existing t8code hypercube example.
+   * Reindexing was disabled in SetUp(), so this mesh keeps the original tree
+   * order generated by t8_cmesh_new_hypercube.
    */
-  t8_cmesh_t expected_cmesh = nullptr;
-  t8_cmesh_init (&expected_cmesh);
+  t8_cmesh_new_hypercube (&control_cmesh, T8_ECLASS_TET, sc_MPI_COMM_SELF, 0, 0, 0);
 
-  ASSERT_NE (expected_cmesh, nullptr);
-  ASSERT_FALSE (t8_cmesh_is_committed (expected_cmesh));
+  ASSERT_TRUE (t8_cmesh_is_committed (control_cmesh));
 
-  t8_cmesh_register_geometry<t8_geometry_linear> (expected_cmesh);
+  t8_cmesh_vtk_write_file (control_cmesh, "test_cmesh_tree_reindex_original");
 
-  for (t8_gloidx_t tree_id = 0; tree_id < static_cast<t8_gloidx_t> (num_trees); ++tree_id) {
-    add_tet_tree (expected_cmesh, tree_id, original_vertices[static_cast<std::size_t> (tree_id)]);
+  /*
+   * Construct the actual test cmesh from the same hypercube example.
+   * The reindex_trees flag is enabled by default, so the reindexing is executed
+   * during the commit inside t8_cmesh_new_hypercube.
+   */
+  t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_TET, sc_MPI_COMM_SELF, 0, 0, 0);
+
+  ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
+
+  t8_cmesh_vtk_write_file (cmesh, "test_cmesh_tree_reindex_reindexed");
+
+  /*
+   * The tetrahedral hypercube consists of six tetrahedral trees.
+   * Since the test uses MPI_COMM_SELF, all trees are local.
+   */
+  for (t8_gloidx_t tree_id = 0; tree_id < num_trees; ++tree_id) {
+    EXPECT_GE (t8_cmesh_get_local_id (control_cmesh, tree_id), 0);
+    EXPECT_GE (t8_cmesh_get_local_id (cmesh, tree_id), 0);
   }
 
   /*
-   * Same internal face joins as t8code's tetrahedral hypercube.
+   * Build a reference map from vertex coordinates to original tree ids.
+   * Since reindexing must not change the geometry, each reindexed tree should
+   * match exactly one tree of the control mesh.
    */
-  t8_cmesh_set_join (expected_cmesh, 0, 1, 2, 1, 0);
-  t8_cmesh_set_join (expected_cmesh, 1, 2, 2, 1, 0);
-  t8_cmesh_set_join (expected_cmesh, 2, 3, 2, 1, 0);
-  t8_cmesh_set_join (expected_cmesh, 3, 4, 2, 1, 0);
-  t8_cmesh_set_join (expected_cmesh, 4, 5, 2, 1, 0);
-  t8_cmesh_set_join (expected_cmesh, 5, 0, 2, 1, 0);
+  std::map<vertex_array_t, t8_gloidx_t> vertices_to_old_tree_id;
 
-  const std::map<t8_gloidx_t, t8_gloidx_t> expected_reindex = t8_cmesh_reindex_tree (expected_cmesh, sc_MPI_COMM_SELF);
+  for (t8_gloidx_t old_tree_id = 0; old_tree_id < num_trees; ++old_tree_id) {
+    const t8_locidx_t old_local_tree_id = t8_cmesh_get_local_id (control_cmesh, old_tree_id);
 
-  ASSERT_FALSE (t8_cmesh_is_committed (expected_cmesh));
+    ASSERT_GE (old_local_tree_id, 0);
+    EXPECT_EQ (t8_cmesh_get_global_id (control_cmesh, old_local_tree_id), old_tree_id);
+    EXPECT_EQ (t8_cmesh_get_tree_class (control_cmesh, old_local_tree_id), T8_ECLASS_TET);
+
+    const vertex_array_t vertices = get_tree_vertices (control_cmesh, old_local_tree_id);
+
+    const auto inserted = vertices_to_old_tree_id.emplace (vertices, old_tree_id);
+    ASSERT_TRUE (inserted.second) << "Duplicate vertex data in control cmesh for tree " << old_tree_id;
+  }
 
   /*
-   * Check that the computed reindexing map is a valid bijection.
+   * Reconstruct the observed reindexing map from the committed reindexed cmesh.
+   * If a tree in the reindexed cmesh has the same vertex coordinates as an old
+   * tree in the control cmesh, then this old tree was mapped to the current new
+   * tree id.
    */
-  ASSERT_EQ (expected_reindex.size (), num_trees);
-
+  std::map<t8_gloidx_t, t8_gloidx_t> observed_reindex;
   std::set<t8_gloidx_t> old_tree_ids;
   std::set<t8_gloidx_t> new_tree_ids;
 
   bool reindex_is_identity = true;
 
-  for (const auto &entry : expected_reindex) {
-    const t8_gloidx_t old_tree_id = entry.first;
-    const t8_gloidx_t new_tree_id = entry.second;
+  for (t8_gloidx_t new_tree_id = 0; new_tree_id < num_trees; ++new_tree_id) {
+    const t8_locidx_t new_local_tree_id = t8_cmesh_get_local_id (cmesh, new_tree_id);
 
-    EXPECT_GE (old_tree_id, 0);
-    EXPECT_LT (old_tree_id, static_cast<t8_gloidx_t> (num_trees));
+    ASSERT_GE (new_local_tree_id, 0);
+    EXPECT_EQ (t8_cmesh_get_global_id (cmesh, new_local_tree_id), new_tree_id);
+    EXPECT_EQ (t8_cmesh_get_tree_class (cmesh, new_local_tree_id), T8_ECLASS_TET);
 
-    EXPECT_GE (new_tree_id, 0);
-    EXPECT_LT (new_tree_id, static_cast<t8_gloidx_t> (num_trees));
+    const vertex_array_t vertices = get_tree_vertices (cmesh, new_local_tree_id);
+
+    const auto old_tree_entry = vertices_to_old_tree_id.find (vertices);
+
+    ASSERT_NE (old_tree_entry, vertices_to_old_tree_id.end ())
+      << "Could not find matching original tree for reindexed tree " << new_tree_id;
+
+    const t8_gloidx_t old_tree_id = old_tree_entry->second;
+
+    const auto inserted = observed_reindex.emplace (old_tree_id, new_tree_id);
+    ASSERT_TRUE (inserted.second) << "Old tree " << old_tree_id << " was mapped more than once.";
 
     old_tree_ids.insert (old_tree_id);
     new_tree_ids.insert (new_tree_id);
@@ -168,14 +168,18 @@ TEST_F (t8_test_cmesh_tree_reindex, commit_reindexes_trees_successfully_and_corr
       reindex_is_identity = false;
     }
 
-    t8_productionf ("Expected reindex: old global tree id %lli -> new global tree id %lli\n",
+    t8_productionf ("Observed reindex: old global tree id %lli -> new global tree id %lli\n",
                     static_cast<long long> (old_tree_id), static_cast<long long> (new_tree_id));
   }
 
-  EXPECT_EQ (old_tree_ids.size (), num_trees);
-  EXPECT_EQ (new_tree_ids.size (), num_trees);
+  /*
+   * Check that the observed reindexing is a valid bijection.
+   */
+  EXPECT_EQ (observed_reindex.size (), static_cast<std::size_t> (num_trees));
+  EXPECT_EQ (old_tree_ids.size (), static_cast<std::size_t> (num_trees));
+  EXPECT_EQ (new_tree_ids.size (), static_cast<std::size_t> (num_trees));
 
-  for (t8_gloidx_t tree_id = 0; tree_id < static_cast<t8_gloidx_t> (num_trees); ++tree_id) {
+  for (t8_gloidx_t tree_id = 0; tree_id < num_trees; ++tree_id) {
     EXPECT_EQ (old_tree_ids.count (tree_id), 1);
     EXPECT_EQ (new_tree_ids.count (tree_id), 1);
   }
@@ -183,108 +187,74 @@ TEST_F (t8_test_cmesh_tree_reindex, commit_reindexes_trees_successfully_and_corr
   t8_productionf ("Reindexing is %s\n", reindex_is_identity ? "identity" : "non-identity");
 
   /*
-   * Commit the reference cmesh without reindexing and write it to VTK.
+   * Verify that all internal face joins were updated consistently.
+   * The control cmesh gives the original connectivity. For each original join,
+   * the old tree ids are mapped to their new tree ids and the same face
+   * connection is queried in the reindexed cmesh.
    */
-  expected_cmesh->reindex_trees = 0;
+  for (t8_gloidx_t old_tree_id = 0; old_tree_id < num_trees; ++old_tree_id) {
+    const t8_locidx_t old_local_tree_id = t8_cmesh_get_local_id (control_cmesh, old_tree_id);
 
-  t8_cmesh_commit (expected_cmesh, sc_MPI_COMM_SELF);
+    ASSERT_GE (old_local_tree_id, 0);
 
-  ASSERT_TRUE (t8_cmesh_is_committed (expected_cmesh));
+    for (int face = 0; face < num_tet_faces; ++face) {
+      int old_dual_face = -1;
+      int old_orientation = -1;
 
-  t8_cmesh_vtk_write_file (expected_cmesh, "test_cmesh_tree_reindex_original");
+      const t8_locidx_t old_neighbor_local_tree_id
+        = t8_cmesh_get_face_neighbor (control_cmesh, old_local_tree_id, face, &old_dual_face, &old_orientation);
 
-  /*
-   * Now commit the actual test cmesh with reindexing enabled.
-   */
-  ASSERT_FALSE (t8_cmesh_is_committed (cmesh));
-  ASSERT_NE (cmesh->stash, nullptr);
+      if (old_neighbor_local_tree_id < 0) {
+        continue;
+      }
 
-  cmesh->reindex_trees = 1;
+      const t8_gloidx_t old_neighbor_tree_id = t8_cmesh_get_global_id (control_cmesh, old_neighbor_local_tree_id);
 
-  t8_cmesh_commit (cmesh, sc_MPI_COMM_SELF);
+      /*
+       * Check every undirected join only once.
+       */
+      if (old_tree_id > old_neighbor_tree_id) {
+        continue;
+      }
 
-  ASSERT_TRUE (t8_cmesh_is_committed (cmesh));
+      const t8_gloidx_t new_tree_id = observed_reindex.at (old_tree_id);
+      const t8_gloidx_t new_neighbor_tree_id = observed_reindex.at (old_neighbor_tree_id);
 
-  t8_cmesh_vtk_write_file (cmesh, "test_cmesh_tree_reindex_reindexed");
+      const t8_locidx_t new_local_tree_id = t8_cmesh_get_local_id (cmesh, new_tree_id);
+      const t8_locidx_t new_neighbor_local_tree_id = t8_cmesh_get_local_id (cmesh, new_neighbor_tree_id);
 
-  for (const auto &entry : expected_reindex) {
-    const t8_gloidx_t old_tree_id = entry.first;
-    const t8_gloidx_t new_tree_id = entry.second;
+      ASSERT_GE (new_local_tree_id, 0);
+      ASSERT_GE (new_neighbor_local_tree_id, 0);
 
-    const t8_locidx_t new_local_tree_id = t8_cmesh_get_local_id (cmesh, new_tree_id);
+      int new_dual_face = -1;
+      int new_orientation = -1;
 
-    ASSERT_GE (new_local_tree_id, 0);
+      const t8_locidx_t actual_neighbor_local_tree_id
+        = t8_cmesh_get_face_neighbor (cmesh, new_local_tree_id, face, &new_dual_face, &new_orientation);
 
-    EXPECT_EQ (t8_cmesh_get_global_id (cmesh, new_local_tree_id), new_tree_id);
+      ASSERT_GE (actual_neighbor_local_tree_id, 0);
 
-    EXPECT_EQ (t8_cmesh_get_tree_class (cmesh, new_local_tree_id), T8_ECLASS_TET);
+      EXPECT_EQ (t8_cmesh_get_global_id (cmesh, actual_neighbor_local_tree_id), new_neighbor_tree_id);
+      EXPECT_EQ (new_dual_face, old_dual_face);
+      EXPECT_EQ (new_orientation, old_orientation);
 
-    double *actual_vertices = t8_cmesh_get_tree_vertices (cmesh, new_local_tree_id);
+      /*
+       * Also verify the reverse direction of the join.
+       */
+      int reverse_dual_face = -1;
+      int reverse_orientation = -1;
 
-    ASSERT_NE (actual_vertices, nullptr);
+      const t8_locidx_t reverse_neighbor_local_tree_id = t8_cmesh_get_face_neighbor (
+        cmesh, new_neighbor_local_tree_id, old_dual_face, &reverse_dual_face, &reverse_orientation);
 
-    const std::array<double, 12> &expected_vertices = original_vertices[static_cast<std::size_t> (old_tree_id)];
+      ASSERT_GE (reverse_neighbor_local_tree_id, 0);
 
-    for (int icoord = 0; icoord < 12; ++icoord) {
-      EXPECT_DOUBLE_EQ (actual_vertices[icoord], expected_vertices[icoord])
-        << "Mismatch for old tree id " << old_tree_id << ", new tree id " << new_tree_id << ", coordinate index "
-        << icoord;
+      EXPECT_EQ (t8_cmesh_get_global_id (cmesh, reverse_neighbor_local_tree_id), new_tree_id);
+      EXPECT_EQ (reverse_dual_face, face);
+
+      t8_productionf ("Verified reindexed join old trees %lli-%lli -> new trees %lli-%lli\n",
+                      static_cast<long long> (old_tree_id), static_cast<long long> (old_neighbor_tree_id),
+                      static_cast<long long> (new_tree_id), static_cast<long long> (new_neighbor_tree_id));
     }
-
-    t8_productionf ("Verified old global tree id %lli -> new global tree id %lli\n",
-                    static_cast<long long> (old_tree_id), static_cast<long long> (new_tree_id));
   }
-
-  const std::array<std::array<int, 5>, 6> original_joins
-    = { std::array<int, 5> { 0, 1, 2, 1, 0 }, std::array<int, 5> { 1, 2, 2, 1, 0 },
-        std::array<int, 5> { 2, 3, 2, 1, 0 }, std::array<int, 5> { 3, 4, 2, 1, 0 },
-        std::array<int, 5> { 4, 5, 2, 1, 0 }, std::array<int, 5> { 5, 0, 2, 1, 0 } };
-
-  for (const auto &join : original_joins) {
-    const t8_gloidx_t old_tree_1 = static_cast<t8_gloidx_t> (join[0]);
-    const t8_gloidx_t old_tree_2 = static_cast<t8_gloidx_t> (join[1]);
-
-    const int face_1 = join[2];
-    const int face_2 = join[3];
-    const int expected_orientation = join[4];
-
-    const t8_gloidx_t new_tree_1 = expected_reindex.at (old_tree_1);
-    const t8_gloidx_t new_tree_2 = expected_reindex.at (old_tree_2);
-
-    const t8_locidx_t local_tree_1 = t8_cmesh_get_local_id (cmesh, new_tree_1);
-
-    const t8_locidx_t local_tree_2 = t8_cmesh_get_local_id (cmesh, new_tree_2);
-
-    ASSERT_GE (local_tree_1, 0);
-    ASSERT_GE (local_tree_2, 0);
-
-    int dual_face = -1;
-    int orientation = -1;
-
-    const t8_locidx_t neighbor_of_tree_1
-      = t8_cmesh_get_face_neighbor (cmesh, local_tree_1, face_1, &dual_face, &orientation);
-
-    ASSERT_GE (neighbor_of_tree_1, 0);
-
-    EXPECT_EQ (t8_cmesh_get_global_id (cmesh, neighbor_of_tree_1), new_tree_2);
-    EXPECT_EQ (dual_face, face_2);
-    EXPECT_EQ (orientation, expected_orientation);
-
-    dual_face = -1;
-    orientation = -1;
-
-    const t8_locidx_t neighbor_of_tree_2
-      = t8_cmesh_get_face_neighbor (cmesh, local_tree_2, face_2, &dual_face, &orientation);
-
-    ASSERT_GE (neighbor_of_tree_2, 0);
-
-    EXPECT_EQ (t8_cmesh_get_global_id (cmesh, neighbor_of_tree_2), new_tree_1);
-    EXPECT_EQ (dual_face, face_1);
-
-    t8_productionf ("Verified reindexed join old trees %lli-%lli -> new trees %lli-%lli\n",
-                    static_cast<long long> (old_tree_1), static_cast<long long> (old_tree_2),
-                    static_cast<long long> (new_tree_1), static_cast<long long> (new_tree_2));
-  }
-
-  t8_cmesh_unref (&expected_cmesh);
 }

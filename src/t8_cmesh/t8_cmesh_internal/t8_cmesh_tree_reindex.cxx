@@ -46,32 +46,13 @@
 #include <vector>
 #include <limits>
 
-//static t8_eclass_t
-//get_tree_eclass_from_stash (const t8_stash_t stash, const t8_gloidx_t global_tree_id)
-//{
-//  T8_ASSERT (stash != nullptr);
-//
-//  for (size_t iclass = 0; iclass < stash->classes.elem_count; ++iclass) {
-//    const t8_stash_class_struct_t *sclass
-//      = static_cast<const t8_stash_class_struct_t *> (sc_array_index (&stash->classes, iclass));
-//
-//    if (sclass->id == global_tree_id) {
-//      return sclass->eclass;
-//    }
-//  }
-//
-//  SC_ABORTF ("Could not find eclass for global tree %lli in stash.\n", static_cast<long long> (global_tree_id));
-//}
-
-// the data for each element. Each element has a list of particles it contains
+/* The data for each element. Each element has a list of particles it contains */
 struct element_data
 {
   std::vector<std::pair<t8_gloidx_t, t8_3D_vec>> midpoints;
 };
 
-// the forest data contains the data of the elements and a flag, which lets us know when we are finished
-// in the transfer_points function you can check, if one of the new elements contains more than one particle
-// and then you set finished to false. At the end of the loop you check the state of finished
+/* The forest data contains the data of the elements and a flag, which lets us know when we are finished */
 struct forest_data
 {
   element_data *elem_data;
@@ -79,6 +60,7 @@ struct forest_data
   int finished;
 };
 
+/* Function to create a new forest data struct */
 static forest_data *
 forest_data_new (const t8_locidx_t num_elements)
 {
@@ -95,6 +77,7 @@ forest_data_new (const t8_locidx_t num_elements)
   return data;
 }
 
+/* Function to destroy a forest data struct */
 static void
 forest_data_destroy (forest_data *data)
 {
@@ -110,6 +93,7 @@ forest_data_destroy (forest_data *data)
   T8_FREE (data);
 }
 
+/* Refinement criterion function. Refine if the element data list of center points contains more than one entry */
 static int
 t8_adapt_refine ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, const t8_locidx_t which_tree,
                  [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const t8_locidx_t lelement_id,
@@ -131,6 +115,8 @@ t8_adapt_refine ([[maybe_unused]] t8_forest_t forest, t8_forest_t forest_from, c
   return 0;
 }
 
+/* This callback transfers the midpoint data stored in the old forest to the corresponding elements in the new forest during adaptation. */
+
 static void
 transfer_points (t8_forest_t forest_old, t8_forest_t forest_new, const t8_locidx_t which_tree,
                  [[maybe_unused]] const t8_eclass_t tree_class, [[maybe_unused]] const t8_scheme *scheme,
@@ -145,8 +131,10 @@ transfer_points (t8_forest_t forest_old, t8_forest_t forest_new, const t8_locidx
     t8_locidx_t old_index = t8_forest_get_tree_element_offset (forest_old, which_tree) + first_old_element;
     t8_locidx_t new_index = t8_forest_get_tree_element_offset (forest_new, which_tree) + first_new_element;
 
+    /* Copy the data directly if the element was not refined */
     data_new->elem_data[new_index] = data_old->elem_data[old_index];
 
+    /* Continue adaptation if the element still contains multiple points */
     if (data_new->elem_data[new_index].midpoints.size () > 1) {
       data_new->finished = 0;
     }
@@ -172,6 +160,7 @@ transfer_points (t8_forest_t forest_old, t8_forest_t forest_new, const t8_locidx
       point_coords[3 * ipoint + 2] = point[2];
     }
 
+    /* Distribute the old element's points among its new child elements */
     for (int inew = 0; inew < num_new_elements; ++inew) {
       t8_locidx_t new_tree_leaf_index = first_new_element + inew;
       t8_locidx_t new_index = t8_forest_get_tree_element_offset (forest_new, which_tree) + new_tree_leaf_index;
@@ -179,12 +168,14 @@ transfer_points (t8_forest_t forest_old, t8_forest_t forest_new, const t8_locidx
       const t8_element_t *new_element
         = t8_forest_get_leaf_element_in_tree (forest_new, which_tree, new_tree_leaf_index);
 
+      /* Determine which of the old element's points lie inside the current child */
       std::vector<int> point_inside (old_element_data.midpoints.size (), 0);
 
       t8_forest_element_points_inside (forest_new, which_tree, new_element, point_coords.data (),
                                        static_cast<int> (old_element_data.midpoints.size ()), point_inside.data (),
                                        0.0f);
 
+      /* Assign each point to the first child containing it */
       for (std::size_t ipoint = 0; ipoint < old_element_data.midpoints.size (); ++ipoint) {
         if (point_inside[ipoint] && !point_was_copied[ipoint]) {
           data_new->elem_data[new_index].midpoints.push_back (old_element_data.midpoints[ipoint]);
@@ -192,6 +183,7 @@ transfer_points (t8_forest_t forest_old, t8_forest_t forest_new, const t8_locidx
         }
       }
 
+      /* Another refinement iteration is needed if multiple points remain */
       if (data_new->elem_data[new_index].midpoints.size () > 1) {
         data_new->finished = false;
       }
@@ -205,11 +197,9 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   std::map<t8_gloidx_t, t8_gloidx_t> tree_reindex;
   std::vector<double> flat_vertices;
 
-  t8_productionf ("starting tree reindexing\n");
+  t8_debugf ("starting tree reindexing\n");
   t8_stash_t original_cmesh_stash = cmesh->stash;
-  /**
-   * Iterating through all vertices of the cmesh in each tree. Store global maximum and minimum coordinates to later create the bbox cmesh, and also store tree centers all in one iteration.
-   */
+  /* Compute the bounding box and the arithmetic mean of each tree's vertices in a single iteration over the cmesh attributes */
   t8_3D_vec min_coords
     = { std::numeric_limits<double>::max (), std::numeric_limits<double>::max (), std::numeric_limits<double>::max () };
 
@@ -234,6 +224,7 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     T8_ASSERT (attr->attr_size % sizeof (double) == 0);
     T8_ASSERT (attr->attr_size % (3 * sizeof (double)) == 0);
 
+    /* Interpret the raw attribute data as an array of 3D vertices */
     const int expected_num_vertices = attr->attr_size / (3 * sizeof (double));
     const std::span<const t8_3D_vec> vertices (static_cast<const t8_3D_vec *> (attr->attr_data), expected_num_vertices);
 
@@ -241,7 +232,7 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     for (const auto &ivert : vertices) {
 
-      t8_productionf ("Coordinates are (%f, %f, %f)\n", ivert[0], ivert[1], ivert[2]);
+      t8_debugf ("Coordinates are (%f, %f, %f)\n", ivert[0], ivert[1], ivert[2]);
       for (int idim = 0; idim < 3; ++idim) {
         min_coords[idim] = std::min (min_coords[idim], ivert[idim]);
         max_coords[idim] = std::max (max_coords[idim], ivert[idim]);
@@ -255,15 +246,18 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     tree_to_center.emplace (attr->id, center);
 
-    t8_productionf ("Computed center for global tree %li: %f, %f, %.f\n", attr->id, center[0], center[1], center[2]);
+    t8_debugf ("Computed center for global tree %li: %f, %f, %.f\n", attr->id, center[0], center[1], center[2]);
   }
 
-  t8_productionf ("received local cmesh bounding box\n");
-  t8_productionf ("physical bbox bounds: x=[%.17g, %.17g], y=[%.17g, %.17g], z=[%.17g, %.17g]\n", min_coords[0],
-                  max_coords[0], min_coords[1], max_coords[1], min_coords[2], max_coords[2]);
+  t8_debugf ("received local cmesh bounding box\n");
+  t8_debugf ("physical bbox bounds: x=[%.17g, %.17g], y=[%.17g, %.17g], z=[%.17g, %.17g]\n", min_coords[0],
+             max_coords[0], min_coords[1], max_coords[1], min_coords[2], max_coords[2]);
 
+  /* Construct an auxiliary cmesh covering the bounding box of the original mesh */
   t8_cmesh_t bbox_cmesh;
   t8_cmesh_init (&bbox_cmesh);
+  /* If this feature is toggled on by default, we have to manually disable it for the bounding box cmesh, else it will result in a stack overflow */
+  bbox_cmesh->reindex_trees = 0;
 
   std::vector<double> vertices
     = { min_coords[0], min_coords[1], min_coords[2], max_coords[0], max_coords[1], max_coords[2] };
@@ -274,9 +268,10 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   const double eps = T8_PRECISION_SQRT_EPS;
 
+  /* Determine the dimension of the bounding box by counting the coordinate directions with a non-negligible extent */
   const int active_dims = (std::abs (dx) > eps) + (std::abs (dy) > eps) + (std::abs (dz) > eps);
 
-  t8_productionf ("Active Dimension %u\n", active_dims);
+  t8_debugf ("Active Dimension %u\n", active_dims);
   t8_eclass_t bbox_eclass;
 
   switch (active_dims) {
@@ -296,30 +291,31 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     SC_ABORT ("Bounding box has zero extent in all directions.\n");
   }
 
+  /* Represent the bounding box as a single axis-aligned coarse mesh tree */
   t8_cmesh_set_tree_class (bbox_cmesh, 0, bbox_eclass);
   t8_cmesh_set_tree_vertices (bbox_cmesh, 0, vertices.data (), 2);
   t8_cmesh_register_geometry<t8_geometry_linear_axis_aligned> (bbox_cmesh);
 
   t8_cmesh_commit (bbox_cmesh, comm);
 
-  t8_productionf ("Committed auxiliary bbox cmesh\n");
+  t8_debugf ("Committed auxiliary bbox cmesh\n");
 
   const int num_cmesh_trees = tree_to_center.size ();
 
-  t8_productionf ("flattened %u tree center point(s)\n", static_cast<unsigned> (num_cmesh_trees));
+  t8_debugf ("flattened %u tree center point(s)\n", static_cast<unsigned> (num_cmesh_trees));
 
+  /* Create an initially unrefined forest covering the bounding box */
   t8_forest_t bbox_forest = t8_forest_new_uniform (bbox_cmesh, t8_scheme_new_default (), 0, 0, comm);
 
-  t8_productionf ("created initial level-0 bbox forest\n");
-
-  if (!t8_forest_write_vtk (bbox_forest, "bounding_box")) {
-    t8_productionf ("Could not write VTK file for forest");
-  };
+  t8_debugf ("created initial level-0 bbox forest\n");
 
   forest_data *data = forest_data_new (t8_forest_get_local_num_leaf_elements (bbox_forest));
 
   T8_ASSERT (data->num_elements == 1);
 
+  /** Associate every original tree center with the initial bounding box element 
+   *  The original global tree ID is retained for constructing the final mapping 
+   */
   for (const auto &entry : tree_to_center) {
     const t8_gloidx_t global_tree_id = entry.first;
     const t8_3D_vec &midpoint = entry.second;
@@ -335,8 +331,9 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   int refinement_pass = 0;
 
-  t8_productionf ("starting refinement pass %i\n", refinement_pass);
+  t8_debugf ("starting refinement pass %i\n", refinement_pass);
 
+  /* Refine the auxiliary forest until no leaf contains more than one tree center */
   while (true) {
     t8_forest_t forest_adapt;
     t8_forest_init (&forest_adapt);
@@ -347,54 +344,25 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     forest_data *new_data = forest_data_new (t8_forest_get_local_num_leaf_elements (forest_adapt));
 
+    /* Redistribute tree centers from the old elements to their new children */
     t8_forest_set_user_data (forest_adapt, new_data);
     t8_forest_iterate_replace (forest_adapt, bbox_forest, transfer_points);
 
     forest_data *old_data = static_cast<forest_data *> (t8_forest_get_user_data (bbox_forest));
 
+    /* Release the previous iteration's data and replace the old forest */
     forest_data_destroy (old_data);
 
     t8_forest_unref (&bbox_forest);
 
     bbox_forest = forest_adapt;
 
+    /* Stop once every leaf contains at most one tree center */
     if (new_data->finished) {
       break;
     }
     ++refinement_pass;
   }
-
-  //  while (true) {
-  //    adapt_data.refined_any = 0;
-  //
-  //    const t8_locidx_t leaf_count_before = t8_forest_get_local_num_leaf_elements (bbox_forest);
-  //
-  //    t8_forest_t adapted_forest = t8_forest_new_adapt (bbox_forest, t8_adapt_refine,
-  //                                                      0,  // non-recursive: one refinement step per loop iteration
-  //                                                      0,  // no face ghosts
-  //                                                      &adapt_data);
-  //
-  //    bbox_forest = adapted_forest;
-  //
-  //    const t8_locidx_t leaf_count_after = t8_forest_get_local_num_leaf_elements (bbox_forest);
-  //
-  //    t8_productionf ("refinement pass %i leaf count: before=%u, after=%u, refined_any=%i\n", refinement_pass,
-  //                    static_cast<unsigned> (leaf_count_before), static_cast<unsigned> (leaf_count_after),
-  //                    adapt_data.refined_any);
-  //
-  //    if (!adapt_data.refined_any) {
-  //      t8_productionf ("refinement pass %i finished without further refinement; stopping\n", refinement_pass);
-  //      break;
-  //    }
-  //
-  //    ++refinement_pass;
-  //  }
-  //
-  //  t8_productionf ("adaptive refinement finished after %i pass(es)\n", refinement_pass + 1);
-  //  if (!t8_forest_write_vtk (bbox_forest, "bounding_box_adapted")) {
-  //    t8_productionf ("Could not write VTK file for forest");
-  //  };
-  //
 
   forest_data *final_data = static_cast<forest_data *> (t8_forest_get_user_data (bbox_forest));
 
@@ -403,9 +371,11 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
   const t8_locidx_t num_bbox_local_trees = t8_forest_get_num_local_trees (bbox_forest);
 
+  /* Traverse the final forest in its SFC order and assign consecutive indices to the original trees represented by the leaf elements */
   for (t8_locidx_t bbox_itree = 0; bbox_itree < num_bbox_local_trees; ++bbox_itree) {
     int num_leaf_elements = t8_forest_get_tree_num_leaf_elements (bbox_forest, bbox_itree);
     for (t8_locidx_t ielement = 0; ielement < num_leaf_elements; ++ielement) {
+      /* Convert the tree-local leaf index to a forest-local element index */
       const t8_locidx_t element_index = t8_forest_get_tree_element_offset (bbox_forest, bbox_itree) + ielement;
 
       const element_data &leaf_data = final_data->elem_data[element_index];
@@ -415,43 +385,45 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
       }
 
       if (leaf_data.midpoints.size () > 1) {
-        t8_productionf ("Warning: final bbox leaf still contains %lu tree centers. "
-                        "Skipping this leaf.\n",
-                        leaf_data.midpoints.size ());
+        t8_debugf ("Warning: final bbox leaf still contains %lu tree centers. "
+                   "Skipping this leaf.\n",
+                   leaf_data.midpoints.size ());
         continue;
       }
 
       const t8_gloidx_t old_tree_index = leaf_data.midpoints[0].first;
 
       if (!mapped_old_tree_ids.insert (old_tree_index).second) {
-        t8_productionf ("Warning: original tree %ld was already mapped. "
-                        "Skipping duplicate occurrence.\n",
-                        old_tree_index);
+        t8_debugf ("Warning: original tree %ld was already mapped. "
+                   "Skipping duplicate occurrence.\n",
+                   old_tree_index);
         continue;
       }
 
+      /* Map the original global tree ID to its position in the new SFC ordering */
       tree_reindex[old_tree_index] = static_cast<t8_gloidx_t> (new_tree_index);
 
-      t8_productionf ("Original tree %u -> new SFC index %u\n", static_cast<unsigned> (old_tree_index),
-                      static_cast<unsigned> (new_tree_index));
+      t8_debugf ("Original tree %u -> new SFC index %u\n", static_cast<unsigned> (old_tree_index),
+                 static_cast<unsigned> (new_tree_index));
 
       ++new_tree_index;
     }
   }
 
+  /* Verify that every original local tree was assigned a new index */
   if (tree_reindex.size () != static_cast<size_t> (num_cmesh_trees)) {
-    t8_productionf ("Warning: only mapped %u of %u local trees.\n", static_cast<unsigned> (tree_reindex.size ()),
-                    static_cast<unsigned> (num_cmesh_trees));
+    t8_debugf ("Warning: only mapped %u of %u local trees.\n", static_cast<unsigned> (tree_reindex.size ()),
+               static_cast<unsigned> (num_cmesh_trees));
   }
   else {
-    t8_productionf ("successfully mapped all %u local tree(s)\n", static_cast<unsigned> (num_cmesh_trees));
+    t8_debugf ("successfully mapped all %u local tree(s)\n", static_cast<unsigned> (num_cmesh_trees));
   }
 
   forest_data_destroy (final_data);
 
   t8_forest_unref (&bbox_forest);
 
-  t8_productionf ("tree reindexing finished\n");
+  t8_debugf ("tree reindexing finished\n");
 
   return tree_reindex;
 }
