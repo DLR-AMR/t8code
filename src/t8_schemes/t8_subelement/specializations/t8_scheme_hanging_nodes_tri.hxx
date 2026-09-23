@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_scheme_tri.hxx
+/** \file t8_scheme_hanging_nodes_tri.hxx
  * Subelement scheme specialization for triangular elements. A triangle is transitioned into
  * triangular subelements (e.g. to resolve hanging nodes). The subelement type is a binary code
  * over the triangle's three faces indicating which of them are hanging; type 0 means the element
@@ -50,14 +50,15 @@
  *
  * Please have a look at \a vertex_coords_of_subelement for the definition of the subelement ids for triangles.
  */
-struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRIANGLE, t8_subelementtri_scheme>
+struct t8_subelem_scheme_hanging_nodes_tri:
+  public t8_subelement_scheme_common<T8_ECLASS_TRIANGLE, t8_subelem_scheme_hanging_nodes_tri>
 {
  public:
   /** The recursive scheme used for the underlying (standalone) triangle elements. Whenever the
    * subelement logic is not needed, the scheme forwards to this underlying scheme. */
-  using TUnderlyingScheme = typename t8_subelement_traits<t8_subelementtri_scheme>::UnderlyingScheme;
+  using TUnderlyingScheme = typename t8_subelement_traits<t8_subelem_scheme_hanging_nodes_tri>::UnderlyingScheme;
   /** The subelement element type (an underlying element plus a subelement type and id). */
-  using TSubelementType = typename t8_subelement_traits<t8_subelementtri_scheme>::SubelementType;
+  using TSubelementType = typename t8_subelement_traits<t8_subelem_scheme_hanging_nodes_tri>::SubelementType;
 
   TUnderlyingScheme underlying_scheme {}; /**< Instance of the underlying standalone scheme. */
 
@@ -135,9 +136,12 @@ struct t8_subelementtri_scheme: public t8_subelement_scheme_common<T8_ECLASS_TRI
    * \param [in] subelement_type The subelement type used for refinement.
    * \return                     The number of subelements the triangle is split into (hanging faces + 1).
    */
-  static int
-  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type)
+  int
+  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type) const noexcept
   {
+    if (subelement_type == 0) {
+      return underlying_scheme.element_get_num_children (this->element_to_standalone (elem));
+    }
     const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     return num_hanging_faces + 1;
   }

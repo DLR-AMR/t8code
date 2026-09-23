@@ -27,6 +27,7 @@
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_adapt_callbacks.hxx>
+#include <test/t8_gtest_custom_assertion.hxx>
 
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
@@ -42,7 +43,7 @@
 TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
 {
   /* Setup: Build hypercube cmesh and uniform forest with the subelement scheme. */
-  const int level = 3;
+  const int level = 2;
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_new_2D_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD);
@@ -58,12 +59,13 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   /* Before resolving hanging nodes, subelements should not yet be introduced. */
   EXPECT_FALSE (t8_forest_has_subelements (forest));
   EXPECT_FALSE (t8_forest_is_conforming (forest));
-  const t8_gloidx_t num_leaves_adapted = t8_forest_get_global_num_leaf_elements (forest);
 
   // Check that discarding without subelements just does nothing.
-  forest = t8_forest_discard_subelements (forest);
-  EXPECT_FALSE (t8_forest_has_subelements (forest));
-  EXPECT_EQ (t8_forest_get_global_num_leaf_elements (forest), num_leaves_adapted);
+  // Introduce second forest for comparisons.
+  t8_forest_ref (forest);
+  auto forest_compare = t8_forest_discard_subelements (forest);
+  EXPECT_FALSE (t8_forest_has_subelements (forest_compare));
+  EXPECT_FOREST_EQ (forest, forest_compare);
 
   /* Remove hanging nodes by inserting subelements. The forest is already balanced as we only adapted once. */
   forest = t8_forest_remove_hanging_nodes (forest);
@@ -72,14 +74,15 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   /* Hanging node resolution must introduce subelements into the forest. */
   EXPECT_TRUE (t8_forest_has_subelements (forest));
 
-  /* Adding transition subelements must increase (or equal) the total leaf count. */
+  /* Adding transition subelements must increase the total leaf count. */
   const t8_gloidx_t num_leaves_sub = t8_forest_get_global_num_leaf_elements (forest);
+  const t8_gloidx_t num_leaves_adapted = t8_forest_get_global_num_leaf_elements (forest_compare);
   EXPECT_GT (num_leaves_sub, num_leaves_adapted);
 
   /* Repartition the forest containing subelements (exercises MPI_Pack / MPI_Unpack). */
   t8_forest_t forest_partitioned;
   t8_forest_init (&forest_partitioned);
-  t8_forest_set_partition (forest_partitioned, forest, 0);
+  t8_forest_set_partition (forest_partitioned, forest, true);
   t8_forest_commit (forest_partitioned);
 
   /* Subelements and leaf count must remain consistent after repartitioning. */
@@ -100,4 +103,5 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
 
   /* Clean up. */
   t8_forest_unref (&forest);
+  t8_forest_unref (&forest_compare);
 }

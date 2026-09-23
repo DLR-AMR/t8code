@@ -43,8 +43,8 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
-#include <t8_schemes/t8_subelement/specializations/t8_scheme_quads.hxx>
-#include <t8_schemes/t8_subelement/specializations/t8_scheme_tri.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_hanging_nodes_quads.hxx>
+#include <t8_schemes/t8_subelement/specializations/t8_scheme_hanging_nodes_tri.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
@@ -105,8 +105,8 @@ struct t8_scheme
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
                                 t8_standalone_scheme<T8_ECLASS_HEX>,
                                 /* Subelement schemes */
-                                t8_subelementquad_scheme,
-                                t8_subelementtri_scheme
+                                t8_subelem_scheme_hanging_nodes_quad,
+                                t8_subelem_scheme_hanging_nodes_tri
                                 >;
   /* clang-format on */
 
@@ -381,24 +381,23 @@ struct t8_scheme
   /** Return the number of children of an element when it is refined.
    * \param [in] tree_class         The eclass of the current tree.
    * \param [in] element            The element whose number of children is returned.
-   * \param [in] subelement_type    The subelement type used for refinement. If no type is given,
-   *                                normal refinement is assumed.
-   * \tparam TSubelementType        The type of the subelement type argument, deduced. At most one
-   *                                argument convertible to int is allowed.
+   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   *                                    For subelements, this can be the subelement type.
+   *                                    Have a look at the scheme specific functions for more details.
+   * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
    * \return            The number of children of \a element if it is to be refined.
    */
-  template <typename... TSubelementType>
-    requires (sizeof...(TSubelementType) <= 1 && (std::is_convertible_v<TSubelementType, int> && ...))
+  template <typename... TArgs>
   inline int
   element_get_num_children (const t8_eclass_t tree_class, const t8_element_t *element,
-                            TSubelementType &&...subelement_type) const
+                            TArgs &&...additional_arguments) const
   {
     return std::visit (
       [&] (auto &&scheme) -> int {
         if constexpr (requires {
-                        scheme.element_get_num_children (element, std::forward<TSubelementType> (subelement_type)...);
+                        scheme.element_get_num_children (element, std::forward<TArgs> (additional_arguments)...);
                       }) {
-          return scheme.element_get_num_children (element, std::forward<TSubelementType> (subelement_type)...);
+          return scheme.element_get_num_children (element, std::forward<TArgs> (additional_arguments)...);
         }
         else {
           SC_ABORT ("element_get_num_children is not supported by this scheme for these arguments");
@@ -495,26 +494,24 @@ struct t8_scheme
    *                      the number of children.
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
-   * \param [in] subelement_type    The subelement type used for refinement. If no type is given,
-   *                                normal refinement is assumed.
-   * \tparam TSubelementType        The type of the subelement type argument, deduced. At most one
-   *                                argument convertible to int is allowed.
+   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   *                                    For subelements, this can be the subelement type.
+   *                                    Have a look at the scheme specific functions for more details.
+   * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
    * It is valid to call this function with element = c[0].
    * \see element_get_num_children
    */
-  template <typename... TSubelementType>
-    requires (sizeof...(TSubelementType) <= 1 && (std::is_convertible_v<TSubelementType, int> && ...))
+  template <typename... TArgs>
   inline void
   element_get_children (const t8_eclass_t tree_class, const t8_element_t *element, const int length, t8_element_t *c[],
-                        TSubelementType &&...subelement_type) const
+                        TArgs &&...additional_arguments) const
   {
     std::visit (
       [&] (auto &&scheme) -> void {
         if constexpr (requires {
-                        scheme.element_get_children (element, length, c,
-                                                     std::forward<TSubelementType> (subelement_type)...);
+                        scheme.element_get_children (element, length, c, std::forward<TArgs> (additional_arguments)...);
                       }) {
-          scheme.element_get_children (element, length, c, std::forward<TSubelementType> (subelement_type)...);
+          scheme.element_get_children (element, length, c, std::forward<TArgs> (additional_arguments)...);
         }
         else {
           SC_ABORT ("element_get_children is not supported by this scheme for these arguments.");

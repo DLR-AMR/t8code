@@ -233,7 +233,11 @@ t8_forest_discard_subelements (t8_forest_t forest)
   if (!t8_forest_has_subelements (forest)) {
     return forest;
   }
-  return t8_forest_new_adapt (forest, detail::t8_discard_subelements_callback, 0, 0, NULL);
+  auto forest_discarded_subelems = t8_forest_new_adapt (forest, detail::t8_discard_subelements_callback, 0, 0, NULL);
+  SC_CHECK_ABORTF (!t8_forest_has_subelements (forest_discarded_subelems),
+                   "ERROR: Failed to discard all subelements. One possible reason for this is that you partitioned the "
+                   "forest without setting the flag partition_for_coarsening to true.");
+  return forest_discarded_subelems;
 }
 
 bool
