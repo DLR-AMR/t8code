@@ -730,7 +730,6 @@ struct t8_subelement_scheme_common:
   // ################################################____FACE NEIGHBOR____##############################################
 
   /** Compute whether a given element shares a given face with its root tree.
-   * \note This is not implemented for subelements.
    * \param [in] elem     The input element.
    * \param [in] face     A face of \a elem.
    * \return              True if \a face is a subface of the element's root element.
@@ -739,8 +738,17 @@ struct t8_subelement_scheme_common:
   int
   element_is_root_boundary (const t8_element_t *elem, const int face) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem),
-                    "element_is_root_boundary is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    if (element_is_subelement (elem)) {
+      const int parent_face = derived ().subelement_face_get_parent_face (elem, face);
+      /* The inner faces of a subelement lie inside its transition cell. */
+      if (parent_face < 0) {
+        return false;
+      }
+      /* The transition cell is the underlying quad, so the outer face is on the root boundary
+       * exactly when the corresponding face of that quad is. */
+      return derived ().underlying_scheme.element_is_root_boundary (element_to_standalone (elem), parent_face);
+    }
     return derived ().underlying_scheme.element_is_root_boundary (element_to_standalone (elem), face);
   }
 
@@ -762,7 +770,6 @@ struct t8_subelement_scheme_common:
   }
 
   /** Construct the face neighbor of a given element if this face neighbor is inside the root tree. Return 0 otherwise.
-   * \note This is not implemented for subelements.
    * \param [in] elem The element to be considered.
    * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside the root tree, this element's data 
    *                  is filled with the data of the face neighbor. Otherwise the data can be modified arbitrarily.
@@ -771,15 +778,22 @@ struct t8_subelement_scheme_common:
    *                  An arbitrary value, if the neighbor is not inside the root tree.
    * \return          True if \a neigh is inside the root tree.
    *                  False if not. In this case \a neigh's data can be arbitrary on output.
+   * \note The face neighbor is always a standalone element.
    */
   int
   element_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face,
                                     int *neigh_face) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem),
-                    "element_get_face_neighbor_inside is not implemented for subelements yet.\n");
-    return derived ().underlying_scheme.element_get_face_neighbor_inside (
+    T8_ASSERT (element_is_valid (elem));
+    if (element_is_subelement (elem)) {
+      return derived ().subelement_get_face_neighbor_inside (elem, neigh, face, neigh_face);
+    }
+    const int inside = derived ().underlying_scheme.element_get_face_neighbor_inside (
       element_to_standalone (elem), element_to_standalone (neigh), face, neigh_face);
+    /* The face neighbor of a standalone element is constructed as a standalone element, and neigh may
+     * carry stale subelement values from a previous use. */
+    unset_subelement_values (as_subelement (neigh));
+    return inside;
   }
 
   // ######################################____TREE FACE TRANSFORMATION____#############################################

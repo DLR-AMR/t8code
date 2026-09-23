@@ -241,6 +241,113 @@ struct t8_subelem_scheme_hanging_nodes_quad:
     }
   }
 
+  /** For a face of a triangular subelement, return the face of the parent quad that it is a subface
+   * of, or -1 if the face lies inside the transition cell.
+   *
+   * The faces of a subelement follow the standard triangle convention: face i is the face opposite vertex i,
+   * that is the face spanned by the two vertices other than i. 
+   * Since vertex 0 is always the centre of the transition cell (see \ref vertex_coords_of_subelement),
+   * face 0 is always the face on the boundary of the transition cell, while faces 1 and 2 are shared with two other
+   * subelements and therefore have no parent face.
+   * \param [in] elem The subelement.
+   * \param [in] face A face of \a elem.
+   * \return          The face of the parent quad that \a face is a subface of, or -1 for the inner
+   *                  faces 1 and 2.
+   */
+  int
+  subelement_face_get_parent_face (const t8_element_t *elem, const int face) const noexcept
+  {
+    T8_ASSERT (this->element_is_subelement (elem));
+    T8_ASSERT (this->element_is_valid (elem));
+    T8_ASSERT (0 <= face && face < subelement_get_num_faces (this->as_subelement (elem)));
+    /* Only face 0 lies on the boundary of the transition cell. */
+    if (face != 0) {
+      return -1;
+    }
+    return element_get_location_of_subelement (elem)[0];
+  }
+
+  /** Construct the face neighbor of a subelement, if this neighbor lies inside the root tree.
+   *
+   * Across an inner face the neighbor is a sibling of the same transition cell. Across face 0 the
+   * neighbor is the face neighbor of the parent quad, or, if that face of the parent quad is
+   * hanging, the child of this neighbor that touches the subelement's half of the face.
+   * \param [in] elem        The subelement.
+   * \param [in,out] neigh   Filled with the face neighbor if it lies inside the root tree.
+   * \param [in] face        A face of \a elem.
+   * \param [out] neigh_face The number of \a face as seen from \a neigh.
+   * \return                 True if \a neigh lies inside the root tree.
+   * \note The neighbor constructed across face 0 is always a standalone quad: the scheme cannot know
+   *       whether the neighboring element is transitioned in the forest. Determining which subelement
+   *       of a neighboring transition cell is the actual neighbor is left to the forest.
+   */
+  int
+  subelement_get_face_neighbor_inside (const t8_element_t *elem, t8_element_t *neigh, const int face,
+                                       int *neigh_face) const noexcept
+  {
+    T8_ASSERT (this->element_is_subelement (elem));
+    T8_ASSERT (this->element_is_valid (elem));
+    T8_ASSERT (0 <= face && face < subelement_get_num_faces (this->as_subelement (elem)));
+
+    const TSubelementType *subelement = this->as_subelement (elem);
+    TSubelementType *neighbor = this->as_subelement (neigh);
+
+    /* Inner face: the neighbor is a subelement sibling. Subelement ids are counted clockwise and vertices are also 
+     * counted clockwise beginning in the middle. Therefore, face 1 borders with the next subelement in
+     * clockwise order and face 2 the previous one. */
+    if (face != 0) {
+      const int num_siblings = subelement_get_num_children (elem, subelement->subelement_type);
+      /* If face 1 +1, for face 2 -1. Add the number of siblings to avoid negative results and get valid range after modulo. */
+      const int neighbor_id = (subelement->subelement_id + ((face == 1) ? 1 : -1) + num_siblings) % num_siblings;
+      // Set neighbor values.
+      underlying_scheme.element_copy (this->subelement_to_standalone (subelement),
+                                      this->subelement_to_standalone (neighbor));
+      neighbor->subelement_type = subelement->subelement_type;
+      neighbor->subelement_id = neighbor_id;
+      /* Face 1 of a subelement meets face 2 of its clockwise successor and vice versa. */
+      *neigh_face = (face == 1) ? 2 : 1;
+      T8_ASSERT (this->element_is_valid (neigh));
+      /* Siblings lie inside the parent quad and are therefore inside the root tree. */
+      return true;
+    }
+
+    /* Outer face 0. */
+    const std::array<int, 3> location = element_get_location_of_subelement (elem);
+    const int parent_face = location[0];
+    const int split = location[1];
+    const int sub_face_id = location[2];
+
+    const int inside = underlying_scheme.element_get_face_neighbor_inside (
+      this->subelement_to_standalone (subelement), this->subelement_to_standalone (neighbor), parent_face, neigh_face);
+    /* The constructed neighbor is a standalone element. */
+    this->unset_subelement_values (neighbor);
+    /* If not inside the root tree, the output can be arbitrary. 
+     * If parent face is not hanging, the neighbor is the parent quad's neighbor. */
+    if (!inside || !split) {
+      return inside;
+    }
+
+    /* The parent face is hanging, so this subelement covers only half of it and the real neighbor is
+     * the child of the same level neighbor that touches this half. Descending here gives the unique
+     * neighbor and matches the level of the subelement; the forest could not make this choice itself,
+     * since which half we occupy is part of the subelement's location.
+     * element_get_children_at_face returns the two children in order of their linear id, so the same order as the 
+     * clockwise order of subelements for faces 0 (left) and 3 (top) but reverse order for face 1 (right) and 2 (bottom). 
+     */
+    const int face_child = (parent_face == 0 || parent_face == 3) ? sub_face_id : 1 - sub_face_id;
+
+    TSubelementType face_children[2];
+    t8_element_t *face_children_ptrs[2]
+      = { this->subelement_to_standalone (&face_children[0]), this->subelement_to_standalone (&face_children[1]) };
+    underlying_scheme.element_init (1, face_children_ptrs[0]);
+    underlying_scheme.element_init (1, face_children_ptrs[1]);
+    underlying_scheme.element_get_children_at_face (this->subelement_to_standalone (neighbor), *neigh_face,
+                                                    face_children_ptrs, 2, NULL);
+    underlying_scheme.element_copy (face_children_ptrs[face_child], this->subelement_to_standalone (neighbor));
+    T8_ASSERT (this->element_is_valid (neigh));
+    return true;
+  }
+
  private:
   /** Check whether a given face of the parent quad is hanging (and therefore split in half).
    * \param [in] subelem_type  The subelement type (binary code over the faces, order is (f0 ,..., f_{numfaces-1})).

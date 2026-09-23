@@ -132,7 +132,7 @@ TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
     }
   }
   // Expect to have subelements.
-  //EXPECT_GT (num_subelements, 0);
+  EXPECT_GT (num_subelements, 0);
 
   t8_forest_unref (&forest);
 }

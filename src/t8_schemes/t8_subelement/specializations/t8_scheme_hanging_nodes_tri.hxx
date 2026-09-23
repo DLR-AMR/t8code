@@ -216,6 +216,31 @@ struct t8_subelem_scheme_hanging_nodes_tri:
     }
   }
 
+  /** TODO */
+  int
+  subelement_face_get_parent_face ([[maybe_unused]] const t8_element_t *elem,
+                                   [[maybe_unused]] const int face) const noexcept
+  {
+    // T8_ASSERT (this->element_is_subelement (elem));
+    // T8_ASSERT (this->element_is_valid (elem));
+    // T8_ASSERT (0 <= face && face < subelement_get_num_faces(elem));
+    // /* Only face 0 lies on the boundary of the transition cell. */
+    // if (face != 0) {
+    //   return -1;
+    // }
+    // return element_get_location_of_subelement (elem)[0];
+    return -1;
+  }
+
+  /** TODO
+   */
+  int
+  subelement_get_face_neighbor_inside ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *neigh,
+                                       [[maybe_unused]] const int face, [[maybe_unused]] int *neigh_face) const noexcept
+  {
+    return 1;
+  }
+
  private:
   /** Check whether a given face of the parent triangle is hanging.
    * \param [in] subelem_type  The subelement type (binary code over the faces, f0 is the most significant bit).
