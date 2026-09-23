@@ -99,8 +99,7 @@ t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh)
 detail::t8_geometry_handler *
 t8_cmesh_set_geometry_handler (t8_cmesh_t cmesh, detail::t8_geometry_handler *new_handler)
 {
-
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
 
   // Check that we do not overwrite an existing handler.
   T8_ASSERT (t8_cmesh_get_geometry_handler (cmesh) == nullptr);
