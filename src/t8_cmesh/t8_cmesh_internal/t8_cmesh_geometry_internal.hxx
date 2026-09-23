@@ -29,7 +29,7 @@
 #include <t8_geometry/t8_geometry_handler.hxx>
 
 /** Set a geometry handler or construct a new geometry_handler for a cmesh and add it to the cmesh.
- * \param [in] cmesh      The cmesh to be considered. Does not need to be committed.
+ * \param [in] cmesh      The cmesh to be considered. Must be initialized. Does not need to be committed.
  * \param [in] new_handler  The geometry handler to be set. If nullptr then a new handler will be allocated.
  * \return                On success, the new geometry_handler. nullptr on failure (out of memory).
  */
