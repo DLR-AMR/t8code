@@ -70,7 +70,7 @@ typedef struct t8_cghost *t8_cghost_t;
 
 namespace detail
 {
-class t8_geometry_handler;
+struct t8_geometry_handler;
 }
 typedef struct detail::t8_geometry_handler t8_geometry_handler_c;
 
