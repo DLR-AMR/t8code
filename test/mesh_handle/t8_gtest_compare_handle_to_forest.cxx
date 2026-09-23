@@ -50,6 +50,7 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
 
   const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
   EXPECT_EQ (mesh.get_num_local_elements (), t8_forest_get_local_num_leaf_elements (forest));
+  EXPECT_EQ (mesh.get_num_global_elements (), t8_forest_get_global_num_leaf_elements (forest));
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
   EXPECT_EQ (mesh.get_dimension (), t8_forest_get_dimension (forest));
 

@@ -633,7 +633,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
    * \note level 0 elements do not form a family.
    */
   inline int
-  elements_are_family (t8_element_t *const *fam) const
+  elements_are_family (const t8_element_t *const *fam) const
   {
 #if T8_ENABLE_DEBUG
     const int num_siblings = element_get_num_siblings (fam[0]);
@@ -645,7 +645,7 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     if (element_get_level (fam[0]) == 0)
       return 1;
 
-    multilevel_element *const *fam_m = (multilevel_element *const *) fam;
+    const multilevel_element *const *fam_m = (const multilevel_element *const *) fam;
 
     /* The first element should be parent of the other elements. */
     linear_element parent;

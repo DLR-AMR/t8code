@@ -214,6 +214,14 @@ t8_cmesh_new_hypercube_pad_ext (t8_cmesh_t cmesh, const t8_eclass_t eclass, sc_M
 void
 t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic);
 
+/** Construct a unit square of two quads and four triangles.
+ * \param [in,out] cmesh    An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
+ *                          Filled and committed in place.
+ * \param [in] comm         The mpi communicator to use.
+ */
+void
+t8_cmesh_new_2D_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+
 /** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?
  * Hypercube?
@@ -393,7 +401,7 @@ t8_cmesh_new_hybrid_gate (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void
 t8_cmesh_new_hybrid_gate_deformed (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
-/** Construct a full hybrig cmesh, with 1 hex, 1 pyra, 1 prism and 1 tet
+/** Construct a full hybrid cmesh, with 1 hex, 1 pyra, 1 prism and 1 tet
  * This cmesh is used for testing and debugging.
  * \param [in,out] cmesh   An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
  *                         Filled and committed (replicated) in place with 4 trees.

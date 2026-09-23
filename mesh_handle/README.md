@@ -6,6 +6,9 @@ Some application codes are designed for unstructured or uniform meshes and canno
 
 If you want to use the handle, note that is has its own library. Turn the option `T8CODE_BUILD_MESH_HANDLE` to `ON` and link against the target `T8_MESH_HANDLE` in addition to the usual t8code target please.
 
+You can include the convenience header [mesh_handle.hxx](mesh_handle.hxx) that includes the complete set of public 
+headers of the mesh handle.
+
 The folder's most important files are: 
 - The [mesh.hxx](mesh.hxx) defines the mesh of the handle. This is the central file of the mesh handle. 
 - The [constructor_wrappers.hxx](constructor_wrappers.hxx) allows to define a mesh handle using a cmesh instead of a forest and provides a very small number of examples where the user needs no cmesh.
