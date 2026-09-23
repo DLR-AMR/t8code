@@ -64,6 +64,13 @@
  * Test fixture for the cmesh boundary condition module. It applies boundary conditions
  * to single tree cmeshes in accordance to their face number.
  */
+
+/** Variable for setting hex boundary conditions. */
+constexpr std::array<std::string_view, 6> single_hex_bcs = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
+
+/** C Version of \ref single_hex_bcs. */
+const char *single_hex_bcs_c[6] = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
+
 struct t8_cmesh_single_tree_bc: public testing::TestWithParam<t8_eclass>
 {
  protected:
@@ -71,7 +78,7 @@ struct t8_cmesh_single_tree_bc: public testing::TestWithParam<t8_eclass>
   SetUp () override
   {
     eclass = GetParam ();
-    boundary_conditions = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
+    boundary_conditions = single_hex_bcs;
     boundary_conditions.resize (static_cast<size_t> (t8_eclass_num_faces[eclass]));
     t8_cmesh_init (&cmesh);
     t8_cmesh_set_tree_class (cmesh, 0, eclass);
@@ -85,7 +92,7 @@ struct t8_cmesh_single_tree_bc: public testing::TestWithParam<t8_eclass>
     t8_cmesh_unref (&cmesh);
   }
 
-  t8_boundary_conditions<std::string> boundary_conditions;
+  t8_boundary_conditions<std::string_view> boundary_conditions;
   t8_cmesh_t cmesh;
   t8_eclass eclass;
 };
@@ -243,14 +250,30 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_hybrid_hypercube_boundary_conditi
 TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
 {
   /* Create a cmesh with one hex and apply boundary conditions */
-  const char *boundary_conditions[6] = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-  t8_cmesh_set_boundary_conditions (cmesh, 0, boundary_conditions, 6);
+  t8_cmesh_set_boundary_conditions (cmesh, 0, single_hex_bcs_c, 6);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  /* Only check if the cmesh tree is local to our process. */
+  /* Check if the cmesh tree is local to our process. */
+  ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), 1);
+  /* Some variables for retrieving and checking the boundary conditions. */
+  const char *retrieved_boundary_conditions[6];
+  const char *retrieved_single_boundary_condition;
+  size_t length = 0;
+
+  /* Retrieve boundary conditions via t8_cmesh_get_boundary_conditions and t8_cmesh_get_boundary_condition() and check them. */
+  t8_cmesh_get_boundary_conditions (cmesh, 0, retrieved_boundary_conditions, &length);
+  for (size_t i_boundary_condition = 0; i_boundary_condition < length; ++i_boundary_condition) {
+    /* Check t8_cmesh_get_boundary_conditions */
+    EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+
+    /* Check t8_cmesh_get_boundary_condition */
+    t8_cmesh_get_boundary_condition (cmesh, 0, i_boundary_condition, &retrieved_single_boundary_condition);
+    EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_single_boundary_condition);
+  }
+
   if (t8_cmesh_get_num_local_trees (cmesh)) {
     /* Some variables for retrieving and checking the boundary conditions. */
     const char *retrieved_boundary_conditions[6];
@@ -261,11 +284,11 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
     t8_cmesh_get_boundary_conditions (cmesh, 0, retrieved_boundary_conditions, &length);
     for (size_t i_boundary_condition = 0; i_boundary_condition < length; ++i_boundary_condition) {
       /* Check t8_cmesh_get_boundary_conditions */
-      EXPECT_STREQ (boundary_conditions[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+      EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
 
       /* Check t8_cmesh_get_boundary_condition */
       t8_cmesh_get_boundary_condition (cmesh, 0, i_boundary_condition, &retrieved_single_boundary_condition);
-      EXPECT_STREQ (boundary_conditions[i_boundary_condition], retrieved_single_boundary_condition);
+      EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_single_boundary_condition);
     }
   }
 
@@ -315,12 +338,226 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
           ASSERT_TRUE (retrieved_boundary_conditions[iface] != nullptr);
           ASSERT_TRUE (retrieved_single_boundary_condition != nullptr);
 
-          EXPECT_STREQ (retrieved_boundary_conditions[iface], boundary_conditions[iface]);
-          EXPECT_STREQ (retrieved_single_boundary_condition, boundary_conditions[iface]);
+          EXPECT_STREQ (retrieved_boundary_conditions[iface], single_hex_bcs_c[iface]);
+          EXPECT_STREQ (retrieved_single_boundary_condition, single_hex_bcs_c[iface]);
         }
       }
     }
   }
 
   t8_forest_unref (&forest);
+}
+
+/**
+ * Checks if the registered boundary conditions of the \a handler match with some \a testing_conditions.
+ * \param [in]  handler             The handler to check.
+ * \param [in]  testing_conditions  The conditions which should be registered in \a handler.
+ */
+static void
+check_boundary_conditions (detail::t8_cmesh_boundary_condition_handler &handler,
+                           std::vector<std::string> testing_conditions)
+{
+  auto retrieved_conditions = handler.get_registered_boundary_conditions ();
+  ASSERT_EQ (retrieved_conditions.size (), testing_conditions.size ());
+
+  std::ranges::sort (retrieved_conditions);
+  std::ranges::sort (testing_conditions);
+  for (size_t i_bc = 0; i_bc < retrieved_conditions.size (); ++i_bc) {
+    EXPECT_EQ (retrieved_conditions[i_bc], testing_conditions[i_bc]);
+  }
+}
+
+/**
+ * This test registers boundary conditions on rank 0 and broadcasts them to the other ranks.
+ * In the end we check, if every rank hast the boundary conditions.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_broadcast)
+{
+  /* Get MPI info. */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int rank;
+  sc_MPI_Comm_rank (comm, &rank);
+
+  /* We create the same vector with 20 boundary conditions on each rank. */
+  std::vector<std::string> testing_boundary_conditions;
+  size_t num_boundary_conditions = 20;
+  testing_boundary_conditions.reserve (num_boundary_conditions);
+  for (size_t i_bc = 0; i_bc < num_boundary_conditions; ++i_bc) {
+    testing_boundary_conditions.emplace_back ("testing_boundary_condition_" + std::to_string (i_bc));
+  }
+
+  /* We create a handler and register the boundary conditions only on rank 0. */
+  detail::t8_cmesh_boundary_condition_handler handler (nullptr);
+  if (rank == 0) {
+    for (const auto &boundary_condition : testing_boundary_conditions) {
+      handler.register_boundary_condition (boundary_condition);
+    }
+  }
+
+  /* Broadcast the conditions. */
+  handler.bcast (0, comm);
+
+  /* Check if every rank has all conditions. */
+  check_boundary_conditions (handler, testing_boundary_conditions);
+}
+
+/**
+ * This test creates boundary conditions for each rank.
+ * Then we synchronize all bcs and check that all boundary conditions are available
+ * on all ranks.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_synchronize)
+{
+  /* Get MPI info */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int rank, mpisize;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &mpisize);
+
+  /* Create the boundary conditions.
+   * For each rank, we create 6 bcs.
+   * The last rank gets no boundary conditions as a special testing case.
+   * Each rank gets his own 6 boundary conditions as well as 2 boundary conditions
+   * of the next rank. This way each rank (except the first, last and second to last)
+   * has 2 shared bcs with rank - 1, 2 unique bcs and 2 shared bcs with rank + 1.
+   * Rank 0 and mpisize - 2 have 4 unique bcs and 2 shared ones (if there are more than 2 ranks).
+   * Rank mpisize - 1 has no boundary conditions. */
+  std::vector<std::string> testing_boundary_conditions;
+  const size_t num_boundary_conditions_per_rank = 6;
+  /* Since the last rank gets no bcs we use mpisize - 1 and since every rank gets 2 additional bcs we also add 2. */
+  size_t num_boundary_conditions = (mpisize - 1) * num_boundary_conditions_per_rank + 2;
+  /* If we are serial we just apply 6 boundary conditions. */
+  if (mpisize == 1)
+    num_boundary_conditions = num_boundary_conditions_per_rank;
+  testing_boundary_conditions.reserve (num_boundary_conditions);
+  for (size_t i_bc = 0; i_bc < num_boundary_conditions; ++i_bc) {
+    testing_boundary_conditions.emplace_back ("testing_boundary_condition_" + std::to_string (i_bc));
+  }
+
+  /* Assign all bcs. */
+  detail::t8_cmesh_boundary_condition_handler handler (nullptr);
+  size_t bc_min = rank * num_boundary_conditions_per_rank;
+  size_t bc_max = (rank + 1) * num_boundary_conditions_per_rank + 2;
+  if (mpisize == 1)
+    bc_max = num_boundary_conditions_per_rank;
+  /* All ranks except the last one assign bcs. */
+  if (rank != mpisize - 1 || mpisize == 1) {
+    for (size_t i_bc = bc_min; i_bc < bc_max; ++i_bc) {
+      handler.register_boundary_condition (testing_boundary_conditions[i_bc]);
+    }
+  }
+
+  /* Synchronize the conditions. */
+  handler.synchronize (comm);
+
+  /* Check if every rank has all conditions. */
+  check_boundary_conditions (handler, testing_boundary_conditions);
+}
+
+/**
+ * We create a cmesh on one rank and broadcast it. The bcs should be available on all ranks.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_broadcasted_cmesh)
+{
+  /* Get MPI info */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int rank, mpisize;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &mpisize);
+
+  /* Create cmesh and apply boundary conditions just on rank 0. */
+  const t8_boundary_conditions<std::string> boundary_conditions = { "bc_0", "bc_1", "bc_2", "bc_3", "bc_4", "bc_5" };
+  t8_cmesh_t cmesh = NULL;
+  if (rank == 0) {
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
+    t8_cmesh_set_boundary_conditions (cmesh, 0, boundary_conditions);
+  }
+  cmesh = t8_cmesh_bcast (cmesh, 0, comm);
+  t8_cmesh_commit (cmesh, comm);
+
+  ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), 1);
+  /* Retrieve and test boundary conditions on all ranks. */
+  const auto retrieved_boundary_conditions = t8_cmesh_get_boundary_conditions (cmesh, 0);
+  ASSERT_EQ (retrieved_boundary_conditions.size (), single_hex_bcs.size ());
+  for (size_t i_boundary_condition = 0; i_boundary_condition < single_hex_bcs.size (); ++i_boundary_condition) {
+    /* Check t8_cmesh_get_boundary_conditions */
+    EXPECT_EQ (single_hex_bcs[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
+  }
+  t8_cmesh_destroy (&cmesh);
+}
+
+/**
+ * We create a distributed cmesh on multiple ranks. The bcs are distributed as well.
+ * After committing, the boundary conditions should be available on every rank.
+ */
+TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_distributed_cmesh)
+{
+  /* Get MPI info */
+  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+  int rank, mpisize;
+  sc_MPI_Comm_rank (comm, &rank);
+  sc_MPI_Comm_size (comm, &mpisize);
+
+  /* The three boundary conditions test three things:
+   * 1. test_boundary_condition is equal on every rank and should not be duplicated.
+   * 2. tree_id: gtreeid is unique to each process and tree and should be available everywhere afterwards.
+   * 3. rank: rank is unique to each rank an tests, that every rank contributed his part. */
+  const t8_boundary_conditions<std::string> boundary_conditions
+    = { "test_boundary_condition", "tree_id: ", "rank: " + std::to_string (rank) };
+
+  /* Every rank gets 5 trees except the last one, which gets 0.
+   * If there is only one rank, it still gets 5 trees. */
+  constexpr size_t num_trees_per_rank = 5;
+  t8_gloidx_t min_tree_id;
+  t8_gloidx_t max_tree_id;
+  if (mpisize == 1 || rank != mpisize - 1) {
+    min_tree_id = rank * num_trees_per_rank;
+    max_tree_id = (rank + 1) * num_trees_per_rank - 1;
+  }
+  else {
+    min_tree_id = 1; /* min tree id has to be bigger than max tree id for t8_cmesh_set_partition_range */
+    max_tree_id = 0;
+  }
+
+  /* Create the distributed cmesh. */
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_set_dimension (cmesh, 2);
+  for (t8_gloidx_t itree = min_tree_id; itree <= max_tree_id; ++itree) {
+    t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_TRIANGLE);
+    auto current_bcs = boundary_conditions;
+    current_bcs[1] += std::to_string (itree);
+    t8_cmesh_set_boundary_conditions (cmesh, itree, current_bcs);
+  }
+  t8_cmesh_set_partition_range (cmesh, 3, min_tree_id, max_tree_id);
+  t8_cmesh_commit (cmesh, comm);
+
+  /* Retrieve boundary conditions and compute how many there should be. */
+  auto registered_boundary_conditions
+    = t8_cmesh_get_boundary_condition_handler (cmesh)->get_registered_boundary_conditions ();
+  std::ranges::sort (registered_boundary_conditions);
+  const t8_gloidx_t num_trees_in_boundary_conditions
+    = mpisize == 1 ? num_trees_per_rank : (mpisize - 1) * num_trees_per_rank;
+  const t8_gloidx_t num_ranks_in_boundary_conditions = mpisize == 1 ? 1 : mpisize - 1;
+
+  /* Check the common boundary condition. */
+  ASSERT_FALSE (std::find (registered_boundary_conditions.begin (), registered_boundary_conditions.end (),
+                           "test_boundary_condition")
+                == registered_boundary_conditions.end ());
+
+  /* Check that all bcs from all ranks (except the last one) are there. */
+  for (int irank = 0; irank < num_ranks_in_boundary_conditions; ++irank) {
+    ASSERT_FALSE (std::find (registered_boundary_conditions.begin (), registered_boundary_conditions.end (),
+                             "rank: " + std::to_string (irank))
+                  == registered_boundary_conditions.end ());
+  }
+
+  /* Check that all tree id bcs are there. */
+  for (int itree = 0; itree < num_trees_in_boundary_conditions; ++itree) {
+    ASSERT_FALSE (std::find (registered_boundary_conditions.begin (), registered_boundary_conditions.end (),
+                             "tree_id: " + std::to_string (itree))
+                  == registered_boundary_conditions.end ());
+  }
+  t8_cmesh_destroy (&cmesh);
 }
