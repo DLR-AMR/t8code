@@ -112,7 +112,7 @@ t8_cmesh_set_geometry_handler (t8_cmesh_t cmesh, detail::t8_geometry_handler *ne
   }
   else {
     // Increase reference count of handler
-    new_handler->ref();
+    new_handler->ref ();
   }
   // Convert the handler to C pointer and add to cmesh
   t8_geometry_handler_c *new_handler_c = detail::t8_geom_handler_to_c (new_handler);
