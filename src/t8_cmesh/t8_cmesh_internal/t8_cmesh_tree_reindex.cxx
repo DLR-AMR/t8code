@@ -46,18 +46,19 @@
 #include <vector>
 #include <limits>
 
-/* The data for each element. Each element has a list of particles it contains */
+/** The data for each element. Each element has a list of particles it contains */
 struct element_data
 {
-  std::vector<std::pair<t8_gloidx_t, t8_3D_vec>> midpoints;
+  std::vector<std::pair<t8_gloidx_t, t8_3D_vec>>
+    midpoints; /**< Vector of pairs containing the original global tree ID and its center coordinates. */
 };
 
-/* The forest data contains the data of the elements and a flag, which lets us know when we are finished */
+/** The forest data contains the data of the elements and a flag, which lets us know when we are finished */
 struct forest_data
 {
-  element_data *elem_data;
-  t8_locidx_t num_elements;
-  int finished;
+  element_data *elem_data;  /**< Array containing the data associated with each forest-local element */
+  t8_locidx_t num_elements; /**< Number of elements stored in elem_data */
+  int finished; /**< Flag indicating whether refinement is complete (1) or further refinement is required (0) */
 };
 
 /* Function to create a new forest data struct */
