@@ -35,7 +35,7 @@
 #include <unordered_map>
 
 // Soft protection against misusage.
-// We need to exposte the geometry handler interface, but we do not want users to manipulate it
+// We need to expose the geometry handler interface, but we do not want users to manipulate it
 // if they do not know what they do. Thus, we use the "detail" namespace as a psychological protection.
 namespace detail
 {
