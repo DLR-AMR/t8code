@@ -114,6 +114,7 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
       /* We retrieve the geometry information of the tree.
        * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
       const int geom_dim = element_dim == 3 ? 2 : 1;
+      const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest_from);
       const int *linked_geometries = t8_geometry_cad::get_tree_geometries (cmesh, cmesh_ltreeid, geom_dim);
 
       /* If the tree face has a linked surface and it is in the list we refine it */
