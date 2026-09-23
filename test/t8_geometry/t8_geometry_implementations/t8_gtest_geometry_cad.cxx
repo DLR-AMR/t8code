@@ -215,14 +215,20 @@ t8_create_cad_hypercube ([[maybe_unused]] double *rot_vec, [[maybe_unused]] int 
   if (face >= 0) {
     faces[face] = 1;
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_surface_shape_x_z ());
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
-                            parameters, 8 * sizeof (double), 0);
+    const int param_dim = 2;
+    const int param_index = face;
+    const int num_params = 8;
+
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, parameters, num_params);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
-                            parameters, 2 * sizeof (double), 0);
+    const int param_dim = 1;
+    const int param_index = edge;
+    const int num_params = 2;
+
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, parameters, num_params);
   }
   else {
     /* Even if we do not want to link any geometry to the edges or faces,
@@ -231,8 +237,12 @@ t8_create_cad_hypercube ([[maybe_unused]] double *rot_vec, [[maybe_unused]] int 
      * link the curve to any edge. */
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
   }
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int), 0);
+  const int face_dim = 2;
+  const int num_faces = 6;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, face_dim, faces, num_faces);
+  const int edge_dim = 1;
+  const int num_edges = 24;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, edge_dim, edges, num_edges);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
 }
@@ -408,14 +418,21 @@ t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edg
   if (face >= 0) {
     faces[face] = 1;
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_surface_shape_x_z ());
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
-                            parameters, 6 * sizeof (double), 0);
+
+    const int param_dim = 2;
+    const int param_index = face;
+    const int num_params = 6;
+
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, parameters, num_params);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
-                            parameters, 2 * sizeof (double), 0);
+    const int param_dim = 1;
+    const int param_index = edge;
+    const int num_params = 2;
+
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, parameters, num_params);
   }
   else {
     /* Even if we do not want to link any geometry to the edges or faces,
@@ -424,8 +441,13 @@ t8_create_cad_reference_tet ([[maybe_unused]] int face, [[maybe_unused]] int edg
      * link the curve to any edge. */
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
   }
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 4 * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 12 * sizeof (int), 0);
+  const int face_dim = 2;
+  const int num_faces = 4;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, face_dim, faces, num_faces);
+  const int edge_dim = 1;
+  const int num_edges = 12;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, edge_dim, edges, num_edges);
+
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
 }
@@ -651,14 +673,20 @@ TEST_P (class_2d_element_cad_curve, t8_check_2d_element_cad_curve)
       cmesh, 0, (eclass == T8_ECLASS_QUAD ? vertices_quad + orientation : vertices_tri + orientation), num_vertices);
 
     /* Passing of the attributes to the element */
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces.data (),
-                            sizeof (int), 0);
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges.data (),
-                            2 * num_vertices * sizeof (int), 0);
-    t8_cmesh_set_attribute (
-      cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + linked_edge,
-      (eclass == T8_ECLASS_QUAD ? (params_quad + 2 * i_orientation) : (params_tri + 2 * i_orientation)),
-      2 * sizeof (double), 0);
+    const int face_dim = 2;
+    const int num_faces = 1;
+    t8_geometry_cad::set_tree_geometries (cmesh, 0, face_dim, faces.data (), num_faces);
+    const int edge_dim = 1;
+    const int num_edges = 2 * num_vertices;
+    t8_geometry_cad::set_tree_geometries (cmesh, 0, edge_dim, edges.data (), num_edges);
+
+    const int param_dim = 1;
+    const int param_index = linked_edge;
+    const int num_params = 2;
+    const double *params
+      = (eclass == T8_ECLASS_QUAD ? (params_quad + 2 * i_orientation) : (params_tri + 2 * i_orientation));
+
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, params, num_params);
 
     /* Commit the cmesh */
     t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
@@ -760,11 +788,19 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
   double params_tri[6] = { 0, 1, 1, 1, 1, 0 };
 
   /* Passing of the attributes to the element */
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges,
-                          2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY,
-                          (eclass == T8_ECLASS_QUAD ? params_quad : params_tri), 2 * num_vertices * sizeof (double), 0);
+  const int face_dim = 2;
+  const int num_faces = 1;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, face_dim, faces, num_faces);
+  const int edge_dim = 1;
+  const int num_edges = 2 * num_vertices;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, edge_dim, edges, num_edges);
+
+  const int param_dim = 2;
+  const int param_index = 0;
+  const int num_params = 2 * num_vertices;
+  const double *params = (eclass == T8_ECLASS_QUAD ? params_quad : params_tri);
+
+  t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, params, num_params);
 
   /* Register the geometry */
   t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, shape);
@@ -873,11 +909,19 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
   double params_tri[6] = { 0, 1, 1, 1, 1, 0 };
 
   /* Passing of the attributes to the element */
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges,
-                          2 * num_vertices * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY,
-                          (eclass == T8_ECLASS_QUAD ? params_quad : params_tri), 2 * num_vertices * sizeof (double), 0);
+  const int face_dim = 2;
+  const int num_faces = 1;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, face_dim, faces, num_faces);
+  const int edge_dim = 1;
+  const int num_edges = 2 * num_vertices;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, edge_dim, edges, num_edges);
+
+  const int param_dim = 2;
+  const int param_index = 0;
+  const int num_params = 2 * num_vertices;
+  const double *params = (eclass == T8_ECLASS_QUAD ? params_quad : params_tri);
+
+  t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, params, num_params);
 
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
@@ -945,14 +989,19 @@ t8_create_cad_reference_prism ([[maybe_unused]] int face, [[maybe_unused]] int e
     faces[face] = 1;
     t8_cmesh_register_geometry<t8_geometry_cad> (
       cmesh, (face <= 2 ? t8_create_cad_surface_shape_x_z () : t8_create_cad_surface_shape_x_y ()));
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + face,
-                            parameters, 2 * face_vertices * sizeof (double), 0);
+    const int param_dim = 2;
+    const int param_index = face;
+    const int num_params = 2 * face_vertices;
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, parameters, num_params);
   }
   else if (edge >= 0) {
     edges[edge] = 1;
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
-    t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + edge,
-                            parameters, 2 * sizeof (double), 0);
+
+    const int param_dim = 1;
+    const int param_index = edge;
+    const int num_params = 2;
+    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, parameters, num_params);
   }
   else {
     /* Even if we do not want to link any geometry to the edges or faces,
@@ -961,8 +1010,12 @@ t8_create_cad_reference_prism ([[maybe_unused]] int face, [[maybe_unused]] int e
      * link the curve to any edge. */
     t8_cmesh_register_geometry<t8_geometry_cad> (cmesh, t8_create_cad_curve_shape ());
   }
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 5 * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 18 * sizeof (int), 0);
+  const int face_dim = 2;
+  const int num_faces = 5;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, face_dim, faces, num_faces);
+  const int edge_dim = 1;
+  const int num_edges = 18;
+  t8_geometry_cad::set_tree_geometries (cmesh, 0, edge_dim, edges, num_edges);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   return cmesh;
 }

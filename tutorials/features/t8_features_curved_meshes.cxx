@@ -113,8 +113,8 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
       const int element_dim = t8_eclass_to_dimension[tree_class];
       /* We retrieve the geometry information of the tree.
        * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
-
-      const int *linked_geometries = t8_geometry_cad::get_tree_geometries (cmesh, cmesh_ltreeid);
+      const int geom_dim = element_dim == 3 ? 2 : 1;
+      const int *linked_geometries = t8_geometry_cad::get_tree_geometries (cmesh, cmesh_ltreeid, geom_dim);
 
       /* If the tree face has a linked surface and it is in the list we refine it */
       for (int igeom = 0; igeom < adapt_data->n_geometries; ++igeom) {
