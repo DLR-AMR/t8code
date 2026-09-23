@@ -30,6 +30,9 @@ struct t8_test_cmesh_tree_reindex: public testing::Test
      * The reindex_trees flag is initialized to 1 by default.
      * Therefore, the test cmesh will be reindexed automatically during commit.
      */
+    if (!cmesh->reindex_trees) {
+      t8_cmesh_enable_tree_reordering (cmesh);
+    }
     ASSERT_EQ (cmesh->reindex_trees, 1);
 
     t8_cmesh_init (&control_cmesh);
