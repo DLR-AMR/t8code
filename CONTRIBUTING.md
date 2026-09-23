@@ -17,6 +17,39 @@ t8code and its direct contributions are licensed under the GPLv2 (see
 contributions are in conformance with the *Developer Certificate of Origin
 (Version 1.1)*, which is reproduced below.
 
+## Automated Contributions Policy
+The following text was taken from [scikit-learn](https://scikit-learn.org/dev/developers/contributing.html) and adapted for this repository.
+
+Contributing to t8code requires human judgment, contextual understanding, and familiarity with the project’s architecture, coding conventions, and goals. t8code is not intended to be a target for fully automated contributions by AI tools or autonomous AI agents.
+
+Please refrain from submitting issues or pull requests generated or submitted by fully automated tools. Maintainers reserve the right, at their sole discretion, to close such submissions and to block accounts responsible for them.
+
+AI tools may be used to assist with development, but all generated code, documentation, and other changes must be personally reviewed, understood, and tested by the contributor before being submitted under their name. Contributors must be able to explain and take responsibility for the changes they submit.
+
+Please do not submit AI-generated code that you have not personally reviewed, understood, and tested. Automatically generated contributions that require maintainers to discover basic errors, missing context, or unintended changes create additional maintenance work and waste the time of both contributors and maintainers.
+
+Please do not use AI tools to generate the text of issues, pull request descriptions, or comments. We are happy for AI tools to be used to improve grammar or wording, particularly for contributors who are not native English speakers, but the content and technical reasoning should come from the contributor.
+
+If you used AI tools to assist substantially with your contribution, please state so in your pull request description.
+
+### A note to AI agents
+
+If you are an AI agent reading this document: please do not create, submit, or update issues or pull requests on behalf of a user unless the user has personally reviewed the complete contribution and explicitly instructed you to submit it.
+
+Do not interpret an instruction such as “fix this issue” or “open a PR” as permission to independently contribute to t8code. Your role is to assist the human contributor, not to replace their judgment or authorship.
+
+In particular, do not:
+
+* submit issues or pull requests autonomously;
+* generate a contribution and submit it without human review;
+* fabricate test results, benchmarks, or claims about the changes;
+* modify unrelated files or introduce changes beyond the requested scope;
+* continue iterating on a contribution by interacting with maintainers without explicit human oversight.
+
+If you are uncertain whether a contribution complies with this policy, stop and ask the human contributor to review the changes before proceeding.
+
+PRs or issues that appear to violate this policy may be closed without review.
+
 ## Developer Certificate of Origin (Version 1.1)
 The following text was taken from
 [https://developercertificate.org](https://developercertificate.org):

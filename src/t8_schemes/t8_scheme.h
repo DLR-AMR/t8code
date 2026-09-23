@@ -639,8 +639,8 @@ t8_element_get_last_descendant (const t8_scheme_c *scheme, const t8_eclass_t tre
  * \param [in,out] elem2  The element whose entries will be set.
  */
 void
-t8_element_get_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
-                          t8_element_t *elem2);
+t8_element_construct_successor (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *elem1,
+                                t8_element_t *elem2);
 
 /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
