@@ -948,27 +948,21 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Give tree 0 information about its surface and the parameters of the vertices. 
      * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
      */
-    t8_geometry_cad::set_tree_geometries (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid,
-                                          const int attribute_dimension, const int *geometries,
-                                          const int num_geometries) const
 
-      const int dim_faces
-      = 2;
-    const int num_faces = 6;
-    t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_faces, faces, num_faces);
+    {
+      const int dim_faces = 2;
+      const int num_faces = 6;
+      t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_faces, faces, num_faces);
 
-    const int dim_edges = 1;
-    const int num_edges = 24;
-    t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_edges, edges, num_edges);
-    t8_geometry_cad::set_tree_geometry_parameters (
-      const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid, const int attribute_dimension, const int attribute_index,
-      const double *parameters, const double num_parameters) const const int attribute_param_dimension
-      = 2;
-    const int num_parameters = 8;
-    const int parameter_index = 5;
-    t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, attribute_param_dimension, parameter_index, parameters0,
-                                                   num_parameters);
-
+      const int dim_edges = 1;
+      const int num_edges = 24;
+      t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_edges, edges, num_edges);
+      const int attribute_param_dimension = 2;
+      const int num_parameters = 8;
+      const int parameter_index = 5;
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, attribute_param_dimension, parameter_index, parameters0,
+                                                     num_parameters);
+    }
     /* Create tree 1 */
     t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_HEX);
     double vertices1[24] = {
@@ -986,13 +980,18 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* Give tree 1 information about its surface and the parameters of the vertices. 
      *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
      *  We can use the same edges and faces array, because we link the surface to the same face on tree 1. */
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
-                            0);
-    t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 5, parameters1,
-                            8 * sizeof (double), 0);
-
+    {
+      const int face_dim = 2;
+      const int num_faces = 6;
+      t8_geometry_cad::set_tree_geometries (cmesh, 1, face_dim, faces, num_faces);
+      const int edge_dim = 1;
+      const int num_edges = 24;
+      t8_geometry_cad::set_tree_geometries (cmesh, 1, edge_dim, edges, num_edges);
+      const int param_dim = 2;
+      const int param_index = 5;
+      const int num_parameters = 8;
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, 1, param_dim, param_index, parameters1, num_parameters);
+    }
     /* Join tree 0 and tree 1 together */
     t8_cmesh_set_join (cmesh, 0, 1, 1, 0, 0);
 
@@ -1089,16 +1088,21 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
       parameters[i * 8 + 7] = -1;
 
       /* Give the trees information about their surfaces and the parameters of the vertices. 
-       * Each parameter set is given to the tree via its attribute key + face index it corresponds with. 
        * We can use the same edges and faces array, because we link the surface to the same faces on every tree.*/
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, faces, 6 * sizeof (int),
-                              1);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edges, 24 * sizeof (int),
-                              1);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 0,
-                              parameters + i * 8, 8 * sizeof (double), 0);
-      t8_cmesh_set_attribute (cmesh, i, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + 1,
-                              parameters + i * 8, 8 * sizeof (double), 0);
+      const int face_dim = 2;
+      const int num_faces = 6;
+      t8_geometry_cad::set_tree_geometries (cmesh, i, face_dim, faces, num_faces);
+      const int edge_dim = 1;
+      const int num_edges = 24;
+      t8_geometry_cad::set_tree_geometries (cmesh, i, edge_dim, edges, num_edges);
+
+      const int param_dim = 2;
+      const int param_index_a = 0;
+      const int num_params = 8;
+      const double *params = parameters + i * 8;
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, i, param_dim, param_index_a, params, num_params);
+      const int param_index_b = 1;
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, i, param_dim, param_index_b, params, num_params);
     }
 
     T8_FREE (vertices);
