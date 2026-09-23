@@ -1448,7 +1448,7 @@ t8_geometry_cad::set_tree_geometries (const t8_cmesh_t cmesh, const t8_gloidx_t 
  * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
  * \param [in] attribute_index The attribute index for which to register I.e. 0 for the first edge or first face.
  * \param [in] parameters List of double parameters for the attribute.
- * \param [in] num_geometries Number of parameters to register for this tree.
+ * \param [in] num_parameters Number of parameters to register for this tree.
  * \note This function is usually only used explicitly by t8code examples.
  */
 void
