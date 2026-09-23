@@ -393,7 +393,7 @@ t8_cmesh_new_hybrid_gate (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 void
 t8_cmesh_new_hybrid_gate_deformed (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
-/** Construct a full hybrig cmesh, with 1 hex, 1 pyra, 1 prism and 1 tet
+/** Construct a full hybrid cmesh, with 1 hex, 1 pyra, 1 prism and 1 tet
  * This cmesh is used for testing and debugging.
  * \param [in,out] cmesh   An initialized, but not committed cmesh, as created by \ref t8_cmesh_init.
  *                         Filled and committed (replicated) in place with 4 trees.

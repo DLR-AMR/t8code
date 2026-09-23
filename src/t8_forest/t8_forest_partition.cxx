@@ -284,7 +284,7 @@ t8_forest_partition_test_boundary_element ([[maybe_unused]] const t8_forest_t fo
   const t8_element_t *element_last
     = t8_forest_get_leaf_element_in_tree (forest, itree, t8_forest_get_tree_leaf_element_count (tree) - 1);
   T8_ASSERT (scheme->element_is_valid (tree_class, element_last));
-  /* last and finest possiple element of current rank */
+  /* last and finest possible element of current rank */
   scheme->element_get_last_descendant (tree_class, element_last, element_last_desc, forest->maxlevel);
   T8_ASSERT (scheme->element_is_valid (tree_class, element_last_desc));
   const int level = scheme->element_get_level (tree_class, element_last_desc);
