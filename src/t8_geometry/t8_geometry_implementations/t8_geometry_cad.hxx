@@ -217,7 +217,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
    * \param [in] attribute_index The attribute index for which to register I.e. 0 for the first edge or first face.
    * \param [in] parameters List of double parameters for the attribute.
-   * \param [in] num_geometries Number of parameters to register for this tree.
+   * \param [in] num_parameters Number of parameters to register for this tree.
    * \note This function is usually only used explicitly by t8code examples.
    */
   static void
