@@ -227,17 +227,19 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     /* Interpret the raw attribute data as an array of 3D vertices */
     const int expected_num_vertices = attr->attr_size / (3 * sizeof (double));
-    const std::span<const t8_3D_vec> vertices (static_cast<const t8_3D_vec *> (attr->attr_data), expected_num_vertices);
+    const t8_3D_vec *vertices = static_cast<const t8_3D_vec *> (attr->attr_data);
 
     t8_3D_vec center = { 0.0, 0.0, 0.0 };
 
-    for (const auto &ivert : vertices) {
+    for (int ivert = 0; ivert < expected_num_vertices; ++ivert) {
+      const t8_3D_vec &vertex = vertices[ivert];
 
-      t8_debugf ("Coordinates are (%f, %f, %f)\n", ivert[0], ivert[1], ivert[2]);
+      t8_debugf ("Coordinates are (%f, %f, %f)\n", vertex[0], vertex[1], vertex[2]);
+
       for (int idim = 0; idim < 3; ++idim) {
-        min_coords[idim] = std::min (min_coords[idim], ivert[idim]);
-        max_coords[idim] = std::max (max_coords[idim], ivert[idim]);
-        center[idim] += ivert[idim];
+        min_coords[idim] = std::min (min_coords[idim], vertex[idim]);
+        max_coords[idim] = std::max (max_coords[idim], vertex[idim]);
+        center[idim] += vertex[idim];
       }
     }
 
