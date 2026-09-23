@@ -2261,8 +2261,8 @@ t8_cmesh_uniform_bounds_from_partition (const t8_cmesh_t cmesh, const t8_gloidx_
 #endif
 
       } /* End sending of end message */
-    } /* End loop over processes */
-  } /* if (num_pure_local_trees > 0) */
+    }   /* End loop over processes */
+  }     /* if (num_pure_local_trees > 0) */
 
   if (this_proc_is_empty) {
     /* If this proc is empty, we only expect a start message.
