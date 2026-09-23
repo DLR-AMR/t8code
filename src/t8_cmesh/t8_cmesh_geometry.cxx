@@ -58,6 +58,7 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t
  * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
  * \return                 The geometry handler of the cmesh.
  * \note                   The return value might be NULL if no geometry handler exists.
+ * \note                   Handle with care. This function should be used by t8code devs only.
  */
 t8_geometry_handler_c *
 t8_cmesh_get_geometry_handler_c (const t8_cmesh_t cmesh)
