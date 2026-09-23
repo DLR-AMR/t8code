@@ -81,7 +81,7 @@ t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
 }
 
 /* Construct a new geometry_handler for a cmesh and add it to the cmesh.
- * \param [in] cmesh      The cmesh to be considered. Does not need to be committed.
+ * \param [in] cmesh      The cmesh to be considered. Must be initialized. Does not need to be committed.
  * \return                On success, the new geometry_handler. nullptr on failure (out of memory).
  * \note                  Handle with care. This function should be used by t8code devs only.
  */
@@ -91,9 +91,8 @@ t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh)
   return t8_cmesh_set_geometry_handler (cmesh, nullptr);
 }
 
-
 /* Set a geometry handler or construct a new geometry_handler for a cmesh and add it to the cmesh.
- * \param [in] cmesh      The cmesh to be considered. Does not need to be committed.
+ * \param [in] cmesh      The cmesh to be considered. Must be initialized. Does not need to be committed.
  * \param [in] new_handler  The geometry handler to be set. If nullptr then a new handler will be allocated.
  * \return                On success, the new geometry_handler. nullptr on failure (out of memory).
  */
