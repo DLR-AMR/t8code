@@ -538,11 +538,13 @@ struct t8_default_scheme_vertex: public t8_default_scheme_common<T8_ECLASS_VERTE
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, int level) const;
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] elem      The element whose successor should be constructed.
+   * \param [in] elem           The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
    * \param [in,out] succ  The successor element whose entries will be set.
    */
   void
-  element_construct_successor ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] t8_element_t *succ) const
+  element_construct_successor ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int uniform_level,
+                               [[maybe_unused]] t8_element_t *succ) const
   {
     SC_ABORT ("Not implemented.\n");
     return; /* prevents compiler warning */

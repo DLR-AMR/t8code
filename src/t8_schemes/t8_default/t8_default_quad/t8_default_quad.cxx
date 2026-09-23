@@ -286,10 +286,13 @@ t8_default_scheme_quad::element_get_last_descendant (const t8_element_t *elem, t
 }
 
 void
-t8_default_scheme_quad::element_construct_successor (const t8_element_t *elem1, t8_element_t *elem2) const
+t8_default_scheme_quad::element_construct_successor (const t8_element_t *elem1,
+                                                     [[maybe_unused]] const int uniform_level,
+                                                     t8_element_t *elem2) const
 {
   T8_ASSERT (element_is_valid (elem1));
   T8_ASSERT (element_is_valid (elem2));
+  T8_ASSERT (element_get_level (elem1) == uniform_level);
   T8_ASSERT (0 <= element_get_level (elem1) && element_get_level (elem1) <= P4EST_QMAXLEVEL);
   p4est_quadrant_successor ((p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);
   element_copy_surround ((const p4est_quadrant_t *) elem1, (p4est_quadrant_t *) elem2);

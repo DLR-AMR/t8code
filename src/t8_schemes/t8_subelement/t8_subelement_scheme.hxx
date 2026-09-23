@@ -864,14 +864,15 @@ struct t8_subelement_scheme_common:
   /** Construct the successor in a uniform refinement of a given element.
    * \note This is not implemented for subelements.
    * \param [in] elem1    The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
    * \param [in,out] elem2  The element whose entries will be set.
    */
   void
-  element_construct_successor (const t8_element_t *elem1, t8_element_t *elem2) const noexcept
+  element_construct_successor (const t8_element_t *elem1, const int uniform_level, t8_element_t *elem2) const noexcept
   {
     SC_CHECK_ABORT (!element_is_subelement (elem1),
                     "element_construct_successor is not implemented for subelements yet.\n");
-    return derived ().underlying_scheme.element_construct_successor (element_to_standalone (elem1),
+    return derived ().underlying_scheme.element_construct_successor (element_to_standalone (elem1), uniform_level,
                                                                      element_to_standalone (elem2));
   }
 

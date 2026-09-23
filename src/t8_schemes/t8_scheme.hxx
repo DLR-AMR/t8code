@@ -43,6 +43,7 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone_implementation.hxx>
+#include <t8_schemes/t8_multilevel/t8_multilevel_implementation.hxx>
 #include <t8_schemes/t8_subelement/specializations/t8_scheme_hanging_nodes_quads.hxx>
 #include <t8_schemes/t8_subelement/specializations/t8_scheme_hanging_nodes_tri.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
@@ -99,17 +100,33 @@ struct t8_scheme
                                 t8_default_scheme_tet,
                                 t8_default_scheme_prism,
                                 t8_default_scheme_pyramid,
+
+                                /* Multilevel default schemes */
+                                t8_multilevel_scheme<t8_default_scheme_vertex, t8_dvertex_t>,
+                                t8_multilevel_scheme<t8_default_scheme_line, t8_dline_t>,
+                                t8_multilevel_scheme<t8_default_scheme_quad, t8_pquad_t>,
+                                t8_multilevel_scheme<t8_default_scheme_tri, t8_dtri_t>,
+                                t8_multilevel_scheme<t8_default_scheme_hex, t8_phex_t>,
+                                t8_multilevel_scheme<t8_default_scheme_tet, t8_dtet_t>,
+                                t8_multilevel_scheme<t8_default_scheme_prism, t8_dprism_t>,
+                                t8_multilevel_scheme<t8_default_scheme_pyramid, t8_dpyramid_t>,
+
                                 /* Standalone schemes */
                                 t8_standalone_scheme<T8_ECLASS_VERTEX>,
                                 t8_standalone_scheme<T8_ECLASS_LINE>,
                                 t8_standalone_scheme<T8_ECLASS_QUAD>,
                                 t8_standalone_scheme<T8_ECLASS_HEX>,
+
+                                /* Multilevel standalone schemes */
+                                t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_VERTEX>, t8_standalone_element<T8_ECLASS_VERTEX>>,
+                                t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_LINE>, t8_standalone_element<T8_ECLASS_LINE>>,
+                                t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_QUAD>, t8_standalone_element<T8_ECLASS_QUAD>>,
+                                t8_multilevel_scheme<t8_standalone_scheme<T8_ECLASS_HEX>, t8_standalone_element<T8_ECLASS_HEX>>,
                                 /* Subelement schemes */
                                 t8_subelem_scheme_hanging_nodes_quad,
                                 t8_subelem_scheme_hanging_nodes_tri
                                 >;
   /* clang-format on */
-
   using scheme_container = std::vector<scheme_var>; /**< Container type for holding eclass schemes. */
 
  private:
@@ -381,7 +398,7 @@ struct t8_scheme
   /** Return the number of children of an element when it is refined.
    * \param [in] tree_class         The eclass of the current tree.
    * \param [in] element            The element whose number of children is returned.
-   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   * \param [in] additional_arguments   Additional arguments you want to provide.
    *                                    For subelements, this can be the subelement type.
    *                                    Have a look at the scheme specific functions for more details.
    * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
@@ -494,7 +511,7 @@ struct t8_scheme
    *                      the number of children.
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
-   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   * \param [in] additional_arguments   Additional arguments you want to provide.
    *                                    For subelements, this can be the subelement type.
    *                                    Have a look at the scheme specific functions for more details.
    * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
@@ -548,7 +565,7 @@ struct t8_scheme
   };
 
   /** Query whether element A is an ancestor of the element B.
-   * An element A is ancestor of an element B if A == B or if B can 
+   * An element A is ancestor of an element B if A == B or if B can
    * be obtained from A via successive refinement.
    * \param [in] tree_class The eclass of the current tree.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.
@@ -945,15 +962,18 @@ struct t8_scheme
   };
 
   /** Construct the successor in a uniform refinement of a given element.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] element    The element whose successor should be constructed.
+   * \param [in] tree_class     The eclass of the current tree.
+   * \param [in] element        The element whose successor should be constructed.
+   * \param [in] uniform_level  The level of the uniform refinement.
    * \param [in,out] successor  The element whose entries will be set to the successor of \a element.
    */
   inline void
-  element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *element, t8_element_t *successor) const
+  element_construct_successor (const t8_eclass_t tree_class, const t8_element_t *element, const int uniform_level,
+                               t8_element_t *successor) const
   {
-    return std::visit ([&] (auto &&scheme) { return scheme.element_construct_successor (element, successor); },
-                       eclass_schemes[tree_class]);
+    return std::visit (
+      [&] (auto &&scheme) { return scheme.element_construct_successor (element, uniform_level, successor); },
+      eclass_schemes[tree_class]);
   };
 
   /** Compute the coordinates of a given element vertex inside a reference tree

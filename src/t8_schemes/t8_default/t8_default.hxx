@@ -45,6 +45,10 @@ T8_EXTERN_C_BEGIN ();
 const t8_scheme *
 t8_scheme_new_default (void);
 
+/** Return the default multilevel element implementation of t8code. */
+const t8_scheme *
+t8_scheme_new_default_multilevel (void);
+
 /** Check whether a given eclass_scheme is one of the default schemes.
  * \param [in] scheme   A (pointer to a) scheme
  * \param [in] eclass   The eclass to check
