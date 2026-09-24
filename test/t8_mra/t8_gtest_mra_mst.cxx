@@ -52,7 +52,7 @@ class mra_mst: public ::testing::Test {
   static constexpr unsigned int U = element_t::U_DIM;
   static constexpr unsigned int DOF = element_t::DOF;
 
-  std::vector<t8_mra::mat> mask;
+  t8_mra::two_scale_mask<Shape, P> mask;
 
   void
   SetUp () override

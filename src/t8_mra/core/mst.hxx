@@ -14,7 +14,6 @@
 #include "t8_mra/data/levelindex_map.hxx"
 #include "t8_mra/data/levelmultiindex.hxx"
 #include "t8_mra/num/mask_coefficients.hxx"
-#include "t8_mra/num/mat.hxx"
 
 namespace t8_mra
 {
@@ -43,8 +42,10 @@ class mst {
   static constexpr unsigned int U_DIM = TElement::U_DIM;
   static constexpr unsigned int DOF = TElement::DOF;
 
+  using mask_t = two_scale_mask<Shape, TElement::P_DIM>;
+
   /// Two-scale mask coefficients, computed once from the reference basis.
-  std::vector<t8_mra::mat> mask;
+  mask_t mask;
 
   mst ()
   {
@@ -109,7 +110,7 @@ class mst {
    */
   static void
   two_scale_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
-                    detail_t &data_on_coarse, const std::vector<t8_mra::mat> &mask_coefficients)
+                    detail_t &data_on_coarse, const mask_t &mask_coefficients)
   {
     const double scaling_factor = TScalingPolicy::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
 
@@ -121,11 +122,11 @@ class mst {
         auto sum = 0.0;
 
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-          const auto &Mk = mask_coefficients[k];
+          const auto &Mk_column = mask_coefficients.transposed[k][i];
           const auto &uk = data_on_siblings[k].u_coeffs;
 
           for (auto j = 0u; j < DOF; ++j)
-            sum += uk[element_t::dg_idx (u, j)] * Mk (j, i);
+            sum += uk[element_t::dg_idx (u, j)] * Mk_column[j];
         }
 
         u_parent[i] = sum * scaling_factor;
@@ -134,13 +135,15 @@ class mst {
 
       // Detail coefficients: d[k][i] = u_child[k][i] - Σ_j M[k](i,j) * u_parent[j]
       for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-        const auto &Mk = mask_coefficients[k];
+        const auto &Mk = mask_coefficients.m[k];
         const auto &uk = data_on_siblings[k].u_coeffs;
 
         for (auto i = 0u; i < DOF; ++i) {
+          const auto &Mk_row = Mk[i];
           auto sum = 0.0;
+
           for (auto j = 0u; j < DOF; ++j)
-            sum += Mk (i, j) * u_parent[j];
+            sum += Mk_row[j] * u_parent[j];
 
           data_on_coarse.d_coeffs[detail_t::wavelet_idx (k, u, i)] = uk[element_t::dg_idx (u, i)] - sum;
         }
@@ -166,21 +169,22 @@ class mst {
   static void
   inverse_two_scale_family (const element_t &data_on_coarse, const detail_t &details,
                             std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
-                            const std::vector<t8_mra::mat> &mask_coefficients)
+                            const mask_t &mask_coefficients)
   {
     const double inv_scaling_factor = TScalingPolicy::inverse_scaling_factor ();
     const auto &u_parent = data_on_coarse.u_coeffs;
 
     for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-      const auto &Mk = mask_coefficients[k];
+      const auto &Mk = mask_coefficients.m[k];
       auto &child = data_on_siblings[k];
 
       for (auto u = 0u; u < U_DIM; ++u) {
         for (auto i = 0u; i < DOF; ++i) {
+          const auto &Mk_row = Mk[i];
           auto sum = 0.0;
 
           for (auto j = 0u; j < DOF; ++j)
-            sum += u_parent[element_t::dg_idx (u, j)] * Mk (i, j);
+            sum += u_parent[element_t::dg_idx (u, j)] * Mk_row[j];
 
           child.u_coeffs[element_t::dg_idx (u, i)]
             = details.d_coeffs[detail_t::wavelet_idx (k, u, i)] + sum * inv_scaling_factor;
@@ -232,7 +236,7 @@ class mst {
   multiscale_transformation (unsigned int l_min, unsigned int l_max,
                              levelindex_map<levelmultiindex, element_t> &lmi_map,
                              levelindex_map<levelmultiindex, detail_t> &d_map,
-                             const std::vector<t8_mra::mat> &mask_coefficients)
+                             const mask_t &mask_coefficients)
   {
     index_set I_set;
     detail_t data_on_coarse;
@@ -289,7 +293,7 @@ class mst {
   static void
   multiscale_decomposition (unsigned int l_min, unsigned int l_max, levelindex_map<levelmultiindex, element_t> &lmi_map,
                             levelindex_map<levelmultiindex, detail_t> &d_map,
-                            const std::vector<t8_mra::mat> &mask_coefficients, TKeep &&keep, TCollapsed &&collapsed)
+                            const mask_t &mask_coefficients, TKeep &&keep, TCollapsed &&collapsed)
   {
     index_set I_set;
     detail_t data_on_coarse;
@@ -347,7 +351,7 @@ class mst {
   static void
   multiscale_decomposition (unsigned int l_min, unsigned int l_max, levelindex_map<levelmultiindex, element_t> &lmi_map,
                             levelindex_map<levelmultiindex, detail_t> &d_map,
-                            const std::vector<t8_mra::mat> &mask_coefficients)
+                            const mask_t &mask_coefficients)
   {
     multiscale_decomposition (
       l_min, l_max, lmi_map, d_map, mask_coefficients, [] (const auto & /*unused*/) { return false; },
@@ -369,7 +373,7 @@ class mst {
   inverse_multiscale_transformation (unsigned int l_min, unsigned int l_max,
                                      levelindex_map<levelmultiindex, element_t> &lmi_map,
                                      levelindex_map<levelmultiindex, detail_t> &d_map,
-                                     const std::vector<t8_mra::mat> &mask_coefficients)
+                                     const mask_t &mask_coefficients)
   {
     std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
 

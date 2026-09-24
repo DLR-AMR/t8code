@@ -275,7 +275,7 @@ TYPED_TEST (mra_num, mask_satisfies_refinement_equation)
   constexpr int DOF = TestFixture::DOF;
   using basis_t = typename TestFixture::basis_t;
 
-  std::vector<t8_mra::mat> mask;
+  t8_mra::two_scale_mask<Shape, P> mask;
   t8_mra::compute_mask<Shape, P> (mask);
 
   const auto children = t8_mra::mask_policy<Shape>::child_maps ();
@@ -288,7 +288,7 @@ TYPED_TEST (mra_num, mask_satisfies_refinement_equation)
       for (int j = 0; j < DOF; ++j) {
         double rhs = 0.0;
         for (int i = 0; i < DOF; ++i)
-          rhs += mask[k](i, j) * phi_child[i];
+          rhs += mask.m[k][i][j] * phi_child[i];
         EXPECT_NEAR (phi_parent[j], factor * rhs, eps) << "child " << k << " parent dof " << j;
       }
     }
