@@ -46,17 +46,10 @@ class nodal_to_modal {
   void
   operator() (std::span<const double> nodal, std::span<double> modal) const
   {
-    std::array<double, DOF> rhs;
     for (auto u = 0u; u < U; ++u) {
       const auto offset = u * DOF;
 
-      for (auto j = 0u; j < DOF; ++j)
-        rhs[j] = nodal[offset + j];
-
-      lu_solve (vandermonde, perm, rhs);
-
-      for (auto i = 0u; i < DOF; ++i)
-        modal[offset + i] = rhs[i];
+      lu_solve (vandermonde, perm, nodal.subspan (offset, DOF), modal.subspan (offset, DOF));
     }
   }
 

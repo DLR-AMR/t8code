@@ -150,19 +150,19 @@ lu_factors (mat &A, std::vector<size_t> &p)
   }
 }
 
+/// Solve A x = b from the LU factors of A. b and x must not alias.
 inline void
-lu_solve (const mat &A, const std::vector<size_t> &p, std::span<double> x)
+lu_solve (const mat &A, const std::vector<size_t> &p, std::span<const double> b, std::span<double> x)
 {
   if (A.rows () != A.cols ())
     throw std::logic_error ("Matrix in t8_mra::util::lr_solve is not a square matrix");
   if (A.rows () != p.size ())
     throw std::logic_error ("Permutation vector in t8_mra::util::lr_solve does not fit");
-  if (A.rows () != x.size ())
+  if (A.rows () != x.size () || A.rows () != b.size ())
     throw std::logic_error ("Solution vector in t8_mra::util::lr_solve does not fit");
 
   const auto n = static_cast<int> (A.rows ());
 
-  const std::vector<double> b (x.begin (), x.end ());
   for (auto i = 0; i < n; ++i) {
     x[i] = b[p[i]];
     for (auto k = 0; k < i; ++k)
