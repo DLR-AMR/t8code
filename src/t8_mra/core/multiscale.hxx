@@ -153,9 +153,9 @@ class multiscale {
   }
 
   void
-  ghost_exchange ()
+  ensure_ghost_layer ()
   {
-    grid.ghost_exchange ();
+    grid.ensure_ghost_layer ();
   }
 
   void
