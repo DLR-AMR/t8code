@@ -181,10 +181,16 @@ detect_jumps (TMultiscale &mra, int level, double c_thresh)
 {
   using levelmultiindex = typename TMultiscale::levelmultiindex;
 
-  mra.grid.ghost_exchange ();
+  /// All a remote leaf contributes here; its higher modes would be shipped unread.
+  struct leaf_mean
+  {
+    std::array<double, TMultiscale::U_DIM> mean;
+  };
+
+  const auto ghost_mean
+    = mra.grid.ghost_exchange ([&mra] (const auto &data) { return leaf_mean { mra.mean_val (data) }; });
 
   auto *lmi_map = mra.get_lmi_map ();
-  auto &ghost_map = mra.grid.ghost_map;
   const auto v_max = global_v_max (mra, level);
 
   typename TMultiscale::index_set jumps;
@@ -197,10 +203,13 @@ detect_jumps (TMultiscale &mra, int level, double c_thresh)
 
   mra.grid.for_each_face_neigh ([&] (const auto &lmi) { return lmi.level () == static_cast<unsigned int> (level); },
                                 [&] (const auto &lmi, t8_eclass_t, t8_gloidx_t, t8_element_t *, const auto &neigh_lmi) {
-                                  const auto *neigh_data = lmi_map->find (neigh_lmi);
-                                  if (neigh_data == nullptr)
-                                    neigh_data = ghost_map.find (neigh_lmi);
-                                  if (neigh_data == nullptr)
+                                  std::array<double, TMultiscale::U_DIM> mean_neigh;
+
+                                  if (const auto *neigh_data = lmi_map->find (neigh_lmi))
+                                    mean_neigh = mra.mean_val (*neigh_data);
+                                  else if (const auto *neigh_ghost = ghost_mean.find (neigh_lmi))
+                                    mean_neigh = neigh_ghost->mean;
+                                  else
                                     return;
 
                                   if (current_leaf != lmi) {
@@ -209,8 +218,6 @@ detect_jumps (TMultiscale &mra, int level, double c_thresh)
                                     threshold = c_thresh * std::sqrt (t8_mra::cell_size<TMultiscale::DIM> (data.vol));
                                     current_leaf = lmi;
                                   }
-
-                                  const auto mean_neigh = mra.mean_val (*neigh_data);
 
                                   for (auto u = 0u; u < TMultiscale::U_DIM; ++u)
                                     if (std::abs (mean_inner[u] - mean_neigh[u]) / v_max[u] > threshold) {
