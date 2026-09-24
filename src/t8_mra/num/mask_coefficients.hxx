@@ -8,7 +8,6 @@
 #include <t8_eclass/t8_eclass.h>
 
 #include <t8_mra/core/shape_traits.hxx>
-#include <t8_mra/num/mat.hxx>
 
 namespace t8_mra
 {
@@ -58,17 +57,35 @@ struct mask_policy;
 namespace t8_mra
 {
 
+/**
+ * @brief The NUM_CHILDREN two-scale masks of a shape at order P.
+ *
+ * m[k](i,j) has row i a child dof and column j a parent dof. The transpose is kept
+ * alongside because the forward transform contracts over the row index
+ */
+template <t8_eclass TShape, int P>
+struct two_scale_mask
+{
+  static constexpr int NC = shape_traits<TShape>::NUM_CHILDREN;
+  static constexpr int DOF = shape_traits<TShape>::dof (P);
+
+  using matrix = std::array<std::array<double, DOF>, DOF>;
+
+  std::array<matrix, NC> m {};
+  std::array<matrix, NC> transposed {};
+};
+
 /// Compute the NUM_CHILDREN two-scale masks for shape TShape at order P.
 template <t8_eclass TShape, int P>
 void
-compute_mask (std::vector<t8_mra::mat> &mask)
+compute_mask (two_scale_mask<TShape, P> &mask)
 {
   using basis_t = basis<TShape, P>;
   constexpr int DIM = basis_t::DIM;
   constexpr int DOF = basis_t::DOF;
   constexpr int NC = shape_traits<TShape>::NUM_CHILDREN;
 
-  mask.assign (NC, t8_mra::mat { DOF, DOF });
+  mask = {};
 
   const quadrature<TShape> quad (quadrature<TShape>::rule_for_degree (2 * P));
   const auto children = mask_policy<TShape>::child_maps ();
@@ -93,8 +110,12 @@ compute_mask (std::vector<t8_mra::mat> &mask)
 
       for (auto i = 0; i < DOF; ++i)
         for (auto j = 0; j < DOF; ++j)
-          mask[k](i, j) += w * phi[i] * phi_mapped[j];
+          mask.m[k][i][j] += w * phi[i] * phi_mapped[j];
     }
+
+    for (auto i = 0; i < DOF; ++i)
+      for (auto j = 0; j < DOF; ++j)
+        mask.transposed[k][j][i] = mask.m[k][i][j];
   }
 }
 
