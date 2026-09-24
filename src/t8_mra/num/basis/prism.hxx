@@ -44,7 +44,7 @@ prism_scaling_function_gradient (double tau1, double tau2, double z)
   const double leg = phi_1d (z, z_degree);
 
   return { tri_grad[0] * leg, tri_grad[1] * leg,
-           scaling_function<tri_index> (tau1, tau2) * phi_prime_1d<P> (z, z_degree) };
+           scaling_function<tri_index> (tau1, tau2) * phi_prime_1d (z, z_degree) };
 }
 
 }  // namespace t8_mra

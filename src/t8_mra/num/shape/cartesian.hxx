@@ -59,7 +59,7 @@ struct basis<TShape, P>
         for (int d = 0; d < DIM; ++d) {
           const int deg = idx % P;
           idx /= P;
-          v *= (d == dir) ? phi_prime_1d<P> (x[d], deg) : phi_1d (x[d], deg);
+          v *= (d == dir) ? phi_prime_1d (x[d], deg) : phi_1d (x[d], deg);
         }
         grad[dir][p] = v;
       }
