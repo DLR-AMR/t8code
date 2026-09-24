@@ -8,6 +8,7 @@
 #include <functional>
 #include <iterator>
 #include <numeric>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -49,10 +50,8 @@ class forest_backend {
   t8_forest_t forest = nullptr;
   sc_MPI_Comm comm;
   unsigned int maximum_level;
-  lmi_map_t ghost_map;
 
-  forest_backend (int _max_level, sc_MPI_Comm _comm)
-    : comm (_comm), maximum_level (static_cast<unsigned int> (_max_level)), ghost_map (_max_level)
+  forest_backend (int _max_level, sc_MPI_Comm _comm): comm (_comm), maximum_level (static_cast<unsigned int> (_max_level))
   {
   }
 
@@ -259,7 +258,6 @@ class forest_backend {
     t8_forest_unref (&forest);
 
     forest = new_forest;
-    ghost_map.erase_all ();
 
     if (post_adapt)
       post_adapt ();
@@ -313,49 +311,81 @@ class forest_backend {
     t8_forest_unref (&forest);
 
     forest = new_forest;
-    ghost_map.erase_all ();
 
     if (post_adapt)
       post_adapt ();
   }
 
-  /** @brief Build the face-ghost layer and fill ghost_map with the remote leaves. Collective. */
+  /** @brief Create the face-ghost layer unless the run is serial or it already exists. */
   void
-  ghost_exchange ()
+  ensure_ghost_layer ()
   {
-    ghost_map.erase_all ();
+    int mpisize = 1;
+    sc_MPI_Comm_size (comm, &mpisize);
+
+    if (mpisize == 1 || forest->ghosts != nullptr)
+      return;
+
+    forest->ghost_type = T8_GHOST_FACES;
+    t8_forest_ghost_create_topdown (forest);
+  }
+
+  /**
+   * @brief Exchange one value per leaf over the face-ghost layer. Collective.
+   *
+   * @param  of_leaf The value shipped for a local leaf; the caller decides how much of
+   *                 the leaf the remote ranks actually need.
+   * @return The received values, keyed by the lmi of the remote leaf.
+   */
+  template <typename TOfLeaf>
+  [[nodiscard]] auto
+  ghost_exchange (TOfLeaf &&of_leaf)
+  {
+    using payload = std::decay_t<std::invoke_result_t<TOfLeaf, const element_t &>>;
+    static_assert (std::is_trivially_copyable_v<payload>, "the ghost payload is shipped as raw bytes");
+
+    levelindex_map<levelmultiindex, payload> received (maximum_level);
 
     int mpisize = 1;
     sc_MPI_Comm_size (comm, &mpisize);
     if (mpisize == 1)
-      return;
+      return received;
 
-    if (forest->ghosts == nullptr) {
-      forest->ghost_type = T8_GHOST_FACES;
-      t8_forest_ghost_create_topdown (forest);
-    }
+    ensure_ghost_layer ();
 
     const auto num_local = t8_forest_get_local_num_leaf_elements (forest);
     const auto num_ghosts = t8_forest_get_num_ghosts (forest);
 
     auto *user_data = get_user_data ();
-    sc_array_resize (user_data->lmi_idx, num_local + num_ghosts);
-    t8_forest_ghost_exchange_data (forest, user_data->lmi_idx);
-
-    auto *data = sc_array_new_count (sizeof (element_t), num_local + num_ghosts);
     auto *lmi_map = get_lmi_map ();
+    auto *shared = sc_array_new_count (sizeof (payload), num_local + num_ghosts);
 
     for (auto i = 0; i < num_local; ++i)
-      *reinterpret_cast<element_t *> (sc_array_index (data, i))
-        = lmi_map->get (t8_mra::get_lmi_from_forest_data (user_data, i));
+      *reinterpret_cast<payload *> (sc_array_index (shared, i))
+        = of_leaf (lmi_map->get (t8_mra::get_lmi_from_forest_data (user_data, i)));
 
-    t8_forest_ghost_exchange_data (forest, data);
+    t8_forest_ghost_exchange_data (forest, shared);
 
-    for (auto i = num_local; i < num_local + num_ghosts; ++i)
-      ghost_map.insert (t8_mra::get_lmi_from_forest_data (user_data, i),
-                        *reinterpret_cast<element_t *> (sc_array_index (data, i)));
+    // A ghost element carries its own identity, so the lmis need no exchange of their own.
+    const auto *scheme = t8_forest_get_scheme (forest);
+    const auto num_ghost_trees = t8_forest_ghost_num_trees (forest);
 
-    sc_array_destroy (data);
+    for (t8_locidx_t ghost_tree = 0; ghost_tree < num_ghost_trees; ++ghost_tree) {
+      const auto gtreeid = t8_forest_ghost_get_global_treeid (forest, ghost_tree);
+      const auto offset = t8_forest_ghost_get_tree_element_offset (forest, ghost_tree);
+      const auto num_elements = t8_forest_ghost_tree_num_leaf_elements (forest, ghost_tree);
+
+      for (t8_locidx_t ele_idx = 0; ele_idx < num_elements; ++ele_idx) {
+        const auto *element = t8_forest_ghost_get_leaf_element (forest, ghost_tree, ele_idx);
+
+        received.insert (levelmultiindex (gtreeid, element, scheme),
+                         *reinterpret_cast<payload *> (sc_array_index (shared, num_local + offset + ele_idx)));
+      }
+    }
+
+    sc_array_destroy (shared);
+
+    return received;
   }
 
   /** @brief Leaf count of the whole forest. */
@@ -411,8 +441,6 @@ class forest_backend {
   void
   cleanup ()
   {
-    ghost_map.erase_all ();
-
     if (forest != nullptr) {
       if (auto *user_data = get_user_data ())
         destroy_user_data (user_data);
