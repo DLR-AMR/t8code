@@ -35,12 +35,16 @@ struct basis<TShape, P>
   [[nodiscard]] static std::array<double, DOF>
   eval (const std::array<double, DIM> &x)
   {
+    std::array<std::array<double, P>, DIM> mode;
+    for (int d = 0; d < DIM; ++d)
+      mode[d] = legendre_values<P> (x[d]);
+
     std::array<double, DOF> res = {};
     for (int p = 0; p < DOF; ++p) {
       double v = 1.0;
       int idx = p;
       for (int d = 0; d < DIM; ++d) {
-        v *= phi_1d (x[d], idx % P);
+        v *= mode[d][idx % P];
         idx /= P;
       }
       res[p] = v;
@@ -51,6 +55,10 @@ struct basis<TShape, P>
   [[nodiscard]] static std::array<std::array<double, DOF>, DIM>
   eval_gradient (const std::array<double, DIM> &x)
   {
+    std::array<legendre_modes<P>, DIM> mode;
+    for (int d = 0; d < DIM; ++d)
+      mode[d] = legendre_at<P> (x[d]);
+
     std::array<std::array<double, DOF>, DIM> grad = {};
     for (int dir = 0; dir < DIM; ++dir) {
       for (int p = 0; p < DOF; ++p) {
@@ -59,7 +67,7 @@ struct basis<TShape, P>
         for (int d = 0; d < DIM; ++d) {
           const int deg = idx % P;
           idx /= P;
-          v *= (d == dir) ? phi_prime_1d (x[d], deg) : phi_1d (x[d], deg);
+          v *= (d == dir) ? mode[d].derivative[deg] : mode[d].value[deg];
         }
         grad[dir][p] = v;
       }
