@@ -146,7 +146,8 @@ write_forest_lagrange_vtk (TMultiscale &mra, const char *prefix, int lagrange_or
   const auto num_local_trees = t8_forest_get_num_local_trees (forest);
 
   constexpr int vtk_cell_type = shape_traits<TShape>::VTK_CELL_TYPE;
-  const int num_nodes_per_elem = shape_traits<TShape>::dof (lagrange_order + 1);
+  const auto lagrange_nodes = vtk_shape<TShape>::lagrange_nodes (lagrange_order);
+  const int num_nodes_per_elem = static_cast<int> (lagrange_nodes.size ());
 
   const int total_points = num_local_elements * num_nodes_per_elem;
 
@@ -165,21 +166,28 @@ write_forest_lagrange_vtk (TMultiscale &mra, const char *prefix, int lagrange_or
   file << "      <Points>\n";
   file << "        <DataArray type=\"Float64\" NumberOfComponents=\"3\" format=\"ascii\">\n";
 
-  std::vector<std::array<double, 3>> all_points;
-  all_points.reserve (total_points);
+  /// Solution state per Lagrange node, evaluated once here and reused by every field.
+  std::vector<std::array<double, U_DIM>> node_state;
+  node_state.reserve (total_points);
+
+  std::vector<int> cell_level;
+  cell_level.reserve (num_local_elements);
 
   const auto *scheme = t8_forest_get_scheme (forest);
 
   for (auto tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
     const auto num_elem_in_tree = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
+    const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
+    const auto base_tree = t8_forest_global_tree_id (forest, tree_idx);
 
     for (auto elem_in_tree = 0; elem_in_tree < num_elem_in_tree; ++elem_in_tree) {
       const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, elem_in_tree);
 
-      const auto base_tree = t8_forest_global_tree_id (forest, tree_idx);
       const auto lmi = typename TMultiscale::levelmultiindex (base_tree, element, scheme);
       const auto *elem_data = lmi_map->find (lmi);
       const auto point_order = elem_data ? elem_data->order : std::array<int, 3> { 0, 1, 2 };
+
+      cell_level.push_back (scheme->element_get_level (tree_class, element));
 
       std::array<std::array<double, 3>, 8> vertices = {};
       for (auto corner = 0; corner < shape_traits<TShape>::NUM_VERTICES; ++corner) {
@@ -188,11 +196,12 @@ write_forest_lagrange_vtk (TMultiscale &mra, const char *prefix, int lagrange_or
         vertices[vtk_shape<TShape>::vertex_slot (corner, point_order)] = coords;
       }
 
-      for (const auto &ref_node : vtk_shape<TShape>::lagrange_nodes (lagrange_order)) {
+      for (const auto &ref_node : lagrange_nodes) {
         const auto phys_point = vtk_shape<TShape>::to_physical (ref_node, vertices);
 
-        all_points.push_back (phys_point);
         file << "          " << phys_point[0] << " " << phys_point[1] << " " << phys_point[2] << "\n";
+        node_state.push_back (elem_data ? mra.evaluate_reference (*elem_data, ref_node)
+                                        : std::array<double, U_DIM> {});
       }
     }
   }
@@ -241,16 +250,8 @@ write_forest_lagrange_vtk (TMultiscale &mra, const char *prefix, int lagrange_or
 
   file << "        <DataArray type=\"Int32\" Name=\"Level\" format=\"ascii\">\n";
 
-  for (auto tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-    const auto num_elem_in_tree = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
-    const auto tree_class = t8_forest_get_tree_class (forest, tree_idx);
-
-    for (auto elem_in_tree = 0; elem_in_tree < num_elem_in_tree; ++elem_in_tree) {
-      const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, elem_in_tree);
-      const int level = scheme->element_get_level (tree_class, element);
-      file << "          " << level << "\n";
-    }
-  }
+  for (const auto level : cell_level)
+    file << "          " << level << "\n";
 
   file << "        </DataArray>\n";
 
@@ -269,44 +270,19 @@ write_forest_lagrange_vtk (TMultiscale &mra, const char *prefix, int lagrange_or
     file << R"(        <DataArray type="Float64" Name=")" << field.name << "\" NumberOfComponents=\"" << comps
          << "\" format=\"ascii\">\n";
 
-    for (auto tree_idx = 0; tree_idx < num_local_trees; ++tree_idx) {
-      const auto num_elem_in_tree = t8_forest_get_tree_num_leaf_elements (forest, tree_idx);
-      const auto base_tree = t8_forest_global_tree_id (forest, tree_idx);
+    for (const auto &state : node_state) {
+      std::array<double, 3> out {};
+      if (field.transform)
+        field.transform (std::span<const double> (state.data (), state.size ()),
+                         std::span<double> (out.data (), field.num_components));
+      else
+        for (auto c = 0; c < field.num_components; ++c)
+          out[c] = state[field.first + c];
 
-      for (auto elem_in_tree = 0; elem_in_tree < num_elem_in_tree; ++elem_in_tree) {
-        const auto *element = t8_forest_get_leaf_element_in_tree (forest, tree_idx, elem_in_tree);
-
-        const auto lmi = typename TMultiscale::levelmultiindex (base_tree, element, scheme);
-
-        const auto *data = lmi_map->find (lmi);
-        if (!data) {
-          for (auto i = 0; i < num_nodes_per_elem; ++i) {
-            file << "         ";
-            for (auto c = 0; c < comps; ++c)
-              file << " 0.0";
-            file << "\n";
-          }
-          continue;
-        }
-
-        const auto lagrange_nodes = vtk_shape<TShape>::lagrange_nodes (lagrange_order);
-        for (const auto &ref_node : lagrange_nodes) {
-          const auto value = mra.evaluate_reference (*data, ref_node);
-
-          std::array<double, 3> out {};
-          if (field.transform)
-            field.transform (std::span<const double> (value.data (), value.size ()),
-                             std::span<double> (out.data (), field.num_components));
-          else
-            for (auto c = 0; c < field.num_components; ++c)
-              out[c] = value[field.first + c];
-
-          file << "         ";
-          for (auto c = 0; c < comps; ++c)
-            file << " " << out[c];
-          file << "\n";
-        }
-      }
+      file << "         ";
+      for (auto c = 0; c < comps; ++c)
+        file << " " << out[c];
+      file << "\n";
     }
 
     file << "        </DataArray>\n";

@@ -78,6 +78,18 @@ vtk_hex_point_index (int i, int j, int k, int order)
   return offset + (i - 1) + (order - 1) * ((j - 1) + (order - 1) * (k - 1));
 }
 
+/// Inverse of a corner permutation: slot of each t8code corner.
+template <size_t N>
+[[nodiscard]] constexpr std::array<int, N>
+inverse_permutation (const std::array<int, N> &perm) noexcept
+{
+  std::array<int, N> inverse {};
+  for (auto slot = 0u; slot < N; ++slot)
+    inverse[perm[slot]] = static_cast<int> (slot);
+
+  return inverse;
+}
+
 /// t8code corner -> VTK slot for a cartesian shape.
 /// t8code numbers corners with the first coordinate fastest; VTK walks the face cycle.
 template <t8_eclass TShape>
@@ -151,12 +163,9 @@ struct vtk_shape<TShape>
   [[nodiscard]] static int
   vertex_slot (int corner, const std::array<int, 3> & /*unused*/)
   {
-    constexpr auto perm = detail::vtk_corner_permutation<TShape> ();
-    for (auto slot = 0u; slot < perm.size (); ++slot)
-      if (perm[slot] == corner)
-        return static_cast<int> (slot);
+    static constexpr auto slot = detail::inverse_permutation (detail::vtk_corner_permutation<TShape> ());
 
-    return corner;
+    return slot[corner];
   }
 
   /** @brief Multilinear map: tensor of (1-x_d)/x_d weights per VTK-ordered corner. */
