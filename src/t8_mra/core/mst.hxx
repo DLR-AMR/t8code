@@ -7,8 +7,6 @@
 #include <utility>
 #include <vector>
 
-#include "ankerl/unordered_dense.h"
-
 #include "t8_mra/core/shape/mst_policy.hxx"
 #include "t8_mra/data/element_data.hxx"
 #include "t8_mra/data/levelindex_map.hxx"
@@ -36,7 +34,6 @@ class mst {
   using element_t = TElement;
   using detail_t = TDetail;
   using levelmultiindex = t8_mra::levelmultiindex<TElement::Shape>;
-  using index_set = ankerl::unordered_dense::set<levelmultiindex>;
 
   static constexpr auto Shape = TElement::Shape;
   static constexpr unsigned int U_DIM = TElement::U_DIM;
@@ -99,6 +96,25 @@ class mst {
   }
 
   /**
+   * @brief Parents of the families present on a level, one entry each.
+   *
+   * Only the leaf that is child 0 of its family contributes, so no deduplication is
+   * needed; a family whose child 0 is not a leaf here is incomplete and would be
+   * skipped anyway. The result is a snapshot, which the destructive sweep needs.
+   */
+  static void
+  collect_parents (const levelindex_map<levelmultiindex, element_t> &lmi_map, unsigned int level,
+                   std::vector<levelmultiindex> &parents)
+  {
+    parents.clear ();
+    parents.reserve (lmi_map.size (level) / levelmultiindex::NUM_CHILDREN);
+
+    for (const auto &[lmi, _] : lmi_map[level])
+      if (lmi.child_id (level) == 0)
+        parents.push_back (t8_mra::parent_lmi (lmi));
+  }
+
+  /**
    * @brief Two-scale transform of one complete family (children -> parent + details).
    *
    *   u_parent[i] = scaling * Σ_k Σ_j u_child[k][j] * M[k](j,i)
@@ -109,7 +125,7 @@ class mst {
    * @param mask_coefficients Two-scale mask matrices M[k].
    */
   static void
-  two_scale_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
+  two_scale_family (const std::array<const element_t *, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
                     detail_t &data_on_coarse, const mask_t &mask_coefficients)
   {
     const double scaling_factor = TScalingPolicy::forward_scaling_factor (levelmultiindex::NUM_CHILDREN);
@@ -123,7 +139,7 @@ class mst {
 
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
           const auto &Mk_column = mask_coefficients.transposed[k][i];
-          const auto &uk = data_on_siblings[k].u_coeffs;
+          const auto &uk = data_on_siblings[k]->u_coeffs;
 
           for (auto j = 0u; j < DOF; ++j)
             sum += uk[element_t::dg_idx (u, j)] * Mk_column[j];
@@ -136,7 +152,7 @@ class mst {
       // Detail coefficients: d[k][i] = u_child[k][i] - Σ_j M[k](i,j) * u_parent[j]
       for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
         const auto &Mk = mask_coefficients.m[k];
-        const auto &uk = data_on_siblings[k].u_coeffs;
+        const auto &uk = data_on_siblings[k]->u_coeffs;
 
         for (auto i = 0u; i < DOF; ++i) {
           const auto &Mk_row = Mk[i];
@@ -150,10 +166,23 @@ class mst {
       }
     }
 
-    data_on_coarse.vol = data_on_siblings[0].vol * levelmultiindex::NUM_CHILDREN;
-    data_on_coarse.order = data_on_siblings[0].order;
+    data_on_coarse.vol = data_on_siblings[0]->vol * levelmultiindex::NUM_CHILDREN;
+    data_on_coarse.order = data_on_siblings[0]->order;
 
     TOrderingPolicy::adjust_parent_order (data_on_coarse);
+  }
+
+  /// Convenience form for callers that hold the siblings by value.
+  static void
+  two_scale_family (const std::array<element_t, levelmultiindex::NUM_CHILDREN> &data_on_siblings,
+                    detail_t &data_on_coarse, const mask_t &mask_coefficients)
+  {
+    std::array<const element_t *, levelmultiindex::NUM_CHILDREN> siblings;
+
+    for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k)
+      siblings[k] = &data_on_siblings[k];
+
+    two_scale_family (siblings, data_on_coarse, mask_coefficients);
   }
 
   /**
@@ -238,32 +267,28 @@ class mst {
                              levelindex_map<levelmultiindex, detail_t> &d_map,
                              const mask_t &mask_coefficients)
   {
-    index_set I_set;
+    std::vector<levelmultiindex> parents;
     detail_t data_on_coarse;
-    std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
+    std::array<const element_t *, levelmultiindex::NUM_CHILDREN> data_on_siblings;
 
     for (auto l = l_max; l > l_min; --l) {
-      I_set.reserve (lmi_map.size (l));
       d_map[l - 1].reserve (lmi_map.size (l) / levelmultiindex::NUM_CHILDREN);
 
-      for (const auto &[lmi, _] : lmi_map[l])
-        I_set.emplace (t8_mra::parent_lmi (lmi));
+      collect_parents (lmi_map, l, parents);
 
-      for (const auto &lmi : I_set) {
+      for (const auto &lmi : parents) {
         const auto siblings_lmi = t8_mra::children_lmi (lmi);
 
         // Incomplete families (siblings on finer levels) carry no detail
         // information.
         auto family_complete = true;
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-          const auto *sibling = lmi_map.find (siblings_lmi[k]);
+          data_on_siblings[k] = lmi_map.find (siblings_lmi[k]);
 
-          if (sibling == nullptr) {
+          if (data_on_siblings[k] == nullptr) {
             family_complete = false;
             break;
           }
-
-          data_on_siblings[k] = *sibling;
         }
 
         if (!family_complete)
@@ -272,8 +297,6 @@ class mst {
         two_scale_family (data_on_siblings, data_on_coarse, mask_coefficients);
         d_map.insert (lmi, data_on_coarse);
       }
-
-      I_set.clear ();
     }
   }
 
@@ -295,32 +318,28 @@ class mst {
                             levelindex_map<levelmultiindex, detail_t> &d_map,
                             const mask_t &mask_coefficients, TKeep &&keep, TCollapsed &&collapsed)
   {
-    index_set I_set;
+    std::vector<levelmultiindex> parents;
     detail_t data_on_coarse;
-    std::array<element_t, levelmultiindex::NUM_CHILDREN> data_on_siblings;
+    std::array<const element_t *, levelmultiindex::NUM_CHILDREN> data_on_siblings;
 
     for (auto l = l_max; l > l_min; --l) {
-
-      for (const auto &[lmi, _] : lmi_map[l])
-        I_set.emplace (t8_mra::parent_lmi (lmi));
-
       d_map[l - 1].reserve (lmi_map.size (l) / levelmultiindex::NUM_CHILDREN);
 
-      for (const auto &lmi : I_set) {
+      collect_parents (lmi_map, l, parents);
+
+      for (const auto &lmi : parents) {
         const auto siblings_lmi = t8_mra::children_lmi (lmi);
 
         // On an adaptive grid a family may be incomplete: some siblings stayed
         // refined on finer levels. Such families cannot be two-scale transformed.
         auto family_complete = true;
         for (auto k = 0u; k < levelmultiindex::NUM_CHILDREN; ++k) {
-          const auto *sibling = lmi_map.find (siblings_lmi[k]);
+          data_on_siblings[k] = lmi_map.find (siblings_lmi[k]);
 
-          if (sibling == nullptr) {
+          if (data_on_siblings[k] == nullptr) {
             family_complete = false;
             break;
           }
-
-          data_on_siblings[k] = *sibling;
         }
 
         if (!family_complete)
@@ -342,8 +361,6 @@ class mst {
           collapsed (siblings_lmi[k]);
         }
       }
-
-      I_set.clear ();
     }
   }
 
