@@ -5,56 +5,129 @@
 #include <array>
 #include <cmath>
 
-#include <gsl/gsl_sf_legendre.h>
-
 namespace t8_mra
 {
 
-/**
- * @brief The p-th Legendre polynomial at x, shifted to [0,1] and L2-normalized.
- *
- * Shift x_std = 2x-1 and multiply by sqrt(2p+1) for orthonormality on [0,1].
- *
- * @param x Point in [0,1].
- * @param p Polynomial degree.
- */
-[[nodiscard]] inline double
-phi_1d (double x, int p)
+namespace detail
 {
-  // Transform x from [0,1] to [-1,1] for standard Legendre polynomials
-  double x_std = 2.0 * x - 1.0;
 
-  // Evaluate Legendre polynomial using GSL
-  double leg_value = gsl_sf_legendre_Pl (p, x_std);
+/// Unnormalized Legendre polynomials of degrees 0..P-1 at xi in [-1,1].
+template <int P>
+[[nodiscard]] inline std::array<double, P>
+legendre_raw (double xi) noexcept
+{
+  std::array<double, P> value {};
+  value[0] = 1.0;
 
-  // Apply L2-normalization for [0,1] interval: sqrt(2*p + 1)
-  return leg_value * std::sqrt (2.0 * p + 1.0);
+  if constexpr (P > 1)
+    value[1] = xi;
+
+  for (auto p = 1; p + 1 < P; ++p)
+    value[p + 1] = ((2 * p + 1) * xi * value[p] - p * value[p - 1]) / (p + 1);
+
+  return value;
 }
 
-/**
- * @brief Derivative of the p-th normalized Legendre polynomial at x on [0,1].
- *
- * @tparam P number of 1D modes (degrees 0..P-1); sizes the GSL scratch exactly.
- * @param p Polynomial degree in [0, P).
- *
- * GSL writes degrees 0..p; the chain-rule factor 2 (from x_std = 2x-1) and the
- * sqrt(2p+1) normalization are applied to the requested degree.
- */
+/// sqrt(2p+1), the L2 normalization of degree p on [0,1].
 template <int P>
-[[nodiscard]] inline double
-phi_prime_1d (double x, int p)
-{
-  const auto x_std = 2.0 * x - 1.0;
+inline const std::array<double, P> legendre_norm = [] {
+  std::array<double, P> norm {};
+  for (auto p = 0; p < P; ++p)
+    norm[p] = std::sqrt (2.0 * p + 1.0);
 
-  // Derivative of the constant mode is zero (and keeps p+1 <= P for p > 0).
+  return norm;
+}();
+
+}  // namespace detail
+
+/// Normalized Legendre values and derivatives of degrees 0..P-1 at one point.
+template <int P>
+struct legendre_modes
+{
+  std::array<double, P> value {};
+  std::array<double, P> derivative {};
+};
+
+/** @brief Degrees 0..P-1 at x in [0,1], orthonormal there, in one recurrence. */
+template <int P>
+[[nodiscard]] inline std::array<double, P>
+legendre_values (double x) noexcept
+{
+  auto value = detail::legendre_raw<P> (2.0 * x - 1.0);
+
+  for (auto p = 0; p < P; ++p)
+    value[p] *= detail::legendre_norm<P>[p];
+
+  return value;
+}
+
+/** @brief Degrees 0..P-1 and their derivatives at x in [0,1], orthonormal there. */
+template <int P>
+[[nodiscard]] inline legendre_modes<P>
+legendre_at (double x) noexcept
+{
+  const auto raw = detail::legendre_raw<P> (2.0 * x - 1.0);
+  legendre_modes<P> modes;
+
+  /// P'_{p+1} = P'_{p-1} + (2p+1) P_p on [-1,1]; xi = 2x-1
+  if constexpr (P > 1)
+    modes.derivative[1] = 1.0;
+
+  for (auto p = 1; p + 1 < P; ++p)
+    modes.derivative[p + 1] = modes.derivative[p - 1] + (2 * p + 1) * raw[p];
+
+  for (auto p = 0; p < P; ++p) {
+    modes.value[p] = raw[p] * detail::legendre_norm<P>[p];
+    modes.derivative[p] *= 2.0 * detail::legendre_norm<P>[p];
+  }
+
+  return modes;
+}
+
+/** @brief The p-th Legendre polynomial at x, shifted to [0,1] and L2-normalized. */
+[[nodiscard]] inline double
+phi_1d (double x, int p) noexcept
+{
+  if (p == 0)
+    return 1.0;
+
+  const auto xi = 2.0 * x - 1.0;
+  auto previous = 1.0;
+  auto current = xi;
+
+  for (auto n = 1; n < p; ++n) {
+    const auto next = ((2 * n + 1) * xi * current - n * previous) / (n + 1);
+    previous = current;
+    current = next;
+  }
+
+  return current * std::sqrt (2.0 * p + 1.0);
+}
+
+/** @brief Derivative of the p-th normalized Legendre polynomial at x on [0,1]. */
+[[nodiscard]] inline double
+phi_prime_1d (double x, int p) noexcept
+{
   if (p == 0)
     return 0.0;
 
-  std::array<double, P> leg_array;
-  std::array<double, P> deriv_array;
-  gsl_sf_legendre_Pl_deriv_array (p, x_std, leg_array.data (), deriv_array.data ());
+  const auto xi = 2.0 * x - 1.0;
+  auto previous = 1.0;
+  auto current = xi;
+  auto derivative_previous = 0.0;
+  auto derivative = 1.0;
 
-  return 2.0 * deriv_array[p] * std::sqrt (2.0 * p + 1.0);
+  for (auto n = 1; n < p; ++n) {
+    const auto next = ((2 * n + 1) * xi * current - n * previous) / (n + 1);
+    const auto next_derivative = derivative_previous + (2 * n + 1) * current;
+
+    previous = current;
+    current = next;
+    derivative_previous = derivative;
+    derivative = next_derivative;
+  }
+
+  return 2.0 * derivative * std::sqrt (2.0 * p + 1.0);
 }
 
 }  // namespace t8_mra
