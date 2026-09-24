@@ -57,8 +57,8 @@ struct t8_openfoam_reader
    * \param [in] foamfile  Path to the *.foam file inside the OpenFOAM case directory.
    * \param [in] comm      The communicator to use for the obtained forest.
    */
-  t8_openfoam_reader (t8_path foamfile, [[maybe_unused]] sc_MPI_Comm comm)
-    : m_case_dir (get_case_dir (foamfile)), m_cmesh (nullptr)
+  t8_openfoam_reader (t8_path foamfile, sc_MPI_Comm comm)
+    : m_case_dir (get_case_dir (foamfile)), m_cmesh (nullptr), m_comm (comm)
   {
     SC_CHECK_ABORTF (std::filesystem::exists (foamfile), "ERROR: Foam file does not exist: %s", foamfile.c_str ());
   };
@@ -155,16 +155,154 @@ struct t8_openfoam_reader
   read_neighbor (const t8_path& neighbor_file);
 
   /**
+   * Compute the cell shape of the OpenFOAM cell
+   * \param [in] cell_id  The id of the cell
+   * \return              The eclass of the cell
+   */
+  t8_eclass_t
+  get_cell_eclass (const size_t cell_id)
+  {
+    /* Count points of the cell. The points are counted for every face,
+    so a hex for example has 6 (faces) * 4 (vertices per face) = 24 points. */
+    int num_points = 0;
+    for (const auto& face : m_cell_faces[cell_id]) {
+      num_points += m_face_points[face.first].size ();
+    }
+
+    /* OpenFOAM only has 3D cells, so we do not check 0-2 dimensional cells. */
+    switch (m_cell_faces[cell_id].size ()) {
+    case 4:
+      /* This cell is hopefully a tet with 4*3=12 points. */
+      if (num_points == 12)
+        return T8_ECLASS_TET;
+      break;
+    case 5:
+      /* This cell could either be a prism (3 * 4 + 2 * 3 = 18) or pyramid (4 * 3 + 1 * 4 = 16). */
+      if (num_points == 18)
+        return T8_ECLASS_PRISM;
+      if (num_points == 16)
+        return T8_ECLASS_PYRAMID;
+      break;
+    case 6:
+      /* This cell is hopefully a hex with 6 * 4 = 24 points. */
+      if (num_points == 24)
+        return T8_ECLASS_HEX;
+      break;
+    default:
+      break;
+    }
+    return T8_ECLASS_INVALID;
+  }
+
+  /**
+   * Given a face eclass and orientation converts the face id of a t8code face vertex id to the corresponding
+   * OpenFOAM face id.
+   * \param [in] face_class         The eclass of the face (triangle or quad)
+   * \param [in] orientation        The orientation of the face (int and bool, the first is the OF vertex,
+   *                                which corresponds to the t8code vertex 0 and the second is 1, if both face
+   *                                normals point in the same direction and 0 otherwise)
+   * \param [in] t8_face_vertex_id  The t8 face vertex id to convert
+   * \return                        The converted OF face vertex id
+   */
+  constexpr static u_int8_t
+  t8_face_vertex_to_of_point (t8_eclass_t face_class, std::pair<u_int8_t, u_int8_t> orientation,
+                              u_int8_t t8_face_vertex_id)
+  {
+    /* While t8code uses the z-order for quads, OpenFOAM uses an anti-clockwise numeration.
+     * So if the face is a quad, we have to switch indices in accordance with this LUT.
+     * This is not necessary for triangles. */
+    if (face_class == T8_ECLASS_QUAD) {
+      t8_face_vertex_id = quad_conversion[t8_face_vertex_id];
+    }
+
+    /* The OpenFOAM face point belonging to the current t8_face_vertex is calculated via the orientation
+     * (orientation.second tells us if we count up +1 or down -1 depending on the fact that the face normals point
+     * in the same direction and orientation.first tells us which OF point is located at t8 vertex 0) and the current t8_face_vertex.
+     * We add t8_eclass_num_vertices[face_class] once, so that we never take a mod of a negative value. */
+    const int order = orientation.second ? 1 : -1;
+    return (order * t8_face_vertex_id + orientation.first + t8_eclass_num_vertices[face_class])
+           % t8_eclass_num_vertices[face_class];
+  }
+
+  /**
+   * Finds a list inside a list which does not contain given values
+   * \param [in] listlist     A list of lists (range of ranges)
+   * \param [in] forbidden    A range of forbidden values
+   * \return                  The location of the first sublist, which does not contain any of \a forbidden. Empty on failure.
+   */
+  template <typename ListList, typename Forbidden>
+  static std::optional<size_t>
+  find_list_not_containing (const ListList& listlist, const Forbidden& forbidden)
+  {
+    /* Find the first index where the corresponding list contains none of the forbidden values. */
+    auto it = std::ranges::find_if (listlist, [&] (const auto& vec) {
+      /* Return true if the range contains none of the forbidden values. */
+      for (const auto& forbidden_val : forbidden) {
+        if (std::ranges::find (vec, forbidden_val) != std::ranges::end (vec)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    if (it != std::ranges::end (listlist)) {
+      return std::distance (std::ranges::begin (listlist), it);
+    }
+    return std::nullopt;
+  }
+
+  /**
+   * Finds a list inside a list which contains given values
+   * \param [in] listlist     A list of lists (range of ranges)
+   * \param [in] required     A range of required values
+   * \return                  The location of the first sublist, which contains all values of \a required. Empty on failure.
+   */
+  template <typename ListList, typename Required>
+  static std::optional<size_t>
+  find_list_containing (const ListList& listlist, const Required& required)
+  {
+    /* Find the first index where the corresponding list contains all of the required values. */
+    auto it = std::ranges::find_if (listlist, [&] (const auto& vec) {
+      /* Return true if the range contains all of the required values. */
+      return std::ranges::all_of (
+        required, [&] (const auto& val) { return std::ranges::find (vec, val) != std::ranges::end (vec); });
+    });
+
+    if (it != std::ranges::end (listlist)) {
+      return std::distance (std::ranges::begin (listlist), it);
+    }
+    return std::nullopt;
+  }
+
+  /**
    * Build the cmesh from the raw mesh data.
    * \return  True on success
    */
   bool
   build_cmesh ();
 
+  /**
+   * Use the gathered cell information to build a hex cell and add it to the cmesh.
+   * \param [in] cell_id           The id of the cell.
+   * \param [in] face_ids          The ids of the cell faces.
+   * \param [in] face_point_ids    The ids of the points of the cell faces.
+   * \param [in] face_normals      The normals of the cell faces.
+   */
+  void
+  reconstruct_hex_cell (size_t cell_id, std::vector<size_t> face_ids, std::vector<std::span<size_t>> face_point_ids,
+                        std::vector<char> face_normals);
+
   /** Path to the OpenFOAM case. */
   t8_path m_case_dir;
   /** The cmesh to build. */
   t8_cmesh_t m_cmesh;
+  /** The assigned communicator. */
+  sc_MPI_Comm m_comm;
+
+  /** Conversion table between OpenFOAM and t8code quad numeration.
+   * We only need this for quads, since triangles numerated equally.
+   */
+  static constexpr std::array<int, 4> quad_conversion = { { 0, 1, 3, 2 } };
 
   /** Holds all points of the mesh. point_id -> x, y, z */
   std::vector<t8_3D_vec> m_points;
