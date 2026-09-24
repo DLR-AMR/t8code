@@ -377,9 +377,9 @@ TEST (mra_mat, lu_solve_recovers_known_solution)
       b[i] += A (i, j) * x_true[j];
 
   std::vector<size_t> p;
-  std::vector<double> x = b;
+  std::vector<double> x (3, 0.0);
   t8_mra::lu_factors (A, p);  // A becomes its LU factors, p the pivot order
-  t8_mra::lu_solve (A, p, x);
+  t8_mra::lu_solve (A, p, b, x);
 
   for (size_t i = 0; i < 3; ++i)
     EXPECT_NEAR (x[i], x_true[i], eps) << "component " << i;
