@@ -26,6 +26,7 @@
 #include <test/t8_gtest_custom_assertion.hxx>
 #include <test/t8_gtest_macros.hxx>
 #include "t8_gtest_bfs_base.hxx"
+#include "t8_gtest_dfs_base.hxx"
 
 /** In this test we iterate through all elements. 
  * On every level we check if the element is equal to the element we get when setting it from the linear id.
@@ -80,3 +81,63 @@ TEST_P (class_test_set_linear_id, test_linear_id_bfs)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_test_all_imps, class_test_set_linear_id, AllSchemes, print_all_schemes);
+
+/** The linear ids of the multilevel schemes enumerate all elements of the tree up to the maximum level,
+ * so they do not follow the uniform refinement of a level as in \ref class_test_set_linear_id.
+ * Instead we check for every element and for its first and last descendant on the maximum level,
+ * that setting an element from its linear id gives the element back.
+ * The descendants on the maximum level have linear ids that do not fit into an int.
+ */
+struct class_test_set_linear_id_round_trip: public TestDFS
+{
+ private:
+  void
+  check_round_trip (const t8_element_t *elem, const t8_element_level level)
+  {
+    const t8_linearidx_t id = scheme->element_get_linear_id (eclass, elem, level);
+    scheme->element_set_linear_id (eclass, test_element, level, id);
+    EXPECT_ELEM_EQ (scheme, eclass, elem, test_element);
+  }
+
+  void
+  check_element () override
+  {
+    const t8_element_level maxlevel = scheme->get_maxlevel (eclass);
+    check_round_trip (element, scheme->element_get_level (eclass, element));
+    scheme->element_get_first_descendant (eclass, element, descendant, maxlevel);
+    check_round_trip (descendant, maxlevel);
+    scheme->element_get_last_descendant (eclass, element, descendant, maxlevel);
+    check_round_trip (descendant, maxlevel);
+  }
+
+ protected:
+  void
+  SetUp () override
+  {
+    dfs_test_setup ();
+    scheme->element_new (eclass, 1, &test_element);
+    scheme->element_new (eclass, 1, &descendant);
+  }
+  void
+  TearDown () override
+  {
+    scheme->element_destroy (eclass, 1, &descendant);
+    scheme->element_destroy (eclass, 1, &test_element);
+    dfs_test_teardown ();
+  }
+#if T8_TEST_LEVEL_INT >= 1
+  const int maxlvl = 3;
+#else
+  const int maxlvl = 5;
+#endif
+  t8_element_t *test_element;
+  t8_element_t *descendant;
+};
+
+TEST_P (class_test_set_linear_id_round_trip, test_linear_id_round_trip_dfs)
+{
+  check_recursive_dfs_to_max_lvl (maxlvl);
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_test_multilevel_imps, class_test_set_linear_id_round_trip, AllMultilevelSchemes,
+                          print_all_schemes);

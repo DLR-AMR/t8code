@@ -92,3 +92,63 @@ TEST_P (class_is_ancestor, t8_recursive_dfs_is_ancestor)
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_is_ancestor, class_is_ancestor, AllSchemes, print_all_schemes);
+INSTANTIATE_TEST_SUITE_P (t8_gtest_is_ancestor_multilevel, class_is_ancestor, AllMultilevelSchemes, print_all_schemes);
+
+/** Siblings are never ancestors of each other. In the multilevel schemes this especially holds for
+ * a refined element, which is its own first child, and the other children.
+ * The siblings are constructed as children of the parent, since not all schemes implement element_get_sibling.
+ */
+struct class_is_ancestor_siblings: public TestDFS
+{
+  void
+  check_element () override
+  {
+    if (scheme->element_get_level (eclass, element) == 0) {
+      return;
+    }
+    /* Only the default quad and hex schemes implement element_get_sibling. */
+    const bool check_get_sibling
+      = std::get<0> (GetParam ()) == 2 && (eclass == T8_ECLASS_QUAD || eclass == T8_ECLASS_HEX);
+
+    t8_element_t *parent;
+    t8_element_t *sibling;
+    t8_element_t *sibling_by_id;
+    scheme->element_new (eclass, 1, &parent);
+    scheme->element_new (eclass, 1, &sibling);
+    scheme->element_new (eclass, 1, &sibling_by_id);
+    scheme->element_get_parent (eclass, element, parent);
+
+    const int child_id = scheme->element_get_child_id (eclass, element);
+    const int num_siblings = scheme->element_get_num_siblings (eclass, element);
+    EXPECT_EQ (num_siblings, scheme->element_get_num_children (eclass, parent));
+    for (int sibling_id = 0; sibling_id < num_siblings; ++sibling_id) {
+      scheme->element_get_child (eclass, parent, sibling_id, sibling);
+      if (check_get_sibling) {
+        scheme->element_get_sibling (eclass, element, sibling_id, sibling_by_id);
+        EXPECT_ELEM_EQ (scheme, eclass, sibling_by_id, sibling);
+      }
+      if (sibling_id == child_id) {
+        EXPECT_ELEM_EQ (scheme, eclass, sibling, element);
+        continue;
+      }
+      EXPECT_FALSE (scheme->element_is_ancestor (eclass, element, sibling));
+      EXPECT_FALSE (scheme->element_is_ancestor (eclass, sibling, element));
+    }
+    scheme->element_destroy (eclass, 1, &sibling_by_id);
+    scheme->element_destroy (eclass, 1, &sibling);
+    scheme->element_destroy (eclass, 1, &parent);
+  }
+};
+
+TEST_P (class_is_ancestor_siblings, t8_recursive_dfs_siblings_are_no_ancestors)
+{
+#if T8_TEST_LEVEL_INT >= 1  // test level medium or lower
+  const int maxlvl = 4;
+#else
+  const int maxlvl = 6;  // test level full
+#endif
+  check_recursive_dfs_to_max_lvl (maxlvl);
+}
+
+INSTANTIATE_TEST_SUITE_P (t8_gtest_is_ancestor_siblings, class_is_ancestor_siblings, AllMultilevelSchemes,
+                          print_all_schemes);

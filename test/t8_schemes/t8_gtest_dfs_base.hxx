@@ -54,7 +54,10 @@ struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
     /** call the implementation of the specific test*/
     check_element ();
 
-    if (scheme->element_get_level (eclass, element) < max_dfs_recursion_level) {
+    /* Elements may not be refinable, e.g. in a multilevel scheme a refined element is its own first child
+     * and cannot be refined any further. */
+    if (scheme->element_get_level (eclass, element) < max_dfs_recursion_level
+        && scheme->element_is_refinable (eclass, element)) {
       /* iterate over all children */
       const int num_children = scheme->element_get_num_children (eclass, element);
       for (int ichild = 0; ichild < num_children; ichild++) {

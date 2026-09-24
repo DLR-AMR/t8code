@@ -462,6 +462,19 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     T8_ASSERT (element_is_valid (elem));
     const multilevel_element *elem_m = (multilevel_element *) elem;
     multilevel_element *sibling_m = (multilevel_element *) sibling;
+    /* Read before writing, since elem and sibling may be the same element. */
+    const bool elem_is_child_of_itself = elem_m->is_child_of_itself;
+    if (elem_is_child_of_itself) {
+      /* The siblings of an element which is child of itself are the element itself and the children of its linear element. */
+      if (sibid == 0) {
+        element_copy (elem, sibling);
+        return;
+      }
+      TUnderlyingEclassScheme::element_get_child ((const t8_element_t *) &elem_m->linear_element, sibid - 1,
+                                                  (t8_element_t *) &sibling_m->linear_element);
+      sibling_m->is_child_of_itself = 0;
+      return;
+    }
     if (sibid == 0) {
       /* The first sibling is the parent as child of itself. */
       sibling_m->is_child_of_itself = 1;
@@ -618,11 +631,12 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     multilevel_element *elem_m = (multilevel_element *) elem;
     const int elem_level = element_get_level (elem);
     T8_ASSERT (level <= elem_level);
-    /* If the element is child of itself the id is always 0. */
-    if (elem_m->is_child_of_itself) {
+    /* If the element is child of itself, it is the first child of its ancestor at its own level. */
+    if (elem_m->is_child_of_itself && level == elem_level) {
       return 0;
     }
-    /* All other children are shifted by one to make space for the first child. */
+    /* On all coarser levels the ancestor is a regular child.
+     * These children are shifted by one to make space for the first child. */
     return 1 + TUnderlyingEclassScheme::element_get_ancestor_id ((const t8_element_t *) &elem_m->linear_element, level);
   }
 
@@ -687,6 +701,10 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     T8_ASSERT (element_is_valid (elem2));
     const multilevel_element *elem_m1 = (multilevel_element *) elem1;
     const multilevel_element *elem_m2 = (multilevel_element *) elem2;
+    if (elem_m1->is_child_of_itself) {
+      /* An element which is child of itself cannot be refined, so it is only an ancestor of itself. */
+      return element_is_equal (elem1, elem2);
+    }
     return TUnderlyingEclassScheme::element_is_ancestor ((const t8_element_t *) &elem_m1->linear_element,
                                                          (const t8_element_t *) &elem_m2->linear_element);
   }
@@ -1049,10 +1067,10 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     const t8_linearidx_t id_max = get_num_elem_in_regular_subtree (dim, maxlvl);
     T8_ASSERT (id < id_max);
 #endif
-    int level = 0;                 /* current operating level */
-    t8_linearidx_t id_linear = id; /* linear id */
-    int id_in_subtree = id_linear; /* id in subtree */
-    t8_linearidx_t subtree_id;     /* id of the subtree */
+    int level = 0;                            /* current operating level */
+    t8_linearidx_t id_linear = id;            /* linear id of the anchor on the maximum level */
+    t8_linearidx_t id_in_subtree = id_linear; /* id in subtree */
+    t8_linearidx_t subtree_id;                /* id of the subtree */
     for (; level < maxlvl; ++level) {
       /* if id in subtree is 0 this is the root */
       if (id_in_subtree == 0) {
@@ -1072,7 +1090,9 @@ class t8_multilevel_scheme: private TUnderlyingEclassScheme {
     }
     T8_ASSERT (level <= uniform_level);
     elem_m->is_child_of_itself = level < uniform_level;
-    TUnderlyingEclassScheme::element_set_linear_id ((t8_element_t *) &elem_m->linear_element, level, id_linear);
+    /* The underlying scheme expects the linear id on the level of the element. */
+    TUnderlyingEclassScheme::element_set_linear_id ((t8_element_t *) &elem_m->linear_element, level,
+                                                    id_linear >> (dim * (maxlvl - level)));
   }
 
   /** Compute the linear id of a given element in a hypothetical uniform

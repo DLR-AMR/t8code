@@ -32,7 +32,8 @@
 #include <gtest/gtest.h>
 
 /** Create a scheme according to a scheme id.
- * \param [in] scheme_id 0: Use default scheme; 1: Use standalone scheme.
+ * \param [in] scheme_id 0: Use default scheme; 1: Use standalone scheme;
+ *                       2: Use default multilevel scheme; 3: Use standalone multilevel scheme.
  * \return The created scheme.
  */
 const t8_scheme *
@@ -43,14 +44,18 @@ create_from_scheme_id (const int scheme_id)
     return t8_scheme_new_default ();
   case 1:
     return t8_scheme_new_standalone ();
+  case 2:
+    return t8_scheme_new_default_multilevel ();
+  case 3:
+    return t8_scheme_new_standalone_multilevel ();
   default:
     SC_ABORT_NOT_REACHED ();
     return nullptr;
   }
 }
 
-/** Strings for the two scheme types. */
-static const char *t8_scheme_to_string[] = { "default", "standalone" };
+/** Strings for the scheme types. */
+static const char *t8_scheme_to_string[] = { "default", "standalone", "default_multilevel", "standalone_multilevel" };
 
 /** Lambda to print the scheme and the eclass of an TestParamInfo object. */
 auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_eclass_t>> &info) {
@@ -66,5 +71,8 @@ auto print_scheme
 #define AllSchemeCollections ::testing::Range (0, 2)
 /** Macro for all schemes and all possible eclasses.*/
 #define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
+/** Macro for the multilevel schemes and the eclasses they are used with. */
+#define AllMultilevelSchemes \
+  ::testing::Combine (::testing::Range (2, 4), ::testing::Values (T8_ECLASS_LINE, T8_ECLASS_QUAD, T8_ECLASS_HEX))
 
 #endif /* T8_GTEST_SCHEMES_HXX */
