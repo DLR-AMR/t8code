@@ -148,7 +148,7 @@ levelindex_map<TLmi, TData>::insert (unsigned int level, size_t key, const TData
 
   TLmi lmi;
   lmi.index = key;
-  level_map[level][lmi] = data;
+  level_map[level].insert_or_assign (lmi, data);
 }
 
 template <lmi_type TLmi, typename TData>
