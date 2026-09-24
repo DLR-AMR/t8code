@@ -34,15 +34,16 @@ concept reference_basis = requires (std::array<double, static_cast<std::size_t> 
 template <t8_eclass TShape, int P>
 struct basis;
 
+/// The constant mode on the reference cell, the only mode a cell mean sees.
+template <t8_eclass TShape, int P>
+inline const double reference_mode0 = basis<TShape, P>::eval ({})[0];
+
 /// Physical cell mean of a modal field (only the zeroth mode survives).
 template <t8_eclass TShape, int P>
 [[nodiscard]] inline double
 cell_mean (std::span<const double> coeffs, double vol)
 {
-  using basis_t = basis<TShape, P>;
-  static const double phi0 = basis_t::eval ({})[0];
-
-  return basis_t::normalization (vol) * phi0 * coeffs[0];
+  return basis<TShape, P>::normalization (vol) * reference_mode0<TShape, P> * coeffs[0];
 }
 
 }  // namespace t8_mra
