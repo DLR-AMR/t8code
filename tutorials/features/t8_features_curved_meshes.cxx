@@ -61,6 +61,7 @@ struct t8_naca_geometry_adapt_data
   int *levels;      /** Array with refinement levels */
 };
 
+#if T8_ENABLE_OCC
 /**
  * The adaptation callback function. This function will be called once for each element
  * and the return value decides whether this element should be refined or not.
@@ -130,7 +131,9 @@ t8_naca_geometry_adapt_callback (t8_forest_t forest, t8_forest_t forest_from, t8
   /* Do not change this element. */
   return 0;
 }
+#endif
 
+#if T8_ENABLE_OCC
 /**
  * The geometry refinement function. Here, we refine all elements, which touch certain geometries.
  *
@@ -193,6 +196,7 @@ t8_naca_geometry_refinement (t8_forest_t forest, const std::string &fileprefix, 
 
   return 1;
 }
+#endif
 
 struct t8_naca_plane_adapt_data
 {
@@ -404,7 +408,7 @@ main (int argc, char **argv)
   sc_options_add_switch (opt, 'g', "geometry", &geometry,
                          "Refine the forest based on the geometries the elements lie on. "
                          "Only viable with curved meshes. Therefore, the -o option is enabled automatically. "
-                         "Cannot be combined with '-p'.");
+                         "Cannot be combined with '-p'. Requires OCC linkage.");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The uniform refinement level of the mesh. Default: 0");
   sc_options_add_int (opt, 'D', "dorsal", &rlevel_dorsal, 3,
                       "The refinement level of the dorsal side of the naca profile. Default: 3");
@@ -419,17 +423,32 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'r', "plane_level", &rlevel_plane, 3, "The refinement level of the plane. Default: 3");
   sc_options_add_int (opt, 'n', "timesteps", &steps, 10,
                       "How many steps the plane takes to move through the airfoil. Default: 10");
-  sc_options_add_switch (opt, 'o', "cad", &cad,
-                         "Use the cad geometry. In the geometry mode this is enabled automatically.");
+  sc_options_add_switch (
+    opt, 'o', "cad", &cad,
+    "Use the cad geometry. In the geometry mode this is enabled automatically. Requires OCC linkage.");
   parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  // Query whether the geometry flags where used correctly.
+  // geometry and cad are not allowed to be used when t8code was not linked against OCC.
+  const bool geometry_valid =
+#if T8_ENABLE_OCC
+    true;
+#else
+    geometry == 0 && cad == 0;
+#endif
   if (helpme) {
     /* display help message and usage */
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed == 0 || fileprefix == NULL || (!plane && !geometry) || (plane && geometry)) {
+  else if (parsed == 0 || fileprefix == NULL || !geometry_valid || (!plane && !geometry) || (plane && geometry)) {
     /* wrong usage */
-    if (!plane && !geometry) {
+    if (!geometry_valid) {
+      t8_global_productionf ("%s\n", help);
+      t8_global_productionf (
+        "\n\tERROR: Wrong usage.\n"
+        "\tt8code not linked to OCC. To use geometry or cad mode, t8code must be linked with OCC.\n\n");
+    }
+    else if (!plane && !geometry) {
       t8_global_productionf ("%s\n", help);
       t8_global_productionf ("\n\tERROR: Wrong usage.\n"
                              "\tPlease specify either the '-p' or the '-g' option as described above.\n\n");
@@ -448,7 +467,9 @@ main (int argc, char **argv)
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
     T8_ASSERT (t8_forest_is_committed (forest));
     if (geometry) {
+#if T8_ENABLE_OCC
       t8_naca_geometry_refinement (forest, fp, level, rlevel_dorsal, rlevel_ventral, dim);
+#endif
     }
     if (plane) {
       t8_naca_plane_refinement (forest, fp, level, rlevel_plane, steps, thickness, xmin, xmax, cad);
