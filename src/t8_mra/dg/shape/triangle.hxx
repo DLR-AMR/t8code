@@ -2,6 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
 #include <array>
 #include <span>
 #include <vector>
@@ -39,6 +40,10 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
 
   explicit dg (int dunavant_rule = default_quadrature_rule): basis (dunavant_rule)
   {
+    basis_at_quad.resize (basis.quad.num_points);
+
+    for (auto q = 0u; q < basis.quad.num_points; ++q)
+      basis_at_quad[q] = basis.basis_value (geometry_t::basis_coord (quad_point (q)));
   }
 
   /** @brief Cell geometry from native corner coords, volume and reference vertex order. */
@@ -58,27 +63,25 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
   void
   project (std::span<double> coeffs, const geometry_t &geom, Func &&func)
   {
-    const auto num_q = basis.quad.num_points;
-    std::vector<std::array<double, DOF>> basis_at_quad (num_q);
-    std::vector<std::array<double, U_DIM>> f_at_quad (num_q);
+    std::ranges::fill (coeffs, 0.0);
 
-    for (auto j = 0u; j < num_q; ++j) {
-      const std::array<double, 2> ref { basis.quad.points[2 * j], basis.quad.points[2 * j + 1] };
-      const auto phys = geom.to_physical (ref);
-      basis_at_quad[j] = basis.basis_value (geom.basis_coord (ref));
-      f_at_quad[j] = func (phys[0], phys[1]);
-    }
+    for (auto q = 0u; q < basis.quad.num_points; ++q) {
+      const auto phys = geom.to_physical (quad_point (q));
+      const auto f_val = func (phys[0], phys[1]);
+      const auto &phi = basis_at_quad[q];
+      const auto weight = basis.quad.weights[q];
 
-    for (auto i = 0u; i < DOF; ++i) {
-      std::array<double, U_DIM> sum = {};
+      for (auto i = 0u; i < DOF; ++i) {
+        const auto weighted_phi = weight * phi[i];
 
-      for (auto j = 0u; j < num_q; ++j)
         for (auto u = 0u; u < U_DIM; ++u)
-          sum[u] += basis.quad.weights[j] * f_at_quad[j][u] * geom.basis_scale * basis_at_quad[j][i];
-
-      for (auto u = 0u; u < U_DIM; ++u)
-        coeffs[element_t::dg_idx (u, i)] = sum[u] * geom.volume;
+          coeffs[element_t::dg_idx (u, i)] += weighted_phi * f_val[u];
+      }
     }
+
+    const auto scale = geom.basis_scale * geom.volume;
+    for (auto &coeff : coeffs)
+      coeff *= scale;
   }
 
   /** @brief Solution value per component at a physical point. */
@@ -105,6 +108,17 @@ class dg<T8_ECLASS_TRIANGLE, U, P> {
       grad[u] = geom.gradient (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref);
 
     return grad;
+  }
+
+ private:
+  /// Basis values at the fixed quadrature points, built once with the rule.
+  std::vector<std::array<double, DOF>> basis_at_quad;
+
+  /// Reference coordinates of quadrature point q.
+  [[nodiscard]] std::array<double, DIM>
+  quad_point (unsigned int q) const
+  {
+    return { basis.quad.points[DIM * q], basis.quad.points[DIM * q + 1] };
   }
 };
 

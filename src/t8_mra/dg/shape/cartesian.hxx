@@ -2,6 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
 #include <array>
 #include <span>
 #include <type_traits>
@@ -41,6 +42,10 @@ class dg<TShape, U, P> {
 
   explicit dg (int num_quad_points_1d = default_quadrature_rule): basis (num_quad_points_1d)
   {
+    basis_at_quad.resize (basis.quad.num_points);
+
+    for (auto q = 0u; q < basis.quad.num_points; ++q)
+      basis_at_quad[q] = basis.basis_value (geometry_t::basis_coord (quad_point (q)));
   }
 
   /** @brief Cell geometry from the leaf's t8code-order corner coords and volume. */
@@ -74,29 +79,19 @@ class dg<TShape, U, P> {
   void
   project (std::span<double> coeffs, const geometry_t &geom, Func &&func)
   {
-    const auto num_q = basis.quad.num_points;
-    std::vector<std::array<double, DOF>> basis_at_quad (num_q);
-    std::vector<std::array<double, DIM>> phys_at_quad (num_q);
-    std::array<double, DIM> x_ref;
+    std::ranges::fill (coeffs, 0.0);
 
-    for (auto q = 0u; q < num_q; ++q) {
-      for (unsigned int d = 0; d < DIM; ++d)
-        x_ref[d] = basis.quad.points[DIM * q + d];
+    for (auto q = 0u; q < basis.quad.num_points; ++q) {
+      const auto f_val = eval_func (func, geom.to_physical (quad_point (q)));
+      const auto &phi = basis_at_quad[q];
+      const auto weight = basis.quad.weights[q];
 
-      basis_at_quad[q] = basis.basis_value (x_ref);
-      phys_at_quad[q] = geom.to_physical (x_ref);
-    }
+      for (auto i = 0u; i < DOF; ++i) {
+        const auto weighted_phi = weight * phi[i];
 
-    for (auto i = 0u; i < DOF; ++i) {
-      std::array<double, U_DIM> sum = {};
-      for (auto q = 0u; q < num_q; ++q) {
-        const auto f_val = eval_func (func, phys_at_quad[q]);
         for (auto u = 0u; u < U_DIM; ++u)
-          sum[u] += basis.quad.weights[q] * f_val[u] * basis_at_quad[q][i];
+          coeffs[element_t::dg_idx (u, i)] += weighted_phi * f_val[u];
       }
-
-      for (auto u = 0u; u < U_DIM; ++u)
-        coeffs[element_t::dg_idx (u, i)] = sum[u];
     }
   }
 
@@ -127,6 +122,20 @@ class dg<TShape, U, P> {
   }
 
  private:
+  /// Basis values at the fixed quadrature points, built once with the rule.
+  std::vector<std::array<double, DOF>> basis_at_quad;
+
+  /// Reference coordinates of quadrature point q.
+  [[nodiscard]] std::array<double, DIM>
+  quad_point (unsigned int q) const
+  {
+    std::array<double, DIM> x_ref;
+    for (auto d = 0u; d < DIM; ++d)
+      x_ref[d] = basis.quad.points[DIM * q + d];
+
+    return x_ref;
+  }
+
   /// Evaluate func at a physical point; supports func(x{,y,z}) returning an
   /// array or writing into an out pointer.
   template <typename Func>
