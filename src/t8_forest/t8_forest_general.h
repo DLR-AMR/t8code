@@ -370,14 +370,14 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type);
 
-/** Set an explicit ghost_definition for a forest.
+/** Set a ghost_definition for a forest.
  * This is used both when the application defines its own ghost_definition class
  * (type = T8_GHOST_USER_DEFINED) and to select a non-default face-neighbor ghost version.
- * \param [in]    forest          The forest.
- * \param [in]    do_ghost        If 0 no ghost layer will be computed.
- * \param [in]    ghost_definition Pointer to an object of the class ghost_definition or a derived class
- *                                The forest takes ownership of the ghost_definition
- * \note Only if do_ghost is not 0 and ghost_definition is not NULL, an old ghost_definition of the forest will be overwritten.
+ * \param [in]    forest            The forest.
+ * \param [in]    do_ghost          If 0 no ghost layer will be computed.
+ * \param [in]    ghost_definition  Pointer to an object of the class ghost_definition or a derived class
+ *                                  The forest takes ownership of the ghost_definition. Can be nullptr if the forest already
+ *                                  owns a definition or \a do_ghost is set to 0.
 */
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition);
