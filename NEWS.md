@@ -18,7 +18,7 @@ If you only used face-neighbor ghosts, you do not have to change anything. If yo
 ```cpp
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 
-t8_forest_set_ghost_ext (forest_ghost, 1, new t8_forest_ghost_definition_face (<ghost_version>>));
+t8_forest_set_ghost_ext (forest_ghost, 1, new t8_forest_ghost_definition_face (<ghost_version>));
 ```
 If you used a custom ghost definition, you now have to derive from the base class or the search-based derived class. You can look at the already implemented face-neighbor ghost definition for an example.
 
