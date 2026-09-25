@@ -37,6 +37,8 @@
 #include <algorithm>
 #include <memory>
 
+using namespace detail;
+
 void
 t8_geometry_handler::register_geometry (t8_geometry *geom)
 {

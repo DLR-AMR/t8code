@@ -31,6 +31,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_geometry/t8_geometry_hash.hxx>
+#include <t8_geometry/t8_geometry_handler.hxx>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -42,6 +43,42 @@ T8_EXTERN_C_BEGIN ();
 t8_geometry_hash
 t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
+/** Return the geometry handler of the cmesh.
+ * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
+ * \return                 The geometry handler of the cmesh.
+ * \note                   The return value might be NULL if no geometry handler exists.
+ */
+detail::t8_geometry_handler *
+t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh);
+
+/** Construct a new geometry_handler for a cmesh and add it to the cmesh.
+ * \param [in] cmesh      The cmesh to be considered. Must be initialized. Does not need to be committed.
+ * \return                On success, the new geometry_handler. nullptr on failure (out of memory).
+ * \note                  Handle with care. This function should be used by t8code devs only.
+ */
+detail::t8_geometry_handler *
+t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh);
+
 T8_EXTERN_C_END ();
+
+/**
+ * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
+ * @tparam geometry_type 
+ * \param [in,out] cmesh The cmesh.
+ * \param [in,out] args The constructor arguments of the geometry.
+ * \return         A pointer to the geometry.
+ */
+template <typename geometry_type, typename... _args>
+inline geometry_type *
+t8_cmesh_register_geometry (t8_cmesh_t cmesh, _args &&...args)
+{
+  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  if (geometry_handler == nullptr) {
+    /* The handler was not constructed, do it now. */
+    geometry_handler = t8_cmesh_add_geometry_handler (cmesh);
+    T8_ASSERT (geometry_handler != nullptr);
+  }
+  return geometry_handler->register_geometry<geometry_type> (std::forward<_args> (args)...);
+}
 
 #endif /* !T8_CMESH_GEOMETRY_H */
