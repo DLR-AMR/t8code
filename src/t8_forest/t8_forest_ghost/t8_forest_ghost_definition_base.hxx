@@ -33,16 +33,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-/**
- * Flags for communicate_ownerships
- * store in the flags which memory was allocated
- */
-enum t8_ghost_definition_memory_flag {
-  CREATE_ELEMENT_ARRAY = 1,    /**< The element offset array was allocated. */
-  CREATE_TREE_ARRAY = 2,       /**< The tree offset array was allocated. */
-  CREATE_GFIRST_DESC_ARRAY = 4 /**< The first descendant offset array was allocated. */
-};
-
 /** Base class for the different ghost definitions (faces, edges, user_defined, ...). */
 struct t8_forest_ghost_definition
 {
@@ -115,10 +105,20 @@ struct t8_forest_ghost_definition
 
  protected:
   /**
+   * Flags for communicate_ownerships
+   * store in the flags which memory was allocated
+   */
+  enum memory_flags {
+    CREATE_ELEMENT_ARRAY = 1,    /**< The element offset array was allocated. */
+    CREATE_TREE_ARRAY = 2,       /**< The tree offset array was allocated. */
+    CREATE_GFIRST_DESC_ARRAY = 4 /**< The first descendant offset array was allocated. */
+  };
+
+  /**
    * Compute and collect ownerships to create the necessary offset
    * for elements, trees and first descendant.
    * \param [in,out] forest   The forest.
-   * \return A bitmask of \ref t8_ghost_definition_memory_flag values recording which of the
+   * \return A bitmask of \ref memory_flags values recording which of the
    * offset arrays were newly allocated by this call. Has to be passed to \ref clean_up afterwards.
    * \note this function could be used in do_ghost
    */
