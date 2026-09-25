@@ -35,7 +35,7 @@ T8_EXTERN_C_BEGIN ();
 
 /**
  * The information stored for the remote trees.
- * Each remote process stores an array of these
+ * Each remote process stores an array of these.
  */
 typedef struct
 {
@@ -69,11 +69,11 @@ typedef struct
  * means a number 0 <= lghost_tree < num_ghost_trees - 1
  */
 
-/** 
+/**
  * Return the number of trees in a ghost.
  *
  * \param[in] forest  The forest.
- * 
+ *
  * \return The number of trees in the forest's ghost (or 0 if ghost structure does not exist).
  */
 t8_locidx_t
@@ -120,10 +120,10 @@ t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid);
 
 /**
   * Given an index in the ghost_tree array, return this tree's element class.
-  * 
+  *
   * \param[in] forest       A committed forest.
   * \param[in] lghost_tree  The tree's local index in the ghost_tree array.
-  * 
+  *
   * \return The element class of the given tree.
  */
 t8_eclass_t
@@ -152,7 +152,7 @@ t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t
 
 /**
  * Query whether a given element is a ghost of a certain tree in a forest.
- * 
+ *
  * \param [in]  forest    The forest.
  * \param [in]  element   An element of a ghost tree in \a forest.
  * \param [in]  lghost_tree A local ghost tree id of \a forest. (0 <= \a lghost_tree < num_ghost_trees)
