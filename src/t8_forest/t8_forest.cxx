@@ -3129,6 +3129,10 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
     /* The documentation states that the forest takes ownership of the definition. This also has to happen
      * if do_ghost is 0. */
     if (ghost_definition != nullptr) {
+      /* Unref the old ghost_definition (if it exists) and set the new one. */
+      if (forest->ghost_definition != nullptr) {
+        t8_forest_ghost_definition_unref (&(forest->ghost_definition));
+      }
       forest->ghost_definition = ghost_definition;
     }
   }
