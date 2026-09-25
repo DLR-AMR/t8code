@@ -201,13 +201,15 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   t8_forest_ref (forest_from);
 
   /* if the set_from forest of the current forest has no ghost layer computed,
-   * compute a ghost layer for the set_from forest */
+   * compute a ghost layer for the set_from forest. It is only needed in the first
+   * balance round and removed afterwards, so that set_from is left unchanged. */
+  bool set_from_ghosts_created = false;
   if (forest->set_from->ghosts == nullptr) {
     /* Check if the forest has a ghost_definition and that it is supported. */
     t8_forest_ghost_definition_c *temp_ghost_definition = nullptr;
     int create_ghost_definition = 0; /* flag if we need to create a temporary ghost definition for balance */
     if (forest->set_from->ghost_definition == nullptr) {
-      t8_debugf ("Forest has ghosts but no ghost definition for balance.\n");
+      t8_debugf ("Forest has no ghost definition for balance.\n");
       create_ghost_definition = 1;
     }
     else if (forest->set_from->ghost_definition->ghost_get_type () != T8_GHOST_FACES) {
@@ -230,9 +232,10 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       forest->set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
     }
     /* compute topdown ghost layer for set_from forest */
-    T8_ASSERT (forest->ghost_definition != nullptr);
-    T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 3);
+    T8_ASSERT (forest->set_from->ghost_definition != nullptr);
+    T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->set_from->ghost_definition) == 3);
     t8_forest_ghost_create (forest->set_from);
+    set_from_ghosts_created = true;
     if (create_ghost_definition) {
       /* if a ghost_definition has been created, it will be dereferenced here */
       t8_forest_ghost_definition_unref (&forest->set_from->ghost_definition);
@@ -262,6 +265,14 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     t8_global_productionf ("Profiling: %i\n", forest->profile != nullptr);
     /* Adapt the forest */
     t8_forest_commit (forest_temp);
+    if (set_from_ghosts_created) {
+      /* The ghost layer of set_from is not needed anymore after the first round.
+       * It may not exist if this process has no local elements. */
+      if (forest->set_from->ghosts != nullptr) {
+        t8_forest_ghost_destroy (&forest->set_from->ghosts);
+      }
+      set_from_ghosts_created = false;
+    }
     /* Store the runtimes of adapt and ghost */
     if (forest->profile != nullptr) {
       if (count_rounds > num_stats_allocated - 2) {
