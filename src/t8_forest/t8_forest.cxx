@@ -3525,7 +3525,7 @@ t8_forest_commit (t8_forest_t forest)
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
       /* TODO: ghost type */
-      t8_forest_ghost_create_ext (forest);
+      t8_forest_ghost_create (forest);
     }
     forest->do_ghost = 0;
   }

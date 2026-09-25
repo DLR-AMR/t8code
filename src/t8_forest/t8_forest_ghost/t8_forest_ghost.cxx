@@ -200,7 +200,7 @@ t8_forest_element_is_ghost (const t8_forest_t forest, const t8_element_t *elemen
 }
 
 void
-t8_forest_ghost_create_ext (t8_forest_t forest)
+t8_forest_ghost_create (t8_forest_t forest)
 {
   t8_forest_ghost_t ghost;
   t8_forest_ghost_definition_c *ghost_definition;
@@ -263,7 +263,7 @@ t8_forest_ghost_create_topdown (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->ghost_definition != nullptr);
   T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 3);
-  t8_forest_ghost_create_ext (forest);
+  t8_forest_ghost_create (forest);
 }
 
 /** Return the array of remote ranks.

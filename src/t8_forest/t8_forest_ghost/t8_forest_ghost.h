@@ -214,7 +214,7 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
  * \a forest must be committed before calling this function.
  */
 void
-t8_forest_ghost_create_ext (t8_forest_t forest);
+t8_forest_ghost_create (t8_forest_t forest);
 
 /** Creating one layer of ghost elements for a forest.
  * experimental version using the ghost_v3 algorithm
