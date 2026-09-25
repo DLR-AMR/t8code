@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2024 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,8 +21,7 @@
 */
 
 /** \file t8_forest_ghost.h
- * We define the ghost routine to create a layer of halo elements
- * for a forest of trees in this file.
+ * Routines to manage and access the ghost layer structure of a forest.
  */
 
 #ifndef T8_FOREST_GHOST_H
@@ -30,8 +29,35 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
+
+/**
+ * A local tree of this process, restricted to those leaf elements that are ghosts on the remote process
+ * \a mpirank. There is one such struct per (local tree, remote process) pair. They are stored, sorted by
+ * local tree id, in the \a remote_trees array of the corresponding \ref t8_ghost_remote_t. Will be sent to
+ * the remote process during \ref t8_forest_ghost_definition::communicate_ghost_elements.
+ */
+typedef struct
+{
+  t8_gloidx_t global_id;       /**< The global id of the (local) tree. */
+  int mpirank;                 /**< The rank of the remote process that has these elements as ghosts. */
+  t8_element_array_t elements; /**< Copies of the leaf elements that are ghosts on \a mpirank, in SFC order. */
+  sc_array_t element_indices;  /**< The tree-local index (\ref t8_locidx_t) of each entry in \a elements. */
+  t8_eclass_t eclass;          /**< The element class of the tree. */
+} t8_ghost_remote_tree_t;
+
+/**
+ * This struct stores information about the data that the current process needs from a specific remote_process
+ * as ghost data, such as the number of remote elements and the remote trees.
+ */
+typedef struct
+{
+  int remote_rank;          /**< The rank of the remote process */
+  t8_locidx_t num_elements; /**< The number of remote elements for this process */
+  sc_array_t remote_trees;  /**< Array of the remote trees of this process */
+} t8_ghost_remote_t;
 
 /* We enumerate the ghost trees by 0, 1, ..., num_ghost_trees - 1
  * In the context of a forest we add the number of local trees as offset,
@@ -45,20 +71,11 @@ T8_EXTERN_C_BEGIN ();
  * means a number 0 <= lghost_tree < num_ghost_trees - 1
  */
 
-/** 
- * Initialize a ghost type of a forest.
- * 
- * \param[out] pghost     Pointer to the forest's ghost.
- * \param[in]  ghost_type The type of the ghost elements, \see t8_ghost_type_t.
- */
-void
-t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type);
-
-/** 
+/**
  * Return the number of trees in a ghost.
  *
  * \param[in] forest  The forest.
- * 
+ *
  * \return The number of trees in the forest's ghost (or 0 if ghost structure does not exist).
  */
 t8_locidx_t
@@ -105,10 +122,10 @@ t8_forest_ghost_get_ghost_treeid (t8_forest_t forest, t8_gloidx_t gtreeid);
 
 /**
   * Given an index in the ghost_tree array, return this tree's element class.
-  * 
+  *
   * \param[in] forest       A committed forest.
   * \param[in] lghost_tree  The tree's local index in the ghost_tree array.
-  * 
+  *
   * \return The element class of the given tree.
  */
 t8_eclass_t
@@ -125,7 +142,7 @@ t8_gloidx_t
 t8_forest_ghost_get_global_treeid (const t8_forest_t forest, const t8_locidx_t lghost_tree);
 
 /** Given an index into the ghost_trees array and for that tree an element index,
- *  return the corresponding element. 
+ *  return the corresponding element.
  * \param [in]  forest      The \a forest. Ghost layer must exist.
  * \param [in]  lghost_tree The ghost tree id of a ghost tree.
  * \param [in]  lelement    The local id of the ghost leaf element considered.
@@ -137,7 +154,7 @@ t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t
 
 /**
  * Query whether a given element is a ghost of a certain tree in a forest.
- * 
+ *
  * \param [in]  forest    The forest.
  * \param [in]  element   An element of a ghost tree in \a forest.
  * \param [in]  lghost_tree A local ghost tree id of \a forest. (0 <= \a lghost_tree < num_ghost_trees)
@@ -146,14 +163,6 @@ t8_forest_ghost_get_leaf_element (t8_forest_t forest, t8_locidx_t lghost_tree, t
  */
 int
 t8_forest_element_is_ghost (const t8_forest_t forest, const t8_element_t *element, const t8_locidx_t lghost_tree);
-
-/** Return the array of remote ranks.
- * \param [in] forest   A forest with constructed ghost layer.
- * \param [in,out] num_remotes On output the number of remote ranks is stored here.
- * \return              The array of remote ranks in ascending order.
- */
-int *
-t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes);
 
 /** Return the first local ghost tree of a remote rank.
  * \param [in] forest   A forest with constructed ghost layer.
@@ -202,6 +211,8 @@ void
 t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 
 /** Create one layer of ghost elements for a forest.
+ * This function is collective. Every process gets a ghost structure,
+ * which is empty on processes without local elements.
  * \see t8_forest_set_ghost
  * \param [in,out]    forest     The forest.
  * \a forest must be committed before calling this function.
@@ -209,22 +220,21 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 void
 t8_forest_ghost_create (t8_forest_t forest);
 
-/** Create one layer of ghost elements for a forest.
- * This version only works with balanced forests and is the original
- * algorithm from p4est: Scalable Algorithms For Parallel Adaptive
- *                Mesh Refinement On Forests of Octrees
- * \param [in,out]    forest     The balanced forest/
- * \a forest must be committed before calling this function.
- * \note The user should prefer \ref t8_forest_ghost_create even for balanced forests.
+/** Return the remote struct of a given remote rank.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in] remote   A remote rank of the ghost layer in \a forest.
+ * \return              The \ref t8_ghost_remote_t of \a remote.
  */
-void
-t8_forest_ghost_create_balanced_only (t8_forest_t forest);
+t8_ghost_remote_t *
+t8_forest_ghost_get_remote (t8_forest_t forest, int remote);
 
-/**
- *  Experimental version of \ref t8_forest_ghost_create using the ghost_v3 algorithm 
+/** Return the array of remote ranks.
+ * \param [in] forest   A forest with constructed ghost layer.
+ * \param [in,out] num_remotes On output the number of remote ranks is stored here.
+ * \return              The array of remote ranks in ascending order.
  */
-void
-t8_forest_ghost_create_topdown (t8_forest_t forest);
+int *
+t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes);
 
 T8_EXTERN_C_END ();
 

@@ -91,11 +91,11 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int 
  * process and a meta .pvtu file.
  * This function uses the vtk library. t8code must be configured with
  * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
- * 
+ *
  * \param[in] cmesh The cmesh
  * \param[in] fileprefix The prefix of the output files
  * \param[in] comm The communicator to use
- * \return int 
+ * \return int
  * \note If t8code was not configured with vtk, use \ref t8_cmesh_vtk_write_file
  */
 int
@@ -106,11 +106,11 @@ t8_cmesh_vtk_write_file_via_API (t8_cmesh_t cmesh, const char *fileprefix, sc_MP
  * process and a meta .pvtu file.
  * This function writes ASCII files and can be used when
  * t8code is not configured with "-DT8CODE_ENABLE_VTK=ON" and
- * \ref t8_cmesh_vtk_write_file_via_API is not available. 
- * 
+ * \ref t8_cmesh_vtk_write_file_via_API is not available.
+ *
  * \param[in] cmesh The cmesh
- * \param[in] fileprefix The prefix of the output files 
- * \return True (nonzero) if successful, false (zero) otherwise 
+ * \param[in] fileprefix The prefix of the output files
+ * \return True (nonzero) if successful, false (zero) otherwise
  */
 int
 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);

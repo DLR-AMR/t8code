@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,7 +29,10 @@
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -197,9 +200,31 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* This function is reference neutral regarding forest_from */
   t8_forest_ref (forest_from);
 
-  if (forest->set_from->ghosts == nullptr) {
-    forest->set_from->ghost_type = T8_GHOST_FACES;
-    t8_forest_ghost_create_topdown (forest->set_from);
+  /* The first balance round needs a ghost layer of set_from that contains all face neighbors,
+   * also if set_from is not balanced. If set_from has no such ghost layer, we set its ghost layer
+   * aside and compute a temporary one. After the first round the original ghost layer is restored,
+   * so that set_from is left unchanged.
+   * This decision is the same on all processes, since the ghost layer exists either on all processes or on none. */
+  const t8_forest_t set_from = forest->set_from;
+  const bool definition_suitable
+    = set_from->ghost_definition != nullptr && set_from->ghost_definition->has_all_face_neighbors ();
+  t8_forest_ghost_t original_ghosts = nullptr;
+  bool temporary_ghosts = false;
+  if (set_from->ghosts == nullptr || !definition_suitable) {
+    original_ghosts = set_from->ghosts;
+    set_from->ghosts = nullptr;
+    t8_forest_ghost_definition_c *const original_definition = set_from->ghost_definition;
+    if (!definition_suitable) {
+      t8_debugf ("Create a temporary face ghost definition of version 3 for balance.\n");
+      set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
+    }
+    T8_ASSERT (set_from->ghost_definition->has_all_face_neighbors ());
+    t8_forest_ghost_create (set_from);
+    temporary_ghosts = true;
+    if (!definition_suitable) {
+      t8_forest_ghost_definition_unref (&set_from->ghost_definition);
+      set_from->ghost_definition = original_definition;
+    }
   }
 
   while (!done_global) {
@@ -223,6 +248,12 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     t8_global_productionf ("Profiling: %i\n", forest->profile != nullptr);
     /* Adapt the forest */
     t8_forest_commit (forest_temp);
+    if (temporary_ghosts) {
+      /* The temporary ghost layer of set_from is only needed in the first round. */
+      t8_forest_ghost_destroy (&set_from->ghosts);
+      set_from->ghosts = original_ghosts;
+      temporary_ghosts = false;
+    }
     /* Store the runtimes of adapt and ghost */
     if (forest->profile != nullptr) {
       if (count_rounds > num_stats_allocated - 2) {
