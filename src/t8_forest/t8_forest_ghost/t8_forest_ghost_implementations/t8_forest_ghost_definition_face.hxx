@@ -54,7 +54,7 @@ struct t8_forest_ghost_definition_face: public t8_forest_ghost_definition_w_sear
   explicit t8_forest_ghost_definition_face (const int version);
 
   /**
-   * Get the version (1,2 or 3) of the ghost defniniton for faces.
+   * Get the version (1,2 or 3) of the ghost definition for faces.
    * \return version
    */
   inline int
