@@ -229,8 +229,10 @@ t8_forest_balance (t8_forest_t forest, int repartition)
       temp_ghost_definition = forest->set_from->ghost_definition;
       forest->set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
     }
-    /* compute ghost layer for set_from forest */
-    t8_forest_ghost_create_topdown (forest->set_from);
+    /* compute topdown ghost layer for set_from forest */
+    T8_ASSERT (forest->ghost_definition != nullptr);
+    T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 3);
+    t8_forest_ghost_create (forest->set_from);
     if (create_ghost_definition) {
       /* if a ghost_definition has been created, it will be unreffed here */
       t8_forest_ghost_definition_unref (&forest->set_from->ghost_definition);

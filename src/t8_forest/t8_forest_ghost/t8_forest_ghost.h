@@ -216,15 +216,6 @@ t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 void
 t8_forest_ghost_create (t8_forest_t forest);
 
-/** Creating one layer of ghost elements for a forest.
- * experimental version using the ghost_v3 algorithm
- * \param [in,out]    forest     The forest.
- * \a forest must be committed before calling this function.
- * \a forest->ghost_definition must have the \a type FACE and the \a version 3
- */
-void
-t8_forest_ghost_create_topdown (t8_forest_t forest);
-
 /** Return the remote struct of a given remote rank.
  * \param [in] forest   A forest with constructed ghost layer.
  * \param [in] remote   A remote rank of the ghost layer in \a forest.
