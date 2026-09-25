@@ -34,16 +34,18 @@
 T8_EXTERN_C_BEGIN ();
 
 /**
- * The information stored for the remote trees.
- * Each remote process stores an array of these.
+ * A local tree of this process, restricted to those leaf elements that are ghosts on the remote process
+ * \a mpirank. There is one such struct per (local tree, remote process) pair. They are stored, sorted by
+ * local tree id, in the \a remote_trees array of the corresponding \ref t8_ghost_remote_t. Will be sent to
+ * the remote process during \ref t8_forest_ghost_definition::communicate_ghost_elements.
  */
 typedef struct
 {
-  t8_gloidx_t global_id;       /**< global id of the tree */
-  int mpirank;                 /**< The mpirank of the remote process */
-  t8_element_array_t elements; /**< The remote elements of that tree */
-  sc_array_t element_indices;  /**< The (tree) local indices of the ghost elements. */
-  t8_eclass_t eclass;          /**< The trees element class */
+  t8_gloidx_t global_id;       /**< The global id of the (local) tree. */
+  int mpirank;                 /**< The rank of the remote process that has these elements as ghosts. */
+  t8_element_array_t elements; /**< Copies of the leaf elements that are ghosts on \a mpirank, in SFC order. */
+  sc_array_t element_indices;  /**< The tree-local index (\ref t8_locidx_t) of each entry in \a elements. */
+  t8_eclass_t eclass;          /**< The element class of the tree. */
 } t8_ghost_remote_tree_t;
 
 /**
