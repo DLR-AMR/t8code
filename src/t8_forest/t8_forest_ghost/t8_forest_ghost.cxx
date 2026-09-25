@@ -230,7 +230,8 @@ t8_forest_ghost_create (t8_forest_t forest)
     t8_global_productionf ("Start ghost at %f  %f\n", sc_MPI_Wtime (), forest->profile->ghost_runtime);
   }
   /* Call the do_ghost function on the ghost_definition class of the forest to compute the ghost layer */
-  ghost_definition->do_ghost (forest);
+  [[maybe_unused]] const int retval = ghost_definition->do_ghost (forest);
+  T8_ASSERT (retval);
 
   ghost = forest->ghosts;
 
