@@ -395,6 +395,7 @@ main (int argc, char *argv[])
       vtu_prefix = "test_hypercube_hybrid";
     }
     else if (test_hex_cube) {
+      t8_cmesh_init (&cmesh);
       t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
       vtu_prefix = "test_hypercube_hex";
     }
