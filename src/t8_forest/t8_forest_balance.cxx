@@ -234,7 +234,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->ghost_definition) == 3);
     t8_forest_ghost_create (forest->set_from);
     if (create_ghost_definition) {
-      /* if a ghost_definition has been created, it will be unreffed here */
+      /* if a ghost_definition has been created, it will be dereferenced here */
       t8_forest_ghost_definition_unref (&forest->set_from->ghost_definition);
       forest->set_from->ghost_definition = temp_ghost_definition;
       t8_debugf ("Deleted temporary face ghost definition.\n");
