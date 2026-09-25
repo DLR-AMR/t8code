@@ -200,47 +200,30 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   /* This function is reference neutral regarding forest_from */
   t8_forest_ref (forest_from);
 
-  /* if the set_from forest of the current forest has no ghost layer computed,
-   * compute a ghost layer for the set_from forest. It is only needed in the first
-   * balance round and removed afterwards, so that set_from is left unchanged. */
-  bool set_from_ghosts_created = false;
-  if (forest->set_from->ghosts == nullptr) {
-    /* Check if the forest has a ghost_definition and that it is supported. */
-    t8_forest_ghost_definition_c *temp_ghost_definition = nullptr;
-    int create_ghost_definition = 0; /* flag if we need to create a temporary ghost definition for balance */
-    if (forest->set_from->ghost_definition == nullptr) {
-      t8_debugf ("Forest has no ghost definition for balance.\n");
-      create_ghost_definition = 1;
+  /* The first balance round needs a ghost layer of set_from that contains all face neighbors,
+   * also if set_from is not balanced. If set_from has no such ghost layer, we set its ghost layer
+   * aside and compute a temporary one. After the first round the original ghost layer is restored,
+   * so that set_from is left unchanged.
+   * This decision is the same on all processes, since the ghost layer exists either on all processes or on none. */
+  const t8_forest_t set_from = forest->set_from;
+  const bool definition_suitable
+    = set_from->ghost_definition != nullptr && set_from->ghost_definition->has_all_face_neighbors ();
+  t8_forest_ghost_t original_ghosts = nullptr;
+  bool temporary_ghosts = false;
+  if (set_from->ghosts == nullptr || !definition_suitable) {
+    original_ghosts = set_from->ghosts;
+    set_from->ghosts = nullptr;
+    t8_forest_ghost_definition_c *const original_definition = set_from->ghost_definition;
+    if (!definition_suitable) {
+      t8_debugf ("Create a temporary face ghost definition of version 3 for balance.\n");
+      set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
     }
-    else if (forest->set_from->ghost_definition->ghost_get_type () != T8_GHOST_FACES) {
-      t8_debugf ("Forest ghost definition of type %s not yet supported for balance.\n",
-                 t8_ghost_type_to_string[forest->set_from->ghost_definition->ghost_get_type ()]);
-      create_ghost_definition = 1;
-    }
-    else {
-      t8_forest_ghost_definition_face *ghost_definition
-        = (t8_forest_ghost_definition_face *) forest->set_from->ghost_definition;
-      if (ghost_definition->get_version () != 3) {
-        t8_debugf ("Forest ghost definition has an unsupported version for balance.\n");
-        create_ghost_definition = 1;
-      }
-    }
-    if (create_ghost_definition) {
-      t8_debugf ("Create a temporary face ghost definition of version 3.\n");
-      /* create a ghost_definition of type face with top-down-search */
-      temp_ghost_definition = forest->set_from->ghost_definition;
-      forest->set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
-    }
-    /* compute topdown ghost layer for set_from forest */
-    T8_ASSERT (forest->set_from->ghost_definition != nullptr);
-    T8_ASSERT (t8_forest_ghost_definition_face_get_version (forest->set_from->ghost_definition) == 3);
-    t8_forest_ghost_create (forest->set_from);
-    set_from_ghosts_created = true;
-    if (create_ghost_definition) {
-      /* if a ghost_definition has been created, it will be dereferenced here */
-      t8_forest_ghost_definition_unref (&forest->set_from->ghost_definition);
-      forest->set_from->ghost_definition = temp_ghost_definition;
-      t8_debugf ("Deleted temporary face ghost definition.\n");
+    T8_ASSERT (set_from->ghost_definition->has_all_face_neighbors ());
+    t8_forest_ghost_create (set_from);
+    temporary_ghosts = true;
+    if (!definition_suitable) {
+      t8_forest_ghost_definition_unref (&set_from->ghost_definition);
+      set_from->ghost_definition = original_definition;
     }
   }
 
@@ -265,13 +248,11 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     t8_global_productionf ("Profiling: %i\n", forest->profile != nullptr);
     /* Adapt the forest */
     t8_forest_commit (forest_temp);
-    if (set_from_ghosts_created) {
-      /* The ghost layer of set_from is not needed anymore after the first round.
-       * It may not exist if this process has no local elements. */
-      if (forest->set_from->ghosts != nullptr) {
-        t8_forest_ghost_destroy (&forest->set_from->ghosts);
-      }
-      set_from_ghosts_created = false;
+    if (temporary_ghosts) {
+      /* The temporary ghost layer of set_from is only needed in the first round. */
+      t8_forest_ghost_destroy (&set_from->ghosts);
+      set_from->ghosts = original_ghosts;
+      temporary_ghosts = false;
     }
     /* Store the runtimes of adapt and ghost */
     if (forest->profile != nullptr) {

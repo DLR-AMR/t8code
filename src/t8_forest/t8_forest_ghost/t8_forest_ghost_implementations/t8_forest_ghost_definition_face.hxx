@@ -63,6 +63,17 @@ struct t8_forest_ghost_definition_face: public t8_forest_ghost_definition_w_sear
     return version;
   }
 
+  /**
+   * Versions 2 and 3 find all face neighbors also in unbalanced forests,
+   * version 1 only in balanced forests.
+   * \return true for versions 2 and 3, false for version 1.
+   */
+  bool
+  has_all_face_neighbors () const override
+  {
+    return version != 1;
+  }
+
  protected:
   /**
    * Fills the remote ghosts. Version 3 does so via the inherited tree-based

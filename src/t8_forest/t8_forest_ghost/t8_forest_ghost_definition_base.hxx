@@ -69,6 +69,17 @@ struct t8_forest_ghost_definition
   }
 
   /**
+   * Whether the ghost layer created by this ghost_definition is guaranteed to contain all face neighbors
+   * of the local leaf elements. This information is needed for the balance routine.
+   * \return true if all face neighbors are guaranteed to be ghosts, false otherwise.
+   */
+  virtual bool
+  has_all_face_neighbors () const
+  {
+    return false;
+  }
+
+  /**
    * Increase the reference count of the ghost_definition.
    */
   inline void
