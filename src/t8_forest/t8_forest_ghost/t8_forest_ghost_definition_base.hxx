@@ -31,8 +31,6 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
 
-T8_EXTERN_C_BEGIN ();
-
 /** Base class for the different ghost definitions (faces, edges, user_defined, ...). */
 struct t8_forest_ghost_definition
 {
@@ -165,7 +163,5 @@ struct t8_forest_ghost_definition
   /** The reference count of the ghost_definition. */
   t8_refcount_t rc;
 };
-
-T8_EXTERN_C_END ();
 
 #endif /* !T8_FOREST_GHOST_DEFINITION_BASE_HXX */
