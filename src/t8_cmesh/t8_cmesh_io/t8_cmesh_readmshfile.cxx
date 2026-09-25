@@ -844,9 +844,11 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
         parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
       }
 
-      t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (),
-                              T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_tree_faces, parameters,
-                              num_face_nodes * 2 * sizeof (double), 0);
+      const int param_dim = 2;
+      const int param_index = i_tree_faces;
+      const int num_params = num_face_nodes * 2;
+
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, parameters, num_params);
     }
   }
   /*----------------------------------------- End of face-surface linkage -----------------------------------------*/
@@ -1195,10 +1197,11 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       edge_geometries[i_edge] = 0;
     }
   }
-  t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, face_geometries,
-                          num_faces * sizeof (int), 0);
-  t8_cmesh_set_attribute (cmesh, tree_count, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, edge_geometries,
-                          2 * num_edges * sizeof (int), 0);
+  const int face_dim = 2;
+  t8_geometry_cad::set_tree_geometries (cmesh, tree_count, face_dim, face_geometries, num_faces);
+  const int edge_dim = 1;
+  const int num_edge_geoms = 2 * num_edges;
+  t8_geometry_cad::set_tree_geometries (cmesh, tree_count, edge_dim, edge_geometries, num_edge_geoms);
 
   /* Now we set the tree geometry according to the tree linkage status. */
   if (tree_is_linked) {

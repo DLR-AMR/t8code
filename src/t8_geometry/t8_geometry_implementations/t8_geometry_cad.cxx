@@ -136,8 +136,8 @@ t8_geometry_cad::t8_geom_load_tree_data (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
   const t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
   t8_geometry_with_vertices::t8_geom_load_tree_data (cmesh, gtreeid);
-  edges = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY, ltreeid);
-  faces = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_ATTRIBUTE_KEY, ltreeid);
+  edges = t8_geometry_cad::get_tree_geometries (cmesh, ltreeid, 1);
+  faces = t8_geometry_cad::get_tree_geometries (cmesh, ltreeid, 2);
   T8_ASSERT (edges != NULL);
   T8_ASSERT (faces != NULL);
 }
@@ -336,8 +336,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
     }
 #endif /* T8_ENABLE_DEBUG */
     /* Retrieve surface parameters */
-    const double *face_parameters = (double *) t8_cmesh_get_attribute (
-      cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY, ltreeid);
+    const double *face_parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 2, 0);
+
     T8_ASSERT (face_parameters != NULL);
 
     /* Retrieve surface_parameter for each reference point in global space by triangular interpolation from ref_coords to global space */
@@ -499,8 +499,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
 #endif /* T8_ENABLE_DEBUG */
 
     /* Retrieve surface parameters */
-    const double *face_parameters = (double *) t8_cmesh_get_attribute (
-      cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY, ltreeid);
+    const double *face_parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 2, 0);
+
     T8_ASSERT (face_parameters != NULL);
 
     /* Interpolate between surface parameters */
@@ -828,8 +828,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         face_intersection_2d[1] = face_intersection[t8_face_ref_coords_tet[i_faces][1]];
 
         /* Retrieve surface_parameters of the linked face */
-        const double *surface_parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
+        const double *surface_parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 2, i_faces);
         T8_ASSERT (surface_parameters != NULL);
 
         /* Iterate over each edge of face to search for additional edge displacement */
@@ -1043,8 +1042,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         t8_geom_get_face_vertices (T8_ECLASS_HEX, active_tree_vertices, i_faces, 3, temp_face_vertices);
 
         /* Retrieve surface parameters of nodes */
-        const double *surface_parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
+        const double *surface_parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 2, i_faces);
         T8_ASSERT (surface_parameters != NULL);
 
         double face_displacement_from_edges[3] = { 0 };
@@ -1314,8 +1312,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
       t8_geom_get_face_vertices (active_tree_class, active_tree_vertices, i_faces, 3, temp_face_vertices);
 
       /* Retrieve surface parameters of nodes */
-      const double *surface_parameters = (double *) t8_cmesh_get_attribute (
-        cmesh, t8_get_package_id (), T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY + i_faces, ltreeid);
+      const double *surface_parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 2, i_faces);
       T8_ASSERT (surface_parameters != NULL);
 
       /* Loop for batch processing of reference points */
@@ -1396,6 +1393,96 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
       }
     }
   }
+}
+
+/* Given a cmesh with registered CAD geometry and a local tree,
+ * return the geometry indices stored for this tree.
+ * \param [in] cmesh  A committed cmesh with CAD geometry.
+ * \param [in] cmesh_ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
+ * \param [in] dim    Either 1 to get edge information or 2 to get face information.
+ * \return A list of all geometries that are linked to this tree.
+ */
+const int *
+t8_geometry_cad::get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t cmesh_ltreeid, const int dim)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+
+  /* We retrieve the geometry information of the tree.
+   * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
+  const int attribute_key = dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
+  const int *linked_geometries
+    = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), attribute_key, cmesh_ltreeid);
+
+  return linked_geometries;
+}
+
+/* Given a cmesh and a global tree for which CAD geometry shall be used,
+ * register the internal attributes.
+ * \param [in] cmesh  An initialized cmesh.
+ * \param [in] cmesh_gtreeid A global tree id of \a cmesh of a tree with CAD geometry.
+ * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
+ * \param [in] geometries List of integers that identify the geometries.
+ * \param [in] num_geometries Number of geometries to register for this tree.
+ * \note This function is usually only used explicitly by t8code examples.
+ */
+void
+t8_geometry_cad::set_tree_geometries (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid,
+                                      const int attribute_dimension, const int *geometries, const int num_geometries)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
+
+  // Get the appropriate key, depending on attribute dimension.
+  const int attribute_key
+    = attribute_dimension == 2 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
+  const bool data_persists = false;  // Force copying of data in internal buffer
+  t8_cmesh_set_attribute (cmesh, cmesh_gtreeid, t8_get_package_id (), attribute_key, (void *) geometries,
+                          num_geometries * sizeof (*geometries), data_persists);
+}
+
+/* Given a cmesh and a global tree for which CAD tree geometry shall be used,
+ * register the internal attribute parameters.
+ * \param [in] cmesh  An initialized cmesh.
+ * \param [in] cmesh_gtreeid A global tree id of \a cmesh of a tree with CAD geometry.
+ * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
+ * \param [in] attribute_index The attribute index for which to register I.e. 0 for the first edge or first face.
+ * \param [in] parameters List of double parameters for the attribute.
+ * \param [in] num_parameters Number of parameters to register for this tree.
+ * \note This function is usually only used explicitly by t8code examples.
+ */
+void
+t8_geometry_cad::set_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid,
+                                               const int attribute_dimension, const int attribute_index,
+                                               const double *parameters, const double num_parameters)
+{
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
+  T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
+  T8_ASSERT (0 <= attribute_index);
+  T8_ASSERT ((attribute_dimension == 1 && (attribute_index < T8_ECLASS_MAX_EDGES))
+             || (attribute_dimension == 2 && (attribute_index < T8_ECLASS_MAX_FACES)));
+  const int attribute_base_key = attribute_dimension == 2 ? T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY
+                                                          : T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY;
+  const int attribute_key = attribute_base_key + attribute_index;
+  t8_cmesh_set_attribute (cmesh, cmesh_gtreeid, t8_get_package_id (), attribute_key, (void *) parameters,
+                          num_parameters * sizeof (*parameters), 0);
+}
+
+const double *
+t8_geometry_cad::get_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t ltreeid,
+                                               const int attribute_dimension, const int attribute_index)
+{
+  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
+  T8_ASSERT ((attribute_dimension == 1 && (attribute_index < T8_ECLASS_MAX_EDGES))
+             || (attribute_dimension == 2 && (attribute_index < T8_ECLASS_MAX_FACES)));
+
+  const int attribute_base_key = attribute_dimension == 2 ? T8_CMESH_CAD_FACE_PARAMETERS_ATTRIBUTE_KEY
+                                                          : T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY;
+  const int attribute_key = attribute_base_key + attribute_index;
+
+  return (const double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), attribute_key, ltreeid);
 }
 
 /* This part should be callable from C */

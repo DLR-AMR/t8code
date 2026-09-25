@@ -156,6 +156,17 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
                                       const double *points, const int num_points, int *is_inside,
                                       const double tolerance) const override;
 
+  /** Given a cmesh with registered CAD geometry and a local tree,
+   * return the geometry indices stored for this tree.
+   * \param [in] cmesh  A committed cmesh with CAD geometry.
+   * \param [in] cmesh_ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
+   * \return A list of all geometries that are linked to this tree. Might be NULL if no geometries exist.
+   * 
+   * \note If there are no CAD geometries at this tree, the return value is NULL.
+   */
+  const int *
+  t8_geom_cad_get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t cmesh_ltreeid) const;
+
   /**
    * Getter function for the CAD handle.
    *
@@ -175,6 +186,55 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
   {
     cad_handle = new_cad_handle;
   }
+
+  /** Given a cmesh with registered CAD geometry and a local tree,
+  * return the geometry indices stored for this tree.
+  * \param [in] cmesh  A committed cmesh with CAD geometry.
+  * \param [in] cmesh_ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
+  * \param [in] dim    Either 1 to get edge information or 2 to get face information.
+  * \return A list of all geometries that are linked to this tree.
+  */
+  static const int *
+  get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t cmesh_ltreeid, const int dim);
+
+  /** Given a cmesh and a global tree for which CAD geometry shall be used,
+   * register the internal attributes.
+   * \param [in] cmesh  An initialized cmesh.
+   * \param [in] cmesh_gtreeid A global tree id of \a cmesh of a tree with CAD geometry.
+   * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
+   * \param [in] geometries List of integers that identify the geometries.
+   * \param [in] num_geometries Number of geometries to register for this tree.
+   * \note This function is usually only used explicitly by t8code examples.
+   */
+  static void
+  set_tree_geometries (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid, const int attribute_dimension,
+                       const int *geometries, const int num_geometries);
+
+  /** Given a cmesh and a global tree for which CAD tree geometry shall be used,
+   * register the internal attribute parameters.
+   * \param [in] cmesh  An initialized cmesh.
+   * \param [in] cmesh_gtreeid A global tree id of \a cmesh of a tree with CAD geometry.
+   * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
+   * \param [in] attribute_index The attribute index for which to register I.e. 0 for the first edge or first face.
+   * \param [in] parameters List of double parameters for the attribute.
+   * \param [in] num_parameters Number of parameters to register for this tree.
+   * \note This function is usually only used explicitly by t8code examples.
+   */
+  static void
+  set_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid, const int attribute_dimension,
+                                const int attribute_index, const double *parameters, const double num_parameters);
+
+  /** Given a cmesh and a local tree for which CAD tree geometry is used,
+   * return the internal attribute parameters.
+   * \param [in] cmesh  An initialized cmesh.
+   * \param [in] ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
+   * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
+   * \param [in] attribute_index The attribute index for which to get the parameters. I.e. 0 for the first edge or first face.
+   * \return The stored CAD parameters for the appropriate edge/face.
+   */
+  static const double *
+  get_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t ltreeid, const int attribute_dimension,
+                                const int attribute_index);
 
  private:
   /**
