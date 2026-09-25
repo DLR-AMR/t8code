@@ -228,20 +228,19 @@ t8_forest_ghost_create (t8_forest_t forest)
   [[maybe_unused]] const int retval = ghost_definition->do_ghost (forest);
   T8_ASSERT (retval);
 
+  if (forest->ghosts == nullptr) {
+    /* Processes without local elements get an empty ghost layer, so that
+     * all processes agree on whether a ghost layer exists. */
+    t8_forest_ghost_init (&forest->ghosts, ghost_definition->ghost_get_type ());
+  }
   ghost = forest->ghosts;
 
   if (forest->profile != nullptr) {
     /* If profiling is enabled, we measure the runtime of ghost_create */
     forest->profile->ghost_runtime += sc_MPI_Wtime ();
     /* We also store the number of ghosts and remotes */
-    if (ghost != nullptr) {
-      forest->profile->ghosts_received = ghost->num_ghosts_elements;
-      forest->profile->ghosts_shipped = ghost->num_remote_elements;
-    }
-    else {
-      forest->profile->ghosts_received = 0;
-      forest->profile->ghosts_shipped = 0;
-    }
+    forest->profile->ghosts_received = ghost->num_ghosts_elements;
+    forest->profile->ghosts_shipped = ghost->num_remote_elements;
     /* DO NOT DELETE THE FOLLOWING line.
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.

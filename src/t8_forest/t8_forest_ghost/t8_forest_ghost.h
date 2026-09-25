@@ -211,6 +211,8 @@ void
 t8_forest_ghost_destroy (t8_forest_ghost_t *pghost);
 
 /** Create one layer of ghost elements for a forest.
+ * This function is collective. Every process gets a ghost structure,
+ * which is empty on processes without local elements.
  * \see t8_forest_set_ghost
  * \param [in,out]    forest     The forest.
  * \a forest must be committed before calling this function.

@@ -121,7 +121,9 @@ typedef struct t8_forest
                                              -1 if this processor is empty. */
   t8_gloidx_t global_num_trees;       /**< The total number of global trees. */
   sc_array_t *trees;                  /**< The array of trees. */
-  t8_forest_ghost_t ghosts;           /**< If not NULL, the ghost elements. \see t8_forest_ghost.h */
+  t8_forest_ghost_t ghosts;           /**< The ghost elements. NULL on all processes if no ghost layer was
+                                                constructed, otherwise set on all processes (possibly empty).
+                                                \see t8_forest_ghost.h */
   t8_shmem_array_t element_offsets;   /**< If partitioned, for each process the global index
                                             of its first element. Since it is memory consuming,
                                             it is usually only constructed when needed and otherwise unallocated. */
