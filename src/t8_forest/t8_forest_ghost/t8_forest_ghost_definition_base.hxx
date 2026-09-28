@@ -55,17 +55,6 @@ struct t8_forest_ghost_definition
       T8_ASSERT (t8_refcount_is_last (&rc));
       t8_refcount_unref (&rc);
     }
-    t8_debugf ("Deleted t8_forest_ghost_definition of type %s.\n", t8_ghost_type_to_string[ghost_type]);
-  }
-
-  /**
-   * Get the type of the ghost_definition
-   * \return the type
-   */
-  inline t8_ghost_type_t
-  ghost_get_type () const
-  {
-    return ghost_type;
   }
 
   /**
@@ -168,20 +157,8 @@ struct t8_forest_ghost_definition
   init ()
   {
     t8_refcount_init (&rc);
-    t8_debugf ("Constructed a t8_forest_ghost_definition of type %s.\n", t8_ghost_type_to_string[ghost_type]);
   }
 
-  /**
-   * Constructor for the derived classes to set the correct type for them.
-   * \param [in] g_type   The type (faces, edges, user_defined, ...) of the ghost_definition
-   */
-  explicit t8_forest_ghost_definition (t8_ghost_type_t g_type): ghost_type (g_type)
-  {
-    init ();
-  };
-
-  /** type of the ghost_definition */
-  t8_ghost_type_t ghost_type { T8_GHOST_NONE };
   /** The reference count of the ghost_definition. */
   t8_refcount_t rc;
 };

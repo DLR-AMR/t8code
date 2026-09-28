@@ -342,12 +342,13 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
   }
 }
 
-t8_forest_ghost_definition_face::t8_forest_ghost_definition_face (const int version)
-  : t8_forest_ghost_definition_w_search (T8_GHOST_FACES, version == 3 ? t8_forest_ghost_search_boundary : nullptr,
-                                         version == 3 ? new t8_forest_ghost_definition_face_data : nullptr),
-    version (version)
+t8_forest_ghost_definition_face::t8_forest_ghost_definition_face (const int version): version (version)
 {
   T8_ASSERT (1 <= version && version <= 3);
+  if (version == 3) {
+    search_fn = t8_forest_ghost_search_boundary;
+    search_data = new t8_forest_ghost_definition_face_data;
+  }
 }
 
 void
@@ -380,8 +381,9 @@ int
 t8_forest_ghost_definition_face_get_version (const t8_forest_ghost_definition_c *ghost_definition)
 {
   T8_ASSERT (ghost_definition != nullptr);
-  T8_ASSERT (ghost_definition->ghost_get_type () == T8_GHOST_FACES);
-  const t8_forest_ghost_definition_face *ghost_definition_passed = (t8_forest_ghost_definition_face *) ghost_definition;
+  const t8_forest_ghost_definition_face *ghost_definition_passed
+    = dynamic_cast<const t8_forest_ghost_definition_face *> (ghost_definition);
+  T8_ASSERT (ghost_definition_passed != nullptr);
 
   return ghost_definition_passed->get_version ();
 }

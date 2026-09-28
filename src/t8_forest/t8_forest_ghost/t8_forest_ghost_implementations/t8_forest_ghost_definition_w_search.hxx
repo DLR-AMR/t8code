@@ -54,7 +54,7 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
   }
 
   /**
-   * Constructor with a search_function. Sets the type to T8_GHOST_TYPE_USER_DEFINED.
+   * Constructor with a search_function.
    * If do_ghost is called on this object,
    * the ghost layer will be created with a tree-based search (t8_forest_search)
    * with \a search_function as callback function.
@@ -65,7 +65,7 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
    */
   explicit t8_forest_ghost_definition_w_search (t8_forest_search_fn search_function,
                                                 t8_forest_ghost_search_data *search_data)
-    : t8_forest_ghost_definition (T8_GHOST_USER_DEFINED), search_fn (search_function), search_data (search_data)
+    : search_fn (search_function), search_data (search_data)
   {
     T8_ASSERT (search_function != nullptr);
   }
@@ -82,22 +82,6 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
    */
   void
   fill_remote_ghosts (t8_forest_t forest) override;
-
-  /**
-   * Constructor for the derived classes to set the type and the search_function.
-   * \param [in] ghost_type       The type (faces, edges, user defined, ...) of the ghost_definition
-   * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in fill_remote_ghosts
-   * \param [in] search_data      Persistent data which can be used during the search. Ghost takes ownership of the data.
-   * \note \a search_data is reachable from within \a search_function via
-   * \ref t8_forest_ghost_get_search_data (forest).
-   */
-  t8_forest_ghost_definition_w_search (const t8_ghost_type_t ghost_type, const t8_forest_search_fn search_function,
-                                       t8_forest_ghost_search_data *search_data)
-    : t8_forest_ghost_definition (ghost_type), search_fn (search_function), search_data (search_data)
-  {
-    T8_ASSERT (ghost_type != T8_GHOST_NONE);
-    T8_ASSERT (search_function != nullptr);
-  }
 
   t8_forest_search_fn search_fn {}; /**< Callback function for t8_forest_search in fill_remote_ghosts */
   /** Persistent data which can be accessed during the search.

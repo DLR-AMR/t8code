@@ -35,15 +35,11 @@ t8_forest_ghost_definition::do_ghost (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
 
-  if (ghost_get_type () == T8_GHOST_NONE) {
-    SC_ABORTF ("ERROR: Trying to construct ghosts with ghost_type NONE.\n");
-  }
-
   const int memory_flag = communicate_ownerships (forest);
 
   /* Processes without local elements also get an (empty) ghost structure, so that
    * all processes agree on whether a ghost layer exists. */
-  t8_forest_ghost_init (&forest->ghosts, ghost_type);
+  t8_forest_ghost_init (&forest->ghosts);
 
   if (t8_forest_get_local_num_leaf_elements (forest) > 0) {
     fill_remote_ghosts (forest);

@@ -31,16 +31,6 @@
 
 T8_EXTERN_C_BEGIN ();
 
-const char *t8_ghost_type_to_string[T8_GHOST_COUNT]
-  = { "T8_GHOST_NONE", "T8_GHOST_FACES", "T8_GHOST_EDGES", "T8_GHOST_VERTICES", "T8_GHOST_USER_DEFINED" };
-
-t8_ghost_type_t
-t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_definition)
-{
-  T8_ASSERT (ghost_definition != nullptr);
-  return ghost_definition->ghost_get_type ();
-}
-
 void
 t8_forest_ghost_definition_ref (t8_forest_ghost_definition_c *ghost_definition)
 {

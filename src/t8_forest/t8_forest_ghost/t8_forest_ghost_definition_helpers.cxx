@@ -242,18 +242,14 @@ t8_ghost_add_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int remote_ran
 }
 
 void
-t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
+t8_forest_ghost_init (t8_forest_ghost_t *pghost)
 {
   t8_forest_ghost_t ghost;
-
-  T8_ASSERT (ghost_type != T8_GHOST_NONE);
 
   /* Allocate memory for ghost */
   ghost = *pghost = T8_ALLOC_ZERO (t8_forest_ghost_struct_t, 1);
   /* initialize the reference counter */
   t8_refcount_init (&ghost->rc);
-  /* Set the ghost type */
-  ghost->ghost_type = ghost_type;
 
   /* Allocate the trees array */
   ghost->ghost_trees = sc_array_new (sizeof (t8_ghost_tree_t));

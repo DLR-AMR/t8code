@@ -66,10 +66,9 @@ typedef struct
 /**
  * Initializes the forest ghost structure and allocates memory.
  * \param [in, out] pghost  The ghost structure
- * \param [in] ghost_type   The type of ghost to use.
  */
 void
-t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type);
+t8_forest_ghost_init (t8_forest_ghost_t *pghost);
 
 /**
   * Add a new element to the remote hash table (if not already in it).

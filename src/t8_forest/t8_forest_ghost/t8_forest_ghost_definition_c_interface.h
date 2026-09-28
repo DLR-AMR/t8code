@@ -40,17 +40,14 @@ typedef struct t8_forest_ghost_definition t8_forest_ghost_definition_c;
 /** This type controls, which neighbors count as ghost elements.
  * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
 typedef enum {
-  T8_GHOST_NONE = 0,     /**< Do not create ghost layer. */
-  T8_GHOST_FACES,        /**< Consider all face (codimension 1) neighbors. */
-  T8_GHOST_EDGES,        /**< Consider all edge (codimension 2) and face neighbors. */
-  T8_GHOST_VERTICES,     /**< Consider all vertex (codimension 3) and edge and face neighbors. */
-  T8_GHOST_USER_DEFINED, /**< For user-defined neighborhoods */
-  T8_GHOST_COUNT         /**< Number of ghost types */
+  T8_GHOST_NONE = 0, /**< Do not create ghost layer. */
+  T8_GHOST_FACES,    /**< Consider all face (codimension 1) neighbors. */
+  T8_GHOST_EDGES,    /**< Consider all edge (codimension 2) and face neighbors. */
+  T8_GHOST_VERTICES, /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+  T8_GHOST_COUNT     /**< Number of ghost types */
 } t8_ghost_type_t;
 
 T8_EXTERN_C_BEGIN ();
-
-extern const char *t8_ghost_type_to_string[T8_GHOST_COUNT];
 
 /**
  * Satisfy the C interface of forest
@@ -70,15 +67,6 @@ t8_forest_ghost_definition_face_new (const int version);
  */
 int
 t8_forest_ghost_definition_face_get_version (const t8_forest_ghost_definition_c *ghost_definition);
-
-/**
- * Satisfy the C interface of forest
- * Return the type of a ghost_definition
- * \param [in]    ghost_definition Pointer to object of class t8_forest_ghost_definition or a derived class
- * \return the type of a ghost definition (T8_GHOST_NONE, T8_GHOST_FACES, T8_GHOST_USER_DEFINED, ...)
- */
-t8_ghost_type_t
-t8_forest_ghost_definition_get_type (const t8_forest_ghost_definition_c *ghost_definition);
 
 /**
  * Satisfy the C interface of forest
