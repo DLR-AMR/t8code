@@ -94,26 +94,14 @@ class dg<T8_ECLASS_PRISM, U, P> {
   [[nodiscard]] std::array<double, U_DIM>
   evaluate (const geometry_t &geom, const element_t &data, const std::array<double, DIM> &x_phys) const
   {
-    const auto x_ref = geom.to_reference (x_phys);
-    std::array<double, U_DIM> res = {};
-
-    for (auto u = 0u; u < U_DIM; ++u)
-      res[u] = geom.value (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref);
-
-    return res;
+    return geom.template values<U_DIM> (data.u_coeffs, geom.to_reference (x_phys));
   }
 
   /** @brief Solution gradient grad[u][d] = d(u_u)/d(x_d) at a physical point. */
   [[nodiscard]] std::array<std::array<double, DIM>, U_DIM>
   evaluate_gradient (const geometry_t &geom, const element_t &data, const std::array<double, DIM> &x_phys) const
   {
-    const auto x_ref = geom.to_reference (x_phys);
-    std::array<std::array<double, DIM>, U_DIM> grad = {};
-
-    for (auto u = 0u; u < U_DIM; ++u)
-      grad[u] = geom.gradient (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF), x_ref);
-
-    return grad;
+    return geom.template gradients<U_DIM> (data.u_coeffs, geom.to_reference (x_phys));
   }
 
  private:
