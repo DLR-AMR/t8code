@@ -82,7 +82,7 @@ the current element are on another rank. If so, add the element to the ghost str
  * \param [in] is_leaf          True if \a element is a leaf of \a forest.
  * \param [in] leaves           Unused but needed for the usage with \ref t8_forest_search.
  * \param [in] tree_leaf_index  The index of \a element in its tree's leaf elements, if \a is_leaf, else negative.
- * \return                      0 if the search should not recurse into the children of \a element, 1 otherwise.
+ * \return                      0 if the element and its face neighbors are completely owned by the current rank; 1 otherwise
  */
 static int
 t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
