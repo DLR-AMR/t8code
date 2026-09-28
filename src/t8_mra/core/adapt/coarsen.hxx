@@ -142,28 +142,6 @@ coarsen (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = 
   clear_state (mra);
 }
 
-/// Per-component max mean magnitude over a level's leaves, reduced across ranks
-/// (floored at 1) so every rank normalizes jump detection identically.
-template <typename TMultiscale>
-[[nodiscard]] auto
-global_v_max (TMultiscale &mra, int level)
-{
-  std::array<double, TMultiscale::U_DIM> local;
-  local.fill (1.0);
-
-  for (const auto &[lmi, data] : (*mra.get_lmi_map ())[level]) {
-    const auto m = mra.mean_val (data);
-
-    for (auto u = 0u; u < TMultiscale::U_DIM; ++u)
-      local[u] = std::max (local[u], std::abs (m[u]));
-  }
-
-  std::array<double, TMultiscale::U_DIM> global;
-  sc_MPI_Allreduce (local.data (), global.data (), TMultiscale::U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, mra.grid.comm);
-
-  return global;
-}
-
 /**
  * @brief Mean-value jump detection on the leaves of one level
  *
@@ -190,7 +168,7 @@ detect_jumps (TMultiscale &mra, int level, double c_thresh)
     = mra.grid.ghost_exchange ([&mra] (const auto &data) { return leaf_mean { mra.mean_val (data) }; });
 
   auto *lmi_map = mra.get_lmi_map ();
-  const auto v_max = global_v_max (mra, level);
+  const auto v_max = mra.v_max (static_cast<unsigned int> (level), static_cast<unsigned int> (level));
 
   typename TMultiscale::index_set jumps;
 
