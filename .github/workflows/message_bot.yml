@@ -65,7 +65,7 @@ jobs:
           echo message_content='User ${{ github.actor }} reopened issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
       - name: debug_after_build
         run: echo ${{ env.message_build }}
-      # if a message has been written send the message to the mattermost-channel described in the secrets
+      # if a message has been written send the message to the channel described in the secrets
       - name: send_message
         if: ${{ env.message_build == 1 }}
         uses: fadenb/matrix-chat-message@v0.0.6
