@@ -36,9 +36,7 @@ t8_forest_ghost_definition::do_ghost (t8_forest_t forest)
   T8_ASSERT (t8_forest_is_committed (forest));
 
   if (ghost_get_type () == T8_GHOST_NONE) {
-    t8_errorf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
-               "Ghost layer is not constructed.\n");
-    return 0;
+    SC_ABORTF ("ERROR: Trying to construct ghosts with ghost_type NONE.\n");
   }
 
   const int memory_flag = communicate_ownerships (forest);
