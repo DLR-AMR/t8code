@@ -274,13 +274,6 @@ t8_forest_ghost_init (t8_forest_ghost_t *pghost, t8_ghost_type_t ghost_type)
   ghost->remote_processes = sc_array_new (sizeof (int));
 }
 
-/* Begin sending the ghost elements from the remote ranks
- * using non-blocking communication.
- * Afterwards,
- *  t8_forest_ghost_send_end
- * must be called to end the communication.
- * Returns an array of mpi_send_info_t, one for each remote rank.
- */
 t8_ghost_mpi_send_info_t *
 t8_forest_ghost_send_start (t8_forest_t forest, t8_forest_ghost_t ghost, sc_MPI_Request **requests)
 {
