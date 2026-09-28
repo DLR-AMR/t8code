@@ -226,31 +226,30 @@ class multiscale {
     return local_threshold_value (d_map.get (lmi), lmi.level (), gamma);
   }
 
-  /** @brief Per-component domain-integral scaling (eq. 2.39), reduced over ranks. */
+  /**
+   * @brief Per-component domain-integral scaling (eq. 2.39), reduced over ranks.
+   */
   [[nodiscard]] std::array<double, U_DIM>
   threshold_scaling_factor ()
   {
-    std::array<double, U_DIM> res = {};
+    std::array<double, U_DIM> local = {};
+    const auto *lmi_map = get_lmi_map ();
 
-    auto *user_data = get_user_data ();
-    auto *lmi_map = user_data->lmi_map;
+    for (auto level = 0u; level <= grid.maximum_level; ++level)
+      for (const auto &[lmi, data] : (*lmi_map)[level]) {
+        const auto mean = mean_val (data);
 
-    for_each_local_leaf ([&] (t8_locidx_t, const t8_element_t *, unsigned int local_idx, t8_gloidx_t) {
-      const auto lmi = t8_mra::get_lmi_from_forest_data (user_data, local_idx);
-      const auto &data = lmi_map->get (lmi);
-      const auto mean = mean_val (data);
+        for (auto u = 0u; u < U_DIM; ++u)
+          local[u] += std::abs (mean[u]) * data.vol;
+      }
 
-      for (auto u = 0u; u < U_DIM; ++u)
-        res[u] += std::abs (mean[u]) * data.vol;
-    });
-
-    std::array<double, U_DIM> global_res = {};
-    sc_MPI_Allreduce (res.data (), global_res.data (), U_DIM, sc_MPI_DOUBLE, sc_MPI_SUM, grid.comm);
+    std::array<double, U_DIM> global = {};
+    sc_MPI_Allreduce (local.data (), global.data (), U_DIM, sc_MPI_DOUBLE, sc_MPI_SUM, grid.comm);
 
     for (auto u = 0u; u < U_DIM; ++u)
-      res[u] = std::max (1.0, global_res[u]);
+      global[u] = std::max (1.0, global[u]);
 
-    return res;
+    return global;
   }
 
   //=============================================================================
