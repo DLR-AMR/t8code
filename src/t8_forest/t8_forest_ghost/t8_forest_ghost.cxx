@@ -326,11 +326,6 @@ t8_forest_ghost_remote_first_tree (t8_forest_t forest, int remote)
   return proc_entry->tree_index;
 }
 
-/** Return the local index of the first ghost element that belongs to a given remote rank.
- * \param [in] forest   A forest with constructed ghost layer.
- * \param [in] remote   A remote rank of the ghost layer in \a forest.
- * \return              The index i in the ghost elements of the first element of rank \a remote
- */
 t8_locidx_t
 t8_forest_ghost_remote_first_elem (t8_forest_t forest, int remote)
 {
