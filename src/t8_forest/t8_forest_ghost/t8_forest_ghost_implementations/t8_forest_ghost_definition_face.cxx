@@ -364,7 +364,7 @@ t8_forest_ghost_definition_face::t8_forest_ghost_definition_face (const int vers
 }
 
 void
-t8_forest_ghost_definition_face::search_for_ghost_elements (t8_forest_t forest)
+t8_forest_ghost_definition_face::fill_remote_ghosts (t8_forest_t forest)
 {
   T8_ASSERT (forest->ghosts != nullptr);
   if (version == 3) {
@@ -372,7 +372,7 @@ t8_forest_ghost_definition_face::search_for_ghost_elements (t8_forest_t forest)
      * and thus its search_data, may be reused for several forests) and let the
      * base class drive the search with our search_fn/search_data. */
     static_cast<t8_forest_ghost_definition_face_data *> (search_data)->reset ();
-    t8_forest_ghost_definition_w_search::search_for_ghost_elements (forest);
+    t8_forest_ghost_definition_w_search::fill_remote_ghosts (forest);
   }
   else {
     /* Versions 1 and 2 are not search-based; construct the remote elements

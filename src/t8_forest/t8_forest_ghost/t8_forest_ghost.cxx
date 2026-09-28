@@ -227,12 +227,8 @@ t8_forest_ghost_create (t8_forest_t forest)
   /* Call the do_ghost function on the ghost_definition class of the forest to compute the ghost layer */
   [[maybe_unused]] const int retval = ghost_definition->do_ghost (forest);
   T8_ASSERT (retval);
+  T8_ASSERT (forest->ghosts != nullptr);
 
-  if (forest->ghosts == nullptr) {
-    /* Processes without local elements get an empty ghost layer, so that
-     * all processes agree on whether a ghost layer exists. */
-    t8_forest_ghost_init (&forest->ghosts, ghost_definition->ghost_get_type ());
-  }
   ghost = forest->ghosts;
 
   if (forest->profile != nullptr) {

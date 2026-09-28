@@ -25,35 +25,9 @@
  */
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.hxx>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
-
-int
-t8_forest_ghost_definition_w_search::do_ghost (t8_forest_t forest)
-{
-  if (ghost_get_type () == T8_GHOST_NONE) {
-    t8_debugf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
-               "Ghost layer is not constructed.\n");
-    return 0;
-  }
-
-  const int memory_flag = communicate_ownerships (forest);
-
-  if (t8_forest_get_local_num_leaf_elements (forest) > 0) {
-
-    /* Initialize the ghost structure */
-    t8_forest_ghost_init (&forest->ghosts, ghost_type);
-
-    search_for_ghost_elements (forest);
-
-    communicate_ghost_elements (forest);
-  }
-  clean_up (forest, memory_flag);
-
-  return 1;
-}
 
 void
-t8_forest_ghost_definition_w_search::search_for_ghost_elements (t8_forest_t forest)
+t8_forest_ghost_definition_w_search::fill_remote_ghosts (t8_forest_t forest)
 {
   /* Store any internal data that may reside on the forest */
   void *const store_t8code_data = forest->t8code_data;

@@ -104,13 +104,15 @@ struct t8_forest_ghost_definition
   }
 
   /** Create one layer of ghost elements for a forest.
+   * Computes the ownership offsets, initializes the ghost structure, lets \ref fill_remote_ghosts
+   * determine the remote elements and exchanges them with the other processes.
    * \param [in,out]    forest     The forest.
    * \return 1 on success, 0 on failure.
    * \a forest must be committed before calling this function.
+   * \note On success, forest->ghosts is initialized on every process, also on those without local elements.
    */
   virtual int
-  do_ghost (t8_forest_t forest)
-    = 0;
+  do_ghost (t8_forest_t forest);
 
  protected:
   /**
@@ -129,14 +131,23 @@ struct t8_forest_ghost_definition
    * \param [in,out] forest   The forest.
    * \return A bitmask of \ref memory_flags values recording which of the
    * offset arrays were newly allocated by this call. Has to be passed to \ref clean_up afterwards.
-   * \note this function could be used in do_ghost
    */
   virtual int
   communicate_ownerships (t8_forest_t forest);
 
   /**
+   * Fill the remote elements and remote processes of the ghost structure forest->ghosts.
+   * Called by \ref do_ghost on processes with local elements, after the ghost structure was initialized
+   * and before the ghost elements are communicated.
+   * \param [in,out]    forest     The forest.
+   */
+  virtual void
+  fill_remote_ghosts (t8_forest_t forest)
+    = 0;
+
+  /**
    * Exchange the list of remote ghost elements between processes
-   * \note this function could be used in do_ghost
+   * \param [in,out] forest   The forest.
    */
   virtual void
   communicate_ghost_elements (t8_forest_t forest);

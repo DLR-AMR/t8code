@@ -31,6 +31,33 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 
 int
+t8_forest_ghost_definition::do_ghost (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  if (ghost_get_type () == T8_GHOST_NONE) {
+    t8_errorf ("WARNING: Trying to construct ghosts with ghost_type NONE. "
+               "Ghost layer is not constructed.\n");
+    return 0;
+  }
+
+  const int memory_flag = communicate_ownerships (forest);
+
+  /* Processes without local elements also get an (empty) ghost structure, so that
+   * all processes agree on whether a ghost layer exists. */
+  t8_forest_ghost_init (&forest->ghosts, ghost_type);
+
+  if (t8_forest_get_local_num_leaf_elements (forest) > 0) {
+    fill_remote_ghosts (forest);
+
+    communicate_ghost_elements (forest);
+  }
+  clean_up (forest, memory_flag);
+
+  return 1;
+}
+
+int
 t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_committed (forest));

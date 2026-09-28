@@ -76,26 +76,18 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
       delete search_data;
   }
 
-  /** Create one layer of ghost elements for a forest.
-   * \param [in,out]    forest     The forest.
-   * \return 1 if successful, 0 if not.
-   * \a forest must be committed before calling this function.
-   */
-  virtual int
-  do_ghost (t8_forest_t forest) override;
-
  protected:
   /**
    * Fills the remote ghosts using a tree-based search.
    * \param [in,out]    forest     The forest.
    */
-  virtual void
-  search_for_ghost_elements (t8_forest_t forest);
+  void
+  fill_remote_ghosts (t8_forest_t forest) override;
 
   /**
    * Constructor for the derived classes to set the type and the search_function.
    * \param [in] ghost_type       The type (faces, edges, user defined, ...) of the ghost_definition
-   * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in search_for_ghost_elements
+   * \param [in] search_function  Function of type t8_forest_search_fn, used as callback function in fill_remote_ghosts
    * \param [in] search_data      Persistent data which can be used during the search. Ghost takes ownership of the data.
    * \note \a search_data is reachable from within \a search_function via
    * \ref t8_forest_ghost_get_search_data (forest).
@@ -107,7 +99,7 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
     T8_ASSERT (ghost_type != T8_GHOST_NONE);
   }
 
-  t8_forest_search_fn search_fn {}; /**< Callback function for t8_forest_search in search_for_ghost_elements */
+  t8_forest_search_fn search_fn {}; /**< Callback function for t8_forest_search in fill_remote_ghosts */
   /** Persistent data which can be accessed during the search.
    * \note Reachable from within \a search_fn via \ref t8_forest_ghost_get_search_data */
   t8_forest_ghost_search_data *search_data {};

@@ -82,7 +82,7 @@ struct t8_forest_ghost_definition_face: public t8_forest_ghost_definition_w_sear
    * \param [in,out]    forest     The forest.
    */
   void
-  search_for_ghost_elements (t8_forest_t forest) override;
+  fill_remote_ghosts (t8_forest_t forest) override;
 
  private:
   int version {};
