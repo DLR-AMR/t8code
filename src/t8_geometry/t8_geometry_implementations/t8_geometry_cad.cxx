@@ -1398,17 +1398,21 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
  * return the geometry indices stored for this tree.
  * \param [in] cmesh  A committed cmesh with CAD geometry.
  * \param [in] cmesh_ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
- * \param [in] dim    Either 1 to get edge information or 2 to get face information.
+ * \param [in] attribute_dimension    Either 1 to get edge information or 2 to get face information.
  * \return A list of all geometries that are linked to this tree.
  */
 const int *
-t8_geometry_cad::get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t cmesh_ltreeid, const int dim)
+t8_geometry_cad::get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t cmesh_ltreeid,
+                                      const int attribute_dimension)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
 
   /* We retrieve the geometry information of the tree.
    * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
-  const int attribute_key = dim == 3 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
+  const int attribute_key
+    = attribute_dimension == 2 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
+
   const int *linked_geometries
     = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), attribute_key, cmesh_ltreeid);
 
