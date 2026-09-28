@@ -1440,6 +1440,7 @@ t8_geometry_cad::set_tree_geometries (const t8_cmesh_t cmesh, const t8_gloidx_t 
   const int attribute_key
     = attribute_dimension == 2 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
   const bool data_persists = false;  // Force copying of data in internal buffer
+
   t8_cmesh_set_attribute (cmesh, cmesh_gtreeid, t8_get_package_id (), attribute_key, (void *) geometries,
                           num_geometries * sizeof (*geometries), data_persists);
 }
@@ -1485,7 +1486,9 @@ t8_geometry_cad::get_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_
                                                           : T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY;
   const int attribute_key = attribute_base_key + attribute_index;
 
-  return (const double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), attribute_key, ltreeid);
+  const double *parameters
+    = (const double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), attribute_key, ltreeid);
+  return parameters;
 }
 
 /* This part should be callable from C */
