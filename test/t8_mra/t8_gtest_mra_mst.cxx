@@ -10,6 +10,7 @@
 #include <t8_mra/data/element_data.hxx>
 #include <t8_mra/data/levelindex_map.hxx>
 #include <t8_mra/num/basis/basis.hxx>
+#include <t8_mra/num/cell_geometry.hxx>
 #include <t8_mra/num/mask_coefficients.hxx>
 #include <t8_mra/num/quadrature/quadrature.hxx>
 
@@ -73,6 +74,67 @@ class mra_mst: public ::testing::Test {
   }
 };
 TYPED_TEST_SUITE (mra_mst, MstConfigs);
+
+/* Gerhard eq. (3.78): the local norm is ||d||_L2 over the family / sqrt(parent volume). */
+TYPED_TEST (mra_mst, detail_norm_is_the_scaled_l2_norm)
+{
+  using element_t = typename TestFixture::element_t;
+  using detail_t = typename TestFixture::detail_t;
+  using mst_t = typename TestFixture::mst_t;
+  constexpr auto Shape = TestFixture::Shape;
+  constexpr auto P = TestFixture::P;
+  constexpr auto NUM_CHILDREN = TestFixture::NUM_CHILDREN;
+  constexpr auto DOF = TestFixture::DOF;
+  constexpr auto U = TestFixture::U;
+
+  using geometry_t = t8_mra::cell_geometry<Shape, P>;
+  using basis_t = t8_mra::basis<Shape, P>;
+  constexpr int DIM = geometry_t::DIM;
+
+  constexpr double child_vol = 0.25;
+
+  std::array<element_t, NUM_CHILDREN> siblings;
+  std::array<const element_t *, NUM_CHILDREN> sibling_ptr;
+  for (unsigned int k = 0; k < NUM_CHILDREN; ++k) {
+    siblings[k] = TestFixture::make_leaf (k, child_vol);
+    sibling_ptr[k] = &siblings[k];
+  }
+
+  detail_t parent {};
+  mst_t::two_scale_family (sibling_ptr, parent, this->mask);
+
+  const t8_mra::quadrature<Shape> quad (t8_mra::quadrature<Shape>::rule_for_degree (2 * P));
+  auto weight_sum = 0.0;
+  for (auto q = 0u; q < quad.num_points; ++q)
+    weight_sum += quad.weights[q];
+
+  const auto child_scale = basis_t::normalization (child_vol);
+  const auto norm = mst_t::detail_norm (parent);
+
+  for (unsigned int u = 0; u < U; ++u) {
+    auto l2_squared = 0.0;
+
+    for (unsigned int k = 0; k < NUM_CHILDREN; ++k) {
+      std::array<double, DOF> coeffs;
+      for (unsigned int i = 0; i < DOF; ++i)
+        coeffs[i] = parent.d_coeffs[detail_t::wavelet_idx (k, u, i)];
+
+      auto weighted_square = 0.0;
+      for (auto q = 0u; q < quad.num_points; ++q) {
+        std::array<double, DIM> ref;
+        for (auto d = 0; d < DIM; ++d)
+          ref[d] = quad.points[DIM * q + d];
+
+        const auto value = geometry_t::eval_modal (coeffs, ref, child_scale);
+        weighted_square += quad.weights[q] * value * value;
+      }
+
+      l2_squared += child_vol * weighted_square / weight_sum;
+    }
+
+    EXPECT_NEAR (norm[u] * norm[u] * parent.vol, l2_squared, eps) << "component " << u;
+  }
+}
 
 /* decomposition then inverse returns the original single family. */
 TYPED_TEST (mra_mst, round_trip_identity_one_level)
