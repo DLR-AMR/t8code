@@ -626,9 +626,6 @@ t8_recv_list_entry_equal (const void *v1, const void *v2, [[maybe_unused]] const
   return e1->rank == e2->rank;
 }
 
-/* Probe for all incoming messages from the remote ranks and receive them.
- * We receive the message in the order in which they arrive. To achieve this,
- * we have to use polling. */
 void
 t8_forest_ghost_receive (t8_forest_t forest, t8_forest_ghost_t ghost)
 {
