@@ -72,8 +72,7 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
 
   ~t8_forest_ghost_definition_w_search () override
   {
-    if (search_data != nullptr)
-      delete search_data;
+    delete search_data;
   }
 
  protected:
