@@ -33,6 +33,8 @@
 int
 t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
 {
+  T8_ASSERT (t8_forest_is_committed (forest));
+
   int memory_flag = 0;
 
   if (forest->element_offsets == nullptr) {
@@ -56,6 +58,8 @@ t8_forest_ghost_definition::communicate_ownerships (t8_forest_t forest)
 void
 t8_forest_ghost_definition::communicate_ghost_elements (t8_forest_t forest)
 {
+  T8_ASSERT (t8_forest_is_committed (forest));
+
   t8_forest_ghost_t const ghost = forest->ghosts;
   sc_MPI_Request *requests;
 
@@ -72,6 +76,8 @@ t8_forest_ghost_definition::communicate_ghost_elements (t8_forest_t forest)
 void
 t8_forest_ghost_definition::clean_up (t8_forest_t forest, const int memory_flag)
 {
+  T8_ASSERT (t8_forest_is_committed (forest));
+
   if (memory_flag & CREATE_ELEMENT_ARRAY) {
     /* Free the offset memory, if allocated */
     t8_shmem_array_destroy (&forest->element_offsets);
