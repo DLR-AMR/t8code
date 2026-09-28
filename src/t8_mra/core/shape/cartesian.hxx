@@ -90,10 +90,12 @@ struct mst_scaling_policy<TShape>
     return 1.0;
   }
 
+  /// The reference basis is orthonormal on the unit cell, so a coefficient 2-norm is
+  /// already the L2 norm over the child divided by its volume.
   [[nodiscard]] static constexpr double
   detail_norm_scale (double /*unused*/)
   {
-    return 1.0;
+    return 1.0 / shape_traits<TShape>::NUM_CHILDREN;
   }
 };
 
