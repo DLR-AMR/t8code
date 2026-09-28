@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 #include <numeric>
 #ifdef T8_ENABLE_MRA
 
@@ -217,6 +218,43 @@ struct cell_geometry<TShape, P>
     return eval_modal (coeffs, ref, basis_scale);
   }
 
+  /** @brief All U components of a U * DOF coefficient block. */
+  template <unsigned int U>
+  [[nodiscard]] static std::array<double, U>
+  eval_modal_all (std::span<const double> coeffs, const point &ref, double basis_scale)
+  {
+    const auto phi = basis_t::eval (basis_coord (ref));
+    std::array<double, U> res {};
+
+    for (auto u = 0u; u < U; ++u) {
+      const auto *block = coeffs.data () + static_cast<size_t> (u * DOF);
+      auto sum = 0.0;
+
+      for (auto i = 0; i < DOF; ++i)
+        sum += block[i] * phi[i];
+
+      res[u] = basis_scale * sum;
+    }
+
+    return res;
+  }
+
+  /** @brief All U components at a reference point from the cell volume alone. */
+  template <unsigned int U>
+  [[nodiscard]] static std::array<double, U>
+  reference_values (std::span<const double> coeffs, const point &ref, double volume)
+  {
+    return eval_modal_all<U> (coeffs, ref, basis_t::normalization (volume));
+  }
+
+  /** @brief All U components at a reference point using the basis scale. */
+  template <unsigned int U>
+  [[nodiscard]] std::array<double, U>
+  values (std::span<const double> coeffs, const point &ref) const
+  {
+    return eval_modal_all<U> (coeffs, ref, basis_scale);
+  }
+
   /** @brief Physical gradient d(u_h)/d(x_d) at a reference point. */
   [[nodiscard]] point
   gradient (std::span<const double> coeffs, const point &ref) const
@@ -224,12 +262,36 @@ struct cell_geometry<TShape, P>
     const auto ref_grad = basis_t::eval_gradient (ref);
     point grad {};
 
-    for (int d = 0; d < DIM; ++d) {
-      double sum = 0.0;
-      for (int i = 0; i < DOF; ++i)
+    for (auto d = 0; d < DIM; ++d) {
+      auto sum = 0.0;
+      for (auto i = 0; i < DOF; ++i)
         sum += coeffs[i] * ref_grad[d][i];
 
       grad[d] = basis_scale * sum / extent[d];
+    }
+
+    return grad;
+  }
+
+  /** @brief Physical gradients of all U components. */
+  template <unsigned int U>
+  [[nodiscard]] std::array<point, U>
+  gradients (std::span<const double> coeffs, const point &ref) const
+  {
+    const auto ref_grad = basis_t::eval_gradient (ref);
+    std::array<point, U> grad {};
+
+    for (auto u = 0u; u < U; ++u) {
+      const auto *block = coeffs.data () + static_cast<size_t> (u * DOF);
+
+      for (auto d = 0; d < DIM; ++d) {
+        auto sum = 0.0;
+
+        for (auto i = 0; i < DOF; ++i)
+          sum += block[i] * ref_grad[d][i];
+
+        grad[u][d] = basis_scale * sum / extent[d];
+      }
     }
 
     return grad;
@@ -241,7 +303,7 @@ struct cell_geometry<TShape, P>
   {
     point ref_dir {};
 
-    for (int d = 0; d < DIM; ++d)
+    for (auto d = 0; d < DIM; ++d)
       ref_dir[d] = phys_dir[d] / extent[d];
 
     return ref_dir;
@@ -253,7 +315,7 @@ struct cell_geometry<TShape, P>
 template <t8_eclass TShape>
 struct quadrature<TShape, std::enable_if_t<is_cartesian<TShape>>>
 {
-  static constexpr int DIM = shape_traits<TShape>::DIM;
+  static constexpr auto DIM = shape_traits<TShape>::DIM;
 
   std::size_t num_points = 0;
   std::vector<double> points;  /// flattened: point q coord d at points[DIM*q + d]
