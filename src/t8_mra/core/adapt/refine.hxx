@@ -2,7 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <t8.h>
+#include "t8.h"
 
 #include "t8_mra/core/adapt/grading.hxx"
 #include "t8_mra/criteria/coarsening_criterion.hxx"

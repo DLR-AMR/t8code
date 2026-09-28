@@ -1,13 +1,12 @@
 #pragma once
 
-#include <algorithm>
-#include <cstddef>
-#include <numeric>
 #ifdef T8_ENABLE_MRA
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <numeric>
 #include <span>
 #include <type_traits>
 #include <vector>

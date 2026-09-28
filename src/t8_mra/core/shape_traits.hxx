@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 
-#include <t8_eclass/t8_eclass.h>
+#include "t8_eclass/t8_eclass.h"
 
 namespace t8_mra
 {

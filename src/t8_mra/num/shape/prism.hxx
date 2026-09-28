@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include <t8.h>
+#include "t8.h"
 
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/num/basis/basis.hxx"

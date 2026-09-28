@@ -6,7 +6,7 @@
 #include <span>
 #include <vector>
 
-#include <t8_eclass/t8_eclass.h>
+#include "t8_eclass/t8_eclass.h"
 
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/num/basis/basis.hxx"

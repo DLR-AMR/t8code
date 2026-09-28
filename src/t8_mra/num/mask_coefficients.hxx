@@ -5,9 +5,9 @@
 #include <array>
 #include <vector>
 
-#include <t8_eclass/t8_eclass.h>
+#include "t8_eclass/t8_eclass.h"
 
-#include <t8_mra/core/shape_traits.hxx>
+#include "t8_mra/core/shape_traits.hxx"
 
 namespace t8_mra
 {
@@ -51,8 +51,8 @@ struct mask_policy;
 
 // The basis and the quadrature pull in the per-shape specializations, so they
 // can only be reached once the primaries above are declared.
-#include <t8_mra/num/basis/basis.hxx>
-#include <t8_mra/num/quadrature/quadrature.hxx>
+#include "t8_mra/num/basis/basis.hxx"
+#include "t8_mra/num/quadrature/quadrature.hxx"
 
 namespace t8_mra
 {

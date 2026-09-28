@@ -2,7 +2,7 @@
 
 #ifdef T8_ENABLE_MRA
 
-#include <t8_eclass/t8_eclass.h>
+#include "t8_eclass/t8_eclass.h"
 
 namespace t8_mra
 {

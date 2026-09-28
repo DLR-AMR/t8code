@@ -17,10 +17,12 @@
 #include <vector>
 
 #include "sc_mpi.h"
+
 #include "t8.h"
-#include "t8_schemes/t8_scheme.hxx"
 #include "t8_forest/t8_forest_general.h"
 #include "t8_forest/t8_forest_geometrical.h"
+#include "t8_schemes/t8_scheme.hxx"
+
 #include "t8_mra/core/shape_traits.hxx"
 #include "t8_mra/io/vtk_shape.hxx"
 

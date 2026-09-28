@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <gsl/gsl_integration.h>
+#include "gsl/gsl_integration.h"
 
 namespace t8_mra
 {
