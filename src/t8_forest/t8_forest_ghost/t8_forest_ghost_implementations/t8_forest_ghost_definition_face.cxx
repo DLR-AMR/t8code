@@ -57,9 +57,6 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
     eclass = T8_ECLASS_COUNT;
     gtreeid = -1;
     scheme = nullptr;
-#if T8_ENABLE_DEBUG
-    left_out = 0;
-#endif
   }
 
   sc_array_t bounds_per_level; /**< For each level from the nca to the parent of the current element
@@ -75,9 +72,6 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
                                      for the parent of element. */
   int max_num_faces;           /**< The maximum number of faces of any element in the forest. */
   t8_eclass_t eclass;          /**< The element class of the tree currently searched. */
-#if T8_ENABLE_DEBUG
-  t8_locidx_t left_out; /**< Count the elements for which we skip the search */
-#endif
 };
 
 /** Search callback that computes owner bounds for elements and their face neighbors, adding
@@ -205,11 +199,6 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
   if (faces_totally_owned && element_is_owned) {
     /* The element only has local descendants and all of its face neighbors are local as well.
      * We do not continue the search */
-#if T8_ENABLE_DEBUG
-    if (tree_leaf_index < 0) {
-      data->left_out += t8_element_array_get_count (leaves);
-    }
-#endif
     return 0;
   }
   /* Continue the top-down search if this element or its face neighbors are not completely owned by the rank. */
