@@ -440,6 +440,7 @@ t8_forest_ghost_receive_message (int recv_rank, sc_MPI_Comm comm, sc_MPI_Status 
 
   /* Get the number of bytes in the message */
   mpiret = sc_MPI_Get_count (&status, sc_MPI_BYTE, recv_bytes);
+  SC_CHECK_MPI (mpiret);
 
   /* Allocate receive buffer */
   recv_buffer = T8_ALLOC_ZERO (char, *recv_bytes);
