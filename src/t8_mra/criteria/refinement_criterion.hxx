@@ -55,7 +55,7 @@ struct harten_prediction
   void
   prepare (TMultiscale &mra)
   {
-    mra.c_scaling = mra.threshold_scaling_factor ();
+    mra.c_scaling = mra.v_max (0, mra.maximum_level ());
   }
 
   template <typename TMultiscale>
