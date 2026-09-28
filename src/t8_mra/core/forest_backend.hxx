@@ -50,9 +50,14 @@ class forest_backend {
   t8_forest_t forest = nullptr;
   sc_MPI_Comm comm;
   unsigned int maximum_level;
+  int mpirank = 0;
+  int mpisize = 1;
 
-  forest_backend (int _max_level, sc_MPI_Comm _comm): comm (_comm), maximum_level (static_cast<unsigned int> (_max_level))
+  forest_backend (int _max_level, sc_MPI_Comm _comm)
+    : comm (_comm), maximum_level (static_cast<unsigned int> (_max_level))
   {
+    sc_MPI_Comm_rank (comm, &mpirank);
+    sc_MPI_Comm_size (comm, &mpisize);
   }
 
   /** @brief Set the multiscale instance and the post-adaptation hook. */
@@ -269,8 +274,6 @@ class forest_backend {
   {
     static_assert (std::is_trivially_copyable_v<element_t>, "element data is shipped as raw bytes");
 
-    int mpisize;
-    sc_MPI_Comm_size (comm, &mpisize);
     if (mpisize == 1)
       return;
 
@@ -320,9 +323,6 @@ class forest_backend {
   void
   ensure_ghost_layer ()
   {
-    int mpisize = 1;
-    sc_MPI_Comm_size (comm, &mpisize);
-
     if (mpisize == 1 || forest->ghosts != nullptr)
       return;
 
@@ -346,8 +346,6 @@ class forest_backend {
 
     levelindex_map<levelmultiindex, payload> received (maximum_level);
 
-    int mpisize = 1;
-    sc_MPI_Comm_size (comm, &mpisize);
     if (mpisize == 1)
       return received;
 
@@ -410,8 +408,6 @@ class forest_backend {
   void
   globalize (TIndexSet &set) const
   {
-    int mpisize = 1;
-    sc_MPI_Comm_size (comm, &mpisize);
     if (mpisize == 1)
       return;
 

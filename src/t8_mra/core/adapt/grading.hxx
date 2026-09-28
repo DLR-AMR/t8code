@@ -103,8 +103,7 @@ exchange_refine_requests (TMultiscale &mra, const std::vector<std::pair<int, siz
 {
   using levelmultiindex = typename TMultiscale::levelmultiindex;
 
-  int mpisize;
-  sc_MPI_Comm_size (mra.grid.comm, &mpisize);
+  const auto mpisize = mra.grid.mpisize;
 
   std::vector<int> send_counts (mpisize, 0);
   for (const auto &[owner, index] : outgoing)
@@ -167,12 +166,8 @@ template <typename TMultiscale, typename TLeafFilter>
 unsigned int
 grade_neighbours (TMultiscale &mra, int min_level, unsigned int max_level_gap, TLeafFilter &&leaf_filter)
 {
-  int mpirank;
-  int mpisize;
-  sc_MPI_Comm_rank (mra.grid.comm, &mpirank);
-  sc_MPI_Comm_size (mra.grid.comm, &mpisize);
-
-  const auto parallel = mpisize > 1;
+  const auto mpirank = mra.grid.mpirank;
+  const auto parallel = mra.grid.mpisize > 1;
   std::vector<std::pair<int, size_t>> outgoing;
   auto num_new_marks = 0u;
 
