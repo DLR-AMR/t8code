@@ -248,11 +248,6 @@ t8_forest_ghost_create (t8_forest_t forest)
                   t8_forest_get_local_num_leaf_elements (forest), t8_forest_get_num_ghosts (forest));
 }
 
-/** Return the array of remote ranks.
- * \param [in] forest   A forest with constructed ghost layer.
- * \param [in,out] num_remotes On output the number of remote ranks is stored here.
- * \return              The array of remote ranks in ascending order.
- */
 int *
 t8_forest_ghost_get_remotes (t8_forest_t forest, int *num_remotes)
 {
