@@ -29,9 +29,8 @@ init_and_decompose (Case &c, F &&f)
   c->multiscale_decomposition (0, c.max_level);
 }
 
-/* threshold_scaling_factor is a domain integral clamped to >= 1, and the DG
- * projection is linear, so doubling the data doubles the (unclamped) factor. */
-TYPED_TEST (mra_criteria, threshold_scaling_factor_is_clamped_and_linear)
+/* v_max is the peak cell mean per component; 1.0 only guards a vanishing component. */
+TYPED_TEST (mra_criteria, v_max_is_the_peak_cell_mean)
 {
   constexpr auto Shape = TypeParam::Shape;
   constexpr auto U = TypeParam::U;
@@ -40,26 +39,54 @@ TYPED_TEST (mra_criteria, threshold_scaling_factor_is_clamped_and_linear)
 
   const int max_level = (DIM == 3) ? 2 : 3;
 
-  /* Vanishing data -> the clamp pins every component at 1. */
   {
     mra_example<Shape, U, P> example (max_level);
-    example.init (constant_func<U, DIM> (1e-9));
-    const auto factor = example->threshold_scaling_factor ();
+    example.init (smooth_func<U, DIM> ());
+
+    std::array<double, U> peak = {};
+    for (auto l = 0; l <= max_level; ++l)
+      for (const auto &[lmi, data] : (*example->get_lmi_map ())[l]) {
+        const auto mean = example->mean_val (data);
+
+        for (auto u = 0u; u < U; ++u)
+          peak[u] = std::max (peak[u], std::abs (mean[u]));
+      }
+
+    const auto factor = example->v_max (0, max_level);
     for (auto u = 0u; u < U; ++u)
-      EXPECT_NEAR (factor[u], 1.0, eps) << "tiny data must clamp to 1, component " << u;
+      EXPECT_NEAR (factor[u], peak[u], eps) << "must be the peak cell mean, component " << u;
   }
 
-  /* Large data -> unclamped, and linear in the amplitude. */
-  mra_example<Shape, U, P> c1 (max_level);
-  mra_example<Shape, U, P> c2 (max_level);
-  c1.init (constant_func<U, DIM> (100.0));
-  c2.init (constant_func<U, DIM> (200.0));
+  {
+    mra_example<Shape, U, P> example (max_level);
+    example.init (constant_func<U, DIM> (0.25));
 
-  const auto f1 = c1->threshold_scaling_factor ();
-  const auto f2 = c2->threshold_scaling_factor ();
-  for (auto u = 0u; u < U; ++u) {
-    ASSERT_GT (f1[u], 1.0) << "amplitude 100 should exceed the clamp, component " << u;
-    EXPECT_NEAR (f2[u] / f1[u], 2.0, eps) << "factor must scale linearly, component " << u;
+    const auto factor = example->v_max (0, max_level);
+    for (auto u = 0u; u < U; ++u)
+      EXPECT_NEAR (factor[u], 0.25 * (u + 1), eps) << "sub-unit amplitude must survive, component " << u;
+  }
+
+  {
+    mra_example<Shape, U, P> example (max_level);
+    example.init (constant_func<U, DIM> (0.0));
+
+    const auto factor = example->v_max (0, max_level);
+    for (auto u = 0u; u < U; ++u)
+      EXPECT_NEAR (factor[u], 1.0, eps) << "vanishing data must guard to 1, component " << u;
+  }
+
+  {
+    mra_example<Shape, U, P> example (max_level);
+    example.init (constant_func<U, DIM> (4.0));
+
+    const auto all = example->v_max (0, max_level);
+    const auto finest = example->v_max (max_level, max_level);
+    const auto coarser = example->v_max (0, max_level - 1);
+
+    for (auto u = 0u; u < U; ++u) {
+      EXPECT_NEAR (finest[u], all[u], eps) << "the finest level carries every leaf, component " << u;
+      EXPECT_NEAR (coarser[u], 1.0, eps) << "an empty range has no scale, component " << u;
+    }
   }
 }
 
