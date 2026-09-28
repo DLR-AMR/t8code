@@ -97,6 +97,7 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
     : t8_forest_ghost_definition (ghost_type), search_fn (search_function), search_data (search_data)
   {
     T8_ASSERT (ghost_type != T8_GHOST_NONE);
+    T8_ASSERT (search_function != nullptr);
   }
 
   t8_forest_search_fn search_fn {}; /**< Callback function for t8_forest_search in fill_remote_ghosts */
