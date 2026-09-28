@@ -123,8 +123,7 @@ coarsen (TMultiscale &mra, int min_level, int max_level, TCriterion criterion = 
     const auto num_leaves = mra.grid.global_num_leaves ();
     const auto num_marked = coarsen_sweep (mra, min_level, max_level, criterion);
 
-    t8_debugf ("MRA coarsen pass %d: %u families marked, %zu leaves remain\n", pass, num_marked,
-               mra.get_lmi_map ()->size ());
+    t8_debugf ("MRA coarsen pass %d: %u families marked\n", pass, num_marked);
 
     if (mra.grid.global_num_marks (num_marked) == 0)
       break;

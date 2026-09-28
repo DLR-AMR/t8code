@@ -248,7 +248,7 @@ class forest_backend {
     t8_forest_t new_forest = t8_forest_new_adapt (forest, adapt_callback, recursive, 0, old_user_data);
 
     lmi_map_t *map = old_user_data->lmi_map;
-    old_user_data->lmi_map = new lmi_map_t (maximum_level);  // placeholder freed with old_user_data
+    old_user_data->lmi_map = nullptr;
 
     auto *user_data = attach_user_data (new_forest, map);
     rebuild_leaf_index (new_forest, user_data,

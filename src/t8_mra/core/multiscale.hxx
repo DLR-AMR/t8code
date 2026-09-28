@@ -214,7 +214,10 @@ class multiscale {
     const auto level_diff = grid.maximum_level - level;
     const auto vol_max_level = detail.vol / static_cast<double> (1ULL << (levelmultiindex::PATH_BITS * level_diff));
 
-    return std::pow (vol_max_level, (gamma + 1.0) / 2.0) / std::sqrt (detail.vol);
+    const auto exponent = 0.5 * (gamma + 1.0);
+    const auto scaled = exponent == 1.0 ? vol_max_level : std::pow (vol_max_level, exponent);
+
+    return scaled / std::sqrt (detail.vol);
   }
 
   [[nodiscard]] double
