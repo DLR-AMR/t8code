@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_ghost_definition_c_interface.cxx
+ * Implements the C wrappers declared in \ref t8_forest_ghost_definition_c_interface.h.
+ */
+
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>

@@ -20,6 +20,12 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_forest_ghost_definition_c_interface.h
+ * C interface for the ghost definition classes.
+ * Provides the \ref t8_ghost_type_t enum and C-callable wrappers around the
+ * C++ \ref t8_forest_ghost_definition class hierarchy.
+ */
+
 #ifndef T8_FOREST_GHOST_DEFINITION_C_INTERFACE_H
 #define T8_FOREST_GHOST_DEFINITION_C_INTERFACE_H
 
