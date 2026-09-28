@@ -313,12 +313,6 @@ t8_forest_ghost_get_proc_info (t8_forest_t forest, int remote)
   return proc_hash_found;
 }
 
-/** Return the first local ghost tree of a remote rank.
- * \param [in] forest   A forest with constructed ghost layer.
- * \param [in] remote   A remote rank of the ghost layer in \a forest.
- * \return              The ghost tree id of the first ghost tree that stores ghost
- *                      elements of \a remote.
- */
 t8_locidx_t
 t8_forest_ghost_remote_first_tree (t8_forest_t forest, int remote)
 {
