@@ -227,27 +227,33 @@ class multiscale {
   }
 
   /**
-   * @brief Per-component domain-integral scaling (eq. 2.39), reduced over ranks.
+   * @brief Per-component maximum cell mean over [l_min, l_max], reduced over ranks.
+   *
+   * The scale a relative criterion divides by: eq. 2.39 over every level for the detail
+   * thresholds.
    */
   [[nodiscard]] std::array<double, U_DIM>
-  threshold_scaling_factor ()
+  v_max (unsigned int l_min, unsigned int l_max)
   {
+    static constexpr double AMPLITUDE_EPS = 1e-15;  /// Clamping cells with no information
+
     std::array<double, U_DIM> local = {};
     const auto *lmi_map = get_lmi_map ();
 
-    for (auto level = 0u; level <= grid.maximum_level; ++level)
-      for (const auto &[lmi, data] : (*lmi_map)[level]) {
+    for (auto l = l_min; l <= l_max; ++l)
+      for (const auto &[lmi, data] : (*lmi_map)[l]) {
         const auto mean = mean_val (data);
 
         for (auto u = 0u; u < U_DIM; ++u)
-          local[u] += std::abs (mean[u]) * data.vol;
+          local[u] = std::max (local[u], std::abs (mean[u]));
       }
 
     std::array<double, U_DIM> global = {};
-    sc_MPI_Allreduce (local.data (), global.data (), U_DIM, sc_MPI_DOUBLE, sc_MPI_SUM, grid.comm);
+    sc_MPI_Allreduce (local.data (), global.data (), U_DIM, sc_MPI_DOUBLE, sc_MPI_MAX, grid.comm);
 
     for (auto u = 0u; u < U_DIM; ++u)
-      global[u] = std::max (1.0, global[u]);
+      if (global[u] < AMPLITUDE_EPS)
+        global[u] = 1.0;
 
     return global;
   }
