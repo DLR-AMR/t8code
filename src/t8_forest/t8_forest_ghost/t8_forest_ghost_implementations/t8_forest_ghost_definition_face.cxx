@@ -74,8 +74,8 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
   t8_eclass_t eclass;          /**< The element class of the tree currently searched. */
 };
 
-/** Search callback that computes owner bounds for elements and their face neighbors, adding
- * leaf elements with remote face neighbors as remote ghosts.
+/** This function is used as callback search function within \ref t8_forest_search to check whether the neighbors of
+the current element are on another rank. If so, add the element to the ghost structures.
  * \param [in] forest           A forest with constructed ghost layer, used as the search callback.
  * \param [in] ltreeid          The local tree id of the tree currently searched.
  * \param [in] element          The element currently visited by the search.
