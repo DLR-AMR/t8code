@@ -115,7 +115,6 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
       bounds[iface * 2] = 0;
       bounds[iface * 2 + 1] = forest->mpisize - 1;
     }
-    /* TODO: compute bounds */
   }
 
   /* The level of the current element */
@@ -187,7 +186,6 @@ t8_forest_ghost_search_boundary (t8_forest_t forest, t8_locidx_t ltreeid, const 
       *(int *) sc_array_index (&data->face_owners, 0) = lower;
       *(int *) sc_array_index (&data->face_owners, 1) = upper;
       t8_forest_element_owners_at_neigh_face (forest, ltreeid, element, iface, &data->face_owners);
-      /*TODO: add as remotes */
       for (iproc = 0; iproc < (int) data->face_owners.elem_count; iproc++) {
         remote_rank = *(int *) sc_array_index (&data->face_owners, iproc);
         if (remote_rank != forest->mpirank) {
