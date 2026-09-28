@@ -258,13 +258,7 @@ class multiscale {
   [[nodiscard]] std::array<double, U_DIM>
   evaluate_reference (const element_t &data, const std::array<double, DIM> &x_ref)
   {
-    std::array<double, U_DIM> res = {};
-
-    for (auto u = 0u; u < U_DIM; ++u)
-      res[u] = geometry_t::reference_value (std::span<const double> (&data.u_coeffs[element_t::dg_idx (u, 0)], DOF),
-                                            x_ref, data.vol);
-
-    return res;
+    return geometry_t::template reference_values<U_DIM> (data.u_coeffs, x_ref, data.vol);
   }
 
   /** @brief Cell average per component. */
