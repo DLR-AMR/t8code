@@ -341,23 +341,27 @@ t8_element_array_find (const t8_element_array_t *element_array, const t8_element
    * The search returns the largest index i,
    * such that the element at position i has a smaller id than the given one.
    * If no such i exists, it returns -1. */
-  const t8_locidx_t search_result = t8_forest_bin_search_lower (element_array, element_id, element_level);
-  if (search_result < 0) {
-    // The element was not found, we return -1. */
-    return -1;
+  t8_locidx_t search_result = t8_forest_bin_search_lower (element_array, element_id, element_level);
+  /* Several elements may share the same linear id (e.g. all subelements of one transition cell).
+   * They are stored contiguously and the search returns the last of them.
+   * Therefore, we walk backwards over all elements with the same id and level
+   * and compare each of them. For schemes without subelements this loop runs at most once. */
+  while (search_result >= 0) {
+    const t8_element_t *check_element = t8_element_array_index_locidx (element_array, search_result);
+    T8_ASSERT (check_element != NULL);
+    if (scheme->element_is_equal (tree_class, element, check_element)) {
+      // The element was found at position search_result. We return it.
+      return search_result;
+    }
+    if (scheme->element_get_level (tree_class, check_element) != element_level
+        || scheme->element_get_linear_id (tree_class, check_element, element_level) != element_id) {
+      // We left the block of candidates with the same id and level.
+      break;
+    }
+    --search_result;
   }
-  /* An element was found but it may not be the candidate element. 
-   * To identify whether the element was found, we compare these two. */
-  const t8_element_t *check_element = t8_element_array_index_locidx (element_array, search_result);
-  T8_ASSERT (check_element != NULL);
-  if (scheme->element_is_equal (tree_class, element, check_element)) {
-    // The element was found at position search_result. We return it.
-    return search_result;
-  }
-  else {
-    // The element was not found, we return -1. */
-    return -1;
-  }
+  // The element was not found, we return -1.
+  return -1;
 }
 
 void
