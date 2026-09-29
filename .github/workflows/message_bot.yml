@@ -34,7 +34,7 @@ on:
   workflow_dispatch:
 env:
   message_build: 0
-  
+
 jobs:
   send_message:
     if: github.repository == 'DLR-AMR/t8code'
@@ -65,12 +65,47 @@ jobs:
           echo message_content='User ${{ github.actor }} reopened issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
       - name: debug_after_build
         run: echo ${{ env.message_build }}
+      - name: Login and Get Fresh Token
+        id: matrix_login
+        env:
+          USERNAME: ${{ secrets.T8DDY_MAIL }}
+          PASSWORD: ${{ secrets.T8DDY_PW }}
+          HOMESERVER: matrix-client.matrix.org 
+        run: |
+          # Safely create JSON payload using jq to handle special characters in passwords
+          PAYLOAD=$(jq -n \
+            --arg user "$USERNAME" \
+            --arg pass "$PASSWORD" \
+            '{type: "m.login.password", identifier: {type: "m.id.user", user: $user}, password: $pass}')
+
+          # Call Matrix login API
+          RESPONSE=$(curl -s -X POST "https://$HOMESERVER/_matrix/client/v3/login" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          # Extract token from response
+          TOKEN=$(echo $RESPONSE | jq -r '.access_token')
+
+          # Instruct GitHub to mask this specific token in logs just like a secret
+          echo "::add-mask::$TOKEN"
+
+          # Output it for the next step
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
       # if a message has been written send the message to the channel described in the secrets
       - name: send_message
         if: ${{ env.message_build == 1 }}
         uses: s3krit/matrix-message-action@v0.0.3
         with:
-          server: "matrix-client.matrix.org"
+          server: "matrix.dlr.de"
           access_token: ${{ secrets.T8DDY_MESSAGE_SECRET}}
           room_id: ${{ secrets.CHAT_ID}}
           message: ${{env.message_content}}
+      - name: Logout (Cleanup Session)
+        # always() ensures logout runs even if the message step fails
+        if: always() 
+        env:
+          HOMESERVER: matrix-client.matrix.org
+        run: |
+          # Destroy the token we just created so we don't spam the server with ghost devices
+          curl -s -X POST "https://$HOMESERVER/_matrix/client/v3/logout" \
+            -H "Authorization: Bearer ${{ steps.matrix_login.outputs.token }}"
