@@ -521,7 +521,7 @@ t8_cmesh_new_hypercube_hybrid_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm, int perio
   const std::string boundary = "boundary";
   std::array<t8_boundary_conditions<std::string>, 16> boundary_conditions;
 
-  /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
+  /* This cmesh consists of 6 tets, 6 prisms and 4 hexes */
   for (i = 0; i < 6; i++) {
     t8_cmesh_set_tree_class (cmesh, i, T8_ECLASS_TET);
     boundary_conditions[i].assign (t8_eclass_num_faces[T8_ECLASS_TET], boundary);
