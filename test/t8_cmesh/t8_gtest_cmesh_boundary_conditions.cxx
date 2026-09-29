@@ -257,7 +257,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
     const char *retrieved_single_boundary_condition;
     size_t length = 0;
 
-    /* Retrieve boundary conditions via t8_cmesh_get_boundary_conditions and t8_cmesh_get_boundary_condition() and check them. */
+    /* Retrieve boundary conditions via t8_cmesh_get_boundary_conditions and t8_cmesh_get_boundary_condition and check them. */
     t8_cmesh_get_boundary_conditions (cmesh, 0, retrieved_boundary_conditions, &length);
     for (size_t i_boundary_condition = 0; i_boundary_condition < length; ++i_boundary_condition) {
       /* Check t8_cmesh_get_boundary_conditions */
