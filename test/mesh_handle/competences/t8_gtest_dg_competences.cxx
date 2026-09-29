@@ -187,7 +187,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
           EXPECT_EQ ((*mesh)[face.sides[iside].element_id].get_level (), elem_first.get_level () + 1)
             << "MORTAR Small side must be one level finer.";
         }
-        // TODO: If the neighbors of ghost work again, the following checks can be enables also for ghost large sides.
+        // TODO: If the neighbors of ghost work again, the following checks can be enabled also for ghost large sides.
         break;
       }
 
