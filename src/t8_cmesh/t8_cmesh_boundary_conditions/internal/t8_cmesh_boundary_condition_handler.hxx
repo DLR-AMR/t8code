@@ -133,6 +133,7 @@ struct t8_cmesh_boundary_condition_handler
     T8_ASSERT (face < T8_ECLASS_MAX_FACES);
     T8_ASSERT (t8_cmesh_is_committed (m_cmesh, 0));
     const std::span<const boundary_condition_hash> hashes = fetch_boundary_condition_hashes (ltreeid);
+    T8_ASSERT (hashes.size () >= face);
     return get_boundary_condition_name (hashes[face]);
   }
 
