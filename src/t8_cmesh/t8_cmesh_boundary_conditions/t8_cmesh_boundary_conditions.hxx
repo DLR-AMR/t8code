@@ -28,9 +28,9 @@
 #pragma once
 
 #include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions_types.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
-#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_types.h>
-#include <t8_data/t8_static_vector.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.h>
 
 #include <vector>
 #include <string_view>
@@ -49,9 +49,9 @@ template <std::ranges::input_range TStringRange>
 void
 t8_cmesh_set_boundary_conditions (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, TStringRange boundary_conditions)
 {
-  detail::t8_cmesh_boundary_condition_handler *handler = t8_cmesh_get_boundary_condition_handler (cmesh);
+  detail::t8_cmesh_boundary_condition_handler *handler = detail::t8_cmesh_get_boundary_condition_handler (cmesh);
   if (handler == nullptr) {
-    handler = t8_cmesh_add_boundary_condition_handler (cmesh);
+    handler = detail::t8_cmesh_add_boundary_condition_handler (cmesh);
   }
   handler->add_boundary_conditions (gtreeid, boundary_conditions);
 }
@@ -79,28 +79,3 @@ t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid);
  */
 std::string_view
 t8_cmesh_get_boundary_condition (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face);
-
-/**
- * Retrieves the boundary conditions of a forest element.
- *
- * \param [in] forest   The forest the element lives in.
- * \param [in] ltreeid  The local id of the forest tree.
- * \param [in] element  The element.
- * \return A container with the boundary conditions. Note, that only elements faces at the boundary of a
- * tree will have boundary conditions. Internal faces will return an empty optional.
- */
-t8_boundary_conditions<std::optional<std::string_view>>
-t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element);
-
-/**
- * Retrieves the boundary condition of a face of a forest element.
- * Retrieving all boundary conditions at once via \ref t8_forest_get_boundary_conditions() will be faster.
- *
- * \param [in] forest   The forest the element lives in.
- * \param [in] ltreeid  The local id of the forest tree.
- * \param [in] element  The element.
- * \param [in] face     The face id of the element.
- * \return The boundary condition. It will be empty if the element is not touching the boundary of the tree.
- */
-std::optional<std::string_view>
-t8_forest_get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face);

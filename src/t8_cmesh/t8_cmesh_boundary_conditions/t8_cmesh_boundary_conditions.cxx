@@ -35,7 +35,7 @@
 t8_boundary_conditions<std::string_view>
 t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 {
-  const detail::t8_cmesh_boundary_condition_handler *handler = t8_cmesh_get_boundary_condition_handler (cmesh);
+  const detail::t8_cmesh_boundary_condition_handler *handler = detail::t8_cmesh_get_boundary_condition_handler (cmesh);
   SC_CHECK_ABORTF (handler != NULL, "ERROR: Trying to retrieve boundary conditions, even though none were set.\n");
   return handler->get_boundary_conditions (ltreeid);
 }
@@ -43,29 +43,9 @@ t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid)
 std::string_view
 t8_cmesh_get_boundary_condition (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face)
 {
-  const detail::t8_cmesh_boundary_condition_handler *handler = t8_cmesh_get_boundary_condition_handler (cmesh);
+  const detail::t8_cmesh_boundary_condition_handler *handler = detail::t8_cmesh_get_boundary_condition_handler (cmesh);
   SC_CHECK_ABORTF (handler != NULL, "ERROR: Trying to retrieve boundary conditions, even though none were set.\n");
   return handler->get_boundary_condition (ltreeid, face);
-}
-
-t8_boundary_conditions<std::optional<std::string_view>>
-t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element)
-{
-  T8_ASSERT (t8_forest_is_committed (forest));
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const detail::t8_cmesh_boundary_condition_handler *handler = t8_cmesh_get_boundary_condition_handler (cmesh);
-  SC_CHECK_ABORTF (handler != NULL, "ERROR: Trying to retrieve boundary conditions, even though none were set.\n");
-  return handler->get_boundary_conditions (forest, ltreeid, element);
-}
-
-std::optional<std::string_view>
-t8_forest_get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face)
-{
-  T8_ASSERT (t8_forest_is_committed (forest));
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const detail::t8_cmesh_boundary_condition_handler *handler = t8_cmesh_get_boundary_condition_handler (cmesh);
-  SC_CHECK_ABORTF (handler != NULL, "ERROR: Trying to retrieve boundary conditions, even though none were set.\n");
-  return handler->get_boundary_condition (forest, ltreeid, element, face);
 }
 
 /**************************************** C INTERFACE ****************************************/
@@ -98,35 +78,6 @@ void
 t8_cmesh_get_boundary_condition (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face, const char **boundary_condition)
 {
   *boundary_condition = t8_cmesh_get_boundary_condition (cmesh, ltreeid, face).data ();
-}
-
-void
-t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const char *boundary_conditions[T8_ECLASS_MAX_FACES], size_t *length)
-{
-  const auto boundary_conditions_cpp = t8_forest_get_boundary_conditions (forest, ltreeid, element);
-  *length = boundary_conditions_cpp.size ();
-  for (size_t i_condition = 0; i_condition < *length; ++i_condition) {
-    if (boundary_conditions_cpp[i_condition].has_value ()) {
-      boundary_conditions[i_condition] = boundary_conditions_cpp[i_condition]->data ();
-    }
-    else {
-      boundary_conditions[i_condition] = nullptr;
-    }
-  }
-}
-
-void
-t8_forest_get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                                  const char **boundary_condition)
-{
-  const auto boundary_condition_cpp = t8_forest_get_boundary_condition (forest, ltreeid, element, face);
-  if (boundary_condition_cpp.has_value ()) {
-    *boundary_condition = boundary_condition_cpp->data ();
-  }
-  else {
-    *boundary_condition = nullptr;
-  }
 }
 
 T8_EXTERN_C_END ();

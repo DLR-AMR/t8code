@@ -30,8 +30,6 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_eclass/t8_eclass.h>
-#include <t8_element/t8_element.h>
-#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -73,36 +71,5 @@ t8_cmesh_get_boundary_conditions (t8_cmesh_t cmesh, t8_locidx_t ltreeid,
  */
 void
 t8_cmesh_get_boundary_condition (t8_cmesh_t cmesh, t8_locidx_t ltreeid, int face, const char **boundary_condition);
-
-/**
- * Retrieves the boundary conditions of a forest element.
- *
- * \param [in]  forest              The forest the element lives in.
- * \param [in]  ltreeid             The local id of the forest tree.
- * \param [in]  element             The element.
- * \param [out] boundary_conditions The boundary conditions of the element. String will be nullptr if the elements
- *                                  face is internal; if it does not touch the trees face, since only the tree faces carry boundary
- *                                  conditions. All inner element faces have neighbors anyways.
- * \param [out] length              The length of \a boundary_conditions.
- */
-void
-t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                   const char *boundary_conditions[T8_ECLASS_MAX_FACES], size_t *length);
-
-/**
- * Retrieves the boundary condition of a face of a forest element.
- * Retrieving all boundary conditions at once via \ref t8_forest_get_boundary_conditions() will be faster.
- *
- * \param [in] forest               The forest the element lives in.
- * \param [in] ltreeid              The local id of the forest tree.
- * \param [in] element              The element.
- * \param [in] face                 The face id of the element.
- * \param [out] boundary_condition  The boundary condition of the element. Will be nullptr if the elements
- *                                  face is internal; if it does not touch the trees face, since only the tree faces carry boundary
- *                                  conditions. All inner element faces have neighbors anyways.
- */
-void
-t8_forest_get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face,
-                                  const char **boundary_condition);
 
 T8_EXTERN_C_END ();

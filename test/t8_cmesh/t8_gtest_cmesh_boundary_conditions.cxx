@@ -28,6 +28,8 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions_c_interface.h>
+#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.hxx>
+#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions_c_interface.h>
 
 /** \file t8_gtest_cmesh_boundary_conditions.cxx
  * In this file we test the cmesh boundary condition module.

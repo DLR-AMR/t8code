@@ -31,5 +31,10 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_profiling.h>
 #include <t8_forest/t8_forest_io.h>
+#ifdef __cplusplus
+#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.hxx>
+#else /* !__cplusplus */
+#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions_c_intrerface.h>
+#endif /* !__cplusplus */
 
 #endif /* !T8_FOREST_H */
