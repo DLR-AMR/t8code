@@ -41,6 +41,8 @@
 #include <string>
 #include <optional>
 #include <span>
+#include <vector>
+#include <ranges>
 
 namespace detail
 {
