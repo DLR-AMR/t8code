@@ -43,7 +43,7 @@
 #include <span>
 
 /**
- * A container to store boundary conditions. *
+ * A container to store boundary conditions.
  * \tparam TType The type the boundary conditions are saved in.
  */
 template <typename TType>
