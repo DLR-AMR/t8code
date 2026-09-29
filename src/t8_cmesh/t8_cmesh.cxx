@@ -1244,6 +1244,10 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     delete cmesh->vertex_connectivity;
   }
 
+  if (cmesh->boundary_condition_handler != nullptr) {
+    delete cmesh->boundary_condition_handler;
+  }
+
   T8_FREE (cmesh);
   *pcmesh = nullptr;
 }
