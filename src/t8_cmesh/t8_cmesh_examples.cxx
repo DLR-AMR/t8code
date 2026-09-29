@@ -479,6 +479,12 @@ t8_cmesh_new_empty (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 void
 t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
 {
+  return t8_cmesh_new_hypercube_hybrid_ext (cmesh, comm, periodic, false);
+}
+
+void
+t8_cmesh_new_hypercube_hybrid_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic, int use_boundary_conditions)
+{
   T8_ASSERT (cmesh != NULL);
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
@@ -765,8 +771,10 @@ t8_cmesh_new_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm, int periodic)
     boundary_conditions[15][0] = internal;
   }
 
-  for (size_t itree = 0; itree < 16; ++itree) {
-    t8_cmesh_set_boundary_conditions (cmesh, itree, boundary_conditions[itree]);
+  if (use_boundary_conditions) {
+    for (size_t itree = 0; itree < 16; ++itree) {
+      t8_cmesh_set_boundary_conditions (cmesh, itree, boundary_conditions[itree]);
+    }
   }
 
   t8_cmesh_commit (cmesh, comm);
