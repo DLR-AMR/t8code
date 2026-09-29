@@ -27,7 +27,7 @@ name: Message_issue
 # Controls when the workflow will run
 on:
   # Triggers the workflow on issues.
-  issues:
+  pull_request:
     types: [ opened, closed, reopened]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -70,7 +70,7 @@ jobs:
         if: ${{ env.message_build == 1 }}
         uses: fadenb/matrix-chat-message@v0.0.6
         with:
-          homeserver: 'matrix.org'
+          homeserver: ${{ secrets.MATRIX_SERVER }}
           token: ${{ secrets.T8DDY_MESSAGE_SECRET}}
           channel: ${{ secrets.CHAT_ID}}
           message: ${{env.message_content}}
