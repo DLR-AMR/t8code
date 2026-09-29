@@ -21,11 +21,17 @@
 */
 
 /**
- * \file t8_cmesh_boundary_conditions_c_interface.h:
+ * \file t8_cmesh_boundary_conditions_c_interface.h
  * Public interface for the definition and retrieval of boundary conditions.
  */
 
 #pragma once
+
+#include <t8.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_eclass/t8_eclass.h>
+#include <t8_element/t8_element.h>
+#include <t8_forest/t8_forest_general.h>
 
 T8_EXTERN_C_BEGIN ();
 
