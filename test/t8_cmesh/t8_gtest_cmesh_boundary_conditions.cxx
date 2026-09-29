@@ -106,9 +106,9 @@ TEST_P (t8_cmesh_single_tree_bc, test_single_tree_boundary_conditions)
 }
 
 /**
- * Tests if internal element faces return empty boundary conditions and if extrior element faces return a filled bc.
+ * Tests if internal element faces inside a forest tree return empty boundary conditions and if exterior element faces return a filled bc.
  */
-TEST_P (t8_cmesh_single_tree_bc, test_single_tree_element_boundary_conditions)
+TEST_P (t8_cmesh_single_tree_bc, test_single_tree_forest_element_boundary_conditions)
 {
   t8_cmesh_ref (cmesh);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 2, 1, sc_MPI_COMM_WORLD);
