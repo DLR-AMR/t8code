@@ -96,7 +96,7 @@ jobs:
         if: ${{ env.message_build == 1 }}
         uses: s3krit/matrix-message-action@v0.0.3
         with:
-          server: "matrix.dlr.de"
+          server: "matrix-client.matrix.org "
           access_token: ${{ steps.matrix_login.outputs.token }}
           room_id: ${{ secrets.CHAT_ID}}
           message: ${{env.message_content}}
