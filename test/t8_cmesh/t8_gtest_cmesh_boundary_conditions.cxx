@@ -158,7 +158,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_hybrid_hypercube_boundary_conditi
   for (int periodic = 0; periodic < 2; ++periodic) {
     t8_cmesh_t cmesh;
     t8_cmesh_init (&cmesh);
-    t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, periodic);
+    t8_cmesh_new_hypercube_hybrid_ext (cmesh, sc_MPI_COMM_WORLD, periodic, true);
 
     /* Test the boundary conditions of the trees. All faces with neighbors should have the bc "internal". All other faces are "boundary". */
     const t8_locidx_t num_local_cmesh_trees = t8_cmesh_get_num_local_trees (cmesh);
