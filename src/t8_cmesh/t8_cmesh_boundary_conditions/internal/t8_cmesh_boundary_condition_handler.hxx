@@ -178,6 +178,9 @@ struct t8_cmesh_boundary_condition_handler
   {
     T8_ASSERT (face >= 0);
     T8_ASSERT (face < T8_ECLASS_MAX_FACES);
+    /* The forest should be associated with the same cmesh this handler is associated with. */
+    T8_ASSERTF (m_cmesh == t8_forest_get_cmesh (forest),
+                "Called get_boundary_conditions on a forest with a different cmesh.\n");
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
     if (scheme->element_is_root_boundary (tree_class, element, face)) {
