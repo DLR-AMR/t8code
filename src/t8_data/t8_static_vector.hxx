@@ -33,6 +33,7 @@
 
 #include <array>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 #include <initializer_list>
 
@@ -150,6 +151,7 @@ class t8_static_vector {
   {
     T8_ASSERT (new_size <= TCapacity);
 
+    delete_range (new_size, m_size);
     if (new_size > m_size) {
       for (size_t i = m_size; i < new_size; ++i) {
         m_data[i] = TType {};
@@ -176,6 +178,7 @@ class t8_static_vector {
   {
     T8_ASSERT (new_size <= TCapacity);
 
+    delete_range (new_size, m_size);
     for (size_t i = m_size; i < new_size; ++i) {
       m_data[i] = value;
     }
@@ -243,6 +246,7 @@ class t8_static_vector {
   {
     T8_ASSERT (size <= TCapacity);
 
+    delete_range (size, m_size);
     m_size = size;
     for (size_t i = 0; i < m_size; ++i) {
       m_data[i] = value;
@@ -258,6 +262,7 @@ class t8_static_vector {
   pop_back () noexcept
   {
     T8_ASSERT (m_size > 0);
+    delete_range (m_size - 1, m_size);
     --m_size;
   }
 
@@ -267,6 +272,7 @@ class t8_static_vector {
   constexpr void
   clear () noexcept
   {
+    delete_range (0, m_size);
     m_size = 0;
   }
 
@@ -283,6 +289,7 @@ class t8_static_vector {
   {
     T8_ASSERT (values.size () <= TCapacity);
 
+    delete_range (values.size (), m_size);
     m_size = 0;
 
     for (const TType& value : values) {
@@ -389,6 +396,26 @@ class t8_static_vector {
   }
 
  private:
+  /**
+   * Releases the contents of the storage slots in the range [\a first, \a last)
+   * if they are not trivially destructible (if they are not mere bytes like ints or doubles).
+   * This frees any resources allocated by more complex objects like shared pointers or so.
+   *
+   * \param [in] first  The index of the first slot to reset.
+   * \param [in] last   The index one past the last slot to reset.
+   *
+   * \note An empty range (\a first >= \a last) is allowed and does nothing.
+   */
+  constexpr void
+  delete_range ([[maybe_unused]] const size_t first, [[maybe_unused]] const size_t last) noexcept
+  {
+    if constexpr (!std::is_trivially_destructible_v<TType>) {
+      for (size_t i = first; i < last; ++i) {
+        m_data[i] = TType {};
+      }
+    }
+  }
+
   /** Storage for the maximum number of elements. */
   std::array<TType, TCapacity> m_data {};
 
