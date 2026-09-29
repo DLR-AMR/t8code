@@ -26,8 +26,8 @@ name: Message_issue
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on issues. For test_purpose I set it to be triggered on a pull_request
-  pull_request:
+  # Triggers the workflow on issues.
+  issue:
     types: [ opened, closed, reopened]
 
   # Allows you to run this workflow manually from the Actions tab
