@@ -90,17 +90,9 @@ jobs:
 
           # 1. LOGIN
           LOGIN_PAYLOAD=$(jq -n \
-              --arg address "$USERNAME" \
-              --arg pass "$PASSWORD" \
-              '{
-                type: "m.login.password",
-                identifier: {
-                  type: "m.id.thirdparty",
-                  medium: "email",
-                  address: $address
-                },
-                password: $pass
-              }')
+            --arg user "$USERNAME" \
+            --arg pass "$PASSWORD" \
+            '{type: "m.login.password", identifier: {type: "m.id.user", user: $user}, password: $pass}')
 
           LOGIN_RESPONSE=$(curl -s -X POST "https://$INPUT_SERVER/_matrix/client/v3/login" \
             -H "Content-Type: application/json" \
