@@ -238,7 +238,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_hybrid_hypercube_boundary_conditi
 
 /**
  * Tests the c interface of the boundary condition module by setting and retrieving the boundary condition of a hex tree.
- * More complex tests are performed for the cpp interface. This test is just to test if th conversion routines are working.
+ * More complex tests are performed for the cpp interface. This test is just to test if the conversion routines are working.
  */
 TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
 {
