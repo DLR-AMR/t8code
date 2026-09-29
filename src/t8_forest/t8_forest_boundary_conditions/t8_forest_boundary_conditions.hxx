@@ -41,7 +41,7 @@
  * \param [in] forest   The forest the element lives in.
  * \param [in] ltreeid  The local id of the forest tree.
  * \param [in] element  The element.
- * \return A container with the boundary conditions. Note, that only elements faces at the boundary of a
+ * \return A container with the boundary conditions. Note, that only element faces at the boundary of a
  * tree will have boundary conditions. Internal faces will return an empty optional.
  */
 t8_boundary_conditions<std::optional<std::string_view>>
