@@ -70,7 +70,7 @@ jobs:
         env:
           USERNAME: ${{ secrets.T8DDY_MAIL }}
           PASSWORD: ${{ secrets.T8DDY_PW }}
-          INPUT_SERVER: matrix-client.matrix.org
+          INPUT_SERVER: matrix.dlr.de
           ROOM_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_TEXT: ${{ env.message_content }}
         run: |
