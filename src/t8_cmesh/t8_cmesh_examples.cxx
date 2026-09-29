@@ -517,8 +517,8 @@ t8_cmesh_new_hypercube_hybrid_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm, int perio
   };
   /* clang-format on */
 
-  std::string internal = "internal";
-  std::string boundary = "boundary";
+  const std::string internal = "internal";
+  const std::string boundary = "boundary";
   std::array<t8_boundary_conditions<std::string>, 16> boundary_conditions;
 
   /* This cmesh consists of 6 tets, 6 prisms and 3 hexes */
