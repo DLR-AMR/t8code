@@ -97,7 +97,7 @@ jobs:
         uses: s3krit/matrix-message-action@v0.0.3
         with:
           server: "matrix.dlr.de"
-          access_token: ${{ secrets.T8DDY_MESSAGE_SECRET}}
+          access_token: ${{ steps.matrix_login.outputs.token }}
           room_id: ${{ secrets.CHAT_ID}}
           message: ${{env.message_content}}
       - name: Logout (Cleanup Session)
