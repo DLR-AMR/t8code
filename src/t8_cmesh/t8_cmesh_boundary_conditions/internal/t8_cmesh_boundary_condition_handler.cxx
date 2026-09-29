@@ -30,6 +30,8 @@
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 
+#include <algorithm>
+
 using namespace detail;
 
 #if T8_ENABLE_DEBUG
