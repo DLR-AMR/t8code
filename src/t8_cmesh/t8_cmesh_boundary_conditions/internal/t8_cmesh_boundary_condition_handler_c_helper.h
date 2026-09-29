@@ -21,7 +21,7 @@
 */
 
 /**
- * \file t8_cmesh_boundary_condition_handler_types.h
+ * \file t8_cmesh_boundary_condition_handler_c_helper.h
  * Implements functionality for working with private headers and c types.
  */
 
@@ -40,7 +40,7 @@
  */
 typedef struct detail::t8_cmesh_boundary_condition_handler t8_cmesh_boundary_condition_handler_c;
 
-#else
+#else /* !__cplusplus */
 
 /** This typedef is used for the opaque pointers to the handler.
  * We need it so that we can use t8_cmesh_boundary_condition_handler_c pointers in .c files
@@ -50,9 +50,12 @@ typedef struct detail::t8_cmesh_boundary_condition_handler t8_cmesh_boundary_con
  */
 typedef struct t8_cmesh_boundary_condition_handler t8_cmesh_boundary_condition_handler_c;
 
-#endif
+#endif /* !__cplusplus */
 
-T8_EXTERN_C_BEGIN ();
+#ifdef __cplusplus
+
+namespace detail
+{
 
 /**
  * Returns the boundary condition handler of the cmesh.
@@ -60,7 +63,7 @@ T8_EXTERN_C_BEGIN ();
  * \param [in] cmesh  The cmesh
  * \return            A pointer to the boundary condition handler. nullptr if none was set.
  */
-t8_cmesh_boundary_condition_handler_c *
+t8_cmesh_boundary_condition_handler *
 t8_cmesh_get_boundary_condition_handler (t8_cmesh_t cmesh);
 
 /**
@@ -68,7 +71,9 @@ t8_cmesh_get_boundary_condition_handler (t8_cmesh_t cmesh);
  * \param [in,out] cmesh  The cmesh
  * \return                A pointer to the newly created handler inside the cmesh.
  */
-t8_cmesh_boundary_condition_handler_c *
+t8_cmesh_boundary_condition_handler *
 t8_cmesh_add_boundary_condition_handler (t8_cmesh_t cmesh);
 
-T8_EXTERN_C_END ();
+}  // namespace detail
+
+#endif /* __cplusplus */

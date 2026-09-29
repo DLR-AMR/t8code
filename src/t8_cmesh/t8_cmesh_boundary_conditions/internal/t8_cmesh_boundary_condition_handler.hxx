@@ -34,20 +34,13 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_data/t8_static_vector.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions_types.hxx>
 
 #include <map>
 #include <string_view>
 #include <string>
 #include <optional>
 #include <span>
-
-/**
- * A container to store boundary conditions.
- * \tparam TType The type the boundary conditions are saved in.
- */
-template <typename TType>
-using t8_boundary_conditions = t8_static_vector<TType, T8_ECLASS_MAX_FACES>;
 
 namespace detail
 {

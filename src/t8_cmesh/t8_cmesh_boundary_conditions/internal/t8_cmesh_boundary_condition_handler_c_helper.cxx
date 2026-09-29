@@ -25,19 +25,20 @@
  * Implements functionality for working with private headers and c types.
  */
 
-#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_types.h>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.h>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 
-T8_EXTERN_C_BEGIN ();
+namespace detail
+{
 
-t8_cmesh_boundary_condition_handler_c *
+t8_cmesh_boundary_condition_handler *
 t8_cmesh_get_boundary_condition_handler (t8_cmesh_t cmesh)
 {
   return cmesh->boundary_condition_handler;
 }
 
-t8_cmesh_boundary_condition_handler_c *
+t8_cmesh_boundary_condition_handler *
 t8_cmesh_add_boundary_condition_handler (t8_cmesh_t cmesh)
 {
   T8_ASSERT (cmesh->boundary_condition_handler == nullptr);
@@ -45,4 +46,4 @@ t8_cmesh_add_boundary_condition_handler (t8_cmesh_t cmesh)
   return cmesh->boundary_condition_handler;
 }
 
-T8_EXTERN_C_END ();
+}  // namespace detail
