@@ -65,47 +65,55 @@ jobs:
           echo message_content='User ${{ github.actor }} reopened issue ${{ github.event.issue.number }}. See ${{ github.event.issue.html_url }} for more details.' >> $GITHUB_ENV
       - name: debug_after_build
         run: echo ${{ env.message_build }}
-      - name: Login and Get Fresh Token
-        id: matrix_login
+      - name: Login, Send Message, and Logout
+        if: env.message_build == '1'
         env:
           USERNAME: ${{ secrets.T8DDY_MAIL }}
           PASSWORD: ${{ secrets.T8DDY_PW }}
-          HOMESERVER: matrix-client.matrix.org 
+          INPUT_SERVER: matrix-client.matrix.org
+          ROOM_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_TEXT: ${{ env.message_content }}
         run: |
-          # Safely create JSON payload using jq to handle special characters in passwords
-          PAYLOAD=$(jq -n \
+          # Define send_message function
+          send_message() {
+            out="$(curl -s -X POST -H "Content-Type: application/json" -d "$1" "https://$INPUT_SERVER/_matrix/client/r0/rooms/$2/send/m.room.message?access_token=$3")"
+            if [ "$(echo "$out" | jq .errcode)" = "null" ]; then
+              echo "[+] Message sent!"
+            else
+              echo '[!] Something went wrong sending the message'
+              echo "$out" | jq '.error'
+              # Try to logout before exiting if an error occurs
+              curl -s -X POST "https://$INPUT_SERVER/_matrix/client/v3/logout" -H "Authorization: Bearer $3"
+              exit 1
+            fi
+          }
+
+          # 1. LOGIN
+          LOGIN_PAYLOAD=$(jq -n \
             --arg user "$USERNAME" \
             --arg pass "$PASSWORD" \
             '{type: "m.login.password", identifier: {type: "m.id.user", user: $user}, password: $pass}')
 
-          # Call Matrix login API
-          RESPONSE=$(curl -s -X POST "https://$HOMESERVER/_matrix/client/v3/login" \
+          LOGIN_RESPONSE=$(curl -s -X POST "https://$INPUT_SERVER/_matrix/client/v3/login" \
             -H "Content-Type: application/json" \
-            -d "$PAYLOAD")
+            -d "$LOGIN_PAYLOAD")
 
-          # Extract token from response
-          TOKEN=$(echo $RESPONSE | jq -r '.access_token')
+          ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.access_token')
 
-          # Instruct GitHub to mask this specific token in logs just like a secret
-          echo "::add-mask::$TOKEN"
+          if [ "$ACCESS_TOKEN" = "null" ] || [ -z "$ACCESS_TOKEN" ]; then
+            echo "[!] Matrix login failed:"
+            echo "$LOGIN_RESPONSE" | jq '.error // .'
+            exit 1
+          fi
 
-          # Output it for the next step
-          echo "token=$TOKEN" >> $GITHUB_OUTPUT
-      # if a message has been written send the message to the channel described in the secrets
-      - name: send_message
-        if: ${{ env.message_build == 1 }}
-        uses: s3krit/matrix-message-action@v0.0.3
-        with:
-          server: "matrix-client.matrix.org"
-          access_token: ${{ steps.matrix_login.outputs.token }}
-          room_id: ${{ secrets.CHAT_ID}}
-          message: "${{env.message_content}}"
-      - name: Logout (Cleanup Session)
-        # always() ensures logout runs even if the message step fails
-        if: always() 
-        env:
-          HOMESERVER: matrix-client.matrix.org
-        run: |
-          # Destroy the token we just created so we don't spam the server with ghost devices
-          curl -s -X POST "https://$HOMESERVER/_matrix/client/v3/logout" \
-            -H "Authorization: Bearer ${{ steps.matrix_login.outputs.token }}"
+          # Mask token in GitHub logs
+          echo "::add-mask::$ACCESS_TOKEN"
+
+          # 2. SEND MESSAGE
+          BODY=$(jq -n --arg msg "$MESSAGE_TEXT" '{msgtype: "m.text", body: $msg}')
+          send_message "$BODY" "$ROOM_ID" "$ACCESS_TOKEN"
+
+          # 3. LOGOUT (CLEANUP)
+          curl -s -X POST "https://$INPUT_SERVER/_matrix/client/v3/logout" \
+            -H "Authorization: Bearer $ACCESS_TOKEN"
+          echo "[+] Session cleaned up successfully."
