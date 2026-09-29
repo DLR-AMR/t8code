@@ -68,9 +68,9 @@ jobs:
       # if a message has been written send the message to the channel described in the secrets
       - name: send_message
         if: ${{ env.message_build == 1 }}
-        uses: fadenb/matrix-chat-message@v0.0.6
+        uses: s3krit/matrix-message-action@v0.0.3
         with:
-          homeserver: 'matrix.dlr.de'
-          token: ${{ secrets.T8DDY_MESSAGE_SECRET}}
-          channel: ${{ secrets.CHAT_ID}}
+          server: "matrix.dlr.de"
+          access_token: ${{ secrets.T8DDY_MESSAGE_SECRET}}
+          room_id: ${{ secrets.CHAT_ID}}
           message: ${{env.message_content}}
