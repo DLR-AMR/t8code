@@ -99,7 +99,7 @@ jobs:
           server: "matrix-client.matrix.org "
           access_token: ${{ steps.matrix_login.outputs.token }}
           room_id: ${{ secrets.CHAT_ID}}
-          message: ${{env.message_content}}
+          message: "${{env.message_content}}"
       - name: Logout (Cleanup Session)
         # always() ensures logout runs even if the message step fails
         if: always() 
