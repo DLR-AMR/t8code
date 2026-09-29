@@ -29,35 +29,33 @@
 #include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions_c_interface.h>
 
-/** \file In this file we test the global cmesh vertex numbers.
+/** \file t8_gtest_cmesh_boundary_conditions.cxx
+ * In this file we test the cmesh boundary condition module.
  *
- * We build a test cmesh consisting of two coarse triangles joined together
- * and associate global vertex numbers with the cmesh's vertices.
- * This cmesh has 4 global vertices in total.
+ * We perform the following tests:
  *
- * We then perform three tests
+ * 1) t8_cmesh_single_tree_bc / test_single_tree_boundary_conditions
+ * For each element class, we build a single-tree cmesh, attach one boundary
+ * condition label per face, commit it, and verify that retrieving the boundary
+ * conditions returns exactly the labels that were set.
  *
- * 1) check_tree_to_vertex
- * Here we test the tree_to_vertex connectivity.
- * That is, given a tree id, we get a list of the global vertices of that tree
- * (in local vertex order) and check whether this list is correct.
+ * 2) t8_cmesh_single_tree_bc / test_single_tree_element_boundary_conditions
+ * Using the same single-tree cmeshes (uniformly refined to level 2), we verify
+ * that interior element faces carry no boundary condition while exterior element
+ * faces do carry one.
  *
- * 2) check_vertex_to_tree
- * Here we test the vertex_to_tree connectivity.
- * Given a global vertex index, the vertex_to_tree connectivity returns a list
- * of pairs (local tree_id, local_vertex_id) of all the local trees and their local
- * vertices that are connected to the global vertex.
- * We check whether this list is correct.
+ * 3) test_hybrid_hypercube_boundary_conditions
+ * We build a hybrid hypercube cmesh (both non-periodic and periodic) whose
+ * boundary conditions are set automatically. Exterior faces receive "boundary",
+ * interior faces receive "internal". We verify these labels at both the cmesh
+ * level and through the forest interface at refinement level 0.
  *
- * 3) check_global_vertex_number
- * We verify that the number of global vertices is 4.
- * We additionally verify that the process local number of global vertices is 4 as well.
- * This is true, since the cmesh is not partitioned.
- *
- * Additionally, t8_test_cmesh_vertex_conn_partitioned is the start of a test
- * suite with partitioned cmesh that is currently disabled and could be enabled and extended
- * when cmesh vertex connectivity supports partitioned cmeshes.
- * Note that the test itself then has to be set to parallel in the CMake file.
+ * 4) test_boundary_condition_c_interface
+ * We verify that the C interface wrappers (t8_cmesh_set_boundary_conditions,
+ * t8_cmesh_get_boundary_conditions, t8_cmesh_get_boundary_condition,
+ * t8_forest_get_boundary_conditions, t8_forest_get_boundary_condition) correctly
+ * set and retrieve boundary conditions, returning nullptr for interior faces and
+ * the correct label for exterior faces.
  */
 
 /**
