@@ -121,7 +121,7 @@ struct t8_cmesh_boundary_condition_handler
 
   /**
    * Retrieves the boundary condition of one face of a cmesh cell.
-   * Retrieving all boundary conditions at once via \ref get_boundary_condition() will be faster.
+   * Retrieving all boundary conditions at once via \ref get_boundary_conditions will be faster.
    *
    * \param [in] ltreeid  The local cmesh id of the cell.
    * \param [in] face     The face id of the cell.
@@ -167,7 +167,7 @@ struct t8_cmesh_boundary_condition_handler
 
   /**
    * Retrieves the boundary condition of a face of a forest element.
-   * Retrieving all boundary conditions at once via \ref get_boundary_conditions() will be faster.
+   * Retrieving all boundary conditions at once via \ref get_boundary_conditions will be faster.
    *
    * \param [in] forest   The forest the element lives in.
    * \param [in] ltreeid  The local id of the forest tree.
