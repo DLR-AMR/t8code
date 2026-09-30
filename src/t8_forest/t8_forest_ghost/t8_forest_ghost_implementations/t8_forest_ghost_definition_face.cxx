@@ -48,9 +48,10 @@ struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
     sc_array_reset (&bounds_per_level);
   }
 
-  /** Reset the per-search state to invalid starting values.
-   * Must be called before every search, since one ghost_definition (and thus
-   * one instance of this data) can be reused for several forests. */
+  /** Resets all values regarding the forest to invalid values so that the
+   * next call of forest search rebuilds them. This is necessary, since this definition
+   * could be owned by multiple forests and therefore these values have to be set anew.
+  */
   void
   reset ()
   {
