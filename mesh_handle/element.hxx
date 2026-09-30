@@ -405,7 +405,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
    *  reference space of the tree.
    * \param [in] ref_coords     Pointer to the reference coordinates of the element.
    * \param [in] num_coords     Number of reference coordinates to convert.
-   * \param [out] tree_ref_coords Pointer to the reference coordinates of the tree.
+   * \param [out] tree_ref_coords Pointer to the reference coordinates of the tree/cmesh element.
    */
   void
   get_reference_coordinates (const t8_3D_vec& ref_coords, std::size_t num_coords, t8_3D_vec& tree_ref_coords) const
@@ -608,7 +608,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     return m_is_ghost_element;
   }
 
-  /** Check if two elements are equal.
+  /** Check if this element is equal to another element.
    * \param [in] other The other element, this element is compared with. 
    * \return           True if the elements are equal, false if they are not equal.
   */
