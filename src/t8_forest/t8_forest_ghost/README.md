@@ -2,7 +2,9 @@
 
 The ghost layer of a forest: copies of elements owned by other processes that are neighbors
 of the local elements. Which elements count as neighbors is decided by a *ghost definition*
-object that is attached to the forest via `t8_forest_set_ghost` / `t8_forest_set_ghost_ext`.
+object that is attached to the forest via `t8_forest_set_ghost_ext`. `t8_forest_set_ghost` is a
+shortcut that selects a built-in definition from a `t8_ghost_type_t`. The definitions themselves do
+not store a ghost type.
 
 ## Files
 
@@ -12,9 +14,10 @@ Public C interface to query the ghost layer of a committed forest (ghost trees, 
 remote ranks) and `t8_forest_ghost_create`, which builds the layer by calling the forest's ghost
 definition.
 
-#### [t8_forest_ghost_definition_c_interface.h](t8_forest_ghost_definition_c_types.h)
+#### [t8_forest_ghost_definition_c_types.h](t8_forest_ghost_definition_c_types.h)
 
-Creates an opaque handle `t8_forest_ghost_definition_c` for the c parts of t8code.
+Declares the opaque handle `t8_forest_ghost_definition_c`, so that C headers such as
+`t8_forest_general.h` can refer to a ghost definition.
 
 #### [t8_forest_ghost_definition_base.hxx](t8_forest_ghost_definition_base.hxx)
 
@@ -31,7 +34,8 @@ Internal data structures of the ghost layer and the building blocks used by the 
 The concrete ghost definitions:
 - `t8_forest_ghost_definition_w_search`: fills the remote elements with a top-down
   `t8_forest_search` over the local leaves, using a user provided search callback and search data.
-- `t8_forest_ghost_definition_face`: face-neighbor ghosts (`T8_GHOST_FACES`), the default.
+- `t8_forest_ghost_definition_face`: face-neighbor ghosts, the definition that
+  `t8_forest_set_ghost` creates for `T8_GHOST_FACES`.
   Version 3 uses the search, versions 1 and 2 compute the remote elements directly.
 
 ## How a ghost layer is built
@@ -61,8 +65,8 @@ Usually, only the remote elements have to be defined. There are two ways to do t
   The callback calls `t8_ghost_add_remote` for every leaf that is a ghost of another rank and can
   access its search data via `t8_forest_ghost_get_search_data`. See
   `t8_forest_ghost_search_boundary` in `t8_forest_ghost_definition_face.cxx` as an example.
-- **`fill_remote_ghosts`**: Derive from `t8_forest_ghost_definition`, pass a `t8_ghost_type_t` to
-  the base constructor and override `fill_remote_ghosts`.
+- **`fill_remote_ghosts`**: Derive from `t8_forest_ghost_definition` and override
+  `fill_remote_ghosts`.
 
 If your ghosts are defined in a completely different way, also override the other steps, e.g.
 `communicate_ownerships` if you need different ownership information,
