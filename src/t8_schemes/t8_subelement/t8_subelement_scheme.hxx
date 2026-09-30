@@ -277,9 +277,6 @@ struct t8_subelement_scheme_common:
   }
 
   /** Check if two elements are equal. 
-  * \note For subelements, it is only checked that the type is equal and not the id!!
-  * (This is because the linear id is the same for all subelements and sometimes, the wrong subelement is found. 
-  * At the moment, this is not a problem.)
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
   * \return            true if the elements are equal, false if they are not equal
@@ -290,7 +287,7 @@ struct t8_subelement_scheme_common:
     T8_ASSERT (element_is_valid (elem1) && element_is_valid (elem2));
     const auto *el1 = as_subelement (elem1);
     const auto *el2 = as_subelement (elem2);
-    if (el1->subelement_type != el2->subelement_type) {
+    if (el1->subelement_type != el2->subelement_type || el1->subelement_id != el2->subelement_id) {
       return 0;
     }
     return derived ().underlying_scheme.element_is_equal (subelement_to_standalone (el1),
@@ -848,7 +845,7 @@ struct t8_subelement_scheme_common:
   // ################################################____LINEAR ID____################################################
 
   /** Initialize the entries of an allocated element according to a given linear id in a uniform refinement.
-   * \note This is not implemented for subelements.
+   * \note A uniform refinement contains no subelements. The result is always a regular element (subelement_type 0).
    * \param [in,out] elem The element whose entries will be set.
    * \param [in] level    The level of the uniform refinement to consider.
    * \param [in] id       The linear id. id must fulfil 0 <= id < 'number of leaves in the uniform refinement'
@@ -856,8 +853,9 @@ struct t8_subelement_scheme_common:
   void
   element_set_linear_id (t8_element_t *elem, const t8_element_level level, t8_linearidx_t id) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem), "element_set_linear_id is not implemented for subelements yet.\n");
+    unset_subelement_values (as_subelement (elem));
     derived ().underlying_scheme.element_set_linear_id (element_to_standalone (elem), level, id);
+    T8_ASSERT (element_is_valid (elem));
   }
 
   /** Compute the linear id of a given element in a hypothetical uniform refinement of a given level.
@@ -872,7 +870,17 @@ struct t8_subelement_scheme_common:
   element_get_linear_id (const t8_element_t *elem, const t8_element_level level) const noexcept
   {
     T8_ASSERT (element_is_valid (elem));
+    T8_ASSERT (0 <= level && level <= get_maxlevel ());
     return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
+    // if(!element_is_subelement (elem)){
+    //   return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
+    // }
+    // const t8_linearidx_t parent_id
+    //   = derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level - 1);
+    // const int max_children = get_max_num_children ();
+    // return parent_id * max_children + as_subelement (elem)->subelement_id;
+    // T8_ASSERT (element_is_valid (elem));
+    // return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
   }
 
   /** Construct the successor in a uniform refinement of a given element.
@@ -912,19 +920,24 @@ struct t8_subelement_scheme_common:
     return derived ().underlying_scheme.count_leaves_from_root (level);
   }
 
-  /** Compare two elements.
-   * \note This is not implemented for subelements.
+  /** Compare two elements by their position on the space-filling curve.
+   * Subelements of the underlying element are ordered by their subelement_id.
    * \param [in] elem1  The first element.
    * \param [in] elem2  The second element.
+   * \return <0 if elem1 < elem2, 0 if equal, >0 if elem1 > elem2.
    */
   int
   element_compare (const t8_element_t *elem1, const t8_element_t *elem2) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem1) && !element_is_subelement (elem2),
-                    "element_compare is not implemented for subelements yet.\n");
-    return derived ().underlying_scheme.element_compare (element_to_standalone (elem1), element_to_standalone (elem2));
+    T8_ASSERT (element_is_valid (elem1) && element_is_valid (elem2));
+    const int compare_standalone
+      = derived ().underlying_scheme.element_compare (element_to_standalone (elem1), element_to_standalone (elem2));
+    if (compare_standalone != 0) {
+      return compare_standalone;
+    }
+    // Same underlying element: subelements are ordered by id.
+    return as_subelement (elem1)->subelement_id - as_subelement (elem2)->subelement_id;
   }
-
   // ################################################____VISUALIZATION____##############################################
 
   /** Compute the coordinates of a given element vertex inside a reference tree 
