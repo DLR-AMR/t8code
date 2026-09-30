@@ -90,8 +90,8 @@ jobs:
 
           # 1. LOGIN
 
-          LOGIN_RESPONSE=$(curl -s -X POST -d '{"type":m.login.password", "user":"$USERNAME", "password":"$PASSWORD"}'\
-             "https://$INPUT_SERVER/_matrix/client/v3/login")
+          LOGIN_RESPONSE=$(curl -XPOST -d '{"type":m.login.password", "user":"$USERNAME", "password":"$PASSWORD"}'\
+             "https://$INPUT_SERVER/_matrix/client/r0/login")
 
           ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.access_token')
 
