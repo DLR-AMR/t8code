@@ -89,6 +89,13 @@ jobs:
           }
 
           # 1. LOGIN
+
+          # get login type:
+          TYPE_RESPONSE=$(curl -XGET "https://$INPUT_SERVER/_matrix/client/r0/login")
+
+          echo "$type: TYPE_RESPONSE" | jq -r '.type' )
+
+
           LOGIN_PAYLOAD=$(jq -n \
             --arg user "$USERNAME" \
             --arg pass "$PASSWORD" \
