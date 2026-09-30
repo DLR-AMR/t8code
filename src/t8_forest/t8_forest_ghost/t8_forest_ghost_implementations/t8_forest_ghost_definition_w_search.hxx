@@ -47,12 +47,6 @@ struct t8_forest_ghost_search_data
 struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
 {
  public:
-  /** Base constructor with no arguments. We need this since it
-   * is called from derived class constructors. */
-  t8_forest_ghost_definition_w_search ()
-  {
-  }
-
   /**
    * Constructor with a search_function.
    * If do_ghost is called on this object,
@@ -76,6 +70,12 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
   }
 
  protected:
+  /** Base constructor with no arguments. We need this since it
+   * can be called from derived class constructors. */
+  t8_forest_ghost_definition_w_search ()
+  {
+  }
+
   /**
    * Fills the remote ghosts using a tree-based search.
    * \param [in,out]    forest     The forest.
