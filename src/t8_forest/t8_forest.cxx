@@ -3124,7 +3124,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
     }
   }
   else {
-    /* Deactivate ghost for the forest, but do not overwrite an old ghost_definition of the forest. */
+    /* Deactivate ghost for the forest. */
     forest->do_ghost = 0;
     /* The documentation states that the forest takes ownership of the definition. This also has to happen
      * if do_ghost is 0. */
