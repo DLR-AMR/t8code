@@ -328,10 +328,6 @@ t8_forest_ghost_fill_remote (t8_forest_t forest, t8_forest_ghost_t ghost, int gh
     }   /* end element loop */
   }     /* end tree loop */
 
-  if (forest->profile != nullptr) {
-    /* If profiling is enabled, we count the number of remote processes. */
-    forest->profile->ghosts_remotes = ghost->remote_processes->elem_count;
-  }
   /* Clean-up memory */
   if (max_num_face_children > 0) {
     scheme->element_destroy (last_class, max_num_face_children, half_neighbors);

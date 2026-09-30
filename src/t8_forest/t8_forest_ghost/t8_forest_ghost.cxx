@@ -237,6 +237,7 @@ t8_forest_ghost_create (t8_forest_t forest)
     /* We also store the number of ghosts and remotes */
     forest->profile->ghosts_received = ghost->num_ghosts_elements;
     forest->profile->ghosts_shipped = ghost->num_remote_elements;
+    forest->profile->ghosts_remotes = ghost->remote_processes->elem_count;
     /* DO NOT DELETE THE FOLLOWING line.
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
      * runtimes were computed to 0.
