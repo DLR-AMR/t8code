@@ -241,6 +241,12 @@ struct t8_subelem_scheme_hanging_nodes_tri:
     return 1;
   }
 
+  static int
+  subelement_get_face_corner ([[maybe_unused]] const int face, [[maybe_unused]] const int corner) noexcept
+  {
+    return -1;
+  }
+
  private:
   /** Check whether a given face of the parent triangle is hanging.
    * \param [in] subelem_type  The subelement type (binary code over the faces, f0 is the most significant bit).

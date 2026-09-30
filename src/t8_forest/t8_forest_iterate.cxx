@@ -28,9 +28,24 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_scheme.hxx>
-
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 /* We want to export the whole implementation to be callable from "C" */
 T8_EXTERN_C_BEGIN ();
+
+bool
+t8_forest_element_is_transition_cell (const t8_element_t *element, const t8_element_array_t *leaf_elements)
+{
+  if (t8_element_array_get_count (leaf_elements) == 0) {
+    return false;
+  }
+  const t8_scheme *scheme = t8_element_array_get_scheme (leaf_elements);
+  const t8_eclass_t tree_class = t8_element_array_get_tree_class (leaf_elements);
+  const t8_element_t *first_leaf = t8_element_array_index_locidx (leaf_elements, 0);
+  /* The leaves are the subelements of element exactly if the first one is a subelement one level
+   * finer than element. A subelement of a finer transition cell has a larger level difference. */
+  return t8_element_is_subelement (scheme, tree_class, first_leaf)
+         && scheme->element_get_level (tree_class, first_leaf) == scheme->element_get_level (tree_class, element) + 1;
+}
 
 /**
  * This struct stores query data about the elements within the forest.
@@ -100,6 +115,7 @@ t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, co
 {
   t8_debugf ("Entering t8_forest_iterate_faces with leaf_index %i and %li total leaves.\n", tree_lindex_of_first_leaf,
              t8_element_array_get_count (leaf_elements));
+
   T8_ASSERT (t8_forest_is_committed (forest));
   const t8_locidx_t num_local_trees = t8_forest_get_num_local_trees (forest);
 #if T8_ENABLE_DEBUG
@@ -127,6 +143,11 @@ t8_forest_iterate_faces (const t8_forest_t forest, const t8_locidx_t ltreeid, co
   //        start the search with a full family and element being one sibling.
   //        In that case, element is a leaf but elem_count is not 1.
   bool is_leaf = t8_forest_element_is_leaf_or_ghost (forest, element, local_or_ghost_tree_id, tree_is_ghost);
+  /* A transition cell is stored as its subelements, so element_is_leaf_or_ghost does not find it.
+   * It is not refined either, so we treat it as a leaf and stop the recursion here. */
+  if (!is_leaf && t8_forest_element_is_transition_cell (element, leaf_elements)) {
+    is_leaf = true;
+  }
 
 #if T8_ENABLE_DEBUG
   if (!is_leaf) {
@@ -245,7 +266,12 @@ t8_forest_search_recursion (t8_forest_t forest, const t8_locidx_t ltreeid, t8_el
   }
 
   int is_leaf = 0;
-  if (elem_count == 1) {
+  if (t8_forest_element_is_transition_cell (element, leaf_elements)) {
+    /* The leaves are the subelements of element. A transition cell is not refined, so we treat it
+     * as a leaf. */
+    is_leaf = 1;
+  }
+  else if (elem_count == 1) {
     /* There is only one leaf left, we check whether it is the same as element and if so call the callback function */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
 

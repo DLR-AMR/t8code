@@ -136,6 +136,15 @@ typedef void (*t8_forest_partition_query_fn) (const t8_forest_t forest, const t8
                                               const size_t num_active_queries);
 
 T8_EXTERN_C_BEGIN ();
+/** Check whether \a element is a transition cell, that is whether the given leaves are its
+ * subelements. A transition cell is stored as several subelements sharing the underlying element
+ * and is not refined, so the recursions treat it as a leaf.
+ * \param[in] element       The element whose leaf array is considered.
+ * \param[in] leaf_elements The leaves that are descendants of \a element.
+ * \return True if the leaves are the subelements of \a element.
+ */
+bool
+t8_forest_element_is_transition_cell (const t8_element_t *element, const t8_element_array_t *leaf_elements);
 
 /** Split an array of elements according to the children of a given element E.
  *  In other words for each child C of E, find

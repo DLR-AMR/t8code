@@ -209,6 +209,50 @@ struct t8_subelem_scheme_hanging_nodes_quad:
     }
   }
 
+  /** Return the corner of a face of a triangular subelement. Face i is the face opposite vertex i,
+   * so its corners are the two vertices other than i.
+   * \verbatim
+   *         V1
+   *          x            f0 = V1 V2  (opposite V0, the centre of the transition cell)
+   *        / |            f1 = V0 V2  (opposite V1)
+   *      f2  f1           f2 = V0 V1  (opposite V2)
+   *      /    |
+   *     x -f0- x
+   *     V0     V2
+   * \endverbatim
+   * \param [in] face   A face of the subelement.
+   * \param [in] corner 0 or 1, the corner of \a face.
+   * \return            The vertex number of the \a corner-th vertex of \a face.
+   */
+  static int
+  subelement_get_face_corner (const int face, const int corner) noexcept
+  {
+    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE]);
+    T8_ASSERT (0 <= corner && corner < 2);
+    static constexpr int face_corner[3][2] = { { 1, 2 }, { 0, 2 }, { 0, 1 } };
+    return face_corner[face][corner];
+  }
+
+  /** Compute the coordinates of a vertex of a triangular subelement inside the reference tree
+   * [0,1]^2.
+   * \param [in] elem    The subelement.
+   * \param [in] vertex  The vertex, 0, 1 or 2. Vertex 0 is the centre of the transition cell, the
+   *                     vertices 1 and 2 are the two boundary vertices in clockwise order.
+   * \param [out] coords The (x, y) coordinates of \a vertex in the reference space of the tree.
+   */
+  void
+  subelement_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const noexcept
+  {
+    T8_ASSERT (this->element_is_subelement (elem));
+    T8_ASSERT (0 <= vertex && vertex < T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE]);
+    std::array<std::array<int, 2>, 3> vertex_coords;
+    vertex_coords_of_subelement (elem, vertex_coords);
+    /* Normalize the integer coordinates to [0,1] by dividing by the root length. */
+    const double root_len = (1 << T8_ELEMENT_MAXLEVEL[T8_ECLASS_QUAD]);
+    coords[0] = vertex_coords[vertex][0] / root_len;
+    coords[1] = vertex_coords[vertex][1] / root_len;
+  }
+
   /** Convert a point in the reference space of a (triangular) subelement to a point in the
    * reference space of the tree.
    * \param [in] elem       The subelement.

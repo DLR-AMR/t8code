@@ -200,17 +200,21 @@ struct t8_subelement_scheme_common:
     return TSubelementSchemeSpecialization::subelement_get_shape (as_subelement (elem));
   }
 
-  /** Not implemented for this scheme.
+  /** Compute the corner number of the \a corner-th vertex of \a face.
+   * The face and corner numbering of a subelement is defined by the specialization.
    * \param [in] element  The element.
    * \param [in] face     A face index for \a element.
    * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
-  static int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face,
-                           [[maybe_unused]] const int corner) noexcept
+  int
+  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const noexcept
   {
-    SC_ABORT ("element_get_face_corner is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (element));
+    if (element_is_subelement (element)) {
+      return TSubelementSchemeSpecialization::subelement_get_face_corner (face, corner);
+    }
+    return derived ().underlying_scheme.element_get_face_corner (element_to_standalone (element), face, corner);
   }
 
   /** Not implemented for this scheme.
@@ -482,13 +486,22 @@ struct t8_subelement_scheme_common:
 
   /** Compute the ancestor id of an element, that is the child id at a given level.
    * \param [in] elem     This must be a valid element.
-   * \param [in] level    A refinement level. Must satisfy \a level < elem.level
+   * \param [in] level    A refinement level. Must satisfy \a level <= elem.level
    * \return              The child_id of \a elem in regard to its \a level ancestor.
    */
   int
   element_get_ancestor_id (const t8_element_t *elem, const t8_element_level level) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_ancestor_id is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    if (!element_is_subelement (elem)) {
+      return derived ().underlying_scheme.element_get_ancestor_id (element_to_standalone (elem), level);
+    }
+    T8_ASSERT (level <= element_get_level (elem));
+    if (level == element_get_level (elem)) {
+      // For subelements, the child id is the subelement id.
+      return as_subelement (elem)->subelement_id;
+    }
+    // If level is smaller its again the ancestor id of the parent.
     return derived ().underlying_scheme.element_get_ancestor_id (element_to_standalone (elem), level);
   }
 
@@ -762,7 +775,13 @@ struct t8_subelement_scheme_common:
   int
   element_get_tree_face (const t8_element_t *elem, const int face) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem), "element_get_tree_face is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    if (element_is_subelement (elem)) {
+      const int parent_face = derived ().subelement_face_get_parent_face (elem, face);
+      /* This should only be called for a face on the tree boundary, which an inner face never is. */
+      T8_ASSERT (parent_face >= 0);
+      return derived ().underlying_scheme.element_get_tree_face (element_to_standalone (elem), parent_face);
+    }
     return derived ().underlying_scheme.element_get_tree_face (element_to_standalone (elem), face);
   }
 

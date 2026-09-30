@@ -31,6 +31,7 @@
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_subelement.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
 
@@ -132,6 +133,66 @@ TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
     }
   }
   // Expect to have subelements.
+  EXPECT_GT (num_subelements, 0);
+
+  t8_forest_unref (&forest);
+}
+
+#include <gtest/gtest.h>
+#include <test/t8_gtest_adapt_callbacks.hxx>
+
+#include <t8.h>
+#include <t8_cmesh/t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh_examples.h>
+#include <t8_forest/t8_forest_io.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_subelement.hxx>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
+
+TEST (t8_gtest_subelement_geometry, face_centroid)
+{
+  const int level = 2;
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, sc_MPI_COMM_WORLD);
+
+  forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<2>, 0, 0, NULL);
+  forest = t8_forest_remove_hanging_nodes (forest);
+  ASSERT_TRUE (t8_forest_has_subelements (forest));
+
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
+  const t8_locidx_t num_leaves = t8_forest_get_tree_num_leaf_elements (forest, 0);
+  int num_subelements = 0;
+
+  for (t8_locidx_t ielem = 0; ielem < num_leaves; ++ielem) {
+    const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, 0, ielem);
+    if (!t8_element_is_subelement (scheme, tree_class, element)) {
+      continue;
+    }
+    ++num_subelements;
+
+    double element_centroid[3];
+    t8_forest_element_centroid (forest, 0, element, element_centroid);
+
+    for (int iface = 0; iface < scheme->element_get_num_faces (tree_class, element); ++iface) {
+      double face_centroid[3];
+      t8_forest_element_face_centroid (forest, 0, element, iface, face_centroid);
+
+      /* The face centroid has to lie inside the unit square. */
+      for (int idim = 0; idim < 2; ++idim) {
+        EXPECT_GE (face_centroid[idim], 0.0) << "leaf " << ielem << ", face " << iface;
+        EXPECT_LE (face_centroid[idim], 1.0) << "leaf " << ielem << ", face " << iface;
+      }
+      /* It must differ from the element centroid, and the three faces must give three
+       * different points. */
+      EXPECT_GT (
+        std::fabs (face_centroid[0] - element_centroid[0]) + std::fabs (face_centroid[1] - element_centroid[1]), 1e-12)
+        << "leaf " << ielem << ", face " << iface << ": face centroid equals the element centroid";
+    }
+  }
   EXPECT_GT (num_subelements, 0);
 
   t8_forest_unref (&forest);

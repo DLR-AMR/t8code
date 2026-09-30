@@ -1631,7 +1631,8 @@ t8_forest_leaf_face_neighbors_iterate (const t8_forest_t forest, const t8_locidx
   // compute its id as a ghost tree ( 0 <= id < num_ghost_trees)
   const bool is_ghost_tree = !t8_forest_tree_is_local (forest, ltreeid);
   const t8_locidx_t adjusted_tree_id = is_ghost_tree ? ltreeid - t8_forest_get_num_local_trees (forest) : ltreeid;
-  T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, element, adjusted_tree_id, is_ghost_tree));
+  T8_ASSERT (t8_forest_element_is_leaf_or_ghost (forest, element, adjusted_tree_id, is_ghost_tree)
+             || t8_forest_element_is_transition_cell (element, leaf_elements));
 
   struct t8_lfn_user_data *lfn_data = reinterpret_cast<struct t8_lfn_user_data *> (user_data);
   // face is the face of the considered leaf neighbor element and thus the
