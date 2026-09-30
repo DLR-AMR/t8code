@@ -89,9 +89,19 @@ jobs:
           }
 
           # 1. LOGIN
+          LOGIN_PAYLOAD=$(jq -n \
+            --arg user "$USERNAME" \
+            --arg pass "$PASSWORD" \
+            '{
+              type: "m.login.password",
+              user: "$USERNAME",
+              password: "$PASSWORD"
+            }')
 
-          LOGIN_RESPONSE=$(curl -XPOST -d '{"type":m.login.password", "user":"$USERNAME", "password":"$PASSWORD"}'\
-             "https://$INPUT_SERVER/_matrix/client/r0/login")
+          LOGIN_RESPONSE=$(curl -s -X POST \
+          -H "Content-Type: application/json" \
+          -d "$LOGIN_PAYLOAD" \
+          "https://$INPUT_SERVER/_matrix/client/r0/login")
 
           ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.access_token')
 
