@@ -198,7 +198,7 @@ void
 t8_forest_ghost_create (t8_forest_t forest)
 {
   t8_forest_ghost_t ghost;
-  t8_forest_ghost_definition_c *ghost_definition;
+  t8_forest_ghost_definition *ghost_definition;
 
   T8_ASSERT (t8_forest_is_committed (forest));
   T8_ASSERT (forest->ghost_definition != nullptr);

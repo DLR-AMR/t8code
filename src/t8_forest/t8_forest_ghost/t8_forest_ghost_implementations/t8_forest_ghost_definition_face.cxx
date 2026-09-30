@@ -369,22 +369,3 @@ t8_forest_ghost_definition_face::fill_remote_ghosts (t8_forest_t forest)
     t8_forest_ghost_fill_remote (forest, forest->ghosts, version != 1);
   }
 }
-
-/* Wrapper for derived face class */
-t8_forest_ghost_definition_c *
-t8_forest_ghost_definition_face_new (const int version)
-{
-  T8_ASSERT (1 <= version && version <= 3);
-  return new t8_forest_ghost_definition_face (version);
-}
-
-int
-t8_forest_ghost_definition_face_get_version (const t8_forest_ghost_definition_c *ghost_definition)
-{
-  T8_ASSERT (ghost_definition != nullptr);
-  const t8_forest_ghost_definition_face *ghost_definition_passed
-    = dynamic_cast<const t8_forest_ghost_definition_face *> (ghost_definition);
-  T8_ASSERT (ghost_definition_passed != nullptr);
-
-  return ghost_definition_passed->get_version ();
-}

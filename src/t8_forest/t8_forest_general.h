@@ -30,7 +30,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_element/t8_element.h>
 #include <t8_data/t8_containers.h>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_types.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
@@ -358,6 +358,16 @@ t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *we
  */
 void
 t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_repartition);
+
+/** This type controls, which neighbors count as ghost elements.
+ * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
+typedef enum {
+  T8_GHOST_NONE = 0, /**< Do not create ghost layer. */
+  T8_GHOST_FACES,    /**< Consider all face (codimension 1) neighbors. */
+  T8_GHOST_EDGES,    /**< Consider all edge (codimension 2) and face neighbors. */
+  T8_GHOST_VERTICES, /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+  T8_GHOST_COUNT     /**< Number of ghost types */
+} t8_ghost_type_t;
 
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.

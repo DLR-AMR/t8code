@@ -20,33 +20,16 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest_ghost_definition_c_interface.cxx
- * Implements the C wrappers declared in \ref t8_forest_ghost_definition_c_interface.h.
+/** \file t8_forest_ghost_definition_c_types.h
+ * Provides an opaque C type for the ghost definition class.
  */
 
+#pragma once
+
 #include <t8.h>
-#include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 
-T8_EXTERN_C_BEGIN ();
-
-void
-t8_forest_ghost_definition_ref (t8_forest_ghost_definition_c *ghost_definition)
-{
-  T8_ASSERT (ghost_definition != nullptr);
-  ghost_definition->ref ();
-}
-
-void
-t8_forest_ghost_definition_unref (t8_forest_ghost_definition_c **pghost_definition)
-{
-  T8_ASSERT (pghost_definition != nullptr);
-  T8_ASSERT (*pghost_definition != nullptr);
-
-  if ((*pghost_definition)->unref () == 0) {
-    *pghost_definition = nullptr;
-  }
-}
-
-T8_EXTERN_C_END ();
+/** This typedef holds virtual functions for a particular ghost definition.
+ * We need it so that we can use t8_ghost_definition_c pointers in .c files
+ * without them seeing the actual C++ code (and then not compiling)
+ */
+typedef struct t8_forest_ghost_definition t8_forest_ghost_definition_c;

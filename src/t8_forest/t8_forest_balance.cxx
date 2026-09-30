@@ -31,7 +31,6 @@
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_profiling.h>
@@ -213,7 +212,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
   if (set_from->ghosts == nullptr || !definition_suitable) {
     original_ghosts = set_from->ghosts;
     set_from->ghosts = nullptr;
-    t8_forest_ghost_definition_c *const original_definition = set_from->ghost_definition;
+    t8_forest_ghost_definition *const original_definition = set_from->ghost_definition;
     if (!definition_suitable) {
       t8_debugf ("Create a temporary face ghost definition of version 3 for balance.\n");
       set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
@@ -222,7 +221,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     t8_forest_ghost_create (set_from);
     temporary_ghosts = true;
     if (!definition_suitable) {
-      t8_forest_ghost_definition_unref (&set_from->ghost_definition);
+      set_from->ghost_definition->unref ();
       set_from->ghost_definition = original_definition;
     }
   }

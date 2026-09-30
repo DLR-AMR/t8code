@@ -37,7 +37,6 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
 #include <t8_forest/t8_forest_iterate.h>
 #include <vector>
 #include <functional>
@@ -485,7 +484,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     t8_forest_ref (m_forest);
     /* Committing consumes the ghost request of the forest. We remember it here, since we may have to
      * request the ghost layer again for the additional forest that the partitioning below creates. */
-    t8_forest_ghost_definition_c* const ghost_definition
+    t8_forest_ghost_definition* const ghost_definition
       = m_uncommitted_forest.value ()->do_ghost ? m_uncommitted_forest.value ()->ghost_definition : nullptr;
     t8_forest_commit (m_uncommitted_forest.value ());
     // Check if we adapted and unregister the adapt context if so.
@@ -516,7 +515,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
                                        this->m_partition_for_coarsening.value ());
               if (ghost_definition != nullptr) {
                 /* The forest takes ownership of the ghost definition, hence the additional reference. */
-                t8_forest_ghost_definition_ref (ghost_definition);
+                ghost_definition->ref ();
                 t8_forest_set_ghost_ext (m_forest, 1, ghost_definition);
               }
               t8_forest_commit (m_forest);

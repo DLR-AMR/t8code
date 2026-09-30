@@ -3100,7 +3100,7 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition)
+t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition *ghost_definition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
 
@@ -3117,7 +3117,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
     else {
       /* Unref the old ghost_definition (if it exists) and set the new one. */
       if (forest->ghost_definition != nullptr) {
-        t8_forest_ghost_definition_unref (&(forest->ghost_definition));
+        forest->ghost_definition->unref ();
       }
       forest->do_ghost = 1;
       forest->ghost_definition = ghost_definition;
@@ -3131,7 +3131,7 @@ t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost
     if (ghost_definition != nullptr) {
       /* Unref the old ghost_definition (if it exists) and set the new one. */
       if (forest->ghost_definition != nullptr) {
-        t8_forest_ghost_definition_unref (&(forest->ghost_definition));
+        forest->ghost_definition->unref ();
       }
       forest->ghost_definition = ghost_definition;
     }

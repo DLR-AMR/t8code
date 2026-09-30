@@ -29,7 +29,6 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_interface.h>
 
 /** Base class for the different ghost definitions (faces, edges, user_defined, ...). */
 struct t8_forest_ghost_definition

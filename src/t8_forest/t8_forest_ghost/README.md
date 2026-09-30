@@ -12,10 +12,9 @@ Public C interface to query the ghost layer of a committed forest (ghost trees, 
 remote ranks) and `t8_forest_ghost_create`, which builds the layer by calling the forest's ghost
 definition.
 
-#### [t8_forest_ghost_definition_c_interface.h](t8_forest_ghost_definition_c_interface.h)
+#### [t8_forest_ghost_definition_c_interface.h](t8_forest_ghost_definition_c_types.h)
 
-The `t8_ghost_type_t` enum, the opaque handle `t8_forest_ghost_definition_c` and C wrappers
-(create a face definition, ref/unref, get type) so that C code can use ghost definitions.
+Creates an opaque handle `t8_forest_ghost_definition_c` for the c parts of t8code.
 
 #### [t8_forest_ghost_definition_base.hxx](t8_forest_ghost_definition_base.hxx)
 
