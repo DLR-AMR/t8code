@@ -596,7 +596,7 @@ typedef struct t8_recv_list_entry_struct
 
 /** The hash function for the receive list hash table. We hash these entries by their rank.
  * \param [in] v1   A \ref t8_recv_list_entry_t.
- * \param [in] u    Unused.
+ * \param [in] u    Unused. Only here to fulfill the interface of sc_hash_new.
  * \return          The rank of \a v1.
  */
 static unsigned
@@ -610,7 +610,7 @@ t8_recv_list_entry_hash (const void *v1, [[maybe_unused]] const void *u)
 /** The equal function for the receive list hash table. Two entries are considered equal if they have the same rank.
  * \param [in] v1   A \ref t8_recv_list_entry_t.
  * \param [in] v2   A \ref t8_recv_list_entry_t.
- * \param [in] u    Unused.
+ * \param [in] u    Unused. Only here to fulfill the interface of sc_hash_new.
  * \return          True if and only if \a v1 and \a v2 have the same rank.
  */
 static int
