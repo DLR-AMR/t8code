@@ -52,7 +52,7 @@ print_mesh_stats (const std::unique_ptr<mesh_type>& mesh, const char* stage)
   int global_elements = mesh->get_num_global_elements ();
 
   t8_global_productionf (" [mesh_step4] === %s === \n", stage);
-  t8_global_productionf (" [mesh_step4] Local elements on this process: %i \n", local_elements);
+  t8_global_productionf (" [mesh_step4] Local elements on the root process: %i \n", local_elements);
   t8_global_productionf (" [mesh_step4] Total elements: %i \n", global_elements);
 }
 
@@ -61,7 +61,7 @@ print_mesh_stats (const std::unique_ptr<mesh_type>& mesh, const char* stage)
  *  \param adapt_params  The adaptation parameters to use for the adaptation.
 */
 void
-create_adapted_mesh (std::unique_ptr<mesh_type>& mesh, const adapt_data& adapt_params)
+step4_adapt_mesh (std::unique_ptr<mesh_type>& mesh, const adapt_data& adapt_params)
 {
   /* Setting the adapt-flag with our adapt_callback_sphere function from step 3 and the adapt_params. Both can be found in the file \ref t8_mesh_tutorials_common.hxx. */
   mesh->set_adapt (
@@ -74,7 +74,7 @@ create_adapted_mesh (std::unique_ptr<mesh_type>& mesh, const adapt_data& adapt_p
  *  \param mesh  The initial mesh to adapt.
 */
 void
-create_partitioned_balanced_mesh (const std::unique_ptr<mesh_type>& mesh)
+step4_partition_balance_mesh (const std::unique_ptr<mesh_type>& mesh)
 {
   /* Setting partition flag.*/
   mesh->set_partition ();
@@ -90,9 +90,9 @@ create_partitioned_balanced_mesh (const std::unique_ptr<mesh_type>& mesh)
  *  \param mesh  The initial mesh to adapt.
 */
 void
-create_ghost_mesh (const std::unique_ptr<mesh_type>& mesh)
+step4_ghost_mesh (const std::unique_ptr<mesh_type>& mesh)
 {
-  /* Creating the ghost layers. */
+  /* Set flag such that ghost layer is created on commit. */
   mesh->set_ghost ();
 
   /* Committing the ghost mesh. */
@@ -155,7 +155,7 @@ main (int argc, char** argv)
     t8_global_productionf (" [mesh_step4] \n");
 
     /** Call adaption helper function. */
-    create_adapted_mesh (mesh, adapt_params);
+    step4_adapt_mesh (mesh, adapt_params);
 
     /* Printing the mesh information. */
     print_mesh_stats (mesh, "Adapted mesh");
@@ -173,10 +173,10 @@ main (int argc, char** argv)
     t8_global_productionf (" [mesh_step4] \n");
 
     /** Adapting the mesh from above a second time to see a difference when balancing. */
-    create_adapted_mesh (mesh, adapt_params);
+    step4_adapt_mesh (mesh, adapt_params);
 
     /** Call partitioning and balancing helper function. */
-    create_partitioned_balanced_mesh (mesh);
+    step4_partition_balance_mesh (mesh);
 
     /* Printing the mesh information. */
     print_mesh_stats (mesh, "Partitioned and Balanced mesh");
@@ -186,7 +186,7 @@ main (int argc, char** argv)
                                            true, false, false);
 
     /**
-     * GHOST MESH
+     * GHOST LAYER
     */
 
     t8_global_productionf (" [mesh_step4] \n");
@@ -194,7 +194,7 @@ main (int argc, char** argv)
     t8_global_productionf (" [mesh_step4] \n");
 
     /** Call ghost helper function. */
-    create_ghost_mesh (mesh);
+    step4_ghost_mesh (mesh);
 
     /* Printing the mesh information. */
     print_mesh_stats (mesh, "Ghost mesh");

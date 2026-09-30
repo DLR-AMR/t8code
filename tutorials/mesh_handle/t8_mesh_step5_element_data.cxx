@@ -40,7 +40,7 @@
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
 #include <t8_types/t8_vec.hxx>      /** t8 vector dataclass. */
-#include "t8_mesh_tutorials_common.hxx" /** Default adaption function. */
+#include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
 #include <memory>
 #include <span>
 

@@ -29,7 +29,7 @@
  * according to our own criterion.
  *
  * The geometry (coarse mesh) is again a cube, this time modelled with
- * 6 tetrahedra, 6 prisms and 4 cubes.
+ * 6 tetrahedra, 6 prisms and 4 hexahedra.
  * We refine an element if its midpoint is within a sphere of given radius
  * around the point (0.5, 0.5, 1) and we coarsen outside of a given radius.
  * We will use non-recursive refinement, that means that the refinement level
@@ -47,7 +47,7 @@
 #include "t8_mesh_tutorials_common.hxx"         /** Adaption function definition used for this tutorial. */
 #include <memory>
 
-/** Build our adapted mesh by transferring the adaption parameters and adapting once with our adapt_callback_sphere function.
+/** Build our adapted mesh by transferring the adaption parameters and adapting once with the adapt_callback_sphere function defined in \ref t8_mesh_tutorials_common.hxx.
  * \tparam TMeshClass    The mesh handle class.
  * \param comm           The MPI communicator.
  * \param level          The initial uniform refinement level.
@@ -55,12 +55,12 @@
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
 std::unique_ptr<TMeshClass>
-build_mesh (sc_MPI_Comm comm, int level)
+build_adapted_mesh (std::unique_ptr<TMeshClass> mesh)
 {
-  /* Generate a hybrid hypercube, made out of cubes, prisms etc. */
-  auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<TMeshClass> (level, comm);
+  /* Setting file name for vtk export. */
+  const char *prefix_initial = "step3_initial_uniform_mesh";
   /* Saving the initial mesh to vtu files to compare them later. */
-  t8_mesh_handle::write_mesh_to_vtk (*mesh, "step3_initial_uniform_mesh.vtu");
+  t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_initial);
   /* Defining the adaption parameters. */
   adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
   /** Adapting once using our adapt callback.
@@ -78,6 +78,8 @@ build_mesh (sc_MPI_Comm comm, int level)
 int
 main (int argc, char **argv)
 {
+  /* Set file name for vtk export. */
+  const char *prefix_adapted = "step3_adapted_mesh";
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   int mpiret = sc_MPI_Init (&argc, &argv);
   /* Error check the MPI return value. */
@@ -106,13 +108,16 @@ main (int argc, char **argv)
   /* The initial uniform refinement level. */
   const int uniform_level = 3;
   /* Building the mesh. */
-  { /** Scope to ensure mesh is deleted properly. */
-    auto mesh = build_mesh<mesh_type> (comm, uniform_level);
+  { /* Scope to ensure mesh is deleted properly. */
+    /* Generate a hybrid hypercube, made out of hexahedra, prisms etc. */
+    auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
+    /* Call the function that handles the adaption. */
+    mesh = build_adapted_mesh<mesh_type> (std::move (mesh));
     /* Write the mesh to a vtu file. */
     t8_global_productionf (" [mesh_step3] \n");
-    t8_global_productionf (" [mesh_step3] Writing adapted mesh to vtu file: step3_adapted_mesh.vtu\n");
+    t8_global_productionf (" [mesh_step3] Writing adapted mesh to vtu files: %s*\n", prefix_adapted);
     t8_global_productionf (" [mesh_step3] \n");
-    t8_mesh_handle::write_mesh_to_vtk (*mesh, "step3_adapted_mesh.vtu");
+    t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_adapted);
   }
   sc_finalize ();
   mpiret = sc_MPI_Finalize ();
