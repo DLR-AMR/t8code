@@ -93,7 +93,7 @@ jobs:
           # get login type:
           TYPE_RESPONSE=$(curl -XGET "https://$INPUT_SERVER/_matrix/client/r0/login")
 
-          echo "$type: $TYPE_RESPONSE" | jq -r '.type' 
+          echo "$type: $TYPE_RESPONSE"
 
 
           LOGIN_PAYLOAD=$(jq -n \
