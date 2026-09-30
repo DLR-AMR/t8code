@@ -49,14 +49,17 @@ typedef struct
 } t8_ghost_remote_tree_t;
 
 /**
- * This struct stores information about the data that the current process needs from a specific remote_process
- * as ghost data, such as the number of remote elements and the remote trees.
+ * All local leaf elements of this process that are ghosts on the remote process \a remote_rank.
+ * There is one such struct per remote process. They are stored in the \a remote_ghosts hash array of the
+ * ghost structure, hashed by \a remote_rank; the ranks themselves are listed in \a remote_processes.
+ * Will be sent to the remote process during \ref t8_forest_ghost_definition::communicate_ghost_elements.
  */
 typedef struct
 {
-  int remote_rank;          /**< The rank of the remote process */
-  t8_locidx_t num_elements; /**< The number of remote elements for this process */
-  sc_array_t remote_trees;  /**< Array of the remote trees of this process */
+  int remote_rank;          /**< The rank of the remote process that has these elements as ghosts. */
+  t8_locidx_t num_elements; /**< The total number of elements over all entries in \a remote_trees. */
+  sc_array_t remote_trees;  /**< The \ref t8_ghost_remote_tree_t of each local tree that has ghosts on
+                                 \a remote_rank, sorted by local tree id. */
 } t8_ghost_remote_t;
 
 /* We enumerate the ghost trees by 0, 1, ..., num_ghost_trees - 1
