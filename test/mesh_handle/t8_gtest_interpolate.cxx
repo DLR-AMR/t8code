@@ -29,10 +29,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8.h>
 #include "t8_gtest_common.hxx"
 
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competence_pack.hxx>
-#include <mesh_handle/constructor_wrappers.hxx>
-#include <mesh_handle/competences/element_data_competences.hxx>
+#include <mesh_handle/mesh_handle.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_eclass/t8_eclass.h>
@@ -114,7 +111,7 @@ TEST (t8_gtest_handle_interpolate, test_interpolate_data)
 
   // Adapt the mesh and set all options.
   mesh->set_adapt (adapt_callback_coarsen_left_refine_middle<mesh_class>);
-  mesh->set_balance ();
+  mesh->set_balance (true);
   mesh->set_partition ();
   mesh->set_ghost ();
   mesh->set_interpolate_callback (mesh_class::mesh_interpolate_callback_wrapper<interpolate_user_data> (

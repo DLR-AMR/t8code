@@ -436,6 +436,18 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   void
   set_balance (bool no_repartition = false)
   {
+    if constexpr (has_interpolate_data_competence ()) {
+      // If we interpolate the data, the elements must stay at the same rank. We partition after interpolation.
+      if (!no_repartition && !this->set_partition_called ()) {
+        this->m_partition_for_coarsening = false;
+        t8_global_errorf (
+          "WARNING: The mesh handle is intended to interpolate data after adaptation. "
+          "Therefore, repartitioning is required to happen AFTER interpolation. The balance function is called with "
+          "no_repartition = false, so the flag is set to true and partitioning is performed automatically after "
+          "interpolation.\n");
+      }
+      no_repartition = true;
+    }
     if (!m_uncommitted_forest.has_value ()) {
       t8_forest_t new_forest;
       t8_forest_init (&new_forest);
@@ -483,6 +495,10 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     }
     t8_forest_ref (m_forest);
     t8_forest_commit (m_uncommitted_forest.value ());
+    t8_global_productionf ("MESH HANDLE commit: %d local elements, %ld global elements, %d ghosts.\n",
+                           t8_forest_get_local_num_leaf_elements (m_uncommitted_forest.value ()),
+                           t8_forest_get_global_num_leaf_elements (m_uncommitted_forest.value ()),
+                           t8_forest_get_num_ghosts (m_uncommitted_forest.value ()));
     // Check if we adapted and unregister the adapt context if so.
     if (detail::adapt_registry::get (m_forest) != nullptr) {
       detail::adapt_registry::unregister_context (m_forest);
@@ -499,7 +515,9 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             detail::interpolate_registry::register_context (
               m_forest, std::make_unique<detail::mesh_interpolate_context<SelfType>> (
                           *this, new_mesh, std::move (this->m_interpolate_callback)));
+            t8_global_productionf ("MESH HANDLE start data interpolation.\n");
             t8_forest_iterate_replace (m_uncommitted_forest.value (), m_forest, detail::mesh_replace_callback_wrapper);
+            t8_global_productionf ("MESH HANDLE finished data interpolation.\n");
             detail::interpolate_registry::unregister_context (m_forest);
             // Override the element data of the current mesh with the interpolated data from the "new mesh".
             this->m_element_data = new_mesh.take_element_data ();
@@ -514,10 +532,13 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
                 t8_forest_set_ghost (m_forest, true, ghost_type);
               }
               t8_forest_commit (m_forest);
+              t8_global_productionf ("MESH HANDLE partition done.\n");
 
               /* Now we repartition also the data: The interpolated data follows m_uncommitted_forest. 
                * We align it now with the partitioned m_forest. */
               this->repartition_element_data (m_uncommitted_forest.value (), m_forest);
+              t8_global_productionf ("MESH HANDLE repartitioned element data.\n");
+              this->m_partition_for_coarsening.reset ();
             }
             else {
               // Update underlying forest of the mesh for the case where we do not repartition.

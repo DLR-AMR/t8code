@@ -74,34 +74,14 @@ struct t8_subelem_scheme_hanging_nodes_quad:
 
   TUnderlyingScheme underlying_scheme {}; /**< Instance of the underlying standalone scheme. */
 
-  /** Compute the number of corners of an element.
-   * \param [in] elem The subelement.
-   * \return          The number of corners of \a elem.
-   */
-  static int
-  subelement_get_num_corners ([[maybe_unused]] const TSubelementType *elem) noexcept
-  {
-    return T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE];
-  }
-
-  /** Compute the number of faces of a given element.
-   * \param [in] elem The element.
-   * \return          The number of faces of \a elem.
-   */
-  static int
-  subelement_get_num_faces ([[maybe_unused]] const TSubelementType *elem) noexcept
-  {
-    return T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE];
-  }
-
   /** Compute the maximum number of faces of a given element and all of its descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
   static int
-  subelement_get_max_num_faces (const TSubelementType *elem) noexcept
+  subelement_get_max_num_faces ([[maybe_unused]] const TSubelementType *elem) noexcept
   {
-    return subelement_get_num_faces (elem);
+    return T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_TRIANGLE];
   }
 
   /** Return the shape of an allocated element.
@@ -112,17 +92,6 @@ struct t8_subelem_scheme_hanging_nodes_quad:
   subelement_get_shape ([[maybe_unused]] const TSubelementType *elem) noexcept
   {
     return T8_ECLASS_TRIANGLE;
-  }
-
-  /** Compute the shape of the face of an element.
-   * \param [in] elem     The element.
-   * \param [in] face     A face of \a elem.
-   * \return              The element shape of the face. As we are in 2D, here always LINE.
-   */
-  static t8_element_shape_t
-  subelement_get_face_shape ([[maybe_unused]] const TSubelementType *elem, [[maybe_unused]] const int face) noexcept
-  {
-    return T8_ECLASS_LINE;
   }
 
   /** Return the max number of children if an element is refined into subelements.
@@ -209,30 +178,6 @@ struct t8_subelem_scheme_hanging_nodes_quad:
     }
   }
 
-  /** Return the corner of a face of a triangular subelement. Face i is the face opposite vertex i,
-   * so its corners are the two vertices other than i.
-   * \verbatim
-   *         V1
-   *          x            f0 = V1 V2  (opposite V0, the centre of the transition cell)
-   *        / |            f1 = V0 V2  (opposite V1)
-   *      f2  f1           f2 = V0 V1  (opposite V2)
-   *      /    |
-   *     x -f0- x
-   *     V0     V2
-   * \endverbatim
-   * \param [in] face   A face of the subelement.
-   * \param [in] corner 0 or 1, the corner of \a face.
-   * \return            The vertex number of the \a corner-th vertex of \a face.
-   */
-  static int
-  subelement_get_face_corner (const int face, const int corner) noexcept
-  {
-    T8_ASSERT (0 <= face && face < T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE]);
-    T8_ASSERT (0 <= corner && corner < 2);
-    static constexpr int face_corner[3][2] = { { 1, 2 }, { 0, 2 }, { 0, 1 } };
-    return face_corner[face][corner];
-  }
-
   /** Compute the coordinates of a vertex of a triangular subelement inside the reference tree
    * [0,1]^2.
    * \param [in] elem    The subelement.
@@ -303,7 +248,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
   {
     T8_ASSERT (this->element_is_subelement (elem));
     T8_ASSERT (this->element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < subelement_get_num_faces (this->as_subelement (elem)));
+    T8_ASSERT (0 <= face && face < this->element_get_num_faces (elem));
     /* Only face 0 lies on the boundary of the transition cell. */
     if (face != 0) {
       return -1;
@@ -331,7 +276,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
   {
     T8_ASSERT (this->element_is_subelement (elem));
     T8_ASSERT (this->element_is_valid (elem));
-    T8_ASSERT (0 <= face && face < subelement_get_num_faces (this->as_subelement (elem)));
+    T8_ASSERT (0 <= face && face < this->element_get_num_faces (elem));
 
     const TSubelementType *subelement = this->as_subelement (elem);
     TSubelementType *neighbor = this->as_subelement (neigh);
