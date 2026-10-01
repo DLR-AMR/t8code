@@ -74,34 +74,14 @@ struct t8_subelem_scheme_hanging_nodes_quad:
 
   TUnderlyingScheme underlying_scheme {}; /**< Instance of the underlying standalone scheme. */
 
-  /** Compute the number of corners of an element.
-   * \param [in] elem The subelement.
-   * \return          The number of corners of \a elem.
-   */
-  static int
-  subelement_get_num_corners ([[maybe_unused]] const TSubelementType *elem) noexcept
-  {
-    return T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE];
-  }
-
-  /** Compute the number of faces of a given element.
-   * \param [in] elem The element.
-   * \return          The number of faces of \a elem.
-   */
-  static int
-  subelement_get_num_faces ([[maybe_unused]] const TSubelementType *elem) noexcept
-  {
-    return T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE];
-  }
-
   /** Compute the maximum number of faces of a given element and all of its descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
   static int
-  subelement_get_max_num_faces (const TSubelementType *elem) noexcept
+  subelement_get_max_num_faces ([[maybe_unused]] const TSubelementType *elem) noexcept
   {
-    return subelement_get_num_faces (elem);
+    return T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_TRIANGLE];
   }
 
   /** Return the shape of an allocated element.
@@ -112,17 +92,6 @@ struct t8_subelem_scheme_hanging_nodes_quad:
   subelement_get_shape ([[maybe_unused]] const TSubelementType *elem) noexcept
   {
     return T8_ECLASS_TRIANGLE;
-  }
-
-  /** Compute the shape of the face of an element.
-   * \param [in] elem     The element.
-   * \param [in] face     A face of \a elem.
-   * \return              The element shape of the face. As we are in 2D, here always LINE.
-   */
-  static t8_element_shape_t
-  subelement_get_face_shape ([[maybe_unused]] const TSubelementType *elem, [[maybe_unused]] const int face) noexcept
-  {
-    return T8_ECLASS_LINE;
   }
 
   /** Return the max number of children if an element is refined into subelements.
