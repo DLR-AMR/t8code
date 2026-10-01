@@ -307,8 +307,9 @@ class interpolate_element_data_mesh_competence:
     using element_data_type = typename TUnderlying::ElementDataType;
     // Take ownership of old data and wrap into sc_array. This is because the forest functions expect an sc_array.
     std::vector<element_data_type> old_data = this->underlying ().take_element_data ();
-    sc_array* data_in = sc_array_new_data (old_data.data (), sizeof (element_data_type),
-                                           t8_forest_get_local_num_leaf_elements (forest_from));
+    const t8_locidx_t num_old_local = t8_forest_get_local_num_leaf_elements (forest_from);
+    T8_ASSERT (old_data.size () >= static_cast<size_t> (num_old_local));
+    sc_array* data_in = sc_array_new_data (old_data.data (), sizeof (element_data_type), num_old_local);
     const t8_locidx_t num_new_local = t8_forest_get_local_num_leaf_elements (forest_to);
     // Define vector for the new data and wrap it.
     std::vector<element_data_type> partitioned_data (num_new_local);
