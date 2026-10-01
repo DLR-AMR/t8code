@@ -138,18 +138,6 @@ TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
   t8_forest_unref (&forest);
 }
 
-#include <gtest/gtest.h>
-#include <test/t8_gtest_adapt_callbacks.hxx>
-
-#include <t8.h>
-#include <t8_cmesh/t8_cmesh.h>
-#include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_forest/t8_forest_io.h>
-#include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_geometrical.h>
-#include <t8_forest/t8_forest_subelement.hxx>
-#include <t8_schemes/t8_subelement/t8_subelement.hxx>
-
 TEST (t8_gtest_subelement_geometry, face_centroid)
 {
   const int level = 2;
