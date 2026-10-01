@@ -49,8 +49,7 @@
 
 /** Build our adapted mesh by transferring the adaption parameters and adapting once with the adapt_callback_sphere function defined in \ref t8_mesh_tutorials_common.hxx.
  * \tparam TMeshClass    The mesh handle class.
- * \param comm           The MPI communicator.
- * \param level          The initial uniform refinement level.
+ * \param mesh           The mesh that should be adapted.
  * \returns Unique pointer to the adapted mesh.
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
