@@ -40,7 +40,7 @@
  * \param [in] forest       The forest to which the new elements belong.
  * \param [in] forest_from  The forest that is adapted.
  * \param [in] which_tree   The local tree containing \a elements.
- * \param [in] eclass   The eclass of \a which_tree.
+ * \param [in] eclass       The eclass of \a which_tree.
  * \param [in] lelement_id  The local element id in \a forest_from in the tree of the current element.
  * \param [in] scheme       The scheme of the forest.
  * \param [in] is_family    If 1, the first \a num_elements entries in \a elements form a family. If 0, they do not.
@@ -54,12 +54,12 @@ t8_test_adapt_first_child (t8_forest_t forest, t8_forest_t forest_from, t8_locid
                            const int is_family, const int num_elements, t8_element_t *elements[]);
 
 /**
- * Adapt callback that refines every n-th local element, where \a n is given as template parameter.
+ * Adapt callback that refines every n-th global element, where \a n is given as template parameter.
  *
- * Optionally, an \a offset < \a n may be defined to not start with the first local leaf eleement.
+ * Optionally, an \a offset < \a n may be defined to not start with the first leaf element.
  *
- * \tparam n      every n-th local leaf element will be refined
- * \tparam offset local ID of the first element to refine
+ * \tparam n      every n-th global leaf element will be refined
+ * \tparam offset global ID of the first element to refine
  *
  * Note: The argument list has to be the same as for \ref t8_forest_adapt_t, even
  *       if most arguments are unused. For their meaning, please refer to \ref t8_forest_adapt_t.
@@ -86,8 +86,12 @@ refine_every_nth_element_callback ([[maybe_unused]] t8_forest_t forest, [[maybe_
                                    [[maybe_unused]] const int is_family, [[maybe_unused]] const int num_elements,
                                    [[maybe_unused]] t8_element_t *elements[])
 {
+  // Compute global element ID (forest offset + tree offset + id in tree).
+  t8_gloidx_t global_elem_id = t8_forest_get_first_local_leaf_element_id (forest_from)
+                               + t8_forest_get_tree_element_offset (forest_from, which_tree) + lelement_id;
+
   // Refine every n-th element, starting from offset (default: zero).
-  return ((lelement_id % n == offset) ? 1 : 0);
+  return ((global_elem_id % n == offset) ? 1 : 0);
 }
 
 #endif /* T8_GTEST_ADAPT_CALLBACKS */

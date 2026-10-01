@@ -66,18 +66,22 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   EXPECT_EQ (mesh->get_num_ghosts (), 0);
   mesh->set_ghost ();
   mesh->commit ();
-  EXPECT_EQ (mesh->get_num_ghosts (), t8_forest_get_num_ghosts (mesh->get_forest ()));
-  if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
-    // Ensure that we actually have ghost elements in this test.
-    EXPECT_GT (mesh->get_num_ghosts (), 0);
-  }
-  else {
-    GTEST_SKIP () << "Skipping test as no ghost elements are created for 1D or single element meshes.";
-  }
 
-  // Check functions for ghost elements.
+  // Test does not make sense without ghosts. Also ensure that we have at least one element per process.
+  int mpisize;
+  int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  if (!(mpisize > 1) || !(mesh->get_dimension () > 1) || (mesh->get_num_global_elements () < mpisize)) {
+    GTEST_SKIP () << "Skipping test as no ghost elements are created.";
+  }
+  // Ensure that we actually test with ghost elements.
   const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
   const t8_locidx_t num_ghost_elements = mesh->get_num_ghosts ();
+  ASSERT_GT (num_ghost_elements, 0);
+  EXPECT_EQ (num_ghost_elements, t8_forest_get_num_ghosts (mesh->get_forest ()));
+
+  // Check functions for ghost elements.
+
   for (t8_locidx_t ighost = num_local_elements; ighost < num_local_elements + num_ghost_elements; ++ighost) {
     EXPECT_EQ (ighost, (*mesh)[ighost].get_element_handle_id ());
     EXPECT_TRUE ((*mesh)[ighost].is_ghost_element ());
@@ -121,10 +125,6 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 
   const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
-  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
-    // Ensure that we have ghost elements in this test.
-    EXPECT_GT (mesh.get_num_ghosts (), 0);
-  }
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
   auto mesh_iterator = mesh.cbegin ();
