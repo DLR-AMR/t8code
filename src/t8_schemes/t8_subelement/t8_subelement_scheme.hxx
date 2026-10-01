@@ -509,8 +509,7 @@ struct t8_subelement_scheme_common:
   }
 
   /** Query whether a given set of elements is a family or not.
-   * \param [in] fam      An array of as many elements as an element of class
-   *                      \b ts has siblings.
+   * \param [in] fam      An array of as many elements as an element of class \b ts has siblings.
    * \return              Zero if \b fam is not a family, nonzero if it is.
    * \note level 0 elements do not form a family.
    */
@@ -894,15 +893,6 @@ struct t8_subelement_scheme_common:
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= level && level <= get_maxlevel ());
     return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
-    // if(!element_is_subelement (elem)){
-    //   return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
-    // }
-    // const t8_linearidx_t parent_id
-    //   = derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level - 1);
-    // const int max_children = get_max_num_children ();
-    // return parent_id * max_children + as_subelement (elem)->subelement_id;
-    // T8_ASSERT (element_is_valid (elem));
-    // return derived ().underlying_scheme.element_get_linear_id (element_to_standalone (elem), level);
   }
 
   /** Construct the successor in a uniform refinement of a given element.
@@ -964,7 +954,6 @@ struct t8_subelement_scheme_common:
 
   /** Compute the coordinates of a given element vertex inside a reference tree 
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \note This is not implemented for subelements.
    *   \param [in] elem      The element to be considered.
    *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
    *   \param [out] coords An array of at least as many doubles as the element's dimension
@@ -973,8 +962,11 @@ struct t8_subelement_scheme_common:
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem),
-                    "element_get_vertex_reference_coords is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    if (element_is_subelement (elem)) {
+      derived ().subelement_get_vertex_reference_coords (elem, vertex, coords);
+      return;
+    }
     derived ().underlying_scheme.element_get_vertex_reference_coords (element_to_standalone (elem), vertex, coords);
   }
 

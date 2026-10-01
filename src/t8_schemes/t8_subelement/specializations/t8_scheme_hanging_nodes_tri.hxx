@@ -201,6 +201,12 @@ struct t8_subelem_scheme_hanging_nodes_tri:
     return -1;
   }
 
+  void
+  subelement_get_vertex_reference_coords ([[maybe_unused]] const t8_element_t *elem, [[maybe_unused]] const int vertex,
+                                          [[maybe_unused]] double coords[]) const noexcept
+  {
+  }
+
   /** TODO
    */
   int

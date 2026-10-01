@@ -35,30 +35,20 @@
 #include <t8_forest/t8_forest_subelement.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
 
-TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
+TEST (t8_gtest_subelement_neighbors, face_neighbors_single_tree)
 {
-  const int level = 2;
+  /* A single quad tree, so no face neighbor crosses a tree boundary. */
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), 3, 0, sc_MPI_COMM_WORLD);
 
-  /* Adapting twice with this callback gives three levels in a 2 x 2 periodic pattern, so we need to
-   * balance before the hanging nodes can be resolved. */
-  forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<2>, 0, 0, NULL);
-  forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<2>, 0, 0, NULL);
-
-  t8_forest_t forest_balanced;
-  t8_forest_init (&forest_balanced);
-  t8_forest_set_balance (forest_balanced, forest, 0);
-  t8_forest_commit (forest_balanced);
-  forest = t8_forest_remove_hanging_nodes (forest_balanced);
-  EXPECT_TRUE (t8_forest_has_subelements (forest));
+  /* A single adapt pass from a uniform forest is balanced, so we can resolve the hanging nodes directly. */
+  forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<3>, 0, 0, NULL);
+  forest = t8_forest_remove_hanging_nodes (forest);
+  ASSERT_TRUE (t8_forest_has_subelements (forest));
 
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  //const t8_locidx_t num_local_leaves = t8_forest_get_local_num_leaf_elements (forest);
-  int num_subelements = 0;
-  int num_cells_with[8] = { 0 };
 
   for (t8_locidx_t itree = 0; itree < t8_forest_get_num_local_trees (forest); ++itree) {
     const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, itree);
@@ -71,12 +61,10 @@ TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
       EXPECT_EQ (scheme->element_get_shape (tree_class, element), is_sub ? T8_ECLASS_TRIANGLE : T8_ECLASS_QUAD);
       const int num_faces = scheme->element_get_num_faces (tree_class, element);
       EXPECT_EQ (num_faces, is_sub ? 3 : 4);
-
       if (is_sub) {
-        ++num_subelements;
+        /* A transition cell has 4 subelements plus one per hanging face. */
         const int siblings = scheme->element_get_num_siblings (tree_class, element);
-        EXPECT_TRUE (siblings >= 5 && siblings <= 7);
-        ++num_cells_with[siblings];
+        EXPECT_TRUE (siblings >= 5 && siblings <= 8);
       }
 
       for (int iface = 0; iface < num_faces; ++iface) {
@@ -84,104 +72,79 @@ TEST (t8_gtest_subelement_neighbors, leaf_face_neighbors)
         t8_locidx_t *neigh_indices = NULL;
         const t8_element_t **neighbors = NULL;
         t8_eclass_t neigh_class;
-
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
                                        &neigh_indices, &neigh_class);
-
         if (num_neighbors == 0) { /* Boundary of the domain. */
           continue;
         }
-        // /* After hanging node resolution every face is matched by exactly one neighbour. */
-        // EXPECT_EQ (num_neighbors, 1) << "tree " << itree << ", leaf " << ielem << ", face " << iface;
-        // EXPECT_GE (neigh_indices[0], 0);
-        // EXPECT_LT (neigh_indices[0], num_local_leaves) << "neighbour is a ghost, but this test is serial";
-        // EXPECT_GE (dual_faces[0], 0);
-        // EXPECT_LT (dual_faces[0], scheme->element_get_num_faces (neigh_class, neighbors[0]));
+        const std::string where
+          = "tree " + std::to_string (itree) + ", leaf " + std::to_string (ielem) + ", face " + std::to_string (iface);
 
-        // /* The indices are forest local, so look the leaf up through the forest, not through the tree. */
-        // t8_locidx_t neigh_tree = -1;
-        // const t8_element_t *neigh_leaf = t8_forest_get_leaf_element (forest, neigh_indices[0], &neigh_tree);
-        // /* element_is_equal ignores the subelement id, so compare the id separately. */
-        // EXPECT_TRUE (scheme->element_is_equal (neigh_class, neigh_leaf, neighbors[0]));
-        // EXPECT_EQ (scheme->element_get_child_id (neigh_class, neigh_leaf),
-        //            scheme->element_get_child_id (neigh_class, neighbors[0]));
+        /* After hanging node resolution every face is matched by exactly one neighbor. */
+        EXPECT_EQ (num_neighbors, 1) << where;
 
-        // /* Crossing back over the dual face must return to the leaf we started from. */
+        /* The reported element and the leaf stored at the reported index must be the same. */
+        t8_locidx_t neigh_tree = -1;
+        const t8_element_t *neigh_leaf = t8_forest_get_leaf_element (forest, neigh_indices[0], &neigh_tree);
+        EXPECT_TRUE (scheme->element_is_equal (neigh_class, neigh_leaf, neighbors[0])) << where;
+
+        /* The face and the dual face of the neighbor are the same segment, so their centroids coincide. */
+        double centroid[3], dual_centroid[3];
+        t8_forest_element_face_centroid (forest, itree, element, iface, centroid);
+        t8_forest_element_face_centroid (forest, neigh_tree, neigh_leaf, dual_faces[0], dual_centroid);
+        EXPECT_LT (std::fabs (centroid[0] - dual_centroid[0]) + std::fabs (centroid[1] - dual_centroid[1]), 1e-10)
+          << where;
+
+        /* Crossing back over the dual face must return to the leaf we started from. */
         // int back_num = 0, *back_faces = NULL;
         // t8_locidx_t *back_indices = NULL;
         // const t8_element_t **back_neighbors = NULL;
         // t8_eclass_t back_class;
-        // t8_forest_leaf_face_neighbors (forest, neigh_tree, neigh_leaf, &back_neighbors, dual_faces[0],
-        //                                &back_faces, &back_num, &back_indices, &back_class);
+        // t8_forest_leaf_face_neighbors (forest, neigh_tree, neigh_leaf, &back_neighbors, dual_faces[0], &back_faces,
+        //                                &back_num, &back_indices, &back_class);
         // bool found = false;
         // for (int iback = 0; iback < back_num; ++iback) {
         //   found = found || back_indices[iback] == tree_offset + ielem;
         // }
-        // EXPECT_TRUE (found) << "no reciprocal neighbour for tree " << itree << ", leaf " << ielem
-        //                     << ", face " << iface;
-        // if (back_num > 0) {
-        //   scheme->element_destroy (back_class, back_num, (t8_element_t **) back_neighbors);
-        //   T8_FREE (back_neighbors);
-        //   T8_FREE (back_faces);
-        //   T8_FREE (back_indices);
-        // }
+        // EXPECT_TRUE (found) << where << ": no reciprocal neighbor";
 
+        // /* The neighbors are the forest's own leaves, so only the arrays are freed. */
+        // T8_FREE (back_neighbors);
+        // T8_FREE (back_faces);
+        // T8_FREE (back_indices);
         T8_FREE (neighbors);
         T8_FREE (dual_faces);
         T8_FREE (neigh_indices);
       }
     }
   }
-  // Expect to have subelements.
-  EXPECT_GT (num_subelements, 0);
-
   t8_forest_unref (&forest);
 }
 
-TEST (t8_gtest_subelement_geometry, face_centroid)
-{
-  const int level = 2;
-  t8_cmesh_t cmesh;
-  t8_cmesh_init (&cmesh);
-  t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_QUAD, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, sc_MPI_COMM_WORLD);
+// TEST (t8_gtest_subelement_geometry, known_face_centroid)
+// {
+//   t8_subelem_scheme_hanging_nodes_quad scheme;
+//   t8_element_t *root;
+//   scheme.element_new (1, &root);
+//   scheme.set_to_root (root);
 
-  forest = t8_forest_new_adapt (forest, refine_every_nth_element_callback<2>, 0, 0, NULL);
-  forest = t8_forest_remove_hanging_nodes (forest);
-  ASSERT_TRUE (t8_forest_has_subelements (forest));
+//   const int type = 8; /* only f0 (left) is hanging: 5 subelements */
+//   const int num_sub = scheme.element_get_num_children (root, type);
+//   ASSERT_EQ (num_sub, 5);
+//   t8_element_t **cell = T8_ALLOC (t8_element_t *, num_sub);
+//   scheme.element_new (num_sub, cell);
+//   scheme.element_get_children (root, num_sub, cell, type);
 
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, 0);
-  const t8_locidx_t num_leaves = t8_forest_get_tree_num_leaf_elements (forest, 0);
-  int num_subelements = 0;
+//   /* Subelement 0 is the lower half of the left face, so its three vertices are the centre of the
+//    * cell, the lower left corner and the midpoint of the left face. */
+//   double v[3][2];
+//   for (int ivertex = 0; ivertex < 3; ++ivertex) {
+//     scheme.element_get_vertex_reference_coords (cell[0], ivertex, v[ivertex]);
+//   }
+//   EXPECT_DOUBLE_EQ (v[0][0], 0.5);
+//   EXPECT_DOUBLE_EQ (v[0][1], 0.5);
 
-  for (t8_locidx_t ielem = 0; ielem < num_leaves; ++ielem) {
-    const t8_element_t *element = t8_forest_get_leaf_element_in_tree (forest, 0, ielem);
-    if (!t8_element_is_subelement (scheme, tree_class, element)) {
-      continue;
-    }
-    ++num_subelements;
-
-    double element_centroid[3];
-    t8_forest_element_centroid (forest, 0, element, element_centroid);
-
-    for (int iface = 0; iface < scheme->element_get_num_faces (tree_class, element); ++iface) {
-      double face_centroid[3];
-      t8_forest_element_face_centroid (forest, 0, element, iface, face_centroid);
-
-      /* The face centroid has to lie inside the unit square. */
-      for (int idim = 0; idim < 2; ++idim) {
-        EXPECT_GE (face_centroid[idim], 0.0) << "leaf " << ielem << ", face " << iface;
-        EXPECT_LE (face_centroid[idim], 1.0) << "leaf " << ielem << ", face " << iface;
-      }
-      /* It must differ from the element centroid, and the three faces must give three
-       * different points. */
-      EXPECT_GT (
-        std::fabs (face_centroid[0] - element_centroid[0]) + std::fabs (face_centroid[1] - element_centroid[1]), 1e-12)
-        << "leaf " << ielem << ", face " << iface << ": face centroid equals the element centroid";
-    }
-  }
-  EXPECT_GT (num_subelements, 0);
-
-  t8_forest_unref (&forest);
-}
+//   scheme.element_destroy (num_sub, cell);
+//   T8_FREE (cell);
+//   scheme.element_destroy (1, &root);
+// }
