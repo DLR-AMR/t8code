@@ -22,14 +22,17 @@
 
 /** \file t8_mesh_stepA_competences.cxx
  * This is step A of the t8code mesh handle tutorials.
- * After finishing the core t8code features, we will now go into an important feature which is native to the mesh handle.
+ * After finishing the core t8code features, we will now go into an important feature 
+ * which is native to the mesh handle.
  * These so called competences are a way to extend the functionality of the mesh handle and its elements.
  * 
- * The competences are organized in different types, depending the functionality. 
+ * The competences are organized in different types, depending on the functionality. 
  * Element data competences are used to store data in the mesh elements and work with it in different ways.
  * Cache competences are used to store data in the mesh elements to avoid recomputing the same data multiple times.
- * The keypoint about competences though is, that you can create your own competence packs with all the competences you want to use and then use this pack to create a mesh handle with all the functionality you need.
- * This can be further expanded by creating your own competences and adding them to your competence pack, making the mesh handle really flexible and individual for each use case. 
+ * The keypoint about competences though is, that you can create your own competence packs with all the competences 
+ * you want to use and then use this pack to create a mesh handle with all the functionality you need.
+ * This can be further expanded by creating your own competences and adding them to your competence pack, 
+ * making the mesh handle really flexible and individual for each use case. 
  * 
  * In this tutorial, we will go through the most important competences and caching, as well as create custom competences.
 */
@@ -86,7 +89,7 @@ struct element_data_volume
  * \param [in] mesh The mesh to compute the total volume of.
  * \param [in] comm The MPI communicator to use for the reduction of the total volume.
 */
-template <t8_mesh_handle::T8MeshType TMeshClass>
+template <T8MeshType TMeshClass>
 void
 demonstrate_element_data (TMeshClass& mesh, sc_MPI_Comm comm)
 {
