@@ -399,7 +399,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
 
   /** If this function is called, the mesh will be partitioned on committing.
    * The partitioning is done according to the SFC and each rank is assigned
-   * the same (maybe +1) number of elements.
+   * the same (+-1) number of elements (+- one family (up to 10 elements) in case of \a set_for_coarsening being true).
    * \note The partition is carried out only when \ref commit is called.
    * \note This setting can be combined with \ref set_adapt and \ref set_balance. The order in which
    * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
