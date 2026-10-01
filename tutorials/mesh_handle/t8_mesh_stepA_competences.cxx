@@ -192,10 +192,11 @@ main (int argc, char** argv)
     /* Initializing all the competence packs with the functionality/competences we want to use. */
 
     /** Combine the data competence pack with the predefined 'all_cache_element_competences' (see competence_pack.hxx) pack into one with union_competence_packs_type. */
-    using element_competences = union_competence_packs_type<all_cache_element_competences, data_element_competences>;
+    using element_competences
+      = union_competence_packs_type<all_cache_element_competences, data_element_competences_basic>;
 
     using mesh_competences
-      = data_mesh_competences<element_data_volume>; /**< Mesh competence to store element data on an element. */
+      = data_mesh_competences_basic<element_data_volume>; /**< Mesh competence to store element data on an element. */
 
     /* Defining our mesh type with the competence packs defined above. */
     using mesh_type = mesh<element_competences, mesh_competences>;
