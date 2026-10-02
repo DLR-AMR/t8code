@@ -427,8 +427,9 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_synchronize)
   /* Since the last rank gets no bcs we use mpisize - 1 and since every rank gets 2 additional bcs we also add 2. */
   size_t num_boundary_conditions = (mpisize - 1) * num_boundary_conditions_per_rank + 2;
   /* If we are serial we just apply 6 boundary conditions. */
-  if (mpisize == 1)
+  if (mpisize == 1) {
     num_boundary_conditions = num_boundary_conditions_per_rank;
+  }
   testing_boundary_conditions.reserve (num_boundary_conditions);
   for (size_t i_bc = 0; i_bc < num_boundary_conditions; ++i_bc) {
     testing_boundary_conditions.emplace_back ("testing_boundary_condition_" + std::to_string (i_bc));
