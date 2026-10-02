@@ -433,15 +433,11 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   {
     if constexpr (has_interpolate_data_competence ()) {
       // If we interpolate the data, the elements must stay at the same rank. We partition after interpolation.
-      if (!no_repartition && !this->set_partition_called ()) {
-        this->m_partition_for_coarsening = false;
-        t8_global_errorf (
-          "WARNING: The mesh handle is intended to interpolate data after adaptation. "
-          "Therefore, repartitioning is required to happen AFTER interpolation. The balance function is called with "
-          "no_repartition = false, so the flag is set to true and partitioning is performed automatically after "
-          "interpolation.\n");
+      if (!no_repartition) {
+        t8_global_errorf ("WARNING: Data interpolation needs the regions of the mesh to stay on their current "
+                          "processes. Therefore, balance is not allowed to repartition the mesh. The mesh will instead "
+                          "be repartitioned after the interpolation and the resulting mesh will be as expected.\n");
       }
-      no_repartition = true;
     }
     if (!m_uncommitted_forest.has_value ()) {
       t8_forest_t new_forest;
