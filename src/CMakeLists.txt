@@ -172,6 +172,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.cxx
     t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.cxx
     t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_overlap.cxx
     t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.cxx
     t8_forest/t8_forest_iterate.cxx
     t8_forest/t8_forest_balance.cxx
