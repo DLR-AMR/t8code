@@ -33,7 +33,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_scheme.hxx>
 
 void
-t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *ts,
+t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *element, const t8_scheme *scheme,
                                   t8_element_array_t *leaf_elements, const t8_locidx_t tree_lindex_of_first_leaf)
 {
   /* Assertions to check for necessary requirements */
@@ -59,11 +59,11 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
     /* There is only one leaf left, we check whether it is the same as element and if so call the callback function */
     const t8_element_t *leaf = t8_element_array_index_locidx (leaf_elements, 0);
 
-    SC_CHECK_ABORT (ts->element_get_level (eclass, element) <= ts->element_get_level (eclass, leaf),
+    SC_CHECK_ABORT (scheme->element_get_level (eclass, element) <= scheme->element_get_level (eclass, leaf),
                     "Search: element level greater than leaf level\n");
-    if (ts->element_get_level (eclass, element) == ts->element_get_level (eclass, leaf)) {
+    if (scheme->element_get_level (eclass, element) == scheme->element_get_level (eclass, leaf)) {
       T8_ASSERT (t8_forest_element_is_leaf (this->forest, leaf, ltreeid));
-      T8_ASSERT (ts->element_is_equal (eclass, element, leaf));
+      T8_ASSERT (scheme->element_is_equal (eclass, element, leaf));
       /* The element is the leaf */
       is_leaf = true;
     }
@@ -85,13 +85,13 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
   /* Enter the recursion (the element is definitely not a leaf at this point) */
   /* We compute all children of E, compute their leaf arrays and call search_recursion */
   /* allocate the memory to store the children */
-  const int num_children = ts->element_get_num_children (eclass, element);
+  const int num_children = scheme->element_get_num_children (eclass, element);
   t8_element_t **children = T8_ALLOC (t8_element_t *, num_children);
-  ts->element_new (eclass, num_children, children);
+  scheme->element_new (eclass, num_children, children);
   /* Memory for the indices that split the leaf_elements array */
   size_t *split_offsets = T8_ALLOC (size_t, num_children + 1);
   /* Compute the children */
-  ts->element_get_children (eclass, element, num_children, children);
+  scheme->element_get_children (eclass, element, num_children, children);
   /* Split the leaves array in portions belonging to the children of element */
   t8_forest_split_array (element, leaf_elements, split_offsets);
   for (int ichild = 0; ichild < num_children; ichild++) {
@@ -105,12 +105,12 @@ t8_search_base::search_recursion (const t8_locidx_t ltreeid, t8_element_t *eleme
       t8_element_array_init_view (&child_leaves, leaf_elements, indexa, indexb - indexa);
       /* Enter the recursion */
       update_queries (new_active_queries);
-      search_recursion (ltreeid, children[ichild], ts, &child_leaves, indexa + tree_lindex_of_first_leaf);
+      search_recursion (ltreeid, children[ichild], scheme, &child_leaves, indexa + tree_lindex_of_first_leaf);
     }
   }
 
   /* clean-up */
-  ts->element_destroy (eclass, num_children, children);
+  scheme->element_destroy (eclass, num_children, children);
   T8_FREE (children);
   T8_FREE (split_offsets);
 }

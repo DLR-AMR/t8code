@@ -37,7 +37,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_balance.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <vector>
 
@@ -66,26 +66,36 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
   EXPECT_EQ (mesh->get_num_ghosts (), 0);
   mesh->set_ghost ();
   mesh->commit ();
-  EXPECT_EQ (mesh->get_num_ghosts (), t8_forest_get_num_ghosts (mesh->get_forest ()));
-  if ((mesh->get_dimension () > 1) && (mesh->get_num_local_elements () > 1)) {
-    // Ensure that we actually have ghost elements in this test.
-    EXPECT_GT (mesh->get_num_ghosts (), 0);
-  }
-  else {
-    GTEST_SKIP () << "Skipping test as no ghost elements are created for 1D or single element meshes.";
-  }
 
-  // Check functions for ghost elements.
+  // Test does not make sense without ghosts. Also ensure that we have at least one element per process.
+  int mpisize;
+  int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  if (!(mpisize > 1) || !(mesh->get_dimension () > 1) || (mesh->get_num_global_elements () < mpisize)) {
+    GTEST_SKIP () << "Skipping test as no ghost elements are created.";
+  }
+  // Ensure that we actually test with ghost elements.
   const t8_locidx_t num_local_elements = mesh->get_num_local_elements ();
   const t8_locidx_t num_ghost_elements = mesh->get_num_ghosts ();
+  ASSERT_GT (num_ghost_elements, 0);
+  EXPECT_EQ (num_ghost_elements, t8_forest_get_num_ghosts (mesh->get_forest ()));
+
+  // Check functions for ghost elements.
+
   for (t8_locidx_t ighost = num_local_elements; ighost < num_local_elements + num_ghost_elements; ++ighost) {
     EXPECT_EQ (ighost, (*mesh)[ighost].get_element_handle_id ());
     EXPECT_TRUE ((*mesh)[ighost].is_ghost_element ());
+    EXPECT_TRUE ((*mesh)[ighost].is_equal ((*mesh)[ighost]));
     EXPECT_EQ (level, (*mesh)[ighost].get_level ());
     EXPECT_LE (0, (*mesh)[ighost].get_num_faces ());
     EXPECT_LE (0, (*mesh)[ighost].get_num_vertices ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
     EXPECT_LE (0, (*mesh)[ighost].get_diameter ());
+    t8_3D_vec ref = { 0.2, 0.3, 1 }, a;
+    (*mesh)[ighost].get_reference_coordinates (ref, 1, a);
+    for (const auto& coordinate : a) {
+      EXPECT_LE (0, coordinate);
+    }
     for (const auto& coordinate : (*mesh)[ighost].get_centroid ()) {
       EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
@@ -104,6 +114,7 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     }
     EXPECT_LT (0, (*mesh)[ighost].get_num_vertices_of_face (0));
     EXPECT_LE (0, (*mesh)[ighost].face_vertex_to_element_vertex (0, 0));
+    EXPECT_GE ((*mesh)[ighost].get_face_orientation (0), 0);
     // Check exemplary that caches work for ghost elements.
     EXPECT_TRUE ((*mesh)[ighost].volume_cache_filled ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
@@ -121,10 +132,6 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
 
   const t8_mesh_handle::mesh<> mesh (forest);
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
-  if ((mesh.get_dimension () > 1) && (mesh.get_num_local_elements () > 1)) {
-    // Ensure that we have ghost elements in this test.
-    EXPECT_GT (mesh.get_num_ghosts (), 0);
-  }
 
   // Iterate over the elements of the forest and of the mesh handle simultaneously and compare results.
   auto mesh_iterator = mesh.cbegin ();

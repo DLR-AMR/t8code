@@ -171,9 +171,14 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_pfc_helper.cxx
     t8_forest/t8_forest.cxx
     t8_forest/t8_forest_private.cxx
-    t8_forest/t8_forest_ghost.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.cxx
     t8_forest/t8_forest_iterate.cxx
     t8_forest/t8_forest_balance.cxx
+    t8_forest/t8_forest_subelement.cxx
     t8_forest/t8_forest_search/t8_forest_search.cxx
     t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.cxx
     t8_geometry/t8_geometry.cxx
@@ -211,6 +216,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
+    t8_schemes/t8_subelement/t8_subelement.cxx
     t8_vtk/t8_vtk.c
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
@@ -293,7 +299,6 @@ install( DIRECTORY t8_forest
     PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
-    PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
     PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry

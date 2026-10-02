@@ -33,10 +33,9 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_iterate.h>
-#include <t8_forest/t8_forest_ghost.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
@@ -45,9 +44,12 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #if T8_ENABLE_DEBUG
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.h>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #endif
 #include <t8_data/t8_element_array_iterator.hxx>
 
@@ -2060,28 +2062,52 @@ int
 t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf, int face,
                                  t8_eclass_t neighbor_tree_class, const t8_element_t *neighbor_leaf, int neighbor_face)
 {
+
   t8_scheme const *scheme = t8_forest_get_scheme (forest);
 
-  t8_element_t *target_virtual_face_neighbor = nullptr;  // the neighbor subface we are looking for
+#if T8_ENABLE_DEBUG
+  // Sanity check: Ensure neighbor leaf is one level coarser than leaf.
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const int leaf_level = scheme->element_get_level (tree_class, leaf);
+  const int neighbor_leaf_level = scheme->element_get_level (neighbor_tree_class, neighbor_leaf);
+  T8_ASSERTF (leaf_level == neighbor_leaf_level + 1,
+              "t8_forest_leaf_neighbor_subface requires leaf neighbor to be one level coarser!\n");
+#endif
+
+  // Determine the virtual face neighbor of leaf along face.
+  // Note 1: Since neighbor leaf is one level coarser, the virtual neighbor is a direct child of neighbor_leaf.
+  // Note 2: The virtual neighbor is required because the subface ID is defined to use the same ordering
+  //         as the leaf neighbor's children at the considered face.
+  t8_element_t *target_virtual_face_neighbor = nullptr;
   scheme->element_new (neighbor_tree_class, 1, &target_virtual_face_neighbor);
   t8_forest_element_face_neighbor (forest, ltreeid, leaf, target_virtual_face_neighbor, neighbor_tree_class, face,
                                    nullptr);
 
-  int const num_children = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
+  int const num_neighbor_face_children
+    = scheme->element_get_num_face_children (neighbor_tree_class, neighbor_leaf, neighbor_face);
 
-  std::array<t8_element_t *, T8_ECLASS_MAX_FACE_CHILDREN> children;  // assumes the forest is (locally) 2:1 balanced
-  scheme->element_new (neighbor_tree_class, children.size (), children.begin ());
+  // Determine the neighbor_leaf's children at neighbor_face (i.e., at the dual face of face).
+  // Note: The array neigh_children_at_face is statically allocated with the maximum size T8_ECLASS_MAX_FACE_CHILDREN,
+  //       but we will only fill it with the actually required number num_neighbor_face_children
+  //       (since this allocation is dynamic anyway).
+  std::array<t8_element_t *, T8_ECLASS_MAX_FACE_CHILDREN>
+    neigh_children_at_face;  // assumes the forest is (locally) 2:1 balanced
+  scheme->element_new (neighbor_tree_class, num_neighbor_face_children, neigh_children_at_face.begin ());
+  scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face,
+                                        neigh_children_at_face.begin (), num_neighbor_face_children, nullptr);
 
-  scheme->element_get_children_at_face (neighbor_tree_class, neighbor_leaf, neighbor_face, children.begin (),
-                                        num_children, nullptr);
-
-  auto iter = std::find_if (children.begin (), children.end (), [&] (t8_element *candidate) -> bool {
+  // Find out which entry of neigh_children_at_face is equal to target_virtual_face_neighbor.
+  auto search_end_it = neigh_children_at_face.begin () + num_neighbor_face_children;
+  auto iter = std::find_if (neigh_children_at_face.begin (), search_end_it, [&] (t8_element *candidate) -> bool {
     return scheme->element_compare (neighbor_tree_class, target_virtual_face_neighbor, candidate) == 0;
   });
-  T8_ASSERT (iter != children.end ());  // make sure target_virtual_face_neighbor was found
-  int neighbor_subface_index = iter - children.begin ();
+  T8_ASSERT (iter != search_end_it);  // make sure target_virtual_face_neighbor was found
 
-  scheme->element_destroy (neighbor_tree_class, 4, children.begin ());
+  // Extract the neighbor leaf's subface ID, i.e., the local child index (at the face).
+  int neighbor_subface_index = iter - neigh_children_at_face.begin ();
+
+  // Free memory and return subface index.
+  scheme->element_destroy (neighbor_tree_class, num_neighbor_face_children, neigh_children_at_face.begin ());
   scheme->element_destroy (neighbor_tree_class, 1, &target_virtual_face_neighbor);
   return neighbor_subface_index;
 }
@@ -3074,14 +3100,49 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 void
-t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version)
+t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition *ghost_definition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  /* We currently only support face ghosts */
+
+  if (do_ghost != 0) {
+    if (ghost_definition == nullptr) {
+      /* If forest has a ghost_definition, activate ghost, otherwise abort. */
+      if (forest->ghost_definition != nullptr) {
+        forest->do_ghost = 1;
+      }
+      else {
+        SC_ABORT ("Tried to enable ghost, but no ghost definition was provided\n");
+      }
+    }
+    else {
+      /* Unref the old ghost_definition (if it exists) and set the new one. */
+      if (forest->ghost_definition != nullptr) {
+        forest->ghost_definition->unref ();
+      }
+      forest->do_ghost = 1;
+      forest->ghost_definition = ghost_definition;
+    }
+  }
+  else {
+    /* Deactivate ghost for the forest. */
+    forest->do_ghost = 0;
+    /* The documentation states that the forest takes ownership of the definition. This also has to happen
+     * if do_ghost is 0. */
+    if (ghost_definition != nullptr) {
+      /* Unref the old ghost_definition (if it exists) and set the new one. */
+      if (forest->ghost_definition != nullptr) {
+        forest->ghost_definition->unref ();
+      }
+      forest->ghost_definition = ghost_definition;
+    }
+  }
+}
+
+void
+t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
+{
   SC_CHECK_ABORT (do_ghost == 0 || ghost_type == T8_GHOST_FACES,
                   "Ghost neighbors other than face-neighbors are not supported.\n");
-  SC_CHECK_ABORT (1 <= ghost_version && ghost_version <= 3, "Invalid choice for ghost version. Choose 1, 2, or 3.\n");
-
   if (ghost_type == T8_GHOST_NONE) {
     /* none type disables ghost */
     forest->do_ghost = 0;
@@ -3090,16 +3151,8 @@ t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    forest->ghost_type = ghost_type;
-    forest->ghost_algorithm = ghost_version;
+    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_definition_face (3));
   }
-}
-
-void
-t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type)
-{
-  /* Use ghost version 3, top-down search and for unbalanced forests. */
-  t8_forest_set_ghost_ext (forest, do_ghost, ghost_type, 3);
 }
 
 void
@@ -3313,6 +3366,11 @@ t8_forest_commit (t8_forest_t forest)
     forest->scheme = forest->set_from->scheme;
     forest->global_num_trees = forest->set_from->global_num_trees;
 
+    if (forest->ghost_definition == nullptr && forest->set_from->ghost_definition != nullptr) {
+      forest->ghost_definition = forest->set_from->ghost_definition;
+      forest->ghost_definition->ref ();
+    }
+
     /* Compute the maximum allowed refinement level */
     t8_forest_compute_maxlevel (forest);
     if (forest->from_method == T8_FOREST_FROM_COPY) {
@@ -3466,25 +3524,16 @@ t8_forest_commit (t8_forest_t forest)
     sc_MPI_Barrier (forest->mpicomm);
     /* Construct a ghost layer, if desired */
     if (forest->do_ghost) {
-      /* TODO: ghost type */
-      switch (forest->ghost_algorithm) {
-      case 1:
-        t8_forest_ghost_create_balanced_only (forest);
-        break;
-      case 2:
-        t8_forest_ghost_create (forest);
-        break;
-      case 3:
-        t8_forest_ghost_create_topdown (forest);
-        break;
-      default:
-        SC_ABORT ("Invalid choice of ghost algorithm");
-      }
+      t8_forest_ghost_create (forest);
     }
     forest->do_ghost = 0;
   }
 #if T8_ENABLE_DEBUG
-  t8_forest_partition_test_boundary_element (forest);
+  if (!(t8_scheme_has_subelement_scheme (forest->scheme))) {
+    // This does not work for subelements as the linear id cannot be defined.
+    // It is just a test so it is fine to skip this for subelements.
+    t8_forest_partition_test_boundary_element (forest);
+  }
 #endif
 }
 
@@ -4350,6 +4399,11 @@ t8_forest_reset (t8_forest_t *pforest)
   /* Destroy the ghost layer if it exists */
   if (forest->ghosts != nullptr) {
     t8_forest_ghost_unref (&forest->ghosts);
+  }
+  /* Unref the ghost_definition class if it exist */
+  if (forest->ghost_definition != nullptr) {
+    forest->ghost_definition->unref ();
+    forest->ghost_definition = nullptr;
   }
   /* we have taken ownership on calling t8_forest_set_* */
   if (forest->scheme != nullptr) {

@@ -36,7 +36,7 @@
 #include <memory>
 #include <span>
 
-/* The data that we want to store for each element.
+/** The data that we want to store for each element.
  * In this example we want to store the element's level and volume. */
 struct data_per_element_type
 {
@@ -139,8 +139,8 @@ exchange_ghost_data_mesh (TMeshClass &mesh)
  *                  and  T8_VTK_VECTOR - 3 doubles per element
  * \tparam TMeshClass     The mesh handle class.
  * \param [in] mesh       The mesh handle.
- * \param [in] fileprefix The prefix of the files where the vtk will be stored.
- *             The master file is then fileprefix.pvtu and the process with rank r writes in the file fileprefix_r.vtu
+ * \param [in] prefix The prefix of the files where the vtk will be stored.
+ *             The master file is then prefix.pvtu and the process with rank r writes in the file prefix_r.vtu
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
 static void
@@ -150,9 +150,9 @@ output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
   /* We need to allocate a new array to store the volumes on their own.
    * This array has one entry per local element. */
   double *element_volumes = T8_ALLOC (double, num_elements);
-  /* The number of user defined data fields to write. */
+  /* The number of user-defined data fields to write. */
   int num_data = 1;
-  /* For each user defined data field we need one t8_vtk_data_field_t variable */
+  /* For each user-defined data field we need one t8_vtk_data_field_t variable */
   t8_vtk_data_field_t vtk_data;
   /* Set the type of this variable. Since we have one value per element, we pick T8_VTK_SCALAR. */
   vtk_data.type = T8_VTK_SCALAR;
@@ -163,7 +163,7 @@ output_data_to_vtu (const TMeshClass &mesh, const char *prefix)
   for (t8_locidx_t ielem = 0; ielem < num_elements; ++ielem) {
     element_volumes[ielem] = mesh[ielem].get_element_data ().volume;
   }
-  /* To write user defined data, we need the extended output function write_mesh_to_vtk_ext.
+  /* To write user-defined data, we need the extended output function write_mesh_to_vtk_ext.
    * Despite writing user data, it also offers more control over which properties to write. */
   t8_mesh_handle::write_mesh_to_vtk_ext (mesh, prefix, num_data, &vtk_data);
   T8_FREE (element_volumes);
@@ -204,8 +204,8 @@ main (int argc, char **argv)
   { /* We put the mesh in its own scope so that it is automatically destroyed at the end of the scope.
      * This is only necessary because sc_finalize checks if there are leftover references.
      * This unique pointer would have been destroyed automatically at the end of the programme. */
-    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences,
-                                            t8_mesh_handle::data_mesh_competences<data_per_element_type>>;
+    using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::data_element_competences_basic,
+                                            t8_mesh_handle::data_mesh_competences_basic<data_per_element_type>>;
     auto mesh = build_mesh<mesh_class> (comm, level);
 
     t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_mesh);
