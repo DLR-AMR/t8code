@@ -376,6 +376,7 @@ struct t8_cmesh_boundary_condition_handler
   /**
    * Synchronizes the contents of the boundary condition handler across all processes.
    * \param [in]  comm      The communicator to use.
+   * \note This is an MPI collective function and must be called by all processes of \a comm.
    */
   void
   synchronize (sc_MPI_Comm comm);
@@ -384,6 +385,7 @@ struct t8_cmesh_boundary_condition_handler
    * Broadcasts the boundary conditions from \a main_rank to all other ranks.
    * \param [in]  main_rank The main rank from which to broadcast.
    * \param [in]  comm      The communicator to use.
+   * \note This is an MPI collective function and must be called by all processes of \a comm.
    */
   void
   bcast (int main_rank, sc_MPI_Comm comm);
