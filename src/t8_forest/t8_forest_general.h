@@ -152,6 +152,15 @@ t8_forest_is_initialized (t8_forest_t forest);
 int
 t8_forest_is_committed (t8_forest_t forest);
 
+/** Check whether a committed forest has (potentially) incomplete trees.
+ * A tree is incomplete if an element has been removed from it.
+ * \param [in] forest           A committed forest.
+ * \return                      True if \a forest has (potentially) incomplete trees, false otherwise.
+ *                              The result is the same on all processes.
+ */
+int
+t8_forest_has_incomplete_trees (const t8_forest_t forest);
+
 /** Check whether the forest has local overlapping elements.
  * \param [in] forest   The forest to consider.
  * \return              True if \a forest has no elements which are inside each other.
@@ -230,6 +239,15 @@ t8_forest_set_level (t8_forest_t forest, int level);
  */
 void
 t8_forest_set_copy (t8_forest_t forest, const t8_forest_t from);
+
+/** Get the forest from which a not yet committed forest is derived in \ref t8_forest_commit.
+ * \param [in] forest  An initialized, not committed forest.
+ * \return             The source forest passed to \ref t8_forest_set_copy, \ref t8_forest_set_adapt,
+ *                     \ref t8_forest_set_partition, or \ref t8_forest_set_balance.
+ *                     NULL if none of these functions has been called with a source forest yet.
+ */
+t8_forest_t
+t8_forest_get_set_from (const t8_forest_t forest);
 
 /** Set a source forest with an adapt function to be adapted on committing.
  * By default, the forest takes ownership of the source \b set_from such that it
