@@ -32,7 +32,9 @@
 #include <t8.h>
 
 #include <array>
+#include <concepts>
 #include <cstddef>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <initializer_list>
@@ -88,6 +90,25 @@ class t8_static_vector {
     m_size = size;
     for (size_t i = 0; i < m_size; ++i) {
       m_data[i] = value;
+    }
+  }
+
+  /**
+   * Creates a static vector from a range.
+   *
+   * \tparam TRange  The type of the input range.
+   * \param [in] range  The elements to store in the vector.
+   *
+   * \note The number of elements in the range must not exceed the vector capacity.
+   */
+  template <std::ranges::input_range TRange>
+    requires std::convertible_to<std::ranges::range_reference_t<TRange>, TType>
+  constexpr t8_static_vector (TRange&& range)
+  {
+    T8_ASSERT (std::ranges::size (range) <= TCapacity);
+
+    for (const auto& value : range) {
+      m_data[m_size++] = value;
     }
   }
 
@@ -293,6 +314,31 @@ class t8_static_vector {
     m_size = 0;
 
     for (const TType& value : values) {
+      m_data[m_size++] = value;
+    }
+
+    return *this;
+  }
+
+  /**
+   * Assigns the contents of a range to the vector.
+   *
+   * \tparam TRange  The type of the input range.
+   * \param [in] range  The elements to copy into the vector.
+   * \return  A reference to this vector.
+   *
+   * \note The number of elements in the range must not exceed the vector capacity.
+   */
+  template <std::ranges::input_range TRange>
+    requires std::convertible_to<std::ranges::range_reference_t<TRange>, TType>
+  constexpr t8_static_vector&
+  operator= (TRange&& range)
+  {
+    T8_ASSERT (std::ranges::size (range) <= TCapacity);
+
+    m_size = 0;
+
+    for (const auto& value : range) {
       m_data[m_size++] = value;
     }
 
