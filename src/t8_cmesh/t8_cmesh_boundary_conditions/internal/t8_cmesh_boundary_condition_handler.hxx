@@ -406,7 +406,7 @@ struct t8_cmesh_boundary_condition_handler
    * \param [in]  overwrite     Overwrites the data in this handler if true. Merges the data with the existing data on false.
    */
   void
-  unpack_map (std::vector<char> &serial_data, bool overwrite);
+  unpack_map (const std::vector<char> &serial_data, const bool overwrite);
 
   /**************************************** MEMBERS ****************************************/
 

@@ -111,7 +111,7 @@ t8_cmesh_boundary_condition_handler::serialize_map () const
 }
 
 void
-t8_cmesh_boundary_condition_handler::unpack_map (std::vector<char> &serial_data, bool overwrite)
+t8_cmesh_boundary_condition_handler::unpack_map (const std::vector<char> &serial_data, const bool overwrite)
 {
   if (overwrite) {
     m_boundary_conditions.clear ();
