@@ -294,8 +294,8 @@ install( DIRECTORY t8_forest
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
-    PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
     PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
+    PATTERN "t8_forest/t8_forest_types.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
