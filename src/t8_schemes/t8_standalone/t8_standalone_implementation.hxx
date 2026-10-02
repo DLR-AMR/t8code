@@ -637,7 +637,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
    * \note level 0 elements do not form a family.
    */
   static constexpr int
-  elements_are_family (t8_element_t *const *fam) noexcept
+  elements_are_family (const t8_element_t *const *fam) noexcept
   {
     if (element_get_child_id (fam[0]) != 0) {
       return 0;

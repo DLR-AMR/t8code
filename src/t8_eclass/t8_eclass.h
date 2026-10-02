@@ -82,6 +82,8 @@ typedef enum t8_eclass {
 #define T8_ECLASS_MAX_DIM 3
 /** The maximal number of children any element may have.*/
 #define T8_ECLASS_MAX_CHILDREN 10
+/** The maximal number of children a face may have.*/
+#define T8_ECLASS_MAX_FACE_CHILDREN 4
 
 /* clang-format off */
 

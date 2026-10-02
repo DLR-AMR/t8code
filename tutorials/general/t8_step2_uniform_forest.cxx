@@ -33,7 +33,7 @@
  * forest how elements of each shape (t8_eclass_t) are refined, what their neighbor
  * are etc.
  * The default scheme in t8_schemes/t8_default/t8_default.hxx provides an implementation for
- * all element shapes that t8code supports (with pyramids currently under construction).
+ * all element shapes that t8code supports.
  *
  * How you can experiment here:
  *  - Use Paraview to visualize the output files.
@@ -63,7 +63,8 @@ t8_step2_build_prismcube_coarse_mesh (sc_MPI_Comm comm)
   t8_cmesh_t cmesh;
 
   /* Build a coarse mesh of 2 prism trees that form a cube. */
-  cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_PRISM, comm, 0, 0, 0);
   t8_global_productionf (" [step2] Constructed coarse mesh with 2 prism trees.\n");
 
   return cmesh;
@@ -137,7 +138,7 @@ main (int argc, char **argv)
   /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_DEBUG);
+  t8_init (SC_LP_PRODUCTION);
 
   /* Print a message on the root process. */
   t8_global_productionf (" [step2] \n");

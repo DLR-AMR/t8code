@@ -97,7 +97,8 @@ t8_time_cmesh_partition_brick (int x, int y, int z, sc_MPI_Comm comm, int no_vtk
   t8_cprofile_t *profile;
 
   /* Create a disjoint brick cmesh with x time y trees on each process */
-  cmesh = t8_cmesh_new_disjoint_bricks (x, y, z, 1, 1, 1, comm);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_disjoint_bricks (cmesh, x, y, z, 1, 1, 1, comm);
   /* Allocate profiling struct */
   profile = T8_ALLOC_ZERO (t8_cprofile_t, 1);
 

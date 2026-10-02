@@ -85,7 +85,8 @@ struct DISABLED_forest_ghost_exchange_holes: public testing::TestWithParam<int>
       const int scheme_id = GetParam ();
       scheme = create_from_scheme_id (scheme_id);
       /* Construct a cmesh */
-      cmesh = t8_cmesh_new_hypercube (T8_ECLASS_QUAD, comm, 0, 0, 0);
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube (&cmesh, T8_ECLASS_QUAD, comm, 0, 0, 0);
     }
     else {
       T8_ASSERT (rank >= 2);

@@ -21,7 +21,7 @@
 */
 
 /** \file t8_geometry_lagrange.cxx
- * Implements functions declared in \ref t8_geometry_lagrange.hxx 
+ * Implements functions declared in \ref t8_geometry_lagrange.hxx
  *  or the C interface \ref t8_geometry_lagrange.h.
  */
 
@@ -323,8 +323,6 @@ t8_lagrange_element::t8_lagrange_element (t8_eclass_t eclass, uint32_t degree, s
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 }
 
-const uint32_t t8_lagrange_element::lagrange_nodes[T8_ECLASS_COUNT][2];
-
 t8_eclass_t
 t8_lagrange_element::get_type () const
 {
@@ -424,10 +422,10 @@ std::vector<std::vector<double>>
 t8_lagrange_element::get_node_coords (std::vector<uint32_t> &nodes) const
 {
   const double *v = t8_cmesh_get_tree_vertices (cmesh, 0);
-  size_t n_node = nodes.size ();
+  size_t const n_node = nodes.size ();
   std::vector<std::vector<double>> node_coords (n_node);
   for (size_t i = 0; i < n_node; ++i) {
-    uint32_t i_node = nodes[i];
+    uint32_t const i_node = nodes[i];
     node_coords[i] = std::vector<double> (v + 3 * i_node, v + 3 * i_node + 3);
   }
   return node_coords;
@@ -479,8 +477,8 @@ t8_lagrange_element::map_on_face (t8_eclass map_onto, const int face_id,
 
   /* Actual mapping, case by case */
   std::array<double, T8_ECLASS_MAX_DIM> mapped_coord;
-  double xi = coord[0];
-  double eta = coord[1];
+  double const xi = coord[0];
+  double const eta = coord[1];
   switch (eclass) {
   case T8_ECLASS_LINE:
     if (map_onto == T8_ECLASS_TRIANGLE) {
@@ -560,7 +558,7 @@ t8_geometry_lagrange_destroy (t8_geometry_c **geom)
   T8_ASSERT ((*geom)->t8_geom_get_type () == T8_GEOMETRY_TYPE_LAGRANGE);
 
   delete *geom;
-  *geom = NULL;
+  *geom = nullptr;
 }
 
 T8_EXTERN_C_END ();
