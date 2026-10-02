@@ -34,7 +34,7 @@
 #ifdef __cplusplus
 #include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.hxx>
 #else /* !__cplusplus */
-#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions_c_intrerface.h>
+#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions_c_interface.h>
 #endif /* !__cplusplus */
 
 #endif /* !T8_FOREST_H */
