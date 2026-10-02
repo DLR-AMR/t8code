@@ -34,7 +34,6 @@
 #include "competences/element_data_competences.hxx"
 #include "concepts.hxx"
 #include <t8_forest/t8_forest_balance.h>
-#include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
@@ -42,6 +41,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <span>
 #include <type_traits>
 
@@ -409,12 +409,6 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
   void
   set_partition (bool set_for_coarsening = false)
   {
-    // If the mesh has an interpolate callback, we partition the mesh after the interpolation step
-    // (and the first committing of the forest), such that we store the partition information for later.
-    if constexpr (has_interpolate_data_competence ()) {
-      this->m_partition_for_coarsening = set_for_coarsening;
-      return;
-    }
     if (!m_uncommitted_forest.has_value ()) {
       t8_forest_t new_forest;
       t8_forest_init (&new_forest);
@@ -494,11 +488,40 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     if (m_uncommitted_forest.value ()->set_from == NULL) {
       t8_forest_set_copy (m_uncommitted_forest.value (), m_forest);
     }
+    /* With the interpolation competence, set_partition has to be called after the interpolation so that the same regions
+     * remain process local. Since the interpolation is not part of the forest commit routine, we have to take the partition and
+     * ghost flags out of the current forest, commit, then interpolate, then reapply the flags and then commit again. */
+
+    /** True if the partitioning has to be carried out after the interpolation, since set_partition or set_balance with
+     * repartitioning was called for this commit. False otherwise, in which case a requested partitioning is part of the
+     * forest commit (mesh without interpolation competence). */
+    bool partition_postponed = false;
+    /** The set_for_coarsening argument of the postponed partitioning: the argument of set_partition if it was called,
+     * false otherwise, as the balancing repartitions with set_for_coarsening false.
+     * Only meaningful if partition_postponed is true. */
+    int partition_for_coarsening = false;
+    /** True if the ghost layer has to be created for the forest of the postponed partitioning, false otherwise. */
+    bool ghost_postponed = false;
+    if constexpr (has_interpolate_data_competence ()) {
+      const t8_forest_t forest = m_uncommitted_forest.value ();
+      /** The no_repartition argument of set_balance if it was called, false otherwise. */
+      int balance_no_repartition = false;
+      // When we have to interpolate the values, balance cannot repartition the forest.
+      // A requested repartitioning is carried out after the interpolation instead.
+      if (t8_forest_get_balance (forest, &balance_no_repartition)) {
+        t8_forest_set_balance (forest, nullptr, true);
+        partition_postponed = !balance_no_repartition;
+      }
+      if (t8_forest_get_partition (forest, &partition_for_coarsening)) {
+        t8_forest_unset_partition (forest);
+        partition_postponed = true;
+      }
+      if (partition_postponed && t8_forest_ghost_is_set (forest)) {
+        t8_forest_set_ghost_ext (forest, 0, nullptr);
+        ghost_postponed = true;
+      }
+    }
     t8_forest_ref (m_forest);
-    /* Committing consumes the ghost request of the forest. We remember it here, since we may have to
-     * request the ghost layer again for the additional forest that the partitioning below creates. */
-    t8_forest_ghost_definition* const ghost_definition
-      = m_uncommitted_forest.value ()->do_ghost ? m_uncommitted_forest.value ()->ghost_definition : nullptr;
     t8_forest_commit (m_uncommitted_forest.value ());
     t8_global_productionf ("MESH HANDLE commit: %d local elements, %ld global elements, %d ghosts.\n",
                            t8_forest_get_local_num_leaf_elements (m_uncommitted_forest.value ()),
@@ -526,34 +549,6 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
             detail::interpolate_registry::unregister_context (m_forest);
             // Override the element data of the current mesh with the interpolated data from the "new mesh".
             this->m_element_data = new_mesh.take_element_data ();
-            // Now we update the forest of the current mesh with the new forest and partition it if required.
-            t8_forest_unref (&m_forest);
-            if (this->set_partition_called ()) {
-              t8_forest_init (&m_forest);
-              t8_forest_set_partition (m_forest, m_uncommitted_forest.value (),
-                                       this->m_partition_for_coarsening.value ());
-              if (ghost_definition != nullptr) {
-                /* The forest takes ownership of the ghost definition, hence the additional reference. */
-                ghost_definition->ref ();
-                t8_forest_set_ghost_ext (m_forest, 1, ghost_definition);
-              }
-              t8_forest_commit (m_forest);
-              t8_global_productionf ("MESH HANDLE partition done.\n");
-
-              /* Now we repartition also the data: The interpolated data follows m_uncommitted_forest.
-               * We align it now with the partitioned m_forest. */
-              this->repartition_element_data (m_uncommitted_forest.value (), m_forest);
-              t8_global_productionf ("MESH HANDLE repartitioned element data.\n");
-              this->m_partition_for_coarsening.reset ();
-            }
-            else {
-              // Update underlying forest of the mesh for the case where we do not repartition.
-              m_forest = m_uncommitted_forest.value ();
-            }
-            // Cleanup and update the elements of the mesh.
-            m_uncommitted_forest.reset ();
-            update_elements ();
-            return;
           }
           else {
             SC_ABORTF ("ERROR: No interpolation callback set. Please provide a callback or do not use "
@@ -570,6 +565,28 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     // Update underlying forest of the mesh.
     m_forest = m_uncommitted_forest.value ();
     m_uncommitted_forest.reset ();
+
+    // Lastly, we perform the postponed partition and ghost steps
+    if constexpr (has_interpolate_data_competence ()) {
+      if (partition_postponed) {
+        // The forest before partitioning. We keep it alive, since the element data still follows it and is
+        // repartitioned below.
+        t8_forest_t unpartitioned_forest = m_forest;
+        t8_forest_ref (unpartitioned_forest);
+        t8_forest_init (&m_forest);
+        t8_forest_set_partition (m_forest, unpartitioned_forest, partition_for_coarsening);
+        if (ghost_postponed) {
+          // The requested ghost definition, which is still owned by the unpartitioned forest.
+          t8_forest_ghost_definition* const ghost_definition = t8_forest_get_ghost_definition (unpartitioned_forest);
+          // The forest takes ownership of the ghost definition, hence the additional reference.
+          ghost_definition->ref ();
+          t8_forest_set_ghost_ext (m_forest, 1, ghost_definition);
+        }
+        t8_forest_commit (m_forest);
+        this->repartition_element_data (unpartitioned_forest, m_forest);
+        t8_forest_unref (&unpartitioned_forest);
+      }
+    }
     update_elements ();
   }
 
