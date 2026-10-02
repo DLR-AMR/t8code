@@ -258,8 +258,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
               f.type = (neigh_rank != LOCAL_RANK) ? face_type::MPI_CONFORMAL : face_type::CONFORMAL;
               f.sides.push_back ({ handle_id, iface, LOCAL_RANK });
               f.sides.push_back ({ neigh_id, dual_faces[0], neigh_rank });
-              f.orientation = t8_forest_leaf_face_orientation (
-                forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
+              f.orientation = elem.get_face_orientation (iface);
 
               const int face_idx = static_cast<int> (m_faces.size ());
               m_faces.push_back (std::move (f));
@@ -289,8 +288,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
             }
 
             // Add large mortar face (ghost) to \a m_faces and update \a m_element_face_vector.
-            const int orientation = t8_forest_leaf_face_orientation (
-              forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
+            const int orientation = elem.get_face_orientation (iface);
             face f { face_type::MPI_MORTAR,
                      { { neigh_id, dual_faces[0], neigh_rank },  // Large mortar first.
                        { handle_id, iface, LOCAL_RANK } },
@@ -318,8 +316,7 @@ struct face_vector_mesh_competence: public t8_crtp_operator<TUnderlying, face_ve
 
           face f;
           f.type = any_remote ? face_type::MPI_MORTAR : face_type::MORTAR;
-          f.orientation = t8_forest_leaf_face_orientation (
-            forest, elem.get_local_tree_id (), t8_forest_get_scheme (forest), elem.get_forest_element (), iface);
+          f.orientation = elem.get_face_orientation (iface);
           f.sides.push_back ({ handle_id, iface, LOCAL_RANK });
           // Add small mortars to the sides vector and record face index for the small mortars in m_element_face_vector.
           for (int ineigh = 0; ineigh < num_neighs; ++ineigh) {
