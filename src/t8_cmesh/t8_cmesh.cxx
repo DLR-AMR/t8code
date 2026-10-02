@@ -769,7 +769,7 @@ t8_cmesh_bcast (const t8_cmesh_t cmesh_in, const int root, sc_MPI_Comm comm)
       t8_cmesh_set_profiling (cmesh_in, 1);
     }
     if (meta_info.cmesh.boundary_condition_handler != nullptr) {
-      t8_cmesh_add_boundary_condition_handler (cmesh_out);
+      detail::t8_cmesh_add_boundary_condition_handler (cmesh_out);
     }
     for (iclass = 0; iclass < T8_ECLASS_COUNT; iclass++) {
       cmesh_out->num_trees_per_eclass[iclass] = meta_info.num_trees_per_eclass[iclass];

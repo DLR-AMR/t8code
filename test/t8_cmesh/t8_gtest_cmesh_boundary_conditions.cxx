@@ -536,7 +536,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_distributed_cm
 
   /* Retrieve boundary conditions and compute how many there should be. */
   auto registered_boundary_conditions
-    = t8_cmesh_get_boundary_condition_handler (cmesh)->get_registered_boundary_conditions ();
+    = detail::t8_cmesh_get_boundary_condition_handler (cmesh)->get_registered_boundary_conditions ();
   std::ranges::sort (registered_boundary_conditions);
   const t8_gloidx_t num_trees_in_boundary_conditions
     = mpisize == 1 ? num_trees_per_rank : (mpisize - 1) * num_trees_per_rank;
