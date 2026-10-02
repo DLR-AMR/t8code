@@ -28,7 +28,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #pragma once
 
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8.h>
 #include <t8_types/t8_operators.hxx>
 #include <t8_types/t8_vec.hxx>
