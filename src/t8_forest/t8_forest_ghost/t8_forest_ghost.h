@@ -28,8 +28,10 @@
 #define T8_FOREST_GHOST_H
 
 #include <t8.h>
-#include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_general.h>
+
+/** Opaque pointer to the ghost elements of a forest. */
+typedef struct t8_forest_ghost *t8_forest_ghost_t;
 
 T8_EXTERN_C_BEGIN ();
 
