@@ -25,6 +25,7 @@
  */
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.hxx>
+#include <t8_forest/t8_forest_types.h>
 
 void
 t8_forest_ghost_definition_w_search::fill_remote_ghosts (t8_forest_t forest)
@@ -38,4 +39,10 @@ t8_forest_ghost_definition_w_search::fill_remote_ghosts (t8_forest_t forest)
 
   /* Reset the internal data from before the search */
   forest->t8code_data = store_t8code_data;
+}
+
+t8_forest_ghost_search_data *
+t8_forest_ghost_get_search_data (const t8_forest_t forest)
+{
+  return (t8_forest_ghost_search_data *) forest->t8code_data;
 }

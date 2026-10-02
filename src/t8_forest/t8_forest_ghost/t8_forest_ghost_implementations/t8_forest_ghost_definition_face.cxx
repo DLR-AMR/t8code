@@ -28,6 +28,7 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.hxx>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_forest/t8_forest_private.h>
+#include <t8_forest/t8_forest_types.h>
 
 /** Struct which holds data for the search of t8_forest_ghost_definition_face */
 struct t8_forest_ghost_definition_face_data: t8_forest_ghost_search_data
