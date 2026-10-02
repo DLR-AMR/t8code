@@ -323,6 +323,24 @@ t8_forest_get_user_function (const t8_forest_t forest);
 void
 t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set_for_coarsening);
 
+/** Query whether a forest is set to be partitioned during commit, see \ref t8_forest_set_partition.
+ * \param [in]      forest              An initialized, not committed forest.
+ * \param [out]     set_for_coarsening  The \a set_for_coarsening argument of \ref t8_forest_set_partition if the
+ *                                      forest is set to be partitioned, false otherwise.
+ *                                      May be NULL, if the argument is not needed.
+ * \return                              True if the forest is set to be partitioned, false otherwise.
+ */
+int
+t8_forest_get_partition (const t8_forest_t forest, int *set_for_coarsening);
+
+/** Undo \ref t8_forest_set_partition, such that the forest is not partitioned during commit.
+ * If the forest is set to be neither adapted nor balanced, it is copied from its source forest during commit.
+ * Nothing happens if the forest is not set to be partitioned.
+ * \param [in, out] forest  An initialized, not committed forest.
+ */
+void
+t8_forest_unset_partition (t8_forest_t forest);
+
 /** Set a user-defined weight function to guide the partitioning.
  * \param [in, out] forest  The forest.
  * \param [in]      weight_callback A callback function defining element weights for the partitioning.
@@ -359,6 +377,16 @@ t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *we
 void
 t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_repartition);
 
+/** Query whether a forest is set to be balanced during commit, see \ref t8_forest_set_balance.
+ * \param [in]      forest          An initialized, not committed forest.
+ * \param [out]     no_repartition  The \a no_repartition argument of \ref t8_forest_set_balance if the forest is set
+ *                                  to be balanced, false otherwise.
+ *                                  May be NULL, if the argument is not needed.
+ * \return                          True if the forest is set to be balanced, false otherwise.
+ */
+int
+t8_forest_get_balance (const t8_forest_t forest, int *no_repartition);
+
 /** This type controls, which neighbors count as ghost elements.
  * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
 typedef enum {
@@ -390,6 +418,22 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
 */
 void
 t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition);
+
+/** Query whether a ghost layer is set to be created during commit,
+ * see \ref t8_forest_set_ghost and \ref t8_forest_set_ghost_ext.
+ * \param [in]      forest  An initialized, not committed forest.
+ * \return                  True if a ghost layer is set to be created, false otherwise.
+ */
+int
+t8_forest_ghost_is_set (const t8_forest_t forest);
+
+/** Get the ghost definition of a forest, see \ref t8_forest_set_ghost_ext.
+ * The forest keeps the ownership of the ghost definition.
+ * \param [in]      forest  An initialized or committed forest.
+ * \return                  The ghost definition of the forest. NULL if the forest has no ghost definition.
+ */
+t8_forest_ghost_definition_c *
+t8_forest_get_ghost_definition (const t8_forest_t forest);
 
 /**
  *  Use assertions and document that the forest_set (..., from) and
