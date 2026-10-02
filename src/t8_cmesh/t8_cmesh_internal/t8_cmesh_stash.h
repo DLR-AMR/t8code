@@ -250,4 +250,48 @@ t8_stash_is_equal (t8_stash_t stash_a, t8_stash_t stash_b);
 
 T8_EXTERN_C_END ();
 
+#ifdef __cplusplus
+
+#include <vector>
+#include <span>
+
+/** Reads the eclasses from a stash and returns them along with their global tree id.
+ * \param [in] stash    A stash.
+ * \return              Vector of pairs with [global tree id, eclass].
+ */
+std::vector<std::pair<t8_gloidx_t, t8_eclass_t>>
+t8_stash_extract_eclasses (const t8_stash_t &stash);
+
+/** Extracts all attributes belonging to an attribute key and package id.
+ *  The attributes are casted into a vector of views of the template parameter \p TType. \p TType is also used
+ *  to determine the size of the elements. If a tree is not listed, no attributes with this package id and key were assigned.
+ * \param [in] stash    A stash.
+ * \return              A vector of pairs with the global tree id and a list of the attributes.
+ */
+template <typename TType>
+std::vector<std::pair<t8_gloidx_t, std::span<TType>>>
+t8_stash_extract_attribute_list (const t8_stash_t &stash, const int package_id, const int key)
+{
+  /* Reserve memory */
+  const t8_gloidx_t ntrees = stash->classes.elem_count;
+  std::vector<std::pair<t8_gloidx_t, std::span<TType>>> attributes;
+  attributes.reserve (ntrees);
+
+  /* Iterate over all attributes and filter by package id and attribute key */
+  for (size_t iattribute = 0; iattribute < stash->attributes.elem_count; iattribute++) {
+    const t8_stash_attribute_struct_t *entry
+      = (const t8_stash_attribute_struct_t *) t8_sc_array_index_locidx (&stash->attributes, iattribute);
+    if (entry->key == key && entry->package_id == package_id) {
+      /* Make sure that the element size matches and construct view. */
+      T8_ASSERT (entry->attr_size % sizeof (TType) == 0);
+      const size_t num_elements = entry->attr_size / sizeof (TType);
+      attributes.emplace_back (entry->id, std::span<TType> (static_cast<TType *> (entry->attr_data), num_elements));
+    }
+  }
+  attributes.shrink_to_fit ();
+  return attributes;
+}
+
+#endif /* __cplusplus */
+
 #endif /* !T8_CMESH_STASH_H */
