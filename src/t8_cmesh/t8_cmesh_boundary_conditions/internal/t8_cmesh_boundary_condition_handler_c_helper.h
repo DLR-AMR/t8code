@@ -52,7 +52,7 @@ typedef struct t8_cmesh_boundary_condition_handler t8_cmesh_boundary_condition_h
 
 #endif /* !__cplusplus */
 
-#ifdef __cplusplus
+#if defined(__cplusplus) || defined(T8_DOXYGEN)
 
 namespace detail
 {
@@ -76,4 +76,4 @@ t8_cmesh_add_boundary_condition_handler (t8_cmesh_t cmesh);
 
 }  // namespace detail
 
-#endif /* __cplusplus */
+#endif /* __cplusplus || T8_DOXYGEN */
