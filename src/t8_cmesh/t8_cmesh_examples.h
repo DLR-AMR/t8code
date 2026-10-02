@@ -233,7 +233,7 @@ t8_cmesh_new_hypercube_hybrid_ext (t8_cmesh_t cmesh, sc_MPI_Comm comm, int perio
  * \param [in] comm         The mpi communicator to use.
  */
 void
-t8_cmesh_new_2D_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
+t8_cmesh_new_hypercube_hybrid_2D (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
 /** Construct a unit interval/square/cube coarse mesh that is periodic in each direction.
  * Element class?
