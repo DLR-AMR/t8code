@@ -61,6 +61,24 @@ typedef struct t8_ctree *t8_ctree_t;
  * ghost tree. */
 typedef struct t8_cghost *t8_cghost_t;
 
+/** This typedef holds virtual functions for the geometry handler.
+ * We need it so that we can use t8_geometry_handler_c pointers in .c files
+ * without them seeing the actual C++ code (and then not compiling)
+ * TODO: Delete this when the cmesh is a proper cpp class.
+ */
+#ifdef __cplusplus
+
+namespace detail
+{
+struct t8_geometry_handler;
+}
+typedef struct detail::t8_geometry_handler t8_geometry_handler_c;
+
+#else
+typedef struct t8_geometry_handler t8_geometry_handler_c;
+
+#endif  // __cplusplus
+
 T8_EXTERN_C_BEGIN ();
 
 /** Create a new cmesh with reference count one.
@@ -556,6 +574,15 @@ t8_cmesh_get_num_ghosts (t8_cmesh_t cmesh);
 t8_gloidx_t
 t8_cmesh_get_first_treeid (t8_cmesh_t cmesh);
 
+/** Return the geometry handler of the cmesh. C version.
+ * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
+ * \return                 The geometry handler of the cmesh.
+ * \note                   The return value might be NULL if no geometry handler exists.
+ * \note                   Handle with care. This function should be used by t8code devs only.
+ */
+t8_geometry_handler_c *
+t8_cmesh_get_geometry_handler_c (const t8_cmesh_t cmesh);
+
 /** Get the geometry of a tree.
  * \param [in] cmesh   The cmesh.
  * \param [in] gtreeid The global tree id of the tree for which the geometry should be returned.
@@ -918,6 +945,7 @@ t8_cmesh_debug_print_trees (const t8_cmesh_t cmesh, sc_MPI_Comm comm);
  */
 int
 t8_cmesh_get_local_bounding_box (const t8_cmesh_t cmesh, double bounds[6]);
+
 T8_EXTERN_C_END ();
 
 #endif /* !T8_CMESH_H */
