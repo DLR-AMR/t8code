@@ -170,6 +170,18 @@ t8_element_array_push (t8_element_array_t *element_array);
 t8_element_t *
 t8_element_array_push_count (t8_element_array_t *element_array, size_t count);
 
+/**
+ * Remove the last element from an array.
+ * \param [in, out] element_array Array structure to be modified.
+ * \return Returns a pointer to the removed element.
+ *
+ * \note The element is not freed or deinitialized. It is not part of the array anymore,
+ *       but the caller is responsible to free or deinitialize the element if needed, or by
+ *      resizing the array smaller.
+ */
+t8_element_t *
+t8_element_array_pop (t8_element_array_t *element_array);
+
 /** Return a given element in an array. Const version.
  * \param [in]  element_array Array of elements.
  * \param [in]  index The index of an element within the array.
