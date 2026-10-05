@@ -27,7 +27,9 @@
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_private.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_subelement.hxx>
 #include <t8_schemes/t8_scheme.hxx>
+#include <t8_schemes/t8_subelement/t8_subelement.hxx>
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt/t8_forest_standard_adapt.hxx>
 
@@ -399,7 +401,7 @@ t8_forest_adapt (t8_forest_t forest)
   t8_locidx_t el_offset;
   t8_tree_t tree;
   t8_tree_t tree_from;
-  sc_list_t *refine_list = NULL; /* This is only needed when we adapt recursively */
+  sc_list_t *refine_list = nullptr; /* This is only needed when we adapt recursively */
   int num_children;
   int num_siblings;
   int curr_size_elements_from;
@@ -415,7 +417,7 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->set_adapt_recursive != -1);
 
   /* if profiling is enabled, measure runtime */
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     forest->profile->adapt_runtime = -sc_MPI_Wtime ();
     /* DO NOT DELETE THE FOLLOWING line.
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the
@@ -435,7 +437,11 @@ t8_forest_adapt (t8_forest_t forest)
   T8_ASSERT (forest->trees->elem_count == forest_from->trees->elem_count);
 
   if (forest->set_adapt_recursive) {
-    refine_list = sc_list_new (NULL);
+    if (t8_scheme_has_subelement_scheme (t8_forest_get_scheme (forest_from))) {
+      SC_CHECK_ABORT (!t8_forest_has_subelements (forest_from),
+                      "Recursive adaptation is currently not implemented for subelement schemes.");
+    }
+    refine_list = sc_list_new (nullptr);
   }
   forest->local_num_leaf_elements = 0;
   el_offset = 0;
@@ -623,6 +629,23 @@ t8_forest_adapt (t8_forest_t forest)
           }
           el_considered++;
         }
+        else if (refine > 1) {  // Subelement case.
+          T8_ASSERT (t8_eclass_scheme_is_subelement (t8_forest_get_scheme (forest_from), T8_ECLASS_QUAD));
+          /* The subelement-callback function returns refine = subelement_type + 1 to avoid subelement_type = 1.
+           * We undo this (e.g. to use the subelement_type-values that match the binary encoding of the neighbour
+           * structure for hanging node resolution).
+           */
+          int subelement_type = refine - 1;
+
+          int num_subelements = scheme->element_get_num_children (tree->eclass, elements_from[0], subelement_type);
+          (void) t8_element_array_push_count (telements, num_subelements);
+          for (int zz = 0; zz < num_subelements; zz++) {
+            elements[zz] = t8_element_array_index_locidx_mutable (telements, el_inserted + zz);
+          }
+          scheme->element_get_children (tree->eclass, elements_from[0], num_subelements, elements, subelement_type);
+          el_inserted += (t8_locidx_t) num_subelements;
+          el_considered++;
+        }
         else {
           /* Remove the element */
           T8_ASSERT (refine == -2);
@@ -669,7 +692,8 @@ t8_forest_adapt (t8_forest_t forest)
   if (!forest_from->incomplete_trees) {
     T8_ASSERT (element_removed == 1 || element_removed == 0);
     int incomplete_trees;
-    int mpiret = sc_MPI_Allreduce (&element_removed, &incomplete_trees, 1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
+    int const mpiret
+      = sc_MPI_Allreduce (&element_removed, &incomplete_trees, 1, sc_MPI_INT, sc_MPI_MAX, forest->mpicomm);
     SC_CHECK_MPI (mpiret);
     T8_ASSERT (incomplete_trees == 1 || incomplete_trees == 0);
     forest->incomplete_trees = incomplete_trees;
@@ -683,7 +707,7 @@ t8_forest_adapt (t8_forest_t forest)
                          (long long) forest->global_num_leaf_elements);
 
   /* if profiling is enabled, measure runtime */
-  if (forest->profile != NULL) {
+  if (forest->profile != nullptr) {
     forest->profile->adapt_runtime += sc_MPI_Wtime ();
     /* DO NOT DELETE THE FOLLOWING line.
      * even if you do not want this output. It fixes a bug that occurred on JUQUEEN, where the

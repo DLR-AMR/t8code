@@ -4,12 +4,12 @@ date-released: "2024-12-10"
 repository-code: "https://github.com/dlr-amr/t8code"
 url: "https://dlr-amr.github.io/t8code/"
 doi: "10.5281/zenodo.7034838"
-license: GPL-2.0
+license: GPL-2.0-or-later
 type: software
 authors:
   #Authors
   - given-names: Johannes
-    family-names: Holke
+    family-names: Albrecht Holke
     email: Johannes.Holke@dlr.de
     affiliation: "German Aerospace Center (DLR)"
     orcid: "https://orcid.org/0000-0002-2783-3286"

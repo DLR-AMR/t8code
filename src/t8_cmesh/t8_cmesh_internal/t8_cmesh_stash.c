@@ -25,7 +25,7 @@
  */
 
 #include <t8.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 
 void
@@ -38,6 +38,14 @@ t8_stash_init (t8_stash_t *pstash)
   sc_array_init (&stash->attributes, sizeof (t8_stash_attribute_struct_t));
   sc_array_init (&stash->classes, sizeof (t8_stash_class_struct_t));
   sc_array_init (&stash->joinfaces, sizeof (t8_stash_joinface_struct_t));
+}
+
+int
+t8_stash_is_empty (const t8_stash_t stash)
+{
+  T8_ASSERT (stash != NULL);
+
+  return stash->classes.elem_count == 0 && stash->joinfaces.elem_count == 0 && stash->attributes.elem_count == 0;
 }
 
 void

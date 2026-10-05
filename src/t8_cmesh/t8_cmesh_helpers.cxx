@@ -27,7 +27,7 @@
 
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 #include <t8_cmesh/t8_cmesh_helpers.h>
@@ -230,7 +230,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
   }   /* Loop over trees. */
 
   /* Transfer the computed face connectivity to the `cmesh` object. */
-  if (cmesh != NULL) {
+  if (cmesh != nullptr) {
     for (int itree = 0; itree < ntrees; itree++) {
       const t8_eclass_t eclass = eclasses[itree];
       const int nfaces = t8_eclass_num_faces[eclass];
@@ -248,7 +248,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
   }
 
   /* Pass the `conn` array to the caller if asked for. */
-  if (connectivity == NULL) {
+  if (connectivity == nullptr) {
     T8_FREE (conn);
   }
   else {

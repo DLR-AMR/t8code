@@ -28,7 +28,7 @@
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid.h>
 #include <t8_schemes/t8_scheme.hxx>
 
-typedef t8_dpyramid_t t8_default_pyramid_t;
+using t8_default_pyramid_t = t8_dpyramid_t;
 
 T8_EXTERN_C_BEGIN ();
 
@@ -256,7 +256,7 @@ t8_default_scheme_pyramid::element_set_linear_id (t8_element_t *elem, int level,
 }
 
 int
-t8_default_scheme_pyramid::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_pyramid::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   const int num_siblings = element_get_num_siblings (fam[0]);

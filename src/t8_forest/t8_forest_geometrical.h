@@ -24,8 +24,6 @@
  * We define the geometrical queries for a forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_GEOMETRICAL_H
 #define T8_FOREST_GEOMETRICAL_H
 
@@ -59,7 +57,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8
  *  The point is given in reference coordinates inside the element and gets
  *  converted to reference coordinates inside the tree. After that, the point
  *  is converted to global coordinates inside the domain. If needed, the element
- *  is stretched by the given stretch factors (the resulting mesh is then 
+ *  is stretched by the given stretch factors (the resulting mesh is then
  *  no longer non-overlapping).
  * \param [in]      forest            The forest.
  * \param [in]      ltreeid           The forest local id of the tree in which the element is.
@@ -106,6 +104,20 @@ t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, cons
 void
 t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, double *coordinates);
 
+/** Compute the coordinates of the centroid of an element by its corner coordinates.
+ * This treats every element as a linear element. The centroid is the mean of all the corner coordinates.
+ * \warning This function omits if an element is curved. So for linear elements it produces the same results as
+ * \ref t8_forest_element_centroid. For curved elements the curvature is ignored.
+ * \param [in]      forest     The forest.
+ * \param [in]      ltreeid    The forest local id of the tree in which the element is.
+ * \param [in]      element    The element.
+ * \param [out]     coordinates On input an allocated array to store 3 doubles, on output
+ *                             the x, y and z coordinates of the centroid.
+ */
+void
+t8_forest_element_linear_centroid (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                   double *coordinates);
+
 /** Compute the diameter of an element if a geometry for this tree is registered in the forest's cmesh.
  * This is only an approximation.
  * \param [in]      forest     The forest.
@@ -123,7 +135,7 @@ t8_forest_element_diam (t8_forest_t forest, t8_locidx_t ltreeid, const t8_elemen
  * \param [in]      forest     The forest.
  * \param [in]      ltreeid    The forest local id of the tree in which the element is.
  * \param [in]      element    The element.
- * \return                     The diameter of the element.
+ * \return                     The volume of the element.
  * \note                       This function assumes d-linear interpolation for the
  *                             tree vertex coordinates.
  *                             \a forest must be committed when calling this function.

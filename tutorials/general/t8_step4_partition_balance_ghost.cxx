@@ -131,15 +131,15 @@ t8_step4_partition_ghost (t8_forest_t forest)
   /* Initialize */
   t8_forest_init (&new_forest);
 
-  /* Tell the new_forest that is should partition the existing forest.
+  /* Tell the new_forest that it should partition the existing forest.
    * This will change the distribution of the forest elements among the processes
    * in such a way that afterwards each process has the same number of elements
    * (+- 1 if the number of elements is not divisible by the number of processes).
    *
-   * The third 0 argument is the flag 'partition_for_coarsening' which is currently not
-   * implemented. Once it is, this will ensure that a family of elements will not be split
-   * across multiple processes and thus one level coarsening is always possible (see also the
-   * comments on coarsening in t8_step3).
+   * The third 0 argument is the flag 'set_for_coarsening'. Setting it non-zero ensures
+   * that a family of (same-level) siblings will not be split across multiple processes;
+   * this way, coarsening by one level is never prevented by the partitioning
+   * (see also the comments on coarsening in t8_step3).
    */
   t8_forest_set_partition (new_forest, forest, 0);
   /* Tell the new_forest to create a ghost layer.
@@ -157,7 +157,7 @@ t8_step4_partition_ghost (t8_forest_t forest)
 }
 
 /* In this function we adapt a forest as in step3 and balance it.
- * In our main program the input forest is already adapted and then the resulting twice adapted forest will be unbalanced.
+ * In our main program the input forest is already adapted and then the resulting twice adapted forest will be balanced.
  */
 static t8_forest_t
 t8_step4_balance (t8_forest_t forest)
@@ -230,7 +230,8 @@ t8_step4_main (int argc, char **argv)
   t8_global_productionf (" [step4] Creating an adapted forest as in step3.\n");
   t8_global_productionf (" [step4] \n");
   /* Build a cube cmesh with tet, hex, and prism trees. */
-  cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, comm, 0);
   t8_global_productionf (" [step4] Created coarse mesh.\n");
   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 

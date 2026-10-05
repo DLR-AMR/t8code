@@ -32,7 +32,7 @@
 #define T8_DEFAULT_QUAD_HXX
 
 #include <p4est.h>
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
@@ -295,7 +295,7 @@ struct t8_default_scheme_quad: public t8_default_scheme_common<T8_ECLASS_QUAD, t
    * \note level 0 elements do not form a family.
    */
   int
-  elements_are_family (t8_element_t *const *fam) const;
+  elements_are_family (const t8_element_t *const *fam) const;
 
   /** Compute the nearest common ancestor of two elements. That is,
    * the element with highest level that still has both given elements as

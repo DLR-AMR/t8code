@@ -23,153 +23,132 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_types/t8_vec.hxx>
 #include <t8_types/t8_vec.h>
 #include <memory>
+#include <span>
 
 T8_EXTERN_C_BEGIN ();
 
 double
 t8_norm (const double vec[3])
 {
-  const auto vec_view = make_t8_3D_vec_view (vec);
-  return t8_norm (vec_view);
+  return t8_norm (std::span<const double, 3> (vec, 3));
 }
 
 void
 t8_normalize (double vec[3])
 {
-  auto vec_view = make_t8_3D_vec_view (vec);
-  t8_normalize (vec_view);
+  auto vec_span = std::span<double, 3> (vec, 3);
+  t8_normalize (vec_span);
 }
 
 void
 t8_copy (const double dimensional_in[3], double dimensional_out[3])
 {
-  const auto vec_view_in = make_t8_3D_vec_view (dimensional_in);
-  auto vec_view_out = make_t8_3D_vec_view (dimensional_out);
-  t8_copy (vec_view_in, vec_view_out);
+  auto dimensional_out_span = std::span<double, 3> (dimensional_out, 3);
+  t8_copy (std::span<const double, 3> (dimensional_in, 3), dimensional_out_span);
 }
 
 double
 t8_dist (const double vec_x[3], const double vec_y[3])
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  const auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  return t8_dist (vec_x_view, vec_y_view);
+  return t8_dist (std::span<const double, 3> (vec_x, 3), std::span<const double, 3> (vec_y, 3));
 }
 
 void
 t8_ax (double vec_x[3], const double alpha)
 {
-  auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  t8_ax (vec_x_view, alpha);
+  auto vec_x_span = std::span<double, 3> (vec_x, 3);
+  t8_ax (vec_x_span, alpha);
 }
 
 void
 t8_axy (const double vec_x[3], double vec_y[3], const double alpha)
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  t8_axy (vec_x_view, vec_y_view, alpha);
+  auto vec_y_span = std::span<double, 3> (vec_y, 3);
+  t8_axy (std::span<const double, 3> (vec_x, 3), vec_y_span, alpha);
 }
 
 void
 t8_axb (const double vec_x[3], double vec_y[3], const double alpha, const double b)
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  t8_axb (vec_x_view, vec_y_view, alpha, b);
+  auto vec_y_span = std::span<double, 3> (vec_y, 3);
+  t8_axb (std::span<const double, 3> (vec_x, 3), vec_y_span, alpha, b);
 }
 
 void
 t8_axpy (const double vec_x[3], double vec_y[3], const double alpha)
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  t8_axpy (vec_x_view, vec_y_view, alpha);
+  auto vec_y_span = std::span<double, 3> (vec_y, 3);
+  t8_axpy (std::span<const double, 3> (vec_x, 3), vec_y_span, alpha);
 }
 
 void
 t8_axpyz (const double vec_x[3], const double vec_y[3], double vec_z[3], const double alpha)
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  const auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  const auto vec_z_view = make_t8_3D_vec_view (vec_z);
-  t8_axpyz (vec_x_view, vec_y_view, vec_z_view, alpha);
+  auto vec_z_span = std::span<double, 3> (vec_z, 3);
+  t8_axpyz (std::span<const double, 3> (vec_x, 3), std::span<const double, 3> (vec_y, 3), vec_z_span, alpha);
 }
 
 double
 t8_dot (const double vec_x[3], const double vec_y[3])
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  const auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  return t8_dot (vec_x_view, vec_y_view);
+  return t8_dot (std::span<const double, 3> (vec_x, 3), std::span<const double, 3> (vec_y, 3));
 }
 
 void
 t8_cross_3D (const double vec_x[3], const double vec_y[3], double cross[3])
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  const auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  auto cross_view = make_t8_3D_vec_view (cross);
-  t8_cross_3D (vec_x_view, vec_y_view, cross_view);
+  auto cross_span = std::span<double, 3> (cross, 3);
+  t8_cross_3D (std::span<const double, 3> (vec_x, 3), std::span<const double, 3> (vec_y, 3), cross_span);
 }
 
 double
 t8_cross_2D (const double vec_x[2], const double vec_y[2])
 {
-  const auto vec_x_view = make_t8_2D_vec_view (vec_x);
-  const auto vec_y_view = make_t8_2D_vec_view (vec_y);
-  return t8_cross_2D (vec_x_view, vec_y_view);
+  return t8_cross_2D (std::span<const double, 2> (vec_x, 2), std::span<const double, 2> (vec_y, 2));
 }
 
 void
 t8_diff (const double vec_x[3], const double vec_y[3], double diff[3])
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  const auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  auto diff_view = make_t8_3D_vec_view (diff);
-  t8_diff (vec_x_view, vec_y_view, diff_view);
+  auto diff_span = std::span<double, 3> (diff, 3);
+  t8_diff (std::span<const double, 3> (vec_x, 3), std::span<const double, 3> (vec_y, 3), diff_span);
 }
 
 int
 t8_eq (const double vec_x[3], const double vec_y[3], const double tol)
 {
-  const auto vec_x_view = make_t8_3D_vec_view (vec_x);
-  const auto vec_y_view = make_t8_3D_vec_view (vec_y);
-  return t8_eq (vec_x_view, vec_y_view, tol);
+  return t8_eq (std::span<const double, 3> (vec_x, 3), std::span<const double, 3> (vec_y, 3), tol);
 }
 
 void
 t8_rescale (double vec[3], const double new_length)
 {
-  auto vec_view = make_t8_3D_vec_view (vec);
-  t8_rescale (vec_view, new_length);
+  auto vec_span = std::span<double, 3> (vec, 3);
+  t8_rescale (vec_span, new_length);
 }
 
 void
 t8_normal_of_tri (const double p1[3], const double p2[3], const double p3[3], double normal[3])
 {
-  const auto p1_view = make_t8_3D_vec_view (p1);
-  const auto p2_view = make_t8_3D_vec_view (p2);
-  const auto p3_view = make_t8_3D_vec_view (p3);
-  const auto normal_view = make_t8_3D_vec_view (normal);
-  t8_normal_of_tri (p1_view, p2_view, p3_view, normal_view);
+  auto normal_span = std::span<double, 3> (normal, 3);
+  t8_normal_of_tri (std::span<const double, 3> (p1, 3), std::span<const double, 3> (p2, 3),
+                    std::span<const double, 3> (p3, 3), normal_span);
 }
 
 void
 t8_orthogonal_tripod (const double v1[3], double v2[3], double v3[3])
 {
-  const auto v1_view = make_t8_3D_vec_view (v1);
-  auto v2_view = make_t8_3D_vec_view (v2);
-  auto v3_view = make_t8_3D_vec_view (v3);
-  t8_orthogonal_tripod (v1_view, v2_view, v3_view);
+  auto v2_span = std::span<double, 3> (v2, 3);
+  auto v3_span = std::span<double, 3> (v3, 3);
+  t8_orthogonal_tripod (std::span<const double, 3> (v1, 3), v2_span, v3_span);
 }
 
 void
 t8_swap (double p1[3], double p2[3])
 {
-  auto p1_view = make_t8_3D_vec_view (p1);
-  auto p2_view = make_t8_3D_vec_view (p2);
-  std::swap (p1_view, p2_view);
+  for (int i = 0; i < 3; ++i) {
+    std::swap (p1[i], p2[i]);
+  }
 }
 
 T8_EXTERN_C_END ();

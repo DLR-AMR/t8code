@@ -25,7 +25,7 @@
  */
 
 #include <t8.h>
-#include <t8_version.h>
+#include <t8_misc/t8_version.h>
 
 static int t8_package_id = -1;
 static void (*external_log_fcn) (int category, int priority, const char *msg) = NULL;

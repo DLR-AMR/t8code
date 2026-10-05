@@ -150,6 +150,7 @@ manipulate_elements (t8_element_array_t *elements, [[maybe_unused]] const t8_ele
                      const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t elements_index,
                      const t8_locidx_t elements_from_index);
 
+
 /** Specialization for the KEEP action. No element modification is performed; 
      * the element is copied as is.
      * \see manipulate_elements
@@ -229,7 +230,8 @@ struct manipulator
   element_manipulator (t8_element_array_t *elements, const t8_element_array_t *const elements_from,
                        const t8_scheme *scheme, const t8_eclass_t tree_class, const t8_locidx_t el_considered,
                        const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
-                       const std::vector<t8_adapt::action> &actions, const bool is_family)
+                       const std::vector<t8_adapt::action> &actions, const bool is_family,
+                       const bool recursive)
   {
     t8_adapt::action iaction = actions[el_considered];
     if (!is_family && iaction == t8_adapt::action::COARSEN) {
@@ -241,7 +243,7 @@ struct manipulator
       const int num_siblings = scheme->element_get_num_siblings (tree_class, current_element);
       const auto start = actions.begin () + static_cast<size_t> (el_considered);
       const auto end = start + static_cast<size_t> (num_siblings);
-      if (!std::all_of (start, end, [] (const t8_adapt::action &a) { return a == t8_adapt::action::COARSEN; })) {
+      if (!std::all_of (start, end, [] (const t8_adapt::action &action) { return action == t8_adapt::action::COARSEN; })) {
         iaction = t8_adapt::action::KEEP;
       }
     }

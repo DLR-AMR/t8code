@@ -27,7 +27,7 @@
 #ifndef T8_DEFAULT_COMMON_HXX
 #define T8_DEFAULT_COMMON_HXX
 
-#include <t8_element.h>
+#include <t8_element/t8_element.h>
 #include <t8_types/t8_operators.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <sc_functions.h>
@@ -189,6 +189,40 @@ struct t8_default_scheme_common: public t8_scheme_helpers<TEclass, TUnderlyingEc
   get_max_num_children () const
   {
     return t8_eclass_max_num_children[TEclass];
+  }
+
+  /** Query whether element A is an ancestor of the element B.
+   * An element A is ancestor of an element B if A == B or if B can 
+   * be obtained from A via successive refinement.
+   * \param [in] element_A An element of class \a eclass in scheme \a scheme.
+   * \param [in] element_B An element of class \a eclass in scheme \a scheme.
+   * \return     True if and only if \a element_A is an ancestor of \a element_B.
+  */
+  inline bool
+  element_is_ancestor (const t8_element_t *element_A, const t8_element_t *element_B) const
+  {
+    /* A is ancestor of B if and only if it has smaller or equal level and
+      restricted to A's level, B has the same id as A.
+
+        level(A) <= level(B) and ID(A,level(A)) == ID(B,level(B))
+    */
+    T8_ASSERT (this->underlying ().element_is_valid (element_A));
+    T8_ASSERT (this->underlying ().element_is_valid (element_B));
+
+    const int level_A = this->underlying ().element_get_level (element_A);
+    const int level_B = this->underlying ().element_get_level (element_B);
+
+    if (level_A > level_B) {
+      /* element A is finer than element B and thus cannot be 
+      * an ancestor of B. */
+      return false;
+    }
+
+    const t8_linearidx_t id_A = this->underlying ().element_get_linear_id (element_A, level_A);
+    const t8_linearidx_t id_B = this->underlying ().element_get_linear_id (element_B, level_A);
+
+    // If both elements have the same linear ID at level_A then A is an ancestor of B.
+    return id_A == id_B;
   }
 
   /** Allocate space for a bunch of elements.

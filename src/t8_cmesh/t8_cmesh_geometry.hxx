@@ -22,7 +22,6 @@
 
 /** \file t8_cmesh_geometry.hxx
  * Internal functions that we need for the cmesh geometry.
- * TODO: document this file
  */
 
 #ifndef T8_CMESH_GEOMETRY_H

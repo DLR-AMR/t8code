@@ -24,8 +24,6 @@
  * We define the forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest */
-
 #ifndef T8_FOREST_PROFILING_H
 #define T8_FOREST_PROFILING_H
 

@@ -20,15 +20,23 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_cmesh_new_comm.hxx 
+ * Parameterized example cmeshes by MPI communicators.
+ */
+
 #ifndef T8_CMESH_NEW_COMM
 #define T8_CMESH_NEW_COMM
 
-#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartestian_product.hxx"
+#include "test/t8_cmesh_generator/t8_gtest_cmesh_cartesian_product.hxx"
 #include "test/t8_cmesh_generator/t8_cmesh_parameterized_examples/t8_cmesh_params.hxx"
 #include <t8_cmesh/t8_cmesh_examples.h>
 
 namespace new_cmesh_comm
 {
+
+/** Function to convert parameter values to a string.
+ * \param [in] comm The communicator used.
+ */
 std::string
 make_param_string (const sc_MPI_Comm &comm)
 {
@@ -37,21 +45,38 @@ make_param_string (const sc_MPI_Comm &comm)
   return params;
 }
 
+/** Wrapper function for \ref make_param_string. */
 std::function<std::string (const sc_MPI_Comm)> print_function = make_param_string;
 
-std::vector<std::function<t8_cmesh_t (sc_MPI_Comm)>> cmesh_functions = { t8_cmesh_new_periodic_tri,
-                                                                         t8_cmesh_new_periodic_hybrid,
-                                                                         t8_cmesh_new_periodic_line_more_trees,
-                                                                         t8_cmesh_new_line_zigzag,
-                                                                         t8_cmesh_new_prism_deformed,
-                                                                         t8_cmesh_new_pyramid_deformed,
-                                                                         t8_cmesh_new_prism_cake_funny_oriented,
-                                                                         t8_cmesh_new_prism_geometry,
-                                                                         t8_cmesh_new_tet_orientation_test,
-                                                                         t8_cmesh_new_hybrid_gate,
-                                                                         t8_cmesh_new_hybrid_gate_deformed,
-                                                                         t8_cmesh_new_full_hybrid };
+/** Wraps a (cmesh, comm) -> t8_cmesh_t generator into a comm -> t8_cmesh_t function,
+ * creating and initializing the cmesh on every call. */
+template <typename Generator>
+std::function<t8_cmesh_t (sc_MPI_Comm)>
+wrap_with_init (Generator generator)
+{
+  return [generator] (sc_MPI_Comm comm) {
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    generator (cmesh, comm);
+    return cmesh;
+  };
+}
 
+/** Vector with functions to construct a cmesh from a communicator parameter. */
+std::vector<std::function<t8_cmesh_t (sc_MPI_Comm)>> cmesh_functions
+  = { wrap_with_init (t8_cmesh_new_periodic_tri),
+      wrap_with_init (t8_cmesh_new_periodic_hybrid),
+      wrap_with_init (t8_cmesh_new_periodic_line_more_trees),
+      wrap_with_init (t8_cmesh_new_line_zigzag),
+      wrap_with_init (t8_cmesh_new_prism_deformed),
+      wrap_with_init (t8_cmesh_new_pyramid_deformed),
+      wrap_with_init (t8_cmesh_new_prism_cake_funny_oriented),
+      wrap_with_init (t8_cmesh_new_prism_geometry),
+      wrap_with_init (t8_cmesh_new_tet_orientation_test),
+      wrap_with_init (t8_cmesh_new_hybrid_gate),
+      wrap_with_init (t8_cmesh_new_hybrid_gate_deformed),
+      wrap_with_init (t8_cmesh_new_full_hybrid) };
+/** Names of the example sets of constructed cmeshes.*/
 std::vector<std::string> names = { "t8_cmesh_new_periodic_tri",
                                    "t8_cmesh_new_periodic_hybrid",
                                    "t8_cmesh_new_periodic_line_more_trees",
@@ -65,6 +90,7 @@ std::vector<std::string> names = { "t8_cmesh_new_periodic_tri",
                                    "t8_cmesh_new_hybrid_gate_deformed",
                                    "t8_cmesh_new_full_hybrid" };
 
+/** Example cmesh set with different communicators. */
 example_set *cmesh_example
   = (example_set *) new cmesh_cartesian_product_params<decltype (cmesh_params::my_comms.begin ())> (
     std::make_pair (cmesh_params::my_comms.begin (), cmesh_params::my_comms.end ()), cmesh_functions, print_function,

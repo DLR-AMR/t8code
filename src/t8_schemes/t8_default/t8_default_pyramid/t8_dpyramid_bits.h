@@ -27,7 +27,7 @@
 #ifndef T8_DPYRAMID_BITS_H
 #define T8_DPYRAMID_BITS_H
 
-#include "t8_element.h"
+#include <t8_element/t8_element.h>
 #include "t8_dpyramid.h"
 
 T8_EXTERN_C_BEGIN ();

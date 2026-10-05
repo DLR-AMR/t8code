@@ -277,10 +277,10 @@ template <typename TType>
 concept element_manipulatable = requires (
   TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from, const t8_scheme *scheme,
   const t8_eclass_t tree_class, const t8_locidx_t el_considered, const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
-  const std::vector<action> &action, const bool is_family) {
+  const std::vector<action> &action, const bool is_family, const bool recursive) {
   {
     object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted,
-                                action, is_family)
+                                action, is_family, recursive)
   } -> std::same_as<void>;
 };
 
@@ -378,8 +378,8 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
    *
    * \note The constructor increments reference counts for non-null forest handles, and the destructor will release them.
    */
-  adaptor (t8_forest_t forest, t8_forest_t forest_from, callback_type callback_in, bool profiling_in = false)
-    : callback (callback_in), forest (forest), forest_from (forest_from), profiling (profiling_in)
+  adaptor (t8_forest_t forest, t8_forest_t forest_from, callback_type callback_in, bool profiling_in = false, bool recursive_in = false)
+    : callback (callback_in), forest (forest), forest_from (forest_from), profiling (profiling_in), recursive (recursive_in)
   {
     T8_ASSERT (forest != nullptr);
     T8_ASSERT (callback);
@@ -401,6 +401,12 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
     if (forest != nullptr) {
       t8_forest_unref (&forest);
     }
+  }
+
+  void
+  set_recursive (bool recursive_in)
+  {
+    recursive = recursive_in;
   }
 
   /** Perform the adaptation process on the forest. */
@@ -446,7 +452,7 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
 
           /* manipulator step*/
           TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered, el_offset,
-                                            el_inserted, actions, is_family);
+                                            el_inserted, actions, is_family, recursive);
           el_considered++;
           el_offset += el_inserted;
           forest->local_num_leaf_elements += el_inserted;
@@ -485,6 +491,7 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
   t8_forest_t forest_from;     /**< The source forest to adapt from. */
   std::vector<action> actions; /**< The adaptation actions for each element in the source forest. */
   bool profiling = false;      /**< Flag to indicate if profiling is enabled. */
+  bool recursive = false;      /**< Flag to indicate if recursive adaptation is enabled. */
 };                             // class adaptor
 
 };     // namespace t8_adapt

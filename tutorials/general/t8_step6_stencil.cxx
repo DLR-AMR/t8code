@@ -81,7 +81,9 @@ struct data_per_element
 static t8_forest_t
 t8_step6_build_forest (sc_MPI_Comm comm, int dim, int level)
 {
-  t8_cmesh_t cmesh = t8_cmesh_new_periodic (comm, dim);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_periodic (cmesh, comm, dim);
 
   const t8_scheme *scheme = t8_scheme_new_default ();
   struct t8_step3_adapt_data adapt_data = {
@@ -206,15 +208,15 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
       /* Loop over all faces of an element. */
       int num_faces = scheme->element_get_num_faces (tree_class, element);
       for (int iface = 0; iface < num_faces; iface++) {
-        int num_neighbors;        /**< Number of neighbors for each face */
-        int *dual_faces;          /**< The face indices of the neighbor elements */
-        t8_locidx_t *neighids;    /**< Indices of the neighbor elements */
-        t8_element_t **neighbors; /*< Neighboring elements. */
-        t8_eclass_t neigh_class;  /*< Neighboring elements tree class. */
+        int num_neighbors;              /**< Number of neighbors for each face */
+        int *dual_faces;                /**< The face indices of the neighbor elements */
+        t8_locidx_t *neighids;          /**< Indices of the neighbor elements */
+        const t8_element_t **neighbors; /*< Neighboring elements. */
+        t8_eclass_t neigh_class;        /*< Neighboring elements tree class. */
 
         /* Collect all neighbors at the current face. */
         t8_forest_leaf_face_neighbors (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
-                                       &neighids, &neigh_class, 1);
+                                       &neighids, &neigh_class);
 
         /* Retrieve the `height` of the face neighbor. Account for two neighbors in case
            of a non-conforming interface by computing the average. */
@@ -248,7 +250,6 @@ t8_step6_compute_stencil (t8_forest_t forest, struct data_per_element *element_d
 
         if (num_neighbors > 0) {
           /* Free allocated memory. */
-          scheme->element_destroy (tree_class, num_neighbors, neighbors);
           T8_FREE (neighbors);
           T8_FREE (dual_faces);
           T8_FREE (neighids);

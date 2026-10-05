@@ -21,8 +21,7 @@
 */
 
 /** \file t8_cmesh_copy.h
- *
- * TODO: document this file
+ * Function to copy a cmesh.
  */
 
 #ifndef T8_CMESH_COPY_H

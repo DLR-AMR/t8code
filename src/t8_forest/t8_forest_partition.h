@@ -24,8 +24,6 @@
  * We define the partition routine to partition a forest of trees in this file.
  */
 
-/* TODO: begin documenting this file: make doxygen 2>&1 | grep t8_forest_partition */
-
 #ifndef T8_FOREST_PARTITION_H
 #define T8_FOREST_PARTITION_H
 

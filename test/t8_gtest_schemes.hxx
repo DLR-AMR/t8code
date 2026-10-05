@@ -20,6 +20,10 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8_gtest_schemes.hxx 
+ * File to provide different schemes for testing purposes.
+ */
+
 #ifndef T8_GTEST_SCHEMES_HXX
 #define T8_GTEST_SCHEMES_HXX
 
@@ -27,6 +31,10 @@
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
 #include <gtest/gtest.h>
 
+/** Create a scheme according to a scheme id.
+ * \param [in] scheme_id 0: Use default scheme; 1: Use standalone scheme.
+ * \return The created scheme.
+ */
 const t8_scheme *
 create_from_scheme_id (const int scheme_id)
 {
@@ -41,17 +49,22 @@ create_from_scheme_id (const int scheme_id)
   }
 }
 
+/** Strings for the two scheme types. */
 static const char *t8_scheme_to_string[] = { "default", "standalone" };
 
+/** Lambda to print the scheme and the eclass of an TestParamInfo object. */
 auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_eclass_t>> &info) {
   return std::string (t8_scheme_to_string[std::get<0> (info.param)]) + "_"
          + t8_eclass_to_string[std::get<1> (info.param)];
 };
 
+/** Lambda to print the scheme. */
 auto print_scheme
   = [] (const testing::TestParamInfo<int> &info) { return std::string (t8_scheme_to_string[info.param]); };
 
+/** Macro for all schemes. */
 #define AllSchemeCollections ::testing::Range (0, 2)
+/** Macro for all schemes and all possible eclasses.*/
 #define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
 #endif /* T8_GTEST_SCHEMES_HXX */

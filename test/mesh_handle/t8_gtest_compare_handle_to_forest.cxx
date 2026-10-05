@@ -42,12 +42,15 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
 {
   // Define forest and mesh handle.
   const int level = 2;
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (sc_MPI_COMM_WORLD, 0, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD, 0);
   const t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
 
   const t8_mesh_handle::mesh<> mesh = t8_mesh_handle::mesh<> (forest);
   EXPECT_EQ (mesh.get_num_local_elements (), t8_forest_get_local_num_leaf_elements (forest));
+  EXPECT_EQ (mesh.get_num_global_elements (), t8_forest_get_global_num_leaf_elements (forest));
   EXPECT_EQ (mesh.get_num_ghosts (), t8_forest_get_num_ghosts (forest));
   EXPECT_EQ (mesh.get_dimension (), t8_forest_get_dimension (forest));
 
@@ -71,25 +74,29 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
       // --- Vertex coordinates. ---
       auto vertex_coordinates = mesh_iterator->get_vertex_coordinates ();
       for (int ivertex = 0; ivertex < mesh_iterator->get_num_vertices (); ++ivertex) {
-        t8_3D_point vertex_forest;
+        t8_3D_vec vertex_forest;
         t8_forest_element_coordinate (forest, itree, elem, ivertex, vertex_forest.data ());
         EXPECT_EQ (vertex_forest, vertex_coordinates[ivertex]);
       }
       // --- Centroid. ---
-      t8_3D_point centroid;
+      t8_3D_vec centroid;
       t8_forest_element_centroid (forest, itree, elem, centroid.data ());
       EXPECT_EQ (mesh_iterator->get_centroid (), centroid);
       // --- Face properties. ---
       // Note: Face-neighbor functionality is tested in t8_gtest_ghost.cxx.
       for (int iface = 0; iface < mesh_iterator->get_num_faces (); ++iface) {
         EXPECT_EQ (mesh_iterator->get_face_area (iface), t8_forest_element_face_area (forest, itree, elem, iface));
-        t8_3D_point coordinates;
+        t8_3D_vec coordinates;
         t8_forest_element_face_centroid (forest, itree, elem, iface, coordinates.data ());
         EXPECT_EQ (mesh_iterator->get_face_centroid (iface), coordinates);
         t8_3D_vec normal;
         t8_forest_element_face_normal (forest, itree, elem, iface, normal.data ());
         EXPECT_EQ (mesh_iterator->get_face_normal (iface), normal);
         EXPECT_EQ (mesh_iterator->get_face_shape (iface), scheme->element_get_face_shape (tree_class, elem, iface));
+        for (int ivertex = 0; ivertex < mesh_iterator->get_num_vertices_of_face (iface); ++ivertex) {
+          EXPECT_EQ (mesh_iterator->face_vertex_to_element_vertex (iface, ivertex),
+                     scheme->element_get_face_corner (tree_class, elem, iface, ivertex));
+        }
       }
       // --- Evolve mesh iterator. ---
       mesh_iterator++;

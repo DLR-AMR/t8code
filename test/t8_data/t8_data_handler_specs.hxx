@@ -90,7 +90,7 @@ struct data_creator
   void
   create (const int num_data);
 
-  std::vector<TType> large_data;
+  std::vector<TType> large_data; /**< A vector to hold the created data items. */
 };
 
 #endif /* T8_DATA_HANDLER_SPECS_HXX */

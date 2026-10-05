@@ -20,22 +20,30 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef T8_GTEST_SCHEME_HELPER_H
-#define T8_GTEST_SCHEME_HELPER_H
+/**
+ * \file t8_gtest_dfs_base.hxx
+ * A base class for depth first search tests.
+ */
+
+#ifndef T8_GTEST_DFS_BASE_HXX
+#define T8_GTEST_DFS_BASE_HXX
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 
+/** A base class for depth first search tests. */
 struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
 {
  public:
   /** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel
-*/
+   */
   virtual void
   check_element () {};
 
-  /** recursive depth first search to iterate over all descendants of elem up to max_dfs_recursion_level */
+  /** recursive depth first search to iterate over all descendants of elem up to \a max_dfs_recursion_level.
+   * \param [in] max_dfs_recursion_level Maximum recursion level.
+   */
   void
   check_recursive_dfs_to_max_lvl (const int max_dfs_recursion_level)
   {
@@ -57,6 +65,7 @@ struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
     }
   }
 
+  /** Test setup for depth first search tests. */
   void
   dfs_test_setup ()
   {
@@ -66,6 +75,7 @@ struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
     scheme->element_new (eclass, 1, &element);
     scheme->set_to_root (eclass, element);
   }
+  /** Test teardown for depth first search tests. */
   void
   dfs_test_teardown ()
   {
@@ -73,20 +83,22 @@ struct TestDFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
     scheme->unref ();
   }
 
+  /** Test setup for \ref TestDFS used by gtest. */
   void
   SetUp () override
   {
     dfs_test_setup ();
   }
+  /** Test teardown for \ref TestDFS used by gtest. */
   void
   TearDown () override
   {
     dfs_test_teardown ();
   }
 
-  t8_eclass_t eclass;
-  const t8_scheme *scheme;
-  t8_element_t *element;
+  t8_eclass_t eclass;      /**< Eclass of the tree to be used for DFS testing. */
+  const t8_scheme *scheme; /**< Scheme to be used for DFS testing. */
+  t8_element_t *element;   /**< Current element in the DFS traversal. */
 };
 
-#endif /*T8_GTEST_SCHEME_HELPER_H*/
+#endif /* T8_GTEST_DFS_BASE_HXX */

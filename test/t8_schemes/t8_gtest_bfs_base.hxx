@@ -29,19 +29,21 @@
 #define T8_GTEST_BFS_BASE_HXX
 
 #include <gtest/gtest.h>
-#include <t8_eclass.h>
+#include <t8_eclass/t8_eclass.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <queue>
 
+/** A base class for breadth first search tests. */
 struct TestBFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
 {
  public:
-  /** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel
-*/
+  /** recursive tests check something for all descendants of a starting element (currently only root) upto maxlevel. */
   virtual void
   check_element () {};
 
-  /** recursive breadth first search to iterate over all descendants of elem up to max_bfs_recursion_level */
+  /** recursive breadth first search to iterate over all descendants of elem up to \a max_bfs_recursion_level 
+   * \param [in] max_bfs_recursion_level Maximum recursion level.
+   */
   void
   check_recursive_bfs_to_max_lvl (const int max_bfs_recursion_level)
   {
@@ -75,6 +77,7 @@ struct TestBFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
     }
   }
 
+  /** Test setup for breadth first search tests. */
   void
   bfs_test_setup ()
   {
@@ -84,29 +87,30 @@ struct TestBFS: public testing::TestWithParam<std::tuple<int, t8_eclass_t>>
     scheme->element_new (eclass, 1, &element);
     scheme->set_to_root (eclass, element);
   }
-
+  /** Test teardown for breadth first search tests. */
   void
   bfs_test_teardown ()
   {
     scheme->unref ();
   }
 
+  /** Test setup for \ref TestBFS used by gtest. */
   void
   SetUp () override
   {
     bfs_test_setup ();
   }
-
+  /** Test teardown for \ref TestBFS used by gtest. */
   void
   TearDown () override
   {
     bfs_test_teardown ();
   }
 
-  const t8_scheme *scheme;
-  t8_eclass_t eclass;
-  t8_element_t *element;
-  int current_level = 0;
+  const t8_scheme *scheme; /**< Scheme to be used for BFS testing. */
+  t8_eclass_t eclass;      /**< Eclass of the tree to be used for BFS testing. */
+  t8_element_t *element;   /**< Current element in the BFS traversal. */
+  int current_level = 0;   /**< Current level in the BFS traversal. */
 };
 
 #endif /* T8_GTEST_BFS_BASE_HXX */

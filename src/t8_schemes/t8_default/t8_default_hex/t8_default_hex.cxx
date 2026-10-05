@@ -197,7 +197,7 @@ t8_default_scheme_hex::element_get_ancestor_id (const t8_element_t *elem, const 
 }
 
 int
-t8_default_scheme_hex::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_hex::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   {
@@ -243,7 +243,7 @@ t8_default_scheme_hex::element_get_children_at_face (const t8_element_t *elem, c
   T8_ASSERT (0 <= face && face < P8EST_FACES);
   T8_ASSERT (num_children == element_get_num_face_children (elem, face));
 
-  if (child_indices != NULL) {
+  if (child_indices != nullptr) {
     child_ids = child_indices;
   }
   else {
