@@ -34,7 +34,15 @@ t8_scheme_new_extruded ()
 {
   t8_scheme_builder builder;
 
+  builder.add_eclass_scheme<t8_default_scheme_vertex> ();
+  builder.add_eclass_scheme<t8_default_scheme_line> ();
+  builder.add_eclass_scheme<t8_default_scheme_quad> ();
+  builder.add_eclass_scheme<t8_default_scheme_tri> ();
   builder.add_eclass_scheme<t8_extruded_scheme_hex> ();
+  builder.add_eclass_scheme<t8_default_scheme_tet> ();
+  builder.add_eclass_scheme<t8_default_scheme_prism> ();
+  builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
+
   return builder.build_scheme ();
 }
 

@@ -45,7 +45,6 @@
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
-#include <t8_schemes/t8_extruded/t8_extruded_element.hxx>
 #include <cstdio>
 #include <cstring>
 #include <utility>
@@ -59,9 +58,6 @@ template <t8_eclass_t TEclass, class TBaseScheme, class TBaseElem>
 struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<TEclass, TBaseScheme, TBaseElem>>
 {
  public:
-  /** The element type of this scheme. */
-  using ExtrudedElementType = t8_extruded_element<TBaseElem>;
-
   /** The eclass of the base elements. */
   static constexpr t8_eclass_t base_eclass = TBaseScheme::get_eclass ();
   /** The number of faces of a base element, which is also the number of lateral faces. */
@@ -88,7 +84,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   // #################################____CONSTRUCTORS & DESTRUCTOR____#################################################
 
   /** Constructor. */
-  t8_extruded_scheme () noexcept: base_scheme (), scheme_context (sc_mempool_new (sizeof (ExtrudedElementType))) {};
+  t8_extruded_scheme () noexcept: base_scheme (), scheme_context (sc_mempool_new (sizeof (TBaseElem))) {};
 
   /** Destructor. */
   ~t8_extruded_scheme ()
@@ -123,7 +119,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
 
   /** Copy constructor */
   t8_extruded_scheme (const t8_extruded_scheme &other)
-    : base_scheme (other.base_scheme), scheme_context (sc_mempool_new (sizeof (ExtrudedElementType))) {};
+    : base_scheme (other.base_scheme), scheme_context (sc_mempool_new (sizeof (TBaseElem))) {};
 
   /** Copy assignment operator */
   t8_extruded_scheme &
@@ -135,49 +131,13 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
         sc_mempool_destroy ((sc_mempool_t *) scheme_context);
       }
       base_scheme = other.base_scheme;
-      scheme_context = sc_mempool_new (sizeof (ExtrudedElementType));
+      scheme_context = sc_mempool_new (sizeof (TBaseElem));
     }
     return *this;
   }
 
  private:
   // ################################################____HELPERS____####################################################
-
-  /** Cast an element to an extruded element. */
-  static inline ExtrudedElementType *
-  as_extruded (t8_element_t *elem)
-  {
-    return reinterpret_cast<ExtrudedElementType *> (elem);
-  }
-
-  /** Cast an element to a const extruded element. */
-  static inline const ExtrudedElementType *
-  as_extruded (const t8_element_t *elem)
-  {
-    return reinterpret_cast<const ExtrudedElementType *> (elem);
-  }
-
-  /** Return the base element of an element. */
-  static inline t8_element_t *
-  to_base (t8_element_t *elem)
-  {
-    return reinterpret_cast<t8_element_t *> (&as_extruded (elem)->base);
-  }
-
-  /** Return the base element of a const element. */
-  static inline const t8_element_t *
-  to_base (const t8_element_t *elem)
-  {
-    return reinterpret_cast<const t8_element_t *> (&as_extruded (elem)->base);
-  }
-
-  /** Set a line to the root line spanning the whole tree height. */
-  static inline void
-  set_line_to_root (t8_dline_t *line)
-  {
-    line->x = 0;
-    line->level = 0;
-  }
 
   /** Return true if \a face is a lateral face. */
   static constexpr bool
@@ -195,14 +155,14 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   static constexpr size_t
   get_element_size (void) noexcept
   {
-    return sizeof (ExtrudedElementType);
+    return sizeof (TBaseElem);
   }
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * \return Dictated by the base scheme because no refinement occurs in extruded direction.
    */
-  static constexpr int
-  refines_irregular ()
+  int
+  refines_irregular (void) const
   {
     return base_scheme.refines_irregular ();
   }
@@ -224,7 +184,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_level (const t8_element_t *elem) const
   {
     T8_ASSERT (element_is_valid (elem));
-    return base_scheme.element_get_level (to_base (elem));
+    return base_scheme.element_get_level (elem);
   }
 
   /** Return the shape of an element.
@@ -293,8 +253,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     if (source == dest) {
       return;
     }
-    base_scheme.element_copy (to_base (source), to_base (dest));
-    as_extruded (dest)->line = as_extruded (source)->line;
+    base_scheme.element_copy (source, dest);
   }
 
   /** Compare two elements in the order of the SFC of the base scheme.
@@ -307,14 +266,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem1));
     T8_ASSERT (element_is_valid (elem2));
-    const int base_compare = base_scheme.element_compare (to_base (elem1), to_base (elem2));
-    if (base_compare != 0) {
-      return base_compare;
-    }
-    // TODO extruded: currently x is always 0?
-    const t8_dline_coord_t z1 = as_extruded (elem1)->line.x;
-    const t8_dline_coord_t z2 = as_extruded (elem2)->line.x;
-    return z1 < z2 ? -1 : (z1 > z2 ? 1 : 0);
+    return base_scheme.element_compare (elem1, elem2);
   }
 
   /** Check if two elements are equal.
@@ -327,10 +279,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem1));
     T8_ASSERT (element_is_valid (elem2));
-    const t8_dline_t &line1 = as_extruded (elem1)->line;
-    const t8_dline_t &line2 = as_extruded (elem2)->line;
-    return base_scheme.element_is_equal (to_base (elem1), to_base (elem2)) && line1.x == line2.x
-           && line1.level == line2.level;
+    return base_scheme.element_is_equal (elem1, elem2);
   }
 
   // ################################################____FAMILY____#####################################################
@@ -343,7 +292,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_is_refinable (const t8_element_t *elem) const
   {
     T8_ASSERT (element_is_valid (elem));
-    return base_scheme.element_is_refinable (to_base (elem));
+    return base_scheme.element_is_refinable (elem);
   }
 
   /** Compute the parent of a given element \a elem and store it in \a parent.
@@ -355,9 +304,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_parent (const t8_element_t *elem, t8_element_t *parent) const
   {
     T8_ASSERT (element_is_valid (elem));
-    const t8_dline_t line = as_extruded (elem)->line;
-    base_scheme.element_get_parent (to_base (elem), to_base (parent));
-    as_extruded (parent)->line = line;
+    base_scheme.element_get_parent (elem, parent);
     T8_ASSERT (element_is_valid (parent));
   }
 
@@ -369,7 +316,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_num_siblings (const t8_element_t *elem) const
   {
     T8_ASSERT (element_is_valid (elem));
-    return base_scheme.element_get_num_siblings (to_base (elem));
+    return base_scheme.element_get_num_siblings (elem);
   }
 
   /** Compute a specific sibling of a given element \a elem and store it in \a sibling.
@@ -382,9 +329,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_sibling (const t8_element_t *elem, const int sibid, t8_element_t *sibling) const
   {
     T8_ASSERT (element_is_valid (elem));
-    const t8_dline_t line = as_extruded (elem)->line;
-    base_scheme.element_get_sibling (to_base (elem), sibid, to_base (sibling));
-    as_extruded (sibling)->line = line;
+    base_scheme.element_get_sibling (elem, sibid, sibling);
     T8_ASSERT (element_is_valid (sibling));
   }
 
@@ -396,7 +341,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_num_children (const t8_element_t *elem) const
   {
     T8_ASSERT (element_is_valid (elem));
-    return base_scheme.element_get_num_children (to_base (elem));
+    return base_scheme.element_get_num_children (elem);
   }
 
   /** Return the max number of children of an element of this class.
@@ -417,27 +362,22 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_child (const t8_element_t *elem, const int childid, t8_element_t *child) const
   {
     T8_ASSERT (element_is_valid (elem));
-    const t8_dline_t line = as_extruded (elem)->line;
-    base_scheme.element_get_child (to_base (elem), childid, to_base (child));
-    as_extruded (child)->line = line;
+    base_scheme.element_get_child (elem, childid, child);
     T8_ASSERT (element_is_valid (child));
   }
 
   /** Construct all children of a given element. It is valid to call this function with elem = children[0].
-   * \param [in] elem     This must be a valid element, bigger than maxlevel.
-   * \param [in] length   The length of the output array \a c must match the number of children.
-   * \param [in,out] c    The storage for these \a length elements must exist. On output, all children are valid.
+   * \param [in] elem          This must be a valid element, bigger than maxlevel.
+   * \param [in] length        The length of the output array \a c must match the number of children.
+   * \param [in,out] children  The storage for these \a length elements must exist. On output, all children are valid.
    */
   inline void
   element_get_children (const t8_element_t *elem, const int length, t8_element_t *children[]) const
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (length == element_get_num_children (elem));
-    const t8_dline_t line = as_extruded (elem)->line;
-    /* The base element is the first member, so the children pointers are also pointers to the base children. */
-    base_scheme.element_get_children (to_base (elem), length, c);
+    base_scheme.element_get_children (elem, length, children);
     for (int ichild = 0; ichild < length; ++ichild) {
-      as_extruded (children[ichild])->line = line;
       T8_ASSERT (element_is_valid (children[ichild]));
     }
   }
@@ -450,7 +390,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_child_id (const t8_element_t *elem) const
   {
     T8_ASSERT (element_is_valid (elem));
-    return base_scheme.element_get_child_id (to_base (elem));
+    return base_scheme.element_get_child_id (elem);
   }
 
   /** Compute the ancestor id of an element, that is the child id at a given level.
@@ -462,7 +402,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_ancestor_id (const t8_element_t *elem, const int level) const
   {
     T8_ASSERT (element_is_valid (elem));
-    return base_scheme.element_get_ancestor_id (to_base (elem), level);
+    return base_scheme.element_get_ancestor_id (elem, level);
   }
 
   /** Query whether element A is an ancestor of the element B.
@@ -475,9 +415,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (element_A));
     T8_ASSERT (element_is_valid (element_B));
-    // TODO extruded: correct to check x?
-    return as_extruded (element_A)->line.x == as_extruded (element_B)->line.x
-           && base_scheme.element_is_ancestor (to_base (element_A), to_base (element_B));
+    return base_scheme.element_is_ancestor (element_A, element_B);
   }
 
   /** Query whether a given set of elements is a family or not.
@@ -488,12 +426,6 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   elements_are_family (const t8_element_t *const *fam) const
   {
     const int num_siblings = element_get_num_siblings (fam[0]);
-    for (int isib = 1; isib < num_siblings; ++isib) {
-      if (as_extruded (fam[isib])->line.x != as_extruded (fam[0])->line.x) {
-        return 0;
-      }
-    }
-    /* The base element is the first member, so the family pointers are also pointers to the base elements. */
     return base_scheme.elements_are_family (fam);
   }
 
@@ -507,10 +439,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem1));
     T8_ASSERT (element_is_valid (elem2));
-    T8_ASSERT (as_extruded (elem1)->line.x == as_extruded (elem2)->line.x);
-    const t8_dline_t line = as_extruded (elem1)->line;
-    base_scheme.element_get_nca (to_base (elem1), to_base (elem2), to_base (nca));
-    as_extruded (nca)->line = line;
+    base_scheme.element_get_nca (elem1, elem2, nca);
     T8_ASSERT (element_is_valid (nca));
   }
 
@@ -527,7 +456,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < element_get_num_faces (elem));
     if (is_lateral_face (face)) {
-      return base_scheme.element_get_num_face_children (to_base (elem), face);
+      return base_scheme.element_get_num_face_children (elem, face);
     }
     /* All children touch the bottom and the top face. */
     return element_get_num_children (elem);
@@ -547,7 +476,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
       /* A face of the base scheme is always a line, an extruded line is always a quad */
       T8_ASSERT (0 <= corner && corner < 4);
       /* The lateral face is the base face at the bottom (corner 0, 1) and at the top (corner 2, 3). */
-      return base_scheme.element_get_face_corner (to_base (elem), face, corner % 2) + num_base_vertices * (corner / 2);
+      return base_scheme.element_get_face_corner (elem, face, corner % 2) + num_base_vertices * (corner / 2);
     }
     T8_ASSERT (0 <= corner && corner < num_base_vertices);
     return corner + num_base_vertices * (face - bottom_face);
@@ -565,7 +494,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     T8_ASSERT (0 <= corner && corner < element_get_num_corners (elem));
     T8_ASSERT (0 <= face && face < 3);
     if (face < 2) {
-      return base_scheme.element_get_corner_face (to_base (elem), corner % num_base_vertices, face);
+      return base_scheme.element_get_corner_face (elem, corner % num_base_vertices, face);
     }
     return bottom_face + corner / num_base_vertices;
   }
@@ -597,10 +526,8 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
       }
       return;
     }
-    const t8_dline_t line = as_extruded (elem)->line;
-    base_scheme.element_get_children_at_face (to_base (elem), face, children, num_children, child_indices);
+    base_scheme.element_get_children_at_face (elem, face, children, num_children, child_indices);
     for (int ichild = 0; ichild < num_children; ++ichild) {
-      as_extruded (children[ichild])->line = line;
       T8_ASSERT (element_is_valid (children[ichild]));
     }
   }
@@ -617,7 +544,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     if (is_lateral_face (face)) {
-      return base_scheme.element_face_get_child_face (to_base (elem), face, face_child);
+      return base_scheme.element_face_get_child_face (elem, face, face_child);
     }
     return face;
   }
@@ -634,7 +561,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     if (is_lateral_face (face)) {
-      return base_scheme.element_face_get_parent_face (to_base (elem), face);
+      return base_scheme.element_face_get_parent_face (elem, face);
     }
     return face;
   }
@@ -652,7 +579,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     if (is_lateral_face (face)) {
-      return base_scheme.element_face_get_ancestor_face (to_base (elem), ancestor_level, face);
+      return base_scheme.element_face_get_ancestor_face (elem, ancestor_level, face);
     }
     return face;
   }
@@ -668,7 +595,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     if (is_lateral_face (face)) {
-      return base_scheme.element_get_tree_face (to_base (elem), face);
+      return base_scheme.element_get_tree_face (elem, face);
     }
     return face;
   }
@@ -706,13 +633,9 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
                         const t8_scheme *scheme) const
   {
     T8_ASSERT (0 <= root_face && root_face < element_get_num_faces (elem));
-    ExtrudedElementType *extruded = as_extruded (elem);
-    // TODO extruded:
-    /* Elem may be an element outside of the tree, reset it to a valid element first. */
-    set_line_to_root (&extruded->line);
     if (!is_lateral_face (root_face)) {
       /* The bottom and top faces are elements of the base scheme. */
-      base_scheme.element_copy (face, to_base (elem));
+      base_scheme.element_copy (face, elem);
       T8_ASSERT (element_is_valid (elem));
       return root_face;
     }
@@ -723,7 +646,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     base_face.level = face_quad->level;
     base_face.x = ((int64_t) face_quad->x * T8_DLINE_ROOT_LEN) / P4EST_ROOT_LEN;
     const int base_face_number
-      = base_scheme.element_extrude_face ((const t8_element_t *) &base_face, to_base (elem), root_face, scheme);
+      = base_scheme.element_extrude_face ((const t8_element_t *) &base_face, elem, root_face, scheme);
     T8_ASSERT (element_is_valid (elem));
     return base_face_number;
   }
@@ -741,9 +664,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     if (is_lateral_face (face)) {
-      const t8_dline_t line = as_extruded (elem)->line;
-      base_scheme.element_get_first_descendant_face (to_base (elem), face, to_base (first_desc), level);
-      as_extruded (first_desc)->line = line;
+      base_scheme.element_get_first_descendant_face (elem, face, first_desc, level);
       T8_ASSERT (element_is_valid (first_desc));
     }
     else {
@@ -764,9 +685,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     if (is_lateral_face (face)) {
-      const t8_dline_t line = as_extruded (elem)->line;
-      base_scheme.element_get_last_descendant_face (to_base (elem), face, to_base (last_desc), level);
-      as_extruded (last_desc)->line = line;
+      base_scheme.element_get_last_descendant_face (elem, face, last_desc, level);
       T8_ASSERT (element_is_valid (last_desc));
     }
     else {
@@ -790,13 +709,15 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= face && face < element_get_num_faces (elem));
     if (!is_lateral_face (face)) {
-      base_scheme.element_copy (to_base (elem), boundary);
+      base_scheme.element_copy (elem, boundary);
       return;
     }
+    // TODO extruded: ??
     /* Compute the boundary line of the base element and use its coordinate as the in-plane coordinate. */
     t8_dline_t base_face;
-    set_line_to_root (&base_face);
-    base_scheme.element_get_boundary_face (to_base (elem), face, (t8_element_t *) &base_face, scheme);
+    base_face.x = 0;
+    base_face.level = 0;
+    base_scheme.element_get_boundary_face (elem, face, (t8_element_t *) &base_face, scheme);
     p4est_quadrant_t *face_quad = (p4est_quadrant_t *) boundary;
     face_quad->level = base_face.level;
     face_quad->x = ((int64_t) base_face.x * P4EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
@@ -813,7 +734,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     if (is_lateral_face (face)) {
-      return base_scheme.element_is_root_boundary (to_base (elem), face);
+      return base_scheme.element_is_root_boundary (elem, face);
     }
     /* Every element spans the whole tree height. */
     return true;
@@ -835,24 +756,17 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (element_is_valid (neigh));
     T8_ASSERT (neigh_face != NULL);
-    const t8_dline_t line = as_extruded (elem)->line;
     if (is_lateral_face (face)) {
       const int is_inside
-        = base_scheme.element_get_face_neighbor_inside (to_base (elem), to_base (neigh), face, neigh_face);
-      as_extruded (neigh)->line = line;
+        = base_scheme.element_get_face_neighbor_inside (elem, neigh, face, neigh_face);
       T8_ASSERT (element_is_valid (neigh));
       return is_inside;
     }
-    /* Shift the element in z-direction. Since elements span the whole tree height, the neighbor is always outside. */
-    base_scheme.element_copy (to_base (elem), to_base (neigh));
-    t8_dline_t &neigh_line = as_extruded (neigh)->line;
     // TODO extruded: ??
-    neigh_line.level = line.level;
-    neigh_line.x = face == bottom_face ? line.x - T8_DLINE_LEN (line.level) : line.x + T8_DLINE_LEN (line.level);
-    /* The bottom face of the upper neighbor is the top face and vice versa. */
+    base_scheme.element_copy (elem, neigh);
     *neigh_face = face == bottom_face ? bottom_face + 1 : bottom_face;
-    // TODO extruded: neighbor cannot be inside?!
-    return 0 <= neigh_line.x && neigh_line.x < T8_DLINE_ROOT_LEN;
+    /* Since elements span the whole tree height, the neighbor is always outside. */
+    return false;
   }
 
   // ################################################____SFC____########################################################
@@ -866,8 +780,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline void
   element_set_linear_id (t8_element_t *elem, const int level, const t8_linearidx_t id) const
   {
-    base_scheme.element_set_linear_id (to_base (elem), level, id);
-    set_line_to_root (&as_extruded (elem)->line);
+    base_scheme.element_set_linear_id (elem, level, id);
     T8_ASSERT (element_is_valid (elem));
   }
 
@@ -880,7 +793,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_linear_id (const t8_element_t *elem, const int level) const
   {
     T8_ASSERT (element_is_valid (elem));
-    return base_scheme.element_get_linear_id (to_base (elem), level);
+    return base_scheme.element_get_linear_id (elem, level);
   }
 
   /** Compute the first descendant of a given element.
@@ -892,9 +805,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_first_descendant (const t8_element_t *elem, t8_element_t *desc, const int level) const
   {
     T8_ASSERT (element_is_valid (elem));
-    const t8_dline_t line = as_extruded (elem)->line;
-    base_scheme.element_get_first_descendant (to_base (elem), to_base (desc), level);
-    as_extruded (desc)->line = line;
+    base_scheme.element_get_first_descendant (elem, desc, level);
     T8_ASSERT (element_is_valid (desc));
   }
 
@@ -907,9 +818,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_get_last_descendant (const t8_element_t *elem, t8_element_t *desc, const int level) const
   {
     T8_ASSERT (element_is_valid (elem));
-    const t8_dline_t line = as_extruded (elem)->line;
-    base_scheme.element_get_last_descendant (to_base (elem), to_base (desc), level);
-    as_extruded (desc)->line = line;
+    base_scheme.element_get_last_descendant (elem, desc, level);
     T8_ASSERT (element_is_valid (desc));
   }
 
@@ -921,10 +830,8 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_construct_successor (const t8_element_t *elem, t8_element_t *succ) const
   {
     T8_ASSERT (element_is_valid (elem));
-    const t8_dline_t line = as_extruded (elem)->line;
-    base_scheme.element_construct_successor (to_base (elem), to_base (succ));
-    as_extruded (succ)->line = line;
-    T8_ASSERT (element_is_valid (desc));
+    base_scheme.element_construct_successor (elem, succ);
+    T8_ASSERT (element_is_valid (succ));
   }
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
@@ -935,7 +842,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline t8_gloidx_t
   element_count_leaves (const t8_element_t *elem, const int level) const
   {
-    return base_scheme.element_count_leaves (to_base (elem), level);
+    return base_scheme.element_count_leaves (elem, level);
   }
 
   /** Count how many leaf descendants of a given uniform level the root element will produce.
@@ -960,10 +867,8 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   {
     T8_ASSERT (element_is_valid (elem));
     T8_ASSERT (0 <= vertex && vertex < element_get_num_corners (elem));
-    base_scheme.element_get_vertex_reference_coords (to_base (elem), vertex % num_base_vertices, coords);
-    const t8_dline_t &line = as_extruded (elem)->line;
-    // TODO extruded: correct?
-    coords[2] = (line.x + (vertex / num_base_vertices) * (double) T8_DLINE_LEN (line.level)) / T8_DLINE_ROOT_LEN;
+    base_scheme.element_get_vertex_reference_coords (elem, vertex % num_base_vertices, coords);
+    coords[2] = vertex / num_base_vertices;
   }
 
   /** Convert points in the reference space of an element to points in the reference space of the tree.
@@ -977,16 +882,15 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
                                 double *out_coords) const
   {
     T8_ASSERT (element_is_valid (elem));
-    const t8_dline_t &line = as_extruded (elem)->line;
     for (size_t icoord = 0; icoord < num_coords; ++icoord) {
       const double *ref = ref_coords + 3 * icoord;
       double *out = out_coords + 3 * icoord;
       /* The base scheme reads 3D input and writes 2D output coordinates. */
       double base_out[2];
-      base_scheme.element_get_reference_coords (to_base (elem), ref, 1, base_out);
+      base_scheme.element_get_reference_coords (elem, ref, 1, base_out);
       out[0] = base_out[0];
       out[1] = base_out[1];
-      out[2] = (line.x + ref[2] * T8_DLINE_LEN (line.level)) / (double) T8_DLINE_ROOT_LEN;
+      out[2] = ref[2];
     }
   }
 
@@ -1000,12 +904,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline int
   element_is_valid (const t8_element_t *elem) const
   {
-    const t8_dline_t &line = as_extruded (elem)->line;
-    /* The line spans the whole tree height, possibly shifted by one tree for neighbors outside of the tree. */
-    // TODO extruded: correct?
-    const bool line_is_valid
-      = line.level == 0 && (line.x == -T8_DLINE_ROOT_LEN || line.x == 0 || line.x == T8_DLINE_ROOT_LEN);
-    return line_is_valid && base_scheme.element_is_valid (to_base (elem));
+    return base_scheme.element_is_valid (elem);
   }
 
   /** Print a given element.
@@ -1039,11 +938,10 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_to_string (const t8_element_t *elem, char *debug_string, const int string_size) const
   {
     T8_ASSERT (debug_string != NULL);
-    base_scheme.element_to_string (to_base (elem), debug_string, string_size);
+    base_scheme.element_to_string (elem, debug_string, string_size);
     const size_t base_length = strlen (debug_string);
     if (base_length < (size_t) string_size) {
-      const t8_dline_t &line = as_extruded (elem)->line;
-      snprintf (debug_string + base_length, string_size - base_length, ", z: %i, z-level: %i", line.x, line.level);
+      snprintf (debug_string + base_length, string_size - base_length, ", z-level: 0");
     }
   }
 
@@ -1060,7 +958,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     T8_ASSERT (0 <= length);
     for (int ielem = 0; ielem < length; ++ielem) {
       elem[ielem] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) scheme_context);
-      base_scheme.element_init (1, to_base (elem[ielem]));
+      base_scheme.element_init (1, elem[ielem]);
       set_to_root (elem[ielem]);
     }
   }
@@ -1072,11 +970,10 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline void
   element_init (const int length, t8_element_t *elem) const
   {
-    ExtrudedElementType *elements = as_extruded (elem);
+    TBaseElem *elements = (TBaseElem *) elem;
     for (int ielem = 0; ielem < length; ++ielem) {
       t8_element_t *element = (t8_element_t *) (elements + ielem);
-      base_scheme.element_init (1, to_base (element));
-      set_to_root (element);
+      base_scheme.element_init (1, element);
     }
   }
 
@@ -1087,9 +984,9 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline void
   element_deinit (const int length, t8_element_t *elem) const
   {
-    ExtrudedElementType *elements = as_extruded (elem);
+    TBaseElem *elements = (TBaseElem *) elem;
     for (int ielem = 0; ielem < length; ++ielem) {
-      base_scheme.element_deinit (1, to_base ((t8_element_t *) (elements + ielem)));
+      base_scheme.element_deinit (1, (t8_element_t *) (elements + ielem));
     }
   }
 
@@ -1112,8 +1009,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline void
   set_to_root (t8_element_t *elem) const
   {
-    base_scheme.set_to_root (to_base (elem));
-    set_line_to_root (&as_extruded (elem)->line);
+    base_scheme.set_to_root (elem);
   }
 
   // ################################################____MPI____########################################################
@@ -1131,15 +1027,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_MPI_Pack (t8_element_t **const elements, const unsigned int count, void *send_buffer, const int buffer_size,
                     int *position, sc_MPI_Comm comm) const
   {
-    /* The base element is the first member, so the element pointers are also pointers to the base elements. */
     base_scheme.element_MPI_Pack (elements, count, send_buffer, buffer_size, position, comm);
-    for (unsigned int ielem = 0; ielem < count; ielem++) {
-      t8_dline_t *line = &as_extruded (elements[ielem])->line;
-      int mpiret = sc_MPI_Pack (&line->x, 1, sc_MPI_INT, send_buffer, buffer_size, position, comm);
-      SC_CHECK_MPI (mpiret);
-      mpiret = sc_MPI_Pack (&line->level, 1, sc_MPI_INT8_T, send_buffer, buffer_size, position, comm);
-      SC_CHECK_MPI (mpiret);
-    }
   }
 
   /** Determine an upper bound for the size of the packed message of \a count elements
@@ -1175,13 +1063,6 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
                       const unsigned int count, sc_MPI_Comm comm) const
   {
     base_scheme.element_MPI_Unpack (recvbuf, buffer_size, position, elements, count, comm);
-    for (unsigned int ielem = 0; ielem < count; ielem++) {
-      t8_dline_t *line = &as_extruded (elements[ielem])->line;
-      int mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &line->x, 1, sc_MPI_INT, comm);
-      SC_CHECK_MPI (mpiret);
-      mpiret = sc_MPI_Unpack (recvbuf, buffer_size, position, &line->level, 1, sc_MPI_INT8_T, comm);
-      SC_CHECK_MPI (mpiret);
-    }
   }
 };
 
