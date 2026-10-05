@@ -848,7 +848,7 @@ t8_cmesh_process_tree_geometry (const t8_cmesh_t cmesh, const t8_eclass_t eclass
       const int param_index = i_tree_faces;
       const int num_params = num_face_nodes * 2;
 
-      t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, param_dim, param_index, parameters, num_params);
+      t8_geometry_cad::set_tree_geometry_parameters (cmesh, tree_count, param_dim, param_index, parameters, num_params);
     }
   }
   /*----------------------------------------- End of face-surface linkage -----------------------------------------*/
