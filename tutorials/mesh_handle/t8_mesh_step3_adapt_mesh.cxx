@@ -36,39 +36,32 @@
  * of any element will change by at most +-1.
 */
 
-#include <t8.h>                                 /** General t8code header. Always include this. */
-#include <mesh_handle/mesh.hxx>                 /** General mesh header. Always needed for mesh_handle code. */
-#include <mesh_handle/competence_pack.hxx>      /** Competence pack for basic mesh_handle features. 
-                                            *  Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
-#include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
-#include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
-#include <mesh_handle/concepts.hxx>             /** Include this to use c++ concepts related to the mesh handle. 
-                                     *  This can be used to constraint the template parameters to only allow mesh handle classes. */
-#include "t8_mesh_tutorials_common.hxx"         /** Adaption function definition used for this tutorial. */
+#include <t8.h>                         /** General t8code header. Always include this. */
+#include <mesh_handle/mesh.hxx>         /** General mesh header. Always needed for mesh_handle code. */
+#include <mesh_handle/mesh_io.hxx>      /** Used to export mesh to vtk files. */
+#include <mesh_handle/concepts.hxx>     /** Include this to use c++ concepts related to the mesh handle. 
+                                     *  This can be used to constrain the template parameters to only allow mesh handle classes. */
+#include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
 #include <memory>
 
 /** Build our adapted mesh by transferring the adaption parameters and adapting once with the adapt_callback_sphere function defined in \ref t8_mesh_tutorials_common.hxx.
  * \tparam TMeshClass    The mesh handle class.
- * \param mesh           The mesh that should be adapted.
+ * \param [in] mesh      The mesh that should be adapted.
  * \returns Unique pointer to the adapted mesh.
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
-std::unique_ptr<TMeshClass>
-build_adapted_mesh (std::unique_ptr<TMeshClass> mesh)
+void
+step3_adapt_mesh (TMeshClass &mesh)
 {
-  /* Setting file name for vtk export. */
-  const char *prefix_initial = "step3_initial_uniform_mesh";
-  /* Saving the initial mesh to vtu files to compare them later. */
-  t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_initial);
   /* Defining the adaption parameters. */
   adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
   /** Adapting once using our adapt callback.
    *  set_adapt() only records how the mesh should be changed, it does not modify anything yet. 
    *  commit() is the function that actually builds the new, adapted mesh from these settings.
-   *  This "configure, then commit" split let's t8code carry out several mesh operations together in one efficient pass, rather than one at a time. 
+   *  This "configure, then commit" split lets t8code carry out several mesh operations together in one efficient pass, rather than one at a time. 
    */
   mesh->set_adapt (
-    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (adapt_callback_sphere<TMeshClass>, adapt_params));
+    TMeshClass::template mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback_sphere<TMeshClass>, adapt_params));
   mesh->commit ();
   return mesh;
 }
@@ -77,7 +70,8 @@ build_adapted_mesh (std::unique_ptr<TMeshClass> mesh)
 int
 main (int argc, char **argv)
 {
-  /* Set file name for vtk export. */
+  /* Set file names for vtk export. */
+  const char *prefix_initial = "step3_initial_uniform_mesh";
   const char *prefix_adapted = "step3_adapted_mesh";
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   int mpiret = sc_MPI_Init (&argc, &argv);
@@ -101,7 +95,6 @@ main (int argc, char **argv)
 
   using mesh_type = t8_mesh_handle::mesh<>;
 
-  t8_global_productionf (" [mesh_step3] \n");
   t8_global_productionf (" [mesh_step3] Creating an adapted mesh.\n");
   t8_global_productionf (" [mesh_step3] \n");
   /* The initial uniform refinement level. */
@@ -110,10 +103,14 @@ main (int argc, char **argv)
   { /* Scope to ensure mesh is deleted properly. */
     /* Generate a hybrid hypercube, made out of hexahedra, prisms etc. */
     auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
-    /* Call the function that handles the adaption. */
-    mesh = build_adapted_mesh<mesh_type> (std::move (mesh));
-    /* Write the mesh to a vtu file. */
+    /* Saving the initial mesh to vtu files to compare them later. */
+    t8_global_productionf (" [mesh_step3] Writing initial mesh to vtu files: %s*\n", prefix_initial);
     t8_global_productionf (" [mesh_step3] \n");
+    t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_initial);
+
+    /* Call the function that handles the adaption. */
+    mesh = step3_adapt_mesh<mesh_type> (std::move (mesh));
+    /* Write the mesh to a vtu file. */
     t8_global_productionf (" [mesh_step3] Writing adapted mesh to vtu files: %s*\n", prefix_adapted);
     t8_global_productionf (" [mesh_step3] \n");
     t8_mesh_handle::write_mesh_to_vtk (*mesh, prefix_adapted);
