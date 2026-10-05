@@ -107,7 +107,7 @@ struct t8_scheme
                                 t8_standalone_scheme<T8_ECLASS_HEX>,
                                 t8_standalone_scheme<T8_ECLASS_TET>,
                                 t8_standalone_scheme<T8_ECLASS_PRISM>,
-                                t8_standalone_scheme<T8_ECLASS_PYRAMID>
+                                t8_standalone_scheme<T8_ECLASS_PYRAMID>,
                                 /* Subelement schemes */
                                 t8_subelem_scheme_hanging_nodes_quad,
                                 t8_subelem_scheme_hanging_nodes_tri

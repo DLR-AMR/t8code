@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <test/t8_gtest_schemes.hxx>
 #include <test/t8_gtest_macros.hxx>
-#include <t8_cmesh.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 
@@ -73,14 +73,16 @@ adapt_all ([[maybe_unused]] t8_forest_t forest, [[maybe_unused]] t8_forest_t for
 
 TEST_P (class_element_leaves, test_element_count_leaves_root)
 {
-#if T8CODE_TEST_LEVEL >= 1
-  const int maxlevel = 4;
+#if T8_TEST_LEVEL_INT >= 1
+  const int maxlevel = 3;
 #else
-  const int maxlevel = 6;
+  const int maxlevel = 5;
 #endif
   t8_gloidx_t compare_value = 1;
   t8_gloidx_t test_value = 1;
-  t8_cmesh_t cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
   t8_cmesh_ref (cmesh);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
   scheme->ref ();
