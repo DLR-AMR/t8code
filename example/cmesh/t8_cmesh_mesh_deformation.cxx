@@ -114,7 +114,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
   sc_options_add_string (opt, 'm', "mshfile", &msh_file, NULL, "File prefix of the input mesh file (without .msh)");
   sc_options_add_string (opt, 'b', "brepfile", &brep_file, NULL,
-                         "Path tothe folder containing the deformation geometry files (.brep)");
+                         "Path to the folder containing the deformation geometry files (.brep)");
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
   sc_options_add_int (opt, 't', "rbftype", &rbf_type_int, 0, "RBF type (0 for CP_C2, 1 for TPS). Default: 0");
@@ -159,50 +159,16 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     int ifile = 0;
     for (const auto &file : brep_files) {
       auto file_without_ext = file.parent_path () / file.stem ();
-      auto cad_deformaed = std::make_shared<t8_cad_handle> (file_without_ext.c_str ());
-
-      auto displacements = deformation.calculate_displacement_surface_vertices (cad_deformaed.get (), rbf_type,
-                                                                                scale_factor_support_radius);
-
-      deformation.apply_vertex_displacements (displacements, cad_deformaed, rbf_type);
-
-      std::string output_name = "deformed_forest_step_" + std::to_string (ifile++);
-      t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
-    }
-#if 0
-    int num_steps = 50;
-    for (int num = 1; num <= num_steps; ++num) {
-
-      char brep_buf[256];
-      snprintf (brep_buf, sizeof (brep_buf), "%s%d", brep_file, num);
-
-      std::string current_brep (brep_buf);
-
-      auto cad_deformed = std::make_shared<t8_cad_handle> (current_brep);
+      auto cad_deformed = std::make_shared<t8_cad_handle> (file_without_ext.c_str ());
 
       auto displacements = deformation.calculate_displacement_surface_vertices (cad_deformed.get (), rbf_type,
                                                                                 scale_factor_support_radius);
 
       deformation.apply_vertex_displacements (displacements, cad_deformed, rbf_type);
 
-      std::string output_name = "deformed_forest_step_" + std::to_string (num);
+      std::string output_name = "deformed_forest_step_" + std::to_string (ifile++);
       t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
     }
-#endif
-#if 0
-    /* Calculate displacements. */
-    auto displacements
-      = deformation.calculate_displacement_surface_vertices (cad.get (), rbf_type, scale_factor_support_radius);
-
-    /* Write output. */
-    t8_forest_vtk_write_file (forest, "input_forest", 1, 1, 1, 1, 0, 0, NULL);
-
-    /* Apply displacements. */
-    deformation.apply_vertex_displacements (displacements, cad, rbf_type);
-
-    /* Write output. */
-    t8_forest_vtk_write_file (forest, "deformed_forest", 1, 1, 1, 1, 0, 0, NULL);
-#endif
     /* Cleanup. */
     t8_forest_unref (&forest);
 
