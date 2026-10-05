@@ -35,10 +35,10 @@
 #include <t8.h> /** General t8code header. Always include this. */
 
 #include <mesh_handle/mesh.hxx>            /** General mesh header. Always needed for mesh_handle code. */
-#include <mesh_handle/competence_pack.hxx> /** Competence pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_competences for more information. */
+#include <mesh_handle/competence_pack.hxx> /** Competence pack for basic mesh_handle features. Look into tutorials/mesh_handle/t8_mesh_stepA_competences for more information. */
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
-#include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constraint the template parameters to only allow mesh handle classes. */
+#include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constrain the template parameters to only allow mesh handle classes. */
 #include <t8_types/t8_vec.hxx>      /** t8 vector dataclass. */
 #include "t8_mesh_tutorials_common.hxx" /** Adaption function definition used for this tutorial. */
 #include <memory>
@@ -70,6 +70,10 @@ build_mesh (sc_MPI_Comm comm, int level)
     0.4              /* Coarsen if outside this radius. */
   };
   /* Adapt, partition, balance and create ghost elements. */
+  /** This is not doing anything here, because we only adapt once before this line, 
+   *  so the difference between elements is +1 or -1 at most. 
+   *  We still include it here for demonstration purposes. 
+   */
   mesh_handle->set_balance ();
   mesh_handle->set_partition ();
   mesh_handle->set_adapt (

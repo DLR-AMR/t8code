@@ -51,7 +51,7 @@ struct adapt_data
  * \tparam TMeshClass The mesh handle class.
  * \param[in] mesh The mesh that should be adapted.
  * \param[in] elements One element or a family of elements to consider.
- * \param[in] adapt_data The user data used during adaptation.
+ * \param[in] adapt_params The user data used during adaptation.
  *
  * \return
  *   1  if the first element should be refined,
@@ -61,20 +61,20 @@ struct adapt_data
 template <t8_mesh_handle::T8MeshType TMeshClass>
 int
 adapt_callback_sphere ([[maybe_unused]] const TMeshClass& mesh,
-                       std::span<const typename TMeshClass::element_class> elements, const adapt_data& adapt_data)
+                       std::span<const typename TMeshClass::element_class> elements, const adapt_data& adapt_params)
 {
   auto element_centroid = elements[0].get_centroid ();
 
-  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_data.midpoint);
+  double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_params.midpoint);
   /** When this if statement returns true, we are inside the set radius of our "refinement sphere" of our point and therefore need to refine. */
-  if (dist < adapt_data.refine_radius) {
-    return 1; /**< Refine. */
+  if (dist < adapt_params.refine_radius) {
+    return 1; /* Refine. */
   }
 
   /** Only coarsen if we actually have a complete family. */
-  if ((elements.size () > 1) && (dist > adapt_data.coarsen_radius)) {
-    return -1; /**< Coarsen. */
+  if ((elements.size () > 1) && (dist > adapt_params.coarsen_radius)) {
+    return -1; /* Coarsen. */
   }
 
-  return 0; /**< Do nothing. */
+  return 0; /* Do nothing. */
 }
