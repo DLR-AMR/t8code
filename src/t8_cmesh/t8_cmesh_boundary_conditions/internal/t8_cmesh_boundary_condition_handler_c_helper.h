@@ -30,7 +30,12 @@
 #include <t8_cmesh/t8_cmesh.h>
 
 #ifdef __cplusplus
-#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
+
+namespace detail
+{
+/* Forward declaration only, the definition lives in \ref t8_cmesh_boundary_condition_handler.hxx. */
+struct t8_cmesh_boundary_condition_handler;
+}  // namespace detail
 
 /** This typedef is used for the opaque pointers to the handler.
  * We need it so that we can use t8_cmesh_boundary_condition_handler_c pointers in .c files
@@ -38,7 +43,7 @@
  * We have one cpp version with the correct namespace and one c version pointing to nothing.
  * TODO: Delete this when the cmesh is a proper cpp class.
  */
-typedef struct detail::t8_cmesh_boundary_condition_handler t8_cmesh_boundary_condition_handler_c;
+typedef detail::t8_cmesh_boundary_condition_handler t8_cmesh_boundary_condition_handler_c;
 
 #else /* !__cplusplus */
 
