@@ -50,7 +50,7 @@ t8_read_msh_file_vtk (t8_cmesh_t cmesh, const char *prefix)
 
 /* Given a cmesh and a file prefix, partition the cmesh uniformly
  * and write vtk files for the partitioned mesh.
- * The original cmesh is unreffed in this function. */
+ * The original cmesh is dereferenced in this function. */
 static t8_cmesh_t
 t8_read_msh_partition (t8_cmesh_t cmesh, const char *prefix)
 {
@@ -125,7 +125,7 @@ main (int argc, char *argv[])
 
   if (sreturn >= BUFSIZ) {
     /* The help message was truncated */
-    /* Note: gcc >= 7.1 prints a warning if we 
+    /* Note: gcc >= 7.1 prints a warning if we
      * do not check the return value of snprintf. */
     t8_debugf ("Warning: Truncated help message to '%s'\n", help);
   }

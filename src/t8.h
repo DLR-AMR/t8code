@@ -24,6 +24,9 @@
  * This is the administrative header file for t8code.
  * It includes standard C headers via subpackages.
  * It also provides application-level convenience code such as logging functions.
+ * \hideincludedbygraph Nearly every file in t8code includes this header, so the
+ * "included by" graph is too large to be useful and is hidden here. It also is larger
+ * than the threshold and therefore throws a doxygen error.
  */
 
 #ifndef T8_H

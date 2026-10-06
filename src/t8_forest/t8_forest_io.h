@@ -34,17 +34,17 @@ T8_EXTERN_C_BEGIN ();
 void
 t8_forest_save (t8_forest_t forest);
 
-/** 
+/**
  * Write the forest in a parallel vtu format. Extended version.
  * See \see t8_forest_write_vtk for the standard version of this function.
  * Writes one master .pvtu file and each process writes in its own .vtu file.
  * If linked and not otherwise specified, the VTK API is used.
  * If the VTK library is not linked, an ASCII file is written.
- * This may change in accordance with \a write_ghosts, \a write_curved and 
- * \a do_not_use_API, because the export of ghosts is not yet available with 
+ * This may change in accordance with \a write_ghosts, \a write_curved and
+ * \a do_not_use_API, because the export of ghosts is not yet available with
  * the VTK API and the export of curved elements is not available with the
  * inbuilt function to write ASCII files. The function will for example
- * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API 
+ * still use the VTK API to satisfy \a write_curved, even if \a do_not_use_API
  * is set to true.
  * Forest must be committed when calling this function.
  * This function is collective and must be called on each process.
@@ -74,7 +74,7 @@ t8_forest_write_vtk_ext (t8_forest_t forest, const char *fileprefix, const int w
                          const int write_level, const int write_element_id, const int write_ghosts,
                          const int write_curved, int do_not_use_API, const int num_data, t8_vtk_data_field_t *data);
 
-/** 
+/**
  * Write the forest in a parallel vtu format. Writes one master
  * .pvtu file and each process writes in its own .vtu file.
  * If linked, the VTK API is used.
