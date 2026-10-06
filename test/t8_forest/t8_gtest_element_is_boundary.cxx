@@ -39,7 +39,7 @@
 /* Maximum uniform level for forest. */
 #define T8_IS_BOUNDARY_MAX_LVL 3
 
-/* Adapt a forest such that always the first child of a
+/* Adapt a forest such that always the child with ID=1 (i.e. the second child)
  * family is refined and no other elements. This results in a highly
  * imbalanced forest. */
 static int
@@ -63,7 +63,8 @@ t8_test_adapt_first_child (t8_forest_t forest, [[maybe_unused]] t8_forest_t fore
   }
   return 0;
 }
-/* In a quad forest remove the first and fourth child of each element.
+
+/* In a quad forest remove the first (ID = 0) and fourth (ID = 3) child of each element.
  * This will reside in a forest where each element and each face is a boundary element.
  * */
 static int
