@@ -36,7 +36,6 @@ The concrete ghost definitions:
   `t8_forest_search` over the local leaves, using a user provided search callback and search data.
 - `t8_forest_ghost_definition_face`: face-neighbor ghosts, the definition that
   `t8_forest_set_ghost` creates for `T8_GHOST_FACES`.
-  Version 3 uses the search, versions 1 and 2 compute the remote elements directly.
 
 ## How a ghost layer is built
 
