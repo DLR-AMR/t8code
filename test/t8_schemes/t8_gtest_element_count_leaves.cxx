@@ -73,7 +73,8 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
       compare_value = 2 * sum1 - sum2;
     }
     else {
-      compare_value *= 1 << t8_eclass_to_dimension[eclass];
+      // TODO extruded: ok to rely on get_max_num_children instead?
+      compare_value *= scheme->get_max_num_children (eclass);
     }
   }
 }
