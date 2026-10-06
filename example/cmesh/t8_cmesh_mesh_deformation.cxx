@@ -28,10 +28,10 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#if T8_ENABLE_OCC
+#if T8_ENABLE_OCC && T8_ENABLE_EIGEN
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
-#endif /* T8_ENABLE_OCC */
+#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN*/
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
 
@@ -42,7 +42,7 @@
 #include <filesystem>
 #include <algorithm>
 
-#if T8_ENABLE_OCC
+#if T8_ENABLE_OCC && T8_ENABLE_EIGEN
 namespace fs = std::filesystem;
 
 static std::vector<fs::path>
@@ -59,12 +59,12 @@ findBrepFiles (const char *folder)
   return files;
 }
 
-#endif /* T8_ENABLE_OCC */
+#endif /* T8_ENABLE_OCC && T8_ENABLE_EIGEN */
 
 int
 main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
-#if T8_ENABLE_OCC
+#if T8_ENABLE_OCC && T8_ENABLE_EIGEN
 
   char usage[BUFSIZ];
   /* Brief help message. */
@@ -183,9 +183,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-#else  /* T8_ENABLE_OCC */
-  t8_global_errorf ("ERROR: This example requires OpenCASCADE support to be enabled in t8code.\n");
-#endif /* T8_ENABLE_OCC */
+#else  /* T8_ENABLE_OCC and T8_ENABLE_EIGEN*/
+  t8_global_errorf ("ERROR: This example requires OpenCASCADE and Eigen support to be enabled in t8code.\n");
+#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN*/
 
   return 0;
 }
