@@ -32,6 +32,7 @@
  * \param [in] cmesh      The cmesh to be considered. Must be initialized. Does not need to be committed.
  * \param [in] new_handler  The geometry handler to be set. If nullptr then a new handler will be allocated.
  * \return                On success, the new geometry_handler. nullptr on failure (out of memory).
+ * \note                  \a cmesh will take ownership of \a new_handler, increase the reference count explicitly if you need \a new_handler outside of \a cmesh.
  */
 detail::t8_geometry_handler *
 t8_cmesh_set_geometry_handler (t8_cmesh_t cmesh, detail::t8_geometry_handler *new_handler);
