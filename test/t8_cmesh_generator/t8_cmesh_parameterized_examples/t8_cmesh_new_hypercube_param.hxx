@@ -62,7 +62,13 @@ std::function<std::string (const t8_eclass_t, const sc_MPI_Comm, const int, cons
 std::vector<t8_eclass_t> periodic_eclasses = { T8_ECLASS_VERTEX, T8_ECLASS_LINE, T8_ECLASS_QUAD, T8_ECLASS_TRIANGLE,
                                                T8_ECLASS_HEX,    T8_ECLASS_TET,  T8_ECLASS_PRISM };
 /** Wrapper function for t8_cmesh_new_hypercube. */
-std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm, int, int, int)> cmesh_wrapper = t8_cmesh_new_hypercube;
+std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm, int, int, int)> cmesh_wrapper
+  = [] (t8_eclass_t eclass, sc_MPI_Comm comm, int do_bcast, int do_partition, int periodic) {
+      t8_cmesh_t cmesh;
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_hypercube (&cmesh, eclass, comm, do_bcast, do_partition, periodic);
+      return cmesh;
+    };
 /** Vector containing the only non-periodic eclass. */
 std::vector<t8_eclass_t> nonperiodic_eclasses = { T8_ECLASS_PYRAMID };
 

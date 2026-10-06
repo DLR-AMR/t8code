@@ -290,7 +290,9 @@ t8_interpolation ()
   const t8_scheme *scheme = t8_scheme_new_default ();
 
   /* Construct a cmesh */
-  t8_cmesh_t cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_from_class (cmesh, T8_ECLASS_HEX, sc_MPI_COMM_WORLD);
 
   /* Construct a forest with one tree */
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);

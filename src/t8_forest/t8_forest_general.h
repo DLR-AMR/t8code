@@ -30,21 +30,13 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_element/t8_element.h>
 #include <t8_data/t8_containers.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_c_types.h>
 
 /** Opaque pointer to a forest implementation. */
 typedef struct t8_forest *t8_forest_t;
 
 /** Opaque pointer to a tree implementation. */
 typedef struct t8_tree *t8_tree_t;
-
-/** This type controls, which neighbors count as ghost elements.
- * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
-typedef enum {
-  T8_GHOST_NONE = 0, /**< Do not create ghost layer. */
-  T8_GHOST_FACES,    /**< Consider all face (codimension 1) neighbors. */
-  T8_GHOST_EDGES,    /**< Consider all edge (codimension 2) and face neighbors. */
-  T8_GHOST_VERTICES  /**< Consider all vertex (codimension 3) and edge and face neighbors. */
-} t8_ghost_type_t;
 
 /** This typedef is needed as a helper construct to
  * properly be able to define a function that returns
@@ -367,6 +359,16 @@ t8_forest_set_partition_weight_function (t8_forest_t forest, t8_weight_fcn_t *we
 void
 t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_repartition);
 
+/** This type controls, which neighbors count as ghost elements.
+ * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */
+typedef enum {
+  T8_GHOST_NONE = 0, /**< Do not create ghost layer. */
+  T8_GHOST_FACES,    /**< Consider all face (codimension 1) neighbors. */
+  T8_GHOST_EDGES,    /**< Consider all edge (codimension 2) and face neighbors. */
+  T8_GHOST_VERTICES, /**< Consider all vertex (codimension 3) and edge and face neighbors. */
+  T8_GHOST_COUNT     /**< Number of ghost types */
+} t8_ghost_type_t;
+
 /** Enable or disable the creation of a layer of ghost elements.
  * On default no ghosts are created.
  * \param [in]      forest    The forest.
@@ -378,21 +380,16 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 void
 t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type);
 
-/** Like \ref t8_forest_set_ghost but with the additional options to change the
- * ghost algorithm. This is used for debugging and timing the algorithm.
- * An application should almost always use \ref t8_forest_set_ghost.
- * \param [in]      forest        The forest.
- * \param [in]      do_ghost      If non-zero a ghost layer will be created.
- * \param [in]      ghost_type    Controls which neighbors count as ghost elements,
- *                                currently only T8_GHOST_FACES is supported. This value
- *                                is ignored if \a do_ghost = 0.
- * \param [in]      ghost_version If 1, the iterative ghost algorithm for balanced forests is used.
- *                                If 2, the iterative algorithm for unbalanced forests.
- *                                If 3, the top-down search algorithm for unbalanced forests.
- * \see t8_forest_set_ghost
- */
+/** Set a specific ghost_definition for a forest.
+ * This is used both when the application defines its own ghost_definition class and to select a non-default face-neighbor ghost version.
+ * \param [in]    forest            The forest.
+ * \param [in]    do_ghost          If 0 no ghost layer will be computed.
+ * \param [in]    ghost_definition  Pointer to an object of the class ghost_definition or a derived class
+ *                                  The forest takes ownership of the ghost_definition. Can be nullptr if the forest already
+ *                                  owns a definition or \a do_ghost is set to 0.
+*/
 void
-t8_forest_set_ghost_ext (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_type, int ghost_version);
+t8_forest_set_ghost_ext (t8_forest_t forest, const int do_ghost, t8_forest_ghost_definition_c *ghost_definition);
 
 /**
  *  Use assertions and document that the forest_set (..., from) and
@@ -552,7 +549,7 @@ t8_forest_element_is_leaf (const t8_forest_t forest, const t8_element_t *element
 
 /**
  * Query whether a given element or a ghost is a leaf of a local or ghost tree in a forest.
- * 
+ *
  * \param [in]  forest    The forest.
  * \param [in]  element   An element of a local tree in \a forest.
  * \param [in]  local_tree A local tree id of \a forest or a ghost tree id
@@ -661,7 +658,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
  * compute the index of the face neighbor of the element - provided that only one or no
  * face neighbors exists.
  * HANDLE WITH CARE. DO NOT CALL IF THE FOREST IS NOT UNIFORM.
- * 
+ *
  * \param[in] forest        The forest. Must be committed.
  * \param[in] element_index Index of an element in \a forest. Must have only one or no facen neighbors across the given face.
  *                          0 <= \a element_index < num_local_elements + num_ghosts
@@ -674,6 +671,26 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
 t8_locidx_t
 t8_forest_same_level_leaf_face_neighbor_index (const t8_forest_t forest, const t8_locidx_t element_index,
                                                const int face_index, const t8_gloidx_t global_treeid, int *dual_face);
+
+/** Compute the subface index for a coarser neighbor
+ * \param [in] forest       The forest. Must be committed.
+ * \param [in] ltreeid      A local tree id.
+ * \param [in] leaf         A leaf in \a ltreeid.
+ * \param [in] face         The face index of \a leaf to consider.
+ * \param [in] neighbor_tree_class The eclass of the neighbor element.
+ * \param [in] neighbor_leaf The leaf of \a forest on the other side of the face of index \a face of element \a leaf.
+ * \param [in] neighbor_face The face index of \a neighbor_leaf (i.e. the dual face of \a face).
+ * \returns The index of the subface of \a neighbor_face which corresponds to \a face.
+ * \pre \a leaf and \a neighbor_leaf must be a face neighbors. The common face must correspond to \a face for \a leaf
+ *      and \a neighbor_face for \a neighbor_leaf respectively. \a neighbor_leaf must be one level coarser than \a leaf.
+ *      Otherwise the behavior is undefined.
+ * \note This function is designed to be called after \ref t8_forest_leaf_face_neighbors_ext to complement its output.
+ *       It is primarily intended for balanced forests, but can be used on any committed forest as long as the preconditions
+ *       hold (i.e. the forest must be ''locally balanced'').
+ */
+int
+t8_forest_leaf_neighbor_subface (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *leaf, int face,
+                                 t8_eclass_t neighbor_tree_class, const t8_element_t *neighbor_leaf, int neighbor_face);
 
 /** Exchange ghost information of user defined element data.
  * \param [in] forest       The forest. Must be committed.
@@ -894,6 +911,7 @@ t8_forest_element_neighbor_eclass (const t8_forest_t forest, const t8_locidx_t l
  * \param [in] neigh_eclass The eclass of \a neigh.
  * \param [in] face         The number of the face along which the neighbor should be constructed.
  * \param [out] neigh_face  The number of the face viewed from perspective of \a neigh.
+ *                          Can be nullptr, in which case the output is discarded.
  * \return The global tree-id of the tree in which \a neigh is in.
  *        -1 if there exists no neighbor across that face. Domain boundary.
  *        -2 if the neighbor is not in a local tree or ghost tree. Process/Ghost boundary.

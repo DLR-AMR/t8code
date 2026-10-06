@@ -83,4 +83,5 @@ copy_tutorial_file (features/t8_features_curved_meshes_generate_cmesh_tri.geo)
 
 if( T8CODE_BUILD_MESH_HANDLE )
     add_mesh_handle_tutorial( NAME t8_mesh_element_data SOURCES mesh_handle/t8_mesh_element_data.cxx )
+    add_mesh_handle_tutorial( NAME t8_mesh_step2_uniform_mesh SOURCES mesh_handle/t8_mesh_step2_uniform_mesh.cxx )
 endif()

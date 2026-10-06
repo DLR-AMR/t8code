@@ -1,3 +1,50 @@
+# Ghost interface restructuring
+The ghost interface is one of the oldest parts of t8code and needed a restructuring to be fit for future changes. Until now, only face-neighbor ghosts communication was allowed. The new modular interface allows for arbitrary ghost definitions and is designed similar to the already known geometry and scheme interfaces.
+
+## What has changed?
+The ghost module consisted basically of two very large files, a source and a header file. This is now broken down into multiple files inside a ghost folder. There are now two relevant parts which are separated.
+
+### Ghost definitions
+Ghost definitions define, as the name suggests, what exactly a ghost is. This means that there now is the already known definition of a face-neighbor ghost. It is encapsulated in its own class, which derives from a common ghost definition base class `t8_forest_ghost_definition`.
+Every newly defined ghost definition has to either derive from this base class or from its derived class `t8_forest_ghost_definition_w_search`, which implements a tree-search based ghost definition. This means, that only the search data and search query have to be defined to have a valid ghost definition. In contrast, the base class requires the implementation of all functions, but there are still helper functions defined in `t8_forest_ghost_definition_helpers.hxx`.
+To use these ghost definitions, they can be added to the forest via `t8_forest_set_ghost_ext`.
+
+### Ghost element access
+The second part of the ghost module is the ghost element access. This part is encapsulated in `t8_ghost.h` and `t8_ghost.cxx`.
+The ghost element access happens during the traversal of the elements of a process. Mostly, this is not needed by the user and automatically called when users want to access neighbors of elements. But in more complex neighborship relations, it can be necessary to access the ghost elements directly via the functions defined here.
+
+## What do I have to change?
+If you only used face-neighbor ghosts, you do not have to change anything. If you used different versions of the face ghost via `t8_forest_set_ghost_ext` you now have to construct the ghost definition object directly and pass it to `t8_forest_set_ghost_ext`.
+```cpp
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
+
+t8_forest_set_ghost_ext (forest_ghost, 1, new t8_forest_ghost_definition_face (<ghost_version>));
+```
+If you used a custom ghost definition, you now have to derive from the base class or the search-based derived class. You can look at the already implemented face-neighbor ghost definition for an example.
+
+# cmesh generators
+
+In this update we pulled the cmesh initialization out of every cmesh generator function like t8_cmesh_from_msh_file or t8_cmesh_new_hypercube. This is a future proofing step for coming cmesh features like mesh deformation or curved cmeshes from every mesh reader. This also allows you to deactivate the negative volume check of the cmesh (t8_cmesh_disable_negative_volume_check, if you know what you are doing) or to activate profiling via t8_cmesh_set_profiling.
+Note, that the cmesh you pass to a generator needs to be empty. There should not be any trees in the cmesh, this is also asserted in debug mode. Furthermore, t8_cmesh_new_hypercube and t8_cmesh_from_msh_file take a reference to the cmesh, because they either destroy it if something goes wrong or need to reassign the pointer during broadcasting.
+In most of your cases you just need to change lines as following:
+```diff
++ t8_cmesh cmesh;
++ t8_cmesh_init (cmesh);
+
++ t8_cmesh_set_profiling (cmesh, 1); //<optional>
+
+- t8_cmesh cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
++ t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+```
+
+# Updated dependencies
+
+We have switched from a submodules approach to a FetchContent approach for our dependencies p4est and sc. If you use p4est and sc shipped with t8code, calling cmake will pull and add the right commit from github. You can also still link against your local installations. Either way you do not need to update your workflow. The submodules of p4est and sc should be removed with this update. Instead they will be downloaded and installed in the _deps folder in your build folder.
+If you use a separate installation of p4est and sc it is important to set the boolean CMake Options "T8CODE_USE_SYSTEM_P4EST" and "T8CODE_USE_SYSTEM_SC" as before. It prevents the triggering of the automatic installation of the libraries.
+For further information have a look at our [Installation Guide](https://github.com/DLR-AMR/t8code/wiki/Installation).
+For devs: Further dependencies can be managed in our dependencies.json.
+
+
 # Updated contribution workflow.
 
 The team of main-developers of t8code and contributors to t8code is getting bigger and we needed an improved workflow to manage all of our contributions.
@@ -19,7 +66,7 @@ Please execute the steps in this order to ensure that your issue has the correct
 No! If your code is only a couple of lines long AND has very little impact on the algorithms of t8code (a single line of changed code can have a big impact) we encourage you to directly open a PR. If no issues are referenced using the Closes-keyword, an issue is automatically created and moved into "Needs Review". That way we shouldn't miss the opening of your PR.
 
 
-# User Updates for the upcoming t8code release (February 2026 - version format unclear)
+# User Updates for the upcoming t8code release (February 2026 - v4.0.0-26.02)
 
 ## Updates to t8_forest_leaf_face_neighbors
 
@@ -237,7 +284,7 @@ Similarly, the following member variables have been renamed:
 
 # Renaming of macros T8_WITH_ to T8_ENABLE_
 We renamed the macros T8_WITH_... to T8_ENABLE_... for consistency reasons with the related cmake options (T8CODE_ENABLE...) and other macros. We are currently working on an automatized way to check for wrong usages.
-Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script. 
+Moreover, we decided to always use #if instead of #ifdef with macros. The #if option allows for more complex conditions and explicitly setting a macro to 0, which is why we chose this option. An incorrect usage of #if and #ifdef is checked in the check_macros.sh script.
 
 
 # Update to MPI 3.0
@@ -271,4 +318,4 @@ For more details, see the pull request https://github.com/DLR-AMR/t8code/pull/19
 
 # Documentation on readthedocs
 
-To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster. 
+To improve our documentation, to make it more searchable and to simplify the updating process of our documentation, we now host our documentation on readthedocs, see https://t8code.readthedocs.io/en/latest/ . You can also build it locally, if you have sphinx, breathe and exhale installed on your system. To do so, you have to set the dependent option `T8CODE_BUILD_DOCUMENTATION_SPHINX`. We hope to give you an improved way of searching through t8code and find the functions that you need even faster.

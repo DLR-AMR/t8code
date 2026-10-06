@@ -49,7 +49,13 @@ make_param_string (const t8_eclass_t &eclass, const sc_MPI_Comm &comm)
 std::function<std::string (const t8_eclass_t &, const sc_MPI_Comm &)> print_function = make_param_string;
 
 /** Wrapper function for t8_cmesh_new_from_class. */
-std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm)> new_from_class_wrapper = t8_cmesh_new_from_class;
+std::function<t8_cmesh_t (t8_eclass_t, sc_MPI_Comm)> new_from_class_wrapper
+  = [] (t8_eclass_t eclass, sc_MPI_Comm comm) {
+      t8_cmesh_t cmesh;
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_new_from_class (cmesh, eclass, comm);
+      return cmesh;
+    };
 
 /** Example cmesh set with different parameter combinations using the new_from_class function. */
 example_set *cmesh_example

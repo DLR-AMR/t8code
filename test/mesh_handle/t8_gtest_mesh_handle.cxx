@@ -22,15 +22,17 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_mesh_handle.cxx
- * Tests if the \ref t8_mesh_handle::mesh class of the handle works as intended for different types of template parameter classes. 
+ * Tests if the \ref t8_mesh_handle::mesh class of the handle works as intended
+ * for different types of template parameter classes.
  */
 
 #include <gtest/gtest.h>
 #include <test/t8_gtest_macros.hxx>
 #include <t8.h>
+#include "t8_gtest_common.hxx"
 
 #include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competences.hxx>
+#include <mesh_handle/competences/cache_element_competences.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 
@@ -86,7 +88,7 @@ TEST_P (t8_mesh_handle_test, test_default_mesh_handle)
 TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 {
   // --- Use predefined competences to use all available caching competences. ---
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::all_cache_element_competences>;
   using element_class = typename mesh_class::element_class;
   const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
     eclass, level, sc_MPI_COMM_WORLD, true, true, false);
@@ -133,7 +135,7 @@ TEST_P (t8_mesh_handle_test, test_all_cache_competence)
 /** Test mesh class with all predefined face competences using some exemplary functionality. */
 TEST_P (t8_mesh_handle_test, test_cache_face_competences)
 {
-  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_competences>;
+  using mesh_class = t8_mesh_handle::mesh<t8_mesh_handle::cache_face_element_competences>;
   using element_class = typename mesh_class::element_class;
   const auto mesh = t8_mesh_handle::handle_hypercube_uniform_default<const mesh_class> (
     eclass, level, sc_MPI_COMM_WORLD, true, true, false);
@@ -172,16 +174,17 @@ TEST_P (t8_mesh_handle_test, test_cache_face_competences)
 }
 
 /** Check that the unique union of multiple competence packs works as intended. */
-TEST (t8_mesh_handle_test, test_union_competence_pack)
+TEST (t8_mesh_handle_test, test_union_element_competence_pack)
 {
   using namespace t8_mesh_handle;
   /* Combine multiple competence packs with some overlapping competences to check that the union works correctly
    * and duplicates are removed. Duplicates would cause an error because we inherit multiple times from the same class.
    */
-  using mesh_class
-    = mesh<union_competence_packs_type<competence_pack<cache_volume>,
-                                       competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
-                                       competence_pack<cache_centroid, cache_face_areas, cache_face_centroids>>>;
+  using mesh_class = mesh<union_competence_packs_type<
+    element_competence_pack<cache_volume>,
+    element_competence_pack<cache_volume, cache_diameter, cache_vertex_coordinates>,
+    element_competence_pack<cache_volume, cache_centroid, cache_face_areas, cache_face_centroids>,
+    empty_element_competences>>;
   using element_class = typename mesh_class::element_class;
 
   EXPECT_TRUE (element_class::has_volume_cache ());
@@ -192,6 +195,23 @@ TEST (t8_mesh_handle_test, test_union_competence_pack)
   EXPECT_TRUE (element_class::has_face_centroids_cache ());
   EXPECT_FALSE (element_class::has_face_normals_cache ());
   EXPECT_FALSE (element_class::has_face_neighbor_cache ());
+}
+
+/** Check that the unique union of multiple mesh competence packs works as intended. */
+TEST (t8_mesh_handle_test, test_union_mesh_competence_pack)
+{
+  using namespace t8_mesh_handle;
+  using mesh_class
+    = mesh<union_competence_packs_type<all_cache_element_competences, data_element_competences_basic,
+                                       empty_element_competences>,
+           union_competence_packs_type<interpolate_data_mesh_competence_pack<data_per_element>,
+                                       data_mesh_competences_basic<data_per_element>, empty_mesh_competences>>;
+  EXPECT_TRUE (mesh_class::has_element_data_handler_competence ());
+  using element_class = typename mesh_class::element_class;
+
+  EXPECT_TRUE (element_class::has_element_data_handler_competence ());
+  EXPECT_TRUE (element_class::has_volume_cache ());
+  EXPECT_TRUE (element_class::has_diameter_cache ());
 }
 
 INSTANTIATE_TEST_SUITE_P (t8_gtest_mesh, t8_mesh_handle_test, testing::Combine (AllEclasses, testing::Range (2, 3)));

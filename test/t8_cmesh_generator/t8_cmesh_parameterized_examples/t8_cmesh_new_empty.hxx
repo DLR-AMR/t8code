@@ -50,8 +50,17 @@ make_param_string (const sc_MPI_Comm &comm, const int do_partition, const int di
 /** Wrapper function for \ref make_param_string. */
 std::function<std::string (const sc_MPI_Comm &, const int, const int)> print_function = make_param_string;
 
-/** Wrapper function for t8_cmesh_new_empty. */
-std::function<t8_cmesh_t (sc_MPI_Comm, const int, const int)> new_from_class_wrapper = t8_cmesh_new_empty;
+/** Wrapper function for t8_cmesh_new_empty.
+ * \a do_partition is unused since t8_cmesh_new_empty no longer takes a (dead) partition flag;
+ * \a dim is applied via \ref t8_cmesh_set_dimension before committing. */
+std::function<t8_cmesh_t (sc_MPI_Comm, const int, const int)> new_from_class_wrapper
+  = [] (sc_MPI_Comm comm, [[maybe_unused]] const int do_partition, const int dim) {
+      t8_cmesh_t cmesh;
+      t8_cmesh_init (&cmesh);
+      t8_cmesh_set_dimension (cmesh, dim);
+      t8_cmesh_new_empty (cmesh, comm);
+      return cmesh;
+    };
 
 /** Example empty cmesh set with different parameter combinations. */
 example_set *cmesh_example

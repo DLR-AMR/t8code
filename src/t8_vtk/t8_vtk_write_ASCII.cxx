@@ -23,7 +23,7 @@
 #include "t8_vtk/t8_vtk_write_ASCII.hxx"
 #include "t8_vtk/t8_vtk_writer_helper.hxx"
 #include <t8_vtk/t8_vtk.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_types/t8_vec.hxx>
 #include "t8_forest/t8_forest_types.h"
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.h>
@@ -918,7 +918,7 @@ t8_cmesh_get_num_vertices (const t8_cmesh_t cmesh, const int count_ghosts)
   t8_gloidx_t num_vertices = 0;
   t8_locidx_t ighost;
   T8_ASSERT (cmesh != NULL);
-  T8_ASSERT (cmesh->committed);
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
 
   for (iclass = T8_ECLASS_ZERO; iclass < T8_ECLASS_COUNT; iclass++) {
     num_vertices += t8_eclass_num_vertices[iclass] * cmesh->num_local_trees_per_eclass[iclass];
