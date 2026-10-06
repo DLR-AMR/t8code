@@ -61,25 +61,6 @@ typedef struct t8_ctree *t8_ctree_t;
  * ghost tree. */
 typedef struct t8_cghost *t8_cghost_t;
 
-/** This typedef holds virtual functions for the geometry handler.
- * We need it so that we can use t8_geometry_handler_c pointers in .c files
- * without them seeing the actual C++ code (and then not compiling)
- * TODO: Delete this when the cmesh is a proper cpp class.
- */
-#ifdef __cplusplus
-
-namespace detail
-{
-struct t8_geometry_handler;
-}
-
-typedef detail::t8_geometry_handler t8_geometry_handler_c;
-
-#else
-typedef struct t8_geometry_handler t8_geometry_handler_c;
-
-#endif  // __cplusplus
-
 T8_EXTERN_C_BEGIN ();
 
 /** Create a new cmesh with reference count one.
