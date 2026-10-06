@@ -43,6 +43,8 @@ T8_EXTERN_C_BEGIN ();
 t8_geometry_hash
 t8_cmesh_get_tree_geom_hash (t8_cmesh_t cmesh, t8_gloidx_t gtreeid);
 
+T8_EXTERN_C_END ();
+
 /** Return the geometry handler of the cmesh.
  * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
  * \return                 The geometry handler of the cmesh.
@@ -58,8 +60,6 @@ t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh);
  */
 detail::t8_geometry_handler *
 t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh);
-
-T8_EXTERN_C_END ();
 
 /**
  * Create and register a geometry with the coarse mesh. The coarse mesh takes the ownership of the geometry.
