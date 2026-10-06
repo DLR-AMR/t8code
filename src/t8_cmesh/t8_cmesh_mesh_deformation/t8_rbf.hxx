@@ -36,8 +36,13 @@
 /** 
  * The available RBF function types. 
  */
-typedef enum { T8_RBF_CP_C2 = 0, T8_RBF_TPS, T8_RBF_FUNCTION_COUNT } t8_rbf_function_type;
+typedef enum {
+  T8_RBF_CP_C2 = 0,     /**< Compactly supported radial basis function (CPC2). */
+  T8_RBF_TPS,           /**< Globally supported radial basis function (TPS). */
+  T8_RBF_FUNCTION_COUNT /**< The number of available RBF function types. */
+} t8_rbf_function_type;
 
+/** A struct representing a node in the mesh for the RBF interpoltaion, containing its global ID, position and displacement. */
 struct t8_rbf_node
 {
   /**The global ID of the node. */
@@ -63,13 +68,26 @@ struct t8_rbf_boundary_node: public t8_rbf_node
   double local_support_radius;
 };
 
+/** A base struct representing a radial basis function. */
 struct t8_rbf_function
 {
   /** Destructor. */
   virtual ~t8_rbf_function () {};
+
+  /** 
+   * Evaluate the radial basis function.
+   * \param[in] distance The euclidean distance between two points.
+   * \param[in] radius The support radius.
+   * \return The function value.
+   */
   virtual double
   evaluate (double distance, double radius) const
     = 0;
+
+  /** 
+   * Check if the radial basis function is compactly supported.
+   * \return true if the function is compactly supported, false otherwise.
+   */
   virtual bool
   is_compactly_supported () const
     = 0;
@@ -91,7 +109,8 @@ struct t8_rbf_cpc2: public t8_rbf_function
    * Solve the radial basis function.
    * Formula: psi(x) = (1 - x)^4 * (4x + 1) for (1-x) > 0.
    * where x = distance / support radius. The distance is the euclidean distance between two points. 
-   * \param[in] distance  The euclidean distance between two points.
+   * \param [in] distance  The euclidean distance between two points.
+   * \param [in] radius The support radius.
    * \return The function value psi. It returns 0.0 if the node is out of the chosen radius and so has no impact.   
    */
   double
@@ -133,6 +152,7 @@ struct t8_rbf_tps: public t8_rbf_function
    * Formula: psi(x) = x^2 * log(x).
    * where x is the euclidean distance between two points. 
    * \param[in] distance  The euclidean distance between two points.
+   * \param [in] radius The support radius (not used for TPS because it is globally supported).
    * \return The function value psi.  
    */
   double
@@ -163,7 +183,7 @@ struct t8_rbf
 {
  public:
   /** Constructor. 
-   * \param[in] rbf_type        The RBF type to be used.
+   * \param [in] rbf_type        The RBF type to be used.
   */
   t8_rbf (t8_rbf_function_type rbf_type)
   {
@@ -184,6 +204,7 @@ struct t8_rbf
 
   /**
    * Transfers the boundary node data to the internal data structure of the RBF.
+   * \param [in] boundary_node_data Map of global vertex IDs to boundary nodes.
    */
   void
   set_boundary_nodes (std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>&& boundary_node_data)
@@ -199,7 +220,9 @@ struct t8_rbf
   }
 
   /** 
-   * Search for the displacement of a specific boundary node with its associated global ID. 
+   * Search for the displacement of a specific boundary node with its associated global ID.
+   * \param [in] global_id The global ID of the boundary node.
+   * \return The displacement vector of the boundary node. 
    */
   t8_3D_vec
   get_boundary_displacement (const t8_gloidx_t global_id) const
@@ -223,7 +246,7 @@ struct t8_rbf
 
   /**
    * Interpolates the inner node.
-   * \param[in, out] inner_node   The inner node which will be interpolated.
+   * \param [in, out] inner_node   The inner node which will be interpolated.
    */
   void
   interpolate (t8_rbf_node& inner_node) const
@@ -249,9 +272,9 @@ struct t8_rbf
 
  private:
   /** The specialised solve function for either compactly supported or globally supported RBFs. 
-   * \param[in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
+   * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
    *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
-   * \param[in] num_boundary_nodes The number of boundary nodes.
+   * \param [in] num_boundary_nodes The number of boundary nodes.
    * \return The matrix of the calculated weights alpha.
   */
   Eigen::MatrixXd

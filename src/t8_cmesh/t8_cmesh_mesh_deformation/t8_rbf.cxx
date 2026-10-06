@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_mesh_deformation_rbf.cxx
+/** \file t8_rbf.cxx
  *  This file implements the Radial Basis Functions for the mesh deformation.
  */
 
