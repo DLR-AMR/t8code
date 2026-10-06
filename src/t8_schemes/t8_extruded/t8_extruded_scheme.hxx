@@ -757,8 +757,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
     T8_ASSERT (element_is_valid (neigh));
     T8_ASSERT (neigh_face != NULL);
     if (is_lateral_face (face)) {
-      const int is_inside
-        = base_scheme.element_get_face_neighbor_inside (elem, neigh, face, neigh_face);
+      const int is_inside = base_scheme.element_get_face_neighbor_inside (elem, neigh, face, neigh_face);
       T8_ASSERT (element_is_valid (neigh));
       return is_inside;
     }
