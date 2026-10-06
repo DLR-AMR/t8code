@@ -31,7 +31,7 @@
 
 #pragma once
 #include <t8_eclass/t8_eclass.h>
-#include "../t8_subelement_scheme.hxx"
+#include "../t8_specialization_interface.hxx"
 #include <array>
 #include <bit>
 
@@ -41,12 +41,9 @@
 #define T8_SUB_QUAD_MAX_SUBELEMENT_TYPE 14
 
 /** Subelement scheme for quadrilateral elements.
- * A quad is transitioned into triangular subelements. The subelement type encodes which of
- * the quad's four faces are hanging as a binary code (one bit per face). Type 0 means the
- * element is not a subelement and is just the underlying standalone quad. For hanging-node
- * resolution the type determines the number of subelements the quad is split into, and the
- * subelement id runs from 0 to num_subelement - 1. Valid types are 1..14; the all-faces-
- * hanging code 15 is excluded.
+ * A quad is transitioned into triangular subelements. The subelement type encodes here which of the quad's four faces
+ * are hanging as a binary code (one bit per face). Type 0 means the element is not a subelement and is just the 
+ * underlying standalone quad. Valid types are 1..14; the all-faces-hanging code 15 is excluded.
  *
  * \verbatim
               f3                          1
@@ -59,21 +56,24 @@
          x - - - - - x              x - - - - - x      enumeration (here faces f0 and f3
               f2                          0            are hanging)
  * \endverbatim
- * Also have a look at \a vertex_coords_of_subelement for the definition of the subelement ids for quads and the 
- * order of vertices.
+ * \note The different subelement types (up to rotation) are:
+ * \verbatim
+        x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x
+        |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |
+        |             |         | 1 \   /   |        |   \   /   |        |   \   /   |        |   \ | /   |
+        |             |   -->   x - - X   3 |   or   x - - x     |   or   x - - x - - x   or   x - - x - - x
+        |             |         | 0 /   \   |        |   / | \   |        |   /   \   |        |   /   \   |
+        | elem        |         | /   4   \ |        | /   |   \ |        | /       \ |        | /       \ |
+        + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x
+ * \endverbatim
+ * Subelement ids are counted clockwise, starting with the (lower) left subelement with id 0.
+ * Note that we do not change the underlying quadrant.
+ * Also have a look at \a vertex_coords_of_subelement for the definition of the order of vertices.
  */
 struct t8_subelem_scheme_hanging_nodes_quad:
-  public t8_subelement_scheme_common<T8_ECLASS_QUAD, t8_subelem_scheme_hanging_nodes_quad>
+  public t8_subelement_scheme_interface<T8_ECLASS_QUAD, t8_subelem_scheme_hanging_nodes_quad>
 {
  public:
-  /** The recursive scheme used for the underlying (standalone) quad elements. Whenever the
-   * subelement logic is not needed, the scheme forwards to this underlying scheme. */
-  using TUnderlyingScheme = typename t8_subelement_traits<t8_subelem_scheme_hanging_nodes_quad>::UnderlyingScheme;
-  /** The subelement element type (an underlying element plus a subelement type and id). */
-  using TSubelementType = typename t8_subelement_traits<t8_subelem_scheme_hanging_nodes_quad>::SubelementType;
-
-  TUnderlyingScheme underlying_scheme {}; /**< Instance of the underlying standalone scheme. */
-
   /** Compute the maximum number of faces of a given element and all of its descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
@@ -114,68 +114,16 @@ struct t8_subelem_scheme_hanging_nodes_quad:
 
   /** Get the number of subelements an element is refined into for a specific type.
    * \param [in] elem   The element whose number of children is returned.
-   * \param [in] subelement_type The subelement type used for refinement.
+   * \param [in] subelement_type The subelement type used for refinement. 
+   *             It must hold 1<= \a subelement_type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE.
    * \return                     The number of subelements the quad is split into for \a subelement_type.
    */
-  int
-  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type) const noexcept
+  static int
+  subelement_get_num_children ([[maybe_unused]] const t8_element_t *elem, int subelement_type) noexcept
   {
-    if (subelement_type == 0) {
-      return underlying_scheme.element_get_num_children (this->element_to_standalone (elem));
-    }
     const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     // Each original face "has" one triangular subelement, each split face two.
     return t8_eclass_num_faces[T8_ECLASS_QUAD] + num_hanging_faces;
-  }
-
-  /** This defines how an element is refined into subelements using a specified subelement type.
-   * \param [in] elem The element to be refined.
-   * \param [in] length   The length of the output array \a c must match the number of subelements.   
-   *                      See \ref element_get_num_children.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
-   * \param [in] subelem_type The subelement type to be used for refinement. This is a binary encoding of the 
-   *                          hanging faces.
-   * \note The different subelement types (up to rotation) are:
-   * \verbatim
-        x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x
-        |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |
-        |             |         | 1 \   /   |        |   \   /   |        |   \   /   |        |   \ | /   |
-        |             |   -->   x - - X   3 |   or   x - - x     |   or   x - - x - - x   or   x - - x - - x
-        |             |         | 0 /   \   |        |   / | \   |        |   /   \   |        |   /   \   |
-        | elem        |         | /   4   \ |        | /   |   \ |        | /       \ |        | /       \ |
-        + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x
-   * \endverbatim
-   * Subelement ids are counted clockwise, starting with the (lower) left subelement with id 0.
-   * Note that we do not change the underlying quadrant.
-   */
-  void
-  subelement_get_children (const t8_element_t *elem, [[maybe_unused]] const int length, t8_element_t *c[],
-                           int subelem_type) const noexcept
-  {
-    const TSubelementType *parent_subelement = this->as_subelement (elem);
-    TSubelementType **c_as_subelements = reinterpret_cast<TSubelementType **> (c);
-    const int num_subelements = this->subelement_get_num_children (elem, subelem_type);
-    T8_ASSERT (length == num_subelements);
-
-    T8_ASSERT (subelem_type >= 1 && subelem_type <= T8_SUB_QUAD_MAX_SUBELEMENT_TYPE);
-    T8_ASSERT (!this->element_is_subelement (elem));
-    T8_ASSERT (this->element_is_valid (elem));
-#if T8_ENABLE_DEBUG
-    {
-      for (int j = 0; j < num_subelements; j++) {
-        T8_ASSERT (this->element_is_valid (c[j]));
-      }
-    }
-#endif
-
-    /* Setting the parameter values for different subelements. */
-    for (int sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
-      TUnderlyingScheme::element_copy (this->subelement_to_standalone (parent_subelement),
-                                       this->subelement_to_standalone (c_as_subelements[sub_id_counter]));
-      c_as_subelements[sub_id_counter]->subelement_type = subelem_type;
-      c_as_subelements[sub_id_counter]->subelement_id = sub_id_counter;
-      T8_ASSERT (this->element_is_valid (c[sub_id_counter]));
-    }
   }
 
   /** Convert a point in the reference space of a (triangular) subelement to a point in the

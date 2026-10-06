@@ -46,8 +46,7 @@
  *         logic which is not equal for all subelements, the scheme calls the functionality of this subelement scheme.
  */
 template <t8_eclass TEclass, typename TSubelementSchemeSpecialization>
-struct t8_subelement_scheme_common:
-  public t8_scheme_helpers<TEclass, t8_subelement_scheme_common<TEclass, TSubelementSchemeSpecialization>>
+struct t8_subelement_scheme_common: public t8_scheme_helpers<TEclass, TSubelementSchemeSpecialization>
 {
  public:
   /** The subelement type used by this subelement scheme defined by a trait. */
@@ -400,6 +399,11 @@ struct t8_subelement_scheme_common:
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_num_children: Cannot refine a subelement into subelements.\n");
+    if (subelement_type == 0) {
+      return derived ().underlying_scheme.element_get_num_children (element_to_standalone (elem));
+    }
+    T8_ASSERT (1 <= subelement_type
+               && subelement_type <= TSubelementSchemeSpecialization::subelement_get_number_of_valid_types ());
     return derived ().subelement_get_num_children (elem, subelement_type);
   }
 
