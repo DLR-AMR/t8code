@@ -102,6 +102,13 @@ t8_stash_init (t8_stash_t *pstash);
 void
 t8_stash_destroy (t8_stash_t *pstash);
 
+/** Check whether a stash holds no classes, face-connections or attributes.
+ * \param [in]   stash   The stash to be considered. Must be initialized.
+ * \return               True if \a stash holds no entries at all, false otherwise.
+ */
+int
+t8_stash_is_empty (const t8_stash_t stash);
+
 /** Set the eclass of a tree.
  * \param [in, out] stash The stash to be updated.
  * \param [in]      id    The global id of the tree whose eclass should be set.

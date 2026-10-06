@@ -42,7 +42,10 @@ template <>
 t8_cmesh_t
 make_grid<t8_cmesh_t> ()
 {
-  return t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_full_hybrid (cmesh, sc_MPI_COMM_WORLD);
+  return cmesh;
 }
 template <>
 t8_forest_t

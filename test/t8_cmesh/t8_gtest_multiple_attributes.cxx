@@ -51,14 +51,17 @@ struct cmesh_multiple_attributes: public testing::TestWithParam<std::tuple<int, 
     const int scheme_id = std::get<0> (GetParam ());
     num_trees = std::get<1> (GetParam ());
 
-    cmesh_one_at = t8_cmesh_new_row_of_cubes (num_trees, 0, 0, sc_MPI_COMM_WORLD, t8_testsuite_get_package_id ());
+    t8_cmesh_init (&cmesh_one_at);
+    t8_cmesh_new_row_of_cubes (cmesh_one_at, num_trees, 0, 0, sc_MPI_COMM_WORLD, t8_testsuite_get_package_id ());
     cmesh_one_at = t8_cmesh_partition_cmesh (cmesh_one_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
-    cmesh_mult_at = t8_cmesh_new_row_of_cubes (num_trees, 1, 0, sc_MPI_COMM_WORLD, t8_testsuite_get_package_id ());
+    t8_cmesh_init (&cmesh_mult_at);
+    t8_cmesh_new_row_of_cubes (cmesh_mult_at, num_trees, 1, 0, sc_MPI_COMM_WORLD, t8_testsuite_get_package_id ());
     cmesh_mult_at = t8_cmesh_partition_cmesh (cmesh_mult_at, create_from_scheme_id (scheme_id), sc_MPI_COMM_WORLD);
 
-    cmesh_mult_at_from_stash
-      = t8_cmesh_new_row_of_cubes (num_trees, 1, 1, sc_MPI_COMM_WORLD, t8_testsuite_get_package_id ());
+    t8_cmesh_init (&cmesh_mult_at_from_stash);
+    t8_cmesh_new_row_of_cubes (cmesh_mult_at_from_stash, num_trees, 1, 1, sc_MPI_COMM_WORLD,
+                               t8_testsuite_get_package_id ());
   }
   void
   TearDown () override

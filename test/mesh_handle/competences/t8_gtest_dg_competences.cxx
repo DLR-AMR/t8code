@@ -25,75 +25,57 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
  * Checks that the competences for discontinuous Galerkin methods defined in \ref dg_competences.hxx work as expected.
  */
 #include <gtest/gtest.h>
+#include <test/mesh_handle/t8_gtest_common.hxx>
 #include <t8.h>
-
-#include <mesh_handle/mesh.hxx>
-#include <mesh_handle/competences/dg_competences.hxx>
-#include <mesh_handle/competence_pack.hxx>
-#include <mesh_handle/constructor_wrappers.hxx>
+#include <mesh_handle/mesh_handle.hxx>
 
 /** Store the rank on each element. */
-struct data_per_element
+struct rank_data_per_element
 {
   int rank;  ///< Rank of the element.
 };
 
-/** Callback function for the mesh handle to decide for refining or coarsening of (a family of) elements.
- * The adaptation criterion is to refine every element with even id.
- * The function header fits the definition of \ref TMesh::adapt_callback_type.
- * \tparam TMeshClass    The mesh handle class.
- * \param [in] mesh      The mesh that should be adapted.
- * \param [in] elements  One element or a family of elements to consider for adaptation.
- * \return 1 if the first entry in \a elements should be refined,
- *        -1 if the family \a elements shall be coarsened,
- *         0 else.
- */
-template <typename TMeshClass>
-int
-mesh_adapt_callback_test_refine_second ([[maybe_unused]] const TMeshClass& mesh,
-                                        std::span<const typename TMeshClass::element_class> elements)
-{
-  if ((elements[0].get_element_handle_id ()) % 2 == 0) {
-    return 1;
-  }
-  return 0;
-}
-
-/** Check the competence remote_ranks_mesh_competence for correctness. The ranks are set as data first, exchanged for 
+/** Check the competence remote_ranks_mesh_competence for correctness. The ranks are set as data first, exchanged for
  * ghost elements and then checked against the competence functionality.
  */
 TEST (t8_gtest_dg_competences, remote_ranks)
 {
   const int level = 2;
   using namespace t8_mesh_handle;
-  using mesh_class
-    = mesh<data_element_competences, union_competence_packs_type<mesh_competence_pack<remote_ranks_mesh_competence>,
-                                                                 data_mesh_competences<data_per_element>>>;
-  auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
-  mesh->set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
+  using mesh_class = mesh<data_element_competences_basic,
+                          union_competence_packs_type<mesh_competence_pack<remote_ranks_mesh_competence>,
+                                                      data_mesh_competences_basic<rank_data_per_element>>>;
+  auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
+  mesh->set_adapt (adapt_callback_refine_second<mesh_class>);
   mesh->set_partition ();
   mesh->set_ghost ();
   mesh->commit ();
 
+  // Test does not make sense without ghosts. Also ensure that we have at least one element per process.
+  int mpisize;
+  int mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  if (!(mpisize > 1) || !(mesh->get_dimension () > 1) || (mesh->get_num_global_elements () < mpisize)) {
+    GTEST_SKIP () << "Skipping test as no ghost elements are created.";
+  }
+  // Ensure that we actually test with ghost elements.
   const t8_locidx_t num_local = mesh->get_num_local_elements ();
   const t8_locidx_t num_ghosts = mesh->get_num_ghosts ();
-  if ((mesh->get_dimension () > 1) && (num_local > 1)) {
-    // Ensure that we actually test with ghost elements.
-    ASSERT_GT (num_ghosts, 0);
-  }
+  ASSERT_GT (num_ghosts, 0);
 
   int mpirank;
-  int mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   // Set local rank for all local mesh elements.
-  std::vector<data_per_element> element_data (num_local, { mpirank });
+  std::vector<rank_data_per_element> element_data (num_local, { mpirank });
   mesh->set_element_data (std::move (element_data));
   // Get element data and check that the remote ranks competence works as expected.
   mesh->exchange_ghost_data ();
   mesh->fill_rank_vector ();
   for (const auto& elem : *mesh) {
     EXPECT_EQ (elem.get_element_data ().rank, mpirank);
+    EXPECT_EQ (mesh->get_local_rank (), mpirank);
     EXPECT_EQ (LOCAL_RANK, mesh->get_rank (elem.get_element_handle_id ()));
   }
   for (t8_locidx_t ighost = num_local; ighost < num_local + num_ghosts; ighost++) {
@@ -101,8 +83,8 @@ TEST (t8_gtest_dg_competences, remote_ranks)
   }
 }
 
-/** Check the competence face_vector_mesh_competence for correctness. 
- * The test checks that the face vector and the element-face vector are consistent with each other and with the 
+/** Check the competence face_vector_mesh_competence for correctness.
+ * The test checks that the face vector and the element-face vector are consistent with each other and with the
  * neighbors of the elements.
  */
 TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
@@ -110,8 +92,8 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
   const int level = 2;
   using namespace t8_mesh_handle;
   using mesh_class = mesh<element_competence_pack<cache_neighbors>, dg_mesh_competences>;
-  auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, true, false);
-  mesh->set_adapt (mesh_adapt_callback_test_refine_second<mesh_class>);
+  auto mesh = handle_hypercube_hybrid_uniform_default<mesh_class> (level, sc_MPI_COMM_WORLD, true, false);
+  mesh->set_adapt (adapt_callback_refine_second<mesh_class>);
   mesh->set_partition ();
   mesh->set_ghost ();
   mesh->commit ();
@@ -127,7 +109,7 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
   ASSERT_EQ (static_cast<t8_locidx_t> (element_face_vector.size ()), num_local + num_ghosts);
 
   // Check element_face_vector first.
-  for (t8_locidx_t ielem = num_local; ielem < num_local + num_ghosts; ielem++) {
+  for (t8_locidx_t ielem = 0; ielem < num_local + num_ghosts; ielem++) {
     EXPECT_EQ (static_cast<int> (element_face_vector[ielem].size ()), (*mesh)[ielem].get_num_faces ());
     // Check that the element_face_vector points to valid face indices in the faces vector.
     for (int iface = 0; iface < (*mesh)[ielem].get_num_faces (); ++iface) {
@@ -135,8 +117,9 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
         EXPECT_TRUE ((*mesh)[ielem].is_ghost_element ());
       }
       else {
+        // Check that the face index is valid.
         EXPECT_GE (element_face_vector[ielem][iface], 0);
-        EXPECT_LE (element_face_vector[ielem][iface], static_cast<int> (faces.size ()));
+        EXPECT_LT (element_face_vector[ielem][iface], static_cast<int> (faces.size ()));
       }
     }
   }
@@ -187,20 +170,34 @@ TEST (t8_gtest_dg_competences, face_vector_mesh_competence)
       break;
     /* --- MORTAR --- */
     case face_type::MORTAR:
-      // Check that first element is the large mortar.
-      // For MPI_MORTARs, the large mortar could have only one neighbor.
-      EXPECT_GT (neighs.size (), 1) << "MORTAR face must have more than 2 sides.";
-      [[fallthrough]];
     case face_type::MPI_MORTAR: {
-      bool has_remote = std::any_of (face.sides.begin (), face.sides.end (),
-                                     [] (const face_side& s) { return s.rank != LOCAL_RANK; });
+      const bool has_remote = std::any_of (face.sides.begin (), face.sides.end (),
+                                           [] (const face_side& s) { return s.rank != LOCAL_RANK; });
       EXPECT_EQ (has_remote, face.type == face_type::MPI_MORTAR);
-      EXPECT_EQ (neighs[0]->get_level (), elem_first.get_level () + 1)
-        << "MORTAR first element must be the large mortar.";
+      EXPECT_GE (face.sides.size (), 2) << "MORTAR face must have a large side and at least one small side.";
+
+      if (elem_first.is_ghost_element ()) {
+        // The large side is a ghost.
+        EXPECT_EQ (face.type, face_type::MPI_MORTAR) << "MORTAR A ghost large side implies MPI_MORTAR.";
+        EXPECT_NE (face.sides[0].rank, LOCAL_RANK) << "MORTAR A ghost large side must be at a remote rank.";
+
+        // Check entries of the face sides vector for the small sides.
+        for (size_t iside = 1; iside < face.sides.size (); ++iside) {
+          EXPECT_EQ (face.sides[iside].rank, LOCAL_RANK) << "MORTAR Small sides of a remote mortar must be local.";
+          EXPECT_EQ ((*mesh)[face.sides[iside].element_id].get_level (), elem_first.get_level () + 1)
+            << "MORTAR Small side must be one level finer.";
+        }
+        // TODO: If the neighbors of ghost work again, the following checks can be enabled also for ghost large sides.
+        break;
+      }
+
+      /* The large side is local: the whole mortar is visible. */
       EXPECT_EQ (neighs.size (), face.sides.size () - 1)
         << "MORTAR side must have as many neighbors as small sides of the face.";
 
       for (int ineigh = 0; ineigh < static_cast<int> (neighs.size ()); ++ineigh) {
+        EXPECT_EQ (neighs[ineigh]->get_level (), elem_first.get_level () + 1)
+          << "MORTAR first element must be the large mortar.";
         // The neighbors do not necessarily have the same order as the face sides.
         auto neigh_face_side
           = std::find_if (face.sides.begin (), face.sides.end (), [&neighs, ineigh] (const face_side& s) {

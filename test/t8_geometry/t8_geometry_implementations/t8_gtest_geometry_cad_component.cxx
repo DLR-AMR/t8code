@@ -82,14 +82,17 @@ class geometry_cad_component: public testing::TestWithParam<int> {
     const int dim = test_file_dimension[GetParam ()];
 
     const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
-    t8_cmesh_t cmesh = t8_cmesh_from_msh_file (filepath.c_str (), 0, comm, dim, 0, 1);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_from_msh_file (&cmesh, filepath.c_str (), 0, comm, dim, 0, 1);
     forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 1, 0, comm);
 
     /* Depending on the tested mesh it is either a msh or vtu file. */
     t8_cmesh_t target_cmesh;
     switch (test_file_format[GetParam ()]) {
     case MSH_FILE:
-      target_cmesh = t8_cmesh_from_msh_file (filepath_target.c_str (), 0, comm, dim, 0, 0);
+      t8_cmesh_init (&target_cmesh);
+      t8_cmesh_from_msh_file (&target_cmesh, filepath_target.c_str (), 0, comm, dim, 0, 0);
       break;
     case VTK_FILE:
 #if T8_ENABLE_VTK

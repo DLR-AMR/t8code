@@ -31,7 +31,7 @@ install( TARGETS t8example LIBRARY )
 
 function( add_t8_example )
     set( options "" )
-    set( oneValueArgs "NAME" )  
+    set( oneValueArgs "NAME" )
     set( multiValueArgs "SOURCES" )
     cmake_parse_arguments( ADD_T8_EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
@@ -80,6 +80,7 @@ add_t8_example( NAME t8_example_geometries              SOURCES geometry/t8_exam
 
 add_t8_example( NAME t8_read_msh_file                   SOURCES IO/cmesh/gmsh/t8_read_msh_file.cxx )
 add_t8_example( NAME t8_load_and_refine_square_w_hole   SOURCES IO/cmesh/gmsh/t8_load_and_refine_square_w_hole.cxx )
+add_t8_example( NAME t8_read_openfoam_case              SOURCES IO/cmesh/OpenFOAM/t8_read_openfoam_case.cxx )
 
 copy_example_file (IO/cmesh/gmsh/circlesquare_hybrid_hole.msh)
 
@@ -100,6 +101,9 @@ add_t8_example( NAME t8_gmsh_to_vtk                     SOURCES IO/forest/gmsh/t
 add_t8_example( NAME t8_example_spheres                 SOURCES remove/t8_example_spheres.cxx )
 add_t8_example( NAME t8_example_gauss_blob              SOURCES remove/t8_example_gauss_blob.cxx )
 add_t8_example( NAME t8_example_empty_trees             SOURCES remove/t8_example_empty_trees.cxx )
+
+add_t8_example( NAME t8_example_hanging_nodes_shock     SOURCES subelements/t8_hanging_nodes_shock.cxx )
+add_t8_example( NAME t8_example_hanging_nodes           SOURCES subelements/t8_quads_hanging_nodes.cxx )
 
 add_t8_example( NAME t8_version                         SOURCES version/t8_version.cxx )
 

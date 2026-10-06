@@ -44,7 +44,8 @@ struct forest_find_owner: public testing::TestWithParam<std::tuple<int, t8_eclas
     scheme = create_from_scheme_id (scheme_id);
     tree_class = std::get<1> (GetParam ());
     /* Construct a coarse mesh of one tree */
-    cmesh = t8_cmesh_new_from_class (tree_class, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, tree_class, sc_MPI_COMM_WORLD);
   }
   t8_eclass_t tree_class;
   t8_cmesh_t cmesh;

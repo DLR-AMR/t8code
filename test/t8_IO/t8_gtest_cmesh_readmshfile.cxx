@@ -48,7 +48,9 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_ascii)
   t8_debugf ("Checking msh file version 4 ascii...\n");
 
   ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " << filename;
-  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix.c_str (), 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_from_msh_file (&cmesh, fileprefix.c_str (), 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   ASSERT_TRUE (cmesh != NULL) << "Could not read cmesh from ascii version 4, but should be able to.";
 
   /* The cmesh was read successfully and we need to destroy it. */
@@ -66,7 +68,9 @@ TEST (t8_cmesh_readmshfile, test_msh_file_vers4_bin)
   t8_debugf ("Checking msh file version 4 binary...\n");
 
   ASSERT_FALSE (access (filename, R_OK)) << "Could not open file " << filename;
-  t8_cmesh_t cmesh = t8_cmesh_from_msh_file (fileprefix.c_str (), 1, sc_MPI_COMM_WORLD, 2, 0, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_from_msh_file (&cmesh, fileprefix.c_str (), 1, sc_MPI_COMM_WORLD, 2, 0, 0);
   ASSERT_TRUE (cmesh == NULL) << "Expected fail of reading binary msh file v.4, but did not fail.";
 
   t8_debugf ("Error handling successful.\n");

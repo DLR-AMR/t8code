@@ -36,7 +36,8 @@ struct cmesh_face_boundary_one_tree: public testing::TestWithParam<t8_eclass>
     eclass = GetParam ();
 
     /* For each eclass create a cmesh consisting only of one tree. */
-    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
 
     /* We now check each face */
     num_faces = t8_eclass_num_faces[(int) eclass];
