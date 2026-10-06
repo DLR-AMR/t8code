@@ -33,7 +33,6 @@
 #include <sc_functions.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
-#include <t8_schemes/t8_standalone/t8_standalone_elements.hxx> /*< Definition of number of faces etc of different eclasses. */
 #include <t8_eclass/t8_eclass.h>
 #include "t8_subelement_traits.hxx"
 #include <utility>
@@ -159,7 +158,7 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_num_corners (element_to_standalone (elem));
     }
-    return T8_ELEMENT_NUM_CORNERS[element_get_shape (elem)];
+    return t8_eclass_num_vertices[element_get_shape (elem)];
   }
 
   /** Compute the number of faces of a given element.
@@ -173,7 +172,7 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_num_faces (element_to_standalone (elem));
     }
-    return T8_ELEMENT_NUM_FACES[element_get_shape (elem)];
+    return t8_eclass_num_faces[element_get_shape (elem)];
   }
 
   /** Compute the maximum number of faces of a given element and all of its descendants.

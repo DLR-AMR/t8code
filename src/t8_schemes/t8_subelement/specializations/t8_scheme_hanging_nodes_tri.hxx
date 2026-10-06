@@ -197,7 +197,7 @@ struct t8_subelem_scheme_hanging_nodes_tri:
     // Get the bit corresponding to iface.
     // If that bit is 1, the face is hanging.
     // 1u is for lowest bit extraction.
-    return ((subelem_type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE] - 1) - iface)) & 1u) != 0u;
+    return ((subelem_type >> ((t8_eclass_num_faces[T8_ECLASS_TRIANGLE] - 1) - iface)) & 1u) != 0u;
   }
 
   /** Compute the integer coordinates of the three vertices of a triangular subelement.
@@ -254,7 +254,7 @@ struct t8_subelem_scheme_hanging_nodes_tri:
 
     /* The corners of the parent triangle. */
     std::array<std::array<int, 2>, 3> parent_coords;
-    for (int icorner = 0; icorner < T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE]; ++icorner) {
+    for (int icorner = 0; icorner < t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]; ++icorner) {
       underlying_scheme.element_get_vertex_integer_coords (this->subelement_to_standalone (subelement), icorner,
                                                            parent_coords[icorner].data ());
     }
@@ -271,7 +271,7 @@ struct t8_subelem_scheme_hanging_nodes_tri:
     while (!face_is_hanging (subelem_type, main_face)) {
       ++main_face;
     }
-    T8_ASSERT (main_face < T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE]);
+    T8_ASSERT (main_face < t8_eclass_num_faces[T8_ECLASS_TRIANGLE]);
     const std::array<int, 2> m_c = compute_face_midpoint (main_face);
 
     /* Build the path: Walk the parent edges from the first to the second end vertex of the main face, the way

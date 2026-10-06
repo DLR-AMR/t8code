@@ -125,7 +125,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
     }
     const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     // Each original face "has" one triangular subelement, each split face two.
-    return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
+    return t8_eclass_num_faces[T8_ECLASS_QUAD] + num_hanging_faces;
   }
 
   /** This defines how an element is refined into subelements using a specified subelement type.
@@ -219,7 +219,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
   static bool
   face_is_hanging (const unsigned subelem_type, const int iface) noexcept
   {
-    return ((subelem_type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] - 1) - iface)) & 1u) != 0u;
+    return ((subelem_type >> ((t8_eclass_num_faces[T8_ECLASS_QUAD] - 1) - iface)) & 1u) != 0u;
   }
 
   /** Compute the integer coordinates of all three vertices of a triangular subelement.
@@ -334,7 +334,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
     int clockwise_face = 0;
     int split = 0;
     int subelements_up_to = 0;  // The current clockwise face iface contains subelements with ids < this number.
-    for (clockwise_face = 0; clockwise_face < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++clockwise_face) {
+    for (clockwise_face = 0; clockwise_face < t8_eclass_num_faces[T8_ECLASS_QUAD]; ++clockwise_face) {
       split = face_is_hanging (subelem_type, clockwise_ordering_to_parent_face[clockwise_face]);
       subelements_up_to += split + 1;
       if (sub_id < subelements_up_to) {
