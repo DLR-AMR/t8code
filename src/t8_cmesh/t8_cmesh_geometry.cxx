@@ -54,20 +54,6 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t
                           sizeof (t8_geometry_hash), 0);
 }
 
-/* Return the geometry handler of the cmesh. C version.
- * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
- * \return                 The geometry handler of the cmesh.
- * \note                   The return value might be NULL if no geometry handler exists.
- * \note                   Handle with care. This function should be used by t8code devs only.
- */
-t8_geometry_handler_c *
-t8_cmesh_get_geometry_handler_c (const t8_cmesh_t cmesh)
-{
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
-
-  return cmesh->geometry_handler;
-}
-
 /* Return the geometry handler of the cmesh.
  * \param [in] cmesh       The cmesh to be considered. Does not need be committed.
  * \return                 The geometry handler of the cmesh.
@@ -78,7 +64,7 @@ t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
 
-  return detail::t8_geom_handler_from_c (t8_cmesh_get_geometry_handler_c (cmesh));
+  return cmesh->geometry_handler;
 }
 
 /* Construct a new geometry_handler for a cmesh and add it to the cmesh.
