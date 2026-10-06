@@ -78,63 +78,15 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   // TODO extruded: do we use private? or protected?
  private:
   TBaseScheme base_scheme; /**< The scheme of the 2D base elements. */
-  void *scheme_context;    /**< The sc_mempool_t of the extruded elements. */
 
  public:
   // #################################____CONSTRUCTORS & DESTRUCTOR____#################################################
 
   /** Constructor. */
-  t8_extruded_scheme () noexcept: base_scheme (), scheme_context (sc_mempool_new (sizeof (TBaseElem))) {};
+  t8_extruded_scheme () noexcept: base_scheme () {};
 
   /** Destructor. */
-  ~t8_extruded_scheme ()
-  {
-    if (scheme_context != nullptr) {
-      SC_ASSERT (((sc_mempool_t *) scheme_context)->elem_count == 0);
-      sc_mempool_destroy ((sc_mempool_t *) scheme_context);
-    }
-  }
-
-  /** Move constructor */
-  t8_extruded_scheme (t8_extruded_scheme &&other) noexcept
-    : base_scheme (std::move (other.base_scheme)), scheme_context (std::exchange (other.scheme_context, nullptr))
-  {
-  }
-
-  /** Move assignment operator */
-  t8_extruded_scheme &
-  operator= (t8_extruded_scheme &&other) noexcept
-  {
-    if (this != &other) {
-      // Free existing resources of moved-to object
-      if (scheme_context) {
-        sc_mempool_destroy ((sc_mempool_t *) scheme_context);
-      }
-      // TODO extruded: move correct?
-      base_scheme = std::move (other.base_scheme);
-      scheme_context = std::exchange (other.scheme_context, nullptr);
-    }
-    return *this;
-  }
-
-  /** Copy constructor */
-  t8_extruded_scheme (const t8_extruded_scheme &other)
-    : base_scheme (other.base_scheme), scheme_context (sc_mempool_new (sizeof (TBaseElem))) {};
-
-  /** Copy assignment operator */
-  t8_extruded_scheme &
-  operator= (const t8_extruded_scheme &other)
-  {
-    if (this != &other) {
-      // Free existing resources of assigned-to object
-      if (scheme_context) {
-        sc_mempool_destroy ((sc_mempool_t *) scheme_context);
-      }
-      base_scheme = other.base_scheme;
-      scheme_context = sc_mempool_new (sizeof (TBaseElem));
-    }
-    return *this;
-  }
+  ~t8_extruded_scheme () {};
 
  private:
   // ################################################____HELPERS____####################################################
@@ -425,7 +377,6 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline int
   elements_are_family (const t8_element_t *const *fam) const
   {
-    const int num_siblings = element_get_num_siblings (fam[0]);
     return base_scheme.elements_are_family (fam);
   }
 
@@ -639,7 +590,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
       T8_ASSERT (element_is_valid (elem));
       return root_face;
     }
-    // TODO extruded:
+    // TODO extruded: correct?
     /* Build the boundary line of the base element from the in-plane coordinate of the face and extrude it. */
     const p4est_quadrant_t *face_quad = (const p4est_quadrant_t *) face;
     t8_dline_t base_face;
@@ -712,7 +663,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
       base_scheme.element_copy (elem, boundary);
       return;
     }
-    // TODO extruded: ??
+    // TODO extruded: correct?
     /* Compute the boundary line of the base element and use its coordinate as the in-plane coordinate. */
     t8_dline_t base_face;
     base_face.x = 0;
@@ -761,7 +712,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
       T8_ASSERT (element_is_valid (neigh));
       return is_inside;
     }
-    // TODO extruded: ??
+    // TODO extruded: correct?
     base_scheme.element_copy (elem, neigh);
     *neigh_face = face == bottom_face ? bottom_face + 1 : bottom_face;
     /* Since elements span the whole tree height, the neighbor is always outside. */
@@ -955,11 +906,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_new (const int length, t8_element_t **elem) const
   {
     T8_ASSERT (0 <= length);
-    for (int ielem = 0; ielem < length; ++ielem) {
-      elem[ielem] = (t8_element_t *) sc_mempool_alloc ((sc_mempool_t *) scheme_context);
-      base_scheme.element_init (1, elem[ielem]);
-      set_to_root (elem[ielem]);
-    }
+    base_scheme.element_new (length, elem);
   }
 
   /** Initialize an array of allocated elements.
@@ -969,11 +916,8 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline void
   element_init (const int length, t8_element_t *elem) const
   {
-    TBaseElem *elements = (TBaseElem *) elem;
-    for (int ielem = 0; ielem < length; ++ielem) {
-      t8_element_t *element = (t8_element_t *) (elements + ielem);
-      base_scheme.element_init (1, element);
-    }
+    T8_ASSERT (0 <= length);
+    base_scheme.element_init (length, elem);
   }
 
   /** Deinitialize an array of allocated elements.
@@ -983,10 +927,8 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   inline void
   element_deinit (const int length, t8_element_t *elem) const
   {
-    TBaseElem *elements = (TBaseElem *) elem;
-    for (int ielem = 0; ielem < length; ++ielem) {
-      base_scheme.element_deinit (1, (t8_element_t *) (elements + ielem));
-    }
+    T8_ASSERT (0 <= length);
+    base_scheme.element_deinit (length, elem);
   }
 
   /** Deallocate an array of elements.
@@ -997,9 +939,7 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_destroy (const int length, t8_element_t **elem) const
   {
     T8_ASSERT (0 <= length);
-    for (int ielem = 0; ielem < length; ++ielem) {
-      sc_mempool_free ((sc_mempool_t *) scheme_context, elem[ielem]);
-    }
+    base_scheme.element_destroy (length, elem);
   }
 
   /** Fill an element with the root element.
@@ -1014,7 +954,6 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   // ################################################____MPI____########################################################
 
   /** Pack multiple elements into contiguous memory, so they can be sent via MPI.
-   * \note First all base elements are packed, then all lines.
    * \param [in] elements        Array of elements that are to be packed
    * \param [in] count           Number of elements to pack
    * \param [in,out] send_buffer Buffer in which to pack the elements
@@ -1038,15 +977,6 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
   element_MPI_Pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack_size) const
   {
     base_scheme.element_MPI_Pack_size (count, comm, pack_size);
-    int datasize = 0;
-    int line_size = 0;
-    int mpiret = sc_MPI_Pack_size (1, sc_MPI_INT, comm, &datasize);
-    SC_CHECK_MPI (mpiret);
-    line_size += datasize;
-    mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &datasize);
-    SC_CHECK_MPI (mpiret);
-    line_size += datasize;
-    *pack_size += count * line_size;
   }
 
   /** Unpack multiple elements from contiguous memory that was received via MPI.
