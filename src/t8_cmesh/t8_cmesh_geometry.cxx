@@ -96,9 +96,7 @@ t8_cmesh_set_geometry_handler (t8_cmesh_t cmesh, detail::t8_geometry_handler *ne
   if (new_handler == nullptr) {
     new_handler = new detail::t8_geometry_handler ();
   }
-  // Convert the handler to C pointer and add to cmesh
-  t8_geometry_handler_c *new_handler_c = detail::t8_geom_handler_to_c (new_handler);
-  return cmesh->geometry_handler = new_handler_c;
+  return cmesh->geometry_handler = new_handler;
 }
 
 const t8_geometry_c *
