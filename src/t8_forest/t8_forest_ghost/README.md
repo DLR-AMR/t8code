@@ -85,3 +85,23 @@ In all cases:
 - The definition may be reused for several forests, so reset any per-forest state at the start
   of each ghost computation.
 - Pass the object to `t8_forest_set_ghost_ext`. The forest takes ownership, it is freed via `unref`.
+
+## A thing to keep in mind about forest ghosts and cmesh ghosts
+
+The forest and its cmesh both have ghosts, and they do not depend on each other:
+
+- The **cmesh ghosts** are coarse trees owned by other processes. A partitioned cmesh only keeps
+  the trees that share a face with one of its local trees. Your forest ghost definition does not
+  change this.
+- The **forest ghosts** are elements owned by other processes. Your ghost definition decides which
+  elements these are, e.g. face, edge or vertex neighbors, or elements chosen by your own criterion.
+
+The forest needs the coarse tree of every ghost element, for example to compute its face neighbors
+or to evaluate the tree's geometry. With a partitioned cmesh, a process only has its local trees and
+the trees that share a face with them. If a ghost element lies in any other tree, e.g. a vertex
+neighbor across a tree corner, its coarse tree is missing on that process and the forest cannot
+handle it.
+
+TLDR: We only guarantee that face ghosts (`T8_GHOST_FACES`) work with **partitioned cmeshes**. Any other ghost
+  definition only works if all of its ghost elements lie in local trees or in trees that share a
+  face with a local tree. When in doubt with a ghost definition other than `T8_GHOST_FACES` do not partition the cmesh.
