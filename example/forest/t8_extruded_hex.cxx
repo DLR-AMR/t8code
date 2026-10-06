@@ -35,12 +35,13 @@
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_schemes/t8_extruded/t8_extruded.hxx>
+#include <t8_types/t8_vec.hxx>
 #include <cmath>
 
 /** The parameters of the refinement. */
 struct t8_extruded_hex_adapt_data
 {
-  double center[2]; /**< The center of the cylinder in the x-y-plane. */
+  t8_2D_vec center; /**< The center of the cylinder in the x-y-plane. */
   double radius;    /**< The radius of the cylinder. */
   double width;     /**< Elements closer than this to the cylinder surface are refined. */
   int maxlevel;     /**< The maximum refinement level. */
@@ -57,10 +58,11 @@ t8_extruded_hex_adapt (t8_forest_t forest, t8_forest_t forest_from, t8_locidx_t 
   if (scheme->element_get_level (tree_class, elements[0]) >= data->maxlevel) {
     return 0;
   }
-  double centroid[3];
-  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);
-  const double distance = std::hypot (centroid[0] - data->center[0], centroid[1] - data->center[1]) - data->radius;
-  return std::abs (distance) < data->width ? 1 : 0;
+  t8_3D_vec centroid;
+  t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid.data ());
+  t8_2D_vec centroid2D ({ centroid[0], centroid[1] });
+  const double distance = t8_dist (centroid2D, data->center);
+  return std::abs (distance - data->radius) < data->width ? 1 : 0;
 }
 
 int
