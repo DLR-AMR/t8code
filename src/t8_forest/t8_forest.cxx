@@ -2264,14 +2264,13 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, const t8_locidx_t local_tr
             "https://github.com/DLR-AMR/t8code/issues/825 is resolved, the function will be available.\n");
 
   /* we need to compute the face neighbors to know whether the element is a boundary element. */
-  const int is_balanced = t8_forest_is_balanced (forest);
   int num_neighbors;
-  t8_element_t **neighbor_leaves;
+  const t8_element_t **neighbor_leaves;
   t8_locidx_t *pelement_indices;
   t8_eclass_t neighbor_eclass;
   /* The forest has holes, the leaf could lie inside a tree but its neighbor was deleted. */
   t8_forest_leaf_face_neighbors (forest, local_tree, leaf, &neighbor_leaves, face, NULL, &num_neighbors,
-                                 &pelement_indices, &neighbor_eclass, is_balanced);
+                                 &pelement_indices, &neighbor_eclass);
 
   if (num_neighbors == 0) {
     /* The element has no neighbors, it is a boundary element. */
