@@ -72,7 +72,8 @@ namespace detail
 {
 struct t8_geometry_handler;
 }
-typedef struct detail::t8_geometry_handler t8_geometry_handler_c;
+
+typedef detail::t8_geometry_handler t8_geometry_handler_c;
 
 #else
 typedef struct t8_geometry_handler t8_geometry_handler_c;
