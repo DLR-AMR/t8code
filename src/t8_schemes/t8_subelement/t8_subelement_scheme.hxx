@@ -207,15 +207,15 @@ struct t8_subelement_scheme_common:
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
   int
-  element_get_face_corner (const t8_element_t *elem, const int face, const int corner) const noexcept
+  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const noexcept
   {
-    T8_ASSERT (element_is_valid (elem));
-    if (!element_is_subelement (elem)) {
-      return derived ().underlying_scheme.element_get_face_corner (element_to_standalone (elem), face, corner);
+    T8_ASSERT (element_is_valid (element));
+    if (!element_is_subelement (element)) {
+      return derived ().underlying_scheme.element_get_face_corner (element_to_standalone (element), face, corner);
     }
-    T8_ASSERT (0 <= face && face < element_get_num_faces (elem));
-    T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[element_get_face_shape (elem, face)]);
-    return t8_face_vertex_to_tree_vertex[element_get_shape (elem)][face][corner];
+    T8_ASSERT (0 <= face && face < element_get_num_faces (element));
+    T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[element_get_face_shape (element, face)]);
+    return t8_face_vertex_to_tree_vertex[element_get_shape (element)][face][corner];
   }
 
   /** Not implemented for this scheme.
