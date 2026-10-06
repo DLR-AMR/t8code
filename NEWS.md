@@ -1,3 +1,10 @@
+# Single face-neighbor ghost definition
+This is an update to the [ghost interface restructuring](#ghost-interface-restructuring). The deprecated ghost versions 1 and 2 were dropped and face ghost version 3 is now the only supported face ghost algorithm. Therefore, `t8_forest_ghost_definition_face` no longer takes a ghost version. Only the top-down search algorithm, which was already the default, remains. If you selected a ghost version there, use `t8_forest_set_ghost` instead:
+```diff
+- t8_forest_set_ghost_ext (forest_ghost, 1, new t8_forest_ghost_definition_face (<ghost_version>));
++ t8_forest_set_ghost (forest_ghost, 1, T8_GHOST_FACES);
+```
+
 # Ghost interface restructuring
 The ghost interface is one of the oldest parts of t8code and needed a restructuring to be fit for future changes. Until now, only face-neighbor ghosts communication was allowed. The new modular interface allows for arbitrary ghost definitions and is designed similar to the already known geometry and scheme interfaces.
 
