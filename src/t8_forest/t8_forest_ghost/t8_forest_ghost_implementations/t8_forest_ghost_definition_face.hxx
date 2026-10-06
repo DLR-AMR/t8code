@@ -32,60 +32,34 @@
 /**
  * Face neighbor based ghost computation.
  * This class computes the ghosts of a process via a face neighbor based ghost definition.
- * It supports three different versions for this definition, but version 3 suffices for most applications.
- *
- * Version 1 (only for balanced forests) follows the algorithm in:
- * p4est: Scalable Algorithms For Parallel Adaptive Mesh Refinement On Forests of Octrees
- * - C. Burstedde, L. C. Wilcox, O. Ghattas
- *
- * Version 2 (also for unbalanced forests) follows the algorithm in:
- * Recursive algorithms for distributed forests of octrees - T. Isaac, C. Burstedde, L. C. Wilcox and O. Ghattas
- *
- * Version 3 uses a top down search and is also available with unbalanced forests.
+ * The remote elements are found with a top-down search, which also works for unbalanced forests.
  */
 struct t8_forest_ghost_definition_face: public t8_forest_ghost_definition_w_search
 {
  public:
   /**
    * Constructor for the face neighbor based ghost.
-   * \param [in] version    The version of the ghost algorithm.
-   * \note Version 3 should be sufficient for most applications.
    */
-  explicit t8_forest_ghost_definition_face (const int version);
+  t8_forest_ghost_definition_face ();
 
   /**
-   * Get the version (1, 2 or 3) of the ghost definition for faces.
-   * \return version
-   */
-  inline int
-  get_version () const
-  {
-    return version;
-  }
-
-  /**
-   * Versions 2 and 3 find all face neighbors also in unbalanced forests,
-   * version 1 only in balanced forests.
-   * \return true for versions 2 and 3, false for version 1.
+   * The face neighbor based ghost layer contains all face neighbors, also in unbalanced forests.
+   * \return true.
    */
   bool
   has_all_face_neighbors () const override
   {
-    return version != 1;
+    return true;
   }
 
  protected:
   /**
-   * Fills the remote ghosts. Version 3 does so via the inherited tree-based
-   * search (using this class's search_fn/search_data). Versions 1 and 2 are
-   * not search-based and compute the remote elements directly.
+   * Fills the remote ghosts via the inherited tree-based search
+   * (using this class's search_fn/search_data).
    * \param [in,out]    forest     The forest.
    */
   void
   fill_remote_ghosts (t8_forest_t forest) override;
-
- private:
-  int version {};
 };
 
 #endif /* !T8_FOREST_GHOST_DEFINITION_FACE_HXX */

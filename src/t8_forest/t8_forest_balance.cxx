@@ -214,8 +214,8 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     set_from->ghosts = nullptr;
     t8_forest_ghost_definition *const original_definition = set_from->ghost_definition;
     if (!definition_suitable) {
-      t8_debugf ("Create a temporary face ghost definition of version 3 for balance.\n");
-      set_from->ghost_definition = new t8_forest_ghost_definition_face (3);
+      t8_debugf ("Create a temporary face ghost definition for balance.\n");
+      set_from->ghost_definition = new t8_forest_ghost_definition_face ();
     }
     T8_ASSERT (set_from->ghost_definition->has_all_face_neighbors ());
     t8_forest_ghost_create (set_from);
