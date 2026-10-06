@@ -2200,7 +2200,7 @@ t8_forest_leaf_is_boundary (const t8_forest_t forest, const t8_locidx_t local_tr
     const int cmesh_face = scheme->element_get_tree_face (tree_class, leaf, face);
     const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
     const t8_locidx_t cmesh_local_tree = t8_forest_ltreeid_to_cmesh_ltreeid (forest, local_tree);
-    int tree_boundary = t8_cmesh_tree_face_is_boundary (cmesh, cmesh_local_tree, cmesh_face);
+    const int tree_boundary = t8_cmesh_tree_face_is_boundary (cmesh, cmesh_local_tree, cmesh_face);
     if (tree_boundary) {
       return 1;
     }
