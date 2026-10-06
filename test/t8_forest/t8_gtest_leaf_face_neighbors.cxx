@@ -43,10 +43,10 @@
 #include <test/t8_gtest_adapt_callbacks.hxx>
 
 bool
-test_face_neighbors_skip_cmesh (const t8_cmesh_t cmesh)
+test_face_neighbors_skip_cmesh (const int scheme_id, const t8_cmesh_t cmesh)
 {
-  // We skip empty cmeshes.
-  return t8_cmesh_is_empty (cmesh);
+  // We skip empty cmeshes and cmeshes that the scheme does not support.
+  return t8_cmesh_is_empty (cmesh) || !t8_test_scheme_supports_cmesh (scheme_id, cmesh, sc_MPI_COMM_WORLD);
 }
 
 class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh_example_base *> > {
@@ -56,8 +56,8 @@ class forest_face_neighbors: public testing::TestWithParam<std::tuple<int, cmesh
   {
     const int scheme_id = std::get<0> (GetParam ());
     t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
-    if (test_face_neighbors_skip_cmesh (cmesh)) {
-      /* we skip empty cmeshes case */
+    if (test_face_neighbors_skip_cmesh (scheme_id, cmesh)) {
+      /* we skip empty cmeshes and cmeshes that the scheme does not support */
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
@@ -562,7 +562,7 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
           T8_FREE (dual_faces);
         }
       }  // End face loop
-    }    // End leaf in tree loop
+    }  // End leaf in tree loop
     if (gtreeid == 0) {
       // Tree 0 must have >0 faces with 1 neighbor.
       EXPECT_GE (num_faces_with_1_neighbor, 1) << "Tree 1 must have 1 face with 2 neighbors.";
@@ -592,8 +592,8 @@ struct forest_face_neighbors_subface: public testing::TestWithParam<std::tuple<i
     const int scheme_id = std::get<0> (GetParam ());
     t8_cmesh_t cmesh = std::get<1> (GetParam ())->cmesh_create ();
 
-    // Skip empty cmeshes.
-    if (test_face_neighbors_skip_cmesh (cmesh)) {
+    // Skip empty cmeshes and cmeshes that the scheme does not support
+    if (test_face_neighbors_skip_cmesh (scheme_id, cmesh)) {
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
@@ -775,7 +775,7 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
             T8_TESTSUITE_FREE (neigh_children);
 
           }  // end if(neighbor_level == level - 1)
-        }    // end if(num_neighbors == 1)
+        }  // end if(num_neighbors == 1)
 
         // Manually free memory allocated by t8code inside t8_forest_leaf_face_neighbors_ext.
         if (num_neighbors > 0) {
@@ -784,8 +784,8 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
           T8_FREE (dual_faces);
         }
       }  // end face loop
-    }    // end element loop
-  }      // end tree loop
+    }  // end element loop
+  }  // end tree loop
 }
 
 // We check for all cmesh examples and scheme collections.
