@@ -45,6 +45,7 @@
 #include <t8_schemes/t8_scheme_helpers.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_default/t8_default_quad/t8_default_quad.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <cstdio>
 #include <cstring>
 #include <utility>
@@ -997,3 +998,6 @@ struct t8_extruded_scheme: public t8_scheme_helpers<TEclass, t8_extruded_scheme<
 
 /** The extruded hex scheme: default quads extruded in z-direction. */
 using t8_extruded_scheme_hex = t8_extruded_scheme<T8_ECLASS_HEX, t8_default_scheme_quad, p4est_quadrant_t>;
+
+/** The extruded prism scheme: default triangles extruded in z-direction. */
+using t8_extruded_scheme_prism = t8_extruded_scheme<T8_ECLASS_PRISM, t8_default_scheme_tri, t8_dtri_t>;

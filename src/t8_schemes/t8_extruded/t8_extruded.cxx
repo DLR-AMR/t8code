@@ -40,7 +40,7 @@ t8_scheme_new_extruded ()
   builder.add_eclass_scheme<t8_default_scheme_tri> ();
   builder.add_eclass_scheme<t8_extruded_scheme_hex> ();
   builder.add_eclass_scheme<t8_default_scheme_tet> ();
-  builder.add_eclass_scheme<t8_default_scheme_prism> ();
+  builder.add_eclass_scheme<t8_extruded_scheme_prism> ();
   builder.add_eclass_scheme<t8_default_scheme_pyramid> ();
 
   return builder.build_scheme ();
@@ -52,13 +52,33 @@ t8_eclass_scheme_is_extruded (const t8_scheme *scheme, const t8_eclass_t eclass)
   switch (eclass) {
   case T8_ECLASS_HEX:
     return scheme->check_eclass_scheme_type<t8_extruded_scheme_hex> (T8_ECLASS_HEX);
+  case T8_ECLASS_PRISM:
+    return scheme->check_eclass_scheme_type<t8_extruded_scheme_prism> (T8_ECLASS_PRISM);
   default:
     return 0;
   }
 }
 
-/** Check whether a single face connection of a hex tree is compatible with the extruded hex scheme.
- * \param [in] face         A face of the hex tree.
+/** Return the number of lateral faces of an extruded eclass.
+ * \param [in] eclass   An eclass.
+ * \return              The number of lateral faces if \a eclass is extruded (hex or prism), -1 otherwise.
+ */
+static int
+t8_extruded_num_lateral_faces (const t8_eclass_t eclass)
+{
+  switch (eclass) {
+  case T8_ECLASS_HEX:
+    return t8_extruded_scheme_hex::num_lateral_faces;
+  case T8_ECLASS_PRISM:
+    return t8_extruded_scheme_prism::num_lateral_faces;
+  default:
+    return -1;
+  }
+}
+
+/** Check whether a single face connection of an extruded tree is compatible with the extruded schemes.
+ * \param [in] eclass       The eclass of the tree, hex or prism.
+ * \param [in] face         A face of the tree.
  * \param [in] neigh_class  The eclass of the neighbor tree.
  * \param [in] neigh_face   The face of the neighbor tree.
  * \param [in] orientation  The orientation of the face connection.
@@ -66,30 +86,29 @@ t8_eclass_scheme_is_extruded (const t8_scheme *scheme, const t8_eclass_t eclass)
  */
 // TODO extruded: static for local helper?
 static bool
-t8_extruded_hex_face_connection_is_compatible (const int face, const t8_eclass_t neigh_class, const int neigh_face,
-                                               const int orientation)
+t8_extruded_face_connection_is_compatible (const t8_eclass_t eclass, const int face, const t8_eclass_t neigh_class,
+                                           const int neigh_face, const int orientation)
 {
-  constexpr int num_lateral_faces = t8_extruded_scheme_hex::num_lateral_faces;
-  const bool face_is_lateral = face < num_lateral_faces;
-  if (neigh_class != T8_ECLASS_HEX) {
-    /* Only the bottom and top face may be connected to a quad face of a tree of a different class. */
-    return !face_is_lateral && t8_eclass_face_types[neigh_class][neigh_face] == T8_ECLASS_QUAD;
+  const int neigh_num_lateral_faces = t8_extruded_num_lateral_faces (neigh_class);
+  if (neigh_num_lateral_faces < 0) {
+    /* The neighbor tree is not extruded. */
+    return false;
   }
-  const bool neigh_face_is_lateral = neigh_face < num_lateral_faces;
+  const bool face_is_lateral = face < t8_extruded_num_lateral_faces (eclass);
+  const bool neigh_face_is_lateral = neigh_face < neigh_num_lateral_faces;
   if (face_is_lateral != neigh_face_is_lateral) {
     /* The z-axis of one tree would be in-plane of the other tree. */
     return false;
   }
   if (!face_is_lateral) {
-    /* Bottom/top faces are genuine quads, any orientation is fine. */
+    /* Bottom/top faces are genuine base elements, any orientation is fine. */
     return true;
   }
-  /* The lateral face coordinates are (in-plane, z). The z-axes are parallel if and only if the face map does not swap
-   * the two face coordinates. Depending on whether the faces have the same topological orientation (sign), this is
-   * the case for the following orientations. */
+  /* The lateral faces are quads with coordinates (in-plane, z) for both hexes and prisms. The z-axes are parallel if
+   * and only if the face map does not swap the two face coordinates. Depending on whether the faces have the same
+   * topological orientation (sign), this is the case for the following orientations. */
   // TODO extruded: correct?
-  const int sign
-    = t8_eclass_face_orientation[T8_ECLASS_HEX][face] == t8_eclass_face_orientation[T8_ECLASS_HEX][neigh_face];
+  const int sign = t8_eclass_face_orientation[eclass][face] == t8_eclass_face_orientation[neigh_class][neigh_face];
   if (sign) {
     return orientation == 1 || orientation == 2;
   }
@@ -102,11 +121,16 @@ t8_cmesh_is_extrusion_compatible (t8_cmesh_t cmesh)
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
   const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
   for (t8_locidx_t ltree = 0; ltree < num_local_trees; ++ltree) {
-    // TODO extruded: no hex, no check?
-    if (t8_cmesh_get_tree_class (cmesh, ltree) != T8_ECLASS_HEX) {
+    const t8_eclass_t eclass = t8_cmesh_get_tree_class (cmesh, ltree);
+    if (t8_eclass_to_dimension[eclass] < 3) {
+      /* Lower dimensional trees use the default schemes. */
       continue;
     }
-    for (int face = 0; face < t8_eclass_num_faces[T8_ECLASS_HEX]; ++face) {
+    if (t8_extruded_num_lateral_faces (eclass) < 0) {
+      t8_debugf ("Local tree %i of class %s cannot be extruded.\n", ltree, t8_eclass_to_string[eclass]);
+      return false;
+    }
+    for (int face = 0; face < t8_eclass_num_faces[eclass]; ++face) {
       int neigh_face;
       int orientation;
       const t8_locidx_t neigh_tree = t8_cmesh_get_face_neighbor (cmesh, ltree, face, &neigh_face, &orientation);
@@ -115,8 +139,8 @@ t8_cmesh_is_extrusion_compatible (t8_cmesh_t cmesh)
         continue;
       }
       const t8_eclass_t neigh_class = t8_cmesh_get_tree_face_neighbor_eclass (cmesh, ltree, face);
-      if (!t8_extruded_hex_face_connection_is_compatible (face, neigh_class, neigh_face, orientation)) {
-        t8_debugf ("Face %i of local tree %i is not compatible with the extruded hex scheme.\n", face, ltree);
+      if (!t8_extruded_face_connection_is_compatible (eclass, face, neigh_class, neigh_face, orientation)) {
+        t8_debugf ("Face %i of local tree %i is not compatible with the extruded schemes.\n", face, ltree);
         return false;
       }
     }

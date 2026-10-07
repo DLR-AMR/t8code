@@ -22,7 +22,8 @@
 
 /** \file t8_extruded.hxx
  * Define the extruded scheme interface.
- * Currently provides hexahedra, which are made of extruded quads (\ref t8_extruded_scheme_hex).
+ * Currently provides hexahedra, which are made of extruded quads (\ref t8_extruded_scheme_hex), and prisms, which are
+ * made of extruded triangles (\ref t8_extruded_scheme_prism).
  * These are only refined in x- and y-direction and always span the whole tree height.
  */
 
@@ -43,15 +44,16 @@ t8_scheme_new_extruded ();
 int
 t8_eclass_scheme_is_extruded (const t8_scheme *scheme, const t8_eclass_t eclass);
 
-/** Check whether the face connections of a cmesh are compatible with the extruded hex scheme.
- * The extruded hex elements span the whole tree height, so the extrusion (z-) directions of neighboring hex trees
- * have to be parallel. That is, for each local hex tree:
- *  - A lateral face (0, ..., 3) is only connected to a lateral face of another hex tree, such that the z-axes of both
- *    trees are parallel (possibly with opposite directions).
- *  - The bottom and top face (4, 5) are connected to the bottom or top face of a hex tree, or to a quad face of a
- *    tree of a different class.
+/** Check whether a cmesh is compatible with the extruded schemes.
+ * All 3D trees have to be extruded, that is hexes or prisms, no tets or pyramids.
+ * The extruded elements span the whole tree height, so the extrusion (z-) directions of
+ * neighboring trees have to be parallel. That is, for each local 3D tree:
+ *  - A lateral face (hex: 0, ..., 3, prism: 0, 1, 2) is only connected to a lateral face of another hex or prism tree,
+ *    such that the z-axes of both trees are parallel (possibly with opposite directions).
+ *  - The bottom and top face (hex: 4, 5, prism: 3, 4) are only connected to the bottom or top face of another tree.
+ * Cmeshes without 3D trees are always compatible.
  * \param [in] cmesh    A committed cmesh.
- * \return              True if all face connections of the local hex trees are compatible, false otherwise.
+ * \return              True if all local trees and their face connections are compatible, false otherwise.
  * \note This function is not collective. It only checks the local trees of \a cmesh.
  */
 bool
