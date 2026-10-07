@@ -411,18 +411,55 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
   }
 
-  /** Function to convert points in reference space of an element to points of the 
-   *  reference space of the tree.
-   * \param [in] ref_coords     Pointer to the reference coordinates of the element.
-   * \param [in] num_coords     Number of reference coordinates to convert.
-   * \param [out] tree_ref_coords Pointer to the reference coordinates of the tree/cmesh element.
+  /** Convert points from the reference space of this element to the reference space of 
+   * its tree / its initial coarse mesh element.
+   * \param [in] ref_coords Points in the element's reference space [0,1]^dim. 
+   *             Only the first dim entries of each point are used.
+   * \return The corresponding points in the tree's / the initial coarse mesh element's reference space.
+   *         Entries beyond the element's dimension are set to 0.
    */
-  void
-  get_reference_coordinates (const t8_3D_vec& ref_coords, std::size_t num_coords, t8_3D_vec& tree_ref_coords) const
+  std::vector<t8_3D_vec>
+  get_reference_coordinates (const std::vector<t8_3D_vec>& ref_coords) const
   {
-    t8_forest_get_scheme (m_mesh->m_forest)
-      ->element_get_reference_coords (get_tree_class (), m_element, ref_coords.data (), num_coords,
-                                      tree_ref_coords.data ());
+    const t8_scheme* scheme = t8_forest_get_scheme (m_mesh->m_forest);
+    const std::size_t dim = m_mesh->get_dimension ();
+    const std::size_t num_coords = ref_coords.size ();
+
+    std::vector<t8_3D_vec> coordinates (num_coords, t8_3D_vec { 0.0, 0.0, 0.0 });
+    if (num_coords == 0) {
+      return coordinates;
+    }
+    // Limit the entries to dim and pack them for the scheme.
+    std::vector<double> packed_in (num_coords * dim);
+    std::vector<double> packed_out (num_coords * dim);
+    for (std::size_t icoord = 0; icoord < num_coords; ++icoord) {
+      for (std::size_t idim = 0; idim < dim; ++idim) {
+        packed_in[icoord * dim + idim] = ref_coords[icoord][idim];
+      }
+    }
+
+    t8_element_get_reference_coords (scheme, get_tree_class (), m_element, packed_in.data (), num_coords,
+                                     packed_out.data ());
+
+    // Fill result vector.
+    for (std::size_t icoord = 0; icoord < num_coords; ++icoord) {
+      for (std::size_t idim = 0; idim < dim; ++idim) {
+        coordinates[icoord][idim] = packed_out[icoord * dim + idim];
+      }
+    }
+    return coordinates;
+  }
+
+  /** Overload of the function above for only one reference coordinate.
+   * \param [in] ref_coord The single point in the element's reference space [0,1]^dim. 
+   *             Only the first dim entries are used.
+   * \return The corresponding point in the tree's / the initial coarse mesh element's reference space.
+   *         Entries beyond the element's dimension are set to 0.
+   */
+  t8_3D_vec
+  get_reference_coordinates (const t8_3D_vec& ref_coord) const
+  {
+    return get_reference_coordinates (std::vector<t8_3D_vec> { ref_coord }).front ();
   }
 
   /** Compute the orientation of a face of an element with respect to its neighbor.

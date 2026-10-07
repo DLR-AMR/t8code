@@ -91,10 +91,10 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     EXPECT_LE (0, (*mesh)[ighost].get_num_vertices ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
     EXPECT_LE (0, (*mesh)[ighost].get_diameter ());
-    t8_3D_vec ref = { 0.2, 0.3, 1 }, a;
-    (*mesh)[ighost].get_reference_coordinates (ref, 1, a);
-    for (const auto& coordinate : a) {
-      EXPECT_LE (0, coordinate);
+    t8_3D_vec reference_coordinates = { 0.2, 0.3, 1 };
+    auto coarse_ref_coords = (*mesh)[ighost].get_reference_coordinates (reference_coordinates);
+    for (const auto& coordinate : coarse_ref_coords) {
+      EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
     }
     for (const auto& coordinate : (*mesh)[ighost].get_centroid ()) {
       EXPECT_TRUE (coordinate >= 0.0 && coordinate <= 1.0);
