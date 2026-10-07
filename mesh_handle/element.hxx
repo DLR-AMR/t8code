@@ -39,6 +39,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <span>
 #include <optional>
 #include <type_traits>
+#include <algorithm>
 
 namespace t8_mesh_handle
 {
@@ -423,7 +424,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   get_reference_coordinates (std::span<const t8_3D_vec> ref_coords) const
   {
     const t8_scheme* scheme = t8_forest_get_scheme (m_mesh->m_forest);
-    const std::size_t dim = m_mesh->get_dimension ();
+    const std::size_t dim = std::max<std::size_t> (m_mesh->get_dimension (), 1);
     const std::size_t num_coords = ref_coords.size ();
 
     std::vector<t8_3D_vec> coordinates (num_coords, t8_3D_vec { 0.0, 0.0, 0.0 });
@@ -432,7 +433,8 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
     // Limit the entries to dim and pack them for the scheme.
     std::vector<double> packed_in (num_coords * dim);
-    std::vector<double> packed_out (num_coords * dim);
+    // The out coordinates of the forest function is always 3d.
+    std::vector<double> packed_out (num_coords * 3);
     for (std::size_t icoord = 0; icoord < num_coords; ++icoord) {
       for (std::size_t idim = 0; idim < dim; ++idim) {
         packed_in[icoord * dim + idim] = ref_coords[icoord][idim];
@@ -445,7 +447,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     // Fill result vector.
     for (std::size_t icoord = 0; icoord < num_coords; ++icoord) {
       for (std::size_t idim = 0; idim < dim; ++idim) {
-        coordinates[icoord][idim] = packed_out[icoord * dim + idim];
+        coordinates[icoord][idim] = packed_out[icoord * 3 + idim];
       }
     }
     return coordinates;
