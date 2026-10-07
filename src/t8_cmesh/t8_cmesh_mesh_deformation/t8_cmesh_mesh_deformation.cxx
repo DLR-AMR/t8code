@@ -197,7 +197,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       gp_Pnt new_coords;
 
-      /* Find the new coordinates of the vertex in the CAD file, based on the geometry its lying on. */
+      /* Find the new coordinates of the vertex in the CAD file, based on the geometry it's lying on. */
       switch (first_tree_entity_dim) {
       case 0: {
         new_coords = cad->get_cad_point (first_tree_entity_tag);
