@@ -2250,6 +2250,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       }
     }
     if constexpr (T8_ELEMENT_NUM_EQUATIONS[TEclass]) {
+      boundary->type = 0;
       for (int ieq = 0; ieq < T8_ELEMENT_NUM_EQUATIONS[TEclass]; ieq++) {
         const int ifaceeq = t8_standalone_lut_rootface_eq_to_faceeq<TEclass>[root_face][ieq];
         if (ifaceeq != -1) {
