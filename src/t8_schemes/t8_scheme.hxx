@@ -109,7 +109,8 @@ struct t8_scheme
                                 t8_subelem_scheme_hanging_nodes_quad,
                                 t8_subelem_scheme_hanging_nodes_tri,
                                 /* Extruded schemes */
-                                t8_extruded_scheme_hex
+                                t8_extruded_scheme_hex,
+                                t8_extruded_scheme_prism
                                 >;
   /* clang-format on */
 
