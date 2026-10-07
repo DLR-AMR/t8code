@@ -87,8 +87,10 @@ t8_test_get_middle_child (const t8_eclass_t eclass, [[maybe_unused]] int ilevel,
 {
   /* Get the child number of the child in the middle of the element, depending of the shape of the element. */
   /* Use a different eclass for extruded scheme because elements refine like their base elements. */
-  const t8_eclass_t refinement_class
-    = t8_eclass_scheme_is_extruded (scheme, eclass) && eclass == T8_ECLASS_HEX ? T8_ECLASS_QUAD : eclass;
+  t8_eclass_t refinement_class = eclass;
+  if (t8_eclass_scheme_is_extruded (scheme, eclass)) {
+    refinement_class = eclass == T8_ECLASS_HEX ? T8_ECLASS_QUAD : T8_ECLASS_TRIANGLE;
+  }
   switch (refinement_class) {
   case T8_ECLASS_VERTEX:
     return 0;

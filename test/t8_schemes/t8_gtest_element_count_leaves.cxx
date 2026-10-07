@@ -66,7 +66,7 @@ TEST_P (class_element_leaves, test_element_count_leaves_root)
     ASSERT_EQ (leaf_count, compare_value)
       << "Incorrect leaf count " << leaf_count << " at eclass " << t8_eclass_to_string[eclass] << " and level " << level
       << " (expecting " << compare_value << ")";
-    /* Multiply the compare_value with 2^dim (= number of children per element) */
+    /* Multiply the compare_value with the number of children per element */
     if (eclass == T8_ECLASS_PYRAMID) {
       sum1 *= 8;
       sum2 *= 6;

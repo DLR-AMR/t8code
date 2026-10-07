@@ -152,8 +152,8 @@ struct t8_test_partition_for_coarsening_test: public testing::TestWithParam<std:
     cmesh = std::get<2> (GetParam ())->cmesh_create ();
     cmesh_name = std::get<2> (GetParam ())->name;
 
-    // Skip empty meshes.
-    if (t8_cmesh_is_empty (cmesh)) {
+    // Skip empty meshes and meshes that the scheme does not support.
+    if (t8_cmesh_is_empty (cmesh) || !t8_test_scheme_supports_cmesh (scheme_id, cmesh, sc_MPI_COMM_WORLD)) {
       GTEST_SKIP ();
     }
   }
