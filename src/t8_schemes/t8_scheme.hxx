@@ -32,6 +32,7 @@
 #include <vector>
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_eclass/t8_eclass.h>
+#include <t8_cmesh/t8_cmesh.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
@@ -189,6 +190,36 @@ struct t8_scheme
   get_eclass_scheme_dimension (const t8_eclass_t tree_class) const
   {
     return std::visit ([&] (auto &&scheme) { return scheme.get_dimension (); }, eclass_schemes[tree_class]);
+  }
+
+  /** Check whether a local tree of a cmesh can be used with its eclass scheme.
+   * \param [in] tree_class    The eclass of the tree.
+   * \param [in] cmesh         A committed cmesh.
+   * \param [in] ltreeid       A local tree of \a cmesh of class \a tree_class.
+   * \return                   True if the tree and its face connections are supported by the eclass scheme.
+   */
+  inline bool
+  cmesh_tree_is_compatible (const t8_eclass_t tree_class, const t8_cmesh_t cmesh, const t8_locidx_t ltreeid) const
+  {
+    return std::visit ([&] (auto &&scheme) { return scheme.cmesh_tree_is_compatible (this, cmesh, ltreeid); },
+                       eclass_schemes[tree_class]);
+  }
+
+  /** Check whether all local trees of a cmesh can be used with this scheme.
+   * \param [in] cmesh         A committed cmesh.
+   * \return                   True if all local trees and their face connections are supported.
+   * \note This function is not collective. It only checks the local trees of \a cmesh.
+   */
+  inline bool
+  cmesh_is_compatible (const t8_cmesh_t cmesh) const
+  {
+    const t8_locidx_t num_local_trees = t8_cmesh_get_num_local_trees (cmesh);
+    for (t8_locidx_t ltreeid = 0; ltreeid < num_local_trees; ++ltreeid) {
+      if (!cmesh_tree_is_compatible (t8_cmesh_get_tree_class (cmesh, ltreeid), cmesh, ltreeid)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /** Return the size of any element of a given class.
