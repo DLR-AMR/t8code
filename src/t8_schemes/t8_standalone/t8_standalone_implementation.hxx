@@ -1755,7 +1755,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       t8_debugf ("x_%i: %i \n", idim, el->coords[idim]);
     }
     for (int e_num = 0; e_num < T8_ELEMENT_NUM_EQUATIONS[TEclass]; e_num++) {
-      t8_debugf ("t_%i: %i \n", e_num, el->type[e_num]);
+      t8_debugf ("t_%i: %i \n", e_num, (int) el->type.test (e_num));
     }
   }
 
