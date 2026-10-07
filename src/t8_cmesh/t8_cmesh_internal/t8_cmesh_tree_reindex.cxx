@@ -352,7 +352,7 @@ t8_cmesh_reindex_tree (t8_cmesh_t cmesh, sc_MPI_Comm comm)
     }
   }
 
-  T8_ASSERT (tree_reindex.size () == static_cast<size_t> (num_cmesh_trees));
+  T8_ASSERT (tree_reindex.size () == static_cast<size_t> (t8_cmesh_get_num_trees (cmesh)));
 
   delete data;
   t8_forest_unref (&bbox_forest);
