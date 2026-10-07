@@ -33,7 +33,7 @@
 
 
 template<>
-constexpr int8_t t8_element_type_Iloc_to_childtype<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_PYRAMID]] = {
+inline constexpr int8_t t8_element_type_Iloc_to_childtype<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_PYRAMID]] = {
   {0, 0, 2, 0, 1, 0, 1, 2, 3, 0},
   {1, 1, 3, 0, 1, 1, -1, -1, -1, -1},
   {2, 2, 3, 0, 2, 2, -1, -1, -1, -1},
@@ -41,7 +41,7 @@ constexpr int8_t t8_element_type_Iloc_to_childtype<T8_ECLASS_PYRAMID>[1<<T8_ELEM
 };
 
 template<>
-constexpr int8_t t8_element_type_Iloc_to_childcubeid<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]]
+inline constexpr int8_t t8_element_type_Iloc_to_childcubeid<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]]
   [T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_PYRAMID]] = {
   {0, 1, 1, 2, 2, 3, 3, 3, 3, 7},
   {0, 1, 1, 5, 5, 7, -1, -1, -1, -1},
@@ -50,7 +50,7 @@ constexpr int8_t t8_element_type_Iloc_to_childcubeid<T8_ECLASS_PYRAMID>[1<<T8_EL
 };
 
 template<>
-constexpr int8_t t8_element_type_cubeid_to_parenttype<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][1<<T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]
+inline constexpr int8_t t8_element_type_cubeid_to_parenttype<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][1<<T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]
   = {
   {0, 0, 0, 0, 3, 1, 2, 0},
   {1, 1, 0, 0, 3, 1, 3, 1},
@@ -59,7 +59,7 @@ constexpr int8_t t8_element_type_cubeid_to_parenttype<T8_ECLASS_PYRAMID>[1<<T8_E
 };
 
 template<>
-constexpr int8_t t8_element_type_cubeid_to_Iloc<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][1<<T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]
+inline constexpr int8_t t8_element_type_cubeid_to_Iloc<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][1<<T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]
   = {
   {0, 1, 3, 5, 1, 3, 3, 9},
   {0, 1, 4, 6, 2, 4, 7, 5},
@@ -69,13 +69,13 @@ constexpr int8_t t8_element_type_cubeid_to_Iloc<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT
 
 
 template<>
-constexpr int8_t t8_type_edge_equations<T8_ECLASS_PYRAMID>[T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][2] = {
+inline constexpr int8_t t8_type_edge_equations<T8_ECLASS_PYRAMID>[T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][2] = {
   {1, 2},
   {0, 2}
 };
 
 template<>
-constexpr int8_t t8_type_vertex_dim_to_binary<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]]
+inline constexpr int8_t t8_type_vertex_dim_to_binary<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]]
   [T8_ELEMENT_NUM_CORNERS[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]] = {
   {
    {0, 0, 0},
@@ -114,14 +114,14 @@ constexpr int8_t t8_type_vertex_dim_to_binary<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_face_internal<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]] = {
+inline constexpr int8_t t8_standalone_lut_face_internal<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]] = {
   {1,0,1,0,0},
   {0,1,1,0,0},
   {0,1,1,0,0},
   {1,0,1,0,0}
 };
 template<>
-constexpr int8_t t8_standalone_lut_type_face_to_typebit<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]] = {
+inline constexpr int8_t t8_standalone_lut_type_face_to_typebit<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]] = {
   {1,-1,0,-1,-1},
   {-1,1,0,-1,-1},
   {-1,0,1,-1,-1},
@@ -129,7 +129,7 @@ constexpr int8_t t8_standalone_lut_type_face_to_typebit<T8_ECLASS_PYRAMID>[1<<T8
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_face_to_sign<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]] = {
+inline constexpr int8_t t8_standalone_lut_type_face_to_sign<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]] = {
   {0,1,0,1,-1},
   {1,0,0,-1,0},
   {1,0,0,-1,0},
@@ -137,7 +137,7 @@ constexpr int8_t t8_standalone_lut_type_face_to_sign<T8_ECLASS_PYRAMID>[1<<T8_EL
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_face_to_facenormal_dim<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]] = {
+inline constexpr int8_t t8_standalone_lut_type_face_to_facenormal_dim<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]] = {
   {-1,0,-1,1,2},
   {0,-1,-1,1,-1},
   {1,-1,-1,0,-1},
@@ -145,7 +145,7 @@ constexpr int8_t t8_standalone_lut_type_face_to_facenormal_dim<T8_ECLASS_PYRAMID
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_face_to_neighface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_type_face_to_neighface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
   {2,3,2,3,4},
   {1,0,2,3,-1},
   {3,2,0,1,-1},
@@ -153,7 +153,7 @@ constexpr int8_t t8_standalone_lut_type_face_to_neighface<T8_ECLASS_PYRAMID>[1<<
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_face_to_tree_face<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_type_face_to_tree_face<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
   {0,1,2,3,4},
   {1,0,-1,-1,-1},
   {3,2,-1,-1,-1},
@@ -162,7 +162,7 @@ constexpr int8_t t8_standalone_lut_type_face_to_tree_face<T8_ECLASS_PYRAMID>[1<<
 
 
 template<>
-constexpr int8_t t8_standalone_lut_type_cubeid_face_to_parentface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][1<<T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_type_cubeid_face_to_parentface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][1<<T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
 {
   { 0,-1, 2,-1, 4},
   {-1, 1, 2,-1, 4},
@@ -206,7 +206,7 @@ constexpr int8_t t8_standalone_lut_type_cubeid_face_to_parentface<T8_ECLASS_PYRA
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_childid_face_to_childface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_type_childid_face_to_childface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_CHILDREN[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
 {
   { 0,-1, 2,-1, 4},
   {-1, 1, 2,-1, 4},
@@ -258,7 +258,7 @@ constexpr int8_t t8_standalone_lut_type_childid_face_to_childface<T8_ECLASS_PYRA
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_face_to_is_1_boundary<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_type_face_to_is_1_boundary<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
   {0,1,0,1,0},
   {1,0,0,0,0},
   {1,0,0,0,0},
@@ -266,7 +266,7 @@ constexpr int8_t t8_standalone_lut_type_face_to_is_1_boundary<T8_ECLASS_PYRAMID>
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_face_to_last_facechilds_cubeid<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_type_face_to_last_facechilds_cubeid<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]]={
   {7,7,7,7,3},
   {7,7,7,5,-1},
   {7,7,7,6,-1},
@@ -274,7 +274,7 @@ constexpr int8_t t8_standalone_lut_type_face_to_last_facechilds_cubeid<T8_ECLASS
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_face_facechildid_to_childid<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_type_face_facechildid_to_childid<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_PYRAMID]][T8_ELEMENT_MAX_NUM_FACECHILDREN[T8_ECLASS_PYRAMID]]={
 {
   {0,3,4,9},
   {1,5,6,9},
@@ -306,7 +306,7 @@ constexpr int8_t t8_standalone_lut_type_face_facechildid_to_childid<T8_ECLASS_PY
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_rootface_dim_to_facedim<T8_ECLASS_PYRAMID>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_rootface_dim_to_facedim<T8_ECLASS_PYRAMID>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]={
   { 1,0,1},
   {-1,0,1},
   {0,1,1},
@@ -314,7 +314,7 @@ constexpr int8_t t8_standalone_lut_rootface_dim_to_facedim<T8_ECLASS_PYRAMID>[T8
   {0,1,-1}
 };
 template<>
-constexpr int8_t t8_standalone_lut_rootface_eq_to_faceeq<T8_ECLASS_PYRAMID>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_rootface_eq_to_faceeq<T8_ECLASS_PYRAMID>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]]={
   {0,-1},
   {0,-1},
   {-1,0},
@@ -323,7 +323,7 @@ constexpr int8_t t8_standalone_lut_rootface_eq_to_faceeq<T8_ECLASS_PYRAMID>[T8_E
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_type_rootface_to_face<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_type_rootface_to_face<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]]={
   { 0, 1, 2, 3, 4},
   { 1, 0,-1,-1,-1},
   {-1,-1, 1, 0,-1},
@@ -331,7 +331,7 @@ constexpr int8_t t8_standalone_lut_type_rootface_to_face<T8_ECLASS_PYRAMID>[1<<T
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_cornerface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_CORNERS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_CORNER_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_cornerface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_CORNERS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_CORNER_FACES[T8_ECLASS_PYRAMID]]={
  {
  {0,2,4,-1},
  {1,2,4,-1},
@@ -361,7 +361,7 @@ constexpr int8_t t8_standalone_lut_cornerface<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_N
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_facecorner<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACE_CORNERS[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_facecorner<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]][T8_ELEMENT_NUM_FACE_CORNERS[T8_ECLASS_PYRAMID]]={
   {
   {0,2,4,-1},
   {1,3,4,-1},
@@ -391,7 +391,7 @@ constexpr int8_t t8_standalone_lut_facecorner<T8_ECLASS_PYRAMID>[1<<T8_ELEMENT_N
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_transform_coords<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_transform_coords<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]={
   {
     {1, 0, 0},
     {0, 1, 0},
@@ -415,7 +415,7 @@ constexpr int8_t t8_standalone_lut_transform_coords<T8_ECLASS_PYRAMID>[1 << T8_E
 };
 
 template<>
-constexpr int8_t t8_standalone_lut_backtransform_coords<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]={
+inline constexpr int8_t t8_standalone_lut_backtransform_coords<T8_ECLASS_PYRAMID>[1 << T8_ELEMENT_NUM_EQUATIONS[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]][T8_ELEMENT_DIM[T8_ECLASS_PYRAMID]]={
   {
     {1, 0, 0},
     {0, 1, 0},
@@ -439,7 +439,7 @@ constexpr int8_t t8_standalone_lut_backtransform_coords<T8_ECLASS_PYRAMID>[1 << 
 };
 
 template<>
-constexpr t8_eclass_t t8_standalone_lut_rootface_to_eclass<T8_ECLASS_PYRAMID>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]]={
+inline constexpr t8_eclass_t t8_standalone_lut_rootface_to_eclass<T8_ECLASS_PYRAMID>[T8_ELEMENT_NUM_FACES[T8_ECLASS_PYRAMID]]={
   T8_ECLASS_TRIANGLE,
   T8_ECLASS_TRIANGLE,
   T8_ECLASS_TRIANGLE,
