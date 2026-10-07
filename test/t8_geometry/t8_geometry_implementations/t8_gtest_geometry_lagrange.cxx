@@ -263,6 +263,7 @@ INSTANTIATE_TEST_SUITE_P (t8_gtest_geometry_lagrange, LagrangeCmesh,
  * We leave the code in here for later generations of developers who might have a
  * solution to test if t8_cmesh_validate_geometry returns false while setting
  * the geometry before commit.
+ * This might be solvable with Death Tests from GoogleTest (checking that t8_cmesh_commit aborts).
  * */
 /**
  * Tests the compatibility checking for the Lagrange geometry.
