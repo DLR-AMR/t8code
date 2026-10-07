@@ -61,48 +61,43 @@ inline constexpr bool t8_is_subelement_element_v<t8_subelement_element<TUnderlyi
 /** The functions every subelement scheme specialization has to provide (all public, all noexcept).
  * This concept is used to ensure that the specialization implements all functions necessary for a working subelement scheme.
  *
- * Please have a look at a specialization, preferably t8_scheme:hanging_node_quad.hxx for function documentations 
+ * Please have a look at a specialization, preferably \ref t8_scheme_hanging_nodes_quads.hxx for function documentations 
  * and variable descriptions.
  * Mostly, the argument is a subelement (subelement_type != 0); the non-subelement case is handled by the common layer,
  * which forwards to the underlying scheme.
  */
 template <typename TSpecialization>
-concept t8_subelement_specialization = requires {
-  typename t8_subelement_traits<TSpecialization>::SubelementType;
-  typename t8_subelement_traits<TSpecialization>::UnderlyingScheme;
-} && t8_is_subelement_element_v<typename t8_subelement_traits<TSpecialization>::SubelementType> && requires (const TSpecialization &spec, const typename t8_subelement_traits<TSpecialization>::SubelementType *subelem, const t8_element_t *elem, const int subelement_type, const int face, const double *ref_coords, const size_t num_coords, double *out_coords) {
-  /* Static shape information. Only compile for static member functions! */
-  {
-    TSpecialization::subelement_get_max_num_faces (subelem)
-  } noexcept -> std::same_as<int>;
-  {
-    TSpecialization::subelement_get_shape (subelem)
-  } noexcept -> std::same_as<t8_element_shape_t>;
+concept t8_subelement_specialization =
+  /* clang-format off */
+  requires {
+    typename t8_subelement_traits<TSpecialization>::SubelementType;
+    typename t8_subelement_traits<TSpecialization>::UnderlyingScheme;
+  } 
+  && t8_is_subelement_element_v<typename t8_subelement_traits<TSpecialization>::SubelementType> 
+  && requires (const TSpecialization &spec, const typename t8_subelement_traits<TSpecialization>::SubelementType *subelem,
+               const t8_element_t *elem, const int subelement_type, const int face, const double *ref_coords, 
+               const size_t num_coords, double *out_coords) {
+    /* Static shape information. Only compile for static member functions! */
+    { TSpecialization::subelement_get_max_num_faces (subelem) } noexcept -> std::same_as<int>;
+    { TSpecialization::subelement_get_shape (subelem) } noexcept -> std::same_as<t8_element_shape_t>;
 
-  /* Static information about the subelement types. */
-  {
-    TSpecialization::subelement_get_max_num_children ()
-  } noexcept -> std::same_as<int>;
-  {
-    TSpecialization::subelement_get_number_of_valid_types ()
-  } noexcept -> std::same_as<int>;
+    /* Static information about the subelement types. */
+    { TSpecialization::subelement_get_max_num_children () } noexcept -> std::same_as<int>;
+    { TSpecialization::subelement_get_number_of_valid_types () } noexcept -> std::same_as<int>;
 
-  /* Refinement into subelements. */
-  {
-    spec.subelement_get_num_children (elem, subelement_type)
-  } noexcept -> std::same_as<int>;
+    /* Refinement into subelements. */
+    { spec.subelement_get_num_children (elem, subelement_type) } noexcept -> std::same_as<int>;
 
-  /* Geometry. */
-  {
-    spec.subelement_get_reference_coords (elem, ref_coords, num_coords, out_coords)
-  } noexcept;
-};
+    /* Geometry. */
+    { spec.subelement_get_reference_coords (elem, ref_coords, num_coords, out_coords) } noexcept;
+  };
+/* clang-format on */
 
 // ##########################################____INTERFACE LAYER____##################################################
 
 /** Intermediate layer between \ref t8_subelement_scheme_common and a concrete subelement scheme specialization.
  * It
- *  - enforces the concept \ref t8_subelement_specialization at compile time,
+ *  - enforces the concept \ref t8_subelement_specialization,
  *  - owns the instance of the underlying scheme (so specializations do not have to declare it),
  *  - provides default implementations for functionality that is identical for all specializations so far.
  *    A specialization may redefine these defaults by declaring a function with the same name and signature.
@@ -155,7 +150,14 @@ struct t8_subelement_scheme_interface: public t8_subelement_scheme_common<TEclas
     T8_ASSERT (this->element_is_valid (elem));
     T8_ASSERT (!this->element_is_subelement (elem));
     T8_ASSERT (1 <= subelem_type && subelem_type <= TSpecialization::subelement_get_number_of_valid_types ());
-    T8_ASSERT (length == TSpecialization::subelement_get_num_children (elem, subelem_type));
+    T8_ASSERT (length == this->derived ().subelement_get_num_children (elem, subelem_type));
+#if T8_ENABLE_DEBUG
+    {
+      for (int j = 0; j < length; j++) {
+        T8_ASSERT (this->element_is_valid (c[j]));
+      }
+    }
+#endif
 
     const auto *parent = this->element_to_standalone (elem);
 

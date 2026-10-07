@@ -66,9 +66,10 @@ struct t8_subelement_scheme_common: public t8_scheme_helpers<TEclass, TSubelemen
   /** Destructor. */
   ~t8_subelement_scheme_common ()
   {
-    T8_ASSERT (scheme_context != NULL);
-    SC_ASSERT (((sc_mempool_t *) scheme_context)->elem_count == 0);
-    sc_mempool_destroy ((sc_mempool_t *) scheme_context);
+    if (scheme_context != nullptr) {
+      SC_ASSERT (((sc_mempool_t *) scheme_context)->elem_count == 0);
+      sc_mempool_destroy ((sc_mempool_t *) scheme_context);
+    }
   }
 
   /** Move constructor */
@@ -470,7 +471,11 @@ struct t8_subelement_scheme_common: public t8_scheme_helpers<TEclass, TSubelemen
   void
   element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[], int subelem_type) const noexcept
   {
-    SC_CHECK_ABORT (length == derived ().subelement_get_num_children (elem, subelem_type),
+    if (subelem_type == 0) {
+      element_get_children (elem, length, c);
+      return;
+    }
+    SC_CHECK_ABORT (length == element_get_num_children (elem, subelem_type),
                     "element_get_children: given length is not fitting the number of children.");
     derived ().subelement_get_children (elem, length, c, subelem_type);
   }
