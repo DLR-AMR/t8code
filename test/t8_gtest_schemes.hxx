@@ -29,10 +29,11 @@
 
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_standalone/t8_standalone.hxx>
+#include <t8_schemes/t8_extruded/t8_extruded.hxx>
 #include <gtest/gtest.h>
 
 /** Create a scheme according to a scheme id.
- * \param [in] scheme_id 0: Use default scheme; 1: Use standalone scheme.
+ * \param [in] scheme_id 0: Use default scheme; 1: Use standalone scheme; 2: Use extruded scheme.
  * \return The created scheme.
  */
 const t8_scheme *
@@ -43,14 +44,16 @@ create_from_scheme_id (const int scheme_id)
     return t8_scheme_new_default ();
   case 1:
     return t8_scheme_new_standalone ();
+  case 2:
+    return t8_scheme_new_extruded ();
   default:
     SC_ABORT_NOT_REACHED ();
     return nullptr;
   }
 }
 
-/** Strings for the two scheme types. */
-static const char *t8_scheme_to_string[] = { "default", "standalone" };
+/** Strings for the scheme types. */
+static const char *t8_scheme_to_string[] = { "default", "standalone", "extruded" };
 
 /** Lambda to print the scheme and the eclass of an TestParamInfo object. */
 auto print_all_schemes = [] (const testing::TestParamInfo<std::tuple<int, t8_eclass_t>> &info) {
@@ -63,7 +66,7 @@ auto print_scheme
   = [] (const testing::TestParamInfo<int> &info) { return std::string (t8_scheme_to_string[info.param]); };
 
 /** Macro for all schemes. */
-#define AllSchemeCollections ::testing::Range (0, 2)
+#define AllSchemeCollections ::testing::Range (0, 3)
 /** Macro for all schemes and all possible eclasses.*/
 #define AllSchemes ::testing::Combine (AllSchemeCollections, ::testing::Range (T8_ECLASS_ZERO, T8_ECLASS_COUNT))
 
