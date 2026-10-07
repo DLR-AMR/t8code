@@ -2405,7 +2405,7 @@ struct t8_standalone_scheme: public t8_scheme_helpers<TEclass, t8_standalone_sch
       coord_v1 = (coord_v1 << level) & ((1 << T8_ELEMENT_MAXLEVEL[TEclass]) - 1);
 
       if (coord_v0 == coord_v1) {
-        type[e] = el->type[e] | type[e];
+        type[e] = el->type[e];
       }
       else if (coord_v0 < coord_v1) {
         type |= (1 << e);
