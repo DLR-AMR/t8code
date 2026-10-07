@@ -2955,6 +2955,14 @@ t8_forest_is_committed (const t8_forest_t forest)
   return forest != nullptr && t8_refcount_is_active (&forest->rc) && forest->committed;
 }
 
+int
+t8_forest_has_incomplete_trees (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_committed (forest));
+  T8_ASSERT (forest->incomplete_trees == 0 || forest->incomplete_trees == 1);
+  return forest->incomplete_trees;
+}
+
 static void
 t8_forest_set_mpicomm (t8_forest_t forest, sc_MPI_Comm mpicomm, int do_dup)
 {
@@ -3042,6 +3050,13 @@ t8_forest_set_copy (t8_forest_t forest, const t8_forest_t set_from)
   forest->set_adapt_recursive = -1;
   forest->set_balance = -1;
   forest->set_for_coarsening = -1;
+}
+
+t8_forest_t
+t8_forest_get_set_from (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  return forest->set_from;
 }
 
 void

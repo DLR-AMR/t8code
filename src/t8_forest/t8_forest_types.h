@@ -35,9 +35,9 @@
 #include <t8_data/t8_containers.h>
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 
-typedef struct t8_profile t8_profile_t;            /**< Defined below */
-typedef struct t8_forest_ghost *t8_forest_ghost_t; /**< The ghost elements of a forest. */
+typedef struct t8_profile t8_profile_t; /**< Defined below */
 
 /** If a forest is to be derived from another forest, there are different
  * possibilities how the original forest is modified.

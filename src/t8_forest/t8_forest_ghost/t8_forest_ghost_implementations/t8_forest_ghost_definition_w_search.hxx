@@ -28,7 +28,6 @@
 #define T8_FOREST_GHOST_DEFINITION_W_SEARCH_HXX
 
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
-#include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_iterate.h>
 
 /** Base for the user search data used in t8_forest_ghost_definition_w_search  */
@@ -95,10 +94,7 @@ struct t8_forest_ghost_definition_w_search: public t8_forest_ghost_definition
  * \param [in] forest  The forest passed to the search callback.
  * \return             The \a search_data of the ghost definition driving the current search.
  */
-inline t8_forest_ghost_search_data *
-t8_forest_ghost_get_search_data (const t8_forest_t forest)
-{
-  return (t8_forest_ghost_search_data *) forest->t8code_data;
-}
+t8_forest_ghost_search_data *
+t8_forest_ghost_get_search_data (const t8_forest_t forest);
 
 #endif /* !T8_FOREST_GHOST_DEFINITION_W_SEARCH_HXX */
