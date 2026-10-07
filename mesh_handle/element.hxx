@@ -36,6 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
+#include <span>
 #include <optional>
 #include <type_traits>
 
@@ -419,7 +420,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
    *         Entries beyond the element's dimension are set to 0.
    */
   std::vector<t8_3D_vec>
-  get_reference_coordinates (const std::vector<t8_3D_vec>& ref_coords) const
+  get_reference_coordinates (std::span<const t8_3D_vec> ref_coords) const
   {
     const t8_scheme* scheme = t8_forest_get_scheme (m_mesh->m_forest);
     const std::size_t dim = m_mesh->get_dimension ();
@@ -459,7 +460,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   t8_3D_vec
   get_reference_coordinates (const t8_3D_vec& ref_coord) const
   {
-    return get_reference_coordinates (std::vector<t8_3D_vec> { ref_coord }).front ();
+    return get_reference_coordinates (std::span (&ref_coord, 1)).front ();
   }
 
   /** Compute the orientation of a face of an element with respect to its neighbor.
