@@ -520,7 +520,7 @@ t8_cmesh_set_dimension (t8_cmesh_t cmesh, const int dim)
 int
 t8_cmesh_get_dimension (const t8_cmesh_t cmesh)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (0 <= cmesh->dimension && cmesh->dimension <= T8_ECLASS_MAX_DIM);
 
   return cmesh->dimension;

@@ -22,7 +22,7 @@
 
 /** \file t8_geometry_c_interface.h
  * C interface of the geometry module. Defines the typedef for the t8_geometry class in order to be usable as a
- * pointer from .c files.
+ * pointer from .c files. The C++ interface is in \ref t8_geometry.hxx.
  */
 
 #pragma once
