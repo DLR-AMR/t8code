@@ -35,6 +35,8 @@
 #include <concepts>
 #include <cmath>
 #include <functional>
+#include <span>
+#include <vector>
 
 /** Type alias for a vector in N-dimensional space.
  * \tparam TDim Dimension of the vector.
@@ -361,6 +363,35 @@ t8_four_points_coplanar (const TVecV0 p_0, const TVecV1 p_1, const TVecV2 p_2, c
   /* || n1 x n2 || */
   const double norm = t8_norm (n1_cross_n2);
   return norm < tolerance;
+}
+
+/** Copy points into an array of consecutive triples of doubles.
+ * Use this to convert point arrays of the C interface.
+ * \param [in]  vecs    The points.
+ * \param [out] coords  Array of 3 * vecs.size () doubles. On output, the coordinates of point i are stored at
+ *                      positions 3i, 3i+1 and 3i+2.
+ */
+inline void
+t8_3D_vecs_to_doubles (std::span<const t8_3D_vec> vecs, double *coords)
+{
+  for (size_t ivec = 0; ivec < vecs.size (); ++ivec) {
+    auto coords_span = std::span<double, 3> (coords + 3 * ivec, 3);
+    t8_copy (vecs[ivec], coords_span);
+  }
+}
+
+/** Copy points into an array of consecutive triples of doubles.
+ * Use this to convert point arrays for the C interface.
+ * \param [in]  vecs    The points.
+ * \return              Array of 3 * vecs.size () doubles. The coordinates of point i are stored at
+ *                      positions 3i, 3i+1 and 3i+2.
+ */
+inline std::vector<double>
+t8_3D_vecs_to_doubles (std::span<const t8_3D_vec> vecs)
+{
+  std::vector<double> coords (3 * vecs.size ());
+  t8_3D_vecs_to_doubles (vecs, coords.data ());
+  return coords;
 }
 
 #endif /* !T8_VEC_HXX */

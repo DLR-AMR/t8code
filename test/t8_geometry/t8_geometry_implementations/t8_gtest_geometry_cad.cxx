@@ -749,9 +749,9 @@ TEST_P (class_2d_element_linear_cad_surface, t8_check_2d_element_linear_cad_surf
 {
   /* Saving the corner vertices for the given element class. */
   const int num_vertices = t8_eclass_num_vertices[eclass];
-  const double *vertices = &(t8_element_corner_ref_coords[eclass][0][0]);
+  const std::vector<double> vertices = t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[eclass]);
 
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
 
   /* Surfaces are parameterized in two parameters u and v. The arrays contain the parameters
    * each vertex of the element has on the linked surface. The parameters are stored in
@@ -862,9 +862,9 @@ TEST_P (class_2d_element_curved_cad_surface, t8_check_2d_element_curved_cad_surf
 {
   /* Saving the corner vertices for the given element class. */
   const int num_vertices = t8_eclass_num_vertices[eclass];
-  const double *vertices = &(t8_element_corner_ref_coords[eclass][0][0]);
+  const std::vector<double> vertices = t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[eclass]);
 
-  t8_cmesh_set_tree_vertices (cmesh, 0, vertices, num_vertices);
+  t8_cmesh_set_tree_vertices (cmesh, 0, vertices.data (), num_vertices);
 
   /* Surfaces are parameterized in two parameters u and v. The arrays contain the parameters
    * each vertex of the element has on the linked surface. The parameters are stored in

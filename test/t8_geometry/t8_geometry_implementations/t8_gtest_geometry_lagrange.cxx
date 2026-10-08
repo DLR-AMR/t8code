@@ -265,7 +265,8 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   /* Build a simple set geometries for the tree. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-  t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_QUAD], 4);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[T8_ECLASS_QUAD]).data (),
+                              4);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
                           0);
 
@@ -280,11 +281,12 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   /* Build a simple set geometries for the tree. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-  t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_HEX], 8);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[T8_ECLASS_HEX]).data (), 8);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
                           0);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_PRISM);
-  t8_cmesh_set_tree_vertices (cmesh, 1, *t8_element_corner_ref_coords[T8_ECLASS_PRISM], 6);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[T8_ECLASS_PRISM]).data (),
+                              6);
   t8_cmesh_set_attribute (cmesh, 1, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
                           0);
   /* Commit the cmesh */
@@ -301,7 +303,7 @@ TEST (test_geometry_lagrange, incompatible_geometry)
   /* Build a simple set geometries for the tree. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_HEX);
-  t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_HEX], 8);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[T8_ECLASS_HEX]).data (), 8);
   t8_cmesh_set_attribute (cmesh, 0, t8_get_package_id (), T8_CMESH_LAGRANGE_POLY_DEGREE_KEY, &degree, sizeof (degree),
                           0);
   /* Commit the cmesh */
