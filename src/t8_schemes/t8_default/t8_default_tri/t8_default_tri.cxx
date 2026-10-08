@@ -23,7 +23,7 @@
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_default_tri.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.h>
-#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
+#include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 #include <t8_schemes/t8_scheme.hxx>
