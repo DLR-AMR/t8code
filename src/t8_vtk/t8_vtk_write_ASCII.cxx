@@ -557,7 +557,7 @@ t8_forest_vtk_write_cell_data (t8_forest_t forest, FILE *vtufile, const char *da
         return 0;
       }
     } /* ghost loop ends here */
-  } /* write_ghosts ends here */
+  }   /* write_ghosts ends here */
   /* call the kernel in clean-up modus */
   kernel (nullptr, 0, nullptr, 0, nullptr, T8_ECLASS_INVALID, 0, nullptr, nullptr, &data, T8_VTK_KERNEL_CLEANUP);
   freturn = fprintf (vtufile, "\n        </DataArray>\n");
