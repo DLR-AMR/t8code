@@ -125,7 +125,7 @@ TEST_P (forest_user_data, test_user_function)
   void (*funpointer_second) (void);
 
   /* Set the t8_test_function_42 as user function pointer. */
-  t8_forest_set_user_function (forest, (void (*) (void)) &t8_test_function_42);
+  t8_forest_set_user_function (forest, (void (*) (void)) & t8_test_function_42);
   /* Retrieve the function pointer from the forest. */
   funpointer = (double (*) (int)) t8_forest_get_user_function (forest);
 
@@ -135,7 +135,7 @@ TEST_P (forest_user_data, test_user_function)
   ASSERT_EQ (funpointer (0), 42.42) << "Forest function pointer returned wrong result.";
 
   /* Overwrite the function user pointer with a second function. */
-  t8_forest_set_user_function (forest, (void (*) (void)) &t8_test_function_second);
+  t8_forest_set_user_function (forest, (void (*) (void)) & t8_test_function_second);
   /* Retrieve the function pointer from the forest. */
   funpointer_second = (void (*) (void)) t8_forest_get_user_function (forest);
 
