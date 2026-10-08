@@ -79,7 +79,7 @@ t8_output_data_to_vtu (t8_forest_t forest, double *data, const char *prefix)
 {
   t8_vtk_data_field_t vtk_data;
   vtk_data.type = T8_VTK_SCALAR;
-  snprintf (vtk_data.description, BUFSIZ, "Gauss");
+  snprintf (vtk_data.description, T8_VTK_MAX_STRING_LENGTH, "Gauss");
   vtk_data.data = data;
 
   int num_data = 1;

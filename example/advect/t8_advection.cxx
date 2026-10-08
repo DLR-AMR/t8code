@@ -1112,16 +1112,16 @@ t8_advect_write_vtk (t8_advect_problem_t *problem)
   }
 
   /* Write meta data for vtk */
-  snprintf (vtk_data[0].description, BUFSIZ, "Num. Solution");
+  snprintf (vtk_data[0].description, T8_VTK_MAX_STRING_LENGTH, "Num. Solution");
   vtk_data[0].type = T8_VTK_SCALAR;
   vtk_data[0].data = u_and_phi_array[0];
-  snprintf (vtk_data[1].description, BUFSIZ, "Ana. Solution");
+  snprintf (vtk_data[1].description, T8_VTK_MAX_STRING_LENGTH, "Ana. Solution");
   vtk_data[1].type = T8_VTK_SCALAR;
   vtk_data[1].data = u_and_phi_array[1];
-  snprintf (vtk_data[2].description, BUFSIZ, "Error");
+  snprintf (vtk_data[2].description, T8_VTK_MAX_STRING_LENGTH, "Error");
   vtk_data[2].type = T8_VTK_SCALAR;
   vtk_data[2].data = u_and_phi_array[2];
-  snprintf (vtk_data[3].description, BUFSIZ, "Flow");
+  snprintf (vtk_data[3].description, T8_VTK_MAX_STRING_LENGTH, "Flow");
   vtk_data[3].type = T8_VTK_VECTOR;
   vtk_data[3].data = u_and_phi_array[3];
   /* Write filename */
