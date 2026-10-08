@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dprism_bits.h
+/** \file t8_dprism_bits.hxx
  * Definition if prism-specific functions.
  */
 
