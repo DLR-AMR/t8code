@@ -46,6 +46,7 @@
 #include <t8_schemes/t8_subelement/specializations/t8_scheme_hanging_nodes_quads.hxx>
 #include <t8_schemes/t8_subelement/specializations/t8_scheme_hanging_nodes_tri.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement_scheme.hxx>
+#include <t8_schemes/t8_extruded/t8_extruded_scheme.hxx>
 #include <string>
 #if T8_ENABLE_DEBUG
 // Only needed for t8_debug_print_type
@@ -106,7 +107,10 @@ struct t8_scheme
                                 t8_standalone_scheme<T8_ECLASS_HEX>,
                                 /* Subelement schemes */
                                 t8_subelem_scheme_hanging_nodes_quad,
-                                t8_subelem_scheme_hanging_nodes_tri
+                                t8_subelem_scheme_hanging_nodes_tri,
+                                /* Extruded schemes */
+                                t8_extruded_scheme_hex,
+                                t8_extruded_scheme_prism
                                 >;
   /* clang-format on */
 
