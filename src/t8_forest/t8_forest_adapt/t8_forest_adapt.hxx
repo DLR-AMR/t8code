@@ -277,10 +277,10 @@ template <typename TType>
 concept element_manipulatable = requires (
   TType object, t8_element_array_t *elements, const t8_element_array_t *const elements_from, const t8_scheme *scheme,
   const t8_eclass_t tree_class, const t8_locidx_t el_considered, const t8_locidx_t el_offset, t8_locidx_t &el_inserted,
-  const std::vector<action> &action, const bool is_family, const bool recursive) {
+  const std::vector<action> &action, const bool is_family) {
   {
     object.element_manipulator (elements, elements_from, scheme, tree_class, el_considered, el_offset, el_inserted,
-                                action, is_family, recursive)
+                                action, is_family)
   } -> std::same_as<void>;
 };
 
@@ -363,9 +363,10 @@ concept element_manipulatable = requires (
    *   different collection and manipulation strategies to be plugged in without changing the control flow.
    * - The adaptor relies on the forest and tree data structures exposing stable array indexing via t8_element_array_* APIs.
    */
-template <actions_collectable TCollect, family_checkable TFamily, element_manipulatable TManipulate>
+template <actions_collectable TCollect, family_checkable TFamily, element_manipulatable TManipulate, bool recursive = false>
 class adaptor: private TCollect, private TFamily, private TManipulate {
  public:
+
   /** The type of callback used for collecting adaptation actions. */
   using callback_type
     = std::conditional_t<has_element_callback_collect<TCollect>, element_callback, batched_element_callback>;
@@ -378,9 +379,16 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
    *
    * \note The constructor increments reference counts for non-null forest handles, and the destructor will release them.
    */
-  adaptor (t8_forest_t forest, t8_forest_t forest_from, callback_type callback_in, bool profiling_in = false, bool recursive_in = false)
-    : callback (callback_in), forest (forest), forest_from (forest_from), profiling (profiling_in), recursive (recursive_in)
+  adaptor (t8_forest_t forest, t8_forest_t forest_from, callback_type callback_in, bool profiling_in = false)
+    : callback (callback_in), forest (forest), forest_from (forest_from), profiling (profiling_in)
   {
+    /** If recursive adaptation is requested, 
+     * ensure that callback_in is an element_callback, not a batched_element_callback. */
+    if constexpr (recursive) {
+      T8_ASSERT (has_element_callback_collect<TCollect>);
+    }
+
+    T8_ASSERT (forest != nullptr);
     T8_ASSERT (forest != nullptr);
     T8_ASSERT (callback);
     if (forest_from != nullptr) {
@@ -450,9 +458,15 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
           t8_locidx_t el_inserted = 0;
           const bool is_family = TFamily::family_check (tree_elements_from, el_considered, scheme, tree_class);
 
-          /* manipulator step*/
-          TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered, el_offset,
-                                            el_inserted, actions, is_family, recursive);
+          if constexpr (recursive) {
+            static_assert (has_element_callback_collect<TCollect>, "Recursive adaptation requires an element-wise callback");
+            /* In recursive mode, we only consider one element at a time. */
+          }
+          else {
+            /* manipulator step*/
+            TManipulate::element_manipulator (elements, tree_elements_from, scheme, tree_class, el_considered, el_offset,
+                                              el_inserted, actions, is_family);
+          }
           el_considered++;
           el_offset += el_inserted;
           forest->local_num_leaf_elements += el_inserted;
@@ -491,7 +505,6 @@ class adaptor: private TCollect, private TFamily, private TManipulate {
   t8_forest_t forest_from;     /**< The source forest to adapt from. */
   std::vector<action> actions; /**< The adaptation actions for each element in the source forest. */
   bool profiling = false;      /**< Flag to indicate if profiling is enabled. */
-  bool recursive = false;      /**< Flag to indicate if recursive adaptation is enabled. */
 };                             // class adaptor
 
 };     // namespace t8_adapt

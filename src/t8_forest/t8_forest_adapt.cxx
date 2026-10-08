@@ -111,7 +111,7 @@ t8_forest_is_family_callback (const t8_scheme *scheme, t8_eclass_t tree_class, c
  * \note If the element with index \a telements_pos in \a telement can not be coarsened
  *       recursively, return INT32_MIN.
  */
-static t8_locidx_t
+t8_locidx_t
 t8_forest_pos (t8_forest_t forest, t8_eclass_t tree_class, const t8_scheme *scheme, t8_element_array_t *telements,
                const t8_locidx_t telements_pos)
 {
