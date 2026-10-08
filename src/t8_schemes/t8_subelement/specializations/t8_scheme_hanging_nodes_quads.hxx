@@ -74,34 +74,14 @@ struct t8_subelem_scheme_hanging_nodes_quad:
 
   TUnderlyingScheme underlying_scheme {}; /**< Instance of the underlying standalone scheme. */
 
-  /** Compute the number of corners of an element.
-   * \param [in] elem The subelement.
-   * \return          The number of corners of \a elem.
-   */
-  static int
-  subelement_get_num_corners ([[maybe_unused]] const TSubelementType *elem) noexcept
-  {
-    return T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE];
-  }
-
-  /** Compute the number of faces of a given element.
-   * \param [in] elem The element.
-   * \return          The number of faces of \a elem.
-   */
-  static int
-  subelement_get_num_faces ([[maybe_unused]] const TSubelementType *elem) noexcept
-  {
-    return T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE];
-  }
-
   /** Compute the maximum number of faces of a given element and all of its descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
   static int
-  subelement_get_max_num_faces (const TSubelementType *elem) noexcept
+  subelement_get_max_num_faces ([[maybe_unused]] const TSubelementType *elem) noexcept
   {
-    return subelement_get_num_faces (elem);
+    return T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_TRIANGLE];
   }
 
   /** Return the shape of an allocated element.
@@ -112,17 +92,6 @@ struct t8_subelem_scheme_hanging_nodes_quad:
   subelement_get_shape ([[maybe_unused]] const TSubelementType *elem) noexcept
   {
     return T8_ECLASS_TRIANGLE;
-  }
-
-  /** Compute the shape of the face of an element.
-   * \param [in] elem     The element.
-   * \param [in] face     A face of \a elem.
-   * \return              The element shape of the face. As we are in 2D, here always LINE.
-   */
-  static t8_element_shape_t
-  subelement_get_face_shape ([[maybe_unused]] const TSubelementType *elem, [[maybe_unused]] const int face) noexcept
-  {
-    return T8_ECLASS_LINE;
   }
 
   /** Return the max number of children if an element is refined into subelements.
@@ -156,7 +125,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
     }
     const int num_hanging_faces = std::popcount (static_cast<unsigned int> (subelement_type));
     // Each original face "has" one triangular subelement, each split face two.
-    return T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] + num_hanging_faces;
+    return t8_eclass_num_faces[T8_ECLASS_QUAD] + num_hanging_faces;
   }
 
   /** This defines how an element is refined into subelements using a specified subelement type.
@@ -250,7 +219,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
   static bool
   face_is_hanging (const unsigned subelem_type, const int iface) noexcept
   {
-    return ((subelem_type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD] - 1) - iface)) & 1u) != 0u;
+    return ((subelem_type >> ((t8_eclass_num_faces[T8_ECLASS_QUAD] - 1) - iface)) & 1u) != 0u;
   }
 
   /** Compute the integer coordinates of all three vertices of a triangular subelement.
@@ -365,7 +334,7 @@ struct t8_subelem_scheme_hanging_nodes_quad:
     int clockwise_face = 0;
     int split = 0;
     int subelements_up_to = 0;  // The current clockwise face iface contains subelements with ids < this number.
-    for (clockwise_face = 0; clockwise_face < T8_ELEMENT_NUM_FACES[T8_ECLASS_QUAD]; ++clockwise_face) {
+    for (clockwise_face = 0; clockwise_face < t8_eclass_num_faces[T8_ECLASS_QUAD]; ++clockwise_face) {
       split = face_is_hanging (subelem_type, clockwise_ordering_to_parent_face[clockwise_face]);
       subelements_up_to += split + 1;
       if (sub_id < subelements_up_to) {
