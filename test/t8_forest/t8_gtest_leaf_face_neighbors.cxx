@@ -562,7 +562,7 @@ TEST_P (forest_face_neighbors_two_quad_mesh, check_neighbors)
           T8_FREE (dual_faces);
         }
       }  // End face loop
-    }  // End leaf in tree loop
+    }    // End leaf in tree loop
     if (gtreeid == 0) {
       // Tree 0 must have >0 faces with 1 neighbor.
       EXPECT_GE (num_faces_with_1_neighbor, 1) << "Tree 1 must have 1 face with 2 neighbors.";
@@ -775,7 +775,7 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
             T8_TESTSUITE_FREE (neigh_children);
 
           }  // end if(neighbor_level == level - 1)
-        }  // end if(num_neighbors == 1)
+        }    // end if(num_neighbors == 1)
 
         // Manually free memory allocated by t8code inside t8_forest_leaf_face_neighbors_ext.
         if (num_neighbors > 0) {
@@ -784,8 +784,8 @@ TEST_P (forest_face_neighbors_subface, test_face_neighbor_subface)
           T8_FREE (dual_faces);
         }
       }  // end face loop
-    }  // end element loop
-  }  // end tree loop
+    }    // end element loop
+  }      // end tree loop
 }
 
 // We check for all cmesh examples and scheme collections.
