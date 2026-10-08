@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "t8_dpyramid_bits.h"
+#include "t8_dpyramid_bits.hxx"
 #include "t8_dpyramid_connectivity.h"
 #include <sc_functions.h>
 #include <p4est_bits.h>

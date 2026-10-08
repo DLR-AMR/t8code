@@ -199,7 +199,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
     t8_schemes/t8_default/t8_default_prism/t8_dprism_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid.cxx
-    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.c
+    t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c
     t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
     t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
