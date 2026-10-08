@@ -31,7 +31,7 @@
 #include <t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.h>
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 #include <t8_geometry/t8_geometry_base.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.h>
