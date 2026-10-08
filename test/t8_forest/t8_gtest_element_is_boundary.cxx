@@ -213,7 +213,8 @@ class element_is_boundary_known_boundary: public testing::TestWithParam<std::tup
   SetUp () override
   {
     eclass = std::get<1> (GetParam ());
-    cmesh = t8_cmesh_new_from_class (eclass, sc_MPI_COMM_WORLD);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_from_class (cmesh, eclass, sc_MPI_COMM_WORLD);
     const int scheme_id = std::get<0> (GetParam ());
     const t8_scheme *scheme = create_from_scheme_id (scheme_id);
     forest = t8_forest_new_uniform (cmesh, scheme, 0, 0, sc_MPI_COMM_WORLD);
