@@ -514,7 +514,7 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
   /* Get the element class and calculate the centroid using its element
    * reference coordinates */
   const t8_element_shape_t element_shape = scheme->element_get_shape (tree_class, element);
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape], 1,
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape].data (), 1,
                                      coordinates);
 }
 
