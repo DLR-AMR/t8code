@@ -48,19 +48,20 @@ using mesh_type = t8_mesh_handle::
 /** Helper function to print the total number of elements in the mesh after each step.
  *  \param [in] mesh  The mesh handle to get the number of elements from.
  *  \param [in] stage The stage of the mesh (e.g. "Initial mesh", "Adapted mesh", etc.) to print in the output.
+ *  \param [in] prefix The prefix for the filename of the exported vtk files. 
 */
 void
 print_stats_and_export (mesh_type& mesh, const char* stage, const char* prefix)
 {
-  t8_locidx_t local_elements = mesh->get_num_local_elements ();
-  t8_gloidx_t global_elements = mesh->get_num_global_elements ();
+  t8_locidx_t local_elements = mesh.get_num_local_elements ();
+  t8_gloidx_t global_elements = mesh.get_num_global_elements ();
 
   t8_global_productionf (" [mesh_step4] === %s === \n", stage);
   t8_global_productionf (" [mesh_step4] Local elements on the root process: %i \n", local_elements);
-  t8_global_productionf (" [mesh_step4] Total elements: %i \n", global_elements);
+  t8_global_productionf (" [mesh_step4] Total elements: %li \n", global_elements);
 
   /* Writing the mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
-  t8_mesh_handle::write_mesh_to_vtk_ext (*mesh, prefix, 0, nullptr, true, true, true, true, true, false, false);
+  t8_mesh_handle::write_mesh_to_vtk_ext (mesh, prefix, 0, nullptr, true, true, true, true, true, false, false);
 }
 
 /** Helper function to adapt a given mesh using the predefined adaption callback function.
@@ -72,10 +73,9 @@ void
 step4_adapt_mesh (mesh_type& mesh, const adapt_data& adapt_params)
 {
   /* Setting the adapt-flag with our adapt_callback_sphere function from step 3 and the adapt_params. Both can be found in the file \ref t8_mesh_tutorials_common.hxx. */
-  mesh->set_adapt (
-    mesh_type::mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback_sphere<mesh_type>, adapt_params));
+  mesh.set_adapt (mesh_type::mesh_adapt_callback_wrapper<adapt_data> (&adapt_callback_sphere<mesh_type>, adapt_params));
   /* Committing the mesh. */
-  mesh->commit ();
+  mesh.commit ();
 }
 
 /** Helper function to partition and balance a given mesh.
@@ -86,13 +86,13 @@ void
 step4_partition_balance_mesh (mesh_type& mesh)
 {
   /* Setting partition flag.*/
-  mesh->set_partition ();
+  mesh.set_partition ();
 
   /* Setting balancing flag. */
-  mesh->set_balance ();
+  mesh.set_balance ();
 
   /* Committing the mesh. */
-  mesh->commit ();
+  mesh.commit ();
 }
 
 /** Helper function to add a layer of ghost elements to an initial mesh.
@@ -102,10 +102,10 @@ void
 step4_ghost_mesh (mesh_type& mesh)
 {
   /* Set flag such that ghost layer is created on commit. */
-  mesh->set_ghost ();
+  mesh.set_ghost ();
 
   /* Committing the mesh. */
-  mesh->commit ();
+  mesh.commit ();
 }
 
 /** Entry point of the program. */
@@ -153,7 +153,7 @@ main (int argc, char** argv)
     auto mesh = t8_mesh_handle::handle_hypercube_hybrid_uniform_default<mesh_type> (uniform_level, comm);
 
     /* Printing the mesh information. */
-    print_stats_and_export (mesh, "Initial mesh", prefix_initial);
+    print_stats_and_export (*mesh, "Initial mesh", prefix_initial);
 
     /** 
      * ADAPT MESH
@@ -164,10 +164,10 @@ main (int argc, char** argv)
     t8_global_productionf (" [mesh_step4] \n");
 
     /** Call adaption helper function. */
-    step4_adapt_mesh (mesh, adapt_params);
+    step4_adapt_mesh (*mesh, adapt_params);
 
     /* Printing the mesh information. */
-    print_stats_and_export (mesh, "Adapted mesh", prefix_adapt);
+    print_stats_and_export (*mesh, "Adapted mesh", prefix_adapt);
 
     /**
      * PARTITION, BALANCE MESH
@@ -178,13 +178,13 @@ main (int argc, char** argv)
     t8_global_productionf (" [mesh_step4] \n");
 
     /** Adapting the mesh from above a second time to see a difference when balancing. */
-    step4_adapt_mesh (mesh, adapt_params);
+    step4_adapt_mesh (*mesh, adapt_params);
 
     /** Call partitioning and balancing helper function. */
-    step4_partition_balance_mesh (mesh);
+    step4_partition_balance_mesh (*mesh);
 
     /* Printing the mesh information. */
-    print_stats_and_export (mesh, "Partitioned and Balanced mesh", prefix_partition_balance);
+    print_stats_and_export (*mesh, "Partitioned and Balanced mesh", prefix_partition_balance);
 
     /**
      * GHOST LAYER
@@ -195,10 +195,10 @@ main (int argc, char** argv)
     t8_global_productionf (" [mesh_step4] \n");
 
     /** Call ghost helper function. */
-    step4_ghost_mesh (mesh);
+    step4_ghost_mesh (*mesh);
 
     /* Printing the mesh information. */
-    print_stats_and_export (mesh, "Ghost mesh", prefix_ghost);
+    print_stats_and_export (*mesh, "Ghost mesh", prefix_ghost);
     int ghost_elements = mesh->get_num_ghosts ();
     t8_global_productionf (" [mesh_step4] Number of ghost elements: %i \n", ghost_elements);
 
