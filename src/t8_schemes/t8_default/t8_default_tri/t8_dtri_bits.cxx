@@ -363,10 +363,10 @@ t8_dtri_compute_integer_coords (const t8_dtri_t *element, const int vertex, t8_d
  * tree (level 0 triangle) is embedded in \f$ [0,1]^2 \f$.
  * \param [in] element      Input triangle.
  * \param [in] vertex       The number of the vertex.
- * \param [out] coordinates An array of 2 double that will be filled with the reference coordinates of the vertex.
+ * \return                 The reference coordinates of the vertex.
  */
-void
-t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *element, const int vertex, double coordinates[T8_DTRI_DIM])
+t8_3D_vec
+t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *element, const int vertex)
 {
   int coords_int[T8_DTRI_DIM];
   T8_ASSERT (0 <= vertex && vertex < T8_DTRI_CORNERS);
@@ -375,19 +375,18 @@ t8_dtri_compute_vertex_ref_coords (const t8_dtri_t *element, const int vertex, d
   /* Since the integer coordinates are coordinates w.r.t to
    * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
    * to divide them by the root length. */
+  t8_3D_vec coordinates {};
   coordinates[0] = coords_int[0] / (double) T8_DTRI_ROOT_LEN;
   coordinates[1] = coords_int[1] / (double) T8_DTRI_ROOT_LEN;
 #ifdef T8_DTRI_TO_DTET
   coordinates[2] = coords_int[2] / (double) T8_DTRI_ROOT_LEN;
 #endif
+  return coordinates;
 }
 
 void
-t8_dtri_compute_reference_coords (const t8_dtri_t *element, const double *ref_coords, const size_t num_coords,
-#ifndef T8_DTRI_TO_DTET
-                                  const size_t skip_coords,
-#endif
-                                  double *out_coords)
+t8_dtri_compute_reference_coords (const t8_dtri_t *element, std::span<const t8_3D_vec> ref_coords,
+                                  std::span<t8_3D_vec> out_coords)
 {
   /* Calculate the reference coordinates of a triangle/tetrahedron in
    * relation to its orientation. Orientations are described here:
@@ -411,13 +410,10 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *element, const double *ref_co
    *   |
    *   z--> x
    */
-  T8_ASSERT (ref_coords != NULL);
+  T8_ASSERT (ref_coords.size () == out_coords.size ());
 
-  t8_dtri_type_t type;
-  t8_dtri_coord_t h;
-
-  type = element->type;
-  h = T8_DTRI_LEN (element->level);
+  const t8_dtri_type_t type = element->type;
+  const t8_dtri_coord_t h = T8_DTRI_LEN (element->level);
 #ifndef T8_DTRI_TO_DTET
   const int tri_orientation = type;
 #else
@@ -427,36 +423,27 @@ t8_dtri_compute_reference_coords (const t8_dtri_t *element, const double *ref_co
   const int tet_orientation1 = (tet_orientation0 + ((type % 2 == 0) ? 1 : 2)) % 3;
   const int tet_orientation2 = (tet_orientation0 + ((type % 2 == 0) ? 2 : 1)) % 3;
 #endif
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    /* offset defines, how many coordinates to skip in an iteration. */
+  for (size_t icoord = 0; icoord < ref_coords.size (); ++icoord) {
+    const t8_3D_vec &ref_coord = ref_coords[icoord];
+    t8_3D_vec &out_coord = out_coords[icoord];
+    out_coord[0] = element->x;
+    out_coord[1] = element->y;
 #ifndef T8_DTRI_TO_DTET
-    const size_t offset = (2 + skip_coords) * coord;
-    const size_t offset_3d = 3 * coord;
+    out_coord[tri_orientation] += h * ref_coord[0];
+    out_coord[1 - tri_orientation] += h * ref_coord[1];
 #else
-    const size_t offset = 3 * coord;
-#endif
-    out_coords[offset + 0] = element->x;
-    out_coords[offset + 1] = element->y;
-#ifdef T8_DTRI_TO_DTET
-    out_coords[offset + 2] = element->z;
-#endif
-#ifndef T8_DTRI_TO_DTET
-    out_coords[offset + tri_orientation] += h * ref_coords[offset_3d + 0];
-    out_coords[offset + 1 - tri_orientation] += h * ref_coords[offset_3d + 1];
-#else
-    out_coords[offset + tet_orientation0] += h * ref_coords[offset + 0];
-    out_coords[offset + tet_orientation1] += h * ref_coords[offset + 1];
-    out_coords[offset + tet_orientation2] += h * ref_coords[offset + 2];
-
-    /* done 3D */
+    out_coord[2] = element->z;
+    out_coord[tet_orientation0] += h * ref_coord[0];
+    out_coord[tet_orientation1] += h * ref_coord[1];
+    out_coord[tet_orientation2] += h * ref_coord[2];
 #endif
     /* Since the integer coordinates are coordinates w.r.t to
      * the embedding into [0,T8_DTRI_ROOT_LEN]^d, we just need
      * to divide them by the root length. */
-    out_coords[offset + 0] /= (double) T8_DTRI_ROOT_LEN;
-    out_coords[offset + 1] /= (double) T8_DTRI_ROOT_LEN;
+    out_coord[0] /= (double) T8_DTRI_ROOT_LEN;
+    out_coord[1] /= (double) T8_DTRI_ROOT_LEN;
 #ifdef T8_DTRI_TO_DTET
-    out_coords[offset + 2] /= (double) T8_DTRI_ROOT_LEN;
+    out_coord[2] /= (double) T8_DTRI_ROOT_LEN;
 #endif
   }
 }

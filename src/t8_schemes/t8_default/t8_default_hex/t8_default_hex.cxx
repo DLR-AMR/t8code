@@ -567,9 +567,8 @@ t8_default_scheme_hex::element_get_vertex_integer_coords (const t8_element_t *el
   coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
 }
 
-void
-t8_default_scheme_hex::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                            double coords[]) const
+t8_3D_vec
+t8_default_scheme_hex::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= vertex && vertex < 8);
@@ -579,34 +578,38 @@ t8_default_scheme_hex::element_get_vertex_reference_coords (const t8_element_t *
 
   /* We divide the integer coordinates by the root length of the hex
    * to obtain the reference coordinates. */
+  t8_3D_vec coords {};
   coords[0] = coords_int[0] / (double) P8EST_ROOT_LEN;
   coords[1] = coords_int[1] / (double) P8EST_ROOT_LEN;
   coords[2] = coords_int[2] / (double) P8EST_ROOT_LEN;
+  return coords;
 }
 
 void
-t8_default_scheme_hex::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                     const size_t num_coords, double *out_coords) const
+t8_default_scheme_hex::element_get_reference_coords (const t8_element_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                                     std::span<t8_3D_vec> out_coords) const
 {
   T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (ref_coords.size () == out_coords.size ());
   const p8est_quadrant_t *q1 = (const p8est_quadrant_t *) elem;
 
   /* Get the length of the quadrant */
   const p4est_qcoord_t len = P8EST_QUADRANT_LEN (q1->level);
 
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t offset = 3 * coord;
+  for (size_t icoord = 0; icoord < ref_coords.size (); ++icoord) {
+    const t8_3D_vec &ref_coord = ref_coords[icoord];
+    t8_3D_vec &out_coord = out_coords[icoord];
     /* Compute the x, y and z coordinates of the point depending on the
      * reference coordinates */
-    out_coords[offset + 0] = q1->x + ref_coords[offset + 0] * len;
-    out_coords[offset + 1] = q1->y + ref_coords[offset + 1] * len;
-    out_coords[offset + 2] = q1->z + ref_coords[offset + 2] * len;
+    out_coord[0] = q1->x + ref_coord[0] * len;
+    out_coord[1] = q1->y + ref_coord[1] * len;
+    out_coord[2] = q1->z + ref_coord[2] * len;
 
     /* We divide the integer coordinates by the root length of the hex
      * to obtain the reference coordinates. */
-    out_coords[offset + 0] /= (double) P8EST_ROOT_LEN;
-    out_coords[offset + 1] /= (double) P8EST_ROOT_LEN;
-    out_coords[offset + 2] /= (double) P8EST_ROOT_LEN;
+    out_coord[0] /= (double) P8EST_ROOT_LEN;
+    out_coord[1] /= (double) P8EST_ROOT_LEN;
+    out_coord[2] /= (double) P8EST_ROOT_LEN;
   }
 }
 

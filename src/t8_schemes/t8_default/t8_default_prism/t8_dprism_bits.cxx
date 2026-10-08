@@ -535,8 +535,8 @@ t8_dprism_vertex_integer_coords (const t8_dprism_t *elem, const int vertex, int 
   coords[2] /= T8_DPRISM_ROOT_BY_DLINE_ROOT;
 }
 
-void
-t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex, double coords[3])
+t8_3D_vec
+t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex)
 {
   int coords_int[3];
   T8_ASSERT (t8_dprism_is_valid (elem));
@@ -546,21 +546,20 @@ t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex, double c
   t8_dprism_vertex_integer_coords (elem, vertex, coords_int);
 
   /* Divide by the root length. */
-  coords[0] = coords_int[0] / (double) T8_DPRISM_ROOT_LEN;
-  coords[1] = coords_int[1] / (double) T8_DPRISM_ROOT_LEN;
-  coords[2] = coords_int[2] / (double) T8_DPRISM_ROOT_LEN;
+  return { coords_int[0] / (double) T8_DPRISM_ROOT_LEN, coords_int[1] / (double) T8_DPRISM_ROOT_LEN,
+           coords_int[2] / (double) T8_DPRISM_ROOT_LEN };
 }
 
 void
-t8_dprism_compute_reference_coords (const t8_dprism_t *elem, const double *ref_coords, const size_t num_coords,
-                                    double *out_coords)
+t8_dprism_compute_reference_coords (const t8_dprism_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                    std::span<t8_3D_vec> out_coords)
 {
   T8_ASSERT (t8_dprism_is_valid (elem));
   T8_ASSERT (elem->line.level == elem->tri.level);
   /*Compute x and y coordinate */
-  t8_dtri_compute_reference_coords (&elem->tri, ref_coords, num_coords, 1, out_coords);
+  t8_dtri_compute_reference_coords (&elem->tri, ref_coords, out_coords);
   /*Compute z coordinate */
-  t8_dline_compute_reference_coords (&elem->line, ref_coords + 2, num_coords, 2, out_coords + 2);
+  t8_dline_compute_reference_coords (&elem->line, ref_coords, out_coords, 2);
 }
 
 t8_linearidx_t

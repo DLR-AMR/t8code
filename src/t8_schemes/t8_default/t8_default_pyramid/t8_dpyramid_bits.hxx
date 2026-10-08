@@ -27,6 +27,8 @@
 #pragma once
 
 #include <t8_element/t8_element.h>
+#include <t8_types/t8_vec.hxx>
+#include <span>
 #include "t8_dpyramid.h"
 
 /** Initialize a pyramid as the pyramid with a given global id in a uniform
@@ -345,24 +347,21 @@ t8_dpyramid_successor (const t8_dpyramid_t *elem, t8_dpyramid_t *s, const int le
 /** Compute the reference coordinates of a vertex of a pyramid when the tree (level 0 triangle) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem    Input pyramid.
  * \param [in] vertex  The number of the vertex.
- * \param [out] coords An array of 3 double that will be filled with the reference coordinates of the vertex.
+ * \return             The reference coordinates of the vertex.
  */
-void
-t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem, const int vertex, double coords[]);
+t8_3D_vec
+t8_dpyramid_vertex_reference_coords (const t8_dpyramid_t *elem, const int vertex);
 
 /** Convert points in the reference space of a pyramid element to points in the
  *  reference space of the tree (level 0) embedded in \f$ [0,1]^3 \f$.
  * \param [in]  elem       Input pyramid.
- * \param [in]  ref_coords The reference coordinates in the pyramid
- *                         (\a num_coords times \f$ [0,1]^3 \f$)
- * \param [in]  num_coords Number of coordinates to evaluate
- * \param [out] out_coords An array of \a num_coords x 3 x double that
- * 		                     will be filled with the reference coordinates
- *                         of the points on the pyramid.
+ * \param [in]  ref_coords The reference coordinates of the points in the pyramid.
+ * \param [out] out_coords The reference coordinates of the points in the tree. Must have the same size as
+ *                         \a ref_coords.
  */
 void
-t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, const double *ref_coords, const size_t num_coords,
-                                      double *out_coords);
+t8_dpyramid_compute_reference_coords (const t8_dpyramid_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                      std::span<t8_3D_vec> out_coords);
 
 /**
  * Compute the nearest common ancestor of two elements

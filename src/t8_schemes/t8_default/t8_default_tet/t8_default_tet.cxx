@@ -462,20 +462,19 @@ t8_default_scheme_tet::element_get_vertex_integer_coords (const t8_element_t *el
   t8_dtet_compute_integer_coords ((const t8_default_tet_t *) elem, vertex, coords);
 }
 
-void
-t8_default_scheme_tet::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                            double coords[]) const
+t8_3D_vec
+t8_default_scheme_tet::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex) const
 {
   T8_ASSERT (element_is_valid (elem));
-  t8_dtet_compute_vertex_ref_coords ((const t8_default_tet_t *) elem, vertex, coords);
+  return t8_dtet_compute_vertex_ref_coords ((const t8_default_tet_t *) elem, vertex);
 }
 
 void
-t8_default_scheme_tet::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                     const size_t num_coords, double *out_coords) const
+t8_default_scheme_tet::element_get_reference_coords (const t8_element_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                                     std::span<t8_3D_vec> out_coords) const
 {
   T8_ASSERT (element_is_valid (elem));
-  t8_dtet_compute_reference_coords ((const t8_dtet_t *) elem, ref_coords, num_coords, out_coords);
+  t8_dtet_compute_reference_coords ((const t8_dtet_t *) elem, ref_coords, out_coords);
 }
 
 /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.

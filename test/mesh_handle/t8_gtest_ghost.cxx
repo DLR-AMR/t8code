@@ -39,6 +39,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_balance.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
+#include <ranges>
 #include <vector>
 
 /** Parametrized test fixture for the ghost tests. */
@@ -91,9 +92,10 @@ TEST_P (t8_mesh_ghost_test, check_ghosts)
     EXPECT_LE (0, (*mesh)[ighost].get_num_vertices ());
     EXPECT_LE (0, (*mesh)[ighost].get_volume ());
     EXPECT_LE (0, (*mesh)[ighost].get_diameter ());
-    t8_3D_vec ref = { 0.2, 0.3, 1 }, a;
-    (*mesh)[ighost].get_reference_coordinates (ref, 1, a);
-    for (const auto& coordinate : a) {
+    const t8_3D_vec ref = { 0.2, 0.3, 1 };
+    const t8_3D_vec a = (*mesh)[ighost].get_reference_coordinates (ref);
+    // Only the first dim components of reference coordinates carry information.
+    for (const auto& coordinate : a | std::views::take (mesh->get_dimension ())) {
       EXPECT_LE (0, coordinate);
     }
     for (const auto& coordinate : (*mesh)[ighost].get_centroid ()) {

@@ -33,6 +33,8 @@
 
 #include <p4est.h>
 #include <t8_element/t8_element.h>
+#include <t8_types/t8_vec.hxx>
+#include <span>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 
@@ -557,29 +559,25 @@ struct t8_default_scheme_quad: public t8_default_scheme_common<T8_ECLASS_QUAD, t
 
   /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \param [in] elem    The element to be considered.
-   *   \param [in] vertex  The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   *   \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used.
+   * \param [in] elem     The element to be considered.
+   * \param [in] vertex   The id of the vertex whose coordinates shall be computed.
+   * \return              The reference coordinates of \a vertex in the tree. Components with an index of at least d
+   *                      are zero.
    */
-  void
-  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const;
+  t8_3D_vec
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex) const;
 
-  /** Convert points in the reference space of an element to points in the
-   *  reference space of the tree.
-   *
+  /** Convert points in the reference space of an element to points in the reference space of the tree.
+   * See \ref t8_scheme::element_get_reference_coords for the conventions.
    * \param [in] elem         The element.
-   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
-   *                          in the reference space of the element.
-   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the points in the
-   *                          reference space of the tree.
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the points in the reference space of the
+   *                          element.
+   * \param [out] out_coords  The coordinates of the points in the reference space of the tree.
+   *                          Must have the same size as \a ref_coords.
    */
   void
-  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                double *out_coords) const;
+  element_get_reference_coords (const t8_element_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                std::span<t8_3D_vec> out_coords) const;
 
   /** Returns true, if there is one element in the tree, that does not refine into 2^dim children.
    * Returns false otherwise.

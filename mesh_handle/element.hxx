@@ -36,26 +36,27 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_types/t8_vec.hxx>
 #include <vector>
+#include <span>
 #include <optional>
 #include <type_traits>
 
 namespace t8_mesh_handle
 {
-/** 
+/**
  * Definition of the mesh element class of the \ref mesh handle.
- * An element without specified template parameters provides default implementations for basic functionality 
+ * An element without specified template parameters provides default implementations for basic functionality
  * as accessing the refinement level or the centroid. With this implementation, the functionality is calculated each time
- * the function is called. 
- * Use the competences defined in \ref cache_element_competences.hxx as template parameter to cache the functionality instead of 
+ * the function is called.
+ * Use the competences defined in \ref cache_element_competences.hxx as template parameter to cache the functionality instead of
  * recalculation in every function call.
  * To add functionality to the element, you can also simply write your own competence and give it as a template parameter.
- * You can access the functions implemented in your competence via the element. 
+ * You can access the functions implemented in your competence via the element.
  * Please note that the competence should be valid for both, mesh elements and ghost elements.
  *
  * The inheritance pattern is inspired by \ref T8Type (which also uses the CRTP).
- * We decided to use this structure 1.) to be able to add new functionality easily and 
+ * We decided to use this structure 1.) to be able to add new functionality easily and
  *    2.) for the cached options to keep the number of member variables of the default element to a minimum to save memory.
- * The choice between calculate and cache is a tradeoff between runtime and memory usage. 
+ * The choice between calculate and cache is a tradeoff between runtime and memory usage.
  *
  * \tparam TMeshClass The class of the mesh the element belongs to.
  * \tparam TCompetences The competences you want to add to the default functionality of the element.
@@ -411,18 +412,29 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
   }
 
-  /** Function to convert points in reference space of an element to points of the 
+  /** Function to convert points in reference space of an element to points of the
    *  reference space of the tree.
-   * \param [in] ref_coords     Pointer to the reference coordinates of the element.
-   * \param [in] num_coords     Number of reference coordinates to convert.
-   * \param [out] tree_ref_coords Pointer to the reference coordinates of the tree/cmesh element.
+   * \param [in] ref_coords       The reference coordinates of the points in the element.
+   * \param [out] tree_ref_coords The reference coordinates of the points in the tree/cmesh element.
+   *                              Must have the same size as \a ref_coords and must not overlap with it.
    */
   void
-  get_reference_coordinates (const t8_3D_vec& ref_coords, std::size_t num_coords, t8_3D_vec& tree_ref_coords) const
+  get_reference_coordinates (std::span<const t8_3D_vec> ref_coords, std::span<t8_3D_vec> tree_ref_coords) const
   {
     t8_forest_get_scheme (m_mesh->m_forest)
-      ->element_get_reference_coords (get_tree_class (), m_element, ref_coords.data (), num_coords,
-                                      tree_ref_coords.data ());
+      ->element_get_reference_coords (get_tree_class (), m_element, ref_coords, tree_ref_coords);
+  }
+
+  /** Function to convert a point in reference space of an element to a point of the
+   *  reference space of the tree.
+   * \param [in] ref_coords  The reference coordinates of the point in the element.
+   * \return                 The reference coordinates of the point in the tree/cmesh element.
+   */
+  t8_3D_vec
+  get_reference_coordinates (const t8_3D_vec& ref_coords) const
+  {
+    return t8_forest_get_scheme (m_mesh->m_forest)
+      ->element_get_reference_coords (get_tree_class (), m_element, ref_coords);
   }
 
   /** Compute the orientation of a face of an element with respect to its neighbor.
@@ -539,8 +551,8 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
 
   // --- Print for the element for debugging purpose. ---
 #if T8_ENABLE_DEBUG
-  /** Print the element. 
-   *  For example, print the coordinates and level of a triangle.  
+  /** Print the element.
+   *  For example, print the coordinates and level of a triangle.
    *  This function is only available in the debugging configuration.
    */
   void
@@ -601,7 +613,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
 
   /** Getter for the local element id in the tree of the element in the forest related to the mesh.
    *  \warning This is related to t8code's tree structure and should not be confused with \ref mesh specific ids.
-   *  For mesh specific id use \ref get_element_handle_id. 
+   *  For mesh specific id use \ref get_element_handle_id.
    *  This function is mainly relevant for writing custom competences that need to access t8code functionality.
    * \return The local element id in the tree of the element in the forest.
    */
@@ -630,7 +642,7 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   }
 
   /** Check if this element is equal to another element.
-   * \param [in] other The other element, this element is compared with. 
+   * \param [in] other The other element, this element is compared with.
    * \return           True if the elements are equal, false if they are not equal.
   */
   bool

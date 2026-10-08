@@ -679,9 +679,8 @@ t8_default_scheme_quad::element_get_vertex_integer_coords (const t8_element_t *e
   coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
 }
 
-void
-t8_default_scheme_quad::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex,
-                                                             double coords[]) const
+t8_3D_vec
+t8_default_scheme_quad::element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (0 <= vertex && vertex < 4);
@@ -691,26 +690,29 @@ t8_default_scheme_quad::element_get_vertex_reference_coords (const t8_element_t 
 
   /* We divide the integer coordinates by the root length of the quad
    * to obtain the reference coordinates. */
+  t8_3D_vec coords {};
   coords[0] = coords_int[0] / (double) P4EST_ROOT_LEN;
   coords[1] = coords_int[1] / (double) P4EST_ROOT_LEN;
+  return coords;
 }
 
 void
-t8_default_scheme_quad::element_get_reference_coords (const t8_element_t *elem, const double *ref_coords,
-                                                      const size_t num_coords, double *out_coords) const
+t8_default_scheme_quad::element_get_reference_coords (const t8_element_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                                      std::span<t8_3D_vec> out_coords) const
 {
   T8_ASSERT (element_is_valid (elem));
+  T8_ASSERT (ref_coords.size () == out_coords.size ());
   const p4est_quadrant_t *quad = (const p4est_quadrant_t *) elem;
   const p4est_qcoord_t h = P4EST_QUADRANT_LEN (quad->level);
 
-  for (size_t icoord = 0; icoord < num_coords; ++icoord) {
-    const size_t offset_2d = icoord * 2;
-    const size_t offset_3d = icoord * 3;
-    out_coords[offset_2d + 0] = quad->x + ref_coords[offset_3d + 0] * h;
-    out_coords[offset_2d + 1] = quad->y + ref_coords[offset_3d + 1] * h;
+  for (size_t icoord = 0; icoord < ref_coords.size (); ++icoord) {
+    const t8_3D_vec &ref_coord = ref_coords[icoord];
+    t8_3D_vec &out_coord = out_coords[icoord];
+    out_coord[0] = quad->x + ref_coord[0] * h;
+    out_coord[1] = quad->y + ref_coord[1] * h;
 
-    out_coords[offset_2d + 0] /= (double) P4EST_ROOT_LEN;
-    out_coords[offset_2d + 1] /= (double) P4EST_ROOT_LEN;
+    out_coord[0] /= (double) P4EST_ROOT_LEN;
+    out_coord[1] /= (double) P4EST_ROOT_LEN;
   }
 }
 

@@ -30,8 +30,13 @@
 
 #include <variant>
 #include <vector>
+#include <span>
+#include <algorithm>
+#include <functional>
+#include <limits>
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_eclass/t8_eclass.h>
+#include <t8_types/t8_vec.hxx>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.hxx>
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line.hxx>
@@ -114,6 +119,35 @@ struct t8_scheme
 
  private:
   scheme_container eclass_schemes; /**< The container holding the eclass schemes. */
+
+#if T8_ENABLE_DEBUG
+  /** Set all components of reference coordinates that exceed the dimension of a tree to NaN.
+   * This way, an accidental use of these components is easy to detect.
+   * \param [in] tree_class   The eclass of the tree.
+   * \param [in,out] coords   Reference coordinates. On output, all components with an index of at least the dimension
+   *                          of \a tree_class are NaN. The other components are unchanged.
+   */
+  static void
+  invalidate_unused_reference_coords (const t8_eclass_t tree_class, t8_3D_vec &coords)
+  {
+    std::fill (coords.begin () + t8_eclass_to_dimension[tree_class], coords.end (),
+               std::numeric_limits<double>::quiet_NaN ());
+  }
+
+  /** Check whether two batches of points share memory.
+   * \param [in] first    The first batch of points.
+   * \param [in] second   The second batch of points.
+   * \return              True if at least one point of \a first is also a point of \a second, false otherwise.
+   */
+  static bool
+  reference_coords_overlap (std::span<const t8_3D_vec> first, std::span<const t8_3D_vec> second)
+  {
+    const std::less<const t8_3D_vec *> less;
+    return less (first.data (), second.data () + second.size ())
+           && less (second.data (), first.data () + first.size ());
+  }
+#endif
+
   mutable t8_refcount_t
     rc; /**< The reference count of the scheme. Mutable so that the class can be const and the ref counter is still mutable. TODO: Replace by shared_ptr when forest becomes a class. */
 
@@ -381,7 +415,7 @@ struct t8_scheme
   /** Return the number of children of an element when it is refined.
    * \param [in] tree_class         The eclass of the current tree.
    * \param [in] element            The element whose number of children is returned.
-   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   * \param [in] additional_arguments   Additional arguments you want to provide.
    *                                    For subelements, this can be the subelement type.
    *                                    Have a look at the scheme specific functions for more details.
    * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
@@ -494,7 +528,7 @@ struct t8_scheme
    *                      the number of children.
    * \param [in,out] c    The storage for these \a length elements must exist.
    *                      On output, all children are valid.
-   * \param [in] additional_arguments   Additional arguments you want to provide. 
+   * \param [in] additional_arguments   Additional arguments you want to provide.
    *                                    For subelements, this can be the subelement type.
    *                                    Have a look at the scheme specific functions for more details.
    * \tparam TArgs                  Type of extra arguments you want to provide. Normally, this is auto deduced.
@@ -548,7 +582,7 @@ struct t8_scheme
   };
 
   /** Query whether element A is an ancestor of the element B.
-   * An element A is ancestor of an element B if A == B or if B can 
+   * An element A is ancestor of an element B if A == B or if B can
    * be obtained from A via successive refinement.
    * \param [in] tree_class The eclass of the current tree.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.
@@ -959,39 +993,73 @@ struct t8_scheme
   /** Compute the coordinates of a given element vertex inside a reference tree
    * that is embedded into [0,1]^d (d = dimension).
    * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] element      The element to be considered.
-   * \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   * \param [out] coords An array of at least as many doubles as the element's dimension
-   *                    whose entries will be filled with the coordinates of \a vertex.
-   * \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                    all coords might be used.
+   * \param [in] element       The element to be considered.
+   * \param [in] vertex        The id of the vertex whose coordinates shall be computed.
+   * \return                   The reference coordinates of \a vertex in the tree. Only the first d components carry
+   *                           information. See \ref element_get_reference_coords for the conventions.
+   */
+  inline t8_3D_vec
+  element_get_vertex_reference_coords (const t8_eclass_t tree_class, const t8_element_t *element,
+                                       const int vertex) const
+  {
+    t8_3D_vec coords
+      = std::visit ([&] (auto &&scheme) { return scheme.element_get_vertex_reference_coords (element, vertex); },
+                    eclass_schemes[tree_class]);
+#if T8_ENABLE_DEBUG
+    invalidate_unused_reference_coords (tree_class, coords);
+#endif
+    return coords;
+  };
+
+  /** Convert points in the reference space of an element to points in the reference space of the tree.
+   *
+   * Reference coordinates of elements and trees are always stored as \ref t8_3D_vec, independent of the
+   * dimension d of the tree. Only the first d components carry information:
+   * - Components of \a ref_coords with an index of at least d are ignored.
+   * - Components of \a out_coords with an index of at least d are not part of the result.
+   * In debug mode, all components that are not part of a result are NaN, so that their use is easy to detect.
+   * For a single point, there is an overload that takes and returns a \ref t8_3D_vec.
+   *
+   * \param [in] tree_class   The eclass of the current tree.
+   * \param [in] element      The element.
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the points in the reference space of the
+   *                          element.
+   * \param [out] out_coords  The coordinates of the points in the reference space of the tree.
+   *                          Must have the same size as \a ref_coords and must not overlap with it.
    */
   inline void
-  element_get_vertex_reference_coords (const t8_eclass_t tree_class, const t8_element_t *element, const int vertex,
-                                       double coords[]) const
+  element_get_reference_coords (const t8_eclass_t tree_class, const t8_element_t *element,
+                                std::span<const t8_3D_vec> ref_coords, std::span<t8_3D_vec> out_coords) const
   {
+    T8_ASSERT (ref_coords.size () == out_coords.size ());
+    T8_ASSERT (!reference_coords_overlap (ref_coords, out_coords));
+#if T8_ENABLE_DEBUG
+    /* The schemes only write the components that are part of the result, all others stay NaN. */
+    for (t8_3D_vec &out_coord : out_coords) {
+      out_coord.fill (std::numeric_limits<double>::quiet_NaN ());
+    }
+#endif
     return std::visit (
-      [&] (auto &&scheme) { return scheme.element_get_vertex_reference_coords (element, vertex, coords); },
+      [&] (auto &&scheme) { return scheme.element_get_reference_coords (element, ref_coords, out_coords); },
       eclass_schemes[tree_class]);
   };
 
-  /** Convert points in the reference space of an element to points in the
-   *  reference space of the tree.
-   * \param [in] tree_class    The eclass of the current tree.
-   * \param [in] element         The element.
-   * \param [in] ref_coords The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
-   *                          in the reference space of the element.
-   * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the points in the
-   *                          reference space of the tree.
+  /** Convert a point in the reference space of an element to a point in the reference space of the tree.
+   * Only the first d components (d = dimension of the tree) of \a ref_coords are used and only the first d components
+   * of the result carry information. In debug mode, the further components of the result are NaN.
+   * \param [in] tree_class   The eclass of the current tree.
+   * \param [in] element      The element.
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point in the reference space of the
+   *                          element.
+   * \return                  The coordinates of the point in the reference space of the tree.
    */
-  inline void
-  element_get_reference_coords (const t8_eclass_t tree_class, const t8_element_t *element, const double *ref_coords,
-                                const size_t num_coords, double *out_coords) const
+  inline t8_3D_vec
+  element_get_reference_coords (const t8_eclass_t tree_class, const t8_element_t *element,
+                                const t8_3D_vec &ref_coords) const
   {
-    return std::visit (
-      [&] (auto &&scheme) { return scheme.element_get_reference_coords (element, ref_coords, num_coords, out_coords); },
-      eclass_schemes[tree_class]);
+    t8_3D_vec out_coords {};
+    element_get_reference_coords (tree_class, element, std::span (&ref_coords, 1), std::span (&out_coords, 1));
+    return out_coords;
   };
 
   /** Count how many leaf descendants of a given uniform level an element would produce.
