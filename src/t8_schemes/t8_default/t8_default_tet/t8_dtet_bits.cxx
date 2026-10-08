@@ -21,7 +21,7 @@
 */
 
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtri_to_dtet.h>
-#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c>
+#include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.cxx>
 
 int
 t8_dtet_is_familypv (const t8_dtri_t *f[])
