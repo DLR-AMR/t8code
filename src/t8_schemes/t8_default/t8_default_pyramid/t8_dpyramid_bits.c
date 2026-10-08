@@ -24,7 +24,7 @@
 #include "t8_dpyramid_connectivity.h"
 #include <sc_functions.h>
 #include <p4est_bits.h>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
 

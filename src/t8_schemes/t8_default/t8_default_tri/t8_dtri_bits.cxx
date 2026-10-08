@@ -28,7 +28,7 @@
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.h>
 #else
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #endif
 

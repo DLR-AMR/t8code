@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_dtet_bits.h
+/** \file t8_dtet_bits.hxx
  * Definitions of tet-specific functions.
  * TODO: Run make doxygen and grep for files.
  *       Also document all arguments of functions.

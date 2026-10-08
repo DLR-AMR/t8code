@@ -22,7 +22,7 @@
 
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_default_tet.hxx>
-#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.h>
+#include <t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.hxx>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.h>
 #include <t8_schemes/t8_scheme.hxx>
@@ -323,9 +323,9 @@ t8_default_scheme_tet::element_get_last_descendant_face (const t8_element_t *ele
 }
 
 /* Construct the boundary element at a specific face. */
-/* This function is defined here instead of in t8_dtet_bits.c since
+/* This function is defined here instead of in t8_dtet_bits.cxx since
  * the compile logic does not allow for t8_dtri_t and t8_dtet_t to exist
- * both in t8_dtet_bits.c. */
+ * both in t8_dtet_bits.cxx. */
 void
 t8_default_scheme_tet::element_get_boundary_face (const t8_element_t *elem, int face, t8_element_t *boundary,
                                                   [[maybe_unused]] const t8_scheme *scheme) const
