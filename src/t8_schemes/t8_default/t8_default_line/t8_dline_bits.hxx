@@ -27,6 +27,8 @@
 #pragma once
 
 #include <t8_element/t8_element.h>
+#include <t8_types/t8_vec.hxx>
+#include <span>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline.h>
 #include <t8_schemes/t8_default/t8_default_vertex/t8_dvertex.h>
 
@@ -242,33 +244,28 @@ t8_dline_last_descendant (const t8_dline_t *line, t8_dline_t *desc, int level);
 void
 t8_dline_vertex_integer_coords (const t8_dline_t *line, const int vertex, int coords[]);
 
-/** Compute the coordinates of a vertex of a line when the 
+/** Compute the coordinates of a vertex of a line when the
  * tree (level 0 line) is embedded in [0,1]^1.
  * \param [in] line         Input line.
  * \param [in] vertex       The number of the vertex.
- * \param [out] coordinates An array of 1 double that
- * 		     will be filled with the reference coordinates of the vertex.
+ * \return                  The reference coordinates of the vertex. The second and third component are zero.
  */
-void
-t8_dline_vertex_ref_coords (const t8_dline_t *line, const int vertex, double coordinates[1]);
+t8_3D_vec
+t8_dline_vertex_ref_coords (const t8_dline_t *line, const int vertex);
 
 /** Convert points in the reference space of a line element to points in the
  *  reference space of the tree (level 0) embedded in [0,1]^1.
  * \param [in]  line        Input line.
- * \param [in]  ref_coords  The reference coordinates in the line
- *                          (\a num_coords times \f$ [0,1]^1 \f$)
- * \param [in]  num_coords  Number of coordinates to evaluate
- * \param [in]  skip_coords Only used for batch computation of prisms.
- *                          In all other cases 0.
- *                          Skip coordinates in the \a ref_coords and
- *                          \a out_coords array.
- * \param [out] out_coords  An array of \a num_coords x 1 x double that
- * 		                      will be filled with the reference coordinates
- *                          of the points on the line.
+ * \param [in]  ref_coords  The reference coordinates of the points in the line.
+ * \param [out] out_coords  The reference coordinates of the points in the tree. Must have the same size as
+ *                          \a ref_coords.
+ * \param [in]  component   The component of the points that holds the coordinate along the line. Only this component
+ *                          is read from \a ref_coords and written to \a out_coords. 0 for lines, 2 for the line
+ *                          of a prism.
  */
 void
-t8_dline_compute_reference_coords (const t8_dline_t *line, const double *ref_coords, const size_t num_coords,
-                                   const size_t skip_coords, double *out_coords);
+t8_dline_compute_reference_coords (const t8_dline_t *line, std::span<const t8_3D_vec> ref_coords,
+                                   std::span<t8_3D_vec> out_coords, const int component = 0);
 
 /** Computes the linear position of a line in an uniform grid.
  * \param [in] line  Pointer to a line element whose id will be computed.

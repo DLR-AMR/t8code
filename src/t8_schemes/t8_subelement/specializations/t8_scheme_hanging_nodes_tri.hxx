@@ -155,14 +155,15 @@ struct t8_subelem_scheme_hanging_nodes_tri:
 
   /** Convert points in the reference space of a (triangular) subelement to points in the reference
    * space of the tree.
+   * See \ref t8_scheme::element_get_reference_coords for the conventions.
    * \param [in]  elem        The subelement.
    * \param [in]  ref_coords  The coordinates in \f$ [0,1]^2 \f$ of the points in the subelement's reference space.
-   * \param [in]  num_coords  The number of points to convert.
    * \param [out] out_coords  The coordinates of the points in the reference space of the tree.
+   *                          Must have the same size as \a ref_coords.
    */
   void
-  subelement_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                   double *out_coords) const noexcept
+  subelement_get_reference_coords (const t8_element_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                   std::span<t8_3D_vec> out_coords) const noexcept
   {
 
     /* Get the 3 integer vertex coords of the subelement triangle. */
@@ -175,13 +176,14 @@ struct t8_subelem_scheme_hanging_nodes_tri:
     double n1[2] = { vertex_coords[1][0] / root_len, vertex_coords[1][1] / root_len };
     double n2[2] = { vertex_coords[2][0] / root_len, vertex_coords[2][1] / root_len };
 
-    for (size_t coord = 0; coord < num_coords; ++coord) {
-      const double u = ref_coords[coord * 2 + 0];
-      const double v = ref_coords[coord * 2 + 1];
+    T8_ASSERT (ref_coords.size () == out_coords.size ());
+    for (size_t icoord = 0; icoord < ref_coords.size (); ++icoord) {
+      const double u = ref_coords[icoord][0];
+      const double v = ref_coords[icoord][1];
 
       /* Mapping: (0,0) -> n0, (1,0) -> n1, (1,1) -> n2. */
-      out_coords[coord * 2 + 0] = (1.0 - u) * n0[0] + (u - v) * n1[0] + v * n2[0];
-      out_coords[coord * 2 + 1] = (1.0 - u) * n0[1] + (u - v) * n1[1] + v * n2[1];
+      out_coords[icoord][0] = (1.0 - u) * n0[0] + (u - v) * n1[0] + v * n2[0];
+      out_coords[icoord][1] = (1.0 - u) * n0[1] + (u - v) * n1[1] + v * n2[1];
     }
   }
 

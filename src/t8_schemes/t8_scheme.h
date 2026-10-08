@@ -154,7 +154,7 @@ void
 t8_element_get_parent (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
                        t8_element_t *parent);
 
-/** Compute the number of siblings of an element. That is the number of 
+/** Compute the number of siblings of an element. That is the number of
  * Children of its parent.
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
@@ -646,12 +646,10 @@ t8_element_construct_successor (const t8_scheme_c *scheme, const t8_eclass_t tre
    *  that is embedded into [0,1]^d (d = dimension).
    * \param [in] scheme        The scheme of the forest.
    * \param [in] tree_class    The eclass of tree the elements are part of.
-   * \param [in] element      The element to be considered.
-   * \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   * \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
-   * \warning           coords should be zero-initialized, as only the first d coords will be set, but when used elsewhere
-   *                      all coords might be used. 
+   * \param [in] element       The element to be considered.
+   * \param [in] vertex        The id of the vertex whose coordinates shall be computed.
+   * \param [out] coords       An array of 3 doubles. On output, the first d entries hold the reference coordinates
+   *                           of \a vertex. The remaining entries are not part of the result (NaN in debug mode).
    */
 void
 t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
@@ -659,14 +657,17 @@ t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_ecla
 
 /** Convert points in the reference space of an element to points in the
  *  reference space of the tree.
+ *  Every point is stored as 3 doubles, independent of the dimension d of the tree. Only the first d entries of a
+ *  point carry information: Further entries of \a ref_coords are ignored.
  * \param [in] scheme       The scheme of the forest.
  * \param [in] tree_class   The eclass of the current tree.
  * \param [in] element      The element.
- * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point
- *                          in the reference space of the element.
- * \param [in] num_coords   Number of \f$ dim\f$-sized coordinates to evaluate.
- * \param [out] out_coords  The coordinates of the points in the
- *                          reference space of the tree.
+ * \param [in] ref_coords   Array of 3 * \a num_coords doubles, the coordinates \f$ [0,1]^\mathrm{dim} \f$ of the
+ *                          points in the reference space of the element.
+ * \param [in] num_coords   Number of points to convert.
+ * \param [out] out_coords  Array of 3 * \a num_coords doubles. On output, the first d entries of each point hold
+ *                          the coordinates of the point in the reference space of the tree. The remaining entries
+ *                          are not part of the result (NaN in debug mode).
  */
 void
 t8_element_get_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
@@ -704,31 +705,31 @@ t8_element_count_leaves_from_root (const t8_scheme_c *scheme, const t8_eclass_t 
 
 #if T8_ENABLE_DEBUG
 /** Query whether a given element can be considered as 'valid' and it is
-   *  safe to perform any of the above algorithms on it.
-   *  For example this could mean that all coordinates are in valid ranges
-   *  and other membervariables do have meaningful values.
-   * \param [in] scheme        The scheme of the forest.
-   * \param [in] tree_class    The eclass of tree the elements are part of.
-   * \param [in]      element  The element to be checked.
-   * \return          True if \a element is safe to use. False otherwise.
-   * \note            An element that is constructed with \ref t8_element_new
-   *                  must pass this test.
-   * \note            An element for which \ref t8_scheme::element_init was called must pass
-   *                  this test.
-   * \note            This function is used for debugging to catch certain errors.
-   *                  These can for example occur when an element points to a region
-   *                  of memory which should not be interpreted as an element.
-   * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (element))
-   *                  in the implementation of each of the functions in this file.
-   */
+ *  safe to perform any of the above algorithms on it.
+ *  For example this could mean that all coordinates are in valid ranges
+ *  and other membervariables do have meaningful values.
+ * \param [in] scheme        The scheme of the forest.
+ * \param [in] tree_class    The eclass of tree the elements are part of.
+ * \param [in]      element  The element to be checked.
+ * \return          True if \a element is safe to use. False otherwise.
+ * \note            An element that is constructed with \ref t8_element_new
+ *                  must pass this test.
+ * \note            An element for which \ref t8_scheme::element_init was called must pass
+ *                  this test.
+ * \note            This function is used for debugging to catch certain errors.
+ *                  These can for example occur when an element points to a region
+ *                  of memory which should not be interpreted as an element.
+ * \note            We recommend to use the assertion T8_ASSERT (t8_element_is_valid (element))
+ *                  in the implementation of each of the functions in this file.
+ */
 int
 t8_element_is_valid (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element);
 
 /**
  * Print a given element. For a example for a triangle print the coordinates
  * and the level of the triangle. This function is only available in the
- * debugging configuration. 
- * 
+ * debugging configuration.
+ *
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of tree the elements are part of.
  * \param [in] element   The element to print
@@ -739,11 +740,11 @@ t8_element_debug_print (const t8_scheme_c *scheme, const t8_eclass_t tree_class,
 #endif
 /**
  * \brief Fill a string with readable information about the element
- * 
+ *
  * \param [in] scheme        The scheme of the forest.
  * \param [in] tree_class    The eclass of the current tree.
  * \param[in] element The element to translate into human-readable information.
- * \param[in, out] debug_string The string to fill. 
+ * \param[in, out] debug_string The string to fill.
  * \param[in] string_size The length of \a debug_string.
  */
 void

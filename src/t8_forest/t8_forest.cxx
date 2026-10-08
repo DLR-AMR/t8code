@@ -29,7 +29,7 @@
 #include <t8_types/t8_vec.h>
 #include <t8_types/t8_vec.hxx>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_geometrical.h>
+#include <t8_forest/t8_forest_geometrical.hxx>
 #include <t8_forest/t8_forest_types.h>
 #include <t8_forest/t8_forest_partition.h>
 #include <t8_forest/t8_forest_private.h>
@@ -44,6 +44,7 @@
 #include <t8_forest/t8_forest_adapt.h>
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_geometry/t8_geometry_base.hxx>
+#include <t8_geometry/t8_geometry.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
 #if T8_ENABLE_DEBUG
@@ -396,6 +397,78 @@ t8_forest_is_equal (t8_forest_t forest_a, t8_forest_t forest_b)
   return 1;
 }
 
+T8_EXTERN_C_END ();
+
+void
+t8_forest_element_from_ref_coords_ext (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                       std::span<const t8_3D_vec> ref_coords, std::span<t8_3D_vec> coords_out,
+                                       const double *stretch_factors)
+{
+  T8_ASSERT (ref_coords.size () == coords_out.size ());
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
+
+  std::vector<t8_3D_vec> tree_ref_coords (ref_coords.size ());
+  if (stretch_factors != nullptr) {
+#if T8_ENABLE_DEBUG
+    const t8_geometry_type_t geom_type = t8_geometry_get_type (cmesh, gtreeid);
+    T8_ASSERT (geom_type == T8_GEOMETRY_TYPE_LINEAR || geom_type == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED);
+#endif /* T8_ENABLE_DEBUG */
+    const int tree_dim = t8_eclass_to_dimension[tree_class];
+    std::vector<t8_3D_vec> stretched_ref_coords (ref_coords.begin (), ref_coords.end ());
+    for (t8_3D_vec &stretched_ref_coord : stretched_ref_coords) {
+      for (int dim = 0; dim < tree_dim; ++dim) {
+        stretched_ref_coord[dim] = 0.5 + ((stretched_ref_coord[dim] - 0.5) * stretch_factors[dim]);
+      }
+    }
+    scheme->element_get_reference_coords (tree_class, element, stretched_ref_coords, tree_ref_coords);
+  }
+  else {
+    scheme->element_get_reference_coords (tree_class, element, ref_coords, tree_ref_coords);
+  }
+
+  t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, coords_out);
+}
+
+void
+t8_forest_element_from_ref_coords (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                   std::span<const t8_3D_vec> ref_coords, std::span<t8_3D_vec> coords_out)
+{
+  t8_forest_element_from_ref_coords_ext (forest, ltreeid, element, ref_coords, coords_out, nullptr);
+}
+
+t8_3D_vec
+t8_forest_element_from_ref_coords (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                                   const t8_3D_vec &ref_coords)
+{
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
+  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
+
+  const t8_3D_vec tree_ref_coords = scheme->element_get_reference_coords (tree_class, element, ref_coords);
+  return t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords);
+}
+
+t8_3D_vec
+t8_forest_element_coordinate (const t8_forest_t forest, const t8_locidx_t ltreeid, const t8_element_t *element,
+                              const int corner_number)
+{
+  T8_ASSERT (forest != NULL);
+  T8_ASSERT (forest->scheme != NULL);
+  /* Get the tree's class and scheme */
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
+  const t8_3D_vec vertex_coords = scheme->element_get_vertex_reference_coords (tree_class, element, corner_number);
+  /* Evaluate the geometry */
+  return t8_geometry_evaluate (t8_forest_get_cmesh (forest), t8_forest_global_tree_id (forest, ltreeid), vertex_coords);
+}
+
+T8_EXTERN_C_BEGIN ();
+
 /* given an element in a coarse tree, the corner coordinates of the coarse tree
  * and a corner number of the element compute the coordinates of that corner
  * within the coarse tree.
@@ -405,65 +478,17 @@ void
 t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id, const t8_element_t *element, int corner_number,
                               double *coordinates)
 {
-  double vertex_coords[3] = { 0.0 };
-
-  T8_ASSERT (forest != NULL);
-  T8_ASSERT (forest->scheme != NULL);
-  /* Get the tree's class and scheme */
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltree_id);
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
-  scheme->element_get_vertex_reference_coords (tree_class, element, corner_number, vertex_coords);
-  /* Compute the global tree id */
-  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltree_id);
-  /* Get the cmesh */
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  /* Evaluate the geometry */
-  t8_geometry_evaluate (cmesh, gtreeid, vertex_coords, 1, coordinates);
-}
-
-void
-t8_forest_element_from_ref_coords_ext (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
-                                       const double *ref_coords, const size_t num_coords, double *coords_out,
-                                       const double *stretch_factors)
-{
-  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-  const int tree_dim = t8_eclass_to_dimension[tree_class];
-  const t8_scheme *scheme = t8_forest_get_scheme (forest);
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const t8_gloidx_t gtreeid = t8_forest_global_tree_id (forest, ltreeid);
-
-  double *tree_ref_coords = T8_ALLOC (double, (tree_dim == 0 ? 1 : tree_dim) * num_coords);
-
-  if (stretch_factors != nullptr) {
-#if T8_ENABLE_DEBUG
-    const t8_geometry_type_t geom_type = t8_geometry_get_type (cmesh, gtreeid);
-    T8_ASSERT (geom_type == T8_GEOMETRY_TYPE_LINEAR || geom_type == T8_GEOMETRY_TYPE_LINEAR_AXIS_ALIGNED);
-#endif /* T8_ENABLE_DEBUG */
-    const int tree_dim = t8_eclass_to_dimension[tree_class];
-    double stretched_ref_coords[T8_ECLASS_MAX_CORNERS * T8_ECLASS_MAX_DIM];
-    for (size_t i_coord = 0; i_coord < num_coords; ++i_coord) {
-      for (int dim = 0; dim < tree_dim; ++dim) {
-        stretched_ref_coords[i_coord * tree_dim + dim]
-          = 0.5 + ((ref_coords[i_coord * tree_dim + dim] - 0.5) * stretch_factors[dim]);
-      }
-    }
-    scheme->element_get_reference_coords (tree_class, element, stretched_ref_coords, num_coords, tree_ref_coords);
-  }
-  else {
-    scheme->element_get_reference_coords (tree_class, element, ref_coords, num_coords, tree_ref_coords);
-  }
-
-  t8_geometry_evaluate (cmesh, gtreeid, tree_ref_coords, num_coords, coords_out);
-
-  T8_FREE (tree_ref_coords);
+  std::ranges::copy (t8_forest_element_coordinate (forest, ltree_id, element, corner_number), coordinates);
 }
 
 void
 t8_forest_element_from_ref_coords (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element,
                                    const double *ref_coords, const size_t num_coords, double *coords_out)
 {
-  t8_forest_element_from_ref_coords_ext (forest, ltreeid, element, ref_coords, num_coords, coords_out, nullptr);
+  const std::vector<t8_3D_vec> ref_vecs = t8_3D_vecs_from_doubles (ref_coords, num_coords);
+  std::vector<t8_3D_vec> out_vecs (num_coords);
+  t8_forest_element_from_ref_coords (forest, ltreeid, element, ref_vecs, out_vecs);
+  t8_3D_vecs_to_doubles (out_vecs, coords_out);
 }
 
 /* Compute the diameter of an element. */
@@ -514,8 +539,9 @@ t8_forest_element_centroid (t8_forest_t forest, t8_locidx_t ltreeid, const t8_el
   /* Get the element class and calculate the centroid using its element
    * reference coordinates */
   const t8_element_shape_t element_shape = scheme->element_get_shape (tree_class, element);
-  t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape].data (), 1,
-                                     coordinates);
+  const t8_3D_vec centroid
+    = t8_forest_element_from_ref_coords (forest, ltreeid, element, t8_element_centroid_ref_coords[element_shape]);
+  std::ranges::copy (centroid, coordinates);
 }
 
 /* Compute the center of mass of an element. We can use the element reference

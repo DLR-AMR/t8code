@@ -365,6 +365,23 @@ t8_four_points_coplanar (const TVecV0 p_0, const TVecV1 p_1, const TVecV2 p_2, c
   return norm < tolerance;
 }
 
+/** Copy points that are stored as consecutive triples of doubles into \ref t8_3D_vec.
+ * Use this to convert point arrays of the C interface.
+ * \param [in] coords     Array of 3 * \a num_vecs doubles. The coordinates of point i are stored at
+ *                        positions 3i, 3i+1 and 3i+2.
+ * \param [in] num_vecs   The number of points.
+ * \return                The points.
+ */
+inline std::vector<t8_3D_vec>
+t8_3D_vecs_from_doubles (const double *coords, const size_t num_vecs)
+{
+  std::vector<t8_3D_vec> vecs (num_vecs);
+  for (size_t ivec = 0; ivec < num_vecs; ++ivec) {
+    t8_copy (std::span<const double, 3> (coords + 3 * ivec, 3), vecs[ivec]);
+  }
+  return vecs;
+}
+
 /** Copy points into an array of consecutive triples of doubles.
  * Use this to convert point arrays of the C interface.
  * \param [in]  vecs    The points.

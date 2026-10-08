@@ -148,12 +148,10 @@ t8_step6_create_element_data (t8_forest_t forest)
       edat->volume = t8_forest_element_volume (forest, itree, element);
       t8_forest_element_centroid (forest, itree, element, edat->midpoint);
 
-      /* Compute vertex coordinates. */
-      double verts[4][3] {};
-      scheme->element_get_vertex_reference_coords (tree_class, element, 0, verts[0]);
-      scheme->element_get_vertex_reference_coords (tree_class, element, 1, verts[1]);
-      scheme->element_get_vertex_reference_coords (tree_class, element, 2, verts[2]);
-      /* Not needed: scheme->element_get_vertex_reference_coords (tree_class, element, 3, verts[3]); */
+      /* Compute vertex coordinates. The coordinates of vertex 3 are not needed. */
+      const std::array<t8_3D_vec, 3> verts = { scheme->element_get_vertex_reference_coords (tree_class, element, 0),
+                                               scheme->element_get_vertex_reference_coords (tree_class, element, 1),
+                                               scheme->element_get_vertex_reference_coords (tree_class, element, 2) };
 
       edat->dx = verts[1][0] - verts[0][0];
       edat->dy = verts[2][1] - verts[0][1];

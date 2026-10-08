@@ -37,6 +37,7 @@
 #include "t8_subelement_traits.hxx"
 #include <utility>
 #include <algorithm>
+#include <span>
 
 /** Scheme for the common functionality of all subelements. 
  * Subelements are discarded before the next adaptation cycle and do not have children.
@@ -920,36 +921,37 @@ struct t8_subelement_scheme_common:
   /** Compute the coordinates of a given element vertex inside a reference tree 
    *  that is embedded into [0,1]^d (d = dimension).
    *   \note This is not implemented for subelements.
-   *   \param [in] elem      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
+   * \param [in] elem     The element to be considered.
+   * \param [in] vertex   The id of the vertex whose coordinates shall be computed.
+   * \return              The reference coordinates of \a vertex in the tree. Components with an index of at least d
+   *                      are zero.
    */
-  void
-  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const noexcept
+  t8_3D_vec
+  element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex) const noexcept
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_vertex_reference_coords is not implemented for subelements yet.\n");
-    derived ().underlying_scheme.element_get_vertex_reference_coords (element_to_standalone (elem), vertex, coords);
+    return derived ().underlying_scheme.element_get_vertex_reference_coords (element_to_standalone (elem), vertex);
   }
 
-  /** Convert a point in the reference space of an element to a point in the reference space of the tree.
+  /** Convert points in the reference space of an element to points in the reference space of the tree.
+   * See \ref t8_scheme::element_get_reference_coords for the conventions.
    * \param [in] elem         The element.
-   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point in the reference space
-   *                          of the element. 
-   * \param [in] num_coords   The number of coordinates to evaluate.
-   * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
+   * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the points in the reference space of the
+   *                          element.
+   * \param [out] out_coords  The coordinates of the points in the reference space of the tree.
+   *                          Must have the same size as \a ref_coords.
    */
   void
-  element_get_reference_coords (const t8_element_t *elem, const double *ref_coords, const size_t num_coords,
-                                double *out_coords) const noexcept
+  element_get_reference_coords (const t8_element_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                std::span<t8_3D_vec> out_coords) const noexcept
   {
+    T8_ASSERT (ref_coords.size () == out_coords.size ());
     if (element_is_subelement (elem)) {
-      derived ().subelement_get_reference_coords (elem, ref_coords, num_coords, out_coords);
+      derived ().subelement_get_reference_coords (elem, ref_coords, out_coords);
     }
     else {
-      derived ().underlying_scheme.element_get_reference_coords (element_to_standalone (elem), ref_coords, num_coords,
-                                                                 out_coords);
+      derived ().underlying_scheme.element_get_reference_coords (element_to_standalone (elem), ref_coords, out_coords);
     }
   }
 

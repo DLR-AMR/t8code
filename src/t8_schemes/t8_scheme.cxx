@@ -21,13 +21,16 @@
 */
 
 /** \file t8_scheme.cxx
- * Implements functions declared in \ref t8_scheme.h.
+ * Implements C interface functions declared in \ref t8_scheme.h.
  */
 
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme.h>
 #include <t8_forest/t8_forest_types.h>
+#include <t8_types/t8_vec.hxx>
+#include <algorithm>
+#include <vector>
 
 void
 t8_scheme_ref (t8_scheme_c *scheme)
@@ -338,14 +341,18 @@ void
 t8_element_get_vertex_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *t,
                                         const int vertex, double coords[])
 {
-  return scheme->element_get_vertex_reference_coords (tree_class, t, vertex, coords);
+  const t8_3D_vec vertex_coords = scheme->element_get_vertex_reference_coords (tree_class, t, vertex);
+  std::ranges::copy (vertex_coords, coords);
 }
 
 void
 t8_element_get_reference_coords (const t8_scheme_c *scheme, const t8_eclass_t tree_class, const t8_element_t *element,
                                  const double *ref_coords, const size_t num_coords, double out_coords[])
 {
-  return scheme->element_get_reference_coords (tree_class, element, ref_coords, num_coords, out_coords);
+  const std::vector<t8_3D_vec> ref_vecs = t8_3D_vecs_from_doubles (ref_coords, num_coords);
+  std::vector<t8_3D_vec> out_vecs (num_coords);
+  scheme->element_get_reference_coords (tree_class, element, ref_vecs, out_vecs);
+  t8_3D_vecs_to_doubles (out_vecs, out_coords);
 }
 
 t8_gloidx_t

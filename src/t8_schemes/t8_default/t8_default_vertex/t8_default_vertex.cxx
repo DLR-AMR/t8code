@@ -285,27 +285,26 @@ t8_default_scheme_vertex::element_get_vertex_integer_coords ([[maybe_unused]] co
   coords[0] = 0;
 }
 
-void
+t8_3D_vec
 t8_default_scheme_vertex::element_get_vertex_reference_coords ([[maybe_unused]] const t8_element_t *elem,
-                                                               [[maybe_unused]] const int vertex, double coords[]) const
+                                                               [[maybe_unused]] const int vertex) const
 {
   T8_ASSERT (element_is_valid (elem));
   T8_ASSERT (vertex == 0);
 
-  coords[0] = 0;
+  /* A vertex has dimension 0, hence no component carries information. */
+  return { 0, 0, 0 };
 }
 
 void
 t8_default_scheme_vertex::element_get_reference_coords ([[maybe_unused]] const t8_element_t *elem,
-                                                        [[maybe_unused]] const double *ref_coords,
-                                                        const size_t num_coords, double *out_coords) const
+                                                        [[maybe_unused]] std::span<const t8_3D_vec> ref_coords,
+                                                        [[maybe_unused]] std::span<t8_3D_vec> out_coords) const
 {
   T8_ASSERT (element_is_valid (elem));
-  T8_ASSERT (fabs (ref_coords[0]) <= T8_PRECISION_EPS);
+  T8_ASSERT (ref_coords.size () == out_coords.size ());
 
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    out_coords[coord] = 0;
-  }
+  /* A vertex has dimension 0, hence there are no components to compute. */
 }
 
 #if T8_ENABLE_DEBUG

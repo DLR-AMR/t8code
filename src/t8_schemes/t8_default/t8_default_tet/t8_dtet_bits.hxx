@@ -30,6 +30,8 @@
 #pragma once
 
 #include <t8_element/t8_element.h>
+#include <t8_types/t8_vec.hxx>
+#include <span>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
 
 /** Compute the coordinates of a vertex of a tetrahedron.
@@ -40,28 +42,25 @@
 void
 t8_dtet_compute_integer_coords (const t8_dtet_t *elem, int vertex, t8_dtet_coord_t coordinates[3]);
 
-/** Compute the coordinates of a vertex of a tetrahedron when the 
+/** Compute the coordinates of a vertex of a tetrahedron when the
  * tree (level 0 tetrahedron) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem         Input tetrahedron.
  * \param [in] vertex       The number of the vertex.
- * \param [out] coordinates An array of 3 double that will be filled with the reference coordinates of the vertex.
+ * \return                  The reference coordinates of the vertex.
  */
-void
-t8_dtet_compute_vertex_ref_coords (const t8_dtet_t *elem, int vertex, double coordinates[3]);
+t8_3D_vec
+t8_dtet_compute_vertex_ref_coords (const t8_dtet_t *elem, const int vertex);
 
 /** Convert points in the reference space of a tet element to points in the
  *  reference space of the tree (level 0) embedded in \f$ [0,1]^3 \f$.
  * \param [in]  tet        Input tet.
- * \param [in]  ref_coords The reference coordinates in the tet
- *                         (\a num_coords times \f$ [0,1]^3 \f$)
- * \param [in]  num_coords Number of coordinates to evaluate
- * \param [out] out_coords An array of \a num_coords x 3 x double that
- * 		                     will be filled with the reference coordinates
- *                         of the points on the tet.
+ * \param [in]  ref_coords The reference coordinates of the points in the tet.
+ * \param [out] out_coords The reference coordinates of the points in the tree. Must have the same size as
+ *                         \a ref_coords.
  */
 void
-t8_dtet_compute_reference_coords (const t8_dtet_t *tet, const double *ref_coords, const size_t num_coords,
-                                  double *out_coords);
+t8_dtet_compute_reference_coords (const t8_dtet_t *tet, std::span<const t8_3D_vec> ref_coords,
+                                  std::span<t8_3D_vec> out_coords);
 
 /** Compute the coordinates of the four vertices of a tetrahedron.
  * \param [in] tet          Input tetrahedron.

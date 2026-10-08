@@ -27,6 +27,8 @@
 #pragma once
 
 #include <t8_element/t8_element.h>
+#include <t8_types/t8_vec.hxx>
+#include <span>
 #include <t8_schemes/t8_default/t8_default_prism/t8_dprism.h>
 
 /** Look-up table for the corners of each face. */
@@ -281,29 +283,25 @@ t8_dprism_corner_descendant (const t8_dprism_t *p, t8_dprism_t *s, int corner, i
 void
 t8_dprism_vertex_integer_coords (const t8_dprism_t *elem, int vertex, int coords[3]);
 
-/** Compute the reference coordinates of a vertex of a prism when the 
+/** Compute the reference coordinates of a vertex of a prism when the
  * tree (level 0) is embedded in \f$ [0,1]^3 \f$.
  * \param [in] elem         Input prism.
  * \param [in] vertex       The number of the vertex.
- * \param [out] coords      An array of 3 double that
- * 		     will be filled with the reference coordinates of the vertex.
+ * \return                  The reference coordinates of the vertex.
  */
-void
-t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, int vertex, double coords[3]);
+t8_3D_vec
+t8_dprism_vertex_ref_coords (const t8_dprism_t *elem, const int vertex);
 
 /** Convert points in the reference space of a prism element to points in the
  *  reference space of the tree (level 0) embedded in \f$ [0,1]^3 \f$.
  * \param [in]  elem       Pointer to the prism element.
- * \param [in]  ref_coords The reference coordinates in the prism
- *                         (\a num_coords times \f$ [0,1]^3 \f$)
- * \param [in]  num_coords Number of coordinates to evaluate
- * \param [out] out_coords An array of \a num_coords x 3 x double that
- * 		                     will be filled with the reference coordinates
- *                         of the points on the prism.
+ * \param [in]  ref_coords The reference coordinates of the points in the prism.
+ * \param [out] out_coords The reference coordinates of the points in the tree. Must have the same size as
+ *                         \a ref_coords.
  */
 void
-t8_dprism_compute_reference_coords (const t8_dprism_t *elem, const double *ref_coords, const size_t num_coords,
-                                    double *out_coords);
+t8_dprism_compute_reference_coords (const t8_dprism_t *elem, std::span<const t8_3D_vec> ref_coords,
+                                    std::span<t8_3D_vec> out_coords);
 
 /** Computes the linear position of a prism in an uniform grid.
  * \param [in] p      Prism whose id will be computed.

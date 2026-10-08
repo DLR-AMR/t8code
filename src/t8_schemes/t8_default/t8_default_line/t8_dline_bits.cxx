@@ -337,8 +337,8 @@ t8_dline_vertex_integer_coords (const t8_dline_t *line, const int vertex, int co
   }
 }
 
-void
-t8_dline_vertex_ref_coords (const t8_dline_t *line, const int vertex, double coordinates[1])
+t8_3D_vec
+t8_dline_vertex_ref_coords (const t8_dline_t *line, const int vertex)
 {
   /* we need to set and initial value to prevent compiler warning. */
   int coords_int = -1;
@@ -346,20 +346,21 @@ t8_dline_vertex_ref_coords (const t8_dline_t *line, const int vertex, double coo
 
   /* Compute integer coordinates and divide by root length. */
   t8_dline_vertex_integer_coords (line, vertex, &coords_int);
-  coordinates[0] = coords_int / (double) T8_DLINE_ROOT_LEN;
+  return { coords_int / (double) T8_DLINE_ROOT_LEN, 0, 0 };
 }
 
 void
-t8_dline_compute_reference_coords (const t8_dline_t *line, const double *ref_coords, const size_t num_coords,
-                                   const size_t skip_coords, double *out_coords)
+t8_dline_compute_reference_coords (const t8_dline_t *line, std::span<const t8_3D_vec> ref_coords,
+                                   std::span<t8_3D_vec> out_coords, const int component)
 {
   T8_ASSERT (t8_dline_is_valid (line));
-  for (size_t coord = 0; coord < num_coords; ++coord) {
-    const size_t offset = coord * (1 + skip_coords);
-    const size_t offset_3d = coord * 3;
-    out_coords[offset] = line->x;
-    out_coords[offset] += T8_DLINE_LEN (line->level) * ref_coords[offset_3d];
-    out_coords[offset] /= (double) T8_DLINE_ROOT_LEN;
+  T8_ASSERT (ref_coords.size () == out_coords.size ());
+  T8_ASSERT (0 <= component && component < T8_ECLASS_MAX_DIM);
+  for (size_t icoord = 0; icoord < ref_coords.size (); ++icoord) {
+    double &out_coord = out_coords[icoord][component];
+    out_coord = line->x;
+    out_coord += T8_DLINE_LEN (line->level) * ref_coords[icoord][component];
+    out_coord /= (double) T8_DLINE_ROOT_LEN;
   }
 }
 
