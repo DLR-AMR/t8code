@@ -229,6 +229,9 @@ t8_geom_compute_linear_axis_aligned_geometry (const t8_eclass_t tree_class, cons
     const size_t offset_domain_dim = i_coord * T8_ECLASS_MAX_DIM;
     for (int i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; ++i_dim) {
       out_coords[offset_domain_dim + i_dim] = tree_vertices[i_dim];
+    }
+    /* Only the first dimension many components of the reference coordinates carry information. */
+    for (int i_dim = 0; i_dim < dimension; ++i_dim) {
       out_coords[offset_domain_dim + i_dim] += ref_coords[offset_tree_dim + i_dim] * vector[i_dim];
     }
   }
