@@ -33,6 +33,7 @@
 #include <sc_functions.h>
 #include <t8_schemes/t8_scheme.hxx>
 #include <t8_schemes/t8_scheme_helpers.hxx>
+#include <t8_eclass/t8_eclass.h>
 #include "t8_subelement_traits.hxx"
 #include <utility>
 #include <algorithm>
@@ -135,7 +136,8 @@ struct t8_subelement_scheme_common:
     return true;  // Potentially there are subelements.
   }
 
-  /** Return the maximum allowed level for any element of a given class.
+  /** Return the maximum allowed level for any element of a given class. 
+   * This maxlevel is for the underlying scheme level, the subelement level is independent of this.
    * \return                      The maximum allowed level for elements of class \b ts.
    */
   constexpr int
@@ -157,7 +159,7 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_num_corners (element_to_standalone (elem));
     }
-    return TSubelementSchemeSpecialization::subelement_get_num_corners (as_subelement (elem));
+    return t8_eclass_num_vertices[element_get_shape (elem)];
   }
 
   /** Compute the number of faces of a given element.
@@ -171,7 +173,7 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_num_faces (element_to_standalone (elem));
     }
-    return TSubelementSchemeSpecialization::subelement_get_num_faces (as_subelement (elem));
+    return t8_eclass_num_faces[element_get_shape (elem)];
   }
 
   /** Compute the maximum number of faces of a given element and all of its descendants.
@@ -188,7 +190,7 @@ struct t8_subelement_scheme_common:
 
   /** Return the shape of an allocated element.
    * \param [in] elem     The element to be considered
-   * \return              The shape of the element as an eclass
+   * \return              The shape of the element as an eclass.
    */
   t8_element_shape_t
   element_get_shape (const t8_element_t *elem) const noexcept
@@ -200,17 +202,20 @@ struct t8_subelement_scheme_common:
     return TSubelementSchemeSpecialization::subelement_get_shape (as_subelement (elem));
   }
 
-  /** Not implemented for this scheme.
+  /** Return the corner number of an element's face corner.
    * \param [in] element  The element.
    * \param [in] face     A face index for \a element.
    * \param [in] corner   A corner index for the face 0 <= \a corner < num_face_corners.
    * \return              The corner number of the \a corner-th vertex of \a face.
    */
-  static int
-  element_get_face_corner ([[maybe_unused]] const t8_element_t *element, [[maybe_unused]] const int face,
-                           [[maybe_unused]] const int corner) noexcept
+  int
+  element_get_face_corner (const t8_element_t *element, const int face, const int corner) const noexcept
   {
-    SC_ABORT ("element_get_face_corner is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (element));
+    if (element_is_subelement (element)) {
+      return t8_face_vertex_to_tree_vertex[element_get_shape (element)][face][corner];
+    }
+    return derived ().underlying_scheme.element_get_face_corner (element_to_standalone (element), face, corner);
   }
 
   /** Not implemented for this scheme.
@@ -239,26 +244,24 @@ struct t8_subelement_scheme_common:
     if (!element_is_subelement (elem)) {
       return derived ().underlying_scheme.element_get_face_shape (element_to_standalone (elem), face);
     }
-    return TSubelementSchemeSpecialization::subelement_get_face_shape (as_subelement (elem), face);
+    return (t8_element_shape_t) t8_eclass_face_types[element_get_shape (elem)][face];
   }
 
-  /** Return the level of a particular element. For subelements, the level is the level of the parent + 1.
-    * \param [in] elem    The element whose level should be returned.
-    * \return             The level of \b elem.
-    */
+  /** Return the level of a particular element. 
+   * \note By convention, subelements have the same level as their parent. 
+   *       Subelements have their own "subelement level" in the refinement tree. 
+   *       This level is only for the underlying refinement scheme.
+   * \param [in] elem    The element whose level should be returned.
+   * \return             The level of \b elem.
+   */
   int
   element_get_level (const t8_element_t *elem) const noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    // Get level of the parent.
-    const int level = derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
-    if (!element_is_subelement (elem)) {
-      return level;
-    }
-    return level + 1;
+    return derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
   }
 
-  // ################################################____GENERAL HELPERS____#############################################
+  // ################################################____GENERAL HELPERS____############################################
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
    *  element. No memory is allocated by this function.
