@@ -190,7 +190,9 @@ TEST (element_is_boundary, quad_forest_with_holes)
    */
   GTEST_SKIP ();
   /* Create a 10 x 5 2D brick cmesh, periodic in x direction. */
-  t8_cmesh_t cmesh = t8_cmesh_new_brick_2d (10, 5, 1, 0, sc_MPI_COMM_WORLD);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_brick_2d (cmesh, 10, 5, 1, 0, sc_MPI_COMM_WORLD);
 
   const t8_scheme *scheme = t8_scheme_new_default ();
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, T8_IS_BOUNDARY_MAX_LVL, 0, sc_MPI_COMM_WORLD);
