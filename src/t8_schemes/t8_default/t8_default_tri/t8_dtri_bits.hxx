@@ -24,13 +24,10 @@
  * Definitions of triangle-specific functions.
  */
 
-#ifndef T8_DTRI_BITS_H
-#define T8_DTRI_BITS_H
+#pragma once
 
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_tri/t8_dtri.h>
-
-T8_EXTERN_C_BEGIN ();
 
 /** Copy the values of one triangle to another.
  * \param [in] element Triangle whose values will be copied.
@@ -441,7 +438,3 @@ t8_dtri_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack
 void
 t8_dtri_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtri_t **elements,
                         const unsigned int count, sc_MPI_Comm comm);
-
-T8_EXTERN_C_END ();
-
-#endif /* T8_DTRI_BITS_H */

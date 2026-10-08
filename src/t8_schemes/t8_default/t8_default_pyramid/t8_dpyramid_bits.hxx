@@ -24,13 +24,10 @@
  * Definitions of pyramid-specific functions.
  */
 
-#ifndef T8_DPYRAMID_BITS_H
-#define T8_DPYRAMID_BITS_H
+#pragma once
 
 #include <t8_element/t8_element.h>
 #include "t8_dpyramid.h"
-
-T8_EXTERN_C_BEGIN ();
 
 /** Initialize a pyramid as the pyramid with a given global id in a uniform
  *  refinement of a given level. *
@@ -385,7 +382,3 @@ t8_dpyramid_nearest_common_ancestor (const t8_dpyramid_t *pyra1, const t8_dpyram
  */
 int
 t8_dpyramid_is_valid (const t8_dpyramid_t *p);
-
-T8_EXTERN_C_END ();
-
-#endif /* T8_DPYRAMID_BITS_H */

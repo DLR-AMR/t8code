@@ -27,13 +27,10 @@
  * TODO: Group the dtet_is functions together.
  */
 
-#ifndef T8_DTET_BITS_H
-#define T8_DTET_BITS_H
+#pragma once
 
 #include <t8_element/t8_element.h>
 #include <t8_schemes/t8_default/t8_default_tet/t8_dtet.h>
-
-T8_EXTERN_C_BEGIN ();
 
 /** Compute the coordinates of a vertex of a tetrahedron.
  * \param [in] elem    Input tetrahedron.
@@ -414,7 +411,3 @@ t8_dtet_element_pack_size (const unsigned int count, sc_MPI_Comm comm, int *pack
 void
 t8_dtet_element_unpack (void *recvbuf, const int buffer_size, int *position, t8_dtet_t **elements,
                         const unsigned int count, sc_MPI_Comm comm);
-
-T8_EXTERN_C_END ();
-
-#endif /* T8_DTET_BITS_H */
