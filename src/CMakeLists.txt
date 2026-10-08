@@ -207,7 +207,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.c
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
     t8_schemes/t8_default/t8_default_tri/t8_default_tri.cxx
-    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
+    t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.cxx
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_types/t8_vec.cxx
