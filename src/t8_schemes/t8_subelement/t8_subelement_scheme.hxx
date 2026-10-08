@@ -845,9 +845,8 @@ struct t8_subelement_scheme_common:
   }
 
   /** Compute the linear id of a given element in a hypothetical uniform refinement of a given level.
-   * \note that the id of a subelement equals the id of its parent.
-   * Therefore, the binary search (for example used in the leaf_face_neighbor function) will find a random subelement 
-   * of the transition cell which might not be the desired neighbor of a given element. 
+   * \note The linear id of a subelement equals the linear id of its parent!
+   *       Therefore, all subelements of the same parent have the same linear id.
    * \param [in] elem     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
@@ -912,6 +911,9 @@ struct t8_subelement_scheme_common:
     if (compare_standalone != 0) {
       return compare_standalone;
     }
+    SC_CHECK_ABORT (
+      as_subelement (elem1)->subelement_type == as_subelement (elem2)->subelement_type,
+      "ERROR: Cannot compare two subelements with the same parent element but different subelement types.");
     // Same underlying element: subelements are ordered by id.
     return as_subelement (elem1)->subelement_id - as_subelement (elem2)->subelement_id;
   }
