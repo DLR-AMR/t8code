@@ -193,7 +193,6 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_scheme.cxx
     t8_schemes/t8_default/t8_default.cxx
     t8_schemes/t8_default/t8_default_hex/t8_default_hex.cxx
-    t8_schemes/t8_default/t8_default_hex/t8_dhex_bits.c
     t8_schemes/t8_default/t8_default_line/t8_default_line.cxx
     t8_schemes/t8_default/t8_default_line/t8_dline_bits.cxx
     t8_schemes/t8_default/t8_default_prism/t8_default_prism.cxx
@@ -202,7 +201,6 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_bits.cxx
     t8_schemes/t8_default/t8_default_pyramid/t8_dpyramid_connectivity.c
     t8_schemes/t8_default/t8_default_quad/t8_default_quad.cxx
-    t8_schemes/t8_default/t8_default_quad/t8_default_quad_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_default_tet.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_bits.cxx
     t8_schemes/t8_default/t8_default_tet/t8_dtet_connectivity.c
