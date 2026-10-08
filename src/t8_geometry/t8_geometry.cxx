@@ -21,7 +21,7 @@
 */
 
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 
 void
