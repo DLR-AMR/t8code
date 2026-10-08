@@ -3306,6 +3306,9 @@ t8_forest_commit (t8_forest_t forest)
      * TODO: Remove when trees access schemes via key.
      * Also remove the complete function t8_forest_scheme_is_valid */
     T8_ASSERT (t8_forest_scheme_is_valid (forest->scheme));
+    /* Check if the scheme supports the trees of the cmesh and their face connections. */
+    SC_CHECK_ABORT (forest->scheme->cmesh_is_compatible (forest->cmesh),
+                    "The cmesh is not compatible with the scheme of the forest.");
 
     /* dup communicator if requested */
     if (forest->do_dup) {

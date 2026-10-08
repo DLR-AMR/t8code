@@ -52,9 +52,8 @@ create_from_scheme_id (const int scheme_id)
   }
 }
 
-/** Check whether a cmesh is supported by the scheme of a given scheme id.
- * The extruded scheme only supports cmeshes whose hex trees have parallel extrusion directions,
- * see \ref t8_cmesh_is_extrusion_compatible. All other schemes support all cmeshes.
+/** Check whether a cmesh is supported by the scheme of a given scheme id, see \ref t8_scheme::cmesh_is_compatible.
+ * For example, the extruded scheme only supports cmeshes whose extruded trees have parallel extrusion directions.
  * \param [in] scheme_id The scheme id, see \ref create_from_scheme_id.
  * \param [in] cmesh     A committed cmesh.
  * \param [in] comm      The communicator of \a cmesh.
@@ -64,10 +63,9 @@ create_from_scheme_id (const int scheme_id)
 inline bool
 t8_test_scheme_supports_cmesh (const int scheme_id, t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
-  if (scheme_id != 2) {
-    return true;
-  }
-  int is_compatible = t8_cmesh_is_extrusion_compatible (cmesh);
+  const t8_scheme *scheme = create_from_scheme_id (scheme_id);
+  int is_compatible = scheme->cmesh_is_compatible (cmesh);
+  scheme->unref ();
   int is_compatible_all = 0;
   const int mpiret = sc_MPI_Allreduce (&is_compatible, &is_compatible_all, 1, sc_MPI_INT, sc_MPI_LAND, comm);
   SC_CHECK_MPI (mpiret);
