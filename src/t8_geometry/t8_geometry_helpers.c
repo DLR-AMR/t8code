@@ -114,7 +114,7 @@ t8_geom_compute_linear_geometry (t8_eclass_t tree_class, const double *tree_vert
     for (i_coord = 0; i_coord < num_coords; i_coord++) {
       const size_t offset_domain_dim = i_coord * T8_ECLASS_MAX_DIM;
       for (i_dim = 0; i_dim < T8_ECLASS_MAX_DIM; i_dim++) {
-        out_coords[offset_domain_dim + i_dim] = tree_vertices[offset_domain_dim + i_dim];
+        out_coords[offset_domain_dim + i_dim] = tree_vertices[i_dim];
       }
     }
     break;
