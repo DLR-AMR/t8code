@@ -35,6 +35,8 @@
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_types/t8_vec.hxx>
 
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx>
+
 /** Struct for mesh deformation. */
 struct t8_cmesh_mesh_deformation
 {
@@ -49,10 +51,13 @@ struct t8_cmesh_mesh_deformation
  * Computes the displacements of the surface vertices.
  * 
  * \param [in]  cad A pointer to the CAD-based geometry object.
- * \return Map from global vertex ID to 3D displacement vector
+ * \param [in]  rbf_type The type of radial basis function to be used.
+ * \param [in] scale_factor_support_radius The scale factor for the support radius.
+ * \return Map from global vertex ID to RBF boundary node which contains the displacement and can than be used to calculate the weight of the boundary node.
  */
-  std::unordered_map<t8_gloidx_t, t8_3D_vec>
-  calculate_displacement_surface_vertices (const t8_cad_handle *cad);
+  std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>
+  calculate_displacement_surface_vertices (const t8_cad_handle *cad, const t8_rbf_function_type rbf_type,
+                                           const double scale_factor_support_radius);
 
   /**
  * Apply vertex displacements to a committed cmesh.
@@ -60,12 +65,13 @@ struct t8_cmesh_mesh_deformation
  * Iterates over the provided map of global vertex IDs to 3D displacement vectors,
  * updating the coordinates in each tree where the vertex appears.
  *
- * \param [in] displacements Map from global vertex ID to 3D displacement vector [dx, dy, dz].
+ * \param [in] boundary_node_data Map from global vertex ID to RBF boundary node.
  * \param [in] cad The shared pointer to the CAD geometry to update.
+ * \param [in] rbf_type The RBF type to be used.
  */
   void
-  apply_vertex_displacements (const std::unordered_map<t8_gloidx_t, t8_3D_vec> &displacements,
-                              std::shared_ptr<t8_cad_handle> cad);
+  apply_vertex_displacements (std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node> &boundary_node_data,
+                              std::shared_ptr<t8_cad_handle> cad, const t8_rbf_function_type rbf_type);
 
  private:
   /** A pointer to the cmesh for attribute retrieval */

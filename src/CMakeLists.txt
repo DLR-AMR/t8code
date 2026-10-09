@@ -97,7 +97,6 @@ if( T8CODE_ENABLE_OCC )
     target_sources(T8 PRIVATE
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.cxx
       t8_cad/t8_cad_handle.cxx
-      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.cxx
     )
     install( FILES
       t8_geometry/t8_geometry_implementations/t8_geometry_cad.hxx
@@ -107,6 +106,24 @@ if( T8CODE_ENABLE_OCC )
     install( FILES
       t8_cad/t8_cad_handle.hxx
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cad
+    )
+endif()
+
+if( T8CODE_ENABLE_EIGEN )
+    target_compile_definitions( T8 PUBLIC T8_ENABLE_EIGEN=1 )
+    target_link_libraries( T8 PRIVATE Eigen3::Eigen )
+    target_sources(T8 PRIVATE
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.cxx
+    )
+    install( FILES
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_mesh_deformation/
+    )
+endif()
+
+if( T8CODE_ENABLE_OCC AND T8CODE_ENABLE_EIGEN )
+    target_sources(T8 PRIVATE
+      t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.cxx
     )
     install( FILES
       t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx

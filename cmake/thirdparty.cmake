@@ -40,13 +40,14 @@ foreach(INDEX RANGE ${DEPS_RANGE})
 
     # If the DEP_CMAKE_OPTION field is non-empty, check the CMake option.
     if(NOT DEP_CMAKE_OPTION STREQUAL "")
+        string(JSON DEP_CMAKE_OPTION_VALUE GET "${DEPS_JSON}" "thirdparty" ${INDEX} "cmake_option_install_value")
         # If the named option variable does not exist in the CMake cache, abort.
         if(NOT DEFINED ${DEP_CMAKE_OPTION})
             message(FATAL_ERROR "Loading thirdparty library ${DEP_NAME} at index ${INDEX} references unknown CMake option '${DEP_CMAKE_OPTION}'. Aborting.")
         else()
             # If the named option is defined but set to ON, skip this thirdparty library.
-            if(${${DEP_CMAKE_OPTION}})
-                message(STATUS "Skipping FetchContent-step for thirdparty library ${DEP_NAME} because CMake option '${DEP_CMAKE_OPTION}' is '${${DEP_CMAKE_OPTION}}'")
+            if(NOT ${DEP_CMAKE_OPTION} STREQUAL ${DEP_CMAKE_OPTION_VALUE})
+                message(STATUS "Skipping FetchContent-step for thirdparty library ${DEP_NAME} because CMake option '${DEP_CMAKE_OPTION}' is set to '${${DEP_CMAKE_OPTION}}'")
                 continue()
             endif()
         endif()
