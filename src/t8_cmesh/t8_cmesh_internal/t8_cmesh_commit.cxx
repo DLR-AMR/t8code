@@ -36,6 +36,7 @@
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
+#include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 
 /**
  * A struct to hold the information about a ghost facejoin.
@@ -521,6 +522,13 @@ void
 t8_cmesh_commit_from_stash (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 {
   T8_ASSERT (cmesh != NULL);
+
+#if T8_ENABLE_DEBUG
+  /* Verify the boundary condition handler if there is one. */
+  if (cmesh->boundary_condition_handler != nullptr) {
+    T8_ASSERT (cmesh->boundary_condition_handler->verify ());
+  }
+#endif
 
   if (cmesh->set_partition) {
     /* partitioned commit */

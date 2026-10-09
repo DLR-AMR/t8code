@@ -3,7 +3,7 @@
   t8code is a C library to manage a collection (a forest) of multiple
   connected adaptive space-trees of general element classes in parallel.
 
-  Copyright (C) 2015 the developers
+  Copyright (C) 2026 the developers
 
   t8code is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,21 +20,19 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_forest.h
- * Includes all headers based on previous t8_forest.h
+/**
+ * \file t8_cmesh_boundary_conditions_types.hxx
+ * Implements helper types for boundary conditions.
  */
 
-#ifndef T8_FOREST_H
-#define T8_FOREST_H
+#pragma once
 
-#include <t8_forest/t8_forest_general.h>
-#include <t8_forest/t8_forest_geometrical.h>
-#include <t8_forest/t8_forest_profiling.h>
-#include <t8_forest/t8_forest_io.h>
-#ifdef __cplusplus
-#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.hxx>
-#else /* !__cplusplus */
-#include <t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions_c_interface.h>
-#endif /* !__cplusplus */
+#include <t8_eclass/t8_eclass.h>
+#include <t8_data/t8_static_vector.hxx>
 
-#endif /* !T8_FOREST_H */
+/**
+ * A container to store boundary conditions.
+ * \tparam TType The type the boundary conditions are saved in.
+ */
+template <typename TType>
+using t8_boundary_conditions = t8_static_vector<TType, T8_ECLASS_MAX_FACES>;
