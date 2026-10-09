@@ -36,6 +36,8 @@
 void
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c *geometry)
 {
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
+
   detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
   if (geometry_handler == nullptr) {
     /* The handler was not constructed, do it now. */
@@ -75,11 +77,12 @@ t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
 detail::t8_geometry_handler *
 t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh)
 {
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
   return t8_cmesh_set_geometry_handler (cmesh, nullptr);
 }
 
 /* Set a geometry handler or construct a new geometry_handler for a cmesh and add it to the cmesh.
- * \param [in] cmesh      The cmesh to be considered. Must be initialized. Does not need to be committed.
+ * \param [in] cmesh      The cmesh to be considered. Must be initialized but not committed.
  * \param [in] new_handler  The geometry handler to be set. If nullptr then a new handler will be allocated.
  * \return                On success, the new geometry_handler. nullptr on failure (out of memory).
  * \note                  \a cmesh will take ownership of \a new_handler, increase the reference count explicitly if you need \a new_handler outside of \a cmesh.
@@ -87,7 +90,7 @@ t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh)
 detail::t8_geometry_handler *
 t8_cmesh_set_geometry_handler (t8_cmesh_t cmesh, detail::t8_geometry_handler *new_handler)
 {
-  T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
   // Check that we do not overwrite an existing handler.
   T8_ASSERT (t8_cmesh_get_geometry_handler (cmesh) == nullptr);
