@@ -1814,8 +1814,6 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
     }
   }
 
-  struct t8_lfn_user_data user_data;
-
   // Now we iterate over the leaf arrays of the neighbor tree
   // or neighbor ghost tree and find all leaf face neighbors of the element.
   *num_neighbors = 0;
@@ -1832,6 +1830,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
   *pelement_indices = NULL;
   *dual_faces = NULL;
   for (auto &leaf_array : leaf_arrays) {
+    struct t8_lfn_user_data user_data;
     auto &tree_leaves = leaf_array->first;
     const bool leaf_array_is_ghost = leaf_array->second;
     T8_ASSERT (tree_leaves != NULL);
