@@ -46,8 +46,7 @@
  *         logic which is not equal for all subelements, the scheme calls the functionality of this subelement scheme.
  */
 template <t8_eclass TEclass, typename TSubelementSchemeSpecialization>
-struct t8_subelement_scheme_common:
-  public t8_scheme_helpers<TEclass, t8_subelement_scheme_common<TEclass, TSubelementSchemeSpecialization>>
+struct t8_subelement_scheme_common: public t8_scheme_helpers<TEclass, TSubelementSchemeSpecialization>
 {
  public:
   /** The subelement type used by this subelement scheme defined by a trait. */
@@ -67,9 +66,10 @@ struct t8_subelement_scheme_common:
   /** Destructor. */
   ~t8_subelement_scheme_common ()
   {
-    T8_ASSERT (scheme_context != NULL);
-    SC_ASSERT (((sc_mempool_t *) scheme_context)->elem_count == 0);
-    sc_mempool_destroy ((sc_mempool_t *) scheme_context);
+    if (scheme_context != nullptr) {
+      SC_ASSERT (((sc_mempool_t *) scheme_context)->elem_count == 0);
+      sc_mempool_destroy ((sc_mempool_t *) scheme_context);
+    }
   }
 
   /** Move constructor */
@@ -399,6 +399,11 @@ struct t8_subelement_scheme_common:
   {
     SC_CHECK_ABORT (!element_is_subelement (elem),
                     "element_get_num_children: Cannot refine a subelement into subelements.\n");
+    if (subelement_type == 0) {
+      return derived ().underlying_scheme.element_get_num_children (element_to_standalone (elem));
+    }
+    T8_ASSERT (1 <= subelement_type
+               && subelement_type <= TSubelementSchemeSpecialization::subelement_get_number_of_valid_types ());
     return derived ().subelement_get_num_children (elem, subelement_type);
   }
 
@@ -465,7 +470,11 @@ struct t8_subelement_scheme_common:
   void
   element_get_children (const t8_element_t *elem, const int length, t8_element_t *c[], int subelem_type) const noexcept
   {
-    SC_CHECK_ABORT (length == derived ().subelement_get_num_children (elem, subelem_type),
+    if (subelem_type == 0) {
+      element_get_children (elem, length, c);
+      return;
+    }
+    SC_CHECK_ABORT (length == element_get_num_children (elem, subelem_type),
                     "element_get_children: given length is not fitting the number of children.");
     derived ().subelement_get_children (elem, length, c, subelem_type);
   }
