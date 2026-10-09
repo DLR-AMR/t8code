@@ -38,6 +38,7 @@ function( add_t8_test )
 
     # Link base libraries.
     target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR} )
+
     # Include binary dir to find generated headers like t8_test_data_dir.h.
     target_include_directories( ${ADD_T8_TEST_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR} )
 
@@ -160,6 +161,7 @@ add_t8_cpp_test( NAME t8_gtest_partition_data_parallel            SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_forest/t8_gtest_set_partition_offset.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
 add_t8_cpp_test( NAME t8_gtest_weighted_partitioning_parallel     SOURCES t8_forest/t8_gtest_weighted_partitioning.cxx )
+add_t8_cpp_test( NAME t8_gtest_element_is_boundary_parallel       SOURCES t8_forest/t8_gtest_element_is_boundary.cxx )
 add_t8_cpp_test( NAME t8_gtest_subelement_parallel                SOURCES t8_forest/t8_gtest_subelement.cxx t8_gtest_adapt_callbacks.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_element_is_leaf_parallel     SOURCES t8_forest/t8_gtest_element_is_leaf.cxx t8_gtest_adapt_callbacks.cxx )
@@ -243,3 +245,4 @@ endif()
 if(NOT APPLE)
     add_t8_cpp_test( NAME t8_gtest_compute_first_element_serial                 SOURCES t8_cmesh/t8_gtest_compute_first_element.cxx )
 endif()
+
