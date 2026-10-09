@@ -55,10 +55,8 @@ TEST (T8GeometryHealpixTest, AllTreesAreOnUnitSphere)
 
   for (int i = 0; i < num_gen_coords; i++) {
     std::cout << i << std::endl;
-    double point_x = dist (gen);
-    double point_y = dist (gen);
-    ref_coords.push_back (point_x);
-    ref_coords.push_back (point_y);
+    ref_coords.push_back (dist(gen));
+    ref_coords.push_back (dist(gen));
   }
 
   const size_t num_coords = ref_coords.size () / 2;
