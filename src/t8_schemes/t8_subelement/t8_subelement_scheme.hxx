@@ -212,10 +212,12 @@ struct t8_subelement_scheme_common:
   element_get_face_corner (const t8_element_t *element, const int face, const int corner) const noexcept
   {
     T8_ASSERT (element_is_valid (element));
-    if (element_is_subelement (element)) {
-      return t8_face_vertex_to_tree_vertex[element_get_shape (element)][face][corner];
+    if (!element_is_subelement (element)) {
+      return derived ().underlying_scheme.element_get_face_corner (element_to_standalone (element), face, corner);
     }
-    return derived ().underlying_scheme.element_get_face_corner (element_to_standalone (element), face, corner);
+    T8_ASSERT (0 <= face && face < element_get_num_faces (element));
+    T8_ASSERT (0 <= corner && corner < T8_ELEMENT_NUM_CORNERS[element_get_face_shape (element, face)]);
+    return t8_face_vertex_to_tree_vertex[element_get_shape (element)][face][corner];
   }
 
   /** Not implemented for this scheme.
@@ -918,17 +920,22 @@ struct t8_subelement_scheme_common:
 
   /** Compute the coordinates of a given element vertex inside a reference tree 
    *  that is embedded into [0,1]^d (d = dimension).
-   *   \note This is not implemented for subelements.
    *   \param [in] elem      The element to be considered.
-   *   \param [in] vertex The id of the vertex whose coordinates shall be computed.
-   *   \param [out] coords An array of at least as many doubles as the element's dimension
-   *                      whose entries will be filled with the coordinates of \a vertex.
+   *   \param [in] vertex    The id of the vertex whose coordinates shall be computed.
+   *   \param [out] coords   An array of at least as many doubles as the element's dimension
+   *                         whose entries will be filled with the coordinates of \a vertex.
    */
   void
   element_get_vertex_reference_coords (const t8_element_t *elem, const int vertex, double coords[]) const noexcept
   {
-    SC_CHECK_ABORT (!element_is_subelement (elem),
-                    "element_get_vertex_reference_coords is not implemented for subelements yet.\n");
+    T8_ASSERT (element_is_valid (elem));
+    if (element_is_subelement (elem)) {
+      T8_ASSERT (0 <= vertex && vertex < element_get_num_corners (elem));
+      /* The vertices are the images of the corners of the reference element of the subelement shape. */
+      const t8_element_shape_t shape = element_get_shape (elem);
+      derived ().subelement_get_reference_coords (elem, t8_element_corner_ref_coords[shape][vertex], 1, coords);
+      return;
+    }
     derived ().underlying_scheme.element_get_vertex_reference_coords (element_to_standalone (elem), vertex, coords);
   }
 
