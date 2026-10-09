@@ -93,7 +93,8 @@ struct t8_geometry_healpix: public t8_geometry
   * Get the type of this geometry.
   * \return The type.
   */
-  t8_geometry_type_t t8_geom_get_type () const override;
+  t8_geometry_type_t
+  t8_geom_get_type () const override;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };

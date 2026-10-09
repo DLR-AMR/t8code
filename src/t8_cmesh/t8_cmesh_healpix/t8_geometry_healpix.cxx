@@ -24,6 +24,20 @@
 #include <t8_geometry/t8_geometry_with_vertices.hxx>
 #include <t8_cmesh/t8_cmesh_healpix/t8_geometry_healpix.hxx>
 #include <numbers>
+
+/**
+ * Evaluates a point on a sphere surface geometry from mesh layer and face parameters.
+ *
+ * Maps 2D parametric reference coordinates (\p xi, \p eta) of a specific mesh element,
+ * identified by its \p layer and \p face indices, to 3D Cartesian coordinates on a unit sphere.
+ *
+ * @param[in]  layer     The layer index of the mesh element.
+ * @param[in]  face      The face index of the mesh element within the layer.
+ * @param[in]  xi        The reference coordinate in the first parametric direction (typically [0, 1]).
+ * @param[in]  eta       The reference coordinate in the second parametric direction (typically [0, 1]).
+ * @param[out] out_coord Pointer to an array of size 3 where the resulting (x, y, z)
+ *                       Cartesian coordinates will be stored.
+ */
 void
 t8_eval_geom_point (t8_gloidx_t layer, t8_gloidx_t face, double xi, double eta, double *out_coord)
 {
@@ -82,5 +96,5 @@ t8_geometry_healpix::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_glo
 t8_geometry_type_t
 t8_geometry_healpix::t8_geom_get_type () const
 {
-  return T8_GEOMETRY_TYPE_ZERO; // Or the specific t8_geometry_type_t enum value for HEALPix
+  return T8_GEOMETRY_TYPE_ZERO;  // Or the specific t8_geometry_type_t enum value for HEALPix
 }
