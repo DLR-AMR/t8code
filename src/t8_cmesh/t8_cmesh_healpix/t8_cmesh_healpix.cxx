@@ -71,6 +71,17 @@ static const struct t8_healpix_join healpix_joins[24] = {
   { 9, 1, 10, 3, 0 },
   { 10, 1, 11, 3, 0 }
 };
+/**
+ * Creates and initializes a new coarse mesh (cmesh) with HEALPix topology.
+ *
+ * Registers the HEALPix geometry and sets up a 12-tree base coarse mesh consisting
+ * of quadrilateral faces (`T8_ECLASS_QUAD`). It explicitly establishes $O(1)$ manual
+ * face connectivity between neighboring trees according to the HEALPix adjacency table
+ * before committing the mesh.
+ *
+ * @param[in] comm The MPI communicator used to manage parallel partitioning/commit.
+ * @return t8_cmesh_t A committed coarse mesh object containing the HEALPix base structure.
+ */
 t8_cmesh_t
 t8_cmesh_new_healpix (sc_MPI_Comm comm)
 {
