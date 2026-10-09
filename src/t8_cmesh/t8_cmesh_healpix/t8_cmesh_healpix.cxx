@@ -63,14 +63,10 @@ t8_cmesh_new_healpix (sc_MPI_Comm comm)
   const int ntrees = 12;
 
   /* Register geometry and retain the pointer */
-  t8_geometry_c *geom = t8_cmesh_register_geometry<t8_geometry_healpix> (cmesh);
-
-  t8_eclass_t all_eclasses[ntrees];
+  t8_cmesh_register_geometry<t8_geometry_healpix> (cmesh);
 
   for (int itree = 0; itree < ntrees; itree++) {
-
     t8_cmesh_set_tree_class (cmesh, itree, T8_ECLASS_QUAD);
-    all_eclasses[itree] = T8_ECLASS_QUAD;
   }
   /* Explicit O(1) manual face joining */
   for (size_t i = 0; i < 24; ++i) {
