@@ -79,3 +79,8 @@ t8_geometry_healpix::t8_geom_evaluate ([[maybe_unused]] t8_cmesh_t cmesh, t8_glo
     t8_eval_geom_point (layer, face, xi, eta, out_coords + base_idx_3d);
   }
 }
+t8_geometry_type_t
+t8_geometry_healpix::t8_geom_get_type () const
+{
+  return T8_GEOMETRY_TYPE_ZERO; // Or the specific t8_geometry_type_t enum value for HEALPix
+}

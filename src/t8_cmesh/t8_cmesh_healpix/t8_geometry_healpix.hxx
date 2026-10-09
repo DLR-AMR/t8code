@@ -21,18 +21,18 @@
 */
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry_with_vertices.hxx>
+#include <t8_geometry/t8_geometry_base.hxx>
 /**
 * The t8_geometry_healpix struct implements a spherical geometry mapping
 * based on the HEALPix (Hierarchical Equal Area isoLatitude Pixelization)
 * base-mesh configuration. It inherits from t8_geometry_with_vertices and
 * is designed to map planar quadrilateral faces onto a spherical surface.
 */
-struct t8_geometry_healpix: public t8_geometry_with_vertices
+struct t8_geometry_healpix: public t8_geometry
 {
  public:
   /* Basic constructor that sets the dimension and the name. */
-  t8_geometry_healpix (): t8_geometry_with_vertices ("t8_geometry_healpix")
+  t8_geometry_healpix (): t8_geometry ("t8_geometry_healpix")
   {
   }
 
@@ -88,6 +88,12 @@ struct t8_geometry_healpix: public t8_geometry_with_vertices
     }
     return true;
   }
+
+  /**
+  * Get the type of this geometry.
+  * \return The type.
+  */
+  t8_geometry_type_t t8_geom_get_type () const override;
 
   /* Load tree data is inherited from t8_geometry_with_vertices. */
 };
