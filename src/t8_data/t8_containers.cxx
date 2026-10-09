@@ -337,27 +337,52 @@ t8_element_array_find (const t8_element_array_t *element_array, const t8_element
   const int element_level = scheme->element_get_level (tree_class, element);
   /* Compute the linear id. */
   const t8_linearidx_t element_id = scheme->element_get_linear_id (tree_class, element, element_level);
-  /* Search for the element.
-   * The search returns the largest index i,
-   * such that the element at position i has a smaller id than the given one.
-   * If no such i exists, it returns -1. */
+
+  /* Search for the element. The returned index points somewhere into the block of elements with the same linear id.
+   * If no candidate exists, it may return -1. */
   const t8_locidx_t search_result = t8_forest_bin_search_lower (element_array, element_id, element_level);
   if (search_result < 0) {
     // The element was not found, we return -1. */
     return -1;
   }
-  /* An element was found but it may not be the candidate element. 
-   * To identify whether the element was found, we compare these two. */
-  const t8_element_t *check_element = t8_element_array_index_locidx (element_array, search_result);
-  T8_ASSERT (check_element != NULL);
-  if (scheme->element_is_equal (tree_class, element, check_element)) {
-    // The element was found at position search_result. We return it.
-    return search_result;
+
+  /* Several elements may share the same linear id (e.g. all subelements of one transition cell).
+   * They are stored contiguously. We therefore scan the block of candidates around search_result in both directions.
+   * For schemes without subelements, at most one element per direction is checked. */
+
+  /* Walk downwards, starting at search_result. */
+  for (t8_locidx_t ielem = search_result; ielem >= 0; --ielem) {
+    const t8_element_t *check_element = t8_element_array_index_locidx (element_array, ielem);
+    T8_ASSERT (check_element != NULL);
+    if (scheme->element_is_equal (tree_class, element, check_element)) {
+      /* The element was found at position ielem. */
+      return ielem;
+    }
+    if (scheme->element_get_level (tree_class, check_element) != element_level
+        || scheme->element_get_linear_id (tree_class, check_element, element_level) != element_id) {
+      /* We left the block of candidates with the same id and level. */
+      break;
+    }
   }
-  else {
-    // The element was not found, we return -1. */
-    return -1;
+
+  /* Walk upwards, starting directly after search_result. */
+  const t8_locidx_t num_elements = (t8_locidx_t) t8_element_array_get_count (element_array);
+  for (t8_locidx_t ielem = search_result + 1; ielem < num_elements; ++ielem) {
+    const t8_element_t *check_element = t8_element_array_index_locidx (element_array, ielem);
+    T8_ASSERT (check_element != NULL);
+    if (scheme->element_is_equal (tree_class, element, check_element)) {
+      /* The element was found at position ielem. */
+      return ielem;
+    }
+    if (scheme->element_get_level (tree_class, check_element) != element_level
+        || scheme->element_get_linear_id (tree_class, check_element, element_level) != element_id) {
+      /* We left the block of candidates with the same id and level. */
+      break;
+    }
   }
+
+  /* The element was not found, we return -1. */
+  return -1;
 }
 
 void
