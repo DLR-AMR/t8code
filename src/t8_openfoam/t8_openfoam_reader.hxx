@@ -269,7 +269,7 @@ struct t8_openfoam_reader
   /** Conversion table between OpenFOAM and t8code quad numeration.
    * We only need this for quads, since triangles numerated equally.
    */
-  static constexpr std::array<int, 4> quad_conversion = { { 0, 1, 3, 2 } };
+  static constexpr std::array quad_conversion = { 0, 1, 3, 2 };
 
   /** Holds all points of the mesh. point_id -> x, y, z */
   std::vector<t8_3D_vec> m_points;
