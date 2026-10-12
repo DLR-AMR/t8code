@@ -437,7 +437,7 @@ t8_openfoam_reader::build_cmesh ()
     ++cell_id;
   }
   t8_cmesh_commit (m_cmesh, m_comm);
-  return 1;
+  return true;
 }
 
 void
