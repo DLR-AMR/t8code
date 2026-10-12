@@ -373,7 +373,7 @@ t8_openfoam_reader::get_cell_eclass (const size_t cell_id)
   /* OpenFOAM only has 3D cells, so we do not check 0-2 dimensional cells. */
   switch (m_cell_faces[cell_id].size ()) {
   case 4:
-    /* This cell is hopefully a tet with 4*3=12 points. */
+    /* This cell should be a tet with 4*3=12 points. */
     if (num_points == 12)
       return T8_ECLASS_TET;
     break;
@@ -385,7 +385,7 @@ t8_openfoam_reader::get_cell_eclass (const size_t cell_id)
       return T8_ECLASS_PYRAMID;
     break;
   case 6:
-    /* This cell is hopefully a hex with 6 * 4 = 24 points. */
+    /* This cell should be a hex with 6 * 4 = 24 points. */
     if (num_points == 24)
       return T8_ECLASS_HEX;
     break;
