@@ -63,12 +63,12 @@ t8_openfoam_reader::skip_openfoam_header (std::istream& input_stream)
   /* Typical OpenFOAM header example */
 
   /*--------------------------------*- C++ -*----------------------------------*\
-    //    =========                 |
-    //    \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-    //     \\    /   O peration     | Website:  https://openfoam.org
-    //      \\  /    A and           | Version:  13
-    //       \\/     M anipulation  |
-    //  \*---------------------------------------------------------------------------*/
+  //    =========                 |
+  //    \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+  //     \\    /   O peration     | Website:  https://openfoam.org
+  //      \\  /    A and           | Version:  13
+  //       \\/     M anipulation  |
+  //  \*---------------------------------------------------------------------------*/
   //  FoamFile
   //  {
   //      format      ascii;                            <-- format string we are searching for
@@ -304,7 +304,7 @@ t8_openfoam_reader::read_owner (const t8_path& owner_file)
   }
 
   /** List of read values from owners file. Position is equal to face id and value
-     * is the owner of the face. face_id -> cell_id */
+   * is the owner of the face. face_id -> cell_id */
   std::vector<size_t> owner_list;
   if (!read_openfoam_label_list (file, owner_list)) {
     t8_errorf ("ERROR: Unable to parse file: %s\n", owner_file.c_str ());
@@ -343,7 +343,7 @@ t8_openfoam_reader::read_neighbor (const t8_path& neighbor_file)
   }
 
   /** List of read values from neighbor file. Position is equal to face id and value
-     * is the neighbor of the face. face_id -> cell_id */
+   * is the neighbor of the face. face_id -> cell_id */
   std::vector<size_t> neighbor_list;
   if (!read_openfoam_label_list (file, neighbor_list)) {
     t8_errorf ("ERROR: Unable to parse file: %s\n", neighbor_file.c_str ());
@@ -363,8 +363,8 @@ t8_openfoam_reader::read_neighbor (const t8_path& neighbor_file)
 t8_eclass_t
 t8_openfoam_reader::get_cell_eclass (const size_t cell_id)
 {
-  /* Count points of the cell. The points are counted for every face,
-    so a hex for example has 6 (faces) * 4 (vertices per face) = 24 points. */
+  /** Count points of the cell. The points are counted for every face,
+   * so a hex for example has 6 (faces) * 4 (vertices per face) = 24 points. */
   int num_points = 0;
   for (const auto& face : m_cell_faces[cell_id]) {
     num_points += m_face_points[face.first].size ();
@@ -445,13 +445,13 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
                                           std::vector<std::span<size_t>> face_point_ids, std::vector<char> face_normals)
 {
   /* To reconstruct the Hexahedron we will follow these stages:
-     * 0. Initialize some needed variables.
-     * 1. Assign the first OpenFOAM face to face 0 of the t8 hexahedron.
-     * 2. Search for the opposite OpenFOAM face (does not share any vertices with face 0) and make it face 1.
-     * 3. Search for a third face to find out the orientation of face 1.
-     * 4. We now have all 8 vertices and can use them to find and orient the last four faces.
-     * 5. Use the vertices and eclass to set the cmesh cell.
-     * 6. Use the face information to link the cell to its neighbors and apply the boundary conditions. */
+   * 0. Initialize some needed variables.
+   * 1. Assign the first OpenFOAM face to face 0 of the t8 hexahedron.
+   * 2. Search for the opposite OpenFOAM face (does not share any vertices with face 0) and make it face 1.
+   * 3. Search for a third face to find out the orientation of face 1.
+   * 4. We now have all 8 vertices and can use them to find and orient the last four faces.
+   * 5. Use the vertices and eclass to set the cmesh cell.
+   * 6. Use the face information to link the cell to its neighbors and apply the boundary conditions. */
 
   /* ------------------------- 0. Initialization ------------------------- */
 
@@ -461,9 +461,9 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   constexpr t8_eclass_t eclass = T8_ECLASS_HEX;
 
   /** Orientation of the OpenFOAM face with regard to the t8code face.
-     * t8 corner 0 -> OF corner <orientation.first>
-     * same normal direction <orientation.second> = 1, different normal direction<orientation.second> = -1
-     */
+   * t8 corner 0 -> OF corner <orientation.first>
+   * same normal direction <orientation.second> = 1, different normal direction<orientation.second> = -1
+   */
   std::pair<u_int8_t, bool> orientation;
   /** Normal of the t8 face. 1 points outward, 0 inward. */
   bool t8_face_normal;
@@ -486,7 +486,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   /* ------------------------- 2. Find face 1 ------------------------- */
 
   /* After assigning face 0, we have to find the opposite face, face 1.
-     * It should not share any points with face 0. */
+   * It should not share any points with face 0. */
   const auto opposite_face = find_list_not_containing (face_point_ids, face_point_ids[0]);
   T8_ASSERTF (opposite_face.has_value (),
               "ERROR: Could not find the opposite face for hex reconstruction. Maybe this cell was falsely classified "
@@ -520,10 +520,10 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   T8_ASSERT (check_face != face_point_ids.end ());
 
   /* We found a face containing the 0th vertex. Now we can check if the next vertex is not part of face 0. If true,
-     * the next vertex is vertex 1 and therefore vertex 0 of face 1. Otherwise, the previous point is vertex 0 of face 1.
-     * We iterate cyclic over the face vertices. So if we arrive at the end, we begin at the start. */
+   * the next vertex is vertex 1 and therefore vertex 0 of face 1. Otherwise, the previous point is vertex 0 of face 1.
+   * We iterate cyclic over the face vertices. So if we arrive at the end, we begin at the start. */
   auto next_vertex
-    = ( (found_face_0_vertex_0 + 1) == check_face->end () ? check_face->begin () : found_face_0_vertex_0 + 1 );
+    = ((found_face_0_vertex_0 + 1) == check_face->end () ? check_face->begin () : found_face_0_vertex_0 + 1);
   /* Check if face 0 contains this vertex */
   size_t face_1_vertex_0;
   if (std::find (face_1_points.begin (), face_1_points.end (), *next_vertex) != face_1_points.end ()) {
@@ -550,7 +550,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   /* ------------------------- 4. Add remaining four faces ------------------------- */
 
   /* Lastly, we have to match the rest of the faces so we can add the boundaries to the cmesh and
-     * to get the orientations and faces for neighbor linkage. */
+   * to get the orientations and faces for neighbor linkage. */
   for (size_t i_t8_face = 2; i_t8_face < t8_eclass_num_faces[T8_ECLASS_HEX]; ++i_t8_face) {
     std::array<size_t, t8_eclass_num_vertices[T8_ECLASS_QUAD]> face_vertices;
     for (size_t i_face_vertex = 0; i_face_vertex < t8_eclass_num_vertices[T8_ECLASS_QUAD]; ++i_face_vertex) {
