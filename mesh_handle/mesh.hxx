@@ -418,14 +418,13 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
     t8_forest_set_partition (m_uncommitted_forest.value (), m_forest, set_for_coarsening);
   }
 
-  /** If this function is called, the mesh will be balanced on committing.
+  /** If this function is called, the mesh will be balanced when calling \ref commit.
    * The mesh is said to be balanced if the element level between face neighbors differs by at most 1.
-   * \note The balance is carried out only when \ref commit is called.
-   * \param [in] no_repartition Balance constructs several intermediate steps that
-   *       are refined from each other. In order to maintain a balanced load, a repartitioning is performed in each
-   *       round and the resulting mesh is load-balanced per default.
-   *       Set \a no_repartition to true if this behaviour is not desired.
-   *       If \a no_repartition is false (default), an additional call of \ref set_partition is not necessary.
+   * \param [in] no_repartition The balance routine performs multiple adaption rounds to reach the balanced state.
+   *                            To maintain a load balanced mesh, the balance routine can partition the mesh in between each adaptation round.
+   *                            \warning  This is only possible if the mesh contains no data which is interpolated using the
+   *                                      \ref interpolate_element_data_mesh_competence since the old and new elements and their data have to be on
+   *                                      the same rank to be able to be interpolated.
    * \note This setting can be combined with \ref set_adapt and \ref set_partition. The order in which
    * these operations are executed is always 1) Adapt 2) Balance 3) Partition.
    */
@@ -509,10 +508,12 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
         t8_forest_set_balance (forest, nullptr, true);
         partition_postponed = !balance_no_repartition;
       }
+      // Same for the requested partition
       if (t8_forest_get_partition (forest, &partition_for_coarsening)) {
         t8_forest_unset_partition (forest);
         partition_postponed = true;
       }
+      // If partition was postponed, ghost also has to be postponed
       if (partition_postponed && t8_forest_ghost_is_set (forest)) {
         t8_forest_set_ghost_ext (forest, 0, nullptr);
         ghost_postponed = true;
