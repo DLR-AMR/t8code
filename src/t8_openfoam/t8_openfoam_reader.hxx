@@ -255,7 +255,8 @@ struct t8_openfoam_reader
    * \param [in] cell_id           The id of the cell.
    * \param [in] face_ids          The ids of the cell faces.
    * \param [in] face_point_ids    The ids of the points of the cell faces.
-   * \param [in] face_normals      The normals of the cell faces.
+   * \param [in] face_normals      The normals of the cell faces. Using std::vector<char> instead of bools
+   *                               because a vector of bools does not fulfill the std library requirements.
    */
   void
   reconstruct_hex_cell (size_t cell_id, std::vector<size_t> face_ids, std::vector<std::span<size_t>> face_point_ids,
