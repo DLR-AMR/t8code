@@ -164,16 +164,17 @@ struct t8_openfoam_reader
 
   /**
    * Given a face eclass and orientation, this function converts the face id of a t8code face-vertex id to the corresponding
-   * OpenFOAM (OF) face-vertex id.
+   * OpenFOAM (foam) face-vertex id.
    * \param [in] face_class         The eclass of the face (triangle or quad)
-   * \param [in] orientation        The orientation of the face (int and bool, the first is the OF vertex,
+   * \param [in] orientation        The orientation of the face (int and bool, the first is the foam vertex,
    *                                which corresponds to the t8code vertex 0 and the second is 1, if both face
    *                                normals point in the same direction and 0 otherwise)
    * \param [in] t8_face_vertex_id  The t8 face-vertex id to convert
-   * \return                        The converted OF face-vertex id
+   * \return                        The converted foam face-vertex id
    */
   constexpr static u_int8_t
-  t8_face_vertex_to_of_point (t8_eclass_t face_class, std::pair<u_int8_t, bool> orientation, u_int8_t t8_face_vertex_id)
+  t8_face_vertex_to_foam_point (t8_eclass_t face_class, std::pair<u_int8_t, bool> orientation,
+                                u_int8_t t8_face_vertex_id)
   {
     /* While t8code uses the z-order for quads, OpenFOAM uses an anti-clockwise numeration.
      * So if the face is a quad, we have to switch indices in accordance with this LUT.
@@ -184,7 +185,7 @@ struct t8_openfoam_reader
 
     /* The OpenFOAM face point belonging to the current t8_face_vertex is calculated via the orientation
      * (orientation.second tells us if we count up +1 or down -1 depending on the fact that the face normals point
-     * in the same direction and orientation.first tells us which OF point is located at t8 vertex 0) and the current t8_face_vertex.
+     * in the same direction and orientation.first tells us which foam point is located at t8 vertex 0) and the current t8_face_vertex.
      * We add t8_eclass_num_vertices[face_class] once, so that we never take a mod of a negative value. */
     const int order = orientation.second ? 1 : -1;
     return (order * t8_face_vertex_id + orientation.first + t8_eclass_num_vertices[face_class])
