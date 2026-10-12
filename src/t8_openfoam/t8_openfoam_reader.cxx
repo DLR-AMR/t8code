@@ -492,7 +492,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
               "ERROR: Could not find the opposite face for hex reconstruction. Maybe this cell was falsely classified "
               "as a hex\n");
   t8_face_normal = t8_eclass_face_orientation[eclass][1];
-  orientation.second = t8_face_normal == face_normals[*opposite_face];
+  orientation.second = (t8_face_normal == face_normals[*opposite_face]);
   faces[1].emplace (face_ids[*opposite_face]);
   const auto face_1_points = face_point_ids[*opposite_face];
 
@@ -523,7 +523,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
      * the next vertex is vertex 1 and therefore vertex 0 of face 1. Otherwise, the previous point is vertex 0 of face 1.
      * We iterate cyclic over the face vertices. So if we arrive at the end, we begin at the start. */
   auto next_vertex
-    = (found_face_0_vertex_0 + 1) == check_face->end () ? check_face->begin () : found_face_0_vertex_0 + 1;
+    = ( (found_face_0_vertex_0 + 1) == check_face->end () ? check_face->begin () : found_face_0_vertex_0 + 1 );
   /* Check if face 0 contains this vertex */
   size_t face_1_vertex_0;
   if (std::find (face_1_points.begin (), face_1_points.end (), *next_vertex) != face_1_points.end ()) {
@@ -531,7 +531,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   }
   else {
     const auto previous_vertex
-      = found_face_0_vertex_0 == check_face->begin () ? check_face->end () : found_face_0_vertex_0 - 1;
+      = (found_face_0_vertex_0 == check_face->begin () ? check_face->end () : found_face_0_vertex_0 - 1);
     face_1_vertex_0 = *previous_vertex;
   }
 
