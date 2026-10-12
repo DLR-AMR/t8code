@@ -148,6 +148,12 @@ else
         sed -i 's/[[:blank:]]*$//' "$arg"
         exit 1
     fi
+
+    CRLF_LINES=$(grep -n $'\r' "$arg")
+    if [ -n "$CRLF_LINES" ]; then
+      sed -i 's/\r$//' "$arg"
+      exit 1
+    fi
   done
   status=$?
 fi
