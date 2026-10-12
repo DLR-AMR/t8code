@@ -38,6 +38,7 @@
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.hxx>
 #include <t8_forest/t8_forest_iterate.h>
+#include <t8_forest/t8_forest_types.h>
 #include <vector>
 #include <functional>
 #include <memory>
