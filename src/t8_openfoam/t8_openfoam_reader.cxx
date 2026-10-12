@@ -521,7 +521,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
 
   /* We found a face containing the 0th vertex. Now we can check if the next vertex is not part of face 0. If true,
    * the next vertex is vertex 1 and therefore vertex 0 of face 1. Otherwise, the previous point is vertex 0 of face 1.
-   * We iterate cyclic over the face vertices. So if we arrive at the end, we begin at the start. */
+   * We iterate cyclically over the face vertices. So if we arrive at the end, we begin at the start. */
   auto next_vertex
     = ((found_face_0_vertex_0 + 1) == check_face->end () ? check_face->begin () : found_face_0_vertex_0 + 1);
   /* Check if face 0 contains this vertex */
