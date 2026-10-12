@@ -233,9 +233,9 @@ struct t8_cmesh_boundary_condition_handler
    * \return                              The hash of the name.
    */
   inline boundary_condition_hash
-  hash_boundary_condition_name (const std::string &boundary_condition_name) const
+  hash_boundary_condition_name (const std::string_view boundary_condition_name) const
   {
-    return boundary_condition_hash (std::hash<std::string> {}(boundary_condition_name));
+    return boundary_condition_hash (std::hash<std::string_view> {}(boundary_condition_name));
   }
 
   /**
