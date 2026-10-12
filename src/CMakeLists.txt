@@ -142,12 +142,11 @@ endif()
 target_sources( T8 PRIVATE
     t8.c
     t8_cmesh/t8_cmesh.cxx
-    t8_cmesh/t8_cmesh_cad.cxx
     t8_cmesh/t8_cmesh_geometry.cxx
     t8_cmesh/t8_cmesh_examples.cxx
     t8_cmesh/t8_cmesh_helpers.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_commit.cxx
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c
     t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c
@@ -169,9 +168,14 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_pfc_helper.cxx
     t8_forest/t8_forest.cxx
     t8_forest/t8_forest_private.cxx
-    t8_forest/t8_forest_ghost.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_base.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_definition_helpers.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.cxx
+    t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_w_search.cxx
     t8_forest/t8_forest_iterate.cxx
     t8_forest/t8_forest_balance.cxx
+    t8_forest/t8_forest_subelement.cxx
     t8_forest/t8_forest_search/t8_forest_search.cxx
     t8_geometry/t8_geometry.cxx
     t8_geometry/t8_geometry_helpers.c
@@ -208,6 +212,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
     t8_types/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
+    t8_schemes/t8_subelement/t8_subelement.cxx
     t8_vtk/t8_vtk.c
     t8_vtk/t8_vtk_writer.cxx
     t8_vtk/t8_vtk_write_ASCII.cxx
@@ -249,7 +254,14 @@ install( DIRECTORY t8_helper_functions
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
+    PATTERN "t8_helper_functions/t8_refcount.h" EXCLUDE
 )
+
+install( FILES
+    t8_helper_functions/t8_refcount.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_helper_functions
+)
+
 install( DIRECTORY t8_cmesh
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
@@ -283,7 +295,6 @@ install( DIRECTORY t8_forest
     PATTERN "*.h"
     PATTERN "*.hxx"
     PATTERN "t8_forest/t8_forest_balance.h" EXCLUDE
-    PATTERN "t8_forest/t8_forest_ghost.h "  EXCLUDE
     PATTERN "t8_forest/t8_forest_private.h" EXCLUDE
 )
 install( DIRECTORY t8_geometry

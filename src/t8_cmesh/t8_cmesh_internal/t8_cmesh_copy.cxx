@@ -20,7 +20,7 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/** \file t8_cmesh_copy.c
+/** \file t8_cmesh_copy.cxx
  * Functionality to copy a cmesh.
  */
 
@@ -39,7 +39,7 @@ t8_cmesh_copy (t8_cmesh_t cmesh, const t8_cmesh_t cmesh_from, sc_MPI_Comm comm)
   t8_locidx_t first_tree, num_trees, first_ghost, num_ghosts;
 
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
-  T8_ASSERT (!cmesh->committed);
+  T8_ASSERT (!t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (t8_cmesh_is_committed (cmesh_from));
 
   if (t8_cmesh_uses_vertex_connectivity (cmesh_from)) {

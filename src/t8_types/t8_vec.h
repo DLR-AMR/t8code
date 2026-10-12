@@ -85,6 +85,7 @@ t8_axy (const double vec_x[3], double vec_y[3], const double alpha);
  */
 void
 t8_axb (const double vec_x[3], double vec_y[3], const double alpha, const double b);
+
 /** Y = Y + alpha * X
  * \param [in]  vec_x  A 3D vector.
  * \param [in,out] vec_y On input, a 3D vector.

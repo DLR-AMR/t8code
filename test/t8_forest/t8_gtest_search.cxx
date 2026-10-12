@@ -43,7 +43,8 @@ struct forest_search: public testing::TestWithParam<std::tuple<std::tuple<int, t
     level = std::get<1> (GetParam ());
 
     /* Construct a cube coarse mesh */
-    cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, 0);
     /* Build a uniform forest */
     forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }

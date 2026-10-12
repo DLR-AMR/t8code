@@ -32,37 +32,7 @@
 #include <t8_vtk/t8_vtk.h>
 #include <t8_forest/t8_forest_types.h>
 
-#if T8_ENABLE_VTK
-#include <vtkUnstructuredGrid.h>
-#endif
-
 T8_EXTERN_C_BEGIN ();
-
-#if T8_ENABLE_VTK
-/**
- * Translate a forest into a vtkUnstructuredGrid with respect to the given flags. 
- * This function uses the vtk library. t8code must be configured with
- * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
- * \param [in]  forest    The forest.
- * \param[in, out] unstructuredGrid 
- * \param [in]  write_treeid If true, the global tree id is written for each element.
- * \param [in]  write_mpirank If true, the mpirank is written for each element.
- * \param [in]  write_level If true, the refinement level is written for each element.
- * \param [in]  write_element_id If true, the global element id is written for each element.
- * \param [in]  curved_flag If true, write the elements as curved element types from vtk.
- * \param [in]  write_ghosts If true, write out ghost elements as well.
- * \param [in]  num_data  Number of user defined double valued data fields to write.
- * \param [in]  data      Array of t8_vtk_data_field_t of length \a num_data
- *                        providing the user defined per element data.
- *                        If scalar and vector fields are used, all scalar fields
- *                        must come first in the array.
- */
-void
-t8_forest_to_vtkUnstructuredGrid (t8_forest_t forest, vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid,
-                                  const int write_treeid, const int write_mpirank, const int write_level,
-                                  const int write_element_id, const int write_ghosts, const int curved_flag,
-                                  const int num_data, t8_vtk_data_field_t *data);
-#endif
 
 /** Write the forest in .pvtu file format. Writes one .vtu file per
  * process and a meta .pvtu file.
@@ -121,11 +91,11 @@ t8_forest_vtk_write_file (t8_forest_t forest, const char *fileprefix, const int 
  * process and a meta .pvtu file.
  * This function uses the vtk library. t8code must be configured with
  * "-DT8CODE_ENABLE_VTK=ON" in order to use it.
- * 
+ *
  * \param[in] cmesh The cmesh
  * \param[in] fileprefix The prefix of the output files
  * \param[in] comm The communicator to use
- * \return int 
+ * \return int
  * \note If t8code was not configured with vtk, use \ref t8_cmesh_vtk_write_file
  */
 int
@@ -136,11 +106,11 @@ t8_cmesh_vtk_write_file_via_API (t8_cmesh_t cmesh, const char *fileprefix, sc_MP
  * process and a meta .pvtu file.
  * This function writes ASCII files and can be used when
  * t8code is not configured with "-DT8CODE_ENABLE_VTK=ON" and
- * \ref t8_cmesh_vtk_write_file_via_API is not available. 
- * 
+ * \ref t8_cmesh_vtk_write_file_via_API is not available.
+ *
  * \param[in] cmesh The cmesh
- * \param[in] fileprefix The prefix of the output files 
- * \return True (nonzero) if successful, false (zero) otherwise 
+ * \param[in] fileprefix The prefix of the output files
+ * \return True (nonzero) if successful, false (zero) otherwise
  */
 int
 t8_cmesh_vtk_write_file (t8_cmesh_t cmesh, const char *fileprefix);

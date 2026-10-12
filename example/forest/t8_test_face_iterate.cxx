@@ -28,7 +28,7 @@
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_io.h>
 #include <t8_forest/t8_forest_geometrical.h>
-#include <t8_forest/t8_forest_ghost.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
@@ -170,11 +170,13 @@ t8_test_fiterate_brick (int dim, int x, int y, int z, int periodic_x, int period
   t8_cmesh_t cmesh;
 
   if (dim == 2) {
-    cmesh = t8_cmesh_new_brick_2d (x, y, periodic_x, periodic_y, comm);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_brick_2d (cmesh, x, y, periodic_x, periodic_y, comm);
   }
   else {
     T8_ASSERT (dim == 3);
-    cmesh = t8_cmesh_new_brick_3d (x, y, z, periodic_x, periodic_y, periodic_z, comm);
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_brick_3d (cmesh, x, y, z, periodic_x, periodic_y, periodic_z, comm);
   }
 
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);
@@ -188,7 +190,8 @@ static void
 t8_test_fiterate_hypercube (t8_eclass_t eclass, int level, sc_MPI_Comm comm, int no_vtk)
 {
   t8_cmesh_t cmesh;
-  cmesh = t8_cmesh_new_hypercube (eclass, comm, 0, 0, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube (&cmesh, eclass, comm, 0, 0, 0);
 
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);
 }
@@ -202,7 +205,8 @@ t8_test_fiterate_msh_file (const char *fileprefix, int level, int dim, sc_MPI_Co
 {
   t8_cmesh_t cmesh;
 
-  cmesh = t8_cmesh_from_msh_file (fileprefix, 0, comm, dim, 0, 0);
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_from_msh_file (&cmesh, fileprefix, 0, comm, dim, 0, 0);
   t8_test_fiterate_refine_and_partition (cmesh, level, comm, 1, no_vtk);
 }
 

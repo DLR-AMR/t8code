@@ -169,7 +169,7 @@ t8_default_scheme_tet::element_get_ancestor_id (const t8_element_t *elem, int le
 }
 
 int
-t8_default_scheme_tet::elements_are_family (t8_element_t *const *fam) const
+t8_default_scheme_tet::elements_are_family (const t8_element_t *const *fam) const
 {
 #if T8_ENABLE_DEBUG
   for (int i = 0; i < T8_DTET_CHILDREN; i++) {

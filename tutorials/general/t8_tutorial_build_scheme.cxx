@@ -128,7 +128,9 @@ main (int argc, char **argv)
   /*
    *  Build forest with default scheme.
    */
-  t8_cmesh_t cmesh = t8_cmesh_new_hypercube_hybrid (comm, 0, 0);
+  t8_cmesh_t cmesh;
+  t8_cmesh_init (&cmesh);
+  t8_cmesh_new_hypercube_hybrid (cmesh, comm, 0);
   /* t8_scheme_new_default creates the default scheme. */
   t8_forest_t forest_default = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 3, 0, comm);
 
