@@ -531,8 +531,9 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   }
   else {
     const auto previous_vertex
-      = (found_face_0_vertex_0 == check_face->begin () ? check_face->end () : found_face_0_vertex_0 - 1);
+      = (found_face_0_vertex_0 == check_face->begin () ? check_face->end () - 1 : found_face_0_vertex_0 - 1);
     face_1_vertex_0 = *previous_vertex;
+    T8_ASSERT (std::find (face_1_points.begin (), face_1_points.end (), face_1_vertex_0) != face_1_points.end ());
   }
 
   /* Now we can compute the complete orientation of face 1. */
