@@ -1241,13 +1241,8 @@ t8_cmesh_reset (t8_cmesh_t *pcmesh)
     cmesh->set_partition_scheme->unref ();
   }
 
-  if (cmesh->vertex_connectivity != nullptr) {
-    delete cmesh->vertex_connectivity;
-  }
-
-  if (cmesh->boundary_condition_handler != nullptr) {
-    delete cmesh->boundary_condition_handler;
-  }
+  delete cmesh->vertex_connectivity;
+  delete cmesh->boundary_condition_handler;
 
   T8_FREE (cmesh);
   *pcmesh = nullptr;
