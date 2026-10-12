@@ -503,7 +503,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
       const t8_forest_t forest = m_uncommitted_forest.value ();
       /** The no_repartition argument of set_balance if it was called, false otherwise. */
       int balance_no_repartition = false;
-      // When we have to interpolate the values, balance cannot repartition the forest.
+      // When we have to interpolate the data, balance cannot repartition the forest.
       // A requested repartitioning is carried out after the interpolation instead.
       if (t8_forest_get_balance (forest, &balance_no_repartition)) {
         t8_forest_set_balance (forest, nullptr, true);
