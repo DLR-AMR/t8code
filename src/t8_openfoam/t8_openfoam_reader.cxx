@@ -524,7 +524,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
    * We iterate cyclically over the face vertices. So if we arrive at the end, we begin at the start. */
   auto next_vertex
     = ((found_face_0_vertex_0 + 1) == check_face->end () ? check_face->begin () : found_face_0_vertex_0 + 1);
-  /* Check if face 0 contains this vertex */
+  /* Check if face 1 contains this vertex */
   size_t face_1_vertex_0;
   if (std::find (face_1_points.begin (), face_1_points.end (), *next_vertex) != face_1_points.end ()) {
     face_1_vertex_0 = *next_vertex;
