@@ -139,8 +139,8 @@ add_t8_cpp_test( NAME t8_gtest_multiple_attributes_parallel                 SOUR
 add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOURCES t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
 
-add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
-add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
+add_t8_cpp_test( NAME t8_gtest_shmem_parallel                       SOURCES t8_data/t8_gtest_shmem.cxx )
+add_t8_cpp_test( NAME t8_gtest_data_pack_parallel                   SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
 
 add_t8_cpp_test( NAME t8_gtest_bin_search_parallel                SOURCES t8_forest/t8_gtest_bin_search.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_element_volume_serial              SOURCES t8_forest/t8_gtest_element_volume.cxx )
@@ -155,6 +155,7 @@ add_t8_cpp_test( NAME t8_gtest_ghost_and_owner_parallel           SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_balance_parallel                   SOURCES t8_forest/t8_gtest_balance.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_commit_parallel             SOURCES t8_forest/t8_gtest_forest_commit.cxx )
 add_t8_cpp_test( NAME t8_gtest_forest_face_normal_serial          SOURCES t8_forest/t8_gtest_forest_face_normal.cxx )
+add_t8_cpp_test( NAME t8_gtest_forest_iterate_faces_serial        SOURCES t8_forest/t8_gtest_forest_iterate_faces.cxx)
 add_t8_cpp_test( NAME t8_gtest_leaf_face_neighbors_parallel       SOURCES t8_forest/t8_gtest_leaf_face_neighbors.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_partition_data_parallel            SOURCES t8_forest/t8_gtest_partition_data.cxx )
 add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_forest/t8_gtest_set_partition_offset.cxx )
