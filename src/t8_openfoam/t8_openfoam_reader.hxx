@@ -211,10 +211,11 @@ struct t8_openfoam_reader
       }
       return true;
     });
-
+    /* If the search result is not the end iterator, return the position as distance from the start. */
     if (it != std::ranges::end (listlist)) {
       return std::distance (std::ranges::begin (listlist), it);
     }
+    /* If no suitable list was found, return empty value. */
     return std::nullopt;
   }
 
@@ -234,10 +235,11 @@ struct t8_openfoam_reader
       return std::ranges::all_of (
         required, [&] (const auto& val) { return std::ranges::find (vec, val) != std::ranges::end (vec); });
     });
-
+    /* If the search result is not the end iterator, return the position as distance from the start. */
     if (it != std::ranges::end (listlist)) {
       return std::distance (std::ranges::begin (listlist), it);
     }
+    /* If no suitable list was found, return empty value. */
     return std::nullopt;
   }
 
