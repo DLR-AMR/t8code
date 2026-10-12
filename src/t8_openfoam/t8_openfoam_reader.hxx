@@ -169,7 +169,7 @@ struct t8_openfoam_reader
    * \param [in] orientation        The orientation of the face (int and bool, the first is the OF vertex,
    *                                which corresponds to the t8code vertex 0 and the second is 1, if both face
    *                                normals point in the same direction and 0 otherwise)
-   * \param [in] t8_face_vertex_id  The t8 face vertex id to convert
+   * \param [in] t8_face_vertex_id  The t8 face-vertex id to convert
    * \return                        The converted OF face vertex id
    */
   constexpr static u_int8_t
