@@ -173,8 +173,7 @@ struct t8_openfoam_reader
    * \return                        The converted OF face vertex id
    */
   constexpr static u_int8_t
-  t8_face_vertex_to_of_point (t8_eclass_t face_class, std::pair<u_int8_t, u_int8_t> orientation,
-                              u_int8_t t8_face_vertex_id)
+  t8_face_vertex_to_of_point (t8_eclass_t face_class, std::pair<u_int8_t, bool> orientation, u_int8_t t8_face_vertex_id)
   {
     /* While t8code uses the z-order for quads, OpenFOAM uses an anti-clockwise numeration.
      * So if the face is a quad, we have to switch indices in accordance with this LUT.
