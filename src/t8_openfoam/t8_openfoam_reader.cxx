@@ -360,6 +360,41 @@ t8_openfoam_reader::read_neighbor (const t8_path& neighbor_file)
   return true;
 }
 
+t8_eclass_t
+t8_openfoam_reader::get_cell_eclass (const size_t cell_id)
+{
+  /* Count points of the cell. The points are counted for every face,
+    so a hex for example has 6 (faces) * 4 (vertices per face) = 24 points. */
+  int num_points = 0;
+  for (const auto& face : m_cell_faces[cell_id]) {
+    num_points += m_face_points[face.first].size ();
+  }
+
+  /* OpenFOAM only has 3D cells, so we do not check 0-2 dimensional cells. */
+  switch (m_cell_faces[cell_id].size ()) {
+  case 4:
+    /* This cell is hopefully a tet with 4*3=12 points. */
+    if (num_points == 12)
+      return T8_ECLASS_TET;
+    break;
+  case 5:
+    /* This cell could either be a prism (3 * 4 + 2 * 3 = 18) or pyramid (4 * 3 + 1 * 4 = 16). */
+    if (num_points == 18)
+      return T8_ECLASS_PRISM;
+    if (num_points == 16)
+      return T8_ECLASS_PYRAMID;
+    break;
+  case 6:
+    /* This cell is hopefully a hex with 6 * 4 = 24 points. */
+    if (num_points == 24)
+      return T8_ECLASS_HEX;
+    break;
+  default:
+    break;
+  }
+  return T8_ECLASS_INVALID;
+}
+
 bool
 t8_openfoam_reader::build_cmesh ()
 {
