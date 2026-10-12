@@ -170,7 +170,7 @@ struct t8_openfoam_reader
    *                                which corresponds to the t8code vertex 0 and the second is 1, if both face
    *                                normals point in the same direction and 0 otherwise)
    * \param [in] t8_face_vertex_id  The t8 face-vertex id to convert
-   * \return                        The converted OF face vertex id
+   * \return                        The converted OF face-vertex id
    */
   constexpr static u_int8_t
   t8_face_vertex_to_of_point (t8_eclass_t face_class, std::pair<u_int8_t, bool> orientation, u_int8_t t8_face_vertex_id)
@@ -192,7 +192,7 @@ struct t8_openfoam_reader
   }
 
   /**
-   * Finds a list inside a list which does not contain given values
+   * Search through a list of lists and find the first one that does not contain any "forbidden" values.
    * \param [in] listlist     A list of lists (range of ranges)
    * \param [in] forbidden    A range of forbidden values
    * \return                  The location of the first sublist, which does not contain any of \a forbidden. Empty on failure.
@@ -219,7 +219,7 @@ struct t8_openfoam_reader
   }
 
   /**
-   * Finds a list inside a list which contains given values
+   * Search through a list of lists and find the first one that contains all given required values.
    * \param [in] listlist     A list of lists (range of ranges)
    * \param [in] required     A range of required values
    * \return                  The location of the first sublist, which contains all values of \a required. Empty on failure.
@@ -249,7 +249,7 @@ struct t8_openfoam_reader
   build_cmesh ();
 
   /**
-   * Use the gathered cell information to build a hex cell and add it to the cmesh.
+   * Use the gathered cell information to build a hex cell and add it to the underlying cmesh.
    * \param [in] cell_id           The id of the cell.
    * \param [in] face_ids          The ids of the cell faces.
    * \param [in] face_point_ids    The ids of the points of the cell faces.
@@ -267,7 +267,7 @@ struct t8_openfoam_reader
   sc_MPI_Comm m_comm;
 
   /** Conversion table between OpenFOAM and t8code quad numeration.
-   * We only need this for quads, since triangles numerated equally.
+   * We only need this for quads, since a triangle's corners are numbered equally.
    */
   static constexpr std::array quad_conversion = { 0, 1, 3, 2 };
 
