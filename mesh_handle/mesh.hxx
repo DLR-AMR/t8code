@@ -509,7 +509,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
         partition_postponed = !balance_no_repartition;
       }
       // Same for the requested partition
-      if (t8_forest_get_partition (forest, &partition_for_coarsening)) {
+      if (t8_forest_partition_is_set (forest, &partition_for_coarsening)) {
         t8_forest_unset_partition (forest);
         partition_postponed = true;
       }

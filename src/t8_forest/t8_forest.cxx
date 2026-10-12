@@ -3071,7 +3071,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
 }
 
 int
-t8_forest_get_partition (const t8_forest_t forest, int *set_for_coarsening)
+t8_forest_partition_is_set (const t8_forest_t forest, int *set_for_coarsening)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   const int partition_is_set = (forest->from_method & T8_FOREST_FROM_PARTITION) != 0;
@@ -3085,7 +3085,7 @@ void
 t8_forest_unset_partition (t8_forest_t forest)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-  if (!t8_forest_get_partition (forest, NULL)) {
+  if (!t8_forest_partition_is_set (forest, NULL)) {
     return;
   }
   /* Remove PARTITION from the from_method.

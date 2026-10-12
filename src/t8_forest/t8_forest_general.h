@@ -331,7 +331,7 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
  * \return                              True if the forest is set to be partitioned, false otherwise.
  */
 int
-t8_forest_get_partition (const t8_forest_t forest, int *set_for_coarsening);
+t8_forest_partition_is_set (const t8_forest_t forest, int *set_for_coarsening);
 
 /** Undo \ref t8_forest_set_partition, such that the forest is not partitioned during commit.
  * If the forest is set to be neither adapted nor balanced, it is copied from its source forest during commit.
