@@ -43,6 +43,7 @@
 #include <span>
 #include <vector>
 #include <ranges>
+#include <concepts>
 
 namespace detail
 {
