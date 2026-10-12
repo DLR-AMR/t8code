@@ -370,7 +370,8 @@ t8_openfoam_reader::get_cell_eclass (const size_t cell_id)
     num_points += m_face_points[face.first].size ();
   }
 
-  /* OpenFOAM only has 3D cells, so we do not check 0-2 dimensional cells. */
+  /* OpenFOAM only has 3D cells, so we do not check 0-2 dimensional cells.
+   * We distinguish shapes based on the number of faces and points. */
   switch (m_cell_faces[cell_id].size ()) {
   case 4:
     /* This cell should be a tet with 4*3=12 points. */
