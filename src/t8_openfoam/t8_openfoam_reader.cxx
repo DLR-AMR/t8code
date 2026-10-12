@@ -38,7 +38,7 @@ t8_openfoam_reader::read ()
   const t8_path case_points_file = m_case_dir / "constant/polyMesh/points";
 
   /* The file reading needs to happen in this order, since these functions depend on each other. */
-  bool success = 1;
+  bool success = true;
   success = read_points (case_points_file);
   success = success && read_faces (case_faces_file);
   success = success && read_owner (case_owner_file);
