@@ -164,7 +164,7 @@ struct t8_openfoam_reader
 
   /**
    * Given a face eclass and orientation, this function converts the face id of a t8code face-vertex id to the corresponding
-   * OpenFOAM face id.
+   * OpenFOAM (OF) face-vertex id.
    * \param [in] face_class         The eclass of the face (triangle or quad)
    * \param [in] orientation        The orientation of the face (int and bool, the first is the OF vertex,
    *                                which corresponds to the t8code vertex 0 and the second is 1, if both face
