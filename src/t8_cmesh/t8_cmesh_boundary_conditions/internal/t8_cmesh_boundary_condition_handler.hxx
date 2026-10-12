@@ -85,17 +85,17 @@ struct t8_cmesh_boundary_condition_handler
    * \param [in] boundary_conditions  The boundary conditions to set. Container must have the same length
    *                                  as the eclass of the cell has faces.
    */
-  template <std::ranges::input_range TStringRange>
+  template <std::ranges::sized_range TStringRange>
     requires std::convertible_to<std::ranges::range_reference_t<TStringRange>, std::string_view>
   inline void
-  add_boundary_conditions (t8_gloidx_t gtreeid, TStringRange boundary_conditions)
+  add_boundary_conditions (t8_gloidx_t gtreeid, TStringRange &&boundary_conditions)
   {
     std::vector<boundary_condition_hash> hashes;
-    hashes.reserve (std::size (boundary_conditions));
+    hashes.reserve (std::ranges::size (boundary_conditions));
     for (const auto &boundary_condition : boundary_conditions) {
       const boundary_condition_hash hash = hash_boundary_condition_name (boundary_condition);
       m_boundary_conditions.try_emplace (hash, boundary_condition);
-      hashes.emplace_back (std::move (hash));
+      hashes.emplace_back (hash);
     }
     t8_cmesh_set_attribute (m_cmesh, gtreeid, t8_get_package_id (), get_boundary_condition_attribute_key (),
                             hashes.data (), sizeof (boundary_condition_hash) * hashes.size (), 0);
