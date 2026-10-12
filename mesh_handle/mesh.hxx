@@ -504,7 +504,7 @@ class mesh: public TMeshCompetencePack::template apply<mesh<TElementCompetencePa
       int balance_no_repartition = false;
       // When we have to interpolate the data, balance cannot repartition the forest.
       // A requested repartitioning is carried out after the interpolation instead.
-      if (t8_forest_get_balance (forest, &balance_no_repartition)) {
+      if (t8_forest_balance_is_set (forest, &balance_no_repartition)) {
         t8_forest_set_balance (forest, nullptr, true);
         partition_postponed = !balance_no_repartition;
       }

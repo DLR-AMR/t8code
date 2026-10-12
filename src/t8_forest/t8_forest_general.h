@@ -385,7 +385,7 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
  * \return                          True if the forest is set to be balanced, false otherwise.
  */
 int
-t8_forest_get_balance (const t8_forest_t forest, int *no_repartition);
+t8_forest_balance_is_set (const t8_forest_t forest, int *no_repartition);
 
 /** This type controls, which neighbors count as ghost elements.
  * Currently, we support face-neighbors. Vertex and edge neighbors will eventually be added. */

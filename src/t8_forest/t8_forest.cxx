@@ -3124,7 +3124,7 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
 }
 
 int
-t8_forest_get_balance (const t8_forest_t forest, int *no_repartition)
+t8_forest_balance_is_set (const t8_forest_t forest, int *no_repartition)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
   const int balance_is_set = (forest->from_method & T8_FOREST_FROM_BALANCE) != 0;
