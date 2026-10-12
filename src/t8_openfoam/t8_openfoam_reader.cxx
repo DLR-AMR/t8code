@@ -471,7 +471,7 @@ t8_openfoam_reader::reconstruct_hex_cell (size_t cell_id, std::vector<size_t> fa
   /* ------------------------- 1. Assign face 0 ------------------------- */
   t8_face_normal = t8_eclass_face_orientation[eclass][0];
   /* The orientation is 1, if both face normals point in the same direction */
-  orientation.second = t8_face_normal == face_normals[0];
+  orientation.second = (t8_face_normal == face_normals[0]);
   orientation.first = 0;
 
   /* Now, we assign the first face to be face 0. */
