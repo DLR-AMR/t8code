@@ -20,8 +20,13 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
+/** \file t8code_post_install_sanity.cxx
+ * This file implements a sanity check that includes t8code from another target and calls some t8code functions.
+ */
+
 #include <t8.h>
 
+/// Main function that tries some very basic t8code functionality for testing purposes.
 int
 main (int argc, char **argv)
 {
