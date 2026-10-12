@@ -59,7 +59,7 @@ fi
 #
 TRAILING_LINES=$(grep -n '[[:blank:]]$' "$file")
 if [ -n "$TRAILING_LINES" ]; then
-    echo "ERROR Trailing whitespace found on the following line(s):"
+    echo "ERROR Trailing whitespace found on the following line(s) in $file:"
     echo "$TRAILING_LINES" | sed 's/^/    /'
     exit 1
 fi
@@ -69,7 +69,7 @@ fi
 #
 CRLF_LINES=$(grep -n $'\r' "$file")
 if [ -n "$CRLF_LINES" ]; then
-  echo "ERROR: Windows/CRLF line-endings found on the following line(s):"
+  echo "ERROR: Windows/CRLF line-endings found on the following line(s) in $file:"
   echo "$CRLF_LINES" | sed 's/^/    /'
   exit 1
 fi
