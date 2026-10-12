@@ -23,8 +23,8 @@
 /** \file t8_subelement_scheme.hxx
  * Common functionality for schemes that support subelements.
  * Subelements are temporary elements used after common recursive adaptation and are discarded before the next
- * adaptation cycle. 
- * Scheme-specific subelement functionality is provided by the corresponding specialization in the specializations 
+ * adaptation cycle.
+ * Scheme-specific subelement functionality is provided by the corresponding specialization in the specializations
  * folder and this file only implements functionality that is equal for all subelements.
  */
 #pragma once
@@ -38,7 +38,7 @@
 #include <utility>
 #include <algorithm>
 
-/** Scheme for the common functionality of all subelements. 
+/** Scheme for the common functionality of all subelements.
  * Subelements are discarded before the next adaptation cycle and do not have children.
  * \tparam TEclass The element class of the underlying elements which we want to define subelements for.
  *         The subelements themselves could have another eclass.
@@ -280,9 +280,9 @@ struct t8_subelement_scheme_common:
     T8_ASSERT (element_is_valid (dest));
   }
 
-  /** Check if two elements are equal. 
+  /** Check if two elements are equal.
   * \note For subelements, it is only checked that the type is equal and not the id!!
-  * (This is because the linear id is the same for all subelements and sometimes, the wrong subelement is found. 
+  * (This is because the linear id is the same for all subelements and sometimes, the wrong subelement is found.
   * At the moment, this is not a problem.)
   * \param [in] elem1  The first element.
   * \param [in] elem2  The second element.
@@ -314,7 +314,7 @@ struct t8_subelement_scheme_common:
   }
 
   /** Compute the parent of a given element \b elem and store it in \b parent.
-   *  \b parent needs to be an existing element. No memory is allocated by this function. \b elem and \b parent can 
+   *  \b parent needs to be an existing element. No memory is allocated by this function. \b elem and \b parent can
    *  point to the same element, then the entries of \b elem are overwritten by the ones of its parent.
    * \param [in] elem   The element whose parent will be computed.
    * \param [in,out] parent This element's entries will be overwritten by those of \b elem's parent.
@@ -377,7 +377,7 @@ struct t8_subelement_scheme_common:
                                                     element_to_standalone (child));
   }
 
-  /** Return the number of children of an element when it is refined. Non-subelement case, 
+  /** Return the number of children of an element when it is refined. Non-subelement case,
    * where just the underlying scheme is used.
    * \param [in] elem   The element whose number of children is returned.
    * \return            The number of children of \a elem if it is to be refined.
@@ -403,7 +403,7 @@ struct t8_subelement_scheme_common:
     return derived ().subelement_get_num_children (elem, subelement_type);
   }
 
-  /** Return the max number of children of an eclass. 
+  /** Return the max number of children of an eclass.
    * \return Maximum number of possible children (maximum of normal refinement and subelement refinement).
    */
   int
@@ -414,7 +414,7 @@ struct t8_subelement_scheme_common:
   }
 
   /**
-   * Indicates if an element is refinable. Possible reasons for being not refinable could be 
+   * Indicates if an element is refinable. Possible reasons for being not refinable could be
    * that the element has reached its max level or is a subelement.
    * \param [in] elem   The element to check.
    * \return            True if the element is refinable.
@@ -432,9 +432,9 @@ struct t8_subelement_scheme_common:
 
   /** Construct all children of a given element. Not possible for subelements as they have no children.
    * \param [in] elem     This must be a valid element, bigger than maxlevel.
-   * \param [in] length   The length of the output array \a c must match the number of children. 
+   * \param [in] length   The length of the output array \a c must match the number of children.
    *                      See \ref element_get_num_children.
-   * \param [in,out] c    The storage for these \a length elements must exist and match the element class in 
+   * \param [in,out] c    The storage for these \a length elements must exist and match the element class in
    *                      the children's ordering. On output, all children are valid.
    * It is valid to call this function with elem = c[0].
    */
@@ -456,11 +456,11 @@ struct t8_subelement_scheme_common:
     T8_FREE (standalone_children_ptrs);
   }
 
-  /** This defines how an element is refined in subelements using a specified subelement type. 
+  /** This defines how an element is refined in subelements using a specified subelement type.
    * \param [in] elem The element to be refined.
-   * \param [in] length   The length of the output array \a c must match the number of subelements.   
+   * \param [in] length   The length of the output array \a c must match the number of subelements.
    *                      See \ref element_get_num_children.
-   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem. 
+   * \param [in, out] c An array of allocated elements that will be filled with the subelements of \a elem.
    * \param [in] subelem_type The subelement type to be used for refinement.
    */
   void
@@ -514,7 +514,7 @@ struct t8_subelement_scheme_common:
       T8_ASSERT (element_is_valid (fam[isib]));
     }
 #endif
-    /* If the first element is a subelement, the remaining elements also have to be subelements and the standalone 
+    /* If the first element is a subelement, the remaining elements also have to be subelements and the standalone
      * elements must be equal. */
     if (element_is_subelement (fam[0])) {
       auto element_0 = element_to_standalone (fam[0]);
@@ -526,7 +526,7 @@ struct t8_subelement_scheme_common:
       }
       return 1;
     }
-    /* If the first element is no subelement, the remaining elements should not be subelements and 
+    /* If the first element is no subelement, the remaining elements should not be subelements and
      * they must form a family. */
     const t8_element_t **standalone_children_ptrs = T8_ALLOC (const t8_element_t *, num_siblings);
     for (int isib = 0; isib < num_siblings; ++isib) {
@@ -543,7 +543,7 @@ struct t8_subelement_scheme_common:
   }
 
   /** Query whether element A is an ancestor of the element B.
-   * An element A is ancestor of an element B if A == B or if B can 
+   * An element A is ancestor of an element B if A == B or if B can
    * be obtained from A via successive refinement.
    * \param [in] element_A An element of class \a eclass in scheme \a scheme.
    * \param [in] element_B An element of class \a eclass in scheme \a scheme.
@@ -583,7 +583,7 @@ struct t8_subelement_scheme_common:
   }
 
   /** Compute the first descendant of a given element.
-   * The first descendant of a subelement is the descendant of the parent element, 
+   * The first descendant of a subelement is the descendant of the parent element,
    * as they are discarded for the next adaptation cycle.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The first element in a uniform refinement of \a elem of the given level.
@@ -599,7 +599,7 @@ struct t8_subelement_scheme_common:
   }
 
   /** Compute the last descendant of a given element.
-   * The last descendant of a subelement is the descendant of the parent element, 
+   * The last descendant of a subelement is the descendant of the parent element,
    * as they are discarded for the next adaptation cycle.
    * \param [in] elem     The element whose descendant is computed.
    * \param [out] desc    The last element in a uniform refinement of \a elem of the given level.
@@ -635,9 +635,9 @@ struct t8_subelement_scheme_common:
    * \note This is not implemented for subelements.
    * \param [in] elem     The element.
    * \param [in] face     A face of \a elem.
-   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with 
+   * \param [in,out] children Allocated elements, in which the children of \a elem that share a face with
    *                          \a face are stored. They will be stored in order of their linear id.
-   * \param [in] num_children The number of elements in \a children. Must match the number of children 
+   * \param [in] num_children The number of elements in \a children. Must match the number of children
    *                          that touch \a face. See \ref element_get_num_face_children.
    * \param [in,out] child_indices If not NULL, an array of num_children integers must be given,
    *                      on output its i-th entry is the child_id of the i-th face_child.
@@ -665,8 +665,8 @@ struct t8_subelement_scheme_common:
     * \note This is not implemented for subelements.
     * \param [in]  elem    The element.
     * \param [in]  face    Then number of the face.
-    * \param [in]  face_child A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that 
-    *                         shares a face with \a face. These children are counted in linear order. 
+    * \param [in]  face_child A number 0 <= \a face_child < num_face_children, specifying a child of \a elem that
+    *                         shares a face with \a face. These children are counted in linear order.
     *                        This coincides with the order of children from a call to \ref element_get_children_at_face.
     * \return              The face number of the face of a child of \a elem that coincides with \a face_child.
     */
@@ -679,7 +679,7 @@ struct t8_subelement_scheme_common:
     return derived ().underlying_scheme.element_face_get_child_face (element_to_standalone (elem), face, face_child);
   }
 
-  /** Given a face of an element return the face number of the parent of the element that matches the element's face. 
+  /** Given a face of an element return the face number of the parent of the element that matches the element's face.
     * \note This is not implemented for subelements.
     * \param [in]  elem    The element.
     * \param [in]  face    Then number of the face.
@@ -699,7 +699,7 @@ struct t8_subelement_scheme_common:
    * \note This is not implemented for subelements.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
-   * \param [in, out] first_desc An allocated element. This element's data will be filled with the data of the first 
+   * \param [in, out] first_desc An allocated element. This element's data will be filled with the data of the first
    *                       descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the first descendant is constructed
    */
@@ -717,7 +717,7 @@ struct t8_subelement_scheme_common:
    * \note This is not implemented for subelements.
    * \param [in] elem      The input element.
    * \param [in] face      A face of \a elem.
-   * \param [in, out] last_desc An allocated element. This element's data will be filled with the data of the last 
+   * \param [in, out] last_desc An allocated element. This element's data will be filled with the data of the last
    *                       descendant of \a elem that shares a face with \a face.
    * \param [in] level     The level, at which the last descendant is constructed
    */
@@ -768,7 +768,7 @@ struct t8_subelement_scheme_common:
   /** Construct the face neighbor of a given element if this face neighbor is inside the root tree. Return 0 otherwise.
    * \note This is not implemented for subelements.
    * \param [in] elem The element to be considered.
-   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside the root tree, this element's data 
+   * \param [in,out] neigh If the face neighbor of \a elem along \a face is inside the root tree, this element's data
    *                  is filled with the data of the face neighbor. Otherwise the data can be modified arbitrarily.
    * \param [in] face The number of the face along which the neighbor should be constructed.
    * \param [out] neigh_face The number of \a face as viewed from \a neigh.
@@ -789,10 +789,10 @@ struct t8_subelement_scheme_common:
   // ######################################____TREE FACE TRANSFORMATION____#############################################
 
   /** \note This is not implemented for this scheme.
-   *  \param [in] elem1     
-   *  \param [in,out] elem2 
-   *  \param [in] orientation 
-   *  \param [in] sign     
+   *  \param [in] elem1
+   *  \param [in,out] elem2
+   *  \param [in] orientation
+   *  \param [in] sign
    *  \param [in] is_smaller_face
    */
   static void
@@ -804,10 +804,10 @@ struct t8_subelement_scheme_common:
   }
 
   /** \note This is not implemented for this scheme.
-   * \param [in] face  
-   * \param [in,out] elem 
-   * \param [in] root_face 
-   * \param [in] scheme   
+   * \param [in] face
+   * \param [in,out] elem
+   * \param [in] root_face
+   * \param [in] scheme
    */
   int
   element_extrude_face ([[maybe_unused]] const t8_element_t *face, [[maybe_unused]] t8_element_t *elem,
@@ -819,9 +819,9 @@ struct t8_subelement_scheme_common:
   }
 
   /** \note This is not implemented for this scheme.
-   * \param [in] elem    
-   * \param [in] face    
-   * \param [in,out] boundary 
+   * \param [in] elem
+   * \param [in] face
+   * \param [in,out] boundary
    * \param [in] scheme
    */
   void
@@ -852,8 +852,8 @@ struct t8_subelement_scheme_common:
 
   /** Compute the linear id of a given element in a hypothetical uniform refinement of a given level.
    * \note that the id of a subelement equals the id of its parent.
-   * Therefore, the binary search (for example used in the leaf_face_neighbor function) will find a random subelement 
-   * of the transition cell which might not be the desired neighbor of a given element. 
+   * Therefore, the binary search (for example used in the leaf_face_neighbor function) will find a random subelement
+   * of the transition cell which might not be the desired neighbor of a given element.
    * \param [in] elem     The element whose id we compute.
    * \param [in] level    The level of the uniform refinement to consider.
    * \return              The linear id of the element.
@@ -917,7 +917,7 @@ struct t8_subelement_scheme_common:
 
   // ################################################____VISUALIZATION____##############################################
 
-  /** Compute the coordinates of a given element vertex inside a reference tree 
+  /** Compute the coordinates of a given element vertex inside a reference tree
    *  that is embedded into [0,1]^d (d = dimension).
    *   \note This is not implemented for subelements.
    *   \param [in] elem      The element to be considered.
@@ -936,7 +936,7 @@ struct t8_subelement_scheme_common:
   /** Convert a point in the reference space of an element to a point in the reference space of the tree.
    * \param [in] elem         The element.
    * \param [in] ref_coords   The coordinates \f$ [0,1]^\mathrm{dim} \f$ of the point in the reference space
-   *                          of the element. 
+   *                          of the element.
    * \param [in] num_coords   The number of coordinates to evaluate.
    * \param [out] out_coords  The coordinates of the point in the reference space of the tree.
    */
@@ -959,7 +959,7 @@ struct t8_subelement_scheme_common:
    * \param [in] length   The number of elements to be allocated.
    * \param [in,out] elems On input an array of \b length many unallocated element pointers.
    *                      On output all these pointers will point to an allocated and initialized element.
-   * \note Not every element that is created in t8code will be created by a call to this function. However, if an 
+   * \note Not every element that is created in t8code will be created by a call to this function. However, if an
    *  element is not created using \ref element_new, then it is guaranteed that \ref element_init is called on it.
    * \note In debugging mode, an element that was created with \ref element_new must pass \ref element_is_valid.
    * \note If an element was created by \ref element_new then \ref element_init may not be called for it.
@@ -1039,12 +1039,12 @@ struct t8_subelement_scheme_common:
   // ############################################____DEBUG____##########################################################
 
 #if T8_ENABLE_DEBUG
-  /** Query whether a given element can be considered as 'valid' and it is safe to perform any of the above 
+  /** Query whether a given element can be considered as 'valid' and it is safe to perform any of the above
    *  algorithms on it. For example this could mean that all coordinates are in valid ranges and other member variables
    *  do have meaningful values.
    * \param [in]      elem  The element to be checked.
    * \return          True if \a elem is safe to use. False otherwise.
-   * \note            This function is used for debugging to catch certain errors. These can for example occur when 
+   * \note            This function is used for debugging to catch certain errors. These can for example occur when
    *                  an element points to a region of memory which should not be interpreted as an element.
    * \note            We recommend to use the assertion T8_ASSERT (element_is_valid (elem))
    *                  in the implementation of each of the functions in this file.
@@ -1068,7 +1068,7 @@ struct t8_subelement_scheme_common:
     return subelement_valid && element_valid;
   }
 
-  /** Print a given element. This prints the subelement information and the standalone debug print. 
+  /** Print a given element. This prints the subelement information and the standalone debug print.
    * This function is only available in the debugging configuration.
    * \param [in]        elem  The element to print
    */
@@ -1165,7 +1165,7 @@ struct t8_subelement_scheme_common:
 
   // ############################################____SUBELEMENT____#####################################################
   /** Check if \a elem is a subelement.
-   * \param [in] elem The elem to be checked. 
+   * \param [in] elem The elem to be checked.
    */
   static bool
   element_is_subelement (const t8_element_t *elem)
@@ -1175,7 +1175,7 @@ struct t8_subelement_scheme_common:
 
  protected:
   // PRIVATE HELPER
-  /** Return the standalone element stored inside a subelement. 
+  /** Return the standalone element stored inside a subelement.
    * Const version.
    * \param[in] subelement The subelement for which the standalone element should be extracted.
    */
@@ -1185,7 +1185,7 @@ struct t8_subelement_scheme_common:
     return (const t8_element_t *) &subelement->element;
   }
 
-  /** Return the standalone element stored inside a subelement. 
+  /** Return the standalone element stored inside a subelement.
    * Non-const version.
    * \param[in] subelement The subelement for which the standalone element should be extracted.
    */
@@ -1195,9 +1195,9 @@ struct t8_subelement_scheme_common:
     return (t8_element_t *) &subelement->element;
   }
 
-  /** Same as \ref subelement_to_standalone but takes a general element type. 
+  /** Same as \ref subelement_to_standalone but takes a general element type.
    * Const version.
-   * \param[in] element Element of class t8_element_t that can be interpreted as subelement. 
+   * \param[in] element Element of class t8_element_t that can be interpreted as subelement.
    */
   static const t8_element_t *
   element_to_standalone (const t8_element_t *element) noexcept
@@ -1205,9 +1205,9 @@ struct t8_subelement_scheme_common:
     return subelement_to_standalone (as_subelement (element));
   }
 
-  /** Same as \ref subelement_to_standalone but takes a general element type. 
+  /** Same as \ref subelement_to_standalone but takes a general element type.
    * Non-const version.
-   * \param[in] element Element of class t8_element_t that can be interpreted as subelement. 
+   * \param[in] element Element of class t8_element_t that can be interpreted as subelement.
    */
   static t8_element_t *
   element_to_standalone (t8_element_t *element) noexcept
@@ -1215,18 +1215,18 @@ struct t8_subelement_scheme_common:
     return subelement_to_standalone (as_subelement (element));
   }
 
-  /** Interpret an element as a subelement. 
+  /** Interpret an element as a subelement.
   * Const version.
-  * \param[in] element Element of class t8_element_t that can be interpreted as subelement. 
+  * \param[in] element Element of class t8_element_t that can be interpreted as subelement.
   */
   static const TSubelementType *
   as_subelement (const t8_element_t *element) noexcept
   {
     return reinterpret_cast<const TSubelementType *> (element);
   }
-  /** Interpret an element as a subelement. 
+  /** Interpret an element as a subelement.
    * Non-const version.
-   * \param[in] element Element of class t8_element_t that can be interpreted as subelement. 
+   * \param[in] element Element of class t8_element_t that can be interpreted as subelement.
    */
   static TSubelementType *
   as_subelement (t8_element_t *element) noexcept
@@ -1255,7 +1255,7 @@ struct t8_subelement_scheme_common:
                  - (derived ().underlying_scheme.element_get_level (subelement_to_standalone (subelement))));
   }
 
-  /** Return the derived subelement scheme. 
+  /** Return the derived subelement scheme.
    * Const Version.
    */
   const TSubelementSchemeSpecialization &
@@ -1264,7 +1264,7 @@ struct t8_subelement_scheme_common:
     return static_cast<const TSubelementSchemeSpecialization &> (*this);
   }
 
-  /** Return the derived subelement scheme. 
+  /** Return the derived subelement scheme.
    * Non-const Version.
    */
   TSubelementSchemeSpecialization &

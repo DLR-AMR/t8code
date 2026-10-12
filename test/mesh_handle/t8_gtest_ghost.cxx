@@ -197,8 +197,8 @@ struct cache_neighbors_overwrite: public t8_mesh_handle::cache_neighbors<TUnderl
   }
 };
 
-/** Use child of \ref t8_mesh_handle::cache_neighbors to check that the cache is actually set 
- * and accessed correctly. This is done by modifying the cache variables to a unrealistic values and 
+/** Use child of \ref t8_mesh_handle::cache_neighbors to check that the cache is actually set
+ * and accessed correctly. This is done by modifying the cache variables to a unrealistic values and
  * checking that the functionality actually outputs this unrealistic value.
  */
 TEST_P (t8_mesh_ghost_test, cache_neighbors)

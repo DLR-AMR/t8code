@@ -244,7 +244,7 @@ t8_default_scheme_prism::element_extrude_face (const t8_element_t *face, t8_elem
   t8_dprism_extrude_face (face, elem, root_face);
   T8_ASSERT (element_is_valid (elem));
   /* For the quad-faces of prisms it holds that only the corner-children touch the faces of the parent and
-   * their face-numbers coincide. 
+   * their face-numbers coincide.
    * for the triangular-faces (bottom and top) the faces always have the same number and we can return the
    * root face-number as well. */
   return root_face;

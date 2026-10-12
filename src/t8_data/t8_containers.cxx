@@ -346,7 +346,7 @@ t8_element_array_find (const t8_element_array_t *element_array, const t8_element
     // The element was not found, we return -1. */
     return -1;
   }
-  /* An element was found but it may not be the candidate element. 
+  /* An element was found but it may not be the candidate element.
    * To identify whether the element was found, we compare these two. */
   const t8_element_t *check_element = t8_element_array_index_locidx (element_array, search_result);
   T8_ASSERT (check_element != NULL);

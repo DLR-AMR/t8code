@@ -138,6 +138,17 @@ then
   status=$?
 else
   $FORMAT $FORMAT_OPTIONS ${newargs[@]}
+  #
+  # Check for trailing white-space
+  #
+  for arg in ${newargs[@]}
+  do
+    TRAILING_LINES=$(grep -n '[[:blank:]]$' "$arg")
+    if [ -n "$TRAILING_LINES" ]; then
+        sed -i 's/[[:blank:]]*$//' "$arg"
+        exit 1
+    fi
+  done
   status=$?
 fi
 

@@ -29,9 +29,9 @@
 
 /** Definition of the subelement class. A subelement always has an underlying element.
  * With the type, it is defined if the element is further defined into subelements (e.g. for hanging node resolution).
- * Type 0 means no subelement and the subelement is just the underlying element. 
+ * Type 0 means no subelement and the subelement is just the underlying element.
  * For hanging node resolution, the type encodes which faces are hanging and therefore the number of subelements in
- * which the element is transitioned. 
+ * which the element is transitioned.
  * Accordingly, the subelement id is between 0 and num_subelement - 1.
  * \tparam TUnderlyingElement The type of the underlying element. For example a standalone element.
  */

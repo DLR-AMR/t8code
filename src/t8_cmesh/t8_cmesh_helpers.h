@@ -50,7 +50,7 @@ T8_EXTERN_C_BEGIN ();
  * \param[in]       do_both_directions  Compute the connectivity from both neighboring sides.
  *                                      Takes much longer to compute.
  *
- * \warning  This routine might be too expensive for very large meshes. In this case, 
+ * \warning  This routine might be too expensive for very large meshes. In this case,
  *           consider to use a fully featured mesh generator.
  *
  * \note This routine does not detect periodic boundaries.
@@ -64,7 +64,7 @@ t8_cmesh_set_join_by_vertices (t8_cmesh_t cmesh, const t8_gloidx_t ntrees, const
  * \param[in,out]   connectivity        If connectivity is not NULL the variable is filled with a pointer to an
  *                                      allocated face connectivity array. The ownership of this
  *                                      array goes to the caller. This argument is mainly used for debugging and
- *                                      testing purposes. The dimension of \a connectivity are 
+ *                                      testing purposes. The dimension of \a connectivity are
  *                                      [ntrees,T8_ECLASS_MAX_FACES,3].
  *                                      For each element and each face the following is stored:
  *                                      neighbor_tree_id, neighbor_dual_face_id, orientation

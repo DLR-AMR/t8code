@@ -168,7 +168,7 @@ struct t8_forest_pfc_message
   /**
    * Receive data from another process. Probes for the size of the message before receiving
    *
-   * \param[in, out]  recv_buf  the receive buffer. The function allocates the right size of memory to receive the message. 
+   * \param[in, out]  recv_buf  the receive buffer. The function allocates the right size of memory to receive the message.
    * \param[out]  buf_size  the size of the buffer
   */
   void

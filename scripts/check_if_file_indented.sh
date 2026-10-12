@@ -72,8 +72,6 @@ if [ -n "$CRLF_LINES" ]; then
   echo "ERROR: Windows/CRLF line-endings found on the following line(s):"
   echo "$CRLF_LINES" | sed 's/^/    /'
   exit 1
-else
-  echo "pass"
 fi
 
 #

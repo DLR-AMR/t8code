@@ -68,7 +68,7 @@ comm_to_string (const sc_MPI_Comm &comm)
  * \tparam T The type of the vector elements.
  * \param [in] size The number of elements in the resulting vector.
  * \param [in] start The starting value for the sequence.
- * \return A vector of type T containing sequential values starting from \p start. 
+ * \return A vector of type T containing sequential values starting from \p start.
  */
 template <typename T>
 std::vector<T>

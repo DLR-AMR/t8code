@@ -37,8 +37,8 @@
 #include <t8_forest/t8_forest_subelement.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
 
-/** Check that the hanging node resolution for 2D hybrid meshes works. At the moment we only check the functionality 
-* needed for visualization (so e.g. no connectivity). 
+/** Check that the hanging node resolution for 2D hybrid meshes works. At the moment we only check the functionality
+* needed for visualization (so e.g. no connectivity).
 */
 TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
 {

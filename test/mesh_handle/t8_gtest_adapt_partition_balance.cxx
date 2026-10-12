@@ -22,7 +22,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 
 /**
  * \file t8_gtest_adapt_partition_balance.cxx
- * Tests for the adapt, partition and balance routines of mesh handle. 
+ * Tests for the adapt, partition and balance routines of mesh handle.
  */
 #include <gtest/gtest.h>
 #include <t8.h>
@@ -36,7 +36,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <t8_types/t8_vec.hxx>
 
-/** Test the adapt, partition and balance routines of a mesh handle. 
+/** Test the adapt, partition and balance routines of a mesh handle.
  * The test compares the results of the mesh handle to a forest adapted with the same criterion and balanced and partitioned similarly.
  * Therefore, the check is based on the assumption that the forest functionality works as intended and is tested elsewhere.
  */

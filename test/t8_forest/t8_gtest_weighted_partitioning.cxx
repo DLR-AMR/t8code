@@ -38,7 +38,7 @@
  *
  * (3.) Next, we test a non-uniform weight function. As an example, we defined the
  *      weight function such that an element's weight is simply its global element id.
- *      This allows to "manually" compute the expected element offsets to then compare 
+ *      This allows to "manually" compute the expected element offsets to then compare
  *      them.
  */
 

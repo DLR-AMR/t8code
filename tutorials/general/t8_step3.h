@@ -58,7 +58,7 @@ struct t8_step3_adapt_data
 };
 
 /** Adapt a forest according to our t8_step3_adapt_callback function.
- *  Thus, the input forest will get refined inside a sphere 
+ *  Thus, the input forest will get refined inside a sphere
  *  of radius 0.2 around (0.5, 0.5, 0.5) and coarsened outside of radius 0.4.
  * \param [in] forest   A committed forest.
  * \return              A new forest that arises from the input \a forest via adaptation.

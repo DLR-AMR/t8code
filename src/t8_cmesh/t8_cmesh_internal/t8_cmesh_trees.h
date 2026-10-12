@@ -279,7 +279,7 @@ t8_cmesh_trees_set_all_boundary (t8_cmesh_t cmesh, t8_cmesh_trees_t trees);
 
 /**
  * Return the part data of a trees struct.
- * 
+ *
  * \param[in]    trees       The trees structure to be queried.
  * \param[in]    proc        The part number to be queried.
  * \param[out]   first_tree  The local id of the first tree in the part.
@@ -388,7 +388,7 @@ t8_cmesh_trees_get_ghost_local_id (t8_cmesh_trees_t trees, t8_gloidx_t global_id
 
 /**
  * Return the total size in bytes of a trees structure.
- * 
+ *
  * \param [in]        trees The trees structure.
  * \return            The total size in bytes of \a trees.
  */
@@ -444,7 +444,7 @@ t8_cmesh_trees_ghost_attribute_size (t8_cghost_t ghost);
  * We assume that the attributes are already sorted! */
 /**
  * Add an attribute to a tree.
- * 
+ *
  * \param [in,out]    trees The trees structure, whose attribute array is updated.
  * \param [in]        proc The process id of the process that owns the tree.
  * \param [in]        attr The stash attribute that is added.

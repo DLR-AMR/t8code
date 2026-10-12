@@ -245,7 +245,7 @@ t8_dline_last_descendant (const t8_dline_t *line, t8_dline_t *desc, int level);
 void
 t8_dline_vertex_integer_coords (const t8_dline_t *line, const int vertex, int coords[]);
 
-/** Compute the coordinates of a vertex of a line when the 
+/** Compute the coordinates of a vertex of a line when the
  * tree (level 0 line) is embedded in [0,1]^1.
  * \param [in] line         Input line.
  * \param [in] vertex       The number of the vertex.
