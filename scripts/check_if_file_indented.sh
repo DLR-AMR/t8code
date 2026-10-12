@@ -55,6 +55,28 @@ else
 fi
 
 #
+# Check for trailing white-space
+#
+TRAILING_LINES=$(grep -n '[[:blank:]]$' "$file")
+if [ -n "$TRAILING_LINES" ]; then
+    echo "ERROR Trailing whitespace found on the following line(s):"
+    echo "$TRAILING_LINES" | sed 's/^/    /'
+    exit 1
+fi
+
+#
+# Check for Linux line-endings (checking for carriage returns)
+#
+CRLF_LINES=$(grep -n $'\r' "$file")
+if [ -n "$CRLF_LINES" ]; then
+  echo "ERROR: Windows/CRLF line-endings found on the following line(s):"
+  echo "$CRLF_LINES" | sed 's/^/    /'
+  exit 1
+else
+  echo "pass"
+fi
+
+#
 # Check if the file is indented
 #
 $INDENT_SCRIPT NO_CHANGE $file
