@@ -913,6 +913,19 @@ t8_cmesh_reorder (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 }
 #endif
 
+t8_cmesh_t
+t8_cmesh_derive_partitioned (t8_cmesh_t cmesh, const int element_level, const t8_scheme *scheme, sc_MPI_Comm comm)
+{
+  t8_cmesh_t cmesh_uniform_partition;
+  t8_cmesh_init (&cmesh_uniform_partition);
+  t8_cmesh_set_derive (cmesh_uniform_partition, cmesh);
+  // Increase ref counter ??
+  scheme->ref ();
+  t8_cmesh_set_partition_uniform (cmesh_uniform_partition, element_level, scheme);
+  t8_cmesh_commit (cmesh_uniform_partition, comm);
+  return cmesh_uniform_partition;
+}
+
 int
 t8_cmesh_is_partitioned (const t8_cmesh_t cmesh)
 {
