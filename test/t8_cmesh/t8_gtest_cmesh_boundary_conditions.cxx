@@ -186,7 +186,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_hybrid_hypercube_boundary_conditi
     }
 
     /* Do the same test with the forest interface. We set the refinement level to 0 so that there are no internal faces inside trees.
-     This way every element face will carry a boundary condition. Internal element faces are checked in another test (test_single_tree_element_boundary_conditions). */
+     This way every element face will carry a boundary condition. Internal element faces are checked in another test (test_single_tree_forest_element_boundary_conditions). */
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), 0, 1, sc_MPI_COMM_WORLD);
     const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
