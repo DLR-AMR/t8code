@@ -144,61 +144,6 @@ struct t8_cmesh_boundary_condition_handler
     return get_boundary_condition_name (hashes[face]);
   }
 
-  /**
-   * Retrieves the boundary conditions of a forest element.
-   *
-   * \param [in] forest   The forest the element lives in.
-   * \param [in] ltreeid  The local id of the forest tree.
-   * \param [in] element  The element.
-   * \return A container with the boundary conditions. Note, that only elements faces at the boundary of a
-   * tree will have boundary conditions. Internal faces will return an empty optional.
-   */
-  inline t8_boundary_conditions<std::optional<std::string_view>>
-  get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element) const
-  {
-    T8_ASSERT (t8_cmesh_is_committed (t8_forest_get_cmesh (forest)));
-    /* The forest should be associated with the same cmesh this handler is associated with. */
-    T8_ASSERTF (m_cmesh == t8_forest_get_cmesh (forest),
-                "Called get_boundary_conditions on a forest with a different cmesh.\n");
-    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-    const t8_scheme *scheme = t8_forest_get_scheme (forest);
-    const int num_faces = scheme->element_get_num_faces (tree_class, element);
-    t8_boundary_conditions<std::optional<std::string_view>> boundary_conditions;
-    for (int iface = 0; iface < num_faces; ++iface) {
-      boundary_conditions.emplace_back (get_boundary_condition (forest, ltreeid, element, iface));
-    }
-    return boundary_conditions;
-  }
-
-  /**
-   * Retrieves the boundary condition of a face of a forest element.
-   * Retrieving all boundary conditions at once via \ref get_boundary_conditions will be faster.
-   *
-   * \param [in] forest   The forest the element lives in.
-   * \param [in] ltreeid  The local id of the forest tree.
-   * \param [in] element  The element.
-   * \param [in] face     The face id of the element.
-   * \return The boundary condition. It will be empty if the element is not touching the boundary of the tree.
-   */
-  inline std::optional<std::string_view>
-  get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face) const
-  {
-    T8_ASSERT (face >= 0);
-    T8_ASSERT (face < T8_ECLASS_MAX_FACES);
-    /* The forest should be associated with the same cmesh this handler is associated with. */
-    T8_ASSERTF (m_cmesh == t8_forest_get_cmesh (forest),
-                "Called get_boundary_conditions on a forest with a different cmesh.\n");
-    const t8_scheme *scheme = t8_forest_get_scheme (forest);
-    const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
-    if (scheme->element_is_root_boundary (tree_class, element, face)) {
-      /* We retrieve the face it lies on */
-      const int tree_face = scheme->element_get_tree_face (tree_class, element, face);
-      const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
-      return get_boundary_condition (cmesh_ltreeid, tree_face);
-    }
-    return std::nullopt;
-  }
-
 #if T8_ENABLE_DEBUG
   /** Verifies the proper attribution of boundary conditions. Can only be called on a cmesh
    * during commit.

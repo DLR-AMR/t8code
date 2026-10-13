@@ -25,6 +25,7 @@
  * Implementation context for \ref t8_forest_boundary_conditions.hxx and \ref t8_forest_boundary_conditions_c_interface.h.
  */
 
+#include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include "t8_forest_boundary_conditions.hxx"
 #include "t8_forest_boundary_conditions_c_interface.h"
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
@@ -34,20 +35,55 @@ t8_boundary_conditions<std::optional<std::string_view>>
 t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element)
 {
   T8_ASSERT (t8_forest_is_committed (forest));
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const detail::t8_cmesh_boundary_condition_handler *handler = detail::t8_cmesh_get_boundary_condition_handler (cmesh);
+
+  /* Get some stuff */
+  const t8_cmesh_t forest_cmesh = t8_forest_get_cmesh (forest);
+  T8_ASSERT (t8_cmesh_is_committed (forest_cmesh));
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const int num_faces = scheme->element_get_num_faces (tree_class, element);
+  const detail::t8_cmesh_boundary_condition_handler *handler
+    = detail::t8_cmesh_get_boundary_condition_handler (forest_cmesh);
   SC_CHECK_ABORTF (handler != NULL, "ERROR: Trying to retrieve boundary conditions, even though none were set.\n");
-  return handler->get_boundary_conditions (forest, ltreeid, element);
+
+  t8_boundary_conditions<std::optional<std::string_view>> boundary_conditions;
+  for (int iface = 0; iface < num_faces; ++iface) {
+    if (scheme->element_is_root_boundary (tree_class, element, iface)) {
+      /* We retrieve the face it lies on */
+      const int tree_face = scheme->element_get_tree_face (tree_class, element, iface);
+      const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+      boundary_conditions.emplace_back (handler->get_boundary_condition (cmesh_ltreeid, tree_face));
+    }
+    else {
+      boundary_conditions.emplace_back (std::nullopt);
+    }
+  }
+  return boundary_conditions;
 }
 
 std::optional<std::string_view>
 t8_forest_get_boundary_condition (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element, int face)
 {
+  T8_ASSERT (face >= 0);
+  T8_ASSERT (face < T8_ECLASS_MAX_FACES);
   T8_ASSERT (t8_forest_is_committed (forest));
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
-  const detail::t8_cmesh_boundary_condition_handler *handler = detail::t8_cmesh_get_boundary_condition_handler (cmesh);
+
+  /* Get some stuff */
+  const t8_cmesh_t forest_cmesh = t8_forest_get_cmesh (forest);
+  T8_ASSERT (t8_cmesh_is_committed (forest_cmesh));
+  const t8_scheme *scheme = t8_forest_get_scheme (forest);
+  const t8_eclass_t tree_class = t8_forest_get_tree_class (forest, ltreeid);
+  const detail::t8_cmesh_boundary_condition_handler *handler
+    = detail::t8_cmesh_get_boundary_condition_handler (forest_cmesh);
   SC_CHECK_ABORTF (handler != NULL, "ERROR: Trying to retrieve boundary conditions, even though none were set.\n");
-  return handler->get_boundary_condition (forest, ltreeid, element, face);
+
+  if (scheme->element_is_root_boundary (tree_class, element, face)) {
+    /* We retrieve the face it lies on */
+    const int tree_face = scheme->element_get_tree_face (tree_class, element, face);
+    const t8_locidx_t cmesh_ltreeid = t8_forest_ltreeid_to_cmesh_ltreeid (forest, ltreeid);
+    return handler->get_boundary_condition (cmesh_ltreeid, tree_face);
+  }
+  return std::nullopt;
 }
 
 /**************************************** C INTERFACE ****************************************/
