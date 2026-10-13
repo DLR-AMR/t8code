@@ -26,8 +26,8 @@
 
 #include <sc_statistics.h>
 #include <t8_helper_functions/t8_refcount.h>
-#include <t8_types/t8_vec.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.h>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_forest/t8_forest_types.h>
@@ -3577,11 +3577,7 @@ t8_forest_commit (t8_forest_t forest)
     forest->do_ghost = 0;
   }
 #if T8_ENABLE_DEBUG
-  if (!(t8_scheme_has_subelement_scheme (forest->scheme))) {
-    // This does not work for subelements as the linear id cannot be defined.
-    // It is just a test so it is fine to skip this for subelements.
-    t8_forest_partition_test_boundary_element (forest);
-  }
+  t8_forest_partition_test_boundary_element (forest);
 #endif
 }
 

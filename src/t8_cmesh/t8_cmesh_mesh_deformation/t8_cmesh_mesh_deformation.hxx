@@ -33,7 +33,7 @@
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_cmesh/t8_cmesh.hxx>
 #include <t8_cad/t8_cad_handle.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx>
 
