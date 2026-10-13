@@ -30,7 +30,7 @@
 #include <t8_vtk/t8_vtk_writer.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_cmesh/t8_cmesh_geometry.hxx>
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 #include <t8_geometry/t8_geometry_handler.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>

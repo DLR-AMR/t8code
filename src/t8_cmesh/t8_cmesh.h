@@ -38,7 +38,7 @@
  * put it before the include. */
 typedef struct t8_cmesh *t8_cmesh_t;
 
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 
 /* TODO: If including eclass were just for the cmesh_new routines, we should
  *       move them into a different file.

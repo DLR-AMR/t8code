@@ -30,7 +30,7 @@
 #include <t8.h>
 #include <t8_helper_functions/t8_refcount.h>
 #include <t8_data/t8_shmem.h>
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
 #include <t8_element/t8_element.h>

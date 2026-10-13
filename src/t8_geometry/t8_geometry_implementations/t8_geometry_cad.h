@@ -28,7 +28,7 @@
 #define T8_GEOMETRY_CAD_H
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 #include <t8_geometry/t8_geometry_with_vertices.h>
 
 /** This typedef holds virtual functions for a particular geometry.

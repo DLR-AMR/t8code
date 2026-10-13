@@ -28,7 +28,7 @@
 #define T8_GEOMETRY_HANDLER_HXX
 
 #include <t8.h>
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 #include <t8_geometry/t8_geometry_base.hxx>
 #include <memory>
 #include <string>

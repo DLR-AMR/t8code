@@ -31,7 +31,7 @@
 #include <t8.h>
 #include <t8_cmesh/t8_cmesh.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_geometry/t8_geometry.h>
+#include <t8_geometry/t8_geometry_c_interface.h>
 #include <t8_geometry/t8_geometry_hash.hxx>
 
 #include <functional>
