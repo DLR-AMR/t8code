@@ -99,6 +99,8 @@ TEST_P (t8_cmesh_single_tree_bc, test_single_tree_boundary_conditions)
   if (t8_cmesh_get_num_local_trees (cmesh)) {
     /* Retrieve bcs and check that input == output. */
     const auto retrieved_boundary_conditions = t8_cmesh_get_boundary_conditions (cmesh, 0);
+    const size_t num_faces = t8_eclass_num_faces[eclass];
+    EXPECT_EQ (num_faces, boundary_conditions.size ());
     for (size_t i_boundary_condition = 0; i_boundary_condition < boundary_conditions.size (); ++i_boundary_condition) {
       EXPECT_EQ (boundary_conditions[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
     }
