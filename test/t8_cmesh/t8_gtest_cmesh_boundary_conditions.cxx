@@ -41,7 +41,7 @@
  * condition label per face, commit it, and verify that retrieving the boundary
  * conditions returns exactly the labels that were set.
  *
- * 2) t8_cmesh_single_tree_bc / test_single_tree_element_boundary_conditions
+ * 2) t8_cmesh_single_tree_bc / test_single_tree_forest_element_boundary_conditions
  * Using the same single-tree cmeshes (uniformly refined to level 2), we verify
  * that interior element faces carry no boundary condition while exterior element
  * faces do carry one.
