@@ -32,7 +32,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <mesh_handle/competences/cache_element_competences.hxx>
 #include <mesh_handle/competence_pack.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <vector>
 
 /** Child of \ref t8_mesh_handle::cache_volume that allows to modify the cache variable for test purposes. */

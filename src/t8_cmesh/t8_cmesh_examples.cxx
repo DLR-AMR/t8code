@@ -30,7 +30,7 @@
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_linear_axis_aligned.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_examples.hxx>
 #include <t8_geometry/t8_geometry_implementations/t8_geometry_zero.hxx>
-#include <t8_types/t8_vec.h>
+#include <t8_vector/t8_vec.h>
 #include <t8_helper_functions/t8_mat.h>
 #include <t8_eclass/t8_eclass.h>
 #include <t8_forest/t8_forest_general.h>
