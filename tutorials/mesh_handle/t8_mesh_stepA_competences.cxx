@@ -22,7 +22,7 @@
 
 /** \file t8_mesh_stepA_competences.cxx
  * This is step A of the t8code mesh handle tutorials.
- * After finishing the core t8code features, we will now go into an important feature 
+ * After finishing the core t8code features, we will now move on to an important feature 
  * which is native to the mesh handle.
  * These so-called competences are a way to extend the functionality of the mesh handle and its elements.
  * 
@@ -49,11 +49,11 @@
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constrain the template parameters to only allow mesh handle classes. */
 #include <t8_types/t8_vec.hxx>      /** t8code vector dataclass. */
+#include <cstring>
 
 using namespace t8_mesh_handle; /** Using the namespace to avoid the t8_mesh_handle:: prefix everywhere and shorten the code. */
 
-/**
- * Creating a simple custom competence that computes the squared volume of an element.
+/** Creating a simple custom competence that computes the squared volume of an element.
  * 
  * All custom competences have to follow the same CRTP inheritance pattern:
  * They are templated on the underlying element type TUnderlying and inherit from 
@@ -78,15 +78,6 @@ struct volume_squared_custom_competence: public t8_crtp_operator<TUnderlying, vo
 };
 
 /**
- * Example element data type that stores the volume of an element.
- * Stays unused in this tutorial, but necessary to demonstrate competence packs.
- */
-struct element_data_volume
-{
-  double volume; /**< Volume of the element. */
-};
-
-/**
  * Demonstrates the use of the cache competences by comparing the freshly computed values to the ones saved in the cache.
  * 
  * \tparam TElementType The mesh element type. 
@@ -103,7 +94,7 @@ demonstrate_cache_competences (const TElementType& elem)
 
   t8_global_productionf (" [mesh_stepA] Vertex coordinates (first call):\n");
   for (const auto& v : vertices1) {
-    t8_global_productionf ("[mesh_stepA] (%f, %f, %f)\n", v[0], v[1], v[2]);
+    t8_global_productionf (" [mesh_stepA] (%f, %f, %f)\n", v[0], v[1], v[2]);
   }
 
   t8_global_productionf (" [mesh_stepA] Vertex cache filled after first call: %d\n", elem.vertex_cache_filled ());
@@ -116,8 +107,10 @@ demonstrate_cache_competences (const TElementType& elem)
 }
 
 /**
- * Demonstrates the use of the custom competence 'volume_squared' that was defined at the top so that we can compute the squared volume of each element in the mesh.
- * Only the first and last local elements of the root process are printed to avoid excessive output when running with multiple MPI processes. 
+ * Demonstrates the use of the custom competence 'volume_squared' that was defined at the top 
+ * so that we can compute the squared volume of each element in the mesh.
+ * Only the first and last local elements of the root process are printed 
+ * to avoid excessive output when running with multiple MPI processes. 
  * 
  * \tparam TMeshClass The mesh class. 
  * \param [in] mesh The mesh to demonstrate the custom competence.
@@ -170,12 +163,11 @@ main (int argc, char** argv)
   { /* Start of mesh scope. */
     /* Initializing all the competence packs with the functionality/competences we want to use. */
 
-    /** Combine the data competence pack with the predefined 'all_cache_element_competences' (see competence_pack.hxx) pack into one with union_competence_packs_type. 
-     *  Because we already showed the element data competences in tutorial step 5, we will not be showing them again here.
-     *  Here we only show how to combine it with other competence packs. 
+    /** Combine the cache competences for vertex coordinates and element volume (see competence_pack.hxx or cache_element_competences.hxx) pack into one with union_competence_packs_type. 
+     *  Because we already showed the element data competences in tutorial step 5, we will not show them again here.
+     *  The cache_volume competence is also unused in this tutorial but we write it below to visualize the combination via union_competence_pack.
     */
-    using element_competences
-      = union_competence_packs_type<all_cache_element_competences, data_element_competences_basic>;
+    using element_competences = union_competence_packs_type<cache_vertex_coordinates, cache_volume>;
 
     using mesh_competences
       = data_mesh_competences_basic<element_data_volume>; /**< Mesh competence to store element data on an element. */
@@ -185,13 +177,13 @@ main (int argc, char** argv)
 
     const int level = 2;
     t8_global_productionf (" [mesh_stepA] \n");
-    t8_global_productionf (" [mesh_stepA] Creating a default mesh with refinement level %d.\n", level);
+    t8_global_productionf (" [mesh_stepA] Creating a uniform mesh with refinement level %d.\n", level);
     t8_global_productionf (" [mesh_stepA] \n");
     /* Creating a hybrid uniform mesh. Our competences get transferred onto the mesh by the mesh type we defined above. */
-    auto default_mesh = handle_hypercube_hybrid_uniform_default<mesh_type> (level, comm);
+    auto mesh = handle_hypercube_hybrid_uniform_default<mesh_type> (level, comm);
 
     /* Guard to protect from undefined behaviour. */
-    if (default_mesh->get_num_local_elements () > 0) {
+    if (mesh->get_num_local_elements () > 0) {
       t8_global_productionf (" [mesh_stepA] \n");
       t8_global_productionf (
         " [mesh_stepA] Demonstrating the cache competences by comparing the freshly computed values to "
@@ -199,10 +191,10 @@ main (int argc, char** argv)
       t8_global_productionf (" [mesh_stepA] \n");
 
       demonstrate_cache_competences (
-        (*default_mesh)[0]); /** Only demonstrating the cache competences for the first element of the mesh*/
+        (*mesh)[0]); /** Only demonstrating the cache competences for the first element of the mesh*/
     }
     /** 
-      * We will now create a second mesh with our custom competence pack that includes the volume competence and our custom defined competence 'volume_squared'.
+      * We will now create a second mesh with a competence pack that includes the volume cache competence and our custom defined competence 'volume_squared_custom_competence'.
     */
     /* Defining a competence pack with the volume cache competence and our custom defined competence. */
     using custom_element_competences = element_competence_pack<cache_volume, volume_squared_custom_competence>;
@@ -211,7 +203,7 @@ main (int argc, char** argv)
     using custom_mesh_class = mesh<custom_element_competences>;
 
     t8_global_productionf (" [mesh_stepA] \n");
-    t8_global_productionf (" [mesh_stepA] Creating a custom mesh for the custom competence with initial "
+    t8_global_productionf (" [mesh_stepA] Creating a mesh for the custom competence with initial "
                            "refinement level of %d.\n",
                            level);
     t8_global_productionf (" [mesh_stepA] \n");
