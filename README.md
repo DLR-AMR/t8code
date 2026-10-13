@@ -73,7 +73,7 @@ Some examples on usage scenarios for `t8code`. More detailed descriptions are be
 
 **Mesh operations** - among others, `t8code` offers the following functionalities:
 
-- Manage distributed adaptive meshes over complex domain geometries
+- Manage distributed adaptive meshes over complex domain geometries using a forest of trees
 - Adapt meshes according to user given refinement/coarsening criteria
 - Establish a 2:1 balance
 - (Re-)partition a mesh (and associated data) among MPI ranks
