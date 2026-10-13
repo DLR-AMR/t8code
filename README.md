@@ -186,6 +186,9 @@ Holke, Johannes *Scalable algorithms for parallel tree-based adaptive mesh refin
 [BH16] **Tetrahedral and triangular Space-filling curve**:
 Burstedde, Carsten and Holke, Johannes *A Tetrahedral Space-Filling Curve for Nonconforming Adaptive Meshes*, SIAM Journal on Scientific Computing, 2016, [10.1137/15M1040049](https://epubs.siam.org/doi/10.1137/15M1040049)
 
+[KHSBD26] **Pyramid Space-filling curve and general computation of uniform bounds**:
+Knapp, David and Albrecht Holke, Johannes and Spenke, Thomas and Burstedde, Carsten and Dreyer, Lukas, *A Morton-Type Space-Filling Curve For Pyramid Subdivision And Hybrid Adaptive Mesh Refinement*, [10.48550/arXiv.2602.20887](https://doi.org/10.48550/arXiv.2602.20887)
+
 [BH17] **Coarse mesh partitioning**:
 Burstedde, Carsten and Holke, Johannes *Coarse mesh partitioning for tree-based AMR*, SIAM Journal on Scientific Computing, 2017, [10.1137/16M1103518](https://epubs.siam.org/doi/10.1137/16M1103518)
 
