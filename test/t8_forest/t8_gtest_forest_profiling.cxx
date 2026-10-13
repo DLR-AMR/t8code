@@ -97,11 +97,13 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   double time_adapt = t8_forest_profile_get_adapt_time (profiling_forest);
   double time_partition = t8_forest_profile_get_partition_time (profiling_forest, &procs_sent);
   double time_balance = t8_forest_profile_get_balance_time (profiling_forest, &balance_rounds);
+  double time_ghost = t8_forest_profile_get_ghost_time (profiling_forest, &ghosts_sent);
+  double time_ghost_wait = t8_forest_profile_get_ghostexchange_waittime (profiling_forest);
+#if T8_ENABLE_MPI
   double time_cmesh_offsets = t8_forest_profile_get_cmesh_offsets_runtime (profiling_forest);
   double time_forest_offsets = t8_forest_profile_get_forest_offsets_runtime (profiling_forest);
   double time_first_descendant = t8_forest_profile_get_first_descendant_runtime (profiling_forest);
-  double time_ghost = t8_forest_profile_get_ghost_time (profiling_forest, &ghosts_sent);
-  double time_ghost_wait = t8_forest_profile_get_ghostexchange_waittime (profiling_forest);
+#endif
 
   // (5) Simple sanity checks.
   // -------------------------
@@ -114,16 +116,20 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_GT (time_adapt, 0.0);
   EXPECT_GT (time_partition, 0.0);
   EXPECT_GT (time_balance, 0.0);
-  EXPECT_GT (time_cmesh_offsets, 0.0);
-  EXPECT_GT (time_forest_offsets, 0.0);
-  EXPECT_GT (time_first_descendant, 0.0);
 
   // Integers
   EXPECT_GT (balance_rounds, 0);
   EXPECT_GE (procs_sent, 0);
   EXPECT_LT (procs_sent, mpisize);
 
-  // Tests only valid for parallel execution
+#if T8_ENABLE_MPI
+  // Tests valid only with MPI, but then even on one process.
+  EXPECT_GT (time_cmesh_offsets, 0.0);
+  EXPECT_GT (time_first_descendant, 0.0);
+  EXPECT_GT (time_forest_offsets, 0.0);
+#endif
+
+  // Tests only valid for parallel execution.
   if (mpisize > 1) {
     EXPECT_GT (ghosts_sent, 0);
     EXPECT_GT (time_ghost, 0.0);
@@ -133,8 +139,8 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   // Stats
   EXPECT_GT (commit_stats->average, 0.0);
 
-  // (6) Sanity checks comparing stats and times
-  // -------------------------------------------
+  // (6) Sanity checks comparing stats and times.
+  // --------------------------------------------
   EXPECT_GE (time_adapt, adapt_stats->min);
   EXPECT_LE (time_adapt, adapt_stats->max);
   EXPECT_GE (time_partition, partition_stats->min);
