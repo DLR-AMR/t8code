@@ -1814,8 +1814,6 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
     }
   }
 
-  struct t8_lfn_user_data user_data;
-
   // Now we iterate over the leaf arrays of the neighbor tree
   // or neighbor ghost tree and find all leaf face neighbors of the element.
   *num_neighbors = 0;
@@ -1832,6 +1830,7 @@ t8_forest_leaf_face_neighbors_ext (const t8_forest_t forest, const t8_locidx_t l
   *pelement_indices = NULL;
   *dual_faces = NULL;
   for (auto &leaf_array : leaf_arrays) {
+    struct t8_lfn_user_data user_data;
     auto &tree_leaves = leaf_array->first;
     const bool leaf_array_is_ghost = leaf_array->second;
     T8_ASSERT (tree_leaves != NULL);
@@ -3070,6 +3069,30 @@ t8_forest_set_partition (t8_forest_t forest, const t8_forest_t set_from, int set
   }
 }
 
+int
+t8_forest_partition_is_set (const t8_forest_t forest, int *set_for_coarsening)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  const int partition_is_set = (forest->from_method & T8_FOREST_FROM_PARTITION) != 0;
+  if (set_for_coarsening != NULL) {
+    *set_for_coarsening = partition_is_set ? forest->set_for_coarsening : 0;
+  }
+  return partition_is_set;
+}
+
+void
+t8_forest_unset_partition (t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  if (!t8_forest_partition_is_set (forest, NULL)) {
+    return;
+  }
+  /* Remove PARTITION from the from_method.
+   * Since T8_FOREST_FROM_COPY is zero, a forest that was only set to be partitioned is copied instead. */
+  forest->from_method &= ~T8_FOREST_FROM_PARTITION;
+  forest->set_for_coarsening = 0;
+}
+
 void
 t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_repartition)
 {
@@ -3097,6 +3120,17 @@ t8_forest_set_balance (t8_forest_t forest, const t8_forest_t set_from, int no_re
   else {
     forest->from_method |= T8_FOREST_FROM_BALANCE;
   }
+}
+
+int
+t8_forest_balance_is_set (const t8_forest_t forest, int *no_repartition)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  const int balance_is_set = (forest->from_method & T8_FOREST_FROM_BALANCE) != 0;
+  if (no_repartition != NULL) {
+    *no_repartition = balance_is_set ? forest->set_balance == T8_FOREST_BALANCE_NO_REPART : 0;
+  }
+  return balance_is_set;
 }
 
 void
@@ -3151,8 +3185,22 @@ t8_forest_set_ghost (t8_forest_t forest, int do_ghost, t8_ghost_type_t ghost_typ
     forest->do_ghost = (do_ghost != 0); /* True if and only if do_ghost != 0 */
   }
   if (forest->do_ghost) {
-    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_definition_face (3));
+    t8_forest_set_ghost_ext (forest, do_ghost, new t8_forest_ghost_definition_face ());
   }
+}
+
+int
+t8_forest_ghost_is_set (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest));
+  return forest->do_ghost;
+}
+
+t8_forest_ghost_definition *
+t8_forest_get_ghost_definition (const t8_forest_t forest)
+{
+  T8_ASSERT (t8_forest_is_initialized (forest) || t8_forest_is_committed (forest));
+  return forest->ghost_definition;
 }
 
 void

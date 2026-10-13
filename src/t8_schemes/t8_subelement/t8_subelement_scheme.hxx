@@ -136,7 +136,8 @@ struct t8_subelement_scheme_common:
     return true;  // Potentially there are subelements.
   }
 
-  /** Return the maximum allowed level for any element of a given class.
+  /** Return the maximum allowed level for any element of a given class. 
+   * This maxlevel is for the underlying scheme level, the subelement level is independent of this.
    * \return                      The maximum allowed level for elements of class \b ts.
    */
   constexpr int
@@ -246,23 +247,21 @@ struct t8_subelement_scheme_common:
     return (t8_element_shape_t) t8_eclass_face_types[element_get_shape (elem)][face];
   }
 
-  /** Return the level of a particular element. For subelements, the level is the level of the parent + 1.
-    * \param [in] elem    The element whose level should be returned.
-    * \return             The level of \b elem.
-    */
+  /** Return the level of a particular element. 
+   * \note By convention, subelements have the same level as their parent. 
+   *       Subelements have their own "subelement level" in the refinement tree. 
+   *       This level is only for the underlying refinement scheme.
+   * \param [in] elem    The element whose level should be returned.
+   * \return             The level of \b elem.
+   */
   int
   element_get_level (const t8_element_t *elem) const noexcept
   {
     T8_ASSERT (element_is_valid (elem));
-    // Get level of the parent.
-    const int level = derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
-    if (!element_is_subelement (elem)) {
-      return level;
-    }
-    return level + 1;
+    return derived ().underlying_scheme.element_get_level (element_to_standalone (elem));
   }
 
-  // ################################################____GENERAL HELPERS____#############################################
+  // ################################################____GENERAL HELPERS____############################################
 
   /** Copy all entries of \b source to \b dest. \b dest must be an existing
    *  element. No memory is allocated by this function.
