@@ -162,18 +162,17 @@ main (int argc, char** argv)
   t8_global_productionf (" [mesh_stepA] \n");
   { /* Start of mesh scope. */
     /* Initializing all the competence packs with the functionality/competences we want to use. */
+    using vertex_pack = element_competence_pack<cache_vertex_coordinates>;
+    using volume_pack = element_competence_pack<cache_volume>;
 
-    /** Combine the cache competences for vertex coordinates and element volume (see competence_pack.hxx or cache_element_competences.hxx) pack into one with union_competence_packs_type. 
+    /** Combine the cache competence packs for vertex coordinates and element volume (see competence_pack.hxx or cache_element_competences.hxx) pack into one with union_competence_packs_type. 
      *  Because we already showed the element data competences in tutorial step 5, we will not show them again here.
      *  The cache_volume competence is also unused in this tutorial but we write it below to visualize the combination via union_competence_pack.
     */
-    using element_competences = union_competence_packs_type<cache_vertex_coordinates, cache_volume>;
-
-    using mesh_competences
-      = data_mesh_competences_basic<element_data_volume>; /**< Mesh competence to store element data on an element. */
+    using element_competences = union_competence_packs_type<vertex_pack, volume_pack>;
 
     /* Defining our mesh type with the competence packs defined above. */
-    using mesh_type = mesh<element_competences, mesh_competences>;
+    using mesh_type = mesh<element_competences>;
 
     const int level = 2;
     t8_global_productionf (" [mesh_stepA] \n");
@@ -200,7 +199,7 @@ main (int argc, char** argv)
     using custom_element_competences = element_competence_pack<cache_volume, volume_squared_custom_competence>;
 
     /* Defining a custom mesh_type with our competence pack. */
-    using custom_mesh_class = mesh<custom_element_competences>;
+    using custom_mesh_class = t8_mesh_handle::mesh<custom_element_competences>;
 
     t8_global_productionf (" [mesh_stepA] \n");
     t8_global_productionf (" [mesh_stepA] Creating a mesh for the custom competence with initial "
