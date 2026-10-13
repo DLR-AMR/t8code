@@ -68,7 +68,7 @@ t8_cmesh_boundary_condition_handler::verify () const
                  bc_it->first);
       return false;
     }
-    /* Make sure that the amount of registered bcs matches th number of tree faces. */
+    /* Make sure that the amount of registered bcs matches the number of tree faces. */
     if (static_cast<size_t> (t8_eclass_num_faces[eclasses_it->second]) != bc_it->second.size ()) {
       t8_errorf ("ERROR: Tree %li has a mismatch in its face count and boundary condition count.\n"
                  "Face count: %i, boundary condition count: %li\n",
