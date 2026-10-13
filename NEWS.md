@@ -1,10 +1,3 @@
-# Single face-neighbor ghost definition
-This is an update to the [ghost interface restructuring](#ghost-interface-restructuring). The deprecated ghost versions 1 and 2 were dropped and face ghost version 3 is now the only supported face ghost algorithm. Therefore, `t8_forest_ghost_definition_face` no longer takes a ghost version. Only the top-down search algorithm, which was already the default, remains. If you selected a ghost version there, use `t8_forest_set_ghost` instead:
-```diff
-- t8_forest_set_ghost_ext (forest_ghost, 1, new t8_forest_ghost_definition_face (<ghost_version>));
-+ t8_forest_set_ghost (forest_ghost, 1, T8_GHOST_FACES);
-```
-
 # Ghost interface restructuring
 The ghost interface is one of the oldest parts of t8code and needed a restructuring to be fit for future changes. Until now, only face-neighbor ghosts communication was allowed. The new modular interface allows for arbitrary ghost definitions and is designed similar to the already known geometry and scheme interfaces.
 
@@ -16,18 +9,20 @@ Ghost definitions define, as the name suggests, what exactly a ghost is. This me
 Every newly defined ghost definition has to either derive from this base class or from its derived class `t8_forest_ghost_definition_w_search`, which implements a tree-search based ghost definition. This means, that only the search data and search query have to be defined to have a valid ghost definition. In contrast, the base class requires the implementation of all functions, but there are still helper functions defined in `t8_forest_ghost_definition_helpers.hxx`.
 To use these ghost definitions, they can be added to the forest via `t8_forest_set_ghost_ext`.
 
+### Single face-neighbor ghost algorithm
+The face ghost versions 1 and 2 were dropped due to being outdated and not tested. Only the top-down search algorithm (formerly version 3), which was already the default, remains. Therefore, `t8_forest_ghost_definition_face` does not take a ghost version.
+
 ### Ghost element access
 The second part of the ghost module is the ghost element access. This part is encapsulated in `t8_ghost.h` and `t8_ghost.cxx`.
 The ghost element access happens during the traversal of the elements of a process. Mostly, this is not needed by the user and automatically called when users want to access neighbors of elements. But in more complex neighborship relations, it can be necessary to access the ghost elements directly via the functions defined here.
 
 ## What do I have to change?
-If you only used face-neighbor ghosts, you do not have to change anything. If you used different versions of the face ghost via `t8_forest_set_ghost_ext` you now have to construct the ghost definition object directly and pass it to `t8_forest_set_ghost_ext`.
-```cpp
-#include <t8_forest/t8_forest_ghost/t8_forest_ghost_implementations/t8_forest_ghost_definition_face.hxx>
-
-t8_forest_set_ghost_ext (forest_ghost, 1, new t8_forest_ghost_definition_face (<ghost_version>));
+If you only used face-neighbor ghosts via `t8_forest_set_ghost`, you do not have to change anything. If you selected a face ghost version via `t8_forest_set_ghost_ext`, use `t8_forest_set_ghost` instead, since there is only one face ghost algorithm left:
+```diff
+- t8_forest_set_ghost_ext (forest_ghost, 1, T8_GHOST_FACES, <ghost_version>);
++ t8_forest_set_ghost (forest_ghost, 1, T8_GHOST_FACES);
 ```
-If you used a custom ghost definition, you now have to derive from the base class or the search-based derived class. You can look at the already implemented face-neighbor ghost definition for an example.
+If you used a custom ghost definition, you now have to derive from the base class or the search-based derived class and pass an object of it to `t8_forest_set_ghost_ext`. You can look at the already implemented face-neighbor ghost definition for an example.
 
 # cmesh generators
 
