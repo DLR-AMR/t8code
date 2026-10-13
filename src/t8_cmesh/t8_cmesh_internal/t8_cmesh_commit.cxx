@@ -571,8 +571,8 @@ t8_cmesh_commit (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
     /* If present use the set geometry handler, otherwise take
      * over the handler from set_from. */
-    detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
-    detail::t8_geometry_handler *geometry_handler_from = t8_cmesh_get_geometry_handler (cmesh->set_from);
+    detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
+    detail::t8_geometry_handler *geometry_handler_from = detail::t8_cmesh_get_geometry_handler (cmesh->set_from);
     if (geometry_handler == nullptr && geometry_handler_from != nullptr) {
       // Since geometry_handler_from needs to be used by cmesh_from as well, we
       // need to ref it once before passing to cmesh (which would take ownership).

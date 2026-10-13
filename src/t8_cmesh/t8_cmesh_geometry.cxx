@@ -36,10 +36,10 @@
 void
 t8_cmesh_register_geometry (t8_cmesh_t cmesh, t8_geometry_c *geometry)
 {
-  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
   if (geometry_handler == nullptr) {
     /* The handler was not constructed, do it now. */
-    geometry_handler = t8_cmesh_add_geometry_handler (cmesh);
+    geometry_handler = detail::t8_cmesh_add_geometry_handler (cmesh);
   }
   geometry_handler->register_geometry (geometry);
 }
@@ -60,7 +60,7 @@ t8_cmesh_set_tree_geometry (t8_cmesh_t cmesh, const t8_gloidx_t gtreeid, const t
  * \note                   The return value might be NULL if no geometry handler exists.
  */
 detail::t8_geometry_handler *
-t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
+detail::t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
 
@@ -73,7 +73,7 @@ t8_cmesh_get_geometry_handler (const t8_cmesh_t cmesh)
  * \note                  Handle with care. This function should be used by t8code devs only.
  */
 detail::t8_geometry_handler *
-t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh)
+detail::t8_cmesh_add_geometry_handler (t8_cmesh_t cmesh)
 {
   return t8_cmesh_set_geometry_handler (cmesh, nullptr);
 }
@@ -90,7 +90,7 @@ t8_cmesh_set_geometry_handler (t8_cmesh_t cmesh, detail::t8_geometry_handler *ne
   T8_ASSERT (t8_cmesh_is_initialized (cmesh) || t8_cmesh_is_committed (cmesh));
 
   // Check that we do not overwrite an existing handler.
-  T8_ASSERT (t8_cmesh_get_geometry_handler (cmesh) == nullptr);
+  T8_ASSERT (detail::t8_cmesh_get_geometry_handler (cmesh) == nullptr);
 
   // If not present allocate a new handler
   if (new_handler == nullptr) {
@@ -103,7 +103,7 @@ const t8_geometry_c *
 t8_cmesh_get_tree_geometry (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  detail::t8_geometry_handler *geom_handler = t8_cmesh_get_geometry_handler (cmesh);
+  detail::t8_geometry_handler *geom_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
 
   if (geom_handler == nullptr) {
     /* If no geometry handler is present, no geometries have been registered and 
@@ -128,7 +128,7 @@ t8_geometry_hash
 t8_cmesh_get_tree_geom_hash (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
   T8_ASSERT (t8_cmesh_is_committed (cmesh));
-  detail::t8_geometry_handler *geom_handler = t8_cmesh_get_geometry_handler (cmesh);
+  detail::t8_geometry_handler *geom_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
 
   if (geom_handler == nullptr) {
     /* If no geometry handler is present, no geometries have been registered and 

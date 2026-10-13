@@ -39,7 +39,7 @@ t8_geometry_evaluate (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
     start_wtime = sc_MPI_Wtime ();
   }
 
-  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
   if (geometry_handler == nullptr) {
     SC_ABORT ("Error: Trying to evaluate non-existing geometry.\n");
   }
@@ -60,14 +60,14 @@ t8_geometry_jacobian (t8_cmesh_t cmesh, t8_gloidx_t gtreeid, const double *ref_c
                       double *jacobian)
 {
   /* Evaluate the jacobian. */
-  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
   geometry_handler->evaluate_tree_geometry_jacobian (cmesh, gtreeid, ref_coords, num_coords, jacobian);
 }
 
 t8_geometry_type_t
 t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 {
-  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
   if (geometry_handler == nullptr) {
     return T8_GEOMETRY_TYPE_INVALID;
   }
@@ -78,6 +78,6 @@ t8_geometry_get_type (t8_cmesh_t cmesh, t8_gloidx_t gtreeid)
 int
 t8_geometry_tree_negative_volume (const t8_cmesh_t cmesh, const t8_gloidx_t gtreeid)
 {
-  detail::t8_geometry_handler *geometry_handler = t8_cmesh_get_geometry_handler (cmesh);
+  detail::t8_geometry_handler *geometry_handler = detail::t8_cmesh_get_geometry_handler (cmesh);
   return geometry_handler->tree_negative_volume (cmesh, gtreeid);
 }

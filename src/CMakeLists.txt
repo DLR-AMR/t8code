@@ -267,10 +267,22 @@ install( DIRECTORY t8_cmesh
   FILES_MATCHING
     PATTERN "*.h"
     PATTERN "*.hxx"
-    PATTERN "t8_cmesh/t8_cmesh_internal*"      EXCLUDE
+    PATTERN "t8_cmesh_internal*"      EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
+
+# We need to install the t8_cmesh_geometry_handler_internal.hxx since it contains exposed
+# functions. These functions should not be used by users and are in detail namespace, but we
+# need to expose them.
+# Putting this file in the section above does not work since it automatically excludes
+# all cmesh_internal files.
+install( DIRECTORY t8_cmesh
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "t8_cmesh_internal/t8_cmesh_geometry_handler_internal.hxx"
+)
+
 install( DIRECTORY t8_data
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
