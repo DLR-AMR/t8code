@@ -84,14 +84,14 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   // ---------------------------------------
   // Stats
   const sc_statinfo_t* adapt_stats = t8_forest_profile_get_adapt_stats (profiling_forest);
-  const sc_statinfo_t* ghost_stats = t8_forest_profile_get_ghost_stats (profiling_forest);
   const sc_statinfo_t* partition_stats = t8_forest_profile_get_partition_stats (profiling_forest);
   const sc_statinfo_t* commit_stats = t8_forest_profile_get_commit_stats (profiling_forest);
   const sc_statinfo_t* balance_stats = t8_forest_profile_get_balance_stats (profiling_forest);
   const sc_statinfo_t* balance_rounds_stats = t8_forest_profile_get_balance_rounds_stats (profiling_forest);
+  [[maybe unused]] const sc_statinfo_t* ghost_stats = t8_forest_profile_get_ghost_stats (profiling_forest);
 
   // Integers
-  int balance_rounds, procs_sent;
+  int balance_rounds, ghosts_sent, procs_sent;
 
   // Runtimes
   double time_adapt = t8_forest_profile_get_adapt_time (profiling_forest);
@@ -100,11 +100,8 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   double time_cmesh_offsets = t8_forest_profile_get_cmesh_offsets_runtime (profiling_forest);
   double time_forest_offsets = t8_forest_profile_get_forest_offsets_runtime (profiling_forest);
   double time_first_descendant = t8_forest_profile_get_first_descendant_runtime (profiling_forest);
-#if T8_ENABLE_MPI
-  int ghosts_sent;
   double time_ghost = t8_forest_profile_get_ghost_time (profiling_forest, &ghosts_sent);
   double time_ghost_wait = t8_forest_profile_get_ghostexchange_waittime (profiling_forest);
-#endif
 
   // (5) Simple sanity checks.
   // -------------------------
@@ -127,13 +124,11 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   EXPECT_LT (procs_sent, mpisize);
 
   // Tests only valid for parallel execution
-#if T8_ENABLE_MPI
   if (mpisize > 1) {
     EXPECT_GT (ghosts_sent, 0);
     EXPECT_GT (time_ghost, 0.0);
     EXPECT_GT (time_ghost_wait, 0.0);
   }
-#endif
 
   // Stats
   EXPECT_GT (commit_stats->average, 0.0);
