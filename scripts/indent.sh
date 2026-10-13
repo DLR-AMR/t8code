@@ -138,25 +138,36 @@ then
   status=$?
 else
   $FORMAT $FORMAT_OPTIONS ${newargs[@]}
-  #
-  # Check for trailing white-space
-  #
-  for arg in ${newargs[@]}
-  do
-    TRAILING_LINES=$(grep -n '[[:blank:]]$' "$arg")
-    if [ -n "$TRAILING_LINES" ]; then
-        sed -i 's/[[:blank:]]*$//' "$arg"
-        exit 1
-    fi
-
-    CRLF_LINES=$(grep -n $'\r' "$arg")
-    if [ -n "$CRLF_LINES" ]; then
-      sed -i 's/\r$//' "$arg"
-      exit 1
-    fi
-  done
   status=$?
 fi
+
+#
+# Check for trailing white-space
+#
+for arg in ${newargs[@]}
+do
+  TRAILING_LINES=$(grep -n '[[:blank:]]$' "$arg")
+  if [ -n "$TRAILING_LINES" ]; then
+      status=1
+      if [[ $NO_CHANGE == "TRUE" ]]; then
+        echo "ERROR Trailing whitespace found on the following line(s) in $file:"
+        echo "$TRAILING_LINES" | sed 's/^/    /'
+      else
+        sed -i 's/[[:blank:]]*$//' "$arg"
+      fi
+  fi
+
+  CRLF_LINES=$(grep -n $'\r' "$arg")
+  if [ -n "$CRLF_LINES" ]; then
+    status = 1
+    if [[ $NO_CHANGE == "TRUE" ]]; then
+      echo "ERROR: Windows/CRLF line-endings found on the following line(s) in $file:"
+      echo "$CRLF_LINES" | sed 's/^/    /'
+    else
+      sed -i 's/\r$//' "$arg"
+    fi
+  fi
+done
 
 # If the file content was not changed, the return
 # value determines whether or not the file was
