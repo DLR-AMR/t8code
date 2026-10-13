@@ -21,7 +21,9 @@
 */
 
 /** \file t8_mesh_tutorials_common.hxx
- * This is the default adaptation callback function that can be used to refine and coarsen a mesh in a spherical shape around a given point.
+ * This defines the shared adaption data and callback for the mesh handle tutorials. 
+ * The adaption callback refines elements whose centroid lies inside a sphere around a given point
+ * and coarsens families whose centroid lies outside a larger sphere around the same point. 
  * It is used in step 3, 4 and 5 in the mesh_handle tutorials.
  */
 
@@ -44,15 +46,12 @@ struct adapt_data
 
 /**
  * Exemplary adaption callback function for the mesh handle.
- *
  * This will refine elements inside of a given sphere and coarsen elements
  * outside of a given sphere.
- *
  * \tparam TMeshClass The mesh handle class.
- * \param[in] mesh The mesh that should be adapted.
- * \param[in] elements One element or a family of elements to consider.
- * \param[in] adapt_params The user data used during adaptation.
- *
+ * \param [in] mesh The mesh that should be adapted.
+ * \param [in] elements One element or a family of elements to consider.
+ * \param [in] adapt_params The user data used during adaptation.
  * \return
  *   1  if the first element should be refined,
  *  -1  if the family of elements should be coarsened,
@@ -64,14 +63,13 @@ adapt_callback_sphere ([[maybe_unused]] const TMeshClass& mesh,
                        std::span<const typename TMeshClass::element_class> elements, const adapt_data& adapt_params)
 {
   auto element_centroid = elements[0].get_centroid ();
-
   double dist = t8_dist<t8_3D_vec, t8_3D_vec> (element_centroid, adapt_params.midpoint);
-  /** When this if statement returns true, we are inside the set radius of our "refinement sphere" of our point and therefore need to refine. */
+  /* When this if statement returns true, we are inside the set radius of our "refinement sphere" of our point and therefore need to refine. */
   if (dist < adapt_params.refine_radius) {
     return 1; /* Refine. */
   }
 
-  /** Only coarsen if we actually have a complete family. */
+  /* Only coarsen if we actually have a complete family. */
   if ((elements.size () > 1) && (dist > adapt_params.coarsen_radius)) {
     return -1; /* Coarsen. */
   }

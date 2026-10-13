@@ -45,7 +45,8 @@
 #include "t8_mesh_tutorials_common.hxx"         /** Adaption function definition used for this tutorial. */
 #include <memory>
 
-/** Build our adapted mesh by transferring the adaption parameters and adapting once with the adapt_callback_sphere function defined in \ref t8_mesh_tutorials_common.hxx.
+/** Build our adapted mesh by transferring the adaption parameters and adapting once 
+ *  with the adapt_callback_sphere function defined in \ref t8_mesh_tutorials_common.hxx.
  * \tparam TMeshClass    The mesh handle class.
  * \param [in] mesh      The mesh that should be adapted.
  */
@@ -55,9 +56,9 @@ step3_adapt_mesh (TMeshClass &mesh)
 {
   /* Defining the adaption parameters. */
   adapt_data adapt_params = { { 0.5, 0.5, 1.0 }, 0.2, 0.4 };
-  /** Adapting once using our adapt callback.
+  /* Adapting once using our adapt callback.
    *  set_adapt() only records how the mesh should be changed, it does not modify anything yet. 
-   *  commit() is the function that actually builds the new, adapted mesh from these settings.
+   *  commit() is the function that actually adapts this mesh using these settings.
    *  This "configure, then commit" split lets t8code carry out several mesh operations together in one efficient pass, rather than one at a time. 
    */
   mesh.set_adapt (

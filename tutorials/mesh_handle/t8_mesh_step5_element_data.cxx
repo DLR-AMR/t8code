@@ -70,10 +70,6 @@ build_mesh (sc_MPI_Comm comm, int level)
     0.4              /* Coarsen if outside this radius. */
   };
   /* Adapt, partition, balance and create ghost elements. */
-  /** This is not doing anything here, because we only adapt once before this line, 
-   *  so the difference between elements is +1 or -1 at most. 
-   *  We still include it here for demonstration purposes. 
-   */
   mesh_handle->set_balance ();
   mesh_handle->set_partition ();
   mesh_handle->set_adapt (
