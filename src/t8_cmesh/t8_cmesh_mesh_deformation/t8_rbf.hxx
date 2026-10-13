@@ -21,7 +21,7 @@
 */
 
 /** \file t8_rbf.hxx
- * Implementation of CAD-based mesh deformation.
+ * Radial basis function (RBF) used to interpolate the boundary displacements of a mesh deformation to the inner nodes.
  */
 #pragma once
 
@@ -42,7 +42,7 @@ typedef enum {
   T8_RBF_FUNCTION_COUNT /**< The number of available RBF function types. */
 } t8_rbf_function_type;
 
-/** A struct representing a node in the mesh for the RBF interpoltaion, containing its global ID, position and displacement. */
+/** A struct representing a node in the mesh for the RBF interpolation, containing its global ID, position and displacement. */
 struct t8_rbf_node
 {
   /**The global ID of the node. */
@@ -118,7 +118,6 @@ struct t8_rbf_cpc2: public t8_rbf_function
   {
     const double normalized_distance = distance / radius;
     if (normalized_distance < 1.0) {
-      const double one_minus_normalized_distance = 1.0 - normalized_distance;
       return std::pow (1.0 - normalized_distance, 4) * (4.0 * normalized_distance + 1.0);
     }
     return 0.0;
@@ -195,7 +194,7 @@ struct t8_rbf
       rbf_function = std::make_unique<t8_rbf_tps> ();
     }
     else {
-      SC_ABORTF ("ERROR: RBF attribute missing or not correct. Unsupported RBF type.\n");
+      SC_ABORT ("ERROR: RBF attribute missing or not correct. Unsupported RBF type.\n");
     }
   };
 
@@ -233,8 +232,8 @@ struct t8_rbf
       }
     }
     /* If the boundary node can not be found in the list of boundary nodes.*/
-    t8_errorf ("ERROR: The boundary node %ld is missing in the boundary node list.\n", global_id);
-    SC_ABORTF ("A boundary node is not recognized as one.");
+    t8_errorf ("ERROR: The boundary node %" T8_GLOIDX_FORMAT " is missing in the boundary node list.\n", global_id);
+    SC_ABORT ("A boundary node is not recognized as one.");
   }
 
   /**
@@ -256,7 +255,7 @@ struct t8_rbf
     /** Iterate over all boundary nodes. */
     for (const auto& boundary_node : boundary_nodes) {
 
-      double distance = t8_dist (inner_node.position, boundary_node.position);
+      const double distance = t8_dist (inner_node.position, boundary_node.position);
 
       const double psi = rbf_function->evaluate (distance, boundary_node.local_support_radius);
       /** Check if the basis function value (the influence factor) is not equal to zero with a numerical tolerance of 1e-12. */
@@ -271,7 +270,8 @@ struct t8_rbf
   }
 
  private:
-  /** The specialised solve function for either compactly supported or globally supported RBFs. 
+  /** Solve the RBF system for a compactly supported RBF. 
+   * The interpolation matrix is sparse, so a sparse iterative solver is used.
    * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
    *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
    * \param [in] num_boundary_nodes The number of boundary nodes.
@@ -279,6 +279,14 @@ struct t8_rbf
   */
   Eigen::MatrixXd
   solve_compactly_supported_rbf (const Eigen::MatrixXd& displacements, const size_t num_boundary_nodes) const;
+
+  /** Solve the RBF system for a globally supported RBF.
+   * The interpolation matrix is dense, so a dense solver is used.
+   * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
+   *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
+   * \param [in] num_boundary_nodes The number of boundary nodes.
+   * \return The matrix of the calculated weights alpha.
+  */
   Eigen::MatrixXd
   solve_globally_supported_rbf (const Eigen::MatrixXd& displacements, const size_t num_boundary_nodes) const;
   /** List of all registered support nodes. */

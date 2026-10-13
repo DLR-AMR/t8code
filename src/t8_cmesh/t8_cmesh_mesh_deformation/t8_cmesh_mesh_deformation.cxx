@@ -54,7 +54,7 @@ calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8
   /** Check if the coordinates are available. */
   if (first_tree_coords == nullptr) {
     t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
-    SC_ABORTF ("Vertex coordinates are missing.");
+    SC_ABORT ("Vertex coordinates are missing.");
   }
 
   const double current_vertex_x = first_tree_coords[3 * first_local_index + 0];
@@ -96,7 +96,7 @@ calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8
   if (unique_neighbors.empty ()) {
     t8_errorf ("Error: No neighbor vertices found for global vertex %d to calculate local support radius.\n",
                current_global_vertex_id);
-    SC_ABORTF ("Calculation of local support radius failed due to missing neighbor vertices.");
+    SC_ABORT ("Calculation of local support radius failed due to missing neighbor vertices.");
   }
   /** Calculate the distance to every neighbor node. */
   for (const auto &[x, y, z] : unique_neighbors) {
@@ -143,7 +143,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
       t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree_id);
-      SC_ABORTF ("Geometry attribute is missing.\n");
+      SC_ABORT ("Geometry attribute is missing.\n");
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
@@ -165,7 +165,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
         t8_errorf (
           "Error: Inconsistent entity info for global vertex %li: tree %d: dim=%d tag=%d, expected dim=%d tag=%d\n",
           global_vertex_id, tree_id, entity_dim, entity_tag, first_tree_entity_dim, first_tree_entity_tag);
-        SC_ABORTF ("Inconsistency in vertex info.\n");
+        SC_ABORT ("Inconsistency in vertex info.\n");
       }
     }
 #endif /* T8_ENABLE_DEBUG */
@@ -180,7 +180,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
         t8_errorf ("Error: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
-        SC_ABORTF ("(u,v)-parameters are missing.\n");
+        SC_ABORT ("(u,v)-parameters are missing.\n");
       }
       /* Get the (u,v)-parameter of the vertex. */
       const double *uv_parameter = &uv_attribute[2 * local_corner_index];
@@ -192,7 +192,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
       /* Check if the coordinates are available. */
       if (old_coords == nullptr) {
         t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
-        SC_ABORTF ("Vertex coordinates are missing.\n");
+        SC_ABORT ("Vertex coordinates are missing.\n");
       }
 
       gp_Pnt new_coords;
@@ -274,7 +274,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
       t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree.first);
-      SC_ABORTF ("Geometry attribute is missing.");
+      SC_ABORT ("Geometry attribute is missing.");
     }
 
     const int first_tree_entity_dim = first_tree_geom_attribute[2 * tree_list[0].second];
@@ -298,7 +298,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
       /** Check if the coordinates are available. */
       if (vertex_coords == nullptr) {
         t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree.first);
-        SC_ABORTF ("Vertex coordinates are missing.");
+        SC_ABORT ("Vertex coordinates are missing.");
       }
 
       /** Save the initial coordinates of the inner node. */
