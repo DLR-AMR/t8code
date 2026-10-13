@@ -97,11 +97,13 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   double time_adapt = t8_forest_profile_get_adapt_time (profiling_forest);
   double time_partition = t8_forest_profile_get_partition_time (profiling_forest, &procs_sent);
   double time_balance = t8_forest_profile_get_balance_time (profiling_forest, &balance_rounds);
-  double time_ghost = t8_forest_profile_get_ghost_time (profiling_forest, &ghosts_sent);
-  double time_ghost_wait = t8_forest_profile_get_ghostexchange_waittime (profiling_forest);
   double time_cmesh_offsets = t8_forest_profile_get_cmesh_offsets_runtime (profiling_forest);
   double time_forest_offsets = t8_forest_profile_get_forest_offsets_runtime (profiling_forest);
   double time_first_descendant = t8_forest_profile_get_first_descendant_runtime (profiling_forest);
+#if T8_ENABLE_MPI
+  double time_ghost = t8_forest_profile_get_ghost_time (profiling_forest, &ghosts_sent);
+  double time_ghost_wait = t8_forest_profile_get_ghostexchange_waittime (profiling_forest);
+#endif
 
   // (5) Simple sanity checks.
   // -------------------------
@@ -121,7 +123,7 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   // Integers
   EXPECT_GT (balance_rounds, 0);
   EXPECT_GE (procs_sent, 0);
-  EXPECT_LT (procs_sent, profiling_forest->mpisize);
+  EXPECT_LT (procs_sent, mpisize);
 
   // Tests only valid for parallel execution
   if (mpisize > 1) {
@@ -137,14 +139,16 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   // -------------------------------------------
   EXPECT_GE (time_adapt, adapt_stats->min);
   EXPECT_LE (time_adapt, adapt_stats->max);
-  EXPECT_GE (time_ghost, ghost_stats->min);
-  EXPECT_LE (time_ghost, ghost_stats->max);
   EXPECT_GE (time_partition, partition_stats->min);
   EXPECT_LE (time_partition, partition_stats->max);
   EXPECT_GE (time_balance, balance_stats->min);
   EXPECT_LE (time_balance, balance_stats->max);
   EXPECT_GE (balance_rounds, balance_rounds_stats->min);
   EXPECT_LE (balance_rounds, balance_rounds_stats->max);
+#if T8_ENABLE_MPI
+  EXPECT_GE (time_ghost, ghost_stats->min);
+  EXPECT_LE (time_ghost, ghost_stats->max);
+#endif
 
   // (7) Memory clean up.
   // --------------------
