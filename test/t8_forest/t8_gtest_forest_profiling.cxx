@@ -88,7 +88,7 @@ TEST (t8_test_forest_profiling_test, test_forest_profiling)
   const sc_statinfo_t* commit_stats = t8_forest_profile_get_commit_stats (profiling_forest);
   const sc_statinfo_t* balance_stats = t8_forest_profile_get_balance_stats (profiling_forest);
   const sc_statinfo_t* balance_rounds_stats = t8_forest_profile_get_balance_rounds_stats (profiling_forest);
-  [[maybe unused]] const sc_statinfo_t* ghost_stats = t8_forest_profile_get_ghost_stats (profiling_forest);
+  [[maybe_unused]] const sc_statinfo_t* ghost_stats = t8_forest_profile_get_ghost_stats (profiling_forest);
 
   // Integers
   int balance_rounds, ghosts_sent, procs_sent;
