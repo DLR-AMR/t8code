@@ -257,7 +257,7 @@ struct vtk_writer
     /* Compute the coordinates of the element/tree. */
     std::vector<t8_3D_vec> coordinates (num_node);
 
-    grid_element_to_coords (grid, itree, element, curved_flag, coordinates.begin (), element_shape);
+    grid_element_to_coords (grid, itree, element, curved_flag, coordinates.data (), element_shape);
     vtkIdType ptId = -1;
     for (int ivertex = 0; ivertex < num_node; ivertex++, (*point_id)++) {
       if (merge_points) {
