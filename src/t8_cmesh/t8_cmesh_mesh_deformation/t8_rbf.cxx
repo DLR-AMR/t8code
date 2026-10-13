@@ -29,29 +29,29 @@
 #include <t8_types/t8_vec.h>
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
+#include <Eigen/SparseLU>
 
-/**
-   * Solves the linear system A * alpha = displacements to find the weight. 
-   * This step is mandatory to later be able to interpolate the inner nodes.
-   */
+/*
+ * Solves the linear system A * alpha = displacements to find the weight. 
+ * This step is mandatory to later be able to interpolate the inner nodes.
+ */
 void
 t8_rbf::solve ()
 {
   const size_t num_boundary_nodes = boundary_nodes.size ();
-  /** Check if there are any boundary nodes. */
+  /* Check if there are any boundary nodes. */
   if (num_boundary_nodes == 0) {
-    t8_errorf ("ERROR: Boundary nodes are not added correctly. The current RBF instance has no boundary nodes\n.");
+    t8_errorf ("ERROR: Boundary nodes are not added correctly. The current RBF instance has no boundary nodes.\n");
   }
 
-  /** Fill the displacement vector with the values of the boundary nodes' displacements. */
+  /* Fill the displacement vector with the values of the boundary nodes' displacements. */
   Eigen::MatrixXd displacements (num_boundary_nodes, 3);
   for (size_t inode = 0; inode < num_boundary_nodes; ++inode) {
     displacements.row (inode)
       = Eigen::Vector3d (boundary_nodes[inode].displacement[0], boundary_nodes[inode].displacement[1],
                          boundary_nodes[inode].displacement[2]);
   }
-  /** Weight vector.  */
+  /* Weight vector. */
   Eigen::MatrixXd alpha;
 
   if (rbf_function->is_compactly_supported ()) {
@@ -60,7 +60,7 @@ t8_rbf::solve ()
   else {
     alpha = solve_globally_supported_rbf (displacements, num_boundary_nodes);
   }
-  /** Copy the calculated weights back to the boundary nodes. */
+  /* Copy the calculated weights back to the boundary nodes. */
   for (size_t inode = 0; inode < num_boundary_nodes; ++inode) {
     boundary_nodes[inode].weight[0] = alpha (inode, 0);
     boundary_nodes[inode].weight[1] = alpha (inode, 1);
@@ -71,35 +71,36 @@ t8_rbf::solve ()
 Eigen::MatrixXd
 t8_rbf::solve_compactly_supported_rbf (const Eigen::MatrixXd &displacements, const size_t num_boundary_nodes) const
 {
-  /** The RBF used is compactly supported so we can use a sparse matrix. The conjugate gradient method can be used for solving the linear equation system. */
-  size_t estimation_of_entries = 50;
+  /* The RBF used is compactly supported so we can use a sparse matrix and a sparse direct solver. */
   typedef Eigen::Triplet<double> triplet;
   std::vector<triplet> coefficients;
-  coefficients.reserve (num_boundary_nodes * estimation_of_entries);
-  /** Fill the matrix A with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
+  /* Each row has at least one non-zero element on the diagonal. 
+   * This only reserves memory for the triplet list. More entries are added automatically. */
+  coefficients.reserve (num_boundary_nodes);
+  /* Fill the interpolation matrix with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
   for (size_t row = 0; row < num_boundary_nodes; ++row) {
 
     for (size_t col = 0; col < num_boundary_nodes; ++col) {
-      /** Calculate the distance between the current pair of boundary nodes. */
+      /* Calculate the distance between the current pair of boundary nodes. */
       const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
-      /** Evaluate the radial basis function for the current distance. */
+      /* Evaluate the radial basis function for the current distance. */
       const double psi = rbf_function->evaluate (distance, boundary_nodes[col].local_support_radius);
-      /** Check if the basis function value (the influence factor) is not equal to zero with a numerical tolerance of 1e-12. */
+      /* Check if the basis function value (the influence factor) is not equal to zero with a numerical tolerance of 1e-12. */
       if (std::abs (psi) > 1e-12) {
         coefficients.emplace_back (row, col, psi);
       }
     }
   }
-  /** Fill the sparse matrix A with the triplets. */
-  Eigen::SparseMatrix<double> A (num_boundary_nodes, num_boundary_nodes);
-  A.setFromTriplets (coefficients.begin (), coefficients.end ());
-  /** Solve the linear system using the conjugate gradient method. */
-  Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
-  solver.setTolerance (1e-10);
-  solver.compute (A);
+  /* Fill the sparse interpolation matrix with the triplets. */
+  Eigen::SparseMatrix<double> interpolation_matrix (num_boundary_nodes, num_boundary_nodes);
+  interpolation_matrix.setFromTriplets (coefficients.begin (), coefficients.end ());
+  interpolation_matrix.makeCompressed ();
+  /* Solve the linear system using the sparse LU decomposition. */
+  Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+  solver.compute (interpolation_matrix);
 
   if (solver.info () != Eigen::Success) {
-    t8_errorf ("ERROR: Decomposition of the matrix A failed. The linear system cannot be solved.\n");
+    t8_errorf ("ERROR: Decomposition of the interpolation matrix failed. The linear system cannot be solved.\n");
   }
 
   return solver.solve (displacements);
@@ -108,22 +109,22 @@ t8_rbf::solve_compactly_supported_rbf (const Eigen::MatrixXd &displacements, con
 Eigen::MatrixXd
 t8_rbf::solve_globally_supported_rbf (const Eigen::MatrixXd &displacements, const size_t num_boundary_nodes) const
 {
-  /** The RBF used is globally supported so we need to use a dense matrix. The linear equation system can be solved with the built-in solver of Eigen. */
+  /* The RBF used is globally supported so we need to use a dense matrix. The linear equation system can be solved with the built-in solver of Eigen. */
 
-  /** Create the matrix A for the linear system. */
-  Eigen::MatrixXd A (num_boundary_nodes, num_boundary_nodes);
-  /** Fill the matrix A with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
+  /* Create the interpolation matrix for the linear system. */
+  Eigen::MatrixXd interpolation_matrix (num_boundary_nodes, num_boundary_nodes);
+  /* Fill the interpolation matrix with the values of the radial basis function psi evaluated at the pairwise euclidean distances between all boundary nodes. */
   for (size_t row = 0; row < num_boundary_nodes; ++row) {
-    /** Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part of the matrix 
+    /* Because of the symmetric property of the distance between nodes, we only need to compute the upper triangular part of the matrix 
        * and can mirror the values to the lower triangular part. */
     for (size_t col = 0; col < num_boundary_nodes; ++col) {
-      /** Calculate the distance between the current pair of boundary nodes. */
+      /* Calculate the distance between the current pair of boundary nodes. */
       const double distance = t8_dist (boundary_nodes[row].position, boundary_nodes[col].position);
-      /** Evaluate the radial basis function for the current distance and write the value to the matrix A. */
-      A (row, col) = rbf_function->evaluate (distance, 0.0);
+      /* Evaluate the radial basis function for the current distance and write the value to the interpolation matrix. */
+      interpolation_matrix (row, col) = rbf_function->evaluate (distance, 0.0);
     }
   }
-  Eigen::PartialPivLU<Eigen::MatrixXd> solver (A);
+  Eigen::PartialPivLU<Eigen::MatrixXd> solver (interpolation_matrix);
 
   if (solver.info () != Eigen::Success) {
     t8_errorf ("ERROR: The global RBF system could not be solved with LU-Decomposition.\n");

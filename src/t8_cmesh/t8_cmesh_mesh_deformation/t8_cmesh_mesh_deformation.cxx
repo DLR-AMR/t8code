@@ -53,7 +53,7 @@ calculate_local_support_radius (t8_cmesh_t cmesh, const std::vector<std::pair<t8
 
   /** Check if the coordinates are available. */
   if (first_tree_coords == nullptr) {
-    t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
+    t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree_id);
     SC_ABORT ("Vertex coordinates are missing.");
   }
 
@@ -142,7 +142,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
-      t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree_id);
+      t8_errorf ("Error: Geometry attribute missing for tree %d.\n", first_tree_id);
       SC_ABORT ("Geometry attribute is missing.\n");
     }
 
@@ -179,7 +179,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       /* Check if the (u,v)-parameters are available. */
       if (uv_attribute == nullptr) {
-        t8_errorf ("Error: (u,v)-parameters are missing for tree %d\n.", first_tree_id);
+        t8_errorf ("Error: (u,v)-parameters are missing for tree %d.\n", first_tree_id);
         SC_ABORT ("(u,v)-parameters are missing.\n");
       }
       /* Get the (u,v)-parameter of the vertex. */
@@ -191,7 +191,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       /* Check if the coordinates are available. */
       if (old_coords == nullptr) {
-        t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree_id);
+        t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree_id);
         SC_ABORT ("Vertex coordinates are missing.\n");
       }
 
@@ -273,7 +273,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
 
     /* Check if the geometry attribute is available for this tree. */
     if (first_tree_geom_attribute == nullptr) {
-      t8_errorf ("Error: Geometry attribute missing for tree %d\n.", first_tree.first);
+      t8_errorf ("Error: Geometry attribute missing for tree %d.\n", first_tree.first);
       SC_ABORT ("Geometry attribute is missing.");
     }
 
@@ -297,7 +297,7 @@ t8_cmesh_mesh_deformation::apply_vertex_displacements (
         associated_cmesh, t8_get_package_id (), T8_CMESH_VERTICES_ATTRIBUTE_KEY, first_tree.first));
       /** Check if the coordinates are available. */
       if (vertex_coords == nullptr) {
-        t8_errorf ("Error: Coordinates attribute missing for tree %d\n.", first_tree.first);
+        t8_errorf ("Error: Coordinates attribute missing for tree %d.\n", first_tree.first);
         SC_ABORT ("Vertex coordinates are missing.");
       }
 
