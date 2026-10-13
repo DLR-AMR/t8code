@@ -134,18 +134,18 @@ Development of `t8code` has been funded by the following institutions:
 
 <table cellpadding="20" cellspacing="0" border="0">
   <tr>
-    <td align="center" valign="top"><img src="doc/pictures/funding/bmftr-logo.png" height="110" /></td>
-    <td align="center" valign="top"><img src="doc/pictures/funding/bmwe-logo.png" height="151" /></td>
-    <td align="center" valign="top"><img src="doc/pictures/funding/bigs-logo.png" height="110" /></td>
+    <td align="center" valign="top"><img src="https://github.com/user-attachments/assets/b8eded23-6343-4e98-80f2-7dc21f3de36a" height="110" alt="bmftr-logo" /></td>
+    <td align="center" valign="top"><img src="https://github.com/user-attachments/assets/834ef92b-32ba-42a2-9eb5-01e43baa9bf5" height="151" alt="bmwe-logo" /></td>
+    <td align="center" valign="top"><img src="https://github.com/user-attachments/assets/031be292-7119-45a6-be00-b55a617ab22a" height="110" alt="bigs-logo" /></td>
   </tr>
   <tr>
-    <td align="center" valign="middle"><img src="doc/pictures/funding/eu-logo.jpg" height="75" /></td>
-    <td align="center" valign="middle"><img src="doc/pictures/funding/dfg-logo.png" height="75" /></td>
-    <td align="center" valign="middle"><img src="doc/pictures/funding/hds-lee-logo.png" height="75" /></td>
+    <td align="center" valign="middle"><img src="https://github.com/user-attachments/assets/33b3709b-1324-4ee9-a156-06a79518e573" height="75" alt="eu-logo" /></td>
+    <td align="center" valign="middle"><img src="https://github.com/user-attachments/assets/c3d7079d-3e2b-4f89-af2f-457641692f3f" height="75" alt="dfg-logo" /></td>
+    <td align="center" valign="middle"><img src="https://github.com/user-attachments/assets/18c3aae3-24fd-42a0-8c42-a9c46fc0a4aa" height="75" alt="hds-lee-logo" /></td>
   </tr>
   <tr>
   <td></td>
-  <td align="center" valign="middle"><img src="doc/pictures/funding/dlr-logo.png" height="70" /></td>
+  <td align="center" valign="middle"><img src="https://github.com/user-attachments/assets/80087926-e7f8-479d-80cc-ab2a55cca0c8" height="70" alt="dlr-logo" /></td>
   <td></td>
   </tr>
 </table>
