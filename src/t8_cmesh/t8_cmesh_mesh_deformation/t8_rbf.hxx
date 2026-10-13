@@ -37,7 +37,7 @@
  * The available RBF function types. 
  */
 typedef enum {
-  T8_RBF_CP_C2 = 0,     /**< Compactly supported radial basis function (CPC2). */
+  T8_RBF_CPC2 = 0,      /**< Compactly supported radial basis function (CPC2). */
   T8_RBF_TPS,           /**< Globally supported radial basis function (TPS). */
   T8_RBF_FUNCTION_COUNT /**< The number of available RBF function types. */
 } t8_rbf_function_type;
@@ -74,7 +74,7 @@ struct t8_rbf_function
   /** Destructor. */
   virtual ~t8_rbf_function () {};
 
-  /** 
+  /**
    * Evaluate the radial basis function.
    * \param[in] distance The euclidean distance between two points.
    * \param[in] radius The support radius.
@@ -106,20 +106,20 @@ struct t8_rbf_cpc2: public t8_rbf_function
   /** Destructor. */
   ~t8_rbf_cpc2 () {};
   /**
-   * Solve the radial basis function.
-   * Formula: psi(x) = (1 - x)^4 * (4x + 1) for (1-x) > 0.
+   * Evaluate the radial basis function.
+   * Formula: psi(x) = (1 - x)^4 * (4x + 1) for (1-x) > 0,
    * where x = distance / support radius. The distance is the euclidean distance between two points. 
    * \param [in] distance  The euclidean distance between two points.
    * \param [in] radius The support radius.
    * \return The function value psi. It returns 0.0 if the node is out of the chosen radius and so has no impact.   
    */
   double
-  evaluate (double distance, double radius) const override
+  evaluate (const double distance, const double radius) const override
   {
-    double r = distance / radius;
-    if (r < 1.0) {
-      double d = 1.0 - r;
-      return (d * d * d * d) * (4.0 * r + 1.0);
+    const double normalized_distance = distance / radius;
+    if (normalized_distance < 1.0) {
+      const double one_minus_normalized_distance = 1.0 - normalized_distance;
+      return std::pow (1.0 - normalized_distance, 4) * (4.0 * normalized_distance + 1.0);
     }
     return 0.0;
   }
@@ -148,8 +148,8 @@ struct t8_rbf_tps: public t8_rbf_function
   /** Destructor. */
   ~t8_rbf_tps () {};
   /**
-   * Solve the radial basis function.
-   * Formula: psi(x) = x^2 * log(x).
+   * Evaluate the radial basis function.
+   * Formula: psi(x) = x^2 * log(x),
    * where x is the euclidean distance between two points. 
    * \param[in] distance  The euclidean distance between two points.
    * \param [in] radius The support radius (not used for TPS because it is globally supported).
@@ -188,7 +188,7 @@ struct t8_rbf
   t8_rbf (t8_rbf_function_type rbf_type)
   {
 
-    if (rbf_type == T8_RBF_CP_C2) {
+    if (rbf_type == T8_RBF_CPC2) {
       rbf_function = std::make_unique<t8_rbf_cpc2> ();
     }
     else if (rbf_type == T8_RBF_TPS) {

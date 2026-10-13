@@ -231,7 +231,7 @@ t8_cmesh_mesh_deformation::calculate_displacement_surface_vertices (const t8_cad
 
       node.weight.fill (0.0);
 
-      if (rbf_type == T8_RBF_CP_C2) {
+      if (rbf_type == T8_RBF_CPC2) {
         node.local_support_radius
           = scale_factor_support_radius
             * calculate_local_support_radius (associated_cmesh, tree_list, global_vertex_id, node.displacement);

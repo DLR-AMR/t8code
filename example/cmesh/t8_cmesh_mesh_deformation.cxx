@@ -158,8 +158,15 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     auto brep_files = findBrepFiles (brep_file);
     std::sort (brep_files.begin (), brep_files.end ());
 
+    /* The geometry of the input mesh, which is already written as step 0. */
+    const fs::path input_geometry_name = fs::path (msh_file).filename ();
+
     int ifile = 0;
     for (const auto &file : brep_files) {
+      /* Skip the input geometry, since it does not deform the mesh. */
+      if (file.stem () == input_geometry_name) {
+        continue;
+      }
       auto file_without_ext = file.parent_path () / file.stem ();
       auto cad_deformed = std::make_shared<t8_cad_handle> (file_without_ext.c_str ());
 
@@ -168,7 +175,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
       deformation.apply_vertex_displacements (displacements, cad_deformed, rbf_type);
 
-      std::string output_name = "deformed_forest_step_" + std::to_string (ifile++);
+      std::string output_name = "deformed_forest_step_" + std::to_string (++ifile);
       t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
     }
     /* Cleanup. */
