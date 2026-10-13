@@ -794,6 +794,22 @@ t8_forest_partition_cmesh (t8_forest_t forest, sc_MPI_Comm comm, int set_profili
 sc_MPI_Comm
 t8_forest_get_mpicomm (const t8_forest_t forest);
 
+/** Return the rank of this process in the mpi communicator of a forest.
+ * \param [in]      forest      The forest.
+ * \return                      The rank of this process in the communicator of \a forest.
+ * \a forest must be committed before calling this function.
+ */
+int
+t8_forest_get_mpirank (const t8_forest_t forest);
+
+/** Return the number of processes in the mpi communicator of a forest.
+ * \param [in]      forest      The forest.
+ * \return                      The number of processes in the communicator of \a forest.
+ * \a forest must be committed before calling this function.
+ */
+int
+t8_forest_get_mpisize (const t8_forest_t forest);
+
 /** Return the global id of the first local tree of a forest.
  * \param [in]      forest      The forest.
  * \return                      The global id of the first local tree in \a forest.

@@ -3684,6 +3684,22 @@ t8_forest_get_mpicomm (const t8_forest_t forest)
   return forest->mpicomm;
 }
 
+int
+t8_forest_get_mpirank (const t8_forest_t forest)
+{
+  T8_ASSERT (forest != nullptr);
+  T8_ASSERT (forest->mpirank >= 0);
+  return forest->mpirank;
+}
+
+int
+t8_forest_get_mpisize (const t8_forest_t forest)
+{
+  T8_ASSERT (forest != nullptr);
+  T8_ASSERT (forest->mpisize > 0);
+  return forest->mpisize;
+}
+
 t8_gloidx_t
 t8_forest_get_first_local_tree_id (const t8_forest_t forest)
 {

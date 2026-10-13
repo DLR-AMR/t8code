@@ -159,8 +159,8 @@ struct t8_forest_pfc_message
     pack (send_buffer, buffer_size, &position);
 
     /* Send buffer */
-    const int mpiret
-      = sc_MPI_Isend (send_buffer, position, sc_MPI_PACKED, iproc, T8_MPI_PFC_TAG, forest->mpicomm, &request);
+    const int mpiret = sc_MPI_Isend (send_buffer, position, sc_MPI_PACKED, iproc, T8_MPI_PFC_TAG,
+                                     t8_forest_get_mpicomm (forest), &request);
     SC_CHECK_MPI (mpiret);
     T8_FREE (send_buffer);
   }
@@ -168,7 +168,7 @@ struct t8_forest_pfc_message
   /**
    * Receive data from another process. Probes for the size of the message before receiving
    *
-   * \param[in, out]  recv_buf  the receive buffer. The function allocates the right size of memory to receive the message. 
+   * \param[in, out]  recv_buf  the receive buffer. The function allocates the right size of memory to receive the message.
    * \param[out]  buf_size  the size of the buffer
   */
   void
@@ -195,7 +195,7 @@ struct t8_forest_pfc_message
   fill (t8_forest_t forest)
   {
     // Set mpi rank and partition element offsets.
-    const t8_procidx_t rank = forest->mpirank;
+    const t8_procidx_t rank = t8_forest_get_mpirank (forest);
     const t8_gloidx_t *partition = t8_shmem_array_get_gloidx_array (forest->element_offsets);
 
     // Determine the global element ID of the current process ("rank") that is closest to the elements of process iproc:
