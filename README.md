@@ -121,8 +121,7 @@ Follow the steps described in our Wiki [Documentation](https://github.com/DLR-AM
 
 ## License and Contributing
 
-`t8code` is licensed under GPLv2 (see [COPYING](COPYING)). Copyright (c) 2015-2026 the developers. We appreciate
-contributions from the community and refer to [CONTRIBUTING.md](CONTRIBUTING.md) and the guides in our [wiki](https://github.com/DLR-AMR/t8code/wiki) for more details.
+`t8code` is licensed under GPLv2-or-later (see [COPYING](COPYING)). We appreciate contributions from the community and refer to [CONTRIBUTING.md](CONTRIBUTING.md) and the guides in our [wiki](https://github.com/DLR-AMR/t8code/wiki) for more details.
 
 Note that we strive to be a friendly, inclusive open-source
 community and ask all members of our community to adhere to our
