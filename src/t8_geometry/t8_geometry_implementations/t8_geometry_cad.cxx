@@ -893,7 +893,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
 
         /* Save the opposite vertex of the face in reference space.
         * Reminder: Opposite vertex of a face has the same index as the face. */
-        const double *ref_opposite_vertex = t8_element_corner_ref_coords[active_tree_class][i_faces];
+        const double *ref_opposite_vertex = t8_element_corner_ref_coords[active_tree_class][i_faces].data ();
 
         dist_ref_coords = sqrt (
           (ref_opposite_vertex[0] - ref_coords[0 + offset_3d]) * (ref_opposite_vertex[0] - ref_coords[0 + offset_3d])

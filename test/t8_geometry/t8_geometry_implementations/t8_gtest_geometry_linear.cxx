@@ -177,7 +177,8 @@ TEST (test_geometry_linear, incompatible_geometry)
   /* Build a simple set geometries for the tree. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_QUAD);
-  t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_QUAD], 4);
+  t8_cmesh_set_tree_vertices (cmesh, 0, t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[T8_ECLASS_QUAD]).data (),
+                              4);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   /* Register the t8_geometry_linear_axis_aligned geometry to this cmesh. */
@@ -189,9 +190,11 @@ TEST (test_geometry_linear, incompatible_geometry)
   /* Build a simple set geometries for the tree. */
   t8_cmesh_init (&cmesh);
   t8_cmesh_set_tree_class (cmesh, 0, T8_ECLASS_TRIANGLE);
-  t8_cmesh_set_tree_vertices (cmesh, 0, *t8_element_corner_ref_coords[T8_ECLASS_TRIANGLE], 3);
+  t8_cmesh_set_tree_vertices (cmesh, 0,
+                              t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[T8_ECLASS_TRIANGLE]).data (), 3);
   t8_cmesh_set_tree_class (cmesh, 1, T8_ECLASS_QUAD);
-  t8_cmesh_set_tree_vertices (cmesh, 1, *t8_element_corner_ref_coords[T8_ECLASS_QUAD], 4);
+  t8_cmesh_set_tree_vertices (cmesh, 1, t8_3D_vecs_to_doubles (t8_element_corner_ref_coords[T8_ECLASS_QUAD]).data (),
+                              4);
   /* Commit the cmesh */
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
   /* Register the linear axis aligned geometry to this cmesh.
