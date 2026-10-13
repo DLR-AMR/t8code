@@ -198,7 +198,8 @@ TEST_P (t8_test_weighted_partitioning_test, test_weighted_partitioning)
     sum += ielem;
 
     // If we are above ideal bound for current process, add offset to vector and go to next rank.
-    if (sum > total_weight_sum * (on_rank + 1) / mpisize) {
+    // Note: The while loop is required to handle empty processes.
+    while (sum > total_weight_sum * (on_rank + 1) / mpisize) {
       on_rank++;
       std::fill (element_offsets.begin () + on_rank, element_offsets.end (), ielem);
       t8_global_productionf ("Computed offset for rank %i: %li \n", on_rank, element_offsets[on_rank]);

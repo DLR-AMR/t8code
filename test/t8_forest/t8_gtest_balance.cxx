@@ -64,6 +64,8 @@ struct gtest_balance: public testing::TestWithParam<std::tuple<std::tuple<int, t
 
 /**
  * \brief This test confirms that the function 't8_forest_is_balanced' recognizes uniform forests as balanced.
+ * \note 't8_forest_is_balanced' only sees face neighbors on other processes via the ghost layer.
+ * Hence, the forest is created with ghosts to also check across process boundaries.
  */
 TEST_P (gtest_balance, confirm_is_balanced_check_for_uniform_forests)
 {
@@ -74,7 +76,7 @@ TEST_P (gtest_balance, confirm_is_balanced_check_for_uniform_forests)
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 0, ido_periodic);
-  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, ilevel, 0, sc_MPI_COMM_WORLD);
+  t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, ilevel, 1, sc_MPI_COMM_WORLD);
 
   EXPECT_EQ (t8_forest_is_balanced (forest), 1);
 
