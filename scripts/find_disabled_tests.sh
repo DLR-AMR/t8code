@@ -21,7 +21,7 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
-#Ensure the script is run from the root of the build folder
+# Ensure the script is run from the root of the build folder
 if [ ! -d "Testing/Temporary" ]; then
     echo "Please execute from the build-folder"
     exit 1
