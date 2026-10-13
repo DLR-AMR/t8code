@@ -407,7 +407,7 @@ class t8_static_vector {
    * \note An empty range (\a first >= \a last) is allowed and does nothing.
    */
   constexpr void
-  delete_range ([[maybe_unused]] const size_t first, [[maybe_unused]] const size_t last) noexcept
+  delete_range ([[maybe_unused]] const size_t first, [[maybe_unused]] const size_t last)
   {
     if constexpr (!std::is_trivially_destructible_v<TType>) {
       for (size_t i = first; i < last; ++i) {
