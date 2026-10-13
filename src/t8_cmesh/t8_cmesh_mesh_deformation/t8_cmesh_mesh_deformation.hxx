@@ -41,8 +41,12 @@
 struct t8_cmesh_mesh_deformation
 {
  public:
-  /** Constructor */
-  t8_cmesh_mesh_deformation (t8_cmesh_t cmesh): associated_cmesh (cmesh), updated_geometry (nullptr) {};
+  /** Constructor.
+   * \param [in] cmesh    The committed cmesh which will be deformed.
+   * \param [in] rbf_type The type of radial basis function used for the deformation.
+   */
+  t8_cmesh_mesh_deformation (t8_cmesh_t cmesh, const t8_rbf_function_type rbf_type)
+    : associated_cmesh (cmesh), updated_geometry (nullptr), rbf_type (rbf_type) {};
 
   /** Destructor */
   ~t8_cmesh_mesh_deformation () {};
@@ -51,13 +55,11 @@ struct t8_cmesh_mesh_deformation
  * Computes the displacements of the surface vertices.
  * 
  * \param [in]  cad A pointer to the CAD-based geometry object.
- * \param [in]  rbf_type The type of radial basis function to be used.
  * \param [in] scale_factor_support_radius The scale factor for the support radius.
- * \return Map from global vertex ID to RBF boundary node which contains the displacement and can than be used to calculate the weight of the boundary node.
+ * \return Map from global vertex ID to RBF boundary node which contains the displacement and can then be used to calculate the weight of the boundary node.
  */
   std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node>
-  calculate_displacement_surface_vertices (const t8_cad_handle *cad, const t8_rbf_function_type rbf_type,
-                                           const double scale_factor_support_radius);
+  calculate_displacement_surface_vertices (const t8_cad_handle *cad, const double scale_factor_support_radius);
 
   /**
  * Apply vertex displacements to a committed cmesh.
@@ -67,15 +69,16 @@ struct t8_cmesh_mesh_deformation
  *
  * \param [in] boundary_node_data Map from global vertex ID to RBF boundary node.
  * \param [in] cad The shared pointer to the CAD geometry to update.
- * \param [in] rbf_type The RBF type to be used.
  */
   void
   apply_vertex_displacements (std::unordered_map<t8_gloidx_t, t8_rbf_boundary_node> &boundary_node_data,
-                              std::shared_ptr<t8_cad_handle> cad, const t8_rbf_function_type rbf_type);
+                              std::shared_ptr<t8_cad_handle> cad);
 
  private:
-  /** A pointer to the cmesh for attribute retrieval */
+  /** A pointer to the cmesh for attribute retrieval. */
   t8_cmesh_t associated_cmesh;
-  /** A shared pointer to the updated geometry which comes from a new cad file */
+  /** A shared pointer to the updated geometry which comes from a new cad file. */
   std::shared_ptr<t8_cad_handle> updated_geometry;
+  /** The type of radial basis function used for the deformation. */
+  t8_rbf_function_type rbf_type;
 };

@@ -31,7 +31,7 @@
 #if T8_ENABLE_OCC && T8_ENABLE_EIGEN
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
-#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN*/
+#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN */
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
 
@@ -68,12 +68,12 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
   char usage[BUFSIZ];
   /* Brief help message. */
-  int sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t for a brief overview of all options.",
-                           basename (argv[0]), basename (argv[0]));
+  const int sreturnA = snprintf (usage, BUFSIZ, "Usage:\t%s <OPTIONS>\n\t%s -h\t for a brief overview of all options.",
+                                 basename (argv[0]), basename (argv[0]));
 
   char help[BUFSIZ];
   /* Long help message. */
-  int sreturnB = snprintf (
+  const int sreturnB = snprintf (
     help, BUFSIZ,
     "Deform a mesh based on a msh file with the new CAD geometry.\n"
     "Required arguments are the input mesh file, the deformation geometry file, and the mesh dimension.\n\n%s\n",
@@ -104,7 +104,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
   int helpme = 0;
   const char *msh_file = NULL;
-  const char *brep_file = NULL;
+  const char *brep_folder = NULL;
   int dim, level;
   int rbf_type_int = 0;
   double scale_factor_support_radius = 1.5;
@@ -113,21 +113,21 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   sc_options_t *opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'h', "help", &helpme, "Display a short help message.");
   sc_options_add_string (opt, 'm', "mshfile", &msh_file, NULL, "File prefix of the input mesh file (without .msh)");
-  sc_options_add_string (opt, 'b', "brepfile", &brep_file, NULL,
+  sc_options_add_string (opt, 'b', "brepfolder", &brep_folder, NULL,
                          "Path to the folder containing the deformation geometry files (.brep)");
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
-  sc_options_add_int (opt, 't', "rbftype", &rbf_type_int, 0, "RBF type (0 for CP_C2, 1 for TPS). Default: 0");
+  sc_options_add_int (opt, 't', "rbftype", &rbf_type_int, 0, "RBF type (0 for CPC2, 1 for TPS). Default: 0");
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
                          "Scale factor for the support radius. Default: 1.5");
 
-  int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
+  const int parsed = sc_options_parse (t8_get_package_id (), SC_LP_ERROR, opt, argc, argv);
 
   if (helpme) {
     t8_global_productionf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (msh_file == NULL || brep_file == NULL || dim == 0 || parsed < 0) {
+  else if (msh_file == NULL || brep_folder == NULL || dim == 0 || parsed < 0) {
     t8_global_errorf ("\n\t ERROR: Wrong usage\n");
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
@@ -138,7 +138,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   else {
 
     /* We will use MPI_COMM_WORLD as a communicator. */
-    sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
+    const sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
 
     /* Create cmesh from msh. */
     t8_cmesh_t cmesh;
@@ -146,16 +146,16 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     t8_cmesh_from_msh_file (&cmesh, msh_file, 0, comm, dim, 0, 1);
     t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, comm);
 
-    /* Initialize the deformation object for the given mesh. */
-    t8_cmesh_mesh_deformation deformation (cmesh);
+    /* Save the input RBF type. */
+    const t8_rbf_function_type rbf_type = static_cast<t8_rbf_function_type> (rbf_type_int);
 
-    /** Save the input RBF type. */
-    t8_rbf_function_type rbf_type = static_cast<t8_rbf_function_type> (rbf_type_int);
+    /* Initialize the deformation object for the given mesh. */
+    t8_cmesh_mesh_deformation deformation (cmesh, rbf_type);
 
     /* Write output. */
     t8_forest_vtk_write_file (forest, "deformed_forest_step_0", 1, 1, 1, 1, 0, 0, NULL);
 
-    auto brep_files = findBrepFiles (brep_file);
+    auto brep_files = findBrepFiles (brep_folder);
     std::sort (brep_files.begin (), brep_files.end ());
 
     /* The geometry of the input mesh, which is already written as step 0. */
@@ -167,15 +167,15 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
       if (file.stem () == input_geometry_name) {
         continue;
       }
-      auto file_without_ext = file.parent_path () / file.stem ();
-      auto cad_deformed = std::make_shared<t8_cad_handle> (file_without_ext.c_str ());
+      const auto file_without_ext = file.parent_path () / file.stem ();
+      const auto cad_deformed = std::make_shared<t8_cad_handle> (file_without_ext.c_str ());
 
-      auto displacements = deformation.calculate_displacement_surface_vertices (cad_deformed.get (), rbf_type,
-                                                                                scale_factor_support_radius);
+      auto displacements
+        = deformation.calculate_displacement_surface_vertices (cad_deformed.get (), scale_factor_support_radius);
 
-      deformation.apply_vertex_displacements (displacements, cad_deformed, rbf_type);
+      deformation.apply_vertex_displacements (displacements, cad_deformed);
 
-      std::string output_name = "deformed_forest_step_" + std::to_string (++ifile);
+      const std::string output_name = "deformed_forest_step_" + std::to_string (++ifile);
       t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
     }
     /* Cleanup. */
@@ -190,9 +190,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-#else  /* T8_ENABLE_OCC and T8_ENABLE_EIGEN*/
+#else  /* T8_ENABLE_OCC and T8_ENABLE_EIGEN */
   t8_global_errorf ("ERROR: This example requires OpenCASCADE and Eigen support to be enabled in t8code.\n");
-#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN*/
+#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN */
 
   return 0;
 }

@@ -45,7 +45,7 @@ typedef enum {
 /** A struct representing a node in the mesh for the RBF interpolation, containing its global ID, position and displacement. */
 struct t8_rbf_node
 {
-  /**The global ID of the node. */
+  /** The global ID of the node. */
   t8_gloidx_t global_id;
   /** The old position of the node. */
   t8_3D_vec position;
@@ -231,7 +231,7 @@ struct t8_rbf
         return node.displacement;
       }
     }
-    /* If the boundary node can not be found in the list of boundary nodes.*/
+    /* If the boundary node can not be found in the list of boundary nodes. */
     t8_errorf ("ERROR: The boundary node %" T8_GLOIDX_FORMAT " is missing in the boundary node list.\n", global_id);
     SC_ABORT ("A boundary node is not recognized as one.");
   }
@@ -250,19 +250,19 @@ struct t8_rbf
   void
   interpolate (t8_rbf_node& inner_node) const
   {
-    /** Reset the inner_node_displacement to zero. */
+    /* Reset the inner_node_displacement to zero. */
     inner_node.displacement.fill (0.0);
-    /** Iterate over all boundary nodes. */
+    /* Iterate over all boundary nodes. */
     for (const auto& boundary_node : boundary_nodes) {
 
       const double distance = t8_dist (inner_node.position, boundary_node.position);
 
       const double psi = rbf_function->evaluate (distance, boundary_node.local_support_radius);
-      /** Check if the basis function value (the influence factor) is not equal to zero with a numerical tolerance of 1e-12. */
+      /* Check if the basis function value (the influence factor) is not equal to zero with a numerical tolerance of 1e-12. */
       if (std::abs (psi) > 1e-12) {
 
         for (int coordinate = 0; coordinate < 3; ++coordinate) {
-          /** Update the displacement for each coordinate with the weighted influence of the boundary node. */
+          /* Update the displacement for each coordinate with the weighted influence of the boundary node. */
           inner_node.displacement[coordinate] += boundary_node.weight[coordinate] * psi;
         }
       }
@@ -271,7 +271,7 @@ struct t8_rbf
 
  private:
   /** Solve the RBF system for a compactly supported RBF. 
-   * The interpolation matrix is sparse, so a sparse iterative solver is used.
+   * The interpolation matrix is sparse, so a sparse direct solver is used.
    * \param [in] displacements The matrix of the boundary node displacements. Each row corresponds to a 
    *                          boundary node and the three columns correspond to the x, y, and z components of the displacement.
    * \param [in] num_boundary_nodes The number of boundary nodes.
