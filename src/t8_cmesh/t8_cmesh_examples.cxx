@@ -758,7 +758,7 @@ t8_cmesh_new_2D_hypercube_hybrid (t8_cmesh_t cmesh, sc_MPI_Comm comm)
 
 /* The unit cube is constructed from trees of the same eclass.
  * For triangles the square is divided along the (0,0) -- (1,1) diagonal.
- * For prisms the front (y=0) and back (y=1) face are divided into triangles
+ * For prisms the bottom (z=0) and top (z=1) faces are divided into triangles
  * as above.
  */
 /* TODO: upgrade with int x,y,z for periodic faces */
@@ -848,7 +848,7 @@ t8_cmesh_new_hypercube (t8_cmesh_t *pcmesh, t8_eclass_t eclass, sc_MPI_Comm comm
       t8_cmesh_set_tree_vertices (cmesh, 1, attr_vertices, 6);
       if (periodic) {
         t8_cmesh_set_join (cmesh, 0, 1, 0, 1, 0);
-        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 0);
+        t8_cmesh_set_join (cmesh, 0, 1, 2, 0, 1);
         t8_cmesh_set_join (cmesh, 0, 0, 3, 4, 0);
         t8_cmesh_set_join (cmesh, 1, 1, 3, 4, 0);
       }

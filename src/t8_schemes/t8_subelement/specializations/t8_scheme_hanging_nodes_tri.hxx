@@ -62,34 +62,14 @@ struct t8_subelem_scheme_hanging_nodes_tri:
 
   TUnderlyingScheme underlying_scheme {}; /**< Instance of the underlying standalone scheme. */
 
-  /** Compute the number of corners of an element.
-   * \param [in] elem The subelement.
-   * \return          The number of corners of \a elem.
-   */
-  static int
-  subelement_get_num_corners ([[maybe_unused]] const TSubelementType *elem) noexcept
-  {
-    return T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE];
-  }
-
-  /** Compute the number of faces of a given element.
-   * \param [in] elem The element.
-   * \return          The number of faces of \a elem.
-   */
-  static int
-  subelement_get_num_faces ([[maybe_unused]] const TSubelementType *elem) noexcept
-  {
-    return T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE];
-  }
-
   /** Compute the maximum number of faces of a given element and all of its descendants.
    * \param [in] elem The element.
    * \return          The maximum number of faces of \a elem and its descendants.
    */
   static int
-  subelement_get_max_num_faces (const TSubelementType *elem) noexcept
+  subelement_get_max_num_faces ([[maybe_unused]] const TSubelementType *elem) noexcept
   {
-    return subelement_get_num_faces (elem);
+    return T8_ELEMENT_MAX_NUM_FACES[T8_ECLASS_TRIANGLE];
   }
 
   /** Return the shape of an allocated element.
@@ -100,17 +80,6 @@ struct t8_subelem_scheme_hanging_nodes_tri:
   subelement_get_shape ([[maybe_unused]] const TSubelementType *elem) noexcept
   {
     return T8_ECLASS_TRIANGLE;
-  }
-
-  /** Compute the shape of the face of an element.
-   * \param [in] elem     The element.
-   * \param [in] face     A face of \a elem.
-   * \return              The element shape of the face. As we are in 2D, here always LINE.
-   */
-  static t8_element_shape_t
-  subelement_get_face_shape ([[maybe_unused]] const TSubelementType *elem, [[maybe_unused]] const int face) noexcept
-  {
-    return T8_ECLASS_LINE;
   }
 
   /** Return the max number of children if an element is refined into subelements.
@@ -228,7 +197,7 @@ struct t8_subelem_scheme_hanging_nodes_tri:
     // Get the bit corresponding to iface.
     // If that bit is 1, the face is hanging.
     // 1u is for lowest bit extraction.
-    return ((subelem_type >> ((T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE] - 1) - iface)) & 1u) != 0u;
+    return ((subelem_type >> ((t8_eclass_num_faces[T8_ECLASS_TRIANGLE] - 1) - iface)) & 1u) != 0u;
   }
 
   /** Compute the integer coordinates of the three vertices of a triangular subelement.
@@ -285,7 +254,7 @@ struct t8_subelem_scheme_hanging_nodes_tri:
 
     /* The corners of the parent triangle. */
     std::array<std::array<int, 2>, 3> parent_coords;
-    for (int icorner = 0; icorner < T8_ELEMENT_NUM_CORNERS[T8_ECLASS_TRIANGLE]; ++icorner) {
+    for (int icorner = 0; icorner < t8_eclass_num_vertices[T8_ECLASS_TRIANGLE]; ++icorner) {
       underlying_scheme.element_get_vertex_integer_coords (this->subelement_to_standalone (subelement), icorner,
                                                            parent_coords[icorner].data ());
     }
@@ -302,7 +271,7 @@ struct t8_subelem_scheme_hanging_nodes_tri:
     while (!face_is_hanging (subelem_type, main_face)) {
       ++main_face;
     }
-    T8_ASSERT (main_face < T8_ELEMENT_NUM_FACES[T8_ECLASS_TRIANGLE]);
+    T8_ASSERT (main_face < t8_eclass_num_faces[T8_ECLASS_TRIANGLE]);
     const std::array<int, 2> m_c = compute_face_midpoint (main_face);
 
     /* Build the path: Walk the parent edges from the first to the second end vertex of the main face, the way
