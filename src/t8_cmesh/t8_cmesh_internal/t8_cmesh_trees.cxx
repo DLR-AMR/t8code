@@ -167,7 +167,6 @@ t8_cmesh_trees_get_num_procs (t8_cmesh_trees_t trees)
 static t8_ctree_t
 t8_part_tree_get_tree (const t8_part_tree_t P, const t8_locidx_t tree_id)
 {
-  t8_locidx_t tree_offset;
   T8_ASSERT (0 <= tree_id);
 
   tree_offset = tree_id - P->first_tree_id;
