@@ -34,10 +34,12 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_forest/t8_forest_general.h>
 #include <t8_forest/t8_forest_geometrical.h>
 #include <t8_schemes/t8_scheme.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <vector>
+#include <span>
 #include <optional>
 #include <type_traits>
+#include <algorithm>
 
 namespace t8_mesh_handle
 {
@@ -411,6 +413,69 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
     }
   }
 
+  /** Convert points from the reference space of this element to the reference space of 
+   * its tree / its initial coarse mesh element.
+   * \param [in] ref_coords Points in the element's reference space [0,1]^dim. 
+   *             Only the first dim entries of each point are used.
+   * \return The corresponding points in the tree's / the initial coarse mesh element's reference space.
+   *         Entries beyond the element's dimension are set to 0.
+   */
+  std::vector<t8_3D_vec>
+  get_reference_coordinates (std::span<const t8_3D_vec> ref_coords) const
+  {
+    const t8_scheme* scheme = t8_forest_get_scheme (m_mesh->m_forest);
+    const std::size_t dim = std::max<std::size_t> (m_mesh->get_dimension (), 1);
+    const std::size_t num_coords = ref_coords.size ();
+
+    std::vector<t8_3D_vec> coordinates (num_coords, t8_3D_vec { 0.0, 0.0, 0.0 });
+    if (num_coords == 0) {
+      return coordinates;
+    }
+    // Limit the entries to dim and pack them for the scheme.
+    std::vector<double> packed_in (num_coords * dim);
+    // The out coordinates of the forest function is always 3d.
+    std::vector<double> packed_out (num_coords * 3);
+    for (std::size_t icoord = 0; icoord < num_coords; ++icoord) {
+      for (std::size_t idim = 0; idim < dim; ++idim) {
+        packed_in[icoord * dim + idim] = ref_coords[icoord][idim];
+      }
+    }
+
+    t8_element_get_reference_coords (scheme, get_tree_class (), m_element, packed_in.data (), num_coords,
+                                     packed_out.data ());
+
+    // Fill result vector.
+    for (std::size_t icoord = 0; icoord < num_coords; ++icoord) {
+      for (std::size_t idim = 0; idim < dim; ++idim) {
+        coordinates[icoord][idim] = packed_out[icoord * 3 + idim];
+      }
+    }
+    return coordinates;
+  }
+
+  /** Overload of the function above for only one reference coordinate.
+   * \param [in] ref_coord The single point in the element's reference space [0,1]^dim. 
+   *             Only the first dim entries are used.
+   * \return The corresponding point in the tree's / the initial coarse mesh element's reference space.
+   *         Entries beyond the element's dimension are set to 0.
+   */
+  t8_3D_vec
+  get_reference_coordinates (const t8_3D_vec& ref_coord) const
+  {
+    return get_reference_coordinates (std::span (&ref_coord, 1)).front ();
+  }
+
+  /** Compute the orientation of a face of an element with respect to its neighbor.
+   *  \param [in] face The index of the face for which the orientation should be computed.
+   *  \return The orientation of the face with respect to its neighbor. Returns 0 if the face has no neighbor.
+   */
+  int
+  get_face_orientation (int face) const
+  {
+    return t8_forest_leaf_face_orientation (m_mesh->m_forest, m_tree_id, t8_forest_get_scheme (m_mesh->m_forest),
+                                            m_element, face);
+  }
+
   // --- Getter for face properties. ---
   /** The area of a face of the element.
    *  This is only an approximation.
@@ -602,6 +667,17 @@ class element: public TCompetences<element<TMeshClass, TCompetences...>>... {
   is_ghost_element () const
   {
     return m_is_ghost_element;
+  }
+
+  /** Check if this element is equal to another element.
+   * \param [in] other The other element, this element is compared with. 
+   * \return           True if the elements are equal, false if they are not equal.
+  */
+  bool
+  is_equal (const SelfType& other) const
+  {
+    return t8_forest_get_scheme (m_mesh->m_forest)
+      ->element_is_equal (get_tree_class (), get_forest_element (), other.get_forest_element ());
   }
 
  private:
