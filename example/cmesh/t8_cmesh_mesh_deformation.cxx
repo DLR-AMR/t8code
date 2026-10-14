@@ -28,10 +28,13 @@
 #include <t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx>
 #include <t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#if T8_ENABLE_OCC && T8_ENABLE_EIGEN
+#if T8_ENABLE_OCC
 #include <t8_cad/t8_cad_handle.hxx>
 #include <t8_cmesh/t8_cmesh_mesh_deformation/t8_cmesh_mesh_deformation.hxx>
-#endif /* T8_ENABLE_OCC and T8_ENABLE_EIGEN*/
+#if T8_ENABLE_EIGEN
+#include <t8_cmesh/t8_cmesh_mesh_deformation/t8_rbf.hxx>
+#endif /* T8_ENABLE_EIGEN */
+#endif /* T8_ENABLE_OCC */
 #include <t8_vtk/t8_vtk_writer.h>
 #include <sc_options.h>
 
@@ -106,7 +109,7 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
   const char *msh_file = NULL;
   const char *brep_file = NULL;
   int dim, level;
-  int rbf_type_int = 0;
+  int deformation_type_int = 0;
   double scale_factor_support_radius = 1.5;
 
   /* Initialize command line argument parser. */
@@ -117,7 +120,8 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
                          "Path to the folder containing the deformation geometry files (.brep)");
   sc_options_add_int (opt, 'd', "dimension", &dim, 0, "Dimension of the mesh (1, 2 or 3)");
   sc_options_add_int (opt, 'l', "level", &level, 2, "Uniform refinement level for the input mesh. Default: 2");
-  sc_options_add_int (opt, 't', "rbftype", &rbf_type_int, 0, "RBF type (0 for CP_C2, 1 for TPS). Default: 0");
+  sc_options_add_int (opt, 't', "deformtype", &deformation_type_int, 0,
+                      "Deformation type (0 for RBF CP_C2, 1 for RBF TPS). Default: 0");
   sc_options_add_double (opt, 's', "scalefactor", &scale_factor_support_radius, 1.5,
                          "Scale factor for the support radius. Default: 1.5");
 
@@ -149,8 +153,18 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     /* Initialize the deformation object for the given mesh. */
     t8_cmesh_mesh_deformation deformation (cmesh);
 
-    /** Save the input RBF type. */
-    t8_rbf_function_type rbf_type = static_cast<t8_rbf_function_type> (rbf_type_int);
+    switch (deformation_type_int) {
+#if T8_ENABLE_EIGEN
+    case 0:
+      deformation.set_deformation_method<t8_rbf> (T8_RBF_CP_C2, scale_factor_support_radius);
+      break;
+    case 1:
+      deformation.set_deformation_method<t8_rbf> (T8_RBF_TPS);
+      break;
+#endif
+    default:
+      SC_ABORTF ("Unknown or unavailable deformation type %d.\n", deformation_type_int);
+    }
 
     /* Write output. */
     t8_forest_vtk_write_file (forest, "deformed_forest_step_0", 1, 1, 1, 1, 0, 0, NULL);
@@ -163,10 +177,9 @@ main ([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
       auto file_without_ext = file.parent_path () / file.stem ();
       auto cad_deformed = std::make_shared<t8_cad_handle> (file_without_ext.c_str ());
 
-      auto displacements = deformation.calculate_displacement_surface_vertices (cad_deformed.get (), rbf_type,
-                                                                                scale_factor_support_radius);
+      auto displacements = deformation.calculate_displacement_surface_vertices (cad_deformed.get ());
 
-      deformation.apply_vertex_displacements (displacements, cad_deformed, rbf_type);
+      deformation.apply_vertex_displacements (displacements, cad_deformed);
 
       std::string output_name = "deformed_forest_step_" + std::to_string (ifile++);
       t8_forest_vtk_write_file (forest, output_name.c_str (), 1, 1, 1, 1, 0, 0, NULL);
