@@ -505,6 +505,21 @@ t8_cmesh_load_and_distribute (const char *fileprefix, int num_files, sc_MPI_Comm
 int
 t8_cmesh_comm_is_valid (t8_cmesh_t cmesh, sc_MPI_Comm comm);
 
+/** Derive a new cmesh from a committed cmesh that is partitioned according to
+ * a uniform refinement of a given level for the provided scheme.
+ * A forest built with \ref t8_forest_new_uniform from a partitioned cmesh requires
+ * the cmesh partition to match the forest partition. Use this function to obtain such a cmesh.
+ * \param [in] cmesh          A committed cmesh. We take ownership. This can be prevented by
+ *                            referencing \a cmesh before calling this function.
+ * \param [in] element_level  The refinement level of the uniform forest.
+ * \param [in] scheme         The element scheme describing the refinement pattern.
+ *                            The caller keeps ownership.
+ * \param [in] comm           The MPI communicator used to commit the new cmesh.
+ * \return                    The committed, uniformly partitioned cmesh.
+ */
+t8_cmesh_t
+t8_cmesh_derive_partitioned (t8_cmesh_t cmesh, const int element_level, const t8_scheme_c *scheme, sc_MPI_Comm comm);
+
 /** Query whether a committed cmesh is partitioned or replicated.
  * \param [in] cmesh       A committed cmesh.
  * \return                 True if \a cmesh is partitioned.
