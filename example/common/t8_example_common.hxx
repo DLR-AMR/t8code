@@ -32,7 +32,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest_general.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 /** A levelset function in 3+1 space dimensions. */
 typedef double (*t8_example_level_set_fn) (const t8_3D_vec &, double, void *);

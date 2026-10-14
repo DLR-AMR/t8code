@@ -46,7 +46,7 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   const int level = 2;
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
-  t8_cmesh_new_2D_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_new_hypercube_hybrid_2D (cmesh, sc_MPI_COMM_WORLD);
 
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, sc_MPI_COMM_WORLD);
 

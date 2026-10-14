@@ -32,7 +32,7 @@
 #include <t8_forest/t8_forest_geometrical.h>          /* geometrical information of the forest */
 #include <t8_forest/t8_forest_subelement.hxx>         /* Function for adding subelements. */
 #include <t8_schemes/t8_subelement/t8_subelement.hxx> /* Subelement refinement scheme. */
-#include <t8_types/t8_vec.h>                          /* Basic operations on 3D vectors. */
+#include <t8_vector/t8_vec.h>                         /* Basic operations on 3D vectors. */
 #include <t8_eclass/t8_eclass.h>                      /* Element-class definitions. */
 
 /** The adaptation callback function. This refines every second element (with even global id).

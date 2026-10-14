@@ -149,11 +149,14 @@ target_sources( T8 PRIVATE
     t8_cmesh/t8_cmesh_internal/t8_cmesh_copy.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_offset.c
     t8_cmesh/t8_cmesh_internal/t8_cmesh_partition.cxx
-    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.c
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.cxx
     t8_cmesh/t8_cmesh_internal/t8_cmesh_trees.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_tree_to_vertex.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_vertex_to_tree.cxx
     t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.cxx
+    t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.cxx
     t8_cmesh/t8_cmesh_io/t8_cmesh_readmshfile.cxx
     t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_save.cxx
     t8_cmesh/t8_cmesh_io/deprecated/deprecated_t8_cmesh_triangle.cxx
@@ -177,6 +180,7 @@ target_sources( T8 PRIVATE
     t8_forest/t8_forest_balance.cxx
     t8_forest/t8_forest_subelement.cxx
     t8_forest/t8_forest_search/t8_forest_search.cxx
+    t8_forest/t8_forest_boundary_conditions/t8_forest_boundary_conditions.cxx
     t8_geometry/t8_geometry.cxx
     t8_geometry/t8_geometry_helpers.c
     t8_geometry/t8_geometry_base.cxx
@@ -210,7 +214,7 @@ target_sources( T8 PRIVATE
     t8_schemes/t8_default/t8_default_tri/t8_dtri_bits.c
     t8_schemes/t8_default/t8_default_tri/t8_dtri_connectivity.c
     t8_schemes/t8_default/t8_default_vertex/t8_default_vertex.cxx
-    t8_types/t8_vec.cxx
+    t8_vector/t8_vec.cxx
     t8_schemes/t8_standalone/t8_standalone.cxx
     t8_schemes/t8_subelement/t8_subelement.cxx
     t8_vtk/t8_vtk.c
@@ -271,6 +275,15 @@ install( DIRECTORY t8_cmesh
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
+
+# t8_cmesh_geometry_handler_internal.hxx is included by the public t8_cmesh_geometry.hxx
+# (functions in detail namespace, not meant for users), so it must be installed despite
+# the t8_cmesh_internal exclusion above.
+install( FILES
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_handler_internal.hxx
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_internal
+)
+
 install( DIRECTORY t8_data
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING

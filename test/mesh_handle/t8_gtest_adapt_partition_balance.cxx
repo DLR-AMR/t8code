@@ -34,7 +34,7 @@ along with t8code; if not, write to the Free Software Foundation, Inc.,
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_forest/t8_forest_general.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 
 /** Test the adapt, partition and balance routines of a mesh handle.
  * The test compares the results of the mesh handle to a forest adapted with the same criterion and balanced and partitioned similarly.

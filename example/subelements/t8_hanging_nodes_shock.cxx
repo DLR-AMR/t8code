@@ -47,7 +47,7 @@
 #include <t8_forest/t8_forest_geometrical.h>          /* geometrical information of the forest */
 #include <t8_forest/t8_forest_subelement.hxx>         /* Function for adding subelements. */
 #include <t8_schemes/t8_subelement/t8_subelement.hxx> /* Subelement refinement scheme. */
-#include <t8_types/t8_vec.h>                          /* Basic operations on 3D vectors. */
+#include <t8_vector/t8_vec.h>                         /* Basic operations on 3D vectors. */
 #include <t8_eclass/t8_eclass.h>                      /* Element class (eclass) definitions. */
 
 /** User data passed to the adaptation callback \ref t8_adapt_callback.
@@ -166,7 +166,7 @@ main (int argc, char **argv)
   /* Hybrid 2D hypercube: a mesh containing both quad and triangle trees. */
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
-  t8_cmesh_new_2D_hypercube_hybrid (cmesh, comm);
+  t8_cmesh_new_hypercube_hybrid_2D (cmesh, comm);
   /* Uniform forest using the subelement scheme (required for hanging-node resolution). */
   const int level = 0;
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, comm);
