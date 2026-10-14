@@ -38,7 +38,6 @@
 #include <type_traits>
 #include <vector>
 #include <functional>
-#include <optional>
 #include <span>
 
 namespace t8_mesh_handle
@@ -276,25 +275,12 @@ class interpolate_element_data_mesh_competence:
   }
 
  protected:
-  /** Decide whether \ref mesh::set_partition has been requested for the upcoming \ref mesh::commit.
-   * With the interpolation competence the partition step is postponed so that it runs after the element data has been
-   * interpolated onto the new mesh; \ref mesh::set_partition therefore records its choice in
-   * \ref m_partition_for_coarsening instead of building the partitioned forest directly.
-   * \return true if \ref mesh::set_partition has been called (i.e. \ref m_partition_for_coarsening holds a value),
-   *         false otherwise.
-   */
-  bool
-  set_partition_called ()
-  {
-    return m_partition_for_coarsening.has_value ();
-  }
-
   /** Repartition the element data so it follows a newly partitioned forest.
    * The element data currently belongs to \a forest_from; this moves it to the layout of \a forest_to, which must
-   * have been created by partitioning \a forest_from. 
-   * Analogous to \ref element_data_mesh_competence_impl::exchange_ghost_data, but using \ref t8_forest_partition_data. 
-   * This function is called from \ref mesh::commit after the interpolated data has been produced and the partitioned 
-   * forest has been committed.
+   * have been created by partitioning \a forest_from.
+   * Analogous to \ref element_data_mesh_competence_impl::exchange_ghost_data, but using \ref t8_forest_partition_data.
+   * This function is called from \ref mesh::commit after the element data has been interpolated (if the mesh was
+   * adapted) and the partitioned forest has been committed.
    * \param [in] forest_from The (committed) forest the current element data belongs to.
    * \param [in] forest_to   The committed forest that was partitioned from \a forest_from.
    * \note Both forests could also be accessed directly (by this->underlying()) but this requires that the function is
@@ -307,8 +293,9 @@ class interpolate_element_data_mesh_competence:
     using element_data_type = typename TUnderlying::ElementDataType;
     // Take ownership of old data and wrap into sc_array. This is because the forest functions expect an sc_array.
     std::vector<element_data_type> old_data = this->underlying ().take_element_data ();
-    sc_array* data_in = sc_array_new_data (old_data.data (), sizeof (element_data_type),
-                                           t8_forest_get_local_num_leaf_elements (forest_from));
+    const t8_locidx_t num_old_local = t8_forest_get_local_num_leaf_elements (forest_from);
+    T8_ASSERT (old_data.size () >= static_cast<size_t> (num_old_local));
+    sc_array* data_in = sc_array_new_data (old_data.data (), sizeof (element_data_type), num_old_local);
     const t8_locidx_t num_new_local = t8_forest_get_local_num_leaf_elements (forest_to);
     // Define vector for the new data and wrap it.
     std::vector<element_data_type> partitioned_data (num_new_local);
@@ -325,9 +312,6 @@ class interpolate_element_data_mesh_competence:
   internal_interpolate_callback_type
     m_interpolate_callback; /**< The wrapped element-index-based interpolation callback, 
                               * applied on the next \ref mesh::commit. */
-  std::optional<bool>
-    m_partition_for_coarsening; /**< Postponed \ref mesh::set_partition request: a value means partition on the next 
-                          * commit (with value passed to \ref mesh::set_partition); no value means do not partition. */
 };
 
 }  // namespace t8_mesh_handle
