@@ -116,7 +116,11 @@ handle_hypercube_uniform_default (t8_eclass_t eclass, const int level, const sc_
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_new_hypercube (&cmesh, eclass, comm, 0, do_partition, periodic);
-  return handle_new_uniform_default<TMeshClass> (cmesh, level, comm, do_face_ghost);
+  const t8_scheme *scheme = t8_scheme_new_default ();
+  if (do_partition) {
+    cmesh = t8_cmesh_derive_partitioned (cmesh, level, scheme, comm);
+  }
+  return handle_new_uniform<TMeshClass> (cmesh, scheme, level, comm, do_face_ghost);
 }
 
 }  // namespace t8_mesh_handle
