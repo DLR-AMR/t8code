@@ -127,7 +127,7 @@ TEST_P (element_neighbor_eclass, neighbor_eclass_matches_neighbor_leaves)
                       tree_eclass)
               << "tree " << itree << " leaf " << ileaf << " face " << iface << " neighbor " << ineigh;
           }
-
+        }
         T8_FREE (neighbors);
         T8_FREE (dual_faces);
         T8_FREE (element_indices);
