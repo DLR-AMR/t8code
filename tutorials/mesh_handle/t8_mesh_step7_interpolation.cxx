@@ -31,7 +31,7 @@
  *
  * Unlike the forest structure, the mesh handle takes care of most things, for example:
  *  - The element data is stored inside the mesh via the element data competences instead of in a user-managed sc_array
- *    (See \ref t8_mesh_stepA_competences.cxx or \ref t8_mesh_element_data.cxx for more information).
+ *    (See \ref t8_mesh_stepA_competences.cxx or \ref t8_mesh_step5_element_data.cxx for more information).
  *  - We only need to provide an interpolation callback that receives spans over the old and the new elements.
  *    The mesh calls it automatically on commit, so there is no need to
  *    call t8_forest_iterate_replace ourselves or to compute tree offsets for the data indices.
