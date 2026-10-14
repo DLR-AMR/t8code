@@ -362,8 +362,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
                                          glob_intersection);
 
         /* Get parameters of the current edge if the edge is curved */
-        const double *edge_parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        const double *edge_parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_edge);
         T8_ASSERT (edge_parameters != NULL);
 
         /* Calculate the curve parameter at the intersection point for each reference coordinate */
@@ -426,8 +425,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tri (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
     for (int i_edge = 0; i_edge < num_edges; i_edge++) {
       if (edges[i_edge] > 0 || edges[i_edge + num_edges] > 0) {
         /* Get parameters of the current edge if the edge is curved */
-        const double *parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        const double *parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_edge);
         T8_ASSERT (parameters != NULL);
 
         /* Calculate the intersections of straight lines from the opposite vertex of the current edge,
@@ -532,8 +530,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         double temp_edge_parameters[2];
         double temp_face_parameters[2];
         /* Retrieve edge parameters and interpolate */
-        const double *edge_parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        const double *edge_parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_edge);
         T8_ASSERT (edge_parameters != NULL);
 
         for (size_t coord = 0; coord < num_coords; ++coord) {
@@ -620,8 +617,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_quad (t8_cmesh_t cmesh, t8_gloidx_t gtreei
         t8_geom_get_face_vertices (active_tree_class, active_tree_vertices, i_edge, 3, temp_edge_vertices);
 
         /* Get pointer to edge parameters */
-        const double *parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        const double *parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_edge);
         T8_ASSERT (parameters != NULL);
         /* Curves have only one parameter u, surfaces have two, u and v.
          * Therefore, we have to distinguish if the edge has a curve or surface linked to it. */
@@ -749,8 +745,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         t8_geom_linear_interpolation (&interpolation_coeff, temp_edge_vertices, 3, 1, interpolated_coords);
 
         /* Retrieve edge parameters of the current edge */
-        const double *parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        const double *parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_edge);
         T8_ASSERT (parameters != NULL);
 
         /* Interpolate between the parameters of the current edge. Same procedure as above.
@@ -840,8 +835,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_tet (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
           if (edges[i_tree_edge] > 0) {
 
             /* Retrieve parameters of nodes on curve */
-            const double *curve_parameters = (double *) t8_cmesh_get_attribute (
-              cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edge, ltreeid);
+            const double *curve_parameters
+              = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_tree_edge);
             T8_ASSERT (curve_parameters != NULL);
 
             /* Get the interpolation coefficients for the current edge */
@@ -1069,11 +1064,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
             /* Convert global tree id to local tree id, for receiving cmesh attributes. */
             t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
             /* Retrieve parameters of nodes und curve */
-            const double *curve_parameters
-              = (double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (),
-                                                   T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY
-                                                     + t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge],
-                                                   ltreeid);
+            const double *curve_parameters = t8_geometry_cad::get_tree_geometry_parameters (
+              cmesh, ltreeid, 1, t8_face_edge_to_tree_edge[T8_ECLASS_HEX][i_faces][i_face_edge]);
             T8_ASSERT (curve_parameters != NULL);
 
             /* Interpolate linearly between the parameters of the two nodes on the curve */
@@ -1262,8 +1254,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
                                       temp_edge_vertices, 3, 1, interpolated_coords);
 
         /* Get the parameters of the curve/surface linked to the current edge */
-        const double *parameters = (double *) t8_cmesh_get_attribute (
-          cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_edge, ltreeid);
+        const double *parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_edge);
         T8_ASSERT (parameters != NULL);
 
         /* Curves have only one parameter u, surfaces have two, u and v.
@@ -1332,8 +1323,8 @@ t8_geometry_cad::t8_geom_evaluate_cad_prism (t8_cmesh_t cmesh, t8_gloidx_t gtree
             /* Convert global tree id to local tree id, for receiving cmesh attributes. */
             t8_locidx_t ltreeid = t8_cmesh_get_local_id (cmesh, gtreeid);
             /* Retrieve parameters of nodes of the curve */
-            const double *curve_parameters = (double *) t8_cmesh_get_attribute (
-              cmesh, t8_get_package_id (), T8_CMESH_CAD_EDGE_PARAMETERS_ATTRIBUTE_KEY + i_tree_edge, ltreeid);
+            const double *curve_parameters
+              = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_tree_edge);
             T8_ASSERT (curve_parameters != NULL);
 
             /* Interpolate linearly between the parameters of the two nodes on the curve */
