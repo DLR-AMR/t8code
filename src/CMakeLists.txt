@@ -275,6 +275,15 @@ install( DIRECTORY t8_cmesh
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_connectivity.hxx" EXCLUDE
     PATTERN "t8_cmesh/t8_cmesh_vertex_connectivity/t8_cmesh_vertex_conn_*.hxx" EXCLUDE
 )
+
+# t8_cmesh_geometry_handler_internal.hxx is included by the public t8_cmesh_geometry.hxx
+# (functions in detail namespace, not meant for users), so it must be installed despite
+# the t8_cmesh_internal exclusion above.
+install( FILES
+    t8_cmesh/t8_cmesh_internal/t8_cmesh_geometry_handler_internal.hxx
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/t8_cmesh/t8_cmesh_internal
+)
+
 install( DIRECTORY t8_data
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
