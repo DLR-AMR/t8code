@@ -109,6 +109,8 @@ TEST (t8_gtest_compare_handle_to_forest, compare_handle_to_forest)
           EXPECT_EQ (mesh_iterator->face_vertex_to_element_vertex (iface, ivertex),
                      scheme->element_get_face_corner (tree_class, elem, iface, ivertex));
         }
+        EXPECT_EQ (mesh_iterator->get_face_orientation (iface),
+                   t8_forest_leaf_face_orientation (forest, itree, scheme, elem, iface));
       }
       // --- Evolve mesh iterator. ---
       mesh_iterator++;
