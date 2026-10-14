@@ -258,7 +258,7 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
   t8_cmesh_set_boundary_conditions (cmesh, 0, single_hex_bcs_c, 6);
   t8_cmesh_commit (cmesh, sc_MPI_COMM_WORLD);
 
-  /* Check if the cmesh tree is local to our process. */
+  /* The cmesh is replicated, so the tree is local to every process. */
   ASSERT_EQ (t8_cmesh_get_num_local_trees (cmesh), 1);
   /* Some variables for retrieving and checking the boundary conditions. */
   const char *retrieved_boundary_conditions[6];
@@ -274,24 +274,6 @@ TEST (t8_gtest_cmesh_boundary_conditions, test_boundary_condition_c_interface)
     /* Check t8_cmesh_get_boundary_condition */
     t8_cmesh_get_boundary_condition (cmesh, 0, i_boundary_condition, &retrieved_single_boundary_condition);
     EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_single_boundary_condition);
-  }
-
-  if (t8_cmesh_get_num_local_trees (cmesh)) {
-    /* Some variables for retrieving and checking the boundary conditions. */
-    const char *retrieved_boundary_conditions[6];
-    const char *retrieved_single_boundary_condition;
-    size_t length = 0;
-
-    /* Retrieve boundary conditions via t8_cmesh_get_boundary_conditions and t8_cmesh_get_boundary_condition and check them. */
-    t8_cmesh_get_boundary_conditions (cmesh, 0, retrieved_boundary_conditions, &length);
-    for (size_t i_boundary_condition = 0; i_boundary_condition < length; ++i_boundary_condition) {
-      /* Check t8_cmesh_get_boundary_conditions */
-      EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_boundary_conditions[i_boundary_condition]);
-
-      /* Check t8_cmesh_get_boundary_condition */
-      t8_cmesh_get_boundary_condition (cmesh, 0, i_boundary_condition, &retrieved_single_boundary_condition);
-      EXPECT_STREQ (single_hex_bcs_c[i_boundary_condition], retrieved_single_boundary_condition);
-    }
   }
 
   /* We now test the interface for a level 1 forest. This way we should get internal and external faces.
