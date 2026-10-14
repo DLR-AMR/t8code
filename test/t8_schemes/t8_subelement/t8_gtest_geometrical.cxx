@@ -103,7 +103,7 @@ check_subelement_geometry (const t8_eclass_t eclass, t8_forest_adapt_t adapt_cal
   t8_forest_unref (&forest);
 }
 
-/** Unit square, level 1. Refining element 2 (upper left) makes only the upper face of the lower left quad hanging
+/** Unit square, level 1. Refining element 2 (upper left) makes the upper face of the lower left quad hanging
  * (type 1, 5 subelements). Its subelement 1 (leaf 1) is the left half of the hanging face with vertices:
  * centre (0.25, 0.25), upper left corner (0, 0.5) and face midpoint (0.25, 0.5). */
 TEST (t8_gtest_subelement_geometry, quad_vertices_and_face_centroids)
@@ -113,7 +113,7 @@ TEST (t8_gtest_subelement_geometry, quad_vertices_and_face_centroids)
                              { { 0.125, 0.5, 0.0 }, { 0.25, 0.375, 0.0 }, { 0.125, 0.375, 0.0 } });
 }
 
-/** Reference triangle (0,0), (1,0), (1,1), level 1. Refining element 2 (middle child) makes only f0 of the corner
+/** Reference triangle (0,0), (1,0), (1,1), level 1. Refining element 2 (middle child) makes f0 of the corner
  * child (0,0), (0.5,0), (0.5,0.5) hanging (type 4, 2 subelements). Its subelement 0 (leaf 0) has the vertices:
  * midpoint of f0 (0.5, 0.25), v1 (0.5, 0) and v0 (0, 0). */
 TEST (t8_gtest_subelement_geometry, tri_vertices_and_face_centroids)
