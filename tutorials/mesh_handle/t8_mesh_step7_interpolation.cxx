@@ -39,7 +39,7 @@
 
 #include <t8.h>                        /** General t8code header. Always include this. */
 #include <mesh_handle/mesh_handle.hxx> /** Convenience header for the mesh_handle. Includes the most necessary headers.  */
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <cstring>
 #include <span>                         /** Required for the interpolation callback function.  */
@@ -54,7 +54,7 @@ struct step7_element_data_type
   double value; /**< Storage for our element value. */
 };
 
-/** The mesh class we use in this tutorial.
+/** The mesh class we use in this tutorial with all the necessary competences.
  *  data_element_competences_basic lets us access the data directly via each element
  *  interpolate_data_mesh_competence_pack stores one element_data_type per element on the mesh and adds the
  *  ability to interpolate this data after adaptation via a user-defined callback. */
@@ -109,7 +109,7 @@ interpolate_callback ([[maybe_unused]] const TMeshClass &mesh_old, [[maybe_unuse
 
 /** Compute the initial distance from each element's centroid to a given midpoint. 
  * \tparam TMeshClass    The mesh handle class.
- * \param [in, out] mesh     The mesh handle.
+ * \param [in, out] mesh     The mesh.
  * \param [in]      midpoint The point to which the distance is computed.
  */
 template <t8_mesh_handle::T8MeshType TMeshClass>
