@@ -775,8 +775,8 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     double parameters_edge[2] = { 0, 1 };
 
     // Give the tree information about its curves and the parameters of the vertices.
-    t8_geometry_cad::set_tree_geometries (cmesh, 0, 1, faces, 1);
-    t8_geometry_cad::set_tree_geometries (cmesh, 0, 2, edges, 6);
+    t8_geometry_cad::set_tree_geometries (cmesh, 0, 1, edges, 6);
+    t8_geometry_cad::set_tree_geometries (cmesh, 0, 2, faces, 1);
 
     t8_geometry_cad::set_tree_geometry_parameters (cmesh, 0, 1, 1, parameters_edge, 2);
 

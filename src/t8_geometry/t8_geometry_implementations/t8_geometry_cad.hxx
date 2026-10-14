@@ -222,7 +222,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    */
   static void
   set_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid, const int attribute_dimension,
-                                const int attribute_index, const double *parameters, const double num_parameters);
+                                const int attribute_index, const double *parameters, const int num_parameters);
 
   /** Given a cmesh and a local tree for which CAD tree geometry is used,
    * return the internal attribute parameters.
@@ -233,7 +233,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
    * \return The stored CAD parameters for the appropriate edge/face.
    */
   static const double *
-  get_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t ltreeid, const int attribute_dimension,
+  get_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_locidx_t ltreeid, const int attribute_dimension,
                                 const int attribute_index);
 
  private:

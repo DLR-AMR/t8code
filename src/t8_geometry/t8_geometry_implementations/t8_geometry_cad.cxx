@@ -1458,7 +1458,7 @@ t8_geometry_cad::set_tree_geometries (const t8_cmesh_t cmesh, const t8_gloidx_t 
 void
 t8_geometry_cad::set_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_gloidx_t cmesh_gtreeid,
                                                const int attribute_dimension, const int attribute_index,
-                                               const double *parameters, const double num_parameters)
+                                               const double *parameters, const int num_parameters)
 {
   T8_ASSERT (t8_cmesh_is_initialized (cmesh));
 
