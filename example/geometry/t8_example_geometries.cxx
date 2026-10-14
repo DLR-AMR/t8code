@@ -774,8 +774,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
     /* The valid parameter range for bsplines is [0, 1]. Therefore, we define the parameter range accordingly. */
     double parameters_edge[2] = { 0, 1 };
 
-    /* Give the tree information about its curves and the parameters of the vertices. 
-       * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
+    // Give the tree information about its curves and the parameters of the vertices.
     t8_geometry_cad::set_tree_geometries (cmesh, 0, 1, faces, 1);
     t8_geometry_cad::set_tree_geometries (cmesh, 0, 2, edges, 6);
 
@@ -839,8 +838,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
        * that parameter 0 and 1 resemble the two vertices of the connected edge. */
     double parameters[2] = { 0, 1 };
 
-    /* Give the tree information about its curves and the parameters of the vertices. 
-       * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. */
+    // Give the tree information about its curves and the parameters of the vertices.
     const int dim_faces = 2;
     const int num_faces = 6;
     t8_geometry_cad::set_tree_geometries (cmesh, 0, dim_faces, faces, num_faces);
@@ -945,9 +943,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
        * that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
     double parameters0[8] = { 0, 0, 0.5, 0, 0, 1, 0.5, 1 };
 
-    /* Give tree 0 information about its surface and the parameters of the vertices. 
-     * Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
-     */
+    // Give tree 0 information about its surface and the parameters of the vertices.
 
     {
       const int dim_faces = 2;
@@ -977,9 +973,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
      * that parameters 0, 0.5 and 1 resemble the vertices of the connected surface. */
     double parameters1[8] = { 0.5, 0, 1, 0, 0.5, 1, 1, 1 };
 
-    /* Give tree 1 information about its surface and the parameters of the vertices. 
-     *  Each parameter set is given to the tree via its attribute key + the edge or face index it corresponds with. 
-     *  We can use the same edges and faces array, because we link the surface to the same face on tree 1. */
+    // Give tree 1 information about its surface and the parameters of the vertices.
     {
       const int face_dim = 2;
       const int num_faces = 6;
