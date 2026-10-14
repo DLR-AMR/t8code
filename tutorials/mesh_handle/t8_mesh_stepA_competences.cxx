@@ -48,7 +48,7 @@
 #include <mesh_handle/constructor_wrappers.hxx> /** Wrapper for basic cmesh to mesh_handle conversions. */
 #include <mesh_handle/mesh_io.hxx>              /** Used to export mesh to vtk files. */
 #include <mesh_handle/concepts.hxx> /** Include this to use c++ concepts related to the mesh handle. This can be used to constrain the template parameters to only allow mesh handle classes. */
-#include <t8_types/t8_vec.hxx>      /** t8code vector dataclass. */
+#include <t8_vector/t8_vec.hxx>     /** t8code vector dataclass. */
 #include <cstring>
 
 using namespace t8_mesh_handle; /** Using the namespace to avoid the t8_mesh_handle:: prefix everywhere and shorten the code. */
@@ -161,15 +161,9 @@ main (int argc, char** argv)
                          "as well as creating custom competences.\n");
   t8_global_productionf (" [mesh_stepA] \n");
   { /* Start of mesh scope. */
-    /* Initializing all the competence packs with the functionality/competences we want to use. */
-    using vertex_pack = element_competence_pack<cache_vertex_coordinates>;
-    using volume_pack = element_competence_pack<cache_volume>;
 
-    /** Combine the cache competence packs for vertex coordinates and element volume (see competence_pack.hxx or cache_element_competences.hxx) pack into one with union_competence_packs_type. 
-     *  Because we already showed the element data competences in tutorial step 5, we will not show them again here.
-     *  The cache_volume competence is also unused in this tutorial but we write it below to visualize the combination via union_competence_pack.
-    */
-    using element_competences = union_competence_packs_type<vertex_pack, volume_pack>;
+    /* Initializing all the competence packs with the functionality/competences we want to use. */
+    using element_competences = element_competence_pack<cache_vertex_coordinates>;
 
     /* Defining our mesh type with the competence packs defined above. */
     using mesh_type = mesh<element_competences>;
@@ -179,10 +173,10 @@ main (int argc, char** argv)
     t8_global_productionf (" [mesh_stepA] Creating a uniform mesh with refinement level %d.\n", level);
     t8_global_productionf (" [mesh_stepA] \n");
     /* Creating a hybrid uniform mesh. Our competences get transferred onto the mesh by the mesh type we defined above. */
-    auto mesh = handle_hypercube_hybrid_uniform_default<mesh_type> (level, comm);
+    auto basic_mesh = handle_hypercube_hybrid_uniform_default<mesh_type> (level, comm);
 
     /* Guard to protect from undefined behaviour. */
-    if (mesh->get_num_local_elements () > 0) {
+    if (basic_mesh->get_num_local_elements () > 0) {
       t8_global_productionf (" [mesh_stepA] \n");
       t8_global_productionf (
         " [mesh_stepA] Demonstrating the cache competences by comparing the freshly computed values to "
@@ -190,16 +184,22 @@ main (int argc, char** argv)
       t8_global_productionf (" [mesh_stepA] \n");
 
       demonstrate_cache_competences (
-        (*mesh)[0]); /** Only demonstrating the cache competences for the first element of the mesh*/
+        (*basic_mesh)[0]); /** Only demonstrating the cache competences for the first element of the mesh*/
     }
     /** 
       * We will now create a second mesh with a competence pack that includes the volume cache competence and our custom defined competence 'volume_squared_custom_competence'.
     */
-    /* Defining a competence pack with the volume cache competence and our custom defined competence. */
-    using custom_element_competences = element_competence_pack<cache_volume, volume_squared_custom_competence>;
+    /* Define the individual competence packs. */
+    using cache_pack = element_competence_pack<cache_volume>;
+    using custom_pack = element_competence_pack<volume_squared_custom_competence>;
+
+    /** Combine the competence packs for our custom competence and volume cache (see competence_pack.hxx or cache_element_competences.hxx) 
+      *into one with union_competence_packs_type. 
+    */
+    using custom_element_competences = union_competence_packs_type<cache_pack, custom_pack>;
 
     /* Defining a custom mesh_type with our competence pack. */
-    using custom_mesh_class = t8_mesh_handle::mesh<custom_element_competences>;
+    using custom_mesh_class = mesh<custom_element_competences>;
 
     t8_global_productionf (" [mesh_stepA] \n");
     t8_global_productionf (" [mesh_stepA] Creating a mesh for the custom competence with initial "
