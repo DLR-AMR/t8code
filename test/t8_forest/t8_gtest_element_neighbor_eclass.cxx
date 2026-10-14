@@ -78,9 +78,8 @@ TEST_P (element_neighbor_eclass, neighbor_eclass_matches_neighbor_leaves)
     const t8_eclass_t tree_eclass = t8_forest_get_tree_class (forest, itree);
     const bool is_ghost = itree >= num_local_trees;
     const t8_locidx_t ghost_tree_id = itree - num_local_trees;
-    const t8_element_array_t *leaf_elements
-      = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
-                 : t8_forest_tree_get_leaf_elements (forest, itree);
+    const t8_element_array_t *leaf_elements = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
+                                                       : t8_forest_tree_get_leaf_elements (forest, itree);
     const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
 
     // Iterate over all leaf elements
@@ -114,7 +113,7 @@ TEST_P (element_neighbor_eclass, neighbor_eclass_matches_neighbor_leaves)
           }
           // For ghost leaves the neighbor may simply not be present on this process.
         }
-        else  {
+        else {
           // The neighbor class must be the class of the forest tree containing the neighbor leaves
           const t8_locidx_t neigh_ltree = t8_forest_get_local_or_ghost_id (forest, gneigh_tree);
           ASSERT_GE (neigh_ltree, 0) << "Neighbor tree " << gneigh_tree << " is neither local nor ghost.";
@@ -124,7 +123,7 @@ TEST_P (element_neighbor_eclass, neighbor_eclass_matches_neighbor_leaves)
           // Looking back from each neighbor leaf must yield our own eclass
           for (int ineigh = 0; ineigh < num_neighbors; ++ineigh) {
             EXPECT_EQ (t8_forest_element_neighbor_eclass (forest, neigh_ltree, neighbors[ineigh], dual_faces[ineigh]),
-                      tree_eclass)
+                       tree_eclass)
               << "tree " << itree << " leaf " << ileaf << " face " << iface << " neighbor " << ineigh;
           }
         }
