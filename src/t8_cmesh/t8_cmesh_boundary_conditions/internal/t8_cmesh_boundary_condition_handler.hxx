@@ -32,8 +32,6 @@
 #include <t8_types/t8_type.hxx>
 #include <t8_types/t8_operators.hxx>
 #include <t8_cmesh/t8_cmesh.h>
-#include <t8_forest/t8_forest_general.h>
-#include <t8_schemes/t8_scheme.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/t8_cmesh_boundary_conditions_types.hxx>
 
 #include <map>

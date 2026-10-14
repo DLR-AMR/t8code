@@ -30,6 +30,7 @@
 #include "t8_forest_boundary_conditions_c_interface.h"
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler.hxx>
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.h>
+#include <t8_schemes/t8_scheme.hxx>
 
 t8_boundary_conditions<std::optional<std::string_view>>
 t8_forest_get_boundary_conditions (t8_forest_t forest, t8_locidx_t ltreeid, const t8_element_t *element)
