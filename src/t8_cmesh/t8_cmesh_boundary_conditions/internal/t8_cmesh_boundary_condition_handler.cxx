@@ -30,6 +30,7 @@
 #include <t8_cmesh/t8_cmesh_boundary_conditions/internal/t8_cmesh_boundary_condition_handler_c_helper.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_types.h>
 #include <t8_cmesh/t8_cmesh_internal/t8_cmesh_stash.h>
+#include <t8_data/t8_shmem.h>
 
 #include <algorithm>
 #include <cstring>
@@ -111,7 +112,7 @@ t8_cmesh_boundary_condition_handler::serialize_map () const
 }
 
 void
-t8_cmesh_boundary_condition_handler::unpack_map (const std::vector<char> &serial_data, const bool overwrite)
+t8_cmesh_boundary_condition_handler::unpack_map (const std::span<const char> serial_data, const bool overwrite)
 {
   if (overwrite) {
     m_boundary_conditions.clear ();
@@ -132,8 +133,7 @@ t8_cmesh_boundary_condition_handler::synchronize (sc_MPI_Comm comm)
 {
   T8_ASSERT (comm != sc_MPI_COMM_NULL);
 
-  int rank, mpisize;
-  sc_MPI_Comm_rank (comm, &rank);
+  int mpisize;
   sc_MPI_Comm_size (comm, &mpisize);
 
   if (mpisize == 1) {
@@ -143,27 +143,26 @@ t8_cmesh_boundary_condition_handler::synchronize (sc_MPI_Comm comm)
 
   /* Prepare the sendbuffer. */
   std::vector<char> send_buffer = t8_cmesh_boundary_condition_handler::serialize_map ();
-
-  /* Communicate the local sizes */
   int local_size = static_cast<int> (send_buffer.size ());
-  std::vector<int> sizes (mpisize);
-  sc_MPI_Allgather (&local_size, 1, sc_MPI_INT, sizes.data (), 1, sc_MPI_INT, comm);
 
-  /* Compute the offsets for the data and create receive buffer. */
-  std::vector<int> offsets (mpisize);
+  /* Compute the size of the receive buffer. */
   int total_size = 0;
-  for (int rank = 0; rank < mpisize; ++rank) {
-    offsets[rank] = total_size;
-    total_size += sizes[rank];
-  }
-  std::vector<char> recv_buffer (total_size);
+  sc_MPI_Allreduce (&local_size, &total_size, 1, sc_MPI_INT, sc_MPI_SUM, comm);
+
+  /* The received data is the same on each process. Hence, we store it in shared memory. */
+  SC_CHECK_ABORT (t8_shmem_init (comm) > 0, "Error in shared memory setup.");
+  t8_shmem_set_type (comm, T8_SHMEM_BEST_TYPE);
+  t8_shmem_array_t recv_buffer;
+  t8_shmem_array_init (&recv_buffer, sizeof (char), total_size, comm);
 
   /* Communicate. */
-  sc_MPI_Allgatherv (send_buffer.data (), local_size, sc_MPI_BYTE, recv_buffer.data (), sizes.data (), offsets.data (),
-                     sc_MPI_BYTE, comm);
+  t8_shmem_array_allgatherv (send_buffer.data (), local_size, sc_MPI_BYTE, recv_buffer, sc_MPI_BYTE, comm);
 
   /* Unpack the data. */
-  t8_cmesh_boundary_condition_handler::unpack_map (recv_buffer, false);
+  const char *recv_data = static_cast<const char *> (t8_shmem_array_get_array (recv_buffer));
+  const std::span<const char> recv_span (recv_data, static_cast<size_t> (total_size));
+  t8_cmesh_boundary_condition_handler::unpack_map (recv_span, false);
+  t8_shmem_array_destroy (&recv_buffer);
 }
 
 void
