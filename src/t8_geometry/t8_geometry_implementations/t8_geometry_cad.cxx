@@ -968,7 +968,7 @@ t8_geometry_cad::t8_geom_evaluate_cad_hex (t8_cmesh_t cmesh, t8_gloidx_t gtreeid
         t8_geom_linear_interpolation (&ref_coords[edge_direction + offset_3d], temp_edge_vertices, 3, 1,
                                       interpolated_coords + offset_3d);
         /* Interpolate parameters between edge vertices. Same procedure as above. */
-        const double *parameters = get_tree_geometry_parameters (cmesh, ltreeid, 1, i_edge);
+        const double *parameters = t8_geometry_cad::get_tree_geometry_parameters (cmesh, ltreeid, 1, i_edge);
         T8_ASSERT (parameters != NULL);
 
         /* Curves have only one parameter u, surfaces have two, u and v.
