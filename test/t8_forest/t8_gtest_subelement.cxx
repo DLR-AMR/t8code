@@ -37,8 +37,8 @@
 #include <t8_forest/t8_forest_subelement.hxx>
 #include <t8_schemes/t8_subelement/t8_subelement.hxx>
 
-/** Check that the hanging node resolution for 2D hybrid meshes works. At the moment we only check the functionality 
-* needed for visualization (so e.g. no connectivity). 
+/** Check that the hanging node resolution for 2D hybrid meshes works. At the moment we only check the functionality
+* needed for visualization (so e.g. no connectivity).
 */
 TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
 {
@@ -46,7 +46,7 @@ TEST (t8_gtest_subelement, hybrid_hanging_nodes_visualization)
   const int level = 2;
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
-  t8_cmesh_new_2D_hypercube_hybrid (cmesh, sc_MPI_COMM_WORLD);
+  t8_cmesh_new_hypercube_hybrid_2D (cmesh, sc_MPI_COMM_WORLD);
 
   t8_forest_t forest = t8_forest_new_uniform (cmesh, t8_scheme_new_subelement (), level, 0, sc_MPI_COMM_WORLD);
 
