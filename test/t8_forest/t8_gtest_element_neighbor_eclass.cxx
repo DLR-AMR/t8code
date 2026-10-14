@@ -24,9 +24,9 @@
 
 #include <test/t8_gtest_schemes.hxx>
 
-#include <t8_forest/t8_forest_ghost.h>
 #include <t8_cmesh/t8_cmesh_examples.h>
-#include <t8_forest/t8_forest_private.h>
+#include <t8_forest/t8_forest_general.h>
+#include <t8_forest/t8_forest_ghost/t8_forest_ghost.h>
 
 struct element_neighbor_eclass: public testing::TestWithParam<std::tuple<int, int>>
 {
@@ -40,10 +40,21 @@ struct element_neighbor_eclass: public testing::TestWithParam<std::tuple<int, in
     const int level = std::get<1> (GetParam ());
 
     // Construct a hybrid coarse mesh
-    const t8_cmesh_t cmesh = t8_cmesh_new_full_hybrid (sc_MPI_COMM_WORLD);
+    t8_cmesh_t cmesh;
+    t8_cmesh_init (&cmesh);
+    t8_cmesh_new_full_hybrid (cmesh, sc_MPI_COMM_WORLD);
+
+    // Partition the cmesh
+    t8_cmesh_t cmesh_partition;
+    t8_cmesh_init (&cmesh_partition);
+    // The cmesh takes ownership of the scheme, but we still pass it to the forest below.
+    scheme->ref ();
+    t8_cmesh_set_partition_uniform (cmesh_partition, level, scheme);
+    t8_cmesh_set_derive (cmesh_partition, cmesh);
+    t8_cmesh_commit (cmesh_partition, sc_MPI_COMM_WORLD);
 
     // Build a uniform forest
-    forest = t8_forest_new_uniform (cmesh, scheme, level, do_ghost, sc_MPI_COMM_WORLD);
+    forest = t8_forest_new_uniform (cmesh_partition, scheme, level, do_ghost, sc_MPI_COMM_WORLD);
   }
 
   void
@@ -55,9 +66,8 @@ struct element_neighbor_eclass: public testing::TestWithParam<std::tuple<int, in
   t8_forest_t forest;
 };
 
-TEST_P (element_neighbor_eclass, test_half_neighbors)
+TEST_P (element_neighbor_eclass, neighbor_eclass_matches_neighbor_leaves)
 {
-  const t8_cmesh_t cmesh = t8_forest_get_cmesh (forest);
   const t8_scheme *scheme = t8_forest_get_scheme (forest);
 
   // Iterate over all trees (local and ghosts)
@@ -68,50 +78,59 @@ TEST_P (element_neighbor_eclass, test_half_neighbors)
     const t8_eclass_t tree_eclass = t8_forest_get_tree_class (forest, itree);
     const bool is_ghost = itree >= num_local_trees;
     const t8_locidx_t ghost_tree_id = itree - num_local_trees;
-    const t8_element_array_t *leaf_elements = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
-                                                       : t8_forest_get_tree_leaf_element_array (forest, itree);
+    const t8_element_array_t *leaf_elements
+      = is_ghost ? t8_forest_ghost_get_tree_leaf_elements (forest, ghost_tree_id)
+                 : t8_forest_tree_get_leaf_elements (forest, itree);
     const t8_locidx_t num_leaves = t8_element_array_get_count (leaf_elements);
-    const t8_locidx_t ltreeid_in_cmesh = t8_forest_ltreeid_to_cmesh_ltreeid (forest, itree);
 
     // Iterate over all leaf elements
     for (t8_locidx_t ileaf = 0; ileaf < num_leaves; ++ileaf) {
 
       const t8_element_t *element = t8_element_array_index_locidx (leaf_elements, ileaf);
+      const int num_faces = scheme->element_get_num_faces (tree_eclass, element);
 
       // Iterate over all faces
-      for (int iface = 0; iface < scheme->element_get_num_faces (tree_eclass, element); iface++) {
+      for (int iface = 0; iface < num_faces; iface++) {
 
         // Get the eclass of the face neighbor (function to test)
         const t8_eclass_t neigh_class = t8_forest_element_neighbor_eclass (forest, itree, element, iface);
 
-        // Inside the current tree
-        if (!scheme->element_is_root_boundary (tree_eclass, element, iface)) {
-          // We expect to get the same eclass
-          EXPECT_EQ (neigh_class, tree_eclass);
-        }
-        // Crossing a tree boundary
-        else {
-          // Get neighbor tree id
-          const int tree_face = scheme->element_get_tree_face (tree_eclass, element, iface);
-          const t8_locidx_t neighbor_id
-            = t8_cmesh_get_face_neighbor (cmesh, ltreeid_in_cmesh, tree_face, nullptr, nullptr);
+        // Compute the actual face neighbor leaves
+        const t8_element_t **neighbors = nullptr;
+        int *dual_faces = nullptr;
+        int num_neighbors = 0;
+        t8_locidx_t *element_indices = nullptr;
+        t8_eclass_t dummy_eclass;
+        t8_gloidx_t gneigh_tree = -1;
+        t8_forest_leaf_face_neighbors_ext (forest, itree, element, &neighbors, iface, &dual_faces, &num_neighbors,
+                                           &element_indices, &dummy_eclass, &gneigh_tree, nullptr);
 
-          if (neighbor_id < 0) {
-            // No neighbor
-            EXPECT_EQ (neigh_class, T8_ECLASS_INVALID);
+        if (num_neighbors == 0) {
+          if (!is_ghost) {
+            // With a ghost layer, every local leaf finds its neighbors if they exist.
+            // No neighbors thus means that the face is on the domain boundary.
+            EXPECT_EQ (neigh_class, T8_ECLASS_INVALID)
+              << "tree " << itree << " leaf " << ileaf << " face " << iface << ": no neighbor leaves found";
           }
-          else {
-            // Neighbor
-            const bool neighbor_is_ghost = t8_cmesh_treeid_is_ghost (cmesh, neighbor_id);
-            if (!neighbor_is_ghost) {
-              EXPECT_EQ (neigh_class, t8_cmesh_get_tree_class (cmesh, neighbor_id));
-            }
-            else {
-              const t8_locidx_t lghost_neighbor_id = neighbor_id - t8_cmesh_get_num_local_trees (cmesh);
-              EXPECT_EQ (neigh_class, t8_cmesh_get_ghost_class (cmesh, lghost_neighbor_id));
-            }
-          }
+          // For ghost leaves the neighbor may simply not be present on this process.
         }
+        else  {
+          // The neighbor class must be the class of the forest tree containing the neighbor leaves
+          const t8_locidx_t neigh_ltree = t8_forest_get_local_or_ghost_id (forest, gneigh_tree);
+          ASSERT_GE (neigh_ltree, 0) << "Neighbor tree " << gneigh_tree << " is neither local nor ghost.";
+          EXPECT_EQ (neigh_class, t8_forest_get_tree_class (forest, neigh_ltree))
+            << "tree " << itree << " leaf " << ileaf << " face " << iface;
+
+          // Looking back from each neighbor leaf must yield our own eclass
+          for (int ineigh = 0; ineigh < num_neighbors; ++ineigh) {
+            EXPECT_EQ (t8_forest_element_neighbor_eclass (forest, neigh_ltree, neighbors[ineigh], dual_faces[ineigh]),
+                      tree_eclass)
+              << "tree " << itree << " leaf " << ileaf << " face " << iface << " neighbor " << ineigh;
+          }
+
+        T8_FREE (neighbors);
+        T8_FREE (dual_faces);
+        T8_FREE (element_indices);
       }
     }
   }
