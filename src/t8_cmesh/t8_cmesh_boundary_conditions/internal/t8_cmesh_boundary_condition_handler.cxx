@@ -118,7 +118,15 @@ t8_cmesh_boundary_condition_handler::unpack_map (const std::span<const char> ser
     m_boundary_conditions.clear ();
   }
 
-  /* Iterate over stings. */
+  if (serial_data.empty ()) {
+    /* Nothing to unpack. */
+    return;
+  }
+  /* The strings are null-terminated. If the last character is not a null character, the data got corrupted
+   * and we would read past the end of the buffer. */
+  SC_CHECK_ABORT (serial_data.back () == '\0', "ERROR: Serialized boundary condition data is not null-terminated.\n");
+
+  /* Iterate over strings. */
   for (const char *string = serial_data.data (); string < serial_data.data () + serial_data.size ();
        string += std::strlen (string) + 1) {
     /* Interpret c string as std::string, rehash it and insert it. */
