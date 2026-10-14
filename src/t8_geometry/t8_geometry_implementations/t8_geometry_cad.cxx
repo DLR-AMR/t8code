@@ -1408,8 +1408,7 @@ t8_geometry_cad::get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t 
   T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
 
-  /* We retrieve the geometry information of the tree.
-   * In the 3D case, we look for linked surfaces, but in 2D, we look for linked edges. */
+  /* We retrieve the geometry information of the tree. */
   const int attribute_key
     = attribute_dimension == 2 ? T8_CMESH_CAD_FACE_ATTRIBUTE_KEY : T8_CMESH_CAD_EDGE_ATTRIBUTE_KEY;
 
