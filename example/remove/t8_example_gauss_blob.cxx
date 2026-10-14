@@ -22,7 +22,7 @@
 
 #include <t8.h>
 #include <t8_forest/t8_forest.h>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <t8_cmesh/t8_cmesh_examples.h>
 #include <t8_schemes/t8_default/t8_default.hxx>
 #include <sc_options.h>
@@ -36,7 +36,7 @@ struct t8_adapt_data
 };
 
 static double
-t8_gausss_blob (const t8_3D_vec &center_elem, const t8_3D_vec &center_cube, const double radius)
+t8_gauss_blob (const t8_3D_vec &center_elem, const t8_3D_vec &center_cube, const double radius)
 {
   double expo = 0;
   for (int i = 0; i < 3; i++) {
@@ -68,7 +68,7 @@ t8_create_element_data (t8_forest_t forest, const t8_3D_vec &sphere_center, cons
       element = t8_forest_get_leaf_element_in_tree (forest, itree, ielement);
       t8_3D_vec center;
       t8_forest_element_centroid (forest, itree, element, center.data ());
-      element_data[current_index] = t8_gausss_blob (center, sphere_center, sphere_radius);
+      element_data[current_index] = t8_gauss_blob (center, sphere_center, sphere_radius);
     }
   }
   return element_data;

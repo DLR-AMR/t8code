@@ -32,7 +32,7 @@
 #include <mesh_handle/constructor_wrappers.hxx>
 #include <mesh_handle/mesh_io.hxx>
 #include <mesh_handle/concepts.hxx>
-#include <t8_types/t8_vec.hxx>
+#include <t8_vector/t8_vec.hxx>
 #include <memory>
 #include <span>
 

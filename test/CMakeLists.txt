@@ -138,6 +138,7 @@ add_t8_cpp_test( NAME t8_gtest_cmesh_vertex_conn_serial                     SOUR
 add_t8_cpp_test( NAME t8_gtest_multiple_attributes_parallel                 SOURCES t8_cmesh/t8_gtest_multiple_attributes.cxx )
 add_t8_cpp_test( NAME t8_gtest_attribute_gloidx_array_serial                SOURCES t8_cmesh/t8_gtest_attribute_gloidx_array.cxx )
 add_t8_cpp_test( NAME t8_gtest_cmesh_bounding_box_serial                    SOURCES t8_cmesh/t8_gtest_cmesh_bounding_box.cxx )
+add_t8_cpp_test( NAME t8_gtest_cmesh_boundary_conditions_serial             SOURCES t8_cmesh/t8_gtest_cmesh_boundary_conditions.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_shmem_parallel  SOURCES t8_data/t8_gtest_shmem.cxx )
 add_t8_cpp_test( NAME t8_gtest_data_pack_parallel       SOURCES t8_data/t8_gtest_data_handler.cxx t8_data/t8_data_handler_specs.cxx)
@@ -161,6 +162,7 @@ add_t8_cpp_test( NAME t8_gtest_set_partition_offset_parallel      SOURCES t8_for
 add_t8_cpp_test( NAME t8_gtest_partition_for_coarsening_parallel  SOURCES t8_forest/t8_gtest_partition_for_coarsening.cxx )
 add_t8_cpp_test( NAME t8_gtest_weighted_partitioning_parallel     SOURCES t8_forest/t8_gtest_weighted_partitioning.cxx )
 add_t8_cpp_test( NAME t8_gtest_subelement_parallel                SOURCES t8_forest/t8_gtest_subelement.cxx t8_gtest_adapt_callbacks.cxx )
+add_t8_cpp_test( NAME t8_gtest_neighbors_of_ghosts_parallel       SOURCES t8_forest/t8_gtest_neighbors_of_ghosts.cxx t8_gtest_adapt_callbacks.cxx )
 
 add_t8_cpp_test( NAME t8_gtest_element_is_leaf_parallel     SOURCES t8_forest/t8_gtest_element_is_leaf.cxx t8_gtest_adapt_callbacks.cxx )
 add_t8_cpp_test( NAME t8_gtest_permute_hole_serial          SOURCES t8_forest_incomplete/t8_gtest_permute_hole.cxx )
