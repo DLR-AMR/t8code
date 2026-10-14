@@ -128,6 +128,7 @@ TEST_P (t8_mesh_ghost_test, compare_neighbors_to_forest)
   t8_cmesh_t cmesh;
   t8_cmesh_init (&cmesh);
   t8_cmesh_new_hypercube (&cmesh, eclass, sc_MPI_COMM_WORLD, 0, 1, 0);
+  cmesh = t8_cmesh_derive_partitioned (cmesh, level, scheme, sc_MPI_COMM_WORLD);
   t8_forest_t forest = t8_forest_new_uniform (cmesh, scheme, level, 1, sc_MPI_COMM_WORLD);
 
   const t8_mesh_handle::mesh<> mesh (forest);
