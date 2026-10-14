@@ -52,7 +52,11 @@ struct forest_iterate: public testing::TestWithParam<cmesh_example_base *>
       t8_cmesh_unref (&cmesh);
       GTEST_SKIP ();
     }
-    forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default (), level, 0, sc_MPI_COMM_WORLD);
+    const t8_scheme *scheme = t8_scheme_new_default ();
+    if (t8_cmesh_is_partitioned (cmesh)) {
+      cmesh = t8_cmesh_derive_partitioned (cmesh, level, scheme, sc_MPI_COMM_WORLD);
+    }
+    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, sc_MPI_COMM_WORLD);
   }
   void
   TearDown () override
