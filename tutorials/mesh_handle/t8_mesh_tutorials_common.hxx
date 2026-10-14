@@ -24,7 +24,6 @@
  * This defines the shared adaption data and callback for the mesh handle tutorials. 
  * The adaption callback refines elements whose centroid lies inside a sphere around a given point
  * and coarsens families whose centroid lies outside a larger sphere around the same point. 
- * It is used in step 3, 4 and 5 in the mesh_handle tutorials.
  */
 
 #pragma once

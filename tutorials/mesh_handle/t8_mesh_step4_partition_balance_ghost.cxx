@@ -43,7 +43,7 @@
 /**< Mesh class used in this tutorial. We define it globally to get rid of the function templates to simplify the code. */
 using mesh_type = t8_mesh_handle::mesh<>;
 
-/** Helper function to print the total number of elements in the mesh after each step.
+/** Helper function to print the total and local number of elements in the mesh, as well as all ghost elements, after each step.
  *  \param [in] mesh  The mesh handle to get the number of elements from.
  *  \param [in] prefix The prefix for the filename of the exported vtk files. 
 */
@@ -183,11 +183,11 @@ main (int argc, char** argv)
     print_stats_and_export (*mesh, prefix_adapt);
 
     /**
-     * PARTITION, BALANCE MESH
+     * PARTITION MESH
      */
 
     t8_global_productionf (" [mesh_step4] \n");
-    t8_global_productionf (" [mesh_step4] Partition and balance the mesh.\n");
+    t8_global_productionf (" [mesh_step4] Partition the mesh.\n");
     t8_global_productionf (" [mesh_step4] \n");
 
     /* Call partitioning helper function. */
@@ -195,6 +195,14 @@ main (int argc, char** argv)
 
     /* Printing the mesh information. */
     print_stats_and_export (*mesh, prefix_partition);
+
+    /**
+     * BALANCE MESH
+     */
+
+    t8_global_productionf (" [mesh_step4] \n");
+    t8_global_productionf (" [mesh_step4] Balancing the mesh.\n");
+    t8_global_productionf (" [mesh_step4] \n");
 
     /* Call balancing helper function. */
     step4_balance_mesh (*mesh);
@@ -215,8 +223,6 @@ main (int argc, char** argv)
 
     /* Printing the mesh information. */
     print_stats_and_export (*mesh, prefix_ghost);
-    t8_locidx_t ghost_elements = mesh->get_num_ghosts ();
-    t8_global_productionf (" [mesh_step4] Number of ghost elements: %i \n", ghost_elements);
 
     t8_global_productionf (" [mesh_step4] \n");
     t8_global_productionf (" [mesh_step4] Finished all steps successfully.\n");

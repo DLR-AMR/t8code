@@ -43,7 +43,6 @@
 #include <mesh_handle/concepts.hxx>             /** Include this to use c++ concepts related to the mesh handle. 
                                           *  This can be used to constrain the template parameters to only allow mesh handle classes. */
 #include "t8_mesh_tutorials_common.hxx"         /** Adaption function definition used for this tutorial. */
-#include <memory>
 
 /** Build our adapted mesh by transferring the adaption parameters and adapting once 
  *  with the adapt_callback_sphere function defined in \ref t8_mesh_tutorials_common.hxx.

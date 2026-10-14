@@ -17,7 +17,7 @@ Initialize t8code and print a welcome message.
 [step1](https://github.com/DLR-AMR/t8code/wiki/Step-1---Creating-a-coarse-mesh) - 
 Create a coarse mesh, output it to vtu and destroy it. We need a coarse mesh to initialize our mesh handle mesh. 
 
-[step2](t8_mesh_step2_uniform_mesh.cxx) -   
+[step2](t8_mesh_step2_uniform_mesh.cxx) -
 Create a uniform mesh, get its number of local and global elements and output it to vtu.
 
 [step3](t8_mesh_step3_adapt_mesh.cxx) - 
