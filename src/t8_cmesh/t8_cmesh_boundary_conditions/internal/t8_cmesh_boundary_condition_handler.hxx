@@ -54,18 +54,6 @@ namespace detail
  */
 struct t8_cmesh_boundary_condition_handler
 {
- private:
-  /**
-   * Tag for boundary condition hash strong type.
-   */
-  struct boundary_condition_hash_tag
-  {
-  };
-  /**
-   * Strong type for boundary condition hashes.
-   */
-  using boundary_condition_hash = T8Type<size_t, boundary_condition_hash_tag, EqualityComparable>;
-
  public:
   /**************************************** CONSTRUCTORS & ASSIGNMENT OPERATORS ****************************************/
 
@@ -245,7 +233,7 @@ struct t8_cmesh_boundary_condition_handler
     return boundary_conditions;
   }
 
-  /**************************************** HELPER FUNCTIONS ****************************************/
+  /**************************************** DEBUG FUNCTIONS ****************************************/
 
 #if T8_ENABLE_DEBUG
   /** Verifies the proper attribution of boundary conditions. Can only be called on a cmesh
@@ -257,7 +245,39 @@ struct t8_cmesh_boundary_condition_handler
 
 #endif /* T8_ENABLE_DEBUG */
 
+  /**************************************** MPI FUNCTIONS ****************************************/
+
+  /**
+   * Synchronizes the contents of the boundary condition handler across all processes.
+   * \param [in]  comm      The communicator to use.
+   * \note This is an MPI collective function and must be called by all processes of \a comm.
+   */
+  void
+  synchronize (sc_MPI_Comm comm);
+
+  /**
+   * Broadcasts the boundary conditions from \a main_rank to all other ranks.
+   * \param [in]  main_rank The main rank from which to broadcast.
+   * \param [in]  comm      The communicator to use.
+   * \note This is an MPI collective function and must be called by all processes of \a comm.
+   */
+  void
+  bcast (int main_rank, sc_MPI_Comm comm);
+
  private:
+  /**
+   * Tag for boundary condition hash strong type.
+   */
+  struct boundary_condition_hash_tag
+  {
+  };
+  /**
+   * Strong type for boundary condition hashes.
+   */
+  using boundary_condition_hash = T8Type<size_t, boundary_condition_hash_tag, EqualityComparable>;
+
+  /**************************************** HELPER FUNCTIONS ****************************************/
+
   /**
    * Gets the attribute key for boundary conditions.
    * \return The attribute key for boundary conditions.
@@ -321,24 +341,6 @@ struct t8_cmesh_boundary_condition_handler
 
   /**************************************** MPI HELPER FUNCTIONS ****************************************/
 
- public:
-  /**
-   * Synchronizes the contents of the boundary condition handler across all processes.
-   * \param [in]  comm      The communicator to use.
-   * \note This is an MPI collective function and must be called by all processes of \a comm.
-   */
-  void
-  synchronize (sc_MPI_Comm comm);
-
-  /**
-   * Broadcasts the boundary conditions from \a main_rank to all other ranks.
-   * \param [in]  main_rank The main rank from which to broadcast.
-   * \param [in]  comm      The communicator to use.
-   * \note This is an MPI collective function and must be called by all processes of \a comm.
-   */
-  void
-  bcast (int main_rank, sc_MPI_Comm comm);
-
   /**
    * Converts the contents of m_boundary_conditions into a serial vector of chars.
    * The keys are omitted and only the strings are serialized.
@@ -351,7 +353,7 @@ struct t8_cmesh_boundary_condition_handler
   /**
    * Unpacks and integrates the \a serial_data into m_boundary_conditions.
    * It either merges the already existing data or overwrites the complete map if \a overwrite is set to true.
-   * \param [in]  serial_data   The data to unpack and integrate.
+   * \param [in]  serial_data   The data to unpack and integrate. Must be empty or end with a null character.
    * \param [in]  overwrite     Overwrites the data in this handler if true. Merges the data with the existing data on false.
    */
   void
@@ -359,7 +361,6 @@ struct t8_cmesh_boundary_condition_handler
 
   /**************************************** MEMBERS ****************************************/
 
- private:
   /** The associated cmesh of this struct */
   t8_cmesh_t m_cmesh;
 
