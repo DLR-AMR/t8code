@@ -226,7 +226,7 @@ struct t8_geometry_cad: public t8_geometry_with_vertices
 
   /** Given a cmesh and a local tree for which CAD tree geometry is used,
    * return the internal attribute parameters.
-   * \param [in] cmesh  An initialized cmesh.
+   * \param [in] cmesh  A committed cmesh.
    * \param [in] ltreeid A local tree id of \a cmesh of a tree with CAD geometry.
    * \param [in] attribute_dimension Either 1 (edges) or 2 (faces).
    * \param [in] attribute_index The attribute index for which to get the parameters. I.e. 0 for the first edge or first face.
