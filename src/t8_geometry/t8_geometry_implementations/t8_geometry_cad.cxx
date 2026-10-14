@@ -1405,7 +1405,7 @@ const int *
 t8_geometry_cad::get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t cmesh_ltreeid,
                                       const int attribute_dimension)
 {
-  T8_ASSERT (t8_cmesh_is_committed (cmesh));
+  T8_ASSERT (t8_cmesh_is_committed (cmesh, 0));
   T8_ASSERT (attribute_dimension == 1 || attribute_dimension == 2);
 
   /* We retrieve the geometry information of the tree.
