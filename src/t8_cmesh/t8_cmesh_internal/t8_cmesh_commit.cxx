@@ -512,7 +512,8 @@ t8_cmesh_commit_partitioned_new (t8_cmesh_t cmesh, sc_MPI_Comm comm)
   sc_MPI_Allreduce (&boundary_conditions_applied_locally, &boundary_conditions_applied_globally, 1, sc_MPI_INT,
                     sc_MPI_MAX, comm);
   if (boundary_conditions_applied_globally && cmesh->boundary_condition_handler == nullptr) {
-    detail::t8_cmesh_add_boundary_condition_handler (cmesh);
+    SC_CHECK_ABORT (detail::t8_cmesh_add_boundary_condition_handler (cmesh) != nullptr,
+                    "ERROR: Could not create boundary condition handler.\n");
   }
   if (cmesh->boundary_condition_handler != nullptr) {
     cmesh->boundary_condition_handler->synchronize (comm);
