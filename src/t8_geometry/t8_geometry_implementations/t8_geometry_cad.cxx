@@ -1416,6 +1416,7 @@ t8_geometry_cad::get_tree_geometries (const t8_cmesh_t cmesh, const t8_locidx_t 
   const int *linked_geometries
     = (const int *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), attribute_key, cmesh_ltreeid);
 
+  T8_ASSERTF (linked_geometries != nullptr, "No CAD geometry found for specific tree.");
   return linked_geometries;
 }
 
@@ -1488,6 +1489,8 @@ t8_geometry_cad::get_tree_geometry_parameters (const t8_cmesh_t cmesh, const t8_
 
   const double *parameters
     = (const double *) t8_cmesh_get_attribute (cmesh, t8_get_package_id (), attribute_key, ltreeid);
+
+  T8_ASSERTF (parameters != nullptr, "No CAD parameters found for specific tree.");
   return parameters;
 }
 
