@@ -31,7 +31,7 @@
 #include <t8.h> /** General t8code header. Always include this. */
 
 #include <mesh_handle/concepts.hxx> /** Mesh concepts header. */
-#include <t8_types/t8_vec.hxx>      /** t8 vector dataclass. */
+#include <t8_vector/t8_vec.hxx>     /** t8 vector dataclass. */
 #include <span>
 
 /** The data that determines the adaptation characteristics of our algorithm.

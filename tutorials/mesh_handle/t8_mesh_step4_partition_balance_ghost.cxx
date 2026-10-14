@@ -56,7 +56,7 @@ print_stats_and_export (mesh_type& mesh, const char* prefix)
 
   t8_global_productionf (" [mesh_step4] === %s === \n", prefix);
   t8_global_productionf (" [mesh_step4] Local elements on the root process: %i \n", local_elements);
-  t8_global_productionf (" [mesh_step4] Total elements: %li \n", global_elements);
+  t8_global_productionf (" [mesh_step4] Total elements: %" T8_GLOIDX_FORMAT " \n", global_elements);
   t8_global_productionf (" [mesh_step4] Ghost elements: %i \n", ghost_elements);
 
   /* Writing the mesh to vtu and pvtu files, using the extended version of the function to ensure additional data like ghost elements, treeid etc. to be written into the files. */
